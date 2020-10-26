@@ -5,12 +5,13 @@
     "keywords": ["etl", "extract", "transform", "load"],
     "prefer-stable": true,
     "require": {
+        "php": ">=7.4.2",
         "ext-mbstring": "*",
-        "php": ">=7.4.2"
+        "webmozart/assert": "^1.9"
     },
     "require-dev": {
         "ext-bcmath": "*",
-        "phpunit/phpunit": "^9.3"
+        "phpunit/phpunit": "^9.4"
     },
     "config": {
         "optimize-autoloader": true,
