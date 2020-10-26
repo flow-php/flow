@@ -1,0 +1,51 @@
+{
+    "name": "flow-php/etl",
+    "type": "library",
+    "description": "PHP ETL - Extract Transform Load - Abstraction",
+    "keywords": ["etl", "extract", "transform", "load"],
+    "prefer-stable": true,
+    "require": {
+        "ext-mbstring": "*",
+        "php": ">=7.4.2"
+    },
+    "require-dev": {
+        "ext-bcmath": "*",
+        "phpunit/phpunit": "^9.3"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Flow\\": [
+                "src/Flow"
+            ]
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Flow\\": "tests/Flow"
+        }
+    },
+    "scripts": {
+        "build": [
+            "@static:analyze",
+            "@test",
+            "@test:mutation"
+        ],
+        "test": [
+            "phpunit"
+        ],
+        "test:mutation": [
+            "tools/infection -j2"
+        ],
+        "static:analyze": [
+            "tools/psalm --output-format=compact",
+            "tools/phpstan analyze -c phpstan.neon",
+            "tools/php-cs-fixer fix --dry-run"
+        ],
+        "cs:php:fix": "tools/php-cs-fixer fix"
+    }
+}

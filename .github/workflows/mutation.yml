@@ -1,0 +1,66 @@
+name: "Mutation Tests"
+
+on:
+  pull_request:
+  push:
+    branches:
+      - "1.x"
+  schedule:
+    - cron:  '* 8 * * *'
+
+jobs:
+  mutation:
+    name: "Mutation Tests"
+
+    runs-on: ${{ matrix.operating-system }}
+
+    strategy:
+      matrix:
+        dependencies:
+          - "locked"
+        php-version:
+          - "7.4"
+        operating-system:
+          - "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v2"
+
+      - name: "Install PHP"
+        uses: "shivammathur/setup-php@v2"
+        with:
+          coverage: pcov
+          tools: phive, composer:v2
+          php-version: "${{ matrix.php-version }}"
+          ini-values: memory_limit=-1
+
+      - name: "Cache dependencies"
+        uses: "actions/cache@v2"
+        with:
+          path: |
+            ~/.composer/cache
+            vendor
+          key: "php-${{ matrix.php-version }}-${{ matrix.dependencies }}"
+          restore-keys: "php-${{ matrix.php-version }}-${{ matrix.dependencies }}"
+
+      - name: "Install lowest dependencies"
+        if: ${{ matrix.dependencies == 'lowest' }}
+        run: "composer update --prefer-lowest --no-interaction --no-progress --no-suggest"
+
+      - name: "Install highest dependencies"
+        if: ${{ matrix.dependencies == 'highest' }}
+        run: "composer update --no-interaction --no-progress --no-suggest"
+
+      - name: "Install locked dependencies"
+        if: ${{ matrix.dependencies == 'locked' }}
+        run: "composer install --no-interaction --no-progress --no-suggest"
+
+      - name: "Install tools"
+        run: "phive install --trust-gpg-keys E82B2FB314E9906E,C5095986493B4AA0,CF1A108D0E7AE720,8A03EA3B385DBAA1 --force-accept-unsigned"
+
+      - name: "Mutation Tests"
+        run: "composer test:mutation"
+        env:
+          INFECTION_BADGE_API_KEY: ${{ secrets.INFECTION_BADGE_API_KEY }}
+          STRYKER_DASHBOARD_API_KEY: ${{ secrets.STRYKER_DASHBOARD_API_KEY }}

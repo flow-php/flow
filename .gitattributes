@@ -1,0 +1,13 @@
+*.php text eol=lf
+/composer.lock export-ignore
+/.github/ export-ignore
+/docs export-ignore
+/tests export-ignore
+/.phive export-ignore
+/.gitattributes export-ignore
+/.gitignore export-ignore
+/.php_cs export-ignore
+/phpstan.neon export-ignore
+/phpunit.xml export-ignore
+/psalm.xml export-ignore
+/infection.json export-ignore
