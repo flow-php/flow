@@ -10,6 +10,7 @@
         "webmozart/assert": "^1.9"
     },
     "require-dev": {
+        "ext-json": "*",
         "ext-bcmath": "*",
         "phpunit/phpunit": "^9.4"
     },
