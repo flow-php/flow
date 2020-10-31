@@ -2,7 +2,7 @@
 
 ## Description
 
-Flow PHP ETL is simple ETL (Extract Transform Load) abstraction designed to implement Filters & Pipes architecture. 
+Flow PHP ETL is a simple ETL (Extract Transform Load) abstraction designed to implement Filters & Pipes architecture. 
 
 ## Typical Use Cases
 
@@ -10,6 +10,13 @@ Flow PHP ETL is simple ETL (Extract Transform Load) abstraction designed to impl
 * File processing 
 * Pushing data to external systems
 * Data migrations
+
+Using this library makes sense when we need to move data from one place to another, doing some transformations in between. 
+
+For example, let's say we must synchronize data from external API periodically, transform them into our internal
+data structure, filter out things that didn't change, and load in bulk into the database. 
+
+This is a perfect scenario for ETL.
 
 ## Features
 
