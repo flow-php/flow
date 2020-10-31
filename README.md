@@ -46,7 +46,7 @@ This is a perfect scenario for ETL.
 ## Installation 
 
 ```bash
-composer require flow-php/etl
+composer require flow-php/etl:1.x@dev
 ```
 
 ## Usage
