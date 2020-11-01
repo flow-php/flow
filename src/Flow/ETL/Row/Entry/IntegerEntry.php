@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
-use Webmozart\Assert\Assert;
 
 /**
  * @psalm-immutable
@@ -20,7 +20,9 @@ final class IntegerEntry implements Entry
 
     public function __construct(string $name, int $value)
     {
-        Assert::notEmpty($name, 'Entry name cannot be empty');
+        if (empty($name)) {
+            throw InvalidArgumentException::because('Entry name cannot be empty');
+        }
 
         $this->key = \mb_strtolower($name);
         $this->name = $name;
@@ -32,7 +34,9 @@ final class IntegerEntry implements Entry
      */
     public static function from(string $name, $value) : self
     {
-        Assert::integerish($value, \sprintf('Value "%s" can\'t be casted to integer.', $value));
+        if (!\is_numeric($value) || $value != (int) $value) {
+            throw InvalidArgumentException::because(\sprintf('Value "%s" can\'t be casted to integer.', $value));
+        }
 
         return new self($name, (int) $value);
     }

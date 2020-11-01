@@ -6,8 +6,7 @@
     "prefer-stable": true,
     "require": {
         "php": ">=7.4.2",
-        "ext-mbstring": "*",
-        "webmozart/assert": "^1.9"
+        "ext-mbstring": "*"
     },
     "require-dev": {
         "ext-json": "*",

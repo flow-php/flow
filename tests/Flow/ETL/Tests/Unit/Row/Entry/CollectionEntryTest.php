@@ -14,6 +14,16 @@ use PHPUnit\Framework\TestCase;
 
 final class CollectionEntryTest extends TestCase
 {
+    public function test_prevents_from_creating_entry_with_empty_entry_name() : void
+    {
+        $this->expectExceptionMessage('Entry name cannot be empty');
+
+        new CollectionEntry(
+            '',
+            new Entries(new IntegerEntry('id', 1), new StringEntry('name', 'one'))
+        );
+    }
+
     public function test_appends_entries() : void
     {
         $one   = new Entries(new IntegerEntry('id', 1), new StringEntry('name', 'one'));

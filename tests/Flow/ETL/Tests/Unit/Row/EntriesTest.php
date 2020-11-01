@@ -62,6 +62,18 @@ final class EntriesTest extends TestCase
         $this->assertEquals(new Entries($integerEntry, $booleanEntry), $entries->remove('string-entry'));
     }
 
+    public function test_assert_if_entry_exists_when_removing_entry() : void
+    {
+        $entries = new Entries(
+            new IntegerEntry('integer-entry', 100),
+            new StringEntry('string-entry', 'just a string'),
+        );
+
+        $this->expectExceptionMessage('Entry "non-existing-entry" does not exist');
+
+        $entries->remove('non-existing-entry');
+    }
+
     public function test_adds_entry_when_it_does_not_exist() : void
     {
         $stringEntry = new StringEntry('string-entry', 'just a string');

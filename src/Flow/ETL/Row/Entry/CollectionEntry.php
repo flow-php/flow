@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Row\Entry;
 
 use Flow\ArrayComparison\ArrayWeakComparison;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry;
-use Webmozart\Assert\Assert;
 
 /**
  * @psalm-immutable
@@ -25,7 +25,9 @@ final class CollectionEntry implements Entry
 
     public function __construct(string $name, Entries ...$entries)
     {
-        Assert::notEmpty($name, 'Entry name cannot be empty');
+        if (empty($name)) {
+            throw InvalidArgumentException::because('Entry name cannot be empty');
+        }
 
         $this->key = \mb_strtolower($name);
         $this->name = $name;
@@ -44,7 +46,17 @@ final class CollectionEntry implements Entry
     public function entryFromAll(string $name) : Entry
     {
         $entries = \array_unique($this->mapEntries(fn (Entries $entries) => $entries->get($name)->value()));
-        Assert::count($entries, 1, \sprintf('Entry "%s" has different values in "%s" collection entry: [%s]', $name, $this->name, \implode(', ', $entries)));
+
+        if (\count($entries) !== 1) {
+            throw InvalidArgumentException::because(
+                \sprintf(
+                    'Entry "%s" has different values in "%s" collection entry: [%s]',
+                    $name,
+                    $this->name,
+                    \implode(', ', $entries)
+                )
+            );
+        }
 
         return \current($this->entries)->get($name);
     }

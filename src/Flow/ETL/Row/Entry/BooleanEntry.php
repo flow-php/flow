@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
-use Webmozart\Assert\Assert;
 
 /**
  * @psalm-immutable
@@ -20,7 +20,9 @@ final class BooleanEntry implements Entry
 
     public function __construct(string $name, bool $value)
     {
-        Assert::notEmpty($name, 'Entry name cannot be empty');
+        if (empty($name)) {
+            throw InvalidArgumentException::because('Entry name cannot be empty');
+        }
 
         $this->key = \mb_strtolower($name);
         $this->name = $name;
@@ -37,7 +39,10 @@ final class BooleanEntry implements Entry
         }
 
         $value = \mb_strtolower(\trim((string) $value));
-        Assert::oneOf($value, [1, 0, '1', '0', 'true', 'false', 'yes', 'no'], 'Value %s can\'t be casted to boolean.');
+
+        if (!\in_array($value, ['1', '0', 'true', 'false', 'yes', 'no'], true)) {
+            throw InvalidArgumentException::because('Value "%s" can\'t be casted to boolean.', $value);
+        }
 
         if ($value === 'true' || $value === 'yes') {
             return new self($name, true);

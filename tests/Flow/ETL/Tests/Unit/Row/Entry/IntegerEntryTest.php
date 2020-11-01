@@ -9,6 +9,13 @@ use PHPUnit\Framework\TestCase;
 
 final class IntegerEntryTest extends TestCase
 {
+    public function test_prevents_from_creating_entry_with_empty_entry_name() : void
+    {
+        $this->expectExceptionMessage('Entry name cannot be empty');
+
+        new IntegerEntry('', 100);
+    }
+
     public function test_renames_entry() : void
     {
         $entry = new IntegerEntry('entry-name', 100);
@@ -18,11 +25,24 @@ final class IntegerEntryTest extends TestCase
         $this->assertEquals(100, $newEntry->value());
     }
 
-    public function test_prevents_from_creating_entry_from_random_value() : void
+    /**
+     * @dataProvider invalid_entries
+     */
+    public function test_prevents_from_creating_entry_from_invalid_entry_values($value) : void
     {
-        $this->expectExceptionMessage('Value "random-value" can\'t be casted to integer');
+        $this->expectExceptionMessage(\sprintf('Value "%s" can\'t be casted to integer', $value));
 
-        IntegerEntry::from('entry-name', 'random-value');
+        IntegerEntry::from('entry-name', $value);
+    }
+
+    /**
+     * @return \Generator
+     */
+    public function invalid_entries() : \Generator
+    {
+        yield ['random_value'];
+        yield [100.50];
+        yield ['100.5'];
     }
 
     /**

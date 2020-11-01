@@ -15,6 +15,22 @@ use PHPUnit\Framework\TestCase;
 
 final class RowsTest extends TestCase
 {
+    public function test_prevents_from_grouping_rows_by_empty_group_name() : void
+    {
+        $rows = new Rows(
+            Row::create(new IntegerEntry('number', 1), new StringEntry('name', 'one')),
+            Row::create(new IntegerEntry('number', 2), new StringEntry('name', 'two')),
+            Row::create(new IntegerEntry('number', 3), new StringEntry('name', 'three')),
+        );
+
+        $this->expectExceptionMessage('Group name for grouping rows cannot be empty');
+
+        $rows->groupTo(
+            'empty-name',
+            fn (Row $row) => $groupBy = ''
+        );
+    }
+
     /**
      * @dataProvider groups_entries_data_provider
      */

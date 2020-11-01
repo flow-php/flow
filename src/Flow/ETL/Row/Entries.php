@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row;
 
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\Entry\CollectionEntry;
-use Webmozart\Assert\Assert;
 
 /**
  * @psalm-immutable
@@ -21,7 +22,10 @@ final class Entries implements \Countable
     public function __construct(Entry ...$entries)
     {
         $names = \array_map(fn (Entry $entry) => $entry->name(), $entries);
-        Assert::uniqueValues($names, \sprintf('Entry names must be unique, given: [%s]', \implode(', ', $names)));
+
+        if (\count($names) !== \count(\array_unique($names))) {
+            throw InvalidArgumentException::because(\sprintf('Entry names must be unique, given: [%s]', \implode(', ', $names)));
+        }
 
         $this->entries = $entries;
     }
@@ -44,14 +48,18 @@ final class Entries implements \Countable
 
     public function add(Entry $entry) : self
     {
-        Assert::false($this->has($entry->name()), \sprintf('Entry "%s" already exist', $entry->name()));
+        if ($this->has($entry->name()) === true) {
+            throw InvalidLogicException::because(\sprintf('Entry "%s" already exist', $entry->name()));
+        }
 
         return new self(...[...$this->entries, $entry]);
     }
 
     public function remove(string $name) : self
     {
-        Assert::true($this->has($name), \sprintf('Entry "%s" does not exist', $name));
+        if ($this->has($name) === false) {
+            throw InvalidLogicException::because(\sprintf('Entry "%s" does not exist', $name));
+        }
 
         return $this->filter(
             fn (Entry $entry) : bool => !$entry->is($name)

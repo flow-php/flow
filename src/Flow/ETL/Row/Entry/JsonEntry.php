@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Row\Entry;
 
 use Flow\ArrayComparison\ArrayWeakComparison;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
-use Webmozart\Assert\Assert;
 
 /**
  * @psalm-immutable
@@ -29,7 +29,9 @@ final class JsonEntry implements Entry
      */
     public function __construct(string $name, array $value)
     {
-        Assert::notEmpty($name, 'Entry name cannot be empty');
+        if (empty($name)) {
+            throw InvalidArgumentException::because('Entry name cannot be empty');
+        }
 
         $this->key = \mb_strtolower($name);
         $this->name = $name;
@@ -43,7 +45,11 @@ final class JsonEntry implements Entry
      */
     public static function object(string $name, array $value) : self
     {
-        Assert::allString(\array_keys($value), 'All keys for JsonEntry object must be strings');
+        foreach (\array_keys($value) as $key) {
+            if (!\is_string($key)) {
+                throw InvalidArgumentException::because('All keys for JsonEntry object must be strings');
+            }
+        }
 
         $entry = new self($name, $value);
         $entry->object = true;

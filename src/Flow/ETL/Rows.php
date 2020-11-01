@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\CollectionEntry;
-use Webmozart\Assert\Assert;
 
 /**
  * @psalm-immutable
@@ -37,7 +37,10 @@ final class Rows
                 $this->rows,
                 function (Entries $entries, Row $row) use ($groupBy) : Entries {
                     $name = (string) $groupBy($row);
-                    Assert::notEmpty($name, 'Group name for grouping rows cannot be empty');
+
+                    if (empty($name)) {
+                        throw InvalidArgumentException::because('Group name for grouping rows cannot be empty');
+                    }
 
                     if ($entries->has($name)) {
                         return $entries->appendTo($name, $row->entries());

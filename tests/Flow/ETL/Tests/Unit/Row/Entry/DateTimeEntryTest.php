@@ -9,6 +9,13 @@ use PHPUnit\Framework\TestCase;
 
 final class DateTimeEntryTest extends TestCase
 {
+    public function test_prevents_from_creating_entry_with_empty_entry_name() : void
+    {
+        $this->expectExceptionMessage('Entry name cannot be empty');
+
+        new DateTimeEntry('', new \DateTimeImmutable('2020-07-13 12:00'));
+    }
+
     public function test_uses_full_date_time() : void
     {
         $entry = new DateTimeEntry('entry-name', new \DateTimeImmutable('2020-07-13 12:00'));

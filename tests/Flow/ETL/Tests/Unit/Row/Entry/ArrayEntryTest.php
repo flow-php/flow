@@ -10,6 +10,13 @@ use PHPUnit\Framework\TestCase;
 
 final class ArrayEntryTest extends TestCase
 {
+    public function test_prevents_from_creating_entry_with_empty_entry_name() : void
+    {
+        $this->expectExceptionMessage('Entry name cannot be empty');
+
+        new ArrayEntry('', ['id' => 1]);
+    }
+
     public function test_renames_entry() : void
     {
         $entry = new ArrayEntry('entry-name', ['id' => 1, 'name' => 'one']);

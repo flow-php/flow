@@ -10,6 +10,20 @@ use PHPUnit\Framework\TestCase;
 
 final class JsonEntryTest extends TestCase
 {
+    public function test_prevents_from_creating_entry_with_empty_entry_name() : void
+    {
+        $this->expectExceptionMessage('Entry name cannot be empty');
+
+        new JsonEntry('', [1, 2, 3]);
+    }
+
+    public function test_prevent_from_creating_object_with_integers_as_keys_in_entry() : void
+    {
+        $this->expectExceptionMessage('All keys for JsonEntry object must be strings');
+
+        JsonEntry::object('entry-name', [1 => 'one', 'id' => 1, 'name' => 'one']);
+    }
+
     public function test_empty_entry() : void
     {
         $jsonEntry = new JsonEntry('empty', []);

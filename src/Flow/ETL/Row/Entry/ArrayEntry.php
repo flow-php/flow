@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Row\Entry;
 
 use Flow\ArrayComparison\ArrayWeakComparison;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
-use Webmozart\Assert\Assert;
 
 /**
  * @psalm-immutable
@@ -27,7 +27,9 @@ final class ArrayEntry implements Entry
      */
     public function __construct(string $name, array $value)
     {
-        Assert::notEmpty($name, 'Entry name cannot be empty');
+        if (empty($name)) {
+            throw InvalidArgumentException::because('Entry name cannot be empty');
+        }
 
         $this->key = \mb_strtolower($name);
         $this->name = $name;

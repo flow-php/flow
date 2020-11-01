@@ -9,6 +9,13 @@ use PHPUnit\Framework\TestCase;
 
 final class ObjectEntryTest extends TestCase
 {
+    public function test_prevents_from_creating_entry_with_empty_entry_name() : void
+    {
+        $this->expectExceptionMessage('Entry name cannot be empty');
+
+        new ObjectEntry('', new \stdClass());
+    }
+
     public function test_renames_entry() : void
     {
         $entry = new ObjectEntry('entry-name', new \stdClass());
