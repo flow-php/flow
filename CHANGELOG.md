@@ -1,6 +1,8 @@
-## [Unreleased] - 2021-01-18
+## [Unreleased] - 2021-01-24
 
 ### Added
+  - [74ffe8](https://github.com/flow-php/etl/commit/74ffe8cb8fbeed83ecbe74e105fdec0307130d3b) - **aeon-php/automation integration** - [@norberttech](https://github.com/norberttech)
+  - [fe271d](https://github.com/flow-php/etl/commit/fe271d20bd2d9c06503d3bde6b013c3fb693ab26) - **aeon integration & updated dependencies** - [@norberttech](https://github.com/norberttech)
   - [be6ccd](https://github.com/flow-php/etl/commit/be6ccde4190b2ac5ba6177328e434f809e55d1ee) - **Changelog** - [@norberttech](https://github.com/norberttech)
   - [636d83](https://github.com/flow-php/etl/commit/636d8314aa05f7f64a653bf9dfece10ef1916040) - **badges** - [@norberttech](https://github.com/norberttech)
   - [474e90](https://github.com/flow-php/etl/commit/474e9051ae858606a80a21455645048098e25fab) - **description of use case into README** - [@norberttech](https://github.com/norberttech)
