@@ -10,7 +10,7 @@
     },
     "require-dev": {
         "ext-json": "*",
-        "phpunit/phpunit": "^9.4"
+        "phpunit/phpunit": "^9.5"
     },
     "config": {
         "optimize-autoloader": true,
