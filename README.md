@@ -1,9 +1,9 @@
 # Extract Transform Load - Abstraction
 
 [![Minimum PHP Version](https://img.shields.io/badge/php-%3E%3D%207.4-8892BF.svg)](https://php.net/)
-[![Latest Stable Version](https://poser.pugx.org/flow-php/etl/v)](//packagist.org/packages/flow-php/etl)
-[![Latest Unstable Version](https://poser.pugx.org/flow-php/etl/v/unstable)](//packagist.org/packages/flow-php/etl)
-[![License](https://poser.pugx.org/flow-php/etl/license)](//packagist.org/packages/flow-php/etl)
+[![Latest Stable Version](https://poser.pugx.org/flow-php/etl/v)](https://packagist.org/packages/flow-php/etl)
+[![Latest Unstable Version](https://poser.pugx.org/flow-php/etl/v/unstable)](https://packagist.org/packages/flow-php/etl)
+[![License](https://poser.pugx.org/flow-php/etl/license)](https://packagist.org/packages/flow-php/etl)
 ![Tests](https://github.com/flow-php/etl/workflows/Tests/badge.svg?branch=1.x)
 
 ## Description
@@ -40,7 +40,7 @@ This is a perfect scenario for ETL.
   * [IntegerEntry](src/Flow/ETL/Row/Entry/IntegerEntry.php)
   * [JsonEntry](src/Flow/ETL/Row/Entry/JsonEntry.php)
   * [NullEntry](src/Flow/ETL/Row/Entry/NullEntry.php)
-  * [ObjectEntryEntry](src/Flow/ETL/Row/Entry/ObjectEntryEntry.php)
+  * [ObjectEntryEntry](src/Flow/ETL/Row/Entry/ObjectEntry.php)
   * [StringEntry](src/Flow/ETL/Row/Entry/StringEntry.php)
 
 ## Installation 
