@@ -1,4 +1,4 @@
-## [Unreleased] - 2021-01-24
+## [Unreleased] - 2021-01-30
 
 ### Added
 - [22bc54](https://github.com/flow-php/etl/commit/22bc549f1d1a5e608e525daec8989f52aab1782b) - **norberttech/md-link-linter integration** - [@norberttech](https://github.com/norberttech)
@@ -15,6 +15,9 @@
 - [#3](https://github.com/flow-php/etl/pull/3) - **Remove Webmozart/Assert dependency** - [@Wiktor6](https://github.com/Wiktor6)
 - [55faa8](https://github.com/flow-php/etl/commit/55faa8edfed3973f54e31b3af57a4ba171050a85) - **Update README.md** - [@norberttech](https://github.com/norberttech)
 - [e48062](https://github.com/flow-php/etl/commit/e48062890cd84e655e1162305086f67148347b83) - **Intial commit** - [@norberttech](https://github.com/norberttech)
+
+### Fixed
+- [1a6eec](https://github.com/flow-php/etl/commit/1a6eec01837f25cf1d6ff7c041996ff7b8b017e7) - **failing tests** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
 - [420f4c](https://github.com/flow-php/etl/commit/420f4cbc2223b0011bd071bf06691346fd8c0e45) - **unused php extension from dev requirements** - [@norberttech](https://github.com/norberttech)
