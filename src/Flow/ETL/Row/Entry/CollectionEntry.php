@@ -58,6 +58,7 @@ final class CollectionEntry implements Entry
             );
         }
 
+        /** @phpstan-ignore-next-line */
         return \current($this->entries)->get($name);
     }
 
