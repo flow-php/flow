@@ -1,6 +1,7 @@
-## [Unreleased] - 2021-02-03
+## [Unreleased] - 2021-03-12
 
 ### Added
+- [#10](https://github.com/flow-php/etl/pull/10) - **Run Tests section** - [@peter279k](https://github.com/peter279k)
 - [22bc54](https://github.com/flow-php/etl/commit/22bc549f1d1a5e608e525daec8989f52aab1782b) - **norberttech/md-link-linter integration** - [@norberttech](https://github.com/norberttech)
 - [74ffe8](https://github.com/flow-php/etl/commit/74ffe8cb8fbeed83ecbe74e105fdec0307130d3b) - **aeon-php/automation integration** - [@norberttech](https://github.com/norberttech)
 - [fe271d](https://github.com/flow-php/etl/commit/fe271d20bd2d9c06503d3bde6b013c3fb693ab26) - **aeon integration & updated dependencies** - [@norberttech](https://github.com/norberttech)
