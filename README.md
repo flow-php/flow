@@ -8,33 +8,33 @@
 
 ## Description
 
-Flow PHP ETL is a simple ETL (Extract Transform Load) abstraction designed to implement Filters & Pipes architecture. 
+Flow PHP ETL is a simple ETL (Extract Transform Load) abstraction designed to implement Filters & Pipes architecture.
 
 ## Typical Use Cases
 
 * Sync data from external systems (API)
-* File processing 
+* File processing
 * Pushing data to external systems
 * Data migrations
 
-Using this library makes sense when we need to move data from one place to another, doing some transformations in between. 
+Using this library makes sense when we need to move data from one place to another, doing some transformations in between.
 
 For example, let's say we must synchronize data from external API periodically, transform them into our internal
-data structure, filter out things that didn't change, and load in bulk into the database. 
+data structure, filter out things that didn't change, and load in bulk into the database.
 
 This is a perfect scenario for ETL.
 
 ## Features
 
-* Low memory consumption even when processing thousands of records 
-* Type safe Rows/Row/Entry abstractions 
+* Low memory consumption even when processing thousands of records
+* Type safe Rows/Row/Entry abstractions
 * Filtering
-* Grouping  
-* Built in Rows objects comparison 
-* Rich collection of Entry implementations 
+* Grouping
+* Built in Rows objects comparison
+* Rich collection of Entry implementations
   * [ArrayEntry](src/Flow/ETL/Row/Entry/ArrayEntry.php)
   * [BooleanEntry](src/Flow/ETL/Row/Entry/BooleanEntry.php)
-  * [CollectionEntry](src/Flow/ETL/Row/Entry/CollectionEntry.php)    
+  * [CollectionEntry](src/Flow/ETL/Row/Entry/CollectionEntry.php)
   * [DateEntry](src/Flow/ETL/Row/Entry/DateEntry.php)
   * [DateTimeEntry](src/Flow/ETL/Row/Entry/DateTimeEntry.php)
   * [IntegerEntry](src/Flow/ETL/Row/Entry/IntegerEntry.php)
@@ -43,7 +43,7 @@ This is a perfect scenario for ETL.
   * [ObjectEntryEntry](src/Flow/ETL/Row/Entry/ObjectEntry.php)
   * [StringEntry](src/Flow/ETL/Row/Entry/StringEntry.php)
 
-## Installation 
+## Installation
 
 ```bash
 composer require flow-php/etl:1.x@dev
@@ -51,7 +51,7 @@ composer require flow-php/etl:1.x@dev
 
 ## Usage
 
-```php 
+```php
 <?php
 
 use Flow\ETL\ETL;
@@ -100,3 +100,14 @@ ETL::extract($extractor)
     ->transform($transformer)
     ->load($loader);
 ```
+
+## Run Tests
+
+In order to execute full test suite, please launch following command:
+
+```bash
+composer test
+```
+
+It's recommended to use [pcov](https://pecl.php.net/package/pcov) for code coverage however you can also use
+xdebug by setting `XDEBUG_MODE=coverage` env variable.
