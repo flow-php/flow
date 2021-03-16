@@ -87,6 +87,9 @@ final class CollectionEntry implements Entry
         return $this->mapEntries(fn (Entries $entries) : array => $entries->toArray());
     }
 
+    /**
+     * @psalm-suppress InvalidArgument
+     */
     public function is(string $name) : bool
     {
         return $this->key === \mb_strtolower($name);
@@ -98,7 +101,7 @@ final class CollectionEntry implements Entry
     }
 
     /**
-     * @psalm-param callable(Entries) : bool $filter
+     * @psalm-param pure-callable(Entries) : bool $filter
      */
     public function filterEntries(callable $filter) : self
     {
@@ -119,6 +122,7 @@ final class CollectionEntry implements Entry
     }
 
     /**
+     * @psalm-suppress ImpureFunctionCall
      * @phpstan-ignore-next-line
      */
     private function mapEntries(callable $callable) : array

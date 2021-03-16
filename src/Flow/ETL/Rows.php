@@ -28,6 +28,7 @@ final class Rows
     }
 
     /**
+     * @psalm-suppress MixedArgument
      * @pslam-param callable (Row) : string|int|float $groupBy  Returns group identifier for the given Row
      */
     public function groupTo(string $collectionEntryName, callable $groupBy) : self
@@ -86,6 +87,9 @@ final class Rows
     }
 
     /**
+     * @psalm-param pure-callable(Row) : bool $callable
+     * @psalm-suppress MixedArgumentTypeCoercion
+     *
      * @param callable(Row) : bool $callable
      */
     public function filter(callable $callable) : self
@@ -94,6 +98,7 @@ final class Rows
     }
 
     /**
+     * @psalm-param pure-callable(Row) : Row $callable
      * @psalm-suppress MixedArgument Psalm doesn't understand that array_map will return array<int, Row>
      *
      * @param callable(Row) : Row $callable
@@ -104,6 +109,19 @@ final class Rows
     }
 
     /**
+     * @psalm-param pure-callable(Row) : Row $callable
+     *
+     * @param callable(Row) : Row $callable
+     */
+    public function each(callable $callable) : void
+    {
+        \array_map($callable, $this->rows);
+    }
+
+    /**
+     * @psalm-param pure-callable(mixed, Row) : mixed $callable
+     * @psalm-suppress MixedAssignment
+     *
      * @param callable(mixed, Row) : mixed $callable
      * @param null|mixed $input
      *

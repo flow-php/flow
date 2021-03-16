@@ -96,6 +96,7 @@ final class Entries implements \Countable
     }
 
     /**
+     * @psalm-suppress ImpureFunctionCall
      * @psalm-suppress MixedReturnTypeCoercion
      * @template ReturnType
      *
@@ -109,6 +110,9 @@ final class Entries implements \Countable
     }
 
     /**
+     * @psalm-suppress ImpureFunctionCall
+     * @psalm-suppress MixedArgumentTypeCoercion
+     *
      * @param callable(Entry) : bool $callable
      */
     public function filter(callable $callable) : self
