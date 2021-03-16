@@ -1,6 +1,8 @@
-## [Unreleased] - 2021-03-12
+## [Unreleased] - 2021-03-16
 
 ### Added
+- [#13](https://github.com/flow-php/etl/pull/13) - **Added each method** - [@DawidSajdak](https://github.com/DawidSajdak)
+- [#14](https://github.com/flow-php/etl/pull/14) - **Added PR template** - [@DawidSajdak](https://github.com/DawidSajdak)
 - [#10](https://github.com/flow-php/etl/pull/10) - **Run Tests section** - [@peter279k](https://github.com/peter279k)
 - [22bc54](https://github.com/flow-php/etl/commit/22bc549f1d1a5e608e525daec8989f52aab1782b) - **norberttech/md-link-linter integration** - [@norberttech](https://github.com/norberttech)
 - [74ffe8](https://github.com/flow-php/etl/commit/74ffe8cb8fbeed83ecbe74e105fdec0307130d3b) - **aeon-php/automation integration** - [@norberttech](https://github.com/norberttech)
@@ -18,6 +20,7 @@
 - [e48062](https://github.com/flow-php/etl/commit/e48062890cd84e655e1162305086f67148347b83) - **Intial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#14](https://github.com/flow-php/etl/pull/14) - **Fixed Github action for checking PR description** - [@DawidSajdak](https://github.com/DawidSajdak)
 - [1a6eec](https://github.com/flow-php/etl/commit/1a6eec01837f25cf1d6ff7c041996ff7b8b017e7) - **failing tests** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
