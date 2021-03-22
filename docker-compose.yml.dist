@@ -1,0 +1,10 @@
+services:
+    postgres:
+        image: postgres:11.3-alpine
+        container_name: flow-test-db
+        ports:
+            - 5432:5432
+        environment:
+            - POSTGRES_USER=postgres
+            - POSTGRES_PASSWORD=postgres
+            - POSTGRES_DB=postgres

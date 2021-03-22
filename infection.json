@@ -1,0 +1,26 @@
+{
+    "timeout": 100,
+    "source": {
+        "directories": [
+            "src"
+        ]
+    },
+    "logs": {
+        "text": "./var/infection/infection.log",
+        "summary": "./var/infection/infection_summary.log",
+        "debug": "./var/infection/infection_debug.log",
+        "badge": {
+            "branch": "1.x"
+        }
+    },
+    "mutators": {
+        "@default": true
+    },
+    "testFramework": "phpunit",
+    "bootstrap": "./vendor/autoload.php",
+    "phpUnit": {
+        "customPath": "tools/vendor/bin/phpunit"
+    },
+    "minMsi": 100,
+    "minCoveredMsi": 100
+}

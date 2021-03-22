@@ -1,0 +1,11 @@
+{
+  "name": "flow-php/etl-adapter-dbal-tools",
+  "description": "ETL Adapter: DBAL - Tools",
+  "require-dev": {
+    "phpunit/phpunit": "^9.5",
+    "vimeo/psalm": "^4.6",
+    "phpstan/phpstan": "^0.12.82",
+    "infection/infection": "^0.21.4",
+    "friendsofphp/php-cs-fixer": "^2.18"
+  }
+}

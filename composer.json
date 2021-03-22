@@ -1,0 +1,52 @@
+{
+    "name": "flow-php/etl-adapter-dbal",
+    "type": "library",
+    "license": "MIT",
+    "description": "ETL adapter for bulk operations using Doctrine DBAL Bulk",
+    "keywords": ["doctrine", "dbal", "bulk", "insert", "upsert", "etl", "loader"],
+    "minimum-stability": "dev",
+    "require": {
+        "php": ">=7.4.2",
+        "flow-php/etl": "^1.0@dev",
+        "flow-php/doctrine-dbal-bulk": "^1.0@dev"
+    },
+    "autoload": {
+        "psr-4": {
+            "Flow\\ETL\\Adapter\\Doctrine\\": [
+                "src/Flow/ETL/Adapter/Doctrine"
+            ]
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Flow\\ETL\\Adapter\\Doctrine\\Tests\\": [
+                "tests/Flow/ETL/Adapter/Doctrine/Tests"
+            ]
+        }
+    },
+    "prefer-stable": true,
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "scripts": {
+        "cs:php:fix": "tools/vendor/bin/php-cs-fixer fix",
+
+        "build": [
+            "@static:analyze",
+            "@test",
+            "@test:mutation"
+        ],
+        "static:analyze": [
+            "tools/vendor/bin/psalm",
+            "tools/vendor/bin/phpstan analyze -c phpstan.neon",
+            "tools/vendor/bin/php-cs-fixer fix --dry-run"
+        ],
+        "test": [
+            "tools/vendor/bin/phpunit"
+        ],
+        "test:mutation": [
+            "tools/vendor/bin/infection -j2"
+        ]
+    }
+}
