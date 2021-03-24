@@ -1,4 +1,4 @@
-## [Unreleased] - 2021-03-18
+## [Unreleased] - 2021-03-24
 
 ### Added
 - [#13](https://github.com/flow-php/etl/pull/13) - **Added each method** - [@DawidSajdak](https://github.com/DawidSajdak)
