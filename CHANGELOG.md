@@ -1,4 +1,4 @@
-## [Unreleased] - 2021-03-24
+## [Unreleased] - 2021-03-27
 
 ### Added
 - [#13](https://github.com/flow-php/etl/pull/13) - **Added each method** - [@DawidSajdak](https://github.com/DawidSajdak)
@@ -15,6 +15,7 @@
 - [856870](https://github.com/flow-php/etl/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#17](https://github.com/flow-php/etl/pull/17) - **replaced phive with composer to handle tools** - [@norberttech](https://github.com/norberttech)
 - [c66f6f](https://github.com/flow-php/etl/commit/c66f6f6bdcfa8c3d69cd74e72fe7bf249bc5770e) - **Update pull-request-description-check.yml** - [@norberttech](https://github.com/norberttech)
 - [#3](https://github.com/flow-php/etl/pull/3) - **Remove Webmozart/Assert dependency** - [@Wiktor6](https://github.com/Wiktor6)
 - [55faa8](https://github.com/flow-php/etl/commit/55faa8edfed3973f54e31b3af57a4ba171050a85) - **Update README.md** - [@norberttech](https://github.com/norberttech)
