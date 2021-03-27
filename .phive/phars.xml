@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<phive xmlns="https://phar.io/phive">
-  <phar name="php-cs-fixer" version="^2.18.3" installed="2.18.3" location="./tools/php-cs-fixer" copy="true"/>
-  <phar name="infection" version="^0.21.4" installed="0.21.4" location="./tools/infection" copy="true"/>
-  <phar name="phpstan" version="^0.12.81" installed="0.12.81" location="./tools/phpstan" copy="true"/>
-  <phar name="psalm" version="^4.5.2" installed="4.5.2" location="./tools/psalm" copy="true"/>
-</phive>

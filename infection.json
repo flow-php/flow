@@ -21,6 +21,9 @@
   },
   "testFramework": "phpunit",
   "bootstrap": "./vendor/autoload.php",
+  "phpUnit": {
+    "customPath": "tools\/vendor\/bin\/phpunit"
+  },
   "minMsi": 60,
   "minCoveredMsi": 60
 }

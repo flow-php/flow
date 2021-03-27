@@ -31,7 +31,7 @@ jobs:
         uses: "shivammathur/setup-php@v2"
         with:
           coverage: pcov
-          tools: phive, composer:v2
+          tools: composer:v2
           php-version: "${{ matrix.php-version }}"
           ini-values: memory_limit=-1
 
@@ -62,7 +62,8 @@ jobs:
         run: "composer install --no-interaction --no-progress --no-suggest"
 
       - name: "Install tools"
-        run: "phive install --trust-gpg-keys E82B2FB314E9906E,C5095986493B4AA0,CF1A108D0E7AE720,12CE0F1D262429A5 --force-accept-unsigned"
+        run: "composer install --no-interaction --no-progress --no-suggest"
+        working-directory: "./tools"
 
       - name: "Static Analyze"
         run: "composer static:analyze"

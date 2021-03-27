@@ -5,12 +5,9 @@
     "keywords": ["etl", "extract", "transform", "load"],
     "prefer-stable": true,
     "require": {
-        "php": ">=7.4.2",
-        "ext-mbstring": "*"
-    },
-    "require-dev": {
-        "ext-json": "*",
-        "phpunit/phpunit": "^9.5"
+        "php": "^7.4 | ^8.0",
+        "ext-mbstring": "*",
+        "ext-json": "*"
     },
     "config": {
         "optimize-autoloader": true,
@@ -36,16 +33,16 @@
             "@test:mutation"
         ],
         "test": [
-            "phpunit"
+            "tools/vendor/bin/phpunit"
         ],
         "test:mutation": [
-            "tools/infection -j2"
+            "tools/vendor/bin/infection -j2"
         ],
         "static:analyze": [
-            "tools/psalm --output-format=compact",
-            "tools/phpstan analyze -c phpstan.neon",
-            "tools/php-cs-fixer fix --dry-run"
+            "tools/vendor/bin/psalm --output-format=compact",
+            "tools/vendor/bin/phpstan analyze -c phpstan.neon",
+            "tools/vendor/bin/php-cs-fixer fix --dry-run"
         ],
-        "cs:php:fix": "tools/php-cs-fixer fix"
+        "cs:php:fix": "tools/vendor/bin/php-cs-fixer fix"
     }
 }
