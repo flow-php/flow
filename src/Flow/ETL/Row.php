@@ -101,7 +101,7 @@ final class Row
     }
 
     /**
-     * @phpstan-ignore-next-line
+     * @return array<string, mixed>
      */
     public function toArray() : array
     {

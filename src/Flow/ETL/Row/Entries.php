@@ -121,8 +121,9 @@ final class Entries implements \Countable
     }
 
     /**
-     * @phpstan-ignore-next-line
      * @psalm-suppress MissingClosureReturnType
+     *
+     * @return array<string, mixed>
      */
     public function toArray() : array
     {
