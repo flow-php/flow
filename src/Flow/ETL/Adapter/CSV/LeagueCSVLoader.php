@@ -25,6 +25,7 @@ final class LeagueCSVLoader implements Loader
 
     public function load(Rows $rows) : void
     {
+        /** @psalm-suppress ImpureMethodCall */
         $this->writer->insertAll($rows->reduceToArray($this->rowEntryName));
     }
 }
