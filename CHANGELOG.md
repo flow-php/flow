@@ -6,6 +6,9 @@
 - [63633c](https://github.com/flow-php/etl-adapter-csv/commit/63633cae23ccfa2222925a1c94c9acf9aca65e7d) - **docs** - [@norberttech](https://github.com/norberttech)
 - [c68ad6](https://github.com/flow-php/etl-adapter-csv/commit/c68ad6c579a3954471e3c9c7233d3bed27cc1eb2) - **Initial commit** - [@norberttech](https://github.com/norberttech)
 
+### Fixed
+- [f0ef40](https://github.com/flow-php/etl-adapter-csv/commit/f0ef40204297eb924a9d0cbb8ef89510ba9bde8a) - **invalid variable name** - [@norberttech](https://github.com/norberttech)
+
 ### Removed
 - [57c585](https://github.com/flow-php/etl-adapter-csv/commit/57c5858a31b76eb255c450d7ad0af9b2fac5f11d) - **redundant workflow** - [@norberttech](https://github.com/norberttech)
 
