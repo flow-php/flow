@@ -44,13 +44,13 @@ use League\Csv\Writer;
 $path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.csv';
 $writer = Writer::createFromPath($path, 'w+');
 
-$extractor = new LeagueCSVLoader($writer);
+$loader = new LeagueCSVLoader($writer);
 
-$extractor->load(new Rows(
+$loader->load(new Rows(
     Row::create(new Row\Entry\ArrayEntry('row', ['id', 'name'])),
     Row::create(new Row\Entry\ArrayEntry('row', [1, 'Norbert'])),
 ));
-$extractor->load(new Rows(
+$loader->load(new Rows(
     Row::create(new Row\Entry\ArrayEntry('row', [2, 'Tomek'])),
     Row::create(new Row\Entry\ArrayEntry('row', [3, 'Dawid'])),
 ));
