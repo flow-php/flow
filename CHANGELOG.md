@@ -1,6 +1,7 @@
-## [Unreleased] - 2021-03-29
+## [Unreleased] - 2021-03-30
 
 ### Changed
+- [be775d](https://github.com/flow-php/etl-adapter-csv/commit/be775d28c349efbf267704d99d7c6d392788b9e1) - **docs** - [@norberttech](https://github.com/norberttech)
 - [6d2a31](https://github.com/flow-php/etl-adapter-csv/commit/6d2a31be222529fcf8ce53a74702544839fd60ed) - **tools dependencieS** - [@norberttech](https://github.com/norberttech)
 - [63633c](https://github.com/flow-php/etl-adapter-csv/commit/63633cae23ccfa2222925a1c94c9acf9aca65e7d) - **docs** - [@norberttech](https://github.com/norberttech)
 - [c68ad6](https://github.com/flow-php/etl-adapter-csv/commit/c68ad6c579a3954471e3c9c7233d3bed27cc1eb2) - **Initial commit** - [@norberttech](https://github.com/norberttech)
