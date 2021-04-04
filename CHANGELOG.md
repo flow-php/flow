@@ -1,6 +1,8 @@
-## [Unreleased] - 2021-04-01
+## [Unreleased] - 2021-04-04
 
 ### Added
+- [#21](https://github.com/flow-php/etl/pull/21) - **Rows::sort(callback $callable) : Rows** - [@norberttech](https://github.com/norberttech)
+- [#21](https://github.com/flow-php/etl/pull/21) - **Rows::find(callback $callable) : ?Row** - [@norberttech](https://github.com/norberttech)
 - [#13](https://github.com/flow-php/etl/pull/13) - **Added each method** - [@DawidSajdak](https://github.com/DawidSajdak)
 - [#14](https://github.com/flow-php/etl/pull/14) - **Added PR template** - [@DawidSajdak](https://github.com/DawidSajdak)
 - [#10](https://github.com/flow-php/etl/pull/10) - **Run Tests section** - [@peter279k](https://github.com/peter279k)
