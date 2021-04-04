@@ -56,6 +56,19 @@ final class Rows
         );
     }
 
+    /**
+     * @psalm-param pure-callable(Row, Row) : int $callback
+     *
+     * @return $this
+     */
+    public function sort(callable $callback) : self
+    {
+        $rows = $this->rows;
+        \usort($rows, $callback);
+
+        return new self(...$rows);
+    }
+
     public function sortAscending(string $name) : self
     {
         $rows = $this->rows;
@@ -88,7 +101,6 @@ final class Rows
 
     /**
      * @psalm-param pure-callable(Row) : bool $callable
-     * @psalm-suppress MixedArgumentTypeCoercion
      *
      * @param callable(Row) : bool $callable
      */
@@ -98,8 +110,27 @@ final class Rows
     }
 
     /**
+     * @psalm-param pure-callable(Row) : bool $callable
+     */
+    public function find(callable $callable) : ?Row
+    {
+        $rows = $this->rows;
+
+        if (!\count($rows)) {
+            return null;
+        }
+
+        $results = \array_filter($rows, $callable);
+
+        if (\count($results)) {
+            return \current($results);
+        }
+
+        return null;
+    }
+
+    /**
      * @psalm-param pure-callable(Row) : Row $callable
-     * @psalm-suppress MixedArgument Psalm doesn't understand that array_map will return array<int, Row>
      *
      * @param callable(Row) : Row $callable
      */
@@ -120,7 +151,6 @@ final class Rows
 
     /**
      * @psalm-param pure-callable(mixed, Row) : mixed $callable
-     * @psalm-suppress MixedAssignment
      *
      * @param callable(mixed, Row) : mixed $callable
      * @param null|mixed $input

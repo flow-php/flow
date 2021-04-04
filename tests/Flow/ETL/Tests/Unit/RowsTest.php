@@ -97,6 +97,24 @@ final class RowsTest extends TestCase
         $this->assertNotEquals($descending, $rows);
     }
 
+    public function test_sort() : void
+    {
+        $rows = new Rows(
+            $three = Row::create(new IntegerEntry('number', 3), new StringEntry('name', 'three')),
+            $one   = Row::create(new IntegerEntry('number', 1), new StringEntry('name', 'one')),
+            $five   = Row::create(new IntegerEntry('number', 5), new StringEntry('name', 'five')),
+            $two   = Row::create(new IntegerEntry('number', 2), new StringEntry('name', 'two')),
+            $four  = Row::create(new IntegerEntry('number', 4), new StringEntry('name', 'four')),
+        );
+
+        $sort = $rows->sort(function (Row $row, Row $nextRow) : int {
+            return $row->valueOf('number') <=> $nextRow->valueOf('number');
+        });
+
+        $this->assertEquals(new Rows($one, $two, $three, $four, $five), $sort);
+        $this->assertNotEquals($sort, $rows);
+    }
+
     public function test_returns_first_row() : void
     {
         $rows = new Rows(
@@ -123,6 +141,33 @@ final class RowsTest extends TestCase
 
         $this->assertEquals(new Rows($two, $four), $rows->filter($evenRows));
         $this->assertEquals(new Rows($one, $three, $five), $rows->filter($oddRows));
+    }
+
+    public function test_find() : void
+    {
+        $rows = new Rows(
+            $one   = Row::create(new IntegerEntry('number', 1), new StringEntry('name', 'one')),
+            $two   = Row::create(new IntegerEntry('number', 2), new StringEntry('name', 'two')),
+            $three = Row::create(new IntegerEntry('number', 3), new StringEntry('name', 'three')),
+            $four  = Row::create(new IntegerEntry('number', 4), new StringEntry('name', 'four')),
+            $three1 = Row::create(new IntegerEntry('number', 3), new StringEntry('name', 'three')),
+        );
+
+        $this->assertSame($three, $rows->find(fn (Row $row) : bool => $row->valueOf('number') === 3));
+        $this->assertNotSame($three1, $rows->find(fn (Row $row) : bool => $row->valueOf('number') === 3));
+    }
+
+    public function test_find_without_results() : void
+    {
+        $rows = new Rows(
+            $one   = Row::create(new IntegerEntry('number', 1), new StringEntry('name', 'one')),
+            $two   = Row::create(new IntegerEntry('number', 2), new StringEntry('name', 'two')),
+            $three = Row::create(new IntegerEntry('number', 3), new StringEntry('name', 'three')),
+            $four  = Row::create(new IntegerEntry('number', 4), new StringEntry('name', 'four')),
+            $three1 = Row::create(new IntegerEntry('number', 3), new StringEntry('name', 'three')),
+        );
+
+        $this->assertNull($rows->find(fn (Row $row) : bool => $row->valueOf('number') === 5));
     }
 
     public function test_transforms_rows_to_array() : void
