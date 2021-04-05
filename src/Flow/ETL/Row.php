@@ -35,6 +35,9 @@ final class Row
         return $this->entries;
     }
 
+    /**
+     * @throws RuntimeException
+     */
     public function get(string $name) : Entry
     {
         return $this->entries->get($name);

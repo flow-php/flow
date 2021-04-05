@@ -31,10 +31,6 @@ final class NullEntry implements Entry
         return $this->name;
     }
 
-    /**
-     * @psalm-suppress MissingReturnType
-     * @phpstan-ignore-next-line
-     */
     public function value()
     {
         return null;

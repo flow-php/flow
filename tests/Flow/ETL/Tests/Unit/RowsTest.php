@@ -11,6 +11,7 @@ use Flow\ETL\Row\Entry\CollectionEntry;
 use Flow\ETL\Row\Entry\DateTimeEntry;
 use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Row\Entry\NullEntry;
+use Flow\ETL\Row\Entry\ObjectEntry;
 use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Rows;
 use PHPUnit\Framework\TestCase;
@@ -338,6 +339,35 @@ final class RowsTest extends TestCase
             ),
             $merged
         );
+    }
+
+    /**
+     * @dataProvider unique_rows_provider
+     */
+    public function test_rows_unique(Rows $expected, Rows $notUnique, ?Row\Comparator $comparator = null) : void
+    {
+        $this->assertEquals($expected, $notUnique->unique($comparator));
+    }
+
+    public function unique_rows_provider() : \Generator
+    {
+        yield 'simple identical rows' => [
+            $expected = new Rows(Row::create(new IntegerEntry('number', 1))),
+            $notUnique = new Rows(
+                Row::create(new IntegerEntry('number', 1)),
+                Row::create(new IntegerEntry('number', 1))
+            ),
+            $comparator = null,
+        ];
+
+        yield 'simple identical rows with objects' => [
+            $expected = new Rows(Row::create(new ObjectEntry('object', new \stdClass()))),
+            $notUnique = new Rows(
+                Row::create(new ObjectEntry('object', $object = new \stdClass())),
+                Row::create(new ObjectEntry('object', $object = new \stdClass()))
+            ),
+            $comparator = new Row\Comparator\WeakObjectComparator(),
+        ];
     }
 
     public function test_sorts_entries_in_all_rows() : void

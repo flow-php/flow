@@ -6,6 +6,8 @@ namespace Flow\ETL;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Row\Comparator;
+use Flow\ETL\Row\Comparator\NativeComparator;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\CollectionEntry;
@@ -274,5 +276,33 @@ final class Rows
         return new self(
             ...\array_merge($this->rows, $rows->rows)
         );
+    }
+
+    public function unique(Comparator $comparator = null) : self
+    {
+        $comparator = $comparator === null ? new NativeComparator() : $comparator;
+
+        /**
+         * @var Row[] $uniqueRows
+         */
+        $uniqueRows = [];
+
+        foreach ($this->rows as $row) {
+            $alreadyAdded = false;
+
+            foreach ($uniqueRows as $uniqueRow) {
+                if ($comparator->equals($row, $uniqueRow)) {
+                    $alreadyAdded = true;
+
+                    break;
+                }
+            }
+
+            if (!$alreadyAdded) {
+                $uniqueRows[] = $row;
+            }
+        }
+
+        return new self(...$uniqueRows);
     }
 }

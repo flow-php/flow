@@ -16,8 +16,7 @@ interface Entry
     public function is(string $name) : bool;
 
     /**
-     * @phpstan-ignore-next-line
-     * @psalm-suppress MissingReturnType
+     * @return mixed
      */
     public function value();
 

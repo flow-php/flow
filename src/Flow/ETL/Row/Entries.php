@@ -35,6 +35,9 @@ final class Entries implements \Countable
         return $this->find($name) !== null;
     }
 
+    /**
+     * @throws RuntimeException
+     */
     public function get(string $name) : Entry
     {
         $entry = $this->find($name);
@@ -161,6 +164,14 @@ final class Entries implements \Countable
         }
 
         return true;
+    }
+
+    /**
+     * @return Entry[]
+     */
+    public function all() : array
+    {
+        return $this->entries;
     }
 
     private function find(string $name) : ?Entry
