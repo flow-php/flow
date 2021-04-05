@@ -1,6 +1,7 @@
 ## [Unreleased] - 2021-04-05
 
 ### Added
+- [#25](https://github.com/flow-php/etl/pull/25) - **Sort all rows entires** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#23](https://github.com/flow-php/etl/pull/23) - **merge() method for rows** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#21](https://github.com/flow-php/etl/pull/21) - **Rows::sort(callback $callable) : Rows** - [@norberttech](https://github.com/norberttech)
 - [#21](https://github.com/flow-php/etl/pull/21) - **Rows::find(callback $callable) : ?Row** - [@norberttech](https://github.com/norberttech)
