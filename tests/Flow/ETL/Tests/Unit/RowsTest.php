@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit;
 
 use Flow\ETL\Row;
+use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry\BooleanEntry;
 use Flow\ETL\Row\Entry\CollectionEntry;
+use Flow\ETL\Row\Entry\DateTimeEntry;
 use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Row\Entry\NullEntry;
 use Flow\ETL\Row\Entry\StringEntry;
@@ -335,6 +337,44 @@ final class RowsTest extends TestCase
                 Row::create(new IntegerEntry('id', 5))
             ),
             $merged
+        );
+    }
+
+    public function test_sorts_entries_in_all_rows() : void
+    {
+        $rows = new Rows(
+            Row::create(
+                $rowOneId = new IntegerEntry('id', 1),
+                $rowOneDeleted = new BooleanEntry('deleted', true),
+                $rowOnePhase = new NullEntry('phase'),
+                $rowOneCreatedAt = new DateTimeEntry('created-at', new \DateTimeImmutable('2020-08-13 15:00')),
+            ),
+            Row::create(
+                $rowTwoDeleted = new BooleanEntry('deleted', true),
+                $rowTwoCreatedAt = new DateTimeEntry('created-at', new \DateTimeImmutable('2020-08-13 15:00')),
+                $rowTwoId = new IntegerEntry('id', 1),
+                $rowTwoPhase = new NullEntry('phase'),
+            ),
+        );
+
+        $sorted = $rows->sortEntries();
+
+        $this->assertEquals(
+            new Rows(
+                Row::create(
+                    $rowOneCreatedAt = new DateTimeEntry('created-at', new \DateTimeImmutable('2020-08-13 15:00')),
+                    $rowOneDeleted = new BooleanEntry('deleted', true),
+                    $rowOneId = new IntegerEntry('id', 1),
+                    $rowOnePhase = new NullEntry('phase'),
+                ),
+                Row::create(
+                    $rowTwoCreatedAt = new DateTimeEntry('created-at', new \DateTimeImmutable('2020-08-13 15:00')),
+                    $rowTwoDeleted = new BooleanEntry('deleted', true),
+                    $rowTwoId = new IntegerEntry('id', 1),
+                    $rowTwoPhase = new NullEntry('phase'),
+                )
+            ),
+            $sorted
         );
     }
 }

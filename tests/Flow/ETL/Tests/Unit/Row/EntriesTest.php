@@ -178,4 +178,40 @@ final class EntriesTest extends TestCase
             $entries->toArray()
         );
     }
+
+    public function test_sorts_entries_by_name() : void
+    {
+        $entries = new Entries(
+            $id = new IntegerEntry('id', 1234),
+            $deleted = new BooleanEntry('deleted', false),
+            $createdAt = new DateTimeEntry('created-at', new \DateTimeImmutable('2020-07-13 15:00')),
+            $expirationDate = new DateEntry('expiration-date', new \DateTimeImmutable('2020-08-24')),
+            $phase = new NullEntry('phase'),
+            $items = new CollectionEntry(
+                'items',
+                new Entries(new IntegerEntry('item-id', 1), new StringEntry('name', 'one')),
+                new Entries(new IntegerEntry('item-id', 2), new StringEntry('name', 'two')),
+                new Entries(new IntegerEntry('item-id', 3), new StringEntry('name', 'three'))
+            )
+        );
+
+        $sorted = $entries->sort();
+
+        $this->assertEquals(
+            new Entries(
+                $createdAt = new DateTimeEntry('created-at', new \DateTimeImmutable('2020-07-13 15:00')),
+                $deleted = new BooleanEntry('deleted', false),
+                $expirationDate = new DateEntry('expiration-date', new \DateTimeImmutable('2020-08-24')),
+                $id = new IntegerEntry('id', 1234),
+                $items = new CollectionEntry(
+                    'items',
+                    new Entries(new IntegerEntry('item-id', 1), new StringEntry('name', 'one')),
+                    new Entries(new IntegerEntry('item-id', 2), new StringEntry('name', 'two')),
+                    new Entries(new IntegerEntry('item-id', 3), new StringEntry('name', 'three'))
+                ),
+                $phase = new NullEntry('phase')
+            ),
+            $sorted
+        );
+    }
 }

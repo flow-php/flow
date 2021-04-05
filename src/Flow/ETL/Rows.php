@@ -85,6 +85,11 @@ final class Rows
         return new self(...$rows);
     }
 
+    public function sortEntries() : self
+    {
+        return $this->map(fn (Row $row) : Row => $row->sortEntries());
+    }
+
     public function first() : Row
     {
         if (empty($this->rows)) {
