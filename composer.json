@@ -1,5 +1,5 @@
 {
-    "name": "flow-php/etl-adapter-dbal",
+    "name": "flow-php/etl-adapter-doctrine",
     "type": "library",
     "license": "MIT",
     "description": "ETL adapter for bulk operations using Doctrine DBAL Bulk",

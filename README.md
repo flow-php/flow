@@ -1,7 +1,7 @@
-# ETL Adapter: DBAL 
+# ETL Adapter: Doctrine 
 
-![PHP Version](https://img.shields.io/packagist/php-v/flow-php/etl-adapter-dbal)
-![Tests](https://github.com/flow-php/etl-adapter-dbal/workflows/Tests/badge.svg?branch=1.x)
+![PHP Version](https://img.shields.io/packagist/php-v/flow-php/etl-adapter-doctrine)
+![Tests](https://github.com/flow-php/etl-adapter-doctrine/workflows/Tests/badge.svg?branch=1.x)
 
 ## Description
 
