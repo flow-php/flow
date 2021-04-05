@@ -311,4 +311,30 @@ final class RowsTest extends TestCase
             $right = new Rows(Row::create(new IntegerEntry('number', 1))),
         ];
     }
+
+    public function test_merges_two_collection_together() : void
+    {
+        $rowsOne = new Rows(
+            Row::create(new IntegerEntry('id', 1)),
+            Row::create(new IntegerEntry('id', 2)),
+        );
+        $rowsTwo = new Rows(
+            Row::create(new IntegerEntry('id', 3)),
+            Row::create(new IntegerEntry('id', 4)),
+            Row::create(new IntegerEntry('id', 5))
+        );
+
+        $merged = $rowsOne->merge($rowsTwo);
+
+        $this->assertEquals(
+            new Rows(
+                Row::create(new IntegerEntry('id', 1)),
+                Row::create(new IntegerEntry('id', 2)),
+                Row::create(new IntegerEntry('id', 3)),
+                Row::create(new IntegerEntry('id', 4)),
+                Row::create(new IntegerEntry('id', 5))
+            ),
+            $merged
+        );
+    }
 }

@@ -140,9 +140,9 @@ final class Rows
     }
 
     /**
-     * @psalm-param pure-callable(Row) : Row $callable
+     * @psalm-param pure-callable(Row) : void $callable
      *
-     * @param callable(Row) : Row $callable
+     * @param callable(Row) : void $callable
      */
     public function each(callable $callable) : void
     {
@@ -261,6 +261,13 @@ final class Rows
     {
         return new self(
             ...\array_merge($this->rows, [$row])
+        );
+    }
+
+    public function merge(self $rows) : self
+    {
+        return new self(
+            ...\array_merge($this->rows, $rows->rows)
         );
     }
 }
