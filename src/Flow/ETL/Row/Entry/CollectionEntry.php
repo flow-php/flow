@@ -34,45 +34,6 @@ final class CollectionEntry implements Entry
         $this->entries = $entries;
     }
 
-    public function append(Entries $entries) : self
-    {
-        return new self($this->name, ...[...$this->entries, $entries]);
-    }
-
-    /**
-     * @psalm-suppress MissingClosureReturnType
-     * @psalm-suppress ImpureMethodCall
-     */
-    public function entryFromAll(string $name) : Entry
-    {
-        $entries = \array_unique($this->mapEntries(fn (Entries $entries) => $entries->get($name)->value()));
-
-        if (\count($entries) !== 1) {
-            throw InvalidArgumentException::because(
-                \sprintf(
-                    'Entry "%s" has different values in "%s" collection entry: [%s]',
-                    $name,
-                    $this->name,
-                    \implode(', ', $entries)
-                )
-            );
-        }
-
-        /** @phpstan-ignore-next-line */
-        return \current($this->entries)->get($name);
-    }
-
-    /**
-     * @psalm-suppress MixedArgument
-     */
-    public function removeFromAll(string $name) : self
-    {
-        return new self(
-            $this->name,
-            ...$this->mapEntries(fn (Entries $entries) : Entries => $entries->remove($name))
-        );
-    }
-
     public function name() : string
     {
         return $this->name;
@@ -84,7 +45,7 @@ final class CollectionEntry implements Entry
      */
     public function value() : array
     {
-        return $this->mapEntries(fn (Entries $entries) : array => $entries->toArray());
+        return \array_map(fn (Entries $entries) : array => $entries->toArray(), $this->entries);
     }
 
     /**
@@ -101,14 +62,6 @@ final class CollectionEntry implements Entry
     }
 
     /**
-     * @psalm-param pure-callable(Entries) : bool $filter
-     */
-    public function filterEntries(callable $filter) : self
-    {
-        return new self($this->name, ...\array_filter($this->entries, $filter));
-    }
-
-    /**
      * @psalm-suppress MixedArgument
      */
     public function map(callable $mapper) : Entry
@@ -119,14 +72,5 @@ final class CollectionEntry implements Entry
     public function isEqual(Entry $entry) : bool
     {
         return $this->is($entry->name()) && $entry instanceof self && (new ArrayWeakComparison())->equals($this->value(), $entry->value());
-    }
-
-    /**
-     * @psalm-suppress ImpureFunctionCall
-     * @phpstan-ignore-next-line
-     */
-    private function mapEntries(callable $callable) : array
-    {
-        return \array_map($callable, $this->entries);
     }
 }

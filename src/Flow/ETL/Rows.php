@@ -4,13 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\Comparator;
 use Flow\ETL\Row\Comparator\NativeComparator;
-use Flow\ETL\Row\Entries;
-use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\Entry\CollectionEntry;
 
 /**
  * @psalm-immutable
@@ -27,35 +23,6 @@ final class Rows
     public function __construct(Row ...$rows)
     {
         $this->rows = $rows;
-    }
-
-    /**
-     * @psalm-suppress MixedArgument
-     * @pslam-param callable (Row) : string|int|float $groupBy  Returns group identifier for the given Row
-     */
-    public function groupTo(string $collectionEntryName, callable $groupBy) : self
-    {
-        return new self(
-            ...\array_reduce(
-                $this->rows,
-                function (Entries $entries, Row $row) use ($groupBy) : Entries {
-                    $name = (string) $groupBy($row);
-
-                    if (empty($name)) {
-                        throw InvalidArgumentException::because('Group name for grouping rows cannot be empty');
-                    }
-
-                    if ($entries->has($name)) {
-                        return $entries->appendTo($name, $row->entries());
-                    }
-
-                    return $entries->add(new CollectionEntry($name, $row->entries()));
-                },
-                new Entries()
-            )->map(
-                fn (Entry $entry) => Row::create($entry->rename($collectionEntryName))
-            )
-        );
     }
 
     /**

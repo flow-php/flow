@@ -24,66 +24,6 @@ final class CollectionEntryTest extends TestCase
         );
     }
 
-    public function test_appends_entries() : void
-    {
-        $one   = new Entries(new IntegerEntry('id', 1), new StringEntry('name', 'one'));
-        $two   = new Entries(new IntegerEntry('id', 2), new StringEntry('name', 'two'));
-        $three = new Entries(new IntegerEntry('id', 3), new StringEntry('name', 'three'));
-        $entry = new CollectionEntry('collection-entry', $one);
-
-        $entry = $entry
-            ->append($two)
-            ->append($three);
-
-        $this->assertEquals(new CollectionEntry('collection-entry', $one, $two, $three), $entry);
-    }
-
-    public function test_gets_entry_from_all_entries_when_value_is_the_same() : void
-    {
-        $orderIdEntry = new IntegerEntry('order-id', 1);
-        $entry = new CollectionEntry(
-            'items',
-            new Entries($orderIdEntry, new StringEntry('item-name', 'one')),
-            new Entries($orderIdEntry, new StringEntry('item-name', 'two')),
-            new Entries(new IntegerEntry('order-id', 1), new StringEntry('item-name', 'three')),
-        );
-
-        $this->assertEquals($orderIdEntry, $entry->entryFromAll('order-id'));
-    }
-
-    public function test_prevents_from_getting_entry_when_value_is_different() : void
-    {
-        $entry = new CollectionEntry(
-            'items',
-            new Entries(new IntegerEntry('order-id', 1), new StringEntry('item-name', 'one')),
-            new Entries(new IntegerEntry('order-id', 2), new StringEntry('item-name', 'two')),
-        );
-
-        $this->expectExceptionMessage('Entry "order-id" has different values in "items" collection entry');
-
-        $entry->entryFromAll('order-id');
-    }
-
-    public function test_removes_entry_from_all_entries() : void
-    {
-        $entry = new CollectionEntry(
-            'items',
-            new Entries(new IntegerEntry('order-id', 1), new StringEntry('item-name', 'one')),
-            new Entries(new IntegerEntry('order-id', 2), new StringEntry('item-name', 'two')),
-            new Entries(new IntegerEntry('order-id', 3), new StringEntry('item-name', 'three'))
-        );
-
-        $this->assertEquals(
-            new CollectionEntry(
-                'items',
-                new Entries(new StringEntry('item-name', 'one')),
-                new Entries(new StringEntry('item-name', 'two')),
-                new Entries(new StringEntry('item-name', 'three'))
-            ),
-            $entry->removeFromAll('order-id'),
-        );
-    }
-
     public function test_returns_array_as_value() : void
     {
         $entry = new CollectionEntry(

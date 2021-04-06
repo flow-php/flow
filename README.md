@@ -29,7 +29,6 @@ This is a perfect scenario for ETL.
 * Low memory consumption even when processing thousands of records
 * Type safe Rows/Row/Entry abstractions
 * Filtering
-* Grouping
 * Built in Rows objects comparison
 * Rich collection of Entry implementations
   * [ArrayEntry](src/Flow/ETL/Row/Entry/ArrayEntry.php)
@@ -42,6 +41,13 @@ This is a perfect scenario for ETL.
   * [NullEntry](src/Flow/ETL/Row/Entry/NullEntry.php)
   * [ObjectEntryEntry](src/Flow/ETL/Row/Entry/ObjectEntry.php)
   * [StringEntry](src/Flow/ETL/Row/Entry/StringEntry.php)
+
+## Adapters
+
+* [Doctrine](https://github.com/flow-php/etl-adapter-doctrine)
+* [CSV](https://github.com/flow-php/etl-adapter-csv)
+* Elasticsearch - TODO
+* XML - TODO
 
 ## Installation
 

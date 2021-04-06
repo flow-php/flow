@@ -100,43 +100,6 @@ final class EntriesTest extends TestCase
         $this->assertEquals(new Entries($booleanEntry, $stringEntry), $entries);
     }
 
-    public function test_appends_entries_to_collection_entry() : void
-    {
-        $one   = new Entries(new IntegerEntry('id', 1), new StringEntry('name', 'one'));
-        $two   = new Entries(new IntegerEntry('id', 2), new StringEntry('name', 'two'));
-        $three = new Entries(new IntegerEntry('id', 3), new StringEntry('name', 'three'));
-        $entries = new Entries(
-            $integerEntry = new IntegerEntry('integer-entry', 100),
-            new CollectionEntry('collection-entry', $one)
-        );
-
-        $entries = $entries
-            ->appendTo('collection-entry', $two)
-            ->appendTo('collection-entry', $three);
-
-        $this->assertEquals(
-            new Entries(
-                $integerEntry,
-                new CollectionEntry('collection-entry', $one, $two, $three)
-            ),
-            $entries
-        );
-    }
-
-    public function test_prevents_from_appending_entries_to_non_collection_entry() : void
-    {
-        $entries = new Entries(
-            $integerEntry = new IntegerEntry('integer-entry', 100),
-        );
-
-        $this->expectExceptionMessage('Entries can be appended only to');
-
-        $entries->appendTo(
-            'integer-entry',
-            new Entries(new IntegerEntry('id', 1), new StringEntry('name', 'one'))
-        );
-    }
-
     public function test_prevents_from_getting_unknown_entry() : void
     {
         $entries = new Entries();

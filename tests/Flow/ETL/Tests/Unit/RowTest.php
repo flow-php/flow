@@ -38,41 +38,6 @@ final class RowTest extends TestCase
         );
     }
 
-    public function test_pull_outs_entry_from_collection_entry() : void
-    {
-        $orderId = new IntegerEntry('order-id', 1234);
-        $row = Row::create(
-            new CollectionEntry(
-                'items',
-                new Entries($orderId, new IntegerEntry('item-id', 1), new StringEntry('name', 'one')),
-                new Entries($orderId, new IntegerEntry('item-id', 2), new StringEntry('name', 'two')),
-                new Entries($orderId, new IntegerEntry('item-id', 3), new StringEntry('name', 'three'))
-            )
-        );
-
-        $this->assertEquals(
-            Row::create(
-                $orderId,
-                new CollectionEntry(
-                    'items',
-                    new Entries(new IntegerEntry('item-id', 1), new StringEntry('name', 'one')),
-                    new Entries(new IntegerEntry('item-id', 2), new StringEntry('name', 'two')),
-                    new Entries(new IntegerEntry('item-id', 3), new StringEntry('name', 'three'))
-                )
-            ),
-            $row->pullOutFrom('items', 'order-id'),
-        );
-    }
-
-    public function test_prevents_from_pulling_out_entry_from_non_collection_entry() : void
-    {
-        $row = Row::create(new IntegerEntry('id', 1), new StringEntry('name', 'one'));
-
-        $this->expectExceptionMessage('Entry can be pulled out only from');
-
-        $row->pullOutFrom('id', 'name');
-    }
-
     public function test_converts_one_entry_into_another_using_converter() : void
     {
         $row = Row::create(new StringEntry('name', 'one'), new IntegerEntry('id', 1));

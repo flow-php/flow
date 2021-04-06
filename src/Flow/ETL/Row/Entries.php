@@ -7,7 +7,6 @@ namespace Flow\ETL\Row;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Row\Entry\CollectionEntry;
 
 /**
  * @psalm-immutable
@@ -78,19 +77,6 @@ final class Entries implements \Countable
         }
 
         return $this->add($entry);
-    }
-
-    public function appendTo(string $name, self $entries) : self
-    {
-        $entry = $this->get($name);
-
-        if (!$entry instanceof CollectionEntry) {
-            throw RuntimeException::because('Entries can be appended only to "%s", "%s" is type of "%s"', CollectionEntry::class, $name, \get_class($entry));
-        }
-
-        return $this
-            ->remove($name)
-            ->add($entry->append($entries));
     }
 
     public function sort() : self

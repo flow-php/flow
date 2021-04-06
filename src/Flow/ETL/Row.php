@@ -8,7 +8,6 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\Converter;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\Entry\CollectionEntry;
 
 /**
  * @psalm-immutable
@@ -75,23 +74,10 @@ final class Row
         );
     }
 
-    public function pullOutFrom(string $collectionName, string $entryName) : self
-    {
-        $collection = $this->get($collectionName);
-
-        if (!$collection instanceof CollectionEntry) {
-            throw RuntimeException::because('Entry can be pulled out only from "%s", but "%s" is a "%s"', CollectionEntry::class, $collectionName, \get_class($collection));
-        }
-
-        return $this
-            ->set($collection->entryFromAll($entryName))
-            ->set($collection->removeFromAll($entryName));
-    }
-
-    public function convert(string $name, Converter $serializer) : self
+    public function convert(string $name, Converter $converter) : self
     {
         return $this->set(
-            $serializer->convert($this->get($name))
+            $converter->convert($this->get($name))
         );
     }
 

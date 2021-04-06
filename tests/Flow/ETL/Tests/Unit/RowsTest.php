@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit;
 
 use Flow\ETL\Row;
-use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry\BooleanEntry;
-use Flow\ETL\Row\Entry\CollectionEntry;
 use Flow\ETL\Row\Entry\DateTimeEntry;
 use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Row\Entry\NullEntry;
@@ -18,69 +16,6 @@ use PHPUnit\Framework\TestCase;
 
 final class RowsTest extends TestCase
 {
-    public function test_prevents_from_grouping_rows_by_empty_group_name() : void
-    {
-        $rows = new Rows(
-            Row::create(new IntegerEntry('number', 1), new StringEntry('name', 'one')),
-            Row::create(new IntegerEntry('number', 2), new StringEntry('name', 'two')),
-            Row::create(new IntegerEntry('number', 3), new StringEntry('name', 'three')),
-        );
-
-        $this->expectExceptionMessage('Group name for grouping rows cannot be empty');
-
-        $rows->groupTo(
-            'empty-name',
-            fn (Row $row) => $groupBy = ''
-        );
-    }
-
-    /**
-     * @dataProvider groups_entries_data_provider
-     */
-    public function test_groups_entries(string $collectionEntryName, Rows $initial, callable $groupBy, Rows $grouped) : void
-    {
-        $this->assertEquals($grouped, $initial->groupTo($collectionEntryName, $groupBy));
-    }
-
-    public function groups_entries_data_provider() : \Generator
-    {
-        $collectionEntryName = 'items';
-
-        yield 'group odd and even numbers' => [
-            $collectionEntryName,
-            new Rows(
-                $one   = Row::create(new IntegerEntry('number', 1), new StringEntry('name', 'one')),
-                $two   = Row::create(new IntegerEntry('number', 2), new StringEntry('name', 'two')),
-                $three = Row::create(new IntegerEntry('number', 3), new StringEntry('name', 'three')),
-                $four  = Row::create(new IntegerEntry('number', 4), new StringEntry('name', 'four')),
-                $five   = Row::create(new IntegerEntry('number', 5), new StringEntry('name', 'five'))
-            ),
-            fn (Row $row) => $row->get('number')->value() % 2 === 0 ? 'even' : 'odd',
-            new Rows(
-                Row::create(new CollectionEntry($collectionEntryName, $two->entries(), $four->entries())),
-                Row::create(new CollectionEntry($collectionEntryName, $one->entries(), $three->entries(), $five->entries()))
-            ),
-        ];
-
-        yield 'group by order number' => [
-            $collectionEntryName,
-            new Rows(
-                $orderOneItemOne   = Row::create(new IntegerEntry('order-number', 1), new StringEntry('item', 'one')),
-                $orderTwoItemOne   = Row::create(new IntegerEntry('order-number', 2), new StringEntry('item', 'one')),
-                $orderOneItemTwo   = Row::create(new IntegerEntry('order-number', 1), new StringEntry('item', 'two')),
-                $orderOneItemThree = Row::create(new IntegerEntry('order-number', 1), new StringEntry('item', 'three')),
-                $orderThreeItemOne = Row::create(new IntegerEntry('order-number', 3), new StringEntry('item', 'one')),
-                $orderTwoItemTwo   = Row::create(new IntegerEntry('order-number', 2), new StringEntry('item', 'two')),
-            ),
-            fn (Row $row) => $row->get('order-number')->value(),
-            new Rows(
-                Row::create(new CollectionEntry($collectionEntryName, $orderOneItemOne->entries(), $orderOneItemTwo->entries(), $orderOneItemThree->entries())),
-                Row::create(new CollectionEntry($collectionEntryName, $orderThreeItemOne->entries())),
-                Row::create(new CollectionEntry($collectionEntryName, $orderTwoItemOne->entries(), $orderTwoItemTwo->entries()))
-            ),
-        ];
-    }
-
     public function test_sort_rows_without_changing_original_collection() : void
     {
         $rows = new Rows(
