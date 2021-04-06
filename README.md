@@ -47,6 +47,7 @@ This is a perfect scenario for ETL.
 Adapters provides Extractors and Transformers for popular data storages or abstractions over those storages. 
 
 * [Doctrine](https://github.com/flow-php/etl-adapter-doctrine)
+  * [Doctrine DBAL Bulk](https://github.com/flow-php/doctrine-dbal-bulk)
 * Elasticsearch - TODO
 * [CSV](https://github.com/flow-php/etl-adapter-csv)
 * XML - TODO
@@ -118,7 +119,6 @@ In order to install dependencies please, launch following commands:
 
 ```bash
 composer install
-composer install --working-dir ./tools
 ```
 
 ## Run Tests
