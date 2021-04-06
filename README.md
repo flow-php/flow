@@ -44,10 +44,15 @@ This is a perfect scenario for ETL.
 
 ## Adapters
 
+Adapters provides Extractors and Transformers for popular data storages or abstractions over those storages. 
+
 * [Doctrine](https://github.com/flow-php/etl-adapter-doctrine)
-* [CSV](https://github.com/flow-php/etl-adapter-csv)
 * Elasticsearch - TODO
+* [CSV](https://github.com/flow-php/etl-adapter-csv)
 * XML - TODO
+
+**❗ If adapter that you are looking for is missing and you are willing to work on one, feel free to create one as a standalone repository.**
+**Well designed and documented adapters can be pulled into `flow-php` organization that will give them maintenance and security support from the organization.** 
 
 ## Installation
 
