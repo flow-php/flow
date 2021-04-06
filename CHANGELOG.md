@@ -1,4 +1,4 @@
-## [Unreleased] - 2021-04-05
+## [Unreleased] - 2021-04-06
 
 ### Added
 - [#24](https://github.com/flow-php/etl/pull/24) - **Rows::unique(Comparator = null) ? self** - [@norberttech](https://github.com/norberttech)
@@ -20,6 +20,7 @@
 - [856870](https://github.com/flow-php/etl/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [202442](https://github.com/flow-php/etl/commit/202442caac43b1316817433751ca156547292958) - **Cleanup Entries (#26)** - [@norberttech](https://github.com/norberttech)
 - [#18](https://github.com/flow-php/etl/pull/18) - **Improved return type for Row::toArray()** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#17](https://github.com/flow-php/etl/pull/17) - **replaced phive with composer to handle tools** - [@norberttech](https://github.com/norberttech)
 - [c66f6f](https://github.com/flow-php/etl/commit/c66f6f6bdcfa8c3d69cd74e72fe7bf249bc5770e) - **Update pull-request-description-check.yml** - [@norberttech](https://github.com/norberttech)
