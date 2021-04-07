@@ -1,4 +1,4 @@
-## [Unreleased] - 2021-04-06
+## [Unreleased] - 2021-04-07
 
 ### Added
 - [#24](https://github.com/flow-php/etl/pull/24) - **Rows::unique(Comparator = null) ? self** - [@norberttech](https://github.com/norberttech)
