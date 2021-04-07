@@ -1,7 +1,10 @@
-## [Unreleased] - 2021-04-06
+## [Unreleased] - 2021-04-07
 
 ### Changed
 - [b71018](https://github.com/flow-php/etl-adapter-elasticsearch/commit/b710189a7399b0df5b253ae19abf63fc8b3c7e0f) - **Initial commit** - [@norberttech](https://github.com/norberttech)
+
+### Fixed
+- [#1](https://github.com/flow-php/etl-adapter-elasticsearch/pull/1) - **failing tests** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
 - [2777ce](https://github.com/flow-php/etl-adapter-elasticsearch/commit/2777cea6ad3165ef10c4716d7a2e86f7f34a8ac4) - **tests at windows on github** - [@norberttech](https://github.com/norberttech)
