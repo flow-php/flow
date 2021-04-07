@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7831bb6aecea6ccf7bc7564b491e33ec",
+    "content-hash": "67ba3c414b426d1425bb81b8c7f3b666",
     "packages": [
         {
             "name": "flow-php/etl",
@@ -339,8 +339,7 @@
     "prefer-lowest": false,
     "platform": {
         "php": "^7.4 | ^8.0",
-        "ext-json": "*",
-        "ext-mbstring": "*"
+        "ext-json": "*"
     },
     "platform-dev": [],
     "plugin-api-version": "2.0.0"

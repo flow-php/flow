@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Elasticsearch\Tests\Integration;
 
-use Flow\ETL\Adapter\Elasticsearch\ElasticsearchLoader;
+use Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHPLoader;
 use Flow\ETL\Adapter\Elasticsearch\EntryIdFactory\Sha1IdFactory;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 
-final class ElasticsearchLoaderTest extends TestCase
+final class ElasticsearchPHPLoaderTest extends TestCase
 {
     public const INDEX_NAME = 'etl-test-index';
 
@@ -29,7 +29,7 @@ final class ElasticsearchLoaderTest extends TestCase
 
     public function test_something() : void
     {
-        $loader = new ElasticsearchLoader($this->elasticsearchContext->client(), 2, self::INDEX_NAME, new Sha1IdFactory('id'), ['refresh' => true]);
+        $loader = new ElasticsearchPHPLoader($this->elasticsearchContext->client(), 2, self::INDEX_NAME, new Sha1IdFactory('id'), ['refresh' => true]);
 
         $loader->load(new Rows(
             Row::create(

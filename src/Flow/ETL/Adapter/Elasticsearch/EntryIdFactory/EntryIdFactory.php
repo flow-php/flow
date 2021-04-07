@@ -8,6 +8,9 @@ use Flow\ETL\Adapter\Elasticsearch\IdFactory;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
 
+/**
+ * @psalm-immutable
+ */
 final class EntryIdFactory implements IdFactory
 {
     private string $entryName;

@@ -11,7 +11,7 @@
         "flow-php/etl": "^1.0@dev"
     },
     "require-dev": {
-        "elasticsearch/elasticsearch": "^7.0 | ^8.0"
+        "elasticsearch/elasticsearch": "^7.6 | ^8.0"
     },
     "config": {
         "optimize-autoloader": true,

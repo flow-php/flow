@@ -76,9 +76,7 @@ jobs:
         if: ${{ matrix.dependencies == 'locked' }}
         run: "composer install --no-interaction --no-progress --no-suggest"
 
-      - name: "Install tools"
-        run: "composer install --no-interaction --no-progress --no-suggest"
-        working-directory: "./tools"
-
       - name: "Test"
         run: "composer test"
+        env:
+          ELASTICSEARCH_URL: "localhost:${{ job.services.postgres.ports[5432] }}"

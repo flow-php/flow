@@ -1,58 +1,50 @@
-# ETL Adapter: CSV
+# ETL Adapter: Elasticsearch
 
 [![Minimum PHP Version](https://img.shields.io/badge/php-%3E%3D%207.4-8892BF.svg)](https://php.net/)
 
 ## Description
 
-ETL Adapter that provides Loaders and Extractors that works with CSV files.
+ETL Adapter that provides Loaders and <s>Extractors</s> that works with Elasticsearch.
 
 Following implementation are available: 
-- [League CSV](https://csv.thephpleague.com/) 
+- [elasticsearch-php](https://github.com/elastic/elasticsearch-php) 
 
-
-## Extractor - LeagueCSVExtractor
-
-```php
-<?php
-
-use Flow\ETL\Adapter\CSV\LeagueCSVExtractor;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
-use League\Csv\Reader;
-
-$reader = Reader::createFromPath(__DIR__ . '/../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv');
-$reader->setHeaderOffset(0);
-
-$extractor = new LeagueCSVExtractor($reader, 5);
-
-/** @var Rows $rows */
-foreach ($extractor->extract() as $rows) {
-    // Do something with Row 
-}
-```
 
 ## Loader - LeagueCSVLoader
 
 ```php 
 <?php
 
-use Flow\ETL\Adapter\CSV\LeagueCSVLoader;
+use Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHPLoader;
+use Flow\ETL\Adapter\Elasticsearch\EntryIdFactory\Sha1IdFactory;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
-use League\Csv\Writer;
 
-$path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.csv';
-$writer = Writer::createFromPath($path, 'w+');
-
-$loader = new LeagueCSVLoader($writer);
+$loader = new ElasticsearchPHPLoader(
+    $this->elasticsearchContext->client(), 
+    $bulkSize = 2, 
+    self::INDEX_NAME, 
+    new Sha1IdFactory('id'), 
+    $params = ['refresh' => true]
+);
 
 $loader->load(new Rows(
-    Row::create(new Row\Entry\ArrayEntry('row', ['id', 'name'])),
-    Row::create(new Row\Entry\ArrayEntry('row', [1, 'Norbert'])),
-));
-$loader->load(new Rows(
-    Row::create(new Row\Entry\ArrayEntry('row', [2, 'Tomek'])),
-    Row::create(new Row\Entry\ArrayEntry('row', [3, 'Dawid'])),
+    Row::create(
+        new Row\Entry\IntegerEntry('id', 1),
+        new Row\Entry\StringEntry('name', 'Łukasz')
+    ),
+    Row::create(
+        new Row\Entry\IntegerEntry('id', 2),
+        new Row\Entry\StringEntry('name', 'Norbert')
+    ),
+    Row::create(
+        new Row\Entry\IntegerEntry('id', 3),
+        new Row\Entry\StringEntry('name', 'Dawid')
+    ),
+    Row::create(
+        new Row\Entry\IntegerEntry('id', 4),
+        new Row\Entry\StringEntry('name', 'Tomek')
+    ),
 ));
 
 ```
@@ -63,7 +55,6 @@ In order to install dependencies please, launch following commands:
 
 ```bash
 composer install
-composer install --working-dir ./tools
 ```
 
 ## Run Tests
@@ -71,6 +62,8 @@ composer install --working-dir ./tools
 In order to execute full test suite, please launch following command:
 
 ```bash
+cp docker-compose.yaml.dist docker-compose.yaml
+docker-compose up
 composer build
 ```
 

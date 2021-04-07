@@ -8,6 +8,9 @@ use Flow\ETL\Adapter\Elasticsearch\IdFactory;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
 
+/**
+ * @psalm-immutable
+ */
 final class Sha1IdFactory implements IdFactory
 {
     /**
@@ -25,7 +28,7 @@ final class Sha1IdFactory implements IdFactory
         return new Row\Entry\StringEntry(
             'id',
             \sha1(
-                \implode(':', \array_map(fn (string $name) => $row->valueOf($name), $this->entryNames))
+                \implode(':', \array_map(fn (string $name) : string => (string) $row->valueOf($name), $this->entryNames))
             )
         );
     }
