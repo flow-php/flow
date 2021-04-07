@@ -48,7 +48,7 @@ Adapters provides Extractors and Transformers for popular data storages or abstr
 
 * [Doctrine](https://github.com/flow-php/etl-adapter-doctrine)
   * [Doctrine DBAL Bulk](https://github.com/flow-php/doctrine-dbal-bulk)
-* Elasticsearch - TODO
+* [Elasticsearch](https://github.com/flow-php/etl-adapter-elasticsearch)
 * [CSV](https://github.com/flow-php/etl-adapter-csv)
 * XML - TODO
 
