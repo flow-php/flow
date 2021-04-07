@@ -20,6 +20,7 @@
 - [856870](https://github.com/flow-php/etl/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [4098cb](https://github.com/flow-php/etl/commit/4098cb5aea3c8ef35d9314dd47568a3a66be2342) - **Update README.md** - [@norberttech](https://github.com/norberttech)
 - [8f6cb0](https://github.com/flow-php/etl/commit/8f6cb0247cbcd90b5bb637319110c677c01ff3fc) - **Update README.md** - [@norberttech](https://github.com/norberttech)
 - [4ec891](https://github.com/flow-php/etl/commit/4ec891d71a72c2fd57515af29aebeae2a7990224) - **Update README.md** - [@norberttech](https://github.com/norberttech)
 - [#18](https://github.com/flow-php/etl/pull/18) - **Improved return type for Row::toArray()** - [@tomaszhanc](https://github.com/tomaszhanc)
