@@ -1,6 +1,7 @@
-## [Unreleased] - 2021-04-07
+## [Unreleased] - 2021-04-09
 
 ### Added
+- [#28](https://github.com/flow-php/etl/pull/28) - **XMLEntry** - [@norberttech](https://github.com/norberttech)
 - [#24](https://github.com/flow-php/etl/pull/24) - **Rows::unique(Comparator = null) ? self** - [@norberttech](https://github.com/norberttech)
 - [#25](https://github.com/flow-php/etl/pull/25) - **Sort all rows entires** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#23](https://github.com/flow-php/etl/pull/23) - **merge() method for rows** - [@tomaszhanc](https://github.com/tomaszhanc)
