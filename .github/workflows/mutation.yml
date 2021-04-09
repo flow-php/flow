@@ -61,10 +61,6 @@ jobs:
         if: ${{ matrix.dependencies == 'locked' }}
         run: "composer install --no-interaction --no-progress --no-suggest"
 
-      - name: "Install tools"
-        run: "composer install --no-interaction --no-progress --no-suggest"
-        working-directory: "./tools"
-
       - name: "Mutation Tests"
         run: "composer test:mutation"
         env:

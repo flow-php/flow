@@ -21,7 +21,7 @@ use PHPUnit\Framework\TestCase;
 
 final class ETLTest extends TestCase
 {
-    public function test_() : void
+    public function test_etl() : void
     {
         $extractor =  new class implements Extractor {
             /**
