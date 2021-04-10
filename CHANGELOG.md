@@ -37,6 +37,7 @@
 - [1a6eec](https://github.com/flow-php/etl/commit/1a6eec01837f25cf1d6ff7c041996ff7b8b017e7) - **failing tests** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#30](https://github.com/flow-php/etl/pull/30) - **Extracted memory into etl-adapter-memory** - [@norberttech](https://github.com/norberttech)
 - [#29](https://github.com/flow-php/etl/pull/29) - **TrimRowToContainOnly** - [@norberttech](https://github.com/norberttech)
 - [#26](https://github.com/flow-php/etl/pull/26) - **Rows::groupTo() : self** - [@norberttech](https://github.com/norberttech)
 - [420f4c](https://github.com/flow-php/etl/commit/420f4cbc2223b0011bd071bf06691346fd8c0e45) - **unused php extension from dev requirements** - [@norberttech](https://github.com/norberttech)
