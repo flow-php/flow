@@ -1,6 +1,7 @@
-## [Unreleased] - 2021-04-09
+## [Unreleased] - 2021-04-10
 
 ### Added
+- [#29](https://github.com/flow-php/etl/pull/29) - **Row::remove() : self** - [@norberttech](https://github.com/norberttech)
 - [#28](https://github.com/flow-php/etl/pull/28) - **XMLEntry** - [@norberttech](https://github.com/norberttech)
 - [#24](https://github.com/flow-php/etl/pull/24) - **Rows::unique(Comparator = null) ? self** - [@norberttech](https://github.com/norberttech)
 - [#25](https://github.com/flow-php/etl/pull/25) - **Sort all rows entires** - [@tomaszhanc](https://github.com/tomaszhanc)
@@ -36,6 +37,7 @@
 - [1a6eec](https://github.com/flow-php/etl/commit/1a6eec01837f25cf1d6ff7c041996ff7b8b017e7) - **failing tests** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#29](https://github.com/flow-php/etl/pull/29) - **TrimRowToContainOnly** - [@norberttech](https://github.com/norberttech)
 - [#26](https://github.com/flow-php/etl/pull/26) - **Rows::groupTo() : self** - [@norberttech](https://github.com/norberttech)
 - [420f4c](https://github.com/flow-php/etl/commit/420f4cbc2223b0011bd071bf06691346fd8c0e45) - **unused php extension from dev requirements** - [@norberttech](https://github.com/norberttech)
 
