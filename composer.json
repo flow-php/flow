@@ -1,0 +1,59 @@
+{
+    "name": "flow-php/etl-adapter-json",
+    "type": "library",
+    "description": "PHP ETL - Adapter - JSON",
+    "keywords": ["etl", "extract", "transform", "load", "json", "adapter"],
+    "prefer-stable": true,
+    "minimum-stability": "dev",
+    "require": {
+        "php": "^7.4 | ^8.0",
+        "ext-json": "*",
+        "ext-mbstring": "*",
+        "flow-php/etl": "^1.0@dev"
+    },
+    "require-dev": {
+        "halaxa/json-machine": "^0.6.1"
+    },
+    "suggest": {
+        "halaxa/json-machine": "Memory safe json library used by Extractors and Loaders"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Flow\\": [
+                "src/Flow"
+            ]
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Flow\\": "tests/Flow"
+        }
+    },
+    "scripts": {
+        "build": [
+            "@static:analyze",
+            "@test"
+        ],
+        "test": [
+            "tools/vendor/bin/phpunit"
+        ],
+        "static:analyze": [
+            "tools/vendor/bin/psalm --output-format=compact",
+            "tools/vendor/bin/phpstan analyze -c phpstan.neon",
+            "tools/vendor/bin/php-cs-fixer fix --dry-run"
+        ],
+        "cs:php:fix": "tools/vendor/bin/php-cs-fixer fix",
+        "tools:install": "composer install --working-dir=./tools",
+        "post-install-cmd": [
+            "@tools:install"
+        ],
+        "post-update-cmd": [
+            "@tools:install"
+        ]
+    }
+}
