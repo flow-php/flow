@@ -30,22 +30,31 @@ This is a perfect scenario for ETL.
 * Type safe Rows/Row/Entry abstractions
 * Filtering
 * Built in Rows objects comparison
-* Rich collection of Entry implementations
-  * [ArrayEntry](src/Flow/ETL/Row/Entry/ArrayEntry.php)
-  * [BooleanEntry](src/Flow/ETL/Row/Entry/BooleanEntry.php)
-  * [CollectionEntry](src/Flow/ETL/Row/Entry/CollectionEntry.php)
-  * [DateEntry](src/Flow/ETL/Row/Entry/DateEntry.php)
-  * [DateTimeEntry](src/Flow/ETL/Row/Entry/DateTimeEntry.php)
-  * [IntegerEntry](src/Flow/ETL/Row/Entry/IntegerEntry.php)
-  * [JsonEntry](src/Flow/ETL/Row/Entry/JsonEntry.php)
-  * [NullEntry](src/Flow/ETL/Row/Entry/NullEntry.php)
-  * [ObjectEntryEntry](src/Flow/ETL/Row/Entry/ObjectEntry.php)
-  * [StringEntry](src/Flow/ETL/Row/Entry/StringEntry.php)
+* Rich collection of Row Entries 
+
+## Row Entries
+
+* [ArrayEntry](src/Flow/ETL/Row/Entry/ArrayEntry.php)
+* [BooleanEntry](src/Flow/ETL/Row/Entry/BooleanEntry.php)
+* [CollectionEntry](src/Flow/ETL/Row/Entry/CollectionEntry.php)
+* [DateEntry](src/Flow/ETL/Row/Entry/DateEntry.php)
+* [DateTimeEntry](src/Flow/ETL/Row/Entry/DateTimeEntry.php)
+* [IntegerEntry](src/Flow/ETL/Row/Entry/IntegerEntry.php)
+* [JsonEntry](src/Flow/ETL/Row/Entry/JsonEntry.php)
+* [XMLEntry](src/Flow/ETL/Row/Entry/XMLEntry.php)
+* [NullEntry](src/Flow/ETL/Row/Entry/NullEntry.php)
+* [ObjectEntryEntry](src/Flow/ETL/Row/Entry/ObjectEntry.php)
+* [StringEntry](src/Flow/ETL/Row/Entry/StringEntry.php)
+
+## Transformers 
+
+* [Generic](https://github.com/flow-php/etl-transformer)
 
 ## Adapters
 
 Adapters provides Extractors and Transformers for popular data storages or abstractions over those storages. 
 
+* [Memory](https://github.com/flow-php/etl-adapter-memory)
 * [Doctrine](https://github.com/flow-php/etl-adapter-doctrine)
   * [Doctrine DBAL Bulk](https://github.com/flow-php/doctrine-dbal-bulk)
 * [Elasticsearch](https://github.com/flow-php/etl-adapter-elasticsearch)
