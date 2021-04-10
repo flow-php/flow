@@ -1,4 +1,7 @@
-## [Unreleased] - 2021-04-07
+## [Unreleased] - 2021-04-10
+
+### Added
+- [#2](https://github.com/flow-php/etl-adapter-elasticsearch/pull/2) - **PHP 8.0 to the testsuite** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
 - [ee9921](https://github.com/flow-php/etl-adapter-elasticsearch/commit/ee9921694b99ee77ca4c047fe530e7832f9f78ac) - **Improved test suite** - [@norberttech](https://github.com/norberttech)
