@@ -63,7 +63,6 @@ In order to install dependencies please, launch following commands:
 
 ```bash
 composer install
-composer install --working-dir ./tools
 ```
 
 ## Run Tests
