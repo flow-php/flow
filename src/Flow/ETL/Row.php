@@ -56,6 +56,15 @@ final class Row
         return new self($this->entries->set($entry));
     }
 
+    public function remove(string $name) : self
+    {
+        if (!$this->entries->has($name)) {
+            return $this;
+        }
+
+        return new self($this->entries->remove($name));
+    }
+
     /**
      * @psalm-suppress MixedArgument
      * @psalm-suppress MixedArgumentTypeCoercion

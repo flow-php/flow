@@ -6,7 +6,6 @@ namespace Flow\ETL\Tests\Unit;
 
 use Flow\ETL\ETL;
 use Flow\ETL\Extractor;
-use Flow\ETL\Filter\TrimRowToContainOnly;
 use Flow\ETL\Loader;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\BooleanEntry;
@@ -55,13 +54,6 @@ final class ETLTest extends TestCase
             }
         };
 
-        $leaveOnlyIdAndStampEntry = new class implements Transformer {
-            public function transform(Rows $rows) : Rows
-            {
-                return $rows->map(new TrimRowToContainOnly('id', 'stamp'));
-            }
-        };
-
         $loader = new class implements Loader {
             public array $result;
 
@@ -78,7 +70,6 @@ final class ETLTest extends TestCase
                 AddStampToStringEntryTransformer::divideBySemicolon('stamp', 'two')
             )
             ->transform(AddStampToStringEntryTransformer::divideBySemicolon('stamp', 'three'))
-            ->transform($leaveOnlyIdAndStampEntry)
             ->load($loader);
 
         $this->assertEquals(
@@ -86,10 +77,16 @@ final class ETLTest extends TestCase
                 [
                     'id' => 101,
                     'stamp' => 'zero:one:two:three',
+                    'deleted' => false,
+                    'expiration-date' => '2020-08-24',
+                    'phase' => null,
                 ],
                 [
                     'id' => 102,
                     'stamp' => 'zero:one:two:three',
+                    'deleted' => true,
+                    'expiration-date' => '2020-08-25',
+                    'phase' => null,
                 ],
             ],
             $loader->result,

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Loader;
 
-use Flow\ETL\Memory\LoadIntoMemory;
+use Flow\ETL\Loader\LoadIntoMemory;
 use Flow\ETL\Memory\Memory;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\IntegerEntry;
@@ -21,7 +21,10 @@ final class LoadIntoMemoryTest extends TestCase
             Row::create(new IntegerEntry('number', 2), new StringEntry('name', 'two')),
         );
         $memory = new class implements Memory {
-            public array $data;
+            /**
+             * @var array<mixed>
+             */
+            public array $data = [];
 
             public function save(array $data) : void
             {
