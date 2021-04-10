@@ -16,6 +16,11 @@ final class XMLEntryTest extends TestCase
         XMLEntry::fromString('', '<xml><name>node</name></xml>');
     }
 
+    public function test_entry_name_can_be_zero() : void
+    {
+        $this->assertSame('0', (XMLEntry::fromString('0', '<xml><name>node</name></xml>'))->name());
+    }
+
     public function test_returns_json_as_value() : void
     {
         $xml = '<xml><name>node</name></xml>';

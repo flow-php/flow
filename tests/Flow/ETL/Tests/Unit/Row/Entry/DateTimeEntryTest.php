@@ -16,6 +16,11 @@ final class DateTimeEntryTest extends TestCase
         new DateTimeEntry('', new \DateTimeImmutable('2020-07-13 12:00'));
     }
 
+    public function test_entry_name_can_be_zero() : void
+    {
+        $this->assertSame('0', (new DateTimeEntry('0', new \DateTimeImmutable('2020-07-13 12:00')))->name());
+    }
+
     public function test_uses_full_date_time() : void
     {
         $entry = new DateTimeEntry('entry-name', new \DateTimeImmutable('2020-07-13 12:00'));

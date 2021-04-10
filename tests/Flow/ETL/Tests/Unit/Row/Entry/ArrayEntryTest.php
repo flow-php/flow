@@ -17,6 +17,11 @@ final class ArrayEntryTest extends TestCase
         new ArrayEntry('', ['id' => 1]);
     }
 
+    public function test_entry_name_can_be_zero() : void
+    {
+        $this->assertSame('0', (new ArrayEntry('0', ['id' => 1]))->name());
+    }
+
     public function test_renames_entry() : void
     {
         $entry = new ArrayEntry('entry-name', ['id' => 1, 'name' => 'one']);

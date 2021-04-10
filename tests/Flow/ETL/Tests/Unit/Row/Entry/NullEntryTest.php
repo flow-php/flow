@@ -16,6 +16,11 @@ final class NullEntryTest extends TestCase
         new NullEntry('');
     }
 
+    public function test_entry_name_can_be_zero() : void
+    {
+        $this->assertSame('0', (new NullEntry('0'))->name());
+    }
+
     public function test_renames_entry() : void
     {
         $entry = new NullEntry('entry-name');

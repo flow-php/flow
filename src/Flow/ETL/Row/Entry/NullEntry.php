@@ -18,7 +18,7 @@ final class NullEntry implements Entry
 
     public function __construct(string $name)
     {
-        if (empty($name)) {
+        if (!\strlen($name)) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 

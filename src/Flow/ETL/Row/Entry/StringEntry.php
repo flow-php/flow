@@ -20,7 +20,7 @@ final class StringEntry implements Entry
 
     public function __construct(string $name, string $value)
     {
-        if (empty($name)) {
+        if (!\strlen($name)) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 

@@ -25,7 +25,7 @@ final class CollectionEntry implements Entry
 
     public function __construct(string $name, Entries ...$entries)
     {
-        if (empty($name)) {
+        if (!\strlen($name)) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 

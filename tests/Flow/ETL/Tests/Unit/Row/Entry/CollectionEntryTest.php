@@ -24,6 +24,11 @@ final class CollectionEntryTest extends TestCase
         );
     }
 
+    public function test_entry_name_can_be_zero() : void
+    {
+        $this->assertSame('0', (new CollectionEntry('0', new Entries(new IntegerEntry('id', 1), new StringEntry('name', 'one'))))->name());
+    }
+
     public function test_returns_array_as_value() : void
     {
         $entry = new CollectionEntry(

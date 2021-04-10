@@ -16,6 +16,11 @@ final class IntegerEntryTest extends TestCase
         new IntegerEntry('', 100);
     }
 
+    public function test_entry_name_can_be_zero() : void
+    {
+        $this->assertSame('0', (new IntegerEntry('0', 0))->name());
+    }
+
     public function test_renames_entry() : void
     {
         $entry = new IntegerEntry('entry-name', 100);

@@ -17,6 +17,11 @@ final class JsonEntryTest extends TestCase
         new JsonEntry('', [1, 2, 3]);
     }
 
+    public function test_entry_name_can_be_zero() : void
+    {
+        $this->assertSame('0', (new JsonEntry('0', [1]))->name());
+    }
+
     public function test_prevent_from_creating_object_with_integers_as_keys_in_entry() : void
     {
         $this->expectExceptionMessage('All keys for JsonEntry object must be strings');

@@ -22,7 +22,7 @@ final class DateTimeEntry implements Entry
 
     public function __construct(string $name, \DateTimeImmutable $value, string $format = \DateTimeImmutable::ATOM)
     {
-        if (empty($name)) {
+        if (!\strlen($name)) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 

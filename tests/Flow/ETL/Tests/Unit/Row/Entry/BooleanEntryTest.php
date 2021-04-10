@@ -16,6 +16,11 @@ final class BooleanEntryTest extends TestCase
         new BooleanEntry('', true);
     }
 
+    public function test_entry_name_can_be_zero() : void
+    {
+        $this->assertSame('0', (new BooleanEntry('0', true))->name());
+    }
+
     public function test_renames_entry() : void
     {
         $entry = new BooleanEntry('entry-name', true);

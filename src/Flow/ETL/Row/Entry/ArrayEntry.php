@@ -27,7 +27,7 @@ final class ArrayEntry implements Entry
      */
     public function __construct(string $name, array $value)
     {
-        if (empty($name)) {
+        if (!\strlen($name)) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 

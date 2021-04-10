@@ -20,7 +20,7 @@ final class IntegerEntry implements Entry
 
     public function __construct(string $name, int $value)
     {
-        if (empty($name)) {
+        if (!\strlen($name)) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 

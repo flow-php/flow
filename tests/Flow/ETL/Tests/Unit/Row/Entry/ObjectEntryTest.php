@@ -16,6 +16,11 @@ final class ObjectEntryTest extends TestCase
         new ObjectEntry('', new \stdClass());
     }
 
+    public function test_entry_name_can_be_zero() : void
+    {
+        $this->assertSame('0', (new ObjectEntry('0', new \stdClass()))->name());
+    }
+
     public function test_renames_entry() : void
     {
         $entry = new ObjectEntry('entry-name', new \stdClass());
