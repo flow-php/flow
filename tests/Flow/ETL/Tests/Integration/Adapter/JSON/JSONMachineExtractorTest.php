@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Adapter\JSON\Tests\Integration;
+namespace Flow\ETL\Tests\Integration\Adapter\JSON;
 
 use Flow\ETL\Adapter\JSON\JSONMachineExtractor;
 use Flow\ETL\Row;
@@ -14,7 +14,7 @@ final class JSONMachineExtractorTest extends TestCase
 {
     public function test_extracting_csv_files_with_header() : void
     {
-        $reader = JsonMachine::fromFile(__DIR__ . '/../Fixtures/timezones.json');
+        $reader = JsonMachine::fromFile(__DIR__ . '/Fixtures/timezones.json');
 
         $extractor = new JSONMachineExtractor($reader, 5);
 

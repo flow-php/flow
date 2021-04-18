@@ -4,11 +4,24 @@
 
 ## Description
 
-ETL Adapter that provides memory safe JSON Extractor.
+ETL Adapter that provides memory safe JSON support for ETL.
 
 Following implementation are available: 
 - [JSON Machine](https://github.com/halaxa/json-machine) 
 
+## Entry - JsonEntry
+
+```php 
+<?php
+
+use Flow\ETL\Row\Entry\JsonEntry;
+
+$jsonEntry = new JsonEntry('empty', []);
+$jsonObjectEntry = JsonEntry::object('empty', []);
+
+$this->assertEquals('[]', $jsonEntry->value());
+$this->assertEquals('{}', $jsonObjectEntry->value());
+```
 
 ## Extractor - JSONMachineExtractor
 

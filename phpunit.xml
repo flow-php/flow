@@ -15,8 +15,11 @@
   </coverage>
   <logging/>
   <testsuites>
+    <testsuite name="unit">
+      <directory suffix=".php">tests/Flow/ETL/Tests/Unit</directory>
+    </testsuite>
     <testsuite name="integration">
-      <directory suffix=".php">tests/Flow/ETL/Adapter/JSON/Tests/Integration</directory>
+      <directory suffix=".php">tests/Flow/ETL/Tests/Integration</directory>
     </testsuite>
   </testsuites>
 </phpunit>
