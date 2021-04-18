@@ -4,36 +4,41 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use Flow\ETL\Pipeline\Element;
+
 final class ETL
 {
     private Extractor $extractor;
 
-    private Transformers $transformers;
+    private Pipeline $pipeline;
 
-    private function __construct(Extractor $extractor, Transformers $transformers)
+    private function __construct(Extractor $extractor, Pipeline $pipeline)
     {
         $this->extractor = $extractor;
-        $this->transformers = $transformers;
+        $this->pipeline = $pipeline;
     }
 
-    public static function extract(Extractor $extractor) : self
+    public static function extract(Extractor $extractor, Pipeline $pipeline = null) : self
     {
-        return new self($extractor, new Transformers());
+        return new self($extractor, $pipeline ?? new SynchronousPipeline());
     }
 
-    public function transform(Transformer ...$transformer) : self
+    public function transform(Transformer $transformer) : self
     {
-        return new self($this->extractor, $this->transformers->add(...$transformer));
+        $this->pipeline->register(Element::transformer($transformer));
+
+        return $this;
     }
 
-    public function load(Loader ...$loaders) : void
+    public function load(Loader $loader) : self
     {
-        foreach ($this->extractor->extract() as $rows) {
-            $transformedRows = $this->transformers->transform($rows);
+        $this->pipeline->register(Element::loader($loader));
 
-            foreach ($loaders as $loader) {
-                $loader->load($transformedRows);
-            }
-        }
+        return $this;
+    }
+
+    public function run() : void
+    {
+        $this->pipeline->process($this->extractor->extract());
     }
 }

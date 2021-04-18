@@ -34,7 +34,10 @@ final class ETLTest extends TestCase
                         new BooleanEntry('deleted', false),
                         new DateEntry('expiration-date', new \DateTimeImmutable('2020-08-24')),
                         new NullEntry('phase')
-                    ),
+                    )
+                );
+
+                yield new Rows(
                     Row::create(
                         new IntegerEntry('id', 102),
                         new BooleanEntry('deleted', true),
@@ -55,22 +58,21 @@ final class ETLTest extends TestCase
         };
 
         $loader = new class implements Loader {
-            public array $result;
+            public array $result = [];
 
             public function load(Rows $rows) : void
             {
-                $this->result = $rows->toArray();
+                $this->result = \array_merge($this->result, $rows->toArray());
             }
         };
 
         ETL::extract($extractor)
             ->transform($addStampStringEntry)
-            ->transform(
-                AddStampToStringEntryTransformer::divideBySemicolon('stamp', 'one'),
-                AddStampToStringEntryTransformer::divideBySemicolon('stamp', 'two')
-            )
+            ->transform(AddStampToStringEntryTransformer::divideBySemicolon('stamp', 'one'))
+            ->transform(AddStampToStringEntryTransformer::divideBySemicolon('stamp', 'two'))
             ->transform(AddStampToStringEntryTransformer::divideBySemicolon('stamp', 'three'))
-            ->load($loader);
+            ->load($loader)
+            ->run();
 
         $this->assertEquals(
             [
