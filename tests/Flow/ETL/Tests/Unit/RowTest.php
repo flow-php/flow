@@ -14,7 +14,6 @@ use Flow\ETL\Row\Entry\CollectionEntry;
 use Flow\ETL\Row\Entry\DateEntry;
 use Flow\ETL\Row\Entry\DateTimeEntry;
 use Flow\ETL\Row\Entry\IntegerEntry;
-use Flow\ETL\Row\Entry\JsonEntry;
 use Flow\ETL\Row\Entry\NullEntry;
 use Flow\ETL\Row\Entry\StringEntry;
 use PHPUnit\Framework\TestCase;
@@ -111,16 +110,6 @@ final class RowTest extends TestCase
             false,
             new Row(new Entries(new IntegerEntry('1', 1), new IntegerEntry('2', 2))),
             new Row(new Entries(new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3))),
-        ];
-        yield 'simple same json entries' => [
-            true,
-            new Row(new Entries(new JsonEntry('json', ['foo' => ['bar' => 'baz']]))),
-            new Row(new Entries(new JsonEntry('json', ['foo' => ['bar' => 'baz']]))),
-        ];
-        yield 'simple different json entries' => [
-            false,
-            new Row(new Entries(new JsonEntry('json', ['foo' => ['bar' => 'baz']]))),
-            new Row(new Entries(new JsonEntry('json', ['bar' => ['bar' => 'baz']]))),
         ];
         yield 'simple same array entries' => [
             true,

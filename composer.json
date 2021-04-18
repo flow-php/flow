@@ -6,8 +6,7 @@
     "prefer-stable": true,
     "require": {
         "php": "^7.4 | ^8.0",
-        "ext-mbstring": "*",
-        "ext-json": "*"
+        "ext-mbstring": "*"
     },
     "config": {
         "optimize-autoloader": true,

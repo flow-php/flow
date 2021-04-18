@@ -8,7 +8,6 @@ use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry\ArrayEntry;
 use Flow\ETL\Row\Entry\CollectionEntry;
 use Flow\ETL\Row\Entry\IntegerEntry;
-use Flow\ETL\Row\Entry\JsonEntry;
 use Flow\ETL\Row\Entry\StringEntry;
 use PHPUnit\Framework\TestCase;
 
@@ -93,16 +92,6 @@ final class CollectionEntryTest extends TestCase
             false,
             new CollectionEntry('name', new Entries(new IntegerEntry('1', 1), new IntegerEntry('2', 2))),
             new CollectionEntry('name', new Entries(new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3))),
-        ];
-        yield 'equal names and equal simple same json entries' => [
-            true,
-            new CollectionEntry('name', new Entries(new JsonEntry('json', ['foo' => ['bar' => 'baz']]))),
-            new CollectionEntry('name', new Entries(new JsonEntry('json', ['foo' => ['bar' => 'baz']]))),
-        ];
-        yield 'equal names and equal simple different json entries' => [
-            false,
-            new CollectionEntry('name', new Entries(new JsonEntry('json', ['foo' => ['bar' => 'baz']]))),
-            new CollectionEntry('name', new Entries(new JsonEntry('json', ['bar' => ['bar' => 'baz']]))),
         ];
         yield 'equal names and equal simple same array entries' => [
             true,

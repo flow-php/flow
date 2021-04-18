@@ -40,7 +40,6 @@ This is a perfect scenario for ETL.
 * [DateEntry](src/Flow/ETL/Row/Entry/DateEntry.php)
 * [DateTimeEntry](src/Flow/ETL/Row/Entry/DateTimeEntry.php)
 * [IntegerEntry](src/Flow/ETL/Row/Entry/IntegerEntry.php)
-* [JsonEntry](src/Flow/ETL/Row/Entry/JsonEntry.php)
 * [NullEntry](src/Flow/ETL/Row/Entry/NullEntry.php)
 * [ObjectEntryEntry](src/Flow/ETL/Row/Entry/ObjectEntry.php)
 * [StringEntry](src/Flow/ETL/Row/Entry/StringEntry.php)
@@ -89,7 +88,7 @@ $extractor = new class implements Extractor {
     {
         yield new Rows(
             Row::create(
-                new Row\Entry\JsonEntry('user', ['id' => 1, 'name' => 'Norbret', 'roles' => ['DEVELOPER', 'ADMIN']])
+                new Row\Entry\ArrayEntry('user', ['id' => 1, 'name' => 'Norbret', 'roles' => ['DEVELOPER', 'ADMIN']])
             )
         );
     }
@@ -99,7 +98,7 @@ $transformer = new class implements Transformer {
     public function transform(Rows $rows): Rows
     {
         return $rows->map(function (Row $row): Row {
-            $dataArray = \json_decode($row->get('user')->value(), true, 512, JSON_THROW_ON_ERROR);
+            $dataArray = $row->get('user')->value();
 
             return Row::create(
                 new Row\Entry\IntegerEntry('id', $dataArray['id']),
