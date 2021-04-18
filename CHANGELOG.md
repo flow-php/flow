@@ -1,6 +1,9 @@
 ## [Unreleased] - 2021-04-18
 
 ### Added
+- [#32](https://github.com/flow-php/etl/pull/32) - **possibility to mix transformers and loaders order of execution** - [@norberttech](https://github.com/norberttech)
+- [#32](https://github.com/flow-php/etl/pull/32) - **Pipeline interface with SynchronousPipeline implementation** - [@norberttech](https://github.com/norberttech)
+- [#32](https://github.com/flow-php/etl/pull/32) - **ETL::run(): void method that makes possible to delay ETL execution** - [@norberttech](https://github.com/norberttech)
 - [#29](https://github.com/flow-php/etl/pull/29) - **Row::remove() : self** - [@norberttech](https://github.com/norberttech)
 - [#28](https://github.com/flow-php/etl/pull/28) - **XMLEntry** - [@norberttech](https://github.com/norberttech)
 - [#24](https://github.com/flow-php/etl/pull/24) - **Rows::unique(Comparator = null) ? self** - [@norberttech](https://github.com/norberttech)
