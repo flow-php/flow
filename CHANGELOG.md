@@ -1,4 +1,4 @@
-## [Unreleased] - 2021-04-10
+## [Unreleased] - 2021-04-18
 
 ### Added
 - [#29](https://github.com/flow-php/etl/pull/29) - **Row::remove() : self** - [@norberttech](https://github.com/norberttech)
@@ -22,6 +22,7 @@
 - [856870](https://github.com/flow-php/etl/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#34](https://github.com/flow-php/etl/pull/34) - **Moved XMLEntry into etl-adapter-xml** - [@norberttech](https://github.com/norberttech)
 - [8fc505](https://github.com/flow-php/etl/commit/8fc505c113f81afae66595d0438ef4969ca9c415) - **Update README.md** - [@norberttech](https://github.com/norberttech)
 - [15cc7c](https://github.com/flow-php/etl/commit/15cc7c5f96cfd7c9f7f8ae328afcbd35008cecb1) - **Update README.md** - [@norberttech](https://github.com/norberttech)
 - [4098cb](https://github.com/flow-php/etl/commit/4098cb5aea3c8ef35d9314dd47568a3a66be2342) - **Update README.md** - [@norberttech](https://github.com/norberttech)
