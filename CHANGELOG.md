@@ -1,6 +1,8 @@
-## [Unreleased] - 2021-04-10
+## [Unreleased] - 2021-04-18
 
 ### Changed
+- [#3](https://github.com/flow-php/etl-adapter-json/pull/3) - **Moved JsonEntry from main ETL library** - [@norberttech](https://github.com/norberttech)
+- [#3](https://github.com/flow-php/etl-adapter-json/pull/3) - **Improved test suite configuration** - [@norberttech](https://github.com/norberttech)
 - [e2a1c6](https://github.com/flow-php/etl-adapter-json/commit/e2a1c672b89845bc1df33ca189a14b68e3d4cbc7) - **Initial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
