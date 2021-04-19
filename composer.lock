@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b225945a340237659070abdc21ab7b2a",
+    "content-hash": "697a5830faa20feb44096122118b7b8e",
     "packages": [
         {
             "name": "composer/package-versions-deprecated",
@@ -385,6 +385,52 @@
             "time": "2020-05-29T18:28:51+00:00"
         },
         {
+            "name": "flow-php/etl",
+            "version": "1.x-dev",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/flow-php/etl.git",
+                "reference": "894f1ba87b28f19c649b3ba3da98828fd9682657"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/flow-php/etl/zipball/894f1ba87b28f19c649b3ba3da98828fd9682657",
+                "reference": "894f1ba87b28f19c649b3ba3da98828fd9682657",
+                "shasum": ""
+            },
+            "require": {
+                "ext-mbstring": "*",
+                "php": "^7.4 | ^8.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Flow\\": [
+                        "src/Flow"
+                    ]
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "PHP ETL - Extract Transform Load - Abstraction",
+            "keywords": [
+                "etl",
+                "extract",
+                "load",
+                "transform"
+            ],
+            "support": {
+                "issues": "https://github.com/flow-php/etl/issues",
+                "source": "https://github.com/flow-php/etl/tree/1.x"
+            },
+            "time": "2021-04-18T14:28:38+00:00"
+        }
+    ],
+    "packages-dev": [
+        {
             "name": "flow-php/doctrine-dbal-bulk",
             "version": "1.x-dev",
             "source": {
@@ -428,54 +474,8 @@
                 "source": "https://github.com/flow-php/doctrine-dbal-bulk/tree/1.x"
             },
             "time": "2021-03-30T07:43:05+00:00"
-        },
-        {
-            "name": "flow-php/etl",
-            "version": "1.x-dev",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/flow-php/etl.git",
-                "reference": "2eaf52f07b409968520faaf8572e1d282e50b9c7"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl/zipball/2eaf52f07b409968520faaf8572e1d282e50b9c7",
-                "reference": "2eaf52f07b409968520faaf8572e1d282e50b9c7",
-                "shasum": ""
-            },
-            "require": {
-                "ext-json": "*",
-                "ext-mbstring": "*",
-                "php": "^7.4 | ^8.0"
-            },
-            "default-branch": true,
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Flow\\": [
-                        "src/Flow"
-                    ]
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "PHP ETL - Extract Transform Load - Abstraction",
-            "keywords": [
-                "etl",
-                "extract",
-                "load",
-                "transform"
-            ],
-            "support": {
-                "issues": "https://github.com/flow-php/etl/issues",
-                "source": "https://github.com/flow-php/etl/tree/1.x"
-            },
-            "time": "2021-03-28T13:26:50+00:00"
         }
     ],
-    "packages-dev": [],
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
@@ -485,7 +485,7 @@
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": ">=7.4.2"
+        "php": "^7.4.2 | ^8.0"
     },
     "platform-dev": [],
     "plugin-api-version": "2.0.0"
