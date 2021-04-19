@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Doctrine\Tests\Context;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Logging\SQLLogger;
 
 final class DatabaseContext
 {
     private Connection $connection;
 
-    private InsertQueryCounter $sqlLogger;
+    private SQLLogger $sqlLogger;
 
     /**
      * @var string[]
@@ -33,6 +34,7 @@ final class DatabaseContext
 
     public function createTestTable(string $tableName) : void
     {
+        $this->connection->executeQuery("DROP TABLE IF EXISTS {$tableName}");
         $this->connection->executeQuery("CREATE TABLE {$tableName} (id INT NOT NULL, name VARCHAR(255) NOT NULL, description VARCHAR(255) NOT NULL, PRIMARY KEY(id))");
 
         $this->createdTables[] = $tableName;
@@ -50,7 +52,11 @@ final class DatabaseContext
 
     public function numberOfExecutedInsertQueries() : int
     {
-        return $this->sqlLogger->count;
+        if ($this->sqlLogger instanceof InsertQueryCounter) {
+            return $this->sqlLogger->count;
+        }
+
+        return 0;
     }
 
     public function dropAllTables() : void

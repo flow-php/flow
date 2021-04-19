@@ -53,6 +53,12 @@
         ],
         "test:mutation": [
             "tools/vendor/bin/infection -j2"
+        ],
+        "post-install-cmd": [
+            "@tools:install"
+        ],
+        "post-update-cmd": [
+            "@tools:install"
         ]
     }
 }

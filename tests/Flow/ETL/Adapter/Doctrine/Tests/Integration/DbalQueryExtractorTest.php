@@ -29,7 +29,7 @@ final class DbalQueryExtractorTest extends IntegrationTestCase
             new TransformTestData()
         )->load(
             DbalBulkLoader::insert($this->pgsqlDatabaseContext->connection(), $bulkSize = 10, $table)
-        );
+        )->run();
 
         ETL::extract(
             new DbalQueryExtractor(
@@ -45,7 +45,7 @@ final class DbalQueryExtractorTest extends IntegrationTestCase
                     $this->data = $rows->toArray();
                 }
             }
-        );
+        )->run();
 
         $this->assertSame(
             [

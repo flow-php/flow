@@ -26,7 +26,7 @@ final class DbalBulkLoaderTest extends IntegrationTestCase
             new TransformTestData()
         )->load(
             DbalBulkLoader::insert($this->pgsqlDatabaseContext->connection(), $bulkSize = 10, $table)
-        );
+        )->run();
 
         $this->assertEquals(3, $this->pgsqlDatabaseContext->tableCount($table));
         $this->assertEquals(1, $this->pgsqlDatabaseContext->numberOfExecutedInsertQueries());
@@ -46,7 +46,7 @@ final class DbalBulkLoaderTest extends IntegrationTestCase
             new TransformTestData()
         )->load(
             DbalBulkLoader::insert($this->pgsqlDatabaseContext->connection(), $bulkSize = 2, $table)
-        );
+        )->run();
 
         $this->assertEquals(3, $this->pgsqlDatabaseContext->tableCount($table));
         $this->assertEquals(2, $this->pgsqlDatabaseContext->numberOfExecutedInsertQueries());
@@ -65,7 +65,7 @@ final class DbalBulkLoaderTest extends IntegrationTestCase
             new TransformTestData()
         )->load(
             DbalBulkLoader::insert($this->pgsqlDatabaseContext->connection(), $bulkSize = 10, $table)
-        );
+        )->run();
 
         ETL::extract(
             new ArrayExtractor(
@@ -77,7 +77,7 @@ final class DbalBulkLoaderTest extends IntegrationTestCase
             new TransformTestData()
         )->load(
             DbalBulkLoader::insertOrSkipOnConflict($this->pgsqlDatabaseContext->connection(), $bulkSize = 10, $table)
-        );
+        )->run();
 
         $this->assertEquals(4, $this->pgsqlDatabaseContext->tableCount($table));
         $this->assertEquals(2, $this->pgsqlDatabaseContext->numberOfExecutedInsertQueries());
@@ -105,7 +105,7 @@ final class DbalBulkLoaderTest extends IntegrationTestCase
             new TransformTestData()
         )->load(
             DbalBulkLoader::insert($this->pgsqlDatabaseContext->connection(), $bulkSize = 10, $table)
-        );
+        )->run();
 
         ETL::extract(
             new ArrayExtractor(
@@ -122,7 +122,7 @@ final class DbalBulkLoaderTest extends IntegrationTestCase
                 $table,
                 'flow_dbal_loader_test_pkey'
             )
-        );
+        )->run();
 
         $this->assertEquals(4, $this->pgsqlDatabaseContext->tableCount($table));
         $this->assertEquals(2, $this->pgsqlDatabaseContext->numberOfExecutedInsertQueries());
