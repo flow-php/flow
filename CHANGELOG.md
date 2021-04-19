@@ -1,6 +1,10 @@
-## [Unreleased] - 2021-04-05
+## [Unreleased] - 2021-04-19
+
+### Added
+- [#1](https://github.com/flow-php/etl-adapter-doctrine/pull/1) - **DbalQueryExtractor** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [3ac4c5](https://github.com/flow-php/etl-adapter-doctrine/commit/3ac4c519913fe5bcb08317de9434831bcfc28673) - **CHANGELOG.md** - [@aeon-automation](https://github.com/aeon-automation)
 - [4e478e](https://github.com/flow-php/etl-adapter-doctrine/commit/4e478e2862f4a9dee0124a2809909ba3136237c9) - **Rename to etl-adapter-doctrine** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [1f8faa](https://github.com/flow-php/etl-adapter-doctrine/commit/1f8faae06632dad7317a05629464040d7d1ca3d1) - **CHANGELOG.md** - [@aeon-automation](https://github.com/aeon-automation)
 - [3ea958](https://github.com/flow-php/etl-adapter-doctrine/commit/3ea95818ff969bdb9151e8590fa1952a3878a60d) - **Initial commit** - [@tomaszhanc](https://github.com/tomaszhanc)
