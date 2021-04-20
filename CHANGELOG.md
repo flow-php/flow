@@ -1,6 +1,7 @@
-## [Unreleased] - 2021-04-10
+## [Unreleased] - 2021-04-20
 
 ### Added
+- [#5](https://github.com/flow-php/etl-adapter-elasticsearch/pull/5) - **elasticsearch/elasticsearch into composer.json suggest section** - [@norberttech](https://github.com/norberttech)
 - [#2](https://github.com/flow-php/etl-adapter-elasticsearch/pull/2) - **PHP 8.0 to the testsuite** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
@@ -8,6 +9,7 @@
 - [b71018](https://github.com/flow-php/etl-adapter-elasticsearch/commit/b710189a7399b0df5b253ae19abf63fc8b3c7e0f) - **Initial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#5](https://github.com/flow-php/etl-adapter-elasticsearch/pull/5) - **broken tests** - [@norberttech](https://github.com/norberttech)
 - [#1](https://github.com/flow-php/etl-adapter-elasticsearch/pull/1) - **failing tests** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
