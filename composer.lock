@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "67ba3c414b426d1425bb81b8c7f3b666",
+    "content-hash": "1f98312d794736f90ffbcae28dee80d1",
     "packages": [
         {
             "name": "flow-php/etl",
@@ -12,16 +12,15 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl.git",
-                "reference": "98124f2eb7badfa7f1f91181ce4ec947e5359195"
+                "reference": "a95539604b371e7507503e6374594c4796274236"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl/zipball/98124f2eb7badfa7f1f91181ce4ec947e5359195",
-                "reference": "98124f2eb7badfa7f1f91181ce4ec947e5359195",
+                "url": "https://api.github.com/repos/flow-php/etl/zipball/a95539604b371e7507503e6374594c4796274236",
+                "reference": "a95539604b371e7507503e6374594c4796274236",
                 "shasum": ""
             },
             "require": {
-                "ext-json": "*",
                 "ext-mbstring": "*",
                 "php": "^7.4 | ^8.0"
             },
@@ -49,7 +48,7 @@
                 "issues": "https://github.com/flow-php/etl/issues",
                 "source": "https://github.com/flow-php/etl/tree/1.x"
             },
-            "time": "2021-04-06T09:20:10+00:00"
+            "time": "2021-04-20T09:41:43+00:00"
         }
     ],
     "packages-dev": [
@@ -230,6 +229,59 @@
             "time": "2020-02-14T23:51:21+00:00"
         },
         {
+            "name": "flow-php/etl-adapter-json",
+            "version": "1.x-dev",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/flow-php/etl-adapter-json.git",
+                "reference": "b919819dff5d87f18321b84673ab26d85fbc2dbb"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/flow-php/etl-adapter-json/zipball/b919819dff5d87f18321b84673ab26d85fbc2dbb",
+                "reference": "b919819dff5d87f18321b84673ab26d85fbc2dbb",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "flow-php/etl": "^1.0@dev",
+                "php": "^7.4 | ^8.0"
+            },
+            "require-dev": {
+                "halaxa/json-machine": "^0.6.1"
+            },
+            "suggest": {
+                "halaxa/json-machine": "Memory safe json library used by Extractors and Loaders"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Flow\\": [
+                        "src/Flow"
+                    ]
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "PHP ETL - Adapter - JSON",
+            "keywords": [
+                "adapter",
+                "etl",
+                "extract",
+                "json",
+                "load",
+                "transform"
+            ],
+            "support": {
+                "issues": "https://github.com/flow-php/etl-adapter-json/issues",
+                "source": "https://github.com/flow-php/etl-adapter-json/tree/1.x"
+            },
+            "time": "2021-04-20T09:45:04+00:00"
+        },
+        {
             "name": "psr/log",
             "version": "1.1.3",
             "source": {
@@ -333,7 +385,8 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "flow-php/etl": 20
+        "flow-php/etl": 20,
+        "flow-php/etl-adapter-json": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
