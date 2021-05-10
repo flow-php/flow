@@ -1,4 +1,4 @@
-## [Unreleased] - 2021-05-05
+## [Unreleased] - 2021-05-10
 
 ### Added
 - [#5](https://github.com/flow-php/etl-adapter-elasticsearch/pull/5) - **elasticsearch/elasticsearch into composer.json suggest section** - [@norberttech](https://github.com/norberttech)
