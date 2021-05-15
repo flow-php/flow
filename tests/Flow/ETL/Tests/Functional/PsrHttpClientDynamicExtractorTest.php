@@ -4,22 +4,22 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Functional;
 
-use Flow\ETL\Adapter\Http\NextRequestFactory;
-use Flow\ETL\Adapter\Http\PsrHttpClientExtractor;
+use Flow\ETL\Adapter\Http\DynamicExtractor\NextRequestFactory;
+use Flow\ETL\Adapter\Http\PsrHttpClientDynamicExtractor;
 use Http\Client\Curl\Client;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
-final class PsrHttpClientExtractorTest extends TestCase
+final class PsrHttpClientDynamicExtractorTest extends TestCase
 {
     public function test_http_extractor() : void
     {
         $psr17Factory = new Psr17Factory();
         $psr18Client = new Client($psr17Factory, $psr17Factory);
 
-        $extractor = new PsrHttpClientExtractor($psr18Client, new class implements NextRequestFactory {
+        $extractor = new PsrHttpClientDynamicExtractor($psr18Client, new class implements NextRequestFactory {
             public function create(?ResponseInterface $previousResponse = null) : ?RequestInterface
             {
                 $psr17Factory = new Psr17Factory();

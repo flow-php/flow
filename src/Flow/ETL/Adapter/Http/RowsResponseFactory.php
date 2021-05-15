@@ -5,41 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Http;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Extractor;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
-use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\ResponseInterface;
 
-/**
- * @psalm-immutable
- */
-final class PsrHttpClientExtractor implements Extractor
+final class RowsResponseFactory
 {
-    private ClientInterface $client;
-
-    private NextRequestFactory $requestFactory;
-
-    public function __construct(ClientInterface $client, NextRequestFactory $requestFactory)
-    {
-        $this->client = $client;
-        $this->requestFactory = $requestFactory;
-    }
-
-    public function extract() : \Generator
-    {
-        $nextRequest = $this->requestFactory->create();
-
-        while ($nextRequest) {
-            /** @psalm-suppress ImpureMethodCall */
-            $response = $this->client->sendRequest($nextRequest);
-
-            yield $this->responseToRows($response);
-
-            $nextRequest = $this->requestFactory->create($response);
-        }
-    }
-
     /**
      * @param ResponseInterface $response
      *
@@ -47,12 +18,13 @@ final class PsrHttpClientExtractor implements Extractor
      * @throws \JsonException
      *
      * @return Rows
+     * @psalm-pure
      * @psalm-suppress ImpureMethodCall
      * @psalm-suppress InvalidLiteralArgument
      * @psalm-suppress ImpureFunctionCall
      * @psalm-suppress MixedArgument
      */
-    private function responseToRows(ResponseInterface $response) : Rows
+    public function create(ResponseInterface $response) : Rows
     {
         $responseType = 'html';
 
