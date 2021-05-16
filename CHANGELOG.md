@@ -1,6 +1,7 @@
-## [Unreleased] - 2021-05-13
+## [Unreleased] - 2021-05-16
 
 ### Added
+- [#44](https://github.com/flow-php/etl/pull/44) - **FloatEntry** - [@norberttech](https://github.com/norberttech)
 - [#32](https://github.com/flow-php/etl/pull/32) - **possibility to mix transformers and loaders order of execution** - [@norberttech](https://github.com/norberttech)
 - [#32](https://github.com/flow-php/etl/pull/32) - **Pipeline interface with SynchronousPipeline implementation** - [@norberttech](https://github.com/norberttech)
 - [#32](https://github.com/flow-php/etl/pull/32) - **ETL::run(): void method that makes possible to delay ETL execution** - [@norberttech](https://github.com/norberttech)
