@@ -342,4 +342,33 @@ final class RowsTest extends TestCase
             $sorted
         );
     }
+
+    public function test_flat_map() : void
+    {
+        $rows = new Rows(
+            Row::create(
+                new IntegerEntry('id', 1234),
+            ),
+            Row::create(
+                new IntegerEntry('id', 4567),
+            )
+        );
+
+        $rows = $rows->flatMap(function (Row $row) : array {
+            return [
+                $row->add(new StringEntry('name', $row->valueOf('id') . '-name-01')),
+                $row->add(new StringEntry('name', $row->valueOf('id') . '-name-02')),
+            ];
+        });
+
+        $this->assertSame(
+            [
+                ['id' => 1234, 'name' => '1234-name-01'],
+                ['id' => 1234, 'name' => '1234-name-02'],
+                ['id' => 4567, 'name' => '4567-name-01'],
+                ['id' => 4567, 'name' => '4567-name-02'],
+            ],
+            $rows->toArray()
+        );
+    }
 }

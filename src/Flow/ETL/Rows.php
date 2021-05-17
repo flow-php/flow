@@ -114,6 +114,16 @@ final class Rows
     }
 
     /**
+     * @psalm-param pure-callable(Row) : Row[] $callable
+     *
+     * @param callable(Row) : Row[] $callable
+     */
+    public function flatMap(callable $callable) : self
+    {
+        return new self(...\array_merge(...\array_map($callable, $this->rows)));
+    }
+
+    /**
      * @psalm-param pure-callable(Row) : void $callable
      *
      * @param callable(Row) : void $callable
