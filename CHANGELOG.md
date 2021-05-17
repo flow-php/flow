@@ -1,6 +1,7 @@
-## [Unreleased] - 2021-05-16
+## [Unreleased] - 2021-05-17
 
 ### Added
+- [#46](https://github.com/flow-php/etl/pull/46) - **Rows::flatMap() : self** - [@norberttech](https://github.com/norberttech)
 - [#44](https://github.com/flow-php/etl/pull/44) - **FloatEntry** - [@norberttech](https://github.com/norberttech)
 - [#32](https://github.com/flow-php/etl/pull/32) - **possibility to mix transformers and loaders order of execution** - [@norberttech](https://github.com/norberttech)
 - [#32](https://github.com/flow-php/etl/pull/32) - **Pipeline interface with SynchronousPipeline implementation** - [@norberttech](https://github.com/norberttech)
