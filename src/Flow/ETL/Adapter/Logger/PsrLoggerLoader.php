@@ -10,7 +10,7 @@ use Flow\ETL\Rows;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 
-final class PSRLoggerLoader implements Loader
+final class PsrLoggerLoader implements Loader
 {
     private LoggerInterface $logger;
 

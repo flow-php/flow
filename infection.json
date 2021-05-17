@@ -18,14 +18,14 @@
   },
   "mutators": {
     "@default": true,
-    "DecrementInteger": {
+    "MethodCallRemoval": {
       "ignore": [
-        "Flow\\ETL\\Extractor\\MemoryExtractor::extract"
+        "Flow\\ETL\\Adapter\\Logger\\Logger\\DumpLogger::log"
       ]
     },
-    "IncrementInteger": {
+    "ArrayItemRemoval": {
       "ignore": [
-        "Flow\\ETL\\Extractor\\MemoryExtractor::extract"
+        "Flow\\ETL\\Adapter\\Logger\\Logger\\DumpLogger::log"
       ]
     }
   },

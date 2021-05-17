@@ -8,13 +8,14 @@ use Psr\Log\AbstractLogger;
 
 final class DumpLogger extends AbstractLogger
 {
-    public function log($level, $message, array $context = array())
+    public function log($level, $message, array $context = []) : void
     {
         if (\class_exists('\\Symfony\\Component\\VarDumper\\VarDumper')) {
+            /** @psalm-suppress UndefinedClass */
             \Symfony\Component\VarDumper\VarDumper::dump([$message => $context]);
         } else {
             /** @psalm-suppress ForbiddenCode */
-            var_dump([$message => $context]);
+            \var_dump([$message => $context]);
         }
     }
 }

@@ -16,9 +16,10 @@ final class DumpLoggerTest extends TestCase
         \ob_start();
         $logger->error('error', ['id' => 1]);
         $output = \ob_get_contents();
-        \ob_end_clean();;
+        \ob_end_clean();
 
-        $this->assertStringContainsString(<<<OUTPUT
+        $this->assertStringContainsString(
+            <<<'OUTPUT'
 array(1) {
   ["error"]=>
   array(1) {
