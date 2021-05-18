@@ -36,9 +36,9 @@ final class ResponseEntriesFactory
         switch ($responseType) {
             case 'json':
                 if (\class_exists('Flow\ETL\Row\Entry\JsonEntry')) {
-                    $responseBodyEntry = new Row\Entry\JsonEntry('request_body', \json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR));
+                    $responseBodyEntry = new Row\Entry\JsonEntry('response_body', \json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR));
                 } else {
-                    $responseBodyEntry = new Row\Entry\StringEntry('request_body', $response->getBody()->getContents());
+                    $responseBodyEntry = new Row\Entry\StringEntry('response_body', $response->getBody()->getContents());
                 }
 
                 break;
