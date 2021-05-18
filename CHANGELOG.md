@@ -1,6 +1,7 @@
-## [Unreleased] - 2021-05-15
+## [Unreleased] - 2021-05-18
 
 ### Added
+- [#6](https://github.com/flow-php/etl-adapter-http/pull/6) - **whole request and response to ETL row** - [@norberttech](https://github.com/norberttech)
 - [#4](https://github.com/flow-php/etl-adapter-http/pull/4) - **Static HTTP extractor to extract rows from predefined collection of requests** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
