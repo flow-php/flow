@@ -18,7 +18,9 @@ final class FloatEntry implements Entry
 
     private float $value;
 
-    public function __construct(string $name, float $value)
+    private int $precision;
+
+    public function __construct(string $name, float $value, int $precision = 6)
     {
         if (!\strlen($name)) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
@@ -27,6 +29,7 @@ final class FloatEntry implements Entry
         $this->key = \mb_strtolower($name);
         $this->name = $name;
         $this->value = $value;
+        $this->precision = $precision;
     }
 
     /**
@@ -76,6 +79,6 @@ final class FloatEntry implements Entry
     {
         return $this->is($entry->name())
             && $entry instanceof self
-            && \bccomp((string) $this->value(), (string) $entry->value()) === 0;
+            && \bccomp((string) $this->value(), (string) $entry->value(), $this->precision) === 0;
     }
 }
