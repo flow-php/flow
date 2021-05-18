@@ -37,14 +37,16 @@ final class PsrHttpClientDynamicExtractorTest extends TestCase
 
         $rows = $extractor->extract();
 
-        $body = \json_decode($rows->current()->first()->valueOf('body'), true, 512, JSON_THROW_ON_ERROR);
+        $body = \json_decode($rows->current()->first()->valueOf('response_body'), true, 512, JSON_THROW_ON_ERROR);
 
         $this->assertSame(1, $rows->current()->count());
         $this->assertSame('flow-php', $body['login']);
         $this->assertSame(73495297, $body['id']);
-        $this->assertSame(['GitHub.com'], $rows->current()->first()->valueOf('headers')['Server']);
-        $this->assertSame(200, $rows->current()->first()->valueOf('status_code'));
-        $this->assertSame('1.1', $rows->current()->first()->valueOf('protocol_version'));
-        $this->assertSame('OK', $rows->current()->first()->valueOf('reason_phrase'));
+        $this->assertSame(['GitHub.com'], $rows->current()->first()->valueOf('response_headers')['Server']);
+        $this->assertSame(200, $rows->current()->first()->valueOf('response_status_code'));
+        $this->assertSame('1.1', $rows->current()->first()->valueOf('response_protocol_version'));
+        $this->assertSame('OK', $rows->current()->first()->valueOf('response_reason_phrase'));
+        $this->assertSame('https://api.github.com/orgs/flow-php', $rows->current()->first()->valueOf('request_uri'));
+        $this->assertSame('GET', $rows->current()->first()->valueOf('request_method'));
     }
 }

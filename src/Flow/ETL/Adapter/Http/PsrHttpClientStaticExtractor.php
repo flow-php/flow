@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Http;
 
 use Flow\ETL\Extractor;
+use Flow\ETL\Row;
+use Flow\ETL\Rows;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 
@@ -32,13 +34,16 @@ final class PsrHttpClientStaticExtractor implements Extractor
 
     public function extract() : \Generator
     {
-        $factory = new RowsResponseFactory();
+        $responseFactory = new ResponseEntriesFactory();
+        $requestFactory = new RequestEntriesFactory();
 
         foreach ($this->requests as $request) {
             /** @psalm-suppress ImpureMethodCall */
             $response = $this->client->sendRequest($request);
 
-            yield $factory->create($response);
+            yield new Rows(
+                Row::create(...\array_merge($responseFactory->create($response)->all(), $requestFactory->create($request)->all()))
+            );
         }
     }
 }

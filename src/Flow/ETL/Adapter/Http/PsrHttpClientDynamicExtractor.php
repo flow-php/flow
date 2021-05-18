@@ -6,6 +6,8 @@ namespace Flow\ETL\Adapter\Http;
 
 use Flow\ETL\Adapter\Http\DynamicExtractor\NextRequestFactory;
 use Flow\ETL\Extractor;
+use Flow\ETL\Row;
+use Flow\ETL\Rows;
 use Psr\Http\Client\ClientInterface;
 
 /**
@@ -25,7 +27,8 @@ final class PsrHttpClientDynamicExtractor implements Extractor
 
     public function extract() : \Generator
     {
-        $factory = new RowsResponseFactory();
+        $responseFactory = new ResponseEntriesFactory();
+        $requestFactory = new RequestEntriesFactory();
 
         $nextRequest = $this->requestFactory->create();
 
@@ -33,7 +36,9 @@ final class PsrHttpClientDynamicExtractor implements Extractor
             /** @psalm-suppress ImpureMethodCall */
             $response = $this->client->sendRequest($nextRequest);
 
-            yield $factory->create($response);
+            yield new Rows(
+                Row::create(...\array_merge($responseFactory->create($response)->all(), $requestFactory->create($nextRequest)->all()))
+            );
 
             $nextRequest = $this->requestFactory->create($response);
         }

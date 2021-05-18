@@ -41,10 +41,8 @@ final class PsrHttpClientStaticExtractorTest extends TestCase
         /** @var Rows $tomekRows */
         $tomekRows = $rowsGenerator->current();
 
-        $norbertResponseBody = \json_decode($norbertRows->first()->valueOf('body'), true, 512, JSON_THROW_ON_ERROR);
-        $tomekResponseBody = \json_decode($tomekRows->first()->valueOf('body'), true, 512, JSON_THROW_ON_ERROR);
-
-        \var_dump($norbertResponseBody);
+        $norbertResponseBody = \json_decode($norbertRows->first()->valueOf('response_body'), true, 512, JSON_THROW_ON_ERROR);
+        $tomekResponseBody = \json_decode($tomekRows->first()->valueOf('response_body'), true, 512, JSON_THROW_ON_ERROR);
 
         $this->assertSame('norberttech', $norbertResponseBody['login']);
         $this->assertSame('tomaszhanc', $tomekResponseBody['login']);
