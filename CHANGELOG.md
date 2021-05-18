@@ -43,6 +43,7 @@
 - [e48062](https://github.com/flow-php/etl/commit/e48062890cd84e655e1162305086f67148347b83) - **Intial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#48](https://github.com/flow-php/etl/pull/48) - **FloatEntry comparison by using precision properly** - [@norberttech](https://github.com/norberttech)
 - [#31](https://github.com/flow-php/etl/pull/31) - **not allowing '0' string as a name** - [@norberttech](https://github.com/norberttech)
 - [#14](https://github.com/flow-php/etl/pull/14) - **Fixed Github action for checking PR description** - [@DawidSajdak](https://github.com/DawidSajdak)
 - [1a6eec](https://github.com/flow-php/etl/commit/1a6eec01837f25cf1d6ff7c041996ff7b8b017e7) - **failing tests** - [@norberttech](https://github.com/norberttech)
