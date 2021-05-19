@@ -1,4 +1,4 @@
-## [Unreleased] - 2021-05-18
+## [Unreleased] - 2021-05-19
 
 ### Added
 - [#46](https://github.com/flow-php/etl/pull/46) - **Rows::flatMap() : self** - [@norberttech](https://github.com/norberttech)
@@ -27,6 +27,7 @@
 - [856870](https://github.com/flow-php/etl/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [56cc82](https://github.com/flow-php/etl/commit/56cc829d20c5e4e930049cdc08306331a4746f14) - **Adapters and Extensions section** - [@norberttech](https://github.com/norberttech)
 - [424aa9](https://github.com/flow-php/etl/commit/424aa92500d096e08c228aa66e2acc24140cfbda) - **Update README.md** - [@norberttech](https://github.com/norberttech)
 - [6113d9](https://github.com/flow-php/etl/commit/6113d9c2b719590326046886a109ee689c70ded8) - **Update README.md** - [@norberttech](https://github.com/norberttech)
 - [#34](https://github.com/flow-php/etl/pull/34) - **Moved XMLEntry into etl-adapter-xml** - [@norberttech](https://github.com/norberttech)
