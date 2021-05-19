@@ -1,5 +1,8 @@
 ## [Unreleased] - 2021-05-19
 
+### Added
+- [#13](https://github.com/flow-php/etl-adapter-xml/pull/13) - **memory safe XMLReaderExtractor** - [@norberttech](https://github.com/norberttech)
+
 ### Changed
 - [758afc](https://github.com/flow-php/etl-adapter-xml/commit/758afc937b64861a36af0aff3d86a0aa7450ad3a) - **dependencies** - [@norberttech](https://github.com/norberttech)
 - [91b656](https://github.com/flow-php/etl-adapter-xml/commit/91b6565354a85c109a77c9e3d0b5c8942ff7f604) - **Initial commit** - [@norberttech](https://github.com/norberttech)
