@@ -13,7 +13,7 @@ ETL Adapter that provides memory safe XML support for ETL.
 
 use Flow\ETL\Row\Entry\XMLEntry;
 
-$entry = XMLEntry::fromString('0', '<xml><name>node</name></xml>')
+$entry = XMLEntry::fromString('xml_entry', '<xml><name>node</name></xml>')
 ```
 
 ## Extractor - XMLExtractor
