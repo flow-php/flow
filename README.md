@@ -44,25 +44,99 @@ This is a perfect scenario for ETL.
 * [ObjectEntryEntry](src/Flow/ETL/Row/Entry/ObjectEntry.php)
 * [StringEntry](src/Flow/ETL/Row/Entry/StringEntry.php)
 
-## Transformers 
+## Extensions  
 
-* [Generic](https://github.com/flow-php/etl-transformer)
+Extensions provides generic, not really related to any specific data source/storage transformers/loaders. 
+
+<table style="text-align:center">
+<thead>
+  <tr>
+    <th>Name</th>
+    <th>Transformer</th>
+    <th>Loader (write)</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+      <td><a href="https://github.com/flow-php/etl-transformer">Transformers</a></td>
+      <td>✅</td>
+      <td>🚫</td>
+  </tr>
+  <tr>
+      <td><a href="https://github.com/flow-php/etl-loader">Loaders</a></td>
+      <td>🚫</td>
+      <td>✅</td>
+  </tr>
+</tbody>
+</table>
 
 ## Adapters
 
-Adapters provides Extractors and Transformers for popular data storages or abstractions over those storages. 
+Adapters connects ETL with existing data sources/storages and including some times custom 
+data entries. 
 
-* [Memory](https://github.com/flow-php/etl-adapter-memory)
-* [Doctrine](https://github.com/flow-php/etl-adapter-doctrine)
-  * [Doctrine DBAL Bulk](https://github.com/flow-php/doctrine-dbal-bulk)
-* [Elasticsearch](https://github.com/flow-php/etl-adapter-elasticsearch)
-* [CSV](https://github.com/flow-php/etl-adapter-csv)
-* [JSON](https://github.com/flow-php/etl-adapter-json)
-* [XML](https://github.com/flow-php/etl-adapter-xml)
-* [HTTP](https://github.com/flow-php/etl-adapter-http)
-* [Logger](https://github.com/flow-php/etl-adapter-logger)
+<table style="text-align:center">
+<thead>
+  <tr>
+    <th>Name</th>
+    <th>Extractor (read)</th>
+    <th>Loader (write)</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+      <td><a href="https://github.com/flow-php/etl-adapter-memory">Memory</a></td>
+      <td>✅</td>
+      <td>✅</td>
+  </tr>
+  <tr>
+      <td><a href="https://github.com/flow-php/etl-adapter-doctrine">Doctrine - DB</a></td>
+      <td>✅</td>
+      <td>✅</td>
+  </tr>
+  <tr>
+      <td><a href="https://github.com/flow-php/etl-adapter-elasticsearch">Elasticsearch</a></td>
+      <td>N/A</td>
+      <td>✅</td>
+  </tr>
+  <tr>
+      <td><a href="https://github.com/flow-php/etl-adapter-csv">CSV</a></td>
+      <td>✅</td>
+      <td>✅</td>
+  </tr>
+  <tr>
+      <td><a href="https://github.com/flow-php/etl-adapter-json">JSON</a></td>
+      <td>✅</td>
+      <td>N/A</td>
+  </tr>
+  <tr>
+      <td><a href="https://github.com/flow-php/etl-adapter-xml">XML</a></td>
+      <td>✅</td>
+      <td>N/A</td>
+  </tr>
+  <tr>
+      <td><a href="https://github.com/flow-php/etl-adapter-http">HTTP</a></td>
+      <td>✅</td>
+      <td>N/A</td>
+  </tr>
+  <tr>
+      <td><a href="#">Excel</a></td>
+      <td>N/A</td>
+      <td>N/A</td>
+  </tr>
+  <tr>
+      <td><a href="https://github.com/flow-php/etl-adapter-logger">Logger</a></td>
+      <td>🚫</td>
+      <td>✅</td>
+  </tr>
+</tbody>
+</table>
 
-**❗ If adapter that you are looking for is missing and you are willing to work on one, feel free to create one as a standalone repository.**
+* ✅ - at least one implementation is available 
+* 🚫 - implementation not possible
+* `N/A` - not implementation available yet 
+
+**❗ If adapter that you are looking for is not available yet, and you are willing to work on one, feel free to create one as a standalone repository.**
 **Well designed and documented adapters can be pulled into `flow-php` organization that will give them maintenance and security support from the organization.** 
 
 ## Installation
