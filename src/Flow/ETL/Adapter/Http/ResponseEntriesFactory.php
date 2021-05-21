@@ -33,20 +33,36 @@ final class ResponseEntriesFactory
             }
         }
 
-        switch ($responseType) {
-            case 'json':
-                if (\class_exists('Flow\ETL\Row\Entry\JsonEntry')) {
-                    $responseBodyEntry = new Row\Entry\JsonEntry('response_body', \json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR));
-                } else {
-                    $responseBodyEntry = new Row\Entry\StringEntry('response_body', $response->getBody()->getContents());
-                }
+        $responseBody = $response->getBody();
 
-                break;
+        if ($responseBody->isReadable()) {
+            if ($responseBody->isSeekable()) {
+                $responseBody->seek(0);
+            }
 
-            default:
-                $responseBodyEntry = new Row\Entry\StringEntry('response_body', $response->getBody()->getContents());
+            $responseBodyContent = $responseBody->getContents();
 
-                break;
+            if ($responseBody->isSeekable()) {
+                $responseBody->seek(0);
+            }
+
+            switch ($responseType) {
+                case 'json':
+                    if (\class_exists('Flow\ETL\Row\Entry\JsonEntry')) {
+                        $responseBodyEntry = new Row\Entry\JsonEntry('response_body', \json_decode($responseBodyContent, true, 512, JSON_THROW_ON_ERROR));
+                    } else {
+                        $responseBodyEntry = new Row\Entry\StringEntry('response_body', $responseBodyContent);
+                    }
+
+                    break;
+
+                default:
+                    $responseBodyEntry = new Row\Entry\StringEntry('response_body', $responseBodyContent);
+
+                    break;
+            }
+        } else {
+            $responseBodyEntry = new Row\Entry\NullEntry('response_body');
         }
 
         return new Row\Entries(

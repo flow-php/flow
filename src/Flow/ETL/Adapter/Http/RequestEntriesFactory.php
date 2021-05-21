@@ -33,20 +33,36 @@ final class RequestEntriesFactory
             }
         }
 
-        switch ($requestType) {
-            case 'json':
-                if (\class_exists('Flow\ETL\Row\Entry\JsonEntry')) {
-                    $requestBodyEntry = new Row\Entry\JsonEntry('request_body', \json_decode($request->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR));
-                } else {
-                    $requestBodyEntry = new Row\Entry\StringEntry('request_body', $request->getBody()->getContents());
-                }
+        $requestBody = $request->getBody();
 
-                break;
+        if ($requestBody->isReadable()) {
+            if ($requestBody->isSeekable()) {
+                $requestBody->seek(0);
+            }
 
-            default:
-                $requestBodyEntry = new Row\Entry\StringEntry('request_body', $request->getBody()->getContents());
+            $requestBodyContent = $requestBody->getContents();
 
-                break;
+            if ($requestBody->isSeekable()) {
+                $requestBody->seek(0);
+            }
+
+            switch ($requestType) {
+                case 'json':
+                    if (\class_exists('Flow\ETL\Row\Entry\JsonEntry')) {
+                        $requestBodyEntry = new Row\Entry\JsonEntry('request_body', \json_decode($requestBodyContent, true, 512, JSON_THROW_ON_ERROR));
+                    } else {
+                        $requestBodyEntry = new Row\Entry\StringEntry('request_body', $requestBodyContent);
+                    }
+
+                    break;
+
+                default:
+                    $requestBodyEntry = new Row\Entry\StringEntry('request_body', $requestBodyContent);
+
+                    break;
+            }
+        } else {
+            $requestBodyEntry = new Row\Entry\NullEntry('request_body');
         }
 
         return new Row\Entries(
