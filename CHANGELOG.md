@@ -1,6 +1,8 @@
-## [Unreleased] - 2021-05-19
+## [Unreleased] - 2021-05-23
 
 ### Added
+- [#49](https://github.com/flow-php/etl/pull/49) - **Rows implements interfaces \ArrayAccess, \Countable, \IteratorAggregate** - [@norberttech](https://github.com/norberttech)
+- [#49](https://github.com/flow-php/etl/pull/49) - **Enties implements interfaces \ArrayAccess, \Countable, \IteratorAggregate** - [@norberttech](https://github.com/norberttech)
 - [#46](https://github.com/flow-php/etl/pull/46) - **Rows::flatMap() : self** - [@norberttech](https://github.com/norberttech)
 - [#44](https://github.com/flow-php/etl/pull/44) - **FloatEntry** - [@norberttech](https://github.com/norberttech)
 - [#32](https://github.com/flow-php/etl/pull/32) - **possibility to mix transformers and loaders order of execution** - [@norberttech](https://github.com/norberttech)
@@ -11,8 +13,8 @@
 - [#24](https://github.com/flow-php/etl/pull/24) - **Rows::unique(Comparator = null) ? self** - [@norberttech](https://github.com/norberttech)
 - [#25](https://github.com/flow-php/etl/pull/25) - **Sort all rows entires** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#23](https://github.com/flow-php/etl/pull/23) - **merge() method for rows** - [@tomaszhanc](https://github.com/tomaszhanc)
-- [#21](https://github.com/flow-php/etl/pull/21) - **Rows::sort(callback $callable) : Rows** - [@norberttech](https://github.com/norberttech)
 - [#21](https://github.com/flow-php/etl/pull/21) - **Rows::find(callback $callable) : ?Row** - [@norberttech](https://github.com/norberttech)
+- [#21](https://github.com/flow-php/etl/pull/21) - **Rows::sort(callback $callable) : Rows** - [@norberttech](https://github.com/norberttech)
 - [#13](https://github.com/flow-php/etl/pull/13) - **Added each method** - [@DawidSajdak](https://github.com/DawidSajdak)
 - [#14](https://github.com/flow-php/etl/pull/14) - **Added PR template** - [@DawidSajdak](https://github.com/DawidSajdak)
 - [#10](https://github.com/flow-php/etl/pull/10) - **Run Tests section** - [@peter279k](https://github.com/peter279k)
