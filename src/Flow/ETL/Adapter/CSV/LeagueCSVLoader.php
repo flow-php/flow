@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\CSV;
 
 use Flow\ETL\Loader;
+use Flow\ETL\Row\Entry;
 use Flow\ETL\Rows;
 use League\Csv\Writer;
 
@@ -15,17 +16,28 @@ final class LeagueCSVLoader implements Loader
 {
     private Writer $writer;
 
-    private string $rowEntryName;
+    private bool $withHeader;
 
-    public function __construct(Writer $writer, string $rowEntryName = 'row')
+    private bool $headerAdded;
+
+    public function __construct(Writer $writer, bool $withHeader = true)
     {
         $this->writer = $writer;
-        $this->rowEntryName = $rowEntryName;
+        $this->headerAdded = false;
+        $this->withHeader = $withHeader;
     }
 
+    /**
+     * @psalm-suppress ImpureMethodCall
+     * @psalm-suppress InaccessibleProperty
+     */
     public function load(Rows $rows) : void
     {
-        /** @psalm-suppress ImpureMethodCall */
-        $this->writer->insertAll($rows->reduceToArray($this->rowEntryName));
+        if ($this->withHeader && !$this->headerAdded) {
+            $this->writer->insertOne($rows->first()->entries()->map(fn (Entry $entry) => $entry->name()));
+            $this->headerAdded = true;
+        }
+
+        $this->writer->insertAll($rows->toArray());
     }
 }
