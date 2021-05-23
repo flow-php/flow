@@ -9,9 +9,11 @@ use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Exception\RuntimeException;
 
 /**
+ * @implements \ArrayAccess<string, Entry>
+ * @implements \IteratorAggregate<string, Entry>
  * @psalm-immutable
  */
-final class Entries implements \Countable
+final class Entries  implements \ArrayAccess, \Countable, \IteratorAggregate
 {
     /**
      * @var Entry[]
@@ -27,6 +29,65 @@ final class Entries implements \Countable
         }
 
         $this->entries = $entries;
+    }
+
+    /**
+     * @param string $offset
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return bool
+     */
+    public function offsetExists($offset) : bool
+    {
+        /** @psalm-suppress DocblockTypeContradiction */
+        if (!\is_string($offset)) {
+            throw new InvalidArgumentException('Entries accepts only string offsets');
+        }
+
+        return $this->has($offset);
+    }
+
+    /**
+     * @param string $offset
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return Entry
+     */
+    public function offsetGet($offset) : Entry
+    {
+        if ($this->offsetExists($offset)) {
+            return $this->get($offset);
+        }
+
+        throw new InvalidArgumentException("Entry {$offset} does not exists.");
+    }
+
+    public function offsetSet($offset, $value) : self
+    {
+        throw new RuntimeException('In order to add new rows use Entries::add(Entry $entry) : self');
+    }
+
+    /**
+     * @param string $offset
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return Entries
+     * @psalm-suppress ImplementedReturnTypeMismatch
+     */
+    public function offsetUnset($offset) : self
+    {
+        throw new RuntimeException('In order to add new rows use Entries::remove(string $name) : self');
+    }
+
+    /**
+     * @return \Iterator<string, Entry>
+     */
+    public function getIterator() : \Iterator
+    {
+        return new \ArrayIterator($this->entries);
     }
 
     public function has(string $name) : bool

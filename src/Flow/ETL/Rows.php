@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\Comparator;
 use Flow\ETL\Row\Comparator\NativeComparator;
 
 /**
+ * @implements \ArrayAccess<int, Row>
+ * @implements \IteratorAggregate<int, Row>
  * @psalm-immutable
  */
-final class Rows
+final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
 {
     /**
      * @psalm-var array<int, Row>
@@ -23,6 +26,65 @@ final class Rows
     public function __construct(Row ...$rows)
     {
         $this->rows = $rows;
+    }
+
+    /**
+     * @param int $offset
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return bool
+     */
+    public function offsetExists($offset) : bool
+    {
+        /** @psalm-suppress DocblockTypeContradiction */
+        if (!\is_int($offset)) {
+            throw new InvalidArgumentException('Rows accepts only integer offsets');
+        }
+
+        return isset($this->rows[$offset]);
+    }
+
+    /**
+     * @param int $offset
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return Row
+     */
+    public function offsetGet($offset) : Row
+    {
+        if ($this->offsetExists($offset)) {
+            return $this->rows[$offset];
+        }
+
+        throw new InvalidArgumentException("Row {$offset} does not exists.");
+    }
+
+    public function offsetSet($offset, $value) : self
+    {
+        throw new RuntimeException('In order to add new rows use Rows::add(Row $row) : self');
+    }
+
+    /**
+     * @param int $offset
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return Rows
+     * @psalm-suppress ImplementedReturnTypeMismatch
+     */
+    public function offsetUnset($offset) : self
+    {
+        throw new RuntimeException('In order to add new rows use Rows::remove(int $offset) : self');
+    }
+
+    /**
+     * @return \Iterator<int, Row>
+     */
+    public function getIterator() : \Iterator
+    {
+        return new \ArrayIterator($this->rows);
     }
 
     /**
@@ -246,6 +308,18 @@ final class Rows
         return new self(
             ...\array_merge($this->rows, [$row])
         );
+    }
+
+    public function remove(int $offset) : self
+    {
+        if (!$this->offsetExists($offset)) {
+            throw new InvalidArgumentException("Rows does not have {$offset} offset");
+        }
+
+        $rows = \iterator_to_array($this->getIterator());
+        unset($rows[$offset]);
+
+        return new self(...\array_merge($rows));
     }
 
     public function merge(self $rows) : self

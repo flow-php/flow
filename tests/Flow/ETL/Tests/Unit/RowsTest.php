@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
+use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\BooleanEntry;
 use Flow\ETL\Row\Entry\DateTimeEntry;
@@ -370,5 +371,61 @@ final class RowsTest extends TestCase
             ],
             $rows->toArray()
         );
+    }
+
+    public function test_array_access_get() : void
+    {
+        $rows = new Rows(
+            Row::create(new IntegerEntry('id', 1)),
+            Row::create(new IntegerEntry('id', 2)),
+            Row::create(new IntegerEntry('id', 3)),
+        );
+
+        $this->assertSame(1, $rows[0]->valueOf('id'));
+        $this->assertSame(2, $rows[1]->valueOf('id'));
+        $this->assertSame(3, $rows[2]->valueOf('id'));
+    }
+
+    public function test_array_access_exists() : void
+    {
+        $rows = new Rows(
+            Row::create(new IntegerEntry('id', 1)),
+            Row::create(new IntegerEntry('id', 2)),
+            Row::create(new IntegerEntry('id', 3)),
+        );
+
+        $this->assertTrue(isset($rows[0]));
+        $this->assertFalse(isset($rows[3]));
+    }
+
+    public function test_array_access_set() : void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('In order to add new rows use Rows::add(Row $row) : self');
+        $rows = new Rows();
+        $rows[0] = Row::create(new IntegerEntry('id', 1));
+    }
+
+    public function test_array_access_unset() : void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('In order to add new rows use Rows::remove(int $offset) : self');
+        $rows = new Rows(Row::create(new IntegerEntry('id', 1)));
+        unset($rows[0]);
+    }
+
+    public function test_remove() : void
+    {
+        $rows = new Rows(
+            Row::create(new IntegerEntry('id', 1)),
+            Row::create(new IntegerEntry('id', 2)),
+            Row::create(new IntegerEntry('id', 3)),
+        );
+
+        $rows = $rows->remove(1);
+
+        $this->assertCount(2, $rows);
+        $this->assertSame(1, $rows[0]->valueOf('id'));
+        $this->assertSame(3, $rows[1]->valueOf('id'));
     }
 }

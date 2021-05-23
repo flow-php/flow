@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row;
 
+use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry\BooleanEntry;
 use Flow\ETL\Row\Entry\CollectionEntry;
@@ -176,5 +177,37 @@ final class EntriesTest extends TestCase
             ),
             $sorted
         );
+    }
+
+    public function test_array_access_get() : void
+    {
+        $entries = new Entries(new IntegerEntry('id', 1), new StringEntry('name', 'John'));
+
+        $this->assertSame(1, $entries['id']->value());
+        $this->assertSame('John', $entries['name']->value());
+    }
+
+    public function test_array_access_exists() : void
+    {
+        $entries = new Entries(new IntegerEntry('id', 1), new StringEntry('name', 'John'));
+
+        $this->assertTrue(isset($entries['id']));
+        $this->assertFalse(isset($entries['test']));
+    }
+
+    public function test_array_access_set() : void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('In order to add new rows use Entries::add(Entry $entry) : self');
+        $entries = new Entries();
+        $entries['id'] = new IntegerEntry('id', 1);
+    }
+
+    public function test_array_access_unset() : void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('In order to add new rows use Entries::remove(string $name) : self');
+        $entries = new Entries(new IntegerEntry('id', 1));
+        unset($entries['id']);
     }
 }
