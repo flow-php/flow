@@ -28,10 +28,26 @@ final class SynchronousPipeline implements Pipeline
      */
     public function process(\Generator $generator) : void
     {
-        foreach ($generator as $rows) {
+        $index = 0;
+
+        while ($generator->valid()) {
+            /** @var Rows $rows */
+            $rows = $generator->current();
+            $generator->next();
+
+            if ($index === 0) {
+                $rows = $rows->makeFirst();
+            }
+
+            if ($generator->valid() === false) {
+                $rows = $rows->makeLast();
+            }
+
             foreach ($this->elements as $element) {
                 $rows = $element->process($rows);
             }
+
+            $index++;
         }
     }
 }

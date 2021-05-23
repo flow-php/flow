@@ -23,9 +23,43 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
      */
     private array $rows;
 
+    private bool $first;
+
+    private bool $last;
+
     public function __construct(Row ...$rows)
     {
         $this->rows = $rows;
+        $this->first = true;
+        $this->last = false;
+    }
+
+    public function makeFirst() : self
+    {
+        $rows = new self(...$this->rows);
+        $rows->first = true;
+        $rows->last = $this->last;
+
+        return $rows;
+    }
+
+    public function makeLast() : self
+    {
+        $rows = new self(...$this->rows);
+        $rows->last = true;
+        $rows->first = $this->first;
+
+        return $rows;
+    }
+
+    public function isFirst() : bool
+    {
+        return $this->first;
+    }
+
+    public function isLast() : bool
+    {
+        return $this->last;
     }
 
     /**

@@ -16,13 +16,14 @@ use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Double\AddStampToStringEntryTransformer;
 use Flow\ETL\Transformer;
+use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\TestCase;
 
 final class ETLTest extends TestCase
 {
     public function test_etl() : void
     {
-        $extractor =  new class implements Extractor {
+        $extractor = new class implements Extractor {
             /**
              * @return \Generator<int, Rows, mixed, void>
              */
@@ -93,5 +94,45 @@ final class ETLTest extends TestCase
             ],
             $loader->result,
         );
+    }
+
+    public function test_first_and_last_rows() : void
+    {
+        $callback = function (int $index, Rows $rows) : void {
+            if ($index === 0) {
+                Assert::assertTrue($rows->isFirst());
+            }
+
+            if ($index === 3) {
+                Assert::assertTrue($rows->isLast());
+            }
+        };
+
+        ETL::extract(new class implements Extractor {
+            /**
+             * @return \Generator<int, Rows, mixed, void>
+             */
+            public function extract() : \Generator
+            {
+                yield new Rows(Row::create(new IntegerEntry('id', 1)));
+                yield new Rows(Row::create(new IntegerEntry('id', 2)));
+                yield new Rows(Row::create(new IntegerEntry('id', 3)));
+            }
+        })->load(new class($callback) implements Loader {
+            private int $index = 0;
+
+            private $callback;
+
+            public function __construct(callable $callback)
+            {
+                $this->callback = $callback;
+            }
+
+            public function load(Rows $rows) : void
+            {
+                ($this->callback)($this->index, $rows);
+                $this->index++;
+            }
+        })->run();
     }
 }
