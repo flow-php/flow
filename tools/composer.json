@@ -1,0 +1,7 @@
+{
+  "name": "flow-php/flow",
+  "description": "Flow PHP - Tools",
+  "require-dev": {
+    "friendsofphp/php-cs-fixer": "^2.18"
+  }
+}

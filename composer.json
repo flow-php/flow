@@ -1,0 +1,65 @@
+{
+    "name": "flow-php/flow",
+    "type": "library",
+    "description": "Flow - PHP data manipulation library",
+    "keywords": ["etl", "extract", "transform", "load", "filter", "flow", "map"],
+    "prefer-stable": true,
+    "minimum-stability": "dev",
+    "require": {
+        "php": "^7.4 | ^8.0",
+        "flow-php/doctrine-dbal-bulk": "^1.0@dev",
+        "flow-php/etl": "^1.0@dev",
+        "flow-php/etl-adapter-csv": "^1.0@dev",
+        "flow-php/etl-adapter-doctrine": "^1.0@dev",
+        "flow-php/etl-adapter-http": "^1.0@dev",
+        "flow-php/etl-adapter-json": "^1.0@dev",
+        "flow-php/etl-adapter-logger": "^1.0@dev",
+        "flow-php/etl-adapter-memory": "^1.0@dev",
+        "flow-php/etl-adapter-xml": "^1.0@dev",
+        "flow-php/etl-loader": "^1.0@dev",
+        "flow-php/etl-transformer": "^1.0@dev"
+    },
+    "require-dev": {
+        "halaxa/json-machine": "^0.7.0",
+        "jawira/case-converter": "^3.4",
+        "league/csv": "^9.7"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Flow\\": [
+                "src/Flow"
+            ]
+        },
+        "files": [
+            "src/Flow/ETL/DSL/extractors.php",
+            "src/Flow/ETL/DSL/transformers.php",
+            "src/Flow/ETL/DSL/loaders.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Flow\\": "tests/Flow"
+        }
+    },
+    "scripts": {
+        "build": [
+            "@static:analyze"
+        ],
+        "static:analyze": [
+            "tools/vendor/bin/php-cs-fixer fix --dry-run"
+        ],
+        "cs:php:fix": "tools/vendor/bin/php-cs-fixer fix",
+        "tools:install": "composer install --working-dir=./tools",
+        "post-install-cmd": [
+            "@tools:install"
+        ],
+        "post-update-cmd": [
+            "@tools:install"
+        ]
+    }
+}

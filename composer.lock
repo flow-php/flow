@@ -1,0 +1,1302 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
+        "This file is @generated automatically"
+    ],
+    "content-hash": "6d34de225dccdcb80a32baeaa0293023",
+    "packages": [
+        {
+            "name": "composer/package-versions-deprecated",
+            "version": "1.11.99.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/composer/package-versions-deprecated.git",
+                "reference": "7413f0b55a051e89485c5cb9f765fe24bb02a7b6"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/composer/package-versions-deprecated/zipball/7413f0b55a051e89485c5cb9f765fe24bb02a7b6",
+                "reference": "7413f0b55a051e89485c5cb9f765fe24bb02a7b6",
+                "shasum": ""
+            },
+            "require": {
+                "composer-plugin-api": "^1.1.0 || ^2.0",
+                "php": "^7 || ^8"
+            },
+            "replace": {
+                "ocramius/package-versions": "1.11.99"
+            },
+            "require-dev": {
+                "composer/composer": "^1.9.3 || ^2.0@dev",
+                "ext-zip": "^1.13",
+                "phpunit/phpunit": "^6.5 || ^7"
+            },
+            "type": "composer-plugin",
+            "extra": {
+                "class": "PackageVersions\\Installer",
+                "branch-alias": {
+                    "dev-master": "1.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "PackageVersions\\": "src/PackageVersions"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Marco Pivetta",
+                    "email": "ocramius@gmail.com"
+                },
+                {
+                    "name": "Jordi Boggiano",
+                    "email": "j.boggiano@seld.be"
+                }
+            ],
+            "description": "Composer plugin that provides efficient querying for installed package versions (no runtime IO)",
+            "support": {
+                "issues": "https://github.com/composer/package-versions-deprecated/issues",
+                "source": "https://github.com/composer/package-versions-deprecated/tree/1.11.99.1"
+            },
+            "funding": [
+                {
+                    "url": "https://packagist.com",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/composer",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/composer/composer",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2020-11-11T10:22:58+00:00"
+        },
+        {
+            "name": "doctrine/cache",
+            "version": "1.11.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/doctrine/cache.git",
+                "reference": "9c53086695937c50c47936ed86d96150ffbcf60d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/doctrine/cache/zipball/9c53086695937c50c47936ed86d96150ffbcf60d",
+                "reference": "9c53086695937c50c47936ed86d96150ffbcf60d",
+                "shasum": ""
+            },
+            "require": {
+                "php": "~7.1 || ^8.0"
+            },
+            "conflict": {
+                "doctrine/common": ">2.2,<2.4",
+                "psr/cache": ">=3"
+            },
+            "require-dev": {
+                "alcaeus/mongo-php-adapter": "^1.1",
+                "cache/integration-tests": "dev-master",
+                "doctrine/coding-standard": "^8.0",
+                "mongodb/mongodb": "^1.1",
+                "phpunit/phpunit": "^7.0 || ^8.0 || ^9.0",
+                "predis/predis": "~1.0",
+                "psr/cache": "^1.0 || ^2.0",
+                "symfony/cache": "^4.4 || ^5.2"
+            },
+            "suggest": {
+                "alcaeus/mongo-php-adapter": "Required to use legacy MongoDB driver"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Doctrine\\Common\\Cache\\": "lib/Doctrine/Common/Cache"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Guilherme Blanco",
+                    "email": "guilhermeblanco@gmail.com"
+                },
+                {
+                    "name": "Roman Borschel",
+                    "email": "roman@code-factory.org"
+                },
+                {
+                    "name": "Benjamin Eberlei",
+                    "email": "kontakt@beberlei.de"
+                },
+                {
+                    "name": "Jonathan Wage",
+                    "email": "jonwage@gmail.com"
+                },
+                {
+                    "name": "Johannes Schmitt",
+                    "email": "schmittjoh@gmail.com"
+                }
+            ],
+            "description": "PHP Doctrine Cache library is a popular cache implementation that supports many different drivers such as redis, memcache, apc, mongodb and others.",
+            "homepage": "https://www.doctrine-project.org/projects/cache.html",
+            "keywords": [
+                "abstraction",
+                "apcu",
+                "cache",
+                "caching",
+                "couchdb",
+                "memcached",
+                "php",
+                "redis",
+                "xcache"
+            ],
+            "support": {
+                "issues": "https://github.com/doctrine/cache/issues",
+                "source": "https://github.com/doctrine/cache/tree/1.11.2"
+            },
+            "funding": [
+                {
+                    "url": "https://www.doctrine-project.org/sponsorship.html",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://www.patreon.com/phpdoctrine",
+                    "type": "patreon"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/doctrine%2Fcache",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2021-05-20T14:57:29+00:00"
+        },
+        {
+            "name": "doctrine/dbal",
+            "version": "3.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/doctrine/dbal.git",
+                "reference": "ee6d1260d5cc20ec506455a585945d7bdb98662c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/doctrine/dbal/zipball/ee6d1260d5cc20ec506455a585945d7bdb98662c",
+                "reference": "ee6d1260d5cc20ec506455a585945d7bdb98662c",
+                "shasum": ""
+            },
+            "require": {
+                "composer/package-versions-deprecated": "^1.11.99",
+                "doctrine/cache": "^1.0",
+                "doctrine/event-manager": "^1.0",
+                "php": "^7.3 || ^8.0"
+            },
+            "require-dev": {
+                "doctrine/coding-standard": "^8.1",
+                "jetbrains/phpstorm-stubs": "^2019.1",
+                "phpstan/phpstan": "^0.12.40",
+                "phpstan/phpstan-strict-rules": "^0.12.2",
+                "phpunit/phpunit": "^9.4",
+                "psalm/plugin-phpunit": "^0.10.0",
+                "symfony/console": "^2.0.5|^3.0|^4.0|^5.0",
+                "vimeo/psalm": "^3.17.2"
+            },
+            "suggest": {
+                "symfony/console": "For helpful console commands such as SQL execution and import of files."
+            },
+            "bin": [
+                "bin/doctrine-dbal"
+            ],
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "4.0.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Doctrine\\DBAL\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Guilherme Blanco",
+                    "email": "guilhermeblanco@gmail.com"
+                },
+                {
+                    "name": "Roman Borschel",
+                    "email": "roman@code-factory.org"
+                },
+                {
+                    "name": "Benjamin Eberlei",
+                    "email": "kontakt@beberlei.de"
+                },
+                {
+                    "name": "Jonathan Wage",
+                    "email": "jonwage@gmail.com"
+                }
+            ],
+            "description": "Powerful PHP database abstraction layer (DBAL) with many features for database schema introspection and management.",
+            "homepage": "https://www.doctrine-project.org/projects/dbal.html",
+            "keywords": [
+                "abstraction",
+                "database",
+                "db2",
+                "dbal",
+                "mariadb",
+                "mssql",
+                "mysql",
+                "oci8",
+                "oracle",
+                "pdo",
+                "pgsql",
+                "postgresql",
+                "queryobject",
+                "sasql",
+                "sql",
+                "sqlite",
+                "sqlserver",
+                "sqlsrv"
+            ],
+            "support": {
+                "issues": "https://github.com/doctrine/dbal/issues",
+                "source": "https://github.com/doctrine/dbal/tree/3.0.0"
+            },
+            "funding": [
+                {
+                    "url": "https://www.doctrine-project.org/sponsorship.html",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://www.patreon.com/phpdoctrine",
+                    "type": "patreon"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/doctrine%2Fdbal",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2020-11-15T18:20:41+00:00"
+        },
+        {
+            "name": "doctrine/event-manager",
+            "version": "1.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/doctrine/event-manager.git",
+                "reference": "41370af6a30faa9dc0368c4a6814d596e81aba7f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/doctrine/event-manager/zipball/41370af6a30faa9dc0368c4a6814d596e81aba7f",
+                "reference": "41370af6a30faa9dc0368c4a6814d596e81aba7f",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.1 || ^8.0"
+            },
+            "conflict": {
+                "doctrine/common": "<2.9@dev"
+            },
+            "require-dev": {
+                "doctrine/coding-standard": "^6.0",
+                "phpunit/phpunit": "^7.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.0.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Doctrine\\Common\\": "lib/Doctrine/Common"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Guilherme Blanco",
+                    "email": "guilhermeblanco@gmail.com"
+                },
+                {
+                    "name": "Roman Borschel",
+                    "email": "roman@code-factory.org"
+                },
+                {
+                    "name": "Benjamin Eberlei",
+                    "email": "kontakt@beberlei.de"
+                },
+                {
+                    "name": "Jonathan Wage",
+                    "email": "jonwage@gmail.com"
+                },
+                {
+                    "name": "Johannes Schmitt",
+                    "email": "schmittjoh@gmail.com"
+                },
+                {
+                    "name": "Marco Pivetta",
+                    "email": "ocramius@gmail.com"
+                }
+            ],
+            "description": "The Doctrine Event Manager is a simple PHP event system that was built to be used with the various Doctrine projects.",
+            "homepage": "https://www.doctrine-project.org/projects/event-manager.html",
+            "keywords": [
+                "event",
+                "event dispatcher",
+                "event manager",
+                "event system",
+                "events"
+            ],
+            "support": {
+                "issues": "https://github.com/doctrine/event-manager/issues",
+                "source": "https://github.com/doctrine/event-manager/tree/1.1.x"
+            },
+            "funding": [
+                {
+                    "url": "https://www.doctrine-project.org/sponsorship.html",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://www.patreon.com/phpdoctrine",
+                    "type": "patreon"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/doctrine%2Fevent-manager",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2020-05-29T18:28:51+00:00"
+        },
+        {
+            "name": "flow-php/doctrine-dbal-bulk",
+            "version": "1.x-dev",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/flow-php/doctrine-dbal-bulk.git",
+                "reference": "ebe3165247a84a0fbc89608e9f636cbfdc649914"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/flow-php/doctrine-dbal-bulk/zipball/ebe3165247a84a0fbc89608e9f636cbfdc649914",
+                "reference": "ebe3165247a84a0fbc89608e9f636cbfdc649914",
+                "shasum": ""
+            },
+            "require": {
+                "doctrine/dbal": "^2.12 | 3.0",
+                "php": "^7.4 | ^8.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Flow\\Doctrine\\Bulk\\": [
+                        "src/Flow/Doctrine/Bulk"
+                    ]
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Bulk inserts and updates for Doctrine DBAL",
+            "keywords": [
+                "bulk",
+                "dbal",
+                "doctrine",
+                "insert",
+                "upsert"
+            ],
+            "support": {
+                "issues": "https://github.com/flow-php/doctrine-dbal-bulk/issues",
+                "source": "https://github.com/flow-php/doctrine-dbal-bulk/tree/1.x"
+            },
+            "time": "2021-03-30T07:43:05+00:00"
+        },
+        {
+            "name": "flow-php/etl",
+            "version": "1.x-dev",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/flow-php/etl.git",
+                "reference": "4633e9a73b5aa701aefc8661707e777806935395"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/flow-php/etl/zipball/4633e9a73b5aa701aefc8661707e777806935395",
+                "reference": "4633e9a73b5aa701aefc8661707e777806935395",
+                "shasum": ""
+            },
+            "require": {
+                "ext-mbstring": "*",
+                "php": "^7.4 | ^8.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Flow\\": [
+                        "src/Flow"
+                    ]
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "PHP ETL - Extract Transform Load - Abstraction",
+            "keywords": [
+                "etl",
+                "extract",
+                "load",
+                "transform"
+            ],
+            "support": {
+                "issues": "https://github.com/flow-php/etl/issues",
+                "source": "https://github.com/flow-php/etl/tree/1.x"
+            },
+            "time": "2021-05-19T15:48:24+00:00"
+        },
+        {
+            "name": "flow-php/etl-adapter-csv",
+            "version": "1.x-dev",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/flow-php/etl-adapter-csv.git",
+                "reference": "7448ab44f9719014caa1a979054877fa52771796"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/flow-php/etl-adapter-csv/zipball/7448ab44f9719014caa1a979054877fa52771796",
+                "reference": "7448ab44f9719014caa1a979054877fa52771796",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "ext-mbstring": "*",
+                "flow-php/etl": "^1.0@dev",
+                "php": "^7.4 | ^8.0"
+            },
+            "require-dev": {
+                "league/csv": "^9.7"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Flow\\": [
+                        "src/Flow"
+                    ]
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "PHP ETL - Adapter - CSV",
+            "keywords": [
+                "adapter",
+                "csv",
+                "etl",
+                "extract",
+                "load",
+                "transform"
+            ],
+            "support": {
+                "issues": "https://github.com/flow-php/etl-adapter-csv/issues",
+                "source": "https://github.com/flow-php/etl-adapter-csv/tree/1.x"
+            },
+            "time": "2021-05-23T08:13:55+00:00"
+        },
+        {
+            "name": "flow-php/etl-adapter-doctrine",
+            "version": "1.x-dev",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/flow-php/etl-adapter-doctrine.git",
+                "reference": "48f810b9920836c72e358f9eb4bbae139f670f1f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/flow-php/etl-adapter-doctrine/zipball/48f810b9920836c72e358f9eb4bbae139f670f1f",
+                "reference": "48f810b9920836c72e358f9eb4bbae139f670f1f",
+                "shasum": ""
+            },
+            "require": {
+                "doctrine/dbal": "^2.12 | ^3.0",
+                "flow-php/etl": "^1.0@dev",
+                "php": "^7.4.2 | ^8.0"
+            },
+            "require-dev": {
+                "flow-php/doctrine-dbal-bulk": "^1.0@dev"
+            },
+            "suggest": {
+                "flow-php/doctrine-dbal-bulk": "Helps to use DbalBulkLoader"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Flow\\ETL\\Adapter\\Doctrine\\": [
+                        "src/Flow/ETL/Adapter/Doctrine"
+                    ]
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "ETL adapter for bulk operations using Doctrine DBAL Bulk",
+            "keywords": [
+                "bulk",
+                "dbal",
+                "doctrine",
+                "etl",
+                "insert",
+                "loader",
+                "upsert"
+            ],
+            "support": {
+                "issues": "https://github.com/flow-php/etl-adapter-doctrine/issues",
+                "source": "https://github.com/flow-php/etl-adapter-doctrine/tree/1.x"
+            },
+            "time": "2021-04-22T08:21:09+00:00"
+        },
+        {
+            "name": "flow-php/etl-adapter-http",
+            "version": "1.x-dev",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/flow-php/etl-adapter-http.git",
+                "reference": "27cac897b2d9b96848725a1d86dbfa2ec0de1d7e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/flow-php/etl-adapter-http/zipball/27cac897b2d9b96848725a1d86dbfa2ec0de1d7e",
+                "reference": "27cac897b2d9b96848725a1d86dbfa2ec0de1d7e",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "flow-php/etl": "^1.0@dev",
+                "php": "^7.4 | ^8.0",
+                "psr/http-client": "^1.0"
+            },
+            "require-dev": {
+                "flow-php/etl-adapter-json": "^1.0@dev",
+                "nyholm/psr7": "^1.4",
+                "php-http/curl-client": "^2.2"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Flow\\": [
+                        "src/Flow"
+                    ]
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "PHP ETL - Adapter - Http",
+            "keywords": [
+                "etl",
+                "extract",
+                "http",
+                "load",
+                "transform"
+            ],
+            "support": {
+                "issues": "https://github.com/flow-php/etl-adapter-http/issues",
+                "source": "https://github.com/flow-php/etl-adapter-http/tree/1.x"
+            },
+            "time": "2021-05-22T09:44:03+00:00"
+        },
+        {
+            "name": "flow-php/etl-adapter-json",
+            "version": "1.x-dev",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/flow-php/etl-adapter-json.git",
+                "reference": "9bf2ef8911dd05da7233912aba80e4867964dd1e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/flow-php/etl-adapter-json/zipball/9bf2ef8911dd05da7233912aba80e4867964dd1e",
+                "reference": "9bf2ef8911dd05da7233912aba80e4867964dd1e",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "flow-php/etl": "^1.0@dev",
+                "php": "^7.4 | ^8.0"
+            },
+            "require-dev": {
+                "halaxa/json-machine": "^0.6.1"
+            },
+            "suggest": {
+                "halaxa/json-machine": "Memory safe json library used by Extractors and Loaders"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Flow\\": [
+                        "src/Flow"
+                    ]
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "PHP ETL - Adapter - JSON",
+            "keywords": [
+                "adapter",
+                "etl",
+                "extract",
+                "json",
+                "load",
+                "transform"
+            ],
+            "support": {
+                "issues": "https://github.com/flow-php/etl-adapter-json/issues",
+                "source": "https://github.com/flow-php/etl-adapter-json/tree/1.x"
+            },
+            "time": "2021-05-13T08:26:38+00:00"
+        },
+        {
+            "name": "flow-php/etl-adapter-logger",
+            "version": "1.x-dev",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/flow-php/etl-adapter-logger.git",
+                "reference": "68fe18caf96ed70e8f71830fe27e43c7e2024855"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/flow-php/etl-adapter-logger/zipball/68fe18caf96ed70e8f71830fe27e43c7e2024855",
+                "reference": "68fe18caf96ed70e8f71830fe27e43c7e2024855",
+                "shasum": ""
+            },
+            "require": {
+                "flow-php/etl": "^1.0@dev",
+                "php": "^7.4 | ^8.0",
+                "psr/log": "^1.1"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Flow\\": [
+                        "src/Flow"
+                    ]
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "PHP ETL - Adapter - Logger",
+            "keywords": [
+                "etl",
+                "extract",
+                "load",
+                "logger",
+                "psr",
+                "transform"
+            ],
+            "support": {
+                "issues": "https://github.com/flow-php/etl-adapter-logger/issues",
+                "source": "https://github.com/flow-php/etl-adapter-logger/tree/1.x"
+            },
+            "time": "2021-05-17T20:00:23+00:00"
+        },
+        {
+            "name": "flow-php/etl-adapter-memory",
+            "version": "1.x-dev",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/flow-php/etl-adapter-memory.git",
+                "reference": "9cdffa37cb67f0bcab0910f84f4854631f15f91c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/flow-php/etl-adapter-memory/zipball/9cdffa37cb67f0bcab0910f84f4854631f15f91c",
+                "reference": "9cdffa37cb67f0bcab0910f84f4854631f15f91c",
+                "shasum": ""
+            },
+            "require": {
+                "flow-php/etl": "^1.0@dev",
+                "php": "^7.4 | ^8.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Flow\\": [
+                        "src/Flow"
+                    ]
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "PHP ETL - Adapter - Memory",
+            "keywords": [
+                "etl",
+                "extract",
+                "load",
+                "memory",
+                "transform"
+            ],
+            "support": {
+                "issues": "https://github.com/flow-php/etl-adapter-memory/issues",
+                "source": "https://github.com/flow-php/etl-adapter-memory/tree/1.x"
+            },
+            "time": "2021-05-13T08:19:04+00:00"
+        },
+        {
+            "name": "flow-php/etl-adapter-xml",
+            "version": "1.x-dev",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/flow-php/etl-adapter-xml.git",
+                "reference": "3b0596b5ad733538b3dac6650b0885d523e58b96"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/flow-php/etl-adapter-xml/zipball/3b0596b5ad733538b3dac6650b0885d523e58b96",
+                "reference": "3b0596b5ad733538b3dac6650b0885d523e58b96",
+                "shasum": ""
+            },
+            "require": {
+                "ext-dom": "*",
+                "ext-xmlreader": "*",
+                "flow-php/etl": "^1.0@dev",
+                "php": "^7.4 | ^8.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Flow\\": [
+                        "src/Flow"
+                    ]
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "PHP ETL - Adapter - XML",
+            "keywords": [
+                "adapter",
+                "etl",
+                "extract",
+                "load",
+                "transform",
+                "xml"
+            ],
+            "support": {
+                "issues": "https://github.com/flow-php/etl-adapter-xml/issues",
+                "source": "https://github.com/flow-php/etl-adapter-xml/tree/1.x"
+            },
+            "time": "2021-05-19T08:30:06+00:00"
+        },
+        {
+            "name": "flow-php/etl-loader",
+            "version": "1.x-dev",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/flow-php/etl-loader.git",
+                "reference": "1583f7395e444b1069088c08ea7b59ed0cdc0b2b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/flow-php/etl-loader/zipball/1583f7395e444b1069088c08ea7b59ed0cdc0b2b",
+                "reference": "1583f7395e444b1069088c08ea7b59ed0cdc0b2b",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "flow-php/etl": "^1.0@dev",
+                "php": "^7.4 | ^8.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Flow\\": [
+                        "src/Flow"
+                    ]
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "PHP ETL - Loaders",
+            "keywords": [
+                "etl",
+                "extract",
+                "load"
+            ],
+            "support": {
+                "issues": "https://github.com/flow-php/etl-loader/issues",
+                "source": "https://github.com/flow-php/etl-loader/tree/1.x"
+            },
+            "time": "2021-05-13T08:19:10+00:00"
+        },
+        {
+            "name": "flow-php/etl-transformer",
+            "version": "1.x-dev",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/flow-php/etl-transformer.git",
+                "reference": "131673e7a794c7c6299bc2547f258c9d84ae82fe"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/flow-php/etl-transformer/zipball/131673e7a794c7c6299bc2547f258c9d84ae82fe",
+                "reference": "131673e7a794c7c6299bc2547f258c9d84ae82fe",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "flow-php/etl": "^1.0@dev",
+                "php": "^7.4 | ^8.0"
+            },
+            "require-dev": {
+                "flow-php/etl-adapter-json": "^1.0@dev",
+                "jawira/case-converter": "^3.4",
+                "laminas/laminas-hydrator": "^4.0"
+            },
+            "suggest": {
+                "jawira/case-converter": "Provides CaseConverter that is required by the EntryNameCaseConverterTransformer",
+                "laminas/laminas-hydrator": "Help converting ObjectEntry into ArrayEntry that can be later unpack into standalone Entries",
+                "ocramius/generated-hydrator": "Provieds generated hydrator that implemenets Laminas\\Hydrator\\HydratorInterface"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Flow\\": [
+                        "src/Flow"
+                    ]
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "PHP ETL - Transformers",
+            "keywords": [
+                "etl",
+                "extract",
+                "filter",
+                "load",
+                "transform"
+            ],
+            "support": {
+                "issues": "https://github.com/flow-php/etl-transformer/issues",
+                "source": "https://github.com/flow-php/etl-transformer/tree/1.x"
+            },
+            "time": "2021-05-22T12:45:21+00:00"
+        },
+        {
+            "name": "psr/http-client",
+            "version": "1.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/php-fig/http-client.git",
+                "reference": "2dfb5f6c5eff0e91e20e913f8c5452ed95b86621"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/php-fig/http-client/zipball/2dfb5f6c5eff0e91e20e913f8c5452ed95b86621",
+                "reference": "2dfb5f6c5eff0e91e20e913f8c5452ed95b86621",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.0 || ^8.0",
+                "psr/http-message": "^1.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.0.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Psr\\Http\\Client\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "PHP-FIG",
+                    "homepage": "http://www.php-fig.org/"
+                }
+            ],
+            "description": "Common interface for HTTP clients",
+            "homepage": "https://github.com/php-fig/http-client",
+            "keywords": [
+                "http",
+                "http-client",
+                "psr",
+                "psr-18"
+            ],
+            "support": {
+                "source": "https://github.com/php-fig/http-client/tree/master"
+            },
+            "time": "2020-06-29T06:28:15+00:00"
+        },
+        {
+            "name": "psr/http-message",
+            "version": "1.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/php-fig/http-message.git",
+                "reference": "f6561bf28d520154e4b0ec72be95418abe6d9363"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/php-fig/http-message/zipball/f6561bf28d520154e4b0ec72be95418abe6d9363",
+                "reference": "f6561bf28d520154e4b0ec72be95418abe6d9363",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.0.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Psr\\Http\\Message\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "PHP-FIG",
+                    "homepage": "http://www.php-fig.org/"
+                }
+            ],
+            "description": "Common interface for HTTP messages",
+            "homepage": "https://github.com/php-fig/http-message",
+            "keywords": [
+                "http",
+                "http-message",
+                "psr",
+                "psr-7",
+                "request",
+                "response"
+            ],
+            "support": {
+                "source": "https://github.com/php-fig/http-message/tree/master"
+            },
+            "time": "2016-08-06T14:39:51+00:00"
+        },
+        {
+            "name": "psr/log",
+            "version": "1.1.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/php-fig/log.git",
+                "reference": "d49695b909c3b7628b6289db5479a1c204601f11"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/php-fig/log/zipball/d49695b909c3b7628b6289db5479a1c204601f11",
+                "reference": "d49695b909c3b7628b6289db5479a1c204601f11",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.1.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Psr\\Log\\": "Psr/Log/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "PHP-FIG",
+                    "homepage": "https://www.php-fig.org/"
+                }
+            ],
+            "description": "Common interface for logging libraries",
+            "homepage": "https://github.com/php-fig/log",
+            "keywords": [
+                "log",
+                "psr",
+                "psr-3"
+            ],
+            "support": {
+                "source": "https://github.com/php-fig/log/tree/1.1.4"
+            },
+            "time": "2021-05-03T11:20:27+00:00"
+        }
+    ],
+    "packages-dev": [
+        {
+            "name": "halaxa/json-machine",
+            "version": "0.7.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/halaxa/json-machine.git",
+                "reference": "39ec702c434e72ddae25d3af14c1d0fe60b03ef6"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/halaxa/json-machine/zipball/39ec702c434e72ddae25d3af14c1d0fe60b03ef6",
+                "reference": "39ec702c434e72ddae25d3af14c1d0fe60b03ef6",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.6"
+            },
+            "require-dev": {
+                "ext-json": "*",
+                "guzzlehttp/guzzle": "^6",
+                "phpunit/phpunit": "^5.7.27"
+            },
+            "suggest": {
+                "ext-json": "To run JSON Machine out of the box without custom decoders."
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "JsonMachine\\": "src/"
+                },
+                "files": [
+                    "src/functions.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "Apache-2.0"
+            ],
+            "authors": [
+                {
+                    "name": "Filip Halaxa",
+                    "email": "filip@halaxa.cz"
+                }
+            ],
+            "description": "Efficient, easy-to-use and fast JSON pull parser",
+            "support": {
+                "issues": "https://github.com/halaxa/json-machine/issues",
+                "source": "https://github.com/halaxa/json-machine/tree/0.7.0"
+            },
+            "time": "2021-05-06T11:47:56+00:00"
+        },
+        {
+            "name": "jawira/case-converter",
+            "version": "v3.4.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/jawira/case-converter.git",
+                "reference": "b32f881bfe30141a82c3b2d6ee466a2f192c7776"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/jawira/case-converter/zipball/b32f881bfe30141a82c3b2d6ee466a2f192c7776",
+                "reference": "b32f881bfe30141a82c3b2d6ee466a2f192c7776",
+                "shasum": ""
+            },
+            "require": {
+                "ext-mbstring": "*",
+                "php": ">=7.1"
+            },
+            "suggest": {
+                "pds/skeleton": "PHP Package Development Standards",
+                "phing/phing": "PHP Build Tool"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Jawira\\CaseConverter\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Jawira Portugal",
+                    "email": "dev@tugal.be",
+                    "homepage": "http://jawira.com/"
+                }
+            ],
+            "description": "Convert strings between 13 naming conventions: Snake case, Camel case, Pascal case, Kebab case, Ada case, Train case, Cobol case, Macro case, Upper case, Lower case, Sentence case, Title case and Dot notation.",
+            "homepage": "https://jawira.github.io/case-converter/",
+            "keywords": [
+                "Ada case",
+                "Cobol case",
+                "Macro case",
+                "Train case",
+                "camel case",
+                "dot notation",
+                "kebab case",
+                "lower case",
+                "pascal case",
+                "sentence case",
+                "snake case",
+                "title case",
+                "upper case"
+            ],
+            "support": {
+                "issues": "https://github.com/jawira/case-converter/issues",
+                "source": "https://github.com/jawira/case-converter/tree/v3.4.2"
+            },
+            "time": "2021-01-05T08:56:22+00:00"
+        },
+        {
+            "name": "league/csv",
+            "version": "9.7.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/thephpleague/csv.git",
+                "reference": "0ec57e8264ec92565974ead0d1724cf1026e10c1"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/thephpleague/csv/zipball/0ec57e8264ec92565974ead0d1724cf1026e10c1",
+                "reference": "0ec57e8264ec92565974ead0d1724cf1026e10c1",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "ext-mbstring": "*",
+                "php": "^7.3 || ^8.0"
+            },
+            "require-dev": {
+                "ext-curl": "*",
+                "ext-dom": "*",
+                "friendsofphp/php-cs-fixer": "^2.16",
+                "phpstan/phpstan": "^0.12.0",
+                "phpstan/phpstan-phpunit": "^0.12.0",
+                "phpstan/phpstan-strict-rules": "^0.12.0",
+                "phpunit/phpunit": "^9.5"
+            },
+            "suggest": {
+                "ext-dom": "Required to use the XMLConverter and or the HTMLConverter classes",
+                "ext-iconv": "Needed to ease transcoding CSV using iconv stream filters"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "9.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "League\\Csv\\": "src"
+                },
+                "files": [
+                    "src/functions_include.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Ignace Nyamagana Butera",
+                    "email": "nyamsprod@gmail.com",
+                    "homepage": "https://github.com/nyamsprod/",
+                    "role": "Developer"
+                }
+            ],
+            "description": "CSV data manipulation made easy in PHP",
+            "homepage": "http://csv.thephpleague.com",
+            "keywords": [
+                "convert",
+                "csv",
+                "export",
+                "filter",
+                "import",
+                "read",
+                "transform",
+                "write"
+            ],
+            "support": {
+                "docs": "https://csv.thephpleague.com",
+                "issues": "https://github.com/thephpleague/csv/issues",
+                "rss": "https://github.com/thephpleague/csv/releases.atom",
+                "source": "https://github.com/thephpleague/csv"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/sponsors/nyamsprod",
+                    "type": "github"
+                }
+            ],
+            "time": "2021-04-17T16:32:08+00:00"
+        }
+    ],
+    "aliases": [],
+    "minimum-stability": "dev",
+    "stability-flags": {
+        "flow-php/doctrine-dbal-bulk": 20,
+        "flow-php/etl": 20,
+        "flow-php/etl-adapter-csv": 20,
+        "flow-php/etl-adapter-doctrine": 20,
+        "flow-php/etl-adapter-http": 20,
+        "flow-php/etl-adapter-json": 20,
+        "flow-php/etl-adapter-logger": 20,
+        "flow-php/etl-adapter-memory": 20,
+        "flow-php/etl-adapter-xml": 20,
+        "flow-php/etl-loader": 20,
+        "flow-php/etl-transformer": 20
+    },
+    "prefer-stable": true,
+    "prefer-lowest": false,
+    "platform": {
+        "php": "^7.4 | ^8.0"
+    },
+    "platform-dev": [],
+    "plugin-api-version": "2.0.0"
+}
