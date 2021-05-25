@@ -27,6 +27,16 @@ function keepColumns(string ...$names) : Transformer
     return new KeepEntriesTransformer(...$names);
 }
 
+function removeColumns(string ...$names) : Transformer
+{
+    return new Transformer\RemoveEntriesTransformer(...$names);
+}
+
+function cloneColumn(string $from, string $to) : Transformer
+{
+    return new Transformer\CloneEntryTransformer($from, $to);
+}
+
 function columnNameConvert(string $style) : Transformer
 {
     if (!\class_exists('Jawira\CaseConverter\Convert')) {
