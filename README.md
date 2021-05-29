@@ -6,6 +6,8 @@ Data manipulation library
 composer require flow-php/flow
 ```
 
+Available data manipulators:
+
 * [extractors](src/Flow/ETL/DSL/extractors.php)
 * [transformers](src/Flow/ETL/DSL/transformers.php)
 * [loaders](src/Flow/ETL/DSL/loaders.php)

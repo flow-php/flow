@@ -7,6 +7,7 @@ namespace Flow\ETL\DSL\Loader;
 use Flow\ETL\Adapter\CSV\LeagueCSVLoader;
 use Flow\ETL\Adapter\Logger\Logger\DumpLogger;
 use Flow\ETL\Adapter\Logger\PsrLoggerLoader;
+use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Loader;
 use Flow\ETL\Memory\Memory;
 use Flow\ETL\Row;
@@ -15,6 +16,10 @@ use League\Csv\Writer;
 
 function toCSV(string $fileName) : Loader
 {
+    if (!\class_exists('League\Csv\Reader')) {
+        throw new RuntimeException("League\Csv\Reader class not found, please install it using 'composer require league/csv'");
+    }
+
     return new LeagueCSVLoader(Writer::createFromPath($fileName, 'w+'));
 }
 

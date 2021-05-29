@@ -2,7 +2,15 @@
     "name": "flow-php/flow",
     "type": "library",
     "description": "Flow - PHP data manipulation library",
-    "keywords": ["etl", "extract", "transform", "load", "filter", "flow", "map"],
+    "keywords": [
+        "etl",
+        "extract",
+        "transform",
+        "load",
+        "filter",
+        "flow",
+        "map"
+    ],
     "prefer-stable": true,
     "minimum-stability": "dev",
     "require": {
@@ -23,6 +31,13 @@
         "halaxa/json-machine": "^0.7.0",
         "jawira/case-converter": "^3.4",
         "league/csv": "^9.7"
+    },
+    "suggest": {
+        "halaxa/json-machine" : "Required in order to use extractJSON()",
+        "jawira/case-converter" : "Required in order to use columnNameConvert()",
+        "league/csv" : "Required in order to use extractCSV(), toCSV()",
+        "doctrine/dbal": "Required in order to use extractDb()",
+        "psr/http-client": "Any implementation of psr/http-client is required in order to use extractHttp()"
     },
     "config": {
         "optimize-autoloader": true,

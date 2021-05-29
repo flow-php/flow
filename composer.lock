@@ -872,12 +872,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl-transformer.git",
-                "reference": "9c143a1276dad9cabb81817299d8e55dd999e8e6"
+                "reference": "8bdc3e9a8f9cd818cbc039a6509506bf67a117f1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl-transformer/zipball/9c143a1276dad9cabb81817299d8e55dd999e8e6",
-                "reference": "9c143a1276dad9cabb81817299d8e55dd999e8e6",
+                "url": "https://api.github.com/repos/flow-php/etl-transformer/zipball/8bdc3e9a8f9cd818cbc039a6509506bf67a117f1",
+                "reference": "8bdc3e9a8f9cd818cbc039a6509506bf67a117f1",
                 "shasum": ""
             },
             "require": {
@@ -920,7 +920,7 @@
                 "issues": "https://github.com/flow-php/etl-transformer/issues",
                 "source": "https://github.com/flow-php/etl-transformer/tree/1.x"
             },
-            "time": "2021-05-25T20:24:15+00:00"
+            "time": "2021-05-25T20:24:53+00:00"
         },
         {
             "name": "psr/http-client",
