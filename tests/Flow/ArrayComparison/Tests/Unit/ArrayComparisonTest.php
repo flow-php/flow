@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\ArrayComparison\Tests\Unit;
 
-use Flow\ArrayComparison\ArrayWeakComparison;
+use Flow\ArrayComparison\ArrayComparison;
 use PHPUnit\Framework\TestCase;
 
-final class ArrayWeakComparisonTest extends TestCase
+final class ArrayComparisonTest extends TestCase
 {
     /**
      * @dataProvider equal_arrays
      */
     public function test_equals(array $a, array $b) : void
     {
-        $this->assertTrue((new ArrayWeakComparison())->equals($a, $b));
+        $this->assertTrue((new ArrayComparison())->equals($a, $b));
     }
 
     public function equal_arrays() : \Generator
@@ -22,6 +22,16 @@ final class ArrayWeakComparisonTest extends TestCase
         yield 'simple arrays' => [
             ['id' => 1, 'name' => 'one', 'color' => 'red'],
             ['name' => 'one', 'color' => 'red', 'id' => 1],
+        ];
+
+        yield 'arrays with datetimes' => [
+            ['date' => new \DateTimeImmutable('2020-01-01 00:00:00 UTC')],
+            ['date' => new \DateTimeImmutable('2020-01-01 00:00:00 UTC')],
+        ];
+
+        yield 'arrays with objects' => [
+            ['date' => new \stdClass()],
+            ['date' => new \stdClass()],
         ];
 
         yield 'complex arrays' => [
@@ -93,7 +103,7 @@ final class ArrayWeakComparisonTest extends TestCase
      */
     public function test_not_equals(array $a, array $b) : void
     {
-        $this->assertFalse((new ArrayWeakComparison())->equals($a, $b));
+        $this->assertFalse((new ArrayComparison())->equals($a, $b));
     }
 
     public function not_equal_arrays() : \Generator
@@ -101,6 +111,11 @@ final class ArrayWeakComparisonTest extends TestCase
         yield 'simple arrays' => [
             ['id' => 1, 'name' => 'one', 'color' => 'red'],
             ['name' => 'one', 'color' => 'red', 'id' => 2],
+        ];
+
+        yield 'arrays with floats' => [
+            ['temp' => 36.00],
+            ['temp' => 36],
         ];
 
         yield 'some data but different key' => [

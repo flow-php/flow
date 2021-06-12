@@ -1,5 +1,4 @@
 {
-  "timeout": 1000,
   "source": {
     "directories": [
       "src\/Flow"

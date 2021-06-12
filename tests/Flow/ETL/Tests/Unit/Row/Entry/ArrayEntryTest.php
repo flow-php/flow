@@ -71,7 +71,7 @@ final class ArrayEntryTest extends TestCase
             new ArrayEntry('name', [1, 2, 3]),
         ];
         yield 'equal names and equal simple integerrish arrays with the same order' => [
-            true,
+            false,
             new ArrayEntry('name', [1, 2, 3]),
             new ArrayEntry('name', ['1', '2', '3']),
         ];
