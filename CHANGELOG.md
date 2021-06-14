@@ -1,6 +1,7 @@
-## [Unreleased] - 2021-05-31
+## [Unreleased] - 2021-06-14
 
 ### Added
+- [683619](https://github.com/flow-php/flow/commit/68361928e607df6ffda7ee6039e3675f23c864ab) - **new entries to DSL** - [@norberttech](https://github.com/norberttech)
 - [3f91da](https://github.com/flow-php/flow/commit/3f91da762a6a099b6b7ad6c9abc77951a0e1afcd) - **more extractors and composer.json suggestions** - [@norberttech](https://github.com/norberttech)
 - [6052dc](https://github.com/flow-php/flow/commit/6052dc269abf336caf9aed1524f2c5cb8d53e984) - **more transformers** - [@norberttech](https://github.com/norberttech)
 
