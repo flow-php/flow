@@ -1,9 +1,12 @@
-## [Unreleased] - 2021-05-13
+## [Unreleased] - 2021-06-14
 
 ### Changed
 - [#3](https://github.com/flow-php/etl-adapter-json/pull/3) - **Moved JsonEntry from main ETL library** - [@norberttech](https://github.com/norberttech)
 - [#3](https://github.com/flow-php/etl-adapter-json/pull/3) - **Improved test suite configuration** - [@norberttech](https://github.com/norberttech)
 - [e2a1c6](https://github.com/flow-php/etl-adapter-json/commit/e2a1c672b89845bc1df33ca189a14b68e3d4cbc7) - **Initial commit** - [@norberttech](https://github.com/norberttech)
+
+### Fixed
+- [#18](https://github.com/flow-php/etl-adapter-json/pull/18) - **ArrayWeakComparison is not available anymore, we should use ArrayComparison** - [@tomaszhanc](https://github.com/tomaszhanc)
 
 ### Removed
 - [bd6bae](https://github.com/flow-php/etl-adapter-json/commit/bd6baefd144977ba3f70104ec6a00b6380beb75d) - **php extensions dependencies** - [@norberttech](https://github.com/norberttech)
