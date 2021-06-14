@@ -1,4 +1,4 @@
-## [Unreleased] - 2021-05-23
+## [Unreleased] - 2021-06-14
 
 ### Added
 - [#50](https://github.com/flow-php/etl/pull/50) - **Rows::isLast()** - [@norberttech](https://github.com/norberttech)
@@ -48,6 +48,7 @@
 - [e48062](https://github.com/flow-php/etl/commit/e48062890cd84e655e1162305086f67148347b83) - **Intial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#54](https://github.com/flow-php/etl/pull/54) - **compare values by using weak comparison only against objects** - [@norberttech](https://github.com/norberttech)
 - [#48](https://github.com/flow-php/etl/pull/48) - **FloatEntry comparison by using precision properly** - [@norberttech](https://github.com/norberttech)
 - [#31](https://github.com/flow-php/etl/pull/31) - **not allowing '0' string as a name** - [@norberttech](https://github.com/norberttech)
 - [#14](https://github.com/flow-php/etl/pull/14) - **Fixed Github action for checking PR description** - [@DawidSajdak](https://github.com/DawidSajdak)
