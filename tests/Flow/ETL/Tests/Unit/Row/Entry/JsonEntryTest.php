@@ -105,11 +105,6 @@ final class JsonEntryTest extends TestCase
             new JsonEntry('name', [1, 2, 3]),
             new JsonEntry('name', [1, 2, 3]),
         ];
-        yield 'equal names and equal simple integerrish arrays with the same order' => [
-            true,
-            new JsonEntry('name', [1, 2, 3]),
-            new JsonEntry('name', ['1', '2', '3']),
-        ];
         yield 'equal names and equal simple integer arrays with different order' => [
             true,
             new JsonEntry('name', [1, 2, 3]),
@@ -134,6 +129,11 @@ final class JsonEntryTest extends TestCase
             true,
             new JsonEntry('name', ['foo' => 1, 'bar' => ['foo' => 'foo', 'bar' => 'bar'], 'baz']),
             new JsonEntry('name', ['baz', 'bar' => ['bar' => 'bar', 'foo' => 'foo'], 'foo' => 1]),
+        ];
+        yield 'equal names and equal simple integerrish arrays with the same order' => [
+            false,
+            new JsonEntry('name', [1, 2, 3]),
+            new JsonEntry('name', ['1', '2', '3']),
         ];
         yield 'equal names and equal multi dimensional array with missing entry' => [
             false,
