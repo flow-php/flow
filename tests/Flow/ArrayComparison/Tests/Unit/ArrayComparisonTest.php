@@ -24,6 +24,11 @@ final class ArrayComparisonTest extends TestCase
             ['name' => 'one', 'color' => 'red', 'id' => 1],
         ];
 
+        yield 'simple arrays with null values' => [
+            ['id' => 1, 'name' => 'one', 'color' => 'red', 'description' => null],
+            ['name' => 'one', 'color' => 'red', 'id' => 1, 'description' => null],
+        ];
+
         yield 'arrays with datetimes' => [
             ['date' => new \DateTimeImmutable('2020-01-01 00:00:00 UTC')],
             ['date' => new \DateTimeImmutable('2020-01-01 00:00:00 UTC')],

@@ -53,7 +53,7 @@ final class ArrayComparison
 
         /** @var mixed $value */
         foreach ($b as $key => $value) {
-            if (!isset($a[$key]) || !isset($b[$key])) {
+            if (!\array_key_exists($key, $a) || !\array_key_exists($key, $b)) {
                 return false;
             }
 
@@ -64,7 +64,7 @@ final class ArrayComparison
 
         /** @var mixed $value */
         foreach ($a as $key => $value) {
-            if (!isset($a[$key]) || !isset($b[$key])) {
+            if (!\array_key_exists($key, $a) || !\array_key_exists($key, $b)) {
                 return false;
             }
 
