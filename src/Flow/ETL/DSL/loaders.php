@@ -4,7 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\DSL\Loader;
 
+use Elasticsearch\Client;
 use Flow\ETL\Adapter\CSV\LeagueCSVLoader;
+use Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHPLoader;
+use Flow\ETL\Adapter\Elasticsearch\EntryIdFactory\EntryIdFactory;
+use Flow\ETL\Adapter\Elasticsearch\EntryIdFactory\Sha1IdFactory;
+use Flow\ETL\Adapter\Elasticsearch\IdFactory;
 use Flow\ETL\Adapter\Logger\Logger\DumpLogger;
 use Flow\ETL\Adapter\Logger\PsrLoggerLoader;
 use Flow\ETL\Exception\RuntimeException;
@@ -23,17 +28,32 @@ function toCSV(string $fileName) : Loader
     return new LeagueCSVLoader(Writer::createFromPath($fileName, 'w+'));
 }
 
-function memory(Memory $memory) : Loader
+function toElasticSearch(Client $client, int $chunkSize, string $index, IdFactory $idFactory, array $parameters = []) : Loader
+{
+    return new ElasticsearchPHPLoader($client, $chunkSize, $index, $idFactory, $parameters);
+}
+
+function esIdSha1(string ...$columns) : IdFactory
+{
+    return new Sha1IdFactory(...$columns);
+}
+
+function esIdColumns(string $column) : IdFactory
+{
+    return new EntryIdFactory($column);
+}
+
+function toMemory(Memory $memory) : Loader
 {
     return new Loader\MemoryLoader($memory);
 }
 
-function debug() : Loader
+function toDebugLogger() : Loader
 {
     return new PsrLoggerLoader(new DumpLogger(), 'debug row content');
 }
 
-function debugEntries(bool $all = false) : Loader
+function toColumnDumper(bool $all = false) : Loader
 {
     return new class($all) implements Loader {
         private bool $allRows;

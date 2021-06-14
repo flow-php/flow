@@ -70,10 +70,6 @@ function extractHttpDynamic(ClientInterface $client, NextRequestFactory $request
 
 function extractDb(Connection $connection, string $query, ParametersSet $parametersSet = null, array $types = [])
 {
-    if (!\class_exists('Doctrine\DBAL\Connection')) {
-        throw new RuntimeException("Doctrine\DBAL\Connection class not found, please install it using 'composer require doctrine/dbal'");
-    }
-
     return ETL::extract(new DbalQueryExtractor($connection, $query, $parametersSet, $types, $entryRowName = 'row'))
         ->transform(new ArrayUnpackTransformer($entryRowName));
 }

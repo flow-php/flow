@@ -23,13 +23,16 @@
         "flow-php/etl-adapter-json": "^1.0@dev",
         "flow-php/etl-adapter-logger": "^1.0@dev",
         "flow-php/etl-adapter-memory": "^1.0@dev",
+        "flow-php/etl-adapter-elasticsearch": "^1.0@dev",
         "flow-php/etl-adapter-xml": "^1.0@dev",
         "flow-php/etl-loader": "^1.0@dev",
         "flow-php/etl-transformer": "^1.0@dev"
     },
     "require-dev": {
+        "elasticsearch/elasticsearch": "^7.13",
         "halaxa/json-machine": "^0.7.0",
         "jawira/case-converter": "^3.4",
+        "laminas/laminas-hydrator": "^4.1",
         "league/csv": "^9.7"
     },
     "suggest": {
@@ -37,7 +40,9 @@
         "jawira/case-converter" : "Required in order to use columnNameConvert()",
         "league/csv" : "Required in order to use extractCSV(), toCSV()",
         "doctrine/dbal": "Required in order to use extractDb()",
-        "psr/http-client": "Any implementation of psr/http-client is required in order to use extractHttp()"
+        "psr/http-client": "Any implementation of psr/http-client is required in order to use extractHttp()",
+        "laminas/laminas-hydrator": "Required in order to use columnFromValue()",
+        "elasticsearch/elasticsearch" : "Required in order to use toElasticSearch()"
     },
     "config": {
         "optimize-autoloader": true,
@@ -52,6 +57,7 @@
         },
         "files": [
             "src/Flow/ETL/DSL/extractors.php",
+            "src/Flow/ETL/DSL/factories.php",
             "src/Flow/ETL/DSL/transformers.php",
             "src/Flow/ETL/DSL/loaders.php"
         ]
