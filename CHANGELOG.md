@@ -1,10 +1,13 @@
-## [Unreleased] - 2021-04-22
+## [Unreleased] - 2021-06-20
 
 ### Added
 - [#3](https://github.com/flow-php/etl-adapter-doctrine/pull/3) - **possibility to extract data from multiple queries** - [@norberttech](https://github.com/norberttech)
 - [#1](https://github.com/flow-php/etl-adapter-doctrine/pull/1) - **DbalQueryExtractor** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#5](https://github.com/flow-php/etl-adapter-doctrine/pull/5) - **Updated dependencies** - [@tomaszhanc](https://github.com/tomaszhanc)
+- [#5](https://github.com/flow-php/etl-adapter-doctrine/pull/5) - **Sort entries before passing them to BulkData** - [@tomaszhanc](https://github.com/tomaszhanc)
+- [48f810](https://github.com/flow-php/etl-adapter-doctrine/commit/48f810b9920836c72e358f9eb4bbae139f670f1f) - **CHANGELOG.md** - [@aeon-automation](https://github.com/aeon-automation)
 - [e1c5de](https://github.com/flow-php/etl-adapter-doctrine/commit/e1c5de50ae790af58ef9f2277ca2b9d081db3b80) - **CHANGELOG.md** - [@aeon-automation](https://github.com/aeon-automation)
 - [38f8f6](https://github.com/flow-php/etl-adapter-doctrine/commit/38f8f654839536d36f04f300d1b07feb1ae193f4) - **CHANGELOG.md** - [@aeon-automation](https://github.com/aeon-automation)
 - [3ac4c5](https://github.com/flow-php/etl-adapter-doctrine/commit/3ac4c519913fe5bcb08317de9434831bcfc28673) - **CHANGELOG.md** - [@aeon-automation](https://github.com/aeon-automation)
