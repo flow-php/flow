@@ -79,7 +79,7 @@ final class DbalBulkLoader implements Loader
     public function load(Rows $rows) : void
     {
         foreach ($rows->chunks($this->bulkChunkSize) as $chunk) {
-            $this->bulkOperation->execute($this->table, new BulkData($chunk->toArray()));
+            $this->bulkOperation->execute($this->table, new BulkData($chunk->sortEntries()->toArray()));
         }
     }
 }
