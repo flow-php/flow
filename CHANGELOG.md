@@ -1,6 +1,9 @@
-## [Unreleased] - 2021-03-30
+## [Unreleased] - 2021-06-20
 
 ### Changed
+- [#5](https://github.com/flow-php/doctrine-dbal-bulk/pull/5) - **Pass parameters types during executing database query** - [@tomaszhanc](https://github.com/tomaszhanc)
+- [#5](https://github.com/flow-php/doctrine-dbal-bulk/pull/5) - **Updated dependencies** - [@tomaszhanc](https://github.com/tomaszhanc)
+- [ebe316](https://github.com/flow-php/doctrine-dbal-bulk/commit/ebe3165247a84a0fbc89608e9f636cbfdc649914) - **CHANGELOG.md** - [@aeon-automation](https://github.com/aeon-automation)
 - [02f619](https://github.com/flow-php/doctrine-dbal-bulk/commit/02f619cfd15ea5818cd7bb1b0de0e806507d3d5c) - **CHANGELOG.md** - [@aeon-automation](https://github.com/aeon-automation)
 - [cdbc76](https://github.com/flow-php/doctrine-dbal-bulk/commit/cdbc76af8c863f40d6181aa81a60e4f1d33d6519) - **Initial commit** - [@norberttech](https://github.com/norberttech)
 
