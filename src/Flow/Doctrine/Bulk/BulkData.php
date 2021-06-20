@@ -45,7 +45,7 @@ final class BulkData
         }
 
         $this->columns = new Columns(...$keys);
-        $this->rows = \array_map( /** @phpstan-ignore-line */
+        $this->rows = \array_map(
             fn (int $index, array $row) => \array_combine(
                 $this->columns->suffix("_{$index}")->all(),
                 $row,

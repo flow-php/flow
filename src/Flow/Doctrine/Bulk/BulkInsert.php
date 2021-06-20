@@ -26,28 +26,37 @@ final class BulkInsert
 
     public function insert(string $table, BulkData $bulkData) : void
     {
-        $this->connection->prepare(
+        $this->connection->executeQuery(
             $this->queryFactory->insert($this->connection->getDatabasePlatform(), $table, $bulkData),
-        )->execute(
-            $bulkData->toSqlParameters()
+            $bulkData->toSqlParameters(),
+            \array_map(
+                fn ($value) : string => \gettype($value),
+                \array_filter($bulkData->toSqlParameters(), fn ($value) : bool => \is_bool($value))
+            )
         );
     }
 
     public function insertOrSkipOnConflict(string $table, BulkData $bulkData) : void
     {
-        $this->connection->prepare(
+        $this->connection->executeQuery(
             $this->queryFactory->insertOrSkipOnConflict($this->connection->getDatabasePlatform(), $table, $bulkData),
-        )->execute(
-            $bulkData->toSqlParameters()
+            $bulkData->toSqlParameters(),
+            \array_map(
+                fn ($value) : string => \gettype($value),
+                \array_filter($bulkData->toSqlParameters(), fn ($value) : bool => \is_bool($value))
+            )
         );
     }
 
     public function insertOrUpdateOnConstraintConflict(string $table, string $constraint, BulkData $bulkData) : void
     {
-        $this->connection->prepare(
+        $this->connection->executeQuery(
             $this->queryFactory->insertOrUpdateOnConstraintConflict($this->connection->getDatabasePlatform(), $table, $constraint, $bulkData),
-        )->execute(
-            $bulkData->toSqlParameters()
+            $bulkData->toSqlParameters(),
+            \array_map(
+                fn ($value) : string => \gettype($value),
+                \array_filter($bulkData->toSqlParameters(), fn ($value) : bool => \is_bool($value))
+            )
         );
     }
 }

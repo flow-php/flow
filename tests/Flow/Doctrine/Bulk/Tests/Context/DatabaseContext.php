@@ -33,7 +33,7 @@ final class DatabaseContext
 
     public function createTestTable(string $tableName) : void
     {
-        $this->connection->executeQuery("CREATE TABLE {$tableName} (id INT NOT NULL, name VARCHAR(255) NOT NULL, description VARCHAR(255) NOT NULL, PRIMARY KEY(id))");
+        $this->connection->executeQuery("CREATE TABLE {$tableName} (id INT NOT NULL, name VARCHAR(255) NOT NULL, description VARCHAR(255) NOT NULL, active BOOLEAN NOT NULL, PRIMARY KEY(id))");
 
         $this->createdTables[] = $tableName;
     }

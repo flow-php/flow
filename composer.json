@@ -6,7 +6,7 @@
     "keywords": ["doctrine", "dbal", "bulk", "insert", "upsert"],
     "require": {
         "php": "^7.4 | ^8.0",
-        "doctrine/dbal": "^2.12 | 3.0"
+        "doctrine/dbal": "^2.12 | ^3.0"
     },
     "autoload": {
         "psr-4": {
