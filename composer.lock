@@ -81,16 +81,16 @@
         },
         {
             "name": "doctrine/cache",
-            "version": "1.11.3",
+            "version": "2.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/doctrine/cache.git",
-                "reference": "3bb5588cec00a0268829cc4a518490df6741af9d"
+                "reference": "c9622c6820d3ede1e2315a6a377ea1076e421d88"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/doctrine/cache/zipball/3bb5588cec00a0268829cc4a518490df6741af9d",
-                "reference": "3bb5588cec00a0268829cc4a518490df6741af9d",
+                "url": "https://api.github.com/repos/doctrine/cache/zipball/c9622c6820d3ede1e2315a6a377ea1076e421d88",
+                "reference": "c9622c6820d3ede1e2315a6a377ea1076e421d88",
                 "shasum": ""
             },
             "require": {
@@ -160,7 +160,7 @@
             ],
             "support": {
                 "issues": "https://github.com/doctrine/cache/issues",
-                "source": "https://github.com/doctrine/cache/tree/1.11.3"
+                "source": "https://github.com/doctrine/cache/tree/2.0.3"
             },
             "funding": [
                 {
@@ -176,37 +176,40 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-05-25T09:01:55+00:00"
+            "time": "2021-05-25T09:43:04+00:00"
         },
         {
             "name": "doctrine/dbal",
-            "version": "3.0.0",
+            "version": "3.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/doctrine/dbal.git",
-                "reference": "ee6d1260d5cc20ec506455a585945d7bdb98662c"
+                "reference": "8e0fde2b90e3f61361013d1e928621beeea07bc0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/doctrine/dbal/zipball/ee6d1260d5cc20ec506455a585945d7bdb98662c",
-                "reference": "ee6d1260d5cc20ec506455a585945d7bdb98662c",
+                "url": "https://api.github.com/repos/doctrine/dbal/zipball/8e0fde2b90e3f61361013d1e928621beeea07bc0",
+                "reference": "8e0fde2b90e3f61361013d1e928621beeea07bc0",
                 "shasum": ""
             },
             "require": {
                 "composer/package-versions-deprecated": "^1.11.99",
-                "doctrine/cache": "^1.0",
+                "doctrine/cache": "^1.0|^2.0",
+                "doctrine/deprecations": "^0.5.3",
                 "doctrine/event-manager": "^1.0",
                 "php": "^7.3 || ^8.0"
             },
             "require-dev": {
-                "doctrine/coding-standard": "^8.1",
-                "jetbrains/phpstorm-stubs": "^2019.1",
-                "phpstan/phpstan": "^0.12.40",
+                "doctrine/coding-standard": "9.0.0",
+                "jetbrains/phpstorm-stubs": "2020.2",
+                "phpstan/phpstan": "0.12.81",
                 "phpstan/phpstan-strict-rules": "^0.12.2",
-                "phpunit/phpunit": "^9.4",
-                "psalm/plugin-phpunit": "^0.10.0",
-                "symfony/console": "^2.0.5|^3.0|^4.0|^5.0",
-                "vimeo/psalm": "^3.17.2"
+                "phpunit/phpunit": "9.5.5",
+                "psalm/plugin-phpunit": "0.13.0",
+                "squizlabs/php_codesniffer": "3.6.0",
+                "symfony/cache": "^5.2|^6.0",
+                "symfony/console": "^2.0.5|^3.0|^4.0|^5.0|^6.0",
+                "vimeo/psalm": "4.6.4"
             },
             "suggest": {
                 "symfony/console": "For helpful console commands such as SQL execution and import of files."
@@ -215,11 +218,6 @@
                 "bin/doctrine-dbal"
             ],
             "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "4.0.x-dev"
-                }
-            },
             "autoload": {
                 "psr-4": {
                     "Doctrine\\DBAL\\": "src"
@@ -271,7 +269,7 @@
             ],
             "support": {
                 "issues": "https://github.com/doctrine/dbal/issues",
-                "source": "https://github.com/doctrine/dbal/tree/3.0.0"
+                "source": "https://github.com/doctrine/dbal/tree/3.1.1"
             },
             "funding": [
                 {
@@ -287,7 +285,50 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2020-11-15T18:20:41+00:00"
+            "time": "2021-06-19T17:59:55+00:00"
+        },
+        {
+            "name": "doctrine/deprecations",
+            "version": "v0.5.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/doctrine/deprecations.git",
+                "reference": "9504165960a1f83cc1480e2be1dd0a0478561314"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/doctrine/deprecations/zipball/9504165960a1f83cc1480e2be1dd0a0478561314",
+                "reference": "9504165960a1f83cc1480e2be1dd0a0478561314",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.1|^8.0"
+            },
+            "require-dev": {
+                "doctrine/coding-standard": "^6.0|^7.0|^8.0",
+                "phpunit/phpunit": "^7.0|^8.0|^9.0",
+                "psr/log": "^1.0"
+            },
+            "suggest": {
+                "psr/log": "Allows logging deprecations via PSR-3 logger implementation"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Doctrine\\Deprecations\\": "lib/Doctrine/Deprecations"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A small layer on top of trigger_error(E_USER_DEPRECATED) or PSR-3 logging with options to disable all deprecations or selectively for packages.",
+            "homepage": "https://www.doctrine-project.org/",
+            "support": {
+                "issues": "https://github.com/doctrine/deprecations/issues",
+                "source": "https://github.com/doctrine/deprecations/tree/v0.5.3"
+            },
+            "time": "2021-03-21T12:59:47+00:00"
         },
         {
             "name": "doctrine/event-manager",
@@ -389,16 +430,16 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/doctrine-dbal-bulk.git",
-                "reference": "ebe3165247a84a0fbc89608e9f636cbfdc649914"
+                "reference": "b9117243a60471ca40a51667e9d010667db053c1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/doctrine-dbal-bulk/zipball/ebe3165247a84a0fbc89608e9f636cbfdc649914",
-                "reference": "ebe3165247a84a0fbc89608e9f636cbfdc649914",
+                "url": "https://api.github.com/repos/flow-php/doctrine-dbal-bulk/zipball/b9117243a60471ca40a51667e9d010667db053c1",
+                "reference": "b9117243a60471ca40a51667e9d010667db053c1",
                 "shasum": ""
             },
             "require": {
-                "doctrine/dbal": "^2.12 | 3.0",
+                "doctrine/dbal": "^2.12 | ^3.0",
                 "php": "^7.4 | ^8.0"
             },
             "default-branch": true,
@@ -426,7 +467,7 @@
                 "issues": "https://github.com/flow-php/doctrine-dbal-bulk/issues",
                 "source": "https://github.com/flow-php/doctrine-dbal-bulk/tree/1.x"
             },
-            "time": "2021-03-30T07:43:05+00:00"
+            "time": "2021-06-20T16:02:11+00:00"
         },
         {
             "name": "flow-php/etl",
@@ -478,12 +519,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl-adapter-csv.git",
-                "reference": "7448ab44f9719014caa1a979054877fa52771796"
+                "reference": "a44288d14c9ad92690dcc8d72f0dfac683bcce36"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl-adapter-csv/zipball/7448ab44f9719014caa1a979054877fa52771796",
-                "reference": "7448ab44f9719014caa1a979054877fa52771796",
+                "url": "https://api.github.com/repos/flow-php/etl-adapter-csv/zipball/a44288d14c9ad92690dcc8d72f0dfac683bcce36",
+                "reference": "a44288d14c9ad92690dcc8d72f0dfac683bcce36",
                 "shasum": ""
             },
             "require": {
@@ -521,7 +562,7 @@
                 "issues": "https://github.com/flow-php/etl-adapter-csv/issues",
                 "source": "https://github.com/flow-php/etl-adapter-csv/tree/1.x"
             },
-            "time": "2021-05-23T08:13:55+00:00"
+            "time": "2021-06-24T07:52:53+00:00"
         },
         {
             "name": "flow-php/etl-adapter-doctrine",
@@ -529,12 +570,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl-adapter-doctrine.git",
-                "reference": "48f810b9920836c72e358f9eb4bbae139f670f1f"
+                "reference": "fa5f51de5fd12cc5b7f3c5793d2fec781a71a41a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl-adapter-doctrine/zipball/48f810b9920836c72e358f9eb4bbae139f670f1f",
-                "reference": "48f810b9920836c72e358f9eb4bbae139f670f1f",
+                "url": "https://api.github.com/repos/flow-php/etl-adapter-doctrine/zipball/fa5f51de5fd12cc5b7f3c5793d2fec781a71a41a",
+                "reference": "fa5f51de5fd12cc5b7f3c5793d2fec781a71a41a",
                 "shasum": ""
             },
             "require": {
@@ -575,7 +616,7 @@
                 "issues": "https://github.com/flow-php/etl-adapter-doctrine/issues",
                 "source": "https://github.com/flow-php/etl-adapter-doctrine/tree/1.x"
             },
-            "time": "2021-04-22T08:21:09+00:00"
+            "time": "2021-06-20T16:01:31+00:00"
         },
         {
             "name": "flow-php/etl-adapter-elasticsearch",
@@ -637,12 +678,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl-adapter-http.git",
-                "reference": "0cd473aca3544241aa0e2b296a7a1ee69e1f43c5"
+                "reference": "9092275d3f06e7e0811d596f02c042b6e025ae1c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl-adapter-http/zipball/0cd473aca3544241aa0e2b296a7a1ee69e1f43c5",
-                "reference": "0cd473aca3544241aa0e2b296a7a1ee69e1f43c5",
+                "url": "https://api.github.com/repos/flow-php/etl-adapter-http/zipball/9092275d3f06e7e0811d596f02c042b6e025ae1c",
+                "reference": "9092275d3f06e7e0811d596f02c042b6e025ae1c",
                 "shasum": ""
             },
             "require": {
@@ -681,7 +722,7 @@
                 "issues": "https://github.com/flow-php/etl-adapter-http/issues",
                 "source": "https://github.com/flow-php/etl-adapter-http/tree/1.x"
             },
-            "time": "2021-06-08T15:28:23+00:00"
+            "time": "2021-06-21T17:31:20+00:00"
         },
         {
             "name": "flow-php/etl-adapter-json",
@@ -926,12 +967,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl-transformer.git",
-                "reference": "9275d0dce4060aad4b0313b3c2e53de1905f7e36"
+                "reference": "22b6bb966578e50ea17b9ae6a2e90b767fbd3e21"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl-transformer/zipball/9275d0dce4060aad4b0313b3c2e53de1905f7e36",
-                "reference": "9275d0dce4060aad4b0313b3c2e53de1905f7e36",
+                "url": "https://api.github.com/repos/flow-php/etl-transformer/zipball/22b6bb966578e50ea17b9ae6a2e90b767fbd3e21",
+                "reference": "22b6bb966578e50ea17b9ae6a2e90b767fbd3e21",
                 "shasum": ""
             },
             "require": {
@@ -974,7 +1015,7 @@
                 "issues": "https://github.com/flow-php/etl-transformer/issues",
                 "source": "https://github.com/flow-php/etl-transformer/tree/1.x"
             },
-            "time": "2021-06-14T10:44:04+00:00"
+            "time": "2021-06-24T17:28:41+00:00"
         },
         {
             "name": "psr/http-client",
@@ -1135,16 +1176,16 @@
     "packages-dev": [
         {
             "name": "elasticsearch/elasticsearch",
-            "version": "v7.13.0",
+            "version": "v7.13.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/elastic/elasticsearch-php.git",
-                "reference": "7343050106bf73ef9f63cf21490024e001829c81"
+                "reference": "45e17adacd3319958d6135e4ee3a21dbbe36a24b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/elastic/elasticsearch-php/zipball/7343050106bf73ef9f63cf21490024e001829c81",
-                "reference": "7343050106bf73ef9f63cf21490024e001829c81",
+                "url": "https://api.github.com/repos/elastic/elasticsearch-php/zipball/45e17adacd3319958d6135e4ee3a21dbbe36a24b",
+                "reference": "45e17adacd3319958d6135e4ee3a21dbbe36a24b",
                 "shasum": ""
             },
             "require": {
@@ -1195,9 +1236,9 @@
             ],
             "support": {
                 "issues": "https://github.com/elastic/elasticsearch-php/issues",
-                "source": "https://github.com/elastic/elasticsearch-php/tree/v7.13.0"
+                "source": "https://github.com/elastic/elasticsearch-php/tree/v7.13.1"
             },
-            "time": "2021-05-25T20:30:27+00:00"
+            "time": "2021-06-15T18:36:52+00:00"
         },
         {
             "name": "ezimuel/guzzlestreams",
@@ -1554,16 +1595,16 @@
         },
         {
             "name": "laminas/laminas-zendframework-bridge",
-            "version": "1.2.0",
+            "version": "1.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laminas/laminas-zendframework-bridge.git",
-                "reference": "6cccbddfcfc742eb02158d6137ca5687d92cee32"
+                "reference": "13af2502d9bb6f7d33be2de4b51fb68c6cdb476e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laminas/laminas-zendframework-bridge/zipball/6cccbddfcfc742eb02158d6137ca5687d92cee32",
-                "reference": "6cccbddfcfc742eb02158d6137ca5687d92cee32",
+                "url": "https://api.github.com/repos/laminas/laminas-zendframework-bridge/zipball/13af2502d9bb6f7d33be2de4b51fb68c6cdb476e",
+                "reference": "13af2502d9bb6f7d33be2de4b51fb68c6cdb476e",
                 "shasum": ""
             },
             "require": {
@@ -1612,7 +1653,7 @@
                     "type": "community_bridge"
                 }
             ],
-            "time": "2021-02-25T21:54:58+00:00"
+            "time": "2021-06-24T12:49:22+00:00"
         },
         {
             "name": "league/csv",

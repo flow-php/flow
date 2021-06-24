@@ -184,12 +184,27 @@ function toArrayFromObject(string $column) : Transformer
     return new Transformer\ObjectToArrayTransformer(new ReflectionHydrator(), $column);
 }
 
-function expand(string $arrayColumn) : Transformer
+function expand(string $arrayColumn, string $expandedName = 'column') : Transformer
 {
-    return new Transformer\ArrayExpandTransformer($arrayColumn);
+    return new Transformer\ArrayExpandTransformer($arrayColumn, $expandedName);
 }
 
-function unpack(string $arrayColumn) : Transformer
+function unpack(string $arrayColumn, string $columnPrefix = '') : Transformer
 {
-    return new Transformer\ArrayUnpackTransformer($arrayColumn);
+    return new Transformer\ArrayUnpackTransformer($arrayColumn, $columnPrefix);
+}
+
+function concat(array $stringColumns, string $glue = '', string $columnName = 'column') : Transformer
+{
+    return new Transformer\StringConcatTransformer($stringColumns, $glue, $columnName);
+}
+
+function arrayValue(string $arrayName, string $path) : Transformer
+{
+    return new Transformer\ArrayAccessorTransformer($arrayName, $path, true);
+}
+
+function objectMethod(string $objectName, string $method, string $columnName = 'column', array $parameters = []) : Transformer
+{
+    return new Transformer\ObjectMethodTransformer($objectName, $method, $columnName, $parameters);
 }
