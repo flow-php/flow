@@ -1,4 +1,4 @@
-## [Unreleased] - 2021-06-14
+## [Unreleased] - 2021-06-24
 
 ### Added
 - [683619](https://github.com/flow-php/flow/commit/68361928e607df6ffda7ee6039e3675f23c864ab) - **new entries to DSL** - [@norberttech](https://github.com/norberttech)
@@ -6,6 +6,7 @@
 - [6052dc](https://github.com/flow-php/flow/commit/6052dc269abf336caf9aed1524f2c5cb8d53e984) - **more transformers** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [12472f](https://github.com/flow-php/flow/commit/12472f4b3b354430578a288e71649c4a8bc3b876) - **dependencies and added new transformers** - [@norberttech](https://github.com/norberttech)
 - [295ece](https://github.com/flow-php/flow/commit/295ece19ce77cbd6d30d501a01bd24e0a72814ea) - **Initial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
