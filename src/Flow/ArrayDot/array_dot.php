@@ -4,20 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\ArrayDot;
 
-use Flow\ArrayDot\Exception\InvalidArgumentException;
+use Flow\ArrayDot\Exception\InvalidPathException;
 
 /**
  * @param array<mixed> $array
  * @param string $path
  *
- * @throws InvalidArgumentException
+ * @throws InvalidPathException
  *
  * @return mixed
  */
 function array_dot_get(array $array, string $path)
 {
     if (\count($array) === 0) {
-        throw new InvalidArgumentException(
+        throw new InvalidPathException(
             \sprintf(
                 'Path "%s" does not exists in array "%s".',
                 $path,
@@ -28,10 +28,22 @@ function array_dot_get(array $array, string $path)
 
     $path = \str_replace('\\.', '__ESCAPED_DOT__', $path);
 
-    $pathSteps = \explode('.', $path);
+    if (\preg_match('/(\.)({(.*?)})/', $path, $multiMatchPath)) {
+        $path = \str_replace($multiMatchPath[2], '__MULTIMATCH_PATH__', $path);
+    }
+
+    if (\strpos($path, '{') === 0 && \strpos($path, '}') !== false) {
+        $pathSteps = [$path];
+    } else {
+        $pathSteps = \explode('.', $path);
+    }
 
     foreach ($pathSteps as $index => $step) {
         $pathSteps[$index] = \str_replace('__ESCAPED_DOT__', '.', $step);
+
+        if ($step === '__MULTIMATCH_PATH__') {
+            $pathSteps[$index] = $multiMatchPath[2];
+        }
     }
 
     $arraySlice = $array;
@@ -93,9 +105,33 @@ function array_dot_get(array $array, string $path)
             $takenSteps[] = $step;
         }
 
+        if (\preg_match('/^{(.*?)}$/', $step, $subSteps)) {
+            $subSteps = \explode(',', $subSteps[1]);
+            $results = [];
+
+            foreach ($subSteps as $subStep) {
+                /** @psalm-suppress MixedAssignment */
+                $results[] = array_dot_get($arraySlice, \trim($subStep));
+            }
+
+            return $results;
+        }
+
+        if (\strpos($step, '\\{') !== false) {
+            $step = \str_replace('\\{', '{', $step);
+            \array_pop($takenSteps);
+            $takenSteps[] = $step;
+        }
+
+        if (\strpos($step, '\\}') !== false) {
+            $step = \str_replace('\\}', '}', $step);
+            \array_pop($takenSteps);
+            $takenSteps[] = $step;
+        }
+
         if (!\array_key_exists($step, $arraySlice)) {
             if (!$nullSafe) {
-                throw new InvalidArgumentException(
+                throw new InvalidPathException(
                     \sprintf(
                         'Path "%s" does not exists in array "%s".',
                         $path,
@@ -126,7 +162,7 @@ function array_dot_exists(array $array, string $path) : bool
         array_dot_get($array, $path);
 
         return true;
-    } catch (InvalidArgumentException $e) {
+    } catch (InvalidPathException $e) {
         return false;
     }
 }
