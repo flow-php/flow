@@ -9,7 +9,7 @@ use function Flow\ArrayDot\array_dot_get;
 use Flow\ArrayDot\Exception\InvalidPathException;
 use PHPUnit\Framework\TestCase;
 
-final class ArrayDotTest extends TestCase
+final class ArrayDotGetTest extends TestCase
 {
     public function test_accessing_array_value_by_path() : void
     {

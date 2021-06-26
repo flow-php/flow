@@ -10,14 +10,19 @@ This implementation brings some custom syntax which will be explained bellow.
 
 ## Available Functions
 
-```
+```php
+<?php 
+
 array_dot_get(array $array, string $path) : mixed;
 array_dot_exists(array $array, string $path) : bool;
+array_dot_steps(string $path) : array;
 ```
 
 ### Dot Notation - Basic Syntax
 
-```
+```php
+<?php 
+
 $array = [
     'foo' => [
         'bar' => [
@@ -53,7 +58,9 @@ function will throw exception.
 
 This behavior can be changed by `?` nullsafe operator. 
 
-```
+```php
+<?php 
+
 $array = [
     'foo' => [
         'bar' => [
@@ -68,7 +75,9 @@ $value = array_dot_get('foo.bar.?nothing'); // null
 
 Nullsafe does not need to be used with the last step of path.
 
-```
+```php
+<?php 
+
 $array = [
     'foo' => [
         'fii' => [
@@ -84,7 +93,9 @@ $value = array_dot_get('foo.?bar.nothing'); // null
 
 Wildcard operator allows to access all paths in nested arrays.
 
-```
+```php
+<?php 
+
 $array = [
     'users' => [
         [
@@ -104,7 +115,9 @@ $value = array_dot_get('foo.*.id'); // [1, 2]
 Nullsafe Wildcard operator allows to access all paths in nested arrays for non symetric
 collections.
 
-```
+```php
+<?php 
+
 $array = [
     'users' => [
         [
@@ -124,7 +137,9 @@ $value = array_dot_get('foo.*.name'); // ['John']
 
 Get only selected keys from nested array
 
-```
+```php
+<?php 
+
 $array = [
     'users' => [
         [

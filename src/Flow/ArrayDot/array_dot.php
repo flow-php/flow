@@ -7,23 +7,26 @@ namespace Flow\ArrayDot;
 use Flow\ArrayDot\Exception\InvalidPathException;
 
 /**
- * @param array<mixed> $array
  * @param string $path
  *
  * @throws InvalidPathException
  *
- * @return mixed
+ * @return array<string>
  */
-function array_dot_get(array $array, string $path)
+function array_dot_steps(string $path) : array
 {
-    if (\count($array) === 0) {
-        throw new InvalidPathException(
-            \sprintf(
-                'Path "%s" does not exists in array "%s".',
-                $path,
-                \preg_replace('/\s+/', '', \trim(\var_export($array, true)))
-            )
-        );
+    if (!\strlen($path)) {
+        throw new InvalidPathException("Path can't be empty.");
+    }
+
+    if (\strpos($path, '{') !== false) {
+        if (\strpos($path, '}') === false) {
+            throw new InvalidPathException('Multimatch syntax not closed');
+        }
+
+        if (\strpos($path, '}') !== \strlen($path) - 1) {
+            throw new InvalidPathException('Multimatch must be used at the end of path');
+        }
     }
 
     $path = \str_replace('\\.', '__ESCAPED_DOT__', $path);
@@ -45,6 +48,31 @@ function array_dot_get(array $array, string $path)
             $pathSteps[$index] = $multiMatchPath[2];
         }
     }
+
+    return $pathSteps;
+}
+
+/**
+ * @param array<mixed> $array
+ * @param string $path
+ *
+ * @throws InvalidPathException
+ *
+ * @return mixed
+ */
+function array_dot_get(array $array, string $path)
+{
+    if (\count($array) === 0) {
+        throw new InvalidPathException(
+            \sprintf(
+                'Path "%s" does not exists in array "%s".',
+                $path,
+                \preg_replace('/\s+/', '', \trim(\var_export($array, true)))
+            )
+        );
+    }
+
+    $pathSteps = array_dot_steps($path);
 
     $arraySlice = $array;
     /** @var array<string> $takenSteps */
