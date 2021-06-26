@@ -1,4 +1,4 @@
-## [Unreleased] - 2021-06-14
+## [Unreleased] - 2021-06-26
 
 ### Added
 - [#50](https://github.com/flow-php/etl/pull/50) - **Rows::isLast()** - [@norberttech](https://github.com/norberttech)
