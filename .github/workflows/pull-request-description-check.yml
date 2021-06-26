@@ -17,4 +17,4 @@ jobs:
           AEON_AUTOMATION_GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           entrypoint: /composer/vendor/bin/automation
-          args: pull-request:description:check ${{ github.repository }} ${{ github.event.pull_request.number }} --skip-from=\dependabot[bot]\
+          args: pull-request:description:check ${{ github.repository }} ${{ github.event.pull_request.number }} --skip-from=dependabot[bot]
