@@ -81,38 +81,42 @@ function array_dot_get(array $array, string $path)
     foreach ($pathSteps as $step) {
         $takenSteps[] = $step;
 
-        // Wildcar step
-        if ($step === '*') {
+        if (\in_array($step, ['*', '?*'], true)) {
             $stepsLeft = \array_slice($pathSteps, \count($takenSteps), \count($pathSteps));
             $results = [];
 
             foreach (\array_keys($arraySlice) as $key) {
-                /**
-                 * @psalm-suppress MixedAssignment
-                 * @psalm-suppress MixedArgument
-                 */
-                $results[] = array_dot_get($arraySlice[$key], \implode('.', $stepsLeft));
-            }
-
-            return $results;
-        }
-
-        // Nullsafe wildcard
-        if ($step === '?*') {
-            $stepsLeft = \array_diff($pathSteps, $takenSteps);
-            $results = [];
-
-            foreach (\array_keys($arraySlice) as $key) {
-                /**
-                 * @psalm-suppress MixedArgument
-                 */
-                if (array_dot_exists($arraySlice[$key], \implode('.', $stepsLeft))) {
+                if ($step === '?*') {
+                    /**
+                     * @psalm-suppress MixedArgument
+                     */
+                    if (array_dot_exists($arraySlice[$key], \implode('.', $stepsLeft))) {
+                        /**
+                         * @psalm-suppress MixedAssignment
+                         * @psalm-suppress MixedArgument
+                         */
+                        $results[] = array_dot_get($arraySlice[$key], \implode('.', $stepsLeft));
+                    }
+                } else {
                     /**
                      * @psalm-suppress MixedAssignment
                      * @psalm-suppress MixedArgument
                      */
                     $results[] = array_dot_get($arraySlice[$key], \implode('.', $stepsLeft));
                 }
+            }
+
+            return $results;
+        }
+
+        // Multiselect
+        if (\preg_match('/^{(.*?)}$/', $step, $subSteps)) {
+            $subSteps = \explode(',', $subSteps[1]);
+            $results = [];
+
+            foreach ($subSteps as $subStep) {
+                /** @psalm-suppress MixedAssignment */
+                $results[] = array_dot_get($arraySlice, \trim($subStep));
             }
 
             return $results;
@@ -131,18 +135,6 @@ function array_dot_get(array $array, string $path)
             $step = \ltrim($step, '?');
             \array_pop($takenSteps);
             $takenSteps[] = $step;
-        }
-
-        if (\preg_match('/^{(.*?)}$/', $step, $subSteps)) {
-            $subSteps = \explode(',', $subSteps[1]);
-            $results = [];
-
-            foreach ($subSteps as $subStep) {
-                /** @psalm-suppress MixedAssignment */
-                $results[] = array_dot_get($arraySlice, \trim($subStep));
-            }
-
-            return $results;
         }
 
         if (\strpos($step, '\\{') !== false) {
