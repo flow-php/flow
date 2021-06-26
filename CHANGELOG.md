@@ -31,6 +31,7 @@
 - [856870](https://github.com/flow-php/etl/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#59](https://github.com/flow-php/etl/pull/59) - **Update dependencies** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [56cc82](https://github.com/flow-php/etl/commit/56cc829d20c5e4e930049cdc08306331a4746f14) - **Adapters and Extensions section** - [@norberttech](https://github.com/norberttech)
 - [424aa9](https://github.com/flow-php/etl/commit/424aa92500d096e08c228aa66e2acc24140cfbda) - **Update README.md** - [@norberttech](https://github.com/norberttech)
 - [6113d9](https://github.com/flow-php/etl/commit/6113d9c2b719590326046886a109ee689c70ded8) - **Update README.md** - [@norberttech](https://github.com/norberttech)
@@ -48,6 +49,7 @@
 - [e48062](https://github.com/flow-php/etl/commit/e48062890cd84e655e1162305086f67148347b83) - **Intial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#59](https://github.com/flow-php/etl/pull/59) - **Psalm errros after update to 4.8.1** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#55](https://github.com/flow-php/etl/pull/55) - **Adds support for null values in array comparison** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#54](https://github.com/flow-php/etl/pull/54) - **compare values by using weak comparison only against objects** - [@norberttech](https://github.com/norberttech)
 - [#48](https://github.com/flow-php/etl/pull/48) - **FloatEntry comparison by using precision properly** - [@norberttech](https://github.com/norberttech)
