@@ -24,6 +24,11 @@
             "ignore": [
                 "Flow\\Doctrine\\Bulk\\QueryFactory\\DbalQueryFactory"
             ]
+        },
+        "UnwrapArrayFilter": {
+            "ignore": [
+                "Flow\\Doctrine\\Bulk\\BulkInsert"
+            ]
         }
     },
     "testFramework": "phpunit",
