@@ -1,7 +1,6 @@
 ## [Unreleased] - 2021-06-26
 
 ### Changed
-- [166a7d](https://github.com/flow-php/etl-adapter-csv/commit/166a7d835a5f3362e4ad31572f8a315e1f030bea) - **Merge pull request #19 from flow-php/dependabot/composer/tools/phpstan/phpstan-0.12.90** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [377a21](https://github.com/flow-php/etl-adapter-csv/commit/377a219a347232105350636270b17c674975f78e) - **Automaticlly instll tools** - [@norberttech](https://github.com/norberttech)
 - [be775d](https://github.com/flow-php/etl-adapter-csv/commit/be775d28c349efbf267704d99d7c6d392788b9e1) - **docs** - [@norberttech](https://github.com/norberttech)
 - [6d2a31](https://github.com/flow-php/etl-adapter-csv/commit/6d2a31be222529fcf8ce53a74702544839fd60ed) - **tools dependencieS** - [@norberttech](https://github.com/norberttech)
