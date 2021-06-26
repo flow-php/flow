@@ -29,7 +29,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
 
     public function __construct(Row ...$rows)
     {
-        $this->rows = $rows;
+        $this->rows = \array_values($rows);
         $this->first = true;
         $this->last = false;
     }
@@ -220,6 +220,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
     }
 
     /**
+     * @psalm-suppress UnusedFunctionCall
      * @psalm-param pure-callable(Row) : void $callable
      *
      * @param callable(Row) : void $callable
@@ -350,6 +351,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
             throw new InvalidArgumentException("Rows does not have {$offset} offset");
         }
 
+        /** @psalm-suppress ImpureFunctionCall */
         $rows = \iterator_to_array($this->getIterator());
         unset($rows[$offset]);
 

@@ -115,7 +115,7 @@ final class Entries  implements \ArrayAccess, \Countable, \IteratorAggregate
             throw InvalidLogicException::because(\sprintf('Entry "%s" already exist', $entry->name()));
         }
 
-        return new self(...[...$this->entries, $entry]);
+        return new self(...$this->entries, ...[$entry]);
     }
 
     public function remove(string $name) : self

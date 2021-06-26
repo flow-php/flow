@@ -17,8 +17,6 @@ final class WeakObjectComparator implements Comparator
     {
         try {
             foreach ($row->entries()->all() as $entry) {
-                $equals = null;
-
                 if ($entry instanceof Row\Entry\ObjectEntry) {
                     if ($entry->value() != $nextRow->get($entry->name())->value()) {
                         return false;
