@@ -1,6 +1,7 @@
-## [Unreleased] - 2021-06-26
+## [Unreleased] - 2021-06-27
 
 ### Added
+- [4d6261](https://github.com/flow-php/array-dot/commit/4d6261b87186f21d4edde8a8e98053b6f5bf5a4d) - **array_dot_set function** - [@norberttech](https://github.com/norberttech)
 - [3e39c9](https://github.com/flow-php/array-dot/commit/3e39c9c560a3fa878ac87391e5c09be4d8fa93e3) - **small optimization** - [@norberttech](https://github.com/norberttech)
 - [484348](https://github.com/flow-php/array-dot/commit/4843488e18bdd6d2879ec254f05bd298c7d7dc37) - **multiselect syntax** - [@norberttech](https://github.com/norberttech)
 
