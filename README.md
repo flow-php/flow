@@ -3,8 +3,6 @@
 Flow PHP is a DSL for [Flow PHP ETL](https://github.com/flow-php/etl) and all core elements. 
 This library is a full bundle of all ETL components with neat functional interface.
 
-
-
 ```
 composer require flow-php/flow
 ```
@@ -53,117 +51,119 @@ extractFromArray($data)
 ```
 
 ## Domain-specific Language
-             
+
+Each element of the DSL is a simple php function that can be combined together with other functions. 
+
 ### Columns
 
-* `function stringColumn(string $name, string $value)`
-* `function integerColumn(string $name, int $value)`
-* `function booleanColumn(string $name, bool $value)`
-* `function floatColumn(string $name, float $value)`
-* `function dateColumn(string $name, string $value)`
-* `function dateTimeColumn(string $name, string $value, string $format = \DateTimeImmutable::ATOM)`
-* `function arrayColumn(string $name, array $data)`
-* `function jsonColumn(string $name, array $data)`
-* `function jsonObjectColumn(string $name, array $data)`
-* `function objectColumn(string $name, object $object)`
+* `stringColumn(string $name, string $value)`
+* `integerColumn(string $name, int $value)`
+* `booleanColumn(string $name, bool $value)`
+* `floatColumn(string $name, float $value)`
+* `dateColumn(string $name, string $value)`
+* `dateTimeColumn(string $name, string $value, string $format = \DateTimeImmutable::ATOM)`
+* `arrayColumn(string $name, array $data)`
+* `jsonColumn(string $name, array $data)`
+* `jsonObjectColumn(string $name, array $data)`
+* `objectColumn(string $name, object $object)`
 
 ### Conditions
 
-* `function all(RowCondition ...$conditions)`
-* `function any(RowCondition ...$conditions)`
-* `function arrayExists(string $column, string $path)`
-* `function arrayValueEquals(string $column, string $path, $value, bool $identical = true)`
-* `function arrayValueGreaterOrEqual(string $column, string $path, $value)`
-* `function arrayValueGreater(string $column, string $path, $value)`
-* `function arrayValueLessOrEqual(string $column, string $path, $value)`
-* `function arrayValueLess(string $column, string $path, $value)`
-* `function exists(string $column)`
-* `function isString(string $column)`
-* `function isInteger(string $column)`
-* `function isBoolean(string $column)`
-* `function isFloat(string $column)`
-* `function isArray(string $column)`
-* `function isJson(string $column)`
-* `function isObject(string $column)`
-* `function isNull(string $column)`
-* `function isNotNull(string $column)`
-* `function valueEquals(string $column, $value, bool $identical = true)`
-* `function valueGreaterOrEqual(string $column, $value)`
-* `function valueGreater(string $column, $value)`
-* `function valueLessOrEqual(string $column, $value)`
-* `function valueLess(string $column, $value)`
-* `function none(RowCondition $conditions)`
-* `function opposite(RowCondition $condition)`
+* `all(RowCondition ...$conditions)`
+* `any(RowCondition ...$conditions)`
+* `arrayExists(string $column, string $path)`
+* `arrayValueEquals(string $column, string $path, $value, bool $identical = true)`
+* `arrayValueGreaterOrEqual(string $column, string $path, $value)`
+* `arrayValueGreater(string $column, string $path, $value)`
+* `arrayValueLessOrEqual(string $column, string $path, $value)`
+* `arrayValueLess(string $column, string $path, $value)`
+* `exists(string $column)`
+* `isString(string $column)`
+* `isInteger(string $column)`
+* `isBoolean(string $column)`
+* `isFloat(string $column)`
+* `isArray(string $column)`
+* `isJson(string $column)`
+* `isObject(string $column)`
+* `isNull(string $column)`
+* `isNotNull(string $column)`
+* `valueEquals(string $column, $value, bool $identical = true)`
+* `valueGreaterOrEqual(string $column, $value)`
+* `valueGreater(string $column, $value)`
+* `valueLessOrEqual(string $column, $value)`
+* `valueLess(string $column, $value)`
+* `none(RowCondition $conditions)`
+* `opposite(RowCondition $condition)`
 
 ### Extractors 
 
-* `function extractFromCSV(string $fileName, int $batchSize = 100, int $headerOffset = 0)`
-* `function extractFromArray(array $array, int $batchSize = 100)`
-* `function extractFromJSON(string $fileName, int $batchSize = 100)`
-* `function extractFromHttp(ClientInterface $client, iterable $requests, ?callable $preRequest = null, ?callable $postRequest = null)`
-* `function extractFromHttpDynamic(ClientInterface $client, NextRequestFactory $requestFactory, ?callable $preRequest = null, ?callable $postRequest = null)`
-* `function extractFromDb(Connection $connection, string $query, ParametersSet $parametersSet = null, array $types = [])`
+* `extractFromCSV(string $fileName, int $batchSize = 100, int $headerOffset = 0)`
+* `extractFromArray(array $array, int $batchSize = 100)`
+* `extractFromJSON(string $fileName, int $batchSize = 100)`
+* `extractFromHttp(ClientInterface $client, iterable $requests, ?callable $preRequest = null, ?callable $postRequest = null)`
+* `extractFromHttpDynamic(ClientInterface $client, NextRequestFactory $requestFactory, ?callable $preRequest = null, ?callable $postRequest = null)`
+* `extractFromDb(Connection $connection, string $query, ParametersSet $parametersSet = null, array $types = [])`
 
 ### Factories
 
-* `function rowsFromArray(array $data)`
-* `function rowsFromCastedArray(array $data, CastEntry ...$castEntries)`
-* `function columnFromValue(string $column, $value)`
+* `rowsFromArray(array $data)`
+* `rowsFromCastedArray(array $data, CastEntry ...$castEntries)`
+* `columnFromValue(string $column, $value)`
  
 ### Loaders
 
-* `function toCSV(string $fileName)`
-* `function toElasticSearch(Client $client, int $chunkSize, string $index, IdFactory $idFactory, array $parameters = [])`
-* `function esIdSha1(string ...$columns) :`
-* `function esIdColumns(string $column) :`
-* `function toMemory(Memory $memory)`
-* `function toDebugLogger()`
-* `function toColumnDumper(bool $all = false)`
+* `toCSV(string $fileName)`
+* `toElasticSearch(Client $client, int $chunkSize, string $index, IdFactory $idFactory, array $parameters = [])`
+* `esIdSha1(string ...$columns) :`
+* `esIdColumns(string $column) :`
+* `toMemory(Memory $memory)`
+* `toDebugLogger()`
+* `toColumnDumper(bool $all = false)`
   
 ### Transformers
 
-* `function filter(string $column, callable $filter)`
-* `function filterEquals(string $column, $value)`
-* `function filterNotEquals(string $column, $value)`
-* `function filterExists(string $column)`
-* `function filterNotExists(string $column)`
-* `function filterNull(string $column)`
-* `function filterNotNull(string $column)`
-* `function filterNumber(string $column)`
-* `function filterNotNumber(string $column)`
-* `function keep(string ...$columns)`
-* `function remove(string ...$columns)`
-* `function rename(string $from, string $to)`
-* `function cloneColumn(string $from, string $to)`
-* `function convertName(string $style)`
-* `function toDateTime(array $columns, $format = 'c', ?string $tz = null, ?string $toTz = null)`
-* `function toDateTimeCast(array $columns, $format = 'c', ?string $tz = null, ?string $toTz = null) : C`
-* `function toDate(string ...$columns)`
-* `function toDateCast(string ...$columns) : C`
-* `function toInteger(string ...$columns)`
-* `function toIntegerCast(string ...$columns) : C`
-* `function toString(string ...$columns)`
-* `function toStringCast(string ...$columns) : C`
-* `function toJson(string ...$columns)`
-* `function toJsonCast(string ...$columns) : C`
-* `function toArrayFromJson(string ...$columns)`
-* `function toArrayFromJsonCast(string ...$columns) : C`
-* `function toNullFromNullString(string ...$columns)`
-* `function toArrayFromObject(string $column)`
-* `function expand(string $arrayColumn, string $expandedName = 'column')`
-* `function unpack(string $arrayColumn, string $columnPrefix = '', array $skipKeys = [])`
-* `function concat(array $stringColumns, string $glue = '', string $columnName = 'column')`
-* `function arrayGet(string $arrayName, string $path, string $columnName = 'column')`
-* `function objectMethod(string $objectName, string $method, string $columnName = 'column', array $parameters = [])`
-* `function addString(string $name, string $value)`
-* `function addInteger(string $name, int $value)`
-* `function addBoolean(string $name, bool $value)`
-* `function addFloat(string $name, float $value)`
-* `function addDate(string $name, string $value)`
-* `function addDateTime(string $name, string $value, string $format = \DateTimeImmutable::ATOM)`
-* `function addArray(string $name, array $data)`
-* `function addJson(string $name, array $data)`
-* `function addJsonObject(string $name, array $data)`
-* `function addObject(string $name, object $data)`
-* `function chain(Transformer ...$transformers)`
-* `function transformIf(Transformer\Condition\RowCondition $condition, Transformer $transformer)`
+* `filter(string $column, callable $filter)`
+* `filterEquals(string $column, $value)`
+* `filterNotEquals(string $column, $value)`
+* `filterExists(string $column)`
+* `filterNotExists(string $column)`
+* `filterNull(string $column)`
+* `filterNotNull(string $column)`
+* `filterNumber(string $column)`
+* `filterNotNumber(string $column)`
+* `keep(string ...$columns)`
+* `remove(string ...$columns)`
+* `rename(string $from, string $to)`
+* `cloneColumn(string $from, string $to)`
+* `convertName(string $style)`
+* `toDateTime(array $columns, $format = 'c', ?string $tz = null, ?string $toTz = null)`
+* `toDateTimeCast(array $columns, $format = 'c', ?string $tz = null, ?string $toTz = null)`
+* `toDate(string ...$columns)`
+* `toDateCast(string ...$columns)`
+* `toInteger(string ...$columns)`
+* `toIntegerCast(string ...$columns)`
+* `toString(string ...$columns)`
+* `toStringCast(string ...$columns)`
+* `toJson(string ...$columns)`
+* `toJsonCast(string ...$columns)`
+* `toArrayFromJson(string ...$columns)`
+* `toArrayFromJsonCast(string ...$columns)`
+* `toNullFromNullString(string ...$columns)`
+* `toArrayFromObject(string $column)`
+* `expand(string $arrayColumn, string $expandedName = 'column')`
+* `unpack(string $arrayColumn, string $columnPrefix = '', array $skipKeys = [])`
+* `concat(array $stringColumns, string $glue = '', string $columnName = 'column')`
+* `arrayGet(string $arrayName, string $path, string $columnName = 'column')`
+* `objectMethod(string $objectName, string $method, string $columnName = 'column', array $parameters = [])`
+* `addString(string $name, string $value)`
+* `addInteger(string $name, int $value)`
+* `addBoolean(string $name, bool $value)`
+* `addFloat(string $name, float $value)`
+* `addDate(string $name, string $value)`
+* `addDateTime(string $name, string $value, string $format = \DateTimeImmutable::ATOM)`
+* `addArray(string $name, array $data)`
+* `addJson(string $name, array $data)`
+* `addJsonObject(string $name, array $data)`
+* `addObject(string $name, object $data)`
+* `chain(Transformer ...$transformers)`
+* `transformIf(Transformer\Condition\RowCondition $condition, Transformer $transformer)`
