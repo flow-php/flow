@@ -189,9 +189,9 @@ function expand(string $arrayColumn, string $expandedName = 'column') : Transfor
     return new Transformer\ArrayExpandTransformer($arrayColumn, $expandedName);
 }
 
-function unpack(string $arrayColumn, string $columnPrefix = '') : Transformer
+function unpack(string $arrayColumn, string $columnPrefix = '', array $skipKeys = []) : Transformer
 {
-    return new Transformer\ArrayUnpackTransformer($arrayColumn, $columnPrefix);
+    return new Transformer\ArrayUnpackTransformer($arrayColumn, $skipKeys, $columnPrefix);
 }
 
 function concat(array $stringColumns, string $glue = '', string $columnName = 'column') : Transformer
@@ -199,12 +199,72 @@ function concat(array $stringColumns, string $glue = '', string $columnName = 'c
     return new Transformer\StringConcatTransformer($stringColumns, $glue, $columnName);
 }
 
-function arrayValue(string $arrayName, string $path) : Transformer
+function arrayGet(string $arrayName, string $path, string $columnName = 'column') : Transformer
 {
-    return new Transformer\ArrayAccessorTransformer($arrayName, $path, true);
+    return new Transformer\ArrayDotGetTransformer($arrayName, $path, $columnName);
 }
 
 function objectMethod(string $objectName, string $method, string $columnName = 'column', array $parameters = []) : Transformer
 {
     return new Transformer\ObjectMethodTransformer($objectName, $method, $columnName, $parameters);
+}
+
+function addString(string $name, string $value) : Transformer
+{
+    return new Transformer\StaticEntryTransformer(new Row\Entry\StringEntry($name, $value));
+}
+
+function addInteger(string $name, int $value) : Transformer
+{
+    return new Transformer\StaticEntryTransformer(new Row\Entry\IntegerEntry($name, $value));
+}
+
+function addBoolean(string $name, bool $value) : Transformer
+{
+    return new Transformer\StaticEntryTransformer(new Row\Entry\BooleanEntry($name, $value));
+}
+
+function addFloat(string $name, float $value) : Transformer
+{
+    return new Transformer\StaticEntryTransformer(new Row\Entry\FloatEntry($name, $value));
+}
+
+function addDate(string $name, string $value) : Transformer
+{
+    return new Transformer\StaticEntryTransformer(new Row\Entry\DateEntry($name, new \DateTimeImmutable($value)));
+}
+
+function addDateTime(string $name, string $value, string $format = \DateTimeImmutable::ATOM) : Transformer
+{
+    return new Transformer\StaticEntryTransformer(new Row\Entry\DateTimeEntry($name, new \DateTimeImmutable($value), $format));
+}
+
+function addArray(string $name, array $data) : Transformer
+{
+    return new Transformer\StaticEntryTransformer(new Row\Entry\ArrayEntry($name, $data));
+}
+
+function addJson(string $name, array $data) : Transformer
+{
+    return new Transformer\StaticEntryTransformer(new Row\Entry\JsonEntry($name, $data));
+}
+
+function addJsonObject(string $name, array $data) : Transformer
+{
+    return new Transformer\StaticEntryTransformer(Row\Entry\JsonEntry::object($name, $data));
+}
+
+function addObject(string $name, object $data) : Transformer
+{
+    return new Transformer\StaticEntryTransformer(new Row\Entry\ObjectEntry($name, $data));
+}
+
+function chain(Transformer ...$transformers) : Transformer
+{
+    return new Transformer\ChainTransformer(...$transformers);
+}
+
+function transformIf(Transformer\Condition\RowCondition $condition, Transformer $transformer) : Transformer
+{
+    return new Transformer\ConditionalTransformer($condition, $transformer);
 }

@@ -56,6 +56,8 @@
             ]
         },
         "files": [
+            "src/Flow/ETL/DSL/columns.php",
+            "src/Flow/ETL/DSL/conditions.php",
             "src/Flow/ETL/DSL/extractors.php",
             "src/Flow/ETL/DSL/factories.php",
             "src/Flow/ETL/DSL/transformers.php",
