@@ -7,6 +7,7 @@
 - [6052dc](https://github.com/flow-php/flow/commit/6052dc269abf336caf9aed1524f2c5cb8d53e984) - **more transformers** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [431de6](https://github.com/flow-php/flow/commit/431de6be6dea3cfabe6c67ff89dc5ddf45522273) - **Readme cleanup** - [@norberttech](https://github.com/norberttech)
 - [41058f](https://github.com/flow-php/flow/commit/41058f480540825d630cdf6693dced82c7f586ce) - **Documentation** - [@norberttech](https://github.com/norberttech)
 - [12472f](https://github.com/flow-php/flow/commit/12472f4b3b354430578a288e71649c4a8bc3b876) - **dependencies and added new transformers** - [@norberttech](https://github.com/norberttech)
 - [295ece](https://github.com/flow-php/flow/commit/295ece19ce77cbd6d30d501a01bd24e0a72814ea) - **Initial commit** - [@norberttech](https://github.com/norberttech)
