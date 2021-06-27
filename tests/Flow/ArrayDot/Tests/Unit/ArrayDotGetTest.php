@@ -217,7 +217,38 @@ final class ArrayDotGetTest extends TestCase
         );
     }
 
-    public function test_accessing_array_scalar_value_by_path_with_escaped_asterix_key() : void
+    public function test_accessing_nested_collection_using_wildcard() : void
+    {
+        $this->assertSame(
+            [
+                [
+                    'id' => 1,
+                    'name' => 'Michael',
+                ],
+                [
+                    'id' => 2,
+                    'name' => 'Rocky',
+                ],
+            ],
+            array_dot_get(
+                [
+                    'users' => [
+                        [
+                            'id' => 1,
+                            'name' => 'Michael',
+                        ],
+                        [
+                            'id' => 2,
+                            'name' => 'Rocky',
+                        ],
+                    ],
+                ],
+                'users.*'
+            ),
+        );
+    }
+
+    public function test_accessing_array_scalar_value_by_path_with_escaped_wildcard_key() : void
     {
         $this->assertSame(
             'Michael',

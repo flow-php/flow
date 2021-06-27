@@ -14,6 +14,7 @@ This implementation brings some custom syntax which will be explained bellow.
 <?php 
 
 array_dot_get(array $array, string $path) : mixed;
+array_dot_set(array $array, string $path, mixed $value) : mixed;
 array_dot_exists(array $array, string $path) : bool;
 array_dot_steps(string $path) : array;
 ```
@@ -32,6 +33,8 @@ $array = [
 ];
 
 $value = array_dot_get('foo.bar.baz'); // 1000
+
+$array = array_dot_set([], 'foo.bar.baz', 1000); // ['foo' => ['bar' => ['baz' => 1000]]];
 ```
 
 In above example `foo.bar.baz` is path which also supports integer keys. For exmaple
@@ -52,6 +55,10 @@ In above example `foo.bar.baz` is path which also supports integer keys. For exm
 - `{}` - multipath
 
 #### Nullsafe Operator - ? 
+
+Supported in functions:
+
+- `array_dot_get`
 
 Dot notation is strict by default, which means that if any step of path is not present,
 function will throw exception. 
@@ -91,6 +98,11 @@ $value = array_dot_get('foo.?bar.nothing'); // null
 
 #### Wildcard Operator - *
 
+Supported in functions:
+
+- `array_dot_get`
+- `array_dot_set`
+
 Wildcard operator allows to access all paths in nested arrays.
 
 ```php
@@ -111,6 +123,10 @@ $value = array_dot_get('foo.*.id'); // [1, 2]
 ```
 
 #### Nullsafe Wildcard Operator - ?*
+
+Supported in functions:
+
+- `array_dot_get`
 
 Nullsafe Wildcard operator allows to access all paths in nested arrays for non symetric
 collections.
@@ -134,6 +150,10 @@ $value = array_dot_get('foo.*.name'); // ['John']
 ```
 
 #### Multipath Syntax - {}
+
+Supported in functions:
+
+- `array_dot_get`
 
 Get only selected keys from nested array
 

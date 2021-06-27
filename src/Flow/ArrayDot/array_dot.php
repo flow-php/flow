@@ -55,6 +55,61 @@ function array_dot_steps(string $path) : array
 /**
  * @param array<mixed> $array
  * @param string $path
+ * @param mixed $value
+ *
+ * @throws InvalidPathException
+ *
+ * @return array<mixed>
+ */
+function array_dot_set(array $array, string $path, $value) : array
+{
+    $pathSteps = array_dot_steps($path);
+
+    $newArray = [];
+    $currentElement = &$newArray;
+
+    $takenSteps = [];
+
+    foreach ($pathSteps as $step) {
+        $takenSteps[] = $step;
+
+        if ($step === '*') {
+            /**
+             * @var array<mixed> $nestedValues
+             */
+            $nestedValues = array_dot_get($array, \implode('.', $takenSteps));
+            $stepsLeft = \array_slice($pathSteps, \count($takenSteps), \count($pathSteps));
+
+            /** @var mixed $nestedValue */
+            foreach ($nestedValues as $nestedKey => $nestedValue) {
+                $currentElement[$nestedKey] = array_dot_set((array) $nestedValue, \implode('.', $stepsLeft), $value);
+            }
+
+            return $newArray;
+        }
+
+        if ($step == '\\*') {
+            $step = \str_replace('\\', '', $step);
+            \array_pop($takenSteps);
+            $takenSteps[] = $step;
+        }
+
+        $currentElement[$step] = [];
+
+        $currentElement = &$currentElement[$step];
+    }
+
+    /**
+     * @psalm-suppress MixedAssignment
+     */
+    $currentElement = $value;
+
+    return \array_merge($array, $newArray);
+}
+
+/**
+ * @param array<mixed> $array
+ * @param string $path
  *
  * @throws InvalidPathException
  *
@@ -86,6 +141,10 @@ function array_dot_get(array $array, string $path)
             $results = [];
 
             foreach (\array_keys($arraySlice) as $key) {
+                if (!\count($stepsLeft)) {
+                    return $arraySlice;
+                }
+
                 if ($step === '?*') {
                     /**
                      * @psalm-suppress MixedArgument
