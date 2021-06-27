@@ -26,14 +26,14 @@ function floatColumn(string $name, float $value) : Entry
     return new Entry\FloatEntry($name, $value);
 }
 
-function dateColumn(string $name, \DateTimeImmutable $value) : Entry
+function dateColumn(string $name, string $value) : Entry
 {
-    return new Entry\DateEntry($name, $value);
+    return new Entry\DateEntry($name, new \DateTimeImmutable($value));
 }
 
-function dateTimeColumn(string $name, \DateTimeImmutable $value, string $format = \DateTimeImmutable::ATOM) : Entry
+function dateTimeColumn(string $name, string $value, string $format = \DateTimeImmutable::ATOM) : Entry
 {
-    return new Entry\DateTimeEntry($name, $value, $format);
+    return new Entry\DateTimeEntry($name, new \DateTimeImmutable($value), $format);
 }
 
 function arrayColumn(string $name, array $data) : Entry

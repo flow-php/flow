@@ -21,7 +21,7 @@ use JsonMachine\JsonMachine;
 use League\Csv\Reader;
 use Psr\Http\Client\ClientInterface;
 
-function extractCSV(string $fileName, int $batchSize = 100, int $headerOffset = 0) : ETL
+function extractFromCSV(string $fileName, int $batchSize = 100, int $headerOffset = 0) : ETL
 {
     if (!\class_exists('League\Csv\Reader')) {
         throw new RuntimeException("League\Csv\Reader class not found, please install it using 'composer require league/csv'");
@@ -34,13 +34,13 @@ function extractCSV(string $fileName, int $batchSize = 100, int $headerOffset = 
         ->transform(new ArrayUnpackTransformer($entryRowName));
 }
 
-function extractArray(array $array, int $batchSize = 100) : ETL
+function extractFromArray(array $array, int $batchSize = 100) : ETL
 {
     return ETL::extract(new MemoryExtractor(new ArrayMemory($array), $batchSize, $entryRowName = 'row'))
         ->transform(new ArrayUnpackTransformer($entryRowName));
 }
 
-function extractJSON(string $fileName, int $batchSize = 100) : ETL
+function extractFromJSON(string $fileName, int $batchSize = 100) : ETL
 {
     if (!\class_exists('JsonMachine\JsonMachine')) {
         throw new RuntimeException("JsonMachine\JsonMachine class not found, please install it using 'composer require halaxa/json-machine'");
@@ -50,7 +50,7 @@ function extractJSON(string $fileName, int $batchSize = 100) : ETL
         ->transform(new ArrayUnpackTransformer($entryRowName));
 }
 
-function extractHttp(ClientInterface $client, iterable $requests, ?callable $preRequest = null, ?callable $postRequest = null) : ETL
+function extractFromHttp(ClientInterface $client, iterable $requests, ?callable $preRequest = null, ?callable $postRequest = null) : ETL
 {
     if (!\class_exists('Psr\Http\Client\ClientInterface')) {
         throw new RuntimeException("Psr\Http\Client\ClientInterface class not found, please install one of available implementations https://packagist.org/providers/psr/http-client-implementation");
@@ -59,7 +59,7 @@ function extractHttp(ClientInterface $client, iterable $requests, ?callable $pre
     return ETL::extract(new PsrHttpClientStaticExtractor($client, $requests, $preRequest, $postRequest));
 }
 
-function extractHttpDynamic(ClientInterface $client, NextRequestFactory $requestFactory, ?callable $preRequest = null, ?callable $postRequest = null) : ETL
+function extractFromHttpDynamic(ClientInterface $client, NextRequestFactory $requestFactory, ?callable $preRequest = null, ?callable $postRequest = null) : ETL
 {
     if (!\class_exists('Psr\Http\Client\ClientInterface')) {
         throw new RuntimeException("Psr\Http\Client\ClientInterface class not found, please install one of available implementations https://packagist.org/providers/psr/http-client-implementation");
@@ -68,7 +68,7 @@ function extractHttpDynamic(ClientInterface $client, NextRequestFactory $request
     return ETL::extract(new PsrHttpClientDynamicExtractor($client, $requestFactory, $preRequest, $postRequest));
 }
 
-function extractDb(Connection $connection, string $query, ParametersSet $parametersSet = null, array $types = [])
+function extractFromDb(Connection $connection, string $query, ParametersSet $parametersSet = null, array $types = [])
 {
     return ETL::extract(new DbalQueryExtractor($connection, $query, $parametersSet, $types, $entryRowName = 'row'))
         ->transform(new ArrayUnpackTransformer($entryRowName));
