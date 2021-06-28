@@ -11,17 +11,17 @@ use Flow\ETL\Transformer\Factory\ArrayRowsFactory;
 use Flow\ETL\Transformer\Factory\CastedRowsFactory;
 use Flow\ETL\Transformer\Factory\NativeEntryFactory;
 
-function rowsFromArray(array $data) : Rows
+function rows_from_array(array $data) : Rows
 {
     return (new ArrayRowsFactory())->create($data);
 }
 
-function rowsFromCastedArray(array $data, CastEntry ...$castEntries) : Rows
+function rows_from_casted_array(array $data, CastEntry ...$cast_entries) : Rows
 {
-    return (new CastedRowsFactory(new ArrayRowsFactory(), ...$castEntries))->create($data);
+    return (new CastedRowsFactory(new ArrayRowsFactory(), ...$cast_entries))->create($data);
 }
 
-function columnFromValue(string $column, $value) : Entry
+function column_from_value(string $column, $value) : Entry
 {
     return (new NativeEntryFactory())->createEntry($column, $value);
 }

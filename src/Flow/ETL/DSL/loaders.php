@@ -19,41 +19,41 @@ use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use League\Csv\Writer;
 
-function toCSV(string $fileName) : Loader
+function to_csv(string $file_name) : Loader
 {
     if (!\class_exists('League\Csv\Reader')) {
         throw new RuntimeException("League\Csv\Reader class not found, please install it using 'composer require league/csv'");
     }
 
-    return new LeagueCSVLoader(Writer::createFromPath($fileName, 'w+'));
+    return new LeagueCSVLoader(Writer::createFromPath($file_name, 'w+'));
 }
 
-function toElasticSearch(Client $client, int $chunkSize, string $index, IdFactory $idFactory, array $parameters = []) : Loader
+function to_elastic_search(Client $client, int $chunk_size, string $index, IdFactory $id_factory, array $parameters = []) : Loader
 {
-    return new ElasticsearchPHPLoader($client, $chunkSize, $index, $idFactory, $parameters);
+    return new ElasticsearchPHPLoader($client, $chunk_size, $index, $id_factory, $parameters);
 }
 
-function esIdSha1(string ...$columns) : IdFactory
+function es_id_sha1(string ...$columns) : IdFactory
 {
     return new Sha1IdFactory(...$columns);
 }
 
-function esIdColumns(string $column) : IdFactory
+function es_id_columns(string $column) : IdFactory
 {
     return new EntryIdFactory($column);
 }
 
-function toMemory(Memory $memory) : Loader
+function to_memory(Memory $memory) : Loader
 {
     return new Loader\MemoryLoader($memory);
 }
 
-function toDebugLogger() : Loader
+function to_debug_logger() : Loader
 {
     return new PsrLoggerLoader(new DumpLogger(), 'debug row content');
 }
 
-function toColumnDumper(bool $all = false) : Loader
+function to_column_dumper(bool $all = false) : Loader
 {
     return new class($all) implements Loader {
         private bool $allRows;

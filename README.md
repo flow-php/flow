@@ -12,41 +12,41 @@ composer require flow-php/flow
 ```php
 <?php
 
-use function Flow\ETL\DSL\Transformer\{convertName,filter, keep, toDateTime, toJson};
-use function Flow\ETL\DSL\Extractor\{extractFromArray};
-use function Flow\ETL\DSL\Loader\{toCSV};
+use function Flow\ETL\DSL\Transformer\{convert_name, filter_equals, keep, to_datetime, to_json};
+use function Flow\ETL\DSL\Extractor\{extract_from_array};
+use function Flow\ETL\DSL\Loader\{to_csv};
 
 $data = [
     [
-        'id' => 1, 
-        'name' => 'Norbert', 
-        'status' => 'premium', 
-        'updatedAt' => '2020-01-01 00:00:00', 
+        'id' => 1,
+        'name' => 'Norbert',
+        'status' => 'premium',
+        'updatedAt' => '2020-01-01 00:00:00',
         'properties' => [1, 2, 3]
     ],
     [
-        'id' => 2, 
-        'name' => 'John', 
-        'status' => 'premium', 
+        'id' => 2,
+        'name' => 'John',
+        'status' => 'premium',
         'updatedAt' => '2020-01-02 00:00:00',
         'properties' => [4, 5]
     ],
     [
-        'id' => 3, 
-        'name' => 'Steve', 
-        'status' => 'free', 
-        'updatedAt' => '2020-01-03 00:00:00', 
+        'id' => 3,
+        'name' => 'Steve',
+        'status' => 'free',
+        'updatedAt' => '2020-01-03 00:00:00',
         'properties' => [6]
     ],
 ];
 
-extractFromArray($data)
-    ->transform(filter('status', fn(string $status) => $status === 'premium'))
-    ->transform(convertName('snake'))
+extract_from_array($data)
+    ->transform(filter_equals('status', 'premium'))
+    ->transform(convert_name('snake'))
     ->transform(keep('id', 'name', 'updated_at', 'properties'))
-    ->transform(toDateTime(['updated_at'], 'Y-m-d H:i:s', 'UTC'))
-    ->transform(toJson('properties'))
-    ->load(toCSV(__DIR__ . '/premium_users.csv'))
+    ->transform(to_datetime(['updated_at'], 'Y-m-d H:i:s', 'UTC'))
+    ->transform(to_json('properties'))
+    ->load(to_csv(__DIR__ . '/premium_users.csv'))
     ->run();
 ```
 
@@ -56,114 +56,115 @@ Each element of the DSL is a simple php function that can be combined together w
 
 ### Columns
 
-* `stringColumn(string $name, string $value)`
-* `integerColumn(string $name, int $value)`
-* `booleanColumn(string $name, bool $value)`
-* `floatColumn(string $name, float $value)`
-* `dateColumn(string $name, string $value)`
-* `dateTimeColumn(string $name, string $value, string $format = \DateTimeImmutable::ATOM)`
-* `arrayColumn(string $name, array $data)`
-* `jsonColumn(string $name, array $data)`
-* `jsonObjectColumn(string $name, array $data)`
-* `objectColumn(string $name, object $object)`
+* `string_column(string $name, string $value)`
+* `integer_column(string $name, int $value)`
+* `boolean_column(string $name, bool $value)`
+* `float_column(string $name, float $value)`
+* `date_column(string $name, string $value)`
+* `dateTime_column(string $name, string $value, string $format = \DateTimeImmutable::ATOM)`
+* `array_column(string $name, array $data)`
+* `json_column(string $name, array $data)`
+* `json_object_column(string $name, array $data)`
+* `object_column(string $name, object $object)`
 
 ### Conditions
 
 * `all(RowCondition ...$conditions)`
 * `any(RowCondition ...$conditions)`
-* `arrayExists(string $column, string $path)`
-* `arrayValueEquals(string $column, string $path, $value, bool $identical = true)`
-* `arrayValueGreaterOrEqual(string $column, string $path, $value)`
-* `arrayValueGreater(string $column, string $path, $value)`
-* `arrayValueLessOrEqual(string $column, string $path, $value)`
-* `arrayValueLess(string $column, string $path, $value)`
+* `array_exists(string $column, string $path)`
+* `array_value_equals(string $column, string $path, $value, bool $identical = true)`
+* `array_value_greaterOrEqual(string $column, string $path, $value)`
+* `array_value_greater(string $column, string $path, $value)`
+* `array_value_less_or_equal(string $column, string $path, $value)`
+* `array_valueLess(string $column, string $path, $value)`
 * `exists(string $column)`
-* `isString(string $column)`
-* `isInteger(string $column)`
-* `isBoolean(string $column)`
-* `isFloat(string $column)`
-* `isArray(string $column)`
-* `isJson(string $column)`
-* `isObject(string $column)`
-* `isNull(string $column)`
-* `isNotNull(string $column)`
-* `valueEquals(string $column, $value, bool $identical = true)`
-* `valueGreaterOrEqual(string $column, $value)`
-* `valueGreater(string $column, $value)`
-* `valueLessOrEqual(string $column, $value)`
-* `valueLess(string $column, $value)`
+* `is_string(string $column)`
+* `is_integer(string $column)`
+* `is_boolean(string $column)`
+* `is_float(string $column)`
+* `is_array(string $column)`
+* `is_json(string $column)`
+* `is_object(string $column)`
+* `is_null(string $column)`
+* `is_not_null(string $column)`
+* `value_equals(string $column, $value, bool $identical = true)`
+* `value_greater_or_equal(string $column, $value)`
+* `value_greater(string $column, $value)`
+* `value_less_or_equal(string $column, $value)`
+* `value_less(string $column, $value)`
 * `none(RowCondition $conditions)`
 * `opposite(RowCondition $condition)`
 
+
 ### Extractors 
 
-* `extractFromCSV(string $fileName, int $batchSize = 100, int $headerOffset = 0)`
-* `extractFromArray(array $array, int $batchSize = 100)`
-* `extractFromJSON(string $fileName, int $batchSize = 100)`
-* `extractFromHttp(ClientInterface $client, iterable $requests, ?callable $preRequest = null, ?callable $postRequest = null)`
-* `extractFromHttpDynamic(ClientInterface $client, NextRequestFactory $requestFactory, ?callable $preRequest = null, ?callable $postRequest = null)`
-* `extractFromDb(Connection $connection, string $query, ParametersSet $parametersSet = null, array $types = [])`
+* `extract_from_csv(string $file_name, int $batch_size = 100, int $header_offset = 0)`
+* `extract_from_array(array $array, int $batch_size = 100)`
+* `extract_from_json(string $file_name, int $batch_size = 100)`
+* `extract_from_http(ClientInterface $client, iterable $requests, ?callable $pre_request = null, ?callable $post_request = null)`
+* `extract_from_http_dynamic(ClientInterface $client, NextRequestFactory $request_factory, ?callable $pre_request = null, ?callable $post_request = null)`
+* `extract_from_db(Connection $connection, string $query, ParametersSet $parameters_set = null, array $types = [])`
 
 ### Factories
 
-* `rowsFromArray(array $data)`
-* `rowsFromCastedArray(array $data, CastEntry ...$castEntries)`
-* `columnFromValue(string $column, $value)`
+* `column_from_value(string $column, $value)`
+* `rows_from_array(array $data)`
+* `rows_from_casted_array(array $data, CastEntry ...$cast_entries)`
  
 ### Loaders
 
-* `toCSV(string $fileName)`
-* `toElasticSearch(Client $client, int $chunkSize, string $index, IdFactory $idFactory, array $parameters = [])`
-* `esIdSha1(string ...$columns) :`
-* `esIdColumns(string $column) :`
-* `toMemory(Memory $memory)`
-* `toDebugLogger()`
-* `toColumnDumper(bool $all = false)`
+* `to_csv(string $file_name)`
+* `to_elastic_search(Client $client, int $chunk_size, string $index, IdFactory $id_factory, array $parameters = [])`
+    * `es_id_sha1(string ...$columns)`
+    * `es_id_columns(string $column)`
+* `to_memory(Memory $memory)`
+* `to_debug_logger()`
+* `to_column_dumper(bool $all = false)`
   
 ### Transformers
 
+* `add_string(string $name, string $value)`
+* `add_integer(string $name, int $value)`
+* `add_boolean(string $name, bool $value)`
+* `add_float(string $name, float $value)`
+* `add_date(string $name, string $value)`
+* `add_datetime(string $name, string $value, string $format = \DateTimeImmutable::ATOM)`
+* `add_array(string $name, array $data)`
+* `add_json(string $name, array $data)`
+* `add_json_object(string $name, array $data)`
+* `add_object(string $name, object $data)`
+* `array_get(string $array_name, string $path, string $column_name = 'column')`
+* `clone_column(string $from, string $to)`
+* `concat(array $stringColumns, string $glue = '', string $column_name = 'column')`
+* `chain(Transformer ...$transformers)`  
+* `convert_name(string $style)`  
+* `expand(string $array_column, string $expanded_name = 'column')`
 * `filter(string $column, callable $filter)`
-* `filterEquals(string $column, $value)`
-* `filterNotEquals(string $column, $value)`
-* `filterExists(string $column)`
-* `filterNotExists(string $column)`
-* `filterNull(string $column)`
-* `filterNotNull(string $column)`
-* `filterNumber(string $column)`
-* `filterNotNumber(string $column)`
+* `filter_equals(string $column, $value)`
+* `filter_not_equals(string $column, $value)`
+* `filter_exists(string $column)`
+* `filter_not_exists(string $column)`
+* `filter_null(string $column)`
+* `filter_not_null(string $column)`
+* `filter_number(string $column)`
+* `filter_not_number(string $column)`
 * `keep(string ...$columns)`
+* `object_method(string $object_name, string $method, string $column_name = 'column', array $parameters = [])`
 * `remove(string ...$columns)`
 * `rename(string $from, string $to)`
-* `cloneColumn(string $from, string $to)`
-* `convertName(string $style)`
-* `toDateTime(array $columns, $format = 'c', ?string $tz = null, ?string $toTz = null)`
-* `toDateTimeCast(array $columns, $format = 'c', ?string $tz = null, ?string $toTz = null)`
-* `toDate(string ...$columns)`
-* `toDateCast(string ...$columns)`
-* `toInteger(string ...$columns)`
-* `toIntegerCast(string ...$columns)`
-* `toString(string ...$columns)`
-* `toStringCast(string ...$columns)`
-* `toJson(string ...$columns)`
-* `toJsonCast(string ...$columns)`
-* `toArrayFromJson(string ...$columns)`
-* `toArrayFromJsonCast(string ...$columns)`
-* `toNullFromNullString(string ...$columns)`
-* `toArrayFromObject(string $column)`
-* `expand(string $arrayColumn, string $expandedName = 'column')`
-* `unpack(string $arrayColumn, string $columnPrefix = '', array $skipKeys = [])`
-* `concat(array $stringColumns, string $glue = '', string $columnName = 'column')`
-* `arrayGet(string $arrayName, string $path, string $columnName = 'column')`
-* `objectMethod(string $objectName, string $method, string $columnName = 'column', array $parameters = [])`
-* `addString(string $name, string $value)`
-* `addInteger(string $name, int $value)`
-* `addBoolean(string $name, bool $value)`
-* `addFloat(string $name, float $value)`
-* `addDate(string $name, string $value)`
-* `addDateTime(string $name, string $value, string $format = \DateTimeImmutable::ATOM)`
-* `addArray(string $name, array $data)`
-* `addJson(string $name, array $data)`
-* `addJsonObject(string $name, array $data)`
-* `addObject(string $name, object $data)`
-* `chain(Transformer ...$transformers)`
-* `transformIf(Transformer\Condition\RowCondition $condition, Transformer $transformer)`
+* `to_datetime(array $columns, $format = 'c', ?string $timezone = null, ?string $to_timezone = null)`
+* `to_datetime_cast(array $columns, $format = 'c', ?string $timezone = null, ?string $to_timezone = null)`
+* `to_date(string ...$columns)`
+* `to_date_cast(string ...$column)`
+* `to_integer(string ...$columns)`
+* `to_integer_cast(string ...$column)`
+* `to_string(string ...$columns)`
+* `to_string_cast(string ...$column)`
+* `to_json(string ...$columns)`
+* `to_json_cast(string ...$column)`
+* `to_array_from_json(string ...$columns)`
+* `to_array_from_json_cast(string ...$column)`
+* `to_null_from_null_string(string ...$columns)`
+* `to_array_from_object(string $column)`
+* `transform_if(RowCondition $condition, Transformer $transformer)`
+* `unpack(string $array_column, string $column_prefix = '', array $skip_keys = [])`

@@ -37,7 +37,7 @@ function filter(string $column, callable $filter) : Transformer
  * @param string $column
  * @param mixed $value
  */
-function filterEquals(string $column, $value) : Transformer
+function filter_equals(string $column, $value) : Transformer
 {
     return new FilterRowsTransformer(new EntryEqualsTo($column, $value));
 }
@@ -46,37 +46,37 @@ function filterEquals(string $column, $value) : Transformer
  * @param string $column
  * @param mixed $value
  */
-function filterNotEquals(string $column, $value) : Transformer
+function filter_not_equals(string $column, $value) : Transformer
 {
     return new FilterRowsTransformer(new Opposite(new EntryEqualsTo($column, $value)));
 }
 
-function filterExists(string $column) : Transformer
+function filter_exists(string $column) : Transformer
 {
     return new FilterRowsTransformer(new EntryExists($column));
 }
 
-function filterNotExists(string $column) : Transformer
+function filter_not_exists(string $column) : Transformer
 {
     return new FilterRowsTransformer(new Opposite(new EntryExists($column)));
 }
 
-function filterNull(string $column) : Transformer
+function filter_null(string $column) : Transformer
 {
     return new FilterRowsTransformer(new Opposite(new EntryNotNull($column)));
 }
 
-function filterNotNull(string $column) : Transformer
+function filter_not_null(string $column) : Transformer
 {
     return new FilterRowsTransformer(new EntryNotNull($column));
 }
 
-function filterNumber(string $column) : Transformer
+function filter_number(string $column) : Transformer
 {
     return new FilterRowsTransformer(new EntryNumber($column));
 }
 
-function filterNotNumber(string $column) : Transformer
+function filter_not_number(string $column) : Transformer
 {
     return new FilterRowsTransformer(new Opposite(new EntryNumber($column)));
 }
@@ -96,12 +96,12 @@ function rename(string $from, string $to) : Transformer
     return new RenameEntriesTransformer(new EntryRename($from, $to));
 }
 
-function cloneColumn(string $from, string $to) : Transformer
+function clone_column(string $from, string $to) : Transformer
 {
     return new Transformer\CloneEntryTransformer($from, $to);
 }
 
-function convertName(string $style) : Transformer
+function convert_name(string $style) : Transformer
 {
     if (!\class_exists('Jawira\CaseConverter\Convert')) {
         throw new RuntimeException("Jawira\CaseConverter\Convert class not found, please require using 'composer require jawira/case-converter'");
@@ -110,72 +110,72 @@ function convertName(string $style) : Transformer
     return new EntryNameCaseConverterTransformer($style);
 }
 
-function toDateTime(array $columns, $format = 'c', ?string $tz = null, ?string $toTz = null) : Transformer
+function to_datetime(array $columns, $format = 'c', ?string $timezone = null, ?string $to_timezone = null) : Transformer
 {
-    return new CastTransformer(CastToDateTime::nullable($columns, $format, $tz, $toTz));
+    return new CastTransformer(CastToDateTime::nullable($columns, $format, $timezone, $to_timezone));
 }
 
-function toDateTimeCast(array $columns, $format = 'c', ?string $tz = null, ?string $toTz = null) : CastEntry
+function to_datetime_cast(array $columns, $format = 'c', ?string $timezone = null, ?string $to_timezone = null) : CastEntry
 {
-    return CastToDateTime::nullable($columns, $format, $tz, $toTz);
+    return CastToDateTime::nullable($columns, $format, $timezone, $to_timezone);
 }
 
-function toDate(string ...$columns) : Transformer
+function to_date(string ...$columns) : Transformer
 {
     return new CastTransformer(CastToDate::nullable($columns));
 }
 
-function toDateCast(string ...$columns) : CastEntry
+function to_date_cast(string ...$columns) : CastEntry
 {
     return CastToDate::nullable($columns);
 }
 
-function toInteger(string ...$columns) : Transformer
+function to_integer(string ...$columns) : Transformer
 {
     return new CastTransformer(CastToInteger::nullable($columns));
 }
 
-function toIntegerCast(string ...$columns) : CastEntry
+function to_integer_cast(string ...$columns) : CastEntry
 {
     return CastToInteger::nullable($columns);
 }
 
-function toString(string ...$columns) : Transformer
+function to_string(string ...$columns) : Transformer
 {
     return new CastTransformer(CastToString::nullable($columns));
 }
 
-function toStringCast(string ...$columns) : CastEntry
+function to_string_cast(string ...$columns) : CastEntry
 {
     return CastToString::nullable($columns);
 }
 
-function toJson(string ...$columns) : Transformer
+function to_json(string ...$columns) : Transformer
 {
     return new CastTransformer(CastToJson::nullable($columns));
 }
 
-function toJsonCast(string ...$columns) : CastEntry
+function to_json_cast(string ...$columns) : CastEntry
 {
     return CastToJson::nullable($columns);
 }
 
-function toArrayFromJson(string ...$columns) : Transformer
+function to_array_from_json(string ...$columns) : Transformer
 {
     return new CastTransformer(CastJsonToArray::nullable($columns));
 }
 
-function toArrayFromJsonCast(string ...$columns) : CastEntry
+function to_array_from_json_cast(string ...$columns) : CastEntry
 {
     return CastJsonToArray::nullable($columns);
 }
 
-function toNullFromNullString(string ...$columns) : Transformer
+function to_null_from_null_string(string ...$columns) : Transformer
 {
     return new Transformer\NullStringIntoNullEntryTransformer(...$columns);
 }
 
-function toArrayFromObject(string $column) : Transformer
+function to_array_from_object(string $column) : Transformer
 {
     if (!\class_exists('Laminas\Hydrator\ReflectionHydrator')) {
         throw new RuntimeException("Laminas\Hydrator\ReflectionHydrator class not found, please install it using 'composer require laminas/laminas-hydrator'");
@@ -184,77 +184,77 @@ function toArrayFromObject(string $column) : Transformer
     return new Transformer\ObjectToArrayTransformer(new ReflectionHydrator(), $column);
 }
 
-function expand(string $arrayColumn, string $expandedName = 'column') : Transformer
+function expand(string $array_column, string $expanded_name = 'column') : Transformer
 {
-    return new Transformer\ArrayExpandTransformer($arrayColumn, $expandedName);
+    return new Transformer\ArrayExpandTransformer($array_column, $expanded_name);
 }
 
-function unpack(string $arrayColumn, string $columnPrefix = '', array $skipKeys = []) : Transformer
+function unpack(string $array_column, string $column_prefix = '', array $skip_keys = []) : Transformer
 {
-    return new Transformer\ArrayUnpackTransformer($arrayColumn, $skipKeys, $columnPrefix);
+    return new Transformer\ArrayUnpackTransformer($array_column, $skip_keys, $column_prefix);
 }
 
-function concat(array $stringColumns, string $glue = '', string $columnName = 'column') : Transformer
+function concat(array $string_columns, string $glue = '', string $column_name = 'column') : Transformer
 {
-    return new Transformer\StringConcatTransformer($stringColumns, $glue, $columnName);
+    return new Transformer\StringConcatTransformer($string_columns, $glue, $column_name);
 }
 
-function arrayGet(string $arrayName, string $path, string $columnName = 'column') : Transformer
+function array_get(string $array_name, string $path, string $column_name = 'column') : Transformer
 {
-    return new Transformer\ArrayDotGetTransformer($arrayName, $path, $columnName);
+    return new Transformer\ArrayDotGetTransformer($array_name, $path, $column_name);
 }
 
-function objectMethod(string $objectName, string $method, string $columnName = 'column', array $parameters = []) : Transformer
+function object_method(string $object_name, string $method, string $column_name = 'column', array $parameters = []) : Transformer
 {
-    return new Transformer\ObjectMethodTransformer($objectName, $method, $columnName, $parameters);
+    return new Transformer\ObjectMethodTransformer($object_name, $method, $column_name, $parameters);
 }
 
-function addString(string $name, string $value) : Transformer
+function add_string(string $name, string $value) : Transformer
 {
     return new Transformer\StaticEntryTransformer(new Row\Entry\StringEntry($name, $value));
 }
 
-function addInteger(string $name, int $value) : Transformer
+function add_integer(string $name, int $value) : Transformer
 {
     return new Transformer\StaticEntryTransformer(new Row\Entry\IntegerEntry($name, $value));
 }
 
-function addBoolean(string $name, bool $value) : Transformer
+function add_boolean(string $name, bool $value) : Transformer
 {
     return new Transformer\StaticEntryTransformer(new Row\Entry\BooleanEntry($name, $value));
 }
 
-function addFloat(string $name, float $value) : Transformer
+function add_float(string $name, float $value) : Transformer
 {
     return new Transformer\StaticEntryTransformer(new Row\Entry\FloatEntry($name, $value));
 }
 
-function addDate(string $name, string $value) : Transformer
+function add_date(string $name, string $value) : Transformer
 {
     return new Transformer\StaticEntryTransformer(new Row\Entry\DateEntry($name, new \DateTimeImmutable($value)));
 }
 
-function addDateTime(string $name, string $value, string $format = \DateTimeImmutable::ATOM) : Transformer
+function add_datetime(string $name, string $value, string $format = \DateTimeImmutable::ATOM) : Transformer
 {
     return new Transformer\StaticEntryTransformer(new Row\Entry\DateTimeEntry($name, new \DateTimeImmutable($value), $format));
 }
 
-function addArray(string $name, array $data) : Transformer
+function add_array(string $name, array $data) : Transformer
 {
     return new Transformer\StaticEntryTransformer(new Row\Entry\ArrayEntry($name, $data));
 }
 
-function addJson(string $name, array $data) : Transformer
+function add_json(string $name, array $data) : Transformer
 {
     return new Transformer\StaticEntryTransformer(new Row\Entry\JsonEntry($name, $data));
 }
 
-function addJsonObject(string $name, array $data) : Transformer
+function add_json_object(string $name, array $data) : Transformer
 {
     return new Transformer\StaticEntryTransformer(Row\Entry\JsonEntry::object($name, $data));
 }
 
-function addObject(string $name, object $data) : Transformer
+function add_object(string $name, object $data) : Transformer
 {
     return new Transformer\StaticEntryTransformer(new Row\Entry\ObjectEntry($name, $data));
 }
@@ -264,7 +264,7 @@ function chain(Transformer ...$transformers) : Transformer
     return new Transformer\ChainTransformer(...$transformers);
 }
 
-function transformIf(Transformer\Condition\RowCondition $condition, Transformer $transformer) : Transformer
+function transform_if(Transformer\Condition\RowCondition $condition, Transformer $transformer) : Transformer
 {
     return new Transformer\ConditionalTransformer($condition, $transformer);
 }

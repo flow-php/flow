@@ -18,32 +18,32 @@ function any(RowCondition ...$conditions) : RowCondition
     return new Condition\Any(...$conditions);
 }
 
-function arrayExists(string $column, string $path) : RowCondition
+function array_exists(string $column, string $path) : RowCondition
 {
     return new Condition\ArrayDotExists($column, $path);
 }
 
-function arrayValueEquals(string $column, string $path, $value, bool $identical = true) : RowCondition
+function array_value_equals(string $column, string $path, $value, bool $identical = true) : RowCondition
 {
     return new Condition\ArrayDotValueEqualsTo($column, $path, $value, $identical);
 }
 
-function arrayValueGreaterOrEqual(string $column, string $path, $value) : RowCondition
+function array_value_greaterOrEqual(string $column, string $path, $value) : RowCondition
 {
     return new Condition\ArrayDotValueGreaterOrEqualThan($column, $path, $value);
 }
 
-function arrayValueGreater(string $column, string $path, $value) : RowCondition
+function array_value_greater(string $column, string $path, $value) : RowCondition
 {
     return new Condition\ArrayDotValueGreaterThan($column, $path, $value);
 }
 
-function arrayValueLessOrEqual(string $column, string $path, $value) : RowCondition
+function array_value_less_or_equal(string $column, string $path, $value) : RowCondition
 {
     return new Condition\ArrayDotValueLessOrEqualThan($column, $path, $value);
 }
 
-function arrayValueLess(string $column, string $path, $value) : RowCondition
+function array_valueLess(string $column, string $path, $value) : RowCondition
 {
     return new Condition\ArrayDotValueLessThan($column, $path, $value);
 }
@@ -53,72 +53,72 @@ function exists(string $column) : RowCondition
     return new Condition\EntryExists($column);
 }
 
-function isString(string $column) : RowCondition
+function is_string(string $column) : RowCondition
 {
     return new Condition\EntryInstanceOf($column, Entry\StringEntry::class);
 }
 
-function isInteger(string $column) : RowCondition
+function is_integer(string $column) : RowCondition
 {
     return new Condition\EntryInstanceOf($column, Entry\IntegerEntry::class);
 }
 
-function isBoolean(string $column) : RowCondition
+function is_boolean(string $column) : RowCondition
 {
     return new Condition\EntryInstanceOf($column, Entry\BooleanEntry::class);
 }
 
-function isFloat(string $column) : RowCondition
+function is_float(string $column) : RowCondition
 {
     return new Condition\EntryInstanceOf($column, Entry\FloatEntry::class);
 }
 
-function isArray(string $column) : RowCondition
+function is_array(string $column) : RowCondition
 {
     return new Condition\EntryInstanceOf($column, Entry\ArrayEntry::class);
 }
 
-function isJson(string $column) : RowCondition
+function is_json(string $column) : RowCondition
 {
     return new Condition\EntryInstanceOf($column, Entry\JsonEntry::class);
 }
 
-function isObject(string $column) : RowCondition
+function is_object(string $column) : RowCondition
 {
     return new Condition\EntryInstanceOf($column, Entry\ObjectEntry::class);
 }
 
-function isNull(string $column) : RowCondition
+function is_null(string $column) : RowCondition
 {
     return new Condition\EntryInstanceOf($column, Entry\NullEntry::class);
 }
 
-function isNotNull(string $column) : RowCondition
+function is_not_null(string $column) : RowCondition
 {
     return new Condition\EntryNotNull($column);
 }
 
-function valueEquals(string $column, $value, bool $identical = true) : RowCondition
+function value_equals(string $column, $value, bool $identical = true) : RowCondition
 {
     return new Condition\EntryValueEqualsTo($column, $value, $identical);
 }
 
-function valueGreaterOrEqual(string $column, $value) : RowCondition
+function value_greater_or_equal(string $column, $value) : RowCondition
 {
     return new Condition\EntryValueGreaterOrEqualThan($column, $value);
 }
 
-function valueGreater(string $column, $value) : RowCondition
+function value_greater(string $column, $value) : RowCondition
 {
     return new Condition\EntryValueGreaterThan($column, $value);
 }
 
-function valueLessOrEqual(string $column, $value) : RowCondition
+function value_less_or_equal(string $column, $value) : RowCondition
 {
     return new Condition\EntryValueLessOrEqualThan($column, $value);
 }
 
-function valueLess(string $column, $value) : RowCondition
+function value_less(string $column, $value) : RowCondition
 {
     return new Condition\EntryValueLessThan($column, $value);
 }
