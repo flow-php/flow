@@ -7,7 +7,7 @@ namespace Flow\ETL\DSL\Transformer;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
 use Flow\ETL\Transformer;
-use Flow\ETL\Transformer\Cast\CastEntry;
+use Flow\ETL\Transformer\Cast\CastEntries;
 use Flow\ETL\Transformer\Cast\CastJsonToArray;
 use Flow\ETL\Transformer\Cast\CastToDate;
 use Flow\ETL\Transformer\Cast\CastToDateTime;
@@ -115,7 +115,7 @@ function to_datetime(array $columns, $format = 'c', ?string $timezone = null, ?s
     return new CastTransformer(CastToDateTime::nullable($columns, $format, $timezone, $to_timezone));
 }
 
-function to_datetime_cast(array $columns, $format = 'c', ?string $timezone = null, ?string $to_timezone = null) : CastEntry
+function to_datetime_cast(array $columns, $format = 'c', ?string $timezone = null, ?string $to_timezone = null) : CastEntries
 {
     return CastToDateTime::nullable($columns, $format, $timezone, $to_timezone);
 }
@@ -125,7 +125,7 @@ function to_date(string ...$columns) : Transformer
     return new CastTransformer(CastToDate::nullable($columns));
 }
 
-function to_date_cast(string ...$columns) : CastEntry
+function to_date_cast(string ...$columns) : CastEntries
 {
     return CastToDate::nullable($columns);
 }
@@ -135,7 +135,7 @@ function to_integer(string ...$columns) : Transformer
     return new CastTransformer(CastToInteger::nullable($columns));
 }
 
-function to_integer_cast(string ...$columns) : CastEntry
+function to_integer_cast(string ...$columns) : CastEntries
 {
     return CastToInteger::nullable($columns);
 }
@@ -145,7 +145,7 @@ function to_string(string ...$columns) : Transformer
     return new CastTransformer(CastToString::nullable($columns));
 }
 
-function to_string_cast(string ...$columns) : CastEntry
+function to_string_cast(string ...$columns) : CastEntries
 {
     return CastToString::nullable($columns);
 }
@@ -155,7 +155,7 @@ function to_json(string ...$columns) : Transformer
     return new CastTransformer(CastToJson::nullable($columns));
 }
 
-function to_json_cast(string ...$columns) : CastEntry
+function to_json_cast(string ...$columns) : CastEntries
 {
     return CastToJson::nullable($columns);
 }
@@ -165,7 +165,7 @@ function to_array_from_json(string ...$columns) : Transformer
     return new CastTransformer(CastJsonToArray::nullable($columns));
 }
 
-function to_array_from_json_cast(string ...$columns) : CastEntry
+function to_array_from_json_cast(string ...$columns) : CastEntries
 {
     return CastJsonToArray::nullable($columns);
 }
@@ -202,6 +202,21 @@ function concat(array $string_columns, string $glue = '', string $column_name = 
 function array_get(string $array_name, string $path, string $column_name = 'column') : Transformer
 {
     return new Transformer\ArrayDotGetTransformer($array_name, $path, $column_name);
+}
+
+function array_sort(string $array_name, $sort_flag = \SORT_REGULAR) : Transformer
+{
+    return new Transformer\ArraySortTransformer($array_name, $sort_flag);
+}
+
+function array_reverse(string $array_name) : Transformer
+{
+    return new Transformer\ArrayReverseTransformer($array_name);
+}
+
+function array_merge(array $array_names, string $column_name = 'columnd') : Transformer
+{
+    return new Transformer\ArrayMergeTransformer($array_names, $column_name);
 }
 
 function object_method(string $object_name, string $method, string $column_name = 'column', array $parameters = []) : Transformer
