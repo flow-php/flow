@@ -417,7 +417,7 @@ final class ArrayDotGetTest extends TestCase
     {
         $this->assertSame(
             [
-                1, 'foo',
+                'id' => 1, 'name' => 'foo',
             ],
             array_dot_get(
                 [
@@ -460,7 +460,7 @@ final class ArrayDotGetTest extends TestCase
     {
         $this->assertSame(
             [
-                1, null,
+                'id' => 1, 'name' => null,
             ],
             array_dot_get(
                 [
@@ -487,9 +487,9 @@ final class ArrayDotGetTest extends TestCase
     {
         $this->assertSame(
             [
-                [1, 'foo'],
-                [2, 'bar'],
-                [3, 'baz'],
+                ['id' => 1, 'name' => 'foo'],
+                ['id' => 2, 'name' => 'bar'],
+                ['id' => 3, 'name' => 'baz'],
             ],
             array_dot_get(
                 [
@@ -517,9 +517,9 @@ final class ArrayDotGetTest extends TestCase
     {
         $this->assertSame(
             [
-                [1, 'foo', 'active'],
-                [2, 'bar', 'active'],
-                [3, 'baz', 'disabled'],
+                ['id' => 1, 'name' => 'foo', 'status' => 'active'],
+                ['id' => 2, 'name' => 'bar', 'status' => 'active'],
+                ['id' => 3, 'name' => 'baz', 'status' => 'disabled'],
             ],
             array_dot_get(
                 [
