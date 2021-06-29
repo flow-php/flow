@@ -1,4 +1,4 @@
-## [Unreleased] - 2021-06-28
+## [Unreleased] - 2021-06-29
 
 ### Added
 - [9c5c5b](https://github.com/flow-php/flow/commit/9c5c5be9a3a710e8e5bea33d70dc1d61b40d4759) - **columns and conditions to DSL** - [@norberttech](https://github.com/norberttech)
@@ -7,6 +7,7 @@
 - [6052dc](https://github.com/flow-php/flow/commit/6052dc269abf336caf9aed1524f2c5cb8d53e984) - **more transformers** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [d8a994](https://github.com/flow-php/flow/commit/d8a99459f44b616cb106ad3cad55976b23206b70) - **dependencies, added array functions** - [@norberttech](https://github.com/norberttech)
 - [93030a](https://github.com/flow-php/flow/commit/93030ac133a3dcf30b83e5a41720957400cbd44a) - **Converter all function names into snake case** - [@norberttech](https://github.com/norberttech)
 - [431de6](https://github.com/flow-php/flow/commit/431de6be6dea3cfabe6c67ff89dc5ddf45522273) - **Readme cleanup** - [@norberttech](https://github.com/norberttech)
 - [41058f](https://github.com/flow-php/flow/commit/41058f480540825d630cdf6693dced82c7f586ce) - **Documentation** - [@norberttech](https://github.com/norberttech)
