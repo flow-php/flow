@@ -517,9 +517,9 @@ final class ArrayDotGetTest extends TestCase
     {
         $this->assertSame(
             [
-                ['id' => 1, 'name' => 'foo', 'status' => 'active'],
-                ['id' => 2, 'name' => 'bar', 'status' => 'active'],
-                ['id' => 3, 'name' => 'baz', 'status' => 'disabled'],
+                ['id' => 1, 'name' => 'foo', 'property_status_value' => 'active'],
+                ['id' => 2, 'name' => 'bar', 'property_status_value' => 'active'],
+                ['id' => 3, 'name' => 'baz', 'property_status_value' => 'disabled'],
             ],
             array_dot_get(
                 [
@@ -527,21 +527,21 @@ final class ArrayDotGetTest extends TestCase
                         [
                             'id' => 1,
                             'name' => 'foo',
-                            'property' => ['status' => 'active'],
+                            'property' => ['status' => ['value' => 'active']],
                         ],
                         [
                             'id' => 2,
                             'name' => 'bar',
-                            'property' => ['status' => 'active'],
+                            'property' => ['status' => ['value' => 'active']],
                         ],
                         [
                             'id' => 3,
                             'name' => 'baz',
-                            'property' => ['status' => 'disabled'],
+                            'property' => ['status' => ['value' => 'disabled']],
                         ],
                     ],
                 ],
-                'array.*.{id, name,    property.status}'
+                'array.*.{id, name,    property.?status.value}'
             ),
         );
     }
