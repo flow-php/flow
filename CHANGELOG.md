@@ -1,4 +1,4 @@
-## [Unreleased] - 2021-06-26
+## [Unreleased] - 2021-06-30
 
 ### Added
 - [#50](https://github.com/flow-php/etl/pull/50) - **Rows::isLast()** - [@norberttech](https://github.com/norberttech)
@@ -31,6 +31,7 @@
 - [856870](https://github.com/flow-php/etl/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#63](https://github.com/flow-php/etl/pull/63) - **DateEntries arguments from DateTimeImmutable into DateTimeInterface** - [@norberttech](https://github.com/norberttech)
 - [#59](https://github.com/flow-php/etl/pull/59) - **Update dependencies** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [56cc82](https://github.com/flow-php/etl/commit/56cc829d20c5e4e930049cdc08306331a4746f14) - **Adapters and Extensions section** - [@norberttech](https://github.com/norberttech)
 - [424aa9](https://github.com/flow-php/etl/commit/424aa92500d096e08c228aa66e2acc24140cfbda) - **Update README.md** - [@norberttech](https://github.com/norberttech)
