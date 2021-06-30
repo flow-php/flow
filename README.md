@@ -15,6 +15,7 @@ This implementation brings some custom syntax which will be explained bellow.
 
 array_dot_get(array $array, string $path) : mixed;
 array_dot_set(array $array, string $path, mixed $value) : mixed;
+array_dot_rename(array $array, string $path, string $newName) : mixed;
 array_dot_exists(array $array, string $path) : bool;
 array_dot_steps(string $path) : array;
 ```
@@ -102,6 +103,7 @@ Supported in functions:
 
 - `array_dot_get`
 - `array_dot_set`
+- `array_dot_rename`
 
 Wildcard operator allows to access all paths in nested arrays.
 

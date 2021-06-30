@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ArrayDot;
 
+use Flow\ArrayDot\Exception\Exception;
 use Flow\ArrayDot\Exception\InvalidPathException;
 
 /**
@@ -229,6 +230,81 @@ function array_dot_get(array $array, string $path)
     }
 
     return $arraySlice;
+}
+
+/**
+ * @param array<mixed> $array
+ * @param string $path
+ * @param string $newName
+ *
+ * @throws InvalidPathException
+ *
+ * @return array<mixed>
+ */
+function array_dot_rename(array $array, string $path, string $newName) : array
+{
+    if (!array_dot_exists($array, $path)) {
+        throw new InvalidPathException(
+            \sprintf(
+                'Path "%s" does not exists in array "%s".',
+                $path,
+                \preg_replace('/\s+/', '', \trim(\var_export($array, true)))
+            )
+        );
+    }
+
+    $pathSteps = array_dot_steps($path);
+    $lastStep = \array_pop($pathSteps);
+
+    $currentElement = &$array;
+
+    $takenSteps = [];
+
+    foreach ($pathSteps as $step) {
+        $takenSteps[] = $step;
+
+        if ($step === '*') {
+            /**
+             * @var array<mixed> $nestedValues
+             */
+            $nestedValues = array_dot_get($array, \implode('.', $takenSteps));
+            $stepsLeft = \array_slice($pathSteps, \count($takenSteps), \count($pathSteps));
+            \array_push($stepsLeft, $lastStep);
+
+            /** @var mixed $nestedValue */
+            foreach ($nestedValues as $nestedKey => $nestedValue) {
+                $currentElement[$nestedKey] = array_dot_rename((array) $nestedValue, \implode('.', $stepsLeft), $newName);
+            }
+
+            return $array;
+        }
+
+        if ($step == '\\*') {
+            $step = \str_replace('\\', '', $step);
+            \array_pop($takenSteps);
+            $takenSteps[] = $step;
+        }
+
+        if (!\is_array($currentElement[$step])) {
+            throw new Exception(
+                \sprintf(
+                    'Item for path "%s" is not an array in "%s".',
+                    \implode('.', $takenSteps),
+                    \preg_replace('/\s+/', '', \trim(\var_export($array, true)))
+                )
+            );
+        }
+
+        $currentElement = &$currentElement[$step];
+    }
+
+    /**
+     * @psalm-suppress MixedAssignment
+     */
+    $currentElement[$newName] = $currentElement[$lastStep];
+    unset($currentElement[$lastStep]);
+
+    return $array;
 }
 
 /**
