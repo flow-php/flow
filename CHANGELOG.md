@@ -1,6 +1,7 @@
-## [Unreleased] - 2021-06-29
+## [Unreleased] - 2021-06-30
 
 ### Added
+- [6e377d](https://github.com/flow-php/flow/commit/6e377db63d1fc5517fce294851f76797ea96c520) - **missing array_ transformers** - [@norberttech](https://github.com/norberttech)
 - [9c5c5b](https://github.com/flow-php/flow/commit/9c5c5be9a3a710e8e5bea33d70dc1d61b40d4759) - **columns and conditions to DSL** - [@norberttech](https://github.com/norberttech)
 - [683619](https://github.com/flow-php/flow/commit/68361928e607df6ffda7ee6039e3675f23c864ab) - **new entries to DSL** - [@norberttech](https://github.com/norberttech)
 - [3f91da](https://github.com/flow-php/flow/commit/3f91da762a6a099b6b7ad6c9abc77951a0e1afcd) - **more extractors and composer.json suggestions** - [@norberttech](https://github.com/norberttech)
