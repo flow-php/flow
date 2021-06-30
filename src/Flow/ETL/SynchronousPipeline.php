@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use Flow\ETL\ErrorHandler\ThrowError;
 use Flow\ETL\Pipeline\Element;
 
 final class SynchronousPipeline implements Pipeline
@@ -13,9 +14,17 @@ final class SynchronousPipeline implements Pipeline
      */
     private array $elements;
 
+    private ErrorHandler $errorHandler;
+
     public function __construct()
     {
         $this->elements = [];
+        $this->errorHandler = new ThrowError();
+    }
+
+    public function onError(ErrorHandler $errorHandler) : void
+    {
+        $this->errorHandler = $errorHandler;
     }
 
     public function register(Element $element) : void
@@ -25,6 +34,8 @@ final class SynchronousPipeline implements Pipeline
 
     /**
      * @param \Generator<int, Rows, mixed, void> $generator
+     *
+     * @throws \Throwable
      */
     public function process(\Generator $generator) : void
     {
@@ -44,7 +55,17 @@ final class SynchronousPipeline implements Pipeline
             }
 
             foreach ($this->elements as $element) {
-                $rows = $element->process($rows);
+                try {
+                    $rows = $element->process($rows);
+                } catch (\Throwable $exception) {
+                    if ($this->errorHandler->throw($exception, $rows)) {
+                        throw $exception;
+                    }
+
+                    if ($this->errorHandler->skipRows($exception, $rows)) {
+                        break;
+                    }
+                }
             }
 
             $index++;

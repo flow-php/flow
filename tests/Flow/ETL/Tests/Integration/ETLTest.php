@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Tests\Unit;
+namespace Flow\ETL\Tests\Integration;
 
+use Flow\ETL\ErrorHandler\IgnoreError;
+use Flow\ETL\ErrorHandler\ThrowError;
 use Flow\ETL\ETL;
 use Flow\ETL\Extractor;
 use Flow\ETL\Loader;
@@ -68,7 +70,14 @@ final class ETLTest extends TestCase
         };
 
         ETL::extract($extractor)
+            ->onError(new IgnoreError())
             ->transform($addStampStringEntry)
+            ->transform(new class implements Transformer {
+                public function transform(Rows $rows) : Rows
+                {
+                    throw new \RuntimeException('Unexpected exception');
+                }
+            })
             ->transform(AddStampToStringEntryTransformer::divideBySemicolon('stamp', 'one'))
             ->transform(AddStampToStringEntryTransformer::divideBySemicolon('stamp', 'two'))
             ->transform(AddStampToStringEntryTransformer::divideBySemicolon('stamp', 'three'))
@@ -118,21 +127,23 @@ final class ETLTest extends TestCase
                 yield new Rows(Row::create(new IntegerEntry('id', 2)));
                 yield new Rows(Row::create(new IntegerEntry('id', 3)));
             }
-        })->load(new class($callback) implements Loader {
-            private int $index = 0;
+        })
+            ->onError(new ThrowError())
+            ->load(new class($callback) implements Loader {
+                private int $index = 0;
 
-            private $callback;
+                private $callback;
 
-            public function __construct(callable $callback)
-            {
-                $this->callback = $callback;
-            }
+                public function __construct(callable $callback)
+                {
+                    $this->callback = $callback;
+                }
 
-            public function load(Rows $rows) : void
-            {
-                ($this->callback)($this->index, $rows);
-                $this->index++;
-            }
-        })->run();
+                public function load(Rows $rows) : void
+                {
+                    ($this->callback)($this->index, $rows);
+                    $this->index++;
+                }
+            })->run();
     }
 }

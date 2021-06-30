@@ -23,6 +23,13 @@ final class ETL
         return new self($extractor, $pipeline ?? new SynchronousPipeline());
     }
 
+    public function onError(ErrorHandler $handler) : self
+    {
+        $this->pipeline->onError($handler);
+
+        return $this;
+    }
+
     public function transform(Transformer $transformer) : self
     {
         $this->pipeline->register(Element::transformer($transformer));

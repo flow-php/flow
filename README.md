@@ -197,6 +197,36 @@ ETL::extract($extractor)
     ->load($loader);
 ```
 
+## Error Handling 
+
+In case of any exception in transform/load steps, ETL process will break, in order
+to change that behavior please set custom [ErrorHandler](src/Flow/ETL/ErrorHandler.php). 
+
+Error Handler defines 3 behavior using 2 methods. 
+
+* `ErrorHandler::throw(\Throwable $error, Rows $rows) : bool`
+* `ErrorHandler::skipRows(\Throwable $error, Rows $rows) : bool`
+
+If `throw` returns true, ETL will simply throw an error.
+If `skipRows' returns true, ETL will stop processing given rows, and it will try to move to the next batch.
+If both methods returns false, ETL will continue processing Rows using next transformers/loaders.
+
+There are 3 build in ErrorHandlers (look for more in adapters):
+
+* [IgnoreError](src/Flow/ETL/ErrorHandler/IgnoreError.php)
+* [SkipRows](src/Flow/ETL/ErrorHandler/SkipRows.php)
+* [ThrowError](src/Flow/ETL/ErrorHandler/ThrowError.php)
+
+Error Handling can be set directly at ETL:
+
+```php
+
+ETL::extract($extractor)
+    ->onError(new IgnoreError())
+    ->transform($transformer)
+    ->load($loader);
+```
+
 ## Development
 
 In order to install dependencies please, launch following commands:

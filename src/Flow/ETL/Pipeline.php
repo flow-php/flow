@@ -14,4 +14,6 @@ interface Pipeline
      * @param \Generator<int, Rows, mixed, void> $generator
      */
     public function process(\Generator $generator) : void;
+
+    public function onError(ErrorHandler $errorHandler) : void;
 }
