@@ -16,9 +16,9 @@ final class DateEntry implements Entry
 
     private string $name;
 
-    private \DateTimeImmutable $value;
+    private \DateTimeInterface $value;
 
-    public function __construct(string $name, \DateTimeImmutable $value)
+    public function __construct(string $name, \DateTimeInterface $value)
     {
         if (!\strlen($name)) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
@@ -26,7 +26,7 @@ final class DateEntry implements Entry
 
         $this->key = \mb_strtolower($name);
         $this->name = $name;
-        $this->value = $value->setTime(0, 0, 0);
+        $this->value = $value instanceof \DateTimeImmutable ? $value->setTime(0, 0, 0) : $value;
     }
 
     public function name() : string
@@ -36,6 +36,7 @@ final class DateEntry implements Entry
 
     /**
      * @psalm-suppress MissingReturnType
+     * @psalm-suppress ImpureMethodCall
      */
     public function value() : string
     {

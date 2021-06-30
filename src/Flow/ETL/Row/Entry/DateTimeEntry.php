@@ -16,11 +16,11 @@ final class DateTimeEntry implements Entry
 
     private string $name;
 
-    private \DateTimeImmutable $value;
+    private \DateTimeInterface $value;
 
     private string $format;
 
-    public function __construct(string $name, \DateTimeImmutable $value, string $format = \DateTimeImmutable::ATOM)
+    public function __construct(string $name, \DateTimeInterface $value, string $format = \DateTimeInterface::ATOM)
     {
         if (!\strlen($name)) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
@@ -39,6 +39,7 @@ final class DateTimeEntry implements Entry
 
     /**
      * @psalm-suppress MissingReturnType
+     * @psalm-suppress ImpureMethodCall
      */
     public function value() : string
     {
