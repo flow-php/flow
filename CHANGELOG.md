@@ -1,6 +1,7 @@
 ## [Unreleased] - 2021-06-30
 
 ### Added
+- [#62](https://github.com/flow-php/etl/pull/62) - **Error handling mechanism** - [@norberttech](https://github.com/norberttech)
 - [#50](https://github.com/flow-php/etl/pull/50) - **Rows::isLast()** - [@norberttech](https://github.com/norberttech)
 - [#50](https://github.com/flow-php/etl/pull/50) - **Rows::isFirst()** - [@norberttech](https://github.com/norberttech)
 - [#49](https://github.com/flow-php/etl/pull/49) - **Rows implements interfaces \ArrayAccess, \Countable, \IteratorAggregate** - [@norberttech](https://github.com/norberttech)
