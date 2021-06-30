@@ -214,7 +214,7 @@ function array_reverse(string $array_name) : Transformer
     return new Transformer\ArrayReverseTransformer($array_name);
 }
 
-function array_merge(array $array_names, string $column_name = 'columnd') : Transformer
+function array_merge(array $array_names, string $column_name = 'column') : Transformer
 {
     return new Transformer\ArrayMergeTransformer($array_names, $column_name);
 }

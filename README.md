@@ -61,7 +61,7 @@ Each element of the DSL is a simple php function that can be combined together w
 * `boolean_column(string $name, bool $value)`
 * `float_column(string $name, float $value)`
 * `date_column(string $name, string $value)`
-* `dateTime_column(string $name, string $value, string $format = \DateTimeImmutable::ATOM)`
+* `datetime_column(string $name, string $value, string $format = \DateTimeImmutable::ATOM)`
 * `array_column(string $name, array $data)`
 * `json_column(string $name, array $data)`
 * `json_object_column(string $name, array $data)`
@@ -134,6 +134,9 @@ Each element of the DSL is a simple php function that can be combined together w
 * `add_json_object(string $name, array $data)`
 * `add_object(string $name, object $data)`
 * `array_get(string $array_name, string $path, string $column_name = 'column')`
+* `array_sort(string $array_name, $sort_flag = \SORT_REGULAR)`
+* `array_reverse(string $array_name)`
+* `array_merge(array $array_names, string $column_name = 'column')`
 * `clone_column(string $from, string $to)`
 * `concat(array $stringColumns, string $glue = '', string $column_name = 'column')`
 * `chain(Transformer ...$transformers)`  

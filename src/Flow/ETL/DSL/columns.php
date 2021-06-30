@@ -31,7 +31,7 @@ function date_column(string $name, string $value) : Entry
     return new Entry\DateEntry($name, new \DateTimeImmutable($value));
 }
 
-function dateTime_column(string $name, string $value, string $format = \DateTimeImmutable::ATOM) : Entry
+function datetime_column(string $name, string $value, string $format = \DateTimeImmutable::ATOM) : Entry
 {
     return new Entry\DateTimeEntry($name, new \DateTimeImmutable($value), $format);
 }
