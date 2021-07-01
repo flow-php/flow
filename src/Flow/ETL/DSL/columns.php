@@ -36,16 +36,28 @@ function datetime_column(string $name, string $value, string $format = \DateTime
     return new Entry\DateTimeEntry($name, new \DateTimeImmutable($value), $format);
 }
 
+/**
+ * @param string $name
+ * @param array<mixed> $data
+ */
 function array_column(string $name, array $data) : Entry
 {
     return new Entry\ArrayEntry($name, $data);
 }
 
+/**
+ * @param string $name
+ * @param array<mixed> $data
+ */
 function json_column(string $name, array $data) : Entry
 {
     return new Entry\JsonEntry($name, $data);
 }
 
+/**
+ * @param string $name
+ * @param array<mixed> $data
+ */
 function json_object_column(string $name, array $data) : Entry
 {
     return Entry\JsonEntry::object($name, $data);
