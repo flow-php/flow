@@ -23,26 +23,52 @@ function array_exists(string $column, string $path) : RowCondition
     return new Condition\ArrayDotExists($column, $path);
 }
 
+/**
+ * @param string $column
+ * @param string $path
+ * @param mixed $value
+ * @param bool $identical
+ */
 function array_value_equals(string $column, string $path, $value, bool $identical = true) : RowCondition
 {
     return new Condition\ArrayDotValueEqualsTo($column, $path, $value, $identical);
 }
 
+/**
+ * @param string $column
+ * @param string $path
+ * @param mixed $value
+ */
 function array_value_greaterOrEqual(string $column, string $path, $value) : RowCondition
 {
     return new Condition\ArrayDotValueGreaterOrEqualThan($column, $path, $value);
 }
 
+/**
+ * @param string $column
+ * @param string $path
+ * @param mixed $value
+ */
 function array_value_greater(string $column, string $path, $value) : RowCondition
 {
     return new Condition\ArrayDotValueGreaterThan($column, $path, $value);
 }
 
+/**
+ * @param string $column
+ * @param string $path
+ * @param mixed $value
+ */
 function array_value_less_or_equal(string $column, string $path, $value) : RowCondition
 {
     return new Condition\ArrayDotValueLessOrEqualThan($column, $path, $value);
 }
 
+/**
+ * @param string $column
+ * @param string $path
+ * @param mixed $value
+ */
 function array_valueLess(string $column, string $path, $value) : RowCondition
 {
     return new Condition\ArrayDotValueLessThan($column, $path, $value);
@@ -98,32 +124,53 @@ function is_not_null(string $column) : RowCondition
     return new Condition\EntryNotNull($column);
 }
 
+/**
+ * @param string $column
+ * @param mixed $value
+ * @param bool $identical
+ */
 function value_equals(string $column, $value, bool $identical = true) : RowCondition
 {
     return new Condition\EntryValueEqualsTo($column, $value, $identical);
 }
 
+/**
+ * @param string $column
+ * @param mixed $value
+ */
 function value_greater_or_equal(string $column, $value) : RowCondition
 {
     return new Condition\EntryValueGreaterOrEqualThan($column, $value);
 }
 
+/**
+ * @param string $column
+ * @param mixed $value
+ */
 function value_greater(string $column, $value) : RowCondition
 {
     return new Condition\EntryValueGreaterThan($column, $value);
 }
 
+/**
+ * @param string $column
+ * @param mixed $value
+ */
 function value_less_or_equal(string $column, $value) : RowCondition
 {
     return new Condition\EntryValueLessOrEqualThan($column, $value);
 }
 
+/**
+ * @param string $column
+ * @param mixed $value
+ */
 function value_less(string $column, $value) : RowCondition
 {
     return new Condition\EntryValueLessThan($column, $value);
 }
 
-function none(RowCondition $conditions) : RowCondition
+function none(RowCondition ...$conditions) : RowCondition
 {
     return new Condition\None(...$conditions);
 }

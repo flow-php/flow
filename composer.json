@@ -74,6 +74,8 @@
             "@static:analyze"
         ],
         "static:analyze": [
+            "tools/vendor/bin/psalm --output-format=compact",
+            "tools/vendor/bin/phpstan analyze -c phpstan.neon",
             "tools/vendor/bin/php-cs-fixer fix --dry-run"
         ],
         "cs:php:fix": "tools/vendor/bin/php-cs-fixer fix",

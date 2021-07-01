@@ -28,6 +28,13 @@ function to_csv(string $file_name) : Loader
     return new LeagueCSVLoader(Writer::createFromPath($file_name, 'w+'));
 }
 
+/**
+ * @param Client $client
+ * @param int $chunk_size
+ * @param string $index
+ * @param IdFactory $id_factory
+ * @param array<mixed> $parameters
+ */
 function to_elastic_search(Client $client, int $chunk_size, string $index, IdFactory $id_factory, array $parameters = []) : Loader
 {
     return new ElasticsearchPHPLoader($client, $chunk_size, $index, $id_factory, $parameters);
@@ -66,6 +73,11 @@ function to_column_dumper(bool $all = false) : Loader
             $this->dumped = false;
         }
 
+        /**
+         * @psalm-suppress UnusedMethodCall
+         * @psalm-suppress ForbiddenCode
+         * @psalm-suppress InvalidArgument
+         */
         public function load(Rows $rows) : void
         {
             if ($this->allRows) {

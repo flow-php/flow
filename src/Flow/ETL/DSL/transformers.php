@@ -7,6 +7,7 @@ namespace Flow\ETL\DSL\Transformer;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
 use Flow\ETL\Transformer;
+use Flow\ETL\Transformer\ArrayKeysCaseConverterTransformer;
 use Flow\ETL\Transformer\Cast\CastEntries;
 use Flow\ETL\Transformer\Cast\CastJsonToArray;
 use Flow\ETL\Transformer\Cast\CastToDate;
@@ -28,6 +29,10 @@ use Flow\ETL\Transformer\RenameEntries\EntryRename;
 use Flow\ETL\Transformer\RenameEntriesTransformer;
 use Laminas\Hydrator\ReflectionHydrator;
 
+/**
+ * @param string $column
+ * @param callable(mixed) : bool $filter
+ */
 function filter(string $column, callable $filter) : Transformer
 {
     return new FilterRowsTransformer(new Callback(fn (Row $row) : bool => $filter($row->valueOf($column))));
@@ -110,12 +115,24 @@ function convert_name(string $style) : Transformer
     return new EntryNameCaseConverterTransformer($style);
 }
 
-function to_datetime(array $columns, $format = 'c', ?string $timezone = null, ?string $to_timezone = null) : Transformer
+/**
+ * @param string[] $columns
+ * @param string $format
+ * @param ?string $timezone
+ * @param ?string $to_timezone
+ */
+function to_datetime(array $columns, string $format = 'c', ?string $timezone = null, ?string $to_timezone = null) : Transformer
 {
     return new CastTransformer(CastToDateTime::nullable($columns, $format, $timezone, $to_timezone));
 }
 
-function to_datetime_cast(array $columns, $format = 'c', ?string $timezone = null, ?string $to_timezone = null) : CastEntries
+/**
+ * @param string[] $columns
+ * @param string $format
+ * @param ?string $timezone
+ * @param ?string $to_timezone
+ */
+function to_datetime_cast(array $columns, string $format = 'c', ?string $timezone = null, ?string $to_timezone = null) : CastEntries
 {
     return CastToDateTime::nullable($columns, $format, $timezone, $to_timezone);
 }
@@ -189,11 +206,21 @@ function expand(string $array_column, string $expanded_name = 'column') : Transf
     return new Transformer\ArrayExpandTransformer($array_column, $expanded_name);
 }
 
+/**
+ * @param string $array_column
+ * @param string $column_prefix
+ * @param string[] $skip_keys
+ */
 function unpack(string $array_column, string $column_prefix = '', array $skip_keys = []) : Transformer
 {
     return new Transformer\ArrayUnpackTransformer($array_column, $skip_keys, $column_prefix);
 }
 
+/**
+ * @param string[] $string_columns
+ * @param string $glue
+ * @param string $column_name
+ */
 function concat(array $string_columns, string $glue = '', string $column_name = 'column') : Transformer
 {
     return new Transformer\StringConcatTransformer($string_columns, $glue, $column_name);
@@ -204,7 +231,7 @@ function array_get(string $array_name, string $path, string $column_name = 'colu
     return new Transformer\ArrayDotGetTransformer($array_name, $path, $column_name);
 }
 
-function array_sort(string $array_name, $sort_flag = \SORT_REGULAR) : Transformer
+function array_sort(string $array_name, int $sort_flag = \SORT_REGULAR) : Transformer
 {
     return new Transformer\ArraySortTransformer($array_name, $sort_flag);
 }
@@ -214,11 +241,30 @@ function array_reverse(string $array_name) : Transformer
     return new Transformer\ArrayReverseTransformer($array_name);
 }
 
+/**
+ * @param string[] $array_names
+ * @param string $column_name
+ */
 function array_merge(array $array_names, string $column_name = 'column') : Transformer
 {
     return new Transformer\ArrayMergeTransformer($array_names, $column_name);
 }
 
+function array_convert_keys(string $array_column, string $style) : Transformer
+{
+    if (!\class_exists('Jawira\CaseConverter\Convert')) {
+        throw new RuntimeException("Jawira\CaseConverter\Convert class not found, please require using 'composer require jawira/case-converter'");
+    }
+
+    return new ArrayKeysCaseConverterTransformer($array_column, $style);
+}
+
+/**
+ * @param string $object_name
+ * @param string $method
+ * @param string $column_name
+ * @param array<mixed> $parameters
+ */
 function object_method(string $object_name, string $method, string $column_name = 'column', array $parameters = []) : Transformer
 {
     return new Transformer\ObjectMethodTransformer($object_name, $method, $column_name, $parameters);
@@ -254,16 +300,28 @@ function add_datetime(string $name, string $value, string $format = \DateTimeImm
     return new Transformer\StaticEntryTransformer(new Row\Entry\DateTimeEntry($name, new \DateTimeImmutable($value), $format));
 }
 
+/**
+ * @param string $name
+ * @param array<mixed> $data
+ */
 function add_array(string $name, array $data) : Transformer
 {
     return new Transformer\StaticEntryTransformer(new Row\Entry\ArrayEntry($name, $data));
 }
 
+/**
+ * @param string $name
+ * @param array<mixed> $data
+ */
 function add_json(string $name, array $data) : Transformer
 {
     return new Transformer\StaticEntryTransformer(new Row\Entry\JsonEntry($name, $data));
 }
 
+/**
+ * @param string $name
+ * @param array<mixed> $data
+ */
 function add_json_object(string $name, array $data) : Transformer
 {
     return new Transformer\StaticEntryTransformer(Row\Entry\JsonEntry::object($name, $data));
