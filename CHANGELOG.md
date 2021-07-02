@@ -1,6 +1,7 @@
-## [Unreleased] - 2021-07-01
+## [Unreleased] - 2021-07-02
 
 ### Added
+- [#3](https://github.com/flow-php/flow/pull/3) - **Add array_rename_keys method** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#2](https://github.com/flow-php/flow/pull/2) - **PHPStan and Psalm** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [6e377d](https://github.com/flow-php/flow/commit/6e377db63d1fc5517fce294851f76797ea96c520) - **missing array_ transformers** - [@norberttech](https://github.com/norberttech)
 - [9c5c5b](https://github.com/flow-php/flow/commit/9c5c5be9a3a710e8e5bea33d70dc1d61b40d4759) - **columns and conditions to DSL** - [@norberttech](https://github.com/norberttech)
@@ -15,6 +16,9 @@
 - [41058f](https://github.com/flow-php/flow/commit/41058f480540825d630cdf6693dced82c7f586ce) - **Documentation** - [@norberttech](https://github.com/norberttech)
 - [12472f](https://github.com/flow-php/flow/commit/12472f4b3b354430578a288e71649c4a8bc3b876) - **dependencies and added new transformers** - [@norberttech](https://github.com/norberttech)
 - [295ece](https://github.com/flow-php/flow/commit/295ece19ce77cbd6d30d501a01bd24e0a72814ea) - **Initial commit** - [@norberttech](https://github.com/norberttech)
+
+### Fixed
+- [#3](https://github.com/flow-php/flow/pull/3) - **BC break i RenameEntries namespace** - [@tomaszhanc](https://github.com/tomaszhanc)
 
 ### Removed
 - [b6fc3b](https://github.com/flow-php/flow/commit/b6fc3be43a05ac325716a783ed52c03ed61991fd) - **tools in gitattributes** - [@norberttech](https://github.com/norberttech)
