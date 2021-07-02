@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Row\Converter;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry;
 
@@ -80,13 +79,6 @@ final class Row
             $this->entries
                 ->remove($currentName)
                 ->add($this->entries->get($currentName)->rename($newName))
-        );
-    }
-
-    public function convert(string $name, Converter $converter) : self
-    {
-        return $this->set(
-            $converter->convert($this->get($name))
         );
     }
 

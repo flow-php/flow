@@ -11,7 +11,7 @@ use Flow\ETL\Extractor;
 use Flow\ETL\Loader;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\BooleanEntry;
-use Flow\ETL\Row\Entry\DateEntry;
+use Flow\ETL\Row\Entry\DateTimeEntry;
 use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Row\Entry\NullEntry;
 use Flow\ETL\Row\Entry\StringEntry;
@@ -35,7 +35,7 @@ final class ETLTest extends TestCase
                     Row::create(
                         new IntegerEntry('id', 101),
                         new BooleanEntry('deleted', false),
-                        new DateEntry('expiration-date', new \DateTimeImmutable('2020-08-24')),
+                        new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-24')),
                         new NullEntry('phase')
                     )
                 );
@@ -44,7 +44,7 @@ final class ETLTest extends TestCase
                     Row::create(
                         new IntegerEntry('id', 102),
                         new BooleanEntry('deleted', true),
-                        new DateEntry('expiration-date', new \DateTimeImmutable('2020-08-25')),
+                        new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-25')),
                         new NullEntry('phase')
                     )
                 );
@@ -90,14 +90,14 @@ final class ETLTest extends TestCase
                     'id' => 101,
                     'stamp' => 'zero:one:two:three',
                     'deleted' => false,
-                    'expiration-date' => '2020-08-24',
+                    'expiration-date' => new \DateTimeImmutable('2020-08-24'),
                     'phase' => null,
                 ],
                 [
                     'id' => 102,
                     'stamp' => 'zero:one:two:three',
                     'deleted' => true,
-                    'expiration-date' => '2020-08-25',
+                    'expiration-date' => new \DateTimeImmutable('2020-08-25'),
                     'phase' => null,
                 ],
             ],

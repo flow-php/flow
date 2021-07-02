@@ -18,6 +18,9 @@ final class StringEntry implements Entry
 
     private string $value;
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function __construct(string $name, string $value)
     {
         if (!\strlen($name)) {
@@ -29,14 +32,28 @@ final class StringEntry implements Entry
         $this->value = $value;
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public static function lowercase(string $name, string $value) : self
     {
         return new self($name, \mb_strtolower($value));
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public static function uppercase(string $name, string $value) : self
     {
         return new self($name, \mb_strtoupper($value));
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    public static function fromDateTime(string $name, \DateTimeInterface $dateTime, string $format = \DateTimeInterface::ATOM) : self
+    {
+        return new self($name, $dateTime->format($format));
     }
 
     public function name() : string
@@ -44,9 +61,6 @@ final class StringEntry implements Entry
         return $this->name;
     }
 
-    /**
-     * @psalm-suppress MissingReturnType
-     */
     public function value() : string
     {
         return $this->value;
@@ -57,6 +71,9 @@ final class StringEntry implements Entry
         return $this->key === \mb_strtolower($name);
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function rename(string $name) : Entry
     {
         return new self($name, $this->value);
@@ -64,6 +81,8 @@ final class StringEntry implements Entry
 
     /**
      * @psalm-suppress MixedArgument
+     *
+     * @throws InvalidArgumentException
      */
     public function map(callable $mapper) : Entry
     {

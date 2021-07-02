@@ -60,9 +60,6 @@ final class BooleanEntry implements Entry
         return $this->name;
     }
 
-    /**
-     * @psalm-suppress MissingReturnType
-     */
     public function value() : bool
     {
         return $this->value;
@@ -73,6 +70,9 @@ final class BooleanEntry implements Entry
         return $this->key === \mb_strtolower($name);
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function rename(string $name) : Entry
     {
         return new self($name, $this->value);
@@ -80,6 +80,8 @@ final class BooleanEntry implements Entry
 
     /**
      * @psalm-suppress MixedArgument
+     *
+     * @throws InvalidArgumentException
      */
     public function map(callable $mapper) : Entry
     {

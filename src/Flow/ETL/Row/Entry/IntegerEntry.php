@@ -18,6 +18,9 @@ final class IntegerEntry implements Entry
 
     private int $value;
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function __construct(string $name, int $value)
     {
         if (!\strlen($name)) {
@@ -46,9 +49,6 @@ final class IntegerEntry implements Entry
         return $this->name;
     }
 
-    /**
-     * @psalm-suppress MissingReturnType
-     */
     public function value() : int
     {
         return $this->value;
@@ -59,6 +59,9 @@ final class IntegerEntry implements Entry
         return $this->key === \mb_strtolower($name);
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function rename(string $name) : Entry
     {
         return new self($name, $this->value);
@@ -66,6 +69,8 @@ final class IntegerEntry implements Entry
 
     /**
      * @psalm-suppress MixedArgument
+     *
+     * @throws InvalidArgumentException
      */
     public function map(callable $mapper) : Entry
     {

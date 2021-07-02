@@ -16,6 +16,9 @@ final class NullEntry implements Entry
 
     private string $name;
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function __construct(string $name)
     {
         if (!\strlen($name)) {
@@ -41,6 +44,9 @@ final class NullEntry implements Entry
         return $this->key === \mb_strtolower($name);
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function rename(string $name) : Entry
     {
         return new self($name);
@@ -48,6 +54,8 @@ final class NullEntry implements Entry
 
     /**
      * @psalm-suppress MixedArgument
+     *
+     * @throws InvalidArgumentException
      */
     public function map(callable $mapper) : Entry
     {

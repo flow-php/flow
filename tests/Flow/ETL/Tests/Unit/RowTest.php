@@ -5,13 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit;
 
 use Flow\ETL\Row;
-use Flow\ETL\Row\Converter;
 use Flow\ETL\Row\Entries;
-use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\ArrayEntry;
 use Flow\ETL\Row\Entry\BooleanEntry;
 use Flow\ETL\Row\Entry\CollectionEntry;
-use Flow\ETL\Row\Entry\DateEntry;
 use Flow\ETL\Row\Entry\DateTimeEntry;
 use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Row\Entry\NullEntry;
@@ -37,29 +34,12 @@ final class RowTest extends TestCase
         );
     }
 
-    public function test_converts_one_entry_into_another_using_converter() : void
-    {
-        $row = Row::create(new StringEntry('name', 'one'), new IntegerEntry('id', 1));
-        $toStringEntry = new class implements Converter {
-            public function convert(Entry $entry) : Entry
-            {
-                return new StringEntry($entry->name(), (string) $entry->value());
-            }
-        };
-
-        $this->assertEquals(
-            Row::create(new StringEntry('name', 'one'), new StringEntry('id', '1')),
-            $row->convert('id', $toStringEntry)
-        );
-    }
-
     public function test_transforms_row_to_array() : void
     {
         $row = Row::create(
             new IntegerEntry('id', 1234),
             new BooleanEntry('deleted', false),
             new DateTimeEntry('created-at', $createdAt = new \DateTimeImmutable('2020-07-13 15:00')),
-            new DateEntry('expiration-date', $expirationDate = new \DateTimeImmutable('2020-08-24')),
             new NullEntry('phase'),
             new CollectionEntry(
                 'items',
@@ -73,8 +53,7 @@ final class RowTest extends TestCase
             [
                 'id' => 1234,
                 'deleted' => false,
-                'created-at' => $createdAt->format(\DATE_ATOM),
-                'expiration-date' => $expirationDate->format('Y-m-d'),
+                'created-at' => $createdAt,
                 'phase' => null,
                 'items' => [
                     ['item-id' => 1, 'name' => 'one'],

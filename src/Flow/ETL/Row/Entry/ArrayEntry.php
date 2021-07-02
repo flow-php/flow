@@ -18,12 +18,15 @@ final class ArrayEntry implements Entry
     private string $name;
 
     /**
-     * @phpstan-ignore-next-line
+     * @var array<mixed>
      */
     private array $value;
 
     /**
-     * @phpstan-ignore-next-line
+     * @param string $name
+     * @param array<mixed> $value
+     *
+     * @throws InvalidArgumentException
      */
     public function __construct(string $name, array $value)
     {
@@ -42,8 +45,7 @@ final class ArrayEntry implements Entry
     }
 
     /**
-     * @psalm-suppress MissingReturnType
-     * @phpstan-ignore-next-line
+     * @return array<mixed>
      */
     public function value() : array
     {
@@ -55,6 +57,9 @@ final class ArrayEntry implements Entry
         return $this->key === \mb_strtolower($name);
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function rename(string $name) : Entry
     {
         return new self($name, $this->value);
@@ -62,6 +67,8 @@ final class ArrayEntry implements Entry
 
     /**
      * @psalm-suppress MixedArgument
+     *
+     * @throws InvalidArgumentException
      */
     public function map(callable $mapper) : Entry
     {

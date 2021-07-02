@@ -8,7 +8,6 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry\BooleanEntry;
 use Flow\ETL\Row\Entry\CollectionEntry;
-use Flow\ETL\Row\Entry\DateEntry;
 use Flow\ETL\Row\Entry\DateTimeEntry;
 use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Row\Entry\NullEntry;
@@ -116,7 +115,6 @@ final class EntriesTest extends TestCase
             new IntegerEntry('id', 1234),
             new BooleanEntry('deleted', false),
             new DateTimeEntry('created-at', $createdAt = new \DateTimeImmutable('2020-07-13 15:00')),
-            new DateEntry('expiration-date', $expirationDate = new \DateTimeImmutable('2020-08-24')),
             new NullEntry('phase'),
             new CollectionEntry(
                 'items',
@@ -130,8 +128,7 @@ final class EntriesTest extends TestCase
             [
                 'id' => 1234,
                 'deleted' => false,
-                'created-at' => $createdAt->format(\DATE_ATOM),
-                'expiration-date' => $expirationDate->format('Y-m-d'),
+                'created-at' => $createdAt,
                 'phase' => null,
                 'items' => [
                     ['item-id' => 1, 'name' => 'one'],
@@ -149,7 +146,6 @@ final class EntriesTest extends TestCase
             $id = new IntegerEntry('id', 1234),
             $deleted = new BooleanEntry('deleted', false),
             $createdAt = new DateTimeEntry('created-at', new \DateTimeImmutable('2020-07-13 15:00')),
-            $expirationDate = new DateEntry('expiration-date', new \DateTimeImmutable('2020-08-24')),
             $phase = new NullEntry('phase'),
             $items = new CollectionEntry(
                 'items',
@@ -165,7 +161,6 @@ final class EntriesTest extends TestCase
             new Entries(
                 $createdAt = new DateTimeEntry('created-at', new \DateTimeImmutable('2020-07-13 15:00')),
                 $deleted = new BooleanEntry('deleted', false),
-                $expirationDate = new DateEntry('expiration-date', new \DateTimeImmutable('2020-08-24')),
                 $id = new IntegerEntry('id', 1234),
                 $items = new CollectionEntry(
                     'items',

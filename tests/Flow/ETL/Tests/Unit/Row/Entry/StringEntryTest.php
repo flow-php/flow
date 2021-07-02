@@ -39,6 +39,13 @@ final class StringEntryTest extends TestCase
         $this->assertEquals('IT SHOULD BE UPPERCASE', $entry->value());
     }
 
+    public function test_creates_datetime_value() : void
+    {
+        $entry = StringEntry::fromDateTime('datetime', new \DateTimeImmutable('2021-06-01 00:00:00 UTC'));
+
+        $this->assertEquals('2021-06-01T00:00:00+00:00', $entry->value());
+    }
+
     public function test_map() : void
     {
         $entry = new StringEntry('entry-name', 'any string value');

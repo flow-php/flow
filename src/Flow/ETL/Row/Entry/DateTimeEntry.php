@@ -18,9 +18,10 @@ final class DateTimeEntry implements Entry
 
     private \DateTimeInterface $value;
 
-    private string $format;
-
-    public function __construct(string $name, \DateTimeInterface $value, string $format = \DateTimeInterface::ATOM)
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function __construct(string $name, \DateTimeInterface $value)
     {
         if (!\strlen($name)) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
@@ -29,7 +30,6 @@ final class DateTimeEntry implements Entry
         $this->key = \mb_strtolower($name);
         $this->name = $name;
         $this->value = $value;
-        $this->format = $format;
     }
 
     public function name() : string
@@ -37,13 +37,9 @@ final class DateTimeEntry implements Entry
         return $this->name;
     }
 
-    /**
-     * @psalm-suppress MissingReturnType
-     * @psalm-suppress ImpureMethodCall
-     */
-    public function value() : string
+    public function value() : \DateTimeInterface
     {
-        return $this->value->format($this->format);
+        return $this->value;
     }
 
     public function is(string $name) : bool
@@ -58,10 +54,12 @@ final class DateTimeEntry implements Entry
 
     /**
      * @psalm-suppress MixedArgument
+     *
+     * @throws InvalidArgumentException
      */
     public function map(callable $mapper) : Entry
     {
-        return new self($this->name, $mapper($this->value), $this->format);
+        return new self($this->name, $mapper($this->value));
     }
 
     public function isEqual(Entry $entry) : bool

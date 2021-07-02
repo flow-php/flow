@@ -20,6 +20,9 @@ final class FloatEntry implements Entry
 
     private int $precision;
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function __construct(string $name, float $value, int $precision = 6)
     {
         if (!\strlen($name)) {
@@ -49,9 +52,6 @@ final class FloatEntry implements Entry
         return $this->name;
     }
 
-    /**
-     * @psalm-suppress MissingReturnType
-     */
     public function value() : float
     {
         return $this->value;
@@ -62,6 +62,9 @@ final class FloatEntry implements Entry
         return $this->key === \mb_strtolower($name);
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function rename(string $name) : Entry
     {
         return new self($name, $this->value);
@@ -69,6 +72,8 @@ final class FloatEntry implements Entry
 
     /**
      * @psalm-suppress MixedArgument
+     *
+     * @throws InvalidArgumentException
      */
     public function map(callable $mapper) : Entry
     {

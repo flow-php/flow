@@ -18,6 +18,9 @@ final class ObjectEntry implements Entry
 
     private object $value;
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function __construct(string $name, object $value)
     {
         if (!\strlen($name)) {
@@ -34,9 +37,6 @@ final class ObjectEntry implements Entry
         return $this->name;
     }
 
-    /**
-     * @psalm-suppress MissingReturnType
-     */
     public function value() : object
     {
         return $this->value;
@@ -47,6 +47,9 @@ final class ObjectEntry implements Entry
         return $this->key === \mb_strtolower($name);
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function rename(string $name) : Entry
     {
         return new self($name, $this->value);
@@ -54,6 +57,8 @@ final class ObjectEntry implements Entry
 
     /**
      * @psalm-suppress MixedArgument
+     *
+     * @throws InvalidArgumentException
      */
     public function map(callable $mapper) : Entry
     {

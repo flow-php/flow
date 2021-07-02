@@ -37,7 +37,6 @@ This is a perfect scenario for ETL.
 * [ArrayEntry](src/Flow/ETL/Row/Entry/ArrayEntry.php)
 * [BooleanEntry](src/Flow/ETL/Row/Entry/BooleanEntry.php)
 * [FloatEntry](src/Flow/ETL/Row/Entry/FloatEntry.php)
-* [DateEntry](src/Flow/ETL/Row/Entry/DateEntry.php)
 * [DateTimeEntry](src/Flow/ETL/Row/Entry/DateTimeEntry.php)
 * [IntegerEntry](src/Flow/ETL/Row/Entry/IntegerEntry.php)
 * [NullEntry](src/Flow/ETL/Row/Entry/NullEntry.php)

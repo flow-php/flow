@@ -23,6 +23,9 @@ final class CollectionEntry implements Entry
      */
     private array $entries;
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function __construct(string $name, Entries ...$entries)
     {
         if (!\strlen($name)) {
@@ -40,8 +43,7 @@ final class CollectionEntry implements Entry
     }
 
     /**
-     * @psalm-suppress MissingReturnType
-     * @phpstan-ignore-next-line
+     * @return array<mixed>
      */
     public function value() : array
     {
@@ -56,6 +58,9 @@ final class CollectionEntry implements Entry
         return $this->key === \mb_strtolower($name);
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function rename(string $name) : Entry
     {
         return new self($name, ...$this->entries);
@@ -63,6 +68,8 @@ final class CollectionEntry implements Entry
 
     /**
      * @psalm-suppress MixedArgument
+     *
+     * @throws InvalidArgumentException
      */
     public function map(callable $mapper) : Entry
     {
