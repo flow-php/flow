@@ -1,6 +1,7 @@
-## [Unreleased] - 2021-06-30
+## [Unreleased] - 2021-07-02
 
 ### Added
+- [#64](https://github.com/flow-php/etl/pull/64) - **Added StringEntry::fromDateTime** - [@norberttech](https://github.com/norberttech)
 - [#62](https://github.com/flow-php/etl/pull/62) - **Error handling mechanism** - [@norberttech](https://github.com/norberttech)
 - [#50](https://github.com/flow-php/etl/pull/50) - **Rows::isLast()** - [@norberttech](https://github.com/norberttech)
 - [#50](https://github.com/flow-php/etl/pull/50) - **Rows::isFirst()** - [@norberttech](https://github.com/norberttech)
@@ -51,6 +52,7 @@
 - [e48062](https://github.com/flow-php/etl/commit/e48062890cd84e655e1162305086f67148347b83) - **Intial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#64](https://github.com/flow-php/etl/pull/64) - **DateTimeEntry::value return type is now \DateTimeInterface** - [@norberttech](https://github.com/norberttech)
 - [#59](https://github.com/flow-php/etl/pull/59) - **Psalm errros after update to 4.8.1** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#55](https://github.com/flow-php/etl/pull/55) - **Adds support for null values in array comparison** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#54](https://github.com/flow-php/etl/pull/54) - **compare values by using weak comparison only against objects** - [@norberttech](https://github.com/norberttech)
@@ -60,6 +62,7 @@
 - [1a6eec](https://github.com/flow-php/etl/commit/1a6eec01837f25cf1d6ff7c041996ff7b8b017e7) - **failing tests** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#64](https://github.com/flow-php/etl/pull/64) - **DateEntry** - [@norberttech](https://github.com/norberttech)
 - [#33](https://github.com/flow-php/etl/pull/33) - **Moved all json related features to etl-adapter-json** - [@norberttech](https://github.com/norberttech)
 - [#30](https://github.com/flow-php/etl/pull/30) - **Extracted memory into etl-adapter-memory** - [@norberttech](https://github.com/norberttech)
 - [#29](https://github.com/flow-php/etl/pull/29) - **TrimRowToContainOnly** - [@norberttech](https://github.com/norberttech)
