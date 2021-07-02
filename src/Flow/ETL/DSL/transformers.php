@@ -25,7 +25,8 @@ use Flow\ETL\Transformer\Filter\Filter\EntryNumber;
 use Flow\ETL\Transformer\Filter\Filter\Opposite;
 use Flow\ETL\Transformer\FilterRowsTransformer;
 use Flow\ETL\Transformer\KeepEntriesTransformer;
-use Flow\ETL\Transformer\RenameEntries\EntryRename;
+use Flow\ETL\Transformer\Rename\ArrayKeyRename;
+use Flow\ETL\Transformer\Rename\EntryRename;
 use Flow\ETL\Transformer\RenameEntriesTransformer;
 use Laminas\Hydrator\ReflectionHydrator;
 
@@ -248,6 +249,11 @@ function array_reverse(string $array_name) : Transformer
 function array_merge(array $array_names, string $column_name = 'column') : Transformer
 {
     return new Transformer\ArrayMergeTransformer($array_names, $column_name);
+}
+
+function array_rename_keys(string $array_column, string $path, string $new_name) : Transformer
+{
+    return new Transformer\ArrayDotRenameTransformer(new ArrayKeyRename($array_column, $path, $new_name));
 }
 
 function array_convert_keys(string $array_column, string $style) : Transformer

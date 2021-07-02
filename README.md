@@ -137,6 +137,8 @@ Each element of the DSL is a simple php function that can be combined together w
 * `array_sort(string $array_name, $sort_flag = \SORT_REGULAR)`
 * `array_reverse(string $array_name)`
 * `array_merge(array $array_names, string $column_name = 'column')`
+* `array_rename_keys(string $array_column, string $path, string $new_name)`
+* `array_convert_keys(string $array_column, string $style)`
 * `clone_column(string $from, string $to)`
 * `concat(array $stringColumns, string $glue = '', string $column_name = 'column')`
 * `chain(Transformer ...$transformers)`  
