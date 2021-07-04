@@ -524,12 +524,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl.git",
-                "reference": "4a9a6a3caf5614dd67b478b0fcbf8d744e32ba7a"
+                "reference": "e68b28cb779f91a81ab9ae85f88984552a9ad9dd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl/zipball/4a9a6a3caf5614dd67b478b0fcbf8d744e32ba7a",
-                "reference": "4a9a6a3caf5614dd67b478b0fcbf8d744e32ba7a",
+                "url": "https://api.github.com/repos/flow-php/etl/zipball/e68b28cb779f91a81ab9ae85f88984552a9ad9dd",
+                "reference": "e68b28cb779f91a81ab9ae85f88984552a9ad9dd",
                 "shasum": ""
             },
             "require": {
@@ -560,7 +560,7 @@
                 "issues": "https://github.com/flow-php/etl/issues",
                 "source": "https://github.com/flow-php/etl/tree/1.x"
             },
-            "time": "2021-06-30T19:47:17+00:00"
+            "time": "2021-07-04T18:24:21+00:00"
         },
         {
             "name": "flow-php/etl-adapter-csv",
@@ -727,12 +727,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl-adapter-http.git",
-                "reference": "9092275d3f06e7e0811d596f02c042b6e025ae1c"
+                "reference": "f2fdb09ba02ee7d10645a476b5921eaffced31a5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl-adapter-http/zipball/9092275d3f06e7e0811d596f02c042b6e025ae1c",
-                "reference": "9092275d3f06e7e0811d596f02c042b6e025ae1c",
+                "url": "https://api.github.com/repos/flow-php/etl-adapter-http/zipball/f2fdb09ba02ee7d10645a476b5921eaffced31a5",
+                "reference": "f2fdb09ba02ee7d10645a476b5921eaffced31a5",
                 "shasum": ""
             },
             "require": {
@@ -771,7 +771,7 @@
                 "issues": "https://github.com/flow-php/etl-adapter-http/issues",
                 "source": "https://github.com/flow-php/etl-adapter-http/tree/1.x"
             },
-            "time": "2021-06-21T17:31:20+00:00"
+            "time": "2021-07-04T08:12:22+00:00"
         },
         {
             "name": "flow-php/etl-adapter-json",
@@ -1016,12 +1016,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl-transformer.git",
-                "reference": "008de1df18c5ffd588102446e33696ed3caf9f9e"
+                "reference": "71527ada33ba64b4e0f53dd1e80451008a8c0f97"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl-transformer/zipball/008de1df18c5ffd588102446e33696ed3caf9f9e",
-                "reference": "008de1df18c5ffd588102446e33696ed3caf9f9e",
+                "url": "https://api.github.com/repos/flow-php/etl-transformer/zipball/71527ada33ba64b4e0f53dd1e80451008a8c0f97",
+                "reference": "71527ada33ba64b4e0f53dd1e80451008a8c0f97",
                 "shasum": ""
             },
             "require": {
@@ -1065,7 +1065,7 @@
                 "issues": "https://github.com/flow-php/etl-transformer/issues",
                 "source": "https://github.com/flow-php/etl-transformer/tree/1.x"
             },
-            "time": "2021-07-02T15:04:07+00:00"
+            "time": "2021-07-02T19:55:56+00:00"
         },
         {
             "name": "psr/http-client",
@@ -2002,5 +2002,5 @@
         "php": "^7.4 | ^8.0"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.0.0"
+    "plugin-api-version": "2.1.0"
 }

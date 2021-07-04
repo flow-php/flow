@@ -8,9 +8,7 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
 use Flow\ETL\Transformer;
 use Flow\ETL\Transformer\ArrayKeysCaseConverterTransformer;
-use Flow\ETL\Transformer\Cast\CastEntries;
 use Flow\ETL\Transformer\Cast\CastJsonToArray;
-use Flow\ETL\Transformer\Cast\CastToDate;
 use Flow\ETL\Transformer\Cast\CastToDateTime;
 use Flow\ETL\Transformer\Cast\CastToInteger;
 use Flow\ETL\Transformer\Cast\CastToJson;
@@ -118,34 +116,12 @@ function convert_name(string $style) : Transformer
 
 /**
  * @param string[] $columns
- * @param string $format
  * @param ?string $timezone
  * @param ?string $to_timezone
  */
-function to_datetime(array $columns, string $format = 'c', ?string $timezone = null, ?string $to_timezone = null) : Transformer
+function to_datetime(array $columns, ?string $timezone = null, ?string $to_timezone = null) : Transformer
 {
-    return new CastTransformer(CastToDateTime::nullable($columns, $format, $timezone, $to_timezone));
-}
-
-/**
- * @param string[] $columns
- * @param string $format
- * @param ?string $timezone
- * @param ?string $to_timezone
- */
-function to_datetime_cast(array $columns, string $format = 'c', ?string $timezone = null, ?string $to_timezone = null) : CastEntries
-{
-    return CastToDateTime::nullable($columns, $format, $timezone, $to_timezone);
-}
-
-function to_date(string ...$columns) : Transformer
-{
-    return new CastTransformer(CastToDate::nullable($columns));
-}
-
-function to_date_cast(string ...$columns) : CastEntries
-{
-    return CastToDate::nullable($columns);
+    return new CastTransformer(CastToDateTime::nullable($columns, $timezone, $to_timezone));
 }
 
 function to_integer(string ...$columns) : Transformer
@@ -153,19 +129,9 @@ function to_integer(string ...$columns) : Transformer
     return new CastTransformer(CastToInteger::nullable($columns));
 }
 
-function to_integer_cast(string ...$columns) : CastEntries
-{
-    return CastToInteger::nullable($columns);
-}
-
 function to_string(string ...$columns) : Transformer
 {
     return new CastTransformer(CastToString::nullable($columns));
-}
-
-function to_string_cast(string ...$columns) : CastEntries
-{
-    return CastToString::nullable($columns);
 }
 
 function to_json(string ...$columns) : Transformer
@@ -173,19 +139,9 @@ function to_json(string ...$columns) : Transformer
     return new CastTransformer(CastToJson::nullable($columns));
 }
 
-function to_json_cast(string ...$columns) : CastEntries
-{
-    return CastToJson::nullable($columns);
-}
-
 function to_array_from_json(string ...$columns) : Transformer
 {
     return new CastTransformer(CastJsonToArray::nullable($columns));
-}
-
-function to_array_from_json_cast(string ...$columns) : CastEntries
-{
-    return CastJsonToArray::nullable($columns);
 }
 
 function to_null_from_null_string(string ...$columns) : Transformer
@@ -296,14 +252,9 @@ function add_float(string $name, float $value) : Transformer
     return new Transformer\StaticEntryTransformer(new Row\Entry\FloatEntry($name, $value));
 }
 
-function add_date(string $name, string $value) : Transformer
+function add_datetime(string $name, string $value) : Transformer
 {
-    return new Transformer\StaticEntryTransformer(new Row\Entry\DateEntry($name, new \DateTimeImmutable($value)));
-}
-
-function add_datetime(string $name, string $value, string $format = \DateTimeImmutable::ATOM) : Transformer
-{
-    return new Transformer\StaticEntryTransformer(new Row\Entry\DateTimeEntry($name, new \DateTimeImmutable($value), $format));
+    return new Transformer\StaticEntryTransformer(new Row\Entry\DateTimeEntry($name, new \DateTimeImmutable($value)));
 }
 
 /**
