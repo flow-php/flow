@@ -12,8 +12,6 @@ use Flow\ETL\Row\Entry;
  */
 final class NullEntry implements Entry
 {
-    private string $key;
-
     private string $name;
 
     /**
@@ -25,7 +23,6 @@ final class NullEntry implements Entry
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        $this->key = \mb_strtolower($name);
         $this->name = $name;
     }
 
@@ -41,7 +38,7 @@ final class NullEntry implements Entry
 
     public function is(string $name) : bool
     {
-        return $this->key === \mb_strtolower($name);
+        return \mb_strtolower($this->name) === \mb_strtolower($name);
     }
 
     /**

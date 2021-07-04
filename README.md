@@ -36,16 +36,18 @@ This is a perfect scenario for ETL.
 
 * [ArrayEntry](src/Flow/ETL/Row/Entry/ArrayEntry.php)
 * [BooleanEntry](src/Flow/ETL/Row/Entry/BooleanEntry.php)
-* [FloatEntry](src/Flow/ETL/Row/Entry/FloatEntry.php)
+* [CollectionEntry](src/Flow/ETL/Row/Entry/CollectionEntry.php)
 * [DateTimeEntry](src/Flow/ETL/Row/Entry/DateTimeEntry.php)
+* [FloatEntry](src/Flow/ETL/Row/Entry/FloatEntry.php)
 * [IntegerEntry](src/Flow/ETL/Row/Entry/IntegerEntry.php)
 * [NullEntry](src/Flow/ETL/Row/Entry/NullEntry.php)
 * [ObjectEntryEntry](src/Flow/ETL/Row/Entry/ObjectEntry.php)
 * [StringEntry](src/Flow/ETL/Row/Entry/StringEntry.php)
+* [StructureEntry](src/Flow/ETL/Row/Entry/StructureEntry.php)
 
 ## Extensions  
 
-Extensions provides generic, not really related to any specific data source/storage transformers/loaders. 
+Extension provides generic, not really related to any specific data source/storage transformers/loaders. 
 
 <table style="text-align:center">
 <thead>
@@ -71,7 +73,7 @@ Extensions provides generic, not really related to any specific data source/stor
 
 ## Adapters
 
-Adapters connects ETL with existing data sources/storages and including some times custom 
+Adapter connects ETL with existing data sources/storages and including some times custom 
 data entries. 
 
 <table style="text-align:center">

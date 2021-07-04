@@ -6,25 +6,24 @@ namespace Flow\ETL\Row\Entry;
 
 use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry;
 
 /**
  * @psalm-immutable
  */
-final class CollectionEntry implements Entry
+final class StructureEntry implements Entry
 {
     private string $name;
 
     /**
-     * @var Entries[]
+     * @var Entry[]
      */
     private array $entries;
 
     /**
      * @throws InvalidArgumentException
      */
-    public function __construct(string $name, Entries ...$entries)
+    public function __construct(string $name, Entry ...$entries)
     {
         if (!\strlen($name)) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
@@ -44,7 +43,7 @@ final class CollectionEntry implements Entry
      */
     public function value() : array
     {
-        return \array_map(fn (Entries $entries) : array => $entries->toArray(), $this->entries);
+        return \array_map(fn (Entry $entry) => [$entry->name() => $entry->value()], $this->entries);
     }
 
     /**
@@ -52,7 +51,7 @@ final class CollectionEntry implements Entry
      */
     public function is(string $name) : bool
     {
-        return \mb_strtolower($name) === \mb_strtolower($name);
+        return \mb_strtolower($this->name) === \mb_strtolower($name);
     }
 
     /**

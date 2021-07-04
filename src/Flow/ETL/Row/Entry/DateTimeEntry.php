@@ -12,8 +12,6 @@ use Flow\ETL\Row\Entry;
  */
 final class DateTimeEntry implements Entry
 {
-    private string $key;
-
     private string $name;
 
     private \DateTimeInterface $value;
@@ -27,7 +25,6 @@ final class DateTimeEntry implements Entry
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        $this->key = \mb_strtolower($name);
         $this->name = $name;
         $this->value = $value;
     }
@@ -44,7 +41,7 @@ final class DateTimeEntry implements Entry
 
     public function is(string $name) : bool
     {
-        return $this->key === \mb_strtolower($name);
+        return \mb_strtolower($this->name) === \mb_strtolower($name);
     }
 
     public function rename(string $name) : Entry

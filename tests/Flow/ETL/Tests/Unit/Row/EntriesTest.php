@@ -7,11 +7,11 @@ namespace Flow\ETL\Tests\Unit\Row;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry\BooleanEntry;
-use Flow\ETL\Row\Entry\CollectionEntry;
 use Flow\ETL\Row\Entry\DateTimeEntry;
 use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Row\Entry\NullEntry;
 use Flow\ETL\Row\Entry\StringEntry;
+use Flow\ETL\Row\Entry\StructureEntry;
 use PHPUnit\Framework\TestCase;
 
 final class EntriesTest extends TestCase
@@ -116,11 +116,14 @@ final class EntriesTest extends TestCase
             new BooleanEntry('deleted', false),
             new DateTimeEntry('created-at', $createdAt = new \DateTimeImmutable('2020-07-13 15:00')),
             new NullEntry('phase'),
-            new CollectionEntry(
+            new StructureEntry(
                 'items',
-                new Entries(new IntegerEntry('item-id', 1), new StringEntry('name', 'one')),
-                new Entries(new IntegerEntry('item-id', 2), new StringEntry('name', 'two')),
-                new Entries(new IntegerEntry('item-id', 3), new StringEntry('name', 'three'))
+                new IntegerEntry('item-id', 1),
+                new StringEntry('name', 'one'),
+                new IntegerEntry('item-id', 2),
+                new StringEntry('name', 'two'),
+                new IntegerEntry('item-id', 3),
+                new StringEntry('name', 'three')
             )
         );
 
@@ -131,9 +134,12 @@ final class EntriesTest extends TestCase
                 'created-at' => $createdAt,
                 'phase' => null,
                 'items' => [
-                    ['item-id' => 1, 'name' => 'one'],
-                    ['item-id' => 2, 'name' => 'two'],
-                    ['item-id' => 3, 'name' => 'three'],
+                    ['item-id' => 1],
+                    ['name' => 'one'],
+                    ['item-id' => 2],
+                    ['name' => 'two'],
+                    ['item-id' => 3],
+                    ['name' => 'three'],
                 ],
             ],
             $entries->toArray()
@@ -147,11 +153,14 @@ final class EntriesTest extends TestCase
             $deleted = new BooleanEntry('deleted', false),
             $createdAt = new DateTimeEntry('created-at', new \DateTimeImmutable('2020-07-13 15:00')),
             $phase = new NullEntry('phase'),
-            $items = new CollectionEntry(
+            $items = new StructureEntry(
                 'items',
-                new Entries(new IntegerEntry('item-id', 1), new StringEntry('name', 'one')),
-                new Entries(new IntegerEntry('item-id', 2), new StringEntry('name', 'two')),
-                new Entries(new IntegerEntry('item-id', 3), new StringEntry('name', 'three'))
+                new IntegerEntry('item-id', 1),
+                new StringEntry('name', 'one'),
+                new IntegerEntry('item-id', 2),
+                new StringEntry('name', 'two'),
+                new IntegerEntry('item-id', 3),
+                new StringEntry('name', 'three')
             )
         );
 
@@ -162,11 +171,14 @@ final class EntriesTest extends TestCase
                 $createdAt = new DateTimeEntry('created-at', new \DateTimeImmutable('2020-07-13 15:00')),
                 $deleted = new BooleanEntry('deleted', false),
                 $id = new IntegerEntry('id', 1234),
-                $items = new CollectionEntry(
+                $items = new StructureEntry(
                     'items',
-                    new Entries(new IntegerEntry('item-id', 1), new StringEntry('name', 'one')),
-                    new Entries(new IntegerEntry('item-id', 2), new StringEntry('name', 'two')),
-                    new Entries(new IntegerEntry('item-id', 3), new StringEntry('name', 'three'))
+                    new IntegerEntry('item-id', 1),
+                    new StringEntry('name', 'one'),
+                    new IntegerEntry('item-id', 2),
+                    new StringEntry('name', 'two'),
+                    new IntegerEntry('item-id', 3),
+                    new StringEntry('name', 'three')
                 ),
                 $phase = new NullEntry('phase')
             ),

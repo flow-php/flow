@@ -12,8 +12,6 @@ use Flow\ETL\Row\Entry;
  */
 final class FloatEntry implements Entry
 {
-    private string $key;
-
     private string $name;
 
     private float $value;
@@ -29,7 +27,6 @@ final class FloatEntry implements Entry
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        $this->key = \mb_strtolower($name);
         $this->name = $name;
         $this->value = $value;
         $this->precision = $precision;
@@ -59,7 +56,7 @@ final class FloatEntry implements Entry
 
     public function is(string $name) : bool
     {
-        return $this->key === \mb_strtolower($name);
+        return \mb_strtolower($this->name) === \mb_strtolower($name);
     }
 
     /**

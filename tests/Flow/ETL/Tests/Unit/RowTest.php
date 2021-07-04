@@ -8,11 +8,11 @@ use Flow\ETL\Row;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry\ArrayEntry;
 use Flow\ETL\Row\Entry\BooleanEntry;
-use Flow\ETL\Row\Entry\CollectionEntry;
 use Flow\ETL\Row\Entry\DateTimeEntry;
 use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Row\Entry\NullEntry;
 use Flow\ETL\Row\Entry\StringEntry;
+use Flow\ETL\Row\Entry\StructureEntry;
 use PHPUnit\Framework\TestCase;
 
 final class RowTest extends TestCase
@@ -41,11 +41,14 @@ final class RowTest extends TestCase
             new BooleanEntry('deleted', false),
             new DateTimeEntry('created-at', $createdAt = new \DateTimeImmutable('2020-07-13 15:00')),
             new NullEntry('phase'),
-            new CollectionEntry(
+            new StructureEntry(
                 'items',
-                new Entries(new IntegerEntry('item-id', 1), new StringEntry('name', 'one')),
-                new Entries(new IntegerEntry('item-id', 2), new StringEntry('name', 'two')),
-                new Entries(new IntegerEntry('item-id', 3), new StringEntry('name', 'three'))
+                new IntegerEntry('item-id', 1),
+                new StringEntry('name', 'one'),
+                new IntegerEntry('item-id', 2),
+                new StringEntry('name', 'two'),
+                new IntegerEntry('item-id', 3),
+                new StringEntry('name', 'three')
             )
         );
 
@@ -56,9 +59,9 @@ final class RowTest extends TestCase
                 'created-at' => $createdAt,
                 'phase' => null,
                 'items' => [
-                    ['item-id' => 1, 'name' => 'one'],
-                    ['item-id' => 2, 'name' => 'two'],
-                    ['item-id' => 3, 'name' => 'three'],
+                    ['item-id' => 1], ['name' => 'one'],
+                    ['item-id' => 2], ['name' => 'two'],
+                    ['item-id' => 3], ['name' => 'three'],
                 ],
             ],
             $row->toArray(),
@@ -97,13 +100,13 @@ final class RowTest extends TestCase
         ];
         yield 'simple same collection entries' => [
             true,
-            new Row(new Entries(new CollectionEntry('json', new Entries(new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3))))),
-            new Row(new Entries(new CollectionEntry('json', new Entries(new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3))))),
+            new Row(new Entries(new StructureEntry('json', new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3)))),
+            new Row(new Entries(new StructureEntry('json', new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3)))),
         ];
         yield 'simple different collection entries' => [
             false,
-            new Row(new Entries(new CollectionEntry('json', new Entries(new IntegerEntry('5', 5), new IntegerEntry('2', 2), new IntegerEntry('3', 3))))),
-            new Row(new Entries(new CollectionEntry('json', new Entries(new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3))))),
+            new Row(new Entries(new StructureEntry('json', new IntegerEntry('5', 5), new IntegerEntry('2', 2), new IntegerEntry('3', 3)))),
+            new Row(new Entries(new StructureEntry('json', new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3)))),
         ];
     }
 }
