@@ -1,6 +1,7 @@
-## [Unreleased] - 2021-07-02
+## [Unreleased] - 2021-07-04
 
 ### Added
+- [#65](https://github.com/flow-php/etl/pull/65) - **StructureEntry** - [@norberttech](https://github.com/norberttech)
 - [#64](https://github.com/flow-php/etl/pull/64) - **Added StringEntry::fromDateTime** - [@norberttech](https://github.com/norberttech)
 - [#62](https://github.com/flow-php/etl/pull/62) - **Error handling mechanism** - [@norberttech](https://github.com/norberttech)
 - [#50](https://github.com/flow-php/etl/pull/50) - **Rows::isLast()** - [@norberttech](https://github.com/norberttech)
