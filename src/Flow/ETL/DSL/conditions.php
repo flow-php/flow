@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\DSL\Factory;
 
+use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Transformer\Condition;
 use Flow\ETL\Transformer\Condition\RowCondition;
+use Symfony\Component\Validator\Constraint;
 
 function all(RowCondition ...$conditions) : RowCondition
 {
@@ -122,6 +124,15 @@ function is_null(string $column) : RowCondition
 function is_not_null(string $column) : RowCondition
 {
     return new Condition\EntryNotNull($column);
+}
+
+function is_valid(string $column, Constraint ...$constraints) : RowCondition
+{
+    if (!\class_exists('Symfony\Component\Validator\Validation')) {
+        throw new RuntimeException("Symfony\Component\Validator\Validation class not found, please add symfony/validator dependency to the project first.");
+    }
+
+    return new Condition\ValidValue($column, new Condition\ValidValue\SymfonyValidator($constraints));
 }
 
 /**

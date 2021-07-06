@@ -13,6 +13,8 @@ use Flow\ETL\Transformer\Cast\CastToDateTime;
 use Flow\ETL\Transformer\Cast\CastToInteger;
 use Flow\ETL\Transformer\Cast\CastToJson;
 use Flow\ETL\Transformer\Cast\CastToString;
+use Flow\ETL\Transformer\Cast\EntryCaster\DateTimeToStringEntryCaster;
+use Flow\ETL\Transformer\Cast\EntryCaster\StringToDateTimeEntryCaster;
 use Flow\ETL\Transformer\CastTransformer;
 use Flow\ETL\Transformer\EntryNameCaseConverterTransformer;
 use Flow\ETL\Transformer\Filter\Filter\Callback;
@@ -21,12 +23,14 @@ use Flow\ETL\Transformer\Filter\Filter\EntryExists;
 use Flow\ETL\Transformer\Filter\Filter\EntryNotNull;
 use Flow\ETL\Transformer\Filter\Filter\EntryNumber;
 use Flow\ETL\Transformer\Filter\Filter\Opposite;
+use Flow\ETL\Transformer\Filter\Filter\ValidValue;
 use Flow\ETL\Transformer\FilterRowsTransformer;
 use Flow\ETL\Transformer\KeepEntriesTransformer;
 use Flow\ETL\Transformer\Rename\ArrayKeyRename;
 use Flow\ETL\Transformer\Rename\EntryRename;
 use Flow\ETL\Transformer\RenameEntriesTransformer;
 use Laminas\Hydrator\ReflectionHydrator;
+use Symfony\Component\Validator\Constraint;
 
 /**
  * @param string $column
@@ -85,6 +89,16 @@ function filter_not_number(string $column) : Transformer
     return new FilterRowsTransformer(new Opposite(new EntryNumber($column)));
 }
 
+function filter_invalid(string $column, Constraint ...$constraints) : Transformer
+{
+    return new FilterRowsTransformer(new ValidValue($column, new ValidValue\SymfonyValidator($constraints)));
+}
+
+function filter_valid(string $column, Constraint ...$constraints) : Transformer
+{
+    return new FilterRowsTransformer(new Opposite(new ValidValue($column, new ValidValue\SymfonyValidator($constraints))));
+}
+
 function keep(string ...$columns) : Transformer
 {
     return new KeepEntriesTransformer(...$columns);
@@ -132,6 +146,25 @@ function to_integer(string ...$columns) : Transformer
 function to_string(string ...$columns) : Transformer
 {
     return new CastTransformer(CastToString::nullable($columns));
+}
+
+/**
+ * @param array<string> $columns
+ * @param string $format
+ */
+function to_string_from_datetime(array $columns, string $format) : Transformer
+{
+    return new CastTransformer(new Transformer\Cast\CastEntries($columns, new DateTimeToStringEntryCaster($format), true));
+}
+
+/**
+ * @param array<string> $columns
+ * @param null|string $tz
+ * @param null|string $toTz
+ */
+function to_datetime_from_string(array $columns, ?string $tz = null, ?string $toTz = null) : Transformer
+{
+    return new CastTransformer(new Transformer\Cast\CastEntries($columns, new StringToDateTimeEntryCaster($tz, $toTz), true));
 }
 
 function to_json(string ...$columns) : Transformer

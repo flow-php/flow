@@ -33,7 +33,8 @@
         "halaxa/json-machine": "^0.7.0",
         "jawira/case-converter": "^3.4",
         "laminas/laminas-hydrator": "^4.1",
-        "league/csv": "^9.7"
+        "league/csv": "^9.7",
+        "symfony/validator": "^5.3"
     },
     "suggest": {
         "halaxa/json-machine" : "Required in order to use extractJSON()",
@@ -58,6 +59,7 @@
         "files": [
             "src/Flow/ETL/DSL/columns.php",
             "src/Flow/ETL/DSL/conditions.php",
+            "src/Flow/ETL/DSL/error_handlers.php",
             "src/Flow/ETL/DSL/extractors.php",
             "src/Flow/ETL/DSL/factories.php",
             "src/Flow/ETL/DSL/transformers.php",

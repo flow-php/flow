@@ -12,9 +12,12 @@ composer require flow-php/flow
 ```php
 <?php
 
-use function Flow\ETL\DSL\Transformer\{convert_name, filter_equals, keep, to_datetime, to_json};
+use Symfony\Component\Validator\Constraints\NotBlank;
+use function Flow\ETL\DSL\Transformer\{convert_name, filter_equals, filter_valid, keep, to_datetime, to_json, to_string_from_datetime};
 use function Flow\ETL\DSL\Extractor\{extract_from_array};
+use function Flow\ETL\DSL\ErrorHandler\skip_rows;
 use function Flow\ETL\DSL\Loader\{to_csv};
+
 
 $data = [
     [
@@ -41,11 +44,14 @@ $data = [
 ];
 
 extract_from_array($data)
+    ->onError(skip_rows())
     ->transform(filter_equals('status', 'premium'))
     ->transform(convert_name('snake'))
     ->transform(keep('id', 'name', 'updated_at', 'properties'))
-    ->transform(to_datetime(['updated_at'], 'Y-m-d H:i:s', 'UTC'))
+    ->transform(to_datetime(['updated_at'], 'UTC', 'America/Los_Angeles'))
+    ->transform(to_string_from_datetime(['updated_at'], 'Y-m-d H:i:s'))
     ->transform(to_json('properties'))
+    ->transform(filter_valid('name', new NotBlank()))
     ->load(to_csv(__DIR__ . '/premium_users.csv'))
     ->run();
 ```
@@ -87,6 +93,7 @@ Each element of the DSL is a simple php function that can be combined together w
 * `is_object(string $column)`
 * `is_null(string $column)`
 * `is_not_null(string $column)`
+* `is_valid(string $column, Constraint ...$constraints)`
 * `value_equals(string $column, $value, bool $identical = true)`
 * `value_greater_or_equal(string $column, $value)`
 * `value_greater(string $column, $value)`
@@ -153,6 +160,8 @@ Each element of the DSL is a simple php function that can be combined together w
 * `filter_not_null(string $column)`
 * `filter_number(string $column)`
 * `filter_not_number(string $column)`
+* `filter_invalid(string $column, Constraint ...$constraints)`
+* `filter_valid(string $column, Constraint ...$constraints)`
 * `keep(string ...$columns)`
 * `object_method(string $object_name, string $method, string $column_name = 'column', array $parameters = [])`
 * `remove(string ...$columns)`
