@@ -1,4 +1,4 @@
-## [Unreleased] - 2021-07-05
+## [Unreleased] - 2021-07-12
 
 ### Added
 - [#65](https://github.com/flow-php/etl/pull/65) - **StructureEntry** - [@norberttech](https://github.com/norberttech)
