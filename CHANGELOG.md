@@ -1,11 +1,16 @@
-## [Unreleased] - 2021-07-12
+## [Unreleased] - 2021-07-15
 
 ### Added
+- [#68](https://github.com/flow-php/etl/pull/68) - **Rows::take(int $size) : self** - [@norberttech](https://github.com/norberttech)
+- [#68](https://github.com/flow-php/etl/pull/68) - **Rows::takeRight(int $size) : self** - [@norberttech](https://github.com/norberttech)
+- [#68](https://github.com/flow-php/etl/pull/68) - **Rows::drop(int $size) : self** - [@norberttech](https://github.com/norberttech)
+- [#68](https://github.com/flow-php/etl/pull/68) - **Rows::dropRight(int $size) : self** - [@norberttech](https://github.com/norberttech)
+- [#68](https://github.com/flow-php/etl/pull/68) - **Rows::reverse() : self** - [@norberttech](https://github.com/norberttech)
 - [#65](https://github.com/flow-php/etl/pull/65) - **StructureEntry** - [@norberttech](https://github.com/norberttech)
 - [#64](https://github.com/flow-php/etl/pull/64) - **Added StringEntry::fromDateTime** - [@norberttech](https://github.com/norberttech)
 - [#62](https://github.com/flow-php/etl/pull/62) - **Error handling mechanism** - [@norberttech](https://github.com/norberttech)
-- [#50](https://github.com/flow-php/etl/pull/50) - **Rows::isLast()** - [@norberttech](https://github.com/norberttech)
 - [#50](https://github.com/flow-php/etl/pull/50) - **Rows::isFirst()** - [@norberttech](https://github.com/norberttech)
+- [#50](https://github.com/flow-php/etl/pull/50) - **Rows::isLast()** - [@norberttech](https://github.com/norberttech)
 - [#49](https://github.com/flow-php/etl/pull/49) - **Rows implements interfaces \ArrayAccess, \Countable, \IteratorAggregate** - [@norberttech](https://github.com/norberttech)
 - [#49](https://github.com/flow-php/etl/pull/49) - **Enties implements interfaces \ArrayAccess, \Countable, \IteratorAggregate** - [@norberttech](https://github.com/norberttech)
 - [#46](https://github.com/flow-php/etl/pull/46) - **Rows::flatMap() : self** - [@norberttech](https://github.com/norberttech)
