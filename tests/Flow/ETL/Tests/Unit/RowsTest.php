@@ -428,4 +428,194 @@ final class RowsTest extends TestCase
         $this->assertSame(1, $rows[0]->valueOf('id'));
         $this->assertSame(3, $rows[1]->valueOf('id'));
     }
+
+    public function test_drop() : void
+    {
+        $rows = new Rows(
+            Row::create(new IntegerEntry('id', 1)),
+            Row::create(new IntegerEntry('id', 2)),
+            Row::create(new IntegerEntry('id', 3)),
+        );
+
+        $rows = $rows->drop(1);
+
+        $this->assertCount(2, $rows);
+        $this->assertSame(2, $rows[0]->valueOf('id'));
+        $this->assertSame(3, $rows[1]->valueOf('id'));
+    }
+
+    public function test_drop_all() : void
+    {
+        $rows = new Rows(
+            Row::create(new IntegerEntry('id', 1)),
+            Row::create(new IntegerEntry('id', 2)),
+            Row::create(new IntegerEntry('id', 3)),
+        );
+
+        $rows = $rows->drop(3);
+
+        $this->assertCount(0, $rows);
+    }
+
+    public function test_drop_more_than_exists() : void
+    {
+        $rows = new Rows(
+            Row::create(new IntegerEntry('id', 1)),
+            Row::create(new IntegerEntry('id', 2)),
+            Row::create(new IntegerEntry('id', 3)),
+        );
+
+        $rows = $rows->drop(4);
+
+        $this->assertCount(0, $rows);
+    }
+
+    public function test_drop_right() : void
+    {
+        $rows = new Rows(
+            Row::create(new IntegerEntry('id', 1)),
+            Row::create(new IntegerEntry('id', 2)),
+            Row::create(new IntegerEntry('id', 3)),
+        );
+
+        $rows = $rows->dropRight(1);
+
+        $this->assertCount(2, $rows);
+        $this->assertSame(1, $rows[0]->valueOf('id'));
+        $this->assertSame(2, $rows[1]->valueOf('id'));
+    }
+
+    public function test_drop_right_all() : void
+    {
+        $rows = new Rows(
+            Row::create(new IntegerEntry('id', 1)),
+            Row::create(new IntegerEntry('id', 2)),
+            Row::create(new IntegerEntry('id', 3)),
+        );
+
+        $rows = $rows->dropRight(3);
+
+        $this->assertCount(0, $rows);
+    }
+
+    public function test_drop_right_more_than_exists() : void
+    {
+        $rows = new Rows(
+            Row::create(new IntegerEntry('id', 1)),
+            Row::create(new IntegerEntry('id', 2)),
+            Row::create(new IntegerEntry('id', 3)),
+        );
+
+        $rows = $rows->dropRight(4);
+
+        $this->assertCount(0, $rows);
+    }
+
+    public function test_take() : void
+    {
+        $rows = new Rows(
+            Row::create(new IntegerEntry('id', 1)),
+            Row::create(new IntegerEntry('id', 2)),
+            Row::create(new IntegerEntry('id', 3)),
+        );
+
+        $rows = $rows->take(1);
+
+        $this->assertCount(1, $rows);
+        $this->assertSame(1, $rows[0]->valueOf('id'));
+    }
+
+    public function test_take_all() : void
+    {
+        $rows = new Rows(
+            Row::create(new IntegerEntry('id', 1)),
+            Row::create(new IntegerEntry('id', 2)),
+            Row::create(new IntegerEntry('id', 3)),
+        );
+
+        $rows = $rows->take(3);
+
+        $this->assertCount(3, $rows);
+        $this->assertSame(1, $rows[0]->valueOf('id'));
+        $this->assertSame(2, $rows[1]->valueOf('id'));
+        $this->assertSame(3, $rows[2]->valueOf('id'));
+    }
+
+    public function test_take_more_than_exists() : void
+    {
+        $rows = new Rows(
+            Row::create(new IntegerEntry('id', 1)),
+            Row::create(new IntegerEntry('id', 2)),
+            Row::create(new IntegerEntry('id', 3)),
+        );
+
+        $rows = $rows->take(4);
+
+        $this->assertCount(3, $rows);
+        $this->assertSame(1, $rows[0]->valueOf('id'));
+        $this->assertSame(2, $rows[1]->valueOf('id'));
+        $this->assertSame(3, $rows[2]->valueOf('id'));
+    }
+
+    public function test_take_right() : void
+    {
+        $rows = new Rows(
+            Row::create(new IntegerEntry('id', 1)),
+            Row::create(new IntegerEntry('id', 2)),
+            Row::create(new IntegerEntry('id', 3)),
+        );
+
+        $rows = $rows->takeRight(1);
+
+        $this->assertCount(1, $rows);
+        $this->assertSame(3, $rows[0]->valueOf('id'));
+    }
+
+    public function test_take_right_all() : void
+    {
+        $rows = new Rows(
+            Row::create(new IntegerEntry('id', 1)),
+            Row::create(new IntegerEntry('id', 2)),
+            Row::create(new IntegerEntry('id', 3)),
+        );
+
+        $rows = $rows->takeRight(3);
+
+        $this->assertCount(3, $rows);
+        $this->assertSame(3, $rows[0]->valueOf('id'));
+        $this->assertSame(2, $rows[1]->valueOf('id'));
+        $this->assertSame(1, $rows[2]->valueOf('id'));
+    }
+
+    public function test_take_right_more_than_exists() : void
+    {
+        $rows = new Rows(
+            Row::create(new IntegerEntry('id', 1)),
+            Row::create(new IntegerEntry('id', 2)),
+            Row::create(new IntegerEntry('id', 3)),
+        );
+
+        $rows = $rows->takeRight(4);
+
+        $this->assertCount(3, $rows);
+        $this->assertSame(3, $rows[0]->valueOf('id'));
+        $this->assertSame(2, $rows[1]->valueOf('id'));
+        $this->assertSame(1, $rows[2]->valueOf('id'));
+    }
+
+    public function test_reverse() : void
+    {
+        $rows = new Rows(
+            Row::create(new IntegerEntry('id', 1)),
+            Row::create(new IntegerEntry('id', 2)),
+            Row::create(new IntegerEntry('id', 3)),
+        );
+
+        $rows = $rows->reverse();
+
+        $this->assertCount(3, $rows);
+        $this->assertSame(3, $rows[0]->valueOf('id'));
+        $this->assertSame(2, $rows[1]->valueOf('id'));
+        $this->assertSame(1, $rows[2]->valueOf('id'));
+    }
 }

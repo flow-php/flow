@@ -392,4 +392,75 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
 
         return new self(...$uniqueRows);
     }
+
+    public function drop(int $size) : self
+    {
+        $rows = $this->rows;
+
+        for ($i = 0; $i < $size; $i++) {
+            \array_shift($rows);
+        }
+
+        $newRows = new self(...$rows);
+        $newRows->first = $this->first;
+        $newRows->last = $this->last;
+
+        return $newRows;
+    }
+
+    public function take(int $size) : self
+    {
+        $rows = $this->rows;
+        $newRows = [];
+
+        for ($i = 0; $i < $size; $i++) {
+            $newRows[] = \array_shift($rows);
+        }
+
+        $newRows = new self(...\array_filter($newRows));
+        $newRows->first = $this->first;
+        $newRows->last = $this->last;
+
+        return $newRows;
+    }
+
+    public function dropRight(int $size) : self
+    {
+        $rows = $this->rows;
+
+        for ($i = 0; $i < $size; $i++) {
+            \array_pop($rows);
+        }
+
+        $newRows = new self(...$rows);
+        $newRows->first = $this->first;
+        $newRows->last = $this->last;
+
+        return $newRows;
+    }
+
+    public function takeRight(int $size) : self
+    {
+        $rows = $this->rows;
+        $newRows = [];
+
+        for ($i = 0; $i < $size; $i++) {
+            $newRows[] = \array_pop($rows);
+        }
+
+        $newRows = new self(...\array_filter($newRows));
+        $newRows->first = $this->first;
+        $newRows->last = $this->last;
+
+        return $newRows;
+    }
+
+    public function reverse() : self
+    {
+        $newRows = new self(...\array_reverse($this->rows));
+        $newRows->first = $this->first;
+        $newRows->last = $this->last;
+
+        return $newRows;
+    }
 }
