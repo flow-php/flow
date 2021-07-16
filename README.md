@@ -182,3 +182,5 @@ Each element of the DSL is a simple php function that can be combined together w
 * `to_array_from_object(string $column)`
 * `transform_if(RowCondition $condition, Transformer $transformer)`
 * `unpack(string $array_column, string $column_prefix = '', array $skip_keys = [])`
+* `upper(string ...$columns)`
+* `lower(string ...$columns)`

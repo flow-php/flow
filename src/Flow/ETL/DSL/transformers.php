@@ -7,7 +7,7 @@ namespace Flow\ETL\DSL\Transformer;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
 use Flow\ETL\Transformer;
-use Flow\ETL\Transformer\ArrayKeysCaseConverterTransformer;
+use Flow\ETL\Transformer\ArrayKeysStyleConverterTransformer;
 use Flow\ETL\Transformer\Cast\CastJsonToArray;
 use Flow\ETL\Transformer\Cast\CastToDateTime;
 use Flow\ETL\Transformer\Cast\CastToInteger;
@@ -16,7 +16,7 @@ use Flow\ETL\Transformer\Cast\CastToString;
 use Flow\ETL\Transformer\Cast\EntryCaster\DateTimeToStringEntryCaster;
 use Flow\ETL\Transformer\Cast\EntryCaster\StringToDateTimeEntryCaster;
 use Flow\ETL\Transformer\CastTransformer;
-use Flow\ETL\Transformer\EntryNameCaseConverterTransformer;
+use Flow\ETL\Transformer\EntryNameStyleConverterTransformer;
 use Flow\ETL\Transformer\Filter\Filter\Callback;
 use Flow\ETL\Transformer\Filter\Filter\EntryEqualsTo;
 use Flow\ETL\Transformer\Filter\Filter\EntryExists;
@@ -125,7 +125,7 @@ function convert_name(string $style) : Transformer
         throw new RuntimeException("Jawira\CaseConverter\Convert class not found, please require using 'composer require jawira/case-converter'");
     }
 
-    return new EntryNameCaseConverterTransformer($style);
+    return new EntryNameStyleConverterTransformer($style);
 }
 
 /**
@@ -191,6 +191,16 @@ function to_array_from_object(string $column) : Transformer
     return new Transformer\ObjectToArrayTransformer(new ReflectionHydrator(), $column);
 }
 
+function upper(string ...$columns) : Transformer
+{
+    return Transformer\StringEntryValueCaseConverterTransformer::upper(...$columns);
+}
+
+function lower(string ...$columns) : Transformer
+{
+    return Transformer\StringEntryValueCaseConverterTransformer::lower(...$columns);
+}
+
 function expand(string $array_column, string $expanded_name = 'column') : Transformer
 {
     return new Transformer\ArrayExpandTransformer($array_column, $expanded_name);
@@ -251,7 +261,7 @@ function array_convert_keys(string $array_column, string $style) : Transformer
         throw new RuntimeException("Jawira\CaseConverter\Convert class not found, please require using 'composer require jawira/case-converter'");
     }
 
-    return new ArrayKeysCaseConverterTransformer($array_column, $style);
+    return new ArrayKeysStyleConverterTransformer($array_column, $style);
 }
 
 /**
