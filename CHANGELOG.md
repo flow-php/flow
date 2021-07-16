@@ -1,6 +1,7 @@
-## [Unreleased] - 2021-07-12
+## [Unreleased] - 2021-07-16
 
 ### Added
+- [#6](https://github.com/flow-php/flow/pull/6) - **Added new functions: upper and lower** - [@DawidSajdak](https://github.com/DawidSajdak)
 - [#3](https://github.com/flow-php/flow/pull/3) - **Add array_rename_keys method** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#2](https://github.com/flow-php/flow/pull/2) - **PHPStan and Psalm** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [6e377d](https://github.com/flow-php/flow/commit/6e377db63d1fc5517fce294851f76797ea96c520) - **missing array_ transformers** - [@norberttech](https://github.com/norberttech)
