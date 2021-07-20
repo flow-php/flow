@@ -1,4 +1,4 @@
-## [Unreleased] - 2021-07-19
+## [Unreleased] - 2021-07-20
 
 ### Added
 - [#13](https://github.com/flow-php/etl-adapter-xml/pull/13) - **memory safe XMLReaderExtractor** - [@norberttech](https://github.com/norberttech)
