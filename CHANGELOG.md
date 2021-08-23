@@ -1,4 +1,4 @@
-## [Unreleased] - 2021-08-17
+## [Unreleased] - 2021-08-23
 
 ### Added
 - [#68](https://github.com/flow-php/etl/pull/68) - **Rows::take(int $size) : self** - [@norberttech](https://github.com/norberttech)
