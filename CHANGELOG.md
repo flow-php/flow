@@ -10,6 +10,7 @@
 - [77c2f3](https://github.com/flow-php/etl-adapter-http/commit/77c2f356ce969ff3e6040c8cd8aed7e155b6ecf3) - **Initial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#31](https://github.com/flow-php/etl-adapter-http/pull/31) - **Use content type header for a request  entires factory** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#8](https://github.com/flow-php/etl-adapter-http/pull/8) - **seek(0) streams after and before reading them** - [@norberttech](https://github.com/norberttech)
 - [#7](https://github.com/flow-php/etl-adapter-http/pull/7) - **Setting up response body** - [@jpiatko](https://github.com/jpiatko)
 
