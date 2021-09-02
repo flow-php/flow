@@ -27,12 +27,21 @@ final class RequestEntriesFactory
     {
         $requestType = 'html';
 
-        foreach ($request->getHeader('Accept') as $header) {
-            if (\strpos('application/json', $header) !== false) {
-                $requestType = 'json';
+        if ($request->hasHeader('Content-Type')) {
+            foreach ($request->getHeader('Content-Type') as $header) {
+                if (\strpos('application/json', $header) !== false) {
+                    $requestType = 'json';
+                }
+            }
+        } else {
+            foreach ($request->getHeader('Accept') as $header) {
+                if (\strpos('application/json', $header) !== false) {
+                    $requestType = 'json';
+                }
             }
         }
 
+        $requestBodyEntry = new Row\Entry\NullEntry('request_body');
         $requestBody = $request->getBody();
 
         if ($requestBody->isReadable()) {
@@ -46,23 +55,23 @@ final class RequestEntriesFactory
                 $requestBody->seek(0);
             }
 
-            switch ($requestType) {
-                case 'json':
-                    if (\class_exists('Flow\ETL\Row\Entry\JsonEntry')) {
-                        $requestBodyEntry = new Row\Entry\JsonEntry('request_body', \json_decode($requestBodyContent, true, 512, JSON_THROW_ON_ERROR));
-                    } else {
+            if (!empty($requestBodyContent)) {
+                switch ($requestType) {
+                    case 'json':
+                        if (\class_exists('Flow\ETL\Row\Entry\JsonEntry')) {
+                            $requestBodyEntry = new Row\Entry\JsonEntry('request_body', \json_decode($requestBodyContent, true, 512, JSON_THROW_ON_ERROR));
+                        } else {
+                            $requestBodyEntry = new Row\Entry\StringEntry('request_body', $requestBodyContent);
+                        }
+
+                        break;
+
+                    default:
                         $requestBodyEntry = new Row\Entry\StringEntry('request_body', $requestBodyContent);
-                    }
 
-                    break;
-
-                default:
-                    $requestBodyEntry = new Row\Entry\StringEntry('request_body', $requestBodyContent);
-
-                    break;
+                        break;
+                }
             }
-        } else {
-            $requestBodyEntry = new Row\Entry\NullEntry('request_body');
         }
 
         return new Row\Entries(
