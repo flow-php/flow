@@ -4,6 +4,8 @@
 - [#9](https://github.com/flow-php/doctrine-dbal-bulk/pull/9) - **Add dependabot for tools** - [@tomaszhanc](https://github.com/tomaszhanc)
 
 ### Changed
+- [#14](https://github.com/flow-php/doctrine-dbal-bulk/pull/14) - **phpunit/phpunit from 9.5.6 to 9.5.9 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
+- [c071e5](https://github.com/flow-php/doctrine-dbal-bulk/commit/c071e517786d49b616ba6a7cae5ed913ba7b0e6c) - **CHANGELOG.md** - [@aeon-automation](https://github.com/aeon-automation)
 - [da5e34](https://github.com/flow-php/doctrine-dbal-bulk/commit/da5e3444c3079e72b99ad686c009643f82735b78) - **CHANGELOG.md** - [@aeon-automation](https://github.com/aeon-automation)
 - [#12](https://github.com/flow-php/doctrine-dbal-bulk/pull/12) - **phpstan/phpstan from 0.12.90 to 0.12.98 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
 - [db1de9](https://github.com/flow-php/doctrine-dbal-bulk/commit/db1de961091dfbff468b6b12e883beaf5b57bf0f) - **CHANGELOG.md** - [@aeon-automation](https://github.com/aeon-automation)
