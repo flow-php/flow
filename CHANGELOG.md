@@ -1,6 +1,10 @@
-## [Unreleased] - 2021-06-26
+## [Unreleased] - 2021-09-03
+
+### Added
+- [#9](https://github.com/flow-php/doctrine-dbal-bulk/pull/9) - **Add dependabot for tools** - [@tomaszhanc](https://github.com/tomaszhanc)
 
 ### Changed
+- [297b2c](https://github.com/flow-php/doctrine-dbal-bulk/commit/297b2cdc82e17a7f43c8d7e735b2efceb3cda24a) - **CHANGELOG.md** - [@aeon-automation](https://github.com/aeon-automation)
 - [#8](https://github.com/flow-php/doctrine-dbal-bulk/pull/8) - **Update dependencies** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [c8dff1](https://github.com/flow-php/doctrine-dbal-bulk/commit/c8dff1c7a36b94f502875068591990f85aeae3cf) - **CHANGELOG.md** - [@aeon-automation](https://github.com/aeon-automation)
 - [b91172](https://github.com/flow-php/doctrine-dbal-bulk/commit/b9117243a60471ca40a51667e9d010667db053c1) - **CHANGELOG.md** - [@aeon-automation](https://github.com/aeon-automation)
