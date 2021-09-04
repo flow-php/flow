@@ -6,6 +6,9 @@
 - [#1](https://github.com/flow-php/etl-adapter-doctrine/pull/1) - **DbalQueryExtractor** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#11](https://github.com/flow-php/etl-adapter-doctrine/pull/11) - **phpstan/phpstan from 0.12.90 to 0.12.98 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
+- [#10](https://github.com/flow-php/etl-adapter-doctrine/pull/10) - **infection/infection from 0.21.5 to 0.24.0 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
+- [5bac15](https://github.com/flow-php/etl-adapter-doctrine/commit/5bac1590fb4d1f12ef0bb9ef7966736b356568a2) - **CHANGELOG.md** - [@aeon-automation](https://github.com/aeon-automation)
 - [#12](https://github.com/flow-php/etl-adapter-doctrine/pull/12) - **friendsofphp/php-cs-fixer from 2.19.0 to 2.19.2 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
 - [6e7894](https://github.com/flow-php/etl-adapter-doctrine/commit/6e78943b48937d9603f1d2637223724bb40fad0e) - **CHANGELOG.md** - [@aeon-automation](https://github.com/aeon-automation)
 - [cf7855](https://github.com/flow-php/etl-adapter-doctrine/commit/cf7855e875fd1fce6abbb9a4005478c7c6e134cd) - **CHANGELOG.md** - [@aeon-automation](https://github.com/aeon-automation)
