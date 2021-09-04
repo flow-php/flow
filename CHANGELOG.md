@@ -1,4 +1,4 @@
-## [Unreleased] - 2021-09-03
+## [Unreleased] - 2021-09-04
 
 ### Added
 - [#68](https://github.com/flow-php/etl/pull/68) - **Rows::take(int $size) : self** - [@norberttech](https://github.com/norberttech)
@@ -68,6 +68,7 @@
 - [1a6eec](https://github.com/flow-php/etl/commit/1a6eec01837f25cf1d6ff7c041996ff7b8b017e7) - **failing tests** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#86](https://github.com/flow-php/etl/pull/86) - **Remove unsued PHP-CS config** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#64](https://github.com/flow-php/etl/pull/64) - **DateEntry** - [@norberttech](https://github.com/norberttech)
 - [#33](https://github.com/flow-php/etl/pull/33) - **Moved all json related features to etl-adapter-json** - [@norberttech](https://github.com/norberttech)
 - [#30](https://github.com/flow-php/etl/pull/30) - **Extracted memory into etl-adapter-memory** - [@norberttech](https://github.com/norberttech)
