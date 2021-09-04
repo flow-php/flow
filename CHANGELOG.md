@@ -6,6 +6,8 @@
 - [#1](https://github.com/flow-php/etl-adapter-doctrine/pull/1) - **DbalQueryExtractor** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#12](https://github.com/flow-php/etl-adapter-doctrine/pull/12) - **friendsofphp/php-cs-fixer from 2.19.0 to 2.19.2 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
+- [6e7894](https://github.com/flow-php/etl-adapter-doctrine/commit/6e78943b48937d9603f1d2637223724bb40fad0e) - **CHANGELOG.md** - [@aeon-automation](https://github.com/aeon-automation)
 - [cf7855](https://github.com/flow-php/etl-adapter-doctrine/commit/cf7855e875fd1fce6abbb9a4005478c7c6e134cd) - **CHANGELOG.md** - [@aeon-automation](https://github.com/aeon-automation)
 - [fa5f51](https://github.com/flow-php/etl-adapter-doctrine/commit/fa5f51de5fd12cc5b7f3c5793d2fec781a71a41a) - **CHANGELOG.md** - [@aeon-automation](https://github.com/aeon-automation)
 - [#5](https://github.com/flow-php/etl-adapter-doctrine/pull/5) - **Updated dependencies** - [@tomaszhanc](https://github.com/tomaszhanc)
