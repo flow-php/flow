@@ -5,8 +5,7 @@ $finder = PhpCsFixer\Finder::create()
     ->in([
         __DIR__ . '/src',
         __DIR__ . '/tests'
-    ])
-    ->notName('*.phpt');
+    ]);
 
 if (!\file_exists(__DIR__ . '/var')) {
     \mkdir(__DIR__ . '/var');
