@@ -4,6 +4,8 @@
 - [#9](https://github.com/flow-php/doctrine-dbal-bulk/pull/9) - **Add dependabot for tools** - [@tomaszhanc](https://github.com/tomaszhanc)
 
 ### Changed
+- [#16](https://github.com/flow-php/doctrine-dbal-bulk/pull/16) - **friendsofphp/php-cs-fixer from 2.19.2 to 3.1.0 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
+- [0640cd](https://github.com/flow-php/doctrine-dbal-bulk/commit/0640cd65924642f1b5a898b7e3abb6b78dac9e56) - **CHANGELOG.md** - [@aeon-automation](https://github.com/aeon-automation)
 - [884a5b](https://github.com/flow-php/doctrine-dbal-bulk/commit/884a5b6512bf00b12f8af4c435daa490521067be) - **CHANGELOG.md** - [@aeon-automation](https://github.com/aeon-automation)
 - [#15](https://github.com/flow-php/doctrine-dbal-bulk/pull/15) - **infection/infection from 0.24.0 to 0.25.0 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
 - [#17](https://github.com/flow-php/doctrine-dbal-bulk/pull/17) - **vimeo/psalm from 4.9.3 to 4.10.0 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
