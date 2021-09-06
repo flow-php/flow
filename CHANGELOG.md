@@ -1,4 +1,4 @@
-## [Unreleased] - 2021-09-04
+## [Unreleased] - 2021-09-06
 
 ### Added
 - [#7](https://github.com/flow-php/etl-adapter-doctrine/pull/7) - **Added dependabot for tools** - [@tomaszhanc](https://github.com/tomaszhanc)
@@ -6,6 +6,8 @@
 - [#1](https://github.com/flow-php/etl-adapter-doctrine/pull/1) - **DbalQueryExtractor** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#15](https://github.com/flow-php/etl-adapter-doctrine/pull/15) - **vimeo/psalm from 4.9.3 to 4.10.0 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
+- [4dc6fb](https://github.com/flow-php/etl-adapter-doctrine/commit/4dc6fb08bc30bcaca618be2ccb5ff5698de15a41) - **CHANGELOG.md** - [@aeon-automation](https://github.com/aeon-automation)
 - [#9](https://github.com/flow-php/etl-adapter-doctrine/pull/9) - **phpunit/phpunit from 9.5.5 to 9.5.9 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
 - [71d254](https://github.com/flow-php/etl-adapter-doctrine/commit/71d254d9a9e88a0af6598a5fd3c3bdc1bb37d609) - **CHANGELOG.md** - [@aeon-automation](https://github.com/aeon-automation)
 - [#8](https://github.com/flow-php/etl-adapter-doctrine/pull/8) - **vimeo/psalm from 4.7.3 to 4.9.3 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
