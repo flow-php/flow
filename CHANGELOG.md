@@ -1,9 +1,12 @@
-## [Unreleased] - 2021-09-03
+## [Unreleased] - 2021-09-06
 
 ### Added
 - [#9](https://github.com/flow-php/doctrine-dbal-bulk/pull/9) - **Add dependabot for tools** - [@tomaszhanc](https://github.com/tomaszhanc)
 
 ### Changed
+- [#15](https://github.com/flow-php/doctrine-dbal-bulk/pull/15) - **infection/infection from 0.24.0 to 0.25.0 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
+- [#17](https://github.com/flow-php/doctrine-dbal-bulk/pull/17) - **vimeo/psalm from 4.9.3 to 4.10.0 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
+- [1d94b0](https://github.com/flow-php/doctrine-dbal-bulk/commit/1d94b04d5b44c8f109aa34a947b9f08458025e02) - **CHANGELOG.md** - [@aeon-automation](https://github.com/aeon-automation)
 - [#14](https://github.com/flow-php/doctrine-dbal-bulk/pull/14) - **phpunit/phpunit from 9.5.6 to 9.5.9 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
 - [c071e5](https://github.com/flow-php/doctrine-dbal-bulk/commit/c071e517786d49b616ba6a7cae5ed913ba7b0e6c) - **CHANGELOG.md** - [@aeon-automation](https://github.com/aeon-automation)
 - [da5e34](https://github.com/flow-php/doctrine-dbal-bulk/commit/da5e3444c3079e72b99ad686c009643f82735b78) - **CHANGELOG.md** - [@aeon-automation](https://github.com/aeon-automation)
