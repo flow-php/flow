@@ -1,4 +1,4 @@
-## [Unreleased] - 2021-09-04
+## [Unreleased] - 2021-09-13
 
 ### Changed
 - [#38](https://github.com/flow-php/etl-adapter-json/pull/38) - **Remove unsued PHP-CS config** - [@tomaszhanc](https://github.com/tomaszhanc)
