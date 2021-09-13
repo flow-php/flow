@@ -1,4 +1,4 @@
-## [Unreleased] - 2021-09-06
+## [Unreleased] - 2021-09-13
 
 ### Added
 - [#6](https://github.com/flow-php/flow/pull/6) - **Added new functions: upper and lower** - [@DawidSajdak](https://github.com/DawidSajdak)
