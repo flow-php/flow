@@ -1,9 +1,13 @@
-## [Unreleased] - 2021-09-06
+## [Unreleased] - 2021-09-13
 
 ### Added
 - [#9](https://github.com/flow-php/doctrine-dbal-bulk/pull/9) - **Add dependabot for tools** - [@tomaszhanc](https://github.com/tomaszhanc)
 
 ### Changed
+- [#18](https://github.com/flow-php/doctrine-dbal-bulk/pull/18) - **doctrine/dbal from 3.1.1 to 3.1.2** - [@dependabot[bot]](https://github.com/apps/dependabot)
+- [#19](https://github.com/flow-php/doctrine-dbal-bulk/pull/19) - **phpstan/phpstan from 0.12.98 to 0.12.99 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
+- [#20](https://github.com/flow-php/doctrine-dbal-bulk/pull/20) - **infection/infection from 0.25.0 to 0.25.1 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
+- [b086cf](https://github.com/flow-php/doctrine-dbal-bulk/commit/b086cfd99a8c7cff4d819911326d11da8900493c) - **CHANGELOG.md** - [@aeon-automation](https://github.com/aeon-automation)
 - [#16](https://github.com/flow-php/doctrine-dbal-bulk/pull/16) - **friendsofphp/php-cs-fixer from 2.19.2 to 3.1.0 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
 - [0640cd](https://github.com/flow-php/doctrine-dbal-bulk/commit/0640cd65924642f1b5a898b7e3abb6b78dac9e56) - **CHANGELOG.md** - [@aeon-automation](https://github.com/aeon-automation)
 - [884a5b](https://github.com/flow-php/doctrine-dbal-bulk/commit/884a5b6512bf00b12f8af4c435daa490521067be) - **CHANGELOG.md** - [@aeon-automation](https://github.com/aeon-automation)
