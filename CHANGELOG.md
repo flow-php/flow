@@ -1,4 +1,4 @@
-## [Unreleased] - 2021-09-13
+## [Unreleased] - 2021-09-24
 
 ### Added
 - [#7](https://github.com/flow-php/etl-adapter-doctrine/pull/7) - **Added dependabot for tools** - [@tomaszhanc](https://github.com/tomaszhanc)
@@ -6,6 +6,8 @@
 - [#1](https://github.com/flow-php/etl-adapter-doctrine/pull/1) - **DbalQueryExtractor** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#19](https://github.com/flow-php/etl-adapter-doctrine/pull/19) - **infection/infection from 0.25.1 to 0.25.2 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
+- [ba0798](https://github.com/flow-php/etl-adapter-doctrine/commit/ba0798d02b9f548e780ded2a10003d1a7954eb2e) - **CHANGELOG.md** - [@aeon-automation](https://github.com/aeon-automation)
 - [0bde6e](https://github.com/flow-php/etl-adapter-doctrine/commit/0bde6edb9da9bbb25d736076f18a44a7b177207d) - **CHANGELOG.md** - [@aeon-automation](https://github.com/aeon-automation)
 - [#17](https://github.com/flow-php/etl-adapter-doctrine/pull/17) - **phpstan/phpstan from 0.12.98 to 0.12.99 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
 - [#18](https://github.com/flow-php/etl-adapter-doctrine/pull/18) - **infection/infection from 0.25.0 to 0.25.1 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
