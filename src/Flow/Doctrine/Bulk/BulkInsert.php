@@ -59,4 +59,24 @@ final class BulkInsert
             )
         );
     }
+
+    /**
+     * @param string $table
+     * @param array<string> $conflictColumns
+     * @param BulkData $bulkData
+     * @param array<string> $updateColumns
+     *
+     * @throws \Doctrine\DBAL\Exception
+     */
+    public function insertOrUpdateOnConflict(string $table, array $conflictColumns, BulkData $bulkData, array $updateColumns = []) : void
+    {
+        $this->connection->executeQuery(
+            $this->queryFactory->insertOrUpdateOnConflict($this->connection->getDatabasePlatform(), $table, $conflictColumns, $bulkData, $updateColumns),
+            $bulkData->toSqlParameters(),
+            \array_map(
+                fn ($value) : string => \gettype($value),
+                \array_filter($bulkData->toSqlParameters(), fn ($value) : bool => \is_bool($value))
+            )
+        );
+    }
 }
