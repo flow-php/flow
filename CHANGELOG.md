@@ -1,4 +1,4 @@
-## [Unreleased] - 2021-09-14
+## [Unreleased] - 2021-10-06
 
 ### Added
 - [#6](https://github.com/flow-php/array-dot/pull/6) - **Added function to rename array keys using dot notation** - [@tomaszhanc](https://github.com/tomaszhanc)
