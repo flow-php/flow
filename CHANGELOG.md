@@ -1,4 +1,4 @@
-## [Unreleased] - 2021-09-24
+## [Unreleased] - 2021-10-06
 
 ### Added
 - [#68](https://github.com/flow-php/etl/pull/68) - **Rows::take(int $size) : self** - [@norberttech](https://github.com/norberttech)
@@ -41,20 +41,10 @@
 ### Changed
 - [#63](https://github.com/flow-php/etl/pull/63) - **DateEntries arguments from DateTimeImmutable into DateTimeInterface** - [@norberttech](https://github.com/norberttech)
 - [#59](https://github.com/flow-php/etl/pull/59) - **Update dependencies** - [@tomaszhanc](https://github.com/tomaszhanc)
-- [56cc82](https://github.com/flow-php/etl/commit/56cc829d20c5e4e930049cdc08306331a4746f14) - **Adapters and Extensions section** - [@norberttech](https://github.com/norberttech)
-- [424aa9](https://github.com/flow-php/etl/commit/424aa92500d096e08c228aa66e2acc24140cfbda) - **Update README.md** - [@norberttech](https://github.com/norberttech)
-- [6113d9](https://github.com/flow-php/etl/commit/6113d9c2b719590326046886a109ee689c70ded8) - **Update README.md** - [@norberttech](https://github.com/norberttech)
 - [#34](https://github.com/flow-php/etl/pull/34) - **Moved XMLEntry into etl-adapter-xml** - [@norberttech](https://github.com/norberttech)
-- [8fc505](https://github.com/flow-php/etl/commit/8fc505c113f81afae66595d0438ef4969ca9c415) - **Update README.md** - [@norberttech](https://github.com/norberttech)
-- [15cc7c](https://github.com/flow-php/etl/commit/15cc7c5f96cfd7c9f7f8ae328afcbd35008cecb1) - **Update README.md** - [@norberttech](https://github.com/norberttech)
-- [4098cb](https://github.com/flow-php/etl/commit/4098cb5aea3c8ef35d9314dd47568a3a66be2342) - **Update README.md** - [@norberttech](https://github.com/norberttech)
-- [8f6cb0](https://github.com/flow-php/etl/commit/8f6cb0247cbcd90b5bb637319110c677c01ff3fc) - **Update README.md** - [@norberttech](https://github.com/norberttech)
-- [4ec891](https://github.com/flow-php/etl/commit/4ec891d71a72c2fd57515af29aebeae2a7990224) - **Update README.md** - [@norberttech](https://github.com/norberttech)
 - [#18](https://github.com/flow-php/etl/pull/18) - **Improved return type for Row::toArray()** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#17](https://github.com/flow-php/etl/pull/17) - **replaced phive with composer to handle tools** - [@norberttech](https://github.com/norberttech)
-- [c66f6f](https://github.com/flow-php/etl/commit/c66f6f6bdcfa8c3d69cd74e72fe7bf249bc5770e) - **Update pull-request-description-check.yml** - [@norberttech](https://github.com/norberttech)
 - [#3](https://github.com/flow-php/etl/pull/3) - **Remove Webmozart/Assert dependency** - [@Wiktor6](https://github.com/Wiktor6)
-- [55faa8](https://github.com/flow-php/etl/commit/55faa8edfed3973f54e31b3af57a4ba171050a85) - **Update README.md** - [@norberttech](https://github.com/norberttech)
 - [e48062](https://github.com/flow-php/etl/commit/e48062890cd84e655e1162305086f67148347b83) - **Intial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
