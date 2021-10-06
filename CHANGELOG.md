@@ -1,4 +1,4 @@
-## [Unreleased] - 2021-09-13
+## [Unreleased] - 2021-10-06
 
 ### Added
 - [#6](https://github.com/flow-php/flow/pull/6) - **Added new functions: upper and lower** - [@DawidSajdak](https://github.com/DawidSajdak)
@@ -11,13 +11,8 @@
 - [6052dc](https://github.com/flow-php/flow/commit/6052dc269abf336caf9aed1524f2c5cb8d53e984) - **more transformers** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
-- [abed22](https://github.com/flow-php/flow/commit/abed227888b96ac06e14e233b860572402cb5b37) - **DSL to latest ETL Transformers update** - [@norberttech](https://github.com/norberttech)
-- [d3f956](https://github.com/flow-php/flow/commit/d3f956f9e3a52cee24e775d5fc631a40908f56b8) - **to latest transformers changes** - [@norberttech](https://github.com/norberttech)
-- [d8a994](https://github.com/flow-php/flow/commit/d8a99459f44b616cb106ad3cad55976b23206b70) - **dependencies, added array functions** - [@norberttech](https://github.com/norberttech)
 - [93030a](https://github.com/flow-php/flow/commit/93030ac133a3dcf30b83e5a41720957400cbd44a) - **Converter all function names into snake case** - [@norberttech](https://github.com/norberttech)
 - [431de6](https://github.com/flow-php/flow/commit/431de6be6dea3cfabe6c67ff89dc5ddf45522273) - **Readme cleanup** - [@norberttech](https://github.com/norberttech)
-- [41058f](https://github.com/flow-php/flow/commit/41058f480540825d630cdf6693dced82c7f586ce) - **Documentation** - [@norberttech](https://github.com/norberttech)
-- [12472f](https://github.com/flow-php/flow/commit/12472f4b3b354430578a288e71649c4a8bc3b876) - **dependencies and added new transformers** - [@norberttech](https://github.com/norberttech)
 - [295ece](https://github.com/flow-php/flow/commit/295ece19ce77cbd6d30d501a01bd24e0a72814ea) - **Initial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
