@@ -1,6 +1,7 @@
-## [Unreleased] - 2021-10-06
+## [Unreleased] - 2021-10-26
 
 ### Added
+- [#21](https://github.com/flow-php/flow/pull/21) - **Workflow for aut-merging dependabot PRs** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#6](https://github.com/flow-php/flow/pull/6) - **Added new functions: upper and lower** - [@DawidSajdak](https://github.com/DawidSajdak)
 - [#3](https://github.com/flow-php/flow/pull/3) - **Add array_rename_keys method** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#2](https://github.com/flow-php/flow/pull/2) - **PHPStan and Psalm** - [@tomaszhanc](https://github.com/tomaszhanc)
@@ -17,6 +18,13 @@
 
 ### Fixed
 - [#3](https://github.com/flow-php/flow/pull/3) - **BC break i RenameEntries namespace** - [@tomaszhanc](https://github.com/tomaszhanc)
+
+### Updated
+- [abed22](https://github.com/flow-php/flow/commit/abed227888b96ac06e14e233b860572402cb5b37) - **DSL to latest ETL Transformers update** - [@norberttech](https://github.com/norberttech)
+- [d3f956](https://github.com/flow-php/flow/commit/d3f956f9e3a52cee24e775d5fc631a40908f56b8) - **to latest transformers changes** - [@norberttech](https://github.com/norberttech)
+- [d8a994](https://github.com/flow-php/flow/commit/d8a99459f44b616cb106ad3cad55976b23206b70) - **dependencies, added array functions** - [@norberttech](https://github.com/norberttech)
+- [41058f](https://github.com/flow-php/flow/commit/41058f480540825d630cdf6693dced82c7f586ce) - **Documentation** - [@norberttech](https://github.com/norberttech)
+- [12472f](https://github.com/flow-php/flow/commit/12472f4b3b354430578a288e71649c4a8bc3b876) - **dependencies and added new transformers** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
 - [b6fc3b](https://github.com/flow-php/flow/commit/b6fc3be43a05ac325716a783ed52c03ed61991fd) - **tools in gitattributes** - [@norberttech](https://github.com/norberttech)
