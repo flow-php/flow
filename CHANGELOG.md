@@ -1,6 +1,7 @@
-## [Unreleased] - 2021-10-06
+## [Unreleased] - 2021-10-26
 
 ### Added
+- [#44](https://github.com/flow-php/etl-adapter-http/pull/44) - **Workflow for aut-merging dependabot PRs** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#9](https://github.com/flow-php/etl-adapter-http/pull/9) - **pre/post request callables** - [@norberttech](https://github.com/norberttech)
 - [#6](https://github.com/flow-php/etl-adapter-http/pull/6) - **whole request and response to ETL row** - [@norberttech](https://github.com/norberttech)
 - [#4](https://github.com/flow-php/etl-adapter-http/pull/4) - **Static HTTP extractor to extract rows from predefined collection of requests** - [@norberttech](https://github.com/norberttech)
