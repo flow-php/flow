@@ -1,6 +1,7 @@
-## [Unreleased] - 2021-10-06
+## [Unreleased] - 2021-10-26
 
 ### Added
+- [#28](https://github.com/flow-php/array-dot/pull/28) - **Workflow for aut-merging dependabot PRs** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#6](https://github.com/flow-php/array-dot/pull/6) - **Added function to rename array keys using dot notation** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [4d6261](https://github.com/flow-php/array-dot/commit/4d6261b87186f21d4edde8a8e98053b6f5bf5a4d) - **array_dot_set function** - [@norberttech](https://github.com/norberttech)
 - [3e39c9](https://github.com/flow-php/array-dot/commit/3e39c9c560a3fa878ac87391e5c09be4d8fa93e3) - **small optimization** - [@norberttech](https://github.com/norberttech)
