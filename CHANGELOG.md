@@ -1,6 +1,7 @@
-## [Unreleased] - 2021-10-06
+## [Unreleased] - 2021-10-26
 
 ### Added
+- [#97](https://github.com/flow-php/etl/pull/97) - **Workflow for aut-merging dependabot PRs** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#68](https://github.com/flow-php/etl/pull/68) - **Rows::take(int $size) : self** - [@norberttech](https://github.com/norberttech)
 - [#68](https://github.com/flow-php/etl/pull/68) - **Rows::takeRight(int $size) : self** - [@norberttech](https://github.com/norberttech)
 - [#68](https://github.com/flow-php/etl/pull/68) - **Rows::drop(int $size) : self** - [@norberttech](https://github.com/norberttech)
@@ -56,6 +57,18 @@
 - [#31](https://github.com/flow-php/etl/pull/31) - **not allowing '0' string as a name** - [@norberttech](https://github.com/norberttech)
 - [#14](https://github.com/flow-php/etl/pull/14) - **Fixed Github action for checking PR description** - [@DawidSajdak](https://github.com/DawidSajdak)
 - [1a6eec](https://github.com/flow-php/etl/commit/1a6eec01837f25cf1d6ff7c041996ff7b8b017e7) - **failing tests** - [@norberttech](https://github.com/norberttech)
+
+### Updated
+- [56cc82](https://github.com/flow-php/etl/commit/56cc829d20c5e4e930049cdc08306331a4746f14) - **Adapters and Extensions section** - [@norberttech](https://github.com/norberttech)
+- [424aa9](https://github.com/flow-php/etl/commit/424aa92500d096e08c228aa66e2acc24140cfbda) - **README.md** - [@norberttech](https://github.com/norberttech)
+- [6113d9](https://github.com/flow-php/etl/commit/6113d9c2b719590326046886a109ee689c70ded8) - **README.md** - [@norberttech](https://github.com/norberttech)
+- [8fc505](https://github.com/flow-php/etl/commit/8fc505c113f81afae66595d0438ef4969ca9c415) - **README.md** - [@norberttech](https://github.com/norberttech)
+- [15cc7c](https://github.com/flow-php/etl/commit/15cc7c5f96cfd7c9f7f8ae328afcbd35008cecb1) - **README.md** - [@norberttech](https://github.com/norberttech)
+- [4098cb](https://github.com/flow-php/etl/commit/4098cb5aea3c8ef35d9314dd47568a3a66be2342) - **README.md** - [@norberttech](https://github.com/norberttech)
+- [8f6cb0](https://github.com/flow-php/etl/commit/8f6cb0247cbcd90b5bb637319110c677c01ff3fc) - **README.md** - [@norberttech](https://github.com/norberttech)
+- [4ec891](https://github.com/flow-php/etl/commit/4ec891d71a72c2fd57515af29aebeae2a7990224) - **README.md** - [@norberttech](https://github.com/norberttech)
+- [c66f6f](https://github.com/flow-php/etl/commit/c66f6f6bdcfa8c3d69cd74e72fe7bf249bc5770e) - **pull-request-description-check.yml** - [@norberttech](https://github.com/norberttech)
+- [55faa8](https://github.com/flow-php/etl/commit/55faa8edfed3973f54e31b3af57a4ba171050a85) - **README.md** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
 - [#86](https://github.com/flow-php/etl/pull/86) - **Remove unsued PHP-CS config** - [@tomaszhanc](https://github.com/tomaszhanc)
