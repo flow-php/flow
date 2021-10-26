@@ -1,5 +1,8 @@
 ## [Unreleased] - 2021-10-26
 
+### Added
+- [#44](https://github.com/flow-php/etl-adapter-json/pull/44) - **Workflow for aut-merging dependabot PRs** - [@tomaszhanc](https://github.com/tomaszhanc)
+
 ### Changed
 - [#38](https://github.com/flow-php/etl-adapter-json/pull/38) - **Remove unsued PHP-CS config** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#3](https://github.com/flow-php/etl-adapter-json/pull/3) - **Moved JsonEntry from main ETL library** - [@norberttech](https://github.com/norberttech)
