@@ -1,6 +1,7 @@
 ## [Unreleased] - 2021-10-26
 
 ### Added
+- [#46](https://github.com/flow-php/etl-adapter-elasticsearch/pull/46) - **Workflow for aut-merging dependabot PRs** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#5](https://github.com/flow-php/etl-adapter-elasticsearch/pull/5) - **elasticsearch/elasticsearch into composer.json suggest section** - [@norberttech](https://github.com/norberttech)
 - [#2](https://github.com/flow-php/etl-adapter-elasticsearch/pull/2) - **PHP 8.0 to the testsuite** - [@norberttech](https://github.com/norberttech)
 
