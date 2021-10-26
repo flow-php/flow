@@ -1,0 +1,33 @@
+name: "Dependabot Auto Merge"
+
+on:
+  workflow_run:
+    types:
+      - completed
+    workflows:
+      - 'Tests'
+      - 'Mutation Tests'
+      - 'Static Analyze'
+
+jobs:
+  merge-me:
+    name: Merge me!
+    runs-on: ubuntu-latest
+    steps:
+      - # It is often a desired behavior to merge only when a workflow execution
+        # succeeds. This can be changed as needed.
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
+        name: Merge me!
+        uses: ridedott/merge-me-action@v2
+        with:
+          # Depending on branch protection rules, a  manually populated
+          # `GITHUB_TOKEN_WORKAROUND` secret with permissions to push to
+          # a protected branch must be used. This secret can have an arbitrary
+          # name, as an example, this repository uses `DOTTBOTT_TOKEN`.
+          #
+          # When using a custom token, it is recommended to leave the following
+          # comment for other developers to be aware of the reasoning behind it:
+          #
+          # This must be used as GitHub Actions token does not support pushing
+          # to protected branches.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
