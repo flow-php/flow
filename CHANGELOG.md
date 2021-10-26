@@ -1,4 +1,7 @@
-## [Unreleased] - 2021-10-11
+## [Unreleased] - 2021-10-26
+
+### Added
+- [#44](https://github.com/flow-php/etl-adapter-csv/pull/44) - **Workflow for aut-merging dependabot PRs** - [@tomaszhanc](https://github.com/tomaszhanc)
 
 ### Changed
 - [377a21](https://github.com/flow-php/etl-adapter-csv/commit/377a219a347232105350636270b17c674975f78e) - **Automaticlly instll tools** - [@norberttech](https://github.com/norberttech)
@@ -7,6 +10,11 @@
 ### Fixed
 - [#15](https://github.com/flow-php/etl-adapter-csv/pull/15) - **CSVLoader** - [@norberttech](https://github.com/norberttech)
 - [f0ef40](https://github.com/flow-php/etl-adapter-csv/commit/f0ef40204297eb924a9d0cbb8ef89510ba9bde8a) - **invalid variable name** - [@norberttech](https://github.com/norberttech)
+
+### Updated
+- [be775d](https://github.com/flow-php/etl-adapter-csv/commit/be775d28c349efbf267704d99d7c6d392788b9e1) - **docs** - [@norberttech](https://github.com/norberttech)
+- [6d2a31](https://github.com/flow-php/etl-adapter-csv/commit/6d2a31be222529fcf8ce53a74702544839fd60ed) - **tools dependencieS** - [@norberttech](https://github.com/norberttech)
+- [63633c](https://github.com/flow-php/etl-adapter-csv/commit/63633cae23ccfa2222925a1c94c9acf9aca65e7d) - **docs** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
 - [#37](https://github.com/flow-php/etl-adapter-csv/pull/37) - **Remove unsued PHP-CS config** - [@tomaszhanc](https://github.com/tomaszhanc)
