@@ -3,7 +3,7 @@
   "description": "Flow PHP - Tools",
   "require-dev": {
     "vimeo/psalm": "^4.6",
-    "phpstan/phpstan": "^0.12.82",
+    "phpstan/phpstan": "^1.0.2",
     "friendsofphp/php-cs-fixer": "^3.1"
   }
 }
