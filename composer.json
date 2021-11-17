@@ -8,7 +8,7 @@
     "require": {
         "php": "^7.4.2 | ^8.0",
         "flow-php/etl": "^1.0@dev",
-        "doctrine/dbal": "^2.12 | ^3.0"
+        "doctrine/dbal": "^2.12 | ^3.1.4"
     },
     "require-dev": {
         "flow-php/doctrine-dbal-bulk": "^1.0@dev"
