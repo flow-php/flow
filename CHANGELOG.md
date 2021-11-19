@@ -1,4 +1,4 @@
-## [Unreleased] - 2021-11-17
+## [Unreleased] - 2021-11-19
 
 ### Added
 - [#21](https://github.com/flow-php/flow/pull/21) - **Workflow for aut-merging dependabot PRs** - [@tomaszhanc](https://github.com/tomaszhanc)
