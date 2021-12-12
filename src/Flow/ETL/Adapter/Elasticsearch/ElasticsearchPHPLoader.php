@@ -19,9 +19,6 @@ final class ElasticsearchPHPLoader implements Loader
 
     private IdFactory $idFactory;
 
-    /**
-     * @var array<mixed>
-     */
     private array $parameters;
 
     /**
@@ -29,7 +26,7 @@ final class ElasticsearchPHPLoader implements Loader
      * @param int $chunkSize
      * @param string $index
      * @param IdFactory $idFactory
-     * @param array<mixed> $parameters
+     * @param array $parameters
      */
     public function __construct(Client $client, int $chunkSize, string $index, IdFactory $idFactory, array $parameters = [])
     {
@@ -66,7 +63,7 @@ final class ElasticsearchPHPLoader implements Loader
             ))->toArray();
 
             /**
-             * @var array<array{data:array<mixed>,id:string}> $data
+             * @var array<array{body:array,id:string}> $data
              */
             foreach ($dataCollection as $data) {
                 $parameters['body'][] = [
