@@ -149,11 +149,13 @@ function array_dot_get(array $array, string $path)
                 if ($step === '?*') {
                     /**
                      * @psalm-suppress MixedArgument
+                     * @phpstan-ignore-next-line
                      */
                     if (array_dot_exists($arraySlice[$key], \implode('.', $stepsLeft))) {
                         /**
                          * @psalm-suppress MixedAssignment
                          * @psalm-suppress MixedArgument
+                         * @phpstan-ignore-next-line
                          */
                         $results[] = array_dot_get($arraySlice[$key], \implode('.', $stepsLeft));
                     }
@@ -161,6 +163,7 @@ function array_dot_get(array $array, string $path)
                     /**
                      * @psalm-suppress MixedAssignment
                      * @psalm-suppress MixedArgument
+                     * @phpstan-ignore-next-line
                      */
                     $results[] = array_dot_get($arraySlice[$key], \implode('.', $stepsLeft));
                 }
