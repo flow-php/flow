@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "15281a3051040e96b862ef23ac452c49",
+    "content-hash": "2829ca79a6a7b78818801dfef7eaf7f7",
     "packages": [
         {
             "name": "flow-php/etl",
@@ -48,7 +48,7 @@
                 "issues": "https://github.com/flow-php/etl/issues",
                 "source": "https://github.com/flow-php/etl/tree/1.x"
             },
-            "time": "2021-04-18T14:28:38+00:00"
+            "time": "2021-12-08T06:10:09+00:00"
         }
     ],
     "packages-dev": [],
@@ -61,6 +61,7 @@
     "prefer-lowest": false,
     "platform": {
         "php": "^7.4 | ^8.0",
+        "ext-xmlreader": "*",
         "ext-dom": "*"
     },
     "platform-dev": [],
