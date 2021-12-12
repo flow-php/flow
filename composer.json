@@ -36,8 +36,8 @@
         "sort-packages": true
     },
     "scripts": {
+        "tools:install": "composer install --working-dir=./tools",
         "cs:php:fix": "tools/vendor/bin/php-cs-fixer fix",
-
         "build": [
             "@static:analyze",
             "@test",

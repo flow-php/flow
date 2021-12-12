@@ -7,7 +7,7 @@ namespace Flow\ETL\Adapter\Doctrine;
 final class ParametersSet
 {
     /**
-     * @var array<array<string, mixed>|list<mixed>> $parameters
+     * @var array<array<string, mixed>>|array<list<mixed>>
      */
     private array $parameters;
 
@@ -20,7 +20,7 @@ final class ParametersSet
     }
 
     /**
-     * @return array<array<string, mixed>|list<mixed>>
+     * @return array<array<string, mixed>>|array<list<mixed>>
      */
     public function all() : array
     {

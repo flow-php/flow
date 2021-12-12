@@ -6,6 +6,6 @@
     "vimeo/psalm": "^4.6",
     "phpstan/phpstan": "^1.0.0",
     "infection/infection": "^0.25.0",
-    "friendsofphp/php-cs-fixer": "^2.18"
+    "friendsofphp/php-cs-fixer": "^3.1"
   }
 }

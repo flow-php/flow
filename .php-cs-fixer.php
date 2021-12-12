@@ -4,7 +4,7 @@ $finder = PhpCsFixer\Finder::create()
     ->files()
     ->in([
         __DIR__ . '/src',
-        __DIR__ . '/tests',
+        __DIR__ . '/tests'
     ]);
 
 if (!\file_exists(__DIR__ . '/var')) {
@@ -15,7 +15,7 @@ if (!\file_exists(__DIR__ . '/var')) {
  * This configuration was taken from https://github.com/sebastianbergmann/phpunit/blob/master/.php_cs.dist
  * and slightly adjusted.
  */
-return PhpCsFixer\Config::create()
+return (new PhpCsFixer\Config())
     ->setRiskyAllowed(true)
     ->setCacheFile(__DIR__.'/var/.php_cs.cache')
     ->setRules([
@@ -29,7 +29,6 @@ return PhpCsFixer\Config::create()
                 'continue',
                 'declare',
                 'default',
-                'die',
                 'do',
                 'exit',
                 'for',
@@ -49,7 +48,7 @@ return PhpCsFixer\Config::create()
         ],
         'braces' => true,
         'cast_spaces' => true,
-        'class_attributes_separation' => ['elements' => ['const', 'method', 'property']],
+        'class_attributes_separation' => ['elements' => ['const' => 'one', 'method' => 'one', 'property' => 'one']],
         'combine_consecutive_issets' => true,
         'combine_consecutive_unsets' => true,
         'compact_nullable_typehint' => true,
@@ -84,13 +83,13 @@ return PhpCsFixer\Config::create()
         'lowercase_static_reference' => true,
         'magic_constant_casing' => true,
         'magic_method_casing' => true,
-        'method_argument_space' => ['ensure_fully_multiline' => true],
+        'method_argument_space' => ['on_multiline' => 'ensure_fully_multiline'],
         'modernize_types_casting' => false,
         'multiline_comment_opening_closing' => true,
         'multiline_whitespace_before_semicolons' => true,
         'native_constant_invocation' => false,
         'native_function_casing' => false,
-        'native_function_invocation' => true,
+        'native_function_invocation' => ['include' => ['@all']],
         'native_function_type_declaration_casing' => true,
         'new_with_braces' => false,
         'no_alias_functions' => true,
@@ -111,7 +110,7 @@ return PhpCsFixer\Config::create()
         'no_null_property_initialization' => true,
         'no_php4_constructor' => true,
         'no_short_bool_cast' => true,
-        'no_short_echo_tag' => true,
+        'echo_tag_syntax' => true,
         'no_singleline_whitespace_before_semicolons' => true,
         'no_spaces_after_function_name' => true,
         'no_spaces_around_offset' => true,
@@ -187,8 +186,8 @@ return PhpCsFixer\Config::create()
         'phpdoc_trim' => true,
         'phpdoc_trim_consecutive_blank_line_separation' => true,
         'phpdoc_types' => ['groups' => ['simple', 'meta']],
-        'phpdoc_types_order' => false,
-        'phpdoc_var_without_name' => false,
+        'phpdoc_types_order' => true,
+        'phpdoc_var_without_name' => true,
         'pow_to_exponentiation' => true,
         'protected_to_private' => true,
         'return_assignment' => true,
@@ -207,7 +206,7 @@ return PhpCsFixer\Config::create()
         'standardize_not_equals' => true,
         'strict_param' => true,
         'ternary_to_null_coalescing' => true,
-        'trailing_comma_in_multiline_array' => true,
+        'trailing_comma_in_multiline' => true,
         'trim_array_spaces' => true,
         'unary_operator_spaces' => true,
         'visibility_required' => [
