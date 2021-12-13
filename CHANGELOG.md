@@ -17,6 +17,7 @@
 - [295ece](https://github.com/flow-php/flow/commit/295ece19ce77cbd6d30d501a01bd24e0a72814ea) - **Initial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#36](https://github.com/flow-php/flow/pull/36) - **Fix PHPStan errors** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#3](https://github.com/flow-php/flow/pull/3) - **BC break i RenameEntries namespace** - [@tomaszhanc](https://github.com/tomaszhanc)
 
 ### Updated
