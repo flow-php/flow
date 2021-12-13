@@ -255,7 +255,9 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
      */
     public function reduceToArray(string $entryName) : array
     {
+        /** @phpstan-ignore-next-line */
         return $this->reduce(
+            /** @phpstan-ignore-next-line */
             function (array $ids, Row $row) use ($entryName) : array {
                 $ids[] = $row->get($entryName)->value();
 
