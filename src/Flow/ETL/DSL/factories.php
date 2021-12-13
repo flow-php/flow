@@ -12,7 +12,7 @@ use Flow\ETL\Transformer\Factory\CastedRowsFactory;
 use Flow\ETL\Transformer\Factory\NativeEntryFactory;
 
 /**
- * @param array<array> $data
+ * @param array<array<mixed>> $data
  */
 function rows_from_array(array $data) : Rows
 {
@@ -20,7 +20,7 @@ function rows_from_array(array $data) : Rows
 }
 
 /**
- * @param array<array> $data
+ * @param array<array<mixed>> $data
  */
 function rows_from_casted_array(array $data, CastRow ...$cast_rows) : Rows
 {

@@ -40,7 +40,7 @@ function extract_from_csv(string $file_name, int $batch_size = 100, int $header_
 }
 
 /**
- * @param array<array> $array
+ * @param array<array<mixed>> $array
  * @param int $batch_size
  */
 function extract_from_array(array $array, int $batch_size = 100) : ETL
