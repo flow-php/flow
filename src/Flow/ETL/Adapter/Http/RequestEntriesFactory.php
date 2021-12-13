@@ -59,7 +59,7 @@ final class RequestEntriesFactory
                 switch ($requestType) {
                     case 'json':
                         if (\class_exists('Flow\ETL\Row\Entry\JsonEntry')) {
-                            $requestBodyEntry = new Row\Entry\JsonEntry('request_body', \json_decode($requestBodyContent, true, 512, JSON_THROW_ON_ERROR));
+                            $requestBodyEntry = new Row\Entry\JsonEntry('request_body', (array) \json_decode($requestBodyContent, true, 512, JSON_THROW_ON_ERROR));
                         } else {
                             $requestBodyEntry = new Row\Entry\StringEntry('request_body', $requestBodyContent);
                         }
