@@ -1,4 +1,4 @@
-## [Unreleased] - 2021-10-26
+## [Unreleased] - 2021-12-24
 
 ### Added
 - [#97](https://github.com/flow-php/etl/pull/97) - **Workflow for aut-merging dependabot PRs** - [@tomaszhanc](https://github.com/tomaszhanc)
@@ -40,6 +40,7 @@
 - [856870](https://github.com/flow-php/etl/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#113](https://github.com/flow-php/etl/pull/113) - **Update tools dependencies** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#63](https://github.com/flow-php/etl/pull/63) - **DateEntries arguments from DateTimeImmutable into DateTimeInterface** - [@norberttech](https://github.com/norberttech)
 - [#59](https://github.com/flow-php/etl/pull/59) - **Update dependencies** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#34](https://github.com/flow-php/etl/pull/34) - **Moved XMLEntry into etl-adapter-xml** - [@norberttech](https://github.com/norberttech)
