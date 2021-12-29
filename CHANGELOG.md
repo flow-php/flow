@@ -1,4 +1,4 @@
-## [Unreleased] - 2021-10-26
+## [Unreleased] - 2021-12-29
 
 ### Added
 - [#28](https://github.com/flow-php/doctrine-dbal-bulk/pull/28) - **Workflow for aut-merging dependabot PRs** - [@tomaszhanc](https://github.com/tomaszhanc)
@@ -6,6 +6,7 @@
 - [#9](https://github.com/flow-php/doctrine-dbal-bulk/pull/9) - **Add dependabot for tools** - [@tomaszhanc](https://github.com/tomaszhanc)
 
 ### Changed
+- [#47](https://github.com/flow-php/doctrine-dbal-bulk/pull/47) - **Deprecated errors from PHPStan** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#8](https://github.com/flow-php/doctrine-dbal-bulk/pull/8) - **Update dependencies** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#5](https://github.com/flow-php/doctrine-dbal-bulk/pull/5) - **Pass parameters types during executing database query** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#5](https://github.com/flow-php/doctrine-dbal-bulk/pull/5) - **Updated dependencies** - [@tomaszhanc](https://github.com/tomaszhanc)
@@ -15,6 +16,28 @@
 - [#7](https://github.com/flow-php/doctrine-dbal-bulk/pull/7) - **Github Action for checking PR description** - [@tomaszhanc](https://github.com/tomaszhanc)
 
 ### Updated
+- [#49](https://github.com/flow-php/doctrine-dbal-bulk/pull/49) - **vimeo/psalm from 4.15.0 to 4.16.1 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
+- [#48](https://github.com/flow-php/doctrine-dbal-bulk/pull/48) - **phpunit/phpunit from 9.5.10 to 9.5.11 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
+- [#46](https://github.com/flow-php/doctrine-dbal-bulk/pull/46) - **infection/infection from 0.25.4 to 0.25.5 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
+- [#45](https://github.com/flow-php/doctrine-dbal-bulk/pull/45) - **friendsofphp/php-cs-fixer from 3.3.2 to 3.4.0 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
+- [#44](https://github.com/flow-php/doctrine-dbal-bulk/pull/44) - **vimeo/psalm from 4.14.0 to 4.15.0 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
+- [#43](https://github.com/flow-php/doctrine-dbal-bulk/pull/43) - **infection/infection from 0.25.3 to 0.25.4 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
+- [#42](https://github.com/flow-php/doctrine-dbal-bulk/pull/42) - **vimeo/psalm from 4.13.1 to 4.14.0 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
+- [#41](https://github.com/flow-php/doctrine-dbal-bulk/pull/41) - **doctrine/dbal from 3.1.4 to 3.2.0** - [@dependabot[bot]](https://github.com/apps/dependabot)
+- [#40](https://github.com/flow-php/doctrine-dbal-bulk/pull/40) - **vimeo/psalm from 4.13.0 to 4.13.1 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
+- [#39](https://github.com/flow-php/doctrine-dbal-bulk/pull/39) - **vimeo/psalm from 4.12.0 to 4.13.0 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
+- [#38](https://github.com/flow-php/doctrine-dbal-bulk/pull/38) - **phpstan/phpstan from 1.1.2 to 1.2.0 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
+- [#37](https://github.com/flow-php/doctrine-dbal-bulk/pull/37) - **friendsofphp/php-cs-fixer from 3.2.1 to 3.3.2 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
+- [#36](https://github.com/flow-php/doctrine-dbal-bulk/pull/36) - **doctrine/dbal from 3.1.3 to 3.1.4** - [@dependabot[bot]](https://github.com/apps/dependabot)
+- [#35](https://github.com/flow-php/doctrine-dbal-bulk/pull/35) - **phpstan/phpstan from 1.1.1 to 1.1.2 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
+- [#34](https://github.com/flow-php/doctrine-dbal-bulk/pull/34) - **vimeo/psalm from 4.11.2 to 4.12.0 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
+- [#33](https://github.com/flow-php/doctrine-dbal-bulk/pull/33) - **phpstan/phpstan from 1.0.2 to 1.1.1 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
+- [#32](https://github.com/flow-php/doctrine-dbal-bulk/pull/32) - **phpstan/phpstan from 1.0.1 to 1.0.2 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
+- [#31](https://github.com/flow-php/doctrine-dbal-bulk/pull/31) - **phpstan/phpstan from 1.0.0 to 1.0.1 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
+- [#30](https://github.com/flow-php/doctrine-dbal-bulk/pull/30) - **phpstan/phpstan from 0.12.99 to 1.0.0 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
+- [#29](https://github.com/flow-php/doctrine-dbal-bulk/pull/29) - **vimeo/psalm from 4.11.1 to 4.11.2 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
+- [#27](https://github.com/flow-php/doctrine-dbal-bulk/pull/27) - **vimeo/psalm from 4.10.0 to 4.11.1 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
+- [fda846](https://github.com/flow-php/doctrine-dbal-bulk/commit/fda846a02d5b99958ef25c7a290d1e67556cdfc0) - **CHANGELOG.md** - [@aeon-automation](https://github.com/aeon-automation)
 - [#25](https://github.com/flow-php/doctrine-dbal-bulk/pull/25) - **infection/infection from 0.25.2 to 0.25.3 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
 - [#26](https://github.com/flow-php/doctrine-dbal-bulk/pull/26) - **friendsofphp/php-cs-fixer from 3.1.0 to 3.2.1 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
 - [cc9c80](https://github.com/flow-php/doctrine-dbal-bulk/commit/cc9c807b69aaa7baddcb6388b365f58313f8184e) - **CHANGELOG.md** - [@aeon-automation](https://github.com/aeon-automation)
@@ -49,5 +72,8 @@
 - [b91172](https://github.com/flow-php/doctrine-dbal-bulk/commit/b9117243a60471ca40a51667e9d010667db053c1) - **CHANGELOG.md** - [@aeon-automation](https://github.com/aeon-automation)
 - [ebe316](https://github.com/flow-php/doctrine-dbal-bulk/commit/ebe3165247a84a0fbc89608e9f636cbfdc649914) - **CHANGELOG.md** - [@aeon-automation](https://github.com/aeon-automation)
 - [02f619](https://github.com/flow-php/doctrine-dbal-bulk/commit/02f619cfd15ea5818cd7bb1b0de0e806507d3d5c) - **CHANGELOG.md** - [@aeon-automation](https://github.com/aeon-automation)
+
+### Removed
+- [#47](https://github.com/flow-php/doctrine-dbal-bulk/pull/47) - **Support for Doctrine Dbal 2.x** - [@tomaszhanc](https://github.com/tomaszhanc)
 
 Generated by [Automation](https://github.com/aeon-php/automation)
