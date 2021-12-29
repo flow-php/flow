@@ -1,4 +1,4 @@
-## [Unreleased] - 2021-12-12
+## [Unreleased] - 2021-12-29
 
 ### Added
 - [#23](https://github.com/flow-php/etl-adapter-doctrine/pull/23) - **Workflow for aut-merging dependabot PRs** - [@tomaszhanc](https://github.com/tomaszhanc)
@@ -7,6 +7,7 @@
 - [#1](https://github.com/flow-php/etl-adapter-doctrine/pull/1) - **DbalQueryExtractor** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#43](https://github.com/flow-php/etl-adapter-doctrine/pull/43) - **Updated dbal version in composer.lock to 3.1.4 due to security concerns** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#31](https://github.com/flow-php/etl-adapter-doctrine/pull/31) - **Update DBAL to 3.1.4** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#5](https://github.com/flow-php/etl-adapter-doctrine/pull/5) - **Updated dependencies** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#5](https://github.com/flow-php/etl-adapter-doctrine/pull/5) - **Sort entries before passing them to BulkData** - [@tomaszhanc](https://github.com/tomaszhanc)
@@ -19,6 +20,11 @@
 - [#2](https://github.com/flow-php/etl-adapter-doctrine/pull/2) - **failing tests after ETL BC break change** - [@norberttech](https://github.com/norberttech)
 
 ### Updated
+- [#41](https://github.com/flow-php/etl-adapter-doctrine/pull/41) - **phpunit/phpunit from 9.5.10 to 9.5.11 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
+- [#42](https://github.com/flow-php/etl-adapter-doctrine/pull/42) - **vimeo/psalm from 4.15.0 to 4.16.1 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
+- [#40](https://github.com/flow-php/etl-adapter-doctrine/pull/40) - **infection/infection from 0.25.4 to 0.25.5 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
+- [#39](https://github.com/flow-php/etl-adapter-doctrine/pull/39) - **friendsofphp/php-cs-fixer from 3.3.2 to 3.4.0 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
+- [b14580](https://github.com/flow-php/etl-adapter-doctrine/commit/b145803e9a7946581ea29a2cf0b527794605ce3d) - **CHANGELOG.md** - [@aeon-automation](https://github.com/aeon-automation)
 - [#37](https://github.com/flow-php/etl-adapter-doctrine/pull/37) - **vimeo/psalm from 4.14.0 to 4.15.0 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
 - [#36](https://github.com/flow-php/etl-adapter-doctrine/pull/36) - **infection/infection from 0.25.3 to 0.25.4 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
 - [#35](https://github.com/flow-php/etl-adapter-doctrine/pull/35) - **vimeo/psalm from 4.13.1 to 4.14.0 in /tools** - [@dependabot[bot]](https://github.com/apps/dependabot)
