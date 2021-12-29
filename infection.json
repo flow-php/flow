@@ -25,6 +25,11 @@
                 "Flow\\Doctrine\\Bulk\\QueryFactory\\DbalQueryFactory"
             ]
         },
+        "Identical": {
+            "ignore": [
+                "Flow\\Doctrine\\Bulk\\QueryFactory\\DbalPlatform"
+            ]
+        },
         "UnwrapArrayFilter": {
             "ignore": [
                 "Flow\\Doctrine\\Bulk\\BulkInsert"

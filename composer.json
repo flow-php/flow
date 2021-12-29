@@ -6,7 +6,7 @@
     "keywords": ["doctrine", "dbal", "bulk", "insert", "upsert"],
     "require": {
         "php": "^7.4 | ^8.0",
-        "doctrine/dbal": "^2.12 | ^3.0"
+        "doctrine/dbal": "^2.12 | ^3.1.4"
     },
     "autoload": {
         "psr-4": {
@@ -28,6 +28,7 @@
         "sort-packages": true
     },
     "scripts": {
+        "tools:install": "composer install --working-dir=./tools",
         "build": [
             "@static:analyze",
             "@test",

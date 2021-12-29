@@ -22,7 +22,7 @@ class DbalQueryFactory implements QueryFactory
      */
     public function insert(AbstractPlatform $platform, string $table, BulkData $bulkData) : string
     {
-        if ($platform->getName() === 'postgresql') {
+        if ((new DbalPlatform($platform))->isPostgreSQL()) {
             return \sprintf(
                 'INSERT INTO %s (%s) VALUES %s',
                 $table,
@@ -33,7 +33,7 @@ class DbalQueryFactory implements QueryFactory
 
         throw new RuntimeException(\sprintf(
             'Database platform "%s" is not supported by this factory',
-            $platform->getName()
+            \get_class($platform)
         ));
     }
 
@@ -48,7 +48,7 @@ class DbalQueryFactory implements QueryFactory
      */
     public function insertOrSkipOnConflict(AbstractPlatform $platform, string $table, BulkData $bulkData) : string
     {
-        if ($platform->getName() === 'postgresql') {
+        if ((new DbalPlatform($platform))->isPostgreSQL()) {
             return \sprintf(
                 'INSERT INTO %s (%s) VALUES %s ON CONFLICT DO NOTHING',
                 $table,
@@ -59,7 +59,7 @@ class DbalQueryFactory implements QueryFactory
 
         throw new RuntimeException(\sprintf(
             'Database platform "%s" is not supported by this factory',
-            $platform->getName()
+            \get_class($platform)
         ));
     }
 
@@ -75,7 +75,7 @@ class DbalQueryFactory implements QueryFactory
      */
     public function insertOrUpdateOnConstraintConflict(AbstractPlatform $platform, string $table, string $constraint, BulkData $bulkData) : string
     {
-        if ($platform->getName() === 'postgresql') {
+        if ((new DbalPlatform($platform))->isPostgreSQL()) {
             return \sprintf(
                 'INSERT INTO %s (%s) VALUES %s ON CONFLICT ON CONSTRAINT %s DO UPDATE SET %s',
                 $table,
@@ -98,7 +98,7 @@ class DbalQueryFactory implements QueryFactory
 
         throw new RuntimeException(\sprintf(
             'Database platform "%s" is not supported by this factory',
-            $platform->getName()
+            \get_class($platform)
         ));
     }
 
@@ -115,7 +115,7 @@ class DbalQueryFactory implements QueryFactory
      */
     public function insertOrUpdateOnConflict(AbstractPlatform $platform, string $table, array $conflictColumns, BulkData $bulkData, array $updateColumns = []) : string
     {
-        if ($platform->getName() === 'postgresql') {
+        if ((new DbalPlatform($platform))->isPostgreSQL()) {
             return \sprintf(
                 'INSERT INTO %s (%s) VALUES %s ON CONFLICT (%s) DO UPDATE SET %s',
                 $table,
@@ -140,7 +140,7 @@ class DbalQueryFactory implements QueryFactory
 
         throw new RuntimeException(\sprintf(
             'Database platform "%s" is not supported by this factory',
-            $platform->getName()
+            \get_class($platform)
         ));
     }
 }
