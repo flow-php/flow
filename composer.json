@@ -11,7 +11,7 @@
         "ext-json": "*"
     },
     "require-dev": {
-        "halaxa/json-machine": "^0.6.1 || ^0.7.0"
+        "halaxa/json-machine": "^0.6.1 || ^0.7.0 || ^0.8.0"
     },
     "suggest": {
         "halaxa/json-machine": "Memory safe json library used by Extractors and Loaders"
