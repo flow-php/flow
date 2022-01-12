@@ -1,4 +1,4 @@
-## [Unreleased] - 2021-12-12
+## [Unreleased] - 2022-01-12
 
 ### Added
 - [#42](https://github.com/flow-php/etl-adapter-xml/pull/42) - **Workflow for aut-merging dependabot PRs** - [@tomaszhanc](https://github.com/tomaszhanc)
@@ -9,6 +9,7 @@
 - [91b656](https://github.com/flow-php/etl-adapter-xml/commit/91b6565354a85c109a77c9e3d0b5c8942ff7f604) - **Initial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#67](https://github.com/flow-php/etl-adapter-xml/pull/67) - **Fix static analyze errors** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#56](https://github.com/flow-php/etl-adapter-xml/pull/56) - **Update composer lock file** - [@tomaszhanc](https://github.com/tomaszhanc)
 
 ### Updated
