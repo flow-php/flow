@@ -20,6 +20,9 @@ interface Entry
      */
     public function value();
 
+    /**
+     * @psalm-param pure-callable $mapper
+     */
     public function map(callable $mapper) : self;
 
     public function isEqual(self $entry) : bool;

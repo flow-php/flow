@@ -1,0 +1,11 @@
+name: Automation - PR Description Validate
+
+on:
+  pull_request:
+    types: [ opened, edited, reopened, ready_for_review ]
+
+jobs:
+  automation:
+    uses: aeon-php/actions/.github/workflows/automation-pr-description-validate.yml@main
+    secrets:
+      automation_github_token: "${{ secrets.GITHUB_TOKEN }}"
