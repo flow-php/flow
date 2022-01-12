@@ -5,6 +5,7 @@
 - [#13](https://github.com/flow-php/etl-adapter-xml/pull/13) - **memory safe XMLReaderExtractor** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#68](https://github.com/flow-php/etl-adapter-xml/pull/68) - **Reuse workflows from aeon-php/actions** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#36](https://github.com/flow-php/etl-adapter-xml/pull/36) - **Remove unsued PHP-CS config** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [91b656](https://github.com/flow-php/etl-adapter-xml/commit/91b6565354a85c109a77c9e3d0b5c8942ff7f604) - **Initial commit** - [@norberttech](https://github.com/norberttech)
 
