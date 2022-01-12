@@ -1,0 +1,23 @@
+name: Quality Assurance
+
+on:
+  pull_request:
+  push:
+    branches: [ 1.x ]
+  schedule: [ { cron: '0 8 * * *' } ]
+
+jobs:
+  tests:
+    name: "Tests"
+    uses: aeon-php/actions/.github/workflows/composer-script-test.yaml@main
+
+  static-analyze:
+    name: "Static Analyze"
+    uses: aeon-php/actions/.github/workflows/composer-script-static-analyze.yaml@main
+
+  mutation-tests:
+    name: "Mutation Tests"
+    uses: aeon-php/actions/.github/workflows/composer-script-mutation.yaml@main
+    secrets:
+      infection_badge_api_key: ${{ secrets.INFECTION_BADGE_API_KEY }}
+      stryker_dashboard_api_key: ${{ secrets.STRYKER_DASHBOARD_API_KEY }}
