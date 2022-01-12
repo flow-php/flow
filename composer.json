@@ -45,6 +45,12 @@
         "test:mutation": [
             "tools/vendor/bin/infection -j2"
         ],
-        "cs:php:fix": "tools/vendor/bin/php-cs-fixer fix"
+        "cs:php:fix": "tools/vendor/bin/php-cs-fixer fix",
+        "post-install-cmd": [
+            "@tools:install"
+        ],
+        "post-update-cmd": [
+            "@tools:install"
+        ]
     }
 }
