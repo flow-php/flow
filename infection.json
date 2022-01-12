@@ -12,8 +12,8 @@
     "text": "./var/infection/infection.log",
     "summary": "./var/infection/infection_summary.log",
     "debug": "./var/infection/infection_summary.log",
-    "badge": {
-      "branch": "1.x"
+    "stryker": {
+      "badge": "1.x"
     }
   },
   "mutators": {
