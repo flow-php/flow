@@ -1,4 +1,4 @@
-## [Unreleased] - 2021-12-12
+## [Unreleased] - 2022-01-12
 
 ### Added
 - [#28](https://github.com/flow-php/array-dot/pull/28) - **Workflow for aut-merging dependabot PRs** - [@tomaszhanc](https://github.com/tomaszhanc)
@@ -8,6 +8,7 @@
 - [484348](https://github.com/flow-php/array-dot/commit/4843488e18bdd6d2879ec254f05bd298c7d7dc37) - **multiselect syntax** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#52](https://github.com/flow-php/array-dot/pull/52) - **Reuse workflows from aeon-php/actions** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#41](https://github.com/flow-php/array-dot/pull/41) - **Skip errors from PHPStan** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [94ffb8](https://github.com/flow-php/array-dot/commit/94ffb8d4f888c176fae941c99014998668a89454) - **Extract array_dot_path function from array_dot_get** - [@norberttech](https://github.com/norberttech)
 - [4461ea](https://github.com/flow-php/array-dot/commit/4461ea9906c4a4160c2a1f58a6d17667bf7822f5) - **Initial commit** - [@norberttech](https://github.com/norberttech)
