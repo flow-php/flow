@@ -1,4 +1,4 @@
-## [Unreleased] - 2021-12-12
+## [Unreleased] - 2022-01-14
 
 ### Added
 - [#46](https://github.com/flow-php/etl-adapter-elasticsearch/pull/46) - **Workflow for aut-merging dependabot PRs** - [@tomaszhanc](https://github.com/tomaszhanc)
@@ -6,6 +6,7 @@
 - [#2](https://github.com/flow-php/etl-adapter-elasticsearch/pull/2) - **PHP 8.0 to the testsuite** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#72](https://github.com/flow-php/etl-adapter-elasticsearch/pull/72) - **Reuse workflows from aeon-php/actions** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#39](https://github.com/flow-php/etl-adapter-elasticsearch/pull/39) - **Remove unsued PHP-CS config** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [ee9921](https://github.com/flow-php/etl-adapter-elasticsearch/commit/ee9921694b99ee77ca4c047fe530e7832f9f78ac) - **Improved test suite** - [@norberttech](https://github.com/norberttech)
 - [b71018](https://github.com/flow-php/etl-adapter-elasticsearch/commit/b710189a7399b0df5b253ae19abf63fc8b3c7e0f) - **Initial commit** - [@norberttech](https://github.com/norberttech)
