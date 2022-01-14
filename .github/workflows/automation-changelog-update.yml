@@ -1,0 +1,11 @@
+name: Automation - Changelog Update
+
+on:
+  push:
+    branches: [ 1.x ]
+
+jobs:
+  automation:
+    uses: aeon-php/actions/.github/workflows/automation-changelog-update.yml@main
+    secrets:
+      automation_github_token: "${{ secrets.GITHUB_TOKEN }}"

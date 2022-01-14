@@ -79,6 +79,8 @@ final class JsonEntry implements Entry
 
     /**
      * @psalm-suppress MixedArgument
+     * @psalm-suppress MoreSpecificImplementedParamType
+     * @psalm-param pure-callable $mapper
      */
     public function map(callable $mapper) : Entry
     {
