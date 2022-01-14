@@ -1,4 +1,4 @@
-## [Unreleased] - 2021-12-13
+## [Unreleased] - 2022-01-14
 
 ### Added
 - [#21](https://github.com/flow-php/flow/pull/21) - **Workflow for aut-merging dependabot PRs** - [@tomaszhanc](https://github.com/tomaszhanc)
@@ -12,6 +12,7 @@
 - [6052dc](https://github.com/flow-php/flow/commit/6052dc269abf336caf9aed1524f2c5cb8d53e984) - **more transformers** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#44](https://github.com/flow-php/flow/pull/44) - **Reuse workflows from aeon-php/actions** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [93030a](https://github.com/flow-php/flow/commit/93030ac133a3dcf30b83e5a41720957400cbd44a) - **Converter all function names into snake case** - [@norberttech](https://github.com/norberttech)
 - [431de6](https://github.com/flow-php/flow/commit/431de6be6dea3cfabe6c67ff89dc5ddf45522273) - **Readme cleanup** - [@norberttech](https://github.com/norberttech)
 - [295ece](https://github.com/flow-php/flow/commit/295ece19ce77cbd6d30d501a01bd24e0a72814ea) - **Initial commit** - [@norberttech](https://github.com/norberttech)
