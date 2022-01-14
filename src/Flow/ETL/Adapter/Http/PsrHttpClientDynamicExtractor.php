@@ -22,11 +22,15 @@ final class PsrHttpClientDynamicExtractor implements Extractor
     private NextRequestFactory $requestFactory;
 
     /**
+     * @psalm-var pure-callable(RequestInterface) : void|null
+     *
      * @var callable(RequestInterface) : void|null
      */
     private $preRequest;
 
     /**
+     * @psalm-var pure-callable(RequestInterface, ResponseInterface) : void|null
+     *
      * @var callable(RequestInterface, ResponseInterface) : void|null
      */
     private $postRequest;
@@ -34,8 +38,8 @@ final class PsrHttpClientDynamicExtractor implements Extractor
     /**
      * @param ClientInterface $client
      * @param NextRequestFactory $requestFactory
-     * @param callable(RequestInterface) : void|null $preRequest
-     * @param callable(RequestInterface, ResponseInterface) : void|null $postRequest
+     * @psalm-param pure-callable(RequestInterface) : void|null $preRequest
+     * @psalm-param pure-callable(RequestInterface, ResponseInterface) : void|null $postRequest
      */
     public function __construct(ClientInterface $client, NextRequestFactory $requestFactory, ?callable $preRequest = null, ?callable $postRequest = null)
     {

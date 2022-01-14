@@ -1,17 +1,13 @@
-name: "Dependabot Auto Merge"
+name: Dependabot - Auto Merge
 
 on:
   workflow_run:
-    types:
-      - completed
-    workflows:
-      - 'Tests'
-      - 'Mutation Tests'
-      - 'Static Analyze'
+    types: [ completed ]
+    workflows: [ "Quality Assurance" ]
 
 jobs:
   merge-me:
-    name: Merge me!
+    name: "Merge me!"
     runs-on: ubuntu-latest
     steps:
       - # It is often a desired behavior to merge only when a workflow execution
