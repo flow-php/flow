@@ -24,11 +24,15 @@ final class PsrHttpClientStaticExtractor implements Extractor
     private iterable $requests;
 
     /**
+     * @psalm-var pure-callable(RequestInterface) : void|null
+     *
      * @var callable(RequestInterface) : void|null
      */
     private $preRequest;
 
     /**
+     * @psalm-var pure-callable(RequestInterface, ResponseInterface) : void|null
+     *
      * @var callable(RequestInterface, ResponseInterface) : void|null
      */
     private $postRequest;
@@ -36,8 +40,8 @@ final class PsrHttpClientStaticExtractor implements Extractor
     /**
      * @param ClientInterface $client
      * @param iterable<RequestInterface> $requests
-     * @param callable(RequestInterface) : void|null $preRequest
-     * @param callable(RequestInterface, ResponseInterface) : void|null $postRequest
+     * @psalm-param pure-callable(RequestInterface) : void|null $preRequest
+     * @psalm-param pure-callable(RequestInterface, ResponseInterface) : void|null $postRequest
      */
     public function __construct(ClientInterface $client, iterable $requests, ?callable $preRequest = null, ?callable $postRequest = null)
     {
