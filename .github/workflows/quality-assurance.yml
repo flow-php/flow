@@ -1,0 +1,12 @@
+name: Quality Assurance
+
+on:
+  pull_request:
+  push:
+    branches: [ 1.x ]
+  schedule: [ { cron: '0 8 * * *' } ]
+
+jobs:
+  static-analyze:
+    name: "Static Analyze"
+    uses: aeon-php/actions/.github/workflows/composer-script-static-analyze.yaml@main
