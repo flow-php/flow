@@ -50,23 +50,26 @@ final class Row
         return $this->get($name)->value();
     }
 
-    public function set(Entry $entry) : self
+    public function set(Entry ...$entries) : self
     {
-        return new self($this->entries->set($entry));
+        return new self($this->entries->set(...$entries));
     }
 
-    public function remove(string $name) : self
+    public function remove(string ...$names) : self
     {
-        if (!$this->entries->has($name)) {
-            return $this;
+        $namesToRemove = [];
+
+        foreach ($names as $name) {
+            if ($this->entries->has($name)) {
+                $namesToRemove[] = $name;
+            }
         }
 
-        return new self($this->entries->remove($name));
+        return new self($this->entries->remove(...$namesToRemove));
     }
 
     /**
-     * @psalm-suppress MixedArgument
-     * @psalm-suppress MixedArgumentTypeCoercion
+     * @param callable(Entry) : Entry $mapper
      */
     public function map(callable $mapper) : self
     {
@@ -75,11 +78,7 @@ final class Row
 
     public function rename(string $currentName, string $newName) : self
     {
-        return new self(
-            $this->entries
-                ->remove($currentName)
-                ->add($this->entries->get($currentName)->rename($newName))
-        );
+        return new self($this->entries->rename($currentName, $newName));
     }
 
     /**
@@ -103,9 +102,9 @@ final class Row
         return $this->entries->isEqual($row->entries());
     }
 
-    public function add(Entry $entry) : self
+    public function add(Entry ...$entries) : self
     {
-        return new self($this->entries->add($entry));
+        return new self($this->entries->add(...$entries));
     }
 
     public function sortEntries() : self

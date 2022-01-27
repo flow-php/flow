@@ -36,6 +36,15 @@ final class RowsTest extends TestCase
         $this->assertNotEquals($descending, $rows);
     }
 
+    public function test_adding_multiple_rows() : void
+    {
+        $one = Row::create(new IntegerEntry('number', 1), new StringEntry('name', 'one'));
+        $two = Row::create(new IntegerEntry('number', 2), new StringEntry('name', 'two'));
+        $rows = (new Rows())->add($one, $two);
+
+        $this->assertEquals(new Rows($one, $two), $rows);
+    }
+
     public function test_sort() : void
     {
         $rows = new Rows(

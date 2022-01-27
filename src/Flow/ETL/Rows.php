@@ -176,7 +176,15 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
      */
     public function filter(callable $callable) : self
     {
-        return new self(...\array_filter($this->rows, $callable));
+        $results = [];
+
+        foreach ($this->rows as $row) {
+            if ($callable($row)) {
+                $results[] = $row;
+            }
+        }
+
+        return new self(...$results);
     }
 
     /**
@@ -190,7 +198,13 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
             return null;
         }
 
-        $results = \array_filter($rows, $callable);
+        $results = [];
+
+        foreach ($this->rows as $row) {
+            if ($callable($row)) {
+                $results[] = $row;
+            }
+        }
 
         if (\count($results)) {
             return \current($results);
@@ -206,7 +220,13 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
      */
     public function map(callable $callable) : self
     {
-        return new self(...\array_map($callable, $this->rows));
+        $rows = [];
+
+        foreach ($this->rows as $row) {
+            $rows[] = $callable($row);
+        }
+
+        return new self(...$rows);
     }
 
     /**
@@ -216,7 +236,13 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
      */
     public function flatMap(callable $callable) : self
     {
-        return new self(...\array_merge(...\array_map($callable, $this->rows)));
+        $rows = [];
+
+        foreach ($this->rows as $row) {
+            $rows[] = $callable($row);
+        }
+
+        return new self(...\array_merge(...$rows));
     }
 
     /**
@@ -227,7 +253,9 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
      */
     public function each(callable $callable) : void
     {
-        \array_map($callable, $this->rows);
+        foreach ($this->rows as $row) {
+            $callable($row);
+        }
     }
 
     /**
@@ -272,7 +300,13 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
      */
     public function toArray() : array
     {
-        return \array_map(fn (Row $row) => $row->toArray(), $this->rows);
+        $array = [];
+
+        foreach ($this->rows as $row) {
+            $array[] = $row->toArray();
+        }
+
+        return $array;
     }
 
     public function count() : int
@@ -340,10 +374,10 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
         return new self(...$differentRows);
     }
 
-    public function add(Row $row) : self
+    public function add(Row ...$rows) : self
     {
         return new self(
-            ...\array_merge($this->rows, [$row])
+            ...\array_merge($this->rows, $rows)
         );
     }
 

@@ -5,7 +5,7 @@
     "keywords": ["etl", "extract", "transform", "load"],
     "prefer-stable": true,
     "require": {
-        "php": "^7.4 | ^8.0",
+        "php": "^7.4.2 || ~8.0",
         "ext-mbstring": "*"
     },
     "config": {
