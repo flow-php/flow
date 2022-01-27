@@ -29,7 +29,7 @@ final class LeagueCSVExtractor implements Extractor
 
     public function extract() : \Generator
     {
-        $rows = new Rows();
+        $rows = [];
 
         /**
          * @psalm-suppress ImpureMethodCall
@@ -37,17 +37,17 @@ final class LeagueCSVExtractor implements Extractor
          * @var array $row
          */
         foreach ($this->reader->getIterator() as $row) {
-            $rows = $rows->add(Row::create(new Row\Entry\ArrayEntry($this->rowEntryName, $row)));
+            $rows[] = Row::create(new Row\Entry\ArrayEntry($this->rowEntryName, $row));
 
-            if ($rows->count() >= $this->rowsInBatch) {
-                yield $rows;
+            if (\count($rows) >= $this->rowsInBatch) {
+                yield new Rows(...$rows);
 
-                $rows = new Rows();
+                $rows = [];
             }
         }
 
-        if ($rows->count()) {
-            yield $rows;
+        if (\count($rows)) {
+            yield new Rows(...$rows);
         }
     }
 }
