@@ -1,6 +1,8 @@
-## [Unreleased] - 2022-01-12
+## [Unreleased] - 2022-01-27
 
 ### Added
+- [#136](https://github.com/flow-php/etl/pull/136) - **possibility to add/remove/set more than one entry at once** - [@norbertmwk](https://github.com/norbertmwk)
+- [#136](https://github.com/flow-php/etl/pull/136) - **possibility to rename more than one entry at once** - [@norbertmwk](https://github.com/norbertmwk)
 - [#97](https://github.com/flow-php/etl/pull/97) - **Workflow for aut-merging dependabot PRs** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#68](https://github.com/flow-php/etl/pull/68) - **Rows::take(int $size) : self** - [@norberttech](https://github.com/norberttech)
 - [#68](https://github.com/flow-php/etl/pull/68) - **Rows::takeRight(int $size) : self** - [@norberttech](https://github.com/norberttech)
@@ -40,6 +42,10 @@
 - [856870](https://github.com/flow-php/etl/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#136](https://github.com/flow-php/etl/pull/136) - **Entries collection is no longer case insensitive, "entry" and "Entry" are two different entry names** - [@norbertmwk](https://github.com/norbertmwk)
+- [#136](https://github.com/flow-php/etl/pull/136) - **Index Entries by name in the collection** - [@norbertmwk](https://github.com/norbertmwk)
+- [#136](https://github.com/flow-php/etl/pull/136) - **Optimize recreating optimized and validated entries** - [@norbertmwk](https://github.com/norbertmwk)
+- [#136](https://github.com/flow-php/etl/pull/136) - **replaced all array_map and array_filter with foreaches** - [@norbertmwk](https://github.com/norbertmwk)
 - [#126](https://github.com/flow-php/etl/pull/126) - **Reuse workflows from aeon-php/actions** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#113](https://github.com/flow-php/etl/pull/113) - **Update tools dependencies** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#63](https://github.com/flow-php/etl/pull/63) - **DateEntries arguments from DateTimeImmutable into DateTimeInterface** - [@norberttech](https://github.com/norberttech)
