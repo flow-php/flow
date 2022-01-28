@@ -146,4 +146,85 @@ final class ETLTest extends TestCase
                 }
             })->run();
     }
+
+    public function test_etl_with_collecting() : void
+    {
+        ETL::extract(
+            new class implements Extractor {
+                /**
+                 * @return \Generator<int, Rows, mixed, void>
+                 */
+                public function extract() : \Generator
+                {
+                    yield new Rows(Row::create(new IntegerEntry('id', 1)));
+                    yield new Rows(Row::create(new IntegerEntry('id', 2)));
+                    yield new Rows(Row::create(new IntegerEntry('id', 3)));
+                }
+            }
+        )
+            ->transform(
+                new class implements Transformer {
+                    public function transform(Rows $rows) : Rows
+                    {
+                        return $rows->map(fn (Row $row) => $row->rename('id', 'new_id'));
+                    }
+                }
+            )
+            ->collect()
+            ->load(
+                new class implements Loader {
+                    public function load(Rows $rows) : void
+                    {
+                        Assert::assertCount(3, $rows);
+                        Assert::assertTrue($rows->isFirst());
+                        Assert::assertTrue($rows->isLast());
+                    }
+                }
+            )
+            ->run();
+    }
+
+    public function test_etl_with_parallelizing() : void
+    {
+        ETL::extract(
+            new class implements Extractor {
+                /**
+                 * @return \Generator<int, Rows, mixed, void>
+                 */
+                public function extract() : \Generator
+                {
+                    yield new Rows(
+                        Row::create(new IntegerEntry('id', 1)),
+                        Row::create(new IntegerEntry('id', 2)),
+                        Row::create(new IntegerEntry('id', 3)),
+                        Row::create(new IntegerEntry('id', 4)),
+                        Row::create(new IntegerEntry('id', 5)),
+                        Row::create(new IntegerEntry('id', 6)),
+                        Row::create(new IntegerEntry('id', 7)),
+                        Row::create(new IntegerEntry('id', 8)),
+                        Row::create(new IntegerEntry('id', 9)),
+                        Row::create(new IntegerEntry('id', 10)),
+                    );
+                }
+            }
+        )
+            ->transform(
+                new class implements Transformer {
+                    public function transform(Rows $rows) : Rows
+                    {
+                        return $rows->map(fn (Row $row) => $row->rename('id', 'new_id'));
+                    }
+                }
+            )
+            ->parallelize(2)
+            ->load(
+                new class implements Loader {
+                    public function load(Rows $rows) : void
+                    {
+                        Assert::assertCount(2, $rows);
+                    }
+                }
+            )
+            ->run();
+    }
 }

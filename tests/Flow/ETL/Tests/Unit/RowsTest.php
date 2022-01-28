@@ -260,7 +260,7 @@ final class RowsTest extends TestCase
         ];
     }
 
-    public function test_merges_two_collection_together() : void
+    public function test_merges_collection_together() : void
     {
         $rowsOne = new Rows(
             Row::create(new IntegerEntry('id', 1)),
@@ -272,7 +272,12 @@ final class RowsTest extends TestCase
             Row::create(new IntegerEntry('id', 5))
         );
 
-        $merged = $rowsOne->merge($rowsTwo);
+        $rowsThree = new Rows(
+            Row::create(new IntegerEntry('id', 6)),
+            Row::create(new IntegerEntry('id', 7)),
+        );
+
+        $merged = $rowsOne->merge($rowsTwo, $rowsThree);
 
         $this->assertEquals(
             new Rows(
@@ -280,7 +285,9 @@ final class RowsTest extends TestCase
                 Row::create(new IntegerEntry('id', 2)),
                 Row::create(new IntegerEntry('id', 3)),
                 Row::create(new IntegerEntry('id', 4)),
-                Row::create(new IntegerEntry('id', 5))
+                Row::create(new IntegerEntry('id', 5)),
+                Row::create(new IntegerEntry('id', 6)),
+                Row::create(new IntegerEntry('id', 7))
             ),
             $merged
         );

@@ -2,15 +2,19 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL;
+namespace Flow\ETL\Pipeline;
 
+use Flow\ETL\ErrorHandler;
 use Flow\ETL\ErrorHandler\ThrowError;
-use Flow\ETL\Pipeline\Element;
+use Flow\ETL\Loader;
+use Flow\ETL\Pipeline;
+use Flow\ETL\Rows;
+use Flow\ETL\Transformer;
 
 final class SynchronousPipeline implements Pipeline
 {
     /**
-     * @var array<Element>
+     * @var array<Loader|Transformer>
      */
     private array $elements;
 
@@ -22,22 +26,37 @@ final class SynchronousPipeline implements Pipeline
         $this->errorHandler = new ThrowError();
     }
 
+    public function clean() : Pipeline
+    {
+        $newPipeline = new self();
+        $newPipeline->errorHandler = $this->errorHandler;
+
+        return $newPipeline;
+    }
+
     public function onError(ErrorHandler $errorHandler) : void
     {
         $this->errorHandler = $errorHandler;
     }
 
-    public function register(Element $element) : void
+    public function registerTransformer(Transformer $transformer) : void
     {
-        $this->elements[] = $element;
+        $this->elements[] = $transformer;
+    }
+
+    public function registerLoader(Loader $loader) : void
+    {
+        $this->elements[] = $loader;
     }
 
     /**
      * @param \Generator<int, Rows, mixed, void> $generator
      *
      * @throws \Throwable
+     *
+     * @return \Generator<int, Rows, mixed, void>
      */
-    public function process(\Generator $generator) : void
+    public function process(\Generator $generator) : \Generator
     {
         $index = 0;
 
@@ -56,7 +75,11 @@ final class SynchronousPipeline implements Pipeline
 
             foreach ($this->elements as $element) {
                 try {
-                    $rows = $element->process($rows);
+                    if ($element instanceof Transformer) {
+                        $rows = $element->transform($rows);
+                    } else {
+                        $element->load($rows);
+                    }
                 } catch (\Throwable $exception) {
                     if ($this->errorHandler->throw($exception, $rows)) {
                         throw $exception;
@@ -67,6 +90,8 @@ final class SynchronousPipeline implements Pipeline
                     }
                 }
             }
+
+            yield $rows;
 
             $index++;
         }

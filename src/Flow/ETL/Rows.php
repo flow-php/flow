@@ -394,10 +394,16 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
         return new self(...\array_merge($rows));
     }
 
-    public function merge(self $rows) : self
+    public function merge(self ...$rows) : self
     {
+        $rowsOfRows = [];
+
+        foreach ($rows as $nextRows) {
+            $rowsOfRows[] = $nextRows->rows;
+        }
+
         return new self(
-            ...\array_merge($this->rows, $rows->rows)
+            ...\array_merge($this->rows, ...$rowsOfRows)
         );
     }
 
