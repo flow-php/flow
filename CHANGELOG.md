@@ -1,6 +1,8 @@
-## [Unreleased] - 2022-01-27
+## [Unreleased] - 2022-01-28
 
 ### Added
+- [#137](https://github.com/flow-php/etl/pull/137) - **ETL::collect()** - [@norberttech](https://github.com/norberttech)
+- [#137](https://github.com/flow-php/etl/pull/137) - **ETL::parallelize(int $chunks)** - [@norberttech](https://github.com/norberttech)
 - [#136](https://github.com/flow-php/etl/pull/136) - **possibility to add/remove/set more than one entry at once** - [@norbertmwk](https://github.com/norbertmwk)
 - [#136](https://github.com/flow-php/etl/pull/136) - **possibility to rename more than one entry at once** - [@norbertmwk](https://github.com/norbertmwk)
 - [#97](https://github.com/flow-php/etl/pull/97) - **Workflow for aut-merging dependabot PRs** - [@tomaszhanc](https://github.com/tomaszhanc)
