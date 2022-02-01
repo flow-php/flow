@@ -1,6 +1,7 @@
-## [Unreleased] - 2022-01-29
+## [Unreleased] - 2022-02-01
 
 ### Added
+- [#144](https://github.com/flow-php/etl/pull/144) - **@internal annotation to Pipeline interface** - [@norberttech](https://github.com/norberttech)
 - [#137](https://github.com/flow-php/etl/pull/137) - **ETL::collect()** - [@norberttech](https://github.com/norberttech)
 - [#137](https://github.com/flow-php/etl/pull/137) - **ETL::parallelize(int $chunks)** - [@norberttech](https://github.com/norberttech)
 - [#136](https://github.com/flow-php/etl/pull/136) - **possibility to add/remove/set more than one entry at once** - [@norbertmwk](https://github.com/norbertmwk)
@@ -44,6 +45,7 @@
 - [856870](https://github.com/flow-php/etl/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#144](https://github.com/flow-php/etl/pull/144) - **Revert pipelines from generators to callbacks** - [@norberttech](https://github.com/norberttech)
 - [#136](https://github.com/flow-php/etl/pull/136) - **Entries collection is no longer case insensitive, "entry" and "Entry" are two different entry names** - [@norbertmwk](https://github.com/norbertmwk)
 - [#136](https://github.com/flow-php/etl/pull/136) - **Index Entries by name in the collection** - [@norbertmwk](https://github.com/norbertmwk)
 - [#136](https://github.com/flow-php/etl/pull/136) - **Optimize recreating optimized and validated entries** - [@norbertmwk](https://github.com/norbertmwk)
