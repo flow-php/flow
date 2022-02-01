@@ -11,6 +11,9 @@ use Flow\ETL\Pipeline;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
+/**
+ * @internal
+ */
 final class ParallelizingPipeline implements Pipeline
 {
     private Pipeline $pipeline;
@@ -45,15 +48,13 @@ final class ParallelizingPipeline implements Pipeline
         $this->nextPipeline->registerLoader($loader);
     }
 
-    public function process(\Generator $generator) : \Generator
+    public function process(\Generator $generator, callable $callback = null) : void
     {
-        foreach ($this->pipeline->process($generator) as $rows) {
+        $this->pipeline->process($generator, function (Rows $rows) use ($callback) : void {
             foreach ($rows->chunks($this->parallel) as $chunk) {
-                foreach ($this->nextPipeline->process($this->generate($chunk)) as $nextRows) {
-                    yield $nextRows;
-                }
+                $this->nextPipeline->process($this->generate($chunk), $callback);
             }
-        }
+        });
     }
 
     public function onError(ErrorHandler $errorHandler) : void

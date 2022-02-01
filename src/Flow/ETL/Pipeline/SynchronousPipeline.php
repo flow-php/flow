@@ -11,6 +11,9 @@ use Flow\ETL\Pipeline;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
+/**
+ * @internal
+ */
 final class SynchronousPipeline implements Pipeline
 {
     /**
@@ -51,12 +54,8 @@ final class SynchronousPipeline implements Pipeline
 
     /**
      * @param \Generator<int, Rows, mixed, void> $generator
-     *
-     * @throws \Throwable
-     *
-     * @return \Generator<int, Rows, mixed, void>
      */
-    public function process(\Generator $generator) : \Generator
+    public function process(\Generator $generator, callable $callback = null) : void
     {
         $index = 0;
 
@@ -91,7 +90,9 @@ final class SynchronousPipeline implements Pipeline
                 }
             }
 
-            yield $rows;
+            if ($callback !== null) {
+                $callback($rows);
+            }
 
             $index++;
         }

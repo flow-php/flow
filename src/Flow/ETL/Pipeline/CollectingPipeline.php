@@ -10,6 +10,9 @@ use Flow\ETL\Pipeline;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
+/**
+ * @internal
+ */
 final class CollectingPipeline implements Pipeline
 {
     private Pipeline $pipeline;
@@ -37,14 +40,21 @@ final class CollectingPipeline implements Pipeline
         $this->nextPipeline->registerLoader($loader);
     }
 
-    public function process(\Generator $generator) : \Generator
+    public function process(\Generator $generator, callable $callback = null) : void
     {
-        $rows = (new Rows())->merge(...\iterator_to_array($this->pipeline->process($generator)));
-        $rows = $rows->makeFirst()->makeLast();
+        $rows = [];
 
-        foreach ($this->nextPipeline->process($this->generate($rows)) as $nextRows) {
-            yield $nextRows;
+        while ($generator->valid()) {
+            $this->pipeline->process($generator, function (Rows $nextRows) use (&$rows) : void {
+                /** @psalm-suppress MixedArrayAssignment */
+                $rows[] = $nextRows;
+            });
         }
+
+        /** @var array<Rows> $rows */
+        $mergedRows = (new Rows())->merge(...$rows)->makeFirst()->makeLast();
+
+        $this->nextPipeline->process($this->generate($mergedRows), $callback);
     }
 
     public function onError(ErrorHandler $errorHandler) : void

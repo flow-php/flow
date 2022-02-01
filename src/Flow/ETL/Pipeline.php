@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+/**
+ * @internal
+ */
 interface Pipeline
 {
     /**
@@ -17,10 +20,9 @@ interface Pipeline
 
     /**
      * @param \Generator<int, Rows, mixed, void> $generator
-     *
-     * @return \Generator<int, Rows, mixed, void>
+     * @param callable(Rows $rows) : void $callback
      */
-    public function process(\Generator $generator) : \Generator;
+    public function process(\Generator $generator, callable $callback = null) : void;
 
     public function onError(ErrorHandler $errorHandler) : void;
 }

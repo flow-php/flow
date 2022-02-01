@@ -72,10 +72,6 @@ final class ETL
 
     public function run() : void
     {
-        $generator = $this->pipeline->process($this->extractor->extract());
-
-        while ($generator->valid()) {
-            $generator->next();
-        }
+        $this->pipeline->process($this->extractor->extract());
     }
 }
