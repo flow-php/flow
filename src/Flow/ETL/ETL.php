@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Pipeline\CollectingPipeline;
 use Flow\ETL\Pipeline\ParallelizingPipeline;
 use Flow\ETL\Pipeline\SynchronousPipeline;
@@ -68,6 +69,32 @@ final class ETL
         $this->pipeline = new ParallelizingPipeline($this->pipeline, $chunks);
 
         return $this;
+    }
+
+    public function fetch(int $limit = 0) : Rows
+    {
+        if ($limit < 0) {
+            throw new InvalidArgumentException("Fetch limit can't be lower than 0");
+        }
+
+        $rows = new Rows();
+        $this->pipeline->process($this->extractor->extract(), function (Rows $nextRows) use ($limit, &$rows) : void {
+            /** @var Rows $rows */
+            if ($limit === 0) {
+                $rows = $rows->merge($nextRows);
+            }
+
+            if ($limit > 0 && $rows->count() < $limit) {
+                $rows = $rows->merge($nextRows);
+
+                if ($rows->count() >= $limit) {
+                    $rows = $rows->dropRight($rows->count() - $limit);
+                }
+            }
+        });
+
+        /** @var Rows $rows */
+        return $rows;
     }
 
     public function run() : void

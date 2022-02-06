@@ -227,4 +227,48 @@ final class ETLTest extends TestCase
             )
             ->run();
     }
+
+    public function test_etl_fetch_with_limit() : void
+    {
+        $rows = ETL::extract(
+            new class implements Extractor {
+                /**
+                 * @return \Generator<int, Rows, mixed, void>
+                 */
+                public function extract() : \Generator
+                {
+                    for ($i = 0; $i < 1000; $i++) {
+                        yield new Rows(
+                            Row::create(new IntegerEntry('id', $i)),
+                        );
+                    }
+                }
+            }
+        )
+        ->fetch(10);
+
+        $this->assertCount(10, $rows);
+    }
+
+    public function test_etl_fetch_without_limit() : void
+    {
+        $rows = ETL::extract(
+            new class implements Extractor {
+                /**
+                 * @return \Generator<int, Rows, mixed, void>
+                 */
+                public function extract() : \Generator
+                {
+                    for ($i = 0; $i < 20; $i++) {
+                        yield new Rows(
+                            Row::create(new IntegerEntry('id', $i)),
+                        );
+                    }
+                }
+            }
+        )
+        ->fetch();
+
+        $this->assertCount(20, $rows);
+    }
 }
