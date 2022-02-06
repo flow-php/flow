@@ -1,6 +1,7 @@
-## [Unreleased] - 2022-02-01
+## [Unreleased] - 2022-02-06
 
 ### Added
+- [#147](https://github.com/flow-php/etl/pull/147) - **fetch feature to return rows from ETL in other way than through Loader** - [@norberttech](https://github.com/norberttech)
 - [#144](https://github.com/flow-php/etl/pull/144) - **@internal annotation to Pipeline interface** - [@norberttech](https://github.com/norberttech)
 - [#137](https://github.com/flow-php/etl/pull/137) - **ETL::collect()** - [@norberttech](https://github.com/norberttech)
 - [#137](https://github.com/flow-php/etl/pull/137) - **ETL::parallelize(int $chunks)** - [@norberttech](https://github.com/norberttech)
