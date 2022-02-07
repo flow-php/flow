@@ -64,14 +64,14 @@ final class DbalQueryExtractor implements Extractor
     public function extract() : \Generator
     {
         foreach ($this->parametersSet->all() as $parameters) {
-            $rows = new Rows();
+            $rows = [];
 
             /** @psalm-suppress ImpureMethodCall */
             foreach ($this->connection->fetchAllAssociative($this->query, $parameters, $this->types) as $row) {
-                $rows = $rows->add(Row::create(new Row\Entry\ArrayEntry($this->rowEntryName, $row)));
+                $rows[] = Row::create(new Row\Entry\ArrayEntry($this->rowEntryName, $row));
             }
 
-            yield $rows;
+            yield new Rows(...$rows);
         }
     }
 }
