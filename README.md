@@ -252,7 +252,7 @@ through Extractors just use `ETL::process(Rows $rows) : ETL`.
 
 ```php 
 
-ETL::extract(new Rows(...))
+ETL::process(new Rows(...))
     ->transform($transformer1)
     ->transform($transformer2)
     ->transform($transformer3)
