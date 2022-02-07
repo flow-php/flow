@@ -76,6 +76,7 @@
 - [1a6eec](https://github.com/flow-php/etl/commit/1a6eec01837f25cf1d6ff7c041996ff7b8b017e7) - **failing tests** - [@norberttech](https://github.com/norberttech)
 
 ### Updated
+- [7ff2da](https://github.com/flow-php/etl/commit/7ff2da54d9145b4c076738e9a5c35c3c997c6359) - **README.md** - [@norberttech](https://github.com/norberttech)
 - [56cc82](https://github.com/flow-php/etl/commit/56cc829d20c5e4e930049cdc08306331a4746f14) - **Adapters and Extensions section** - [@norberttech](https://github.com/norberttech)
 - [424aa9](https://github.com/flow-php/etl/commit/424aa92500d096e08c228aa66e2acc24140cfbda) - **README.md** - [@norberttech](https://github.com/norberttech)
 - [6113d9](https://github.com/flow-php/etl/commit/6113d9c2b719590326046886a109ee689c70ded8) - **README.md** - [@norberttech](https://github.com/norberttech)
