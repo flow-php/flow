@@ -25,6 +25,23 @@ use PHPUnit\Framework\TestCase;
 
 final class ETLTest extends TestCase
 {
+    public function test_etl_process_constructor() : void
+    {
+        $collectedRows = ETL::process(
+            $rows = new Rows(
+                Row::create(
+                    new IntegerEntry('id', 101),
+                    new BooleanEntry('deleted', false),
+                    new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-24')),
+                    new NullEntry('phase')
+                )
+            )
+        )
+            ->fetch();
+
+        $this->assertEquals($rows, $collectedRows);
+    }
+
     public function test_etl() : void
     {
         $extractor = new class implements Extractor {

@@ -245,6 +245,20 @@ ETL::extract($extractor)
 If `ETL::fetch(int $limit = 0) : Rows` limit argument is different than 0, fetch will
 return no more rows than requested. 
 
+## Process
+
+Sometimes you might already have `Rows` prepared, in that case instead of going
+through Extractors just use `ETL::process(Rows $rows) : ETL`. 
+
+```php 
+
+ETL::extract(new Rows(...))
+    ->transform($transformer1)
+    ->transform($transformer2)
+    ->transform($transformer3)
+    ->transform($transformer4)
+    ->load($loader);
+```
 
 ## Display
 

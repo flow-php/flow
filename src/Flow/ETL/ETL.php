@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Extractor\ProcessExtractor;
 use Flow\ETL\Formatter\AsciiTableFormatter;
 use Flow\ETL\Pipeline\CollectingPipeline;
 use Flow\ETL\Pipeline\ParallelizingPipeline;
@@ -20,6 +21,11 @@ final class ETL
     {
         $this->extractor = $extractor;
         $this->pipeline = $pipeline;
+    }
+
+    public static function process(Rows $rows, Pipeline $pipeline = null) : self
+    {
+        return new self(new ProcessExtractor($rows), $pipeline ?? new SynchronousPipeline());
     }
 
     public static function extract(Extractor $extractor, Pipeline $pipeline = null) : self
