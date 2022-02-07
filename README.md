@@ -24,6 +24,17 @@ data structure, filter out things that didn't change, and load in bulk into the 
 
 This is a perfect scenario for ETL.
 
+## Usage
+
+```php
+
+ETL::extract($extractor)
+    ->transform($transformer1)
+    ->transform($transformer2)
+    ->transform($transformer3)
+    ->load($loader);
+```
+
 ## Features
 
 * Low memory consumption even when processing thousands of records
@@ -146,58 +157,6 @@ data entries.
 composer require flow-php/etl:1.x@dev
 ```
 
-## Usage
-
-```php
-<?php
-
-use Flow\ETL\ETL;
-use Flow\ETL\Extractor;
-use Flow\ETL\Loader;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
-use Flow\ETL\Transformer;
-
-require_once __DIR__ . '/../vendor/autoload.php';
-
-$extractor = new class implements Extractor {
-    public function extract(): Generator
-    {
-        yield new Rows(
-            Row::create(
-                new Row\Entry\ArrayEntry('user', ['id' => 1, 'name' => 'Norbret', 'roles' => ['DEVELOPER', 'ADMIN']])
-            )
-        );
-    }
-};
-
-$transformer = new class implements Transformer {
-    public function transform(Rows $rows): Rows
-    {
-        return $rows->map(function (Row $row): Row {
-            $dataArray = $row->get('user')->value();
-
-            return Row::create(
-                new Row\Entry\IntegerEntry('id', $dataArray['id']),
-                new Row\Entry\StringEntry('name', $dataArray['name']),
-                new Row\Entry\ArrayEntry('roles', $dataArray['roles'])
-            );
-        });
-    }
-};
-
-$loader = new class implements Loader {
-    public function load(Rows $rows): void
-    {
-        var_dump($rows->toArray());
-    }
-};
-
-ETL::extract($extractor)
-    ->transform($transformer)
-    ->load($loader);
-```
-
 ## Error Handling 
 
 In case of any exception in transform/load steps, ETL process will break, in order
@@ -230,6 +189,15 @@ ETL::extract($extractor)
 
 ## Collect/Parallelize
 
+```php
+
+ETL::extract($extractor)
+    ->transform($transformer1)
+    ->transform($transformer2)
+    ->collect()
+    ->load($loader);
+```
+
 Flow PHP ETL is designed to keep memory consumption constant. This can be achieved by processing
 only one chunk of data at time.
 
@@ -246,6 +214,69 @@ will wait for all rows to get extracted, then it will merge them and pass total 
 
 Parallelize method is exactly opposite, it will not wait for all Rows in order to collect them, instead it will
 take any incoming Rows instance and split it into smaller chunks according to `ETL::parallelize(int $chunks)` method `chunks` argument.
+
+```php
+
+ETL::extract($extractor)
+    ->transform($transformer1)
+    ->transform($transformer2)
+    ->load($loader1)
+    ->parallelize(20)
+    ->transform($transformer3)
+    ->transform($transformer4)
+    ->load($loader2);
+```
+
+## Fetch
+
+Loaders are a great way to load `Rows` into specific Data Sink, however stometimes
+you want to simply grab Rows and do something with them. 
+
+```php
+
+ETL::extract($extractor)
+    ->transform($transformer1)
+    ->transform($transformer2)
+    ->transform($transformer3)
+    ->transform($transformer4)
+    ->fetch();
+```
+
+If `ETL::fetch(int $limit = 0) : Rows` limit argument is different than 0, fetch will
+return no more rows than requested. 
+
+
+## Display
+
+Display is probably the easiest way to debug ETL's, by default
+it will grab selected number of rows (20 by default)
+
+```php
+
+$output = ETL::extract($extractor)
+    ->transform($transformer1)
+    ->transform($transformer2)
+    ->transform($transformer3)
+    ->transform($transformer4)
+    ->display($limit = 5, $truncate = 0);
+    
+echo $output;
+```
+
+Output:
+
+```
++------+--------+---------+---------------------------+-------+------------------------------+--------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------+
+|   id |  price | deleted | created-at                | phase | items                        | tags                                                                                       | object                                                                                         |
++------+--------+---------+---------------------------+-------+------------------------------+--------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------+
+| 1234 | 123.45 | false   | 2020-07-13T15:00:00+00:00 | null  | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) |
+| 1234 | 123.45 | false   | 2020-07-13T15:00:00+00:00 | null  | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) |
+| 1234 | 123.45 | false   | 2020-07-13T15:00:00+00:00 | null  | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) |
+| 1234 | 123.45 | false   | 2020-07-13T15:00:00+00:00 | null  | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) |
+| 1234 | 123.45 | false   | 2020-07-13T15:00:00+00:00 | null  | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) |
++------+--------+---------+---------------------------+-------+------------------------------+--------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------+
+5 rows
+```
 
 ## Performance
 

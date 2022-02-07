@@ -36,6 +36,11 @@ final class ArrayEntry implements Entry
         $this->value = $value;
     }
 
+    public function __toString() : string
+    {
+        return $this->toString();
+    }
+
     public function name() : string
     {
         return $this->name;
@@ -75,5 +80,10 @@ final class ArrayEntry implements Entry
     public function isEqual(Entry $entry) : bool
     {
         return $this->is($entry->name()) && $entry instanceof self && (new ArrayComparison())->equals($this->value(), $entry->value());
+    }
+
+    public function toString() : string
+    {
+        return (string) \preg_replace('!\s+!', ' ', \str_replace("\n", '', \print_r($this->value(), true)));
     }
 }

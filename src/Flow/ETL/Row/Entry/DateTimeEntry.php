@@ -29,6 +29,11 @@ final class DateTimeEntry implements Entry
         $this->value = $value;
     }
 
+    public function __toString() : string
+    {
+        return $this->toString();
+    }
+
     public function name() : string
     {
         return $this->name;
@@ -62,5 +67,11 @@ final class DateTimeEntry implements Entry
     public function isEqual(Entry $entry) : bool
     {
         return $this->is($entry->name()) && $entry instanceof self && $this->value() == $entry->value();
+    }
+
+    public function toString() : string
+    {
+        /** @psalm-suppress ImpureMethodCall */
+        return $this->value()->format(\DateTimeInterface::ATOM);
     }
 }

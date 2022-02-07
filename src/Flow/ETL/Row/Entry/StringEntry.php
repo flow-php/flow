@@ -53,6 +53,11 @@ final class StringEntry implements Entry
         return new self($name, $dateTime->format($format));
     }
 
+    public function __toString() : string
+    {
+        return $this->toString();
+    }
+
     public function name() : string
     {
         return $this->name;
@@ -89,5 +94,10 @@ final class StringEntry implements Entry
     public function isEqual(Entry $entry) : bool
     {
         return $this->is($entry->name()) && $entry instanceof self && $this->value() === $entry->value();
+    }
+
+    public function toString() : string
+    {
+        return $this->value();
     }
 }

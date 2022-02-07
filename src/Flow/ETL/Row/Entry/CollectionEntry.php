@@ -34,6 +34,11 @@ final class CollectionEntry implements Entry
         $this->entries = $entries;
     }
 
+    public function __toString() : string
+    {
+        return $this->toString();
+    }
+
     public function name() : string
     {
         return $this->name;
@@ -76,5 +81,22 @@ final class CollectionEntry implements Entry
     public function isEqual(Entry $entry) : bool
     {
         return $this->is($entry->name()) && $entry instanceof self && (new ArrayComparison())->equals($this->value(), $entry->value());
+    }
+
+    public function toString() : string
+    {
+        $array = [];
+
+        foreach ($this->entries as $entries) {
+            $entriesArray = [];
+
+            foreach ($entries as $entry) {
+                $entriesArray[$entry->name()] = $entry->toString();
+            }
+
+            $array[] = $entriesArray;
+        }
+
+        return (string) \json_encode($array);
     }
 }

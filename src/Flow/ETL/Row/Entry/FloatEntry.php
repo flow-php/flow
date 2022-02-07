@@ -44,6 +44,11 @@ final class FloatEntry implements Entry
         return new self($name, (float) $value);
     }
 
+    public function __toString() : string
+    {
+        return $this->toString();
+    }
+
     public function name() : string
     {
         return $this->name;
@@ -82,5 +87,10 @@ final class FloatEntry implements Entry
         return $this->is($entry->name())
             && $entry instanceof self
             && \bccomp((string) $this->value(), (string) $entry->value(), $this->precision) === 0;
+    }
+
+    public function toString() : string
+    {
+        return (string) $this->value();
     }
 }

@@ -26,6 +26,11 @@ final class NullEntry implements Entry
         $this->name = $name;
     }
 
+    public function __toString() : string
+    {
+        return $this->toString();
+    }
+
     public function name() : string
     {
         return $this->name;
@@ -62,5 +67,10 @@ final class NullEntry implements Entry
     public function isEqual(Entry $entry) : bool
     {
         return $this->is($entry->name()) && $entry instanceof self;
+    }
+
+    public function toString() : string
+    {
+        return 'null';
     }
 }

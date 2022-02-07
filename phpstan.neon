@@ -2,5 +2,7 @@ parameters:
     level: max
     paths:
         - src
+    excludePaths:
+        - src/Flow/ETL/Formatter/ASCII/ASCIITable.php
 
     tmpDir: var/phpstan/cache

@@ -33,6 +33,11 @@ final class StructureEntry implements Entry
         $this->entries = $entries;
     }
 
+    public function __toString() : string
+    {
+        return $this->toString();
+    }
+
     public function name() : string
     {
         return $this->name;
@@ -75,5 +80,16 @@ final class StructureEntry implements Entry
     public function isEqual(Entry $entry) : bool
     {
         return $this->is($entry->name()) && $entry instanceof self && (new ArrayComparison())->equals($this->value(), $entry->value());
+    }
+
+    public function toString() : string
+    {
+        $array = [];
+
+        foreach ($this->entries as $entry) {
+            $array[$entry->name()] = $entry->toString();
+        }
+
+        return (string) \json_encode($array);
     }
 }

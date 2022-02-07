@@ -9,6 +9,8 @@ namespace Flow\ETL\Row;
  */
 interface Entry
 {
+    public function __toString() : string;
+
     public function name() : string;
 
     public function rename(string $name) : self;
@@ -26,4 +28,6 @@ interface Entry
     public function map(callable $mapper) : self;
 
     public function isEqual(self $entry) : bool;
+
+    public function toString() : string;
 }

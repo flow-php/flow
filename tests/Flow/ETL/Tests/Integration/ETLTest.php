@@ -12,9 +12,11 @@ use Flow\ETL\Loader;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\BooleanEntry;
 use Flow\ETL\Row\Entry\DateTimeEntry;
+use Flow\ETL\Row\Entry\FloatEntry;
 use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Row\Entry\NullEntry;
 use Flow\ETL\Row\Entry\StringEntry;
+use Flow\ETL\Row\Entry\StructureEntry;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Double\AddStampToStringEntryTransformer;
 use Flow\ETL\Transformer;
@@ -270,5 +272,75 @@ final class ETLTest extends TestCase
         ->fetch();
 
         $this->assertCount(20, $rows);
+    }
+
+    public function test_etl_display() : void
+    {
+        $etl = ETL::extract(
+            new class implements Extractor {
+                /**
+                 * @return \Generator<int, Rows, mixed, void>
+                 */
+                public function extract() : \Generator
+                {
+                    for ($i = 0; $i < 20; $i++) {
+                        yield new Rows(
+                            Row::create(
+                                new IntegerEntry('id', 1234),
+                                new FloatEntry('price', 123.45),
+                                new BooleanEntry('deleted', false),
+                                new DateTimeEntry('created-at', $createdAt = new \DateTimeImmutable('2020-07-13 15:00')),
+                                new NullEntry('phase'),
+                                new StructureEntry(
+                                    'items',
+                                    new IntegerEntry('item-id', 1),
+                                    new StringEntry('name', 'one'),
+                                ),
+                                new Row\Entry\CollectionEntry(
+                                    'tags',
+                                    new Row\Entries(new IntegerEntry('item-id', 1), new StringEntry('name', 'one')),
+                                    new Row\Entries(new IntegerEntry('item-id', 2), new StringEntry('name', 'two')),
+                                    new Row\Entries(new IntegerEntry('item-id', 3), new StringEntry('name', 'three'))
+                                ),
+                                new Row\Entry\ObjectEntry('object', new \ArrayIterator([1, 2, 3]))
+                            ),
+                        );
+                    }
+                }
+            }
+        );
+
+        $this->assertStringContainsString(
+            <<<'ASCIITABLE'
++----+------+-------+--------------------+-----+--------------------+--------------------+--------------------+
+|  id| price|deleted|          created-at|phase|               items|                tags|              object|
++----+------+-------+--------------------+-----+--------------------+--------------------+--------------------+
+|1234|123.45|  false|2020-07-13T15:00:...| null|{"item-id":"1","n...|[{"item-id":"1","...|ArrayIterator Obj...|
+|1234|123.45|  false|2020-07-13T15:00:...| null|{"item-id":"1","n...|[{"item-id":"1","...|ArrayIterator Obj...|
+|1234|123.45|  false|2020-07-13T15:00:...| null|{"item-id":"1","n...|[{"item-id":"1","...|ArrayIterator Obj...|
+|1234|123.45|  false|2020-07-13T15:00:...| null|{"item-id":"1","n...|[{"item-id":"1","...|ArrayIterator Obj...|
+|1234|123.45|  false|2020-07-13T15:00:...| null|{"item-id":"1","n...|[{"item-id":"1","...|ArrayIterator Obj...|
++----+------+-------+--------------------+-----+--------------------+--------------------+--------------------+
+5 rows
+ASCIITABLE,
+            $etl->display(5)
+        );
+
+        $this->assertStringContainsString(
+            <<<'ASCIITABLE'
++----+------+-------+-------------------------+-----+----------------------------+------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------+
+|  id| price|deleted|               created-at|phase|                       items|                                                                                      tags|                                                                                        object|
++----+------+-------+-------------------------+-----+----------------------------+------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------+
+|1234|123.45|  false|2020-07-13T15:00:00+00:00| null|{"item-id":"1","name":"one"}|[{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}]|ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 ))|
+|1234|123.45|  false|2020-07-13T15:00:00+00:00| null|{"item-id":"1","name":"one"}|[{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}]|ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 ))|
+|1234|123.45|  false|2020-07-13T15:00:00+00:00| null|{"item-id":"1","name":"one"}|[{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}]|ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 ))|
+|1234|123.45|  false|2020-07-13T15:00:00+00:00| null|{"item-id":"1","name":"one"}|[{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}]|ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 ))|
+|1234|123.45|  false|2020-07-13T15:00:00+00:00| null|{"item-id":"1","name":"one"}|[{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}]|ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 ))|
+|1234|123.45|  false|2020-07-13T15:00:00+00:00| null|{"item-id":"1","name":"one"}|[{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}]|ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 ))|
++----+------+-------+-------------------------+-----+----------------------------+------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------+
+6 rows
+ASCIITABLE,
+            $etl->display(6, 0)
+        );
     }
 }

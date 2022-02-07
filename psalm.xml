@@ -11,6 +11,7 @@
         <directory name="src"/>
         <ignoreFiles>
             <directory name="vendor"/>
+            <file name="src/Flow/ETL/Formatter/ASCII/ASCIITable.php" />
         </ignoreFiles>
     </projectFiles>
 </psalm>
