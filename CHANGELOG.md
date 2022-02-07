@@ -1,6 +1,7 @@
 ## [Unreleased] - 2022-02-07
 
 ### Added
+- [#150](https://github.com/flow-php/etl/pull/150) - **ETL::process(Rows $rows) for direct Rows processing** - [@norberttech](https://github.com/norberttech)
 - [#149](https://github.com/flow-php/etl/pull/149) - **ETL::display() function that lets you grab and display slected number of rows** - [@norberttech](https://github.com/norberttech)
 - [#149](https://github.com/flow-php/etl/pull/149) - **ASCIITableFormatter for as a ETL::display method default formatter** - [@norberttech](https://github.com/norberttech)
 - [#147](https://github.com/flow-php/etl/pull/147) - **fetch feature to return rows from ETL in other way than through Loader** - [@norberttech](https://github.com/norberttech)
