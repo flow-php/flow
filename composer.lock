@@ -12,17 +12,17 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl.git",
-                "reference": "894f1ba87b28f19c649b3ba3da98828fd9682657"
+                "reference": "80d77c0de9529a7173b547dc89b8ac6d56dd61b9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl/zipball/894f1ba87b28f19c649b3ba3da98828fd9682657",
-                "reference": "894f1ba87b28f19c649b3ba3da98828fd9682657",
+                "url": "https://api.github.com/repos/flow-php/etl/zipball/80d77c0de9529a7173b547dc89b8ac6d56dd61b9",
+                "reference": "80d77c0de9529a7173b547dc89b8ac6d56dd61b9",
                 "shasum": ""
             },
             "require": {
                 "ext-mbstring": "*",
-                "php": "^7.4 | ^8.0"
+                "php": "^7.4.2 || ~8.0"
             },
             "default-branch": true,
             "type": "library",
@@ -48,7 +48,7 @@
                 "issues": "https://github.com/flow-php/etl/issues",
                 "source": "https://github.com/flow-php/etl/tree/1.x"
             },
-            "time": "2021-12-08T06:10:09+00:00"
+            "time": "2022-02-08T06:15:18+00:00"
         }
     ],
     "packages-dev": [],

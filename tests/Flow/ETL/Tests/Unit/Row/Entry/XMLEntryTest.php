@@ -96,4 +96,12 @@ final class XMLEntryTest extends TestCase
             false,
         ];
     }
+
+    public function test_casts_to_string() : void
+    {
+        $xml = '<xml><name>node</name></xml>';
+        $entry = XMLEntry::fromString('item', $xml);
+
+        $this->assertStringContainsString($xml, $entry->toString());
+    }
 }

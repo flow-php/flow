@@ -41,6 +41,11 @@ final class XMLEntry implements Entry
         return new self($name, $dom);
     }
 
+    public function __toString() : string
+    {
+        return $this->toString();
+    }
+
     public function name() : string
     {
         return $this->name;
@@ -78,5 +83,13 @@ final class XMLEntry implements Entry
          */
         return $this->is($entry->name()) && $entry instanceof self
             && ($this->value()->saveXML() === $entry->value()->saveXML());
+    }
+
+    public function toString() : string
+    {
+        /**
+         * @psalm-suppress ImpureMethodCall
+         */
+        return (string) $this->value->saveXML();
     }
 }
