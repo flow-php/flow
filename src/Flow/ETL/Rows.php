@@ -319,6 +319,10 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
      */
     public function chunks(int $size) : array
     {
+        if ($size < 1) {
+            throw InvalidArgumentException::because('Chunk size must be greater than 0');
+        }
+
         $chunks = [];
 
         foreach (\array_chunk($this->rows, $size) as $chunk) {
