@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-02-07
+## [Unreleased] - 2022-02-09
 
 ### Added
 - [#150](https://github.com/flow-php/etl/pull/150) - **ETL::process(Rows $rows) for direct Rows processing** - [@norberttech](https://github.com/norberttech)
