@@ -12,17 +12,17 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl.git",
-                "reference": "a04048307a31019398922f1cf0a9ab4fa4e2f01d"
+                "reference": "80d77c0de9529a7173b547dc89b8ac6d56dd61b9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl/zipball/a04048307a31019398922f1cf0a9ab4fa4e2f01d",
-                "reference": "a04048307a31019398922f1cf0a9ab4fa4e2f01d",
+                "url": "https://api.github.com/repos/flow-php/etl/zipball/80d77c0de9529a7173b547dc89b8ac6d56dd61b9",
+                "reference": "80d77c0de9529a7173b547dc89b8ac6d56dd61b9",
                 "shasum": ""
             },
             "require": {
                 "ext-mbstring": "*",
-                "php": "^7.4 | ^8.0"
+                "php": "^7.4.2 || ~8.0"
             },
             "default-branch": true,
             "type": "library",
@@ -48,22 +48,22 @@
                 "issues": "https://github.com/flow-php/etl/issues",
                 "source": "https://github.com/flow-php/etl/tree/1.x"
             },
-            "time": "2022-01-14T06:19:00+00:00"
+            "time": "2022-02-08T06:15:18+00:00"
         }
     ],
     "packages-dev": [
         {
             "name": "halaxa/json-machine",
-            "version": "1.0.0",
+            "version": "1.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/halaxa/json-machine.git",
-                "reference": "3302a163985a75f24dcba1f86a00c236a0278126"
+                "reference": "0372736167a86a3f9c8723544e84bdb24ff032a6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/halaxa/json-machine/zipball/3302a163985a75f24dcba1f86a00c236a0278126",
-                "reference": "3302a163985a75f24dcba1f86a00c236a0278126",
+                "url": "https://api.github.com/repos/halaxa/json-machine/zipball/0372736167a86a3f9c8723544e84bdb24ff032a6",
+                "reference": "0372736167a86a3f9c8723544e84bdb24ff032a6",
                 "shasum": ""
             },
             "require": {
@@ -97,7 +97,7 @@
             "description": "Efficient, easy-to-use and fast JSON pull parser",
             "support": {
                 "issues": "https://github.com/halaxa/json-machine/issues",
-                "source": "https://github.com/halaxa/json-machine/tree/1.0.0"
+                "source": "https://github.com/halaxa/json-machine/tree/1.0.1"
             },
             "funding": [
                 {
@@ -105,7 +105,7 @@
                     "type": "other"
                 }
             ],
-            "time": "2022-02-04T15:22:19+00:00"
+            "time": "2022-02-05T17:55:41+00:00"
         }
     ],
     "aliases": [],
