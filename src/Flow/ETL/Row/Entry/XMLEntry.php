@@ -20,7 +20,7 @@ final class XMLEntry implements Entry
 
     public function __construct(string $name, \DOMDocument $value)
     {
-        if (!\strlen($name)) {
+        if ($name === '') {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
@@ -31,6 +31,10 @@ final class XMLEntry implements Entry
 
     public static function fromString(string $name, string $value, string $version = '1.0', string $encoding = '') : self
     {
+        if ($value === '') {
+            throw InvalidArgumentException::because('Value cannot be empty');
+        }
+
         $dom = new \DOMDocument($version, $encoding);
         $dom->loadXML($value);
 
