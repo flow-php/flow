@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-02-07
+## [Unreleased] - 2022-02-12
 
 ### Added
 - [#23](https://github.com/flow-php/etl-adapter-doctrine/pull/23) - **Workflow for aut-merging dependabot PRs** - [@tomaszhanc](https://github.com/tomaszhanc)
@@ -7,6 +7,7 @@
 - [#1](https://github.com/flow-php/etl-adapter-doctrine/pull/1) - **DbalQueryExtractor** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#75](https://github.com/flow-php/etl-adapter-doctrine/pull/75) - **Adjusted adapter for serialization** - [@norberttech](https://github.com/norberttech)
 - [#73](https://github.com/flow-php/etl-adapter-doctrine/pull/73) - **Build Rows object on the end of foreach loop** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#54](https://github.com/flow-php/etl-adapter-doctrine/pull/54) - **Reuse workflows from aeon-php/actions** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#43](https://github.com/flow-php/etl-adapter-doctrine/pull/43) - **Updated dbal version in composer.lock to 3.1.4 due to security concerns** - [@tomaszhanc](https://github.com/tomaszhanc)
