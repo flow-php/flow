@@ -19,12 +19,17 @@ final class ElasticsearchContext
         $this->hosts = $host;
     }
 
+    public function clientConfig() : array
+    {
+        return [
+            'hosts' => $this->hosts,
+        ];
+    }
+
     public function client() : Client
     {
         if ($this->client === null) {
-            $this->client = ClientBuilder::create()
-                ->setHosts($this->hosts)
-                ->build();
+            $this->client = ClientBuilder::fromConfig($this->clientConfig());
         }
 
         return $this->client;

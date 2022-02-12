@@ -6,11 +6,12 @@ namespace Flow\ETL\Adapter\Elasticsearch;
 
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
+use Flow\Serializer\Serializable;
 
 /**
  * @psalm-immutable
  */
-interface IdFactory
+interface IdFactory extends Serializable
 {
     public function create(Row $row) : Entry;
 }

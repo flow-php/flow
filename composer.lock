@@ -12,17 +12,17 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl.git",
-                "reference": "a95539604b371e7507503e6374594c4796274236"
+                "reference": "22a7b708e099339324a7d797e700af0258fc5663"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl/zipball/a95539604b371e7507503e6374594c4796274236",
-                "reference": "a95539604b371e7507503e6374594c4796274236",
+                "url": "https://api.github.com/repos/flow-php/etl/zipball/22a7b708e099339324a7d797e700af0258fc5663",
+                "reference": "22a7b708e099339324a7d797e700af0258fc5663",
                 "shasum": ""
             },
             "require": {
                 "ext-mbstring": "*",
-                "php": "^7.4 | ^8.0"
+                "php": "^7.4.2 || ~8.0"
             },
             "default-branch": true,
             "type": "library",
@@ -48,7 +48,7 @@
                 "issues": "https://github.com/flow-php/etl/issues",
                 "source": "https://github.com/flow-php/etl/tree/1.x"
             },
-            "time": "2021-04-20T09:41:43+00:00"
+            "time": "2022-02-12T20:03:05+00:00"
         }
     ],
     "packages-dev": [
@@ -231,12 +231,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl-adapter-json.git",
-                "reference": "b919819dff5d87f18321b84673ab26d85fbc2dbb"
+                "reference": "d964c74d42de07ff04fa516a7e24ac8a39840b1e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl-adapter-json/zipball/b919819dff5d87f18321b84673ab26d85fbc2dbb",
-                "reference": "b919819dff5d87f18321b84673ab26d85fbc2dbb",
+                "url": "https://api.github.com/repos/flow-php/etl-adapter-json/zipball/d964c74d42de07ff04fa516a7e24ac8a39840b1e",
+                "reference": "d964c74d42de07ff04fa516a7e24ac8a39840b1e",
                 "shasum": ""
             },
             "require": {
@@ -245,7 +245,7 @@
                 "php": "^7.4 | ^8.0"
             },
             "require-dev": {
-                "halaxa/json-machine": "^0.6.1"
+                "halaxa/json-machine": "^0.8.0 || ^1.0.0"
             },
             "suggest": {
                 "halaxa/json-machine": "Memory safe json library used by Extractors and Loaders"
@@ -276,7 +276,7 @@
                 "issues": "https://github.com/flow-php/etl-adapter-json/issues",
                 "source": "https://github.com/flow-php/etl-adapter-json/tree/1.x"
             },
-            "time": "2021-04-20T09:45:04+00:00"
+            "time": "2022-02-12T20:54:37+00:00"
         },
         {
             "name": "psr/log",
@@ -330,23 +330,23 @@
         },
         {
             "name": "react/promise",
-            "version": "v2.8.0",
+            "version": "v2.9.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/reactphp/promise.git",
-                "reference": "f3cff96a19736714524ca0dd1d4130de73dbbbc4"
+                "reference": "234f8fd1023c9158e2314fa9d7d0e6a83db42910"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/reactphp/promise/zipball/f3cff96a19736714524ca0dd1d4130de73dbbbc4",
-                "reference": "f3cff96a19736714524ca0dd1d4130de73dbbbc4",
+                "url": "https://api.github.com/repos/reactphp/promise/zipball/234f8fd1023c9158e2314fa9d7d0e6a83db42910",
+                "reference": "234f8fd1023c9158e2314fa9d7d0e6a83db42910",
                 "shasum": ""
             },
             "require": {
                 "php": ">=5.4.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "^7.0 || ^6.5 || ^5.7 || ^4.8.36"
+                "phpunit/phpunit": "^9.3 || ^5.7 || ^4.8.36"
             },
             "type": "library",
             "autoload": {
@@ -364,7 +364,23 @@
             "authors": [
                 {
                     "name": "Jan Sorgalla",
-                    "email": "jsorgalla@gmail.com"
+                    "email": "jsorgalla@gmail.com",
+                    "homepage": "https://sorgalla.com/"
+                },
+                {
+                    "name": "Christian Lück",
+                    "email": "christian@clue.engineering",
+                    "homepage": "https://clue.engineering/"
+                },
+                {
+                    "name": "Cees-Jan Kiewiet",
+                    "email": "reactphp@ceesjankiewiet.nl",
+                    "homepage": "https://wyrihaximus.net/"
+                },
+                {
+                    "name": "Chris Boden",
+                    "email": "cboden@gmail.com",
+                    "homepage": "https://cboden.dev/"
                 }
             ],
             "description": "A lightweight implementation of CommonJS Promises/A for PHP",
@@ -374,9 +390,19 @@
             ],
             "support": {
                 "issues": "https://github.com/reactphp/promise/issues",
-                "source": "https://github.com/reactphp/promise/tree/v2.8.0"
+                "source": "https://github.com/reactphp/promise/tree/v2.9.0"
             },
-            "time": "2020-05-12T15:16:56+00:00"
+            "funding": [
+                {
+                    "url": "https://github.com/WyriHaximus",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/clue",
+                    "type": "github"
+                }
+            ],
+            "time": "2022-02-11T10:27:51+00:00"
         }
     ],
     "aliases": [],

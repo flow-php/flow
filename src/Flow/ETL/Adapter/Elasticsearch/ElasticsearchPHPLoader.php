@@ -5,10 +5,14 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Elasticsearch;
 
 use Elasticsearch\Client;
+use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Loader;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 
+/**
+ * @deprecated
+ */
 final class ElasticsearchPHPLoader implements Loader
 {
     private Client $client;
@@ -35,6 +39,21 @@ final class ElasticsearchPHPLoader implements Loader
         $this->index = $index;
         $this->idFactory = $idFactory;
         $this->parameters = $parameters;
+    }
+
+    /**
+     * @throws RuntimeException
+     *
+     * @return array<string, mixed>
+     */
+    public function __serialize() : array
+    {
+        throw new RuntimeException('ElasticsearchPHPLoader is not serializable, please use ElasticsearchPHP\\ClientLoader');
+    }
+
+    public function __unserialize(array $data) : void
+    {
+        throw new RuntimeException('ElasticsearchPHPLoader is not serializable, please use ElasticsearchPHP\\ClientLoader');
     }
 
     public function load(Rows $rows) : void

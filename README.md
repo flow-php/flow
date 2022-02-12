@@ -15,13 +15,13 @@ Following implementation are available:
 ```php 
 <?php
 
-use Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHPLoader;
+use Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\ElasticsearchLoader;
 use Flow\ETL\Adapter\Elasticsearch\EntryIdFactory\Sha1IdFactory;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 
-$loader = new ElasticsearchPHPLoader(
-    $this->elasticsearchContext->client(), 
+$loader = new ElasticsearchLoader(
+    ['hosts' => ['localhost:9200']], 
     $bulkSize = 2, 
     self::INDEX_NAME, 
     new Sha1IdFactory('id'), 
