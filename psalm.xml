@@ -11,6 +11,9 @@
         <directory name="src"/>
         <ignoreFiles>
             <directory name="vendor"/>
+            <directory name="src/Flow/ETL/Adapter/Doctrine/BulkOperation" />
+            <file name="src/Flow/ETL/Adapter/Doctrine/BulkOperation.php"/>
+            <file name="src/Flow/ETL/Adapter/Doctrine/DbalBulkLoader.php"/>
         </ignoreFiles>
     </projectFiles>
 </psalm>

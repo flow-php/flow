@@ -15,7 +15,7 @@ ETL::extract(
 )->transform(
     ...
 )->load(
-    DbalBulkLoader::insert($this->pgsqlDatabaseContext->connection(), $bulkSize = 100, 'your-table-name')
+    DbalLoader('your-table-name', $bulkSize = 100, ['url' => \getenv('PGSQL_DATABASE_URL')], ['skip_conflicts' => true])
 );
 ```
 

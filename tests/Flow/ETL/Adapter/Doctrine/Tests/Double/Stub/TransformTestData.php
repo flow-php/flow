@@ -10,6 +10,14 @@ use Flow\ETL\Transformer;
 
 final class TransformTestData implements Transformer
 {
+    public function __serialize() : array
+    {
+    }
+
+    public function __unserialize(array $data) : void
+    {
+    }
+
     public function transform(Rows $rows) : Rows
     {
         return $rows->map(

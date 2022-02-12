@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine\Tests\Integration;
 
+use Doctrine\DBAL\Schema\Column;
+use Doctrine\DBAL\Schema\Table;
+use Doctrine\DBAL\Types\Type;
+use Doctrine\DBAL\Types\Types;
 use Flow\ETL\Adapter\Doctrine\DbalBulkLoader;
 use Flow\ETL\Adapter\Doctrine\DbalQueryExtractor;
 use Flow\ETL\Adapter\Doctrine\ParametersSet;
@@ -11,14 +15,20 @@ use Flow\ETL\Adapter\Doctrine\Tests\Double\Stub\ArrayExtractor;
 use Flow\ETL\Adapter\Doctrine\Tests\Double\Stub\TransformTestData;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
 use Flow\ETL\ETL;
-use Flow\ETL\Loader;
-use Flow\ETL\Rows;
 
 final class DbalQueryExtractorTest extends IntegrationTestCase
 {
     public function test_extracting_multiple_rows_at_once() : void
     {
-        $this->pgsqlDatabaseContext->createTestTable($table = 'flow_dbal_extractor_test');
+        $this->pgsqlDatabaseContext->createTable((new Table(
+            $table = 'flow_doctrine_bulk_test',
+            [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+            ],
+        ))
+            ->setPrimaryKey(['id']));
 
         ETL::extract(
             new ArrayExtractor(
@@ -32,21 +42,12 @@ final class DbalQueryExtractorTest extends IntegrationTestCase
             DbalBulkLoader::insert($this->pgsqlDatabaseContext->connection(), $bulkSize = 10, $table)
         )->run();
 
-        ETL::extract(
+        $rows = ETL::extract(
             DbalQueryExtractor::single(
                 $this->pgsqlDatabaseContext->connection(),
                 "SELECT * FROM {$table} ORDER BY id"
             )
-        )->load(
-            $loader = new class implements Loader {
-                public array $data = [];
-
-                public function load(Rows $rows) : void
-                {
-                    $this->data = $rows->toArray();
-                }
-            }
-        )->run();
+        )->fetch();
 
         $this->assertSame(
             [
@@ -54,13 +55,21 @@ final class DbalQueryExtractorTest extends IntegrationTestCase
                 ['row' => ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two']],
                 ['row' => ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three']],
             ],
-            $loader->data
+            $rows->toArray()
         );
     }
 
     public function test_extracting_multiple_rows_multiple_times() : void
     {
-        $this->pgsqlDatabaseContext->createTestTable($table = 'flow_dbal_extractor_test');
+        $this->pgsqlDatabaseContext->createTable((new Table(
+            $table = 'flow_doctrine_bulk_test',
+            [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+            ],
+        ))
+            ->setPrimaryKey(['id']));
 
         ETL::extract(
             new ArrayExtractor(
@@ -81,7 +90,7 @@ final class DbalQueryExtractorTest extends IntegrationTestCase
             DbalBulkLoader::insert($this->pgsqlDatabaseContext->connection(), $bulkSize = 10, $table)
         )->run();
 
-        ETL::extract(
+        $rows = ETL::extract(
             new DbalQueryExtractor(
                 $this->pgsqlDatabaseContext->connection(),
                 "SELECT * FROM {$table} ORDER BY id LIMIT :limit OFFSET :offset",
@@ -93,21 +102,9 @@ final class DbalQueryExtractorTest extends IntegrationTestCase
                     ['limit' => 2, 'offset' => 8],
                 )
             )
-        )->load(
-            $loader = new class implements Loader {
-                public array $data = [];
+        )->fetch();
 
-                public int $loads = 0;
-
-                public function load(Rows $rows) : void
-                {
-                    $this->loads += 1;
-                    $this->data = \array_merge($this->data, $rows->toArray());
-                }
-            }
-        )->run();
-
-        $this->assertSame(5, $loader->loads);
+        $this->assertSame(10, $rows->count());
         $this->assertSame(
             [
                 ['row' => ['id' => 1, 'name' => 'Name', 'description' => 'Description']],
@@ -121,7 +118,7 @@ final class DbalQueryExtractorTest extends IntegrationTestCase
                 ['row' => ['id' => 9, 'name' => 'Name', 'description' => 'Description']],
                 ['row' => ['id' => 10, 'name' => 'Name', 'description' => 'Description']],
             ],
-            $loader->data
+            $rows->toArray()
         );
     }
 }

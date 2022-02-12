@@ -14,11 +14,16 @@ abstract class IntegrationTestCase extends TestCase
 
     protected function setUp() : void
     {
-        $this->pgsqlDatabaseContext = new DatabaseContext(DriverManager::getConnection(['url' => \getenv('PGSQL_DATABASE_URL')]));
+        $this->pgsqlDatabaseContext = new DatabaseContext(DriverManager::getConnection($this->connectionParams()));
     }
 
     protected function tearDown() : void
     {
         $this->pgsqlDatabaseContext->dropAllTables();
+    }
+
+    protected function connectionParams() : array
+    {
+        return ['url' => \getenv('PGSQL_DATABASE_URL')];
     }
 }

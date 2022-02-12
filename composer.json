@@ -14,7 +14,7 @@
         "flow-php/doctrine-dbal-bulk": "^1.0@dev"
     },
     "suggest": {
-        "flow-php/doctrine-dbal-bulk" : "Helps to use DbalBulkLoader"
+        "flow-php/doctrine-dbal-bulk" : "Allows DbalBulkLoader to insert data in bulks into database"
     },
     "autoload": {
         "psr-4": {
