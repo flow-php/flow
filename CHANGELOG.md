@@ -1,6 +1,8 @@
-## [Unreleased] - 2022-02-09
+## [Unreleased] - 2022-02-12
 
 ### Added
+- [#152](https://github.com/flow-php/etl/pull/152) - **Serializer** - [@norberttech](https://github.com/norberttech)
+- [#152](https://github.com/flow-php/etl/pull/152) - **Pipes object and Pipe interface** - [@norberttech](https://github.com/norberttech)
 - [#150](https://github.com/flow-php/etl/pull/150) - **ETL::process(Rows $rows) for direct Rows processing** - [@norberttech](https://github.com/norberttech)
 - [#149](https://github.com/flow-php/etl/pull/149) - **ETL::display() function that lets you grab and display slected number of rows** - [@norberttech](https://github.com/norberttech)
 - [#149](https://github.com/flow-php/etl/pull/149) - **ASCIITableFormatter for as a ETL::display method default formatter** - [@norberttech](https://github.com/norberttech)
