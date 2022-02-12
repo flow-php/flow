@@ -13,8 +13,6 @@ use Flow\ETL\Row\Entry;
  */
 final class JsonEntry implements Entry
 {
-    private string $key;
-
     private string $name;
 
     private array $value;
@@ -27,7 +25,6 @@ final class JsonEntry implements Entry
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        $this->key = \mb_strtolower($name);
         $this->name = $name;
         $this->value = $value;
         $this->object = false;
@@ -55,6 +52,30 @@ final class JsonEntry implements Entry
         return $this->toString();
     }
 
+    /**
+     * @return array{name: string, value: array<mixed>, object: boolean}
+     */
+    public function __serialize() : array
+    {
+        return [
+            'name' => $this->name,
+            'value' => $this->value,
+            'object' => $this->object,
+        ];
+    }
+
+    /**
+     * @psalm-suppress MoreSpecificImplementedParamType
+     *
+     * @param array{name: string, value: array<mixed>, object: boolean} $data
+     */
+    public function __unserialize(array $data) : void
+    {
+        $this->name = $data['name'];
+        $this->value = $data['value'];
+        $this->object = $data['object'];
+    }
+
     public function toString() : string
     {
         return $this->value();
@@ -79,7 +100,7 @@ final class JsonEntry implements Entry
 
     public function is(string $name) : bool
     {
-        return $this->key === \mb_strtolower($name);
+        return \mb_strtolower($this->name) === \mb_strtolower($name);
     }
 
     public function rename(string $name) : Entry

@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Row\Entry;
 
 use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Row\Entry\JsonEntry;
+use Flow\Serializer\NativePHPSerializer;
 use PHPUnit\Framework\TestCase;
 
 final class JsonEntryTest extends TestCase
@@ -57,6 +58,19 @@ final class JsonEntryTest extends TestCase
         $entry = new JsonEntry('items', $items);
 
         $this->assertEquals(\json_encode($items), $entry->value());
+    }
+
+    public function test_serialization() : void
+    {
+        $serializer = new NativePHPSerializer();
+        $items = [
+            ['item-id' => 1, 'name' => 'one'],
+            ['item-id' => 2, 'name' => 'two'],
+            ['item-id' => 3, 'name' => 'three'],
+        ];
+        $entrySerialized = $serializer->serialize($entry = new JsonEntry('items', $items));
+
+        $this->assertEquals($entry, $serializer->unserialize($entrySerialized));
     }
 
     public function test_map() : void
