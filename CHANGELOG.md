@@ -1,9 +1,10 @@
-## [Unreleased] - 2022-01-27
+## [Unreleased] - 2022-02-12
 
 ### Added
 - [#44](https://github.com/flow-php/etl-adapter-csv/pull/44) - **Workflow for aut-merging dependabot PRs** - [@tomaszhanc](https://github.com/tomaszhanc)
 
 ### Changed
+- [#82](https://github.com/flow-php/etl-adapter-csv/pull/82) - **Adjusted Adapter for Serialization** - [@norberttech](https://github.com/norberttech)
 - [#74](https://github.com/flow-php/etl-adapter-csv/pull/74) - **Instread of adding Rows to existing Rows, build array of Rows and instantiate object after** - [@norberttech](https://github.com/norberttech)
 - [#67](https://github.com/flow-php/etl-adapter-csv/pull/67) - **Reuse workflows from aeon-php/actions** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [377a21](https://github.com/flow-php/etl-adapter-csv/commit/377a219a347232105350636270b17c674975f78e) - **Automaticlly instll tools** - [@norberttech](https://github.com/norberttech)
