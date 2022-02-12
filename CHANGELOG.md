@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-01-14
+## [Unreleased] - 2022-02-12
 
 ### Added
 - [#28](https://github.com/flow-php/doctrine-dbal-bulk/pull/28) - **Workflow for aut-merging dependabot PRs** - [@tomaszhanc](https://github.com/tomaszhanc)
@@ -6,6 +6,7 @@
 - [#9](https://github.com/flow-php/doctrine-dbal-bulk/pull/9) - **Add dependabot for tools** - [@tomaszhanc](https://github.com/tomaszhanc)
 
 ### Changed
+- [#80](https://github.com/flow-php/doctrine-dbal-bulk/pull/80) - **Added more customizable abstraction for BulkInserts** - [@norberttech](https://github.com/norberttech)
 - [#60](https://github.com/flow-php/doctrine-dbal-bulk/pull/60) - **Reuse workflows from aeon-php/actions** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#47](https://github.com/flow-php/doctrine-dbal-bulk/pull/47) - **Deprecated errors from PHPStan** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#8](https://github.com/flow-php/doctrine-dbal-bulk/pull/8) - **Update dependencies** - [@tomaszhanc](https://github.com/tomaszhanc)
