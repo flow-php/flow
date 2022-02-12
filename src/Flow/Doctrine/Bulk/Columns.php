@@ -9,7 +9,7 @@ use Flow\Doctrine\Bulk\Exception\RuntimeException;
 final class Columns
 {
     /**
-     * @var string[]
+     * @var array<string>
      */
     private array $columns;
 
@@ -50,7 +50,7 @@ final class Columns
     }
 
     /**
-     * @return string[]
+     * @return array<string>
      */
     public function all() : array
     {
@@ -60,10 +60,17 @@ final class Columns
     /**
      * @template ReturnType
      * @psalm-param callable(string) : ReturnType $callable
-     * @psalm-return ReturnType[]
+     * @psalm-return array<ReturnType>
      */
     public function map(callable $callable) : array
     {
-        return \array_map($callable, $this->columns);
+        /** @var array<ReturnType> $columns */
+        $columns = [];
+
+        foreach ($this->columns as $column) {
+            $columns[] = $callable($column);
+        }
+
+        return $columns;
     }
 }

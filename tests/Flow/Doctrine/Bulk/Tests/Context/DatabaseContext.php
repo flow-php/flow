@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\Doctrine\Bulk\Tests\Context;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Schema\Table;
 
 final class DatabaseContext
 {
@@ -12,16 +13,10 @@ final class DatabaseContext
 
     private InsertQueryCounter $sqlLogger;
 
-    /**
-     * @var string[]
-     */
-    private array $createdTables;
-
     public function __construct(Connection $connection)
     {
         $this->connection = $connection;
         $this->sqlLogger = new InsertQueryCounter();
-        $this->createdTables = [];
 
         $this->connection->getConfiguration()->setSQLLogger($this->sqlLogger);
     }
@@ -31,21 +26,42 @@ final class DatabaseContext
         return $this->connection;
     }
 
-    public function createTestTable(string $tableName) : void
+    public function createTable(Table $table) : void
     {
-        $this->connection->executeQuery("CREATE TABLE {$tableName} (id INT NOT NULL, name VARCHAR(255) NOT NULL, description VARCHAR(255) NOT NULL, active BOOLEAN NOT NULL, PRIMARY KEY(id))");
+        $schemaManager = $this
+            ->connection
+            ->getSchemaManager();
 
-        $this->createdTables[] = $tableName;
+        if ($schemaManager->tablesExist($table->getName())) {
+            $schemaManager->dropTable($table->getName());
+        }
+
+        $schemaManager->createTable($table);
     }
 
     public function selectAll(string $tableName) : array
     {
-        return $this->connection->fetchAllAssociative("SELECT * FROM {$tableName} ORDER BY id");
+        return $this->connection->fetchAllAssociative(
+            $this
+                ->connection
+                ->createQueryBuilder()
+                ->select('*')
+                ->from($tableName)
+                ->orderBy('id')
+                ->getSQL()
+        );
     }
 
     public function tableCount(string $tableName) : int
     {
-        return (int) $this->connection->fetchOne("SELECT COUNT(*) FROM {$tableName}");
+        return (int) $this->connection->fetchOne(
+            $this
+                ->connection
+                ->createQueryBuilder()
+                ->select('COUNT(*)')
+                ->from($tableName)
+                ->getSQL()
+        );
     }
 
     public function numberOfExecutedInsertQueries() : int
@@ -55,8 +71,8 @@ final class DatabaseContext
 
     public function dropAllTables() : void
     {
-        foreach ($this->createdTables as $table) {
-            $this->connection->executeQuery("DROP TABLE {$table}");
+        foreach ($this->connection->getSchemaManager()->listTables() as $table) {
+            $this->connection->getSchemaManager()->dropTable($table->getName());
         }
     }
 }

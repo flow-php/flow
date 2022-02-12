@@ -1,15 +1,12 @@
-<?php
+<?php declare(strict_types=1);
 
-declare(strict_types=1);
+namespace Flow\Doctrine\Bulk\Dialect;
 
-namespace Flow\Doctrine\Bulk;
+use Flow\Doctrine\Bulk\BulkData;
 
-use Doctrine\DBAL\Platforms\AbstractPlatform;
-
-interface QueryFactory
+interface Dialect
 {
     /**
-     * @param AbstractPlatform $platform
      * @param string $table
      * @param BulkData $bulkData
      * @param array{
@@ -21,5 +18,5 @@ interface QueryFactory
      *
      * @return string
      */
-    public function insert(AbstractPlatform $platform, string $table, BulkData $bulkData, array $insertOptions = []) : string;
+    public function prepareInsert(string $table, BulkData $bulkData, array $insertOptions = []) : string;
 }
