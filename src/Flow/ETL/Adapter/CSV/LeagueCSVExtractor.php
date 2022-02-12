@@ -10,6 +10,7 @@ use Flow\ETL\Rows;
 use League\Csv\Reader;
 
 /**
+ * @deprecated
  * @psalm-immutable
  */
 final class LeagueCSVExtractor implements Extractor

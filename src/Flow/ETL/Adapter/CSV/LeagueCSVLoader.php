@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV;
 
+use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Loader;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Rows;
 use League\Csv\Writer;
 
 /**
+ * @deprecated
  * @psalm-immutable
  */
 final class LeagueCSVLoader implements Loader
@@ -25,6 +27,16 @@ final class LeagueCSVLoader implements Loader
         $this->writer = $writer;
         $this->headerAdded = false;
         $this->withHeader = $withHeader;
+    }
+
+    public function __serialize() : array
+    {
+        throw new RuntimeException('DbalBulkLoader is not serializable, please use DbalLoader');
+    }
+
+    public function __unserialize(array $data) : void
+    {
+        throw new RuntimeException('DbalBulkLoader is not serializable, please use DbalLoader');
     }
 
     /**

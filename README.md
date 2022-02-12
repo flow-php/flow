@@ -10,20 +10,21 @@ Following implementation are available:
 - [League CSV](https://csv.thephpleague.com/) 
 
 
-## Extractor - LeagueCSVExtractor
+## Extractor - League CSVExtractor
 
 ```php
 <?php
 
-use Flow\ETL\Adapter\CSV\LeagueCSVExtractor;
+use Flow\ETL\Adapter\CSV\League\CSVExtractor;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use League\Csv\Reader;
 
-$reader = Reader::createFromPath(__DIR__ . '/../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv');
-$reader->setHeaderOffset(0);
-
-$extractor = new LeagueCSVExtractor($reader, 5);
+$extractor = new CSVExtractor(
+    __DIR__ . '/../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv',
+    $rowsInBatch = 5,
+    $offsetHeader = 0
+);
 
 /** @var Rows $rows */
 foreach ($extractor->extract() as $rows) {
@@ -31,20 +32,19 @@ foreach ($extractor->extract() as $rows) {
 }
 ```
 
-## Loader - LeagueCSVLoader
+## Loader - League CSVLoader
 
 ```php 
 <?php
 
-use Flow\ETL\Adapter\CSV\LeagueCSVLoader;
+use Flow\ETL\Adapter\CSV\League\CSVLoader;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use League\Csv\Writer;
 
-$path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.csv';
-$writer = Writer::createFromPath($path, 'w+');
-
-$loader = new LeagueCSVLoader($writer);
+$loader = new CSVLoader(
+    $path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.csv'
+);
 
 $loader->load(new Rows(
     Row::create(new Row\Entry\ArrayEntry('row', ['id', 'name'])),

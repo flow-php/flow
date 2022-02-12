@@ -38,7 +38,7 @@ CSV,
         );
 
         if (\file_exists($path)) {
-            unset($path);
+            \unlink($path);
         }
     }
 }
