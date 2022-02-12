@@ -34,6 +34,24 @@ final class ObjectEntry implements Entry
         return $this->toString();
     }
 
+    /**
+     * @return array{name: string, value: object}
+     */
+    public function __serialize() : array
+    {
+        return ['name' => $this->name, 'value' => $this->value];
+    }
+
+    /**
+     * @param array{name: string, value: object} $data
+     * @psalm-suppress MoreSpecificImplementedParamType
+     */
+    public function __unserialize(array $data) : void
+    {
+        $this->name = $data['name'];
+        $this->value = $data['value'];
+    }
+
     public function name() : string
     {
         return $this->name;
@@ -69,7 +87,9 @@ final class ObjectEntry implements Entry
 
     public function isEqual(Entry $entry) : bool
     {
-        return $this->is($entry->name()) && $entry instanceof self && $this->value() === $entry->value();
+        return $this->is($entry->name())
+            && $entry instanceof self
+            && \serialize($this->__serialize()['value']) === \serialize($entry->__serialize()['value']);
     }
 
     public function toString() : string

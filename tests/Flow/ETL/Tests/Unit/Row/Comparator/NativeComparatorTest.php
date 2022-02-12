@@ -36,6 +36,6 @@ final class NativeComparatorTest extends TestCase
 
         $comparator = new Row\Comparator\NativeComparator();
 
-        $this->assertFalse($comparator->equals($row, $nextRow));
+        $this->assertTrue($comparator->equals($row, $nextRow));
     }
 }

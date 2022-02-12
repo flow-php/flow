@@ -115,4 +115,15 @@ final class StructureEntryTest extends TestCase
             new StructureEntry('name', new StructureEntry('json', new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3))),
         ];
     }
+
+    public function test_serialization() : void
+    {
+        $string = new StructureEntry('name', new StructureEntry('json', new IntegerEntry('5', 5), new IntegerEntry('2', 2), new IntegerEntry('3', 3)));
+
+        $serialized = \serialize($string);
+        /** @var StructureEntry $unserialized */
+        $unserialized = \unserialize($serialized);
+
+        $this->assertTrue($string->isEqual($unserialized));
+    }
 }

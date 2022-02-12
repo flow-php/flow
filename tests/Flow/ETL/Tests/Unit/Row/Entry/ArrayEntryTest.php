@@ -131,4 +131,15 @@ final class ArrayEntryTest extends TestCase
             new ArrayEntry('name', ['foo' => 1, 'bar' => ['foo' => new IntegerEntry('test', 1), 'bar' => 'bar'], 'baz']),
         ];
     }
+
+    public function test_serialization() : void
+    {
+        $string = new ArrayEntry('name', ['foo' => 1, 'bar' => ['foo' => new IntegerEntry('test', 1), 'bar' => 'bar'], 'baz']);
+
+        $serialized = \serialize($string);
+        /** @var ArrayEntry $unserialized */
+        $unserialized = \unserialize($serialized);
+
+        $this->assertTrue($string->isEqual($unserialized));
+    }
 }

@@ -634,4 +634,22 @@ final class RowsTest extends TestCase
         $this->assertSame(2, $rows[1]->valueOf('id'));
         $this->assertSame(1, $rows[2]->valueOf('id'));
     }
+
+    public function test_rows_serialization() : void
+    {
+        $rows = new Rows(
+            Row::create(new IntegerEntry('id', 1)),
+            Row::create(new IntegerEntry('id', 2)),
+            Row::create(new IntegerEntry('id', 3)),
+        );
+
+        $serialized = \serialize($rows);
+
+        /** @var Rows $unserialized */
+        $unserialized = \unserialize($serialized);
+
+        $this->assertTrue($unserialized[0]->isEqual($rows[0]));
+        $this->assertTrue($unserialized[1]->isEqual($rows[1]));
+        $this->assertTrue($unserialized[2]->isEqual($rows[2]));
+    }
 }

@@ -32,6 +32,18 @@ final class AddStampToStringEntryTransformer implements Transformer
         return new self($entryName, $stamp, ':');
     }
 
+    public function __serialize() : array
+    {
+        return ['entryName' => $this->entryName, 'stamp' => $this->stamp, 'divider' => $this->divider];
+    }
+
+    public function __unserialize(array $data) : void
+    {
+        $this->entryName = $data['entryName'];
+        $this->stamp = $data['stamp'];
+        $this->divider = $data['divider'];
+    }
+
     public function transform(Rows $rows) : Rows
     {
         return $rows->map(

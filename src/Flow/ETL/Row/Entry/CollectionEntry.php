@@ -17,7 +17,7 @@ final class CollectionEntry implements Entry
     private string $name;
 
     /**
-     * @var Entries[]
+     * @var array<entries>
      */
     private array $entries;
 
@@ -37,6 +37,27 @@ final class CollectionEntry implements Entry
     public function __toString() : string
     {
         return $this->toString();
+    }
+
+    /**
+     * @return array{name: string, entries: array<Entries>}
+     */
+    public function __serialize() : array
+    {
+        return [
+            'name' => $this->name,
+            'entries' => $this->entries,
+        ];
+    }
+
+    /**
+     * @param array{name: string, entries: array<Entries>} $data
+     * @psalm-suppress MoreSpecificImplementedParamType
+     */
+    public function __unserialize(array $data) : void
+    {
+        $this->name = $data['name'];
+        $this->entries = $data['entries'];
     }
 
     public function name() : string

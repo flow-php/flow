@@ -42,14 +42,14 @@ final class ETL
 
     public function transform(Transformer $transformer) : self
     {
-        $this->pipeline->registerTransformer($transformer);
+        $this->pipeline->add($transformer);
 
         return $this;
     }
 
     public function load(Loader $loader) : self
     {
-        $this->pipeline->registerLoader($loader);
+        $this->pipeline->add($loader);
 
         return $this;
     }

@@ -49,6 +49,25 @@ final class FloatEntry implements Entry
         return $this->toString();
     }
 
+    /**
+     * @return array{name: string, value: float, precision: int}
+     */
+    public function __serialize() : array
+    {
+        return ['name' => $this->name, 'value' => $this->value, 'precision' => $this->precision];
+    }
+
+    /**
+     * @param array{name: string, value: float, precision: int} $data
+     * @psalm-suppress MoreSpecificImplementedParamType
+     */
+    public function __unserialize(array $data) : void
+    {
+        $this->name = $data['name'];
+        $this->value = $data['value'];
+        $this->precision = $data['precision'];
+    }
+
     public function name() : string
     {
         return $this->name;

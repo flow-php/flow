@@ -74,4 +74,15 @@ final class StringEntryTest extends TestCase
         yield 'equal names and different value characters' => [false, new StringEntry('name', 'value'), new StringEntry('name', 'VALUE')];
         yield 'different names characters and equal values' => [true, new StringEntry('NAME', 'value'), new StringEntry('name', 'value')];
     }
+
+    public function test_serialization() : void
+    {
+        $string = new StringEntry('name', 'some string');
+
+        $serialized = \serialize($string);
+        /** @var StringEntry $unserialized */
+        $unserialized = \unserialize($serialized);
+
+        $this->assertTrue($string->isEqual($unserialized));
+    }
 }

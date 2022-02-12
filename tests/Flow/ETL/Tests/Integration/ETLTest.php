@@ -77,6 +77,15 @@ final class ETLTest extends TestCase
                     fn (Row $row) : Row => $row->set(new StringEntry('stamp', 'zero'))
                 );
             }
+
+            public function __serialize() : array
+            {
+                return [];
+            }
+
+            public function __unserialize(array $data) : void
+            {
+            }
         };
 
         $loader = new class implements Loader {
@@ -85,6 +94,15 @@ final class ETLTest extends TestCase
             public function load(Rows $rows) : void
             {
                 $this->result = \array_merge($this->result, $rows->toArray());
+            }
+
+            public function __serialize() : array
+            {
+                return [];
+            }
+
+            public function __unserialize(array $data) : void
+            {
             }
         };
 
@@ -95,6 +113,15 @@ final class ETLTest extends TestCase
                 public function transform(Rows $rows) : Rows
                 {
                     throw new \RuntimeException('Unexpected exception');
+                }
+
+                public function __serialize() : array
+                {
+                    return [];
+                }
+
+                public function __unserialize(array $data) : void
+                {
                 }
             })
             ->transform(AddStampToStringEntryTransformer::divideBySemicolon('stamp', 'one'))
@@ -163,6 +190,15 @@ final class ETLTest extends TestCase
                     ($this->callback)($this->index, $rows);
                     $this->index++;
                 }
+
+                public function __serialize() : array
+                {
+                    return [];
+                }
+
+                public function __unserialize(array $data) : void
+                {
+                }
             })->run();
     }
 
@@ -187,6 +223,15 @@ final class ETLTest extends TestCase
                     {
                         return $rows->map(fn (Row $row) => $row->rename('id', 'new_id'));
                     }
+
+                    public function __serialize() : array
+                    {
+                        return [];
+                    }
+
+                    public function __unserialize(array $data) : void
+                    {
+                    }
                 }
             )
             ->collect()
@@ -197,6 +242,15 @@ final class ETLTest extends TestCase
                         Assert::assertCount(3, $rows);
                         Assert::assertTrue($rows->isFirst());
                         Assert::assertTrue($rows->isLast());
+                    }
+
+                    public function __serialize() : array
+                    {
+                        return [];
+                    }
+
+                    public function __unserialize(array $data) : void
+                    {
                     }
                 }
             )
@@ -233,6 +287,15 @@ final class ETLTest extends TestCase
                     {
                         return $rows->map(fn (Row $row) => $row->rename('id', 'new_id'));
                     }
+
+                    public function __serialize() : array
+                    {
+                        return [];
+                    }
+
+                    public function __unserialize(array $data) : void
+                    {
+                    }
                 }
             )
             ->parallelize(2)
@@ -241,6 +304,15 @@ final class ETLTest extends TestCase
                     public function load(Rows $rows) : void
                     {
                         Assert::assertCount(2, $rows);
+                    }
+
+                    public function __serialize() : array
+                    {
+                        return [];
+                    }
+
+                    public function __unserialize(array $data) : void
+                    {
                     }
                 }
             )

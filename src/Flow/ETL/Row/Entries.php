@@ -7,13 +7,14 @@ namespace Flow\ETL\Row;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\Serializer\Serializable;
 
 /**
  * @implements \ArrayAccess<string, Entry>
  * @implements \IteratorAggregate<string, Entry>
  * @psalm-immutable
  */
-final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
+final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Serializable
 {
     /**
      * @var array<string, Entry>
@@ -33,6 +34,23 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
                 throw InvalidArgumentException::because(\sprintf('Entry names must be unique, given: [%s]', \implode(', ', \array_map(fn (Entry $entry) => $entry->name(), $entries))));
             }
         }
+    }
+
+    /**
+     * @return array{entries: array<string, Entry>}
+     */
+    public function __serialize() : array
+    {
+        return ['entries' => $this->entries];
+    }
+
+    /**
+     * @param array{entries: array<string, Entry>} $data
+     * @psalm-suppress MoreSpecificImplementedParamType
+     */
+    public function __unserialize(array $data) : void
+    {
+        $this->entries = $data['entries'];
     }
 
     /**

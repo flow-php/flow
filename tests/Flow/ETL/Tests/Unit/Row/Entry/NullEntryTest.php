@@ -43,4 +43,15 @@ final class NullEntryTest extends TestCase
         yield 'equal names and values' => [true, new NullEntry('name'), new NullEntry('name')];
         yield 'different names characters and equal values' => [true, new NullEntry('NAME'), new NullEntry('name')];
     }
+
+    public function test_serialization() : void
+    {
+        $string = new NullEntry('name');
+
+        $serialized = \serialize($string);
+        /** @var NullEntry $unserialized */
+        $unserialized = \unserialize($serialized);
+
+        $this->assertTrue($string->isEqual($unserialized));
+    }
 }

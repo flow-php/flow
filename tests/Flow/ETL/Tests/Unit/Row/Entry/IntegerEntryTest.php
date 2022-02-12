@@ -98,4 +98,15 @@ final class IntegerEntryTest extends TestCase
         yield 'equal names and different values' => [false, new IntegerEntry('name', 1), new IntegerEntry('name', 2)];
         yield 'different names characters and equal values' => [true, new IntegerEntry('NAME', 1), new IntegerEntry('name', 1)];
     }
+
+    public function test_serialization() : void
+    {
+        $string = new IntegerEntry('name', 1);
+
+        $serialized = \serialize($string);
+        /** @var IntegerEntry $unserialized */
+        $unserialized = \unserialize($serialized);
+
+        $this->assertTrue($string->isEqual($unserialized));
+    }
 }

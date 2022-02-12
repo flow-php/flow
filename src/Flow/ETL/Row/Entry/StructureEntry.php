@@ -16,7 +16,7 @@ final class StructureEntry implements Entry
     private string $name;
 
     /**
-     * @var Entry[]
+     * @var array<Entry>
      */
     private array $entries;
 
@@ -36,6 +36,27 @@ final class StructureEntry implements Entry
     public function __toString() : string
     {
         return $this->toString();
+    }
+
+    /**
+     * @return array{name: string, entries: array<Entry>}
+     */
+    public function __serialize() : array
+    {
+        return [
+            'name' => $this->name,
+            'entries' => $this->entries,
+        ];
+    }
+
+    /**
+     * @param array{name: string, entries: array<Entry>} $data
+     * @psalm-suppress MoreSpecificImplementedParamType
+     */
+    public function __unserialize(array $data) : void
+    {
+        $this->name = $data['name'];
+        $this->entries = $data['entries'];
     }
 
     public function name() : string

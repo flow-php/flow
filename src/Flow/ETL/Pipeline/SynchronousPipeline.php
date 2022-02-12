@@ -16,17 +16,14 @@ use Flow\ETL\Transformer;
  */
 final class SynchronousPipeline implements Pipeline
 {
-    /**
-     * @var array<Loader|Transformer>
-     */
-    private array $elements;
-
     private ErrorHandler $errorHandler;
+
+    private Pipes $pipes;
 
     public function __construct()
     {
-        $this->elements = [];
         $this->errorHandler = new ThrowError();
+        $this->pipes = Pipes::empty();
     }
 
     public function clean() : Pipeline
@@ -37,19 +34,14 @@ final class SynchronousPipeline implements Pipeline
         return $newPipeline;
     }
 
+    public function add(Pipe $pipe) : void
+    {
+        $this->pipes->add($pipe);
+    }
+
     public function onError(ErrorHandler $errorHandler) : void
     {
         $this->errorHandler = $errorHandler;
-    }
-
-    public function registerTransformer(Transformer $transformer) : void
-    {
-        $this->elements[] = $transformer;
-    }
-
-    public function registerLoader(Loader $loader) : void
-    {
-        $this->elements[] = $loader;
     }
 
     /**
@@ -72,11 +64,11 @@ final class SynchronousPipeline implements Pipeline
                 $rows = $rows->makeLast();
             }
 
-            foreach ($this->elements as $element) {
+            foreach ($this->pipes->all() as $element) {
                 try {
                     if ($element instanceof Transformer) {
                         $rows = $element->transform($rows);
-                    } else {
+                    } elseif ($element instanceof Loader) {
                         $element->load($rows);
                     }
                 } catch (\Throwable $exception) {

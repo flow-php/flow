@@ -31,6 +31,20 @@ final class NullEntry implements Entry
         return $this->toString();
     }
 
+    public function __serialize() : array
+    {
+        return ['name' => $this->name];
+    }
+
+    /**
+     * @param array{name: string, value: string} $data
+     * @psalm-suppress MoreSpecificImplementedParamType
+     */
+    public function __unserialize(array $data) : void
+    {
+        $this->name = $data['name'];
+    }
+
     public function name() : string
     {
         return $this->name;

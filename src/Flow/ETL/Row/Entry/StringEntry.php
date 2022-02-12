@@ -58,6 +58,24 @@ final class StringEntry implements Entry
         return $this->toString();
     }
 
+    /**
+     * @return array{name: string, value: string}
+     */
+    public function __serialize() : array
+    {
+        return ['name' => $this->name, 'value' => $this->value];
+    }
+
+    /**
+     * @param array{name: string, value: string} $data
+     * @psalm-suppress MoreSpecificImplementedParamType
+     */
+    public function __unserialize(array $data) : void
+    {
+        $this->name = $data['name'];
+        $this->value = $data['value'];
+    }
+
     public function name() : string
     {
         return $this->name;

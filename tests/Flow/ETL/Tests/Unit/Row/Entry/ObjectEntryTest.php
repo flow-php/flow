@@ -55,7 +55,17 @@ final class ObjectEntryTest extends TestCase
         yield 'equal names and values' => [true, new ObjectEntry('name', $object = new \stdClass()), new ObjectEntry('name', $object)];
         yield 'different names and values' => [false, new ObjectEntry('name', $object = new \stdClass()), new ObjectEntry('different_name', $object)];
         yield 'equal names and different values' => [false, new ObjectEntry('name', new \stdClass()), new ObjectEntry('name', new \ArrayObject())];
-        yield 'equal names and different value characters' => [false, new ObjectEntry('name', new \stdClass()), new ObjectEntry('name', new \stdClass())];
         yield 'different names characters and equal values' => [true, new ObjectEntry('NAME', $object = new \stdClass()), new ObjectEntry('name', $object)];
+    }
+
+    public function test_serialization() : void
+    {
+        $string = new ObjectEntry('name', $object = new \stdClass());
+
+        $serialized = \serialize($string);
+        /** @var ObjectEntry $unserialized */
+        $unserialized = \unserialize($serialized);
+
+        $this->assertTrue($string->isEqual($unserialized));
     }
 }

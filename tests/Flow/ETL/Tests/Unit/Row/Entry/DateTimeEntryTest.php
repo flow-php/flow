@@ -68,4 +68,15 @@ final class DateTimeEntryTest extends TestCase
         yield 'equal names and equal values and different format' => [false, new DateTimeEntry('name', new \DateTimeImmutable('2020-02-19 00:00:00+00')), new DateTimeEntry('name', new \DateTimeImmutable('2020-01-02 00:00:00+00'))];
         yield 'equal names and equal values for given format' => [true, new DateTimeEntry('name', new \DateTimeImmutable('2020-02-19 00:00:00+00')), new DateTimeEntry('name', new \DateTimeImmutable('2020-02-19 00:00:00+00'))];
     }
+
+    public function test_serialization() : void
+    {
+        $string = new DateTimeEntry('name', new \DateTimeImmutable('2020-01-01 00:00:00+00'));
+
+        $serialized = \serialize($string);
+        /** @var DateTimeEntry $unserialized */
+        $unserialized = \unserialize($serialized);
+
+        $this->assertTrue($string->isEqual($unserialized));
+    }
 }

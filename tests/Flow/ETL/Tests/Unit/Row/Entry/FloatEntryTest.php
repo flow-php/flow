@@ -98,4 +98,15 @@ final class FloatEntryTest extends TestCase
         yield 'different names characters and equal values with high precision' => [true, new FloatEntry('NAME', 1.00001), new FloatEntry('name', 1.00001)];
         yield 'different names characters and different values with high precision' => [false, new FloatEntry('NAME', 1.205502), new FloatEntry('name', 1.205501)];
     }
+
+    public function test_serialization() : void
+    {
+        $string = new FloatEntry('name', 1.0);
+
+        $serialized = \serialize($string);
+        /** @var FloatEntry $unserialized */
+        $unserialized = \unserialize($serialized);
+
+        $this->assertTrue($string->isEqual($unserialized));
+    }
 }

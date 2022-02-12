@@ -8,18 +8,17 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\Comparator;
 use Flow\ETL\Row\Comparator\NativeComparator;
+use Flow\Serializer\Serializable;
 
 /**
  * @implements \ArrayAccess<int, Row>
  * @implements \IteratorAggregate<int, Row>
  * @psalm-immutable
  */
-final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
+final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serializable
 {
     /**
-     * @psalm-var array<int, Row>
-     *
-     * @var Row[]
+     * @var array<int, Row>
      */
     private array $rows;
 
@@ -32,6 +31,30 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
         $this->rows = \array_values($rows);
         $this->first = true;
         $this->last = false;
+    }
+
+    /**
+     * @return array{rows: array<int, Row>, first: boolean, last: boolean}
+     */
+    public function __serialize() : array
+    {
+        return [
+            'rows' => $this->rows,
+            'first' => $this->first,
+            'last' => $this->last,
+        ];
+    }
+
+    /**
+     * @psalm-suppress MoreSpecificImplementedParamType
+     *
+     * @param array{rows: array<int, Row>, first: boolean, last: boolean} $data
+     */
+    public function __unserialize(array $data) : void
+    {
+        $this->rows = $data['rows'];
+        $this->first = $data['first'];
+        $this->last = $data['last'];
     }
 
     public function makeFirst() : self

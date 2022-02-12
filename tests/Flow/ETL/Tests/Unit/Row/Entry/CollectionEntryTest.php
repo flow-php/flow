@@ -109,4 +109,15 @@ final class CollectionEntryTest extends TestCase
             new CollectionEntry('name', new Entries(new CollectionEntry('json', new Entries(new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3))))),
         ];
     }
+
+    public function test_serialization() : void
+    {
+        $string = new CollectionEntry('name', new Entries(new CollectionEntry('json', new Entries(new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3)))));
+
+        $serialized = \serialize($string);
+        /** @var CollectionEntry $unserialized */
+        $unserialized = \unserialize($serialized);
+
+        $this->assertTrue($string->isEqual($unserialized));
+    }
 }

@@ -54,6 +54,15 @@ final class ETLErrorHandlingTest extends TestCase
             {
                 throw new \RuntimeException('Transformer Exception');
             }
+
+            public function __serialize() : array
+            {
+                return [];
+            }
+
+            public function __unserialize(array $data) : void
+            {
+            }
         };
 
         $loader = new class implements Loader {
@@ -62,6 +71,15 @@ final class ETLErrorHandlingTest extends TestCase
             public function load(Rows $rows) : void
             {
                 $this->result = \array_merge($this->result, $rows->toArray());
+            }
+
+            public function __serialize() : array
+            {
+                return [];
+            }
+
+            public function __unserialize(array $data) : void
+            {
             }
         };
 
@@ -108,6 +126,16 @@ final class ETLErrorHandlingTest extends TestCase
             {
                 throw new \RuntimeException('Transformer Exception');
             }
+
+            public function __serialize() : array
+            {
+                return [];
+            }
+
+            public function __unserialize(array $data) : void
+            {
+                // TODO: Implement __unserialize() method.
+            }
         };
 
         $loader = new class implements Loader {
@@ -116,6 +144,15 @@ final class ETLErrorHandlingTest extends TestCase
             public function load(Rows $rows) : void
             {
                 $this->result = \array_merge($this->result, $rows->toArray());
+            }
+
+            public function __serialize() : array
+            {
+                return [];
+            }
+
+            public function __unserialize(array $data) : void
+            {
             }
         };
 
@@ -181,6 +218,15 @@ final class ETLErrorHandlingTest extends TestCase
 
                 return $rows;
             }
+
+            public function __serialize() : array
+            {
+                return [];
+            }
+
+            public function __unserialize(array $data) : void
+            {
+            }
         };
 
         $loader = new class implements Loader {
@@ -189,6 +235,15 @@ final class ETLErrorHandlingTest extends TestCase
             public function load(Rows $rows) : void
             {
                 $this->result = \array_merge($this->result, $rows->toArray());
+            }
+
+            public function __serialize() : array
+            {
+                return [];
+            }
+
+            public function __unserialize(array $data) : void
+            {
             }
         };
 

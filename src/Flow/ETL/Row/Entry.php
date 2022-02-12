@@ -4,12 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row;
 
+use Flow\Serializer\Serializable;
+
 /**
  * @psalm-immutable
  */
-interface Entry
+interface Entry extends Serializable
 {
     public function __toString() : string;
+
+    public function __serialize() : array;
+
+    public function __unserialize(array $data) : void;
 
     public function name() : string;
 

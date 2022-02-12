@@ -5,10 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Pipeline;
 
 use Flow\ETL\ErrorHandler;
-use Flow\ETL\Loader;
 use Flow\ETL\Pipeline;
 use Flow\ETL\Rows;
-use Flow\ETL\Transformer;
 
 /**
  * @internal
@@ -30,14 +28,9 @@ final class CollectingPipeline implements Pipeline
         return new self($this->pipeline);
     }
 
-    public function registerTransformer(Transformer $transformer) : void
+    public function add(Pipe $pipe) : void
     {
-        $this->nextPipeline->registerTransformer($transformer);
-    }
-
-    public function registerLoader(Loader $loader) : void
-    {
-        $this->nextPipeline->registerLoader($loader);
+        $this->nextPipeline->add($pipe);
     }
 
     public function process(\Generator $generator, callable $callback = null) : void
