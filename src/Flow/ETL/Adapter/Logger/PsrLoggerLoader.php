@@ -25,6 +25,29 @@ final class PsrLoggerLoader implements Loader
         $this->message = $message;
     }
 
+    /**
+     * @return array{logger: LoggerInterface, log_level: string, message: string}
+     */
+    public function __serialize() : array
+    {
+        return [
+            'logger' => $this->logger,
+            'log_level' => $this->logLevel,
+            'message' => $this->message,
+        ];
+    }
+
+    /**
+     * @param array{logger: LoggerInterface, log_level: string, message: string} $data
+     * @psalm-suppress MoreSpecificImplementedParamType
+     */
+    public function __unserialize(array $data) : void
+    {
+        $this->logger = $data['logger'];
+        $this->logLevel = $data['log_level'];
+        $this->message = $data['message'];
+    }
+
     public function load(Rows $rows) : void
     {
         /**

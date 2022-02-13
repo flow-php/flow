@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\Adapter\Logger;
 use Flow\ETL\Adapter\Logger\PsrLoggerLoader;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
+use Flow\Serializer\NativePHPSerializer;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LogLevel;
 use Psr\Log\Test\TestLogger;
@@ -28,5 +29,16 @@ final class PsrLoggerLoaderTest extends TestCase
 
         $this->assertTrue($logger->hasErrorRecords());
         $this->assertTrue($logger->hasError('row log'));
+    }
+
+    public function test_psr_logger_loader_serialization() : void
+    {
+        $logger = new TestLogger();
+
+        $loader = new PsrLoggerLoader($logger, 'row log', LogLevel::ERROR);
+
+        $serializer = new NativePHPSerializer();
+
+        $this->assertEquals($loader, $serializer->unserialize($serializer->serialize($loader)));
     }
 }

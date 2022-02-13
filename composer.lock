@@ -12,17 +12,17 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl.git",
-                "reference": "598cbeec2da2ef85bbe3276e00b4b1bdc0cb92bb"
+                "reference": "22a7b708e099339324a7d797e700af0258fc5663"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl/zipball/598cbeec2da2ef85bbe3276e00b4b1bdc0cb92bb",
-                "reference": "598cbeec2da2ef85bbe3276e00b4b1bdc0cb92bb",
+                "url": "https://api.github.com/repos/flow-php/etl/zipball/22a7b708e099339324a7d797e700af0258fc5663",
+                "reference": "22a7b708e099339324a7d797e700af0258fc5663",
                 "shasum": ""
             },
             "require": {
                 "ext-mbstring": "*",
-                "php": "^7.4 | ^8.0"
+                "php": "^7.4.2 || ~8.0"
             },
             "default-branch": true,
             "type": "library",
@@ -48,7 +48,7 @@
                 "issues": "https://github.com/flow-php/etl/issues",
                 "source": "https://github.com/flow-php/etl/tree/1.x"
             },
-            "time": "2021-05-17T14:00:46+00:00"
+            "time": "2022-02-12T20:03:05+00:00"
         },
         {
             "name": "psr/log",
@@ -113,5 +113,5 @@
         "php": "^7.4 | ^8.0"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.0.0"
+    "plugin-api-version": "2.2.0"
 }
