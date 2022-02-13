@@ -1,0 +1,67 @@
+{
+    "name": "flow-php/etl-async-adapter-reactphp",
+    "type": "library",
+    "description": "PHP ETL - Asynchronous Adapter on ReactPHP",
+    "keywords": ["etl", "extract", "transform", "load", "async", "reactphp"],
+    "prefer-stable": true,
+    "minimum-stability": "dev",
+    "require": {
+        "php": "^7.4.2 || ~8.0",
+        "ext-json": "*",
+        "flow-php/etl-async": "^1.0@dev",
+        "react/child-process": "^0.6.4",
+        "react/socket": "^1.11",
+        "monolog/monolog": "^2.0"
+    },
+    "require-dev": {
+        "flow-php/doctrine-dbal-bulk": "1.x-dev",
+        "flow-php/etl-adapter-doctrine": "1.x-dev",
+        "flow-php/etl-transformer": "^1.0@dev"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "bin": [
+        "bin/worker-reactphp"
+    ],
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Flow\\": [
+                "src/Flow"
+            ]
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Flow\\": "tests/Flow"
+        }
+    },
+    "scripts": {
+        "build": [
+            "@static:analyze",
+            "@test",
+            "@test:mutation"
+        ],
+        "test": [
+            "tools/vendor/bin/phpunit"
+        ],
+        "test:mutation": [
+            "tools/vendor/bin/infection -j2"
+        ],
+        "static:analyze": [
+            "tools/vendor/bin/psalm --output-format=compact",
+            "tools/vendor/bin/phpstan analyze -c phpstan.neon",
+            "tools/vendor/bin/php-cs-fixer fix --dry-run"
+        ],
+        "cs:php:fix": "tools/vendor/bin/php-cs-fixer fix",
+        "tools:install": "composer install --working-dir=./tools",
+        "post-install-cmd": [
+            "@tools:install"
+        ],
+        "post-update-cmd": [
+            "@tools:install"
+        ]
+    }
+}

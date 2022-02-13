@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<psalm
+    totallyTyped="true"
+    resolveFromConfigFile="true"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="https://getpsalm.org/schema/config"
+    xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
+    cacheDirectory="var/psalm/cache"
+>
+    <projectFiles>
+        <directory name="src"/>
+        <ignoreFiles>
+            <directory name="vendor"/>
+            <!-- Move to standalone repo-->
+            <directory name="src/Flow/ETL/Async/ReactPHP" />
+            <!-- Make type safe -->
+            <file name="src/Flow/ETL/Async/Communication/Message.php" />
+        </ignoreFiles>
+    </projectFiles>
+</psalm>
