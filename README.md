@@ -146,7 +146,7 @@ data entries.
 
 * ✅ - at least one implementation is available 
 * 🚫 - implementation not possible
-* `N/A` - not implementation available yet 
+* `N/A` - not available yet 
 
 **❗ If adapter that you are looking for is not available yet, and you are willing to work on one, feel free to create one as a standalone repository.**
 **Well designed and documented adapters can be pulled into `flow-php` organization that will give them maintenance and security support from the organization.** 
