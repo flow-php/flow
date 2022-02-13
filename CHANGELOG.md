@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-02-12
+## [Unreleased] - 2022-02-13
 
 ### Added
 - [#152](https://github.com/flow-php/etl/pull/152) - **Serializer** - [@norberttech](https://github.com/norberttech)
@@ -78,6 +78,7 @@
 - [1a6eec](https://github.com/flow-php/etl/commit/1a6eec01837f25cf1d6ff7c041996ff7b8b017e7) - **failing tests** - [@norberttech](https://github.com/norberttech)
 
 ### Updated
+- [42fb80](https://github.com/flow-php/etl/commit/42fb80acd15fb728854a527e4237f4261d5cf97a) - **README.md** - [@norberttech](https://github.com/norberttech)
 - [7ff2da](https://github.com/flow-php/etl/commit/7ff2da54d9145b4c076738e9a5c35c3c997c6359) - **README.md** - [@norberttech](https://github.com/norberttech)
 - [56cc82](https://github.com/flow-php/etl/commit/56cc829d20c5e4e930049cdc08306331a4746f14) - **Adapters and Extensions section** - [@norberttech](https://github.com/norberttech)
 - [424aa9](https://github.com/flow-php/etl/commit/424aa92500d096e08c228aa66e2acc24140cfbda) - **README.md** - [@norberttech](https://github.com/norberttech)
