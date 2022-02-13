@@ -9,7 +9,6 @@ use Flow\ETL\Async\Client\Pool;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use React\ChildProcess\Process;
-use React\EventLoop\StreamSelectLoop;
 
 final class ChildProcessLauncher implements Launcher
 {
@@ -49,14 +48,8 @@ final class ChildProcessLauncher implements Launcher
 
             $process->start();
 
-            $process->stdout->on('data', function ($chunk) {
-                foreach (explode("\n", $chunk) as $chunkLine) {
-                    $this->logger->debug($chunkLine);
-                }
-            });
-
-            $process->stderr->on('data', function ($chunk) {
-                foreach (explode("\n", $chunk) as $chunkLine) {
+            $process->stderr->on('data', function ($chunk) : void {
+                foreach (\explode("\n", $chunk) as $chunkLine) {
                     $this->logger->error($chunkLine);
                 }
             });

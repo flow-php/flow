@@ -11,10 +11,6 @@
         <directory name="src"/>
         <ignoreFiles>
             <directory name="vendor"/>
-            <!-- Move to standalone repo-->
-            <directory name="src/Flow/ETL/Async/ReactPHP" />
-            <!-- Make type safe -->
-            <file name="src/Flow/ETL/Async/Communication/Message.php" />
         </ignoreFiles>
     </projectFiles>
 </psalm>

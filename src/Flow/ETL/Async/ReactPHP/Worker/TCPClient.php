@@ -73,7 +73,7 @@ final class TCPClient implements Client
                         $this->logger->error('[client] something went wrong', ['exception' => $e]);
                     });
 
-                    $connection->on('close', function() use ($loop) :  void {
+                    $connection->on('close', function () use ($loop) : void {
                         $this->logger->debug('[client] server closes connection', []);
                         $loop->stop();
                     });
