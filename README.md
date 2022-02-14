@@ -151,6 +151,11 @@ data entries.
 **❗ If adapter that you are looking for is not available yet, and you are willing to work on one, feel free to create one as a standalone repository.**
 **Well designed and documented adapters can be pulled into `flow-php` organization that will give them maintenance and security support from the organization.** 
 
+## Asynchronous Processing
+
+Flow PHP allows asynchronous processing that can drastically increase processing power.
+Asynchronouse processing is still under development, latest progress is available in [flow-php/etl-async](https://github.com/flow-php/etl-async) repository.
+
 ## Installation
 
 ```bash
