@@ -513,6 +513,34 @@ final class ArrayDotGetTest extends TestCase
         );
     }
 
+    public function test_get_wildcard_from_not_array() : void
+    {
+        $this->expectException(InvalidPathException::class);
+        $this->expectExceptionMessage('Expected array under path, "*", but got: integer');
+
+        array_dot_get(
+            [
+                'id' => 1,
+                'status' => 'NEW',
+            ],
+            '*.{id}'
+        );
+    }
+
+    public function test_get_nullsafe_wildcard_from_not_array() : void
+    {
+        $this->expectException(InvalidPathException::class);
+        $this->expectExceptionMessage('Expected array under path, "?*", but got: integer');
+
+        array_dot_get(
+            [
+                'id' => 1,
+                'status' => 'NEW',
+            ],
+            '?*.{id}'
+        );
+    }
+
     public function test_all_multi_key_get_nested() : void
     {
         $this->assertSame(
