@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-01-12
+## [Unreleased] - 2022-02-18
 
 ### Added
 - [#28](https://github.com/flow-php/array-dot/pull/28) - **Workflow for aut-merging dependabot PRs** - [@tomaszhanc](https://github.com/tomaszhanc)
@@ -14,6 +14,7 @@
 - [4461ea](https://github.com/flow-php/array-dot/commit/4461ea9906c4a4160c2a1f58a6d17667bf7822f5) - **Initial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [d2c3af](https://github.com/flow-php/array-dot/commit/d2c3af6b22917e3148a123212fd301ca8dc9b185) - **array_dot edge case of accessing non array through wildcard (#66)** - [@norberttech](https://github.com/norberttech)
 - [1f0da0](https://github.com/flow-php/array-dot/commit/1f0da0a7b831283ef7c40c94f4394a302b881b1c) - **multiselect nested paths** - [@norberttech](https://github.com/norberttech)
 - [#5](https://github.com/flow-php/array-dot/pull/5) - **Added missing keys to multiselect result array** - [@norberttech](https://github.com/norberttech)
 
