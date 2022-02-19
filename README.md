@@ -57,6 +57,7 @@ ETL::extract($extractor)
 * [DateTimeEntry](src/Flow/ETL/Row/Entry/DateTimeEntry.php)
 * [FloatEntry](src/Flow/ETL/Row/Entry/FloatEntry.php)
 * [IntegerEntry](src/Flow/ETL/Row/Entry/IntegerEntry.php)
+* [JsonEntry](src/Flow/ETL/Row/Entry/JsonEntry.php)  
 * [NullEntry](src/Flow/ETL/Row/Entry/NullEntry.php)
 * [ObjectEntryEntry](src/Flow/ETL/Row/Entry/ObjectEntry.php)
 * [StringEntry](src/Flow/ETL/Row/Entry/StringEntry.php)
@@ -106,7 +107,7 @@ Adapters might also define some custom transformers.
 
 ### Serialization
 
-In order to allow serialization of callable base transformers please
+In order to allow serialization of callable based transformers please
 add into your dependencies [opis/closure](https://github.com/opis/closure) library:
 
 ```
