@@ -7,10 +7,10 @@
     "require": {
         "php": "^7.4.2 || ~8.0",
         "flow-php/array-dot": "^1.0@dev",
-        "ext-mbstring": "*"
+        "ext-mbstring": "*",
+        "ext-json": "*"
     },
     "require-dev": {
-        "flow-php/etl-adapter-json": "^1.0@dev",
         "jawira/case-converter": "^3.4",
         "laminas/laminas-hydrator": "^4.0",
         "opis/closure": "^3.5.1",

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ba9074462cc33e58424edc336e72c3f4",
+    "content-hash": "ddff73ab2165026ae50734456a08110b",
     "packages": [
         {
             "name": "flow-php/array-dot",
@@ -57,59 +57,6 @@
         }
     ],
     "packages-dev": [
-        {
-            "name": "flow-php/etl-adapter-json",
-            "version": "1.x-dev",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/flow-php/etl-adapter-json.git",
-                "reference": "2bc2225e6e9ddbeef17bd2e12e6646d2d21c9d86"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl-adapter-json/zipball/2bc2225e6e9ddbeef17bd2e12e6646d2d21c9d86",
-                "reference": "2bc2225e6e9ddbeef17bd2e12e6646d2d21c9d86",
-                "shasum": ""
-            },
-            "require": {
-                "ext-json": "*",
-                "flow-php/etl": "^1.0@dev",
-                "php": "^7.4 | ^8.0"
-            },
-            "require-dev": {
-                "halaxa/json-machine": "^0.8.0 || ^1.0.0"
-            },
-            "suggest": {
-                "halaxa/json-machine": "Memory safe json library used by Extractors and Loaders"
-            },
-            "default-branch": true,
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Flow\\": [
-                        "src/Flow"
-                    ]
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "PHP ETL - Adapter - JSON",
-            "keywords": [
-                "adapter",
-                "etl",
-                "extract",
-                "json",
-                "load",
-                "transform"
-            ],
-            "support": {
-                "issues": "https://github.com/flow-php/etl-adapter-json/issues",
-                "source": "https://github.com/flow-php/etl-adapter-json/tree/1.x"
-            },
-            "time": "2022-02-18T22:13:17+00:00"
-        },
         {
             "name": "jawira/case-converter",
             "version": "v3.4.6",
@@ -1104,14 +1051,14 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "flow-php/array-dot": 20,
-        "flow-php/etl-adapter-json": 20
+        "flow-php/array-dot": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "php": "^7.4.2 || ~8.0",
-        "ext-mbstring": "*"
+        "ext-mbstring": "*",
+        "ext-json": "*"
     },
     "platform-dev": [],
     "plugin-api-version": "2.2.0"
