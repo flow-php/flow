@@ -1,10 +1,7 @@
 {
   "source": {
     "directories": [
-      "src\/Flow"
-    ],
-    "excludes": [
-      "/.*\\.phpt/"
+      "src"
     ]
   },
   "logs": {
@@ -18,11 +15,10 @@
   "mutators": {
     "@default": true
   },
-  "testFramework": "phpunit",
   "bootstrap": "./vendor/autoload.php",
   "phpUnit": {
     "customPath": "tools\/vendor\/bin\/phpunit"
   },
-  "minMsi": 60,
-  "minCoveredMsi": 60
+  "minMsi": 50,
+  "minCoveredMsi": 50
 }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\Serializer\Unit;
+namespace Flow\Serializer\Tests\Unit;
 
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\BooleanEntry;
@@ -14,11 +14,19 @@ use Flow\ETL\Row\Entry\ObjectEntry;
 use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Row\Entry\StructureEntry;
 use Flow\ETL\Rows;
+use Flow\Serializer\CompressingSerializer;
 use Flow\Serializer\NativePHPSerializer;
 use PHPUnit\Framework\TestCase;
 
-final class NativePHPSerializerTest extends TestCase
+final class CompressingSerializerTest extends TestCase
 {
+    public function setUp() : void
+    {
+        if (!\function_exists('gzcompress')) {
+            $this->markTestSkipped('gzcompress unavailable.');
+        }
+    }
+
     public function test_serializing_rows() : void
     {
         $rows = new Rows(
@@ -43,7 +51,7 @@ final class NativePHPSerializerTest extends TestCase
             )
         );
 
-        $serializer = new NativePHPSerializer();
+        $serializer = new CompressingSerializer(new NativePHPSerializer());
 
         $serialized = $serializer->serialize($rows);
 

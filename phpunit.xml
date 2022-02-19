@@ -7,7 +7,7 @@
   >
   <coverage>
     <include>
-      <directory suffix=".php">src</directory>
+      <directory suffix=".php">./src</directory>
     </include>
     <report>
       <html outputDirectory="var/phpunit/coverage/html" lowUpperBound="95" highLowerBound="100"/>
@@ -17,6 +17,8 @@
   <testsuites>
     <testsuite name="unit">
       <directory suffix=".php">tests/Flow/ETL/Tests/Unit</directory>
+      <directory suffix=".php">tests/Flow/Serializer/Tests/Unit</directory>
+      <directory suffix=".php">tests/Flow/ArrayComparison/Tests/Unit</directory>
     </testsuite>
     <testsuite name="integration">
       <directory suffix=".php">tests/Flow/ETL/Tests/Integration</directory>

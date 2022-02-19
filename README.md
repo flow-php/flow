@@ -10,6 +10,12 @@
 
 Flow PHP ETL is a simple ETL (Extract Transform Load) abstraction designed to implement Filters & Pipes architecture.
 
+## Installation
+
+```bash
+composer require flow-php/etl:1.x@dev
+```
+
 ## Typical Use Cases
 
 * Sync data from external systems (API)
@@ -56,31 +62,149 @@ ETL::extract($extractor)
 * [StringEntry](src/Flow/ETL/Row/Entry/StringEntry.php)
 * [StructureEntry](src/Flow/ETL/Row/Entry/StructureEntry.php)
 
-## Extensions  
+## Transformers
 
-Extension provides generic, not really related to any specific data source/storage transformers/loaders. 
+Set of ETL generic Transformers, for the detailed usage instruction please look into [tests](tests/Flow/ETL/Tests/Unit/Transformer).
+Adapters might also define some custom transformers.
 
-<table style="text-align:center">
-<thead>
-  <tr>
-    <th>Name</th>
-    <th>Transformer</th>
-    <th>Loader (write)</th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-      <td><a href="https://github.com/flow-php/etl-transformer">Transformers</a></td>
-      <td>✅</td>
-      <td>🚫</td>
-  </tr>
-  <tr>
-      <td><a href="https://github.com/flow-php/etl-loader">Loaders</a></td>
-      <td>🚫</td>
-      <td>✅</td>
-  </tr>
-</tbody>
-</table>
+* **Generic**
+    * [cast](src/Flow/ETL/Transformer/CastTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/CastTransformerTest.php)
+    * [chain](src/Flow/ETL/Transformer/ChainTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/ChainTransformerTest.php)
+    * [clone entry](src/Flow/ETL/Transformer/CloneEntryTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/CloneEntryTransformerTest.php)
+    * [conditional](src/Flow/ETL/Transformer/ConditionalTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/ConditionalTransformerTest.php)
+    * [dynamic entry](src/Flow/ETL/Transformer/DynamicEntryTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/DynamicEntryTransformerTest.php)
+    * [entry name style converter](src/Flow/ETL/Transformer/EntryNameStyleConverterTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/DynamicEntryTransformerTest.php)
+    * [filter rows](src/Flow/ETL/Transformer/FilterRowsTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/FilterRowsTransformerTest.php)
+    * [group to array](src/Flow/ETL/Transformer/GroupToArrayTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/GroupToArrayTransformerTest.php)
+    * [keep entries](src/Flow/ETL/Transformer/KeepEntriesTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/KeepEntriesTransformerTest.php)
+    * [math operation](src/Flow/ETL/Transformer/MathOperationTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/MathOperationTransformerTest.php)
+    * [remove entries](src/Flow/ETL/Transformer/RemoveEntriesTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/RemoveEntriesTransformerTest.php)
+    * [rename entries](src/Flow/ETL/Transformer/RenameEntriesTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/RenameEntriesTransformerTest.php)
+    * [static entry](src/Flow/ETL/Transformer/StaticEntryTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/StaticEntryTransformerTest.php)
+* **Array**
+    * [array collection get](src/Flow/ETL/Transformer/ArrayCollectionGetTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/ArrayCollectionGetTransformerTest.php)
+    * [array collection merge](src/Flow/ETL/Transformer/ArrayCollectionMergeTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/ArrayCollectionMergeTransformerTest.php)
+    * [array dot get](src/Flow/ETL/Transformer/ArrayDotGetTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/ArrayDotGetTransformerTest.php)
+    * [array rename](src/Flow/ETL/Transformer/ArrayDotRenameTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/ArrayDotRenameTransformerTest.php)
+    * [array expand](src/Flow/ETL/Transformer/ArrayExpandTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/ArrayExpandTransformerTest.php)
+    * [array keys style converter](src/Flow/ETL/Transformer/ArrayKeysStyleConverterTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/ArrayKeysStyleConverterTransformerTest.php)
+    * [array merge](src/Flow/ETL/Transformer/ArrayMergeTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/ArrayMergeTransformerTest.php)
+    * [array reverse](src/Flow/ETL/Transformer/ArrayMergeTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/ArrayMergeTransformerTest.php)
+    * [array sort](src/Flow/ETL/Transformer/ArraySortTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/ArraySortTransformerTest.php)
+    * [array unpack](src/Flow/ETL/Transformer/ArrayUnpackTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/ArrayUnpackTransformerTest.php)
+* **Object**
+    * [object method](src/Flow/ETL/Transformer/ObjectMethodTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/ObjectMethodTransformerTest.php)
+    * [object to array](src/Flow/ETL/Transformer/ObjectToArrayTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/ObjectToArrayTransformerTest.php)
+* **String**
+    * [null string into null entry](src/Flow/ETL/Transformer/NullStringIntoNullEntryTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/NullStringIntoNullEntryTransformerTest.php)
+    * [string concat](src/Flow/ETL/Transformer/StringConcatTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/StringConcatTransformerTest.php)
+    * [string entry value case converter](src/Flow/ETL/Transformer/StringEntryValueCaseConverterTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/StringEntryValueCaseConverterTransformerTest.php)
+    * [string format](src/Flow/ETL/Transformer/StringFormatTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/StringFormatTransformerTest.php)
+* **Callback** - *Might come with performance degradation*
+    * [callback entry](src/Flow/ETL/Transformer/CallbackEntryTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/CallbackEntryTransformerTest.php)
+    * [callback row](src/Flow/ETL/Transformer/CallbackRowTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/CallbackRowTransformerTest.php)
+
+### Serialization
+
+In order to allow serialization of callable base transformers please
+add into your dependencies [opis/closure](https://github.com/opis/closure) library:
+
+```
+{
+  "require": {
+    "opis/closure": "^3.5"
+  }
+}
+```
+
+
+### Custom Transformer
+
+> If possible it's recommended to avoid writing custom transformers. Official transformers are optimized
+> again internal mechanisms which you might not be able to achieve in your custom code.
+
+
+Custom should only implement `Transformer` interface:
+
+Example:
+```php
+<?php
+
+use Flow\ETL\Transformer;
+use Flow\ETL\Rows;
+
+class NotNorbertTransformer implements Transformer
+{
+    public function transform(Rows $rows) : Rows
+    {
+        return $rows->filter(fn(Row $row) => $row->get('name')->value() !== "Norbert");
+    }
+}
+```
+
+### Complex Transformers
+
+Below transformers might not be self descriptive and might require some additional options/dependencies.
+
+#### Transformer - FilterRows
+
+Available Filters
+
+- [All](src/Flow/ETL/Transformer/Filter/Filter/All.php)
+- [Any](src/Flow/ETL/Transformer/Filter/Filter/Any.php)
+- [Callback](src/Flow/ETL/Transformer/Filter/Filter/Callback.php)
+- [EntryEqualsTo](src/Flow/ETL/Transformer/Filter/Filter/EntryEqualsTo.php)
+- [EntryNotEqualsTo](src/Flow/ETL/Transformer/Filter/Filter/EntryNotEqualsTo.php)
+- [EntryNotNull](src/Flow/ETL/Transformer/Filter/Filter/EntryNotNull.php)
+- [EntryNotNumber](src/Flow/ETL/Transformer/Filter/Filter/EntryNotNumber.php)
+- [EntryNumber](src/Flow/ETL/Transformer/Filter/Filter/EntryNumber.php)
+- [EntryExists](src/Flow/ETL/Transformer/Filter/Filter/EntryExists.php)
+- [Opposite](src/Flow/ETL/Transformer/Filter/Filter/Opposite.php)
+- [ValidValue](src/Flow/ETL/Transformer/Filter/Filter/ValidValue.php) - optionally integrates with [Symfony Validator](https://github.com/symfony/validator)
+
+#### Transformer - Conditional
+
+Transforms only those Rows that met given condition.
+
+Available Conditions
+
+- [All](src/Flow/ETL/Transformer/Condition/All.php)
+- [Any](src/Flow/ETL/Transformer/Condition/Any.php)
+- [ArrayDotExists](src/Flow/ETL/Transformer/Condition/ArrayDotExists.php)
+- [ArrayDotValueEqualsTo](src/Flow/ETL/Transformer/Condition/ArrayDotValueEqualsTo.php)
+- [ArrayDotValueGreaterOrEqualThan](src/Flow/ETL/Transformer/Condition/ArrayDotValueGreaterOrEqualThan.php)
+- [ArrayDotValueGreaterThan](src/Flow/ETL/Transformer/Condition/ArrayDotValueGreaterThan.php)
+- [ArrayDotValueLessOrEqualThan](src/Flow/ETL/Transformer/Condition/ArrayDotValueLessOrEqualThan.php)
+- [ArrayDotValueLessThan](src/Flow/ETL/Transformer/Condition/ArrayDotValueLessThan.php)
+- [EntryExists](src/Flow/ETL/Transformer/Condition/EntryExists.php)
+- [EntryInstanceOf](src/Flow/ETL/Transformer/Condition/EntryInstanceOf.php)
+- [EntryNotNull](src/Flow/ETL/Transformer/Condition/EntryNotNull.php)
+- [EntryValueEqualsTo](src/Flow/ETL/Transformer/Condition/EntryValueEqualsTo.php)
+- [EntryValueGreaterOrEqualThan](src/Flow/ETL/Transformer/Condition/EntryValueGreaterOrEqualThan.php)
+- [EntryValueGreaterThan](src/Flow/ETL/Transformer/Condition/EntryValueGreaterThan.php)
+- [EntryValueLessOrEqualThan](src/Flow/ETL/Transformer/Condition/EntryValueLessOrEqualThan.php)
+- [EntryValueLessThan](src/Flow/ETL/Transformer/Condition/EntryValueLessThan.php)
+- [None](src/Flow/ETL/Transformer/Condition/None.php)
+- [Opposite](src/Flow/ETL/Transformer/Condition/Opposite.php)
+- [ValidValue](src/Flow/ETL/Transformer/Condition/ValidValue) - optionally integrates with [Symfony Validator](https://github.com/symfony/validator)
+
+
+#### Transformer - Cast
+
+
+Casting Types:
+
+* [CastEntries](src/Flow/ETL/Transformer/Cast/CastEntries.php)
+* [CastArrayEntryEach](src/Flow/ETL/Transformer/Cast/CastArrayEntryEach.php)
+* [CastToDateTime](src/Flow/ETL/Transformer/Cast/CastToDateTime.php)
+* [CastToString](src/Flow/ETL/Transformer/Cast/CastToString.php)
+* [CastToInteger](src/Flow/ETL/Transformer/Cast/CastToInteger.php)
+* [CastToFloat](src/Flow/ETL/Transformer/Cast/CastToFloat.php)
+* [CastToJson](src/Flow/ETL/Transformer/Cast/CastToJson.php)
+* [CastToArray](src/Flow/ETL/Transformer/Cast/CastToArray.php)
+* [CastJsonToArray](src/Flow/ETL/Transformer/Cast/CastJsonToArray.php)
+
+#### Transformer - EntryNameStyleConverter
 
 ## Adapters
 
@@ -154,13 +278,7 @@ data entries.
 ## Asynchronous Processing
 
 Flow PHP allows asynchronous processing that can drastically increase processing power.
-Asynchronouse processing is still under development, latest progress is available in [flow-php/etl-async](https://github.com/flow-php/etl-async) repository.
-
-## Installation
-
-```bash
-composer require flow-php/etl:1.x@dev
-```
+Asynchronous processing is still under development, the latest progress is available in [flow-php/etl-async](https://github.com/flow-php/etl-async) repository.
 
 ## Error Handling 
 
