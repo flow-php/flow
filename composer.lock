@@ -4,25 +4,87 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "68f794f0d7148e69541f146fb258b5ac",
+    "content-hash": "415c50da50736606b560d889ae2ac5fc",
     "packages": [
+        {
+            "name": "flow-php/array-dot",
+            "version": "1.x-dev",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/flow-php/array-dot.git",
+                "reference": "3dfcefb27cf18c43f3cf64fa1572175a9c68e6ec"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/flow-php/array-dot/zipball/3dfcefb27cf18c43f3cf64fa1572175a9c68e6ec",
+                "reference": "3dfcefb27cf18c43f3cf64fa1572175a9c68e6ec",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.4 | ^8.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "src/Flow/ArrayDot/array_dot.php"
+                ],
+                "psr-4": {
+                    "Flow\\": [
+                        "src/Flow"
+                    ]
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "PHP ETL - Array Dot fuctions",
+            "keywords": [
+                "array",
+                "dot",
+                "etl",
+                "extract",
+                "filter",
+                "load",
+                "transform"
+            ],
+            "support": {
+                "issues": "https://github.com/flow-php/array-dot/issues",
+                "source": "https://github.com/flow-php/array-dot/tree/1.x"
+            },
+            "time": "2022-02-18T21:14:35+00:00"
+        },
         {
             "name": "flow-php/etl",
             "version": "1.x-dev",
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl.git",
-                "reference": "72d786fb4c50eb6b5da5067ce09e5e9a3ae044a8"
+                "reference": "91c176984e6af6adf8e118f1957cdfcdf6aa1d78"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl/zipball/72d786fb4c50eb6b5da5067ce09e5e9a3ae044a8",
-                "reference": "72d786fb4c50eb6b5da5067ce09e5e9a3ae044a8",
+                "url": "https://api.github.com/repos/flow-php/etl/zipball/91c176984e6af6adf8e118f1957cdfcdf6aa1d78",
+                "reference": "91c176984e6af6adf8e118f1957cdfcdf6aa1d78",
                 "shasum": ""
             },
             "require": {
                 "ext-mbstring": "*",
+                "flow-php/array-dot": "^1.0@dev",
                 "php": "^7.4.2 || ~8.0"
+            },
+            "require-dev": {
+                "flow-php/etl-adapter-json": "^1.0@dev",
+                "jawira/case-converter": "^3.4",
+                "laminas/laminas-hydrator": "^4.0",
+                "opis/closure": "^3.5.1",
+                "symfony/validator": "^5.3"
+            },
+            "suggest": {
+                "jawira/case-converter": "Provides CaseConverter that is required by the EntryNameCaseConverterTransformer",
+                "laminas/laminas-hydrator": "Help converting ObjectEntry into ArrayEntry that can be later unpack into standalone Entries",
+                "ocramius/generated-hydrator": "Provieds generated hydrator that implemenets Laminas\\Hydrator\\HydratorInterface"
             },
             "default-branch": true,
             "type": "library",
@@ -48,7 +110,7 @@
                 "issues": "https://github.com/flow-php/etl/issues",
                 "source": "https://github.com/flow-php/etl/tree/1.x"
             },
-            "time": "2022-02-12T20:01:47+00:00"
+            "time": "2022-02-19T15:41:53+00:00"
         }
     ],
     "packages-dev": [
@@ -116,7 +178,7 @@
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": "^7.4 | ^8.0",
+        "php": "^7.4 || ~8.0",
         "ext-json": "*"
     },
     "platform-dev": [],
