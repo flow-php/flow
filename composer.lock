@@ -61,21 +61,21 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl.git",
-                "reference": "91c176984e6af6adf8e118f1957cdfcdf6aa1d78"
+                "reference": "15c7c56a0106e786acc5e3598df6dde386581f54"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl/zipball/91c176984e6af6adf8e118f1957cdfcdf6aa1d78",
-                "reference": "91c176984e6af6adf8e118f1957cdfcdf6aa1d78",
+                "url": "https://api.github.com/repos/flow-php/etl/zipball/15c7c56a0106e786acc5e3598df6dde386581f54",
+                "reference": "15c7c56a0106e786acc5e3598df6dde386581f54",
                 "shasum": ""
             },
             "require": {
+                "ext-json": "*",
                 "ext-mbstring": "*",
                 "flow-php/array-dot": "^1.0@dev",
                 "php": "^7.4.2 || ~8.0"
             },
             "require-dev": {
-                "flow-php/etl-adapter-json": "^1.0@dev",
                 "jawira/case-converter": "^3.4",
                 "laminas/laminas-hydrator": "^4.0",
                 "opis/closure": "^3.5.1",
@@ -110,7 +110,7 @@
                 "issues": "https://github.com/flow-php/etl/issues",
                 "source": "https://github.com/flow-php/etl/tree/1.x"
             },
-            "time": "2022-02-19T15:41:53+00:00"
+            "time": "2022-02-19T20:04:40+00:00"
         }
     ],
     "packages-dev": [
