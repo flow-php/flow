@@ -71,6 +71,7 @@
 - [e48062](https://github.com/flow-php/etl/commit/e48062890cd84e655e1162305086f67148347b83) - **Intial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#155](https://github.com/flow-php/etl/pull/155) - **ETL display function for arrays** - [@norbertmwk](https://github.com/norbertmwk)
 - [#139](https://github.com/flow-php/etl/pull/139) - **memory consumption broken by using iterator_to_array on pipeline** - [@norberttech](https://github.com/norberttech)
 - [#64](https://github.com/flow-php/etl/pull/64) - **DateTimeEntry::value return type is now \DateTimeInterface** - [@norberttech](https://github.com/norberttech)
 - [#59](https://github.com/flow-php/etl/pull/59) - **Psalm errros after update to 4.8.1** - [@tomaszhanc](https://github.com/tomaszhanc)
