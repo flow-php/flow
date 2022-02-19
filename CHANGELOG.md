@@ -82,6 +82,7 @@
 - [1a6eec](https://github.com/flow-php/etl/commit/1a6eec01837f25cf1d6ff7c041996ff7b8b017e7) - **failing tests** - [@norberttech](https://github.com/norberttech)
 
 ### Updated
+- [15c7c5](https://github.com/flow-php/etl/commit/15c7c56a0106e786acc5e3598df6dde386581f54) - **README.md** - [@norberttech](https://github.com/norberttech)
 - [44272b](https://github.com/flow-php/etl/commit/44272b7da3f86ecac5d1578a555b3efa91d2bc70) - **README.md** - [@norberttech](https://github.com/norberttech)
 - [42fb80](https://github.com/flow-php/etl/commit/42fb80acd15fb728854a527e4237f4261d5cf97a) - **README.md** - [@norberttech](https://github.com/norberttech)
 - [7ff2da](https://github.com/flow-php/etl/commit/7ff2da54d9145b4c076738e9a5c35c3c997c6359) - **README.md** - [@norberttech](https://github.com/norberttech)
