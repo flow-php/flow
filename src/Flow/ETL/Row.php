@@ -73,6 +73,15 @@ final class Row implements Serializable
         return new self($this->entries->set(...$entries));
     }
 
+    public function merge(self $row, string $prefix = '_') : self
+    {
+        return new self(
+            $this->entries()->merge(
+                $row->map(fn (Entry $entry) : Entry => $entry->rename($prefix . $entry->name()))->entries()
+            )
+        );
+    }
+
     public function remove(string ...$names) : self
     {
         $namesToRemove = [];

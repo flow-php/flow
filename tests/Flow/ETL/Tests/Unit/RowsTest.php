@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\BooleanEntry;
@@ -651,5 +652,27 @@ final class RowsTest extends TestCase
         $this->assertTrue($unserialized[0]->isEqual($rows[0]));
         $this->assertTrue($unserialized[1]->isEqual($rows[1]));
         $this->assertTrue($unserialized[2]->isEqual($rows[2]));
+    }
+
+    public function test_merge_row_with_another_row_using_prefix() : void
+    {
+        $this->assertSame(
+            [
+                'id' => 1,
+                '_id' => 2,
+            ],
+            Row::create(new IntegerEntry('id', 1))
+                ->merge(Row::create(new IntegerEntry('id', 2)), $prefix = '_')
+                ->toArray()
+        );
+    }
+
+    public function test_merge_row_with_another_row_that_has_duplicated_entries() : void
+    {
+        $this->expectExceptionMessage('Merged entries names must be unique, given: [id] + [id]');
+        $this->expectException(InvalidArgumentException::class);
+
+        Row::create(new IntegerEntry('id', 1))
+            ->merge(Row::create(new IntegerEntry('id', 2)), $prefix = '');
     }
 }
