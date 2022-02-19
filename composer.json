@@ -20,6 +20,11 @@
         "optimize-autoloader": true,
         "sort-packages": true
     },
+    "suggest": {
+        "laminas/laminas-hydrator" : "Help converting ObjectEntry into ArrayEntry that can be later unpack into standalone Entries",
+        "ocramius/generated-hydrator" : "Provieds generated hydrator that implemenets Laminas\\Hydrator\\HydratorInterface",
+        "jawira/case-converter" : "Provides CaseConverter that is required by the EntryNameCaseConverterTransformer"
+    },
     "license": "MIT",
     "autoload": {
         "psr-4": {
