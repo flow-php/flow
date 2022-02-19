@@ -1,6 +1,7 @@
 ## [Unreleased] - 2022-02-19
 
 ### Added
+- [85f934](https://github.com/flow-php/etl/commit/85f9344b3725b68da6950f9ced878b1b73f3e84b) - **suggested packages** - [@norberttech](https://github.com/norberttech)
 - [#152](https://github.com/flow-php/etl/pull/152) - **Serializer** - [@norberttech](https://github.com/norberttech)
 - [#152](https://github.com/flow-php/etl/pull/152) - **Pipes object and Pipe interface** - [@norberttech](https://github.com/norberttech)
 - [#150](https://github.com/flow-php/etl/pull/150) - **ETL::process(Rows $rows) for direct Rows processing** - [@norberttech](https://github.com/norberttech)
