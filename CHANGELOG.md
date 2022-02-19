@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-02-12
+## [Unreleased] - 2022-02-19
 
 ### Added
 - [#44](https://github.com/flow-php/etl-adapter-json/pull/44) - **Workflow for aut-merging dependabot PRs** - [@tomaszhanc](https://github.com/tomaszhanc)
@@ -14,6 +14,9 @@
 
 ### Fixed
 - [#18](https://github.com/flow-php/etl-adapter-json/pull/18) - **ArrayWeakComparison is not available anymore, we should use ArrayComparison** - [@tomaszhanc](https://github.com/tomaszhanc)
+
+### Updated
+- [247c2f](https://github.com/flow-php/etl-adapter-json/commit/247c2fe106da6a29612354f99ea090cb4a002b3b) - **dependencies** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
 - [bd6bae](https://github.com/flow-php/etl-adapter-json/commit/bd6baefd144977ba3f70104ec6a00b6380beb75d) - **php extensions dependencies** - [@norberttech](https://github.com/norberttech)
