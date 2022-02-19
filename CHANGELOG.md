@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-02-14
+## [Unreleased] - 2022-02-19
 
 ### Added
 - [#152](https://github.com/flow-php/etl/pull/152) - **Serializer** - [@norberttech](https://github.com/norberttech)
@@ -51,6 +51,7 @@
 - [856870](https://github.com/flow-php/etl/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [5f7333](https://github.com/flow-php/etl/commit/5f73337329323921c46e06bd1c5cf3b7033b3e88) - **Merged flow-php/etl-transformers and flow-php/etl-loaders repositories into etl repo** - [@norberttech](https://github.com/norberttech)
 - [#144](https://github.com/flow-php/etl/pull/144) - **Revert pipelines from generators to callbacks** - [@norberttech](https://github.com/norberttech)
 - [#136](https://github.com/flow-php/etl/pull/136) - **Entries collection is no longer case insensitive, "entry" and "Entry" are two different entry names** - [@norbertmwk](https://github.com/norbertmwk)
 - [#136](https://github.com/flow-php/etl/pull/136) - **Index Entries by name in the collection** - [@norbertmwk](https://github.com/norbertmwk)
