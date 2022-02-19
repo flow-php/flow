@@ -102,6 +102,6 @@ final class ArrayEntry implements Entry
 
     public function toString() : string
     {
-        return (string) \preg_replace('!\s+!', ' ', \str_replace("\n", '', \print_r($this->value(), true)));
+        return (string) \json_encode($this->value());
     }
 }

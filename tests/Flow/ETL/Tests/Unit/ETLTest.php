@@ -10,6 +10,7 @@ use Flow\ETL\ETL;
 use Flow\ETL\Extractor;
 use Flow\ETL\Loader;
 use Flow\ETL\Row;
+use Flow\ETL\Row\Entry\ArrayEntry;
 use Flow\ETL\Row\Entry\BooleanEntry;
 use Flow\ETL\Row\Entry\DateTimeEntry;
 use Flow\ETL\Row\Entry\FloatEntry;
@@ -380,6 +381,13 @@ final class ETLTest extends TestCase
                                 new BooleanEntry('deleted', false),
                                 new DateTimeEntry('created-at', $createdAt = new \DateTimeImmutable('2020-07-13 15:00')),
                                 new NullEntry('phase'),
+                                new ArrayEntry(
+                                    'array',
+                                    [
+                                        ['id' => 1, 'status' => 'NEW'],
+                                        ['id' => 2, 'status' => 'PENDING'],
+                                    ]
+                                ),
                                 new StructureEntry(
                                     'items',
                                     new IntegerEntry('item-id', 1),
@@ -401,15 +409,15 @@ final class ETLTest extends TestCase
 
         $this->assertStringContainsString(
             <<<'ASCIITABLE'
-+----+------+-------+--------------------+-----+--------------------+--------------------+--------------------+
-|  id| price|deleted|          created-at|phase|               items|                tags|              object|
-+----+------+-------+--------------------+-----+--------------------+--------------------+--------------------+
-|1234|123.45|  false|2020-07-13T15:00:...| null|{"item-id":"1","n...|[{"item-id":"1","...|ArrayIterator Obj...|
-|1234|123.45|  false|2020-07-13T15:00:...| null|{"item-id":"1","n...|[{"item-id":"1","...|ArrayIterator Obj...|
-|1234|123.45|  false|2020-07-13T15:00:...| null|{"item-id":"1","n...|[{"item-id":"1","...|ArrayIterator Obj...|
-|1234|123.45|  false|2020-07-13T15:00:...| null|{"item-id":"1","n...|[{"item-id":"1","...|ArrayIterator Obj...|
-|1234|123.45|  false|2020-07-13T15:00:...| null|{"item-id":"1","n...|[{"item-id":"1","...|ArrayIterator Obj...|
-+----+------+-------+--------------------+-----+--------------------+--------------------+--------------------+
++----+------+-------+--------------------+-----+--------------------+--------------------+--------------------+--------------------+
+|  id| price|deleted|          created-at|phase|               array|               items|                tags|              object|
++----+------+-------+--------------------+-----+--------------------+--------------------+--------------------+--------------------+
+|1234|123.45|  false|2020-07-13T15:00:...| null|[{"id":1,"status"...|{"item-id":"1","n...|[{"item-id":"1","...|ArrayIterator Obj...|
+|1234|123.45|  false|2020-07-13T15:00:...| null|[{"id":1,"status"...|{"item-id":"1","n...|[{"item-id":"1","...|ArrayIterator Obj...|
+|1234|123.45|  false|2020-07-13T15:00:...| null|[{"id":1,"status"...|{"item-id":"1","n...|[{"item-id":"1","...|ArrayIterator Obj...|
+|1234|123.45|  false|2020-07-13T15:00:...| null|[{"id":1,"status"...|{"item-id":"1","n...|[{"item-id":"1","...|ArrayIterator Obj...|
+|1234|123.45|  false|2020-07-13T15:00:...| null|[{"id":1,"status"...|{"item-id":"1","n...|[{"item-id":"1","...|ArrayIterator Obj...|
++----+------+-------+--------------------+-----+--------------------+--------------------+--------------------+--------------------+
 5 rows
 ASCIITABLE,
             $etl->display(5)
@@ -417,19 +425,78 @@ ASCIITABLE,
 
         $this->assertStringContainsString(
             <<<'ASCIITABLE'
-+----+------+-------+-------------------------+-----+----------------------------+------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------+
-|  id| price|deleted|               created-at|phase|                       items|                                                                                      tags|                                                                                        object|
-+----+------+-------+-------------------------+-----+----------------------------+------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------+
-|1234|123.45|  false|2020-07-13T15:00:00+00:00| null|{"item-id":"1","name":"one"}|[{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}]|ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 ))|
-|1234|123.45|  false|2020-07-13T15:00:00+00:00| null|{"item-id":"1","name":"one"}|[{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}]|ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 ))|
-|1234|123.45|  false|2020-07-13T15:00:00+00:00| null|{"item-id":"1","name":"one"}|[{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}]|ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 ))|
-|1234|123.45|  false|2020-07-13T15:00:00+00:00| null|{"item-id":"1","name":"one"}|[{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}]|ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 ))|
-|1234|123.45|  false|2020-07-13T15:00:00+00:00| null|{"item-id":"1","name":"one"}|[{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}]|ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 ))|
-|1234|123.45|  false|2020-07-13T15:00:00+00:00| null|{"item-id":"1","name":"one"}|[{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}]|ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 ))|
-+----+------+-------+-------------------------+-----+----------------------------+------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------+
++----+------+-------+-------------------------+-----+-----------------------------------------------------+----------------------------+------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------+
+|  id| price|deleted|               created-at|phase|                                                array|                       items|                                                                                      tags|                                                                                        object|
++----+------+-------+-------------------------+-----+-----------------------------------------------------+----------------------------+------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------+
+|1234|123.45|  false|2020-07-13T15:00:00+00:00| null|[{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}]|{"item-id":"1","name":"one"}|[{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}]|ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 ))|
+|1234|123.45|  false|2020-07-13T15:00:00+00:00| null|[{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}]|{"item-id":"1","name":"one"}|[{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}]|ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 ))|
+|1234|123.45|  false|2020-07-13T15:00:00+00:00| null|[{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}]|{"item-id":"1","name":"one"}|[{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}]|ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 ))|
+|1234|123.45|  false|2020-07-13T15:00:00+00:00| null|[{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}]|{"item-id":"1","name":"one"}|[{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}]|ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 ))|
+|1234|123.45|  false|2020-07-13T15:00:00+00:00| null|[{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}]|{"item-id":"1","name":"one"}|[{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}]|ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 ))|
+|1234|123.45|  false|2020-07-13T15:00:00+00:00| null|[{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}]|{"item-id":"1","name":"one"}|[{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}]|ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 ))|
++----+------+-------+-------------------------+-----+-----------------------------------------------------+----------------------------+------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------+
 6 rows
 ASCIITABLE,
             $etl->display(6, 0)
+        );
+    }
+
+    public function test_etl_display_with_very_long_entry_name() : void
+    {
+        $etl = ETL::extract(
+            new class implements Extractor {
+                /**
+                 * @return \Generator<int, Rows, mixed, void>
+                 */
+                public function extract() : \Generator
+                {
+                    for ($i = 0; $i < 20; $i++) {
+                        yield new Rows(
+                            Row::create(
+                                new ArrayEntry(
+                                    'this is very long entry name that should be longer than items',
+                                    [
+                                        ['id' => 1, 'status' => 'NEW'],
+                                        ['id' => 2, 'status' => 'PENDING'],
+                                    ]
+                                ),
+                            ),
+                        );
+                    }
+                }
+            }
+        );
+
+        $this->assertStringContainsString(
+            <<<'ASCIITABLE'
++--------------------+
+|this is very long...|
++--------------------+
+|[{"id":1,"status"...|
+|[{"id":1,"status"...|
+|[{"id":1,"status"...|
+|[{"id":1,"status"...|
+|[{"id":1,"status"...|
++--------------------+
+5 rows
+ASCIITABLE,
+            $etl->display(5)
+        );
+
+        $this->assertStringContainsString(
+            <<<'ASCIITABLE'
++-------------------------------------------------------------+
+|this is very long entry name that should be longer than items|
++-------------------------------------------------------------+
+|        [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}]|
+|        [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}]|
+|        [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}]|
+|        [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}]|
+|        [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}]|
++-------------------------------------------------------------+
+5 rows
+ASCIITABLE,
+            $etl->display(5, 0)
         );
     }
 }

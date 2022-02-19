@@ -87,7 +87,7 @@ final class ASCIITable
             $table .= $this->makeDivider();
 
             // Output the header row
-            $table .= $this->makeHeaders();
+            $table .= $this->makeHeaders($truncate);
 
             // Another divider line
             $table .= $this->makeDivider();
@@ -113,7 +113,7 @@ final class ASCIITable
         if (isset($array[0])) {
             foreach (\array_keys($array[0]) as $col) {
                 $length = \max(\max(\array_map([$this, 'len'], $this->arrCol($array, $col))), $this->len($col));
-                $this->colWidths[$col] = $truncate === 0
+                $this->colWidths[$col] = ($truncate === 0)
                     ? $length
                     : \min($length, $truncate);
             }
@@ -195,7 +195,7 @@ final class ASCIITable
      *
      * @return string the row of the table header
      */
-    private function makeHeaders() : string
+    private function makeHeaders(int $trucate) : string
     {
         // This time were going to start with a simple bar;
         $row = '|';
@@ -204,7 +204,21 @@ final class ASCIITable
         foreach ($this->colWidths as $col => $length) {
             // Add title
             $alignment = STR_PAD_LEFT;
-            $row .= \str_pad($col, $this->colWidths[$col], ' ', $alignment);
+
+            if ($trucate === 0) {
+                $row .= \str_pad($col, $this->colWidths[$col], ' ', $alignment);
+            } else {
+                if (self::len($col) > $trucate) {
+                    $row .= \str_pad(
+                        self::substr($col, 0, $trucate - 3) . '...',
+                        $this->colWidths[$col],
+                        ' ',
+                        $alignment
+                    );
+                } else {
+                    $row .= \str_pad($col, $this->colWidths[$col], ' ', $alignment);
+                }
+            }
 
             // Add the right hand bar
             $row .= '|';
