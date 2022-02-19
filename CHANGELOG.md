@@ -1,6 +1,7 @@
 ## [Unreleased] - 2022-02-19
 
 ### Added
+- [#88](https://github.com/flow-php/etl-adapter-json/pull/88) - **Added JsonLoader** - [@norberttech](https://github.com/norberttech)
 - [#44](https://github.com/flow-php/etl-adapter-json/pull/44) - **Workflow for aut-merging dependabot PRs** - [@tomaszhanc](https://github.com/tomaszhanc)
 
 ### Changed
