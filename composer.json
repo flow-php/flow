@@ -7,8 +7,9 @@
     "minimum-stability": "dev",
     "require": {
         "php": "^7.4 || ~8.0",
+        "ext-json": "*",
         "flow-php/etl": "^1.0@dev",
-        "ext-json": "*"
+        "ramsey/uuid": "^3.0 || ^4.0"
     },
     "require-dev": {
         "halaxa/json-machine": "^0.8.0 || ^1.0.0"

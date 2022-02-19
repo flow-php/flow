@@ -9,18 +9,18 @@ ETL Adapter that provides memory safe JSON support for ETL.
 Following implementation are available: 
 - [JSON Machine](https://github.com/halaxa/json-machine) 
 
-## Extractor - JSONMachineExtractor
+## Extractor - JSONMachine - JsonExtractor
 
 ```php
 <?php
 
-use Flow\ETL\Adapter\JSON\JSONMachineExtractor;
+use Flow\ETL\Adapter\JSON\JSONMachine\JsonExtractor;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use JsonMachine\JsonMachine;
 
-$extractor = new JSONMachineExtractor(
-    JsonMachine::fromFile(__DIR__ . '/../Fixtures/timezones.json'), 
+$extractor = new JsonExtractor(
+    __DIR__ . '/../Fixtures/timezones.json', 
     5
 );
 
@@ -28,6 +28,15 @@ $extractor = new JSONMachineExtractor(
 foreach ($extractor->extract() as $rows) {
     // Do something with Row 
 }
+```
+
+## Loader - JsonLoader
+
+```php
+<?php
+
+$loader = new JsonLoader(\sys_get_temp_dir() . '/file.json');
+$loader->load(new Rows(...));
 ```
 
 ## Development
