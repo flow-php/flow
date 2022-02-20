@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Transformer\Factory;
+namespace Flow\ETL\Row\Factory;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
+use Flow\ETL\RowsFactory;
 use Flow\ETL\Transformer\ArrayUnpackTransformer;
 use Flow\ETL\Transformer\RemoveEntriesTransformer;
-use Flow\ETL\Transformer\RowsFactory;
 
 final class ArrayRowsFactory implements RowsFactory
 {
@@ -28,7 +28,14 @@ final class ArrayRowsFactory implements RowsFactory
     {
     }
 
-    /** @phpstan-ignore-next-line */
+    /**
+     * @param array<array<mixed>> $data
+     *
+     * @throws InvalidArgumentException
+     * @throws \Flow\ETL\Exception\RuntimeException
+     *
+     * @return Rows
+     */
     public function create(array $data) : Rows
     {
         foreach ($data as $row) {

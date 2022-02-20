@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Factory;
 
+use Flow\ETL\Factory\CastedRowsFactory;
 use Flow\ETL\Row\Entry\DateTimeEntry;
 use Flow\ETL\Row\Entry\NullEntry;
+use Flow\ETL\Row\Factory\ArrayRowsFactory;
 use Flow\ETL\Transformer\Cast\CastToDateTime;
-use Flow\ETL\Transformer\Factory\ArrayRowsFactory;
-use Flow\ETL\Transformer\Factory\CastedRowsFactory;
 use PHPUnit\Framework\TestCase;
 
 final class CasedRowsFactoryTest extends TestCase

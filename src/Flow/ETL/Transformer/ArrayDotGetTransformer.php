@@ -7,9 +7,10 @@ namespace Flow\ETL\Transformer;
 use function Flow\ArrayDot\array_dot_get;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
+use Flow\ETL\Row\EntryFactory;
+use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
-use Flow\ETL\Transformer\Factory\NativeEntryFactory;
 
 /**
  * @psalm-immutable
@@ -77,7 +78,7 @@ final class ArrayDotGetTransformer implements Transformer
             }
 
             return $row->add(
-                $this->entryFactory->createEntry(
+                $this->entryFactory->create(
                     $this->newEntryName,
                     array_dot_get($arrayEntry->value(), $this->path)
                 )

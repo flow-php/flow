@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Transformer\Factory;
+namespace Flow\ETL\Factory;
 
 use Flow\ETL\Row\RowConverter;
 use Flow\ETL\Rows;
+use Flow\ETL\RowsFactory;
 use Flow\ETL\Transformer\CastTransformer;
-use Flow\ETL\Transformer\RowsFactory;
 
 final class CastedRowsFactory implements RowsFactory
 {
@@ -46,7 +46,11 @@ final class CastedRowsFactory implements RowsFactory
         $this->castEntries = $data['cast_entries'];
     }
 
-    /** @phpstan-ignore-next-line */
+    /**
+     * @param array<array<mixed>> $data
+     *
+     * @return Rows
+     */
     public function create(array $data) : Rows
     {
         return (new CastTransformer(...$this->castEntries))->transform($this->factory->create($data));

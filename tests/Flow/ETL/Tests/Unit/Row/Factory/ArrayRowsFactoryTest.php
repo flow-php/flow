@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Tests\Unit\Factory;
+namespace Flow\ETL\Tests\Unit\Row\Factory;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Transformer\Factory\ArrayRowsFactory;
+use Flow\ETL\Row\Factory\ArrayRowsFactory;
 use PHPUnit\Framework\TestCase;
 
 final class ArrayRowsFactoryTest extends TestCase

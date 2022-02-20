@@ -6,9 +6,10 @@ namespace Flow\ETL\Transformer;
 
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
+use Flow\ETL\Row\EntryFactory;
+use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
-use Flow\ETL\Transformer\Factory\NativeEntryFactory;
 
 /**
  * @psalm-immutable
@@ -98,7 +99,7 @@ final class ObjectMethodTransformer implements Transformer
                 throw new RuntimeException("\"{$this->objectEntryName}\" is object does not have \"{$this->method}\" method.");
             }
 
-            return $row->add($this->entryFactory->createEntry(
+            return $row->add($this->entryFactory->create(
                 $this->newEntryName,
                 /** @phpstan-ignore-next-line */
                 \call_user_func([$object, $this->method], ...$this->parameters)

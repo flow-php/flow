@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Transformer\Factory;
+namespace Flow\ETL\Row\Factory;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
-use Flow\ETL\Transformer\EntryFactory;
+use Flow\ETL\Row\EntryFactory;
 
 final class NativeEntryFactory implements EntryFactory
 {
@@ -22,7 +22,7 @@ final class NativeEntryFactory implements EntryFactory
     {
     }
 
-    public function createEntry(string $entryName, $value) : Entry
+    public function create(string $entryName, $value) : Entry
     {
         if (\is_string($value)) {
             if (\class_exists('\\Flow\\ETL\\Row\\Entry\\JsonEntry') && $this->isJson($value)) {

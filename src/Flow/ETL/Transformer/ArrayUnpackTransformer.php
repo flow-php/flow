@@ -6,9 +6,10 @@ namespace Flow\ETL\Transformer;
 
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
+use Flow\ETL\Row\EntryFactory;
+use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
-use Flow\ETL\Transformer\Factory\NativeEntryFactory;
 
 /**
  * @psalm-immutable
@@ -95,7 +96,7 @@ final class ArrayUnpackTransformer implements Transformer
                     $entryName = $this->entryPrefix . $entryName;
                 }
 
-                $entries[] = $this->entryFactory->createEntry($entryName, $value);
+                $entries[] = $this->entryFactory->create($entryName, $value);
             }
 
             if (\count($entries)) {

@@ -1,8 +1,7 @@
 <?php declare(strict_types=1);
 
-namespace Flow\ETL\Transformer;
+namespace Flow\ETL\Row;
 
-use Flow\ETL\Row\Entry;
 use Flow\Serializer\Serializable;
 
 interface EntryFactory extends Serializable
@@ -13,5 +12,5 @@ interface EntryFactory extends Serializable
      *
      * @return Entry
      */
-    public function createEntry(string $entryName, $value) : Entry;
+    public function create(string $entryName, $value) : Entry;
 }

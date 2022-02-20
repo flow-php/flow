@@ -7,9 +7,10 @@ namespace Flow\ETL\Transformer;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
+use Flow\ETL\Row\EntryFactory;
+use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
-use Flow\ETL\Transformer\Factory\NativeEntryFactory;
 use Flow\ETL\Transformer\StyleConverter\ArrayKeyConverter;
 use Flow\ETL\Transformer\StyleConverter\StringStyles;
 use Jawira\CaseConverter\Convert;
@@ -89,7 +90,7 @@ final class ArrayKeysStyleConverterTransformer implements Transformer
             $converter = fn (string $key) : string => (string) \call_user_func([new Convert($key), 'to' . \ucfirst($this->style)]);
 
             return $row->set(
-                $this->entryFactory->createEntry(
+                $this->entryFactory->create(
                     $arrayEntry->name(),
                     (new ArrayKeyConverter($converter))->convert($arrayEntry->value())
                 )
