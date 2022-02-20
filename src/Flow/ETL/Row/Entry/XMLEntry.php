@@ -46,6 +46,35 @@ final class XMLEntry implements Entry
         return $this->toString();
     }
 
+    /**
+     * @return array{name: string, value: string, encoding: null|string, version: null|string}
+     */
+    public function __serialize() : array
+    {
+        return [
+            'name' => $this->name,
+            'value' => $this->toString(),
+            'encoding' => $this->value->encoding,
+            'version' => $this->value->xmlVersion,
+        ];
+    }
+
+    /**
+     * @psalm-suppress MoreSpecificImplementedParamType
+     * @psalm-suppress ImpureMethodCall
+     *
+     * @param array{name: string, value: string, encoding: null|string, version: null|string} $data
+     */
+    public function __unserialize(array $data) : void
+    {
+        $dom = new \DOMDocument($data['version'] ? $data['version'] : '', $data['encoding'] ? $data['encoding'] : '');
+        /** @psalm-suppress ArgumentTypeCoercion */
+        $dom->loadXML($data['value']);
+
+        $this->name = $data['name'];
+        $this->value = $dom;
+    }
+
     public function name() : string
     {
         return $this->name;
