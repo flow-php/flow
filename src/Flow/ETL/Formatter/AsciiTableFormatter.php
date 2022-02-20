@@ -35,6 +35,6 @@ final class AsciiTableFormatter implements Formatter
         });
 
         return (new ASCIITable())->makeTable($array, $truncate)
-            . "{$rows->count()} rows";
+            . "{$rows->count()} rows\n";
     }
 }

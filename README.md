@@ -207,6 +207,16 @@ Casting Types:
 
 #### Transformer - EntryNameStyleConverter
 
+## Loaders 
+
+In most cases Loaders should be provided by Adapters which you can find below, however there are few generic loaders, 
+please find them below.  
+Please read [tests](tests/Flow/ETL/Tests/Unit/Loader) to find examples of usage.
+
+* [callback](src/Flow/ETL/Loader/CallbackLoader.php) - [tests](tests/Flow/ETL/Tests/Unit/Loader/CallbackLoaderTest.php)
+* [stream](src/Flow/ETL/Loader/StreamLoader.php) - [tests](tests/Flow/ETL/Tests/Unit/Loader/StreamLoaderTest.php)
+* [transforming](src/Flow/ETL/Loader/TransformerLoader.php) - [tests](tests/Flow/ETL/Tests/Unit/Loader/TransformerLoaderTest.php)
+
 ## Adapters
 
 Adapter connects ETL with existing data sources/storages and including some times custom 
