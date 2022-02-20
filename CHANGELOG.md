@@ -19,6 +19,7 @@
 - [#1](https://github.com/flow-php/etl-adapter-elasticsearch/pull/1) - **failing tests** - [@norberttech](https://github.com/norberttech)
 
 ### Updated
+- [d204d2](https://github.com/flow-php/etl-adapter-elasticsearch/commit/d204d21f9c5aef7b059167a27ed265cccc6cf402) - **dependencies** - [@norberttech](https://github.com/norberttech)
 - [0f739f](https://github.com/flow-php/etl-adapter-elasticsearch/commit/0f739f4cc1c6bc9d4d173ee0078c02ab120d1b76) - **dependencies** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
