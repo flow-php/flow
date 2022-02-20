@@ -22,7 +22,7 @@ interface Pipeline
      * @param \Generator<int, Rows, mixed, void> $generator
      * @param callable(Rows $rows) : void $callback
      */
-    public function process(\Generator $generator, callable $callback = null) : void;
+    public function process(\Generator $generator, ?int $limit = null, callable $callback = null) : void;
 
     public function onError(ErrorHandler $errorHandler) : void;
 }

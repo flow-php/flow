@@ -33,12 +33,12 @@ final class CollectingPipeline implements Pipeline
         $this->nextPipeline->add($pipe);
     }
 
-    public function process(\Generator $generator, callable $callback = null) : void
+    public function process(\Generator $generator, ?int $limit = null, callable $callback = null) : void
     {
         $rows = [];
 
         while ($generator->valid()) {
-            $this->pipeline->process($generator, function (Rows $nextRows) use (&$rows) : void {
+            $this->pipeline->process($generator, $limit, function (Rows $nextRows) use (&$rows) : void {
                 /** @psalm-suppress MixedArrayAssignment */
                 $rows[] = $nextRows;
             });
@@ -47,7 +47,7 @@ final class CollectingPipeline implements Pipeline
         /** @var array<Rows> $rows */
         $mergedRows = (new Rows())->merge(...$rows)->makeFirst()->makeLast();
 
-        $this->nextPipeline->process($this->generate($mergedRows), $callback);
+        $this->nextPipeline->process($this->generate($mergedRows), $limit, $callback);
     }
 
     public function onError(ErrorHandler $errorHandler) : void

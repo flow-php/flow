@@ -41,11 +41,11 @@ final class ParallelizingPipeline implements Pipeline
         $this->nextPipeline->add($pipe);
     }
 
-    public function process(\Generator $generator, callable $callback = null) : void
+    public function process(\Generator $generator, ?int $limit = null, callable $callback = null) : void
     {
-        $this->pipeline->process($generator, function (Rows $rows) use ($callback) : void {
+        $this->pipeline->process($generator, $limit, function (Rows $rows) use ($limit, $callback) : void {
             foreach ($rows->chunks($this->parallel) as $chunk) {
-                $this->nextPipeline->process($this->generate($chunk), $callback);
+                $this->nextPipeline->process($this->generate($chunk), $limit, $callback);
             }
         });
     }

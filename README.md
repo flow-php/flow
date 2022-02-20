@@ -33,6 +33,7 @@ This is a perfect scenario for ETL.
 ## Usage
 
 ```php
+<?php 
 
 ETL::extract($extractor)
     ->transform($transformer1)
@@ -315,6 +316,7 @@ There are 3 build in ErrorHandlers (look for more in adapters):
 Error Handling can be set directly at ETL:
 
 ```php
+<?php 
 
 ETL::extract($extractor)
     ->onError(new IgnoreError())
@@ -326,6 +328,7 @@ ETL::extract($extractor)
 ## Collect/Parallelize
 
 ```php
+<?php 
 
 ETL::extract($extractor)
     ->transform($transformer1)
@@ -353,6 +356,7 @@ Parallelize method is exactly opposite, it will not wait for all Rows in order t
 take any incoming Rows instance and split it into smaller chunks according to `ETL::parallelize(int $chunks)` method `chunks` argument.
 
 ```php
+<?php 
 
 ETL::extract($extractor)
     ->transform($transformer1)
@@ -365,12 +369,38 @@ ETL::extract($extractor)
     ->run();
 ```
 
+## Limit 
+
+Because sometimes you might just want to process first 10 rows. 
+In this example, Pipeline will take only 5 rows from Extractor passing them through all transformers. 
+
+Because pipeline execution is delayed, limit function can be used in any place, before: 
+
+- `ETL::run()`
+- `ETL::fetch()`
+- `ETL::display()`
+
+```php
+<?php 
+
+ETL::extract($extractor)
+    ->transform($transformer1)
+    ->transform($transformer2)
+    ->transform($transformer3)
+    ->transform($transformer4)
+    ->loader($loader)
+    ->limit(5)
+    ->run();
+```
+
+
 ## Fetch
 
-Loaders are a great way to load `Rows` into specific Data Sink, however stometimes
+Loaders are a great way to load `Rows` into specific Data Sink, however sometimes
 you want to simply grab Rows and do something with them. 
 
 ```php
+<?php 
 
 $rows = ETL::extract($extractor)
     ->transform($transformer1)
@@ -389,6 +419,7 @@ Sometimes you might already have `Rows` prepared, in that case instead of going
 through Extractors just use `ETL::process(Rows $rows) : ETL`. 
 
 ```php 
+<?php 
 
 ETL::process(new Rows(...))
     ->transform($transformer1)
@@ -405,6 +436,7 @@ Display is probably the easiest way to debug ETL's, by default
 it will grab selected number of rows (20 by default)
 
 ```php
+<?php 
 
 $output = ETL::extract($extractor)
     ->transform($transformer1)

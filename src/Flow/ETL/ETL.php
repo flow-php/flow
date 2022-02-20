@@ -13,6 +13,8 @@ use Flow\ETL\Pipeline\SynchronousPipeline;
 
 final class ETL
 {
+    private ?int $limit;
+
     private Extractor $extractor;
 
     private Pipeline $pipeline;
@@ -21,6 +23,7 @@ final class ETL
     {
         $this->extractor = $extractor;
         $this->pipeline = $pipeline;
+        $this->limit = null;
     }
 
     public static function process(Rows $rows, Pipeline $pipeline = null) : self
@@ -85,7 +88,7 @@ final class ETL
         }
 
         $rows = new Rows();
-        $this->pipeline->process($this->extractor->extract(), function (Rows $nextRows) use ($limit, &$rows) : void {
+        $this->pipeline->process($this->extractor->extract(), $this->limit, function (Rows $nextRows) use ($limit, &$rows) : void {
             /** @var Rows $rows */
             if ($limit === 0) {
                 $rows = $rows->merge($nextRows);
@@ -102,6 +105,17 @@ final class ETL
 
         /** @var Rows $rows */
         return $rows;
+    }
+
+    public function limit(int $limit) : self
+    {
+        if ($limit <= 0) {
+            throw new InvalidArgumentException("Limit can't be lower or equal zero, given: {$limit}");
+        }
+
+        $this->limit = $limit;
+
+        return $this;
     }
 
     /**
@@ -122,6 +136,6 @@ final class ETL
 
     public function run() : void
     {
-        $this->pipeline->process($this->extractor->extract());
+        $this->pipeline->process($this->extractor->extract(), $this->limit);
     }
 }

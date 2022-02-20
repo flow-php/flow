@@ -342,6 +342,127 @@ final class ETLTest extends TestCase
         $this->assertCount(10, $rows);
     }
 
+    public function test_etl_limit() : void
+    {
+        $rows = ETL::extract(
+            new class implements Extractor {
+                /**
+                 * @return \Generator<int, Rows, mixed, void>
+                 */
+                public function extract() : \Generator
+                {
+                    for ($i = 0; $i < 1000; $i++) {
+                        yield new Rows(
+                            Row::create(new IntegerEntry('id', $i + 1)),
+                            Row::create(new IntegerEntry('id', $i + 2)),
+                        );
+                    }
+                }
+            }
+        )
+        ->limit(10)
+        ->fetch();
+
+        $this->assertCount(10, $rows);
+    }
+
+    public function test_etl_limit_with_collecting() : void
+    {
+        $rows = ETL::extract(
+            new class implements Extractor {
+                /**
+                 * @return \Generator<int, Rows, mixed, void>
+                 */
+                public function extract() : \Generator
+                {
+                    for ($i = 0; $i < 1000; $i++) {
+                        yield new Rows(
+                            Row::create(new IntegerEntry('id', $i + 1)),
+                            Row::create(new IntegerEntry('id', $i + 2)),
+                        );
+                    }
+                }
+            }
+        )
+            ->limit(10)
+            ->collect()
+            ->fetch();
+
+        $this->assertCount(10, $rows);
+    }
+
+    public function test_etl_limit_with_parallelizing() : void
+    {
+        $rows = ETL::extract(
+            new class implements Extractor {
+                /**
+                 * @return \Generator<int, Rows, mixed, void>
+                 */
+                public function extract() : \Generator
+                {
+                    for ($i = 0; $i < 1000; $i++) {
+                        yield new Rows(
+                            Row::create(new IntegerEntry('id', $i + 1)),
+                            Row::create(new IntegerEntry('id', $i + 2)),
+                        );
+                    }
+                }
+            }
+        )
+            ->parallelize(50)
+            ->limit(10)
+            ->fetch();
+
+        $this->assertCount(10, $rows);
+    }
+
+    public function test_etl_exceeding_the_limit_in_one_rows_set() : void
+    {
+        $rows = ETL::extract(
+            new class implements Extractor {
+                /**
+                 * @return \Generator<int, Rows, mixed, void>
+                 */
+                public function extract() : \Generator
+                {
+                    for ($i = 0; $i < 1000; $i++) {
+                        yield new Rows(
+                            Row::create(new IntegerEntry('id', $i + 1)),
+                            Row::create(new IntegerEntry('id', $i + 2)),
+                        );
+                    }
+                }
+            }
+        )
+            ->limit(9)
+            ->fetch();
+
+        $this->assertCount(9, $rows);
+    }
+
+    public function test_etl_with_total_rows_below_the_limit() : void
+    {
+        $rows = ETL::extract(
+            new class implements Extractor {
+                /**
+                 * @return \Generator<int, Rows, mixed, void>
+                 */
+                public function extract() : \Generator
+                {
+                    for ($i = 0; $i < 5; $i++) {
+                        yield new Rows(
+                            Row::create(new IntegerEntry('id', $i)),
+                        );
+                    }
+                }
+            }
+        )
+            ->limit(10)
+            ->fetch();
+
+        $this->assertCount(5, $rows);
+    }
+
     public function test_etl_fetch_without_limit() : void
     {
         $rows = ETL::extract(

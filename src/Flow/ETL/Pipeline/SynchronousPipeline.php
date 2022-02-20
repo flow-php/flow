@@ -47,13 +47,15 @@ final class SynchronousPipeline implements Pipeline
     /**
      * @param \Generator<int, Rows, mixed, void> $generator
      */
-    public function process(\Generator $generator, callable $callback = null) : void
+    public function process(\Generator $generator, ?int $limit = null, callable $callback = null) : void
     {
         $index = 0;
+        $total = 0;
 
         while ($generator->valid()) {
             /** @var Rows $rows */
             $rows = $generator->current();
+            $total += $rows->count();
             $generator->next();
 
             if ($index === 0) {
@@ -62,6 +64,13 @@ final class SynchronousPipeline implements Pipeline
 
             if ($generator->valid() === false) {
                 $rows = $rows->makeLast();
+            }
+
+            if ($limit !== null) {
+                if ($total > $limit) {
+                    $rows = $rows->dropRight($total - $limit);
+                    $total = $limit;
+                }
             }
 
             foreach ($this->pipes->all() as $element) {
@@ -84,6 +93,12 @@ final class SynchronousPipeline implements Pipeline
 
             if ($callback !== null) {
                 $callback($rows);
+            }
+
+            if ($limit !== null) {
+                if ($total === $limit) {
+                    break;
+                }
             }
 
             $index++;
