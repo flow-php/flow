@@ -12,15 +12,14 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
-        "php": "^7.4 | ^8.0",
+        "php": "^7.4 || ~8.0",
         "ext-json": "*",
         "flow-php/etl": "^1.0@dev",
         "psr/http-client": "^1.0"
     },
     "require-dev": {
         "nyholm/psr7": "^1.4",
-        "php-http/curl-client": "^2.2",
-        "flow-php/etl-adapter-json": "^1.0@dev"
+        "php-http/curl-client": "^2.2"
     },
     "config": {
         "optimize-autoloader": true,
