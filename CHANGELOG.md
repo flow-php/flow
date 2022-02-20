@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-02-12
+## [Unreleased] - 2022-02-20
 
 ### Added
 - [#46](https://github.com/flow-php/etl-adapter-elasticsearch/pull/46) - **Workflow for aut-merging dependabot PRs** - [@tomaszhanc](https://github.com/tomaszhanc)
@@ -16,6 +16,9 @@
 - [#61](https://github.com/flow-php/etl-adapter-elasticsearch/pull/61) - **Static analyse** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#5](https://github.com/flow-php/etl-adapter-elasticsearch/pull/5) - **broken tests** - [@norberttech](https://github.com/norberttech)
 - [#1](https://github.com/flow-php/etl-adapter-elasticsearch/pull/1) - **failing tests** - [@norberttech](https://github.com/norberttech)
+
+### Updated
+- [0f739f](https://github.com/flow-php/etl-adapter-elasticsearch/commit/0f739f4cc1c6bc9d4d173ee0078c02ab120d1b76) - **dependencies** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
 - [2777ce](https://github.com/flow-php/etl-adapter-elasticsearch/commit/2777cea6ad3165ef10c4716d7a2e86f7f34a8ac4) - **tests at windows on github** - [@norberttech](https://github.com/norberttech)
