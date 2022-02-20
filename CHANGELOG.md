@@ -15,6 +15,7 @@
 - [#56](https://github.com/flow-php/etl-adapter-xml/pull/56) - **Update composer lock file** - [@tomaszhanc](https://github.com/tomaszhanc)
 
 ### Updated
+- [21d3ef](https://github.com/flow-php/etl-adapter-xml/commit/21d3efe358bbd90c47ba8dda18cdf4c4e12ec873) - **dependencies** - [@norberttech](https://github.com/norberttech)
 - [bee0b4](https://github.com/flow-php/etl-adapter-xml/commit/bee0b4f940cb47edb9ef8ac53d6662bd7d6c38e6) - **dependencies** - [@norberttech](https://github.com/norberttech)
 - [bf5960](https://github.com/flow-php/etl-adapter-xml/commit/bf5960b7665f910d7c723a138b40883caa265f15) - **README.md** - [@norberttech](https://github.com/norberttech)
 - [758afc](https://github.com/flow-php/etl-adapter-xml/commit/758afc937b64861a36af0aff3d86a0aa7450ad3a) - **dependencies** - [@norberttech](https://github.com/norberttech)
