@@ -244,11 +244,6 @@ data entries.
 </thead>
 <tbody>
   <tr>
-      <td><a href="https://github.com/flow-php/etl-adapter-memory">Memory</a></td>
-      <td>✅</td>
-      <td>✅</td>
-  </tr>
-  <tr>
       <td><a href="https://github.com/flow-php/etl-adapter-doctrine">Doctrine - DB</a></td>
       <td>✅</td>
       <td>✅</td>
