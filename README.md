@@ -196,15 +196,15 @@ Available Conditions
 
 Casting Types:
 
-* [c ast entries](src/Flow/ETL/Transformer/Cast/CastEntries.php)
-* [c ast array entry each](src/Flow/ETL/Transformer/Cast/CastArrayEntryEach.php)
-* [c ast to datetime](src/Flow/ETL/Transformer/Cast/CastToDateTime.php)
-* [c ast to string](src/Flow/ETL/Transformer/Cast/CastToString.php)
-* [c ast to integer](src/Flow/ETL/Transformer/Cast/CastToInteger.php)
-* [c ast to float](src/Flow/ETL/Transformer/Cast/CastToFloat.php)
-* [c ast to json](src/Flow/ETL/Transformer/Cast/CastToJson.php)
-* [c ast to array](src/Flow/ETL/Transformer/Cast/CastToArray.php)
-* [c ast json to array](src/Flow/ETL/Transformer/Cast/CastJsonToArray.php)
+* [cast entries](src/Flow/ETL/Transformer/Cast/CastEntries.php)
+* [cast array entry each](src/Flow/ETL/Transformer/Cast/CastArrayEntryEach.php)
+* [cast to datetime](src/Flow/ETL/Transformer/Cast/CastToDateTime.php)
+* [cast to string](src/Flow/ETL/Transformer/Cast/CastToString.php)
+* [cast to integer](src/Flow/ETL/Transformer/Cast/CastToInteger.php)
+* [cast to float](src/Flow/ETL/Transformer/Cast/CastToFloat.php)
+* [cast to json](src/Flow/ETL/Transformer/Cast/CastToJson.php)
+* [cast to array](src/Flow/ETL/Transformer/Cast/CastToArray.php)
+* [cast json to array](src/Flow/ETL/Transformer/Cast/CastJsonToArray.php)
 
 #### Transformer - EntryNameStyleConverter
 
