@@ -56,6 +56,9 @@
 - [856870](https://github.com/flow-php/etl/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#158](https://github.com/flow-php/etl/pull/158) - **renamed CastRow into RowConverter** - [@norberttech](https://github.com/norberttech)
+- [#158](https://github.com/flow-php/etl/pull/158) - **renamed CastEntry into EntryConvert** - [@norberttech](https://github.com/norberttech)
+- [#158](https://github.com/flow-php/etl/pull/158) - **renamed CastValue into ValueCaster** - [@norberttech](https://github.com/norberttech)
 - [f5ea58](https://github.com/flow-php/etl/commit/f5ea5897b342eeee7822c9aca6690f0963caabc9) - **Merged flow-php/etl-adapter-memory into flow-php/etl** - [@norberttech](https://github.com/norberttech)
 - [5f7333](https://github.com/flow-php/etl/commit/5f73337329323921c46e06bd1c5cf3b7033b3e88) - **Merged flow-php/etl-transformers and flow-php/etl-loaders repositories into etl repo** - [@norberttech](https://github.com/norberttech)
 - [#144](https://github.com/flow-php/etl/pull/144) - **Revert pipelines from generators to callbacks** - [@norberttech](https://github.com/norberttech)
