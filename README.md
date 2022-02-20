@@ -38,7 +38,8 @@ ETL::extract($extractor)
     ->transform($transformer1)
     ->transform($transformer2)
     ->transform($transformer3)
-    ->load($loader);
+    ->load($loader)
+    ->run();
 ```
 
 ## Features
@@ -51,17 +52,17 @@ ETL::extract($extractor)
 
 ## Row Entries
 
-* [ArrayEntry](src/Flow/ETL/Row/Entry/ArrayEntry.php)
-* [BooleanEntry](src/Flow/ETL/Row/Entry/BooleanEntry.php)
-* [CollectionEntry](src/Flow/ETL/Row/Entry/CollectionEntry.php)
-* [DateTimeEntry](src/Flow/ETL/Row/Entry/DateTimeEntry.php)
-* [FloatEntry](src/Flow/ETL/Row/Entry/FloatEntry.php)
-* [IntegerEntry](src/Flow/ETL/Row/Entry/IntegerEntry.php)
-* [JsonEntry](src/Flow/ETL/Row/Entry/JsonEntry.php)  
-* [NullEntry](src/Flow/ETL/Row/Entry/NullEntry.php)
-* [ObjectEntryEntry](src/Flow/ETL/Row/Entry/ObjectEntry.php)
-* [StringEntry](src/Flow/ETL/Row/Entry/StringEntry.php)
-* [StructureEntry](src/Flow/ETL/Row/Entry/StructureEntry.php)
+* [array](src/Flow/ETL/Row/Entry/ArrayEntry.php)
+* [boolean](src/Flow/ETL/Row/Entry/BooleanEntry.php)
+* [collection](src/Flow/ETL/Row/Entry/CollectionEntry.php)
+* [datetime](src/Flow/ETL/Row/Entry/DateTimeEntry.php)
+* [float](src/Flow/ETL/Row/Entry/FloatEntry.php)
+* [integer](src/Flow/ETL/Row/Entry/IntegerEntry.php)
+* [json](src/Flow/ETL/Row/Entry/JsonEntry.php)  
+* [null](src/Flow/ETL/Row/Entry/NullEntry.php)
+* [object](src/Flow/ETL/Row/Entry/ObjectEntry.php)
+* [string](src/Flow/ETL/Row/Entry/StringEntry.php)
+* [structure](src/Flow/ETL/Row/Entry/StructureEntry.php)
 
 ## Transformers
 
@@ -151,17 +152,17 @@ Below transformers might not be self descriptive and might require some addition
 
 Available Filters
 
-- [All](src/Flow/ETL/Transformer/Filter/Filter/All.php)
-- [Any](src/Flow/ETL/Transformer/Filter/Filter/Any.php)
-- [Callback](src/Flow/ETL/Transformer/Filter/Filter/Callback.php)
-- [EntryEqualsTo](src/Flow/ETL/Transformer/Filter/Filter/EntryEqualsTo.php)
-- [EntryNotEqualsTo](src/Flow/ETL/Transformer/Filter/Filter/EntryNotEqualsTo.php)
-- [EntryNotNull](src/Flow/ETL/Transformer/Filter/Filter/EntryNotNull.php)
-- [EntryNotNumber](src/Flow/ETL/Transformer/Filter/Filter/EntryNotNumber.php)
-- [EntryNumber](src/Flow/ETL/Transformer/Filter/Filter/EntryNumber.php)
-- [EntryExists](src/Flow/ETL/Transformer/Filter/Filter/EntryExists.php)
-- [Opposite](src/Flow/ETL/Transformer/Filter/Filter/Opposite.php)
-- [ValidValue](src/Flow/ETL/Transformer/Filter/Filter/ValidValue.php) - optionally integrates with [Symfony Validator](https://github.com/symfony/validator)
+- [all](src/Flow/ETL/Transformer/Filter/Filter/All.php)
+- [any](src/Flow/ETL/Transformer/Filter/Filter/Any.php)
+- [callback](src/Flow/ETL/Transformer/Filter/Filter/Callback.php)
+- [entry equals to](src/Flow/ETL/Transformer/Filter/Filter/EntryEqualsTo.php)
+- [entry not equals to](src/Flow/ETL/Transformer/Filter/Filter/EntryNotEqualsTo.php)
+- [entry not null](src/Flow/ETL/Transformer/Filter/Filter/EntryNotNull.php)
+- [entry not number](src/Flow/ETL/Transformer/Filter/Filter/EntryNotNumber.php)
+- [entry number](src/Flow/ETL/Transformer/Filter/Filter/EntryNumber.php)
+- [entry exists](src/Flow/ETL/Transformer/Filter/Filter/EntryExists.php)
+- [opposite](src/Flow/ETL/Transformer/Filter/Filter/Opposite.php)
+- [valid value](src/Flow/ETL/Transformer/Filter/Filter/ValidValue.php) - optionally integrates with [symfony validator](https://github.com/symfony/validator)
 
 #### Transformer - Conditional
 
@@ -169,25 +170,25 @@ Transforms only those Rows that met given condition.
 
 Available Conditions
 
-- [All](src/Flow/ETL/Transformer/Condition/All.php)
-- [Any](src/Flow/ETL/Transformer/Condition/Any.php)
-- [ArrayDotExists](src/Flow/ETL/Transformer/Condition/ArrayDotExists.php)
-- [ArrayDotValueEqualsTo](src/Flow/ETL/Transformer/Condition/ArrayDotValueEqualsTo.php)
-- [ArrayDotValueGreaterOrEqualThan](src/Flow/ETL/Transformer/Condition/ArrayDotValueGreaterOrEqualThan.php)
-- [ArrayDotValueGreaterThan](src/Flow/ETL/Transformer/Condition/ArrayDotValueGreaterThan.php)
-- [ArrayDotValueLessOrEqualThan](src/Flow/ETL/Transformer/Condition/ArrayDotValueLessOrEqualThan.php)
-- [ArrayDotValueLessThan](src/Flow/ETL/Transformer/Condition/ArrayDotValueLessThan.php)
-- [EntryExists](src/Flow/ETL/Transformer/Condition/EntryExists.php)
-- [EntryInstanceOf](src/Flow/ETL/Transformer/Condition/EntryInstanceOf.php)
-- [EntryNotNull](src/Flow/ETL/Transformer/Condition/EntryNotNull.php)
-- [EntryValueEqualsTo](src/Flow/ETL/Transformer/Condition/EntryValueEqualsTo.php)
-- [EntryValueGreaterOrEqualThan](src/Flow/ETL/Transformer/Condition/EntryValueGreaterOrEqualThan.php)
-- [EntryValueGreaterThan](src/Flow/ETL/Transformer/Condition/EntryValueGreaterThan.php)
-- [EntryValueLessOrEqualThan](src/Flow/ETL/Transformer/Condition/EntryValueLessOrEqualThan.php)
-- [EntryValueLessThan](src/Flow/ETL/Transformer/Condition/EntryValueLessThan.php)
-- [None](src/Flow/ETL/Transformer/Condition/None.php)
-- [Opposite](src/Flow/ETL/Transformer/Condition/Opposite.php)
-- [ValidValue](src/Flow/ETL/Transformer/Condition/ValidValue) - optionally integrates with [Symfony Validator](https://github.com/symfony/validator)
+- [all](src/Flow/ETL/Transformer/Condition/All.php)
+- [any](src/Flow/ETL/Transformer/Condition/Any.php)
+- [array dot exists](src/Flow/ETL/Transformer/Condition/ArrayDotExists.php)
+- [array dot value equals to](src/Flow/ETL/Transformer/Condition/ArrayDotValueEqualsTo.php)
+- [array dot value greater or equal than](src/Flow/ETL/Transformer/Condition/ArrayDotValueGreaterOrEqualThan.php)
+- [array dot value greater than](src/Flow/ETL/Transformer/Condition/ArrayDotValueGreaterThan.php)
+- [array dot value less or equal than](src/Flow/ETL/Transformer/Condition/ArrayDotValueLessOrEqualThan.php)
+- [array dot value less than](src/Flow/ETL/Transformer/Condition/ArrayDotValueLessThan.php)
+- [entry exists](src/Flow/ETL/Transformer/Condition/EntryExists.php)
+- [entry instance of](src/Flow/ETL/Transformer/Condition/EntryInstanceOf.php)
+- [entry not null](src/Flow/ETL/Transformer/Condition/EntryNotNull.php)
+- [entry value equals to](src/Flow/ETL/Transformer/Condition/EntryValueEqualsTo.php)
+- [entry value greater or equal than](src/Flow/ETL/Transformer/Condition/EntryValueGreaterOrEqualThan.php)
+- [entry value greater than](src/Flow/ETL/Transformer/Condition/EntryValueGreaterThan.php)
+- [entry value less or equal than](src/Flow/ETL/Transformer/Condition/EntryValueLessOrEqualThan.php)
+- [entry value less than](src/Flow/ETL/Transformer/Condition/EntryValueLessThan.php)
+- [none](src/Flow/ETL/Transformer/Condition/None.php)
+- [opposite](src/Flow/ETL/Transformer/Condition/Opposite.php)
+- [valid value](src/Flow/ETL/Transformer/Condition/ValidValue) - optionally integrates with [Symfony Validator](https://github.com/symfony/validator)
 
 
 #### Transformer - Cast
@@ -195,15 +196,15 @@ Available Conditions
 
 Casting Types:
 
-* [CastEntries](src/Flow/ETL/Transformer/Cast/CastEntries.php)
-* [CastArrayEntryEach](src/Flow/ETL/Transformer/Cast/CastArrayEntryEach.php)
-* [CastToDateTime](src/Flow/ETL/Transformer/Cast/CastToDateTime.php)
-* [CastToString](src/Flow/ETL/Transformer/Cast/CastToString.php)
-* [CastToInteger](src/Flow/ETL/Transformer/Cast/CastToInteger.php)
-* [CastToFloat](src/Flow/ETL/Transformer/Cast/CastToFloat.php)
-* [CastToJson](src/Flow/ETL/Transformer/Cast/CastToJson.php)
-* [CastToArray](src/Flow/ETL/Transformer/Cast/CastToArray.php)
-* [CastJsonToArray](src/Flow/ETL/Transformer/Cast/CastJsonToArray.php)
+* [c ast entries](src/Flow/ETL/Transformer/Cast/CastEntries.php)
+* [c ast array entry each](src/Flow/ETL/Transformer/Cast/CastArrayEntryEach.php)
+* [c ast to datetime](src/Flow/ETL/Transformer/Cast/CastToDateTime.php)
+* [c ast to string](src/Flow/ETL/Transformer/Cast/CastToString.php)
+* [c ast to integer](src/Flow/ETL/Transformer/Cast/CastToInteger.php)
+* [c ast to float](src/Flow/ETL/Transformer/Cast/CastToFloat.php)
+* [c ast to json](src/Flow/ETL/Transformer/Cast/CastToJson.php)
+* [c ast to array](src/Flow/ETL/Transformer/Cast/CastToArray.php)
+* [c ast json to array](src/Flow/ETL/Transformer/Cast/CastJsonToArray.php)
 
 #### Transformer - EntryNameStyleConverter
 
@@ -254,7 +255,7 @@ data entries.
   <tr>
       <td><a href="https://github.com/flow-php/etl-adapter-json">JSON</a></td>
       <td>✅</td>
-      <td>N/A</td>
+      <td>✅</td>
   </tr>
   <tr>
       <td><a href="https://github.com/flow-php/etl-adapter-xml">XML</a></td>
@@ -307,9 +308,9 @@ If both methods returns false, ETL will continue processing Rows using next tran
 
 There are 3 build in ErrorHandlers (look for more in adapters):
 
-* [IgnoreError](src/Flow/ETL/ErrorHandler/IgnoreError.php)
-* [SkipRows](src/Flow/ETL/ErrorHandler/SkipRows.php)
-* [ThrowError](src/Flow/ETL/ErrorHandler/ThrowError.php)
+* [ignore error](src/Flow/ETL/ErrorHandler/IgnoreError.php)
+* [skip rows](src/Flow/ETL/ErrorHandler/SkipRows.php)
+* [throw error](src/Flow/ETL/ErrorHandler/ThrowError.php)
 
 Error Handling can be set directly at ETL:
 
@@ -318,7 +319,8 @@ Error Handling can be set directly at ETL:
 ETL::extract($extractor)
     ->onError(new IgnoreError())
     ->transform($transformer)
-    ->load($loader);
+    ->load($loader)
+    ->run();
 ```
 
 ## Collect/Parallelize
@@ -329,7 +331,8 @@ ETL::extract($extractor)
     ->transform($transformer1)
     ->transform($transformer2)
     ->collect()
-    ->load($loader);
+    ->load($loader)
+    ->run();
 ```
 
 Flow PHP ETL is designed to keep memory consumption constant. This can be achieved by processing
@@ -358,7 +361,8 @@ ETL::extract($extractor)
     ->parallelize(20)
     ->transform($transformer3)
     ->transform($transformer4)
-    ->load($loader2);
+    ->load($loader2)
+    ->run();
 ```
 
 ## Fetch
@@ -368,7 +372,7 @@ you want to simply grab Rows and do something with them.
 
 ```php
 
-ETL::extract($extractor)
+$rows = ETL::extract($extractor)
     ->transform($transformer1)
     ->transform($transformer2)
     ->transform($transformer3)
@@ -391,7 +395,8 @@ ETL::process(new Rows(...))
     ->transform($transformer2)
     ->transform($transformer3)
     ->transform($transformer4)
-    ->load($loader);
+    ->load($loader)
+    ->run();
 ```
 
 ## Display
