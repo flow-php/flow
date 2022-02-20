@@ -6,7 +6,7 @@
     "prefer-stable": true,
     "minimum-stability": "dev",
     "require": {
-        "php": "^7.4 | ^8.0",
+        "php": "^7.4 || ~8.0",
         "ext-xmlreader": "*",
         "flow-php/etl": "^1.0@dev",
         "ext-dom": "*"
