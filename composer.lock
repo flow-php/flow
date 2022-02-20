@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "67ba3c414b426d1425bb81b8c7f3b666",
+    "content-hash": "1404237fa5768cf4204baec045c613a5",
     "packages": [
         {
             "name": "flow-php/array-dot",
@@ -61,12 +61,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl.git",
-                "reference": "bde608d1b307ff41fdd059be018303c44312a2a3"
+                "reference": "ce449b7ff68cd515eb0b8b645c015d2ffcfb4762"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl/zipball/bde608d1b307ff41fdd059be018303c44312a2a3",
-                "reference": "bde608d1b307ff41fdd059be018303c44312a2a3",
+                "url": "https://api.github.com/repos/flow-php/etl/zipball/ce449b7ff68cd515eb0b8b645c015d2ffcfb4762",
+                "reference": "ce449b7ff68cd515eb0b8b645c015d2ffcfb4762",
                 "shasum": ""
             },
             "require": {
@@ -110,7 +110,7 @@
                 "issues": "https://github.com/flow-php/etl/issues",
                 "source": "https://github.com/flow-php/etl/tree/1.x"
             },
-            "time": "2022-02-20T11:14:23+00:00"
+            "time": "2022-02-20T16:39:36+00:00"
         }
     ],
     "packages-dev": [
@@ -426,7 +426,7 @@
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": "^7.4 | ^8.0",
+        "php": "^7.4 || ~8.0",
         "ext-json": "*"
     },
     "platform-dev": [],
