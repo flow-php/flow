@@ -1,6 +1,7 @@
-## [Unreleased] - 2022-02-19
+## [Unreleased] - 2022-02-20
 
 ### Added
+- [#156](https://github.com/flow-php/etl/pull/156) - **Stream Loader** - [@norberttech](https://github.com/norberttech)
 - [#154](https://github.com/flow-php/etl/pull/154) - **Row merge function** - [@norberttech](https://github.com/norberttech)
 - [f311dd](https://github.com/flow-php/etl/commit/f311dd0aee03e59df7f03d277b4b4d121f9b0679) - **JsonEntry from flow-php/etl-adapter-json** - [@norberttech](https://github.com/norberttech)
 - [85f934](https://github.com/flow-php/etl/commit/85f9344b3725b68da6950f9ced878b1b73f3e84b) - **suggested packages** - [@norberttech](https://github.com/norberttech)
