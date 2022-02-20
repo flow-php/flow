@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\Transformer\Cast\ValueCaster;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Transformer\Cast\ValueCaster;
+use Flow\ETL\Row\ValueConverter;
 
 /**
  * @psalm-immutable
  */
-final class AnyToJsonCaster implements ValueCaster
+final class AnyToJsonCaster implements ValueConverter
 {
     private const JSON_DEPTH = 512;
 
@@ -31,7 +31,7 @@ final class AnyToJsonCaster implements ValueCaster
      *
      * @return array<mixed>
      */
-    public function cast($value) : array
+    public function convert($value) : array
     {
         if (!\is_array($value)) {
             throw new InvalidArgumentException('Only array can be casted to Json, got ' . \gettype($value));

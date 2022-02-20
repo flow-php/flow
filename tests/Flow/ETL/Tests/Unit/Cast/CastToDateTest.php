@@ -17,7 +17,7 @@ final class CastToDateTest extends TestCase
             [
                 'date' => new \DateTimeImmutable('2020-01-01'),
             ],
-            (new CastToDateTime(['date']))->cast(Row::create(new StringEntry('date', '2020-01-01')))->toArray()
+            (new CastToDateTime(['date']))->convert(Row::create(new StringEntry('date', '2020-01-01')))->toArray()
         );
     }
 }

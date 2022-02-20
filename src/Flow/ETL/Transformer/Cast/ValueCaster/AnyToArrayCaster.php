@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer\Cast\ValueCaster;
 
-use Flow\ETL\Transformer\Cast\ValueCaster;
+use Flow\ETL\Row\ValueConverter;
 
 /**
  * @psalm-immutable
  */
-final class AnyToArrayCaster implements ValueCaster
+final class AnyToArrayCaster implements ValueConverter
 {
     public function __serialize() : array
     {
@@ -25,7 +25,7 @@ final class AnyToArrayCaster implements ValueCaster
      *
      * @return array<mixed>
      */
-    public function cast($value) : array
+    public function convert($value) : array
     {
         return (array) $value;
     }

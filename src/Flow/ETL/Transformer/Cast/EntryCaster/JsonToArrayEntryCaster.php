@@ -6,23 +6,23 @@ namespace Flow\ETL\Transformer\Cast\EntryCaster;
 
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\ArrayEntry;
-use Flow\ETL\Transformer\Cast\EntryCaster;
-use Flow\ETL\Transformer\Cast\ValueCaster;
+use Flow\ETL\Row\EntryConverter;
+use Flow\ETL\Transformer\Cast\ValueCaster\JsonToArrayCaster;
 
 /**
  * @psalm-immutable
  */
-final class JsonToArrayEntryCaster implements EntryCaster
+final class JsonToArrayEntryCaster implements EntryConverter
 {
-    private ValueCaster\JsonToArrayCaster $valueCaster;
+    private JsonToArrayCaster $valueCaster;
 
     public function __construct()
     {
-        $this->valueCaster = new ValueCaster\JsonToArrayCaster();
+        $this->valueCaster = new JsonToArrayCaster();
     }
 
     /**
-     * @return array{value_caster: ValueCaster\JsonToArrayCaster}
+     * @return array{value_caster: JsonToArrayCaster}
      */
     public function __serialize() : array
     {
@@ -32,7 +32,7 @@ final class JsonToArrayEntryCaster implements EntryCaster
     }
 
     /**
-     * @param array{value_caster: ValueCaster\JsonToArrayCaster} $data
+     * @param array{value_caster: JsonToArrayCaster} $data
      *
      * @psalm-suppress MoreSpecificImplementedParamType
      */
@@ -41,11 +41,11 @@ final class JsonToArrayEntryCaster implements EntryCaster
         $this->valueCaster = $data['value_caster'];
     }
 
-    public function cast(Entry $entry) : Entry
+    public function convert(Entry $entry) : Entry
     {
         return new ArrayEntry(
             $entry->name(),
-            $this->valueCaster->cast($entry->value())
+            $this->valueCaster->convert($entry->value())
         );
     }
 }

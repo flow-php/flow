@@ -30,7 +30,7 @@ final class CastArrayEntryEachToDateTest extends TestCase
                 new \DateTimeImmutable('2020-01-02'),
                 new \DateTimeImmutable('2020-01-03'),
             ],
-            $caster->cast(Row::create($arrayEntry))->valueOf('dates')
+            $caster->convert(Row::create($arrayEntry))->valueOf('dates')
         );
     }
 }

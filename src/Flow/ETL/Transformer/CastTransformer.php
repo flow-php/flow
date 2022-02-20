@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Transformer;
 
 use Flow\ETL\Row;
+use Flow\ETL\Row\RowConverter;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
@@ -14,17 +15,17 @@ use Flow\ETL\Transformer;
 final class CastTransformer implements Transformer
 {
     /**
-     * @var Cast\CastRow[]
+     * @var RowConverter[]
      */
     private array $rowCasts;
 
-    public function __construct(Transformer\Cast\CastRow ...$rowCasts)
+    public function __construct(RowConverter ...$rowCasts)
     {
         $this->rowCasts = $rowCasts;
     }
 
     /**
-     * @return array{row_casts: array<Transformer\Cast\CastRow>}
+     * @return array{row_casts: array<RowConverter>}
      */
     public function __serialize() : array
     {
@@ -34,7 +35,7 @@ final class CastTransformer implements Transformer
     }
 
     /**
-     * @param array{row_casts: array<Transformer\Cast\CastRow>} $data
+     * @param array{row_casts: array<RowConverter>} $data
      *
      * @psalm-suppress MoreSpecificImplementedParamType
      */
@@ -48,7 +49,7 @@ final class CastTransformer implements Transformer
         /** @psalm-var pure-callable(Row $row) : Row $transformer */
         $transformer = function (Row $row) : Row {
             foreach ($this->rowCasts as $caster) {
-                $row = $caster->cast($row);
+                $row = $caster->convert($row);
             }
 
             return $row;

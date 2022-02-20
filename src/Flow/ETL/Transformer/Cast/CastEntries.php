@@ -5,27 +5,29 @@ declare(strict_types=1);
 namespace Flow\ETL\Transformer\Cast;
 
 use Flow\ETL\Row;
+use Flow\ETL\Row\EntryConverter;
+use Flow\ETL\Row\RowConverter;
 
 /**
  * @psalm-immutable
  */
-class CastEntries implements CastRow
+class CastEntries implements RowConverter
 {
     /**
      * @var array<string>
      */
     private array $entryNames;
 
-    private EntryCaster $caster;
+    private EntryConverter $caster;
 
     private bool $nullable;
 
     /**
      * @param array<string> $entryNames
-     * @param EntryCaster $caster
+     * @param EntryConverter $caster
      * @param bool $nullable
      */
-    public function __construct(array $entryNames, EntryCaster $caster, bool $nullable = false)
+    public function __construct(array $entryNames, EntryConverter $caster, bool $nullable = false)
     {
         $this->entryNames = $entryNames;
         $this->nullable = $nullable;
@@ -33,7 +35,7 @@ class CastEntries implements CastRow
     }
 
     /**
-     * @return array{entry_names: array<string>, nullable: boolean, caster: EntryCaster}
+     * @return array{entry_names: array<string>, nullable: boolean, caster: EntryConverter}
      */
     public function __serialize() : array
     {
@@ -45,7 +47,7 @@ class CastEntries implements CastRow
     }
 
     /**
-     * @param array{entry_names: array<string>, nullable: boolean, caster: EntryCaster} $data
+     * @param array{entry_names: array<string>, nullable: boolean, caster: EntryConverter} $data
      *
      * @psalm-suppress MoreSpecificImplementedParamType
      */
@@ -56,7 +58,7 @@ class CastEntries implements CastRow
         $this->caster = $data['caster'];
     }
 
-    final public function cast(Row $row) : Row
+    final public function convert(Row $row) : Row
     {
         foreach ($this->entryNames as $entryName) {
             if ($row->entries()->has($entryName)) {
@@ -66,7 +68,7 @@ class CastEntries implements CastRow
                     continue;
                 }
 
-                $row = new Row($row->entries()->set($this->caster->cast($entry)));
+                $row = new Row($row->entries()->set($this->caster->convert($entry)));
             }
         }
 

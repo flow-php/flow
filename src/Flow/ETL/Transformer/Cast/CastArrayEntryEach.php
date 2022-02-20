@@ -5,24 +5,26 @@ declare(strict_types=1);
 namespace Flow\ETL\Transformer\Cast;
 
 use Flow\ETL\Row;
+use Flow\ETL\Row\RowConverter;
+use Flow\ETL\Row\ValueConverter;
 
 /**
  * @psalm-immutable
  */
-class CastArrayEntryEach implements CastRow
+class CastArrayEntryEach implements RowConverter
 {
     private string $arrayEntryName;
 
-    private ValueCaster $caster;
+    private ValueConverter $caster;
 
-    public function __construct(string $arrayEntryName, ValueCaster $caster)
+    public function __construct(string $arrayEntryName, ValueConverter $caster)
     {
         $this->arrayEntryName = $arrayEntryName;
         $this->caster = $caster;
     }
 
     /**
-     * @return array{caster: ValueCaster, array_entry_name: string}
+     * @return array{caster: ValueConverter, array_entry_name: string}
      */
     public function __serialize() : array
     {
@@ -33,7 +35,7 @@ class CastArrayEntryEach implements CastRow
     }
 
     /**
-     * @param array{caster: ValueCaster, array_entry_name: string} $data
+     * @param array{caster: ValueConverter, array_entry_name: string} $data
      *
      * @psalm-suppress MoreSpecificImplementedParamType
      */
@@ -43,7 +45,7 @@ class CastArrayEntryEach implements CastRow
         $this->caster = $data['caster'];
     }
 
-    final public function cast(Row $row) : Row
+    final public function convert(Row $row) : Row
     {
         if (!$row->entries()->has($this->arrayEntryName)) {
             return $row;
@@ -66,7 +68,7 @@ class CastArrayEntryEach implements CastRow
                     new Row\Entry\ArrayEntry(
                         $entry->name(),
                         \array_map(
-                            fn ($value) => $this->caster->cast($value),
+                            fn ($value) => $this->caster->convert($value),
                             $entry->value()
                         )
                     )

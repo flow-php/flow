@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer\Cast\ValueCaster;
 
-use Flow\ETL\Transformer\Cast\ValueCaster;
+use Flow\ETL\Row\ValueConverter;
 
 /**
  * @psalm-immutable
  */
-final class AnyToStringCaster implements ValueCaster
+final class AnyToStringCaster implements ValueConverter
 {
     public function __serialize() : array
     {
@@ -20,7 +20,7 @@ final class AnyToStringCaster implements ValueCaster
     {
     }
 
-    public function cast($value) : string
+    public function convert($value) : string
     {
         /** @phpstan-ignore-next-line */
         return (string) $value;

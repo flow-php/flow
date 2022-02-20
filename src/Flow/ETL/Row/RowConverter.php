@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Transformer\Cast;
+namespace Flow\ETL\Row;
 
 use Flow\ETL\Row;
 use Flow\Serializer\Serializable;
@@ -10,7 +10,7 @@ use Flow\Serializer\Serializable;
 /**
  * @psalm-immutable
  */
-interface CastRow extends Serializable
+interface RowConverter extends Serializable
 {
-    public function cast(Row $row) : Row;
+    public function convert(Row $row) : Row;
 }

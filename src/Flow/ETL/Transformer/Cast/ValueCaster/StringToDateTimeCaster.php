@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\Transformer\Cast\ValueCaster;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Transformer\Cast\ValueCaster;
+use Flow\ETL\Row\ValueConverter;
 
 /**
  * @psalm-immutable
  */
-final class StringToDateTimeCaster implements ValueCaster
+final class StringToDateTimeCaster implements ValueConverter
 {
     private ?string $timeZone;
 
@@ -56,7 +56,7 @@ final class StringToDateTimeCaster implements ValueCaster
         $this->toTimeZone = $data['to_time_zone'];
     }
 
-    public function cast($value) : \DateTimeImmutable
+    public function convert($value) : \DateTimeImmutable
     {
         if (!\is_string($value)) {
             throw new InvalidArgumentException('Only string can be casted to DateTime, got ' . \gettype($value));

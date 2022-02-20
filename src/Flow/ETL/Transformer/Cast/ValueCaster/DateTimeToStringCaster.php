@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\Transformer\Cast\ValueCaster;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Transformer\Cast\ValueCaster;
+use Flow\ETL\Row\ValueConverter;
 
 /**
  * @psalm-immutable
  */
-final class DateTimeToStringCaster implements ValueCaster
+final class DateTimeToStringCaster implements ValueConverter
 {
     private string $format;
 
@@ -39,7 +39,7 @@ final class DateTimeToStringCaster implements ValueCaster
         $this->format = $data['format'];
     }
 
-    public function cast($value) : string
+    public function convert($value) : string
     {
         if (!$value instanceof \DateTimeInterface) {
             throw new InvalidArgumentException('Only \DateTimeInterface can be casted to string, got ' . \gettype($value));

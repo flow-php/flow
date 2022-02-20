@@ -6,15 +6,15 @@ namespace Flow\ETL\Transformer\Cast\EntryCaster;
 
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\DateTimeEntry;
-use Flow\ETL\Transformer\Cast\EntryCaster;
-use Flow\ETL\Transformer\Cast\ValueCaster;
+use Flow\ETL\Row\EntryConverter;
+use Flow\ETL\Transformer\Cast\ValueCaster\StringToDateTimeCaster;
 
 /**
  * @psalm-immutable
  */
-final class StringToDateTimeEntryCaster implements EntryCaster
+final class StringToDateTimeEntryCaster implements EntryConverter
 {
-    private ValueCaster\StringToDateTimeCaster $valueCaster;
+    private StringToDateTimeCaster $valueCaster;
 
     /**
      * $timezone - this value should be used for datetime values that does not come with explicit tz to avoid using system default.
@@ -30,11 +30,11 @@ final class StringToDateTimeEntryCaster implements EntryCaster
      */
     public function __construct(?string $timeZone = null, ?string $toTimeZone = null)
     {
-        $this->valueCaster = new ValueCaster\StringToDateTimeCaster($timeZone, $toTimeZone);
+        $this->valueCaster = new StringToDateTimeCaster($timeZone, $toTimeZone);
     }
 
     /**
-     * @return array{value_caster: ValueCaster\StringToDateTimeCaster}
+     * @return array{value_caster: StringToDateTimeCaster}
      */
     public function __serialize() : array
     {
@@ -44,7 +44,7 @@ final class StringToDateTimeEntryCaster implements EntryCaster
     }
 
     /**
-     * @param array{value_caster: ValueCaster\StringToDateTimeCaster} $data
+     * @param array{value_caster: StringToDateTimeCaster} $data
      *
      * @psalm-suppress MoreSpecificImplementedParamType
      */
@@ -53,11 +53,11 @@ final class StringToDateTimeEntryCaster implements EntryCaster
         $this->valueCaster = $data['value_caster'];
     }
 
-    public function cast(Entry $entry) : Entry
+    public function convert(Entry $entry) : Entry
     {
         return new DateTimeEntry(
             $entry->name(),
-            $this->valueCaster->cast($entry->value())
+            $this->valueCaster->convert($entry->value())
         );
     }
 }

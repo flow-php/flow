@@ -6,23 +6,23 @@ namespace Flow\ETL\Transformer\Cast\EntryCaster;
 
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\StringEntry;
-use Flow\ETL\Transformer\Cast\EntryCaster;
-use Flow\ETL\Transformer\Cast\ValueCaster;
+use Flow\ETL\Row\EntryConverter;
+use Flow\ETL\Transformer\Cast\ValueCaster\DateTimeToStringCaster;
 
 /**
  * @psalm-immutable
  */
-final class DateTimeToStringEntryCaster implements EntryCaster
+final class DateTimeToStringEntryCaster implements EntryConverter
 {
-    private ValueCaster\DateTimeToStringCaster $valueCaster;
+    private DateTimeToStringCaster $valueCaster;
 
     public function __construct(string $format = \DateTimeInterface::ATOM)
     {
-        $this->valueCaster = new ValueCaster\DateTimeToStringCaster($format);
+        $this->valueCaster = new DateTimeToStringCaster($format);
     }
 
     /**
-     * @return array{value_caster: ValueCaster\DateTimeToStringCaster}
+     * @return array{value_caster: DateTimeToStringCaster}
      */
     public function __serialize() : array
     {
@@ -32,7 +32,7 @@ final class DateTimeToStringEntryCaster implements EntryCaster
     }
 
     /**
-     * @param array{value_caster: ValueCaster\DateTimeToStringCaster} $data
+     * @param array{value_caster: DateTimeToStringCaster} $data
      *
      * @psalm-suppress MoreSpecificImplementedParamType
      */
@@ -41,11 +41,11 @@ final class DateTimeToStringEntryCaster implements EntryCaster
         $this->valueCaster = $data['value_caster'];
     }
 
-    public function cast(Entry $entry) : Entry
+    public function convert(Entry $entry) : Entry
     {
         return new StringEntry(
             $entry->name(),
-            $this->valueCaster->cast($entry->value())
+            $this->valueCaster->convert($entry->value())
         );
     }
 }

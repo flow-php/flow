@@ -1,13 +1,13 @@
 <?php declare(strict_types=1);
 
-namespace Flow\ETL\Transformer\Cast;
+namespace Flow\ETL\Row;
 
 use Flow\Serializer\Serializable;
 
 /**
  * @psalm-immutable
  */
-interface ValueCaster extends Serializable
+interface ValueConverter extends Serializable
 {
     /**
      * @psalm-pure
@@ -16,5 +16,5 @@ interface ValueCaster extends Serializable
      *
      * @return mixed
      */
-    public function cast($value);
+    public function convert($value);
 }

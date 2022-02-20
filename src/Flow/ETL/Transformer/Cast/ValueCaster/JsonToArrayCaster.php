@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\Transformer\Cast\ValueCaster;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Transformer\Cast\ValueCaster;
+use Flow\ETL\Row\ValueConverter;
 
 /**
  * @psalm-immutable
  */
-final class JsonToArrayCaster implements ValueCaster
+final class JsonToArrayCaster implements ValueConverter
 {
     public function __serialize() : array
     {
@@ -28,7 +28,7 @@ final class JsonToArrayCaster implements ValueCaster
      *
      * @return array<mixed>
      */
-    public function cast($value) : array
+    public function convert($value) : array
     {
         if (!\is_string($value)) {
             throw new InvalidArgumentException('Only json string can be casted to Array, got ' . \gettype($value));

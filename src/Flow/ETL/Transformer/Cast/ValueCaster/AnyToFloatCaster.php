@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer\Cast\ValueCaster;
 
-use Flow\ETL\Transformer\Cast\ValueCaster;
+use Flow\ETL\Row\ValueConverter;
 
 /**
  * @psalm-immutable
  */
-final class AnyToFloatCaster implements ValueCaster
+final class AnyToFloatCaster implements ValueConverter
 {
     public function __serialize() : array
     {
@@ -20,7 +20,7 @@ final class AnyToFloatCaster implements ValueCaster
     {
     }
 
-    public function cast($value) : float
+    public function convert($value) : float
     {
         /** @phpstan-ignore-next-line */
         return (float) $value;

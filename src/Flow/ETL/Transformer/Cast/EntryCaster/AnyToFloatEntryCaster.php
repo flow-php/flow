@@ -6,23 +6,23 @@ namespace Flow\ETL\Transformer\Cast\EntryCaster;
 
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\FloatEntry;
-use Flow\ETL\Transformer\Cast\EntryCaster;
-use Flow\ETL\Transformer\Cast\ValueCaster;
+use Flow\ETL\Row\EntryConverter;
+use Flow\ETL\Transformer\Cast\ValueCaster\AnyToFloatCaster;
 
 /**
  * @psalm-immutable
  */
-final class AnyToFloatEntryCaster implements EntryCaster
+final class AnyToFloatEntryCaster implements EntryConverter
 {
-    private ValueCaster\AnyToFloatCaster $valueCaster;
+    private AnyToFloatCaster $valueCaster;
 
     public function __construct()
     {
-        $this->valueCaster = new ValueCaster\AnyToFloatCaster();
+        $this->valueCaster = new AnyToFloatCaster();
     }
 
     /**
-     * @return array{value_caster: ValueCaster\AnyToFloatCaster}
+     * @return array{value_caster: AnyToFloatCaster}
      */
     public function __serialize() : array
     {
@@ -32,7 +32,7 @@ final class AnyToFloatEntryCaster implements EntryCaster
     }
 
     /**
-     * @param array{value_caster: ValueCaster\AnyToFloatCaster} $data
+     * @param array{value_caster: AnyToFloatCaster} $data
      *
      * @psalm-suppress MoreSpecificImplementedParamType
      */
@@ -41,11 +41,11 @@ final class AnyToFloatEntryCaster implements EntryCaster
         $this->valueCaster = $data['value_caster'];
     }
 
-    public function cast(Entry $entry) : Entry
+    public function convert(Entry $entry) : Entry
     {
         return new FloatEntry(
             $entry->name(),
-            $this->valueCaster->cast($entry->value())
+            $this->valueCaster->convert($entry->value())
         );
     }
 }
