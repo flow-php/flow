@@ -56,6 +56,7 @@
 - [856870](https://github.com/flow-php/etl/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [ce449b](https://github.com/flow-php/etl/commit/ce449b7ff68cd515eb0b8b645c015d2ffcfb4762) - **Cleaned up factories defined by transformers** - [@norberttech](https://github.com/norberttech)
 - [#158](https://github.com/flow-php/etl/pull/158) - **renamed CastRow into RowConverter** - [@norberttech](https://github.com/norberttech)
 - [#158](https://github.com/flow-php/etl/pull/158) - **renamed CastEntry into EntryConvert** - [@norberttech](https://github.com/norberttech)
 - [#158](https://github.com/flow-php/etl/pull/158) - **renamed CastValue into ValueCaster** - [@norberttech](https://github.com/norberttech)
