@@ -11,8 +11,7 @@
         "flow-php/etl": "^1.0@dev"
     },
     "require-dev": {
-        "elasticsearch/elasticsearch": "^7.6 | ^8.0",
-        "flow-php/etl-adapter-json": "^1.0@dev"
+        "elasticsearch/elasticsearch": "^7.6 | ^8.0"
     },
     "suggest": {
         "elasticsearch/elasticsearch" : "PHP Elasticsearch client used by Loaders and Extractor, preferably versions ^7.6 | ^8.0"

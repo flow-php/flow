@@ -4,25 +4,87 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1f98312d794736f90ffbcae28dee80d1",
+    "content-hash": "67ba3c414b426d1425bb81b8c7f3b666",
     "packages": [
+        {
+            "name": "flow-php/array-dot",
+            "version": "1.x-dev",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/flow-php/array-dot.git",
+                "reference": "3dfcefb27cf18c43f3cf64fa1572175a9c68e6ec"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/flow-php/array-dot/zipball/3dfcefb27cf18c43f3cf64fa1572175a9c68e6ec",
+                "reference": "3dfcefb27cf18c43f3cf64fa1572175a9c68e6ec",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.4 | ^8.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "src/Flow/ArrayDot/array_dot.php"
+                ],
+                "psr-4": {
+                    "Flow\\": [
+                        "src/Flow"
+                    ]
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "PHP ETL - Array Dot fuctions",
+            "keywords": [
+                "array",
+                "dot",
+                "etl",
+                "extract",
+                "filter",
+                "load",
+                "transform"
+            ],
+            "support": {
+                "issues": "https://github.com/flow-php/array-dot/issues",
+                "source": "https://github.com/flow-php/array-dot/tree/1.x"
+            },
+            "time": "2022-02-18T21:14:35+00:00"
+        },
         {
             "name": "flow-php/etl",
             "version": "1.x-dev",
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl.git",
-                "reference": "22a7b708e099339324a7d797e700af0258fc5663"
+                "reference": "bde608d1b307ff41fdd059be018303c44312a2a3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl/zipball/22a7b708e099339324a7d797e700af0258fc5663",
-                "reference": "22a7b708e099339324a7d797e700af0258fc5663",
+                "url": "https://api.github.com/repos/flow-php/etl/zipball/bde608d1b307ff41fdd059be018303c44312a2a3",
+                "reference": "bde608d1b307ff41fdd059be018303c44312a2a3",
                 "shasum": ""
             },
             "require": {
+                "ext-json": "*",
                 "ext-mbstring": "*",
+                "flow-php/array-dot": "^1.0@dev",
                 "php": "^7.4.2 || ~8.0"
+            },
+            "require-dev": {
+                "jawira/case-converter": "^3.4",
+                "laminas/laminas-hydrator": "^4.0",
+                "opis/closure": "^3.5.1",
+                "symfony/validator": "^5.3"
+            },
+            "suggest": {
+                "jawira/case-converter": "Provides CaseConverter that is required by the EntryNameCaseConverterTransformer",
+                "laminas/laminas-hydrator": "Help converting ObjectEntry into ArrayEntry that can be later unpack into standalone Entries",
+                "ocramius/generated-hydrator": "Provieds generated hydrator that implemenets Laminas\\Hydrator\\HydratorInterface"
             },
             "default-branch": true,
             "type": "library",
@@ -48,29 +110,29 @@
                 "issues": "https://github.com/flow-php/etl/issues",
                 "source": "https://github.com/flow-php/etl/tree/1.x"
             },
-            "time": "2022-02-12T20:03:05+00:00"
+            "time": "2022-02-20T11:14:23+00:00"
         }
     ],
     "packages-dev": [
         {
             "name": "elasticsearch/elasticsearch",
-            "version": "v8.0.0",
+            "version": "v7.17.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/elastic/elasticsearch-php.git",
-                "reference": "0334e5b287800cf0d8b74c2cbe66a864fc964fc3"
+                "reference": "1890f9d7fde076b5a3ddcf579a802af05b2e781b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/elastic/elasticsearch-php/zipball/0334e5b287800cf0d8b74c2cbe66a864fc964fc3",
-                "reference": "0334e5b287800cf0d8b74c2cbe66a864fc964fc3",
+                "url": "https://api.github.com/repos/elastic/elasticsearch-php/zipball/1890f9d7fde076b5a3ddcf579a802af05b2e781b",
+                "reference": "1890f9d7fde076b5a3ddcf579a802af05b2e781b",
                 "shasum": ""
             },
             "require": {
                 "ext-json": ">=1.3.7",
                 "ezimuel/ringphp": "^1.1.2",
                 "php": "^7.3 || ^8.0",
-                "psr/log": "^1|^2"
+                "psr/log": "^1|^2|^3"
             },
             "require-dev": {
                 "ext-yaml": "*",
@@ -87,13 +149,17 @@
             },
             "type": "library",
             "autoload": {
+                "files": [
+                    "src/autoload.php"
+                ],
                 "psr-4": {
                     "Elasticsearch\\": "src/Elasticsearch/"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
-                "Apache-2.0"
+                "Apache-2.0",
+                "LGPL-2.1-only"
             ],
             "authors": [
                 {
@@ -111,9 +177,9 @@
             ],
             "support": {
                 "issues": "https://github.com/elastic/elasticsearch-php/issues",
-                "source": "https://github.com/elastic/elasticsearch-php/tree/v8.0.0"
+                "source": "https://github.com/elastic/elasticsearch-php/tree/v7.17.0"
             },
-            "time": "2021-10-21T22:05:38+00:00"
+            "time": "2022-02-03T13:40:04+00:00"
         },
         {
             "name": "ezimuel/guzzlestreams",
@@ -224,59 +290,6 @@
                 "source": "https://github.com/ezimuel/ringphp/tree/1.2.0"
             },
             "time": "2021-11-16T11:51:30+00:00"
-        },
-        {
-            "name": "flow-php/etl-adapter-json",
-            "version": "1.x-dev",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/flow-php/etl-adapter-json.git",
-                "reference": "d964c74d42de07ff04fa516a7e24ac8a39840b1e"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl-adapter-json/zipball/d964c74d42de07ff04fa516a7e24ac8a39840b1e",
-                "reference": "d964c74d42de07ff04fa516a7e24ac8a39840b1e",
-                "shasum": ""
-            },
-            "require": {
-                "ext-json": "*",
-                "flow-php/etl": "^1.0@dev",
-                "php": "^7.4 | ^8.0"
-            },
-            "require-dev": {
-                "halaxa/json-machine": "^0.8.0 || ^1.0.0"
-            },
-            "suggest": {
-                "halaxa/json-machine": "Memory safe json library used by Extractors and Loaders"
-            },
-            "default-branch": true,
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Flow\\": [
-                        "src/Flow"
-                    ]
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "PHP ETL - Adapter - JSON",
-            "keywords": [
-                "adapter",
-                "etl",
-                "extract",
-                "json",
-                "load",
-                "transform"
-            ],
-            "support": {
-                "issues": "https://github.com/flow-php/etl-adapter-json/issues",
-                "source": "https://github.com/flow-php/etl-adapter-json/tree/1.x"
-            },
-            "time": "2022-02-12T20:54:37+00:00"
         },
         {
             "name": "psr/log",
@@ -408,8 +421,7 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "flow-php/etl": 20,
-        "flow-php/etl-adapter-json": 20
+        "flow-php/etl": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
