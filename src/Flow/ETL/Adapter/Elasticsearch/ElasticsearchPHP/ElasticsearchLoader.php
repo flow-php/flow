@@ -38,6 +38,8 @@ final class ElasticsearchLoader implements Loader
 
     private ?Client $client;
 
+    private string $method;
+
     /**
      * @param array{
      *  hosts?: array<string>,
@@ -63,6 +65,32 @@ final class ElasticsearchLoader implements Loader
         $this->idFactory = $idFactory;
         $this->parameters = $parameters;
         $this->client = null;
+        $this->method = 'index';
+    }
+
+    /**
+     * @param array{
+     *  hosts?: array<string>,
+     *  connectionParams?: array<mixed>,
+     *  retries?: int,
+     *  sniffOnStart?: boolean,
+     *  sslCert?: array<string>,
+     *  sslKey?: array<string>,
+     *  sslVerification?: boolean|string,
+     *  elasticMetaHeader?: boolean,
+     *  includePortInHostHeader?: boolean
+     * } $clientConfig
+     * @param int $chunkSize
+     * @param string $index
+     * @param IdFactory $idFactory
+     * @param array<mixed> $parameters
+     */
+    public static function update(array $clientConfig, int $chunkSize, string $index, IdFactory $idFactory, array $parameters = []) : self
+    {
+        $loader = new self($clientConfig, $chunkSize, $index, $idFactory, $parameters);
+        $loader->method = 'update';
+
+        return $loader;
     }
 
     /**
@@ -81,7 +109,8 @@ final class ElasticsearchLoader implements Loader
      *  chunk_size: int,
      *  index: string,
      *  id_factory: IdFactory,
-     *  parameters: array<mixed>
+     *  parameters: array<mixed>,
+     *  method: string
      * }
      */
     public function __serialize() : array
@@ -92,6 +121,7 @@ final class ElasticsearchLoader implements Loader
             'index' => $this->index,
             'id_factory' => $this->idFactory,
             'parameters' => $this->parameters,
+            'method' => $this->method,
         ];
     }
 
@@ -111,7 +141,8 @@ final class ElasticsearchLoader implements Loader
      *  chunk_size: int,
      *  index: string,
      *  id_factory: IdFactory,
-     *  parameters: array<mixed>
+     *  parameters: array<mixed>,
+     *  method: string
      * } $data
      * @psalm-suppress MoreSpecificImplementedParamType
      */
@@ -122,6 +153,7 @@ final class ElasticsearchLoader implements Loader
         $this->index = $data['index'];
         $this->idFactory = $data['id_factory'];
         $this->parameters = $data['parameters'];
+        $this->method = $data['method'];
         $this->client = null;
     }
 
@@ -155,12 +187,17 @@ final class ElasticsearchLoader implements Loader
              */
             foreach ($dataCollection as $data) {
                 $parameters['body'][] = [
-                    'index' => [
+                    $this->method => [
                         '_id' => $data['id'],
                         '_index' => $this->index,
                     ],
                 ];
-                $parameters['body'][] = $data['body'];
+
+                if ($this->method === 'update') {
+                    $parameters['body'][] = ['doc' => $data['body']];
+                } else {
+                    $parameters['body'][] = $data['body'];
+                }
             }
 
             $this->client()->bulk($parameters);

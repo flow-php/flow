@@ -25,6 +25,8 @@ final class ElasticsearchPHPLoader implements Loader
 
     private array $parameters;
 
+    private string $method;
+
     /**
      * @param Client $client
      * @param int $chunkSize
@@ -39,6 +41,15 @@ final class ElasticsearchPHPLoader implements Loader
         $this->index = $index;
         $this->idFactory = $idFactory;
         $this->parameters = $parameters;
+        $this->method = 'index';
+    }
+
+    public static function update(Client $client, int $chunkSize, string $index, IdFactory $idFactory, array $parameters = []) : self
+    {
+        $loader = new self($client, $chunkSize, $index, $idFactory, $parameters);
+        $loader->method = 'update';
+
+        return $loader;
     }
 
     /**
@@ -86,12 +97,17 @@ final class ElasticsearchPHPLoader implements Loader
              */
             foreach ($dataCollection as $data) {
                 $parameters['body'][] = [
-                    'index' => [
+                    $this->method => [
                         '_id' => $data['id'],
                         '_index' => $this->index,
                     ],
                 ];
-                $parameters['body'][] = $data['body'];
+
+                if ($this->method === 'update') {
+                    $parameters['body'][] = ['doc' => $data['body']];
+                } else {
+                    $parameters['body'][] = $data['body'];
+                }
             }
 
             $this->client->bulk($parameters);

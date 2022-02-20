@@ -161,4 +161,58 @@ final class ElasticsearchPHPLoaderTest extends TestCase
 
         $this->assertSame(0, $response['hits']['total']['value']);
     }
+
+    public function test_integration_with_partial_update_id_factory() : void
+    {
+        $insertLoader = new ElasticsearchPHPLoader($this->elasticsearchContext->client(), 2, self::INDEX_NAME, new Sha1IdFactory('id'), ['refresh' => true]);
+
+        $insertLoader->load(new Rows(
+            Row::create(
+                new Row\Entry\IntegerEntry('id', 1),
+                new Row\Entry\StringEntry('name', 'Some Name'),
+                new Row\Entry\StringEntry('status', 'NEW'),
+                new Row\Entry\DateTimeEntry('updated_at', new \DateTimeImmutable('2022-01-01 00:00:00'))
+            ),
+        ));
+
+        $updateLoader = ElasticsearchPHPLoader::update($this->elasticsearchContext->client(), 2, self::INDEX_NAME, new Sha1IdFactory('id'), ['refresh' => true]);
+
+        $updateLoader->load(new Rows(
+            Row::create(
+                new Row\Entry\IntegerEntry('id', 1),
+                new Row\Entry\StringEntry('name', 'Other Name'),
+            ),
+        ));
+
+        $params = [
+            'index' => self::INDEX_NAME,
+            'body'  => [
+                'query' => [
+                    'match_all' => ['boost' => 1.0],
+                ],
+            ],
+        ];
+
+        $response = $this->elasticsearchContext->client()->search($params);
+
+        $this->assertSame(1, $response['hits']['total']['value']);
+
+        $data = \array_map(fn (array $hit) : array => $hit['_source'], $response['hits']['hits']);
+
+        $this->assertSame(
+            [
+                [
+                    'id' => 1,
+                    'name' => 'Other Name',
+                    'status' => 'NEW',
+                    'updated_at' => [
+                        'date' => '2022-01-01 00:00:00.000000',
+                        'timezone_type' => 3,
+                        'timezone' => 'UTC',
+                    ],
+                ],
+            ],
+            $data
+        );
+    }
 }
