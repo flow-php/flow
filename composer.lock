@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1754b38b06f517897cbbcba8baa0cd3a",
+    "content-hash": "b0ce4fc4d32601171da4600e3679af8c",
     "packages": [
         {
             "name": "brick/math",
@@ -121,12 +121,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl.git",
-                "reference": "6322e197ea23e58d4fcb451b9aa03ed172e486eb"
+                "reference": "8a1a119964e9cc1c7dee949e584eb8103810a85b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl/zipball/6322e197ea23e58d4fcb451b9aa03ed172e486eb",
-                "reference": "6322e197ea23e58d4fcb451b9aa03ed172e486eb",
+                "url": "https://api.github.com/repos/flow-php/etl/zipball/8a1a119964e9cc1c7dee949e584eb8103810a85b",
+                "reference": "8a1a119964e9cc1c7dee949e584eb8103810a85b",
                 "shasum": ""
             },
             "require": {
@@ -170,7 +170,7 @@
                 "issues": "https://github.com/flow-php/etl/issues",
                 "source": "https://github.com/flow-php/etl/tree/1.x"
             },
-            "time": "2022-02-19T20:06:19+00:00"
+            "time": "2022-02-20T16:41:15+00:00"
         },
         {
             "name": "ramsey/collection",
@@ -597,16 +597,16 @@
     "packages-dev": [
         {
             "name": "halaxa/json-machine",
-            "version": "1.0.1",
+            "version": "1.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/halaxa/json-machine.git",
-                "reference": "0372736167a86a3f9c8723544e84bdb24ff032a6"
+                "reference": "c7edb2317c783f931c7f7cc4ab989d29a2151aef"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/halaxa/json-machine/zipball/0372736167a86a3f9c8723544e84bdb24ff032a6",
-                "reference": "0372736167a86a3f9c8723544e84bdb24ff032a6",
+                "url": "https://api.github.com/repos/halaxa/json-machine/zipball/c7edb2317c783f931c7f7cc4ab989d29a2151aef",
+                "reference": "c7edb2317c783f931c7f7cc4ab989d29a2151aef",
                 "shasum": ""
             },
             "require": {
@@ -640,7 +640,7 @@
             "description": "Efficient, easy-to-use and fast JSON pull parser",
             "support": {
                 "issues": "https://github.com/halaxa/json-machine/issues",
-                "source": "https://github.com/halaxa/json-machine/tree/1.0.1"
+                "source": "https://github.com/halaxa/json-machine/tree/1.1.0"
             },
             "funding": [
                 {
@@ -648,7 +648,7 @@
                     "type": "other"
                 }
             ],
-            "time": "2022-02-05T17:55:41+00:00"
+            "time": "2022-02-19T21:00:16+00:00"
         }
     ],
     "aliases": [],
@@ -659,7 +659,8 @@
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": "^7.4 || ~8.0"
+        "php": "^7.4 || ~8.0",
+        "ext-json": "*"
     },
     "platform-dev": [],
     "plugin-api-version": "2.2.0"
