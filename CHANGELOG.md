@@ -1,10 +1,11 @@
-## [Unreleased] - 2022-02-09
+## [Unreleased] - 2022-02-20
 
 ### Added
 - [#42](https://github.com/flow-php/etl-adapter-xml/pull/42) - **Workflow for aut-merging dependabot PRs** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#13](https://github.com/flow-php/etl-adapter-xml/pull/13) - **memory safe XMLReaderExtractor** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#82](https://github.com/flow-php/etl-adapter-xml/pull/82) - **Adjusted adapter fore serialization** - [@norberttech](https://github.com/norberttech)
 - [#68](https://github.com/flow-php/etl-adapter-xml/pull/68) - **Reuse workflows from aeon-php/actions** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#36](https://github.com/flow-php/etl-adapter-xml/pull/36) - **Remove unsued PHP-CS config** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [91b656](https://github.com/flow-php/etl-adapter-xml/commit/91b6565354a85c109a77c9e3d0b5c8942ff7f604) - **Initial commit** - [@norberttech](https://github.com/norberttech)
