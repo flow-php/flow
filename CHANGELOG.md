@@ -84,6 +84,7 @@
 - [1a6eec](https://github.com/flow-php/etl/commit/1a6eec01837f25cf1d6ff7c041996ff7b8b017e7) - **failing tests** - [@norberttech](https://github.com/norberttech)
 
 ### Updated
+- [c14ee8](https://github.com/flow-php/etl/commit/c14ee8269b38acb444a5fb3a91b5d4ed5b29e595) - **README by fixing smoe missing pieces and making bullet points lowercase** - [@norberttech](https://github.com/norberttech)
 - [15c7c5](https://github.com/flow-php/etl/commit/15c7c56a0106e786acc5e3598df6dde386581f54) - **README.md** - [@norberttech](https://github.com/norberttech)
 - [44272b](https://github.com/flow-php/etl/commit/44272b7da3f86ecac5d1578a555b3efa91d2bc70) - **README.md** - [@norberttech](https://github.com/norberttech)
 - [42fb80](https://github.com/flow-php/etl/commit/42fb80acd15fb728854a527e4237f4261d5cf97a) - **README.md** - [@norberttech](https://github.com/norberttech)
