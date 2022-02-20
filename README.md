@@ -216,8 +216,18 @@ please find them below.
 Please read [tests](tests/Flow/ETL/Tests/Unit/Loader) to find examples of usage.
 
 * [callback](src/Flow/ETL/Loader/CallbackLoader.php) - [tests](tests/Flow/ETL/Tests/Unit/Loader/CallbackLoaderTest.php)
+* [memory](src/Flow/ETL/Loader/MemoryLoader.php) - [tests](tests/Flow/ETL/Tests/Unit/Loader/MemoryLoaderTest.php)
 * [stream](src/Flow/ETL/Loader/StreamLoader.php) - [tests](tests/Flow/ETL/Tests/Unit/Loader/StreamLoaderTest.php)
 * [transforming](src/Flow/ETL/Loader/TransformerLoader.php) - [tests](tests/Flow/ETL/Tests/Unit/Loader/TransformerLoaderTest.php)
+
+## Extractors
+
+In most cases Extractors should be provided by Adapters which you can find below, however there are few generic extractors,
+please find them below.  
+Please read [tests](tests/Flow/ETL/Tests/Unit/Extractor) to find examples of usage.
+
+* [process](src/Flow/ETL/Extractor/ProcessExtractor.php) - [tests](tests/Flow/ETL/Tests/Unit/Extractor/ProcessExtractorTest.php)
+* [memory](src/Flow/ETL/Extractor/MemoryExtractor.php) - [tests](tests/Flow/ETL/Tests/Unit/Extractor/MemoryExtractorTest.php)
 
 ## Adapters
 
