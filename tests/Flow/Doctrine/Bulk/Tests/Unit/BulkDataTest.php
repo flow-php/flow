@@ -82,6 +82,78 @@ final class BulkDataTest extends TestCase
         );
     }
 
+    public function test_returns_rows_with_numeric_indexes_even_when_provided_no_sorted() : void
+    {
+        $bulkData = new BulkData([
+            5 => [
+                'date' => 'today',
+                'title' => 'Title One',
+                'description' => 'Description One',
+                'quantity' => 101,
+            ],
+            10 => [
+                'date' => 'today',
+                'title' => 'Title Two',
+                'description' => 'Description Two',
+                'quantity' => 102,
+            ],
+        ]);
+
+        $this->assertEquals(
+            [
+                0 => [
+                    'date' => 'today',
+                    'title' => 'Title One',
+                    'description' => 'Description One',
+                    'quantity' => 101,
+                ],
+                1 => [
+                    'date' => 'today',
+                    'title' => 'Title Two',
+                    'description' => 'Description Two',
+                    'quantity' => 102,
+                ],
+            ],
+            $bulkData->rows()
+        );
+    }
+
+    public function test_returns_sql_rows() : void
+    {
+        $bulkData = new BulkData([
+            5 => [
+                'date' => 'today',
+                'title' => 'Title One',
+                'description' => 'Description One',
+                'quantity' => 101,
+            ],
+            10 => [
+                'date' => 'today',
+                'title' => 'Title Two',
+                'description' => 'Description Two',
+                'quantity' => 102,
+            ],
+        ]);
+
+        $this->assertEquals(
+            [
+                0 => [
+                    'date_0' => 'today',
+                    'title_0' => 'Title One',
+                    'description_0' => 'Description One',
+                    'quantity_0' => 101,
+                ],
+                1 => [
+                    'date_1' => 'today',
+                    'title_1' => 'Title Two',
+                    'description_1' => 'Description Two',
+                    'quantity_1' => 102,
+                ],
+            ],
+            $bulkData->sqlRows()
+        );
+    }
+
     public function test_returns_all_sql_parameters_as_one_dimensional_array_with_placeholders_as_keys() : void
     {
         $bulkData = new BulkData([
@@ -133,7 +205,7 @@ final class BulkDataTest extends TestCase
 
         $this->assertEquals(
             '(:date_0,:title_0,:description_0,:quantity_0),(:date_1,:title_1,:description_1,:quantity_1)',
-            $bulkData->toSqlValuesPlaceholders()
+            $bulkData->toSqlPlaceholders()
         );
     }
 }

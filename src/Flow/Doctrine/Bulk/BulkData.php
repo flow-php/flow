@@ -32,62 +32,56 @@ final class BulkData
             throw new RuntimeException('Each row must be an array');
         }
 
-        $keys = \array_keys($firstRow);
+        $columns = \array_keys($firstRow);
 
         foreach ($rows as $row) {
             if (!\is_array($row)) {
                 throw new RuntimeException('Each row must be an array');
             }
 
-            if ($keys !== \array_keys($row)) {
+            if ($columns !== \array_keys($row)) {
                 throw new RuntimeException('Each row must be have the same keys in the same order');
             }
         }
 
-        $this->columns = new Columns(...$keys);
-        $this->rows = \array_map( /** @phpstan-ignore-line */
-            fn (int $index, array $row) => \array_combine(
-                $this->columns->suffix("_{$index}")->all(),
-                $row,
-            ),
-            \range(0, \count($rows) - 1),
-            $rows
-        );
+        $this->columns = new Columns(...$columns);
+        $this->rows = \array_values($rows);
+    }
+
+    public function count() : int
+    {
+        return \count($this->rows);
     }
 
     /**
+     * Example:.
+     *
+     * [
+     *   'id_0' => 1, 'name_0' => 'some name',
+     *   'id_1' => 2, 'name_1' => 'other name',
+     * ]
+     *
      * @return array<string, mixed>
      */
     public function toSqlParameters() : array
     {
-        return \array_merge(...$this->rows);
-    }
-
-    /**
-     * @return array<string>
-     */
-    public function toTypes() : array
-    {
-        return  \array_map(
-            fn ($value) : string => \gettype($value),
-            \array_filter($this->toSqlParameters(), fn ($value) : bool => \is_bool($value))
-        );
+        return \array_merge(...$this->sqlRows());
     }
 
     /**
      * @return string It returns a string for SQL bulk insert query, eg:
      *                (:id_0, :name_0, :title_0), (:id_1, :name_1, :title_1), (:id_2, :name_2, :title_2)
      */
-    public function toSqlValuesPlaceholders() : string
+    public function toSqlPlaceholders() : string
     {
         return \implode(
             ',',
             \array_map(
                 fn (array $row) : string => \sprintf(
-                    '(%s)',
-                    (new Columns(...\array_keys($row)))->prefix(':')->concat(',')
+                    '(:%s)',
+                    \implode(',:', \array_keys($row))
                 ),
-                $this->rows
+                $this->sqlRows()
             )
         );
     }
@@ -95,5 +89,48 @@ final class BulkData
     public function columns() : Columns
     {
         return $this->columns;
+    }
+
+    /**
+     * Example:.
+     *
+     * [
+     *   ['id_0' => 1, 'name_0' => 'some name'],
+     *   ['id_1' => 2, 'name_1' => 'other name'],
+     * ]
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function sqlRows() : array
+    {
+        $rows = [];
+
+        foreach ($this->rows as $index => $row) {
+            /**
+             * @psalm-suppress MixedAssignment
+             *
+             * @var mixed $entry
+             */
+            foreach ($row as $column => $entry) {
+                $rows[$index][$column . '_' . $index] = $entry;
+            }
+        }
+
+        return $rows;
+    }
+
+    /**
+     * Example:.
+     *
+     * [
+     *   ['id' => 1, 'name' => 'some name'],
+     *   ['id' => 2, 'name' => 'other name'],
+     * ]
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function rows() : array
+    {
+        return $this->rows;
     }
 }

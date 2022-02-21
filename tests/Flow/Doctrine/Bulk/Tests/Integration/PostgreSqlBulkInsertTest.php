@@ -11,6 +11,7 @@ use Doctrine\DBAL\Types\Types;
 use Flow\Doctrine\Bulk\BulkData;
 use Flow\Doctrine\Bulk\BulkInsert;
 use Flow\Doctrine\Bulk\Tests\IntegrationTestCase;
+use Ramsey\Uuid\Uuid;
 
 final class PostgreSqlBulkInsertTest extends IntegrationTestCase
 {
@@ -20,10 +21,12 @@ final class PostgreSqlBulkInsertTest extends IntegrationTestCase
             (new Table(
                 $table = 'flow_doctrine_bulk_test',
                 [
-                    new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                    new Column('id', Type::getType(Types::GUID), ['notnull' => true]),
+                    new Column('age', Type::getType(Types::INTEGER), ['notnull' => true]),
                     new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
                     new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
                     new Column('active', Type::getType(Types::BOOLEAN), ['notnull' => true]),
+                    new Column('updated_at', Type::getType(Types::DATETIME_IMMUTABLE), ['notnull' => true]),
                 ],
             ))
             ->setPrimaryKey(['id'])
@@ -33,9 +36,9 @@ final class PostgreSqlBulkInsertTest extends IntegrationTestCase
             $this->pgsqlDatabaseContext->connection(),
             $table,
             new BulkData([
-                ['id' => 1, 'name' => 'Name One', 'description' => 'Description One', 'active' => false],
-                ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two', 'active' => true],
-                ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three', 'active' => false],
+                ['id' => Uuid::uuid4()->toString(), 'age' => 20, 'name' => 'Name One', 'description' => 'Description One', 'active' => false, 'updated_at' => new \DateTimeImmutable()],
+                ['id' => Uuid::uuid4()->toString(), 'age' => 20, 'name' => 'Name Two', 'description' => 'Description Two', 'active' => true, 'updated_at' => new \DateTimeImmutable()],
+                ['id' => Uuid::uuid4()->toString(), 'age' => 20, 'name' => 'Name Three', 'description' => 'Description Three', 'active' => false, 'updated_at' => new \DateTimeImmutable()],
             ])
         );
 

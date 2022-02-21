@@ -10,7 +10,7 @@ interface QueryFactory
 {
     /**
      * @param AbstractPlatform $platform
-     * @param string $table
+     * @param TableDefinition $table
      * @param BulkData $bulkData
      * @param array{
      *  skip_conflicts?: boolean,
@@ -21,5 +21,5 @@ interface QueryFactory
      *
      * @return string
      */
-    public function insert(AbstractPlatform $platform, string $table, BulkData $bulkData, array $insertOptions = []) : string;
+    public function insert(AbstractPlatform $platform, TableDefinition $table, BulkData $bulkData, array $insertOptions = []) : string;
 }

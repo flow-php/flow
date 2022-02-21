@@ -8,12 +8,13 @@ use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Flow\Doctrine\Bulk\BulkData;
 use Flow\Doctrine\Bulk\DbalPlatform;
 use Flow\Doctrine\Bulk\QueryFactory;
+use Flow\Doctrine\Bulk\TableDefinition;
 
 class DbalQueryFactory implements QueryFactory
 {
     /**
      * @param AbstractPlatform $platform
-     * @param string $table
+     * @param TableDefinition $table
      * @param BulkData $bulkData
      * @param array{
      *  skip_conflicts?: boolean,
@@ -22,11 +23,11 @@ class DbalQueryFactory implements QueryFactory
      *  update_columns?: array<string>
      * } $insertOptions $insertOptions
      *
-     * @throws \Flow\Doctrine\Bulk\Exception\RuntimeException
+     *@throws \Flow\Doctrine\Bulk\Exception\RuntimeException
      *
      * @return string
      */
-    public function insert(AbstractPlatform $platform, string $table, BulkData $bulkData, array $insertOptions = []) : string
+    public function insert(AbstractPlatform $platform, TableDefinition $table, BulkData $bulkData, array $insertOptions = []) : string
     {
         return (new DbalPlatform($platform))->dialect()->prepareInsert($table, $bulkData, $insertOptions);
     }

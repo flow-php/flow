@@ -33,24 +33,27 @@ final class BulkInsert
      * } $insertOptions $insertOptions
      *
      * @throws \Doctrine\DBAL\Exception
+     * @psalm-suppress DeprecatedMethod
      */
     public function insert(Connection $connection, string $table, BulkData $bulkData, array $insertOptions = []) : void
     {
-        $connection->executeQuery(
-            $this->queryFactory->insert($connection->getDatabasePlatform(), $table, $bulkData, $insertOptions),
+        $tableDefinition = new TableDefinition($table, ...\array_values($connection->getSchemaManager()->listTableColumns($table)));
+
+        $connection->executeStatement(
+            $this->queryFactory->insert($connection->getDatabasePlatform(), $tableDefinition, $bulkData, $insertOptions),
             $bulkData->toSqlParameters(),
-            $bulkData->toTypes()
+            $tableDefinition->dbalTypes($bulkData)
         );
     }
 
     /**
-     * @deprecated
-     *
      * @param Connection $connection
      * @param string $table
      * @param BulkData $bulkData
      *
      * @throws \Doctrine\DBAL\Exception
+     *
+     *@deprecated
      */
     public function insertOrSkipOnConflict(Connection $connection, string $table, BulkData $bulkData) : void
     {
@@ -60,14 +63,14 @@ final class BulkInsert
     }
 
     /**
-     * @deprecated
-     *
      * @param Connection $connection
      * @param string $table
      * @param string $constraint
      * @param BulkData $bulkData
      *
      * @throws \Doctrine\DBAL\Exception
+     *
+     *@deprecated
      */
     public function insertOrUpdateOnConstraintConflict(Connection $connection, string $table, string $constraint, BulkData $bulkData) : void
     {
@@ -77,8 +80,6 @@ final class BulkInsert
     }
 
     /**
-     * @deprecated
-     *
      * @param Connection $connection
      * @param string $table
      * @param array<string> $conflictColumns
@@ -86,6 +87,8 @@ final class BulkInsert
      * @param array<string> $updateColumns
      *
      * @throws \Doctrine\DBAL\Exception
+     *
+     *@deprecated
      */
     public function insertOrUpdateOnConflict(Connection $connection, string $table, array $conflictColumns, BulkData $bulkData, array $updateColumns = []) : void
     {

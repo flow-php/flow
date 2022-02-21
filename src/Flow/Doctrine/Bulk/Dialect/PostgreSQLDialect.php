@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace Flow\Doctrine\Bulk\Dialect;
 
 use Flow\Doctrine\Bulk\BulkData;
+use Flow\Doctrine\Bulk\TableDefinition;
 
 final class PostgreSQLDialect implements Dialect
 {
     /**
-     * @param string $table
+     * @param TableDefinition $table
      * @param BulkData $bulkData
      * @param array{
      *  skip_conflicts?: boolean,
@@ -20,14 +21,14 @@ final class PostgreSQLDialect implements Dialect
      *
      * @return string
      */
-    public function prepareInsert(string $table, BulkData $bulkData, array $insertOptions = []) : string
+    public function prepareInsert(TableDefinition $table, BulkData $bulkData, array $insertOptions = []) : string
     {
         if (\array_key_exists('conflict_columns', $insertOptions)) {
             return \sprintf(
                 'INSERT INTO %s (%s) VALUES %s ON CONFLICT (%s) DO UPDATE SET %s',
-                $table,
+                $table->name(),
                 $bulkData->columns()->concat(','),
-                $bulkData->toSqlValuesPlaceholders(),
+                $bulkData->toSqlPlaceholders(),
                 \implode(',', $insertOptions['conflict_columns']),
                 (\array_key_exists('update_columns', $insertOptions) && \count($insertOptions['update_columns']))
                     ? $this->updatedSelectedColumns($insertOptions['update_columns'], $bulkData)
@@ -38,9 +39,9 @@ final class PostgreSQLDialect implements Dialect
         if (\array_key_exists('constraint', $insertOptions)) {
             return \sprintf(
                 'INSERT INTO %s (%s) VALUES %s ON CONFLICT ON CONSTRAINT %s DO UPDATE SET %s',
-                $table,
+                $table->name(),
                 $bulkData->columns()->concat(','),
-                $bulkData->toSqlValuesPlaceholders(),
+                $bulkData->toSqlPlaceholders(),
                 $insertOptions['constraint'],
                 (\array_key_exists('update_columns', $insertOptions) && \count($insertOptions['update_columns']))
                     ? $this->updatedSelectedColumns($insertOptions['update_columns'], $bulkData)
@@ -51,17 +52,17 @@ final class PostgreSQLDialect implements Dialect
         if (\array_key_exists('skip_conflicts', $insertOptions) && $insertOptions['skip_conflicts'] === true) {
             return \sprintf(
                 'INSERT INTO %s (%s) VALUES %s ON CONFLICT DO NOTHING',
-                $table,
+                $table->name(),
                 $bulkData->columns()->concat(','),
-                $bulkData->toSqlValuesPlaceholders()
+                $bulkData->toSqlPlaceholders()
             );
         }
 
         return \sprintf(
             'INSERT INTO %s (%s) VALUES %s',
-            $table,
+            $table->name(),
             $bulkData->columns()->concat(','),
-            $bulkData->toSqlValuesPlaceholders()
+            $bulkData->toSqlPlaceholders()
         );
     }
 
