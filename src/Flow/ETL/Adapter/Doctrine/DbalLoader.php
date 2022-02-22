@@ -49,6 +49,7 @@ final class DbalLoader implements Loader
      *  update_columns?: array<string>,
      *  primary_key_columns?: array<string>
      * } $operationOptions
+     * @param string $operation
      *
      * @throws InvalidArgumentException
      */
@@ -84,6 +85,7 @@ final class DbalLoader implements Loader
      *  update_columns?: array<string>,
      *  primary_key_columns?: array<string>
      * } $operationOptions
+     * @param string $operation
      *
      * @throws InvalidArgumentException
      */
@@ -91,10 +93,11 @@ final class DbalLoader implements Loader
         Connection $connection,
         string $tableName,
         int $chunkSize,
-        array $operationOptions = []
+        array $operationOptions = [],
+        string $operation = 'insert'
     ) : self {
         /** @psalm-suppress InternalMethod */
-        $loader = new self($tableName, $chunkSize, $connection->getParams(), $operationOptions);
+        $loader = new self($tableName, $chunkSize, $connection->getParams(), $operationOptions, $operation);
         $loader->connection = $connection;
 
         return $loader;
