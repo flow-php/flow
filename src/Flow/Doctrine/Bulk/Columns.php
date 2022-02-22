@@ -73,4 +73,30 @@ final class Columns
 
         return $columns;
     }
+
+    /**
+     * @param string ...$columnNames
+     *
+     * @return bool
+     */
+    public function has(string ...$columnNames) : bool
+    {
+        return \count(\array_unique(\array_merge($this->columns, $columnNames))) === \count($this->columns);
+    }
+
+    /**
+     * @throws RuntimeException
+     */
+    public function without(string ...$columnNames) : self
+    {
+        $columns = [];
+
+        foreach ($this->columns as $column) {
+            if (false === \in_array($column, $columnNames, true)) {
+                $columns[] = $column;
+            }
+        }
+
+        return new self(...$columns);
+    }
 }

@@ -52,4 +52,28 @@ final class ColumnsTest extends TestCase
             $columns->concat(',')
         );
     }
+
+    public function test_that_collection_contains_columns() : void
+    {
+        $columns = new Columns('date', 'title', 'description', 'quantity');
+
+        $this->assertTrue($columns->has('date'));
+        $this->assertTrue($columns->has('date', 'title'));
+        $this->assertFalse($columns->has('row'));
+    }
+
+    public function test_that_collection_not_contains_columns() : void
+    {
+        $columns = new Columns('date', 'title', 'description', 'quantity');
+        $this->assertEquals(
+            new Columns('title', 'description', 'quantity'),
+            $columns->without('date')
+        );
+
+        $columns = new Columns('date', 'title', 'description', 'quantity');
+        $this->assertEquals(
+            new Columns('title', 'quantity'),
+            $columns->without('date', 'description')
+        );
+    }
 }

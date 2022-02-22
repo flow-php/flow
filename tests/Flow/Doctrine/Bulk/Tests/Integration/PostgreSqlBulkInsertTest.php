@@ -8,8 +8,8 @@ use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
+use Flow\Doctrine\Bulk\Bulk;
 use Flow\Doctrine\Bulk\BulkData;
-use Flow\Doctrine\Bulk\BulkInsert;
 use Flow\Doctrine\Bulk\Tests\IntegrationTestCase;
 use Ramsey\Uuid\Uuid;
 
@@ -32,7 +32,7 @@ final class PostgreSqlBulkInsertTest extends IntegrationTestCase
             ->setPrimaryKey(['id'])
         );
 
-        BulkInsert::create()->insert(
+        Bulk::create()->insert(
             $this->pgsqlDatabaseContext->connection(),
             $table,
             new BulkData([
@@ -61,7 +61,7 @@ final class PostgreSqlBulkInsertTest extends IntegrationTestCase
             ->setPrimaryKey(['id'])
         );
 
-        BulkInsert::create()->insert(
+        Bulk::create()->insert(
             $this->pgsqlDatabaseContext->connection(),
             $table,
             new BulkData([
@@ -71,7 +71,7 @@ final class PostgreSqlBulkInsertTest extends IntegrationTestCase
             ])
         );
 
-        BulkInsert::create()->insertOrSkipOnConflict(
+        Bulk::create()->insertOrSkipOnConflict(
             $this->pgsqlDatabaseContext->connection(),
             $table,
             new BulkData([
@@ -108,7 +108,7 @@ final class PostgreSqlBulkInsertTest extends IntegrationTestCase
             ))
             ->setPrimaryKey(['id'])
         );
-        BulkInsert::create()->insert(
+        Bulk::create()->insert(
             $this->pgsqlDatabaseContext->connection(),
             $table,
             new BulkData([
@@ -118,7 +118,7 @@ final class PostgreSqlBulkInsertTest extends IntegrationTestCase
             ])
         );
 
-        BulkInsert::create()->insertOrUpdateOnConstraintConflict(
+        Bulk::create()->insertOrUpdateOnConstraintConflict(
             $this->pgsqlDatabaseContext->connection(),
             $table,
             'flow_doctrine_bulk_test_pkey',
@@ -156,7 +156,7 @@ final class PostgreSqlBulkInsertTest extends IntegrationTestCase
             ))
             ->setPrimaryKey(['id'])
         );
-        BulkInsert::create()->insert(
+        Bulk::create()->insert(
             $this->pgsqlDatabaseContext->connection(),
             $table,
             new BulkData([
@@ -166,7 +166,7 @@ final class PostgreSqlBulkInsertTest extends IntegrationTestCase
             ])
         );
 
-        BulkInsert::create()->insertOrUpdateOnConflict(
+        Bulk::create()->insertOrUpdateOnConflict(
             $this->pgsqlDatabaseContext->connection(),
             $table,
             ['id'],
@@ -204,7 +204,7 @@ final class PostgreSqlBulkInsertTest extends IntegrationTestCase
             ))
             ->setPrimaryKey(['id'])
         );
-        BulkInsert::create()->insert(
+        Bulk::create()->insert(
             $this->pgsqlDatabaseContext->connection(),
             $table,
             new BulkData([
@@ -214,7 +214,7 @@ final class PostgreSqlBulkInsertTest extends IntegrationTestCase
             ])
         );
 
-        BulkInsert::create()->insertOrUpdateOnConflict(
+        Bulk::create()->insertOrUpdateOnConflict(
             $this->pgsqlDatabaseContext->connection(),
             $table,
             ['id'],
