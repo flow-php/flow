@@ -1,6 +1,7 @@
-## [Unreleased] - 2022-02-21
+## [Unreleased] - 2022-02-22
 
 ### Added
+- [#86](https://github.com/flow-php/doctrine-dbal-bulk/pull/86) - **Update multiple rows at once** - [@DawidSajdak](https://github.com/DawidSajdak)
 - [#28](https://github.com/flow-php/doctrine-dbal-bulk/pull/28) - **Workflow for aut-merging dependabot PRs** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#23](https://github.com/flow-php/doctrine-dbal-bulk/pull/23) - **upsert on conflict columns** - [@norberttech](https://github.com/norberttech)
 - [#9](https://github.com/flow-php/doctrine-dbal-bulk/pull/9) - **Add dependabot for tools** - [@tomaszhanc](https://github.com/tomaszhanc)
