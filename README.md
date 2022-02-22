@@ -5,11 +5,13 @@
 
 ## Description
 
-It provides bulk inserts and updates for Doctrine DBAL. To use it, create a `BulkInsert` object:
+It provides bulk inserts and updates for Doctrine DBAL. To use it, create a `Bulk` object:
 
+Insert:
 ```php
-$bulkInsert = BulkInsert::create($dbalConnection);
-$bulkInsert->insert(
+$bulk = Bulk::create();
+$bulk->insert(
+    $dbalConnection,
     'your-table-name',
     new BulkData([
         ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
@@ -20,11 +22,30 @@ $bulkInsert->insert(
 
 ```
 
+Update:
+```php
+$bulk = Bulk::create();
+$bulk->update(
+    $dbalConnection,
+    'your-table-name',
+    new BulkData([
+        ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
+        ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
+        ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
+    ]),
+    [
+        'primary_key_columns' => ['id'],
+        'update_columns' => ['name']
+    ]
+);
+
+```
+
 *Currently, it supports only PostgreSQL*, so if you need a different database platform, feel free to create a pull request
-to the repository or create `BulkInsert` object on your own:
+to the repository or create `Bulk` object on your own:
 
 ```php
-$bulkInsert = new BulkInsert($dbalConnection, new YourQueryFactory());
+$bulk = new Bulk(new YourQueryFactory());
 ```
 
 For your implementation, you need to implement the `QueryFactory` interface. To make it easier for you, the default

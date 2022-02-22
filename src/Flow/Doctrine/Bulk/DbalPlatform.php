@@ -20,7 +20,7 @@ final class DbalPlatform
     public function dialect() : Dialect
     {
         if ($this->isPostgreSQL()) {
-            return new PostgreSQLDialect();
+            return new PostgreSQLDialect($this->platform);
         }
 
         throw new RuntimeException(\sprintf(

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk\Dialect;
 
-use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
+use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Flow\Doctrine\Bulk\BulkData;
 use Flow\Doctrine\Bulk\Columns;
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
@@ -12,6 +12,13 @@ use Flow\Doctrine\Bulk\TableDefinition;
 
 final class PostgreSQLDialect implements Dialect
 {
+    private AbstractPlatform $platform;
+
+    public function __construct(AbstractPlatform $platform)
+    {
+        $this->platform = $platform;
+    }
+
     /**
      * @param TableDefinition $table
      * @param BulkData $bulkData
@@ -97,7 +104,7 @@ final class PostgreSQLDialect implements Dialect
             (\array_key_exists('update_columns', $updateOptions) && \count($updateOptions['update_columns']))
                 ? $this->updatedSelectedColumns($updateOptions['update_columns'], $bulkData->columns()->without(...$updateOptions['primary_key_columns']))
                 : $this->updateAllColumns($bulkData->columns()->without(...$updateOptions['primary_key_columns'])),
-            $table->toSqlCastedPlaceholders($bulkData, new PostgreSQLPlatform()),
+            $table->toSqlCastedPlaceholders($bulkData, $this->platform),
             $bulkData->columns()->concat(','),
             $this->updatedIndexColumns($updateOptions['primary_key_columns'])
         );
