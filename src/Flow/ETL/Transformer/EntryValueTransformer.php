@@ -83,7 +83,7 @@ final class EntryValueTransformer implements Transformer
                     $entry = $this->entryFactory->create(
                         $entry->name(),
                         /** @phpstan-ignore-next-line */
-                        (string) \call_user_func($this->userFunction, $entry->value())
+                        \call_user_func($this->userFunction, $entry->value())
                     );
                 }
 
