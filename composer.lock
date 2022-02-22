@@ -408,12 +408,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl.git",
-                "reference": "8a1a119964e9cc1c7dee949e584eb8103810a85b"
+                "reference": "65ad19ec8bc024c4013e819d408d14fede87d371"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl/zipball/8a1a119964e9cc1c7dee949e584eb8103810a85b",
-                "reference": "8a1a119964e9cc1c7dee949e584eb8103810a85b",
+                "url": "https://api.github.com/repos/flow-php/etl/zipball/65ad19ec8bc024c4013e819d408d14fede87d371",
+                "reference": "65ad19ec8bc024c4013e819d408d14fede87d371",
                 "shasum": ""
             },
             "require": {
@@ -457,7 +457,7 @@
                 "issues": "https://github.com/flow-php/etl/issues",
                 "source": "https://github.com/flow-php/etl/tree/1.x"
             },
-            "time": "2022-02-20T16:41:15+00:00"
+            "time": "2022-02-21T06:11:34+00:00"
         },
         {
             "name": "psr/cache",
@@ -566,17 +566,20 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/doctrine-dbal-bulk.git",
-                "reference": "d37ce7f884116d6d2b8b68f0ca13d89356f30488"
+                "reference": "a1aac4309881381080bd6653d7bacdf928d0a0f6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/doctrine-dbal-bulk/zipball/d37ce7f884116d6d2b8b68f0ca13d89356f30488",
-                "reference": "d37ce7f884116d6d2b8b68f0ca13d89356f30488",
+                "url": "https://api.github.com/repos/flow-php/doctrine-dbal-bulk/zipball/a1aac4309881381080bd6653d7bacdf928d0a0f6",
+                "reference": "a1aac4309881381080bd6653d7bacdf928d0a0f6",
                 "shasum": ""
             },
             "require": {
                 "doctrine/dbal": "^2.12 | ^3.1.4",
                 "php": "^7.4 | ^8.0"
+            },
+            "require-dev": {
+                "ramsey/uuid": "^3.0"
             },
             "default-branch": true,
             "type": "library",
@@ -603,7 +606,7 @@
                 "issues": "https://github.com/flow-php/doctrine-dbal-bulk/issues",
                 "source": "https://github.com/flow-php/doctrine-dbal-bulk/tree/1.x"
             },
-            "time": "2022-02-16T03:22:44+00:00"
+            "time": "2022-02-22T11:14:13+00:00"
         }
     ],
     "aliases": [],

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Doctrine;
 
 use Doctrine\DBAL\Connection;
+use Flow\Doctrine\Bulk\Bulk;
 use Flow\Doctrine\Bulk\BulkData;
-use Flow\Doctrine\Bulk\BulkInsert;
 use Flow\Doctrine\Bulk\QueryFactory;
 use Flow\ETL\Adapter\Doctrine\BulkOperation\Insert;
 use Flow\ETL\Adapter\Doctrine\BulkOperation\InsertOrSkipOnConflict;
@@ -45,7 +45,7 @@ final class DbalBulkLoader implements Loader
         return new self(
             $connection,
             new Insert(
-                $queryFactory ? new BulkInsert($queryFactory) : BulkInsert::create()
+                $queryFactory ? new Bulk($queryFactory) : Bulk::create()
             ),
             $bulkChunkSize,
             $table
@@ -61,7 +61,7 @@ final class DbalBulkLoader implements Loader
         return new self(
             $connection,
             new InsertOrSkipOnConflict(
-                $queryFactory ? new BulkInsert($queryFactory) : BulkInsert::create()
+                $queryFactory ? new Bulk($queryFactory) : Bulk::create()
             ),
             $bulkChunkSize,
             $table
@@ -78,7 +78,7 @@ final class DbalBulkLoader implements Loader
         return new self(
             $connection,
             new InsertOrUpdateOnConstraintConflict(
-                $queryFactory ? new BulkInsert($queryFactory) : BulkInsert::create(),
+                $queryFactory ? new Bulk($queryFactory) : Bulk::create(),
                 $constraint
             ),
             $bulkChunkSize,

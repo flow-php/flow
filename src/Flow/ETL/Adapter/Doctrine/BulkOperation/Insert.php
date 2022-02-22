@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Doctrine\BulkOperation;
 
 use Doctrine\DBAL\Connection;
+use Flow\Doctrine\Bulk\Bulk;
 use Flow\Doctrine\Bulk\BulkData;
-use Flow\Doctrine\Bulk\BulkInsert;
 use Flow\ETL\Adapter\Doctrine\BulkOperation;
 
 /**
@@ -14,11 +14,11 @@ use Flow\ETL\Adapter\Doctrine\BulkOperation;
  */
 final class Insert implements BulkOperation
 {
-    private BulkInsert $bulkInsert;
+    private Bulk $bulk;
 
-    public function __construct(BulkInsert $bulkInsert)
+    public function __construct(Bulk $bulk)
     {
-        $this->bulkInsert = $bulkInsert;
+        $this->bulk = $bulk;
     }
 
     /**
@@ -26,6 +26,6 @@ final class Insert implements BulkOperation
      */
     public function execute(Connection $connection, string $table, BulkData $bulkData) : void
     {
-        $this->bulkInsert->insert($connection, $table, $bulkData);
+        $this->bulk->insert($connection, $table, $bulkData);
     }
 }
