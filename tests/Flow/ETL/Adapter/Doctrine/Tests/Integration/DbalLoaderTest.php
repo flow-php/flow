@@ -37,6 +37,30 @@ final class DbalLoaderTest extends IntegrationTestCase
         new DbalLoader($table, $bulkSize = 10, $this->connectionParams(), [], 'delete');
     }
 
+    public function test_create_loader_with_invalid_operation_from_connection() : void
+    {
+        $this->pgsqlDatabaseContext->createTable((new Table(
+            $table = 'flow_doctrine_bulk_test',
+            [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+            ],
+        ))
+            ->setPrimaryKey(['id']));
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Operation can be insert or update, delete given.');
+
+        DbalLoader::fromConnection(
+            $this->pgsqlDatabaseContext->connection(),
+            $table,
+            $bulkSize = 10,
+            $this->connectionParams(),
+            'delete'
+        );
+    }
+
     public function test_that_operation_is_lower_cased() : void
     {
         $this->pgsqlDatabaseContext->createTable((new Table(
