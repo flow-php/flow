@@ -7,7 +7,7 @@
 
 Adapter for [ETL](https://github.com/flow-php/etl) using bulk operations from [Doctrine Dbal Bulk](https://github.com/flow-php/doctrine-dbal-bulk).
 
-## Loader - DbalBulk
+## Loader - DbalLoader
 
 ```php
 ETL::extract(
@@ -15,7 +15,7 @@ ETL::extract(
 )->transform(
     ...
 )->load(
-    DbalLoader('your-table-name', $bulkSize = 100, ['url' => \getenv('PGSQL_DATABASE_URL')], ['skip_conflicts' => true])
+    new DbalLoader('your-table-name', $bulkSize = 100, ['url' => \getenv('PGSQL_DATABASE_URL')], ['skip_conflicts' => true])
 );
 ```
 
