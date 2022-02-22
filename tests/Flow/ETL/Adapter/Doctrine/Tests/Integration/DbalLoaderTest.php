@@ -54,6 +54,28 @@ final class DbalLoaderTest extends IntegrationTestCase
         $this->assertSame($loader->__serialize()['operation'], 'insert');
     }
 
+    public function test_that_operation_is_lower_cased_from_connection_method() : void
+    {
+        $this->pgsqlDatabaseContext->createTable((new Table(
+            $table = 'flow_doctrine_bulk_test',
+            [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+            ],
+        ))
+            ->setPrimaryKey(['id']));
+
+        $loader = DbalLoader::fromConnection(
+            $this->pgsqlDatabaseContext->connection(),
+            $table,
+            $bulkSize = 10,
+            $this->connectionParams()
+        );
+
+        $this->assertSame($loader->__serialize()['operation'], 'insert');
+    }
+
     public function test_inserts_multiple_rows_at_once() : void
     {
         $this->pgsqlDatabaseContext->createTable((new Table(
