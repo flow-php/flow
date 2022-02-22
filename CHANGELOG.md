@@ -1,6 +1,7 @@
 ## [Unreleased] - 2022-02-22
 
 ### Added
+- [#80](https://github.com/flow-php/etl-adapter-doctrine/pull/80) - **Added `update` operation to the `fromConnection` method** - [@DawidSajdak](https://github.com/DawidSajdak)
 - [#79](https://github.com/flow-php/etl-adapter-doctrine/pull/79) - **Added `update` operation** - [@DawidSajdak](https://github.com/DawidSajdak)
 - [#23](https://github.com/flow-php/etl-adapter-doctrine/pull/23) - **Workflow for aut-merging dependabot PRs** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#7](https://github.com/flow-php/etl-adapter-doctrine/pull/7) - **Added dependabot for tools** - [@tomaszhanc](https://github.com/tomaszhanc)
