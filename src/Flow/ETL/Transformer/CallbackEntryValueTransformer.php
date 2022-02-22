@@ -42,7 +42,7 @@ final class CallbackEntryValueTransformer implements Transformer
     }
 
     /**
-     * @return array{callables: array<SerializableClosure>}
+     * @return array{entries: array<string>, callables: array<SerializableClosure>}
      */
     public function __serialize() : array
     {
@@ -58,12 +58,13 @@ final class CallbackEntryValueTransformer implements Transformer
         }
 
         return [
+            'entries' => $this->entries,
             'callables' => $closures,
         ];
     }
 
     /**
-     * @param array{callables: array<SerializableClosure>} $data
+     * @param array{entries: array<string>, callables: array<SerializableClosure>} $data
      * @psalm-suppress MoreSpecificImplementedParamType
      */
     public function __unserialize(array $data) : void
@@ -79,6 +80,7 @@ final class CallbackEntryValueTransformer implements Transformer
             $callables[] = $closure->getClosure();
         }
 
+        $this->entries = $data['entries'];
         $this->callables = $callables;
     }
 
