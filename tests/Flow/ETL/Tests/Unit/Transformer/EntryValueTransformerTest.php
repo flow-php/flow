@@ -7,16 +7,16 @@ namespace Flow\ETL\Tests\Unit\Transformer;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Rows;
-use Flow\ETL\Transformer\CallbackEntryValueTransformer;
+use Flow\ETL\Transformer\EntryValueTransformer;
 use PHPUnit\Framework\TestCase;
 
-final class CallbackEntryValueTransformerTest extends TestCase
+final class EntryValueTransformerTest extends TestCase
 {
     public function test_upper_string_callback() : void
     {
-        $callbackTransformer = new CallbackEntryValueTransformer(
+        $callbackTransformer = new EntryValueTransformer(
             ['string-entry'],
-            fn (Entry $entry) : Entry => new $entry($entry->name(), \strtoupper($entry->value()))
+            'strtoupper'
         );
 
         $rows = $callbackTransformer->transform(
@@ -38,9 +38,9 @@ final class CallbackEntryValueTransformerTest extends TestCase
 
     public function test_unique_array() : void
     {
-        $callbackTransformer = new CallbackEntryValueTransformer(
+        $callbackTransformer = new EntryValueTransformer(
             ['array_list'],
-            fn (Entry $entry) : Entry => new $entry($entry->name(), \array_values(\array_unique($entry->value())))
+            'array_unique'
         );
 
         $rows = $callbackTransformer->transform(
@@ -50,6 +50,13 @@ final class CallbackEntryValueTransformerTest extends TestCase
                 )
             )
         );
+
+        $callbackTransformer = new EntryValueTransformer(
+            ['array_list'],
+            'array_values'
+        );
+
+        $rows = $callbackTransformer->transform($rows);
 
         $this->assertEquals(new Rows(
             Row::create(
