@@ -20,4 +20,16 @@ interface Dialect
      * @return string
      */
     public function prepareInsert(TableDefinition $table, BulkData $bulkData, array $insertOptions = []) : string;
+
+    /**
+     * @param TableDefinition $table
+     * @param BulkData $bulkData
+     * @param array{
+     *  primary_key_columns?: array<string>,
+     *  update_columns?: array<string>
+     * } $updateOptions $updateOptions
+     *
+     * @return string
+     */
+    public function prepareUpdate(TableDefinition $table, BulkData $bulkData, array $updateOptions = []) : string;
 }

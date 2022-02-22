@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk\Dialect;
 
+use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Flow\Doctrine\Bulk\BulkData;
+use Flow\Doctrine\Bulk\Columns;
+use Flow\Doctrine\Bulk\Exception\RuntimeException;
 use Flow\Doctrine\Bulk\TableDefinition;
 
 final class PostgreSQLDialect implements Dialect
@@ -31,8 +34,8 @@ final class PostgreSQLDialect implements Dialect
                 $bulkData->toSqlPlaceholders(),
                 \implode(',', $insertOptions['conflict_columns']),
                 (\array_key_exists('update_columns', $insertOptions) && \count($insertOptions['update_columns']))
-                    ? $this->updatedSelectedColumns($insertOptions['update_columns'], $bulkData)
-                    : $this->updateAllColumns($bulkData)
+                    ? $this->updatedSelectedColumns($insertOptions['update_columns'], $bulkData->columns())
+                    : $this->updateAllColumns($bulkData->columns())
             );
         }
 
@@ -44,8 +47,8 @@ final class PostgreSQLDialect implements Dialect
                 $bulkData->toSqlPlaceholders(),
                 $insertOptions['constraint'],
                 (\array_key_exists('update_columns', $insertOptions) && \count($insertOptions['update_columns']))
-                    ? $this->updatedSelectedColumns($insertOptions['update_columns'], $bulkData)
-                    : $this->updateAllColumns($bulkData)
+                    ? $this->updatedSelectedColumns($insertOptions['update_columns'], $bulkData->columns())
+                    : $this->updateAllColumns($bulkData->columns())
             );
         }
 
@@ -67,12 +70,46 @@ final class PostgreSQLDialect implements Dialect
     }
 
     /**
-     * @param array<string> $updateColumns
+     * @param TableDefinition $table
      * @param BulkData $bulkData
+     * @param array{
+     *  primary_key_columns?: array<string>,
+     *  update_columns?: array<string>
+     * } $updateOptions $updateOptions
+     *
+     * @throws RuntimeException
      *
      * @return string
      */
-    private function updatedSelectedColumns(array $updateColumns, BulkData $bulkData) : string
+    public function prepareUpdate(TableDefinition $table, BulkData $bulkData, array $updateOptions = []) : string
+    {
+        if (false === \array_key_exists('primary_key_columns', $updateOptions)) {
+            throw new RuntimeException('primary_key_columns option is required for update.');
+        }
+
+        if (false === $bulkData->columns()->has(...$updateOptions['primary_key_columns'])) {
+            throw new RuntimeException('All columns from primary_key_columns must be in bulk data columns.');
+        }
+
+        return \sprintf(
+            'UPDATE %s as existing_table SET %s FROM (VALUES %s) as excluded (%s) WHERE %s',
+            $table->name(),
+            (\array_key_exists('update_columns', $updateOptions) && \count($updateOptions['update_columns']))
+                ? $this->updatedSelectedColumns($updateOptions['update_columns'], $bulkData->columns()->without(...$updateOptions['primary_key_columns']))
+                : $this->updateAllColumns($bulkData->columns()->without(...$updateOptions['primary_key_columns'])),
+            $table->toSqlCastedPlaceholders($bulkData, new PostgreSQLPlatform()),
+            $bulkData->columns()->concat(','),
+            $this->updatedIndexColumns($updateOptions['primary_key_columns'])
+        );
+    }
+
+    /**
+     * @param array<string> $updateColumns
+     * @param Columns $columns
+     *
+     * @return string
+     */
+    private function updatedSelectedColumns(array $updateColumns, Columns $columns) : string
     {
         /**
          * https://www.postgresql.org/docs/9.5/sql-insert.html#SQL-ON-CONFLICT
@@ -81,15 +118,25 @@ final class PostgreSQLDialect implements Dialect
          */
         return \count($updateColumns)
             ? \implode(',', \array_map(fn (string $column) : string => "{$column} = excluded.{$column}", $updateColumns))
-            : $this->updateAllColumns($bulkData);
+            : $this->updateAllColumns($columns);
     }
 
     /**
-     * @param BulkData $bulkData
+     * @param array<string> $updateColumns
      *
      * @return string
      */
-    private function updateAllColumns(BulkData $bulkData) : string
+    private function updatedIndexColumns(array $updateColumns) : string
+    {
+        return \implode(' AND ', \array_map(fn (string $column) : string => "existing_table.{$column} = excluded.{$column}", $updateColumns));
+    }
+
+    /**
+     * @param Columns $columns
+     *
+     * @return string
+     */
+    private function updateAllColumns(Columns $columns) : string
     {
         /**
          * https://www.postgresql.org/docs/9.5/sql-insert.html#SQL-ON-CONFLICT
@@ -98,7 +145,7 @@ final class PostgreSQLDialect implements Dialect
          */
         return \implode(
             ',',
-            $bulkData->columns()->map(
+            $columns->map(
                 fn (string $column) : string => "{$column} = excluded.{$column}"
             )
         );

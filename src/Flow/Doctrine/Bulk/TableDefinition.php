@@ -34,7 +34,7 @@ final class TableDefinition
     /**
      * @param BulkData $bulkData
      *
-     *@throws RuntimeException
+     * @throws RuntimeException
      *
      * @return array<string, string>
      */
@@ -88,6 +88,9 @@ final class TableDefinition
         );
     }
 
+    /**
+     * @throws RuntimeException
+     */
     private function getDbalColumn(string $columnName) : Column
     {
         $dbColumnNames = \array_filter($this->columns, fn (Column $dbColumn) : bool => $dbColumn->getName() === $columnName);

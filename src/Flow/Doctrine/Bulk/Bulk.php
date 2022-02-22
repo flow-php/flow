@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Flow\Doctrine\Bulk;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Exception;
+use Flow\Doctrine\Bulk\Exception\RuntimeException;
 use Flow\Doctrine\Bulk\QueryFactory\DbalQueryFactory;
 
-final class BulkInsert
+final class Bulk
 {
     private QueryFactory $queryFactory;
 
@@ -32,7 +34,7 @@ final class BulkInsert
      *  update_columns?: array<string>
      * } $insertOptions $insertOptions
      *
-     * @throws \Doctrine\DBAL\Exception
+     * @throws Exception|RuntimeException
      * @psalm-suppress DeprecatedMethod
      */
     public function insert(Connection $connection, string $table, BulkData $bulkData, array $insertOptions = []) : void
@@ -50,10 +52,33 @@ final class BulkInsert
      * @param Connection $connection
      * @param string $table
      * @param BulkData $bulkData
+     * @param array{
+     *  primary_key_columns?: array<string>,
+     *  update_columns?: array<string>
+     * } $updateOptions $updateOptions
      *
-     * @throws \Doctrine\DBAL\Exception
+     * @throws Exception|RuntimeException
+     * @psalm-suppress DeprecatedMethod
+     */
+    public function update(Connection $connection, string $table, BulkData $bulkData, array $updateOptions = []) : void
+    {
+        $tableDefinition = new TableDefinition($table, ...\array_values($connection->getSchemaManager()->listTableColumns($table)));
+
+        $connection->executeQuery(
+            $this->queryFactory->update($connection->getDatabasePlatform(), $tableDefinition, $bulkData, $updateOptions),
+            $bulkData->toSqlParameters(),
+            $tableDefinition->dbalTypes($bulkData)
+        );
+    }
+
+    /**
+     * @param Connection $connection
+     * @param string $table
+     * @param BulkData $bulkData
      *
-     *@deprecated
+     * @throws Exception|RuntimeException
+     *
+     * @deprecated
      */
     public function insertOrSkipOnConflict(Connection $connection, string $table, BulkData $bulkData) : void
     {
@@ -68,9 +93,9 @@ final class BulkInsert
      * @param string $constraint
      * @param BulkData $bulkData
      *
-     * @throws \Doctrine\DBAL\Exception
+     * @throws Exception|RuntimeException
      *
-     *@deprecated
+     * @deprecated
      */
     public function insertOrUpdateOnConstraintConflict(Connection $connection, string $table, string $constraint, BulkData $bulkData) : void
     {
@@ -86,9 +111,9 @@ final class BulkInsert
      * @param BulkData $bulkData
      * @param array<string> $updateColumns
      *
-     * @throws \Doctrine\DBAL\Exception
+     * @throws Exception|RuntimeException
      *
-     *@deprecated
+     * @deprecated
      */
     public function insertOrUpdateOnConflict(Connection $connection, string $table, array $conflictColumns, BulkData $bulkData, array $updateColumns = []) : void
     {
