@@ -24,9 +24,10 @@ final class PostgreSqlBulkInsertTest extends IntegrationTestCase
                     new Column('id', Type::getType(Types::GUID), ['notnull' => true]),
                     new Column('age', Type::getType(Types::INTEGER), ['notnull' => true]),
                     new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-                    new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                    new Column('description', Type::getType(Types::STRING), ['notnull' => false]),
                     new Column('active', Type::getType(Types::BOOLEAN), ['notnull' => true]),
                     new Column('updated_at', Type::getType(Types::DATETIME_IMMUTABLE), ['notnull' => true]),
+                    new Column('tags', Type::getType(Types::JSON), ['notnull' => true, 'platformOptions' => ['jsonb' => true]]),
                 ],
             ))
             ->setPrimaryKey(['id'])
@@ -36,14 +37,23 @@ final class PostgreSqlBulkInsertTest extends IntegrationTestCase
             $this->pgsqlDatabaseContext->connection(),
             $table,
             new BulkData([
-                ['id' => Uuid::uuid4()->toString(), 'age' => 20, 'name' => 'Name One', 'description' => 'Description One', 'active' => false, 'updated_at' => new \DateTimeImmutable()],
-                ['id' => Uuid::uuid4()->toString(), 'age' => 20, 'name' => 'Name Two', 'description' => 'Description Two', 'active' => true, 'updated_at' => new \DateTimeImmutable()],
-                ['id' => Uuid::uuid4()->toString(), 'age' => 20, 'name' => 'Name Three', 'description' => 'Description Three', 'active' => false, 'updated_at' => new \DateTimeImmutable()],
+                ['id' => $id1 = Uuid::uuid4()->toString(), 'age' => 20, 'name' => 'Name One', 'description' => 'Description One', 'active' => false, 'updated_at' => $date1 = new \DateTimeImmutable(), 'tags' => \json_encode(['a', 'b', 'c'])],
+                ['id' => $id2 = Uuid::uuid4()->toString(), 'age' => 30, 'name' => 'Name Two', 'description' => null, 'active' => true, 'updated_at' => $date2 = new \DateTimeImmutable(), 'tags' => \json_encode(['a', 'b', 'c'])],
+                ['id' => $id3 = Uuid::uuid4()->toString(), 'age' => 40, 'name' => 'Name Three', 'description' => 'Description Three', 'active' => false, 'updated_at' => $date3 = new \DateTimeImmutable(), 'tags' => \json_encode(['a', 'b', 'c'])],
             ])
         );
 
         $this->assertEquals(3, $this->pgsqlDatabaseContext->tableCount($table));
         $this->assertEquals(1, $this->pgsqlDatabaseContext->numberOfExecutedInsertQueries());
+
+        $this->assertSame(
+            [
+                ['id' => $id1, 'age' => 20, 'name' => 'Name One', 'description' => 'Description One', 'active' => false, 'updated_at' => $date1->format('Y-m-d H:i:s'), 'tags' => '["a", "b", "c"]'],
+                ['id' => $id2, 'age' => 30, 'name' => 'Name Two', 'description' => null, 'active' => true, 'updated_at' => $date2->format('Y-m-d H:i:s'), 'tags' => '["a", "b", "c"]'],
+                ['id' => $id3, 'age' => 40, 'name' => 'Name Three', 'description' => 'Description Three', 'active' => false, 'updated_at' => $date3->format('Y-m-d H:i:s'), 'tags' => '["a", "b", "c"]'],
+            ],
+            $this->pgsqlDatabaseContext->connection()->executeQuery("SELECT * FROM {$table} ORDER BY age ASC")->fetchAllAssociative()
+        );
     }
 
     public function test_inserts_new_rows_and_skip_already_existed() : void

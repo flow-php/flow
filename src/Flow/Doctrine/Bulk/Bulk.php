@@ -43,7 +43,7 @@ final class Bulk
 
         $connection->executeStatement(
             $this->queryFactory->insert($connection->getDatabasePlatform(), $tableDefinition, $bulkData, $insertOptions),
-            $bulkData->toSqlParameters(),
+            $bulkData->toSqlParameters($tableDefinition),
             $tableDefinition->dbalTypes($bulkData)
         );
     }
@@ -66,7 +66,7 @@ final class Bulk
 
         $connection->executeQuery(
             $this->queryFactory->update($connection->getDatabasePlatform(), $tableDefinition, $bulkData, $updateOptions),
-            $bulkData->toSqlParameters(),
+            $bulkData->toSqlParameters($tableDefinition),
             $tableDefinition->dbalTypes($bulkData)
         );
     }

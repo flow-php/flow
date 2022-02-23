@@ -16,7 +16,13 @@
         "@default": true,
         "DecrementInteger": {
             "ignore": [
-                "Flow\\Doctrine\\Bulk\\Exception\\RuntimeException::__construct"
+                "Flow\\Doctrine\\Bulk\\Exception\\RuntimeException::__construct",
+                "Flow\\Doctrine\\Bulk\\BulkData::toSqlParameters"
+            ]
+        },
+        "IncrementInteger": {
+            "ignore": [
+                "Flow\\Doctrine\\Bulk\\BulkData::toSqlParameters"
             ]
         },
         "Throw_": {

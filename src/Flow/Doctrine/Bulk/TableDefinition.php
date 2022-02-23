@@ -43,7 +43,7 @@ final class TableDefinition
         $types = [];
 
         foreach ($bulkData->columns()->all() as $columnName) {
-            $dbColumn = $this->getDbalColumn($columnName);
+            $dbColumn = $this->dbalColumn($columnName);
 
             for ($i = 0; $i < $bulkData->count(); $i++) {
                 $types[$columnName . '_' . $i] = $dbColumn->getType()->getName();
@@ -73,7 +73,7 @@ final class TableDefinition
                      * @var mixed $value
                      */
                     foreach ($row as $columnName => $value) {
-                        $dbColumn = $this->getDbalColumn($columnName);
+                        $dbColumn = $this->dbalColumn($columnName);
                         $keys[] = 'CAST(:' . $columnName . '_' . $index . ' as ' . $dbColumn->getType()->getSQLDeclaration($dbColumn->toArray(), $abstractPlatform) . ')';
                     }
 
@@ -91,7 +91,7 @@ final class TableDefinition
     /**
      * @throws RuntimeException
      */
-    private function getDbalColumn(string $columnName) : Column
+    public function dbalColumn(string $columnName) : Column
     {
         $dbColumnNames = \array_filter($this->columns, fn (Column $dbColumn) : bool => $dbColumn->getName() === $columnName);
 

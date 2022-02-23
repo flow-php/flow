@@ -4,8 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk\Tests\Unit;
 
+use Doctrine\DBAL\Schema\Column;
+use Doctrine\DBAL\Types\IntegerType;
+use Doctrine\DBAL\Types\JsonType;
+use Doctrine\DBAL\Types\StringType;
 use Flow\Doctrine\Bulk\BulkData;
 use Flow\Doctrine\Bulk\Columns;
+use Flow\Doctrine\Bulk\TableDefinition;
 use PHPUnit\Framework\TestCase;
 
 final class BulkDataTest extends TestCase
@@ -162,12 +167,14 @@ final class BulkDataTest extends TestCase
                 'title' => 'Title One',
                 'description' => 'Description One',
                 'quantity' => 101,
+                'errors' => '[]',
             ],
             [
                 'date' => 'today',
                 'title' => 'Title Two',
                 'description' => 'Description Two',
                 'quantity' => 102,
+                'errors' => '[]',
             ],
         ]);
 
@@ -177,12 +184,23 @@ final class BulkDataTest extends TestCase
                 'title_0' => 'Title One',
                 'description_0' => 'Description One',
                 'quantity_0' => 101,
+                'errors_0' => [],
                 'date_1' => 'today',
                 'title_1' => 'Title Two',
                 'description_1' => 'Description Two',
                 'quantity_1' => 102,
+                'errors_1' => [],
             ],
-            $bulkData->toSqlParameters()
+            $bulkData->toSqlParameters(
+                new TableDefinition(
+                    'test',
+                    new Column('date', new StringType()),
+                    new Column('title', new StringType()),
+                    new Column('description', new StringType()),
+                    new Column('quantity', new IntegerType()),
+                    new Column('errors', new JsonType()),
+                )
+            )
         );
     }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk;
 
+use Doctrine\DBAL\Types\Types;
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
 
 final class BulkData
@@ -63,9 +64,26 @@ final class BulkData
      *
      * @return array<string, mixed>
      */
-    public function toSqlParameters() : array
+    public function toSqlParameters(TableDefinition $table) : array
     {
-        return \array_merge(...$this->sqlRows());
+        $rows = [];
+
+        foreach ($this->rows as $index => $row) {
+            /**
+             * @psalm-suppress MixedAssignment
+             *
+             * @var mixed $entry
+             */
+            foreach ($row as $column => $entry) {
+                if (\is_string($entry) && $table->dbalColumn($column)->getType()->getName() === Types::JSON) {
+                    $rows[$index][$column . '_' . $index] = \json_decode($entry, true, 512, JSON_THROW_ON_ERROR);
+                } else {
+                    $rows[$index][$column . '_' . $index] = $entry;
+                }
+            }
+        }
+
+        return \array_merge(...$rows);
     }
 
     /**
