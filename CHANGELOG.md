@@ -1,6 +1,8 @@
 ## [Unreleased] - 2022-02-23
 
 ### Added
+- [#163](https://github.com/flow-php/etl/pull/163) - **Pipeline Clousure** - [@norberttech](https://github.com/norberttech)
+- [#163](https://github.com/flow-php/etl/pull/163) - **BufferLoader** - [@norberttech](https://github.com/norberttech)
 - [#162](https://github.com/flow-php/etl/pull/162) - **Cache abstraction with LocalFilesystemCache implementation** - [@norberttech](https://github.com/norberttech)
 - [#162](https://github.com/flow-php/etl/pull/162) - **ExternalSort abstraction with CacheExternalSort implementation** - [@norberttech](https://github.com/norberttech)
 - [#162](https://github.com/flow-php/etl/pull/162) - **ETL::sortBy method** - [@norberttech](https://github.com/norberttech)
@@ -87,6 +89,7 @@
 - [e48062](https://github.com/flow-php/etl/commit/e48062890cd84e655e1162305086f67148347b83) - **Intial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#163](https://github.com/flow-php/etl/pull/163) - **ETL::fetch limit argument** - [@norberttech](https://github.com/norberttech)
 - [38c119](https://github.com/flow-php/etl/commit/38c119d13095f70992586af01807647e7ea3ec90) - **typo in readme** - [@norberttech](https://github.com/norberttech)
 - [#155](https://github.com/flow-php/etl/pull/155) - **ETL display function for arrays** - [@norbertmwk](https://github.com/norbertmwk)
 - [#139](https://github.com/flow-php/etl/pull/139) - **memory consumption broken by using iterator_to_array on pipeline** - [@norberttech](https://github.com/norberttech)
@@ -119,6 +122,7 @@
 - [55faa8](https://github.com/flow-php/etl/commit/55faa8edfed3973f54e31b3af57a4ba171050a85) - **README.md** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#163](https://github.com/flow-php/etl/pull/163) - **Rows::makeFirst and Rows::makeLast methods** - [@norberttech](https://github.com/norberttech)
 - [#86](https://github.com/flow-php/etl/pull/86) - **Remove unsued PHP-CS config** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#64](https://github.com/flow-php/etl/pull/64) - **DateEntry** - [@norberttech](https://github.com/norberttech)
 - [#33](https://github.com/flow-php/etl/pull/33) - **Moved all json related features to etl-adapter-json** - [@norberttech](https://github.com/norberttech)
