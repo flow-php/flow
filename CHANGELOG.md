@@ -1,6 +1,13 @@
-## [Unreleased] - 2022-02-20
+## [Unreleased] - 2022-02-23
 
 ### Added
+- [#162](https://github.com/flow-php/etl/pull/162) - **Cache abstraction with LocalFilesystemCache implementation** - [@norberttech](https://github.com/norberttech)
+- [#162](https://github.com/flow-php/etl/pull/162) - **ExternalSort abstraction with CacheExternalSort implementation** - [@norberttech](https://github.com/norberttech)
+- [#162](https://github.com/flow-php/etl/pull/162) - **ETL::sortBy method** - [@norberttech](https://github.com/norberttech)
+- [#162](https://github.com/flow-php/etl/pull/162) - **ETL::cache method** - [@norberttech](https://github.com/norberttech)
+- [#162](https://github.com/flow-php/etl/pull/162) - **CacheExtractor** - [@norberttech](https://github.com/norberttech)
+- [#162](https://github.com/flow-php/etl/pull/162) - **BufferExtractor** - [@norberttech](https://github.com/norberttech)
+- [#162](https://github.com/flow-php/etl/pull/162) - **Multidimensional Rows sorting** - [@norberttech](https://github.com/norberttech)
 - [#157](https://github.com/flow-php/etl/pull/157) - **Limit function to ETL api** - [@norberttech](https://github.com/norberttech)
 - [#156](https://github.com/flow-php/etl/pull/156) - **Stream Loader** - [@norberttech](https://github.com/norberttech)
 - [#154](https://github.com/flow-php/etl/pull/154) - **Row merge function** - [@norberttech](https://github.com/norberttech)
@@ -56,6 +63,8 @@
 - [856870](https://github.com/flow-php/etl/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#162](https://github.com/flow-php/etl/pull/162) - **documentation** - [@norberttech](https://github.com/norberttech)
+- [#162](https://github.com/flow-php/etl/pull/162) - **CompressingSerializer is now using base64 at compressed rows** - [@norberttech](https://github.com/norberttech)
 - [ce449b](https://github.com/flow-php/etl/commit/ce449b7ff68cd515eb0b8b645c015d2ffcfb4762) - **Cleaned up factories defined by transformers** - [@norberttech](https://github.com/norberttech)
 - [#158](https://github.com/flow-php/etl/pull/158) - **renamed CastRow into RowConverter** - [@norberttech](https://github.com/norberttech)
 - [#158](https://github.com/flow-php/etl/pull/158) - **renamed CastEntry into EntryConvert** - [@norberttech](https://github.com/norberttech)
