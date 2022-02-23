@@ -75,7 +75,7 @@ final class BulkData
              * @var mixed $entry
              */
             foreach ($row as $column => $entry) {
-                if (\is_string($entry) && $table->dbalColumn($column)->getType()->getName() === Types::JSON) {
+                if (\is_string($entry) && ($table->dbalColumn($column)->getType()->getName() === Types::JSON || $table->dbalColumn($column)->getType()->getName() === 'json_array')) {
                     $rows[$index][$column . '_' . $index] = \json_decode($entry, true, 512, JSON_THROW_ON_ERROR);
                 } else {
                     $rows[$index][$column . '_' . $index] = $entry;
