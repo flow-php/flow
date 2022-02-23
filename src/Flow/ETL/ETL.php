@@ -107,20 +107,17 @@ final class ETL
             throw new InvalidArgumentException("Fetch limit can't be lower than 0");
         }
 
+        if ($limit !== 0) {
+            $this->limit = $limit;
+        }
+
         $rows = new Rows();
-        $this->pipeline->process($this->extractor->extract(), $this->limit, function (Rows $nextRows) use ($limit, &$rows) : void {
-            /** @var Rows $rows */
-            if ($limit === 0) {
-                $rows = $rows->merge($nextRows);
-            }
-
-            if ($limit > 0 && $rows->count() < $limit) {
-                $rows = $rows->merge($nextRows);
-
-                if ($rows->count() >= $limit) {
-                    $rows = $rows->dropRight($rows->count() - $limit);
-                }
-            }
+        $this->pipeline->process($this->extractor->extract(), $this->limit, function (Rows $nextRows) use (&$rows) : void {
+            /**
+             * @psalm-suppress MixedMethodCall
+             * @psalm-suppress MixedAssignment
+             */
+            $rows = $rows->merge($nextRows);
         });
 
         /** @var Rows $rows */

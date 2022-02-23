@@ -23,67 +23,29 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
      */
     private array $rows;
 
-    private bool $first;
-
-    private bool $last;
-
     public function __construct(Row ...$rows)
     {
         $this->rows = \array_values($rows);
-        $this->first = true;
-        $this->last = false;
     }
 
     /**
-     * @return array{rows: array<int, Row>, first: boolean, last: boolean}
+     * @return array{rows: array<int, Row>}
      */
     public function __serialize() : array
     {
         return [
             'rows' => $this->rows,
-            'first' => $this->first,
-            'last' => $this->last,
         ];
     }
 
     /**
      * @psalm-suppress MoreSpecificImplementedParamType
      *
-     * @param array{rows: array<int, Row>, first: boolean, last: boolean} $data
+     * @param array{rows: array<int, Row>} $data
      */
     public function __unserialize(array $data) : void
     {
         $this->rows = $data['rows'];
-        $this->first = $data['first'];
-        $this->last = $data['last'];
-    }
-
-    public function makeFirst() : self
-    {
-        $rows = new self(...$this->rows);
-        $rows->first = true;
-        $rows->last = $this->last;
-
-        return $rows;
-    }
-
-    public function makeLast() : self
-    {
-        $rows = new self(...$this->rows);
-        $rows->last = true;
-        $rows->first = $this->first;
-
-        return $rows;
-    }
-
-    public function isFirst() : bool
-    {
-        return $this->first;
-    }
-
-    public function isLast() : bool
-    {
-        return $this->last;
     }
 
     /**
@@ -505,11 +467,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
             \array_shift($rows);
         }
 
-        $newRows = new self(...$rows);
-        $newRows->first = $this->first;
-        $newRows->last = $this->last;
-
-        return $newRows;
+        return new self(...$rows);
     }
 
     public function take(int $size) : self
@@ -521,11 +479,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
             $newRows[] = \array_shift($rows);
         }
 
-        $newRows = new self(...\array_filter($newRows));
-        $newRows->first = $this->first;
-        $newRows->last = $this->last;
-
-        return $newRows;
+        return new self(...\array_filter($newRows));
     }
 
     public function dropRight(int $size) : self
@@ -536,11 +490,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
             \array_pop($rows);
         }
 
-        $newRows = new self(...$rows);
-        $newRows->first = $this->first;
-        $newRows->last = $this->last;
-
-        return $newRows;
+        return new self(...$rows);
     }
 
     public function takeRight(int $size) : self
@@ -552,19 +502,11 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
             $newRows[] = \array_pop($rows);
         }
 
-        $newRows = new self(...\array_filter($newRows));
-        $newRows->first = $this->first;
-        $newRows->last = $this->last;
-
-        return $newRows;
+        return new self(...\array_filter($newRows));
     }
 
     public function reverse() : self
     {
-        $newRows = new self(...\array_reverse($this->rows));
-        $newRows->first = $this->first;
-        $newRows->last = $this->last;
-
-        return $newRows;
+        return new self(...\array_reverse($this->rows));
     }
 }

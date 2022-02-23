@@ -45,7 +45,7 @@ final class CollectingPipeline implements Pipeline
         }
 
         /** @var array<Rows> $rows */
-        $mergedRows = (new Rows())->merge(...$rows)->makeFirst()->makeLast();
+        $mergedRows = (new Rows())->merge(...$rows);
 
         $this->nextPipeline->process($this->generate($mergedRows), $limit, $callback);
     }

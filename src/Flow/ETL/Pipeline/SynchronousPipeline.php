@@ -49,7 +49,6 @@ final class SynchronousPipeline implements Pipeline
      */
     public function process(\Generator $generator, ?int $limit = null, callable $callback = null) : void
     {
-        $index = 0;
         $total = 0;
 
         while ($generator->valid()) {
@@ -58,14 +57,6 @@ final class SynchronousPipeline implements Pipeline
             $total += $rows->count();
             $generator->next();
 
-            if ($index === 0) {
-                $rows = $rows->makeFirst();
-            }
-
-            if ($generator->valid() === false) {
-                $rows = $rows->makeLast();
-            }
-
             if ($limit !== null) {
                 if ($total > $limit) {
                     $rows = $rows->dropRight($total - $limit);
@@ -73,12 +64,20 @@ final class SynchronousPipeline implements Pipeline
                 }
             }
 
-            foreach ($this->pipes->all() as $element) {
+            foreach ($this->pipes->all() as $pipe) {
                 try {
-                    if ($element instanceof Transformer) {
-                        $rows = $element->transform($rows);
-                    } elseif ($element instanceof Loader) {
-                        $element->load($rows);
+                    if ($pipe instanceof Transformer) {
+                        $rows = $pipe->transform($rows);
+                    } elseif ($pipe instanceof Loader) {
+                        $pipe->load($rows);
+                    }
+
+                    if ($pipe instanceof Pipeline\Closure) {
+                        if ($generator->valid() === false) {
+                            $pipe->closure($rows);
+                        } elseif ($limit !== null && $total === $limit) {
+                            $pipe->closure($rows);
+                        }
                     }
                 } catch (\Throwable $exception) {
                     if ($this->errorHandler->throw($exception, $rows)) {
@@ -95,13 +94,9 @@ final class SynchronousPipeline implements Pipeline
                 $callback($rows);
             }
 
-            if ($limit !== null) {
-                if ($total === $limit) {
-                    break;
-                }
+            if ($limit !== null && $total === $limit) {
+                break;
             }
-
-            $index++;
         }
     }
 }
