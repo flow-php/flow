@@ -125,7 +125,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
         $entry = $this->find($name);
 
         if ($entry === null) {
-            throw RuntimeException::because('Entry "%s" does not exist', $name);
+            throw new InvalidArgumentException("Entry \"{$name}\" does not exist");
         }
 
         return $entry;

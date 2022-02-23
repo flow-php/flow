@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
-use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry;
 use Flow\Serializer\Serializable;
@@ -52,7 +52,7 @@ final class Row implements Serializable
     }
 
     /**
-     * @throws RuntimeException
+     * @throws InvalidArgumentException
      */
     public function get(string $name) : Entry
     {
@@ -62,6 +62,8 @@ final class Row implements Serializable
     /**
      * @psalm-suppress MissingReturnType
      * @phpstan-ignore-next-line
+     *
+     * @throws InvalidArgumentException
      */
     public function valueOf(string $name)
     {

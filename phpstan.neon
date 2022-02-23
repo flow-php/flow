@@ -4,5 +4,6 @@ parameters:
         - src
     excludePaths:
         - src/Flow/ETL/Formatter/ASCII/ASCIITable.php
+        - src/Flow/ETL/ExternalSort/RowsMinHeap.php
 
     tmpDir: var/phpstan/cache

@@ -37,6 +37,51 @@ final class RowsTest extends TestCase
         $this->assertNotEquals($descending, $rows);
     }
 
+    public function test_sort_rows_by_two_columns() : void
+    {
+        $rows = new Rows(
+            Row::create(new IntegerEntry('a', 3), new IntegerEntry('b', 2)),
+            Row::create(new IntegerEntry('a', 1), new IntegerEntry('b', 5)),
+            Row::create(new IntegerEntry('a', 1), new IntegerEntry('b', 4)),
+            Row::create(new IntegerEntry('a', 2), new IntegerEntry('b', 7)),
+            Row::create(new IntegerEntry('a', 3), new IntegerEntry('b', 10)),
+            Row::create(new IntegerEntry('a', 2), new IntegerEntry('b', 4)),
+        );
+
+        $ascending = $rows->sortBy(Row\Sort::asc('a'), Row\Sort::desc('b'));
+        $descending = $rows->sortBy(Row\Sort::desc('a'), Row\Sort::asc('b'));
+
+        $this->assertSame(
+            [
+                ['a' => 1, 'b' => 5], ['a' => 1, 'b' => 4], ['a' => 2, 'b' => 7], ['a' => 2, 'b' => 4], ['a' => 3, 'b' => 10], ['a' => 3, 'b' => 2],
+            ],
+            $ascending->toArray()
+        );
+        $this->assertSame(
+            [
+                ['a' => 3, 'b' => 2], ['a' => 3, 'b' => 10], ['a' => 2, 'b' => 4], ['a' => 2, 'b' => 7], ['a' => 1, 'b' => 4], ['a' => 1, 'b' => 5],
+            ],
+            $descending->toArray()
+        );
+    }
+
+    public function test_sort_rows_by_not_existing_column() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Entry "c" does not exist');
+
+        $rows = new Rows(
+            Row::create(new IntegerEntry('a', 3), new IntegerEntry('b', 2)),
+            Row::create(new IntegerEntry('a', 1), new IntegerEntry('b', 5)),
+            Row::create(new IntegerEntry('a', 1), new IntegerEntry('b', 4)),
+            Row::create(new IntegerEntry('a', 2), new IntegerEntry('b', 7)),
+            Row::create(new IntegerEntry('a', 3), new IntegerEntry('b', 10)),
+            Row::create(new IntegerEntry('a', 2), new IntegerEntry('b', 4)),
+        );
+
+        $rows->sortBy(Row\Sort::asc('c'), Row\Sort::desc('b'));
+    }
+
     public function test_adding_multiple_rows() : void
     {
         $one = Row::create(new IntegerEntry('number', 1), new StringEntry('name', 'one'));

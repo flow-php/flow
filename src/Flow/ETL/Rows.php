@@ -8,6 +8,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\Comparator;
 use Flow\ETL\Row\Comparator\NativeComparator;
+use Flow\ETL\Row\Sort;
 use Flow\Serializer\Serializable;
 
 /**
@@ -157,6 +158,13 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
         return new self(...$rows);
     }
 
+    /**
+     * @param string $name
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return $this
+     */
     public function sortAscending(string $name) : self
     {
         $rows = $this->rows;
@@ -165,6 +173,13 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
         return new self(...$rows);
     }
 
+    /**
+     * @param string $name
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return $this
+     */
     public function sortDescending(string $name) : self
     {
         $rows = $this->rows;
@@ -176,6 +191,26 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
     public function sortEntries() : self
     {
         return $this->map(fn (Row $row) : Row => $row->sortEntries());
+    }
+
+    /**
+     * @param Sort ...$entries
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return $this
+     */
+    public function sortBy(Sort ...$entries) : self
+    {
+        $sortBy = \array_reverse($entries);
+
+        $rows = $this;
+
+        foreach ($sortBy as $entry) {
+            $rows = $entry->isAsc() ? $rows->sortAscending($entry->name()) : $rows->sortDescending($entry->name());
+        }
+
+        return $rows;
     }
 
     public function first() : Row

@@ -1,4 +1,5 @@
-# Extract Transform Load - Abstraction
+# Flow PHP
+Data processing and manipulation library,
 
 [![Minimum PHP Version](https://img.shields.io/badge/php-%3E%3D%207.4-8892BF.svg)](https://php.net/)
 [![Latest Stable Version](https://poser.pugx.org/flow-php/etl/v)](https://packagist.org/packages/flow-php/etl)
@@ -8,7 +9,11 @@
 
 ## Description
 
-Flow PHP ETL is a simple ETL (Extract Transform Load) abstraction designed to implement Filters & Pipes architecture.
+Flow is a most advanced and flexible PHP, data processing library that is designed according to Filters & Pipes architecture.
+
+Except typical ETL use cases (Extract, Transform, Load), Flow can be also used for memory-safe data analysis.
+
+By default, all operations are synchronous, but for bigger datasets Flow offers also an [asynchronous](https://github.com/flow-php/etl-async) pipeline. 
 
 ## Installation
 
@@ -45,11 +50,15 @@ ETL::extract($extractor)
 
 ## Features
 
-* Low memory consumption even when processing thousands of records
+* Constant memory consumption even when processing millions of records
 * Type safe Rows/Row/Entry abstractions
 * Filtering
+* Sorting 
+* Caching
 * Built in Rows objects comparison
-* Rich collection of Row Entries 
+* Rich collection of entry types and generic transformers 
+* Out of the box support for popular data sources/sinks 
+* Simple API
 
 ## Row Entries
 
@@ -64,6 +73,17 @@ ETL::extract($extractor)
 * [object](src/Flow/ETL/Row/Entry/ObjectEntry.php)
 * [string](src/Flow/ETL/Row/Entry/StringEntry.php)
 * [structure](src/Flow/ETL/Row/Entry/StructureEntry.php)
+
+## Extractors
+
+In most cases Extractors should be provided by Adapters which you can find below, however there are few generic extractors,
+please find them below.  
+Please read [tests](tests/Flow/ETL/Tests/Unit/Extractor) to find examples of usage.
+
+* [buffer](src/Flow/ETL/Extractor/BufferExtractor.php) - [tests](tests/Flow/ETL/Tests/Unit/Extractor/BufferExtractorTest.php)
+* [cache](src/Flow/ETL/Extractor/CacheExtractor.php) - [tests](tests/Flow/ETL/Tests/Unit/Extractor/CacheExtractorTest.php)
+* [process](src/Flow/ETL/Extractor/ProcessExtractor.php) - [tests](tests/Flow/ETL/Tests/Unit/Extractor/ProcessExtractorTest.php)
+* [memory](src/Flow/ETL/Extractor/MemoryExtractor.php) - [tests](tests/Flow/ETL/Tests/Unit/Extractor/MemoryExtractorTest.php)
 
 ## Transformers
 
@@ -107,6 +127,8 @@ Adapters might also define some custom transformers.
     * [callback entry](src/Flow/ETL/Transformer/CallbackEntryTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/CallbackEntryTransformerTest.php)
     * [callback row](src/Flow/ETL/Transformer/CallbackRowTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/CallbackRowTransformerTest.php)
 
+Some transformers comes with complex configuration, please find more details [here](/docs/complex_transformers.md).
+
 ### Serialization
 
 In order to allow serialization of callable based transformers please
@@ -120,8 +142,7 @@ add into your dependencies [opis/closure](https://github.com/opis/closure) libra
 }
 ```
 
-
-### Custom Transformer
+### Custom Transformers
 
 > If possible it's recommended to avoid writing custom transformers. Official transformers are optimized
 > again internal mechanisms which you might not be able to achieve in your custom code.
@@ -145,70 +166,6 @@ class NotNorbertTransformer implements Transformer
 }
 ```
 
-### Complex Transformers
-
-Below transformers might not be self descriptive and might require some additional options/dependencies.
-
-#### Transformer - FilterRows
-
-Available Filters
-
-- [all](src/Flow/ETL/Transformer/Filter/Filter/All.php)
-- [any](src/Flow/ETL/Transformer/Filter/Filter/Any.php)
-- [callback](src/Flow/ETL/Transformer/Filter/Filter/Callback.php)
-- [entry equals to](src/Flow/ETL/Transformer/Filter/Filter/EntryEqualsTo.php)
-- [entry not equals to](src/Flow/ETL/Transformer/Filter/Filter/EntryNotEqualsTo.php)
-- [entry not null](src/Flow/ETL/Transformer/Filter/Filter/EntryNotNull.php)
-- [entry not number](src/Flow/ETL/Transformer/Filter/Filter/EntryNotNumber.php)
-- [entry number](src/Flow/ETL/Transformer/Filter/Filter/EntryNumber.php)
-- [entry exists](src/Flow/ETL/Transformer/Filter/Filter/EntryExists.php)
-- [opposite](src/Flow/ETL/Transformer/Filter/Filter/Opposite.php)
-- [valid value](src/Flow/ETL/Transformer/Filter/Filter/ValidValue.php) - optionally integrates with [symfony validator](https://github.com/symfony/validator)
-
-#### Transformer - Conditional
-
-Transforms only those Rows that met given condition.
-
-Available Conditions
-
-- [all](src/Flow/ETL/Transformer/Condition/All.php)
-- [any](src/Flow/ETL/Transformer/Condition/Any.php)
-- [array dot exists](src/Flow/ETL/Transformer/Condition/ArrayDotExists.php)
-- [array dot value equals to](src/Flow/ETL/Transformer/Condition/ArrayDotValueEqualsTo.php)
-- [array dot value greater or equal than](src/Flow/ETL/Transformer/Condition/ArrayDotValueGreaterOrEqualThan.php)
-- [array dot value greater than](src/Flow/ETL/Transformer/Condition/ArrayDotValueGreaterThan.php)
-- [array dot value less or equal than](src/Flow/ETL/Transformer/Condition/ArrayDotValueLessOrEqualThan.php)
-- [array dot value less than](src/Flow/ETL/Transformer/Condition/ArrayDotValueLessThan.php)
-- [entry exists](src/Flow/ETL/Transformer/Condition/EntryExists.php)
-- [entry instance of](src/Flow/ETL/Transformer/Condition/EntryInstanceOf.php)
-- [entry not null](src/Flow/ETL/Transformer/Condition/EntryNotNull.php)
-- [entry value equals to](src/Flow/ETL/Transformer/Condition/EntryValueEqualsTo.php)
-- [entry value greater or equal than](src/Flow/ETL/Transformer/Condition/EntryValueGreaterOrEqualThan.php)
-- [entry value greater than](src/Flow/ETL/Transformer/Condition/EntryValueGreaterThan.php)
-- [entry value less or equal than](src/Flow/ETL/Transformer/Condition/EntryValueLessOrEqualThan.php)
-- [entry value less than](src/Flow/ETL/Transformer/Condition/EntryValueLessThan.php)
-- [none](src/Flow/ETL/Transformer/Condition/None.php)
-- [opposite](src/Flow/ETL/Transformer/Condition/Opposite.php)
-- [valid value](src/Flow/ETL/Transformer/Condition/ValidValue) - optionally integrates with [Symfony Validator](https://github.com/symfony/validator)
-
-
-#### Transformer - Cast
-
-
-Casting Types:
-
-* [cast entries](src/Flow/ETL/Transformer/Cast/CastEntries.php)
-* [cast array entry each](src/Flow/ETL/Transformer/Cast/CastArrayEntryEach.php)
-* [cast to datetime](src/Flow/ETL/Transformer/Cast/CastToDateTime.php)
-* [cast to string](src/Flow/ETL/Transformer/Cast/CastToString.php)
-* [cast to integer](src/Flow/ETL/Transformer/Cast/CastToInteger.php)
-* [cast to float](src/Flow/ETL/Transformer/Cast/CastToFloat.php)
-* [cast to json](src/Flow/ETL/Transformer/Cast/CastToJson.php)
-* [cast to array](src/Flow/ETL/Transformer/Cast/CastToArray.php)
-* [cast json to array](src/Flow/ETL/Transformer/Cast/CastJsonToArray.php)
-
-#### Transformer - EntryNameStyleConverter
-
 ## Loaders 
 
 In most cases Loaders should be provided by Adapters which you can find below, however there are few generic loaders, 
@@ -219,15 +176,6 @@ Please read [tests](tests/Flow/ETL/Tests/Unit/Loader) to find examples of usage.
 * [memory](src/Flow/ETL/Loader/MemoryLoader.php) - [tests](tests/Flow/ETL/Tests/Unit/Loader/MemoryLoaderTest.php)
 * [stream](src/Flow/ETL/Loader/StreamLoader.php) - [tests](tests/Flow/ETL/Tests/Unit/Loader/StreamLoaderTest.php)
 * [transforming](src/Flow/ETL/Loader/TransformerLoader.php) - [tests](tests/Flow/ETL/Tests/Unit/Loader/TransformerLoaderTest.php)
-
-## Extractors
-
-In most cases Extractors should be provided by Adapters which you can find below, however there are few generic extractors,
-please find them below.  
-Please read [tests](tests/Flow/ETL/Tests/Unit/Extractor) to find examples of usage.
-
-* [process](src/Flow/ETL/Extractor/ProcessExtractor.php) - [tests](tests/Flow/ETL/Tests/Unit/Extractor/ProcessExtractorTest.php)
-* [memory](src/Flow/ETL/Extractor/MemoryExtractor.php) - [tests](tests/Flow/ETL/Tests/Unit/Extractor/MemoryExtractorTest.php)
 
 ## Adapters
 
@@ -293,10 +241,110 @@ data entries.
 **❗ If adapter that you are looking for is not available yet, and you are willing to work on one, feel free to create one as a standalone repository.**
 **Well designed and documented adapters can be pulled into `flow-php` organization that will give them maintenance and security support from the organization.** 
 
-## Asynchronous Processing
+## Process
 
-Flow PHP allows asynchronous processing that can drastically increase processing power.
-Asynchronous processing is still under development, the latest progress is available in [flow-php/etl-async](https://github.com/flow-php/etl-async) repository.
+Sometimes you might already have `Rows` prepared, in that case instead of going
+through Extractors just use `ETL::process(Rows $rows) : ETL`.
+
+```php 
+<?php 
+
+ETL::process(new Rows(...))
+    ->transform($transformer1)
+    ->transform($transformer2)
+    ->transform($transformer3)
+    ->transform($transformer4)
+    ->load($loader)
+    ->run();
+```
+
+## Delayed Execution
+
+Reading from the source, transforming data, even loading to sink is executed only by one of the following
+trigger methods that will immediately run the pipeline.  
+
+- `ETL::run()`
+- `ETL::fetch()`
+- `ETL::display()`
+- `ETL::cache()`
+- `ETL::sortBy()`
+- `ETL::collect()`
+- `ETL::parallelize()`
+
+It is important to be aware of this, especially when using methods like `ETL::limit()`
+that must be placed before first trigger method to make an effect.
+
+## Limit
+
+Sometimes you might just want to process only few first rows, maybe for debugging purpose.
+
+In this example, Pipeline will take only 5 rows from Extractor passing them through all transformers.
+
+
+```php
+<?php 
+
+ETL::extract($extractor)
+    ->transform($transformer1)
+    ->transform($transformer2)
+    ->transform($transformer3)
+    ->transform($transformer4)
+    ->loader($loader)
+    ->limit(5)
+    ->run();
+```
+
+## Fetch
+
+Loaders are a great way to load `Rows` into specific data sinks, however sometimes
+you want to simply grab Rows and do something with them.
+
+```php
+<?php 
+
+$rows = ETL::extract($extractor)
+    ->transform($transformer1)
+    ->transform($transformer2)
+    ->transform($transformer3)
+    ->transform($transformer4)
+    ->fetch();
+```
+
+If `ETL::fetch(int $limit = 0) : Rows` limit argument is different from 0, fetch will
+return no more rows than requested.
+
+## Display
+
+Display is probably the easiest way to debug ETL's, by default
+it will grab selected number of rows (20 by default)
+
+```php
+<?php 
+
+$output = ETL::extract($extractor)
+    ->transform($transformer1)
+    ->transform($transformer2)
+    ->transform($transformer3)
+    ->transform($transformer4)
+    ->display($limit = 5, $truncate = 0);
+    
+echo $output;
+```
+
+Output:
+
+```
++------+--------+---------+---------------------------+-------+------------------------------+--------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------+
+|   id |  price | deleted | created-at                | phase | items                        | tags                                                                                       | object                                                                                         |
++------+--------+---------+---------------------------+-------+------------------------------+--------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------+
+| 1234 | 123.45 | false   | 2020-07-13T15:00:00+00:00 | null  | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) |
+| 1234 | 123.45 | false   | 2020-07-13T15:00:00+00:00 | null  | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) |
+| 1234 | 123.45 | false   | 2020-07-13T15:00:00+00:00 | null  | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) |
+| 1234 | 123.45 | false   | 2020-07-13T15:00:00+00:00 | null  | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) |
+| 1234 | 123.45 | false   | 2020-07-13T15:00:00+00:00 | null  | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) |
++------+--------+---------+---------------------------+-------+------------------------------+--------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------+
+5 rows
+```
 
 ## Error Handling 
 
@@ -326,6 +374,71 @@ Error Handling can be set directly at ETL:
 ETL::extract($extractor)
     ->onError(new IgnoreError())
     ->transform($transformer)
+    ->load($loader)
+    ->run();
+```
+
+## Sort By 
+
+Thanks to implementation of External Sort algorithm, sorting as everything else
+is by default memory-safe. This means, that even sorting 10gb file if doable
+in just few megabytes of RAM. 
+
+
+```php
+<?php 
+
+$rows = ETL::extract($extractor)
+    ->transform($transformer1)
+    ->transform($transformer2)
+    ->sortBy(Sort::desc('price'))
+    ->fetch();
+```
+
+Please remember that sort is an expensive operation, usually datasets are either 
+loaded into destination storages, or reduced by filtering/grouping. 
+Sorting needs to go through entire dataset and sort all Rows regardless of how 
+big the dataset is compared to available memory. In order to achieve
+that, External Sort is using cache which relays on I/O that might become a bottleneck. 
+
+Alternatively you can also fetch Rows from ETL, sort them and then process again. 
+That way, sorting will happen in memory so make sure you have enough. 
+
+```php
+
+$rows = ETL::extract($extractor)
+    ->transform($transformer1)
+    ->transform($transformer2)
+    ->fetch();
+    
+ETL::process($rows->sortBy(Sort::desc('price')))
+    ->load($loader);
+    
+```
+
+## Cache 
+
+The goal of cache is to serialize and save on disk (or in other location defined by Cache implementation)
+already transformer dataset. 
+
+Cache will run a pipeline, catching each Rows and saving them into cache 
+from where those rows can be later extracted. 
+
+This is useful for operations that requires full transformation of dataset before
+moving forward, like for example sorting.
+
+Another interesting use case for caching would be to share the dataset between multiple ETL's.
+So instead of going to datasource multiple times and then repeating all transformations, only one ETL would
+do the whole job and others could benefit from the final form of dataset in a memory-safe way. 
+
+```php
+<?php 
+
+ETL::extract($extractor)
+    ->transform($transformer1)
+    ->transform($transformer2)
+    ->cache()
+    ->transform($transformer3)
     ->load($loader)
     ->run();
 ```
@@ -374,109 +487,21 @@ ETL::extract($extractor)
     ->run();
 ```
 
-## Limit 
-
-Because sometimes you might just want to process first 10 rows. 
-In this example, Pipeline will take only 5 rows from Extractor passing them through all transformers. 
-
-Because pipeline execution is delayed, limit function can be used in any place, before: 
-
-- `ETL::run()`
-- `ETL::fetch()`
-- `ETL::display()`
-
-```php
-<?php 
-
-ETL::extract($extractor)
-    ->transform($transformer1)
-    ->transform($transformer2)
-    ->transform($transformer3)
-    ->transform($transformer4)
-    ->loader($loader)
-    ->limit(5)
-    ->run();
-```
-
-
-## Fetch
-
-Loaders are a great way to load `Rows` into specific Data Sink, however sometimes
-you want to simply grab Rows and do something with them. 
-
-```php
-<?php 
-
-$rows = ETL::extract($extractor)
-    ->transform($transformer1)
-    ->transform($transformer2)
-    ->transform($transformer3)
-    ->transform($transformer4)
-    ->fetch();
-```
-
-If `ETL::fetch(int $limit = 0) : Rows` limit argument is different than 0, fetch will
-return no more rows than requested. 
-
-## Process
-
-Sometimes you might already have `Rows` prepared, in that case instead of going
-through Extractors just use `ETL::process(Rows $rows) : ETL`. 
-
-```php 
-<?php 
-
-ETL::process(new Rows(...))
-    ->transform($transformer1)
-    ->transform($transformer2)
-    ->transform($transformer3)
-    ->transform($transformer4)
-    ->load($loader)
-    ->run();
-```
-
-## Display
-
-Display is probably the easiest way to debug ETL's, by default
-it will grab selected number of rows (20 by default)
-
-```php
-<?php 
-
-$output = ETL::extract($extractor)
-    ->transform($transformer1)
-    ->transform($transformer2)
-    ->transform($transformer3)
-    ->transform($transformer4)
-    ->display($limit = 5, $truncate = 0);
-    
-echo $output;
-```
-
-Output:
-
-```
-+------+--------+---------+---------------------------+-------+------------------------------+--------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------+
-|   id |  price | deleted | created-at                | phase | items                        | tags                                                                                       | object                                                                                         |
-+------+--------+---------+---------------------------+-------+------------------------------+--------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------+
-| 1234 | 123.45 | false   | 2020-07-13T15:00:00+00:00 | null  | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) |
-| 1234 | 123.45 | false   | 2020-07-13T15:00:00+00:00 | null  | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) |
-| 1234 | 123.45 | false   | 2020-07-13T15:00:00+00:00 | null  | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) |
-| 1234 | 123.45 | false   | 2020-07-13T15:00:00+00:00 | null  | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) |
-| 1234 | 123.45 | false   | 2020-07-13T15:00:00+00:00 | null  | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) |
-+------+--------+---------+---------------------------+-------+------------------------------+--------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------+
-5 rows
-```
-
 ## Performance
 
 The most important thing about performance to remember is that creating custom Loaders/Transformers might have negative impact to
 processing performance.
 
-#### ETL::collect()
+### ETL::collect()
 
 Using collect on a large number of rows might end up without of memory exception, but it can also significantly increase
 loading time into datasink. It might be cheaper to do one big insert than multiple smaller inserts.
+
+### ETL::sortBy()
+
+Even that sortBy is memory efficient due to External Sort algorithm, it still might become a time bottleneck. 
+In many cases sorting is redundant, since data sinks like databases can deal with this way more efficient. 
+If sorting can't be avoided the best practice is to reduce the dataset by filtering as much as possible.
 
 ## Development
 

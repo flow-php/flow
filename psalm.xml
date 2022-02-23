@@ -12,6 +12,7 @@
         <ignoreFiles>
             <directory name="vendor"/>
             <file name="src/Flow/ETL/Formatter/ASCII/ASCIITable.php" />
+            <file name="src/Flow/ETL/ExternalSort/RowsMinHeap.php" />
         </ignoreFiles>
     </projectFiles>
 </psalm>

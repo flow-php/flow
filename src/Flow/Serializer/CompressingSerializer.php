@@ -30,7 +30,7 @@ final class CompressingSerializer implements Serializer
         /**
          * @phpstan-ignore-next-line
          */
-        return \gzcompress($this->serializer->serialize($serializable), $this->compressionLevel);
+        return \base64_encode(\gzcompress($this->serializer->serialize($serializable), $this->compressionLevel));
     }
 
     public function unserialize(string $serialized) : Serializable
@@ -42,6 +42,6 @@ final class CompressingSerializer implements Serializer
         /**
          * @phpstan-ignore-next-line
          */
-        return $this->serializer->unserialize(\gzuncompress($serialized));
+        return $this->serializer->unserialize(\gzuncompress(\base64_decode($serialized, true)));
     }
 }
