@@ -9,16 +9,16 @@
     "packages-dev": [
         {
             "name": "amphp/amp",
-            "version": "v2.6.1",
+            "version": "v2.6.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/amphp/amp.git",
-                "reference": "c5fc66a78ee38d7ac9195a37bacaf940eb3f65ae"
+                "reference": "9d5100cebffa729aaffecd3ad25dc5aeea4f13bb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/amphp/amp/zipball/c5fc66a78ee38d7ac9195a37bacaf940eb3f65ae",
-                "reference": "c5fc66a78ee38d7ac9195a37bacaf940eb3f65ae",
+                "url": "https://api.github.com/repos/amphp/amp/zipball/9d5100cebffa729aaffecd3ad25dc5aeea4f13bb",
+                "reference": "9d5100cebffa729aaffecd3ad25dc5aeea4f13bb",
                 "shasum": ""
             },
             "require": {
@@ -40,13 +40,13 @@
                 }
             },
             "autoload": {
-                "psr-4": {
-                    "Amp\\": "lib"
-                },
                 "files": [
                     "lib/functions.php",
                     "lib/Internal/functions.php"
-                ]
+                ],
+                "psr-4": {
+                    "Amp\\": "lib"
+                }
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
@@ -71,7 +71,7 @@
                 }
             ],
             "description": "A non-blocking concurrency framework for PHP applications.",
-            "homepage": "http://amphp.org/amp",
+            "homepage": "https://amphp.org/amp",
             "keywords": [
                 "async",
                 "asynchronous",
@@ -86,7 +86,7 @@
             "support": {
                 "irc": "irc://irc.freenode.org/amphp",
                 "issues": "https://github.com/amphp/amp/issues",
-                "source": "https://github.com/amphp/amp/tree/v2.6.1"
+                "source": "https://github.com/amphp/amp/tree/v2.6.2"
             },
             "funding": [
                 {
@@ -94,7 +94,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2021-09-23T18:43:08+00:00"
+            "time": "2022-02-20T17:52:18+00:00"
         },
         {
             "name": "amphp/byte-stream",
@@ -2030,16 +2030,16 @@
         },
         {
             "name": "phpunit/php-code-coverage",
-            "version": "9.2.11",
+            "version": "9.2.13",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/php-code-coverage.git",
-                "reference": "665a1ac0a763c51afc30d6d130dac0813092b17f"
+                "reference": "deac8540cb7bd40b2b8cfa679b76202834fd04e8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/665a1ac0a763c51afc30d6d130dac0813092b17f",
-                "reference": "665a1ac0a763c51afc30d6d130dac0813092b17f",
+                "url": "https://api.github.com/repos/sebastianbergmann/php-code-coverage/zipball/deac8540cb7bd40b2b8cfa679b76202834fd04e8",
+                "reference": "deac8540cb7bd40b2b8cfa679b76202834fd04e8",
                 "shasum": ""
             },
             "require": {
@@ -2095,7 +2095,7 @@
             ],
             "support": {
                 "issues": "https://github.com/sebastianbergmann/php-code-coverage/issues",
-                "source": "https://github.com/sebastianbergmann/php-code-coverage/tree/9.2.11"
+                "source": "https://github.com/sebastianbergmann/php-code-coverage/tree/9.2.13"
             },
             "funding": [
                 {
@@ -2103,7 +2103,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2022-02-18T12:46:09+00:00"
+            "time": "2022-02-23T17:02:38+00:00"
         },
         {
             "name": "phpunit/php-file-iterator",
@@ -2348,16 +2348,16 @@
         },
         {
             "name": "phpunit/phpunit",
-            "version": "9.5.14",
+            "version": "9.5.16",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "1883687169c017d6ae37c58883ca3994cfc34189"
+                "reference": "5ff8c545a50226c569310a35f4fa89d79f1ddfdc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/1883687169c017d6ae37c58883ca3994cfc34189",
-                "reference": "1883687169c017d6ae37c58883ca3994cfc34189",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/5ff8c545a50226c569310a35f4fa89d79f1ddfdc",
+                "reference": "5ff8c545a50226c569310a35f4fa89d79f1ddfdc",
                 "shasum": ""
             },
             "require": {
@@ -2373,7 +2373,7 @@
                 "phar-io/version": "^3.0.2",
                 "php": ">=7.3",
                 "phpspec/prophecy": "^1.12.1",
-                "phpunit/php-code-coverage": "^9.2.7",
+                "phpunit/php-code-coverage": "^9.2.13",
                 "phpunit/php-file-iterator": "^3.0.5",
                 "phpunit/php-invoker": "^3.1.1",
                 "phpunit/php-text-template": "^2.0.3",
@@ -2435,7 +2435,7 @@
             ],
             "support": {
                 "issues": "https://github.com/sebastianbergmann/phpunit/issues",
-                "source": "https://github.com/sebastianbergmann/phpunit/tree/9.5.14"
+                "source": "https://github.com/sebastianbergmann/phpunit/tree/9.5.16"
             },
             "funding": [
                 {
@@ -2447,7 +2447,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2022-02-18T12:54:07+00:00"
+            "time": "2022-02-23T17:10:58+00:00"
         },
         {
             "name": "psr/cache",
@@ -5377,16 +5377,16 @@
         },
         {
             "name": "vimeo/psalm",
-            "version": "4.20.0",
+            "version": "4.21.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/vimeo/psalm.git",
-                "reference": "f82a70e7edfc6cf2705e9374c8a0b6a974a779ed"
+                "reference": "d8bec4c7aaee111a532daec32fb09de5687053d1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/vimeo/psalm/zipball/f82a70e7edfc6cf2705e9374c8a0b6a974a779ed",
-                "reference": "f82a70e7edfc6cf2705e9374c8a0b6a974a779ed",
+                "url": "https://api.github.com/repos/vimeo/psalm/zipball/d8bec4c7aaee111a532daec32fb09de5687053d1",
+                "reference": "d8bec4c7aaee111a532daec32fb09de5687053d1",
                 "shasum": ""
             },
             "require": {
@@ -5477,9 +5477,9 @@
             ],
             "support": {
                 "issues": "https://github.com/vimeo/psalm/issues",
-                "source": "https://github.com/vimeo/psalm/tree/4.20.0"
+                "source": "https://github.com/vimeo/psalm/tree/4.21.0"
             },
-            "time": "2022-02-03T17:03:47+00:00"
+            "time": "2022-02-18T04:34:15+00:00"
         },
         {
             "name": "webmozart/assert",
