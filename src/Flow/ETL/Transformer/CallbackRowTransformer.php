@@ -7,6 +7,7 @@ namespace Flow\ETL\Transformer;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
+use Flow\ETL\Serializer\Closure;
 use Flow\ETL\Transformer;
 use Opis\Closure\SerializableClosure;
 
@@ -15,8 +16,6 @@ use Opis\Closure\SerializableClosure;
  */
 final class CallbackRowTransformer implements Transformer
 {
-    private static ?bool $isSerializable = null;
-
     /**
      * @psalm-var pure-callable(Row) : Row
      * @phpstan-var callable(Row) : Row
@@ -39,7 +38,7 @@ final class CallbackRowTransformer implements Transformer
     public function __serialize() : array
     {
         /** @psalm-suppress ImpureMethodCall */
-        if (!self::isSerializable()) {
+        if (!Closure::isSerializable()) {
             throw new RuntimeException('CallbackRowTransformer is not serializable without "opis/closure" library in your dependencies.');
         }
 
@@ -55,7 +54,7 @@ final class CallbackRowTransformer implements Transformer
     public function __unserialize(array $data) : void
     {
         /** @psalm-suppress ImpureMethodCall */
-        if (!self::isSerializable()) {
+        if (!Closure::isSerializable()) {
             throw new RuntimeException('CallbackRowTransformer is not serializable without "opis/closure" library in your dependencies.');
         }
 
@@ -65,14 +64,5 @@ final class CallbackRowTransformer implements Transformer
     public function transform(Rows $rows) : Rows
     {
         return $rows->map($this->callable);
-    }
-
-    private static function isSerializable() : bool
-    {
-        if (self::$isSerializable === null) {
-            self::$isSerializable = \class_exists('Opis\Closure\SerializableClosure');
-        }
-
-        return self::$isSerializable;
     }
 }
