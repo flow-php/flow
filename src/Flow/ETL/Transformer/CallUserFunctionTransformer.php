@@ -14,7 +14,7 @@ use Flow\ETL\Transformer;
 /**
  * @psalm-immutable
  */
-final class EntryValueTransformer implements Transformer
+final class CallUserFunctionTransformer implements Transformer
 {
     private static ?bool $isSerializable = null;
 
@@ -23,51 +23,55 @@ final class EntryValueTransformer implements Transformer
      */
     private array $entries;
 
-    private string $userFunction;
+    /**
+     * @psalm-var array<pure-callable(Entry) : Entry>
+     * @phpstan-var array<callable(Entry) : Entry>
+     */
+    private $callback;
 
     private EntryFactory $entryFactory;
 
     /**
      * @param array<string> $entries
-     * @param string $userFunction
+     * @param callable $callback
      */
-    public function __construct(array $entries, string $userFunction, EntryFactory $entryFactory = null)
+    public function __construct(array $entries, callable $callback, EntryFactory $entryFactory = null)
     {
         $this->entries = $entries;
-        $this->userFunction = $userFunction;
+        $this->callback = $callback;
         $this->entryFactory = $entryFactory ?? new NativeEntryFactory();
     }
 
     /**
-     * @return array{entries: array<string>, user_function: string, entry_factory: EntryFactory}
+     * @return array{entries: array<string>, callback: callable, entry_factory: EntryFactory}
      */
     public function __serialize() : array
     {
         /** @psalm-suppress ImpureMethodCall */
-        if (!self::isSerializable()) {
-            throw new RuntimeException('CallbackEntryTransformer is not serializable without "opis/closure" library in your dependencies.');
+        if ($this->callback instanceof \Closure && !self::isSerializable()) {
+            throw new RuntimeException('CallUserFunctionTransformer is not serializable without "opis/closure" library in your dependencies.');
         }
 
         return [
             'entries' => $this->entries,
-            'user_function' => $this->userFunction,
+            'callback' => $this->callback,
             'entry_factory' => $this->entryFactory,
         ];
     }
 
     /**
-     * @param array{entries: array<string>, user_function: string, entry_factory: EntryFactory} $data
+     * @param array{entries: array<string>, callback: callable, entry_factory: EntryFactory} $data
      * @psalm-suppress MoreSpecificImplementedParamType
      */
     public function __unserialize(array $data) : void
     {
         /** @psalm-suppress ImpureMethodCall */
-        if (!self::isSerializable()) {
-            throw new RuntimeException('CallbackEntryTransformer is not serializable without "opis/closure" library in your dependencies.');
+        if ($this->callback instanceof \Closure && !self::isSerializable()) {
+            throw new RuntimeException('CallUserFunctionTransformer is not serializable without "opis/closure" library in your dependencies.');
         }
 
         $this->entries = $data['entries'];
-        $this->userFunction = $data['user_function'];
+        $this->callback = $data['callback'];
         $this->entryFactory = $data['entry_factory'];
     }
 
@@ -83,7 +87,7 @@ final class EntryValueTransformer implements Transformer
                     $entry = $this->entryFactory->create(
                         $entry->name(),
                         /** @phpstan-ignore-next-line */
-                        \call_user_func($this->userFunction, $entry->value())
+                        \call_user_func($this->callback, $entry->value())
                     );
                 }
 

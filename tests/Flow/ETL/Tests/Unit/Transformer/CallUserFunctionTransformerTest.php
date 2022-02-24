@@ -7,14 +7,14 @@ namespace Flow\ETL\Tests\Unit\Transformer;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Rows;
-use Flow\ETL\Transformer\EntryValueTransformer;
+use Flow\ETL\Transformer\CallUserFunctionTransformer;
 use PHPUnit\Framework\TestCase;
 
-final class EntryValueTransformerTest extends TestCase
+final class CallUserFunctionTransformerTest extends TestCase
 {
     public function test_upper_string_callback() : void
     {
-        $callbackTransformer = new EntryValueTransformer(
+        $callbackTransformer = new CallUserFunctionTransformer(
             ['string-entry'],
             'strtoupper'
         );
@@ -38,7 +38,7 @@ final class EntryValueTransformerTest extends TestCase
 
     public function test_unique_array() : void
     {
-        $callbackTransformer = new EntryValueTransformer(
+        $callbackTransformer = new CallUserFunctionTransformer(
             ['array_list'],
             'array_unique'
         );
@@ -51,7 +51,36 @@ final class EntryValueTransformerTest extends TestCase
             )
         );
 
-        $callbackTransformer = new EntryValueTransformer(
+        $callbackTransformer = new CallUserFunctionTransformer(
+            ['array_list'],
+            'array_values'
+        );
+
+        $rows = $callbackTransformer->transform($rows);
+
+        $this->assertEquals(new Rows(
+            Row::create(
+                new Row\Entry\ArrayEntry('array_list', [1, 2, 3, 4]),
+            )
+        ), $rows);
+    }
+
+    public function test_unique_array_with_closure() : void
+    {
+        $callbackTransformer = new CallUserFunctionTransformer(
+            ['array_list'],
+            fn (array $entry) => \array_unique($entry)
+        );
+
+        $rows = $callbackTransformer->transform(
+            new Rows(
+                Row::create(
+                    new Row\Entry\ArrayEntry('array_list', [1, 1, 1, 2, 3, 4]),
+                )
+            )
+        );
+
+        $callbackTransformer = new CallUserFunctionTransformer(
             ['array_list'],
             'array_values'
         );
