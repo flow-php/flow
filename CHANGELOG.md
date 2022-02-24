@@ -1,6 +1,7 @@
-## [Unreleased] - 2022-02-23
+## [Unreleased] - 2022-02-24
 
 ### Added
+- [#161](https://github.com/flow-php/etl/pull/161) - **Added CallbackEntryValueTransformer** - [@DawidSajdak](https://github.com/DawidSajdak)
 - [#163](https://github.com/flow-php/etl/pull/163) - **Pipeline Clousure** - [@norberttech](https://github.com/norberttech)
 - [#163](https://github.com/flow-php/etl/pull/163) - **BufferLoader** - [@norberttech](https://github.com/norberttech)
 - [#162](https://github.com/flow-php/etl/pull/162) - **Cache abstraction with LocalFilesystemCache implementation** - [@norberttech](https://github.com/norberttech)
