@@ -7,6 +7,7 @@ namespace Flow\ETL\Transformer;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
+use Flow\ETL\Serializer\Closure;
 use Flow\ETL\Transformer;
 use Opis\Closure\SerializableClosure;
 
@@ -15,8 +16,6 @@ use Opis\Closure\SerializableClosure;
  */
 final class DynamicEntryTransformer implements Transformer
 {
-    private static ?bool $isSerializable = null;
-
     /**
      * @var callable(Row) : Row\Entries
      */
@@ -36,7 +35,7 @@ final class DynamicEntryTransformer implements Transformer
     public function __serialize() : array
     {
         /** @psalm-suppress ImpureMethodCall */
-        if (!self::isSerializable()) {
+        if (!Closure::isSerializable()) {
             throw new RuntimeException('DynamicEntryTransformer is not serializable without "opis/closure" library in your dependencies.');
         }
 
@@ -53,7 +52,7 @@ final class DynamicEntryTransformer implements Transformer
     public function __unserialize(array $data) : void
     {
         /** @psalm-suppress ImpureMethodCall */
-        if (!self::isSerializable()) {
+        if (!Closure::isSerializable()) {
             throw new RuntimeException('DynamicEntryTransformer is not serializable without "opis/closure" library in your dependencies.');
         }
 
@@ -70,14 +69,5 @@ final class DynamicEntryTransformer implements Transformer
         };
 
         return $rows->map($transformer);
-    }
-
-    private static function isSerializable() : bool
-    {
-        if (self::$isSerializable === null) {
-            self::$isSerializable = \class_exists('Opis\Closure\SerializableClosure');
-        }
-
-        return self::$isSerializable;
     }
 }

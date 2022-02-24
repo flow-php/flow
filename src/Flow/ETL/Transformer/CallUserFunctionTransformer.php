@@ -9,23 +9,23 @@ use Flow\ETL\Row;
 use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Rows;
+use Flow\ETL\Serializer\Closure;
 use Flow\ETL\Transformer;
+use Opis\Closure\SerializableClosure;
 
 /**
  * @psalm-immutable
  */
 final class CallUserFunctionTransformer implements Transformer
 {
-    private static ?bool $isSerializable = null;
-
     /**
      * @var array<string>
      */
     private array $entries;
 
     /**
-     * @psalm-var array<pure-callable(Entry) : Entry>
-     * @phpstan-var array<callable(Entry) : Entry>
+     * @psalm-var callable
+     * @phpstan-var callable
      */
     private $callback;
 
@@ -48,13 +48,13 @@ final class CallUserFunctionTransformer implements Transformer
     public function __serialize() : array
     {
         /** @psalm-suppress ImpureMethodCall */
-        if ($this->callback instanceof \Closure && !self::isSerializable()) {
+        if ($this->callback instanceof \Closure && !Closure::isSerializable()) {
             throw new RuntimeException('CallUserFunctionTransformer is not serializable without "opis/closure" library in your dependencies.');
         }
 
         return [
             'entries' => $this->entries,
-            'callback' => $this->callback,
+            'callback' => $this->callback instanceof \Closure ? new SerializableClosure(\Closure::fromCallable($this->callback)) : $this->callback,
             'entry_factory' => $this->entryFactory,
         ];
     }
@@ -66,12 +66,12 @@ final class CallUserFunctionTransformer implements Transformer
     public function __unserialize(array $data) : void
     {
         /** @psalm-suppress ImpureMethodCall */
-        if ($this->callback instanceof \Closure && !self::isSerializable()) {
+        if ($this->callback instanceof \Closure && !Closure::isSerializable()) {
             throw new RuntimeException('CallUserFunctionTransformer is not serializable without "opis/closure" library in your dependencies.');
         }
 
         $this->entries = $data['entries'];
-        $this->callback = $data['callback'];
+        $this->callback = $data['callback'] instanceof SerializableClosure ? $data['callback']->getClosure() : $data['callback'];
         $this->entryFactory = $data['entry_factory'];
     }
 
@@ -86,7 +86,6 @@ final class CallUserFunctionTransformer implements Transformer
                 if (\in_array($entry->name(), $this->entries, true)) {
                     $entry = $this->entryFactory->create(
                         $entry->name(),
-                        /** @phpstan-ignore-next-line */
                         \call_user_func($this->callback, $entry->value())
                     );
                 }
@@ -98,14 +97,5 @@ final class CallUserFunctionTransformer implements Transformer
         };
 
         return $rows->map($transform);
-    }
-
-    private static function isSerializable() : bool
-    {
-        if (self::$isSerializable === null) {
-            self::$isSerializable = \class_exists('Opis\Closure\SerializableClosure');
-        }
-
-        return self::$isSerializable;
     }
 }
