@@ -107,7 +107,7 @@ final class ETLTest extends TestCase
             }
         };
 
-        ETL::extract($extractor)
+        ETL::read($extractor)
             ->onError(new IgnoreError())
             ->transform($addStampStringEntry)
             ->transform(new class implements Transformer {
@@ -128,7 +128,7 @@ final class ETLTest extends TestCase
             ->transform(AddStampToStringEntryTransformer::divideBySemicolon('stamp', 'one'))
             ->transform(AddStampToStringEntryTransformer::divideBySemicolon('stamp', 'two'))
             ->transform(AddStampToStringEntryTransformer::divideBySemicolon('stamp', 'three'))
-            ->load($loader)
+            ->write($loader)
             ->run();
 
         $this->assertEquals(
@@ -665,6 +665,71 @@ ASCIITABLE,
 5 rows
 ASCIITABLE,
             $etl->display(5, 0)
+        );
+    }
+
+    public function test_etl_filter() : void
+    {
+        $rows = ETL::extract(
+            new class implements Extractor {
+                /**
+                 * @return \Generator<int, Rows, mixed, void>
+                 */
+                public function extract() : \Generator
+                {
+                    for ($i = 1; $i <= 10; $i++) {
+                        yield new Rows(
+                            Row::create(new IntegerEntry('id', $i)),
+                        );
+                    }
+                }
+            }
+        )
+            ->filter(fn (Row $row) => $row->valueOf('id') % 2 === 0)
+            ->fetch();
+
+        $this->assertCount(5, $rows);
+        $this->assertSame(
+            [['id' => 2], ['id' => 4], ['id' => 6], ['id' => 8], ['id' => 10]],
+            $rows->toArray()
+        );
+    }
+
+    public function test_etl_map() : void
+    {
+        $rows = ETL::extract(
+            new class implements Extractor {
+                /**
+                 * @return \Generator<int, Rows, mixed, void>
+                 */
+                public function extract() : \Generator
+                {
+                    for ($i = 1; $i <= 10; $i++) {
+                        yield new Rows(
+                            Row::create(new IntegerEntry('id', $i)),
+                        );
+                    }
+                }
+            }
+        )
+            ->map(fn (Row $row) => $row->add(new BooleanEntry('odd', $row->valueOf('id') % 2 === 0)))
+            ->fetch();
+
+        $this->assertCount(10, $rows);
+        $this->assertSame(
+            [
+                ['id' => 1, 'odd' => false],
+                ['id' => 2, 'odd' => true],
+                ['id' => 3, 'odd' => false],
+                ['id' => 4, 'odd' => true],
+                ['id' => 5, 'odd' => false],
+                ['id' => 6, 'odd' => true],
+                ['id' => 7, 'odd' => false],
+                ['id' => 8, 'odd' => true],
+                ['id' => 9, 'odd' => false],
+                ['id' => 10, 'odd' => true],
+            ],
+            $rows->toArray()
         );
     }
 }

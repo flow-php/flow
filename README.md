@@ -37,16 +37,30 @@ This is a perfect scenario for ETL.
 
 ## Usage
 
+Examples: 
+
 ```php
 <?php 
 
-ETL::extract($extractor)
-    ->transform($transformer1)
-    ->transform($transformer2)
-    ->transform($transformer3)
+ETL::extract($extractor, Config::default())
+    ->transform($transformer)
+    ->sortBy(Sort::desc('size'))
     ->load($loader)
     ->run();
 ```
+
+or 
+
+```php
+<?php 
+
+ETL::read($extractor, Config::default())
+    ->transform($transformer)
+    ->sortBy(Sort::desc('size'))
+    ->write($loader)
+    ->run();
+```
+
 
 ## Configuration
 
@@ -68,7 +82,7 @@ ETL::extract(
         ->build()
     )
     ->transform($transformer)
-    ->load($loader)
+    ->write($loader)
     ->run();
 ```
 
@@ -106,9 +120,9 @@ Configuration makes possible to setup following options:
 * [string](src/Flow/ETL/Row/Entry/StringEntry.php)
 * [structure](src/Flow/ETL/Row/Entry/StructureEntry.php)
 
-## Extractors
+## Extractors aka Readers
 
-In most cases Extractors should be provided by Adapters which you can find below, however there are few generic extractors,
+In most cases Extractors (Readers) should be provided by Adapters which you can find below, however there are few generic readers,
 please find them below.  
 Please read [tests](tests/Flow/ETL/Tests/Unit/Extractor) to find examples of usage.
 
@@ -198,9 +212,9 @@ class NotNorbertTransformer implements Transformer
 }
 ```
 
-## Loaders 
+## Loaders aka Writers 
 
-In most cases Loaders should be provided by Adapters which you can find below, however there are few generic loaders, 
+In most cases Loaders (Writers) should be provided by Adapters which you can find below, however there are few generic loaders, 
 please find them below.  
 Please read [tests](tests/Flow/ETL/Tests/Unit/Loader) to find examples of usage.
 
@@ -295,9 +309,40 @@ ETL::process(new Rows(...))
     ->transform($transformer2)
     ->transform($transformer3)
     ->transform($transformer4)
-    ->load($loader)
+    ->write($loader)
     ->run();
 ```
+
+## Filter
+
+In order to quickly filter Rows `ETL::filter` shortcut function can be used. 
+
+```php 
+<?php 
+
+ETL::process(new Rows(...))
+    ->filter(fn (Row $row) => $row->valueOf('id') % 2 === 0)
+    ->write($loader)
+    ->run();
+```
+
+This function is internally using [filter transformer](src/Flow/ETL/Transformer/FilterRowsTransformer.php).
+
+## Map
+
+Quick `Row` transformations are available through `ETL::map` function
+
+```php 
+<?php 
+
+ETL::process(new Rows(...))
+    ->map(fn (Row $row) => $row->add(new BooleanEntry('odd', $row->valueOf('id') % 2 === 0)))
+    ->write($loader)
+    ->run();
+```
+
+This function is internally using [filter transformer](src/Flow/ETL/Transformer/FilterRowsTransformer.php).
+
 
 ## Delayed Execution
 
@@ -325,7 +370,7 @@ In this example, Pipeline will take only 5 rows from Extractor passing them thro
 ```php
 <?php 
 
-ETL::extract($extractor)
+ETL::read($extractor)
     ->transform($transformer1)
     ->transform($transformer2)
     ->transform($transformer3)
@@ -343,7 +388,7 @@ you want to simply grab Rows and do something with them.
 ```php
 <?php 
 
-$rows = ETL::extract($extractor)
+$rows = ETL::read($extractor)
     ->transform($transformer1)
     ->transform($transformer2)
     ->transform($transformer3)
@@ -362,7 +407,7 @@ it will grab selected number of rows (20 by default)
 ```php
 <?php 
 
-$output = ETL::extract($extractor)
+$output = ETL::read($extractor)
     ->transform($transformer1)
     ->transform($transformer2)
     ->transform($transformer3)
@@ -412,10 +457,10 @@ Error Handling can be set directly at ETL:
 ```php
 <?php 
 
-ETL::extract($extractor)
+ETL::read($extractor)
     ->onError(new IgnoreError())
     ->transform($transformer)
-    ->load($loader)
+    ->write($loader)
     ->run();
 ```
 
@@ -429,7 +474,7 @@ in just few megabytes of RAM.
 ```php
 <?php 
 
-$rows = ETL::extract($extractor)
+$rows = ETL::read($extractor)
     ->transform($transformer1)
     ->transform($transformer2)
     ->sortBy(Sort::desc('price'))
@@ -447,13 +492,13 @@ That way, sorting will happen in memory so make sure you have enough.
 
 ```php
 
-$rows = ETL::extract($extractor)
+$rows = ETL::read($extractor)
     ->transform($transformer1)
     ->transform($transformer2)
     ->fetch();
     
 ETL::process($rows->sortBy(Sort::desc('price')))
-    ->load($loader);
+    ->write($loader);
     
 ```
 
@@ -475,12 +520,12 @@ do the whole job and others could benefit from the final form of dataset in a me
 ```php
 <?php 
 
-ETL::extract($extractor)
+ETL::read($extractor)
     ->transform($transformer1)
     ->transform($transformer2)
     ->cache()
     ->transform($transformer3)
-    ->load($loader)
+    ->write($loader)
     ->run();
 ```
 
@@ -489,11 +534,11 @@ ETL::extract($extractor)
 ```php
 <?php 
 
-ETL::extract($extractor)
+ETL::read($extractor)
     ->transform($transformer1)
     ->transform($transformer2)
     ->collect()
-    ->load($loader)
+    ->write($loader)
     ->run();
 ```
 
@@ -517,14 +562,14 @@ take any incoming Rows instance and split it into smaller chunks according to `E
 ```php
 <?php 
 
-ETL::extract($extractor)
+ETL::read($extractor)
     ->transform($transformer1)
     ->transform($transformer2)
-    ->load($loader1)
+    ->write($loader1)
     ->parallelize(20)
     ->transform($transformer3)
     ->transform($transformer4)
-    ->load($loader2)
+    ->write($loader2)
     ->run();
 ```
 

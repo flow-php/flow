@@ -11,6 +11,9 @@ use Flow\ETL\Formatter\AsciiTableFormatter;
 use Flow\ETL\Pipeline\CollectingPipeline;
 use Flow\ETL\Pipeline\ParallelizingPipeline;
 use Flow\ETL\Row\Sort;
+use Flow\ETL\Transformer\CallbackRowTransformer;
+use Flow\ETL\Transformer\Filter\Filter\Callback;
+use Flow\ETL\Transformer\FilterRowsTransformer;
 
 final class ETL
 {
@@ -52,6 +55,19 @@ final class ETL
         );
     }
 
+    /**
+     * Alias for ETL::extract function.
+     *
+     * @param Extractor $extractor
+     * @param null|Config $configuration
+     *
+     * @return static
+     */
+    public static function read(Extractor $extractor, Config $configuration = null) : self
+    {
+        return self::extract($extractor, $configuration);
+    }
+
     public function onError(ErrorHandler $handler) : self
     {
         $this->pipeline->onError($handler);
@@ -69,6 +85,44 @@ final class ETL
     public function load(Loader $loader) : self
     {
         $this->pipeline->add($loader);
+
+        return $this;
+    }
+
+    /**
+     * Alias for ETL::load function.
+     *
+     * @param Loader $loader
+     *
+     * @return $this
+     */
+    public function write(Loader $loader) : self
+    {
+        return $this->load($loader);
+    }
+
+    /**
+     * @param callable(Row $row) : bool $callback
+     * @psalm-param pure-callable(Row $row) : bool $callback
+     *
+     * @return $this
+     */
+    public function filter(callable $callback) : self
+    {
+        $this->pipeline->add(new FilterRowsTransformer(new Callback($callback)));
+
+        return $this;
+    }
+
+    /**
+     * @param callable(Row $row) : Row $callback
+     * @psalm-param pure-callable(Row $row) : Row $callback
+     *
+     * @return $this
+     */
+    public function map(callable $callback)
+    {
+        $this->pipeline->add(new CallbackRowTransformer($callback));
 
         return $this;
     }
