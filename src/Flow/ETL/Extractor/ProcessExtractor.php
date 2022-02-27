@@ -13,15 +13,20 @@ use Flow\ETL\Rows;
  */
 final class ProcessExtractor implements Extractor
 {
-    private Rows $rows;
+    /**
+     * @var array<Rows>
+     */
+    private array $rows;
 
-    public function __construct(Rows $rows)
+    public function __construct(Rows ...$rows)
     {
         $this->rows = $rows;
     }
 
     public function extract() : \Generator
     {
-        yield $this->rows;
+        foreach ($this->rows as $rows) {
+            yield $rows;
+        }
     }
 }

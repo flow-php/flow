@@ -21,10 +21,6 @@ use Flow\ETL\Rows;
  * There is still much space for optimization, for example currently heap is created from all parts that for
  * massive datasets with millions of small Rows might become a potential memory leak.
  * Ideally in that case, Rows should be merged in multiple runs with a limited heap.
- *
- * Another thing that could be done better is handling small datasets.
- * When total size of dataset is not greater than let say 10% of available memory instead of going
- * through heap, it should be cheaper and faster to load entire dataset into memory, sort and cache.
  */
 final class CacheExternalSort implements ExternalSort
 {

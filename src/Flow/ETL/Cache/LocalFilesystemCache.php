@@ -7,36 +7,22 @@ namespace Flow\ETL\Cache;
 use Flow\ETL\Cache;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Rows;
-use Flow\Serializer\CompressingSerializer;
-use Flow\Serializer\NativePHPSerializer;
 use Flow\Serializer\Serializer;
 
 final class LocalFilesystemCache implements Cache
 {
-    public const CACHE_DIR_ENV = 'FLOW_LOCAL_FILESYSTEM_CACHE_DIR';
-
     private string $path;
 
     private Serializer $serializer;
 
-    public function __construct(string $path = null, Serializer $serializer = null)
+    public function __construct(string $path, Serializer $serializer)
     {
-        $path = $path !== null
-            ? $path
-            : (
-                \is_string(\getenv(self::CACHE_DIR_ENV))
-                    ? \getenv(self::CACHE_DIR_ENV)
-                    : \sys_get_temp_dir()
-            );
-
-        /** @psalm-suppress PossiblyFalseArgument */
         if (!\file_exists($path) || !\is_dir($path)) {
             throw new InvalidArgumentException("Given cache path does not exists or it's not a directory: {$path}");
         }
 
-        /** @psalm-suppress PossiblyFalsePropertyAssignmentValue */
         $this->path = $path;
-        $this->serializer = $serializer ?? new CompressingSerializer(new NativePHPSerializer());
+        $this->serializer = $serializer;
     }
 
     public function add(string $id, Rows $rows) : void

@@ -4,20 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
-use Flow\ETL\Cache\LocalFilesystemCache;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\ExternalSort\CacheExternalSort;
 use Flow\ETL\Extractor\CacheExtractor;
 use Flow\ETL\Extractor\ProcessExtractor;
 use Flow\ETL\Formatter\AsciiTableFormatter;
 use Flow\ETL\Pipeline\CollectingPipeline;
 use Flow\ETL\Pipeline\ParallelizingPipeline;
-use Flow\ETL\Pipeline\SynchronousPipeline;
 use Flow\ETL\Row\Sort;
 
 final class ETL
 {
-    private string $uniqueId;
+    private string $id;
 
     private ?int $limit;
 
@@ -29,30 +26,29 @@ final class ETL
 
     private ExternalSort $externalSort;
 
-    private function __construct(Extractor $extractor, Pipeline $pipeline)
+    private function __construct(Extractor $extractor, Config $configuration)
     {
-        $this->uniqueId = \uniqid('flow_php_');
-
+        $this->id = $configuration->id();
         $this->extractor = $extractor;
-        $this->pipeline = $pipeline;
+        $this->pipeline = $configuration->pipeline();
         $this->limit = null;
-        $this->cache = new LocalFilesystemCache();
-        $this->externalSort = new CacheExternalSort($this->uniqueId, $this->cache);
+        $this->cache = $configuration->cache();
+        $this->externalSort = $configuration->externalSort();
     }
 
-    public static function process(Rows $rows, Pipeline $pipeline = null) : self
+    public static function process(Rows $rows, Config $configuration = null) : self
     {
         return new self(
             new ProcessExtractor($rows),
-            $pipeline ?? new SynchronousPipeline(),
+            $configuration ?? Config::default()
         );
     }
 
-    public static function extract(Extractor $extractor, Pipeline $pipeline = null) : self
+    public static function extract(Extractor $extractor, Config $configuration = null) : self
     {
         return new self(
             $extractor,
-            $pipeline ?? new SynchronousPipeline()
+            $configuration ?? Config::default()
         );
     }
 
@@ -158,7 +154,7 @@ final class ETL
 
     public function cache(string $id = null) : self
     {
-        $this->cache->clear($id = $id ?? $this->uniqueId);
+        $this->cache->clear($id = $id ?? $this->id);
 
         $this->pipeline->process($this->extractor->extract(), $this->limit, function (Rows $rows) use ($id) : void {
             $this->cache->add($id, $rows);
@@ -173,7 +169,7 @@ final class ETL
 
     public function sortBy(Sort ...$entries) : self
     {
-        $this->cache($this->uniqueId);
+        $this->cache($this->id);
 
         $this->extractor = $this->externalSort->sortBy(...$entries);
 

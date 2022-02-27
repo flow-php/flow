@@ -48,6 +48,38 @@ ETL::extract($extractor)
     ->run();
 ```
 
+## Configuration
+
+Some configuration options can be passed through environment variables, list below: 
+
+- `FLOW_LOCAL_FILESYSTEM_CACHE_DIR` - location of default local filesystem cache, default: `\sys_get_temp_dir()`
+- `FLOW_EXTERNAL_SORT_MAX_MEMORY` - amount of memory to use for sorting, default: `200M` 
+
+To get more control over ETL please use [Config](src/Flow/ETL/Config.php) than can be created
+through [ConfigBuilder](src/Flow/ETL/ConfigBuilder.php).
+
+```
+<?php
+
+ETL::extract(
+      $extractor, 
+      Config::builder()
+        ->cache(new MyCustomCache())
+        ->build()
+    )
+    ->transform($transformer)
+    ->load($loader)
+    ->run();
+```
+
+Configuration makes possible to setup following options:
+
+- `id` - unique identifier of ETL instance
+- `cache` - implementation of [Cache](src/Flow/ETL/Cache.php) interface
+- `external sort` - implementation of [External Sort](src/Flow/ETL/ExternalSort.php) interface
+- `serializer` - implementation of [Serializer](src/Flow/Serializer/Serializer.php) interface
+- `pipeline` - implementation of [Pipeline](src/Flow/ETL/Pipeline.php) interface
+
 ## Features
 
 * Constant memory consumption even when processing millions of records
