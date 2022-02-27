@@ -1,6 +1,10 @@
 ## [Unreleased] - 2022-02-27
 
 ### Added
+- [#165](https://github.com/flow-php/etl/pull/165) - **ETL::filter** - [@norberttech](https://github.com/norberttech)
+- [#165](https://github.com/flow-php/etl/pull/165) - **ETL::map** - [@norberttech](https://github.com/norberttech)
+- [#165](https://github.com/flow-php/etl/pull/165) - **ETL::read - alias for ETL::extract** - [@norberttech](https://github.com/norberttech)
+- [#165](https://github.com/flow-php/etl/pull/165) - **ETL::write - alias for ETL::load** - [@norberttech](https://github.com/norberttech)
 - [#164](https://github.com/flow-php/etl/pull/164) - **Memory consumption monitoring** - [@norberttech](https://github.com/norberttech)
 - [#164](https://github.com/flow-php/etl/pull/164) - **Memory External Sort implementation** - [@norberttech](https://github.com/norberttech)
 - [#164](https://github.com/flow-php/etl/pull/164) - **Config and ConfigBuilder** - [@norberttech](https://github.com/norberttech)
