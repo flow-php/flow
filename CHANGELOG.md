@@ -1,6 +1,9 @@
-## [Unreleased] - 2022-02-24
+## [Unreleased] - 2022-02-27
 
 ### Added
+- [#164](https://github.com/flow-php/etl/pull/164) - **Memory consumption monitoring** - [@norberttech](https://github.com/norberttech)
+- [#164](https://github.com/flow-php/etl/pull/164) - **Memory External Sort implementation** - [@norberttech](https://github.com/norberttech)
+- [#164](https://github.com/flow-php/etl/pull/164) - **Config and ConfigBuilder** - [@norberttech](https://github.com/norberttech)
 - [#161](https://github.com/flow-php/etl/pull/161) - **Added CallbackEntryValueTransformer** - [@DawidSajdak](https://github.com/DawidSajdak)
 - [#163](https://github.com/flow-php/etl/pull/163) - **Pipeline Clousure** - [@norberttech](https://github.com/norberttech)
 - [#163](https://github.com/flow-php/etl/pull/163) - **BufferLoader** - [@norberttech](https://github.com/norberttech)
