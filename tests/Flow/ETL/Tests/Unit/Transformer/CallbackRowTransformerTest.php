@@ -16,7 +16,7 @@ class CallbackRowTransformerTest extends TestCase
     public function test_replacing_dashes_in_entry_name_with_str_replace_callback() : void
     {
         $callbackTransformer = Transform::callback_row(
-            fn (Row $row) : Row => $row->remove_entries('old-int')
+            fn (Row $row) : Row => $row->remove('old-int')
         );
 
         $rows = $callbackTransformer->transform(
@@ -38,7 +38,7 @@ class CallbackRowTransformerTest extends TestCase
     public function test_replacing_dashes_in_entry_name_with_str_replace_callback_with_serialization() : void
     {
         $callbackTransformer = Transform::callback_row(
-            fn (Row $row) : Row => $row->remove_entries('old-int')
+            fn (Row $row) : Row => $row->remove('old-int')
         );
 
         $serialization = new NativePHPSerializer();

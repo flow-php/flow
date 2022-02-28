@@ -65,7 +65,7 @@ final class RowTest extends TestCase
             new StringEntry('name', 'just a string'),
             new BooleanEntry('active', true)
         );
-        $newRow = $row->rename_entry('name', 'new-name');
+        $newRow = $row->rename('name', 'new-name');
 
         $this->assertEquals(
             Row::create(

@@ -47,7 +47,7 @@ final class RenameEntriesTransformer implements Transformer
     {
         foreach ($this->entryRenames as $entryRename) {
             $rows = $rows->map(function (Row $row) use ($entryRename) : Row {
-                return $row->rename_entry($entryRename->from(), $entryRename->to());
+                return $row->rename($entryRename->from(), $entryRename->to());
             });
         }
 

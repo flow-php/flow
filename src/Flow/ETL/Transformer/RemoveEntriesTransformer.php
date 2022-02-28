@@ -49,7 +49,7 @@ final class RemoveEntriesTransformer implements Transformer
          * @psalm-var pure-callable(Row $row) : Row $transformer
          */
         $transformer = function (Row $row) : Row {
-            return $row->remove_entries(...$this->names);
+            return $row->remove(...$this->names);
         };
 
         return $rows->map($transformer);

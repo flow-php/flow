@@ -615,7 +615,7 @@ ASCIITABLE,
                 new class implements Transformer {
                     public function transform(Rows $rows) : Rows
                     {
-                        return $rows->map(fn (Row $row) => $row->rename_entry('id', 'new_id'));
+                        return $rows->map(fn (Row $row) => $row->rename('id', 'new_id'));
                     }
 
                     public function __serialize() : array
@@ -677,7 +677,7 @@ ASCIITABLE,
                 new class implements Transformer {
                     public function transform(Rows $rows) : Rows
                     {
-                        return $rows->map(fn (Row $row) => $row->rename_entry('id', 'new_id'));
+                        return $rows->map(fn (Row $row) => $row->rename('id', 'new_id'));
                     }
 
                     public function __serialize() : array
