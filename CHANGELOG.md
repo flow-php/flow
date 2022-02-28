@@ -1,6 +1,8 @@
 ## [Unreleased] - 2022-02-28
 
 ### Added
+- [#169](https://github.com/flow-php/etl/pull/169) - **To::transform_to** - [@norberttech](https://github.com/norberttech)
+- [#169](https://github.com/flow-php/etl/pull/169) - **Transform::add_null** - [@norberttech](https://github.com/norberttech)
 - [#167](https://github.com/flow-php/etl/pull/167) - **Domain Specific Language** - [@norberttech](https://github.com/norberttech)
 - [#167](https://github.com/flow-php/etl/pull/167) - **ChainExtractor** - [@norberttech](https://github.com/norberttech)
 - [#167](https://github.com/flow-php/etl/pull/167) - **ETL::rows method alias for ETL::transform** - [@norberttech](https://github.com/norberttech)
