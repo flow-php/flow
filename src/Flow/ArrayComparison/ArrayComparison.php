@@ -61,16 +61,6 @@ final class ArrayComparison
             }
         }
 
-        foreach (\array_keys($a) as $key) {
-            if (!\array_key_exists($key, $a) || !\array_key_exists($key, $b)) {
-                return false;
-            }
-
-            if (!$this->valueEquals($a[$key], $b[$key])) {
-                return false;
-            }
-        }
-
         return true;
     }
 }

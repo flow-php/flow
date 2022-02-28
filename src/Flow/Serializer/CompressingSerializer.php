@@ -24,7 +24,9 @@ final class CompressingSerializer implements Serializer
     public function serialize(Serializable $serializable) : string
     {
         if (!\function_exists('gzcompress')) {
+            // @codeCoverageIgnoreStart
             throw new RuntimeException("'ext-zlib' is missing in, compression impossible due to lack of gzcompress.");
+            // @codeCoverageIgnoreEnd
         }
 
         /**
@@ -36,7 +38,9 @@ final class CompressingSerializer implements Serializer
     public function unserialize(string $serialized) : Serializable
     {
         if (!\function_exists('gzcompress')) {
+            // @codeCoverageIgnoreStart
             throw new RuntimeException("'ext-zlib' is missing in, decompression impossible due to lack of gzuncompress.");
+            // @codeCoverageIgnoreEnd
         }
 
         /**

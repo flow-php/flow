@@ -135,6 +135,14 @@ final class ArrayComparisonTest extends TestCase
         ];
     }
 
+    public function test_compare_arrays() : void
+    {
+        $this->assertSame(
+            -1,
+            (new ArrayComparison())->compare([1, 2, 3], [4, 5, 6])
+        );
+    }
+
     /**
      * @dataProvider equal_arrays
      */

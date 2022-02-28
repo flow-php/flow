@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit;
 
 use Flow\ETL\ErrorHandler\IgnoreError;
 use Flow\ETL\ETL;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Loader;
 use Flow\ETL\Pipeline\Closure;
@@ -92,8 +93,8 @@ final class ETLTest extends TestCase
 
         ETL::read($extractor)
             ->onError(new IgnoreError())
-            ->transform($addStampStringEntry)
-            ->transform(new class implements Transformer {
+            ->rows($addStampStringEntry)
+            ->rows(new class implements Transformer {
                 public function transform(Rows $rows) : Rows
                 {
                     throw new \RuntimeException('Unexpected exception');
@@ -108,9 +109,9 @@ final class ETLTest extends TestCase
                 {
                 }
             })
-            ->transform(AddStampToStringEntryTransformer::divideBySemicolon('stamp', 'one'))
-            ->transform(AddStampToStringEntryTransformer::divideBySemicolon('stamp', 'two'))
-            ->transform(AddStampToStringEntryTransformer::divideBySemicolon('stamp', 'three'))
+            ->rows(AddStampToStringEntryTransformer::divideBySemicolon('stamp', 'one'))
+            ->rows(AddStampToStringEntryTransformer::divideBySemicolon('stamp', 'two'))
+            ->rows(AddStampToStringEntryTransformer::divideBySemicolon('stamp', 'three'))
             ->write($loader)
             ->run();
 
@@ -731,5 +732,23 @@ ASCIITABLE,
             ->fetch();
 
         $this->assertCount(5, $rows);
+    }
+
+    public function test_fetch_with_limit_below_0() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Fetch limit can't be lower than 0");
+
+        ETL::process(new Rows())
+            ->fetch(-1);
+    }
+
+    public function test_limit_below_0() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Limit can't be lower or equal zero, given: -1");
+
+        ETL::process(new Rows())
+            ->limit(-1);
     }
 }

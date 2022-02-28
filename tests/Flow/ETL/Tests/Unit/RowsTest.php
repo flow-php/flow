@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
+use Flow\ETL\DSL\Entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
@@ -134,6 +135,13 @@ final class RowsTest extends TestCase
         unset($rows[0]);
     }
 
+    public function test_chunks_smaller_than_1() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        (new Rows())->chunks(-1);
+    }
+
     public function test_chunks_with_less() : void
     {
         $rows = new Rows(
@@ -252,6 +260,12 @@ final class RowsTest extends TestCase
         $this->assertCount(0, $rows);
     }
 
+    public function test_empty_rows() : void
+    {
+        $this->assertTrue((new Rows())->empty());
+        $this->assertFalse((new Rows(Row::create(Entry::integer('id', 1))))->empty());
+    }
+
     public function test_filters_out_rows() : void
     {
         $rows = new Rows(
@@ -283,6 +297,11 @@ final class RowsTest extends TestCase
         $this->assertNotSame($three1, $rows->find(fn (Row $row) : bool => $row->valueOf('number') === 3));
     }
 
+    public function test_find_on_empty_rows() : void
+    {
+        $this->asserTNull((new Rows())->find(fn (Row $row) => false));
+    }
+
     public function test_find_without_results() : void
     {
         $rows = new Rows(
@@ -294,6 +313,13 @@ final class RowsTest extends TestCase
         );
 
         $this->assertNull($rows->find(fn (Row $row) : bool => $row->valueOf('number') === 5));
+    }
+
+    public function test_first_on_empty_rows() : void
+    {
+        $this->expectException(RuntimeException::class);
+
+        (new Rows())->first();
     }
 
     public function test_flat_map() : void
@@ -380,6 +406,20 @@ final class RowsTest extends TestCase
         );
     }
 
+    public function test_offset_exists_with_non_int_offset() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        (new Rows())->offsetExists('a');
+    }
+
+    public function test_offset_get_on_empty_rows() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        (new Rows())[5];
+    }
+
     public function test_remove() : void
     {
         $rows = new Rows(
@@ -393,6 +433,13 @@ final class RowsTest extends TestCase
         $this->assertCount(2, $rows);
         $this->assertSame(1, $rows[0]->valueOf('id'));
         $this->assertSame(3, $rows[1]->valueOf('id'));
+    }
+
+    public function test_remove_on_empty_rows() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        (new Rows())->remove(1);
     }
 
     public function test_returns_first_row() : void
