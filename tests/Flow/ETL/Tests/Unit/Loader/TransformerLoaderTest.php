@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Loader;
 
+use Flow\ETL\DSL\To;
 use Flow\ETL\Loader;
-use Flow\ETL\Loader\TransformerLoader;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 use Flow\Serializer\NativePHPSerializer;
@@ -24,7 +24,7 @@ final class TransformerLoaderTest extends TestCase
         $loaderMock->expects($this->once())
             ->method('load');
 
-        $transformer = new TransformerLoader(
+        $transformer = To::transform_to(
             $transformerMock,
             $loaderMock
         );
@@ -38,7 +38,7 @@ final class TransformerLoaderTest extends TestCase
 
         $loaderMock = $this->createMock(Loader::class);
 
-        $transformer = new TransformerLoader(
+        $transformer = To::transform_to(
             $transformerMock,
             $loaderMock
         );

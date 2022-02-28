@@ -7,6 +7,7 @@ namespace Flow\ETL\DSL;
 use Flow\ETL\Formatter;
 use Flow\ETL\Loader;
 use Flow\ETL\Memory\Memory;
+use Flow\ETL\Transformer;
 
 class To
 {
@@ -43,5 +44,10 @@ class To
     final public static function stream(string $uri, string $mode = 'w', int $truncate = 20, Formatter $formatter = null) : Loader
     {
         return new Loader\StreamLoader($uri, $mode, $truncate, $formatter);
+    }
+
+    final public static function transform_to(Transformer $transformer, Loader $loader) : Loader
+    {
+        return new Loader\TransformerLoader($transformer, $loader);
     }
 }

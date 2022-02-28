@@ -100,6 +100,11 @@ class Transform
         return new Transformer\StaticEntryTransformer(DSLEntry::json_object($name, $data));
     }
 
+    final public static function add_null(string $name) : Transformer
+    {
+        return new Transformer\StaticEntryTransformer(DSLEntry::null($name));
+    }
+
     final public static function add_object(string $name, object $data) : Transformer
     {
         return new Transformer\StaticEntryTransformer(DSLEntry::object($name, $data));
