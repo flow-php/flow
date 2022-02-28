@@ -26,17 +26,17 @@ final class SynchronousPipeline implements Pipeline
         $this->pipes = Pipes::empty();
     }
 
+    public function add(Pipe $pipe) : void
+    {
+        $this->pipes->add($pipe);
+    }
+
     public function clean() : Pipeline
     {
         $newPipeline = new self();
         $newPipeline->errorHandler = $this->errorHandler;
 
         return $newPipeline;
-    }
-
-    public function add(Pipe $pipe) : void
-    {
-        $this->pipes->add($pipe);
     }
 
     public function onError(ErrorHandler $errorHandler) : void

@@ -48,6 +48,228 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
         $this->rows = $data['rows'];
     }
 
+    public function add(Row ...$rows) : self
+    {
+        return new self(
+            ...\array_merge($this->rows, $rows)
+        );
+    }
+
+    /**
+     * @return Rows[]
+     */
+    public function chunks(int $size) : array
+    {
+        if ($size < 1) {
+            throw InvalidArgumentException::because('Chunk size must be greater than 0');
+        }
+
+        $chunks = [];
+
+        foreach (\array_chunk($this->rows, $size) as $chunk) {
+            $chunks[] = new self(...$chunk);
+        }
+
+        return $chunks;
+    }
+
+    public function count() : int
+    {
+        return \count($this->rows);
+    }
+
+    public function diffLeft(self $rows) : self
+    {
+        $differentRows = [];
+
+        foreach ($this->rows as $row) {
+            $found = false;
+
+            foreach ($rows->rows as $otherRow) {
+                if ($row->isEqual($otherRow)) {
+                    $found = true;
+
+                    break;
+                }
+            }
+
+            if (!$found) {
+                $differentRows[] = $row;
+            }
+        }
+
+        return new self(...$differentRows);
+    }
+
+    public function diffRight(self $rows) : self
+    {
+        $differentRows = [];
+
+        foreach ($rows->rows as $row) {
+            $found = false;
+
+            foreach ($this->rows as $otherRow) {
+                if ($row->isEqual($otherRow)) {
+                    $found = true;
+
+                    break;
+                }
+            }
+
+            if (!$found) {
+                $differentRows[] = $row;
+            }
+        }
+
+        return new self(...$differentRows);
+    }
+
+    public function drop(int $size) : self
+    {
+        $rows = $this->rows;
+
+        for ($i = 0; $i < $size; $i++) {
+            \array_shift($rows);
+        }
+
+        return new self(...$rows);
+    }
+
+    public function dropRight(int $size) : self
+    {
+        $rows = $this->rows;
+
+        for ($i = 0; $i < $size; $i++) {
+            \array_pop($rows);
+        }
+
+        return new self(...$rows);
+    }
+
+    /**
+     * @psalm-suppress UnusedFunctionCall
+     * @psalm-param pure-callable(Row) : void $callable
+     *
+     * @param callable(Row) : void $callable
+     */
+    public function each(callable $callable) : void
+    {
+        foreach ($this->rows as $row) {
+            $callable($row);
+        }
+    }
+
+    public function empty() : bool
+    {
+        return $this->count() === 0;
+    }
+
+    /**
+     * @psalm-param pure-callable(Row) : bool $callable
+     *
+     * @param callable(Row) : bool $callable
+     */
+    public function filter(callable $callable) : self
+    {
+        $results = [];
+
+        foreach ($this->rows as $row) {
+            if ($callable($row)) {
+                $results[] = $row;
+            }
+        }
+
+        return new self(...$results);
+    }
+
+    /**
+     * @psalm-param pure-callable(Row) : bool $callable
+     */
+    public function find(callable $callable) : ?Row
+    {
+        $rows = $this->rows;
+
+        if (!\count($rows)) {
+            return null;
+        }
+
+        $results = [];
+
+        foreach ($this->rows as $row) {
+            if ($callable($row)) {
+                $results[] = $row;
+            }
+        }
+
+        if (\count($results)) {
+            return \current($results);
+        }
+
+        return null;
+    }
+
+    public function first() : Row
+    {
+        if (empty($this->rows)) {
+            throw RuntimeException::because('First row does not exist in empty collection');
+        }
+
+        return \reset($this->rows);
+    }
+
+    /**
+     * @psalm-param pure-callable(Row) : Row[] $callable
+     *
+     * @param callable(Row) : Row[] $callable
+     */
+    public function flatMap(callable $callable) : self
+    {
+        $rows = [];
+
+        foreach ($this->rows as $row) {
+            $rows[] = $callable($row);
+        }
+
+        return new self(...\array_merge(...$rows));
+    }
+
+    /**
+     * @return \Iterator<int, Row>
+     */
+    public function getIterator() : \Iterator
+    {
+        return new \ArrayIterator($this->rows);
+    }
+
+    /**
+     * @psalm-param pure-callable(Row) : Row $callable
+     *
+     * @param callable(Row) : Row $callable
+     */
+    public function map(callable $callable) : self
+    {
+        $rows = [];
+
+        foreach ($this->rows as $row) {
+            $rows[] = $callable($row);
+        }
+
+        return new self(...$rows);
+    }
+
+    public function merge(self ...$rows) : self
+    {
+        $rowsOfRows = [];
+
+        foreach ($rows as $nextRows) {
+            $rowsOfRows[] = $nextRows->rows;
+        }
+
+        return new self(
+            ...\array_merge($this->rows, ...$rowsOfRows)
+        );
+    }
+
     /**
      * @param int $offset
      *
@@ -100,185 +322,6 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
     }
 
     /**
-     * @return \Iterator<int, Row>
-     */
-    public function getIterator() : \Iterator
-    {
-        return new \ArrayIterator($this->rows);
-    }
-
-    /**
-     * @psalm-param pure-callable(Row, Row) : int $callback
-     *
-     * @return $this
-     */
-    public function sort(callable $callback) : self
-    {
-        $rows = $this->rows;
-        \usort($rows, $callback);
-
-        return new self(...$rows);
-    }
-
-    /**
-     * @param string $name
-     *
-     * @throws InvalidArgumentException
-     *
-     * @return $this
-     */
-    public function sortAscending(string $name) : self
-    {
-        $rows = $this->rows;
-        \usort($rows, fn (Row $a, Row $b) : int => $a->valueOf($name) <=> $b->valueOf($name));
-
-        return new self(...$rows);
-    }
-
-    /**
-     * @param string $name
-     *
-     * @throws InvalidArgumentException
-     *
-     * @return $this
-     */
-    public function sortDescending(string $name) : self
-    {
-        $rows = $this->rows;
-        \usort($rows, fn (Row $a, Row $b) : int => -($a->valueOf($name) <=> $b->valueOf($name)));
-
-        return new self(...$rows);
-    }
-
-    public function sortEntries() : self
-    {
-        return $this->map(fn (Row $row) : Row => $row->sortEntries());
-    }
-
-    /**
-     * @param Sort ...$entries
-     *
-     * @throws InvalidArgumentException
-     *
-     * @return $this
-     */
-    public function sortBy(Sort ...$entries) : self
-    {
-        $sortBy = \array_reverse($entries);
-
-        $rows = $this;
-
-        foreach ($sortBy as $entry) {
-            $rows = $entry->isAsc() ? $rows->sortAscending($entry->name()) : $rows->sortDescending($entry->name());
-        }
-
-        return $rows;
-    }
-
-    public function first() : Row
-    {
-        if (empty($this->rows)) {
-            throw RuntimeException::because('First row does not exist in empty collection');
-        }
-
-        return \reset($this->rows);
-    }
-
-    public function empty() : bool
-    {
-        return $this->count() === 0;
-    }
-
-    /**
-     * @psalm-param pure-callable(Row) : bool $callable
-     *
-     * @param callable(Row) : bool $callable
-     */
-    public function filter(callable $callable) : self
-    {
-        $results = [];
-
-        foreach ($this->rows as $row) {
-            if ($callable($row)) {
-                $results[] = $row;
-            }
-        }
-
-        return new self(...$results);
-    }
-
-    /**
-     * @psalm-param pure-callable(Row) : bool $callable
-     */
-    public function find(callable $callable) : ?Row
-    {
-        $rows = $this->rows;
-
-        if (!\count($rows)) {
-            return null;
-        }
-
-        $results = [];
-
-        foreach ($this->rows as $row) {
-            if ($callable($row)) {
-                $results[] = $row;
-            }
-        }
-
-        if (\count($results)) {
-            return \current($results);
-        }
-
-        return null;
-    }
-
-    /**
-     * @psalm-param pure-callable(Row) : Row $callable
-     *
-     * @param callable(Row) : Row $callable
-     */
-    public function map(callable $callable) : self
-    {
-        $rows = [];
-
-        foreach ($this->rows as $row) {
-            $rows[] = $callable($row);
-        }
-
-        return new self(...$rows);
-    }
-
-    /**
-     * @psalm-param pure-callable(Row) : Row[] $callable
-     *
-     * @param callable(Row) : Row[] $callable
-     */
-    public function flatMap(callable $callable) : self
-    {
-        $rows = [];
-
-        foreach ($this->rows as $row) {
-            $rows[] = $callable($row);
-        }
-
-        return new self(...\array_merge(...$rows));
-    }
-
-    /**
-     * @psalm-suppress UnusedFunctionCall
-     * @psalm-param pure-callable(Row) : void $callable
-     *
-     * @param callable(Row) : void $callable
-     */
-    public function each(callable $callable) : void
-    {
-        foreach ($this->rows as $row) {
-            $callable($row);
-        }
-    }
-
-    /**
      * @psalm-param pure-callable(mixed, Row) : mixed $callable
      *
      * @param callable(mixed, Row) : mixed $callable
@@ -315,96 +358,6 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
         );
     }
 
-    /**
-     * @return array<int, array<string, mixed>>
-     */
-    public function toArray() : array
-    {
-        $array = [];
-
-        foreach ($this->rows as $row) {
-            $array[] = $row->toArray();
-        }
-
-        return $array;
-    }
-
-    public function count() : int
-    {
-        return \count($this->rows);
-    }
-
-    /**
-     * @return Rows[]
-     */
-    public function chunks(int $size) : array
-    {
-        if ($size < 1) {
-            throw InvalidArgumentException::because('Chunk size must be greater than 0');
-        }
-
-        $chunks = [];
-
-        foreach (\array_chunk($this->rows, $size) as $chunk) {
-            $chunks[] = new self(...$chunk);
-        }
-
-        return $chunks;
-    }
-
-    public function diffLeft(self $rows) : self
-    {
-        $differentRows = [];
-
-        foreach ($this->rows as $row) {
-            $found = false;
-
-            foreach ($rows->rows as $otherRow) {
-                if ($row->isEqual($otherRow)) {
-                    $found = true;
-
-                    break;
-                }
-            }
-
-            if (!$found) {
-                $differentRows[] = $row;
-            }
-        }
-
-        return new self(...$differentRows);
-    }
-
-    public function diffRight(self $rows) : self
-    {
-        $differentRows = [];
-
-        foreach ($rows->rows as $row) {
-            $found = false;
-
-            foreach ($this->rows as $otherRow) {
-                if ($row->isEqual($otherRow)) {
-                    $found = true;
-
-                    break;
-                }
-            }
-
-            if (!$found) {
-                $differentRows[] = $row;
-            }
-        }
-
-        return new self(...$differentRows);
-    }
-
-    public function add(Row ...$rows) : self
-    {
-        return new self(
-            ...\array_merge($this->rows, $rows)
-        );
-    }
-
     public function remove(int $offset) : self
     {
         if (!$this->offsetExists($offset)) {
@@ -418,17 +371,115 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
         return new self(...\array_merge($rows));
     }
 
-    public function merge(self ...$rows) : self
+    public function reverse() : self
     {
-        $rowsOfRows = [];
+        return new self(...\array_reverse($this->rows));
+    }
 
-        foreach ($rows as $nextRows) {
-            $rowsOfRows[] = $nextRows->rows;
+    /**
+     * @psalm-param pure-callable(Row, Row) : int $callback
+     *
+     * @return $this
+     */
+    public function sort(callable $callback) : self
+    {
+        $rows = $this->rows;
+        \usort($rows, $callback);
+
+        return new self(...$rows);
+    }
+
+    /**
+     * @param string $name
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return $this
+     */
+    public function sortAscending(string $name) : self
+    {
+        $rows = $this->rows;
+        \usort($rows, fn (Row $a, Row $b) : int => $a->valueOf($name) <=> $b->valueOf($name));
+
+        return new self(...$rows);
+    }
+
+    /**
+     * @param Sort ...$entries
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return $this
+     */
+    public function sortBy(Sort ...$entries) : self
+    {
+        $sortBy = \array_reverse($entries);
+
+        $rows = $this;
+
+        foreach ($sortBy as $entry) {
+            $rows = $entry->isAsc() ? $rows->sortAscending($entry->name()) : $rows->sortDescending($entry->name());
         }
 
-        return new self(
-            ...\array_merge($this->rows, ...$rowsOfRows)
-        );
+        return $rows;
+    }
+
+    /**
+     * @param string $name
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return $this
+     */
+    public function sortDescending(string $name) : self
+    {
+        $rows = $this->rows;
+        \usort($rows, fn (Row $a, Row $b) : int => -($a->valueOf($name) <=> $b->valueOf($name)));
+
+        return new self(...$rows);
+    }
+
+    public function sortEntries() : self
+    {
+        return $this->map(fn (Row $row) : Row => $row->sortEntries());
+    }
+
+    public function take(int $size) : self
+    {
+        $rows = $this->rows;
+        $newRows = [];
+
+        for ($i = 0; $i < $size; $i++) {
+            $newRows[] = \array_shift($rows);
+        }
+
+        return new self(...\array_filter($newRows));
+    }
+
+    public function takeRight(int $size) : self
+    {
+        $rows = $this->rows;
+        $newRows = [];
+
+        for ($i = 0; $i < $size; $i++) {
+            $newRows[] = \array_pop($rows);
+        }
+
+        return new self(...\array_filter($newRows));
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function toArray() : array
+    {
+        $array = [];
+
+        foreach ($this->rows as $row) {
+            $array[] = $row->toArray();
+        }
+
+        return $array;
     }
 
     public function unique(Comparator $comparator = null) : self
@@ -457,56 +508,5 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
         }
 
         return new self(...$uniqueRows);
-    }
-
-    public function drop(int $size) : self
-    {
-        $rows = $this->rows;
-
-        for ($i = 0; $i < $size; $i++) {
-            \array_shift($rows);
-        }
-
-        return new self(...$rows);
-    }
-
-    public function take(int $size) : self
-    {
-        $rows = $this->rows;
-        $newRows = [];
-
-        for ($i = 0; $i < $size; $i++) {
-            $newRows[] = \array_shift($rows);
-        }
-
-        return new self(...\array_filter($newRows));
-    }
-
-    public function dropRight(int $size) : self
-    {
-        $rows = $this->rows;
-
-        for ($i = 0; $i < $size; $i++) {
-            \array_pop($rows);
-        }
-
-        return new self(...$rows);
-    }
-
-    public function takeRight(int $size) : self
-    {
-        $rows = $this->rows;
-        $newRows = [];
-
-        for ($i = 0; $i < $size; $i++) {
-            $newRows[] = \array_pop($rows);
-        }
-
-        return new self(...\array_filter($newRows));
-    }
-
-    public function reverse() : self
-    {
-        return new self(...\array_reverse($this->rows));
     }
 }

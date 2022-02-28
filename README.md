@@ -40,27 +40,41 @@ This is a perfect scenario for ETL.
 Examples: 
 
 ```php
-<?php 
+<?php
 
-ETL::extract($extractor, Config::default())
-    ->transform($transformer)
-    ->sortBy(Sort::desc('size'))
-    ->load($loader)
-    ->run();
+use Flow\ETL\DSL\From;
+use Flow\ETL\DSL\Transform;
+use Flow\ETL\DSL\To;
+use Flow\ETL\ETL;
+use Flow\ETL\Memory\ArrayMemory;
+use Flow\ETL\Row\Sort;
+use Flow\ETL\Rows;
+
+$array = new ArrayMemory();
+
+ETL::read(From::rows(new Rows()))
+    ->rows(Transform::keep(['id', 'name', 'status']))
+    ->sortBy(Sort::desc('status'))
+    ->write(To::memory($array);
 ```
 
-or 
+## DSL - Domain Specific Language
 
-```php
-<?php 
+Flow comes with a rich DSL that will make code more readable and easier to understand,
+due to language limitations DSL is available through static methods on following classes:
 
-ETL::read($extractor, Config::default())
-    ->transform($transformer)
-    ->sortBy(Sort::desc('size'))
-    ->write($loader)
-    ->run();
-```
+* [Entry](src/Flow/ETL/DSL/Entry.php)
+* [Handler](src/Flow/ETL/DSL/Handler.php)
+* [From](src/Flow/ETL/DSL/From.php) - Readers (Extractors)
+* [Transform](src/Flow/ETL/DSL/Transform.php)  - Transformers
+  * [Condition](src/Flow/ETL/DSL/Condition.php) 
+* [To](src/Flow/ETL/DSL/To.php) - Writers (Loaders)
 
+Adapters should deliver their own DSL, so for example Json Adapter should create custom `ToJson` and `FromJson` 
+classes with own methods. 
+
+By design all methods in DSL are marked as final (they are not an extension points) but
+classes itself can be extended in case you would like to add your own custom elements.
 
 ## Configuration
 
@@ -108,6 +122,8 @@ Configuration makes possible to setup following options:
 
 ## Row Entries
 
+All entries are available through [DSL\Entry](src/Flow/ETL/DSL/Entry.php)
+
 * [array](src/Flow/ETL/Row/Entry/ArrayEntry.php)
 * [boolean](src/Flow/ETL/Row/Entry/BooleanEntry.php)
 * [collection](src/Flow/ETL/Row/Entry/CollectionEntry.php)
@@ -122,6 +138,8 @@ Configuration makes possible to setup following options:
 
 ## Extractors aka Readers
 
+All generic extractors are available through [DSL\From](src/Flow/ETL/DSL/From.php)
+
 In most cases Extractors (Readers) should be provided by Adapters which you can find below, however there are few generic readers,
 please find them below.  
 Please read [tests](tests/Flow/ETL/Tests/Unit/Extractor) to find examples of usage.
@@ -132,6 +150,13 @@ Please read [tests](tests/Flow/ETL/Tests/Unit/Extractor) to find examples of usa
 * [memory](src/Flow/ETL/Extractor/MemoryExtractor.php) - [tests](tests/Flow/ETL/Tests/Unit/Extractor/MemoryExtractorTest.php)
 
 ## Transformers
+
+All generic transformers are available through [DSL\Transform](src/Flow/ETL/DSL/Transform.php)
+
+Transformers can be registered in the pipeline through following methods:
+
+* `ETL::transformer(Transformer $transformer) : ETL`
+* `ETL::rows(Transformer $transformer) : ETL`
 
 Set of ETL generic Transformers, for the detailed usage instruction please look into [tests](tests/Flow/ETL/Tests/Unit/Transformer).
 Adapters might also define some custom transformers.
@@ -213,6 +238,8 @@ class NotNorbertTransformer implements Transformer
 ```
 
 ## Loaders aka Writers 
+
+All generic loaders are available through [DSL\To](src/Flow/ETL/DSL/To.php)
 
 In most cases Loaders (Writers) should be provided by Adapters which you can find below, however there are few generic loaders, 
 please find them below.  

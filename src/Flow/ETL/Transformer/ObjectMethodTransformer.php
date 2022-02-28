@@ -16,18 +16,18 @@ use Flow\ETL\Transformer;
  */
 final class ObjectMethodTransformer implements Transformer
 {
-    private string $objectEntryName;
+    private EntryFactory $entryFactory;
 
     private string $method;
 
     private string $newEntryName;
 
+    private string $objectEntryName;
+
     /**
      * @var array<mixed>
      */
     private array $parameters;
-
-    private EntryFactory $entryFactory;
 
     /**
      * ObjectMethodTransformer constructor.

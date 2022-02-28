@@ -13,9 +13,9 @@ use Flow\ETL\Transformer;
  */
 final class StringEntryValueCaseConverterTransformer implements Transformer
 {
-    private const CASE_UPPER = 'upper';
-
     private const CASE_LOWER = 'lower';
+
+    private const CASE_UPPER = 'upper';
 
     private string $case;
 
@@ -30,14 +30,14 @@ final class StringEntryValueCaseConverterTransformer implements Transformer
         $this->entryNames = $entryNames;
     }
 
-    public static function upper(string ...$entryNames) : self
-    {
-        return new self(self::CASE_UPPER, ...$entryNames);
-    }
-
     public static function lower(string ...$entryNames) : self
     {
         return new self(self::CASE_LOWER, ...$entryNames);
+    }
+
+    public static function upper(string ...$entryNames) : self
+    {
+        return new self(self::CASE_UPPER, ...$entryNames);
     }
 
     /**

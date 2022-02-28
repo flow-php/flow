@@ -11,107 +11,6 @@ use PHPUnit\Framework\TestCase;
 
 final class JsonEntryTest extends TestCase
 {
-    public function test_prevents_from_creating_entry_with_empty_entry_name() : void
-    {
-        $this->expectExceptionMessage('Entry name cannot be empty');
-
-        new JsonEntry('', [1, 2, 3]);
-    }
-
-    public function test_entry_name_can_be_zero() : void
-    {
-        $this->assertSame('0', (new JsonEntry('0', [1]))->name());
-    }
-
-    public function test_prevent_from_creating_object_with_integers_as_keys_in_entry() : void
-    {
-        $this->expectExceptionMessage('All keys for JsonEntry object must be strings');
-
-        JsonEntry::object('entry-name', [1 => 'one', 'id' => 1, 'name' => 'one']);
-    }
-
-    public function test_empty_entry() : void
-    {
-        $jsonEntry = new JsonEntry('empty', []);
-        $jsonObjectEntry = JsonEntry::object('empty', []);
-
-        $this->assertEquals('[]', $jsonEntry->value());
-        $this->assertEquals('{}', $jsonObjectEntry->value());
-    }
-
-    public function test_renames_entry() : void
-    {
-        $entry = new JsonEntry('entry-name', ['id' => 1, 'name' => 'one']);
-        $newEntry = $entry->rename('new-entry-name');
-
-        $this->assertEquals('new-entry-name', $newEntry->name());
-        $this->assertEquals($entry->value(), $newEntry->value());
-    }
-
-    public function test_returns_json_as_value() : void
-    {
-        $items = [
-            ['item-id' => 1, 'name' => 'one'],
-            ['item-id' => 2, 'name' => 'two'],
-            ['item-id' => 3, 'name' => 'three'],
-        ];
-        $entry = new JsonEntry('items', $items);
-
-        $this->assertEquals(\json_encode($items), $entry->value());
-    }
-
-    public function test_serialization() : void
-    {
-        $serializer = new NativePHPSerializer();
-        $items = [
-            ['item-id' => 1, 'name' => 'one'],
-            ['item-id' => 2, 'name' => 'two'],
-            ['item-id' => 3, 'name' => 'three'],
-        ];
-        $entrySerialized = $serializer->serialize($entry = new JsonEntry('items', $items));
-
-        $this->assertEquals($entry, $serializer->unserialize($entrySerialized));
-    }
-
-    public function test_map() : void
-    {
-        $items = [
-            ['item-id' => 1, 'name' => 'one', 'address' => ['line1' => "NO. 47 HENGSHAN ROAD, ECONOMIC TECHNOLOGICAL DEVELOPMENT ZONE, WUHU, ANHUI, 241000, CHINA\t\t\t\t\t\t\t\t\t\t \t\t\t\t\t\t\t\t\t\t"]],
-            ['item-id' => 2, 'name' => 'two'],
-            ['item-id' => 3, 'name' => 'three'],
-        ];
-        $entry = (new JsonEntry('items', $items))->map(function (array $value) {
-            $trimValue = $value;
-
-            \array_walk_recursive($trimValue, function (&$v) : void {
-                if (\is_string($v)) {
-                    $v = \trim($v);
-                }
-            });
-
-            return $trimValue;
-        });
-
-        $this->assertEquals(
-            \json_encode(
-                $items = [
-                    ['item-id' => 1, 'name' => 'one', 'address' => ['line1' => 'NO. 47 HENGSHAN ROAD, ECONOMIC TECHNOLOGICAL DEVELOPMENT ZONE, WUHU, ANHUI, 241000, CHINA']],
-                    ['item-id' => 2, 'name' => 'two'],
-                    ['item-id' => 3, 'name' => 'three'],
-                ]
-            ),
-            $entry->value()
-        );
-    }
-
-    /**
-     * @dataProvider is_equal_data_provider
-     */
-    public function test_is_equal(bool $equals, JsonEntry $entry, JsonEntry $nextEntry) : void
-    {
-        $this->assertSame($equals, $entry->isEqual($nextEntry));
-    }
-
     public function is_equal_data_provider() : \Generator
     {
         yield 'equal names and equal simple integer arrays with the same order' => [
@@ -179,5 +78,106 @@ final class JsonEntryTest extends TestCase
             new JsonEntry('name', ['foo' => 1, 'bar' => ['foo' => new IntegerEntry('test', 1), 'bar' => 'bar'], 'baz']),
             new JsonEntry('name', ['foo' => 1, 'bar' => ['foo' => new IntegerEntry('test', 1), 'bar' => 'bar'], 'baz']),
         ];
+    }
+
+    public function test_empty_entry() : void
+    {
+        $jsonEntry = new JsonEntry('empty', []);
+        $jsonObjectEntry = JsonEntry::object('empty', []);
+
+        $this->assertEquals('[]', $jsonEntry->value());
+        $this->assertEquals('{}', $jsonObjectEntry->value());
+    }
+
+    public function test_entry_name_can_be_zero() : void
+    {
+        $this->assertSame('0', (new JsonEntry('0', [1]))->name());
+    }
+
+    /**
+     * @dataProvider is_equal_data_provider
+     */
+    public function test_is_equal(bool $equals, JsonEntry $entry, JsonEntry $nextEntry) : void
+    {
+        $this->assertSame($equals, $entry->isEqual($nextEntry));
+    }
+
+    public function test_map() : void
+    {
+        $items = [
+            ['item-id' => 1, 'name' => 'one', 'address' => ['line1' => "NO. 47 HENGSHAN ROAD, ECONOMIC TECHNOLOGICAL DEVELOPMENT ZONE, WUHU, ANHUI, 241000, CHINA\t\t\t\t\t\t\t\t\t\t \t\t\t\t\t\t\t\t\t\t"]],
+            ['item-id' => 2, 'name' => 'two'],
+            ['item-id' => 3, 'name' => 'three'],
+        ];
+        $entry = (new JsonEntry('items', $items))->map(function (array $value) {
+            $trimValue = $value;
+
+            \array_walk_recursive($trimValue, function (&$v) : void {
+                if (\is_string($v)) {
+                    $v = \trim($v);
+                }
+            });
+
+            return $trimValue;
+        });
+
+        $this->assertEquals(
+            \json_encode(
+                $items = [
+                    ['item-id' => 1, 'name' => 'one', 'address' => ['line1' => 'NO. 47 HENGSHAN ROAD, ECONOMIC TECHNOLOGICAL DEVELOPMENT ZONE, WUHU, ANHUI, 241000, CHINA']],
+                    ['item-id' => 2, 'name' => 'two'],
+                    ['item-id' => 3, 'name' => 'three'],
+                ]
+            ),
+            $entry->value()
+        );
+    }
+
+    public function test_prevent_from_creating_object_with_integers_as_keys_in_entry() : void
+    {
+        $this->expectExceptionMessage('All keys for JsonEntry object must be strings');
+
+        JsonEntry::object('entry-name', [1 => 'one', 'id' => 1, 'name' => 'one']);
+    }
+
+    public function test_prevents_from_creating_entry_with_empty_entry_name() : void
+    {
+        $this->expectExceptionMessage('Entry name cannot be empty');
+
+        new JsonEntry('', [1, 2, 3]);
+    }
+
+    public function test_renames_entry() : void
+    {
+        $entry = new JsonEntry('entry-name', ['id' => 1, 'name' => 'one']);
+        $newEntry = $entry->rename('new-entry-name');
+
+        $this->assertEquals('new-entry-name', $newEntry->name());
+        $this->assertEquals($entry->value(), $newEntry->value());
+    }
+
+    public function test_returns_json_as_value() : void
+    {
+        $items = [
+            ['item-id' => 1, 'name' => 'one'],
+            ['item-id' => 2, 'name' => 'two'],
+            ['item-id' => 3, 'name' => 'three'],
+        ];
+        $entry = new JsonEntry('items', $items);
+
+        $this->assertEquals(\json_encode($items), $entry->value());
+    }
+
+    public function test_serialization() : void
+    {
+        $serializer = new NativePHPSerializer();
+        $items = [
+            ['item-id' => 1, 'name' => 'one'],
+            ['item-id' => 2, 'name' => 'two'],
+            ['item-id' => 3, 'name' => 'three'],
+        ];
+        $entrySerialized = $serializer->serialize($entry = new JsonEntry('items', $items));
+
+        $this->assertEquals($entry, $serializer->unserialize($entrySerialized));
     }
 }

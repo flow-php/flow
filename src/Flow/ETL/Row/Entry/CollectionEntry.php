@@ -14,12 +14,12 @@ use Flow\ETL\Row\Entry;
  */
 final class CollectionEntry implements Entry
 {
-    private string $name;
-
     /**
      * @var array<entries>
      */
     private array $entries;
+
+    private string $name;
 
     /**
      * @throws InvalidArgumentException
@@ -34,11 +34,6 @@ final class CollectionEntry implements Entry
         $this->entries = $entries;
     }
 
-    public function __toString() : string
-    {
-        return $this->toString();
-    }
-
     /**
      * @return array{name: string, entries: array<Entries>}
      */
@@ -48,6 +43,11 @@ final class CollectionEntry implements Entry
             'name' => $this->name,
             'entries' => $this->entries,
         ];
+    }
+
+    public function __toString() : string
+    {
+        return $this->toString();
     }
 
     /**
@@ -60,19 +60,6 @@ final class CollectionEntry implements Entry
         $this->entries = $data['entries'];
     }
 
-    public function name() : string
-    {
-        return $this->name;
-    }
-
-    /**
-     * @return array<mixed>
-     */
-    public function value() : array
-    {
-        return \array_map(fn (Entries $entries) : array => $entries->toArray(), $this->entries);
-    }
-
     /**
      * @psalm-suppress InvalidArgument
      */
@@ -81,12 +68,9 @@ final class CollectionEntry implements Entry
         return \mb_strtolower($name) === \mb_strtolower($name);
     }
 
-    /**
-     * @throws InvalidArgumentException
-     */
-    public function rename(string $name) : Entry
+    public function isEqual(Entry $entry) : bool
     {
-        return new self($name, ...$this->entries);
+        return $this->is($entry->name()) && $entry instanceof self && (new ArrayComparison())->equals($this->value(), $entry->value());
     }
 
     /**
@@ -99,9 +83,17 @@ final class CollectionEntry implements Entry
         return new self($this->name, ...$mapper($this->entries));
     }
 
-    public function isEqual(Entry $entry) : bool
+    public function name() : string
     {
-        return $this->is($entry->name()) && $entry instanceof self && (new ArrayComparison())->equals($this->value(), $entry->value());
+        return $this->name;
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function rename(string $name) : Entry
+    {
+        return new self($name, ...$this->entries);
     }
 
     public function toString() : string
@@ -119,5 +111,13 @@ final class CollectionEntry implements Entry
         }
 
         return (string) \json_encode($array);
+    }
+
+    /**
+     * @return array<mixed>
+     */
+    public function value() : array
+    {
+        return \array_map(fn (Entries $entries) : array => $entries->toArray(), $this->entries);
     }
 }

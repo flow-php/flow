@@ -19,23 +19,23 @@ final class Sort
         $this->order = $order;
     }
 
-    public static function desc(string $column) : self
-    {
-        return new self($column, 'desc');
-    }
-
     public static function asc(string $column) : self
     {
         return new self($column, 'asc');
     }
 
-    public function name() : string
+    public static function desc(string $column) : self
     {
-        return $this->column;
+        return new self($column, 'desc');
     }
 
     public function isAsc() : bool
     {
         return $this->order === 'asc';
+    }
+
+    public function name() : string
+    {
+        return $this->column;
     }
 }

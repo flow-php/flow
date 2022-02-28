@@ -16,11 +16,11 @@ final class MathOperationTransformer implements Transformer
 {
     private string $leftEntry;
 
-    private string $rightEntry;
+    private string $newEntryName;
 
     private string $operation;
 
-    private string $newEntryName;
+    private string $rightEntry;
 
     private function __construct(string $leftEntry, string $rightEntry, string $operation, string $newEntryName)
     {
@@ -35,16 +35,6 @@ final class MathOperationTransformer implements Transformer
         return new self($leftEntry, $rightEntry, 'add', $newEntryName);
     }
 
-    public static function subtract(string $leftEntry, string $rightEntry, string $newEntryName = 'subtract') : self
-    {
-        return new self($leftEntry, $rightEntry, 'subtract', $newEntryName);
-    }
-
-    public static function multiply(string $leftEntry, string $rightEntry, string $newEntryName = 'multiply') : self
-    {
-        return new self($leftEntry, $rightEntry, 'multiply', $newEntryName);
-    }
-
     public static function divide(string $leftEntry, string $rightEntry, string $newEntryName = 'divide') : self
     {
         return new self($leftEntry, $rightEntry, 'divide', $newEntryName);
@@ -55,9 +45,19 @@ final class MathOperationTransformer implements Transformer
         return new self($leftEntry, $rightEntry, 'modulo', $newEntryName);
     }
 
+    public static function multiply(string $leftEntry, string $rightEntry, string $newEntryName = 'multiply') : self
+    {
+        return new self($leftEntry, $rightEntry, 'multiply', $newEntryName);
+    }
+
     public static function power(string $leftEntry, string $rightEntry, string $newEntryName = 'power') : self
     {
         return new self($leftEntry, $rightEntry, 'power', $newEntryName);
+    }
+
+    public static function subtract(string $leftEntry, string $rightEntry, string $newEntryName = 'subtract') : self
+    {
+        return new self($leftEntry, $rightEntry, 'subtract', $newEntryName);
     }
 
     /**

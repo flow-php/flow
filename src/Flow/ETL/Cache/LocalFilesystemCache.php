@@ -36,6 +36,15 @@ final class LocalFilesystemCache implements Cache
         \fclose($cacheStream);
     }
 
+    public function clear(string $id) : void
+    {
+        if (!\file_exists($cachePath = $this->cachePath($id))) {
+            return;
+        }
+
+        \unlink($cachePath);
+    }
+
     /**
      * @param string $id
      *
@@ -59,15 +68,6 @@ final class LocalFilesystemCache implements Cache
         }
 
         \fclose($cacheStream);
-    }
-
-    public function clear(string $id) : void
-    {
-        if (!\file_exists($cachePath = $this->cachePath($id))) {
-            return;
-        }
-
-        \unlink($cachePath);
     }
 
     /**

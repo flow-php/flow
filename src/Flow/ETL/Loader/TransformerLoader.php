@@ -10,9 +10,9 @@ use Flow\ETL\Transformer;
 
 final class TransformerLoader implements Loader
 {
-    private Transformer $transformer;
-
     private Loader $loader;
+
+    private Transformer $transformer;
 
     public function __construct(Transformer $transformer, Loader $loader)
     {

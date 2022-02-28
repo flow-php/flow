@@ -4,19 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use Flow\ETL\DSL\Transform;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
-use Flow\ETL\Transformer\Rename\EntryRename;
-use Flow\ETL\Transformer\RenameEntriesTransformer;
 use PHPUnit\Framework\TestCase;
 
 final class RenameEntriesTransformerTest extends TestCase
 {
     public function test_renaming_entries() : void
     {
-        $renameTransformer = new RenameEntriesTransformer(
-            new EntryRename('old_int', 'new_int'),
-            new EntryRename('null', 'nothing')
+        $renameTransformer = Transform::chain(
+            Transform::rename('old_int', 'new_int'),
+            Transform::rename('null', 'nothing')
         );
 
         $rows = $renameTransformer->transform(

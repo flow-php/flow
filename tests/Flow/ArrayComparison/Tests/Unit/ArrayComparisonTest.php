@@ -9,14 +9,6 @@ use PHPUnit\Framework\TestCase;
 
 final class ArrayComparisonTest extends TestCase
 {
-    /**
-     * @dataProvider equal_arrays
-     */
-    public function test_equals(array $a, array $b) : void
-    {
-        $this->assertTrue((new ArrayComparison())->equals($a, $b));
-    }
-
     public function equal_arrays() : \Generator
     {
         yield 'simple arrays' => [
@@ -103,14 +95,6 @@ final class ArrayComparisonTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider not_equal_arrays
-     */
-    public function test_not_equals(array $a, array $b) : void
-    {
-        $this->assertFalse((new ArrayComparison())->equals($a, $b));
-    }
-
     public function not_equal_arrays() : \Generator
     {
         yield 'simple arrays' => [
@@ -149,5 +133,21 @@ final class ArrayComparisonTest extends TestCase
                 ],
             ],
         ];
+    }
+
+    /**
+     * @dataProvider equal_arrays
+     */
+    public function test_equals(array $a, array $b) : void
+    {
+        $this->assertTrue((new ArrayComparison())->equals($a, $b));
+    }
+
+    /**
+     * @dataProvider not_equal_arrays
+     */
+    public function test_not_equals(array $a, array $b) : void
+    {
+        $this->assertFalse((new ArrayComparison())->equals($a, $b));
     }
 }

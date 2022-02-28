@@ -4,15 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Serializer\Tests\Unit;
 
+use Flow\ETL\DSL\Entry;
 use Flow\ETL\Row;
-use Flow\ETL\Row\Entry\BooleanEntry;
-use Flow\ETL\Row\Entry\DateTimeEntry;
-use Flow\ETL\Row\Entry\FloatEntry;
-use Flow\ETL\Row\Entry\IntegerEntry;
-use Flow\ETL\Row\Entry\NullEntry;
-use Flow\ETL\Row\Entry\ObjectEntry;
-use Flow\ETL\Row\Entry\StringEntry;
-use Flow\ETL\Row\Entry\StructureEntry;
 use Flow\ETL\Rows;
 use Flow\Serializer\NativePHPSerializer;
 use PHPUnit\Framework\TestCase;
@@ -25,17 +18,17 @@ final class NativePHPSerializerTest extends TestCase
             ...\array_map(
                 function () : Row {
                     return Row::create(
-                        new IntegerEntry('integer', 1),
-                        new StringEntry('string', 'string'),
-                        new BooleanEntry('boolean', true),
-                        new DateTimeEntry('datetime', new \DateTimeImmutable('2022-01-01 00:00:00')),
-                        new NullEntry('null'),
-                        new FloatEntry('float', 0.12),
-                        new ObjectEntry('object', new \ArrayIterator([1, 2, 3])),
-                        new StructureEntry(
+                        Entry::integer('integer', 1),
+                        Entry::string('string', 'string'),
+                        Entry::boolean('boolean', true),
+                        Entry::datetime('datetime', new \DateTimeImmutable('2022-01-01 00:00:00')),
+                        Entry::null('null'),
+                        Entry::float('float', 0.12),
+                        Entry::object('object', new \ArrayIterator([1, 2, 3])),
+                        Entry::structure(
                             'struct',
-                            new IntegerEntry('integer', 1),
-                            new StringEntry('string', 'string'),
+                            Entry::integer('integer', 1),
+                            Entry::string('string', 'string'),
                         )
                     );
                 },

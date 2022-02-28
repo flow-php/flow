@@ -8,12 +8,12 @@ use Flow\ETL\Exception\RuntimeException;
 
 final class CompressingSerializer implements Serializer
 {
+    private int $compressionLevel;
+
     /**
      * @var Serializer
      */
     private Serializer $serializer;
-
-    private int $compressionLevel;
 
     public function __construct(Serializer $serializer, int $compressionLevel = 9)
     {

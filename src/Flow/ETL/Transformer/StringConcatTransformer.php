@@ -13,14 +13,14 @@ use Flow\ETL\Transformer;
  */
 final class StringConcatTransformer implements Transformer
 {
+    private string $glue;
+
+    private string $newEntryName;
+
     /**
      * @var array<string>
      */
     private array $stringEntryNames;
-
-    private string $glue;
-
-    private string $newEntryName;
 
     /**
      * @param array<string> $stringEntryNames

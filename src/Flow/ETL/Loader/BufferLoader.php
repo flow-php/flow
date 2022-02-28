@@ -10,11 +10,11 @@ use Flow\ETL\Rows;
 
 final class BufferLoader implements Closure, Loader
 {
-    private Loader $overflowLoader;
+    private Rows $buffer;
 
     private int $bufferSize;
 
-    private Rows $buffer;
+    private Loader $overflowLoader;
 
     public function __construct(Loader $overflowLoader, int $bufferSize)
     {
@@ -45,6 +45,13 @@ final class BufferLoader implements Closure, Loader
         $this->bufferSize = $data['buffer_size'];
     }
 
+    public function closure(Rows $rows) : void
+    {
+        if ($this->buffer->count()) {
+            $this->overflowLoader->load($rows);
+        }
+    }
+
     public function load(Rows $rows) : void
     {
         if ($this->buffer->count() < $this->bufferSize) {
@@ -65,13 +72,6 @@ final class BufferLoader implements Closure, Loader
             $this->overflowLoader->load($this->buffer);
 
             $this->buffer = new Rows();
-        }
-    }
-
-    public function closure(Rows $rows) : void
-    {
-        if ($this->buffer->count()) {
-            $this->overflowLoader->load($rows);
         }
     }
 }

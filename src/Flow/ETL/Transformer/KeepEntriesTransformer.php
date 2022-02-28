@@ -51,7 +51,7 @@ final class KeepEntriesTransformer implements Transformer
             $allEntries = $row->entries()->map(fn (Entry $entry) : string => $entry->name());
             $removeEntries = \array_diff($allEntries, $this->names);
 
-            return $row->remove(...$removeEntries);
+            return $row->remove_entries(...$removeEntries);
         });
     }
 }

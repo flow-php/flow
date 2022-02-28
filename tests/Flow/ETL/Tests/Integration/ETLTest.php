@@ -24,26 +24,6 @@ final class ETLTest extends IntegrationTestCase
         $this->assertContains(\hash('sha256', 'test_etl_cache'), $cacheContent);
     }
 
-    public function test_etl_sort_by_in_memory() : void
-    {
-        \ini_set('memory_limit', '-1');
-
-        $config = Config::builder()
-            ->id($id = 'test_etl_sort_by_in_memory')
-            ->cache($cacheSpy = new CacheSpy(Config::default()->cache()))
-            ->build();
-
-        $rows = ETL::extract(new AllRowTypesFakeExtractor($rowsets = 20, $rows = 2), $config)
-            ->sortBy(Sort::asc('id'))
-            ->fetch();
-
-        $cache = \array_diff(\scandir($this->cacheDir), ['..', '.']);
-
-        $this->assertEmpty($cache);
-        $this->assertSame(\range(0, 39), $rows->reduceToArray('id'));
-        $this->assertSame(20, $cacheSpy->writes());
-    }
-
     public function test_etl_sort_at_disk_in_memory() : void
     {
         \ini_set('memory_limit', '500M');
@@ -70,5 +50,25 @@ final class ETLTest extends IntegrationTestCase
         // 1 sorted cache
         // 1 extracted cache
         $this->assertSame(53, $cacheSpy->clears());
+    }
+
+    public function test_etl_sort_by_in_memory() : void
+    {
+        \ini_set('memory_limit', '-1');
+
+        $config = Config::builder()
+            ->id($id = 'test_etl_sort_by_in_memory')
+            ->cache($cacheSpy = new CacheSpy(Config::default()->cache()))
+            ->build();
+
+        $rows = ETL::extract(new AllRowTypesFakeExtractor($rowsets = 20, $rows = 2), $config)
+            ->sortBy(Sort::asc('id'))
+            ->fetch();
+
+        $cache = \array_diff(\scandir($this->cacheDir), ['..', '.']);
+
+        $this->assertEmpty($cache);
+        $this->assertSame(\range(0, 39), $rows->reduceToArray('id'));
+        $this->assertSame(20, $cacheSpy->writes());
     }
 }

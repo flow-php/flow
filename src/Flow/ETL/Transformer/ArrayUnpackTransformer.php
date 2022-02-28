@@ -18,14 +18,14 @@ final class ArrayUnpackTransformer implements Transformer
 {
     private string $arrayEntryName;
 
+    private EntryFactory $entryFactory;
+
+    private ?string $entryPrefix;
+
     /**
      * @var string[]
      */
     private array $skipEntryNames;
-
-    private ?string $entryPrefix;
-
-    private EntryFactory $entryFactory;
 
     /**
      * @param string[] $skipEntryNames

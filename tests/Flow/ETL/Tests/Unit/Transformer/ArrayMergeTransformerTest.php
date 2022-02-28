@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use Flow\ETL\DSL\Transform;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\ArrayEntry;
 use Flow\ETL\Rows;
-use Flow\ETL\Transformer\ArrayMergeTransformer;
 use PHPUnit\Framework\TestCase;
 
 final class ArrayMergeTransformerTest extends TestCase
@@ -33,7 +33,7 @@ final class ArrayMergeTransformerTest extends TestCase
             ]
         );
 
-        $transformer = new ArrayMergeTransformer(['array_one', 'array_two']);
+        $transformer = Transform::array_merge(['array_one', 'array_two']);
 
         $this->assertSame(
             [

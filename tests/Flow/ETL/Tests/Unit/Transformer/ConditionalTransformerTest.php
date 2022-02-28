@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use Flow\ETL\DSL\Condition;
+use Flow\ETL\DSL\Transform;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
-use Flow\ETL\Transformer\ChainTransformer;
-use Flow\ETL\Transformer\Condition\All;
-use Flow\ETL\Transformer\Condition\EntryValueEqualsTo;
-use Flow\ETL\Transformer\ConditionalTransformer;
 use Flow\ETL\Transformer\StaticEntryTransformer;
 use PHPUnit\Framework\TestCase;
 
@@ -17,18 +15,18 @@ final class ConditionalTransformerTest extends TestCase
 {
     public function test_transformation_when_condition_met_for_one_row_in_rows() : void
     {
-        $transformer = new ChainTransformer(
-            new ConditionalTransformer(
-                new All(
-                    new EntryValueEqualsTo('first_name', 'Michael'),
-                    new EntryValueEqualsTo('last_name', 'Jackson'),
+        $transformer = Transform::chain(
+            Transform::transform_if(
+                Condition::all(
+                    Condition::equals_to_value('first_name', 'Michael'),
+                    Condition::equals_to_value('last_name', 'Jackson'),
                 ),
                 new StaticEntryTransformer(new Row\Entry\StringEntry('profession', 'singer'))
             ),
-            new ConditionalTransformer(
-                new All(
-                    new EntryValueEqualsTo('first_name', 'Rocky'),
-                    new EntryValueEqualsTo('last_name', 'Balboa'),
+            Transform::transform_if(
+                Condition::all(
+                    Condition::equals_to_value('first_name', 'Rocky'),
+                    Condition::equals_to_value('last_name', 'Balboa'),
                 ),
                 new StaticEntryTransformer(new Row\Entry\StringEntry('profession', 'boxer'))
             )

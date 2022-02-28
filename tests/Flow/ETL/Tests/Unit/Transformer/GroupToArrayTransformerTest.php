@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use Flow\ETL\DSL\Transform;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
-use Flow\ETL\Transformer\GroupToArrayTransformer;
 use PHPUnit\Framework\TestCase;
 
 final class GroupToArrayTransformerTest extends TestCase
@@ -37,7 +37,7 @@ final class GroupToArrayTransformerTest extends TestCase
             )
         );
 
-        $transformer = new GroupToArrayTransformer('order_id', 'order_line_items');
+        $transformer = Transform::group_to_array('order_id', 'order_line_items');
 
         $this->assertSame(
             [

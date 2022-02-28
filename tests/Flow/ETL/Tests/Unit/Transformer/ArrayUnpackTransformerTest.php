@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use Flow\ETL\DSL\Transform;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
-use Flow\ETL\Transformer\ArrayUnpackTransformer;
-use Flow\ETL\Transformer\RemoveEntriesTransformer;
 use PHPUnit\Framework\TestCase;
 
 final class ArrayUnpackTransformerTest extends TestCase
@@ -18,9 +17,9 @@ final class ArrayUnpackTransformerTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('"integer_entry" is not ArrayEntry');
 
-        $arrayUnpackTransformer = new ArrayUnpackTransformer('integer_entry');
+        $arrayUnpackTransformer = Transform::array_unpack('integer_entry');
 
-        (new RemoveEntriesTransformer('integer_entry'))->transform(
+        (Transform::remove('integer_entry'))->transform(
             $arrayUnpackTransformer->transform(
                 new Rows(
                     Row::create(
@@ -36,9 +35,9 @@ final class ArrayUnpackTransformerTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('"array_entry" not found');
 
-        $arrayUnpackTransformer = new ArrayUnpackTransformer('array_entry');
+        $arrayUnpackTransformer = Transform::array_unpack('array_entry');
 
-        (new RemoveEntriesTransformer('integer_entry'))->transform(
+        (Transform::remove('integer_entry'))->transform(
             $arrayUnpackTransformer->transform(
                 new Rows(
                     Row::create(
@@ -51,9 +50,9 @@ final class ArrayUnpackTransformerTest extends TestCase
 
     public function test_array_unpack_transformer() : void
     {
-        $arrayUnpackTransformer = new ArrayUnpackTransformer('array_entry');
+        $arrayUnpackTransformer = Transform::array_unpack('array_entry');
 
-        $rows = (new RemoveEntriesTransformer('array_entry'))->transform(
+        $rows = (Transform::remove('array_entry'))->transform(
             $arrayUnpackTransformer->transform(
                 new Rows(
                     Row::create(
@@ -97,9 +96,9 @@ final class ArrayUnpackTransformerTest extends TestCase
 
     public function test_array_unpack_transformer_for_non_associative_array() : void
     {
-        $arrayUnpackTransformer = new ArrayUnpackTransformer('array_entry');
+        $arrayUnpackTransformer = Transform::array_unpack('array_entry');
 
-        $rows = (new RemoveEntriesTransformer('array_entry'))->transform(
+        $rows = (Transform::remove('array_entry'))->transform(
             $arrayUnpackTransformer->transform(
                 new Rows(
                     Row::create(
@@ -139,9 +138,9 @@ final class ArrayUnpackTransformerTest extends TestCase
 
     public function test_array_unpack_with_integer() : void
     {
-        $arrayUnpackTransformer = new ArrayUnpackTransformer('array_entry');
+        $arrayUnpackTransformer = Transform::array_unpack('array_entry');
 
-        $rows = (new RemoveEntriesTransformer('array_entry'))->transform(
+        $rows = (Transform::remove('array_entry'))->transform(
             $arrayUnpackTransformer->transform(
                 new Rows(
                     Row::create(new Row\Entry\ArrayEntry('array_entry', ['id' => '1']), ),
@@ -159,9 +158,9 @@ final class ArrayUnpackTransformerTest extends TestCase
 
     public function test_array_unpack_with_null_as_string() : void
     {
-        $arrayUnpackTransformer = new ArrayUnpackTransformer('array_entry');
+        $arrayUnpackTransformer = Transform::array_unpack('array_entry');
 
-        $rows = (new RemoveEntriesTransformer('array_entry'))->transform(
+        $rows = (Transform::remove('array_entry'))->transform(
             $arrayUnpackTransformer->transform(
                 new Rows(
                     Row::create(new Row\Entry\ArrayEntry('array_entry', ['status' => 'null']), ),
@@ -179,7 +178,7 @@ final class ArrayUnpackTransformerTest extends TestCase
 
     public function test_array_unpack_with_prefix() : void
     {
-        $rows = (new ArrayUnpackTransformer('inventory', [], 'inventory_'))
+        $rows = (Transform::array_unpack('inventory', 'inventory_'))
             ->transform(
                 new Rows(
                     Row::create(new Row\Entry\ArrayEntry('inventory', ['total' => 100, 'available' => 100, 'damaged' => 0]))
@@ -201,7 +200,7 @@ final class ArrayUnpackTransformerTest extends TestCase
 
     public function test_array_unpack_with_skipped_entries() : void
     {
-        $rows = (new ArrayUnpackTransformer('inventory', ['available', 'damaged']))
+        $rows = (Transform::array_unpack('inventory', '', ['available', 'damaged']))
             ->transform(
                 new Rows(
                     Row::create(new Row\Entry\ArrayEntry('inventory', ['total' => 100, 'available' => 100, 'damaged' => 0]))

@@ -10,52 +10,6 @@ use PHPUnit\Framework\TestCase;
 
 final class JsonObjectEntryTest extends TestCase
 {
-    public function test_renames_entry() : void
-    {
-        $entry = JsonEntry::object('entry-name', ['id' => 1, 'name' => 'one']);
-        $newEntry = $entry->rename('new-entry-name');
-
-        $this->assertEquals('new-entry-name', $newEntry->name());
-        $this->assertEquals($entry->value(), $newEntry->value());
-    }
-
-    public function test_returns_json_as_value() : void
-    {
-        $item = ['item-id' => 1, 'name' => 'one'];
-        $entry = JsonEntry::object('item', $item);
-
-        $this->assertEquals(\json_encode($item), $entry->value());
-    }
-
-    public function test_map() : void
-    {
-        $item = ['item-id' => 1, 'name' => 'one'];
-        $entry = (JsonEntry::object('item', $item))->map(function (array $value) {
-            \array_walk($value, function (&$v) : void {
-                if (\is_string($v)) {
-                    $v = \mb_strtoupper($v);
-                }
-            });
-
-            return $value;
-        });
-
-        $this->assertEquals(
-            \json_encode(
-                ['item-id' => 1, 'name' => 'ONE']
-            ),
-            $entry->value()
-        );
-    }
-
-    /**
-     * @dataProvider is_equal_data_provider
-     */
-    public function test_is_equal(bool $equals, JsonEntry $entry, JsonEntry $nextEntry) : void
-    {
-        $this->assertSame($equals, $entry->isEqual($nextEntry));
-    }
-
     public function is_equal_data_provider() : \Generator
     {
         yield 'equal names and equal multi dimensional array with the same order' => [
@@ -98,5 +52,51 @@ final class JsonObjectEntryTest extends TestCase
             JsonEntry::object('name', ['foo' => 1, 'bar' => ['foo' => new IntegerEntry('test', 1), 'bar' => 'bar'], 'baz' => 2]),
             JsonEntry::object('name', ['foo' => 1, 'bar' => ['foo' => new IntegerEntry('test', 1), 'bar' => 'bar'], 'baz' => 2]),
         ];
+    }
+
+    /**
+     * @dataProvider is_equal_data_provider
+     */
+    public function test_is_equal(bool $equals, JsonEntry $entry, JsonEntry $nextEntry) : void
+    {
+        $this->assertSame($equals, $entry->isEqual($nextEntry));
+    }
+
+    public function test_map() : void
+    {
+        $item = ['item-id' => 1, 'name' => 'one'];
+        $entry = (JsonEntry::object('item', $item))->map(function (array $value) {
+            \array_walk($value, function (&$v) : void {
+                if (\is_string($v)) {
+                    $v = \mb_strtoupper($v);
+                }
+            });
+
+            return $value;
+        });
+
+        $this->assertEquals(
+            \json_encode(
+                ['item-id' => 1, 'name' => 'ONE']
+            ),
+            $entry->value()
+        );
+    }
+
+    public function test_renames_entry() : void
+    {
+        $entry = JsonEntry::object('entry-name', ['id' => 1, 'name' => 'one']);
+        $newEntry = $entry->rename('new-entry-name');
+
+        $this->assertEquals('new-entry-name', $newEntry->name());
+        $this->assertEquals($entry->value(), $newEntry->value());
+    }
+
+    public function test_returns_json_as_value() : void
+    {
+        $item = ['item-id' => 1, 'name' => 'one'];
+        $entry = JsonEntry::object('item', $item);
+
+        $this->assertEquals(\json_encode($item), $entry->value());
     }
 }

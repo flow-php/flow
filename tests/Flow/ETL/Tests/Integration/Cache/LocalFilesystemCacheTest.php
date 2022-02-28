@@ -13,46 +13,6 @@ use Flow\ETL\Tests\Integration\IntegrationTestCase;
 
 final class LocalFilesystemCacheTest extends IntegrationTestCase
 {
-    public function test_writing_to_cache() : void
-    {
-        $cache = new LocalFilesystemCache($this->cacheDir, Config::default()->serializer());
-
-        $cache->add('test', new Rows(Row::create(new IntegerEntry('id', 1))));
-        $cache->add('test', new Rows(Row::create(new IntegerEntry('id', 2))));
-
-        $this->assertCount(
-            2,
-            \iterator_to_array($cache->read('test'))
-        );
-    }
-
-    public function test_writing_to_cache_with_different_ids() : void
-    {
-        $cache = new LocalFilesystemCache($this->cacheDir, Config::default()->serializer());
-
-        $cache->add('test', new Rows(Row::create(new IntegerEntry('id', 1))));
-        $cache->add('other-test', new Rows(Row::create(new IntegerEntry('id', 2))));
-
-        $this->assertCount(
-            1,
-            \iterator_to_array($cache->read('test'))
-        );
-        $this->assertCount(
-            1,
-            \iterator_to_array($cache->read('other-test'))
-        );
-    }
-
-    public function test_reading_empty_cache() : void
-    {
-        $cache = new LocalFilesystemCache($this->cacheDir, Config::default()->serializer());
-
-        $this->assertCount(
-            0,
-            \iterator_to_array($cache->read('test'))
-        );
-    }
-
     public function test_cleaning_cache() : void
     {
         $cache = new LocalFilesystemCache($this->cacheDir, Config::default()->serializer());
@@ -80,6 +40,46 @@ final class LocalFilesystemCacheTest extends IntegrationTestCase
         $this->assertCount(
             1,
             \iterator_to_array($cache->read('test'))
+        );
+    }
+
+    public function test_reading_empty_cache() : void
+    {
+        $cache = new LocalFilesystemCache($this->cacheDir, Config::default()->serializer());
+
+        $this->assertCount(
+            0,
+            \iterator_to_array($cache->read('test'))
+        );
+    }
+
+    public function test_writing_to_cache() : void
+    {
+        $cache = new LocalFilesystemCache($this->cacheDir, Config::default()->serializer());
+
+        $cache->add('test', new Rows(Row::create(new IntegerEntry('id', 1))));
+        $cache->add('test', new Rows(Row::create(new IntegerEntry('id', 2))));
+
+        $this->assertCount(
+            2,
+            \iterator_to_array($cache->read('test'))
+        );
+    }
+
+    public function test_writing_to_cache_with_different_ids() : void
+    {
+        $cache = new LocalFilesystemCache($this->cacheDir, Config::default()->serializer());
+
+        $cache->add('test', new Rows(Row::create(new IntegerEntry('id', 1))));
+        $cache->add('other-test', new Rows(Row::create(new IntegerEntry('id', 2))));
+
+        $this->assertCount(
+            1,
+            \iterator_to_array($cache->read('test'))
+        );
+        $this->assertCount(
+            1,
+            \iterator_to_array($cache->read('other-test'))
         );
     }
 }

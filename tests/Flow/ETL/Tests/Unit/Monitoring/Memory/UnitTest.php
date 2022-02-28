@@ -9,6 +9,18 @@ use PHPUnit\Framework\TestCase;
 
 final class UnitTest extends TestCase
 {
+    public function test_calculating_percentage_from_value() : void
+    {
+        $this->assertEquals(
+            Unit::fromString('10M'),
+            Unit::fromString('100M')->percentage(10)
+        );
+        $this->assertEquals(
+            Unit::fromString('90M'),
+            Unit::fromString('100M')->percentage(90)
+        );
+    }
+
     public function test_conversion_from_bytes_to_kbs() : void
     {
         $this->assertSame(1.0, Unit::fromBytes(1000)->inKb());
@@ -34,18 +46,6 @@ final class UnitTest extends TestCase
         $this->assertSame(
             5.0,
             Unit::fromMb(5)->diff(Unit::fromMb(10))->absolute()->inMb()
-        );
-    }
-
-    public function test_calculating_percentage_from_value() : void
-    {
-        $this->assertEquals(
-            Unit::fromString('10M'),
-            Unit::fromString('100M')->percentage(10)
-        );
-        $this->assertEquals(
-            Unit::fromString('90M'),
-            Unit::fromString('100M')->percentage(90)
         );
     }
 }

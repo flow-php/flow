@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\ExternalSort;
 
 use Flow\ETL\Cache;
+use Flow\ETL\DSL\Entry;
 use Flow\ETL\ExternalSort\BufferCache;
 use Flow\ETL\Row;
-use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Rows;
 use PHPUnit\Framework\Constraint\Callback;
 use PHPUnit\Framework\TestCase;
@@ -25,8 +25,8 @@ final class BufferCacheTest extends TestCase
             ->method('add')
             ->with('id', new Callback(fn (Rows $rows) => $rows->count() === 2));
 
-        $bufferCache->add('id', new Rows(Row::create(new IntegerEntry('id', 1))));
-        $bufferCache->add('id', new Rows(Row::create(new IntegerEntry('id', 2))));
+        $bufferCache->add('id', new Rows(Row::create(Entry::integer('id', 1))));
+        $bufferCache->add('id', new Rows(Row::create(Entry::integer('id', 2))));
 
         $bufferCache->close();
     }
@@ -42,8 +42,8 @@ final class BufferCacheTest extends TestCase
             ->method('add')
             ->with('id', new Callback(fn (Rows $rows) => $rows->count() === 2));
 
-        $bufferCache->add('id', new Rows(Row::create(new IntegerEntry('id', 1))));
-        $bufferCache->add('id', new Rows(Row::create(new IntegerEntry('id', 2))));
+        $bufferCache->add('id', new Rows(Row::create(Entry::integer('id', 1))));
+        $bufferCache->add('id', new Rows(Row::create(Entry::integer('id', 2))));
     }
 
     public function test_buffer_cache_overflow_and_close() : void
@@ -60,9 +60,9 @@ final class BufferCacheTest extends TestCase
                 ['id', new Callback(fn (Rows $rows) => $rows->count() === 1)],
             );
 
-        $bufferCache->add('id', new Rows(Row::create(new IntegerEntry('id', 1))));
-        $bufferCache->add('id', new Rows(Row::create(new IntegerEntry('id', 2))));
-        $bufferCache->add('id', new Rows(Row::create(new IntegerEntry('id', 3))));
+        $bufferCache->add('id', new Rows(Row::create(Entry::integer('id', 1))));
+        $bufferCache->add('id', new Rows(Row::create(Entry::integer('id', 2))));
+        $bufferCache->add('id', new Rows(Row::create(Entry::integer('id', 3))));
 
         $bufferCache->close();
     }

@@ -9,43 +9,22 @@ use PHPUnit\Framework\TestCase;
 
 final class FloatEntryTest extends TestCase
 {
-    public function test_prevents_from_creating_entry_with_empty_entry_name() : void
-    {
-        $this->expectExceptionMessage('Entry name cannot be empty');
-
-        new FloatEntry('', 10.01);
-    }
-
-    public function test_entry_name_can_be_zero() : void
-    {
-        $this->assertSame('0', (new FloatEntry('0', 0))->name());
-    }
-
-    public function test_renames_entry() : void
-    {
-        $entry = new FloatEntry('entry-name', 100.00001);
-        $newEntry = $entry->rename('new-entry-name');
-
-        $this->assertEquals('new-entry-name', $newEntry->name());
-        $this->assertEquals(100.00001, $newEntry->value());
-    }
-
-    /**
-     * @dataProvider invalid_entries
-     */
-    public function test_prevents_from_creating_entry_from_invalid_entry_values($value) : void
-    {
-        $this->expectExceptionMessage(\sprintf('Value "%s" can\'t be casted to integer', $value));
-
-        FloatEntry::from('entry-name', $value);
-    }
-
     /**
      * @return \Generator
      */
     public function invalid_entries() : \Generator
     {
         yield ['random_value'];
+    }
+
+    public function is_equal_data_provider() : \Generator
+    {
+        yield 'equal names and values' => [true, new FloatEntry('name', 1.0), new FloatEntry('name', 1.0)];
+        yield 'different names and values' => [false, new FloatEntry('name', 1.0), new FloatEntry('different_name', 1.0)];
+        yield 'equal names and different values' => [false, new FloatEntry('name', 1.0), new FloatEntry('name', 2)];
+        yield 'different names characters and equal values' => [true, new FloatEntry('NAME', 1.1), new FloatEntry('name', 1.1)];
+        yield 'different names characters and equal values with high precision' => [true, new FloatEntry('NAME', 1.00001), new FloatEntry('name', 1.00001)];
+        yield 'different names characters and different values with high precision' => [false, new FloatEntry('NAME', 1.205502), new FloatEntry('name', 1.205501)];
     }
 
     /**
@@ -56,6 +35,19 @@ final class FloatEntryTest extends TestCase
         $entry = FloatEntry::from('entry-name', $value);
 
         $this->assertEquals((int) $value, $entry->value());
+    }
+
+    public function test_entry_name_can_be_zero() : void
+    {
+        $this->assertSame('0', (new FloatEntry('0', 0))->name());
+    }
+
+    /**
+     * @dataProvider is_equal_data_provider
+     */
+    public function test_is_equal(bool $equals, FloatEntry $entry, FloatEntry $nextEntry) : void
+    {
+        $this->assertSame($equals, $entry->isEqual($nextEntry));
     }
 
     public function test_map() : void
@@ -71,32 +63,29 @@ final class FloatEntryTest extends TestCase
     }
 
     /**
-     * @return \Generator
+     * @dataProvider invalid_entries
      */
-    public function valid_float_entries() : \Generator
+    public function test_prevents_from_creating_entry_from_invalid_entry_values($value) : void
     {
-        yield [100];
-        yield [100.00];
-        yield ['100'];
-        yield ['100.00'];
+        $this->expectExceptionMessage(\sprintf('Value "%s" can\'t be casted to integer', $value));
+
+        FloatEntry::from('entry-name', $value);
     }
 
-    /**
-     * @dataProvider is_equal_data_provider
-     */
-    public function test_is_equal(bool $equals, FloatEntry $entry, FloatEntry $nextEntry) : void
+    public function test_prevents_from_creating_entry_with_empty_entry_name() : void
     {
-        $this->assertSame($equals, $entry->isEqual($nextEntry));
+        $this->expectExceptionMessage('Entry name cannot be empty');
+
+        new FloatEntry('', 10.01);
     }
 
-    public function is_equal_data_provider() : \Generator
+    public function test_renames_entry() : void
     {
-        yield 'equal names and values' => [true, new FloatEntry('name', 1.0), new FloatEntry('name', 1.0)];
-        yield 'different names and values' => [false, new FloatEntry('name', 1.0), new FloatEntry('different_name', 1.0)];
-        yield 'equal names and different values' => [false, new FloatEntry('name', 1.0), new FloatEntry('name', 2)];
-        yield 'different names characters and equal values' => [true, new FloatEntry('NAME', 1.1), new FloatEntry('name', 1.1)];
-        yield 'different names characters and equal values with high precision' => [true, new FloatEntry('NAME', 1.00001), new FloatEntry('name', 1.00001)];
-        yield 'different names characters and different values with high precision' => [false, new FloatEntry('NAME', 1.205502), new FloatEntry('name', 1.205501)];
+        $entry = new FloatEntry('entry-name', 100.00001);
+        $newEntry = $entry->rename('new-entry-name');
+
+        $this->assertEquals('new-entry-name', $newEntry->name());
+        $this->assertEquals(100.00001, $newEntry->value());
     }
 
     public function test_serialization() : void
@@ -108,5 +97,16 @@ final class FloatEntryTest extends TestCase
         $unserialized = \unserialize($serialized);
 
         $this->assertTrue($string->isEqual($unserialized));
+    }
+
+    /**
+     * @return \Generator
+     */
+    public function valid_float_entries() : \Generator
+    {
+        yield [100];
+        yield [100.00];
+        yield ['100'];
+        yield ['100.00'];
     }
 }

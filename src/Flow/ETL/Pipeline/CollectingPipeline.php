@@ -13,9 +13,9 @@ use Flow\ETL\Rows;
  */
 final class CollectingPipeline implements Pipeline
 {
-    private Pipeline $pipeline;
-
     private Pipeline $nextPipeline;
+
+    private Pipeline $pipeline;
 
     public function __construct(Pipeline $pipeline)
     {
@@ -23,14 +23,19 @@ final class CollectingPipeline implements Pipeline
         $this->nextPipeline = $pipeline->clean();
     }
 
+    public function add(Pipe $pipe) : void
+    {
+        $this->nextPipeline->add($pipe);
+    }
+
     public function clean() : Pipeline
     {
         return new self($this->pipeline);
     }
 
-    public function add(Pipe $pipe) : void
+    public function onError(ErrorHandler $errorHandler) : void
     {
-        $this->nextPipeline->add($pipe);
+        $this->nextPipeline->onError($errorHandler);
     }
 
     public function process(\Generator $generator, ?int $limit = null, callable $callback = null) : void
@@ -48,11 +53,6 @@ final class CollectingPipeline implements Pipeline
         $mergedRows = (new Rows())->merge(...$rows);
 
         $this->nextPipeline->process($this->generate($mergedRows), $limit, $callback);
-    }
-
-    public function onError(ErrorHandler $errorHandler) : void
-    {
-        $this->nextPipeline->onError($errorHandler);
     }
 
     /**

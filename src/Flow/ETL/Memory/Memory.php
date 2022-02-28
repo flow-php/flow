@@ -9,9 +9,13 @@ use Flow\Serializer\Serializable;
 interface Memory extends Serializable
 {
     /**
-     * @param array<array<string, mixed>> $data
+     * @param int $size
+     *
+     * @return array<self>
      */
-    public function save(array $data) : void;
+    public function chunks(int $size) : array;
+
+    public function count() : int;
 
     /**
      * @psalm-mutation-free
@@ -19,20 +23,6 @@ interface Memory extends Serializable
      * @return array<array<string, mixed>>
      */
     public function dump() : array;
-
-    /**
-     * @param callable(array<string, mixed>) : mixed $callback
-     *
-     * @return array<mixed>
-     */
-    public function map(callable $callback) : array;
-
-    /**
-     * @param int $size
-     *
-     * @return array<self>
-     */
-    public function chunks(int $size) : array;
 
     /**
      * This method is a combination of array_map and array_values functions.
@@ -44,5 +34,15 @@ interface Memory extends Serializable
      */
     public function flatValues() : array;
 
-    public function count() : int;
+    /**
+     * @param callable(array<string, mixed>) : mixed $callback
+     *
+     * @return array<mixed>
+     */
+    public function map(callable $callback) : array;
+
+    /**
+     * @param array<array<string, mixed>> $data
+     */
+    public function save(array $data) : void;
 }

@@ -16,16 +16,16 @@ use Flow\ETL\Transformer;
  */
 final class ArrayCollectionGetTransformer implements Transformer
 {
+    private string $arrayEntryName;
+
+    private string $index;
+
     /**
      * @var array<string>
      */
     private array $keys;
 
-    private string $arrayEntryName;
-
     private string $newEntryName;
-
-    private string $index;
 
     /**
      * @param array<string> $keys

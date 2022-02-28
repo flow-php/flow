@@ -15,9 +15,9 @@ use Laminas\Hydrator\HydratorInterface;
  */
 final class ObjectToArrayTransformer implements Transformer
 {
-    private string $objectEntryName;
-
     private HydratorInterface $hydrator;
+
+    private string $objectEntryName;
 
     public function __construct(HydratorInterface $hydrator, string $objectEntryName)
     {

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use Flow\ETL\DSL\Transform;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
-use Flow\ETL\Transformer\DynamicEntryTransformer;
 use Flow\Serializer\NativePHPSerializer;
 use PHPUnit\Framework\TestCase;
 
@@ -14,7 +14,7 @@ final class DynamicEntryTransformerTest extends TestCase
 {
     public function test_adding_new_entries() : void
     {
-        $transformer = new DynamicEntryTransformer(
+        $transformer = Transform::dynamic(
             fn (Row $row) : Row\Entries => new Row\Entries(new Row\Entry\DateTimeEntry('updated_at', new \DateTimeImmutable('2020-01-01 00:00:00 UTC')))
         );
 
@@ -34,7 +34,7 @@ final class DynamicEntryTransformerTest extends TestCase
 
     public function test_adding_new_entries_with_serialization() : void
     {
-        $transformer = new DynamicEntryTransformer(
+        $transformer = Transform::dynamic(
             fn (Row $row) : Row\Entries => new Row\Entries(new Row\Entry\DateTimeEntry('updated_at', new \DateTimeImmutable('2020-01-01 00:00:00 UTC')))
         );
 

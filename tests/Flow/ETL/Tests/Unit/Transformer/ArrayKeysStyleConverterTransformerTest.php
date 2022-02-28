@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use Flow\ETL\DSL\Transform;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
-use Flow\ETL\Transformer\ArrayKeysStyleConverterTransformer;
 use Flow\ETL\Transformer\StyleConverter\StringStyles;
 use PHPUnit\Framework\TestCase;
 
@@ -14,7 +14,7 @@ final class ArrayKeysStyleConverterTransformerTest extends TestCase
 {
     public function test_transforms_case_style_for_all_keys_in_array_entry() : void
     {
-        $transformer = new ArrayKeysStyleConverterTransformer('arrayEntry', StringStyles::SNAKE);
+        $transformer = Transform::array_convert_keys('arrayEntry', StringStyles::SNAKE);
 
         $rows = $transformer->transform(
             new Rows(

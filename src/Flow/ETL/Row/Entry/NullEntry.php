@@ -26,14 +26,14 @@ final class NullEntry implements Entry
         $this->name = $name;
     }
 
-    public function __toString() : string
-    {
-        return $this->toString();
-    }
-
     public function __serialize() : array
     {
         return ['name' => $this->name];
+    }
+
+    public function __toString() : string
+    {
+        return $this->toString();
     }
 
     /**
@@ -45,27 +45,14 @@ final class NullEntry implements Entry
         $this->name = $data['name'];
     }
 
-    public function name() : string
-    {
-        return $this->name;
-    }
-
-    public function value()
-    {
-        return null;
-    }
-
     public function is(string $name) : bool
     {
         return \mb_strtolower($this->name) === \mb_strtolower($name);
     }
 
-    /**
-     * @throws InvalidArgumentException
-     */
-    public function rename(string $name) : Entry
+    public function isEqual(Entry $entry) : bool
     {
-        return new self($name);
+        return $this->is($entry->name()) && $entry instanceof self;
     }
 
     /**
@@ -78,13 +65,26 @@ final class NullEntry implements Entry
         return new self($this->name);
     }
 
-    public function isEqual(Entry $entry) : bool
+    public function name() : string
     {
-        return $this->is($entry->name()) && $entry instanceof self;
+        return $this->name;
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function rename(string $name) : Entry
+    {
+        return new self($name);
     }
 
     public function toString() : string
     {
         return 'null';
+    }
+
+    public function value()
+    {
+        return null;
     }
 }

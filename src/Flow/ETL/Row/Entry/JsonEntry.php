@@ -15,12 +15,12 @@ final class JsonEntry implements Entry
 {
     private string $name;
 
+    private bool $object;
+
     /**
      * @var array<mixed>
      */
     private array $value;
-
-    private bool $object;
 
     /**
      * JsonEntry constructor.
@@ -65,11 +65,6 @@ final class JsonEntry implements Entry
         return $entry;
     }
 
-    public function __toString() : string
-    {
-        return $this->toString();
-    }
-
     /**
      * @return array{name: string, value: array<mixed>, object: boolean}
      */
@@ -80,6 +75,11 @@ final class JsonEntry implements Entry
             'value' => $this->value,
             'object' => $this->object,
         ];
+    }
+
+    public function __toString() : string
+    {
+        return $this->toString();
     }
 
     /**
@@ -94,36 +94,14 @@ final class JsonEntry implements Entry
         $this->object = $data['object'];
     }
 
-    public function toString() : string
-    {
-        return $this->value();
-    }
-
-    public function name() : string
-    {
-        return $this->name;
-    }
-
-    /**
-     * @psalm-suppress MissingReturnType
-     */
-    public function value() : string
-    {
-        if (empty($this->value) && $this->object) {
-            return '{}';
-        }
-
-        return \json_encode($this->value, JSON_THROW_ON_ERROR);
-    }
-
     public function is(string $name) : bool
     {
         return \mb_strtolower($this->name) === \mb_strtolower($name);
     }
 
-    public function rename(string $name) : Entry
+    public function isEqual(Entry $entry) : bool
     {
-        return new self($name, $this->value);
+        return $this->is($entry->name()) && $entry instanceof self && (new ArrayComparison())->equals($this->value, $entry->value);
     }
 
     /**
@@ -136,8 +114,30 @@ final class JsonEntry implements Entry
         return new self($this->name, $mapper($this->value));
     }
 
-    public function isEqual(Entry $entry) : bool
+    public function name() : string
     {
-        return $this->is($entry->name()) && $entry instanceof self && (new ArrayComparison())->equals($this->value, $entry->value);
+        return $this->name;
+    }
+
+    public function rename(string $name) : Entry
+    {
+        return new self($name, $this->value);
+    }
+
+    public function toString() : string
+    {
+        return $this->value();
+    }
+
+    /**
+     * @psalm-suppress MissingReturnType
+     */
+    public function value() : string
+    {
+        if (empty($this->value) && $this->object) {
+            return '{}';
+        }
+
+        return \json_encode($this->value, JSON_THROW_ON_ERROR);
     }
 }

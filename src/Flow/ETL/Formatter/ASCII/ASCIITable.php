@@ -20,14 +20,14 @@ namespace Flow\ETL\Formatter\ASCII;
 final class ASCIITable
 {
     /**
-     * An array that contains the max character width of each column (not including buffer spacing).
-     */
-    private array $colWidths = [];
-
-    /**
      * An array that contains the column types.
      */
     private array $colTypes = [];
+
+    /**
+     * An array that contains the max character width of each column (not including buffer spacing).
+     */
+    private array $colWidths = [];
 
     /**
      * This is the function that you will call to make the table. You must pass it at least the first variable.
@@ -103,21 +103,28 @@ final class ASCIITable
     }
 
     /**
-     * This method will set the $col_width variable with the longest value in each column.
+     * This is an array_column shim, it will use the PHP array_column function if there is one, otherwise it will do the same thing the old way.
      *
      * @param array $array the multi-dimensional array you are building the ASCII Table from
+     * @param string $col a table's key (column)
+     *
+     * @return array an array containing all values of a column
      */
-    private function getColWidths(array $array, int $truncate) : void
+    private function arrCol(array $array, string $col)
     {
-        // If we have some array data loop through each row, then through each cell
-        if (isset($array[0])) {
-            foreach (\array_keys($array[0]) as $col) {
-                $length = \max(\max(\array_map([$this, 'len'], $this->arrCol($array, $col))), $this->len($col));
-                $this->colWidths[$col] = ($truncate === 0)
-                    ? $length
-                    : \min($length, $truncate);
+        if (\is_callable('array_column')) {
+            $return = \array_column($array, $col);
+        } else {
+            $return = [];
+
+            foreach ($array as $n => $dat) {
+                if (isset($dat[$col])) {
+                    $return[] = $dat[$col];
+                }
             }
         }
+
+        return $return;
     }
 
     /**
@@ -147,28 +154,21 @@ final class ASCIITable
     }
 
     /**
-     * This is an array_column shim, it will use the PHP array_column function if there is one, otherwise it will do the same thing the old way.
+     * This method will set the $col_width variable with the longest value in each column.
      *
      * @param array $array the multi-dimensional array you are building the ASCII Table from
-     * @param string $col a table's key (column)
-     *
-     * @return array an array containing all values of a column
      */
-    private function arrCol(array $array, string $col)
+    private function getColWidths(array $array, int $truncate) : void
     {
-        if (\is_callable('array_column')) {
-            $return = \array_column($array, $col);
-        } else {
-            $return = [];
-
-            foreach ($array as $n => $dat) {
-                if (isset($dat[$col])) {
-                    $return[] = $dat[$col];
-                }
+        // If we have some array data loop through each row, then through each cell
+        if (isset($array[0])) {
+            foreach (\array_keys($array[0]) as $col) {
+                $length = \max(\max(\array_map([$this, 'len'], $this->arrCol($array, $col))), $this->len($col));
+                $this->colWidths[$col] = ($truncate === 0)
+                    ? $length
+                    : \min($length, $truncate);
             }
         }
-
-        return $return;
     }
 
     /**

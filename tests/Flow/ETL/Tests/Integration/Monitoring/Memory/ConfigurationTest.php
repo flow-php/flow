@@ -10,6 +10,26 @@ use Flow\ETL\Tests\Integration\IntegrationTestCase;
 
 final class ConfigurationTest extends IntegrationTestCase
 {
+    public function test_less_than_for_infinite_memory() : void
+    {
+        \ini_set('memory_limit', '-1');
+
+        $config = new Configuration(0);
+
+        $this->assertFalse($config->isLessThan(Unit::fromGb(1000000)));
+    }
+
+    public function test_less_than_for_set_memory() : void
+    {
+        \ini_set('memory_limit', '1G');
+
+        $config = new Configuration(0);
+
+        $this->assertTrue($config->isLessThan(Unit::fromGb(1000000)));
+        $this->assertFalse($config->isLessThan(Unit::fromGb(1)));
+        $this->assertFalse($config->isLessThan(Unit::fromMb(100)));
+    }
+
     public function test_memory_limit_fixed() : void
     {
         \ini_set('memory_limit', '1G');
@@ -49,15 +69,6 @@ final class ConfigurationTest extends IntegrationTestCase
         );
     }
 
-    public function test_unit_below_limit_percentage_for_infinite_memory() : void
-    {
-        \ini_set('memory_limit', '-1');
-
-        $config = new Configuration(0);
-
-        $this->assertTrue($config->isConsumptionBelow(Unit::fromGb(1000000), 10));
-    }
-
     public function test_unit_below_limit_percentage_for_fixed_memory() : void
     {
         \ini_set('memory_limit', '1G');
@@ -68,23 +79,12 @@ final class ConfigurationTest extends IntegrationTestCase
         $this->assertFalse($config->isConsumptionBelow(Unit::fromMb(100), 10));
     }
 
-    public function test_less_than_for_infinite_memory() : void
+    public function test_unit_below_limit_percentage_for_infinite_memory() : void
     {
         \ini_set('memory_limit', '-1');
 
         $config = new Configuration(0);
 
-        $this->assertFalse($config->isLessThan(Unit::fromGb(1000000)));
-    }
-
-    public function test_less_than_for_set_memory() : void
-    {
-        \ini_set('memory_limit', '1G');
-
-        $config = new Configuration(0);
-
-        $this->assertTrue($config->isLessThan(Unit::fromGb(1000000)));
-        $this->assertFalse($config->isLessThan(Unit::fromGb(1)));
-        $this->assertFalse($config->isLessThan(Unit::fromMb(100)));
+        $this->assertTrue($config->isConsumptionBelow(Unit::fromGb(1000000), 10));
     }
 }

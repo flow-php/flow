@@ -19,11 +19,11 @@ final class ArrayDotGetTransformer implements Transformer
 {
     private string $arrayEntryName;
 
-    private string $path;
+    private EntryFactory $entryFactory;
 
     private string $newEntryName;
 
-    private EntryFactory $entryFactory;
+    private string $path;
 
     public function __construct(
         string $arrayEntryName,

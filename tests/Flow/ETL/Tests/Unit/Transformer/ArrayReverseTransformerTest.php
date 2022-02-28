@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use Flow\ETL\DSL\Transform;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\ArrayEntry;
 use Flow\ETL\Rows;
-use Flow\ETL\Transformer\ArrayReverseTransformer;
 use PHPUnit\Framework\TestCase;
 
 final class ArrayReverseTransformerTest extends TestCase
@@ -24,7 +24,7 @@ final class ArrayReverseTransformerTest extends TestCase
             ]
         );
 
-        $transformer = new ArrayReverseTransformer('array', \SORT_REGULAR);
+        $transformer = Transform::array_reverse('array');
 
         $this->assertSame(
             [

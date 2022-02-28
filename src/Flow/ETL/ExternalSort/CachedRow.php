@@ -10,12 +10,12 @@ use Flow\ETL\Rows;
 
 final class CachedRow
 {
+    private string $cacheId;
+
     /**
      * @var Row
      */
     private Row $row;
-
-    private string $cacheId;
 
     public function __construct(Row $row, string $cacheId)
     {
@@ -32,14 +32,14 @@ final class CachedRow
         return new self($rows->first(), $cacheId);
     }
 
-    public function row() : Row
-    {
-        return $this->row;
-    }
-
     public function cacheId() : string
     {
         return $this->cacheId;
+    }
+
+    public function row() : Row
+    {
+        return $this->row;
     }
 
     public function toRows() : Rows

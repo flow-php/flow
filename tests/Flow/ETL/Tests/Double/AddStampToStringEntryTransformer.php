@@ -14,11 +14,11 @@ use Flow\ETL\Transformer;
  */
 final class AddStampToStringEntryTransformer implements Transformer
 {
+    private string $divider;
+
     private string $entryName;
 
     private string $stamp;
-
-    private string $divider;
 
     public function __construct(string $entryName, string $stamp, string $divider)
     {

@@ -11,18 +11,18 @@ use Flow\ETL\Pipeline\Pipe;
  */
 interface Pipeline
 {
+    public function add(Pipe $pipe) : void;
+
     /**
      * Create clean instance of pipeline, with empty pipes.
      */
     public function clean() : self;
 
-    public function add(Pipe $pipe) : void;
+    public function onError(ErrorHandler $errorHandler) : void;
 
     /**
      * @param \Generator<int, Rows, mixed, void> $generator
      * @param callable(Rows $rows) : void $callback
      */
     public function process(\Generator $generator, ?int $limit = null, callable $callback = null) : void;
-
-    public function onError(ErrorHandler $errorHandler) : void;
 }

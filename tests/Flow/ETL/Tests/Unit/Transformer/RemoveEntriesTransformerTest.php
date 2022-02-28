@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use Flow\ETL\DSL\Transform;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
-use Flow\ETL\Transformer\RemoveEntriesTransformer;
 use PHPUnit\Framework\TestCase;
 
 final class RemoveEntriesTransformerTest extends TestCase
@@ -21,7 +21,7 @@ final class RemoveEntriesTransformerTest extends TestCase
             )
         );
 
-        $transformer = new RemoveEntriesTransformer('id', 'array');
+        $transformer = Transform::remove('id', 'array');
         $this->assertSame(
             [
                 ['name' => 'Row Name'],
@@ -40,7 +40,7 @@ final class RemoveEntriesTransformerTest extends TestCase
             )
         );
 
-        $transformer = new RemoveEntriesTransformer('not_existing');
+        $transformer = Transform::remove('not_existing');
         $this->assertSame(
             [
                 ['id' => 1, 'name' => 'Row Name', 'array' => ['test']],

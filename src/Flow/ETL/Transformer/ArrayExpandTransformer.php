@@ -19,9 +19,9 @@ final class ArrayExpandTransformer implements Transformer
 {
     private string $arrayEntryName;
 
-    private string $expandEntryName;
-
     private EntryFactory $entryFactory;
+
+    private string $expandEntryName;
 
     public function __construct(string $arrayEntryName, string $expandEntryName = 'element', EntryFactory $entryFactory = null)
     {

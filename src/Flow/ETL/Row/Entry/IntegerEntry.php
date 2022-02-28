@@ -41,14 +41,14 @@ final class IntegerEntry implements Entry
         return new self($name, (int) $value);
     }
 
-    public function __toString() : string
-    {
-        return $this->toString();
-    }
-
     public function __serialize() : array
     {
         return ['name' => $this->name, 'value' => $this->value];
+    }
+
+    public function __toString() : string
+    {
+        return $this->toString();
     }
 
     /**
@@ -61,27 +61,14 @@ final class IntegerEntry implements Entry
         $this->value = $data['value'];
     }
 
-    public function name() : string
-    {
-        return $this->name;
-    }
-
-    public function value() : int
-    {
-        return $this->value;
-    }
-
     public function is(string $name) : bool
     {
         return \mb_strtolower($this->name) === \mb_strtolower($name);
     }
 
-    /**
-     * @throws InvalidArgumentException
-     */
-    public function rename(string $name) : Entry
+    public function isEqual(Entry $entry) : bool
     {
-        return new self($name, $this->value);
+        return $this->is($entry->name()) && $entry instanceof self && $this->value() === $entry->value();
     }
 
     /**
@@ -94,13 +81,26 @@ final class IntegerEntry implements Entry
         return new self($this->name, $mapper($this->value()));
     }
 
-    public function isEqual(Entry $entry) : bool
+    public function name() : string
     {
-        return $this->is($entry->name()) && $entry instanceof self && $this->value() === $entry->value();
+        return $this->name;
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function rename(string $name) : Entry
+    {
+        return new self($name, $this->value);
     }
 
     public function toString() : string
     {
         return (string) $this->value();
+    }
+
+    public function value() : int
+    {
+        return $this->value;
     }
 }

@@ -9,6 +9,13 @@ use Flow\ETL\Rows;
 
 final class CacheSpy implements Cache
 {
+    private Cache $cache;
+
+    /**
+     * @var array<string, int>
+     */
+    private array $clears = [];
+
     /**
      * @var array<string, int>
      */
@@ -18,13 +25,6 @@ final class CacheSpy implements Cache
      * @var array<string, int>
      */
     private array $writes = [];
-
-    /**
-     * @var array<string, int>
-     */
-    private array $clears = [];
-
-    private Cache $cache;
 
     public function __construct(Cache $cache)
     {
@@ -42,17 +42,6 @@ final class CacheSpy implements Cache
         $this->cache->add($id, $rows);
     }
 
-    public function read(string $id) : \Generator
-    {
-        if (!\array_key_exists($id, $this->reads)) {
-            $this->reads[$id] = 1;
-        } else {
-            $this->reads[$id] += 1;
-        }
-
-        return $this->cache->read($id);
-    }
-
     public function clear(string $id) : void
     {
         if (!\array_key_exists($id, $this->clears)) {
@@ -62,6 +51,28 @@ final class CacheSpy implements Cache
         }
 
         $this->cache->clear($id);
+    }
+
+    public function clears() : int
+    {
+        $total = 0;
+
+        foreach ($this->clears as $clears) {
+            $total += $clears;
+        }
+
+        return $total;
+    }
+
+    public function read(string $id) : \Generator
+    {
+        if (!\array_key_exists($id, $this->reads)) {
+            $this->reads[$id] = 1;
+        } else {
+            $this->reads[$id] += 1;
+        }
+
+        return $this->cache->read($id);
     }
 
     public function reads() : int
@@ -81,17 +92,6 @@ final class CacheSpy implements Cache
 
         foreach ($this->writes as $writes) {
             $total += $writes;
-        }
-
-        return $total;
-    }
-
-    public function clears() : int
-    {
-        $total = 0;
-
-        foreach ($this->clears as $clears) {
-            $total += $clears;
         }
 
         return $total;

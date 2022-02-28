@@ -9,25 +9,15 @@ use PHPUnit\Framework\TestCase;
 
 final class NullEntryTest extends TestCase
 {
-    public function test_prevents_from_creating_entry_with_empty_entry_name() : void
+    public function is_equal_data_provider() : \Generator
     {
-        $this->expectExceptionMessage('Entry name cannot be empty');
-
-        new NullEntry('');
+        yield 'equal names and values' => [true, new NullEntry('name'), new NullEntry('name')];
+        yield 'different names characters and equal values' => [true, new NullEntry('NAME'), new NullEntry('name')];
     }
 
     public function test_entry_name_can_be_zero() : void
     {
         $this->assertSame('0', (new NullEntry('0'))->name());
-    }
-
-    public function test_renames_entry() : void
-    {
-        $entry = new NullEntry('entry-name');
-        $newEntry = $entry->rename('new-entry-name');
-
-        $this->assertEquals('new-entry-name', $newEntry->name());
-        $this->assertNull($newEntry->value());
     }
 
     /**
@@ -38,10 +28,20 @@ final class NullEntryTest extends TestCase
         $this->assertSame($equals, $entry->isEqual($nextEntry));
     }
 
-    public function is_equal_data_provider() : \Generator
+    public function test_prevents_from_creating_entry_with_empty_entry_name() : void
     {
-        yield 'equal names and values' => [true, new NullEntry('name'), new NullEntry('name')];
-        yield 'different names characters and equal values' => [true, new NullEntry('NAME'), new NullEntry('name')];
+        $this->expectExceptionMessage('Entry name cannot be empty');
+
+        new NullEntry('');
+    }
+
+    public function test_renames_entry() : void
+    {
+        $entry = new NullEntry('entry-name');
+        $newEntry = $entry->rename('new-entry-name');
+
+        $this->assertEquals('new-entry-name', $newEntry->name());
+        $this->assertNull($newEntry->value());
     }
 
     public function test_serialization() : void

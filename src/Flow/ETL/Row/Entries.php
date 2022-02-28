@@ -53,6 +53,146 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
         $this->entries = $data['entries'];
     }
 
+    public function add(Entry ...$entries) : self
+    {
+        $newEntries = [];
+
+        foreach ($entries as $entry) {
+            $newEntries[$entry->name()] = $entry;
+        }
+
+        $mergedEntries = \array_merge($this->entries, $newEntries);
+
+        if (\count($mergedEntries) !== \count($entries) + \count($this->entries)) {
+            throw InvalidArgumentException::because(
+                \sprintf(
+                    'Added entries names must be unique, given: [%s] + [%s]',
+                    \implode(', ', \array_map(fn (Entry $entry) => $entry->name(), $this->entries)),
+                    \implode(', ', \array_map(fn (Entry $entry) => $entry->name(), $newEntries)),
+                )
+            );
+        }
+
+        return self::recreate($mergedEntries);
+    }
+
+    /**
+     * @return Entry[]
+     */
+    public function all() : array
+    {
+        return \array_values($this->entries);
+    }
+
+    public function count() : int
+    {
+        return \count($this->entries);
+    }
+
+    /**
+     * @psalm-suppress ImpureFunctionCall
+     * @psalm-suppress MixedArgumentTypeCoercion
+     *
+     * @param callable(Entry) : bool $callable
+     */
+    public function filter(callable $callable) : self
+    {
+        $entries = [];
+
+        foreach ($this->entries as $entry) {
+            if ($callable($entry)) {
+                $entries[$entry->name()] = $entry;
+            }
+        }
+
+        return self::recreate($entries);
+    }
+
+    /**
+     * @throws RuntimeException
+     */
+    public function get(string $name) : Entry
+    {
+        $entry = $this->find($name);
+
+        if ($entry === null) {
+            throw new InvalidArgumentException("Entry \"{$name}\" does not exist");
+        }
+
+        return $entry;
+    }
+
+    /**
+     * @return \Iterator<string, Entry>
+     */
+    public function getIterator() : \Iterator
+    {
+        return new \ArrayIterator($this->all());
+    }
+
+    public function has(string $name) : bool
+    {
+        return \array_key_exists($name, $this->entries);
+    }
+
+    public function isEqual(self $entries) : bool
+    {
+        if ($this->count() !== $entries->count()) {
+            return false;
+        }
+
+        foreach ($this->entries as $entry) {
+            $otherEntry = $entries->find($entry->name());
+
+            if ($otherEntry === null) {
+                return false;
+            }
+
+            if (!$otherEntry->isEqual($entry)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * @psalm-suppress ImpureFunctionCall
+     * @psalm-suppress MixedReturnTypeCoercion
+     * @template ReturnType
+     *
+     * @param callable(Entry) : ReturnType $callable
+     *
+     * @return array<int, ReturnType>
+     */
+    public function map(callable $callable) : array
+    {
+        $returnValues = [];
+
+        foreach ($this->entries as $entry) {
+            $returnValues[] = $callable($entry);
+        }
+
+        return $returnValues;
+    }
+
+    public function merge(self $entries) : self
+    {
+        $newEntries = \array_merge($this->entries, $entries->entries);
+
+        if (\count($newEntries) != $this->count() + $entries->count()) {
+            throw InvalidArgumentException::because(
+                \sprintf(
+                    'Merged entries names must be unique, given: [%s] + [%s]',
+                    \implode(', ', \array_map(fn (Entry $entry) => $entry->name(), $this->entries)),
+                    \implode(', ', \array_map(fn (Entry $entry) => $entry->name(), $entries->all())),
+                )
+            );
+        }
+
+        return self::recreate($newEntries);
+    }
+
     /**
      * @param string $offset
      *
@@ -102,73 +242,6 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
     public function offsetUnset($offset) : self
     {
         throw new RuntimeException('In order to add new rows use Entries::remove(string $name) : self');
-    }
-
-    /**
-     * @return \Iterator<string, Entry>
-     */
-    public function getIterator() : \Iterator
-    {
-        return new \ArrayIterator($this->all());
-    }
-
-    public function has(string $name) : bool
-    {
-        return \array_key_exists($name, $this->entries);
-    }
-
-    /**
-     * @throws RuntimeException
-     */
-    public function get(string $name) : Entry
-    {
-        $entry = $this->find($name);
-
-        if ($entry === null) {
-            throw new InvalidArgumentException("Entry \"{$name}\" does not exist");
-        }
-
-        return $entry;
-    }
-
-    public function add(Entry ...$entries) : self
-    {
-        $newEntries = [];
-
-        foreach ($entries as $entry) {
-            $newEntries[$entry->name()] = $entry;
-        }
-
-        $mergedEntries = \array_merge($this->entries, $newEntries);
-
-        if (\count($mergedEntries) !== \count($entries) + \count($this->entries)) {
-            throw InvalidArgumentException::because(
-                \sprintf(
-                    'Added entries names must be unique, given: [%s] + [%s]',
-                    \implode(', ', \array_map(fn (Entry $entry) => $entry->name(), $this->entries)),
-                    \implode(', ', \array_map(fn (Entry $entry) => $entry->name(), $newEntries)),
-                )
-            );
-        }
-
-        return self::recreate($mergedEntries);
-    }
-
-    public function merge(self $entries) : self
-    {
-        $newEntries = \array_merge($this->entries, $entries->entries);
-
-        if (\count($newEntries) != $this->count() + $entries->count()) {
-            throw InvalidArgumentException::because(
-                \sprintf(
-                    'Merged entries names must be unique, given: [%s] + [%s]',
-                    \implode(', ', \array_map(fn (Entry $entry) => $entry->name(), $this->entries)),
-                    \implode(', ', \array_map(fn (Entry $entry) => $entry->name(), $entries->all())),
-                )
-            );
-        }
-
-        return self::recreate($newEntries);
     }
 
     public function remove(string ...$names) : self
@@ -222,50 +295,6 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
         return new self(...$entries);
     }
 
-    public function count() : int
-    {
-        return \count($this->entries);
-    }
-
-    /**
-     * @psalm-suppress ImpureFunctionCall
-     * @psalm-suppress MixedReturnTypeCoercion
-     * @template ReturnType
-     *
-     * @param callable(Entry) : ReturnType $callable
-     *
-     * @return array<int, ReturnType>
-     */
-    public function map(callable $callable) : array
-    {
-        $returnValues = [];
-
-        foreach ($this->entries as $entry) {
-            $returnValues[] = $callable($entry);
-        }
-
-        return $returnValues;
-    }
-
-    /**
-     * @psalm-suppress ImpureFunctionCall
-     * @psalm-suppress MixedArgumentTypeCoercion
-     *
-     * @param callable(Entry) : bool $callable
-     */
-    public function filter(callable $callable) : self
-    {
-        $entries = [];
-
-        foreach ($this->entries as $entry) {
-            if ($callable($entry)) {
-                $entries[$entry->name()] = $entry;
-            }
-        }
-
-        return self::recreate($entries);
-    }
-
     /**
      * @psalm-suppress MissingClosureReturnType
      *
@@ -278,35 +307,6 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
             $this->map(fn (Entry $entry) => $entry->name()),
             $this->map(fn (Entry $entry) => $entry->value())
         );
-    }
-
-    public function isEqual(self $entries) : bool
-    {
-        if ($this->count() !== $entries->count()) {
-            return false;
-        }
-
-        foreach ($this->entries as $entry) {
-            $otherEntry = $entries->find($entry->name());
-
-            if ($otherEntry === null) {
-                return false;
-            }
-
-            if (!$otherEntry->isEqual($entry)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /**
-     * @return Entry[]
-     */
-    public function all() : array
-    {
-        return \array_values($this->entries);
     }
 
     private function find(string $name) : ?Entry

@@ -9,19 +9,6 @@ use PHPUnit\Framework\TestCase;
 
 final class ArraySortByKeyTest extends TestCase
 {
-    /**
-     * @dataProvider arrays
-     */
-    public function test_sorts_array_by_key(array $origin, array $sorted) : void
-    {
-        // serialize to JSON to be sure that array is sorted exactly as expected
-
-        $this->assertEquals(
-            \json_encode($sorted),
-            \json_encode((new ArraySortByKey)($origin)),
-        );
-    }
-
     public function arrays() : \Generator
     {
         yield 'simple array' => [
@@ -120,5 +107,18 @@ final class ArraySortByKeyTest extends TestCase
                 'seller-id' => 1,
             ],
         ];
+    }
+
+    /**
+     * @dataProvider arrays
+     */
+    public function test_sorts_array_by_key(array $origin, array $sorted) : void
+    {
+        // serialize to JSON to be sure that array is sorted exactly as expected
+
+        $this->assertEquals(
+            \json_encode($sorted),
+            \json_encode((new ArraySortByKey)($origin)),
+        );
     }
 }

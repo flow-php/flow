@@ -10,59 +10,6 @@ use PHPUnit\Framework\TestCase;
 
 final class ArrayEntryTest extends TestCase
 {
-    public function test_prevents_from_creating_entry_with_empty_entry_name() : void
-    {
-        $this->expectExceptionMessage('Entry name cannot be empty');
-
-        new ArrayEntry('', ['id' => 1]);
-    }
-
-    public function test_entry_name_can_be_zero() : void
-    {
-        $this->assertSame('0', (new ArrayEntry('0', ['id' => 1]))->name());
-    }
-
-    public function test_renames_entry() : void
-    {
-        $entry = new ArrayEntry('entry-name', ['id' => 1, 'name' => 'one']);
-        $newEntry = $entry->rename('new-entry-name');
-
-        $this->assertEquals('new-entry-name', $newEntry->name());
-        $this->assertEquals(['id' => 1, 'name' => 'one'], $newEntry->value());
-    }
-
-    public function test_returns_array_as_value() : void
-    {
-        $items = [
-            ['item-id' => 1, 'name' => 'one'],
-            ['item-id' => 2, 'name' => 'two'],
-            ['item-id' => 3, 'name' => 'three'],
-        ];
-        $entry = new ArrayEntry('items', $items);
-
-        $this->assertEquals($items, $entry->value());
-    }
-
-    public function test_map() : void
-    {
-        $entry = new ArrayEntry('entry-name', ['id' => 1, 'name' => 'one']);
-
-        $this->assertEquals(
-            $entry,
-            $entry->map(function (array $value) {
-                return $value;
-            })
-        );
-    }
-
-    /**
-     * @dataProvider is_equal_data_provider
-     */
-    public function test_is_equal(bool $equals, ArrayEntry $entry, ArrayEntry $nextEntry) : void
-    {
-        $this->assertSame($equals, $entry->isEqual($nextEntry));
-    }
-
     public function is_equal_data_provider() : \Generator
     {
         yield 'equal names and equal simple integer arrays with the same order' => [
@@ -130,6 +77,59 @@ final class ArrayEntryTest extends TestCase
             new ArrayEntry('name', ['foo' => 1, 'bar' => ['foo' => new IntegerEntry('test', 1), 'bar' => 'bar'], 'baz']),
             new ArrayEntry('name', ['foo' => 1, 'bar' => ['foo' => new IntegerEntry('test', 1), 'bar' => 'bar'], 'baz']),
         ];
+    }
+
+    public function test_entry_name_can_be_zero() : void
+    {
+        $this->assertSame('0', (new ArrayEntry('0', ['id' => 1]))->name());
+    }
+
+    /**
+     * @dataProvider is_equal_data_provider
+     */
+    public function test_is_equal(bool $equals, ArrayEntry $entry, ArrayEntry $nextEntry) : void
+    {
+        $this->assertSame($equals, $entry->isEqual($nextEntry));
+    }
+
+    public function test_map() : void
+    {
+        $entry = new ArrayEntry('entry-name', ['id' => 1, 'name' => 'one']);
+
+        $this->assertEquals(
+            $entry,
+            $entry->map(function (array $value) {
+                return $value;
+            })
+        );
+    }
+
+    public function test_prevents_from_creating_entry_with_empty_entry_name() : void
+    {
+        $this->expectExceptionMessage('Entry name cannot be empty');
+
+        new ArrayEntry('', ['id' => 1]);
+    }
+
+    public function test_renames_entry() : void
+    {
+        $entry = new ArrayEntry('entry-name', ['id' => 1, 'name' => 'one']);
+        $newEntry = $entry->rename('new-entry-name');
+
+        $this->assertEquals('new-entry-name', $newEntry->name());
+        $this->assertEquals(['id' => 1, 'name' => 'one'], $newEntry->value());
+    }
+
+    public function test_returns_array_as_value() : void
+    {
+        $items = [
+            ['item-id' => 1, 'name' => 'one'],
+            ['item-id' => 2, 'name' => 'two'],
+            ['item-id' => 3, 'name' => 'three'],
+        ];
+        $entry = new ArrayEntry('items', $items);
+
+        $this->assertEquals($items, $entry->value());
     }
 
     public function test_serialization() : void

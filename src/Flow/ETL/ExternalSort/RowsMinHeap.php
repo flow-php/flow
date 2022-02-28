@@ -24,6 +24,14 @@ final class RowsMinHeap extends \SplMinHeap
     }
 
     /**
+     * @return CachedRow
+     */
+    public function extract()
+    {
+        return parent::extract();
+    }
+
+    /**
      * @param CachedRow $value
      */
     public function insert($value) : void
@@ -33,14 +41,6 @@ final class RowsMinHeap extends \SplMinHeap
         }
 
         parent::insert($value);
-    }
-
-    /**
-     * @return CachedRow
-     */
-    public function extract()
-    {
-        return parent::extract();
     }
 
     /**

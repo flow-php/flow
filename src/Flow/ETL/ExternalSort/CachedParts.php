@@ -23,6 +23,14 @@ final class CachedParts
     }
 
     /**
+     * @return array<string>
+     */
+    public function cacheIds() : array
+    {
+        return \array_keys($this->generators);
+    }
+
+    /**
      * @param Sort ...$entries
      *
      * @throws \Flow\ETL\Exception\InvalidArgumentException
@@ -42,6 +50,17 @@ final class CachedParts
         }
 
         return $heap;
+    }
+
+    public function notEmpty() : bool
+    {
+        foreach ($this->generators as $generator) {
+            if ($generator->valid()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -71,24 +90,5 @@ final class CachedParts
                 }
             }
         }
-    }
-
-    public function notEmpty() : bool
-    {
-        foreach ($this->generators as $generator) {
-            if ($generator->valid()) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * @return array<string>
-     */
-    public function cacheIds() : array
-    {
-        return \array_keys($this->generators);
     }
 }

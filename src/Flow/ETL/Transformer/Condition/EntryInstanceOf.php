@@ -8,9 +8,9 @@ use Flow\ETL\Row;
 
 final class EntryInstanceOf implements RowCondition
 {
-    private string $entryName;
-
     private string $class;
+
+    private string $entryName;
 
     public function __construct(string $entryName, string $class)
     {

@@ -9,13 +9,13 @@ use Flow\ETL\Rows;
 
 final class ThrowError implements ErrorHandler
 {
-    public function throw(\Throwable $error, Rows $rows) : bool
-    {
-        return true;
-    }
-
     public function skipRows(\Throwable $error, Rows $rows) : bool
     {
         return false;
+    }
+
+    public function throw(\Throwable $error, Rows $rows) : bool
+    {
+        return true;
     }
 }

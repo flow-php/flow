@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use Flow\ETL\DSL\Transform;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
-use Flow\ETL\Transformer\StringConcatTransformer;
 use PHPUnit\Framework\TestCase;
 
 final class StringConcatTransformerTest extends TestCase
 {
     public function test_string_contact() : void
     {
-        $transformer = new StringConcatTransformer([
+        $transformer = Transform::string_concat([
             'id', 'first_name', 'last_name',
         ]);
 
@@ -31,7 +31,7 @@ final class StringConcatTransformerTest extends TestCase
                     'id' => '1',
                     'first_name' => 'Norbert',
                     'last_name' => 'Orzechowicz',
-                    'element' => '1 Norbert Orzechowicz',
+                    'element' => '1NorbertOrzechowicz',
                 ],
             ],
             $rows->toArray()
@@ -40,7 +40,7 @@ final class StringConcatTransformerTest extends TestCase
 
     public function test_string_contact_with_non_string_value() : void
     {
-        $transformer = new StringConcatTransformer([
+        $transformer = Transform::string_concat([
             'id', 'first_name', 'last_name',
         ]);
 
@@ -58,7 +58,7 @@ final class StringConcatTransformerTest extends TestCase
                     'id' => 1,
                     'first_name' => 'Norbert',
                     'last_name' => 'Orzechowicz',
-                    'element' => 'Norbert Orzechowicz',
+                    'element' => 'NorbertOrzechowicz',
                 ],
             ],
             $rows->toArray()

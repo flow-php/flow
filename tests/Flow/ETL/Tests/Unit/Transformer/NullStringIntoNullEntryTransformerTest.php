@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use Flow\ETL\DSL\Transform;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
-use Flow\ETL\Transformer\NullStringIntoNullEntryTransformer;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -16,7 +16,7 @@ final class NullStringIntoNullEntryTransformerTest extends TestCase
 {
     public function test_transforms_null_string_entries_into_null_entries() : void
     {
-        $transformer = new NullStringIntoNullEntryTransformer('description', 'recommendation');
+        $transformer = Transform::to_null_from_null_string('description', 'recommendation');
 
         $rows = $transformer->transform(new Rows(
             Row::create(

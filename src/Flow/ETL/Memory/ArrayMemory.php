@@ -43,62 +43,6 @@ final class ArrayMemory implements \Countable, Memory
     }
 
     /**
-     * @param array<array<string, mixed>> $data
-     */
-    public function save(array $data) : void
-    {
-        $this->assertMemoryStructure($data);
-
-        $this->data = \array_merge($this->data, $data);
-    }
-
-    /**
-     * Example: [['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4]].
-     *
-     * @return array<array<string, mixed>>
-     */
-    public function dump() : array
-    {
-        return $this->data;
-    }
-
-    /**
-     * @param callable(array<string, mixed>) : mixed $callback
-     *
-     * @return array<mixed>
-     */
-    public function map(callable $callback) : array
-    {
-        $data = [];
-
-        foreach ($this->data as $entry) {
-            /** @psalm-suppress MixedAssignment */
-            $data[] = $callback($entry);
-        }
-
-        return $data;
-    }
-
-    /**
-     * This method is a combination of array_map and array_values functions.
-     *
-     * Turns: [['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4]]
-     * Into: [1, 2, 3, 4]
-     *
-     * @return array<mixed>
-     */
-    public function flatValues() : array
-    {
-        $data = [];
-
-        foreach ($this->data as $entry) {
-            $data[] = \array_values($entry);
-        }
-
-        return \array_merge(...$data);
-    }
-
-    /**
      * @param int $size
      *
      * @return array<self>
@@ -121,6 +65,62 @@ final class ArrayMemory implements \Countable, Memory
     public function count() : int
     {
         return \count($this->data);
+    }
+
+    /**
+     * Example: [['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4]].
+     *
+     * @return array<array<string, mixed>>
+     */
+    public function dump() : array
+    {
+        return $this->data;
+    }
+
+    /**
+     * This method is a combination of array_map and array_values functions.
+     *
+     * Turns: [['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4]]
+     * Into: [1, 2, 3, 4]
+     *
+     * @return array<mixed>
+     */
+    public function flatValues() : array
+    {
+        $data = [];
+
+        foreach ($this->data as $entry) {
+            $data[] = \array_values($entry);
+        }
+
+        return \array_merge(...$data);
+    }
+
+    /**
+     * @param callable(array<string, mixed>) : mixed $callback
+     *
+     * @return array<mixed>
+     */
+    public function map(callable $callback) : array
+    {
+        $data = [];
+
+        foreach ($this->data as $entry) {
+            /** @psalm-suppress MixedAssignment */
+            $data[] = $callback($entry);
+        }
+
+        return $data;
+    }
+
+    /**
+     * @param array<array<string, mixed>> $data
+     */
+    public function save(array $data) : void
+    {
+        $this->assertMemoryStructure($data);
+
+        $this->data = \array_merge($this->data, $data);
     }
 
     /**

@@ -13,9 +13,9 @@ final class ArrayKeyRename implements Serializable
 {
     private string $arrayEntry;
 
-    private string $path;
-
     private string $newName;
+
+    private string $path;
 
     public function __construct(string $arrayEntry, string $path, string $newName)
     {
@@ -53,13 +53,13 @@ final class ArrayKeyRename implements Serializable
         return $this->arrayEntry;
     }
 
-    public function path() : string
-    {
-        return $this->path;
-    }
-
     public function newName() : string
     {
         return $this->newName;
+    }
+
+    public function path() : string
+    {
+        return $this->path;
     }
 }

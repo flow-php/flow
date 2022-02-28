@@ -9,12 +9,12 @@ use Flow\ETL\Rows;
 
 final class IgnoreError implements ErrorHandler
 {
-    public function throw(\Throwable $error, Rows $rows) : bool
+    public function skipRows(\Throwable $error, Rows $rows) : bool
     {
         return false;
     }
 
-    public function skipRows(\Throwable $error, Rows $rows) : bool
+    public function throw(\Throwable $error, Rows $rows) : bool
     {
         return false;
     }

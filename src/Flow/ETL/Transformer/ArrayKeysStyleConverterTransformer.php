@@ -22,9 +22,9 @@ final class ArrayKeysStyleConverterTransformer implements Transformer
 {
     private string $arrayEntryName;
 
-    private string $style;
-
     private EntryFactory $entryFactory;
+
+    private string $style;
 
     public function __construct(
         string $arrayEntryName,

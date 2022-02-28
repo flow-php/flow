@@ -6,12 +6,12 @@ interface Cache
 {
     public function add(string $id, Rows $rows) : void;
 
+    public function clear(string $id) : void;
+
     /**
      * @param string $id
      *
      * @return \Generator<int, Rows, mixed, void>
      */
     public function read(string $id) : \Generator;
-
-    public function clear(string $id) : void;
 }

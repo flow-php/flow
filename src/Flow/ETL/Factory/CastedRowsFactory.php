@@ -11,12 +11,12 @@ use Flow\ETL\Transformer\CastTransformer;
 
 final class CastedRowsFactory implements RowsFactory
 {
-    private RowsFactory $factory;
-
     /**
      * @var array<RowConverter>
      */
     private array $castEntries;
+
+    private RowsFactory $factory;
 
     public function __construct(RowsFactory $factory, RowConverter ...$castEntries)
     {

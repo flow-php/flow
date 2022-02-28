@@ -19,15 +19,15 @@ use Opis\Closure\SerializableClosure;
 final class CallUserFunctionTransformer implements Transformer
 {
     /**
-     * @var array<string>
-     */
-    private array $entries;
-
-    /**
      * @psalm-var callable
      * @phpstan-var callable
      */
     private $callback;
+
+    /**
+     * @var array<string>
+     */
+    private array $entries;
 
     private EntryFactory $entryFactory;
 

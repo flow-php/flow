@@ -9,11 +9,12 @@ use PHPUnit\Framework\TestCase;
 
 final class ObjectEntryTest extends TestCase
 {
-    public function test_prevents_from_creating_entry_with_empty_entry_name() : void
+    public function is_equal_data_provider() : \Generator
     {
-        $this->expectExceptionMessage('Entry name cannot be empty');
-
-        new ObjectEntry('', new \stdClass());
+        yield 'equal names and values' => [true, new ObjectEntry('name', $object = new \stdClass()), new ObjectEntry('name', $object)];
+        yield 'different names and values' => [false, new ObjectEntry('name', $object = new \stdClass()), new ObjectEntry('different_name', $object)];
+        yield 'equal names and different values' => [false, new ObjectEntry('name', new \stdClass()), new ObjectEntry('name', new \ArrayObject())];
+        yield 'different names characters and equal values' => [true, new ObjectEntry('NAME', $object = new \stdClass()), new ObjectEntry('name', $object)];
     }
 
     public function test_entry_name_can_be_zero() : void
@@ -21,13 +22,12 @@ final class ObjectEntryTest extends TestCase
         $this->assertSame('0', (new ObjectEntry('0', new \stdClass()))->name());
     }
 
-    public function test_renames_entry() : void
+    /**
+     * @dataProvider is_equal_data_provider
+     */
+    public function test_is_equal(bool $equals, ObjectEntry $entry, ObjectEntry $nextEntry) : void
     {
-        $entry = new ObjectEntry('entry-name', new \stdClass());
-        $newEntry = $entry->rename('new-entry-name');
-
-        $this->assertEquals('new-entry-name', $newEntry->name());
-        $this->assertIsObject($newEntry->value());
+        $this->assertSame($equals, $entry->isEqual($nextEntry));
     }
 
     public function test_map() : void
@@ -42,20 +42,20 @@ final class ObjectEntryTest extends TestCase
         );
     }
 
-    /**
-     * @dataProvider is_equal_data_provider
-     */
-    public function test_is_equal(bool $equals, ObjectEntry $entry, ObjectEntry $nextEntry) : void
+    public function test_prevents_from_creating_entry_with_empty_entry_name() : void
     {
-        $this->assertSame($equals, $entry->isEqual($nextEntry));
+        $this->expectExceptionMessage('Entry name cannot be empty');
+
+        new ObjectEntry('', new \stdClass());
     }
 
-    public function is_equal_data_provider() : \Generator
+    public function test_renames_entry() : void
     {
-        yield 'equal names and values' => [true, new ObjectEntry('name', $object = new \stdClass()), new ObjectEntry('name', $object)];
-        yield 'different names and values' => [false, new ObjectEntry('name', $object = new \stdClass()), new ObjectEntry('different_name', $object)];
-        yield 'equal names and different values' => [false, new ObjectEntry('name', new \stdClass()), new ObjectEntry('name', new \ArrayObject())];
-        yield 'different names characters and equal values' => [true, new ObjectEntry('NAME', $object = new \stdClass()), new ObjectEntry('name', $object)];
+        $entry = new ObjectEntry('entry-name', new \stdClass());
+        $newEntry = $entry->rename('new-entry-name');
+
+        $this->assertEquals('new-entry-name', $newEntry->name());
+        $this->assertIsObject($newEntry->value());
     }
 
     public function test_serialization() : void

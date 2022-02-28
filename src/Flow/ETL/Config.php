@@ -12,11 +12,11 @@ final class Config
 
     public const EXTERNAL_SORT_MAX_MEMORY_ENV = 'FLOW_EXTERNAL_SORT_MAX_MEMORY';
 
-    private string $id;
-
     private Cache $cache;
 
     private ExternalSort $externalSort;
+
+    private string $id;
 
     private Pipeline $pipeline;
 
@@ -46,11 +46,6 @@ final class Config
         return self::builder()->build();
     }
 
-    public function id() : string
-    {
-        return $this->id;
-    }
-
     public function cache() : Cache
     {
         return $this->cache;
@@ -59,6 +54,11 @@ final class Config
     public function externalSort() : ExternalSort
     {
         return $this->externalSort;
+    }
+
+    public function id() : string
+    {
+        return $this->id;
     }
 
     public function pipeline() : Pipeline

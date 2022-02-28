@@ -10,12 +10,12 @@ final class EntryValueEqualsTo implements RowCondition
 {
     private string $entryName;
 
+    private bool $identical;
+
     /**
      * @var mixed
      */
     private $value;
-
-    private bool $identical;
 
     /**
      * @param string $entryName

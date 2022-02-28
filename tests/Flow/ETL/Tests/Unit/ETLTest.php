@@ -26,23 +26,6 @@ use PHPUnit\Framework\TestCase;
 
 final class ETLTest extends TestCase
 {
-    public function test_etl_process_constructor() : void
-    {
-        $collectedRows = ETL::process(
-            $rows = new Rows(
-                Row::create(
-                    new IntegerEntry('id', 101),
-                    new BooleanEntry('deleted', false),
-                    new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-24')),
-                    new NullEntry('phase')
-                )
-            )
-        )
-            ->fetch();
-
-        $this->assertEquals($rows, $collectedRows);
-    }
-
     public function test_etl() : void
     {
         $extractor = new class implements Extractor {
@@ -150,386 +133,6 @@ final class ETLTest extends TestCase
             ],
             $loader->result,
         );
-    }
-
-    public function test_etl_with_collecting() : void
-    {
-        ETL::extract(
-            new class implements Extractor {
-                /**
-                 * @return \Generator<int, Rows, mixed, void>
-                 */
-                public function extract() : \Generator
-                {
-                    yield new Rows(Row::create(new IntegerEntry('id', 1)));
-                    yield new Rows(Row::create(new IntegerEntry('id', 2)));
-                    yield new Rows(Row::create(new IntegerEntry('id', 3)));
-                }
-            }
-        )
-            ->transform(
-                new class implements Transformer {
-                    public function transform(Rows $rows) : Rows
-                    {
-                        return $rows->map(fn (Row $row) => $row->rename('id', 'new_id'));
-                    }
-
-                    public function __serialize() : array
-                    {
-                        return [];
-                    }
-
-                    public function __unserialize(array $data) : void
-                    {
-                    }
-                }
-            )
-            ->collect()
-            ->load(
-                new class implements Loader {
-                    public function load(Rows $rows) : void
-                    {
-                        Assert::assertCount(3, $rows);
-                    }
-
-                    public function __serialize() : array
-                    {
-                        return [];
-                    }
-
-                    public function __unserialize(array $data) : void
-                    {
-                    }
-                }
-            )
-            ->run();
-    }
-
-    public function test_etl_with_parallelizing() : void
-    {
-        ETL::extract(
-            new class implements Extractor {
-                /**
-                 * @return \Generator<int, Rows, mixed, void>
-                 */
-                public function extract() : \Generator
-                {
-                    yield new Rows(
-                        Row::create(new IntegerEntry('id', 1)),
-                        Row::create(new IntegerEntry('id', 2)),
-                        Row::create(new IntegerEntry('id', 3)),
-                        Row::create(new IntegerEntry('id', 4)),
-                        Row::create(new IntegerEntry('id', 5)),
-                        Row::create(new IntegerEntry('id', 6)),
-                        Row::create(new IntegerEntry('id', 7)),
-                        Row::create(new IntegerEntry('id', 8)),
-                        Row::create(new IntegerEntry('id', 9)),
-                        Row::create(new IntegerEntry('id', 10)),
-                    );
-                }
-            }
-        )
-            ->transform(
-                new class implements Transformer {
-                    public function transform(Rows $rows) : Rows
-                    {
-                        return $rows->map(fn (Row $row) => $row->rename('id', 'new_id'));
-                    }
-
-                    public function __serialize() : array
-                    {
-                        return [];
-                    }
-
-                    public function __unserialize(array $data) : void
-                    {
-                    }
-                }
-            )
-            ->parallelize(2)
-            ->load(
-                new class implements Loader {
-                    public function load(Rows $rows) : void
-                    {
-                        Assert::assertCount(2, $rows);
-                    }
-
-                    public function __serialize() : array
-                    {
-                        return [];
-                    }
-
-                    public function __unserialize(array $data) : void
-                    {
-                    }
-                }
-            )
-            ->run();
-    }
-
-    public function test_etl_fetch_with_limit() : void
-    {
-        $rows = ETL::extract(
-            new class implements Extractor {
-                /**
-                 * @return \Generator<int, Rows, mixed, void>
-                 */
-                public function extract() : \Generator
-                {
-                    for ($i = 0; $i < 1000; $i++) {
-                        yield new Rows(
-                            Row::create(new IntegerEntry('id', $i)),
-                        );
-                    }
-                }
-            }
-        )
-        ->fetch(10);
-
-        $this->assertCount(10, $rows);
-    }
-
-    public function test_etl_fetch_limit_with_closure() : void
-    {
-        $rows = ETL::extract(
-            new class implements Extractor {
-                /**
-                 * @return \Generator<int, Rows, mixed, void>
-                 */
-                public function extract() : \Generator
-                {
-                    for ($i = 0; $i < 1000; $i++) {
-                        yield new Rows(
-                            Row::create(new IntegerEntry('id', $i)),
-                        );
-                    }
-                }
-            }
-        )
-            ->transform($transformer = new class implements Closure, Transformer {
-                public bool $closureCalled = false;
-
-                public int $rowsTransformed = 0;
-
-                public function transform(Rows $rows) : Rows
-                {
-                    $this->rowsTransformed += 1;
-
-                    return $rows;
-                }
-
-                public function closure(Rows $rows) : void
-                {
-                    $this->closureCalled = true;
-                }
-
-                public function __serialize() : array
-                {
-                    return [];
-                }
-
-                public function __unserialize(array $data) : void
-                {
-                }
-            })
-            ->fetch(10);
-
-        $this->assertCount(10, $rows);
-        $this->assertSame(10, $transformer->rowsTransformed);
-        $this->assertTrue($transformer->closureCalled);
-    }
-
-    public function test_etl_limit_with_closure() : void
-    {
-        ETL::extract(
-            new class implements Extractor {
-                /**
-                 * @return \Generator<int, Rows, mixed, void>
-                 */
-                public function extract() : \Generator
-                {
-                    for ($i = 0; $i < 1000; $i++) {
-                        yield new Rows(
-                            Row::create(new IntegerEntry('id', $i)),
-                        );
-                    }
-                }
-            }
-        )
-            ->transform($transformer = new class implements Closure, Transformer {
-                public bool $closureCalled = false;
-
-                public int $rowsTransformed = 0;
-
-                public function transform(Rows $rows) : Rows
-                {
-                    $this->rowsTransformed += 1;
-
-                    return $rows;
-                }
-
-                public function closure(Rows $rows) : void
-                {
-                    $this->closureCalled = true;
-                }
-
-                public function __serialize() : array
-                {
-                    return [];
-                }
-
-                public function __unserialize(array $data) : void
-                {
-                }
-            })
-            ->limit(10)
-            ->run();
-
-        $this->assertSame(10, $transformer->rowsTransformed);
-        $this->assertTrue($transformer->closureCalled);
-    }
-
-    public function test_etl_limit() : void
-    {
-        $rows = ETL::extract(
-            new class implements Extractor {
-                /**
-                 * @return \Generator<int, Rows, mixed, void>
-                 */
-                public function extract() : \Generator
-                {
-                    for ($i = 0; $i < 1000; $i++) {
-                        yield new Rows(
-                            Row::create(new IntegerEntry('id', $i + 1)),
-                            Row::create(new IntegerEntry('id', $i + 2)),
-                        );
-                    }
-                }
-            }
-        )
-        ->limit(10)
-        ->fetch();
-
-        $this->assertCount(10, $rows);
-    }
-
-    public function test_etl_limit_with_collecting() : void
-    {
-        $rows = ETL::extract(
-            new class implements Extractor {
-                /**
-                 * @return \Generator<int, Rows, mixed, void>
-                 */
-                public function extract() : \Generator
-                {
-                    for ($i = 0; $i < 1000; $i++) {
-                        yield new Rows(
-                            Row::create(new IntegerEntry('id', $i + 1)),
-                            Row::create(new IntegerEntry('id', $i + 2)),
-                        );
-                    }
-                }
-            }
-        )
-            ->limit(10)
-            ->collect()
-            ->fetch();
-
-        $this->assertCount(10, $rows);
-    }
-
-    public function test_etl_limit_with_parallelizing() : void
-    {
-        $rows = ETL::extract(
-            new class implements Extractor {
-                /**
-                 * @return \Generator<int, Rows, mixed, void>
-                 */
-                public function extract() : \Generator
-                {
-                    for ($i = 0; $i < 1000; $i++) {
-                        yield new Rows(
-                            Row::create(new IntegerEntry('id', $i + 1)),
-                            Row::create(new IntegerEntry('id', $i + 2)),
-                        );
-                    }
-                }
-            }
-        )
-            ->parallelize(50)
-            ->limit(10)
-            ->fetch();
-
-        $this->assertCount(10, $rows);
-    }
-
-    public function test_etl_exceeding_the_limit_in_one_rows_set() : void
-    {
-        $rows = ETL::extract(
-            new class implements Extractor {
-                /**
-                 * @return \Generator<int, Rows, mixed, void>
-                 */
-                public function extract() : \Generator
-                {
-                    for ($i = 0; $i < 1000; $i++) {
-                        yield new Rows(
-                            Row::create(new IntegerEntry('id', $i + 1)),
-                            Row::create(new IntegerEntry('id', $i + 2)),
-                        );
-                    }
-                }
-            }
-        )
-            ->limit(9)
-            ->fetch();
-
-        $this->assertCount(9, $rows);
-    }
-
-    public function test_etl_with_total_rows_below_the_limit() : void
-    {
-        $rows = ETL::extract(
-            new class implements Extractor {
-                /**
-                 * @return \Generator<int, Rows, mixed, void>
-                 */
-                public function extract() : \Generator
-                {
-                    for ($i = 0; $i < 5; $i++) {
-                        yield new Rows(
-                            Row::create(new IntegerEntry('id', $i)),
-                        );
-                    }
-                }
-            }
-        )
-            ->limit(10)
-            ->fetch();
-
-        $this->assertCount(5, $rows);
-    }
-
-    public function test_etl_fetch_without_limit() : void
-    {
-        $rows = ETL::extract(
-            new class implements Extractor {
-                /**
-                 * @return \Generator<int, Rows, mixed, void>
-                 */
-                public function extract() : \Generator
-                {
-                    for ($i = 0; $i < 20; $i++) {
-                        yield new Rows(
-                            Row::create(new IntegerEntry('id', $i)),
-                        );
-                    }
-                }
-            }
-        )
-        ->fetch();
-
-        $this->assertCount(20, $rows);
     }
 
     public function test_etl_display() : void
@@ -668,6 +271,124 @@ ASCIITABLE,
         );
     }
 
+    public function test_etl_exceeding_the_limit_in_one_rows_set() : void
+    {
+        $rows = ETL::extract(
+            new class implements Extractor {
+                /**
+                 * @return \Generator<int, Rows, mixed, void>
+                 */
+                public function extract() : \Generator
+                {
+                    for ($i = 0; $i < 1000; $i++) {
+                        yield new Rows(
+                            Row::create(new IntegerEntry('id', $i + 1)),
+                            Row::create(new IntegerEntry('id', $i + 2)),
+                        );
+                    }
+                }
+            }
+        )
+            ->limit(9)
+            ->fetch();
+
+        $this->assertCount(9, $rows);
+    }
+
+    public function test_etl_fetch_limit_with_closure() : void
+    {
+        $rows = ETL::extract(
+            new class implements Extractor {
+                /**
+                 * @return \Generator<int, Rows, mixed, void>
+                 */
+                public function extract() : \Generator
+                {
+                    for ($i = 0; $i < 1000; $i++) {
+                        yield new Rows(
+                            Row::create(new IntegerEntry('id', $i)),
+                        );
+                    }
+                }
+            }
+        )
+            ->transform($transformer = new class implements Closure, Transformer {
+                public bool $closureCalled = false;
+
+                public int $rowsTransformed = 0;
+
+                public function transform(Rows $rows) : Rows
+                {
+                    $this->rowsTransformed += 1;
+
+                    return $rows;
+                }
+
+                public function closure(Rows $rows) : void
+                {
+                    $this->closureCalled = true;
+                }
+
+                public function __serialize() : array
+                {
+                    return [];
+                }
+
+                public function __unserialize(array $data) : void
+                {
+                }
+            })
+            ->fetch(10);
+
+        $this->assertCount(10, $rows);
+        $this->assertSame(10, $transformer->rowsTransformed);
+        $this->assertTrue($transformer->closureCalled);
+    }
+
+    public function test_etl_fetch_with_limit() : void
+    {
+        $rows = ETL::extract(
+            new class implements Extractor {
+                /**
+                 * @return \Generator<int, Rows, mixed, void>
+                 */
+                public function extract() : \Generator
+                {
+                    for ($i = 0; $i < 1000; $i++) {
+                        yield new Rows(
+                            Row::create(new IntegerEntry('id', $i)),
+                        );
+                    }
+                }
+            }
+        )
+        ->fetch(10);
+
+        $this->assertCount(10, $rows);
+    }
+
+    public function test_etl_fetch_without_limit() : void
+    {
+        $rows = ETL::extract(
+            new class implements Extractor {
+                /**
+                 * @return \Generator<int, Rows, mixed, void>
+                 */
+                public function extract() : \Generator
+                {
+                    for ($i = 0; $i < 20; $i++) {
+                        yield new Rows(
+                            Row::create(new IntegerEntry('id', $i)),
+                        );
+                    }
+                }
+            }
+        )
+        ->fetch();
+
+        $this->assertCount(20, $rows);
+    }
+
     public function test_etl_filter() : void
     {
         $rows = ETL::extract(
@@ -693,6 +414,130 @@ ASCIITABLE,
             [['id' => 2], ['id' => 4], ['id' => 6], ['id' => 8], ['id' => 10]],
             $rows->toArray()
         );
+    }
+
+    public function test_etl_limit() : void
+    {
+        $rows = ETL::extract(
+            new class implements Extractor {
+                /**
+                 * @return \Generator<int, Rows, mixed, void>
+                 */
+                public function extract() : \Generator
+                {
+                    for ($i = 0; $i < 1000; $i++) {
+                        yield new Rows(
+                            Row::create(new IntegerEntry('id', $i + 1)),
+                            Row::create(new IntegerEntry('id', $i + 2)),
+                        );
+                    }
+                }
+            }
+        )
+        ->limit(10)
+        ->fetch();
+
+        $this->assertCount(10, $rows);
+    }
+
+    public function test_etl_limit_with_closure() : void
+    {
+        ETL::extract(
+            new class implements Extractor {
+                /**
+                 * @return \Generator<int, Rows, mixed, void>
+                 */
+                public function extract() : \Generator
+                {
+                    for ($i = 0; $i < 1000; $i++) {
+                        yield new Rows(
+                            Row::create(new IntegerEntry('id', $i)),
+                        );
+                    }
+                }
+            }
+        )
+            ->transform($transformer = new class implements Closure, Transformer {
+                public bool $closureCalled = false;
+
+                public int $rowsTransformed = 0;
+
+                public function transform(Rows $rows) : Rows
+                {
+                    $this->rowsTransformed += 1;
+
+                    return $rows;
+                }
+
+                public function closure(Rows $rows) : void
+                {
+                    $this->closureCalled = true;
+                }
+
+                public function __serialize() : array
+                {
+                    return [];
+                }
+
+                public function __unserialize(array $data) : void
+                {
+                }
+            })
+            ->limit(10)
+            ->run();
+
+        $this->assertSame(10, $transformer->rowsTransformed);
+        $this->assertTrue($transformer->closureCalled);
+    }
+
+    public function test_etl_limit_with_collecting() : void
+    {
+        $rows = ETL::extract(
+            new class implements Extractor {
+                /**
+                 * @return \Generator<int, Rows, mixed, void>
+                 */
+                public function extract() : \Generator
+                {
+                    for ($i = 0; $i < 1000; $i++) {
+                        yield new Rows(
+                            Row::create(new IntegerEntry('id', $i + 1)),
+                            Row::create(new IntegerEntry('id', $i + 2)),
+                        );
+                    }
+                }
+            }
+        )
+            ->limit(10)
+            ->collect()
+            ->fetch();
+
+        $this->assertCount(10, $rows);
+    }
+
+    public function test_etl_limit_with_parallelizing() : void
+    {
+        $rows = ETL::extract(
+            new class implements Extractor {
+                /**
+                 * @return \Generator<int, Rows, mixed, void>
+                 */
+                public function extract() : \Generator
+                {
+                    for ($i = 0; $i < 1000; $i++) {
+                        yield new Rows(
+                            Row::create(new IntegerEntry('id', $i + 1)),
+                            Row::create(new IntegerEntry('id', $i + 2)),
+                        );
+                    }
+                }
+            }
+        )
+            ->parallelize(50)
+            ->limit(10)
+            ->fetch();
+
+        $this->assertCount(10, $rows);
     }
 
     public function test_etl_map() : void
@@ -731,5 +576,160 @@ ASCIITABLE,
             ],
             $rows->toArray()
         );
+    }
+
+    public function test_etl_process_constructor() : void
+    {
+        $collectedRows = ETL::process(
+            $rows = new Rows(
+                Row::create(
+                    new IntegerEntry('id', 101),
+                    new BooleanEntry('deleted', false),
+                    new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-24')),
+                    new NullEntry('phase')
+                )
+            )
+        )
+            ->fetch();
+
+        $this->assertEquals($rows, $collectedRows);
+    }
+
+    public function test_etl_with_collecting() : void
+    {
+        ETL::extract(
+            new class implements Extractor {
+                /**
+                 * @return \Generator<int, Rows, mixed, void>
+                 */
+                public function extract() : \Generator
+                {
+                    yield new Rows(Row::create(new IntegerEntry('id', 1)));
+                    yield new Rows(Row::create(new IntegerEntry('id', 2)));
+                    yield new Rows(Row::create(new IntegerEntry('id', 3)));
+                }
+            }
+        )
+            ->transform(
+                new class implements Transformer {
+                    public function transform(Rows $rows) : Rows
+                    {
+                        return $rows->map(fn (Row $row) => $row->rename_entry('id', 'new_id'));
+                    }
+
+                    public function __serialize() : array
+                    {
+                        return [];
+                    }
+
+                    public function __unserialize(array $data) : void
+                    {
+                    }
+                }
+            )
+            ->collect()
+            ->load(
+                new class implements Loader {
+                    public function load(Rows $rows) : void
+                    {
+                        Assert::assertCount(3, $rows);
+                    }
+
+                    public function __serialize() : array
+                    {
+                        return [];
+                    }
+
+                    public function __unserialize(array $data) : void
+                    {
+                    }
+                }
+            )
+            ->run();
+    }
+
+    public function test_etl_with_parallelizing() : void
+    {
+        ETL::extract(
+            new class implements Extractor {
+                /**
+                 * @return \Generator<int, Rows, mixed, void>
+                 */
+                public function extract() : \Generator
+                {
+                    yield new Rows(
+                        Row::create(new IntegerEntry('id', 1)),
+                        Row::create(new IntegerEntry('id', 2)),
+                        Row::create(new IntegerEntry('id', 3)),
+                        Row::create(new IntegerEntry('id', 4)),
+                        Row::create(new IntegerEntry('id', 5)),
+                        Row::create(new IntegerEntry('id', 6)),
+                        Row::create(new IntegerEntry('id', 7)),
+                        Row::create(new IntegerEntry('id', 8)),
+                        Row::create(new IntegerEntry('id', 9)),
+                        Row::create(new IntegerEntry('id', 10)),
+                    );
+                }
+            }
+        )
+            ->transform(
+                new class implements Transformer {
+                    public function transform(Rows $rows) : Rows
+                    {
+                        return $rows->map(fn (Row $row) => $row->rename_entry('id', 'new_id'));
+                    }
+
+                    public function __serialize() : array
+                    {
+                        return [];
+                    }
+
+                    public function __unserialize(array $data) : void
+                    {
+                    }
+                }
+            )
+            ->parallelize(2)
+            ->load(
+                new class implements Loader {
+                    public function load(Rows $rows) : void
+                    {
+                        Assert::assertCount(2, $rows);
+                    }
+
+                    public function __serialize() : array
+                    {
+                        return [];
+                    }
+
+                    public function __unserialize(array $data) : void
+                    {
+                    }
+                }
+            )
+            ->run();
+    }
+
+    public function test_etl_with_total_rows_below_the_limit() : void
+    {
+        $rows = ETL::extract(
+            new class implements Extractor {
+                /**
+                 * @return \Generator<int, Rows, mixed, void>
+                 */
+                public function extract() : \Generator
+                {
+                    for ($i = 0; $i < 5; $i++) {
+                        yield new Rows(
+                            Row::create(new IntegerEntry('id', $i)),
+                        );
+                    }
+                }
+            }
+        )
+            ->limit(10)
+            ->fetch();
+
+        $this->assertCount(5, $rows);
     }
 }

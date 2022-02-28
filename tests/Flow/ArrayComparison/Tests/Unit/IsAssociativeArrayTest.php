@@ -9,14 +9,6 @@ use PHPUnit\Framework\TestCase;
 
 final class IsAssociativeArrayTest extends TestCase
 {
-    /**
-     * @dataProvider collections
-     */
-    public function test_is_a_collection(array $collection) : void
-    {
-        $this->assertFalse((new IsAssociativeArray)($collection));
-    }
-
     public function collections() : \Generator
     {
         yield [
@@ -32,14 +24,6 @@ final class IsAssociativeArrayTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider not_collections
-     */
-    public function test_is_not_a_collection(array $collection) : void
-    {
-        $this->assertTrue((new IsAssociativeArray)($collection));
-    }
-
     public function not_collections() : \Generator
     {
         yield [
@@ -53,5 +37,21 @@ final class IsAssociativeArrayTest extends TestCase
                 'item-3' => ['id' => 3, 'name' => 'three'],
             ],
         ];
+    }
+
+    /**
+     * @dataProvider collections
+     */
+    public function test_is_a_collection(array $collection) : void
+    {
+        $this->assertFalse((new IsAssociativeArray)($collection));
+    }
+
+    /**
+     * @dataProvider not_collections
+     */
+    public function test_is_not_a_collection(array $collection) : void
+    {
+        $this->assertTrue((new IsAssociativeArray)($collection));
     }
 }

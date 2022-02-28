@@ -13,22 +13,22 @@ final class ArrayComparison
      * @param array<mixed> $a
      * @param array<mixed> $b
      *
-     * @return bool
+     * @return int
      */
-    public function equals(array $a, array $b) : bool
+    public function compare(array $a, array $b) : int
     {
-        return $this->valueEquals((new ArraySortByKey)($a), (new ArraySortByKey)($b));
+        return (new ArraySortByKey)($a) <=> (new ArraySortByKey)($b);
     }
 
     /**
      * @param array<mixed> $a
      * @param array<mixed> $b
      *
-     * @return int
+     * @return bool
      */
-    public function compare(array $a, array $b) : int
+    public function equals(array $a, array $b) : bool
     {
-        return (new ArraySortByKey)($a) <=> (new ArraySortByKey)($b);
+        return $this->valueEquals((new ArraySortByKey)($a), (new ArraySortByKey)($b));
     }
 
     /**

@@ -17,12 +17,12 @@ final class MemoryExtractor implements Extractor
 {
     private const CHUNK_SIZE = 100;
 
-    private Memory $memory;
-
     /**
      * @var int<1, max>
      */
     private int $chunkSize;
+
+    private Memory $memory;
 
     private string $rowEntryName;
 

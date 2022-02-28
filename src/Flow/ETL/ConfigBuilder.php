@@ -14,11 +14,11 @@ use Flow\Serializer\Serializer;
 
 final class ConfigBuilder
 {
-    private ?string $id;
-
     private ?Cache $cache;
 
     private ?ExternalSort $externalSort;
+
+    private ?string $id;
 
     private ?Pipeline $pipeline;
 
@@ -31,46 +31,6 @@ final class ConfigBuilder
         $this->externalSort = null;
         $this->pipeline = null;
         $this->serializer = null;
-    }
-
-    public function reset() : self
-    {
-        return new self();
-    }
-
-    public function id(string $id) : self
-    {
-        $this->id = $id;
-
-        return $this;
-    }
-
-    public function cache(Cache $cache) : self
-    {
-        $this->cache = $cache;
-
-        return $this;
-    }
-
-    public function externalSort(ExternalSort $externalSort) : self
-    {
-        $this->externalSort = $externalSort;
-
-        return $this;
-    }
-
-    public function pipeline(Pipeline $pipeline) : self
-    {
-        $this->pipeline = $pipeline;
-
-        return $this;
-    }
-
-    public function serializer(Serializer $serializer) : self
-    {
-        $this->serializer = $serializer;
-
-        return $this;
     }
 
     /**
@@ -101,5 +61,45 @@ final class ConfigBuilder
             $this->pipeline,
             $this->serializer
         );
+    }
+
+    public function cache(Cache $cache) : self
+    {
+        $this->cache = $cache;
+
+        return $this;
+    }
+
+    public function externalSort(ExternalSort $externalSort) : self
+    {
+        $this->externalSort = $externalSort;
+
+        return $this;
+    }
+
+    public function id(string $id) : self
+    {
+        $this->id = $id;
+
+        return $this;
+    }
+
+    public function pipeline(Pipeline $pipeline) : self
+    {
+        $this->pipeline = $pipeline;
+
+        return $this;
+    }
+
+    public function reset() : self
+    {
+        return new self();
+    }
+
+    public function serializer(Serializer $serializer) : self
+    {
+        $this->serializer = $serializer;
+
+        return $this;
     }
 }

@@ -11,13 +11,13 @@ use Flow\ETL\Rows;
 
 final class StreamLoader implements Loader
 {
-    private string $url;
+    private Formatter $formatter;
 
     private string $mode;
 
     private int $truncate;
 
-    private Formatter $formatter;
+    private string $url;
 
     /**
      * @param string $url all protocols supported by PHP are allowed https://www.php.net/manual/en/wrappers.php
@@ -33,9 +33,9 @@ final class StreamLoader implements Loader
         $this->truncate = $truncate;
     }
 
-    public static function stdout(int $truncate = 20, Formatter $formatter = null) : self
+    public static function output(int $truncate = 20, Formatter $formatter = null) : self
     {
-        return new self('php://stdout', 'w', $truncate, $formatter);
+        return new self('php://output', 'w', $truncate, $formatter);
     }
 
     public static function stderr(int $truncate = 20, Formatter $formatter = null) : self
@@ -43,9 +43,9 @@ final class StreamLoader implements Loader
         return new self('php://stderr', 'w', $truncate, $formatter);
     }
 
-    public static function output(int $truncate = 20, Formatter $formatter = null) : self
+    public static function stdout(int $truncate = 20, Formatter $formatter = null) : self
     {
-        return new self('php://output', 'w', $truncate, $formatter);
+        return new self('php://stdout', 'w', $truncate, $formatter);
     }
 
     /**

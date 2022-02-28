@@ -13,14 +13,6 @@ final class Consumption
         $this->initial = Unit::fromBytes(\memory_get_usage());
     }
 
-    /**
-     * @return Unit
-     */
-    public function initial() : Unit
-    {
-        return $this->initial;
-    }
-
     public function current() : Unit
     {
         return Unit::fromBytes(\memory_get_usage());
@@ -29,5 +21,13 @@ final class Consumption
     public function currentDiff() : Unit
     {
         return $this->current()->diff($this->initial);
+    }
+
+    /**
+     * @return Unit
+     */
+    public function initial() : Unit
+    {
+        return $this->initial;
     }
 }

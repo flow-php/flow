@@ -4,59 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use Flow\ETL\DSL\Transform;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Fixtures\Example;
-use Flow\ETL\Transformer\ObjectToArrayTransformer;
-use Laminas\Hydrator\ReflectionHydrator;
 use PHPUnit\Framework\TestCase;
 
 final class ObjectToArrayTransformerTest extends TestCase
 {
-    public function test_object_to_array_when_entry_is_not_object() : void
-    {
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('"integer_entry" is not ObjectEntry');
-
-        $objectHydratorTransformer = new ObjectToArrayTransformer(
-            new ReflectionHydrator(),
-            'integer_entry'
-        );
-
-        $objectHydratorTransformer->transform(
-            new Rows(
-                Row::create(
-                    new Row\Entry\IntegerEntry('integer_entry', 1000),
-                    new Row\Entry\ObjectEntry('object_entry', new Example()),
-                ),
-            ),
-        );
-    }
-
-    public function test_object_to_array_when_entry_does_not_exists() : void
-    {
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('"object_entry" not found');
-
-        $objectHydratorTransformer = new ObjectToArrayTransformer(
-            new ReflectionHydrator(),
-            'object_entry'
-        );
-
-        $objectHydratorTransformer->transform(
-            new Rows(
-                Row::create(
-                    new Row\Entry\IntegerEntry('integer_entry', 1000),
-                ),
-            ),
-        );
-    }
-
     public function test_object_to_array_transformer() : void
     {
-        $objectHydratorTransformer = new ObjectToArrayTransformer(
-            new ReflectionHydrator(),
+        $objectHydratorTransformer = Transform::to_array_from_object(
             'object_entry'
         );
 
@@ -82,6 +41,43 @@ final class ObjectToArrayTransformerTest extends TestCase
                 ),
             ),
             $rows
+        );
+    }
+
+    public function test_object_to_array_when_entry_does_not_exists() : void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('"object_entry" not found');
+
+        $objectHydratorTransformer = Transform::to_array_from_object(
+            'object_entry'
+        );
+
+        $objectHydratorTransformer->transform(
+            new Rows(
+                Row::create(
+                    new Row\Entry\IntegerEntry('integer_entry', 1000),
+                ),
+            ),
+        );
+    }
+
+    public function test_object_to_array_when_entry_is_not_object() : void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('"integer_entry" is not ObjectEntry');
+
+        $objectHydratorTransformer = Transform::to_array_from_object(
+            'integer_entry'
+        );
+
+        $objectHydratorTransformer->transform(
+            new Rows(
+                Row::create(
+                    new Row\Entry\IntegerEntry('integer_entry', 1000),
+                    new Row\Entry\ObjectEntry('object_entry', new Example()),
+                ),
+            ),
         );
     }
 }

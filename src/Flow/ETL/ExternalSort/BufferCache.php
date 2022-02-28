@@ -12,14 +12,14 @@ use Flow\ETL\Rows;
  */
 final class BufferCache
 {
-    private Cache $overflowCache;
-
-    private int $bufferSize;
-
     /**
      * @var array<string, Rows>
      */
     private array $buffers;
+
+    private int $bufferSize;
+
+    private Cache $overflowCache;
 
     public function __construct(Cache $overflowCache, int $bufferSize)
     {

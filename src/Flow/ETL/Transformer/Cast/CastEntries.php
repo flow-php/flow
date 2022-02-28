@@ -13,12 +13,12 @@ use Flow\ETL\Row\RowConverter;
  */
 class CastEntries implements RowConverter
 {
+    private EntryConverter $caster;
+
     /**
      * @var array<string>
      */
     private array $entryNames;
-
-    private EntryConverter $caster;
 
     private bool $nullable;
 

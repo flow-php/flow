@@ -8,11 +8,11 @@ final class Example
 {
     public int $foo = 1;
 
+    private \DateTimeImmutable $bad;
+
     private int $bar = 2;
 
     private int $baz = 3;
-
-    private \DateTimeImmutable $bad;
 
     public function __construct()
     {

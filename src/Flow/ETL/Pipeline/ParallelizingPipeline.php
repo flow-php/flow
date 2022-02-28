@@ -14,11 +14,11 @@ use Flow\ETL\Rows;
  */
 final class ParallelizingPipeline implements Pipeline
 {
-    private Pipeline $pipeline;
-
     private Pipeline $nextPipeline;
 
     private int $parallel;
+
+    private Pipeline $pipeline;
 
     public function __construct(Pipeline $pipeline, int $parallel)
     {
@@ -31,14 +31,19 @@ final class ParallelizingPipeline implements Pipeline
         $this->nextPipeline = $pipeline->clean();
     }
 
+    public function add(Pipe $pipe) : void
+    {
+        $this->nextPipeline->add($pipe);
+    }
+
     public function clean() : Pipeline
     {
         return new self($this->pipeline, $this->parallel);
     }
 
-    public function add(Pipe $pipe) : void
+    public function onError(ErrorHandler $errorHandler) : void
     {
-        $this->nextPipeline->add($pipe);
+        $this->nextPipeline->onError($errorHandler);
     }
 
     public function process(\Generator $generator, ?int $limit = null, callable $callback = null) : void
@@ -48,11 +53,6 @@ final class ParallelizingPipeline implements Pipeline
                 $this->nextPipeline->process($this->generate($chunk), $limit, $callback);
             }
         });
-    }
-
-    public function onError(ErrorHandler $errorHandler) : void
-    {
-        $this->nextPipeline->onError($errorHandler);
     }
 
     /**

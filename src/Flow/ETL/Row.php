@@ -46,9 +46,22 @@ final class Row implements Serializable
         $this->entries = $data['entries'];
     }
 
+    public function add(Entry ...$entries) : self
+    {
+        return new self($this->entries->add(...$entries));
+    }
+
     public function entries() : Entries
     {
         return $this->entries;
+    }
+
+    /**
+     * @param callable(Entry) : bool $callable
+     */
+    public function filter(callable $callable) : self
+    {
+        return new self($this->entries->filter($callable));
     }
 
     /**
@@ -59,20 +72,17 @@ final class Row implements Serializable
         return $this->entries->get($name);
     }
 
-    /**
-     * @psalm-suppress MissingReturnType
-     * @phpstan-ignore-next-line
-     *
-     * @throws InvalidArgumentException
-     */
-    public function valueOf(string $name)
+    public function isEqual(self $row) : bool
     {
-        return $this->get($name)->value();
+        return $this->entries->isEqual($row->entries());
     }
 
-    public function set(Entry ...$entries) : self
+    /**
+     * @param callable(Entry) : Entry $mapper
+     */
+    public function map(callable $mapper) : self
     {
-        return new self($this->entries->set(...$entries));
+        return new self(new Entries(...$this->entries->map($mapper)));
     }
 
     public function merge(self $row, string $prefix = '_') : self
@@ -84,7 +94,7 @@ final class Row implements Serializable
         );
     }
 
-    public function remove(string ...$names) : self
+    public function remove_entries(string ...$names) : self
     {
         $namesToRemove = [];
 
@@ -97,25 +107,19 @@ final class Row implements Serializable
         return new self($this->entries->remove(...$namesToRemove));
     }
 
-    /**
-     * @param callable(Entry) : Entry $mapper
-     */
-    public function map(callable $mapper) : self
-    {
-        return new self(new Entries(...$this->entries->map($mapper)));
-    }
-
-    public function rename(string $currentName, string $newName) : self
+    public function rename_entry(string $currentName, string $newName) : self
     {
         return new self($this->entries->rename($currentName, $newName));
     }
 
-    /**
-     * @param callable(Entry) : bool $callable
-     */
-    public function filter(callable $callable) : self
+    public function set(Entry ...$entries) : self
     {
-        return new self($this->entries->filter($callable));
+        return new self($this->entries->set(...$entries));
+    }
+
+    public function sortEntries() : self
+    {
+        return new self($this->entries->sort());
     }
 
     /**
@@ -126,18 +130,14 @@ final class Row implements Serializable
         return $this->entries->toArray();
     }
 
-    public function isEqual(self $row) : bool
+    /**
+     * @psalm-suppress MissingReturnType
+     * @phpstan-ignore-next-line
+     *
+     * @throws InvalidArgumentException
+     */
+    public function valueOf(string $name)
     {
-        return $this->entries->isEqual($row->entries());
-    }
-
-    public function add(Entry ...$entries) : self
-    {
-        return new self($this->entries->add(...$entries));
-    }
-
-    public function sortEntries() : self
-    {
-        return new self($this->entries->sort());
+        return $this->get($name)->value();
     }
 }

@@ -19,6 +19,26 @@ use Symfony\Component\Validator\Constraints\NotBlank;
 
 final class ConditionalTransformerTest extends TestCase
 {
+    public function test_returns_all_expanded_rows() : void
+    {
+        $conditionalTransformer = new ConditionalTransformer(
+            new EntryExists('array_entry'),
+            new ArrayExpandTransformer('array_entry', 'array_entry')
+        );
+
+        $rows = $conditionalTransformer->transform(
+            new Rows(
+                new Row(new Row\Entries(new Row\Entry\StringEntry('name', 'without array entry'))),
+                new Row(new Row\Entries(
+                    new Row\Entry\StringEntry('name', 'with array entry'),
+                    new Row\Entry\ArrayEntry('array_entry', ['red', 'blue'])
+                ))
+            )
+        );
+
+        $this->assertEquals(3, $rows->count());
+    }
+
     public function test_symfony_filter_integration() : void
     {
         $rows = new Rows(
@@ -69,25 +89,5 @@ final class ConditionalTransformerTest extends TestCase
             ],
             $transformer->transform($rows)->toArray()
         );
-    }
-
-    public function test_returns_all_expanded_rows() : void
-    {
-        $conditionalTransformer = new ConditionalTransformer(
-            new EntryExists('array_entry'),
-            new ArrayExpandTransformer('array_entry', 'array_entry')
-        );
-
-        $rows = $conditionalTransformer->transform(
-            new Rows(
-                new Row(new Row\Entries(new Row\Entry\StringEntry('name', 'without array entry'))),
-                new Row(new Row\Entries(
-                    new Row\Entry\StringEntry('name', 'with array entry'),
-                    new Row\Entry\ArrayEntry('array_entry', ['red', 'blue'])
-                ))
-            )
-        );
-
-        $this->assertEquals(3, $rows->count());
     }
 }

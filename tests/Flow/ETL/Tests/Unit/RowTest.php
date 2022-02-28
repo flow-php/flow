@@ -17,13 +17,55 @@ use PHPUnit\Framework\TestCase;
 
 final class RowTest extends TestCase
 {
+    public function is_equal_data_provider() : \Generator
+    {
+        yield 'equal simple same integer entries' => [
+            true,
+            new Row(new Entries(new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3))),
+            new Row(new Entries(new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3))),
+        ];
+        yield 'same integer entries with different number of entries' => [
+            false,
+            new Row(new Entries(new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3))),
+            new Row(new Entries(new IntegerEntry('1', 1), new IntegerEntry('2', 2))),
+        ];
+        yield 'simple same integer entries with different number of entries reversed' => [
+            false,
+            new Row(new Entries(new IntegerEntry('1', 1), new IntegerEntry('2', 2))),
+            new Row(new Entries(new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3))),
+        ];
+        yield 'simple same array entries' => [
+            true,
+            new Row(new Entries(new ArrayEntry('json', ['foo' => ['bar' => 'baz']]))),
+            new Row(new Entries(new ArrayEntry('json', ['foo' => ['bar' => 'baz']]))),
+        ];
+        yield 'simple same collection entries' => [
+            true,
+            new Row(new Entries(new StructureEntry('json', new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3)))),
+            new Row(new Entries(new StructureEntry('json', new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3)))),
+        ];
+        yield 'simple different collection entries' => [
+            false,
+            new Row(new Entries(new StructureEntry('json', new IntegerEntry('5', 5), new IntegerEntry('2', 2), new IntegerEntry('3', 3)))),
+            new Row(new Entries(new StructureEntry('json', new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3)))),
+        ];
+    }
+
+    /**
+     * @dataProvider is_equal_data_provider
+     */
+    public function test_is_equal(bool $equals, Row $row, Row $nextRow) : void
+    {
+        $this->assertSame($equals, $row->isEqual($nextRow));
+    }
+
     public function test_renames_entry() : void
     {
         $row = Row::create(
             new StringEntry('name', 'just a string'),
             new BooleanEntry('active', true)
         );
-        $newRow = $row->rename('name', 'new-name');
+        $newRow = $row->rename_entry('name', 'new-name');
 
         $this->assertEquals(
             Row::create(
@@ -66,47 +108,5 @@ final class RowTest extends TestCase
             ],
             $row->toArray(),
         );
-    }
-
-    /**
-     * @dataProvider is_equal_data_provider
-     */
-    public function test_is_equal(bool $equals, Row $row, Row $nextRow) : void
-    {
-        $this->assertSame($equals, $row->isEqual($nextRow));
-    }
-
-    public function is_equal_data_provider() : \Generator
-    {
-        yield 'equal simple same integer entries' => [
-            true,
-            new Row(new Entries(new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3))),
-            new Row(new Entries(new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3))),
-        ];
-        yield 'same integer entries with different number of entries' => [
-            false,
-            new Row(new Entries(new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3))),
-            new Row(new Entries(new IntegerEntry('1', 1), new IntegerEntry('2', 2))),
-        ];
-        yield 'simple same integer entries with different number of entries reversed' => [
-            false,
-            new Row(new Entries(new IntegerEntry('1', 1), new IntegerEntry('2', 2))),
-            new Row(new Entries(new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3))),
-        ];
-        yield 'simple same array entries' => [
-            true,
-            new Row(new Entries(new ArrayEntry('json', ['foo' => ['bar' => 'baz']]))),
-            new Row(new Entries(new ArrayEntry('json', ['foo' => ['bar' => 'baz']]))),
-        ];
-        yield 'simple same collection entries' => [
-            true,
-            new Row(new Entries(new StructureEntry('json', new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3)))),
-            new Row(new Entries(new StructureEntry('json', new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3)))),
-        ];
-        yield 'simple different collection entries' => [
-            false,
-            new Row(new Entries(new StructureEntry('json', new IntegerEntry('5', 5), new IntegerEntry('2', 2), new IntegerEntry('3', 3)))),
-            new Row(new Entries(new StructureEntry('json', new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3)))),
-        ];
     }
 }

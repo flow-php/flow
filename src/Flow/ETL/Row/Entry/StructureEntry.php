@@ -13,12 +13,12 @@ use Flow\ETL\Row\Entry;
  */
 final class StructureEntry implements Entry
 {
-    private string $name;
-
     /**
      * @var array<Entry>
      */
     private array $entries;
+
+    private string $name;
 
     /**
      * @throws InvalidArgumentException
@@ -33,11 +33,6 @@ final class StructureEntry implements Entry
         $this->entries = $entries;
     }
 
-    public function __toString() : string
-    {
-        return $this->toString();
-    }
-
     /**
      * @return array{name: string, entries: array<Entry>}
      */
@@ -47,6 +42,11 @@ final class StructureEntry implements Entry
             'name' => $this->name,
             'entries' => $this->entries,
         ];
+    }
+
+    public function __toString() : string
+    {
+        return $this->toString();
     }
 
     /**
@@ -59,19 +59,6 @@ final class StructureEntry implements Entry
         $this->entries = $data['entries'];
     }
 
-    public function name() : string
-    {
-        return $this->name;
-    }
-
-    /**
-     * @return array<mixed>
-     */
-    public function value() : array
-    {
-        return \array_map(fn (Entry $entry) => [$entry->name() => $entry->value()], $this->entries);
-    }
-
     /**
      * @psalm-suppress InvalidArgument
      */
@@ -80,12 +67,9 @@ final class StructureEntry implements Entry
         return \mb_strtolower($this->name) === \mb_strtolower($name);
     }
 
-    /**
-     * @throws InvalidArgumentException
-     */
-    public function rename(string $name) : Entry
+    public function isEqual(Entry $entry) : bool
     {
-        return new self($name, ...$this->entries);
+        return $this->is($entry->name()) && $entry instanceof self && (new ArrayComparison())->equals($this->value(), $entry->value());
     }
 
     /**
@@ -98,9 +82,17 @@ final class StructureEntry implements Entry
         return new self($this->name, ...$mapper($this->entries));
     }
 
-    public function isEqual(Entry $entry) : bool
+    public function name() : string
     {
-        return $this->is($entry->name()) && $entry instanceof self && (new ArrayComparison())->equals($this->value(), $entry->value());
+        return $this->name;
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function rename(string $name) : Entry
+    {
+        return new self($name, ...$this->entries);
     }
 
     public function toString() : string
@@ -112,5 +104,13 @@ final class StructureEntry implements Entry
         }
 
         return (string) \json_encode($array);
+    }
+
+    /**
+     * @return array<mixed>
+     */
+    public function value() : array
+    {
+        return \array_map(fn (Entry $entry) => [$entry->name() => $entry->value()], $this->entries);
     }
 }

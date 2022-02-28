@@ -157,6 +157,7 @@ return (new PhpCsFixer\Config())
                 'method_protected_static',
                 'method_private_static',
             ],
+            'sort_algorithm' => 'alpha'
         ],
         'ordered_imports' => [
             'imports_order' => [

@@ -15,6 +15,26 @@ final class Unit
         $this->bytes = $bytes;
     }
 
+    public static function fromBytes(int $bytes) : self
+    {
+        return new self($bytes);
+    }
+
+    public static function fromGb(int $gb) : self
+    {
+        return new self($gb * 1000 * 1000 * 1000);
+    }
+
+    public static function fromKb(int $kb) : self
+    {
+        return new self($kb * 1000);
+    }
+
+    public static function fromMb(int $mb) : self
+    {
+        return new self($mb * 1000 * 1000);
+    }
+
     /**
      * @param string $memoryString
      *
@@ -46,29 +66,24 @@ final class Unit
         }
     }
 
-    public static function fromBytes(int $bytes) : self
+    public function absolute() : self
     {
-        return new self($bytes);
+        return new self(\abs($this->bytes));
     }
 
-    public static function fromKb(int $kb) : self
+    public function diff(self $unit) : self
     {
-        return new self($kb * 1000);
-    }
-
-    public static function fromMb(int $mb) : self
-    {
-        return new self($mb * 1000 * 1000);
-    }
-
-    public static function fromGb(int $gb) : self
-    {
-        return new self($gb * 1000 * 1000 * 1000);
+        return new self($this->bytes - $unit->bytes);
     }
 
     public function inBytes() : int
     {
         return $this->bytes;
+    }
+
+    public function inGb(int $precision = 2) : float
+    {
+        return \round($this->inMb($precision) / 1000, $precision);
     }
 
     public function inKb(int $precision = 2) : float
@@ -81,28 +96,13 @@ final class Unit
         return \round($this->inKb($precision) / 1000, $precision);
     }
 
-    public function inGb(int $precision = 2) : float
+    public function isGreaterThan(self $unit) : bool
     {
-        return \round($this->inMb($precision) / 1000, $precision);
-    }
-
-    public function diff(self $unit) : self
-    {
-        return new self($this->bytes - $unit->bytes);
-    }
-
-    public function absolute() : self
-    {
-        return new self(\abs($this->bytes));
+        return $this->bytes > $unit->bytes;
     }
 
     public function percentage(int $value) : self
     {
         return new self((int) \round(($value / 100) * $this->bytes));
-    }
-
-    public function isGreaterThan(self $unit) : bool
-    {
-        return $this->bytes > $unit->bytes;
     }
 }

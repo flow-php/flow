@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Loader;
 
-use Flow\ETL\Loader\CallbackLoader;
+use Flow\ETL\DSL\Entry;
+use Flow\ETL\DSL\To;
 use Flow\ETL\Row;
-use Flow\ETL\Row\Entry\IntegerEntry;
-use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Rows;
 use Flow\Serializer\NativePHPSerializer;
 use PHPUnit\Framework\TestCase;
@@ -17,15 +16,15 @@ final class CallbackLoaderTest extends TestCase
     public function test_callback_loader() : void
     {
         $rows = new Rows(
-            Row::create(new IntegerEntry('number', 1), new StringEntry('name', 'one')),
-            Row::create(new IntegerEntry('number', 2), new StringEntry('name', 'two')),
+            Row::create(Entry::integer('number', 1), Entry::string('name', 'one')),
+            Row::create(Entry::integer('number', 2), Entry::string('name', 'two')),
         );
 
         $data = [];
 
-        (new CallbackLoader(function (Rows $rows) use (&$data) : void {
+        To::callback(function (Rows $rows) use (&$data) : void {
             $data = $rows->toArray();
-        }))->load($rows);
+        })->load($rows);
 
         $this->assertEquals($rows->toArray(), $data);
     }
@@ -33,13 +32,13 @@ final class CallbackLoaderTest extends TestCase
     public function test_callback_loader_serialization() : void
     {
         $rows = new Rows(
-            Row::create(new IntegerEntry('number', 1), new StringEntry('name', 'one')),
-            Row::create(new IntegerEntry('number', 2), new StringEntry('name', 'two')),
+            Row::create(Entry::integer('number', 1), Entry::string('name', 'one')),
+            Row::create(Entry::integer('number', 2), Entry::string('name', 'two')),
         );
 
         $path = \sys_get_temp_dir() . DIRECTORY_SEPARATOR . \uniqid('flow_callback_loader') . '.txt';
 
-        $loader = new CallbackLoader(function (Rows $rows) use ($path) : void {
+        $loader = To::callback(function (Rows $rows) use ($path) : void {
             $data = $rows->toArray();
 
             \file_put_contents($path, \print_r($data, true));

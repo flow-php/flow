@@ -12,14 +12,14 @@ final class ArrayDotValueEqualsTo implements RowCondition
 {
     private string $arrayEntryName;
 
+    private bool $identical;
+
     private string $path;
 
     /**
      * @var mixed
      */
     private $value;
-
-    private bool $identical;
 
     /**
      * @param string $arrayEntryName
