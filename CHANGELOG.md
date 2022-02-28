@@ -103,6 +103,7 @@
 - [e48062](https://github.com/flow-php/etl/commit/e48062890cd84e655e1162305086f67148347b83) - **Intial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#170](https://github.com/flow-php/etl/pull/170) - **Accidental BC Break in Row class** - [@norberttech](https://github.com/norberttech)
 - [#168](https://github.com/flow-php/etl/pull/168) - **code coverage in some tests** - [@norberttech](https://github.com/norberttech)
 - [#163](https://github.com/flow-php/etl/pull/163) - **ETL::fetch limit argument** - [@norberttech](https://github.com/norberttech)
 - [38c119](https://github.com/flow-php/etl/commit/38c119d13095f70992586af01807647e7ea3ec90) - **typo in readme** - [@norberttech](https://github.com/norberttech)
