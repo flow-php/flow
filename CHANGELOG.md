@@ -1,6 +1,9 @@
-## [Unreleased] - 2022-02-27
+## [Unreleased] - 2022-02-28
 
 ### Added
+- [#167](https://github.com/flow-php/etl/pull/167) - **Domain Specific Language** - [@norberttech](https://github.com/norberttech)
+- [#167](https://github.com/flow-php/etl/pull/167) - **ChainExtractor** - [@norberttech](https://github.com/norberttech)
+- [#167](https://github.com/flow-php/etl/pull/167) - **ETL::rows method alias for ETL::transform** - [@norberttech](https://github.com/norberttech)
 - [#165](https://github.com/flow-php/etl/pull/165) - **ETL::filter** - [@norberttech](https://github.com/norberttech)
 - [#165](https://github.com/flow-php/etl/pull/165) - **ETL::map** - [@norberttech](https://github.com/norberttech)
 - [#165](https://github.com/flow-php/etl/pull/165) - **ETL::read - alias for ETL::extract** - [@norberttech](https://github.com/norberttech)
@@ -73,6 +76,7 @@
 - [856870](https://github.com/flow-php/etl/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#167](https://github.com/flow-php/etl/pull/167) - **tests to use DSL** - [@norberttech](https://github.com/norberttech)
 - [#162](https://github.com/flow-php/etl/pull/162) - **documentation** - [@norberttech](https://github.com/norberttech)
 - [#162](https://github.com/flow-php/etl/pull/162) - **CompressingSerializer is now using base64 at compressed rows** - [@norberttech](https://github.com/norberttech)
 - [ce449b](https://github.com/flow-php/etl/commit/ce449b7ff68cd515eb0b8b645c015d2ffcfb4762) - **Cleaned up factories defined by transformers** - [@norberttech](https://github.com/norberttech)
