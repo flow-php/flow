@@ -1,6 +1,9 @@
-## [Unreleased] - 2022-02-28
+## [Unreleased] - 2022-03-02
 
 ### Added
+- [#172](https://github.com/flow-php/etl/pull/172) - **PipelineExtractor** - [@norberttech](https://github.com/norberttech)
+- [#172](https://github.com/flow-php/etl/pull/172) - **ChunkExtractor** - [@norberttech](https://github.com/norberttech)
+- [#172](https://github.com/flow-php/etl/pull/172) - **ETL::forEach alias method for ETL::run** - [@norberttech](https://github.com/norberttech)
 - [#169](https://github.com/flow-php/etl/pull/169) - **To::transform_to** - [@norberttech](https://github.com/norberttech)
 - [#169](https://github.com/flow-php/etl/pull/169) - **Transform::add_null** - [@norberttech](https://github.com/norberttech)
 - [#167](https://github.com/flow-php/etl/pull/167) - **Domain Specific Language** - [@norberttech](https://github.com/norberttech)
@@ -78,6 +81,7 @@
 - [856870](https://github.com/flow-php/etl/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#172](https://github.com/flow-php/etl/pull/172) - **Pipeline process returns Generator** - [@norberttech](https://github.com/norberttech)
 - [#167](https://github.com/flow-php/etl/pull/167) - **tests to use DSL** - [@norberttech](https://github.com/norberttech)
 - [#162](https://github.com/flow-php/etl/pull/162) - **documentation** - [@norberttech](https://github.com/norberttech)
 - [#162](https://github.com/flow-php/etl/pull/162) - **CompressingSerializer is now using base64 at compressed rows** - [@norberttech](https://github.com/norberttech)
@@ -103,6 +107,7 @@
 - [e48062](https://github.com/flow-php/etl/commit/e48062890cd84e655e1162305086f67148347b83) - **Intial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#172](https://github.com/flow-php/etl/pull/172) - **ParallelizingPipeline to create one pipeline, instead of creating one for each chunk** - [@norberttech](https://github.com/norberttech)
 - [#170](https://github.com/flow-php/etl/pull/170) - **Accidental BC Break in Row class** - [@norberttech](https://github.com/norberttech)
 - [#168](https://github.com/flow-php/etl/pull/168) - **code coverage in some tests** - [@norberttech](https://github.com/norberttech)
 - [#163](https://github.com/flow-php/etl/pull/163) - **ETL::fetch limit argument** - [@norberttech](https://github.com/norberttech)
