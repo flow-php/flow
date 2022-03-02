@@ -10,6 +10,7 @@ use Flow\ETL\Extractor\MemoryExtractor;
 use Flow\ETL\Extractor\ProcessExtractor;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Memory\Memory;
+use Flow\ETL\Pipeline;
 use Flow\ETL\Rows;
 
 class From
@@ -45,9 +46,19 @@ class From
         return new Extractor\ChainExtractor(...$extractors);
     }
 
+    final public static function chunks_from(Extractor $extractor, int $chunkSize) : Extractor
+    {
+        return new Extractor\ChunkExtractor($extractor, $chunkSize);
+    }
+
     final public static function memory(Memory $memory, int $chunkSize = 100, string $rowEntryName = 'row') : Extractor
     {
         return new MemoryExtractor($memory, $chunkSize, $rowEntryName);
+    }
+
+    final public static function pipeline(Pipeline $pipeline, ?int $limit = null) : Extractor
+    {
+        return new Extractor\PipelineExtractor($pipeline, $limit);
     }
 
     /**

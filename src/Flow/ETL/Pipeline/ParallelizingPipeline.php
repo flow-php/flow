@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Pipeline;
 
+use Flow\ETL\DSL\From;
 use Flow\ETL\ErrorHandler;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Extractor;
 use Flow\ETL\Pipeline;
-use Flow\ETL\Rows;
 
 /**
  * @internal
@@ -46,20 +47,20 @@ final class ParallelizingPipeline implements Pipeline
         $this->nextPipeline->onError($errorHandler);
     }
 
-    public function process(\Generator $generator, ?int $limit = null, callable $callback = null) : void
+    public function process(?int $limit = null, callable $callback = null) : \Generator
     {
-        $this->pipeline->process($generator, $limit, function (Rows $rows) use ($limit, $callback) : void {
-            foreach ($rows->chunks($this->parallel) as $chunk) {
-                $this->nextPipeline->process($this->generate($chunk), $limit, $callback);
-            }
-        });
+        $this->nextPipeline->source(
+            From::chunks_from(
+                From::pipeline($this->pipeline, $limit),
+                $this->parallel
+            )
+        );
+
+        return $this->nextPipeline->process($limit, $callback);
     }
 
-    /**
-     * @return \Generator<int, Rows, mixed, void>
-     */
-    private function generate(Rows $rows) : \Generator
+    public function source(Extractor $extractor) : void
     {
-        yield $rows;
+        $this->pipeline->source($extractor);
     }
 }

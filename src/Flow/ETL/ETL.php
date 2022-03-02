@@ -21,8 +21,6 @@ final class ETL
 
     private ExternalSort $externalSort;
 
-    private Extractor $extractor;
-
     private string $id;
 
     private ?int $limit;
@@ -32,8 +30,8 @@ final class ETL
     private function __construct(Extractor $extractor, Config $configuration)
     {
         $this->id = $configuration->id();
-        $this->extractor = $extractor;
         $this->pipeline = $configuration->pipeline();
+        $this->pipeline->source($extractor);
         $this->limit = null;
         $this->cache = $configuration->cache();
         $this->externalSort = $configuration->externalSort();
@@ -72,13 +70,13 @@ final class ETL
     {
         $this->cache->clear($id = $id ?? $this->id);
 
-        $this->pipeline->process($this->extractor->extract(), $this->limit, function (Rows $rows) use ($id) : void {
+        foreach ($this->pipeline->process($this->limit) as $rows) {
             $this->cache->add($id, $rows);
-        });
+        }
 
         $this->pipeline = $this->pipeline->clean();
         $this->limit = null;
-        $this->extractor = new CacheExtractor($id, $this->cache);
+        $this->pipeline->source(new CacheExtractor($id, $this->cache));
 
         return $this;
     }
@@ -120,17 +118,7 @@ final class ETL
             $this->limit = $limit;
         }
 
-        $rows = new Rows();
-        $this->pipeline->process($this->extractor->extract(), $this->limit, function (Rows $nextRows) use (&$rows) : void {
-            /**
-             * @psalm-suppress MixedMethodCall
-             * @psalm-suppress MixedAssignment
-             */
-            $rows = $rows->merge($nextRows);
-        });
-
-        /** @var Rows $rows */
-        return $rows;
+        return (new Rows())->merge(...\iterator_to_array($this->pipeline->process($this->limit)));
     }
 
     /**
@@ -144,6 +132,14 @@ final class ETL
         $this->pipeline->add(new FilterRowsTransformer(new Callback($callback)));
 
         return $this;
+    }
+
+    /**
+     * @param null|callable(Rows $rows) : void $callback
+     */
+    public function forEach(callable $callback = null) : void
+    {
+        $this->run($callback);
     }
 
     public function limit(int $limit) : self
@@ -213,16 +209,23 @@ final class ETL
         return $this->transform($transformer);
     }
 
-    public function run() : void
+    /**
+     * @param callable(Rows $rows): void|null $callback
+     */
+    public function run(callable $callback = null) : void
     {
-        $this->pipeline->process($this->extractor->extract(), $this->limit);
+        foreach ($this->pipeline->process($this->limit) as $rows) {
+            if ($callback !== null) {
+                $callback($rows);
+            }
+        }
     }
 
     public function sortBy(Sort ...$entries) : self
     {
         $this->cache($this->id);
 
-        $this->extractor = $this->externalSort->sortBy(...$entries);
+        $this->pipeline->source($this->externalSort->sortBy(...$entries));
 
         return $this;
     }

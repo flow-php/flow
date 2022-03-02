@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Pipeline;
 
+use Flow\ETL\DSL\From;
 use Flow\ETL\ErrorHandler;
 use Flow\ETL\ErrorHandler\ThrowError;
+use Flow\ETL\Extractor;
 use Flow\ETL\Loader;
 use Flow\ETL\Pipeline;
 use Flow\ETL\Rows;
@@ -18,12 +20,15 @@ final class SynchronousPipeline implements Pipeline
 {
     private ErrorHandler $errorHandler;
 
+    private Extractor $extractor;
+
     private Pipes $pipes;
 
     public function __construct()
     {
         $this->errorHandler = new ThrowError();
         $this->pipes = Pipes::empty();
+        $this->extractor = From::rows(new Rows());
     }
 
     public function add(Pipe $pipe) : void
@@ -44,12 +49,11 @@ final class SynchronousPipeline implements Pipeline
         $this->errorHandler = $errorHandler;
     }
 
-    /**
-     * @param \Generator<int, Rows, mixed, void> $generator
-     */
-    public function process(\Generator $generator, ?int $limit = null, callable $callback = null) : void
+    public function process(?int $limit = null, callable $callback = null) : \Generator
     {
         $total = 0;
+
+        $generator = $this->extractor->extract();
 
         while ($generator->valid()) {
             /** @var Rows $rows */
@@ -94,9 +98,16 @@ final class SynchronousPipeline implements Pipeline
                 $callback($rows);
             }
 
+            yield $rows;
+
             if ($limit !== null && $total === $limit) {
                 break;
             }
         }
+    }
+
+    public function source(Extractor $extractor) : void
+    {
+        $this->extractor = $extractor;
     }
 }

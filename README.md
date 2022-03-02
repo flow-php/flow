@@ -146,8 +146,11 @@ Please read [tests](tests/Flow/ETL/Tests/Unit/Extractor) to find examples of usa
 
 * [buffer](src/Flow/ETL/Extractor/BufferExtractor.php) - [tests](tests/Flow/ETL/Tests/Unit/Extractor/BufferExtractorTest.php)
 * [cache](src/Flow/ETL/Extractor/CacheExtractor.php) - [tests](tests/Flow/ETL/Tests/Unit/Extractor/CacheExtractorTest.php)
-* [process](src/Flow/ETL/Extractor/ProcessExtractor.php) - [tests](tests/Flow/ETL/Tests/Unit/Extractor/ProcessExtractorTest.php)
+* [chain](src/Flow/ETL/Extractor/ChainExtractor.php) - [tests](tests/Flow/ETL/Tests/Unit/Extractor/ChainExtractorTest.php)
+* [chunk](src/Flow/ETL/Extractor/ChunkExtractor.php) - [tests](tests/Flow/ETL/Tests/Unit/Extractor/ChunkExtractorTest.php)  
 * [memory](src/Flow/ETL/Extractor/MemoryExtractor.php) - [tests](tests/Flow/ETL/Tests/Unit/Extractor/MemoryExtractorTest.php)
+* [pipeline](src/Flow/ETL/Extractor/PipelineExtractor.php) - [tests](tests/Flow/ETL/Tests/Unit/Extractor/PipelineExtractorTest.php)  
+* [process](src/Flow/ETL/Extractor/ProcessExtractor.php) - [tests](tests/Flow/ETL/Tests/Unit/Extractor/ProcessExtractorTest.php)
 
 ## Transformers
 

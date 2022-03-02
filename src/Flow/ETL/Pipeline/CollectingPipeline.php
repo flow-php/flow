@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Pipeline;
 
+use Flow\ETL\DSL\From;
 use Flow\ETL\ErrorHandler;
+use Flow\ETL\Extractor;
 use Flow\ETL\Pipeline;
 use Flow\ETL\Rows;
 
@@ -38,28 +40,17 @@ final class CollectingPipeline implements Pipeline
         $this->nextPipeline->onError($errorHandler);
     }
 
-    public function process(\Generator $generator, ?int $limit = null, callable $callback = null) : void
+    public function process(?int $limit = null, callable $callback = null) : \Generator
     {
-        $rows = [];
+        $this->nextPipeline->source(From::rows(
+            (new Rows())->merge(...\iterator_to_array($this->pipeline->process($limit)))
+        ));
 
-        while ($generator->valid()) {
-            $this->pipeline->process($generator, $limit, function (Rows $nextRows) use (&$rows) : void {
-                /** @psalm-suppress MixedArrayAssignment */
-                $rows[] = $nextRows;
-            });
-        }
-
-        /** @var array<Rows> $rows */
-        $mergedRows = (new Rows())->merge(...$rows);
-
-        $this->nextPipeline->process($this->generate($mergedRows), $limit, $callback);
+        return $this->nextPipeline->process($limit, $callback);
     }
 
-    /**
-     * @return \Generator<int, Rows, mixed, void>
-     */
-    private function generate(Rows $rows) : \Generator
+    public function source(Extractor $extractor) : void
     {
-        yield $rows;
+        $this->pipeline->source($extractor);
     }
 }

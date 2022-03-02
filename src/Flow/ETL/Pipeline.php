@@ -21,8 +21,11 @@ interface Pipeline
     public function onError(ErrorHandler $errorHandler) : void;
 
     /**
-     * @param \Generator<int, Rows, mixed, void> $generator
      * @param callable(Rows $rows) : void $callback
+     *
+     * @return \Generator<int, Rows, mixed, void>
      */
-    public function process(\Generator $generator, ?int $limit = null, callable $callback = null) : void;
+    public function process(?int $limit = null, callable $callback = null) : \Generator;
+
+    public function source(Extractor $extractor) : void;
 }
