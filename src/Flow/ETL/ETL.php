@@ -8,8 +8,10 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor\CacheExtractor;
 use Flow\ETL\Extractor\ProcessExtractor;
 use Flow\ETL\Formatter\AsciiTableFormatter;
+use Flow\ETL\Loader\SchemaValidationLoader;
 use Flow\ETL\Pipeline\CollectingPipeline;
 use Flow\ETL\Pipeline\ParallelizingPipeline;
+use Flow\ETL\Row\Schema;
 use Flow\ETL\Row\Sort;
 use Flow\ETL\Transformer\CallbackRowTransformer;
 use Flow\ETL\Transformer\Filter\Filter\Callback;
@@ -233,6 +235,13 @@ final class ETL
     public function transform(Transformer $transformer) : self
     {
         $this->pipeline->add($transformer);
+
+        return $this;
+    }
+
+    public function validate(Schema $schema) : self
+    {
+        $this->pipeline->add(new SchemaValidationLoader($schema));
 
         return $this;
     }

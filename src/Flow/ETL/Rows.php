@@ -227,7 +227,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
     public function first() : Row
     {
         if (empty($this->rows)) {
-            throw RuntimeException::because('First row does not exist in empty collection');
+            throw new RuntimeException('First row does not exist in empty collection');
         }
 
         return \reset($this->rows);

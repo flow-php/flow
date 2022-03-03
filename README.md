@@ -119,6 +119,7 @@ Configuration makes possible to setup following options:
 * Rich collection of entry types and generic transformers 
 * Out of the box support for popular data sources/sinks 
 * Simple API
+* Schema Definition
 
 ## Row Entries
 
@@ -461,6 +462,38 @@ Output:
 +------+--------+---------+---------------------------+-------+------------------------------+--------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------+
 5 rows
 ```
+
+## Schema Validation
+
+Before loading data to sink it might be a good idea to validate it against the schema.
+Row Schema needs to come a definition for each entry in Row, definition is created from: 
+
+* entry - name of entry
+* type - type of entry (class string)
+* nullable - if `true` NullEntry with matching name will also pass the validation regardless of the type
+* constraint - additional, flexible validation. Useful for checking if entry value is for example one of expected values
+
+Example: 
+
+```php 
+<?php
+
+ETL::read($from)
+  ->rows($transform)
+  ->validate(
+      new Schema(
+          Schema\Definition::integer('id', $nullable = false),
+          Schema\Definition::string('name', $nullable = true),
+          Schema\Definition::boolean('active', $nullable = false),
+      )
+  )
+  ->write($to)
+  ->run();
+```
+
+### Schema Constraints 
+
+@TODO 
 
 ## Error Handling 
 

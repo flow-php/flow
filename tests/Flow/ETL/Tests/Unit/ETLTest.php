@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
+use Flow\ETL\DSL\Entry;
 use Flow\ETL\ErrorHandler\IgnoreError;
 use Flow\ETL\ETL;
 use Flow\ETL\Exception\InvalidArgumentException;
@@ -19,6 +20,7 @@ use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Row\Entry\NullEntry;
 use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Row\Entry\StructureEntry;
+use Flow\ETL\Row\Schema;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Double\AddStampToStringEntryTransformer;
 use Flow\ETL\Transformer;
@@ -750,5 +752,31 @@ ASCIITABLE,
 
         ETL::process(new Rows())
             ->limit(-1);
+    }
+
+    public function test_validation_against_schema() : void
+    {
+        $rows = ETL::process(
+            new Rows(
+                Row::create(Entry::integer('id', 1), Entry::string('name', 'foo'), Entry::boolean('active', true)),
+                Row::create(Entry::integer('id', 2), Entry::null('name'), Entry::boolean('active', false)),
+                Row::create(Entry::integer('id', 2), Entry::string('name', 'bar'), Entry::boolean('active', false)),
+            )
+        )->validate(
+            new Schema(
+                Schema\Definition::integer('id', $nullable = false),
+                Schema\Definition::string('name', $nullable = true),
+                Schema\Definition::boolean('active', $nullable = false),
+            )
+        )->fetch();
+
+        $this->assertEquals(
+            new Rows(
+                Row::create(Entry::integer('id', 1), Entry::string('name', 'foo'), Entry::boolean('active', true)),
+                Row::create(Entry::integer('id', 2), Entry::null('name'), Entry::boolean('active', false)),
+                Row::create(Entry::integer('id', 2), Entry::string('name', 'bar'), Entry::boolean('active', false)),
+            ),
+            $rows
+        );
     }
 }
