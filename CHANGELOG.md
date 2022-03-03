@@ -1,6 +1,7 @@
-## [Unreleased] - 2022-03-02
+## [Unreleased] - 2022-03-03
 
 ### Added
+- [#174](https://github.com/flow-php/etl/pull/174) - **Rows::groupBy** - [@norberttech](https://github.com/norberttech)
 - [#172](https://github.com/flow-php/etl/pull/172) - **PipelineExtractor** - [@norberttech](https://github.com/norberttech)
 - [#172](https://github.com/flow-php/etl/pull/172) - **ChunkExtractor** - [@norberttech](https://github.com/norberttech)
 - [#172](https://github.com/flow-php/etl/pull/172) - **ETL::forEach alias method for ETL::run** - [@norberttech](https://github.com/norberttech)
