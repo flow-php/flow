@@ -122,6 +122,17 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
         return $entry;
     }
 
+    public function getAll(string ...$names) : self
+    {
+        $entries = [];
+
+        foreach ($names as $name) {
+            $entries[] = $this->get($name);
+        }
+
+        return new self(...$entries);
+    }
+
     /**
      * @return \Iterator<string, Entry>
      */
@@ -130,9 +141,15 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
         return new \ArrayIterator($this->all());
     }
 
-    public function has(string $name) : bool
+    public function has(string ...$names) : bool
     {
-        return \array_key_exists($name, $this->entries);
+        foreach ($names as $name) {
+            if (!\array_key_exists($name, $this->entries)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public function isEqual(self $entries) : bool

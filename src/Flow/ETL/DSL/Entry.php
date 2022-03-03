@@ -33,6 +33,11 @@ class Entry
         return new RowEntry\DateTimeEntry($name, $value);
     }
 
+    final public static function entries(RowEntry ...$entries) : Entries
+    {
+        return new Entries(...$entries);
+    }
+
     final public static function float(string $name, float $value) : RowEntry
     {
         return new RowEntry\FloatEntry($name, $value);

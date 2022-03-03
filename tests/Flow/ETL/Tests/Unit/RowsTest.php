@@ -351,6 +351,188 @@ final class RowsTest extends TestCase
         );
     }
 
+    public function test_group_by_multiple_entries() : void
+    {
+        $rows = new Rows(
+            Row::create(Entry::integer('id', 1), Entry::string('foo', 'aa'), Entry::string('bar', 'ab'), Entry::integer('value', 1000)),
+            Row::create(Entry::integer('id', 2), Entry::string('foo', 'aa'), Entry::string('bar', 'cd'), Entry::integer('value', 1001)),
+            Row::create(Entry::integer('id', 3), Entry::string('foo', 'bb'), Entry::string('bar', 'ab'), Entry::integer('value', 1002)),
+            Row::create(Entry::integer('id', 4), Entry::string('foo', 'cc'), Entry::string('bar', 'bc'), Entry::integer('value', 1003)),
+            Row::create(Entry::integer('id', 5), Entry::string('foo', 'cc'), Entry::string('bar', 'ab'), Entry::integer('value', 1004)),
+            Row::create(Entry::integer('id', 6), Entry::string('foo', 'cc'), Entry::string('bar', 'bc'), Entry::integer('value', 1005)),
+            Row::create(Entry::integer('id', 7), Entry::string('foo', 'aa'), Entry::string('bar', 'cd'), Entry::integer('value', 1006)),
+        );
+
+        $this->assertEquals(
+            new Rows(
+                Row::create(
+                    Entry::array('entries', ['foo', 'bar']),
+                    Entry::array('values', ['aa', 'ab']),
+                    Entry::collection(
+                        'rows',
+                        Entry::entries(Entry::integer('id', 1), Entry::string('foo', 'aa'), Entry::string('bar', 'ab'), Entry::integer('value', 1000)),
+                    )
+                ),
+                Row::create(
+                    Entry::array('entries', ['foo', 'bar']),
+                    Entry::array('values', ['aa', 'cd']),
+                    Entry::collection(
+                        'rows',
+                        Entry::entries(Entry::integer('id', 2), Entry::string('foo', 'aa'), Entry::string('bar', 'cd'), Entry::integer('value', 1001)),
+                        Entry::entries(Entry::integer('id', 7), Entry::string('foo', 'aa'), Entry::string('bar', 'cd'), Entry::integer('value', 1006))
+                    )
+                ),
+                Row::create(
+                    Entry::array('entries', ['foo', 'bar']),
+                    Entry::array('values', ['bb', 'ab']),
+                    Entry::collection(
+                        'rows',
+                        Entry::entries(Entry::integer('id', 3), Entry::string('foo', 'bb'), Entry::string('bar', 'ab'), Entry::integer('value', 1002)),
+                    )
+                ),
+                Row::create(
+                    Entry::array('entries', ['foo', 'bar']),
+                    Entry::array('values', ['cc', 'bc']),
+                    Entry::collection(
+                        'rows',
+                        Entry::entries(Entry::integer('id', 4), Entry::string('foo', 'cc'), Entry::string('bar', 'bc'), Entry::integer('value', 1003)),
+                        Entry::entries(Entry::integer('id', 6), Entry::string('foo', 'cc'), Entry::string('bar', 'bc'), Entry::integer('value', 1005)),
+                    )
+                ),
+                Row::create(
+                    Entry::array('entries', ['foo', 'bar']),
+                    Entry::array('values', ['cc', 'ab']),
+                    Entry::collection(
+                        'rows',
+                        Entry::entries(Entry::integer('id', 5), Entry::string('foo', 'cc'), Entry::string('bar', 'ab'), Entry::integer('value', 1004)),
+                    )
+                )
+            ),
+            $rows->groupBy('foo', 'bar')->toRows()
+        );
+    }
+
+    public function test_group_by_single_entry() : void
+    {
+        $rows = new Rows(
+            Row::create(Entry::integer('id', 1), Entry::string('foo', 'aa'), Entry::integer('value', 1000)),
+            Row::create(Entry::integer('id', 2), Entry::string('foo', 'aa'), Entry::integer('value', 1001)),
+            Row::create(Entry::integer('id', 3), Entry::string('foo', 'bb'), Entry::integer('value', 1002)),
+            Row::create(Entry::integer('id', 4), Entry::string('foo', 'cc'), Entry::integer('value', 1003)),
+            Row::create(Entry::integer('id', 5), Entry::string('foo', 'cc'), Entry::integer('value', 1004)),
+            Row::create(Entry::integer('id', 6), Entry::string('foo', 'cc'), Entry::integer('value', 1005)),
+            Row::create(Entry::integer('id', 7), Entry::string('foo', 'aa'), Entry::integer('value', 1006)),
+        );
+
+        $this->assertEquals(
+            new Rows(
+                Row::create(
+                    Entry::array('entries', ['foo']),
+                    Entry::array('values', ['aa']),
+                    Entry::collection(
+                        'rows',
+                        Entry::entries(Entry::integer('id', 1), Entry::string('foo', 'aa'), Entry::integer('value', 1000)),
+                        Entry::entries(Entry::integer('id', 2), Entry::string('foo', 'aa'), Entry::integer('value', 1001)),
+                        Entry::entries(Entry::integer('id', 7), Entry::string('foo', 'aa'), Entry::integer('value', 1006)),
+                    )
+                ),
+                Row::create(
+                    Entry::array('entries', ['foo']),
+                    Entry::array('values', ['bb']),
+                    Entry::collection(
+                        'rows',
+                        Entry::entries(Entry::integer('id', 3), Entry::string('foo', 'bb'), Entry::integer('value', 1002)),
+                    )
+                ),
+                Row::create(
+                    Entry::array('entries', ['foo']),
+                    Entry::array('values', ['cc']),
+                    Entry::collection(
+                        'rows',
+                        Entry::entries(Entry::integer('id', 4), Entry::string('foo', 'cc'), Entry::integer('value', 1003)),
+                        Entry::entries(Entry::integer('id', 5), Entry::string('foo', 'cc'), Entry::integer('value', 1004)),
+                        Entry::entries(Entry::integer('id', 6), Entry::string('foo', 'cc'), Entry::integer('value', 1005)),
+                    )
+                )
+            ),
+            $rows->groupBy('foo')->toRows()
+        );
+    }
+
+    public function test_group_by_single_entry_with_nulls_and_missing_entry() : void
+    {
+        $rows = new Rows(
+            Row::create(Entry::integer('id', 1), Entry::string('foo', 'aa'), Entry::integer('value', 1000)),
+            Row::create(Entry::integer('id', 2), Entry::string('foo', 'aa'), Entry::integer('value', 1001)),
+            Row::create(Entry::integer('id', 3), Entry::string('foo', 'bb'), Entry::integer('value', 1002)),
+            Row::create(Entry::integer('id', 4), Entry::null('foo'), Entry::integer('value', 1003)),
+            Row::create(Entry::integer('id', 5), Entry::string('foo', 'cc'), Entry::integer('value', 1004)),
+            Row::create(Entry::integer('id', 6), Entry::string('foo', 'cc'), Entry::integer('value', 1005)),
+            Row::create(Entry::integer('id', 7), Entry::null('foo'), Entry::integer('value', 1006)),
+            Row::create(Entry::integer('id', 8), Entry::integer('value', 1007)),
+        );
+
+        $this->assertEquals(
+            new Rows(
+                Row::create(
+                    Entry::array('entries', ['foo']),
+                    Entry::array('values', ['aa']),
+                    Entry::collection(
+                        'rows',
+                        Entry::entries(Entry::integer('id', 1), Entry::string('foo', 'aa'), Entry::integer('value', 1000)),
+                        Entry::entries(Entry::integer('id', 2), Entry::string('foo', 'aa'), Entry::integer('value', 1001)),
+                    )
+                ),
+                Row::create(
+                    Entry::array('entries', ['foo']),
+                    Entry::array('values', ['bb']),
+                    Entry::collection(
+                        'rows',
+                        Entry::entries(Entry::integer('id', 3), Entry::string('foo', 'bb'), Entry::integer('value', 1002)),
+                    )
+                ),
+                Row::create(
+                    Entry::array('entries', ['foo']),
+                    Entry::array('values', ['null']),
+                    Entry::collection(
+                        'rows',
+                        Entry::entries(Entry::integer('id', 4), Entry::null('foo'), Entry::integer('value', 1003)),
+                        Entry::entries(Entry::integer('id', 7), Entry::null('foo'), Entry::integer('value', 1006)),
+                        Entry::entries(Entry::integer('id', 8), Entry::null('foo'), Entry::integer('value', 1007)),
+                    )
+                ),
+                Row::create(
+                    Entry::array('entries', ['foo']),
+                    Entry::array('values', ['cc']),
+                    Entry::collection(
+                        'rows',
+                        Entry::entries(Entry::integer('id', 5), Entry::string('foo', 'cc'), Entry::integer('value', 1004)),
+                        Entry::entries(Entry::integer('id', 6), Entry::string('foo', 'cc'), Entry::integer('value', 1005)),
+                    )
+                ),
+            ),
+            $rows->groupBy('foo')->toRows()
+        );
+    }
+
+    public function test_group_empty_rows() : void
+    {
+        $rows = new Rows();
+
+        $this->assertEquals(
+            new Rows(),
+            $rows->groupBy('id')->toRows()
+        );
+    }
+
+    public function test_group_with_empty_entries() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        $rows = new Rows();
+        $rows->groupBy();
+    }
+
     public function test_merge_row_with_another_row_that_has_duplicated_entries() : void
     {
         $this->expectExceptionMessage('Merged entries names must be unique, given: [id] + [id]');
