@@ -1,6 +1,7 @@
 ## [Unreleased] - 2022-03-03
 
 ### Added
+- [#175](https://github.com/flow-php/etl/pull/175) - **Row schema validation mechanism** - [@norberttech](https://github.com/norberttech)
 - [#174](https://github.com/flow-php/etl/pull/174) - **Rows::groupBy** - [@norberttech](https://github.com/norberttech)
 - [#172](https://github.com/flow-php/etl/pull/172) - **PipelineExtractor** - [@norberttech](https://github.com/norberttech)
 - [#172](https://github.com/flow-php/etl/pull/172) - **ChunkExtractor** - [@norberttech](https://github.com/norberttech)
