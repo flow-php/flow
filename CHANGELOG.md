@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-03-03
+## [Unreleased] - 2022-03-04
 
 ### Added
 - [#175](https://github.com/flow-php/etl/pull/175) - **Row schema validation mechanism** - [@norberttech](https://github.com/norberttech)
@@ -145,6 +145,7 @@
 - [55faa8](https://github.com/flow-php/etl/commit/55faa8edfed3973f54e31b3af57a4ba171050a85) - **README.md** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#176](https://github.com/flow-php/etl/pull/176) - **Replaced Schema::isValid with SchemaValidator** - [@norberttech](https://github.com/norberttech)
 - [#163](https://github.com/flow-php/etl/pull/163) - **Rows::makeFirst and Rows::makeLast methods** - [@norberttech](https://github.com/norberttech)
 - [#86](https://github.com/flow-php/etl/pull/86) - **Remove unsued PHP-CS config** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#64](https://github.com/flow-php/etl/pull/64) - **DateEntry** - [@norberttech](https://github.com/norberttech)
