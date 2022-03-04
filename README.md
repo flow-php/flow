@@ -466,7 +466,7 @@ Output:
 ## Schema Validation
 
 Before loading data to sink it might be a good idea to validate it against the schema.
-Row Schema needs to come a definition for each entry in Row, definition is created from: 
+Row Schema is built from Entry Definitions, each definition is created from: 
 
 * entry - name of entry
 * type - type of entry (class string)
@@ -486,6 +486,34 @@ ETL::read($from)
           Schema\Definition::string('name', $nullable = true),
           Schema\Definition::boolean('active', $nullable = false),
       )
+  )
+  ->write($to)
+  ->run();
+```
+
+### Schema Validator 
+
+There is more than one way to validate the schema, built in strategies are defined below: 
+
+* [StrictValidator](src/Flow/ETL/Row/Schema/StrictValidator.php) - each row must exactly match the schema, extra entries will fail validation
+* [SelectiveValidator](src/Flow/ETL/Row/Schema/SelectiveValidator.php) - only rows defined in the schema must match, any extra entry in row will be ignored 
+
+By default, ETL is initializing `StrictValidator`, but it's possible to override it by passing second argument to `ETL::validate()` method.
+
+Example: 
+
+```php 
+<?php
+
+ETL::read($from)
+  ->rows($transform)
+  ->validate(
+      new Schema(
+          Schema\Definition::integer('id', $nullable = false),
+          Schema\Definition::string('name', $nullable = true),
+          Schema\Definition::boolean('active', $nullable = false),
+      ),
+      new SelectiveValidator()
   )
   ->write($to)
   ->run();

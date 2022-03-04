@@ -4,35 +4,26 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Exception;
 
-use Flow\ETL\Row;
 use Flow\ETL\Row\Schema;
+use Flow\ETL\Rows;
 
 final class SchemaValidationException extends RuntimeException
 {
-    /**
-     * @var Row
-     */
-    private Row $row;
+    private Rows $rows;
 
-    /**
-     * @var Schema
-     */
     private Schema $schema;
 
-    public function __construct(Schema $schema, Row $row)
+    public function __construct(Schema $schema, Rows $rows)
     {
         $this->schema = $schema;
-        $this->row = $row;
+        $this->rows = $rows;
 
         parent::__construct('Row does not match schema.');
     }
 
-    /**
-     * @return Row
-     */
-    public function row() : Row
+    public function rows() : Rows
     {
-        return $this->row;
+        return $this->rows;
     }
 
     /**

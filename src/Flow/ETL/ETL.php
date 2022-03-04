@@ -239,9 +239,15 @@ final class ETL
         return $this;
     }
 
-    public function validate(Schema $schema) : self
+    /**
+     * @param Schema $schema
+     * @param null|SchemaValidator $validator - when null, StrictValidator gets initialized
+     *
+     * @return $this
+     */
+    public function validate(Schema $schema, SchemaValidator $validator = null) : self
     {
-        $this->pipeline->add(new SchemaValidationLoader($schema));
+        $this->pipeline->add(new SchemaValidationLoader($schema, $validator ?? new Schema\StrictValidator()));
 
         return $this;
     }

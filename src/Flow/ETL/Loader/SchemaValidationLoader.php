@@ -6,26 +6,30 @@ namespace Flow\ETL\Loader;
 
 use Flow\ETL\Exception\SchemaValidationException;
 use Flow\ETL\Loader;
-use Flow\ETL\Row;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Rows;
+use Flow\ETL\SchemaValidator;
 
 final class SchemaValidationLoader implements Loader
 {
     private Schema $schema;
 
-    public function __construct(Schema $schema)
+    private SchemaValidator $validator;
+
+    public function __construct(Schema $schema, SchemaValidator $validator)
     {
         $this->schema = $schema;
+        $this->validator = $validator;
     }
 
     /**
-     * @return array{schema: Schema}
+     * @return array{schema: Schema, validator: SchemaValidator}
      */
     public function __serialize() : array
     {
         return [
             'schema' => $this->schema,
+            'validator' => $this->validator,
         ];
     }
 
@@ -40,14 +44,8 @@ final class SchemaValidationLoader implements Loader
 
     public function load(Rows $rows) : void
     {
-        /** @psalm-var pure-callable(Row $row) : void $validator */
-        $validator = function (Row $row) : void {
-            if (!$this->schema->isValid($row)) {
-                throw new SchemaValidationException($this->schema, $row);
-            }
-        };
-
-        /** @psalm-suppress UnusedMethodCall */
-        $rows->each($validator);
+        if (!$this->validator->isValid($rows, $this->schema)) {
+            throw new SchemaValidationException($this->schema, $rows);
+        }
     }
 }

@@ -114,6 +114,11 @@ final class Definition implements Serializable
         $this->nullable = $data['nullable'];
         $this->constraint = $data['constraint'];
     }
+
+    public function entry() : string
+    {
+        return \mb_strtolower($this->entry);
+    }
     // @codeCoverageIgnoreEnd
 
     public function matches(Entry $entry) : bool

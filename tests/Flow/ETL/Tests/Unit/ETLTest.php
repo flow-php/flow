@@ -754,7 +754,30 @@ ASCIITABLE,
             ->limit(-1);
     }
 
-    public function test_validation_against_schema() : void
+    public function test_selective_validation_against_schema() : void
+    {
+        $rows = ETL::process(
+            new Rows(
+                Row::create(Entry::integer('id', 1), Entry::string('name', 'foo'), Entry::boolean('active', true)),
+                Row::create(Entry::integer('id', 2), Entry::null('name'), Entry::array('tags', ['foo', 'bar'])),
+                Row::create(Entry::integer('id', 2), Entry::string('name', 'bar'), Entry::boolean('active', false)),
+            )
+        )->validate(
+            new Schema(Schema\Definition::integer('id', $nullable = false)),
+            new Schema\SelectiveValidator()
+        )->fetch();
+
+        $this->assertEquals(
+            new Rows(
+                Row::create(Entry::integer('id', 1), Entry::string('name', 'foo'), Entry::boolean('active', true)),
+                Row::create(Entry::integer('id', 2), Entry::null('name'), Entry::array('tags', ['foo', 'bar'])),
+                Row::create(Entry::integer('id', 2), Entry::string('name', 'bar'), Entry::boolean('active', false)),
+            ),
+            $rows
+        );
+    }
+
+    public function test_strict_validation_against_schema() : void
     {
         $rows = ETL::process(
             new Rows(

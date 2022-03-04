@@ -109,7 +109,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
     }
 
     /**
-     * @throws RuntimeException
+     * @throws InvalidArgumentException
      */
     public function get(string $name) : Entry
     {
