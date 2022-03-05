@@ -83,6 +83,7 @@
 - [856870](https://github.com/flow-php/etl/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#178](https://github.com/flow-php/etl/pull/178) - **Keep entries case insensitive without changing entry name** - [@norberttech](https://github.com/norberttech)
 - [#177](https://github.com/flow-php/etl/pull/177) - **StructEntry::toArray is no longer reducing internal entries to arrays** - [@norberttech](https://github.com/norberttech)
 - [#177](https://github.com/flow-php/etl/pull/177) - **CollectionEntry::toArray is no longer reducing internal entries to arrays** - [@norberttech](https://github.com/norberttech)
 - [#177](https://github.com/flow-php/etl/pull/177) - **JsonEntry::map requires json string as a callback argument and return type** - [@norberttech](https://github.com/norberttech)
