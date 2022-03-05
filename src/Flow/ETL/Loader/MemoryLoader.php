@@ -8,6 +8,9 @@ use Flow\ETL\Loader;
 use Flow\ETL\Memory\Memory;
 use Flow\ETL\Rows;
 
+/**
+ * @implements Loader<array{memory: Memory}>
+ */
 final class MemoryLoader implements Loader
 {
     private Memory $memory;
@@ -17,9 +20,6 @@ final class MemoryLoader implements Loader
         $this->memory = $memory;
     }
 
-    /**
-     * @return array{memory: Memory}
-     */
     public function __serialize() : array
     {
         return [
@@ -27,10 +27,6 @@ final class MemoryLoader implements Loader
         ];
     }
 
-    /**
-     * @param array{memory: Memory} $data
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->memory = $data['memory'];

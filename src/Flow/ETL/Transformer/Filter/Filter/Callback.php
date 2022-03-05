@@ -8,6 +8,7 @@ use Flow\ETL\Row;
 use Flow\ETL\Transformer\Filter\Filter;
 
 /**
+ * @implements Filter<array{callback: pure-callable(Row $row) : bool}>
  * @psalm-immutable
  */
 final class Callback implements Filter
@@ -31,8 +32,6 @@ final class Callback implements Filter
 
     /**
      * @phpstan-ignore-next-line
-     *
-     * @return array{callback: pure-callable(Row $row) : bool}
      */
     public function __serialize() : array
     {
@@ -43,9 +42,6 @@ final class Callback implements Filter
 
     /**
      * @phpstan-ignore-next-line
-     * @psalm-suppress MoreSpecificImplementedParamType
-     *
-     * @param array{callback: pure-callable(Row $row) : bool} $data
      */
     public function __unserialize(array $data) : void
     {

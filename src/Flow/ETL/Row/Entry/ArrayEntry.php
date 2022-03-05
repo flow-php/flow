@@ -9,6 +9,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
 
 /**
+ * @implements Entry<array<mixed>, array{name: string, value: array<mixed>}>
  * @psalm-immutable
  */
 final class ArrayEntry implements Entry
@@ -36,9 +37,6 @@ final class ArrayEntry implements Entry
         $this->value = $value;
     }
 
-    /**
-     * @return array{name: string, value: array<mixed>}
-     */
     public function __serialize() : array
     {
         return ['name' => $this->name, 'value' => $this->value];
@@ -49,10 +47,6 @@ final class ArrayEntry implements Entry
         return $this->toString();
     }
 
-    /**
-     * @param array{name: string, value: array<mixed>} $data
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->name = $data['name'];
@@ -69,14 +63,9 @@ final class ArrayEntry implements Entry
         return $this->is($entry->name()) && $entry instanceof self && (new ArrayComparison())->equals($this->value(), $entry->value());
     }
 
-    /**
-     * @psalm-suppress MixedArgument
-     *
-     * @throws InvalidArgumentException
-     */
     public function map(callable $mapper) : Entry
     {
-        return new self($this->name, $mapper($this->value()));
+        return new self($this->name, $mapper($this->value));
     }
 
     public function name() : string
@@ -84,9 +73,6 @@ final class ArrayEntry implements Entry
         return $this->name;
     }
 
-    /**
-     * @throws InvalidArgumentException
-     */
     public function rename(string $name) : Entry
     {
         return new self($name, $this->value);
@@ -97,9 +83,6 @@ final class ArrayEntry implements Entry
         return (string) \json_encode($this->value());
     }
 
-    /**
-     * @return array<mixed>
-     */
     public function value() : array
     {
         return $this->value;

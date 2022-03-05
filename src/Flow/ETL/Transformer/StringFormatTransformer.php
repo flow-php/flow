@@ -9,6 +9,7 @@ use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 /**
+ * @implements Transformer<array{entry_name:string,format:string}>
  * @psalm-immutable
  */
 final class StringFormatTransformer implements Transformer
@@ -23,9 +24,6 @@ final class StringFormatTransformer implements Transformer
         $this->format = $format;
     }
 
-    /**
-     * @return array{entry_name: string, format: string}
-     */
     public function __serialize() : array
     {
         return [
@@ -34,11 +32,6 @@ final class StringFormatTransformer implements Transformer
         ];
     }
 
-    /**
-     * @param array{entry_name: string, format: string} $data
-     *
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->entryName = $data['entry_name'];
@@ -53,10 +46,8 @@ final class StringFormatTransformer implements Transformer
         $transformer = function (Row $row) : Row {
             $entry = $row->get($this->entryName);
 
-            /** @psalm-suppress MixedArgument */
             return $row->set(
-                /** @phpstan-ignore-next-line */
-                new Row\Entry\StringEntry($entry->name(), \sprintf($this->format, $entry->value()))
+                new Row\Entry\StringEntry($entry->name(), \sprintf($this->format, $entry->toString()))
             );
         };
 

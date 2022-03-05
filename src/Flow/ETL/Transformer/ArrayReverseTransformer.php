@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 /**
+ * @implements Transformer<array{array_entry_name: string}>
  * @psalm-immutable
  */
 final class ArrayReverseTransformer implements Transformer
@@ -21,9 +23,6 @@ final class ArrayReverseTransformer implements Transformer
         $this->arrayEntryName = $arrayEntry;
     }
 
-    /**
-     * @return array{array_entry_name: string}
-     */
     public function __serialize() : array
     {
         return [
@@ -31,11 +30,6 @@ final class ArrayReverseTransformer implements Transformer
         ];
     }
 
-    /**
-     * @param array{array_entry_name: string} $data
-     *
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->arrayEntryName = $data['array_entry_name'];
@@ -57,10 +51,12 @@ final class ArrayReverseTransformer implements Transformer
 
             $arrayEntry = $row->get($this->arrayEntryName);
 
-            /** @psalm-suppress MixedArgument */
+            if (!$arrayEntry instanceof Row\Entry\ArrayEntry) {
+                throw new InvalidArgumentException("Entry {$this->arrayEntryName} is not a ArrayEntry");
+            }
+
             return $row->set(new Row\Entry\ArrayEntry(
                 $arrayEntry->name(),
-                /** @phpstan-ignore-next-line */
                 \array_reverse($arrayEntry->value())
             ));
         };

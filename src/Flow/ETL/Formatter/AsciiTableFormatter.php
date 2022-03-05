@@ -6,16 +6,10 @@ namespace Flow\ETL\Formatter;
 
 use Flow\ETL\Formatter;
 use Flow\ETL\Formatter\ASCII\ASCIITable;
-use Flow\ETL\Row;
 use Flow\ETL\Rows;
 
 final class AsciiTableFormatter implements Formatter
 {
-    /**
-     * @psalm-suppress UnusedMethodCall
-     * @psalm-suppress MixedArrayAssignment
-     * @psalm-suppress MixedArgument
-     */
     public function format(Rows $rows, int $truncate = 20) : string
     {
         if ($rows->count() === 0) {
@@ -24,7 +18,7 @@ final class AsciiTableFormatter implements Formatter
 
         $array = [];
 
-        $rows->each(function (Row $row) use (&$array) : void {
+        foreach ($rows as $row) {
             $rowsArray = [];
 
             foreach ($row->entries()->all() as $entry) {
@@ -32,7 +26,7 @@ final class AsciiTableFormatter implements Formatter
             }
 
             $array[] = $rowsArray;
-        });
+        }
 
         return (new ASCIITable())->makeTable($array, $truncate)
             . "{$rows->count()} rows\n";

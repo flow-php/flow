@@ -4,6 +4,10 @@ namespace Flow\ETL;
 
 use Flow\Serializer\Serializable;
 
+/**
+ * @template T
+ * @extends Serializable<T>
+ */
 interface RowsFactory extends Serializable
 {
     /**

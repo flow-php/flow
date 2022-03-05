@@ -4,6 +4,10 @@ namespace Flow\ETL\Transformer\Filter\Filter\ValidValue;
 
 use Flow\Serializer\Serializable;
 
+/**
+ * @template T
+ * @extends Serializable<T>
+ */
 interface Validator extends Serializable
 {
     /**

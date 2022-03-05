@@ -9,6 +9,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
 
 /**
+ * @implements Entry<string, array{name: string, value: array<mixed>, object: boolean}>
  * @psalm-immutable
  */
 final class JsonEntry implements Entry
@@ -45,6 +46,42 @@ final class JsonEntry implements Entry
      * @psalm-pure
      *
      * @param string $name
+     * @param string $json
+     *
+     * @throws InvalidArgumentException
+     * @throws \JsonException
+     *
+     * @return static
+     */
+    public static function fromJsonString(string $name, string $json) : self
+    {
+        /** @var array<mixed> $arrayValue */
+        $arrayValue = \json_decode($json, true, 515, JSON_THROW_ON_ERROR);
+        $onlyArrays = true;
+        $onlyStringEntries = true;
+
+        /** @var mixed $entry */
+        foreach ($arrayValue as $key => $entry) {
+            if (!\is_array($entry)) {
+                $onlyArrays = false;
+            }
+
+            if (!\is_string($key)) {
+                $onlyStringEntries = false;
+            }
+        }
+
+        if ($onlyArrays && !$onlyStringEntries) {
+            return new self($name, $arrayValue);
+        }
+
+        return self::object($name, $arrayValue);
+    }
+
+    /**
+     * @psalm-pure
+     *
+     * @param string $name
      * @param array<mixed> $value
      *
      * @throws InvalidArgumentException
@@ -65,9 +102,6 @@ final class JsonEntry implements Entry
         return $entry;
     }
 
-    /**
-     * @return array{name: string, value: array<mixed>, object: boolean}
-     */
     public function __serialize() : array
     {
         return [
@@ -82,11 +116,6 @@ final class JsonEntry implements Entry
         return $this->toString();
     }
 
-    /**
-     * @psalm-suppress MoreSpecificImplementedParamType
-     *
-     * @param array{name: string, value: array<mixed>, object: boolean} $data
-     */
     public function __unserialize(array $data) : void
     {
         $this->name = $data['name'];
@@ -104,14 +133,9 @@ final class JsonEntry implements Entry
         return $this->is($entry->name()) && $entry instanceof self && (new ArrayComparison())->equals($this->value, $entry->value);
     }
 
-    /**
-     * @psalm-suppress MixedArgument
-     * @psalm-suppress MoreSpecificImplementedParamType
-     * @psalm-param pure-callable $mapper
-     */
     public function map(callable $mapper) : Entry
     {
-        return new self($this->name, $mapper($this->value));
+        return self::fromJsonString($this->name, $mapper($this->value()));
     }
 
     public function name() : string
@@ -129,9 +153,6 @@ final class JsonEntry implements Entry
         return $this->value();
     }
 
-    /**
-     * @psalm-suppress MissingReturnType
-     */
     public function value() : string
     {
         if (empty($this->value) && $this->object) {

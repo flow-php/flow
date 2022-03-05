@@ -4,25 +4,23 @@ declare(strict_types=1);
 
 namespace Flow\Serializer;
 
+use Flow\ETL\Exception\RuntimeException;
+
 final class NativePHPSerializer implements Serializer
 {
     public function serialize(Serializable $serializable) : string
     {
-        /**
-         * @psalm-suppress MixedInferredReturnType
-         */
         return \serialize($serializable);
     }
 
-    /**
-     * @psalm-suppress MixedInferredReturnType
-     */
     public function unserialize(string $serialized) : Serializable
     {
-        /**
-         * @psalm-suppress MixedReturnStatement
-         * @phpstan-ignore-next-line
-         */
-        return \unserialize($serialized);
+        $value = \unserialize($serialized);
+
+        if (!$value instanceof Serializable) {
+            throw new RuntimeException('NativePHPSerializer::unserialize must return instance of Serializable');
+        }
+
+        return $value;
     }
 }

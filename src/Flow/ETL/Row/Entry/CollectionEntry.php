@@ -10,12 +10,13 @@ use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry;
 
 /**
+ * @implements Entry<array<Entries>, array{name: string, entries: array<Entries>}>
  * @psalm-immutable
  */
 final class CollectionEntry implements Entry
 {
     /**
-     * @var array<entries>
+     * @var array<Entries>
      */
     private array $entries;
 
@@ -34,9 +35,6 @@ final class CollectionEntry implements Entry
         $this->entries = $entries;
     }
 
-    /**
-     * @return array{name: string, entries: array<Entries>}
-     */
     public function __serialize() : array
     {
         return [
@@ -50,19 +48,12 @@ final class CollectionEntry implements Entry
         return $this->toString();
     }
 
-    /**
-     * @param array{name: string, entries: array<Entries>} $data
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->name = $data['name'];
         $this->entries = $data['entries'];
     }
 
-    /**
-     * @psalm-suppress InvalidArgument
-     */
     public function is(string $name) : bool
     {
         return \mb_strtolower($name) === \mb_strtolower($name);
@@ -73,11 +64,6 @@ final class CollectionEntry implements Entry
         return $this->is($entry->name()) && $entry instanceof self && (new ArrayComparison())->equals($this->value(), $entry->value());
     }
 
-    /**
-     * @psalm-suppress MixedArgument
-     *
-     * @throws InvalidArgumentException
-     */
     public function map(callable $mapper) : Entry
     {
         return new self($this->name, ...$mapper($this->entries));
@@ -113,11 +99,8 @@ final class CollectionEntry implements Entry
         return (string) \json_encode($array);
     }
 
-    /**
-     * @return array<mixed>
-     */
     public function value() : array
     {
-        return \array_map(fn (Entries $entries) : array => $entries->toArray(), $this->entries);
+        return $this->entries;
     }
 }

@@ -11,26 +11,16 @@ use Flow\ETL\Rows;
 use Flow\ETL\SchemaValidator;
 
 /**
+ * @implements SchemaValidator<array<mixed>>
  * Matches only entries defined in the schema, ignoring every other entries in the row.
  */
 final class SelectiveValidator implements SchemaValidator
 {
-    /**
-     * @phpstan-ignore-next-line
-     *
-     * @return array
-     * @psalm-suppress LessSpecificImplementedReturnType
-     */
     public function __serialize() : array
     {
         return [];
     }
 
-    /**
-     * @phpstan-ignore-next-line
-     *
-     * @param array $data
-     */
     public function __unserialize(array $data) : void
     {
     }

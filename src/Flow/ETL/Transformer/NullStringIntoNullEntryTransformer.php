@@ -9,6 +9,7 @@ use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 /**
+ * @implements Transformer<array{entry_names: array<string>}>
  * @psalm-immutable
  */
 final class NullStringIntoNullEntryTransformer implements Transformer
@@ -23,9 +24,6 @@ final class NullStringIntoNullEntryTransformer implements Transformer
         $this->entryNames = $entryNames;
     }
 
-    /**
-     * @return array{entry_names: array<string>}
-     */
     public function __serialize() : array
     {
         return [
@@ -33,11 +31,6 @@ final class NullStringIntoNullEntryTransformer implements Transformer
         ];
     }
 
-    /**
-     * @param array{entry_names: array<string>} $data
-     *
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->entryNames = $data['entry_names'];
@@ -52,7 +45,7 @@ final class NullStringIntoNullEntryTransformer implements Transformer
             foreach ($this->entryNames as $entryName) {
                 $entry = $row->get($entryName);
 
-                if (!\is_string($entry->value())) {
+                if (!$entry instanceof Row\Entry\StringEntry) {
                     continue;
                 }
 

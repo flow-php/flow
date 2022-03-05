@@ -9,6 +9,7 @@ use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 /**
+ * @implements Transformer<array{case: string, entry_names: array<string>}>
  * @psalm-immutable
  */
 final class StringEntryValueCaseConverterTransformer implements Transformer
@@ -40,9 +41,6 @@ final class StringEntryValueCaseConverterTransformer implements Transformer
         return new self(self::CASE_UPPER, ...$entryNames);
     }
 
-    /**
-     * @return array{case: string, entry_names: array<string>}
-     */
     public function __serialize() : array
     {
         return [
@@ -51,11 +49,6 @@ final class StringEntryValueCaseConverterTransformer implements Transformer
         ];
     }
 
-    /**
-     * @param array{case: string, entry_names: array<string>} $data
-     *
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->case = $data['case'];
@@ -73,7 +66,6 @@ final class StringEntryValueCaseConverterTransformer implements Transformer
                 $entry = $row->get($entryName);
 
                 $row = $row->set(
-                    /** @psalm-suppress MixedArgument */
                     new Row\Entry\StringEntry($entry->name(), ($this->case === self::CASE_UPPER) ? \mb_strtoupper($entry->value()) : \mb_strtolower($entry->value()))
                 );
             }

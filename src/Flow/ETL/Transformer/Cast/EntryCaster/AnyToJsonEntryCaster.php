@@ -10,6 +10,7 @@ use Flow\ETL\Row\EntryConverter;
 use Flow\ETL\Transformer\Cast\ValueCaster\AnyToJsonCaster;
 
 /**
+ * @implements EntryConverter<array{value_caster: AnyToJsonCaster}>
  * @psalm-immutable
  */
 final class AnyToJsonEntryCaster implements EntryConverter
@@ -21,9 +22,6 @@ final class AnyToJsonEntryCaster implements EntryConverter
         $this->valueCaster = new AnyToJsonCaster();
     }
 
-    /**
-     * @return array{value_caster: AnyToJsonCaster}
-     */
     public function __serialize() : array
     {
         return [
@@ -31,11 +29,6 @@ final class AnyToJsonEntryCaster implements EntryConverter
         ];
     }
 
-    /**
-     * @param array{value_caster: AnyToJsonCaster} $data
-     *
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->valueCaster = $data['value_caster'];

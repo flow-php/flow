@@ -10,6 +10,7 @@ use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 /**
+ * @implements Transformer<array{left_entry: string, right_entry: string, operation: string, new_entry_name: string}>
  * @psalm-immutable
  */
 final class MathOperationTransformer implements Transformer
@@ -60,9 +61,6 @@ final class MathOperationTransformer implements Transformer
         return new self($leftEntry, $rightEntry, 'subtract', $newEntryName);
     }
 
-    /**
-     * @return array{left_entry: string, right_entry: string, operation: string, new_entry_name: string}
-     */
     public function __serialize() : array
     {
         return [
@@ -73,11 +71,6 @@ final class MathOperationTransformer implements Transformer
         ];
     }
 
-    /**
-     * @param array{left_entry: string, right_entry: string, operation: string, new_entry_name: string} $data
-     *
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->leftEntry = $data['left_entry'];
@@ -141,11 +134,11 @@ final class MathOperationTransformer implements Transformer
                     throw new RuntimeException('Unknown operation');
             }
 
-            return $row->add(
-                (\is_float($value))
-                    ? new Row\Entry\FloatEntry($this->newEntryName, $value)
-                    : new Row\Entry\IntegerEntry($this->newEntryName, $value)
-            );
+            if (\is_float($value)) {
+                return $row->add(new Row\Entry\FloatEntry($this->newEntryName, $value));
+            }
+
+            return $row->add(new Row\Entry\IntegerEntry($this->newEntryName, $value));
         };
 
         return $rows->map($transformer);

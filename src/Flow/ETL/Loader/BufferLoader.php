@@ -8,6 +8,9 @@ use Flow\ETL\Loader;
 use Flow\ETL\Pipeline\Closure;
 use Flow\ETL\Rows;
 
+/**
+ * @implements Loader<array{overflow_loader: Loader, buffer_size: int}>
+ */
 final class BufferLoader implements Closure, Loader
 {
     private Rows $buffer;
@@ -23,9 +26,6 @@ final class BufferLoader implements Closure, Loader
         $this->buffer = new Rows();
     }
 
-    /**
-     * @return array{overflow_loader: Loader, buffer_size: int}
-     */
     public function __serialize() : array
     {
         return [
@@ -34,10 +34,6 @@ final class BufferLoader implements Closure, Loader
         ];
     }
 
-    /**
-     * @param array{overflow_loader: Loader, buffer_size: int} $data
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->buffer = new Rows();

@@ -9,6 +9,9 @@ use Flow\ETL\Formatter;
 use Flow\ETL\Loader;
 use Flow\ETL\Rows;
 
+/**
+ * @implements Loader<array{url: string, mode: string, truncate: int, formatter: Formatter}>
+ */
 final class StreamLoader implements Loader
 {
     private Formatter $formatter;
@@ -48,9 +51,6 @@ final class StreamLoader implements Loader
         return new self('php://stdout', 'w', $truncate, $formatter);
     }
 
-    /**
-     * @return array{url: string, mode: string, truncate: int, formatter: Formatter}
-     */
     public function __serialize() : array
     {
         return [
@@ -61,10 +61,6 @@ final class StreamLoader implements Loader
         ];
     }
 
-    /**
-     * @param array{url: string, mode: string, truncate: int, formatter: Formatter} $data
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->url = $data['url'];

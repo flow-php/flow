@@ -9,6 +9,7 @@ use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 /**
+ * @implements Transformer<array{string_entry_names: array<string>, glue: string, new_entry_name: string}>
  * @psalm-immutable
  */
 final class StringConcatTransformer implements Transformer
@@ -34,9 +35,6 @@ final class StringConcatTransformer implements Transformer
         $this->newEntryName = $newEntryName;
     }
 
-    /**
-     * @return array{string_entry_names: array<string>, glue: string, new_entry_name: string}
-     */
     public function __serialize() : array
     {
         return [
@@ -46,11 +44,6 @@ final class StringConcatTransformer implements Transformer
         ];
     }
 
-    /**
-     * @param array{string_entry_names: array<string>, glue: string, new_entry_name: string} $data
-     *
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->stringEntryNames = $data['string_entry_names'];
@@ -64,13 +57,14 @@ final class StringConcatTransformer implements Transformer
          * @psalm-var pure-callable(Row $row) : Row $transformer
          */
         $transformer = function (Row $row) : Row {
-            $entries = $row->filter(fn (Row\Entry $entry) : bool => \in_array($entry->name(), $this->stringEntryNames, true) && $entry instanceof Row\Entry\StringEntry)->entries();
+            /** @psalm-var pure-callable(Row\Entry) : bool $filter */
+            $filter = fn (Row\Entry $entry) : bool => \in_array($entry->name(), $this->stringEntryNames, true) && $entry instanceof Row\Entry\StringEntry;
+            $entries = $row->filter($filter)->entries();
             /** @var array<string> $values */
             $values = [];
 
             foreach ($entries->all() as $entry) {
-                /** @phpstan-ignore-next-line */
-                $values[] = (string) $entry->value();
+                $values[] = $entry->toString();
             }
 
             return $row->add(

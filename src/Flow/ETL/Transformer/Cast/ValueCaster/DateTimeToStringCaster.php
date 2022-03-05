@@ -8,6 +8,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\ValueConverter;
 
 /**
+ * @implements ValueConverter<array{format: string}>
  * @psalm-immutable
  */
 final class DateTimeToStringCaster implements ValueConverter
@@ -19,9 +20,6 @@ final class DateTimeToStringCaster implements ValueConverter
         $this->format = $format;
     }
 
-    /**
-     * @return array{format: string}
-     */
     public function __serialize() : array
     {
         return [
@@ -29,11 +27,6 @@ final class DateTimeToStringCaster implements ValueConverter
         ];
     }
 
-    /**
-     * @param array{format: string} $data
-     *
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->format = $data['format'];

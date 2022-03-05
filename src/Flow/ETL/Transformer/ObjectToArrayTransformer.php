@@ -11,6 +11,7 @@ use Flow\ETL\Transformer;
 use Laminas\Hydrator\HydratorInterface;
 
 /**
+ * @implements Transformer<array{object_entry_name: string, hydrator: HydratorInterface}>
  * @psalm-immutable
  */
 final class ObjectToArrayTransformer implements Transformer
@@ -25,9 +26,6 @@ final class ObjectToArrayTransformer implements Transformer
         $this->hydrator = $hydrator;
     }
 
-    /**
-     * @return array{object_entry_name: string, hydrator: HydratorInterface}
-     */
     public function __serialize() : array
     {
         return [
@@ -36,29 +34,19 @@ final class ObjectToArrayTransformer implements Transformer
         ];
     }
 
-    /**
-     * @param array{object_entry_name: string, hydrator: HydratorInterface} $data
-     *
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->objectEntryName = $data['object_entry_name'];
         $this->hydrator = $data['hydrator'];
     }
 
-    /**
-     * @psalm-suppress InvalidArgument
-     * @psalm-suppress MixedArgument
-     */
     public function transform(Rows $rows) : Rows
     {
-        return $rows->map(function (Row $row) : Row {
-            if (!$row->entries()->has($this->objectEntryName)) {
-                throw new RuntimeException("\"{$this->objectEntryName}\" not found");
-            }
+        /** @psalm-var pure-callable(Row) : Row $transformer */
+        $transformer = function (Row $row) : Row {
+            $entry = $row->entries()->get($this->objectEntryName);
 
-            if (!$row->entries()->get($this->objectEntryName) instanceof Row\Entry\ObjectEntry) {
+            if (!$entry instanceof Row\Entry\ObjectEntry) {
                 throw new RuntimeException("\"{$this->objectEntryName}\" is not ObjectEntry");
             }
 
@@ -68,12 +56,14 @@ final class ObjectToArrayTransformer implements Transformer
                     new Row\Entry\ArrayEntry(
                         $this->objectEntryName,
                         $this->hydrator->extract(
-                            $row->valueOf($this->objectEntryName)
+                            $entry->value()
                         )
                     )
                 );
 
             return new Row($entries);
-        });
+        };
+
+        return $rows->map($transformer);
     }
 }

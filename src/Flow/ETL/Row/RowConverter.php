@@ -8,6 +8,8 @@ use Flow\ETL\Row;
 use Flow\Serializer\Serializable;
 
 /**
+ * @template T
+ * @extends Serializable<T>
  * @psalm-immutable
  */
 interface RowConverter extends Serializable

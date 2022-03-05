@@ -9,6 +9,7 @@ use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 /**
+ * @implements Transformer<array{names: array<string>}>
  * @psalm-immutable
  */
 final class RemoveEntriesTransformer implements Transformer
@@ -23,9 +24,6 @@ final class RemoveEntriesTransformer implements Transformer
         $this->names = $names;
     }
 
-    /**
-     * @return array{names: array<string>}
-     */
     public function __serialize() : array
     {
         return [
@@ -33,11 +31,6 @@ final class RemoveEntriesTransformer implements Transformer
         ];
     }
 
-    /**
-     * @param array{names: array<string>} $data
-     *
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->names = $data['names'];

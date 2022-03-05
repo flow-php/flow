@@ -16,6 +16,7 @@ use Flow\ETL\Transformer\StyleConverter\StringStyles;
 use Jawira\CaseConverter\Convert;
 
 /**
+ * @implements Transformer<array{array_entry_name: string, style: string, entry_factory: EntryFactory}>
  * @psalm-immutable
  */
 final class ArrayKeysStyleConverterTransformer implements Transformer
@@ -45,9 +46,6 @@ final class ArrayKeysStyleConverterTransformer implements Transformer
         $this->entryFactory = $entryFactory ?? new NativeEntryFactory();
     }
 
-    /**
-     * @return array{array_entry_name: string, style: string, entry_factory: EntryFactory}
-     */
     public function __serialize() : array
     {
         return [
@@ -57,11 +55,6 @@ final class ArrayKeysStyleConverterTransformer implements Transformer
         ];
     }
 
-    /**
-     * @param array{array_entry_name: string, style: string, entry_factory: EntryFactory} $data
-     *
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->arrayEntryName = $data['array_entry_name'];

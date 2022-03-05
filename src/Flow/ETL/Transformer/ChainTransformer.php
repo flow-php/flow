@@ -8,6 +8,7 @@ use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 /**
+ * @implements Transformer<array{transformers: array<Transformer>}>
  * @psalm-immutable
  */
 final class ChainTransformer implements Transformer
@@ -22,9 +23,6 @@ final class ChainTransformer implements Transformer
         $this->transformers = $transformers;
     }
 
-    /**
-     * @return array{transformers: array<Transformer>}
-     */
     public function __serialize() : array
     {
         return [
@@ -32,11 +30,6 @@ final class ChainTransformer implements Transformer
         ];
     }
 
-    /**
-     * @param array{transformers: array<Transformer>} $data
-     *
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->transformers = $data['transformers'];

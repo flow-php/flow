@@ -8,6 +8,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\ValueConverter;
 
 /**
+ * @implements ValueConverter<array{time_zone: null|string, to_time_zone: null|string}>
  * @psalm-immutable
  */
 final class StringToDateTimeCaster implements ValueConverter
@@ -34,9 +35,6 @@ final class StringToDateTimeCaster implements ValueConverter
         $this->toTimeZone = $toTimeZone;
     }
 
-    /**
-     * @return array{time_zone: null|string, to_time_zone: null|string}
-     */
     public function __serialize() : array
     {
         return [
@@ -45,11 +43,6 @@ final class StringToDateTimeCaster implements ValueConverter
         ];
     }
 
-    /**
-     * @param array{time_zone: null|string, to_time_zone: null|string} $data
-     *
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->timeZone = $data['time_zone'];

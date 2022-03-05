@@ -10,6 +10,7 @@ use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 /**
+ * @implements Transformer<array{group_by_entry: string, new_entry_name: string}>
  * @psalm-immutable
  */
 final class GroupToArrayTransformer implements Transformer
@@ -24,9 +25,6 @@ final class GroupToArrayTransformer implements Transformer
         $this->newEntryName = $newEntryName;
     }
 
-    /**
-     * @return array{group_by_entry: string, new_entry_name: string}
-     */
     public function __serialize() : array
     {
         return [
@@ -35,11 +33,6 @@ final class GroupToArrayTransformer implements Transformer
         ];
     }
 
-    /**
-     * @param array{group_by_entry: string, new_entry_name: string} $data
-     *
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->groupByEntry = $data['group_by_entry'];
@@ -51,22 +44,16 @@ final class GroupToArrayTransformer implements Transformer
         /** @var array<array-key, array<mixed>> $entries */
         $entries = [];
 
-        /**
-         * @psalm-var pure-callable(Row $row) : void $iterator
-         */
-        $iterator = function (Row $row) use (&$entries) : void {
+        foreach ($rows as $row) {
             /** @var array<array-key, array<mixed>> $entries */
-            $groupValue = (string) $row->valueOf($this->groupByEntry);
+            $groupValue = $row->get($this->groupByEntry)->toString();
 
             if (!\array_key_exists($groupValue, $entries)) {
                 $entries[$groupValue] = [];
             }
 
             $entries[$groupValue][] = $row->toArray();
-        };
-
-        /** @psalm-suppress UnusedMethodCall */
-        $rows->each($iterator);
+        }
 
         $rows = new Rows();
 

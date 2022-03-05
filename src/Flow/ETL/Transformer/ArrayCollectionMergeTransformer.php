@@ -10,6 +10,7 @@ use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 /**
+ * @implements Transformer<array{array_entry_name: string, new_entry_name: string}>
  * @psalm-immutable
  */
 final class ArrayCollectionMergeTransformer implements Transformer
@@ -28,9 +29,6 @@ final class ArrayCollectionMergeTransformer implements Transformer
         $this->newEntryName = $newEntryName;
     }
 
-    /**
-     * @return array{array_entry_name: string, new_entry_name: string}
-     */
     public function __serialize() : array
     {
         return [
@@ -39,10 +37,6 @@ final class ArrayCollectionMergeTransformer implements Transformer
         ];
     }
 
-    /**
-     * @param array{array_entry_name: string, new_entry_name: string} $data
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->arrayEntryName = $data['array_entry_name'];

@@ -12,6 +12,7 @@ use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 /**
+ * @implements Transformer<array{array_entry_name: string, skip_entry_names: array<string>, entry_factory: EntryFactory, entry_prefix: null|string}>
  * @psalm-immutable
  */
 final class ArrayUnpackTransformer implements Transformer
@@ -38,9 +39,6 @@ final class ArrayUnpackTransformer implements Transformer
         $this->entryPrefix = $entryPrefix;
     }
 
-    /**
-     * @return array{array_entry_name: string, skip_entry_names: array<string>, entry_factory: EntryFactory, entry_prefix: null|string}
-     */
     public function __serialize() : array
     {
         return [
@@ -51,11 +49,6 @@ final class ArrayUnpackTransformer implements Transformer
         ];
     }
 
-    /**
-     * @param array{array_entry_name: string, skip_entry_names: array<string>, entry_factory: EntryFactory, entry_prefix: null|string} $data
-     *
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->arrayEntryName = $data['array_entry_name'];
@@ -64,19 +57,15 @@ final class ArrayUnpackTransformer implements Transformer
         $this->entryPrefix = $data['entry_prefix'];
     }
 
-    /**
-     * @psalm-suppress InvalidArgument
-     * @psalm-suppress InvalidScalarArgument
-     * @psalm-suppress MixedArgument
-     */
     public function transform(Rows $rows) : Rows
     {
-        return $rows->map(function (Row $row) : Row {
-            if (!$row->entries()->has($this->arrayEntryName)) {
-                throw new RuntimeException("\"{$this->arrayEntryName}\" not found");
-            }
+        /**
+         * @psalm-var pure-callable(Row) : Row $rowsMap
+         */
+        $rowsMap = function (Row $row) : Row {
+            $arrayEntry = $row->entries()->get($this->arrayEntryName);
 
-            if (!$row->entries()->get($this->arrayEntryName) instanceof Row\Entry\ArrayEntry) {
+            if (!$arrayEntry instanceof Row\Entry\ArrayEntry) {
                 throw new RuntimeException("\"{$this->arrayEntryName}\" is not ArrayEntry");
             }
 
@@ -85,7 +74,7 @@ final class ArrayUnpackTransformer implements Transformer
              * @var int|string $key
              * @var mixed $value
              */
-            foreach ($row->valueOf($this->arrayEntryName) as $key => $value) {
+            foreach ($arrayEntry->value() as $key => $value) {
                 $entryName = (string) $key;
 
                 if (\in_array($entryName, $this->skipEntryNames, true)) {
@@ -104,6 +93,8 @@ final class ArrayUnpackTransformer implements Transformer
             }
 
             return $row;
-        });
+        };
+
+        return $rows->map($rowsMap);
     }
 }

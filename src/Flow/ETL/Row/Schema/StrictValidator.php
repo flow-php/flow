@@ -7,29 +7,18 @@ namespace Flow\ETL\Row\Schema;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Rows;
 use Flow\ETL\SchemaValidator;
-use Flow\Serializer\Serializable;
 
 /**
+ * @implements SchemaValidator<array<mixed>>
  * Matches all entries in the schema, if row comes with any extra entry it will fail validation.
  */
-final class StrictValidator implements SchemaValidator, Serializable
+final class StrictValidator implements SchemaValidator
 {
-    /**
-     * @phpstan-ignore-next-line
-     *
-     * @return array
-     * @psalm-suppress LessSpecificImplementedReturnType
-     */
     public function __serialize() : array
     {
         return [];
     }
 
-    /**
-     * @phpstan-ignore-next-line
-     *
-     * @param array $data
-     */
     public function __unserialize(array $data) : void
     {
     }

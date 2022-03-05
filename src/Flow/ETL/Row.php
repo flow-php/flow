@@ -10,6 +10,7 @@ use Flow\ETL\Row\Entry;
 use Flow\Serializer\Serializable;
 
 /**
+ * @implements Serializable<array{entries: Entries}>
  * @psalm-immutable
  */
 final class Row implements Serializable
@@ -23,29 +24,35 @@ final class Row implements Serializable
 
     /**
      * @psalm-pure
+     *
+     * @param Entry ...$entries
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return Row
      */
     public static function create(Entry ...$entries) : self
     {
         return new self(new Entries(...$entries));
     }
 
-    /**
-     * @return array{entries: Entries}
-     */
     public function __serialize() : array
     {
         return ['entries' => $this->entries];
     }
 
-    /**
-     * @param array{entries: Entries} $data
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->entries = $data['entries'];
     }
 
+    /**
+     * @param Entry ...$entries
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return $this
+     */
     public function add(Entry ...$entries) : self
     {
         return new self($this->entries->add(...$entries));
@@ -57,6 +64,8 @@ final class Row implements Serializable
     }
 
     /**
+     * @psalm-param pure-callable(Entry) : bool $callable
+     *
      * @param callable(Entry) : bool $callable
      */
     public function filter(callable $callable) : self
@@ -65,7 +74,11 @@ final class Row implements Serializable
     }
 
     /**
+     * @param string $name
+     *
      * @throws InvalidArgumentException
+     *
+     * @return Entry
      */
     public function get(string $name) : Entry
     {
@@ -78,6 +91,8 @@ final class Row implements Serializable
     }
 
     /**
+     * @psalm-param pure-callable(Entry) : Entry $mapper
+     *
      * @param callable(Entry) : Entry $mapper
      */
     public function map(callable $mapper) : self
@@ -112,6 +127,11 @@ final class Row implements Serializable
         return new self($this->entries->rename($currentName, $newName));
     }
 
+    /**
+     * @param Entry ...$entries
+     *
+     * @return self
+     */
     public function set(Entry ...$entries) : self
     {
         return new self($this->entries->set(...$entries));
@@ -131,10 +151,11 @@ final class Row implements Serializable
     }
 
     /**
-     * @psalm-suppress MissingReturnType
-     * @phpstan-ignore-next-line
+     * @param string $name
      *
      * @throws InvalidArgumentException
+     *
+     * @return mixed
      */
     public function valueOf(string $name)
     {

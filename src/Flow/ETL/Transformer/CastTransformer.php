@@ -10,6 +10,7 @@ use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 /**
+ * @implements Transformer<array{row_casts: array<RowConverter>}>
  * @psalm-immutable
  */
 final class CastTransformer implements Transformer
@@ -24,9 +25,6 @@ final class CastTransformer implements Transformer
         $this->rowCasts = $rowCasts;
     }
 
-    /**
-     * @return array{row_casts: array<RowConverter>}
-     */
     public function __serialize() : array
     {
         return [
@@ -34,11 +32,6 @@ final class CastTransformer implements Transformer
         ];
     }
 
-    /**
-     * @param array{row_casts: array<RowConverter>} $data
-     *
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->rowCasts = $data['row_casts'];

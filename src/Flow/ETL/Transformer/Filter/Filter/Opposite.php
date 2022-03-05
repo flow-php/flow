@@ -8,6 +8,7 @@ use Flow\ETL\Row;
 use Flow\ETL\Transformer\Filter\Filter;
 
 /**
+ * @implements Filter<array{filter: Filter}>
  * @psalm-immutable
  */
 final class Opposite implements Filter
@@ -22,9 +23,6 @@ final class Opposite implements Filter
         $this->filter = $filter;
     }
 
-    /**
-     * @return array{filter: Filter}
-     */
     public function __serialize() : array
     {
         return [
@@ -32,11 +30,6 @@ final class Opposite implements Filter
         ];
     }
 
-    /**
-     * @param array{filter: Filter} $data
-     *
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->filter = $data['filter'];

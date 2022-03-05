@@ -9,6 +9,9 @@ use Flow\ETL\Loader;
 use Flow\ETL\Rows;
 use Opis\Closure\SerializableClosure;
 
+/**
+ * @implements Loader<array{callback: SerializableClosure}>
+ */
 final class CallbackLoader implements Loader
 {
     private static ?bool $isSerializable = null;
@@ -25,11 +28,6 @@ final class CallbackLoader implements Loader
         $this->callback = $callback;
     }
 
-    /**
-     * @throws RuntimeException
-     *
-     * @return array{callback: SerializableClosure}
-     */
     public function __serialize() : array
     {
         if (!self::isSerializable()) {
@@ -41,12 +39,6 @@ final class CallbackLoader implements Loader
         ];
     }
 
-    /**
-     * @param array{callback: SerializableClosure} $data
-     * @psalm-suppress MoreSpecificImplementedParamType
-     *
-     * @throws RuntimeException
-     */
     public function __unserialize(array $data) : void
     {
         if (!self::isSerializable()) {

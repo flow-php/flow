@@ -102,9 +102,9 @@ final class CollectionEntryTest extends TestCase
 
         $this->assertEquals(
             [
-                ['item-id' => 1, 'name' => 'one'],
-                ['item-id' => 2, 'name' => 'two'],
-                ['item-id' => 3, 'name' => 'three'],
+                new Entries(new IntegerEntry('item-id', 1), new StringEntry('name', 'one')),
+                new Entries(new IntegerEntry('item-id', 2), new StringEntry('name', 'two')),
+                new Entries(new IntegerEntry('item-id', 3), new StringEntry('name', 'three')),
             ],
             $entry->value()
         );

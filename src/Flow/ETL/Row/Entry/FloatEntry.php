@@ -8,6 +8,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
 
 /**
+ * @implements Entry<float, array{name: string, value: float, precision: int}>
  * @psalm-immutable
  */
 final class FloatEntry implements Entry
@@ -44,9 +45,6 @@ final class FloatEntry implements Entry
         return new self($name, (float) $value);
     }
 
-    /**
-     * @return array{name: string, value: float, precision: int}
-     */
     public function __serialize() : array
     {
         return ['name' => $this->name, 'value' => $this->value, 'precision' => $this->precision];
@@ -57,10 +55,6 @@ final class FloatEntry implements Entry
         return $this->toString();
     }
 
-    /**
-     * @param array{name: string, value: float, precision: int} $data
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->name = $data['name'];
@@ -80,11 +74,6 @@ final class FloatEntry implements Entry
             && \bccomp((string) $this->value(), (string) $entry->value(), $this->precision) === 0;
     }
 
-    /**
-     * @psalm-suppress MixedArgument
-     *
-     * @throws InvalidArgumentException
-     */
     public function map(callable $mapper) : Entry
     {
         return new self($this->name, $mapper($this->value()));

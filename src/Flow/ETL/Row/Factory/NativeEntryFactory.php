@@ -9,6 +9,9 @@ use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\EntryFactory;
 
+/**
+ * @implements EntryFactory<array<mixed>>
+ */
 final class NativeEntryFactory implements EntryFactory
 {
     private const JSON_DEPTH = 512;
@@ -22,10 +25,19 @@ final class NativeEntryFactory implements EntryFactory
     {
     }
 
+    /**
+     * @param string $entryName
+     * @param mixed $value
+     *
+     * @throws InvalidArgumentException
+     * @throws \JsonException
+     *
+     * @return Entry
+     */
     public function create(string $entryName, $value) : Entry
     {
         if (\is_string($value)) {
-            if (\class_exists('\\Flow\\ETL\\Row\\Entry\\JsonEntry') && $this->isJson($value)) {
+            if ($this->isJson($value)) {
                 /** @psalm-suppress MixedArgument */
                 return new Row\Entry\JsonEntry($entryName, (array) \json_decode($value, true, self::JSON_DEPTH, JSON_THROW_ON_ERROR));
             }

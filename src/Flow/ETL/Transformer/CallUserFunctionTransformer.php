@@ -14,6 +14,7 @@ use Flow\ETL\Transformer;
 use Opis\Closure\SerializableClosure;
 
 /**
+ * @implements Transformer<array{entries: array<string>, callback: callable, entry_factory: EntryFactory}>
  * @psalm-immutable
  */
 final class CallUserFunctionTransformer implements Transformer
@@ -42,12 +43,8 @@ final class CallUserFunctionTransformer implements Transformer
         $this->entryFactory = $entryFactory ?? new NativeEntryFactory();
     }
 
-    /**
-     * @return array{entries: array<string>, callback: callable, entry_factory: EntryFactory}
-     */
     public function __serialize() : array
     {
-        /** @psalm-suppress ImpureMethodCall */
         if ($this->callback instanceof \Closure && !Closure::isSerializable()) {
             throw new RuntimeException('CallUserFunctionTransformer is not serializable without "opis/closure" library in your dependencies.');
         }
@@ -59,13 +56,8 @@ final class CallUserFunctionTransformer implements Transformer
         ];
     }
 
-    /**
-     * @param array{entries: array<string>, callback: callable, entry_factory: EntryFactory} $data
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
-        /** @psalm-suppress ImpureMethodCall */
         if ($this->callback instanceof \Closure && !Closure::isSerializable()) {
             throw new RuntimeException('CallUserFunctionTransformer is not serializable without "opis/closure" library in your dependencies.');
         }
@@ -82,7 +74,8 @@ final class CallUserFunctionTransformer implements Transformer
          * @psalm-var pure-callable(Row) : Row $transform
          */
         $transform = function (Row $row) : Row {
-            $entries = $row->entries()->map(function (Row\Entry $entry) : Row\Entry {
+            /** @psalm-var pure-callable(Row\Entry) : Row\Entry $entryMap */
+            $entryMap = function (Row\Entry $entry) : Row\Entry {
                 if (\in_array($entry->name(), $this->entries, true)) {
                     $entry = $this->entryFactory->create(
                         $entry->name(),
@@ -91,7 +84,8 @@ final class CallUserFunctionTransformer implements Transformer
                 }
 
                 return $entry;
-            });
+            };
+            $entries = $row->entries()->map($entryMap);
 
             return new Row(new Row\Entries(...$entries));
         };

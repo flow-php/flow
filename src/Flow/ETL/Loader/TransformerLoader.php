@@ -8,6 +8,9 @@ use Flow\ETL\Loader;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
+/**
+ * @implements Loader<array{transformer: Transformer, loader: Loader}>
+ */
 final class TransformerLoader implements Loader
 {
     private Loader $loader;
@@ -20,9 +23,6 @@ final class TransformerLoader implements Loader
         $this->loader = $loader;
     }
 
-    /**
-     * @return array{transformer: Transformer, loader: Loader}
-     */
     public function __serialize() : array
     {
         return [
@@ -31,10 +31,6 @@ final class TransformerLoader implements Loader
         ];
     }
 
-    /**
-     * @param array{transformer: Transformer, loader: Loader} $data
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->transformer = $data['transformer'];

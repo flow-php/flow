@@ -10,6 +10,7 @@ use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 /**
+ * @implements Transformer<array{array_entry_name: string, sorting_flag: int}>
  * @psalm-immutable
  */
 final class ArraySortTransformer implements Transformer
@@ -24,9 +25,6 @@ final class ArraySortTransformer implements Transformer
         $this->sortingFlag = $sortingFlag;
     }
 
-    /**
-     * @return array{array_entry_name: string, sorting_flag: int}
-     */
     public function __serialize() : array
     {
         return [
@@ -35,11 +33,6 @@ final class ArraySortTransformer implements Transformer
         ];
     }
 
-    /**
-     * @param array{array_entry_name: string, sorting_flag: int} $data
-     *
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->arrayEntryName = $data['array_entry_name'];

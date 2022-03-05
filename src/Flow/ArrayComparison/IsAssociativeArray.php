@@ -10,7 +10,9 @@ namespace Flow\ArrayComparison;
 final class IsAssociativeArray
 {
     /**
-     * @phpstan-ignore-next-line
+     * @param array<mixed> $array
+     *
+     * @return bool
      */
     public function __invoke(array $array) : bool
     {

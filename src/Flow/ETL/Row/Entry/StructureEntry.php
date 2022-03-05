@@ -9,6 +9,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
 
 /**
+ * @implements Entry<array<Entry>, array{name: string, entries: array<Entry>}>
  * @psalm-immutable
  */
 final class StructureEntry implements Entry
@@ -21,6 +22,9 @@ final class StructureEntry implements Entry
     private string $name;
 
     /**
+     * @param string $name
+     * @param Entry ...$entries
+     *
      * @throws InvalidArgumentException
      */
     public function __construct(string $name, Entry ...$entries)
@@ -33,9 +37,6 @@ final class StructureEntry implements Entry
         $this->entries = $entries;
     }
 
-    /**
-     * @return array{name: string, entries: array<Entry>}
-     */
     public function __serialize() : array
     {
         return [
@@ -49,19 +50,12 @@ final class StructureEntry implements Entry
         return $this->toString();
     }
 
-    /**
-     * @param array{name: string, entries: array<Entry>} $data
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->name = $data['name'];
         $this->entries = $data['entries'];
     }
 
-    /**
-     * @psalm-suppress InvalidArgument
-     */
     public function is(string $name) : bool
     {
         return \mb_strtolower($this->name) === \mb_strtolower($name);
@@ -72,11 +66,6 @@ final class StructureEntry implements Entry
         return $this->is($entry->name()) && $entry instanceof self && (new ArrayComparison())->equals($this->value(), $entry->value());
     }
 
-    /**
-     * @psalm-suppress MixedArgument
-     *
-     * @throws InvalidArgumentException
-     */
     public function map(callable $mapper) : Entry
     {
         return new self($this->name, ...$mapper($this->entries));
@@ -87,9 +76,6 @@ final class StructureEntry implements Entry
         return $this->name;
     }
 
-    /**
-     * @throws InvalidArgumentException
-     */
     public function rename(string $name) : Entry
     {
         return new self($name, ...$this->entries);
@@ -106,11 +92,8 @@ final class StructureEntry implements Entry
         return (string) \json_encode($array);
     }
 
-    /**
-     * @return array<mixed>
-     */
     public function value() : array
     {
-        return \array_map(fn (Entry $entry) => [$entry->name() => $entry->value()], $this->entries);
+        return \array_values($this->entries);
     }
 }

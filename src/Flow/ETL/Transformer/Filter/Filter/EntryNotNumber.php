@@ -8,6 +8,7 @@ use Flow\ETL\Row;
 use Flow\ETL\Transformer\Filter\Filter;
 
 /**
+ * @implements Filter<array{entry_name: string}>
  * @psalm-immutable
  */
 final class EntryNotNumber implements Filter
@@ -22,9 +23,6 @@ final class EntryNotNumber implements Filter
         $this->entryName = $entryName;
     }
 
-    /**
-     * @return array{entry_name: string}
-     */
     public function __serialize() : array
     {
         return [
@@ -32,11 +30,6 @@ final class EntryNotNumber implements Filter
         ];
     }
 
-    /**
-     * @param array{entry_name: string} $data
-     *
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->entryName = $data['entry_name'];

@@ -13,6 +13,9 @@ if (!\class_exists('Symfony\Component\Validator\Validation')) {
     throw new RuntimeException("Symfony\Component\Validator\Validation class not found, please add symfony/validator dependency to the project first.");
 }
 
+/**
+ * @implements Validator<array{validator: ValidatorInterface, constraints: array<Constraint>}>
+ */
 final class SymfonyValidator implements Validator
 {
     /**
@@ -32,9 +35,6 @@ final class SymfonyValidator implements Validator
         $this->validator = $validator ? $validator : Validation::createValidator();
     }
 
-    /**
-     * @return array{validator: ValidatorInterface, constraints: array<Constraint>}
-     */
     public function __serialize() : array
     {
         return [
@@ -43,11 +43,6 @@ final class SymfonyValidator implements Validator
         ];
     }
 
-    /**
-     * @param array{validator: ValidatorInterface, constraints: array<Constraint>} $data
-     *
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->validator = $data['validator'];

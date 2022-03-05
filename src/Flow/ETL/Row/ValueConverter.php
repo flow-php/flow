@@ -5,6 +5,8 @@ namespace Flow\ETL\Row;
 use Flow\Serializer\Serializable;
 
 /**
+ * @template T
+ * @extends Serializable<T>
  * @psalm-immutable
  */
 interface ValueConverter extends Serializable

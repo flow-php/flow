@@ -10,6 +10,7 @@ use Flow\ETL\Row\EntryConverter;
 use Flow\ETL\Transformer\Cast\ValueCaster\AnyToStringCaster;
 
 /**
+ * @implements EntryConverter<array{value_caster: AnyToStringCaster}>
  * @psalm-immutable
  */
 final class AnyToStringEntryCaster implements EntryConverter
@@ -21,9 +22,6 @@ final class AnyToStringEntryCaster implements EntryConverter
         $this->valueCaster = new AnyToStringCaster();
     }
 
-    /**
-     * @return array{value_caster: AnyToStringCaster}
-     */
     public function __serialize() : array
     {
         return [
@@ -31,11 +29,6 @@ final class AnyToStringEntryCaster implements EntryConverter
         ];
     }
 
-    /**
-     * @param array{value_caster: AnyToStringCaster} $data
-     *
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->valueCaster = $data['value_caster'];

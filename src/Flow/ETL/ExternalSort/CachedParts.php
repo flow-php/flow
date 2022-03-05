@@ -36,7 +36,6 @@ final class CachedParts
      * @throws \Flow\ETL\Exception\InvalidArgumentException
      *
      * @return RowsMinHeap
-     * @phpstan-ignore-next-line
      */
     public function createHeap(Sort ...$entries) : RowsMinHeap
     {
@@ -69,7 +68,6 @@ final class CachedParts
      * @param BufferCache $cache
      *
      * @throws \Flow\ETL\Exception\InvalidArgumentException
-     * @phpstan-ignore-next-line
      */
     public function takeNext(RowsMinHeap $heap, string $cacheId, BufferCache $cache) : void
     {

@@ -11,19 +11,16 @@ use Flow\ETL\RowsFactory;
 use Flow\ETL\Transformer\ArrayUnpackTransformer;
 use Flow\ETL\Transformer\RemoveEntriesTransformer;
 
+/**
+ * @implements RowsFactory<array<mixed>>
+ */
 final class ArrayRowsFactory implements RowsFactory
 {
-    /**
-     * @return array<string, mixed>
-     */
     public function __serialize() : array
     {
         return [];
     }
 
-    /**
-     * @param array<string, mixed> $data
-     */
     public function __unserialize(array $data) : void
     {
     }

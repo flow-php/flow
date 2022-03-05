@@ -9,6 +9,9 @@ use Flow\ETL\Rows;
 use Flow\ETL\RowsFactory;
 use Flow\ETL\Transformer\CastTransformer;
 
+/**
+ * @implements RowsFactory<array{factory: RowsFactory, cast_entries: array<RowConverter>}>
+ */
 final class CastedRowsFactory implements RowsFactory
 {
     /**
@@ -24,9 +27,6 @@ final class CastedRowsFactory implements RowsFactory
         $this->castEntries = $castEntries;
     }
 
-    /**
-     * @return array{factory: RowsFactory, cast_entries: array<RowConverter>}
-     */
     public function __serialize() : array
     {
         return [
@@ -35,11 +35,6 @@ final class CastedRowsFactory implements RowsFactory
         ];
     }
 
-    /**
-     * @psalm-suppress MoreSpecificImplementedParamType
-     *
-     * @param array{factory: RowsFactory, cast_entries: array<RowConverter>} $data
-     */
     public function __unserialize(array $data) : void
     {
         $this->factory = $data['factory'];

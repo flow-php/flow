@@ -6,6 +6,9 @@ namespace Flow\ETL\Memory;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 
+/**
+ * @implements Memory<array{data: array<array<string, mixed>>}>
+ */
 final class ArrayMemory implements \Countable, Memory
 {
     /**
@@ -14,18 +17,17 @@ final class ArrayMemory implements \Countable, Memory
     public array $data;
 
     /**
-     * @param array<array<string, mixed>> $memory
+     * @param array<mixed> $memory
+     *
+     * @throws InvalidArgumentException
      */
     public function __construct(array $memory = [])
     {
         $this->assertMemoryStructure($memory);
-
+        /** @var array<array-key, array<string, mixed>> $memory */
         $this->data = $memory;
     }
 
-    /**
-     * @return array{data: array<array<string, mixed>>}
-     */
     public function __serialize() : array
     {
         return [
@@ -33,10 +35,6 @@ final class ArrayMemory implements \Countable, Memory
         ];
     }
 
-    /**
-     * @param array{data: array<array<string, mixed>>} $data
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->data = $data['data'];
@@ -124,14 +122,13 @@ final class ArrayMemory implements \Countable, Memory
     }
 
     /**
-     * @param array<array<mixed>> $memory
+     * @param array<mixed> $memory
      *
      * @throws InvalidArgumentException
      */
     private function assertMemoryStructure(array $memory) : void
     {
         foreach ($memory as $entry) {
-            /** @psalm-suppress DocblockTypeContradiction */
             if (!\is_array($entry)) {
                 throw new InvalidArgumentException('Memory expects nested array data structure: array<array<mixed>>');
             }

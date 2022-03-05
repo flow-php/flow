@@ -10,6 +10,7 @@ use Flow\ETL\Row\EntryConverter;
 use Flow\ETL\Transformer\Cast\ValueCaster\StringToDateTimeCaster;
 
 /**
+ * @implements EntryConverter<array{value_caster: StringToDateTimeCaster}>
  * @psalm-immutable
  */
 final class StringToDateTimeEntryCaster implements EntryConverter
@@ -33,9 +34,6 @@ final class StringToDateTimeEntryCaster implements EntryConverter
         $this->valueCaster = new StringToDateTimeCaster($timeZone, $toTimeZone);
     }
 
-    /**
-     * @return array{value_caster: StringToDateTimeCaster}
-     */
     public function __serialize() : array
     {
         return [
@@ -43,11 +41,6 @@ final class StringToDateTimeEntryCaster implements EntryConverter
         ];
     }
 
-    /**
-     * @param array{value_caster: StringToDateTimeCaster} $data
-     *
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->valueCaster = $data['value_caster'];

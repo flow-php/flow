@@ -30,10 +30,10 @@ final class GroupedRowsTest extends TestCase
 
         $this->assertEquals(
             [
-                ['entries' => ['id', 'name'], 'values' => ['1', 'null'], 'rows' => [['id' => 1, 'name' => null]]],
-                ['entries' => ['id', 'name'], 'values' => ['2', 'null'], 'rows' => [['id' => 2, 'name' => null]]],
-                ['entries' => ['id', 'name'], 'values' => ['2', 'test'], 'rows' => [['id' => 2, 'name' => 'test'], ['id' => 2, 'name' => 'test']]],
-                ['entries' => ['id', 'name'], 'values' => ['3', 'test'], 'rows' => [['id' => 3, 'name' => 'test']]],
+                ['entries' => ['id', 'name'], 'values' => ['1', 'null'], 'rows' => [new Row\Entries(Entry::integer('id', 1), Entry::null('name'))]],
+                ['entries' => ['id', 'name'], 'values' => ['2', 'null'], 'rows' => [new Row\Entries(Entry::integer('id', 2), Entry::null('name'))]],
+                ['entries' => ['id', 'name'], 'values' => ['2', 'test'], 'rows' => [new Row\Entries(Entry::integer('id', 2), Entry::string('name', 'test')), new Row\Entries(Entry::integer('id', 2), Entry::string('name', 'test'))]],
+                ['entries' => ['id', 'name'], 'values' => ['3', 'test'], 'rows' => [new Row\Entries(Entry::integer('id', 3), Entry::string('name', 'test'))]],
             ],
             $groupedRows->toRows()->toArray()
         );

@@ -16,6 +16,7 @@ use Flow\Serializer\Serializable;
 /**
  * @implements \ArrayAccess<int, Row>
  * @implements \IteratorAggregate<int, Row>
+ * @implements Serializable<array{rows: array<int, Row>}>
  * @psalm-immutable
  */
 final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serializable
@@ -30,9 +31,6 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
         $this->rows = \array_values($rows);
     }
 
-    /**
-     * @return array{rows: array<int, Row>}
-     */
     public function __serialize() : array
     {
         return [
@@ -40,11 +38,6 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
         ];
     }
 
-    /**
-     * @psalm-suppress MoreSpecificImplementedParamType
-     *
-     * @param array{rows: array<int, Row>} $data
-     */
     public function __unserialize(array $data) : void
     {
         $this->rows = $data['rows'];

@@ -6,6 +6,9 @@ namespace Flow\ETL\Pipeline;
 
 use Flow\Serializer\Serializable;
 
+/**
+ * @implements Serializable<array{pipes: array<int, Pipe>}>
+ */
 final class Pipes implements Serializable
 {
     /**
@@ -26,9 +29,6 @@ final class Pipes implements Serializable
         return new self([]);
     }
 
-    /**
-     * @return array{pipes: array<int, Pipe>}
-     */
     public function __serialize() : array
     {
         return [
@@ -36,10 +36,6 @@ final class Pipes implements Serializable
         ];
     }
 
-    /**
-     * @param array{pipes: array<int, Pipe>} $data
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->pipes = $data['pipes'];

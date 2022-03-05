@@ -12,6 +12,7 @@ use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 /**
+ * @implements Transformer<array{object_entry_name: string, method: string, new_entry_name: string, parameters: array<mixed>, entry_factory: EntryFactory}>
  * @psalm-immutable
  */
 final class ObjectMethodTransformer implements Transformer
@@ -47,9 +48,6 @@ final class ObjectMethodTransformer implements Transformer
         $this->entryFactory = null === $entryFactory ? new NativeEntryFactory() : $entryFactory;
     }
 
-    /**
-     * @return array{object_entry_name: string, method: string, new_entry_name: string, parameters: array<mixed>, entry_factory: EntryFactory}
-     */
     public function __serialize() : array
     {
         return [
@@ -61,11 +59,6 @@ final class ObjectMethodTransformer implements Transformer
         ];
     }
 
-    /**
-     * @param array{object_entry_name: string, method: string, new_entry_name: string, parameters: array<mixed>, entry_factory: EntryFactory} $data
-     *
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->objectEntryName = $data['object_entry_name'];

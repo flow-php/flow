@@ -10,9 +10,9 @@ namespace Flow\ArrayComparison;
 final class ArraySortByKey
 {
     /**
-     * @phpstan-ignore-next-line
-     * @psalm-suppress MissingClosureParamType
-     * @psalm-suppress MissingClosureReturnType
+     * @param array<mixed> $array
+     *
+     * @return array<mixed>
      */
     public function __invoke(array $array) : array
     {

@@ -12,6 +12,7 @@ use Flow\ETL\Transformer;
 use Flow\ETL\Transformer\Rename\ArrayKeyRename;
 
 /**
+ * @implements Transformer<array{array_key_renames: array<ArrayKeyRename>}>
  * @psalm-immutable
  */
 final class ArrayDotRenameTransformer implements Transformer
@@ -26,9 +27,6 @@ final class ArrayDotRenameTransformer implements Transformer
         $this->arrayKeyRenames = $arrayKeyRenames;
     }
 
-    /**
-     * @return array{array_key_renames: array<ArrayKeyRename>}
-     */
     public function __serialize() : array
     {
         return [
@@ -36,11 +34,6 @@ final class ArrayDotRenameTransformer implements Transformer
         ];
     }
 
-    /**
-     * @param array{array_key_renames: array<ArrayKeyRename>} $data
-     *
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->arrayKeyRenames = $data['array_key_renames'];

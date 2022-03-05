@@ -9,6 +9,7 @@ use Flow\ETL\Transformer\Filter\Filter;
 use Flow\ETL\Transformer\Filter\Filter\ValidValue\Validator;
 
 /**
+ * @implements Filter<array{entry_name: string, validator: Validator}>
  * @psalm-immutable
  */
 final class ValidValue implements Filter
@@ -23,9 +24,6 @@ final class ValidValue implements Filter
         $this->validator = $validator;
     }
 
-    /**
-     * @return array{entry_name: string, validator: Validator}
-     */
     public function __serialize() : array
     {
         return [
@@ -34,11 +32,6 @@ final class ValidValue implements Filter
         ];
     }
 
-    /**
-     * @param array{entry_name: string, validator: Validator} $data
-     *
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->entryName = $data['entry_name'];

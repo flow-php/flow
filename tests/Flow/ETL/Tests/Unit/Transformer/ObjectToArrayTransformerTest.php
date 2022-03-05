@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Transformer;
 
 use Flow\ETL\DSL\Transform;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -46,8 +47,8 @@ final class ObjectToArrayTransformerTest extends TestCase
 
     public function test_object_to_array_when_entry_does_not_exists() : void
     {
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('"object_entry" not found');
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Entry "object_entry" does not exist');
 
         $objectHydratorTransformer = Transform::to_array_from_object(
             'object_entry'

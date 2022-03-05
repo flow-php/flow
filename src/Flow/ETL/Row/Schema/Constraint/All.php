@@ -7,6 +7,9 @@ namespace Flow\ETL\Row\Schema\Constraint;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Schema\Constraint;
 
+/**
+ * @implements Constraint<array{constraints: array<Constraint>}>
+ */
 final class All implements Constraint
 {
     /**
@@ -20,9 +23,6 @@ final class All implements Constraint
     }
 
     // @codeCoverageIgnoreStart
-    /**
-     * @return array{constraints: array<Constraint>}
-     */
     public function __serialize() : array
     {
         return [
@@ -30,11 +30,6 @@ final class All implements Constraint
         ];
     }
 
-    /**
-     * @psalm-suppress MoreSpecificImplementedParamType
-     *
-     * @param array{constraints: array<Constraint>} $data
-     */
     public function __unserialize(array $data) : void
     {
         $this->constraints = $data['constraints'];

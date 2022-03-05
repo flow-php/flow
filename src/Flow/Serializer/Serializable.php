@@ -2,10 +2,14 @@
 
 namespace Flow\Serializer;
 
+/**
+ * @template T
+ */
 interface Serializable
 {
     /**
-     * @return array<string, mixed>
+     * @return T
+     * @phpstan-ignore-next-line
      */
     public function __serialize() : array;
 
@@ -13,7 +17,8 @@ interface Serializable
      * While not used by NativePHPSerializer it first requires Serializable to be instantiate
      * through Reflection without invoking constructor so __unserialize can bring object to the right state.
      *
-     * @param array<string, mixed> $data
+     * @param T $data
+     * @phpstan-ignore-next-line
      */
     public function __unserialize(array $data) : void;
 }

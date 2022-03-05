@@ -10,6 +10,9 @@ use Flow\ETL\Row\Schema;
 use Flow\ETL\Rows;
 use Flow\ETL\SchemaValidator;
 
+/**
+ * @implements Loader<array{schema: Schema, validator: SchemaValidator}>
+ */
 final class SchemaValidationLoader implements Loader
 {
     private Schema $schema;
@@ -22,9 +25,6 @@ final class SchemaValidationLoader implements Loader
         $this->validator = $validator;
     }
 
-    /**
-     * @return array{schema: Schema, validator: SchemaValidator}
-     */
     public function __serialize() : array
     {
         return [
@@ -33,10 +33,6 @@ final class SchemaValidationLoader implements Loader
         ];
     }
 
-    /**
-     * @param array{schema: Schema} $data
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->schema = $data['schema'];

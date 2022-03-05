@@ -10,6 +10,7 @@ use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 /**
+ * @implements Transformer<array{array_entries: array<string>, new_entry_name: string}>
  * @psalm-immutable
  */
 final class ArrayMergeTransformer implements Transformer
@@ -31,9 +32,6 @@ final class ArrayMergeTransformer implements Transformer
         $this->newEntryName = $newEntryName;
     }
 
-    /**
-     * @return array{array_entries: array<string>, new_entry_name: string}
-     */
     public function __serialize() : array
     {
         return [
@@ -42,11 +40,6 @@ final class ArrayMergeTransformer implements Transformer
         ];
     }
 
-    /**
-     * @param array{array_entries: array<string>, new_entry_name: string} $data
-     *
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->arrayEntries = $data['array_entries'];
@@ -62,22 +55,17 @@ final class ArrayMergeTransformer implements Transformer
             $entryValues = [];
 
             foreach ($this->arrayEntries as $entryName) {
-                if (!$row->entries()->has($entryName)) {
-                    throw new RuntimeException("\"{$entryName}\" not found");
-                }
+                $arrayEntry = $row->entries()->get($entryName);
 
-                if (!$row->entries()->get($entryName) instanceof Row\Entry\ArrayEntry) {
+                if (!$arrayEntry instanceof Row\Entry\ArrayEntry) {
                     throw new RuntimeException("\"{$entryName}\" is not ArrayEntry");
                 }
 
-                /** @psalm-suppress MixedAssignment */
-                $entryValues[] = $row->get($entryName)->value();
+                $entryValues[] = $arrayEntry->value();
             }
 
-            /** @psalm-suppress MixedArgument */
             return $row->add(new Row\Entry\ArrayEntry(
                 $this->newEntryName,
-                /** @phpstan-ignore-next-line */
                 \array_merge(...$entryValues)
             ));
         };

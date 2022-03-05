@@ -16,6 +16,9 @@ use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Row\Entry\StructureEntry;
 use Flow\Serializer\Serializable;
 
+/**
+ * @implements Serializable<array{entry: string, class:class-string, nullable: boolean, constraint: null|Constraint}>
+ */
 final class Definition implements Serializable
 {
     /**
@@ -89,9 +92,6 @@ final class Definition implements Serializable
         return new self($entry, StructureEntry::class, $nullable, $constraint);
     }
 
-    /**
-     * @return array{entry: string, class:class-string, nullable: boolean, constraint: null|Constraint}
-     */
     public function __serialize() : array
     {
         return [
@@ -102,11 +102,6 @@ final class Definition implements Serializable
         ];
     }
 
-    /**
-     * @psalm-suppress MoreSpecificImplementedParamType
-     *
-     * @param array{entry: string, class:class-string, nullable: boolean, constraint: null|Constraint} $data
-     */
     public function __unserialize(array $data) : void
     {
         $this->entry = $data['entry'];
@@ -121,6 +116,11 @@ final class Definition implements Serializable
     }
     // @codeCoverageIgnoreEnd
 
+    /**
+     * @param Entry $entry
+     *
+     * @return bool
+     */
     public function matches(Entry $entry) : bool
     {
         if ($this->nullable && $entry instanceof Entry\NullEntry && $entry->is($this->entry)) {

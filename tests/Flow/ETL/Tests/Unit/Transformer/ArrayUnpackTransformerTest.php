@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Transformer;
 
 use Flow\ETL\DSL\Transform;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -32,8 +33,8 @@ final class ArrayUnpackTransformerTest extends TestCase
 
     public function test_array_unpack_for_not_existing_entry() : void
     {
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('"array_entry" not found');
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Entry "array_entry" does not exist');
 
         $arrayUnpackTransformer = Transform::array_unpack('array_entry');
 

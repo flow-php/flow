@@ -7,6 +7,7 @@ namespace Flow\ETL\Transformer\Rename;
 use Flow\Serializer\Serializable;
 
 /**
+ * @implements Serializable<array{array_entry: string, path: string, new_name: string}>
  * @psalm-immutable
  */
 final class ArrayKeyRename implements Serializable
@@ -24,9 +25,6 @@ final class ArrayKeyRename implements Serializable
         $this->newName = $newName;
     }
 
-    /**
-     * @return array{array_entry: string, path: string, new_name: string}
-     */
     public function __serialize() : array
     {
         return [
@@ -36,11 +34,6 @@ final class ArrayKeyRename implements Serializable
         ];
     }
 
-    /**
-     * @param array{array_entry: string, path: string, new_name: string} $data
-     *
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->arrayEntry = 'array_entry';

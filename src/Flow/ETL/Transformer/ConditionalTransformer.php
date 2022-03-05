@@ -9,6 +9,7 @@ use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 /**
+ * @implements Transformer<array{condition: Condition\RowCondition, transformer: Transformer}>
  * @psalm-immutable
  */
 final class ConditionalTransformer implements Transformer
@@ -23,9 +24,6 @@ final class ConditionalTransformer implements Transformer
         $this->transformer = $transformer;
     }
 
-    /**
-     * @return array{condition: Condition\RowCondition,transformer: Transformer}
-     */
     public function __serialize() : array
     {
         return [
@@ -34,11 +32,6 @@ final class ConditionalTransformer implements Transformer
         ];
     }
 
-    /**
-     * @param array{condition: Condition\RowCondition, transformer: Transformer} $data
-     *
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->condition = $data['condition'];
