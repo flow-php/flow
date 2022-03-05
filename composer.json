@@ -5,7 +5,7 @@
     "keywords": ["etl", "extract", "transform", "load"],
     "prefer-stable": true,
     "require": {
-        "php": "^7.4.2 || ~8.0",
+        "php": "^7.4.2 || ~8.0 || ~8.1",
         "flow-php/array-dot": "^1.0@dev",
         "ext-mbstring": "*",
         "ext-json": "*"

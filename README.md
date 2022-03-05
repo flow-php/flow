@@ -1,11 +1,16 @@
 # Flow PHP
 Data processing and manipulation library,
 
-[![Minimum PHP Version](https://img.shields.io/badge/php-%3E%3D%207.4-8892BF.svg)](https://php.net/)
 [![Latest Stable Version](https://poser.pugx.org/flow-php/etl/v)](https://packagist.org/packages/flow-php/etl)
 [![Latest Unstable Version](https://poser.pugx.org/flow-php/etl/v/unstable)](https://packagist.org/packages/flow-php/etl)
 [![License](https://poser.pugx.org/flow-php/etl/license)](https://packagist.org/packages/flow-php/etl)
 ![Tests](https://github.com/flow-php/etl/workflows/Tests/badge.svg?branch=1.x)
+
+Supported PHP versions
+
+* [![Supported PHP Version](https://img.shields.io/badge/php-7.4-8892BF.svg)](https://php.net/)
+* [![Supported PHP Version](https://img.shields.io/badge/php-8.0-8892BF.svg)](https://php.net/)
+* [![Supported PHP Version](https://img.shields.io/badge/php-8.1-8892BF.svg)](https://php.net/)
 
 ## Description
 

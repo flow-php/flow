@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ddff73ab2165026ae50734456a08110b",
+    "content-hash": "9f45a83b54f7ec52514c99abf77604a0",
     "packages": [
         {
             "name": "flow-php/array-dot",
@@ -1056,7 +1056,7 @@
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": "^7.4.2 || ~8.0",
+        "php": "^7.4.2 || ~8.0 || ~8.1",
         "ext-mbstring": "*",
         "ext-json": "*"
     },
