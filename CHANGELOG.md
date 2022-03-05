@@ -83,6 +83,9 @@
 - [856870](https://github.com/flow-php/etl/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#177](https://github.com/flow-php/etl/pull/177) - **StructEntry::toArray is no longer reducing internal entries to arrays** - [@norberttech](https://github.com/norberttech)
+- [#177](https://github.com/flow-php/etl/pull/177) - **CollectionEntry::toArray is no longer reducing internal entries to arrays** - [@norberttech](https://github.com/norberttech)
+- [#177](https://github.com/flow-php/etl/pull/177) - **JsonEntry::map requires json string as a callback argument and return type** - [@norberttech](https://github.com/norberttech)
 - [#172](https://github.com/flow-php/etl/pull/172) - **Pipeline process returns Generator** - [@norberttech](https://github.com/norberttech)
 - [#167](https://github.com/flow-php/etl/pull/167) - **tests to use DSL** - [@norberttech](https://github.com/norberttech)
 - [#162](https://github.com/flow-php/etl/pull/162) - **documentation** - [@norberttech](https://github.com/norberttech)
@@ -109,6 +112,7 @@
 - [e48062](https://github.com/flow-php/etl/commit/e48062890cd84e655e1162305086f67148347b83) - **Intial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#177](https://github.com/flow-php/etl/pull/177) - **Psalm types detection** - [@norberttech](https://github.com/norberttech)
 - [#172](https://github.com/flow-php/etl/pull/172) - **ParallelizingPipeline to create one pipeline, instead of creating one for each chunk** - [@norberttech](https://github.com/norberttech)
 - [#170](https://github.com/flow-php/etl/pull/170) - **Accidental BC Break in Row class** - [@norberttech](https://github.com/norberttech)
 - [#168](https://github.com/flow-php/etl/pull/168) - **code coverage in some tests** - [@norberttech](https://github.com/norberttech)
