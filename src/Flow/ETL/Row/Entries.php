@@ -33,7 +33,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
 
         if (\count($entries)) {
             foreach ($entries as $entry) {
-                $this->entries[$entry->name()] = $entry;
+                $this->entries[\mb_strtolower($entry->name())] = $entry;
             }
 
             if (\count($this->entries) !== \count($entries)) {
@@ -153,7 +153,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
     public function has(string ...$names) : bool
     {
         foreach ($names as $name) {
-            if (!\array_key_exists($name, $this->entries)) {
+            if (!\array_key_exists(\mb_strtolower($name), $this->entries)) {
                 return false;
             }
         }
@@ -351,7 +351,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
     private function find(string $name) : ?Entry
     {
         if ($this->has($name)) {
-            return $this->entries[$name];
+            return $this->entries[\mb_strtolower($name)];
         }
 
         return null;

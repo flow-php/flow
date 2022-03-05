@@ -123,13 +123,11 @@ final class EntriesTest extends TestCase
     public function test_case_insensitive_entry_names() : void
     {
         $entries = new Entries(
-            new StringEntry('entry-name', 'just a string'),
-            new IntegerEntry('entry-Name', 100)
+            new StringEntry('entry-Name', 'just a string'),
         );
 
-        $this->assertCount(2, $entries);
         $this->assertTrue($entries->has('entry-name'));
-        $this->assertTrue($entries->has('entry-Name'));
+        $this->assertEquals(new StringEntry('entry-Name', 'just a string'), $entries->get('entry-name'));
     }
 
     public function test_get_all_entries() : void
