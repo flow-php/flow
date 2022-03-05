@@ -86,7 +86,7 @@ Some configuration options can be passed through environment variables, list bel
 To get more control over ETL please use [Config](src/Flow/ETL/Config.php) than can be created
 through [ConfigBuilder](src/Flow/ETL/ConfigBuilder.php).
 
-```
+```php
 <?php
 
 ETL::extract(
