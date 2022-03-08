@@ -288,18 +288,42 @@ final class RowsTest extends TestCase
         $rows = new Rows(
             $one   = Row::create(new IntegerEntry('number', 1), new StringEntry('name', 'one')),
             $two   = Row::create(new IntegerEntry('number', 2), new StringEntry('name', 'two')),
+            $three = Row::create(new IntegerEntry('number', 3), new StringEntry('name', 'one')),
+            $four  = Row::create(new IntegerEntry('number', 4), new StringEntry('name', 'four')),
+            $three1 = Row::create(new IntegerEntry('number', 3), new StringEntry('name', 'three')),
+        );
+
+        $this->assertEquals(
+            new Rows(
+                $one,
+                $three
+            ),
+            $rows->find(fn (Row $row) : bool => $row->valueOf('name') === 'one')
+        );
+    }
+
+    public function test_find_on_empty_rows() : void
+    {
+        $this->assertEquals(new Rows(), (new Rows())->find(fn (Row $row) => false));
+    }
+
+    public function test_find_one() : void
+    {
+        $rows = new Rows(
+            $one   = Row::create(new IntegerEntry('number', 1), new StringEntry('name', 'one')),
+            $two   = Row::create(new IntegerEntry('number', 2), new StringEntry('name', 'two')),
             $three = Row::create(new IntegerEntry('number', 3), new StringEntry('name', 'three')),
             $four  = Row::create(new IntegerEntry('number', 4), new StringEntry('name', 'four')),
             $three1 = Row::create(new IntegerEntry('number', 3), new StringEntry('name', 'three')),
         );
 
-        $this->assertSame($three, $rows->find(fn (Row $row) : bool => $row->valueOf('number') === 3));
-        $this->assertNotSame($three1, $rows->find(fn (Row $row) : bool => $row->valueOf('number') === 3));
+        $this->assertSame($three, $rows->findOne(fn (Row $row) : bool => $row->valueOf('number') === 3));
+        $this->assertNotSame($three1, $rows->findOne(fn (Row $row) : bool => $row->valueOf('number') === 3));
     }
 
-    public function test_find_on_empty_rows() : void
+    public function test_find_one_on_empty_rows() : void
     {
-        $this->asserTNull((new Rows())->find(fn (Row $row) => false));
+        $this->assertNull((new Rows())->findOne(fn (Row $row) => false));
     }
 
     public function test_find_without_results() : void
@@ -312,7 +336,7 @@ final class RowsTest extends TestCase
             $three1 = Row::create(new IntegerEntry('number', 3), new StringEntry('name', 'three')),
         );
 
-        $this->assertNull($rows->find(fn (Row $row) : bool => $row->valueOf('number') === 5));
+        $this->assertNull($rows->findOne(fn (Row $row) : bool => $row->valueOf('number') === 5));
     }
 
     public function test_first_on_empty_rows() : void

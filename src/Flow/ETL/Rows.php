@@ -194,7 +194,29 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
     /**
      * @psalm-param pure-callable(Row) : bool $callable
      */
-    public function find(callable $callable) : ?Row
+    public function find(callable $callable) : self
+    {
+        $rows = $this->rows;
+
+        if (!\count($rows)) {
+            return new self();
+        }
+
+        $rows = [];
+
+        foreach ($this->rows as $row) {
+            if ($callable($row)) {
+                $rows[] = $row;
+            }
+        }
+
+        return new self(...$rows);
+    }
+
+    /**
+     * @psalm-param pure-callable(Row) : bool $callable
+     */
+    public function findOne(callable $callable) : ?Row
     {
         $rows = $this->rows;
 
@@ -202,16 +224,16 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
             return null;
         }
 
-        $results = [];
+        $rows = [];
 
         foreach ($this->rows as $row) {
             if ($callable($row)) {
-                $results[] = $row;
+                $rows[] = $row;
             }
         }
 
-        if (\count($results)) {
-            return \current($results);
+        if (\count($rows)) {
+            return \current($rows);
         }
 
         return null;
