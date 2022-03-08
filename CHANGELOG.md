@@ -1,6 +1,7 @@
-## [Unreleased] - 2022-03-05
+## [Unreleased] - 2022-03-08
 
 ### Added
+- [#180](https://github.com/flow-php/etl/pull/180) - **Rows::find() : Rows** - [@norberttech](https://github.com/norberttech)
 - [#175](https://github.com/flow-php/etl/pull/175) - **Row schema validation mechanism** - [@norberttech](https://github.com/norberttech)
 - [#174](https://github.com/flow-php/etl/pull/174) - **Rows::groupBy** - [@norberttech](https://github.com/norberttech)
 - [#172](https://github.com/flow-php/etl/pull/172) - **PipelineExtractor** - [@norberttech](https://github.com/norberttech)
@@ -83,6 +84,7 @@
 - [856870](https://github.com/flow-php/etl/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#180](https://github.com/flow-php/etl/pull/180) - **renamed Rows::find into Rows::findOne** - [@norberttech](https://github.com/norberttech)
 - [#179](https://github.com/flow-php/etl/pull/179) - **Enabled php 8.1** - [@norberttech](https://github.com/norberttech)
 - [#178](https://github.com/flow-php/etl/pull/178) - **Keep entries case insensitive without changing entry name** - [@norberttech](https://github.com/norberttech)
 - [#177](https://github.com/flow-php/etl/pull/177) - **StructEntry::toArray is no longer reducing internal entries to arrays** - [@norberttech](https://github.com/norberttech)
