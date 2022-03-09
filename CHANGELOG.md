@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-03-08
+## [Unreleased] - 2022-03-09
 
 ### Added
 - [#180](https://github.com/flow-php/etl/pull/180) - **Rows::find() : Rows** - [@norberttech](https://github.com/norberttech)
@@ -84,6 +84,7 @@
 - [856870](https://github.com/flow-php/etl/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#186](https://github.com/flow-php/etl/pull/186) - **Make entry names case sensitive** - [@norberttech](https://github.com/norberttech)
 - [#180](https://github.com/flow-php/etl/pull/180) - **renamed Rows::find into Rows::findOne** - [@norberttech](https://github.com/norberttech)
 - [#179](https://github.com/flow-php/etl/pull/179) - **Enabled php 8.1** - [@norberttech](https://github.com/norberttech)
 - [#178](https://github.com/flow-php/etl/pull/178) - **Keep entries case insensitive without changing entry name** - [@norberttech](https://github.com/norberttech)
