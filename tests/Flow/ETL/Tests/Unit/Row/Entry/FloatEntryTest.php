@@ -22,8 +22,8 @@ final class FloatEntryTest extends TestCase
         yield 'equal names and values' => [true, new FloatEntry('name', 1.0), new FloatEntry('name', 1.0)];
         yield 'different names and values' => [false, new FloatEntry('name', 1.0), new FloatEntry('different_name', 1.0)];
         yield 'equal names and different values' => [false, new FloatEntry('name', 1.0), new FloatEntry('name', 2)];
-        yield 'different names characters and equal values' => [true, new FloatEntry('NAME', 1.1), new FloatEntry('name', 1.1)];
-        yield 'different names characters and equal values with high precision' => [true, new FloatEntry('NAME', 1.00001), new FloatEntry('name', 1.00001)];
+        yield 'different names characters and equal values' => [false, new FloatEntry('NAME', 1.1), new FloatEntry('name', 1.1)];
+        yield 'different names characters and equal values with high precision' => [false, new FloatEntry('NAME', 1.00001), new FloatEntry('name', 1.00001)];
         yield 'different names characters and different values with high precision' => [false, new FloatEntry('NAME', 1.205502), new FloatEntry('name', 1.205501)];
     }
 

@@ -56,7 +56,7 @@ final class CollectionEntry implements Entry
 
     public function is(string $name) : bool
     {
-        return \mb_strtolower($name) === \mb_strtolower($name);
+        return $name === $name;
     }
 
     public function isEqual(Entry $entry) : bool

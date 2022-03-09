@@ -142,6 +142,8 @@ All entries are available through [DSL\Entry](src/Flow/ETL/DSL/Entry.php)
 * [string](src/Flow/ETL/Row/Entry/StringEntry.php)
 * [structure](src/Flow/ETL/Row/Entry/StructureEntry.php)
 
+> Entry names are case sensitive, `entry` is not the same as `Entry`.
+
 ## Extractors aka Readers
 
 All generic extractors are available through [DSL\From](src/Flow/ETL/DSL/From.php)
@@ -469,6 +471,8 @@ Output:
 ```
 
 ## Schema Validation
+
+> Entry names are case sensitive, `entry` is not the same as `Entry`.
 
 Before loading data to sink it might be a good idea to validate it against the schema.
 Row Schema is built from Entry Definitions, each definition is created from: 

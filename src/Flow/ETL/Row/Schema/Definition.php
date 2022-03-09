@@ -112,7 +112,7 @@ final class Definition implements Serializable
 
     public function entry() : string
     {
-        return \mb_strtolower($this->entry);
+        return $this->entry;
     }
     // @codeCoverageIgnoreEnd
 

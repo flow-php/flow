@@ -120,14 +120,24 @@ final class EntriesTest extends TestCase
         $entries->remove('non-existing-entry');
     }
 
-    public function test_case_insensitive_entry_names() : void
+    public function test_case_sensitive_entry_names() : void
     {
         $entries = new Entries(
             new StringEntry('entry-Name', 'just a string'),
         );
 
-        $this->assertTrue($entries->has('entry-name'));
-        $this->assertEquals(new StringEntry('entry-Name', 'just a string'), $entries->get('entry-name'));
+        $this->assertFalse($entries->has('entry-name'));
+    }
+
+    public function test_create_from_non_unique_entries() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Entry names must be unique, given: [integer-entry, integer-entry]');
+
+        new Entries(
+            new IntegerEntry('integer-entry', 100),
+            new IntegerEntry('integer-entry', 200)
+        );
     }
 
     public function test_get_all_entries() : void
@@ -186,6 +196,16 @@ final class EntriesTest extends TestCase
         $entries1->merge($entries2);
     }
 
+    public function test_merge_duplicated_entries_case_insensitive_() : void
+    {
+        $entries1 = new Entries(new StringEntry('string-name', 'new string entry'));
+        $entries2 = new Entries(new StringEntry('string-Name', 'new string entry'));
+
+        $merged = $entries1->merge($entries2);
+
+        $this->assertCount(2, $merged);
+    }
+
     public function test_merge_entries() : void
     {
         $entries1 = new Entries(new StringEntry('string-name', 'new string entry'));
@@ -222,6 +242,17 @@ final class EntriesTest extends TestCase
         $this->expectExceptionMessage('Added entries names must be unique, given: [entry-name] + [entry-name]');
 
         $entries->add(new StringEntry('entry-name', 'just a string'));
+    }
+
+    public function test_prevents_from_adding_entry_with_the_same_name_case_insensitive() : void
+    {
+        $entries = new Entries(
+            new IntegerEntry('entry-Name', 100)
+        );
+
+        $newEntries = $entries->add(new StringEntry('entry-name', 'just a string'));
+
+        $this->assertCount(2, $newEntries);
     }
 
     public function test_prevents_from_creating_collection_with_duplicate_entry_names() : void

@@ -14,7 +14,7 @@ final class BooleanEntryTest extends TestCase
         yield 'equal names and values' => [true, new BooleanEntry('name', true), new BooleanEntry('name', true)];
         yield 'different names and values' => [false, new BooleanEntry('name', true), new BooleanEntry('different_name', true)];
         yield 'equal names and different values' => [false, new BooleanEntry('name', true), new BooleanEntry('name', false)];
-        yield 'different names characters and equal values' => [true, new BooleanEntry('NAME', true), new BooleanEntry('name', true)];
+        yield 'different names characters and equal values' => [false, new BooleanEntry('NAME', true), new BooleanEntry('name', true)];
     }
 
     /**

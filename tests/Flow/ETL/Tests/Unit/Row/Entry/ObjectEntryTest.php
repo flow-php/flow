@@ -14,7 +14,7 @@ final class ObjectEntryTest extends TestCase
         yield 'equal names and values' => [true, new ObjectEntry('name', $object = new \stdClass()), new ObjectEntry('name', $object)];
         yield 'different names and values' => [false, new ObjectEntry('name', $object = new \stdClass()), new ObjectEntry('different_name', $object)];
         yield 'equal names and different values' => [false, new ObjectEntry('name', new \stdClass()), new ObjectEntry('name', new \ArrayObject())];
-        yield 'different names characters and equal values' => [true, new ObjectEntry('NAME', $object = new \stdClass()), new ObjectEntry('name', $object)];
+        yield 'different names characters and equal values' => [false, new ObjectEntry('NAME', $object = new \stdClass()), new ObjectEntry('name', $object)];
     }
 
     public function test_entry_name_can_be_zero() : void

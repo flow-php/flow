@@ -16,7 +16,7 @@ final class DateTimeEntryTest extends TestCase
         yield 'equal names and different values day' => [false, new DateTimeEntry('name', new \DateTimeImmutable('2020-01-01 00:00:00+00')), new DateTimeEntry('name', new \DateTimeImmutable('2020-01-02 00:00:00+00'))];
         yield 'equal names and different values hour' => [false, new DateTimeEntry('name', new \DateTimeImmutable('2020-01-01 00:00:00+00')), new DateTimeEntry('name', new \DateTimeImmutable('2020-01-01 02:00:00+00'))];
         yield 'equal names and different values tz' => [false, new DateTimeEntry('name', new \DateTimeImmutable('2020-01-01 00:00:00+00')), new DateTimeEntry('name', new \DateTimeImmutable('2020-01-01 00:00:00+10'))];
-        yield 'different names characters and equal values' => [true, new DateTimeEntry('NAME', new \DateTimeImmutable('2020-01-01 00:00:00+00')), new DateTimeEntry('name', new \DateTimeImmutable('2020-01-01 00:00:00+00'))];
+        yield 'different names characters and equal values' => [false, new DateTimeEntry('NAME', new \DateTimeImmutable('2020-01-01 00:00:00+00')), new DateTimeEntry('name', new \DateTimeImmutable('2020-01-01 00:00:00+00'))];
         yield 'equal names and equal values and different format' => [false, new DateTimeEntry('name', new \DateTimeImmutable('2020-02-19 00:00:00+00')), new DateTimeEntry('name', new \DateTimeImmutable('2020-01-02 00:00:00+00'))];
         yield 'equal names and equal values for given format' => [true, new DateTimeEntry('name', new \DateTimeImmutable('2020-02-19 00:00:00+00')), new DateTimeEntry('name', new \DateTimeImmutable('2020-02-19 00:00:00+00'))];
     }

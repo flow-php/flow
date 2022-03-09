@@ -24,7 +24,7 @@ final class IntegerEntryTest extends TestCase
         yield 'equal names and values' => [true, new IntegerEntry('name', 1), new IntegerEntry('name', 1)];
         yield 'different names and values' => [false, new IntegerEntry('name', 1), new IntegerEntry('different_name', 1)];
         yield 'equal names and different values' => [false, new IntegerEntry('name', 1), new IntegerEntry('name', 2)];
-        yield 'different names characters and equal values' => [true, new IntegerEntry('NAME', 1), new IntegerEntry('name', 1)];
+        yield 'different names characters and equal values' => [false, new IntegerEntry('NAME', 1), new IntegerEntry('name', 1)];
     }
 
     /**

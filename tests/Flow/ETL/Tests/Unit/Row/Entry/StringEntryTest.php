@@ -15,7 +15,7 @@ final class StringEntryTest extends TestCase
         yield 'different names and values' => [false, new StringEntry('name', 'value'), new StringEntry('different_name', 'value')];
         yield 'equal names and different values' => [false, new StringEntry('name', 'value'), new StringEntry('name', 'different_value')];
         yield 'equal names and different value characters' => [false, new StringEntry('name', 'value'), new StringEntry('name', 'VALUE')];
-        yield 'different names characters and equal values' => [true, new StringEntry('NAME', 'value'), new StringEntry('name', 'value')];
+        yield 'different names characters and equal values' => [false, new StringEntry('NAME', 'value'), new StringEntry('name', 'value')];
     }
 
     public function test_creates_datetime_value() : void

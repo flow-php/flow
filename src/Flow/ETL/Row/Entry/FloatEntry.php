@@ -64,7 +64,7 @@ final class FloatEntry implements Entry
 
     public function is(string $name) : bool
     {
-        return \mb_strtolower($this->name) === \mb_strtolower($name);
+        return $this->name === $name;
     }
 
     public function isEqual(Entry $entry) : bool

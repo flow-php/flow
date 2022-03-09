@@ -22,11 +22,11 @@ final class SchemaTest extends TestCase
 
     public function test_allowing_only_unique_defintions_case_insensitive() : void
     {
-        $this->expectException(InvalidArgumentException::class);
-
-        new Schema(
+        $schema = new Schema(
             Schema\Definition::integer('id'),
             Schema\Definition::integer('Id')
         );
+
+        $this->assertSame(['id', 'Id'], $schema->entries());
     }
 }
