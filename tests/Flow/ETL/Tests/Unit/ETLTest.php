@@ -29,6 +29,28 @@ use PHPUnit\Framework\TestCase;
 
 final class ETLTest extends TestCase
 {
+    public function test_drop() : void
+    {
+        $rows = ETL::process(
+            new Rows(
+                Row::create(Entry::integer('id', 1), Entry::string('name', 'foo'), Entry::boolean('active', true)),
+                Row::create(Entry::integer('id', 2), Entry::null('name'), Entry::boolean('active', false)),
+                Row::create(Entry::integer('id', 2), Entry::string('name', 'bar'), Entry::boolean('active', false)),
+            )
+        )->drop(
+            'id'
+        )->fetch();
+
+        $this->assertEquals(
+            new Rows(
+                Row::create(Entry::string('name', 'foo'), Entry::boolean('active', true)),
+                Row::create(Entry::null('name'), Entry::boolean('active', false)),
+                Row::create(Entry::string('name', 'bar'), Entry::boolean('active', false)),
+            ),
+            $rows
+        );
+    }
+
     public function test_etl() : void
     {
         $extractor = new class implements Extractor {
@@ -752,6 +774,28 @@ ASCIITABLE,
 
         ETL::process(new Rows())
             ->limit(-1);
+    }
+
+    public function test_select() : void
+    {
+        $rows = ETL::process(
+            new Rows(
+                Row::create(Entry::integer('id', 1), Entry::string('name', 'foo'), Entry::boolean('active', true)),
+                Row::create(Entry::integer('id', 2), Entry::null('name'), Entry::boolean('active', false)),
+                Row::create(Entry::integer('id', 2), Entry::string('name', 'bar'), Entry::boolean('active', false)),
+            )
+        )->select(
+            'id'
+        )->fetch();
+
+        $this->assertEquals(
+            new Rows(
+                Row::create(Entry::integer('id', 1)),
+                Row::create(Entry::integer('id', 2)),
+                Row::create(Entry::integer('id', 2)),
+            ),
+            $rows
+        );
     }
 
     public function test_selective_validation_against_schema() : void

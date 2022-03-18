@@ -16,6 +16,8 @@ use Flow\ETL\Row\Sort;
 use Flow\ETL\Transformer\CallbackRowTransformer;
 use Flow\ETL\Transformer\Filter\Filter\Callback;
 use Flow\ETL\Transformer\FilterRowsTransformer;
+use Flow\ETL\Transformer\KeepEntriesTransformer;
+use Flow\ETL\Transformer\RemoveEntriesTransformer;
 
 final class ETL
 {
@@ -108,6 +110,20 @@ final class ETL
         $formatter = $formatter ?? new AsciiTableFormatter();
 
         return $formatter->format($this->fetch($limit), $truncate);
+    }
+
+    /**
+     * Drop given entries.
+     *
+     * @param string ...$entries
+     *
+     * @return $this
+     */
+    public function drop(string ...$entries) : self
+    {
+        $this->pipeline->add(new RemoveEntriesTransformer(...$entries));
+
+        return $this;
     }
 
     public function fetch(int $limit = 0) : Rows
@@ -221,6 +237,20 @@ final class ETL
                 $callback($rows);
             }
         }
+    }
+
+    /**
+     * Keep only given entries.
+     *
+     * @param string ...$entries
+     *
+     * @return $this
+     */
+    public function select(string ...$entries) : self
+    {
+        $this->pipeline->add(new KeepEntriesTransformer(...$entries));
+
+        return $this;
     }
 
     public function sortBy(Sort ...$entries) : self

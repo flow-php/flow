@@ -364,7 +364,36 @@ ETL::process(new Rows(...))
     ->run();
 ```
 
-This function is internally using [filter transformer](src/Flow/ETL/Transformer/FilterRowsTransformer.php).
+
+## Select
+
+In order to quickly select only relevant entries use Rows `ETL::select`
+
+```php 
+<?php 
+
+ETL::process(new Rows(...))
+    ->select("id", "name")
+    ->write($loader)
+    ->run();
+```
+
+This function is internally using [keep entries](src/Flow/ETL/Transformer/KeepEntriesTransformer.php) transformers.
+
+## Drop
+
+In order to quickly drop irrelevant entries use Rows `ETL::drop`
+
+```php 
+<?php 
+
+ETL::process(new Rows(...))
+    ->drop("_tags")
+    ->write($loader)
+    ->run();
+```
+
+This function is internally using [remove entries](src/Flow/ETL/Transformer/RemoveEntriesTransformer.php) transformers.
 
 ## Map
 
