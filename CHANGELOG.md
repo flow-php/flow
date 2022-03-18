@@ -1,6 +1,8 @@
-## [Unreleased] - 2022-03-09
+## [Unreleased] - 2022-03-18
 
 ### Added
+- [#190](https://github.com/flow-php/etl/pull/190) - **ETL::drop** - [@norberttech](https://github.com/norberttech)
+- [#190](https://github.com/flow-php/etl/pull/190) - **ETL::select** - [@norberttech](https://github.com/norberttech)
 - [#180](https://github.com/flow-php/etl/pull/180) - **Rows::find() : Rows** - [@norberttech](https://github.com/norberttech)
 - [#175](https://github.com/flow-php/etl/pull/175) - **Row schema validation mechanism** - [@norberttech](https://github.com/norberttech)
 - [#174](https://github.com/flow-php/etl/pull/174) - **Rows::groupBy** - [@norberttech](https://github.com/norberttech)
