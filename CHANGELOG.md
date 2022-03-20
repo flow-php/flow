@@ -1,6 +1,9 @@
-## [Unreleased] - 2022-03-18
+## [Unreleased] - 2022-03-20
 
 ### Added
+- [#191](https://github.com/flow-php/etl/pull/191) - **ETL::groupBy** - [@norberttech](https://github.com/norberttech)
+- [#191](https://github.com/flow-php/etl/pull/191) - **ETL::aggregate** - [@norberttech](https://github.com/norberttech)
+- [#191](https://github.com/flow-php/etl/pull/191) - **Aggregations: avg, max, min, sum, count** - [@norberttech](https://github.com/norberttech)
 - [#190](https://github.com/flow-php/etl/pull/190) - **ETL::drop** - [@norberttech](https://github.com/norberttech)
 - [#190](https://github.com/flow-php/etl/pull/190) - **ETL::select** - [@norberttech](https://github.com/norberttech)
 - [#180](https://github.com/flow-php/etl/pull/180) - **Rows::find() : Rows** - [@norberttech](https://github.com/norberttech)
@@ -157,6 +160,7 @@
 - [55faa8](https://github.com/flow-php/etl/commit/55faa8edfed3973f54e31b3af57a4ba171050a85) - **README.md** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#191](https://github.com/flow-php/etl/pull/191) - **Row::groupBy** - [@norberttech](https://github.com/norberttech)
 - [#176](https://github.com/flow-php/etl/pull/176) - **Replaced Schema::isValid with SchemaValidator** - [@norberttech](https://github.com/norberttech)
 - [#163](https://github.com/flow-php/etl/pull/163) - **Rows::makeFirst and Rows::makeLast methods** - [@norberttech](https://github.com/norberttech)
 - [#86](https://github.com/flow-php/etl/pull/86) - **Remove unsued PHP-CS config** - [@tomaszhanc](https://github.com/tomaszhanc)
