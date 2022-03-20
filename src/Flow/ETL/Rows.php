@@ -9,7 +9,6 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\Comparator;
 use Flow\ETL\Row\Comparator\NativeComparator;
 use Flow\ETL\Row\Entries;
-use Flow\ETL\Row\GroupedRows;
 use Flow\ETL\Row\Sort;
 use Flow\Serializer\Serializable;
 
@@ -270,18 +269,6 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
     public function getIterator() : \Iterator
     {
         return new \ArrayIterator($this->rows);
-    }
-
-    public function groupBy(string ...$entries) : GroupedRows
-    {
-        $groups = new GroupedRows(...$entries);
-
-        foreach ($this->rows as $row) {
-            /** @psalm-suppress ImpureMethodCall */
-            $groups->add($row);
-        }
-
-        return $groups;
     }
 
     /**

@@ -9,6 +9,7 @@ use Flow\ETL\ErrorHandler\IgnoreError;
 use Flow\ETL\ETL;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
+use Flow\ETL\GroupBy\Aggregation;
 use Flow\ETL\Loader;
 use Flow\ETL\Pipeline\Closure;
 use Flow\ETL\Row;
@@ -37,9 +38,9 @@ final class ETLTest extends TestCase
                 Row::create(Entry::integer('id', 2), Entry::null('name'), Entry::boolean('active', false)),
                 Row::create(Entry::integer('id', 2), Entry::string('name', 'bar'), Entry::boolean('active', false)),
             )
-        )->drop(
-            'id'
-        )->fetch();
+        )
+            ->drop('id')
+            ->fetch();
 
         $this->assertEquals(
             new Rows(
@@ -767,6 +768,167 @@ ASCIITABLE,
             ->fetch(-1);
     }
 
+    public function test_foreach() : void
+    {
+        ETL::process(
+            new Rows(
+                Row::create(Entry::integer('id', 1), Entry::string('name', 'foo'), Entry::boolean('active', true)),
+                Row::create(Entry::integer('id', 2), Entry::null('name'), Entry::boolean('active', false)),
+                Row::create(Entry::integer('id', 2), Entry::string('name', 'bar'), Entry::boolean('active', false)),
+            )
+        )
+            ->foreach(function (Rows $rows) : void {
+                $this->assertEquals(
+                    new Rows(
+                        Row::create(Entry::integer('id', 1), Entry::string('name', 'foo'), Entry::boolean('active', true)),
+                        Row::create(Entry::integer('id', 2), Entry::null('name'), Entry::boolean('active', false)),
+                        Row::create(Entry::integer('id', 2), Entry::string('name', 'bar'), Entry::boolean('active', false)),
+                    ),
+                    $rows
+                );
+            });
+    }
+
+    public function test_group_by_multiple_columns() : void
+    {
+        $rows = ETL::process(
+            new Rows(
+                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20), Entry::string('gender', 'male')),
+                Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20), Entry::string('gender', 'male')),
+                Row::create(Entry::integer('id', 3), Entry::string('country', 'PL'), Entry::integer('age', 25), Entry::string('gender', 'male')),
+                Row::create(Entry::integer('id', 4), Entry::string('country', 'PL'), Entry::integer('age', 30), Entry::string('gender', 'female')),
+                Row::create(Entry::integer('id', 5), Entry::string('country', 'US'), Entry::integer('age', 40), Entry::string('gender', 'female')),
+                Row::create(Entry::integer('id', 6), Entry::string('country', 'US'), Entry::integer('age', 40), Entry::string('gender', 'male')),
+                Row::create(Entry::integer('id', 7), Entry::string('country', 'US'), Entry::integer('age', 45), Entry::string('gender', 'female')),
+                Row::create(Entry::integer('id', 9), Entry::string('country', 'US'), Entry::integer('age', 50), Entry::string('gender', 'male')),
+            )
+        )
+            ->groupBy('country', 'gender')
+            ->fetch();
+
+        $this->assertEquals(
+            new Rows(
+                Row::create(Entry::string('country', 'PL'), Entry::string('gender', 'male')),
+                Row::create(Entry::string('country', 'PL'), Entry::string('gender', 'female')),
+                Row::create(Entry::string('country', 'US'), Entry::string('gender', 'female')),
+                Row::create(Entry::string('country', 'US'), Entry::string('gender', 'male')),
+            ),
+            $rows
+        );
+    }
+
+    public function test_group_by_multiples_columns_with_avg_aggregation() : void
+    {
+        $rows = ETL::process(
+            new Rows(
+                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20), Entry::string('gender', 'male')),
+                Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20), Entry::string('gender', 'male')),
+                Row::create(Entry::integer('id', 3), Entry::string('country', 'PL'), Entry::integer('age', 25), Entry::string('gender', 'male')),
+                Row::create(Entry::integer('id', 4), Entry::string('country', 'PL'), Entry::integer('age', 30), Entry::string('gender', 'female')),
+                Row::create(Entry::integer('id', 5), Entry::string('country', 'US'), Entry::integer('age', 40), Entry::string('gender', 'female')),
+                Row::create(Entry::integer('id', 6), Entry::string('country', 'US'), Entry::integer('age', 40), Entry::string('gender', 'male')),
+                Row::create(Entry::integer('id', 7), Entry::string('country', 'US'), Entry::integer('age', 45), Entry::string('gender', 'female')),
+                Row::create(Entry::integer('id', 9), Entry::string('country', 'US'), Entry::integer('age', 50), Entry::string('gender', 'male')),
+            )
+        )
+            ->groupBy('country', 'gender')
+            ->aggregate(Aggregation::avg('age'))
+            ->fetch();
+
+        $this->assertEquals(
+            new Rows(
+                Row::create(Entry::string('country', 'PL'), Entry::string('gender', 'male'), Entry::float('age_avg', 21.666666666666668)),
+                Row::create(Entry::string('country', 'PL'), Entry::string('gender', 'female'), Entry::integer('age_avg', 30)),
+                Row::create(Entry::string('country', 'US'), Entry::string('gender', 'female'), Entry::float('age_avg', 42.5)),
+                Row::create(Entry::string('country', 'US'), Entry::string('gender', 'male'), Entry::integer('age_avg', 45)),
+            ),
+            $rows
+        );
+    }
+
+    public function test_group_by_multiples_columns_with_avg_aggregation_with_null() : void
+    {
+        $rows = ETL::process(
+            new Rows(
+                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20), Entry::string('gender', 'male')),
+                Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20), Entry::string('gender', 'male')),
+                Row::create(Entry::integer('id', 3), Entry::string('country', 'PL'), Entry::integer('age', 25), Entry::string('gender', 'male')),
+                Row::create(Entry::integer('id', 4), Entry::string('country', 'PL'), Entry::integer('age', 30), Entry::string('gender', 'female')),
+                Row::create(Entry::integer('id', 5), Entry::string('country', 'US'), Entry::integer('age', 40), Entry::string('gender', 'female')),
+                Row::create(Entry::integer('id', 6), Entry::string('country', 'US'), Entry::integer('age', 40), Entry::string('gender', 'male')),
+                Row::create(Entry::integer('id', 7), Entry::string('country', 'US'), Entry::integer('age', 45), Entry::null('gender')),
+                Row::create(Entry::integer('id', 9), Entry::string('country', 'US'), Entry::integer('age', 50), Entry::string('gender', 'male')),
+            )
+        )
+            ->groupBy('country', 'gender')
+            ->aggregate(Aggregation::avg('age'))
+            ->fetch();
+
+        $this->assertEquals(
+            new Rows(
+                Row::create(Entry::string('country', 'PL'), Entry::string('gender', 'male'), Entry::float('age_avg', 21.666666666666668)),
+                Row::create(Entry::string('country', 'PL'), Entry::string('gender', 'female'), Entry::integer('age_avg', 30)),
+                Row::create(Entry::string('country', 'US'), Entry::string('gender', 'female'), Entry::integer('age_avg', 40)),
+                Row::create(Entry::string('country', 'US'), Entry::string('gender', 'male'), Entry::integer('age_avg', 45)),
+                Row::create(Entry::string('country', 'US'), Entry::null('gender'), Entry::integer('age_avg', 45)),
+            ),
+            $rows
+        );
+    }
+
+    public function test_group_by_single_column() : void
+    {
+        $rows = ETL::process(
+            new Rows(
+                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20)),
+                Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20)),
+                Row::create(Entry::integer('id', 3), Entry::string('country', 'PL'), Entry::integer('age', 25)),
+                Row::create(Entry::integer('id', 4), Entry::string('country', 'PL'), Entry::integer('age', 30)),
+                Row::create(Entry::integer('id', 5), Entry::string('country', 'US'), Entry::integer('age', 40)),
+                Row::create(Entry::integer('id', 6), Entry::string('country', 'US'), Entry::integer('age', 40)),
+                Row::create(Entry::integer('id', 7), Entry::string('country', 'US'), Entry::integer('age', 45)),
+                Row::create(Entry::integer('id', 9), Entry::string('country', 'US'), Entry::integer('age', 50)),
+            )
+        )
+            ->groupBy('country')
+            ->fetch();
+
+        $this->assertEquals(
+            new Rows(
+                Row::create(Entry::string('country', 'PL')),
+                Row::create(Entry::string('country', 'US')),
+            ),
+            $rows
+        );
+    }
+
+    public function test_group_by_single_column_with_avg_aggregation() : void
+    {
+        $rows = ETL::process(
+            new Rows(
+                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20)),
+                Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20)),
+                Row::create(Entry::integer('id', 3), Entry::string('country', 'PL'), Entry::integer('age', 25)),
+                Row::create(Entry::integer('id', 4), Entry::string('country', 'PL'), Entry::integer('age', 30)),
+                Row::create(Entry::integer('id', 5), Entry::string('country', 'US'), Entry::integer('age', 40)),
+                Row::create(Entry::integer('id', 6), Entry::string('country', 'US'), Entry::integer('age', 40)),
+                Row::create(Entry::integer('id', 7), Entry::string('country', 'US'), Entry::integer('age', 45)),
+                Row::create(Entry::integer('id', 9), Entry::string('country', 'US'), Entry::integer('age', 50)),
+            )
+        )
+            ->groupBy('country')
+            ->aggregate(Aggregation::avg('age'))
+            ->fetch();
+
+        $this->assertEquals(
+            new Rows(
+                Row::create(Entry::string('country', 'PL'), Entry::float('age_avg', 23.75)),
+                Row::create(Entry::string('country', 'US'), Entry::float('age_avg', 43.75)),
+            ),
+            $rows
+        );
+    }
+
     public function test_limit_below_0() : void
     {
         $this->expectException(InvalidArgumentException::class);
@@ -784,9 +946,9 @@ ASCIITABLE,
                 Row::create(Entry::integer('id', 2), Entry::null('name'), Entry::boolean('active', false)),
                 Row::create(Entry::integer('id', 2), Entry::string('name', 'bar'), Entry::boolean('active', false)),
             )
-        )->select(
-            'id'
-        )->fetch();
+        )
+            ->select('id')
+            ->fetch();
 
         $this->assertEquals(
             new Rows(
@@ -819,6 +981,59 @@ ASCIITABLE,
             ),
             $rows
         );
+    }
+
+    public function test_standalone_avg_aggregation() : void
+    {
+        $rows = ETL::process(
+            new Rows(
+                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20)),
+                Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20)),
+                Row::create(Entry::integer('id', 3), Entry::string('country', 'PL'), Entry::integer('age', 25)),
+                Row::create(Entry::integer('id', 4), Entry::string('country', 'PL'), Entry::integer('age', 30)),
+                Row::create(Entry::integer('id', 5), Entry::string('country', 'US'), Entry::integer('age', 40)),
+                Row::create(Entry::integer('id', 6), Entry::string('country', 'US'), Entry::integer('age', 40)),
+                Row::create(Entry::integer('id', 7), Entry::string('country', 'US'), Entry::integer('age', 45)),
+                Row::create(Entry::integer('id', 9), Entry::string('country', 'US'), Entry::integer('age', 50)),
+            )
+        )
+            ->aggregate(Aggregation::avg('age'))
+            ->fetch();
+
+        $this->assertEquals(
+            new Rows(
+                Row::create(Entry::float('age_avg', 33.75)),
+            ),
+            $rows
+        );
+    }
+
+    public function test_standalone_avg_and_max_aggregation() : void
+    {
+        ETL::process(
+            new Rows(
+                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20)),
+                Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20)),
+                Row::create(Entry::integer('id', 3), Entry::string('country', 'PL'), Entry::integer('age', 25)),
+                Row::create(Entry::integer('id', 4), Entry::string('country', 'PL'), Entry::integer('age', 30)),
+                Row::create(Entry::integer('id', 5), Entry::string('country', 'US'), Entry::integer('age', 40)),
+                Row::create(Entry::integer('id', 6), Entry::string('country', 'US'), Entry::integer('age', 40)),
+                Row::create(Entry::integer('id', 7), Entry::string('country', 'US'), Entry::integer('age', 45)),
+                Row::create(Entry::integer('id', 9), Entry::string('country', 'US'), Entry::integer('age', 50)),
+            )
+        )
+            ->aggregate(Aggregation::avg('age'), Aggregation::max('age'))
+            ->run(function (Rows $rows) : void {
+                $this->assertEquals(
+                    new Rows(
+                        Row::create(
+                            Entry::float('age_avg', 33.75),
+                            Entry::integer('age_max', 50)
+                        )
+                    ),
+                    $rows
+                );
+            });
     }
 
     public function test_strict_validation_against_schema() : void

@@ -8,8 +8,10 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor\CacheExtractor;
 use Flow\ETL\Extractor\ProcessExtractor;
 use Flow\ETL\Formatter\AsciiTableFormatter;
+use Flow\ETL\GroupBy\Aggregation;
 use Flow\ETL\Loader\SchemaValidationLoader;
 use Flow\ETL\Pipeline\CollectingPipeline;
+use Flow\ETL\Pipeline\GroupByPipeline;
 use Flow\ETL\Pipeline\ParallelizingPipeline;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Row\Sort;
@@ -25,6 +27,8 @@ final class ETL
 
     private ExternalSort $externalSort;
 
+    private ?GroupBy $groupBy;
+
     private string $id;
 
     private ?int $limit;
@@ -39,6 +43,7 @@ final class ETL
         $this->limit = null;
         $this->cache = $configuration->cache();
         $this->externalSort = $configuration->externalSort();
+        $this->groupBy = null;
     }
 
     public static function extract(Extractor $extractor, Config $configuration = null) : self
@@ -63,11 +68,29 @@ final class ETL
      * @param Extractor $extractor
      * @param null|Config $configuration
      *
-     * @return static
+     * @return self
      */
     public static function read(Extractor $extractor, Config $configuration = null) : self
     {
         return self::extract($extractor, $configuration);
+    }
+
+    /**
+     * @param Aggregation ...$aggregations
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return self
+     */
+    public function aggregate(Aggregation ...$aggregations) : self
+    {
+        if ($this->groupBy === null) {
+            $this->groupBy = new GroupBy();
+        }
+
+        $this->groupBy->aggregate(...$aggregations);
+
+        return $this;
     }
 
     public function cache(string $id = null) : self
@@ -117,7 +140,7 @@ final class ETL
      *
      * @param string ...$entries
      *
-     * @return $this
+     * @return self
      */
     public function drop(string ...$entries) : self
     {
@@ -136,6 +159,11 @@ final class ETL
             $this->limit = $limit;
         }
 
+        if ($this->groupBy !== null) {
+            $this->pipeline = new GroupByPipeline($this->groupBy, $this->pipeline);
+            $this->groupBy = null;
+        }
+
         return (new Rows())->merge(...\iterator_to_array($this->pipeline->process($this->limit)));
     }
 
@@ -143,7 +171,7 @@ final class ETL
      * @param callable(Row $row) : bool $callback
      * @psalm-param pure-callable(Row $row) : bool $callback
      *
-     * @return $this
+     * @return self
      */
     public function filter(callable $callback) : self
     {
@@ -158,6 +186,20 @@ final class ETL
     public function forEach(callable $callback = null) : void
     {
         $this->run($callback);
+    }
+
+    /**
+     * @param string ...$entries
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return self
+     */
+    public function groupBy(string ...$entries) : self
+    {
+        $this->groupBy = new GroupBy(...$entries);
+
+        return $this;
     }
 
     public function limit(int $limit) : self
@@ -182,7 +224,7 @@ final class ETL
      * @param callable(Row $row) : Row $callback
      * @psalm-param pure-callable(Row $row) : Row $callback
      *
-     * @return $this
+     * @return self
      */
     public function map(callable $callback) : self
     {
@@ -206,7 +248,7 @@ final class ETL
      *
      * @throws InvalidArgumentException
      *
-     * @return ETL
+     * @return self
      */
     public function parallelize(int $chunks) : self
     {
@@ -220,7 +262,7 @@ final class ETL
      *
      * @param Transformer $transformer
      *
-     * @return $this
+     * @return self
      */
     public function rows(Transformer $transformer) : self
     {
@@ -232,6 +274,11 @@ final class ETL
      */
     public function run(callable $callback = null) : void
     {
+        if ($this->groupBy !== null) {
+            $this->pipeline = new GroupByPipeline($this->groupBy, $this->pipeline);
+            $this->groupBy = null;
+        }
+
         foreach ($this->pipeline->process($this->limit) as $rows) {
             if ($callback !== null) {
                 $callback($rows);
@@ -244,7 +291,7 @@ final class ETL
      *
      * @param string ...$entries
      *
-     * @return $this
+     * @return self
      */
     public function select(string ...$entries) : self
     {
@@ -273,7 +320,7 @@ final class ETL
      * @param Schema $schema
      * @param null|SchemaValidator $validator - when null, StrictValidator gets initialized
      *
-     * @return $this
+     * @return self
      */
     public function validate(Schema $schema, SchemaValidator $validator = null) : self
     {
@@ -287,7 +334,7 @@ final class ETL
      *
      * @param Loader $loader
      *
-     * @return $this
+     * @return self
      */
     public function write(Loader $loader) : self
     {
