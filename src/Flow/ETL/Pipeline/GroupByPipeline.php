@@ -13,27 +13,33 @@ final class GroupByPipeline implements Pipeline
 {
     private GroupBy $groupBy;
 
+    private Pipeline $nextPipeline;
+
     private Pipeline $pipeline;
 
     public function __construct(GroupBy $groupBy, Pipeline $pipeline)
     {
+        $existingPipeline = $pipeline instanceof self ? $pipeline->pipeline : $pipeline;
+
         $this->groupBy = $groupBy;
-        $this->pipeline = $pipeline;
+        $this->pipeline = $existingPipeline;
+        $this->nextPipeline = $existingPipeline->clean();
     }
 
     public function add(Pipe $pipe) : void
     {
-        $this->pipeline->add($pipe);
+        $this->nextPipeline->add($pipe);
     }
 
     public function clean() : Pipeline
     {
-        return new self($this->groupBy, $this->pipeline->clean());
+        return $this->pipeline->clean();
     }
 
     public function onError(ErrorHandler $errorHandler) : void
     {
         $this->pipeline->onError($errorHandler);
+        $this->nextPipeline->onError($errorHandler);
     }
 
     public function process(?int $limit = null, callable $callback = null) : \Generator
@@ -42,13 +48,11 @@ final class GroupByPipeline implements Pipeline
             $this->groupBy->group($nextRows);
         }
 
-        $rows = $this->groupBy->result();
+        $this->nextPipeline->source(new Extractor\ProcessExtractor($this->groupBy->result()));
 
-        if ($callback) {
-            $callback($rows);
+        foreach ($this->nextPipeline->process(null, $callback) as $nextRows) {
+            yield $nextRows;
         }
-
-        yield $rows;
     }
 
     public function source(Extractor $extractor) : void

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit;
 
 use Flow\ETL\DSL\Entry;
+use Flow\ETL\DSL\Transform;
 use Flow\ETL\ErrorHandler\IgnoreError;
 use Flow\ETL\ETL;
 use Flow\ETL\Exception\InvalidArgumentException;
@@ -789,8 +790,12 @@ ASCIITABLE,
             });
     }
 
-    public function test_group_by_multiple_columns() : void
+    public function test_group_by_multiple_columns_and_parallelize() : void
     {
+        $loader = $this->createMock(Loader::class);
+        $loader->expects($this->exactly(4))
+            ->method('load');
+
         $rows = ETL::process(
             new Rows(
                 Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20), Entry::string('gender', 'male')),
@@ -804,6 +809,8 @@ ASCIITABLE,
             )
         )
             ->groupBy('country', 'gender')
+            ->parallelize(1)
+            ->write($loader)
             ->fetch();
 
         $this->assertEquals(
@@ -938,6 +945,33 @@ ASCIITABLE,
             ->limit(-1);
     }
 
+    public function test_overriding_group_by() : void
+    {
+        $rows = ETL::process(
+            new Rows(
+                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20)),
+                Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20)),
+                Row::create(Entry::integer('id', 3), Entry::string('country', 'PL'), Entry::integer('age', 25)),
+                Row::create(Entry::integer('id', 4), Entry::string('country', 'PL'), Entry::integer('age', 30)),
+                Row::create(Entry::integer('id', 5), Entry::string('country', 'US'), Entry::integer('age', 40)),
+                Row::create(Entry::integer('id', 6), Entry::string('country', 'US'), Entry::integer('age', 40)),
+                Row::create(Entry::integer('id', 7), Entry::string('country', 'US'), Entry::integer('age', 45)),
+                Row::create(Entry::integer('id', 9), Entry::string('country', 'US'), Entry::integer('age', 50)),
+            )
+        )
+            ->groupBy('id')
+            ->groupBy('country')
+            ->fetch();
+
+        $this->assertEquals(
+            new Rows(
+                Row::create(Entry::string('country', 'PL')),
+                Row::create(Entry::string('country', 'US')),
+            ),
+            $rows
+        );
+    }
+
     public function test_select() : void
     {
         $rows = ETL::process(
@@ -998,11 +1032,12 @@ ASCIITABLE,
             )
         )
             ->aggregate(Aggregation::avg('age'))
+            ->rows(Transform::rename('age_avg', 'average_age'))
             ->fetch();
 
         $this->assertEquals(
             new Rows(
-                Row::create(Entry::float('age_avg', 33.75)),
+                Row::create(Entry::float('average_age', 33.75)),
             ),
             $rows
         );

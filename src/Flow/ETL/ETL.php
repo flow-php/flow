@@ -90,6 +90,9 @@ final class ETL
 
         $this->groupBy->aggregate(...$aggregations);
 
+        $this->pipeline = new GroupByPipeline($this->groupBy, $this->pipeline);
+        $this->groupBy = null;
+
         return $this;
     }
 
@@ -159,11 +162,6 @@ final class ETL
             $this->limit = $limit;
         }
 
-        if ($this->groupBy !== null) {
-            $this->pipeline = new GroupByPipeline($this->groupBy, $this->pipeline);
-            $this->groupBy = null;
-        }
-
         return (new Rows())->merge(...\iterator_to_array($this->pipeline->process($this->limit)));
     }
 
@@ -198,6 +196,7 @@ final class ETL
     public function groupBy(string ...$entries) : self
     {
         $this->groupBy = new GroupBy(...$entries);
+        $this->pipeline = new GroupByPipeline($this->groupBy, $this->pipeline);
 
         return $this;
     }
@@ -274,11 +273,6 @@ final class ETL
      */
     public function run(callable $callback = null) : void
     {
-        if ($this->groupBy !== null) {
-            $this->pipeline = new GroupByPipeline($this->groupBy, $this->pipeline);
-            $this->groupBy = null;
-        }
-
         foreach ($this->pipeline->process($this->limit) as $rows) {
             if ($callback !== null) {
                 $callback($rows);
