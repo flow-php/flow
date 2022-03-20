@@ -43,6 +43,6 @@ final class Sum implements Aggregator
             return \Flow\ETL\DSL\Entry::integer($this->entry . '_sum', (int) $this->sum);
         }
 
-        return \Flow\ETL\DSL\Entry::float($this->entry . '_min', $this->sum);
+        return \Flow\ETL\DSL\Entry::float($this->entry . '_sum', $this->sum);
     }
 }
