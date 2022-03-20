@@ -122,6 +122,7 @@
 - [e48062](https://github.com/flow-php/etl/commit/e48062890cd84e655e1162305086f67148347b83) - **Intial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#193](https://github.com/flow-php/etl/pull/193) - **sum aggregation float alias** - [@norberttech](https://github.com/norberttech)
 - [#192](https://github.com/flow-php/etl/pull/192) - **GroupByPipeline execution** - [@norberttech](https://github.com/norberttech)
 - [#177](https://github.com/flow-php/etl/pull/177) - **Psalm types detection** - [@norberttech](https://github.com/norberttech)
 - [#172](https://github.com/flow-php/etl/pull/172) - **ParallelizingPipeline to create one pipeline, instead of creating one for each chunk** - [@norberttech](https://github.com/norberttech)
