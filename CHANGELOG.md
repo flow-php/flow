@@ -1,9 +1,12 @@
-## [Unreleased] - 2022-02-20
+## [Unreleased] - 2022-03-20
 
 ### Added
+- [#95](https://github.com/flow-php/etl-adapter-csv/pull/95) - **Loader options: delimiter, enclouser, escape string** - [@norberttech](https://github.com/norberttech)
+- [#95](https://github.com/flow-php/etl-adapter-csv/pull/95) - **Extractor options: delimiter, enclouser, escape string** - [@norberttech](https://github.com/norberttech)
 - [#44](https://github.com/flow-php/etl-adapter-csv/pull/44) - **Workflow for aut-merging dependabot PRs** - [@tomaszhanc](https://github.com/tomaszhanc)
 
 ### Changed
+- [#95](https://github.com/flow-php/etl-adapter-csv/pull/95) - **updated dependencies** - [@norberttech](https://github.com/norberttech)
 - [#82](https://github.com/flow-php/etl-adapter-csv/pull/82) - **Adjusted Adapter for Serialization** - [@norberttech](https://github.com/norberttech)
 - [#74](https://github.com/flow-php/etl-adapter-csv/pull/74) - **Instread of adding Rows to existing Rows, build array of Rows and instantiate object after** - [@norberttech](https://github.com/norberttech)
 - [#67](https://github.com/flow-php/etl-adapter-csv/pull/67) - **Reuse workflows from aeon-php/actions** - [@tomaszhanc](https://github.com/tomaszhanc)
