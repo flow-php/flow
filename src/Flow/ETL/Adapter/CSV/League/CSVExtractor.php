@@ -26,12 +26,21 @@ final class CSVExtractor implements Extractor
 
     private ?Reader $reader;
 
+    private string $delimiter;
+
+    private string $enclosure;
+
+    private string $escape;
+
     public function __construct(
         string $path,
         int $rowsInBatch,
         int $headerOffset = null,
         string $operationMode = 'r',
-        string $rowEntryName = 'row'
+        string $rowEntryName = 'row',
+        string $delimiter = ',',
+        string $enclosure = '"',
+        string $escape = '\\'
     ) {
         $this->path = $path;
         $this->rowsInBatch = $rowsInBatch;
@@ -39,6 +48,9 @@ final class CSVExtractor implements Extractor
         $this->rowEntryName = $rowEntryName;
         $this->reader = null;
         $this->headerOffset = $headerOffset;
+        $this->delimiter = $delimiter;
+        $this->enclosure = $enclosure;
+        $this->escape = $escape;
     }
 
     public function extract() : \Generator
@@ -76,6 +88,9 @@ final class CSVExtractor implements Extractor
         if ($this->reader === null) {
             $this->reader = Reader::createFromPath($this->path, $this->operationMode);
             $this->reader->setHeaderOffset($this->headerOffset);
+            $this->reader->setDelimiter($this->delimiter);
+            $this->reader->setEnclosure($this->enclosure);
+            $this->reader->setEscape($this->escape);
         }
 
         return $this->reader;

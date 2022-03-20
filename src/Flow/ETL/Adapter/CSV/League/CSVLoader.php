@@ -10,6 +10,9 @@ use Flow\ETL\Rows;
 use League\Csv\Writer;
 use Ramsey\Uuid\Uuid;
 
+/**
+ * @implements Loader<array{path: string, open_mode: string, with_header: boolean, safe_mode: boolean, delimiter: string, enclosure: string, escape: string}>
+ */
 final class CSVLoader implements Loader
 {
     private string $path;
@@ -24,23 +27,31 @@ final class CSVLoader implements Loader
 
     private bool $safeMode;
 
-    public function __construct(string $path, string $openMode = 'w+', bool $withHeader = true, bool $safeMode = true)
-    {
+    private string $delimiter;
+
+    private string $enclosure;
+
+    private string $escape;
+
+    public function __construct(
+        string $path,
+        string $openMode = 'w+',
+        bool $withHeader = true,
+        bool $safeMode = true,
+        string $delimiter = ',',
+        string $enclosure = '"',
+        string $escape = '\\'
+    ) {
         $this->headerAdded = false;
         $this->path = $path;
         $this->openMode = $openMode;
         $this->withHeader = $withHeader;
         $this->safeMode = $safeMode;
+        $this->delimiter = $delimiter;
+        $this->enclosure = $enclosure;
+        $this->escape = $escape;
     }
 
-    /**
-     * @return array{
-     *  path: string,
-     *  open_mode: string,
-     *  with_header: boolean,
-     *  safe_mode: boolean
-     * }
-     */
     public function __serialize() : array
     {
         return [
@@ -48,24 +59,21 @@ final class CSVLoader implements Loader
             'open_mode' => $this->openMode,
             'with_header' => $this->withHeader,
             'safe_mode' => $this->safeMode,
+            'delimiter' => $this->delimiter,
+            'enclosure' => $this->enclosure,
+            'escape' => $this->escape,
         ];
     }
 
-    /**
-     * @param array{
-     *  path: string,
-     *  open_mode: string,
-     *  with_header: boolean,
-     *  safe_mode: boolean
-     * } $data
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->path = $data['path'];
         $this->openMode = $data['open_mode'];
         $this->withHeader = $data['with_header'];
         $this->safeMode = $data['safe_mode'];
+        $this->delimiter = $data['delimiter'];
+        $this->escape = $data['escape'];
+        $this->enclosure = $data['enclosure'];
         $this->headerAdded = false;
         $this->writer = null;
     }
@@ -96,6 +104,9 @@ final class CSVLoader implements Loader
             }
 
             $this->writer = Writer::createFromPath($path, $this->openMode);
+            $this->writer->setDelimiter($this->delimiter);
+            $this->writer->setEnclosure($this->enclosure);
+            $this->writer->setEscape($this->escape);
         }
 
         return $this->writer;

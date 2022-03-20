@@ -13,6 +13,7 @@ use League\Csv\Writer;
 /**
  * @deprecated
  * @psalm-immutable
+ * @implements Loader<array<mixed>>
  */
 final class LeagueCSVLoader implements Loader
 {
@@ -34,6 +35,9 @@ final class LeagueCSVLoader implements Loader
         throw new RuntimeException('DbalBulkLoader is not serializable, please use DbalLoader');
     }
 
+    /**
+     * @psalm-suppress MoreSpecificImplementedParamType
+     */
     public function __unserialize(array $data) : void
     {
         throw new RuntimeException('DbalBulkLoader is not serializable, please use DbalLoader');
