@@ -30,7 +30,7 @@ final class GroupBy
 
     public function __construct(string ...$entries)
     {
-        $this->entries = $entries;
+        $this->entries = \array_unique($entries);
         $this->aggregations = [];
         $this->groups = [];
     }

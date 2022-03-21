@@ -434,7 +434,20 @@ ETL::process(new Rows(...))
     ->run();
 ```
 
-This function is internally using [remove entries](src/Flow/ETL/Transformer/RemoveEntriesTransformer.php) transformers.
+## Rename
+
+In order to quickly rename entries use Rows `ETL::rename`
+
+```php 
+<?php 
+
+ETL::process(new Rows(...))
+    ->rename("old_name", "new_name")
+    ->write($loader)
+    ->run();
+```
+
+This function is internally using [rename entries](src/Flow/ETL/Transformer/RenameEntriesTransformer.php) transformers.
 
 ## Map
 
@@ -538,6 +551,39 @@ Output:
 | 1234 | 123.45 | false   | 2020-07-13T15:00:00+00:00 | null  | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) |
 +------+--------+---------+---------------------------+-------+------------------------------+--------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------+
 5 rows
+```
+
+Another way to display Rows without breaking execution is through using [stream loader](src/Flow/ETL/Loader/StreamLoader.php)
+
+```php
+
+$output = ETL::read($extractor)
+    ->transform($transformer1)
+    ->transform($transformer2)
+    ->transform(Transform::output()) // display rows in stdout stream.
+    ->transform($transformer3)
+    ->transform($transformer4)
+    ->write($loader)
+    ->run();
+```
+
+## Void
+
+Void allows to process Rows only to a given moment in a pipeline which is
+mostly useful during debugging. 
+
+```php
+<?php 
+
+$rows = ETL::read($extractor)  // extract non empty rows
+    ->transform($transformer1) // non empty rows
+    ->transform($transformer2) // non empty rows
+    ->void()
+    ->transform($transformer3) // empty rows
+    ->transform($transformer4) // empty rows
+    ->fetch();
+    
+// $rows are empty instance of Rows();
 ```
 
 ## Schema Validation

@@ -763,7 +763,7 @@ ASCIITABLE,
     public function test_fetch_with_limit_below_0() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("Fetch limit can't be lower than 0");
+        $this->expectExceptionMessage("Fetch limit can't be lower or equal to 0");
 
         ETL::process(new Rows())
             ->fetch(-1);
@@ -972,6 +972,28 @@ ASCIITABLE,
         );
     }
 
+    public function test_rename() : void
+    {
+        $rows = ETL::process(
+            new Rows(
+                Row::create(Entry::integer('id', 1), Entry::string('name', 'foo'), Entry::boolean('active', true)),
+                Row::create(Entry::integer('id', 2), Entry::null('name'), Entry::boolean('active', false)),
+                Row::create(Entry::integer('id', 2), Entry::string('name', 'bar'), Entry::boolean('active', false)),
+            )
+        )
+            ->rename('name', 'new_name')
+            ->fetch();
+
+        $this->assertEquals(
+            new Rows(
+                Row::create(Entry::integer('id', 1), Entry::string('new_name', 'foo'), Entry::boolean('active', true)),
+                Row::create(Entry::integer('id', 2), Entry::null('new_name'), Entry::boolean('active', false)),
+                Row::create(Entry::integer('id', 2), Entry::string('new_name', 'bar'), Entry::boolean('active', false)),
+            ),
+            $rows
+        );
+    }
+
     public function test_select() : void
     {
         $rows = ETL::process(
@@ -1093,6 +1115,32 @@ ASCIITABLE,
                 Row::create(Entry::integer('id', 2), Entry::null('name'), Entry::boolean('active', false)),
                 Row::create(Entry::integer('id', 2), Entry::string('name', 'bar'), Entry::boolean('active', false)),
             ),
+            $rows
+        );
+    }
+
+    public function test_void() : void
+    {
+        $rows = ETL::process(
+            new Rows(
+                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20)),
+                Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20)),
+                Row::create(Entry::integer('id', 3), Entry::string('country', 'PL'), Entry::integer('age', 25)),
+                Row::create(Entry::integer('id', 4), Entry::string('country', 'PL'), Entry::integer('age', 30)),
+                Row::create(Entry::integer('id', 5), Entry::string('country', 'US'), Entry::integer('age', 40)),
+                Row::create(Entry::integer('id', 6), Entry::string('country', 'US'), Entry::integer('age', 40)),
+                Row::create(Entry::integer('id', 7), Entry::string('country', 'US'), Entry::integer('age', 45)),
+                Row::create(Entry::integer('id', 9), Entry::string('country', 'US'), Entry::integer('age', 50)),
+            )
+        )
+            ->rename('country', 'country_code')
+            ->void()
+            ->aggregate(Aggregation::avg('age'))
+            ->rows(Transform::rename('age_avg', 'average_age'))
+            ->fetch();
+
+        $this->assertEquals(
+            new Rows(),
             $rows
         );
     }
