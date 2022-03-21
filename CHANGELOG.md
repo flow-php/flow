@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-03-20
+## [Unreleased] - 2022-03-21
 
 ### Added
 - [#191](https://github.com/flow-php/etl/pull/191) - **ETL::groupBy** - [@norberttech](https://github.com/norberttech)
@@ -162,6 +162,7 @@
 - [55faa8](https://github.com/flow-php/etl/commit/55faa8edfed3973f54e31b3af57a4ba171050a85) - **README.md** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#195](https://github.com/flow-php/etl/pull/195) - **callbacks from pipeline process** - [@norberttech](https://github.com/norberttech)
 - [#191](https://github.com/flow-php/etl/pull/191) - **Row::groupBy** - [@norberttech](https://github.com/norberttech)
 - [#176](https://github.com/flow-php/etl/pull/176) - **Replaced Schema::isValid with SchemaValidator** - [@norberttech](https://github.com/norberttech)
 - [#163](https://github.com/flow-php/etl/pull/163) - **Rows::makeFirst and Rows::makeLast methods** - [@norberttech](https://github.com/norberttech)
