@@ -104,7 +104,7 @@ final class ETL
             $this->cache->add($id, $rows);
         }
 
-        $this->pipeline = $this->pipeline->clean();
+        $this->pipeline = $this->pipeline->cleanCopy();
         $this->limit = null;
         $this->pipeline->source(new CacheExtractor($id, $this->cache));
 

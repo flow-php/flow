@@ -36,7 +36,7 @@ final class SynchronousPipeline implements Pipeline
         $this->pipes->add($pipe);
     }
 
-    public function clean() : Pipeline
+    public function cleanCopy() : Pipeline
     {
         $newPipeline = new self();
         $newPipeline->errorHandler = $this->errorHandler;
@@ -49,7 +49,7 @@ final class SynchronousPipeline implements Pipeline
         $this->errorHandler = $errorHandler;
     }
 
-    public function process(?int $limit = null, callable $callback = null) : \Generator
+    public function process(?int $limit = null) : \Generator
     {
         $total = 0;
 
@@ -92,10 +92,6 @@ final class SynchronousPipeline implements Pipeline
                         break;
                     }
                 }
-            }
-
-            if ($callback !== null) {
-                $callback($rows);
             }
 
             yield $rows;

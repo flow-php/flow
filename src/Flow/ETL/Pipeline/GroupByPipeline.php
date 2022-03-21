@@ -23,7 +23,7 @@ final class GroupByPipeline implements Pipeline
 
         $this->groupBy = $groupBy;
         $this->pipeline = $existingPipeline;
-        $this->nextPipeline = $existingPipeline->clean();
+        $this->nextPipeline = $existingPipeline->cleanCopy();
     }
 
     public function add(Pipe $pipe) : void
@@ -31,9 +31,9 @@ final class GroupByPipeline implements Pipeline
         $this->nextPipeline->add($pipe);
     }
 
-    public function clean() : Pipeline
+    public function cleanCopy() : Pipeline
     {
-        return $this->pipeline->clean();
+        return $this->pipeline->cleanCopy();
     }
 
     public function onError(ErrorHandler $errorHandler) : void
@@ -42,7 +42,7 @@ final class GroupByPipeline implements Pipeline
         $this->nextPipeline->onError($errorHandler);
     }
 
-    public function process(?int $limit = null, callable $callback = null) : \Generator
+    public function process(?int $limit = null) : \Generator
     {
         foreach ($this->pipeline->process($limit) as $nextRows) {
             $this->groupBy->group($nextRows);
@@ -50,7 +50,7 @@ final class GroupByPipeline implements Pipeline
 
         $this->nextPipeline->source(new Extractor\ProcessExtractor($this->groupBy->result()));
 
-        foreach ($this->nextPipeline->process(null, $callback) as $nextRows) {
+        foreach ($this->nextPipeline->process() as $nextRows) {
             yield $nextRows;
         }
     }

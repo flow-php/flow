@@ -29,7 +29,7 @@ final class ParallelizingPipeline implements Pipeline
 
         $this->pipeline = $pipeline;
         $this->parallel = $parallel;
-        $this->nextPipeline = $pipeline->clean();
+        $this->nextPipeline = $pipeline->cleanCopy();
     }
 
     public function add(Pipe $pipe) : void
@@ -37,7 +37,7 @@ final class ParallelizingPipeline implements Pipeline
         $this->nextPipeline->add($pipe);
     }
 
-    public function clean() : Pipeline
+    public function cleanCopy() : Pipeline
     {
         return new self($this->pipeline, $this->parallel);
     }
@@ -56,7 +56,7 @@ final class ParallelizingPipeline implements Pipeline
             )
         );
 
-        return $this->nextPipeline->process($limit, $callback);
+        return $this->nextPipeline->process();
     }
 
     public function source(Extractor $extractor) : void

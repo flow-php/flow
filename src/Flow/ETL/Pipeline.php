@@ -14,18 +14,16 @@ interface Pipeline
     public function add(Pipe $pipe) : void;
 
     /**
-     * Create clean instance of pipeline, with empty pipes.
+     * Create clean instance of pipeline, with empty pipes and without source.
      */
-    public function clean() : self;
+    public function cleanCopy() : self;
 
     public function onError(ErrorHandler $errorHandler) : void;
 
     /**
-     * @param callable(Rows $rows) : void $callback
-     *
      * @return \Generator<int, Rows, mixed, void>
      */
-    public function process(?int $limit = null, callable $callback = null) : \Generator;
+    public function process(?int $limit = null) : \Generator;
 
     public function source(Extractor $extractor) : void;
 }
