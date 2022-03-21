@@ -1,6 +1,8 @@
 ## [Unreleased] - 2022-03-21
 
 ### Added
+- [#196](https://github.com/flow-php/etl/pull/196) - **ETL::rename** - [@norberttech](https://github.com/norberttech)
+- [#196](https://github.com/flow-php/etl/pull/196) - **ETL::void** - [@norberttech](https://github.com/norberttech)
 - [#191](https://github.com/flow-php/etl/pull/191) - **ETL::groupBy** - [@norberttech](https://github.com/norberttech)
 - [#191](https://github.com/flow-php/etl/pull/191) - **ETL::aggregate** - [@norberttech](https://github.com/norberttech)
 - [#191](https://github.com/flow-php/etl/pull/191) - **Aggregations: avg, max, min, sum, count** - [@norberttech](https://github.com/norberttech)
