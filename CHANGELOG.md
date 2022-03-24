@@ -1,6 +1,7 @@
-## [Unreleased] - 2022-03-21
+## [Unreleased] - 2022-03-24
 
 ### Added
+- [#197](https://github.com/flow-php/etl/pull/197) - **Flow class that will become entry point of data processing** - [@norberttech](https://github.com/norberttech)
 - [#196](https://github.com/flow-php/etl/pull/196) - **ETL::rename** - [@norberttech](https://github.com/norberttech)
 - [#196](https://github.com/flow-php/etl/pull/196) - **ETL::void** - [@norberttech](https://github.com/norberttech)
 - [#191](https://github.com/flow-php/etl/pull/191) - **ETL::groupBy** - [@norberttech](https://github.com/norberttech)
@@ -91,6 +92,8 @@
 - [856870](https://github.com/flow-php/etl/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#197](https://github.com/flow-php/etl/pull/197) - **Extracted DataFrame from ETL** - [@norberttech](https://github.com/norberttech)
+- [#197](https://github.com/flow-php/etl/pull/197) - **Deprecated ETL class** - [@norberttech](https://github.com/norberttech)
 - [#186](https://github.com/flow-php/etl/pull/186) - **Make entry names case sensitive** - [@norberttech](https://github.com/norberttech)
 - [#180](https://github.com/flow-php/etl/pull/180) - **renamed Rows::find into Rows::findOne** - [@norberttech](https://github.com/norberttech)
 - [#179](https://github.com/flow-php/etl/pull/179) - **Enabled php 8.1** - [@norberttech](https://github.com/norberttech)
