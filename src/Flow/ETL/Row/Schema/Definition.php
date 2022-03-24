@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Schema;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\ArrayEntry;
 use Flow\ETL\Row\Entry\BooleanEntry;
@@ -20,31 +21,31 @@ use Flow\Serializer\Serializable;
 
 /**
  * @psalm-immutable
- * @implements Serializable<array{entry: string, class:class-string, nullable: boolean, constraint: null|Constraint}>
+ * @implements Serializable<array{entry: string, classes:array<class-string<Entry>>, constraint: null|Constraint}>
  */
 final class Definition implements Serializable
 {
     /**
-     * @var class-string
+     * @var array<class-string<Entry>>
      */
-    private string $class;
+    private array $classes;
 
     private ?Constraint $constraint;
 
     private string $entry;
 
-    private bool $nullable;
-
     /**
      * @param string $entry
-     * @param class-string $class
-     * @param bool $nullable
-     * @param null|Constraint $constraint
+     * @param array<class-string<Entry>> $classes
+     * @param ?Constraint $constraint
      */
-    public function __construct(string $entry, string $class, bool $nullable = false, ?Constraint $constraint = null)
+    public function __construct(string $entry, array $classes, ?Constraint $constraint = null)
     {
-        $this->class = $class;
-        $this->nullable = $nullable;
+        if (!\count($classes)) {
+            throw new InvalidArgumentException('Schema definition must come with at least one entry class');
+        }
+
+        $this->classes = $classes;
         $this->constraint = $constraint;
         $this->entry = $entry;
     }
@@ -53,28 +54,26 @@ final class Definition implements Serializable
      * @psalm-pure
      *
      * @param string $entry
-     * @param bool $nullable
-     * @param null|Constraint $constraint
+     * @param ?Constraint $constraint
      *
-     * @return static
+     * @return self
      */
     public static function array(string $entry, bool $nullable = false, ?Constraint $constraint = null) : self
     {
-        return new self($entry, ArrayEntry::class, $nullable, $constraint);
+        return new self($entry, ($nullable) ? [ArrayEntry::class, NullEntry::class] : [ArrayEntry::class], $constraint);
     }
 
     /**
      * @psalm-pure
      *
      * @param string $entry
-     * @param bool $nullable
-     * @param null|Constraint $constraint
+     * @param ?Constraint $constraint
      *
-     * @return static
+     * @return self
      */
     public static function boolean(string $entry, bool $nullable = false, ?Constraint $constraint = null) : self
     {
-        return new self($entry, BooleanEntry::class, $nullable, $constraint);
+        return new self($entry, ($nullable) ? [BooleanEntry::class, NullEntry::class] : [BooleanEntry::class], $constraint);
     }
 
     /**
@@ -82,13 +81,13 @@ final class Definition implements Serializable
      *
      * @param string $entry
      * @param bool $nullable
-     * @param null|Constraint $constraint
+     * @param ?Constraint $constraint
      *
-     * @return static
+     * @return self
      */
     public static function collection(string $entry, bool $nullable = false, ?Constraint $constraint = null) : self
     {
-        return new self($entry, CollectionEntry::class, $nullable, $constraint);
+        return new self($entry, ($nullable) ? [CollectionEntry::class, NullEntry::class] : [CollectionEntry::class], $constraint);
     }
 
     /**
@@ -96,13 +95,13 @@ final class Definition implements Serializable
      *
      * @param string $entry
      * @param bool $nullable
-     * @param null|Constraint $constraint
+     * @param ?Constraint $constraint
      *
-     * @return static
+     * @return self
      */
     public static function dateTime(string $entry, bool $nullable = false, ?Constraint $constraint = null) : self
     {
-        return new self($entry, DateTimeEntry::class, $nullable, $constraint);
+        return new self($entry, ($nullable) ? [DateTimeEntry::class, NullEntry::class] : [DateTimeEntry::class], $constraint);
     }
 
     /**
@@ -110,13 +109,13 @@ final class Definition implements Serializable
      *
      * @param string $entry
      * @param bool $nullable
-     * @param null|Constraint $constraint
+     * @param ?Constraint $constraint
      *
-     * @return static
+     * @return self
      */
     public static function float(string $entry, bool $nullable = false, ?Constraint $constraint = null) : self
     {
-        return new self($entry, FloatEntry::class, $nullable, $constraint);
+        return new self($entry, ($nullable) ? [FloatEntry::class, NullEntry::class] : [FloatEntry::class], $constraint);
     }
 
     /**
@@ -124,13 +123,13 @@ final class Definition implements Serializable
      *
      * @param string $entry
      * @param bool $nullable
-     * @param null|Constraint $constraint
+     * @param ?Constraint $constraint
      *
-     * @return static
+     * @return self
      */
     public static function integer(string $entry, bool $nullable = false, ?Constraint $constraint = null) : self
     {
-        return new self($entry, IntegerEntry::class, $nullable, $constraint);
+        return new self($entry, ($nullable) ? [IntegerEntry::class, NullEntry::class] : [IntegerEntry::class], $constraint);
     }
 
     /**
@@ -138,13 +137,13 @@ final class Definition implements Serializable
      *
      * @param string $entry
      * @param bool $nullable
-     * @param null|Constraint $constraint
+     * @param ?Constraint $constraint
      *
-     * @return static
+     * @return self
      */
     public static function json(string $entry, bool $nullable = false, ?Constraint $constraint = null) : self
     {
-        return new self($entry, JsonEntry::class, $nullable, $constraint);
+        return new self($entry, ($nullable) ? [JsonEntry::class, NullEntry::class] : [JsonEntry::class], $constraint);
     }
 
     /**
@@ -152,11 +151,11 @@ final class Definition implements Serializable
      *
      * @param string $entry
      *
-     * @return static
+     * @return self
      */
     public static function null(string $entry) : self
     {
-        return new self($entry, NullEntry::class, true);
+        return new self($entry, [NullEntry::class]);
     }
 
     /**
@@ -164,13 +163,13 @@ final class Definition implements Serializable
      *
      * @param string $entry
      * @param bool $nullable
-     * @param null|Constraint $constraint
+     * @param ?Constraint $constraint
      *
-     * @return static
+     * @return self
      */
     public static function object(string $entry, bool $nullable = false, ?Constraint $constraint = null) : self
     {
-        return new self($entry, ObjectEntry::class, $nullable, $constraint);
+        return new self($entry, ($nullable) ? [ObjectEntry::class, NullEntry::class] : [ObjectEntry::class], $constraint);
     }
 
     /**
@@ -178,13 +177,13 @@ final class Definition implements Serializable
      *
      * @param string $entry
      * @param bool $nullable
-     * @param null|Constraint $constraint
+     * @param ?Constraint $constraint
      *
-     * @return static
+     * @return self
      */
     public static function string(string $entry, bool $nullable = false, ?Constraint $constraint = null) : self
     {
-        return new self($entry, StringEntry::class, $nullable, $constraint);
+        return new self($entry, ($nullable) ? [StringEntry::class, NullEntry::class] : [StringEntry::class], $constraint);
     }
 
     /**
@@ -192,13 +191,27 @@ final class Definition implements Serializable
      *
      * @param string $entry
      * @param bool $nullable
-     * @param null|Constraint $constraint
+     * @param ?Constraint $constraint
      *
-     * @return static
+     * @return self
      */
     public static function structure(string $entry, bool $nullable = false, ?Constraint $constraint = null) : self
     {
-        return new self($entry, StructureEntry::class, $nullable, $constraint);
+        return new self($entry, ($nullable) ? [StructureEntry::class, NullEntry::class] : [StructureEntry::class], $constraint);
+    }
+
+    /**
+     * @psalm-pure
+     *
+     * @param string $entry
+     * @param array<class-string<Entry>> $entryClasses
+     * @param ?Constraint $constraint
+     *
+     * @return Definition
+     */
+    public static function union(string $entry, array $entryClasses, ?Constraint $constraint = null)
+    {
+        return new self($entry, $entryClasses, $constraint);
     }
 
     // @codeCoverageIgnoreStart
@@ -206,8 +219,7 @@ final class Definition implements Serializable
     {
         return [
             'entry' => $this->entry,
-            'class' => $this->class,
-            'nullable' => $this->nullable,
+            'classes' => $this->classes,
             'constraint' => $this->constraint,
         ];
     }
@@ -215,8 +227,7 @@ final class Definition implements Serializable
     public function __unserialize(array $data) : void
     {
         $this->entry = $data['entry'];
-        $this->class = $data['class'];
-        $this->nullable = $data['nullable'];
+        $this->classes = $data['classes'];
         $this->constraint = $data['constraint'];
     }
 
@@ -224,11 +235,22 @@ final class Definition implements Serializable
     {
         return $this->entry;
     }
+
+    public function isEqualType(self $definition) : bool
+    {
+        $classes = $this->classes;
+        $otherClasses = $definition->classes;
+
+        \sort($classes);
+        \sort($otherClasses);
+
+        return $this->classes === $otherClasses;
+    }
     // @codeCoverageIgnoreEnd
 
     public function isNullable() : bool
     {
-        return $this->nullable;
+        return \in_array(NullEntry::class, $this->classes, true);
     }
 
     /**
@@ -238,11 +260,25 @@ final class Definition implements Serializable
      */
     public function matches(Entry $entry) : bool
     {
-        if ($this->nullable && $entry instanceof Entry\NullEntry && $entry->is($this->entry)) {
+        if ($this->isNullable() && $entry instanceof Entry\NullEntry && $entry->is($this->entry)) {
             return true;
         }
 
-        if (!$entry instanceof $this->class || !$entry->is($this->entry)) {
+        if (!$entry->is($this->entry)) {
+            return false;
+        }
+
+        $isTypeValid = false;
+
+        foreach ($this->classes as $entryClass) {
+            if ($entry instanceof $entryClass) {
+                $isTypeValid = true;
+
+                break;
+            }
+        }
+
+        if (!$isTypeValid) {
             return false;
         }
 
@@ -256,6 +292,18 @@ final class Definition implements Serializable
 
     public function nullable() : self
     {
-        return new self($this->entry, $this->class, true, $this->constraint);
+        if (!\in_array(NullEntry::class, $this->classes, true)) {
+            return new self($this->entry, \array_merge($this->classes, [NullEntry::class]), $this->constraint);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return array<class-string<Entry>>
+     */
+    public function types() : array
+    {
+        return $this->classes;
     }
 }

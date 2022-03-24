@@ -517,12 +517,13 @@ final class RowsTest extends TestCase
             Row::create(Entry::integer('id', 1), Entry::string('name', 'foo')),
             Row::create(Entry::integer('id', 1), Entry::null('name')),
             Row::create(Entry::integer('id', 1), Entry::string('name', 'bar'), Entry::array('tags', ['a', 'b'])),
+            Row::create(Entry::integer('id', 1), Entry::integer('name', 25)),
         );
 
         $this->assertEquals(
             new Schema(
                 Definition::integer('id'),
-                Definition::string('name', $nullable = true),
+                Definition::union('name', [StringEntry::class, NullEntry::class, IntegerEntry::class]),
                 Definition::array('tags', $nullable = true)
             ),
             $rows->schema()

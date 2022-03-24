@@ -86,8 +86,10 @@ final class Schema implements \Countable, Serializable
                 $newDefinitions[$entry] = $definition->nullable();
             }
 
-            if ($definition->isNullable() && !$newDefinitions[$entry]->isNullable()) {
-                $newDefinitions[$entry] = $newDefinitions[$entry]->nullable();
+            if (!$newDefinitions[$entry]->isEqualType($definition)) {
+                $types = \array_unique(\array_merge($newDefinitions[$entry]->types(), $definition->types()));
+
+                $newDefinitions[$entry] = Definition::union($entry, $types);
             }
         }
 
