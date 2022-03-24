@@ -1,6 +1,7 @@
 ## [Unreleased] - 2022-03-24
 
 ### Added
+- [#198](https://github.com/flow-php/etl/pull/198) - **Getting schema from existing Rows** - [@norberttech](https://github.com/norberttech)
 - [#197](https://github.com/flow-php/etl/pull/197) - **Flow class that will become entry point of data processing** - [@norberttech](https://github.com/norberttech)
 - [#196](https://github.com/flow-php/etl/pull/196) - **ETL::rename** - [@norberttech](https://github.com/norberttech)
 - [#196](https://github.com/flow-php/etl/pull/196) - **ETL::void** - [@norberttech](https://github.com/norberttech)
