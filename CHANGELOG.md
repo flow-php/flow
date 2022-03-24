@@ -1,6 +1,7 @@
 ## [Unreleased] - 2022-03-24
 
 ### Added
+- [#199](https://github.com/flow-php/etl/pull/199) - **union type into schema definition** - [@norberttech](https://github.com/norberttech)
 - [#198](https://github.com/flow-php/etl/pull/198) - **Getting schema from existing Rows** - [@norberttech](https://github.com/norberttech)
 - [#197](https://github.com/flow-php/etl/pull/197) - **Flow class that will become entry point of data processing** - [@norberttech](https://github.com/norberttech)
 - [#196](https://github.com/flow-php/etl/pull/196) - **ETL::rename** - [@norberttech](https://github.com/norberttech)
@@ -168,6 +169,7 @@
 - [55faa8](https://github.com/flow-php/etl/commit/55faa8edfed3973f54e31b3af57a4ba171050a85) - **README.md** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#199](https://github.com/flow-php/etl/pull/199) - **nullable flag from schema definition** - [@norberttech](https://github.com/norberttech)
 - [#195](https://github.com/flow-php/etl/pull/195) - **callbacks from pipeline process** - [@norberttech](https://github.com/norberttech)
 - [#191](https://github.com/flow-php/etl/pull/191) - **Row::groupBy** - [@norberttech](https://github.com/norberttech)
 - [#176](https://github.com/flow-php/etl/pull/176) - **Replaced Schema::isValid with SchemaValidator** - [@norberttech](https://github.com/norberttech)
