@@ -9,6 +9,7 @@ use Flow\ETL\Row\Schema\Definition;
 use Flow\Serializer\Serializable;
 
 /**
+ * @psalm-immutable
  * @implements Serializable<array{definitions: array<string, Definition>}>
  */
 final class Schema implements \Countable, Serializable
@@ -74,5 +75,22 @@ final class Schema implements \Countable, Serializable
         }
 
         return $this->definitions[$entry];
+    }
+
+    public function merge(self $schema) : self
+    {
+        $newDefinitions = $this->definitions;
+
+        foreach ($schema->definitions as $entry => $definition) {
+            if (!\array_key_exists($definition->entry(), $newDefinitions)) {
+                $newDefinitions[$entry] = $definition->nullable();
+            }
+
+            if ($definition->isNullable() && !$newDefinitions[$entry]->isNullable()) {
+                $newDefinitions[$entry] = $newDefinitions[$entry]->nullable();
+            }
+        }
+
+        return new self(...\array_values($newDefinitions));
     }
 }

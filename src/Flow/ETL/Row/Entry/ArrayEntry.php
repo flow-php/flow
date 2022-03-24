@@ -7,6 +7,7 @@ namespace Flow\ETL\Row\Entry;
 use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\Schema\Definition;
 
 /**
  * @implements Entry<array<mixed>, array{name: string, value: array<mixed>}>
@@ -51,6 +52,11 @@ final class ArrayEntry implements Entry
     {
         $this->name = $data['name'];
         $this->value = $data['value'];
+    }
+
+    public function definition() : Definition
+    {
+        return Definition::array($this->name, false);
     }
 
     public function is(string $name) : bool

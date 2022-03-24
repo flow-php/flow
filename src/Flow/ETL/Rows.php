@@ -9,6 +9,7 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\Comparator;
 use Flow\ETL\Row\Comparator\NativeComparator;
 use Flow\ETL\Row\Entries;
+use Flow\ETL\Row\Schema;
 use Flow\ETL\Row\Sort;
 use Flow\Serializer\Serializable;
 
@@ -404,6 +405,25 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
     public function reverse() : self
     {
         return new self(...\array_reverse($this->rows));
+    }
+
+    public function schema() : Schema
+    {
+        if (!$this->count()) {
+            return new Schema();
+        }
+
+        /** @var ?Schema $schema */
+        $schema = null;
+
+        foreach ($this->rows as $row) {
+            $schema = $schema === null
+                ? $row->schema()
+                : $schema->merge($row->schema());
+        }
+
+        /** @var Schema $schema */
+        return $schema;
     }
 
     /**

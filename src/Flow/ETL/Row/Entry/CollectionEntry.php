@@ -8,6 +8,7 @@ use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\Schema\Definition;
 
 /**
  * @implements Entry<array<Entries>, array{name: string, entries: array<Entries>}>
@@ -52,6 +53,11 @@ final class CollectionEntry implements Entry
     {
         $this->name = $data['name'];
         $this->entries = $data['entries'];
+    }
+
+    public function definition() : Definition
+    {
+        return Definition::collection($this->name, false);
     }
 
     public function is(string $name) : bool

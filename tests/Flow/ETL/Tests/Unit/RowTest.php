@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
+use Flow\ETL\DSL\Entry;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry\ArrayEntry;
@@ -49,6 +50,51 @@ final class RowTest extends TestCase
             new Row(new Entries(new StructureEntry('json', new IntegerEntry('5', 5), new IntegerEntry('2', 2), new IntegerEntry('3', 3)))),
             new Row(new Entries(new StructureEntry('json', new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3)))),
         ];
+    }
+
+    public function test_getting_schema_from_row() : void
+    {
+        $row = Row::create(
+            Entry::integer('id', \random_int(100, 100000)),
+            Entry::float('price', \random_int(100, 100000) / 100),
+            Entry::boolean('deleted', false),
+            Entry::datetime('created-at', new \DateTimeImmutable('now')),
+            Entry::null('phase'),
+            Entry::array(
+                'array',
+                [
+                    ['id' => 1, 'status' => 'NEW'],
+                    ['id' => 2, 'status' => 'PENDING'],
+                ]
+            ),
+            Entry::structure(
+                'items',
+                Entry::integer('item-id', 1),
+                Entry::string('name', 'one'),
+            ),
+            Entry::collection(
+                'tags',
+                new Row\Entries(Entry::integer('item-id', 1), Entry::string('name', 'one')),
+                new Row\Entries(Entry::integer('item-id', 2), Entry::string('name', 'two')),
+                new Row\Entries(Entry::integer('item-id', 3), Entry::string('name', 'three'))
+            ),
+            Entry::object('object', new \ArrayIterator([1, 2, 3]))
+        );
+
+        $this->assertEquals(
+            new Row\Schema(
+                Row\Schema\Definition::integer('id'),
+                Row\Schema\Definition::float('price'),
+                Row\Schema\Definition::boolean('deleted'),
+                Row\Schema\Definition::dateTime('created-at'),
+                Row\Schema\Definition::null('phase'),
+                Row\Schema\Definition::array('array'),
+                Row\Schema\Definition::structure('items'),
+                Row\Schema\Definition::collection('tags'),
+                Row\Schema\Definition::object('object'),
+            ),
+            $row->schema()
+        );
     }
 
     /**

@@ -14,6 +14,8 @@ use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Row\Entry\NullEntry;
 use Flow\ETL\Row\Entry\ObjectEntry;
 use Flow\ETL\Row\Entry\StringEntry;
+use Flow\ETL\Row\Schema;
+use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Rows;
 use PHPUnit\Framework\TestCase;
 
@@ -507,6 +509,24 @@ final class RowsTest extends TestCase
     public function test_rows_diff_right(Rows $expected, Rows $left, Rows $right) : void
     {
         $this->assertEquals($expected, $left->diffRight($right));
+    }
+
+    public function test_rows_schema() : void
+    {
+        $rows = new Rows(
+            Row::create(Entry::integer('id', 1), Entry::string('name', 'foo')),
+            Row::create(Entry::integer('id', 1), Entry::null('name')),
+            Row::create(Entry::integer('id', 1), Entry::string('name', 'bar'), Entry::array('tags', ['a', 'b'])),
+        );
+
+        $this->assertEquals(
+            new Schema(
+                Definition::integer('id'),
+                Definition::string('name', $nullable = true),
+                Definition::array('tags', $nullable = true)
+            ),
+            $rows->schema()
+        );
     }
 
     public function test_rows_serialization() : void

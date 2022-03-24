@@ -6,6 +6,7 @@ namespace Flow\ETL\Row\Entry;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\Schema\Definition;
 
 /**
  * @implements Entry<null, array{name: string}>
@@ -40,6 +41,11 @@ final class NullEntry implements Entry
     public function __unserialize(array $data) : void
     {
         $this->name = $data['name'];
+    }
+
+    public function definition() : Definition
+    {
+        return Definition::null($this->name);
     }
 
     public function is(string $name) : bool

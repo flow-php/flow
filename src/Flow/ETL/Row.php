@@ -7,6 +7,7 @@ namespace Flow\ETL;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\Schema;
 use Flow\Serializer\Serializable;
 
 /**
@@ -125,6 +126,17 @@ final class Row implements Serializable
     public function rename(string $currentName, string $newName) : self
     {
         return new self($this->entries->rename($currentName, $newName));
+    }
+
+    public function schema() : Schema
+    {
+        $definitions = [];
+
+        foreach ($this->entries->all() as $entry) {
+            $definitions[] = $entry->definition();
+        }
+
+        return new Schema(...$definitions);
     }
 
     /**

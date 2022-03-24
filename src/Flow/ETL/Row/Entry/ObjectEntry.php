@@ -6,6 +6,7 @@ namespace Flow\ETL\Row\Entry;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\Schema\Definition;
 
 /**
  * @implements Entry<object, array{name: string, value: object}>
@@ -44,6 +45,11 @@ final class ObjectEntry implements Entry
     {
         $this->name = $data['name'];
         $this->value = $data['value'];
+    }
+
+    public function definition() : Definition
+    {
+        return Definition::object($this->name, false);
     }
 
     public function is(string $name) : bool

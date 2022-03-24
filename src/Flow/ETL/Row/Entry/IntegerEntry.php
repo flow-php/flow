@@ -6,6 +6,7 @@ namespace Flow\ETL\Row\Entry;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\Schema\Definition;
 
 /**
  * @implements Entry<int, array{name: string, value: integer}>
@@ -56,6 +57,11 @@ final class IntegerEntry implements Entry
     {
         $this->name = $data['name'];
         $this->value = $data['value'];
+    }
+
+    public function definition() : Definition
+    {
+        return Definition::integer($this->name, false);
     }
 
     public function is(string $name) : bool

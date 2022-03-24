@@ -7,6 +7,7 @@ namespace Flow\ETL\Row\Entry;
 use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\Schema\Definition;
 
 /**
  * @implements Entry<string, array{name: string, value: array<mixed>, object: boolean}>
@@ -121,6 +122,11 @@ final class JsonEntry implements Entry
         $this->name = $data['name'];
         $this->value = $data['value'];
         $this->object = $data['object'];
+    }
+
+    public function definition() : Definition
+    {
+        return Definition::json($this->name, false);
     }
 
     public function is(string $name) : bool

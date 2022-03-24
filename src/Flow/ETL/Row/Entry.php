@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row;
 
+use Flow\ETL\Row\Schema\Definition;
 use Flow\Serializer\Serializable;
 
 /**
@@ -15,6 +16,8 @@ use Flow\Serializer\Serializable;
 interface Entry extends Serializable
 {
     public function __toString() : string;
+
+    public function definition() : Definition;
 
     public function is(string $name) : bool;
 

@@ -6,6 +6,7 @@ namespace Flow\ETL\Row\Entry;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\Schema\Definition;
 
 /**
  * @implements Entry<float, array{name: string, value: float, precision: int}>
@@ -60,6 +61,11 @@ final class FloatEntry implements Entry
         $this->name = $data['name'];
         $this->value = $data['value'];
         $this->precision = $data['precision'];
+    }
+
+    public function definition() : Definition
+    {
+        return Definition::float($this->name, false);
     }
 
     public function is(string $name) : bool
