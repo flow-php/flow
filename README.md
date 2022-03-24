@@ -14,7 +14,7 @@ Supported PHP versions
 
 ## Description
 
-Flow is a most advanced and flexible PHP, data processing library that is designed according to Filters & Pipes architecture.
+Flow is a most advanced and flexible PHP, data processing library.
 
 Except typical ETL use cases (Extract, Transform, Load), Flow can be also used for memory-safe data analysis.
 
@@ -51,13 +51,15 @@ use Flow\ETL\DSL\From;
 use Flow\ETL\DSL\Transform;
 use Flow\ETL\DSL\To;
 use Flow\ETL\ETL;
+use Flow\ETL\Flow;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Row\Sort;
 use Flow\ETL\Rows;
 
 $array = new ArrayMemory();
 
-ETL::read(From::rows(new Rows()))
+(new Flow())
+    ->read(From::rows(new Rows()))
     ->rows(Transform::keep(['id', 'name', 'status']))
     ->sortBy(Sort::desc('status'))
     ->write(To::memory($array);
@@ -88,18 +90,17 @@ Some configuration options can be passed through environment variables, list bel
 - `FLOW_LOCAL_FILESYSTEM_CACHE_DIR` - location of default local filesystem cache, default: `\sys_get_temp_dir()`
 - `FLOW_EXTERNAL_SORT_MAX_MEMORY` - amount of memory to use for sorting, default: `200M` 
 
-To get more control over ETL please use [Config](src/Flow/ETL/Config.php) than can be created
+To get more control over how Flow is processing data frames please use [Config](src/Flow/ETL/Config.php) than can be created
 through [ConfigBuilder](src/Flow/ETL/ConfigBuilder.php).
 
 ```php
 <?php
 
-ETL::extract(
-      $extractor, 
-      Config::builder()
-        ->cache(new MyCustomCache())
-        ->build()
-    )
+$config = Config::builder()
+  ->cache(new MyCustomCache());
+
+Flow::setUp($config)
+    ->extract($extractor)
     ->transform($transformer)
     ->write($loader)
     ->run();
@@ -166,8 +167,8 @@ All generic transformers are available through [DSL\Transform](src/Flow/ETL/DSL/
 
 Transformers can be registered in the pipeline through following methods:
 
-* `ETL::transformer(Transformer $transformer) : ETL`
-* `ETL::rows(Transformer $transformer) : ETL`
+* `DataFrame::transformer(Transformer $transformer) : DataFrame`
+* `DataFrame::rows(Transformer $transformer) : DataFrame`
 
 Set of ETL generic Transformers, for the detailed usage instruction please look into [tests](tests/Flow/ETL/Tests/Unit/Transformer).
 Adapters might also define some custom transformers.
@@ -209,7 +210,7 @@ Adapters might also define some custom transformers.
     * [callback entry](src/Flow/ETL/Transformer/CallbackEntryTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/CallbackEntryTransformerTest.php)
     * [callback row](src/Flow/ETL/Transformer/CallbackRowTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/CallbackRowTransformerTest.php)
 
-Some transformers comes with complex configuration, please find more details [here](/docs/complex_transformers.md).
+Some transformers come with complex configuration, please find more details [here](/docs/complex_transformers.md).
 
 ### Serialization
 
@@ -337,12 +338,14 @@ data entries.
 ## Process
 
 Sometimes you might already have `Rows` prepared, in that case instead of going
-through Extractors just use `ETL::process(Rows $rows) : ETL`.
+through Extractors just use `Flow::process(Rows $rows) : DataFrame`.
 
 ```php 
 <?php 
 
-ETL::process(new Rows(...))
+$flow = new Flow();
+
+$flow->process(new Rows(...))
     ->transform($transformer1)
     ->transform($transformer2)
     ->transform($transformer3)
@@ -353,12 +356,14 @@ ETL::process(new Rows(...))
 
 ## Filter
 
-In order to quickly filter Rows `ETL::filter` shortcut function can be used. 
+In order to quickly filter Rows `DataFrame::filter` shortcut function can be used. 
 
 ```php 
 <?php 
 
-ETL::process(new Rows(...))
+$flow = new Flow();
+
+$flow->process(new Rows(...))
     ->filter(fn (Row $row) => $row->valueOf('id') % 2 === 0)
     ->write($loader)
     ->run();
@@ -381,7 +386,9 @@ is missing it will be skipped or grouped into `null` entry.
 ```php 
 <?php
 
-$rows = ETL::process(
+$flow = new Flow();
+
+$rows = $flow->process(
         new Rows(
             Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20)),
             Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20)),
@@ -408,12 +415,14 @@ $this->assertEquals(
 
 ## Select
 
-In order to quickly select only relevant entries use Rows `ETL::select`
+In order to quickly select only relevant entries use Rows `DataFrame::select`
 
 ```php 
 <?php 
 
-ETL::process(new Rows(...))
+$flow = new Flow();
+
+$flow->process(new Rows(...))
     ->select("id", "name")
     ->write($loader)
     ->run();
@@ -423,12 +432,14 @@ This function is internally using [keep entries](src/Flow/ETL/Transformer/KeepEn
 
 ## Drop
 
-In order to quickly drop irrelevant entries use Rows `ETL::drop`
+In order to quickly drop irrelevant entries use Rows `DataFrame::drop`
 
 ```php 
 <?php 
 
-ETL::process(new Rows(...))
+$flow = new Flow();
+
+$flow->process(new Rows(...))
     ->drop("_tags")
     ->write($loader)
     ->run();
@@ -436,12 +447,14 @@ ETL::process(new Rows(...))
 
 ## Rename
 
-In order to quickly rename entries use Rows `ETL::rename`
+In order to quickly rename entries use Rows `DataFrame::rename`
 
 ```php 
 <?php 
 
-ETL::process(new Rows(...))
+$flow = new Flow();
+
+$flow->process(new Rows(...))
     ->rename("old_name", "new_name")
     ->write($loader)
     ->run();
@@ -451,12 +464,14 @@ This function is internally using [rename entries](src/Flow/ETL/Transformer/Rena
 
 ## Map
 
-Quick `Row` transformations are available through `ETL::map` function
+Quick `Row` transformations are available through `DataFrame::map` function
 
 ```php 
 <?php 
 
-ETL::process(new Rows(...))
+$flow = new Flow();
+
+$flow->process(new Rows(...))
     ->map(fn (Row $row) => $row->add(new BooleanEntry('odd', $row->valueOf('id') % 2 === 0)))
     ->write($loader)
     ->run();
@@ -470,15 +485,15 @@ This function is internally using [filter transformer](src/Flow/ETL/Transformer/
 Reading from the source, transforming data, even loading to sink is executed only by one of the following
 trigger methods that will immediately run the pipeline.  
 
-- `ETL::run()`
-- `ETL::fetch()`
-- `ETL::display()`
-- `ETL::cache()`
-- `ETL::sortBy()`
-- `ETL::collect()`
-- `ETL::parallelize()`
+- `DataFrame::run()`
+- `DataFrame::fetch()`
+- `DataFrame::display()`
+- `DataFrame::cache()`
+- `DataFrame::sortBy()`
+- `DataFrame::collect()`
+- `DataFrame::parallelize()`
 
-It is important to be aware of this, especially when using methods like `ETL::limit()`
+It is important to be aware of this, especially when using methods like `DataFrame::limit()`
 that must be placed before first trigger method to make an effect.
 
 ## Limit
@@ -491,7 +506,9 @@ In this example, Pipeline will take only 5 rows from Extractor passing them thro
 ```php
 <?php 
 
-ETL::read($extractor)
+$flow = new Flow();
+
+$flow->read($extractor)
     ->transform($transformer1)
     ->transform($transformer2)
     ->transform($transformer3)
@@ -509,7 +526,9 @@ you want to simply grab Rows and do something with them.
 ```php
 <?php 
 
-$rows = ETL::read($extractor)
+$flow = new Flow();
+
+$rows = $flow->read($extractor)
     ->transform($transformer1)
     ->transform($transformer2)
     ->transform($transformer3)
@@ -517,7 +536,7 @@ $rows = ETL::read($extractor)
     ->fetch();
 ```
 
-If `ETL::fetch(int $limit = 0) : Rows` limit argument is different from 0, fetch will
+If `DataFrame::fetch(int $limit = 0) : Rows` limit argument is different from 0, fetch will
 return no more rows than requested.
 
 ## Display
@@ -528,7 +547,9 @@ it will grab selected number of rows (20 by default)
 ```php
 <?php 
 
-$output = ETL::read($extractor)
+$flow = new Flow();
+
+$output = $flow->read($extractor)
     ->transform($transformer1)
     ->transform($transformer2)
     ->transform($transformer3)
@@ -557,7 +578,9 @@ Another way to display Rows without breaking execution is through using [stream 
 
 ```php
 
-$output = ETL::read($extractor)
+$flow = new Flow();
+
+$output = $flow->read($extractor)
     ->transform($transformer1)
     ->transform($transformer2)
     ->transform(Transform::output()) // display rows in stdout stream.
@@ -575,7 +598,9 @@ mostly useful during debugging.
 ```php
 <?php 
 
-$rows = ETL::read($extractor)  // extract non empty rows
+$flow = new Flow();
+
+$rows = $flow->read($extractor)  // extract non empty rows
     ->transform($transformer1) // non empty rows
     ->transform($transformer2) // non empty rows
     ->void()
@@ -603,7 +628,9 @@ Example:
 ```php 
 <?php
 
-ETL::read($from)
+$flow = new Flow();
+
+$flow->read($from)
   ->rows($transform)
   ->validate(
       new Schema(
@@ -623,14 +650,16 @@ There is more than one way to validate the schema, built in strategies are defin
 * [StrictValidator](src/Flow/ETL/Row/Schema/StrictValidator.php) - each row must exactly match the schema, extra entries will fail validation
 * [SelectiveValidator](src/Flow/ETL/Row/Schema/SelectiveValidator.php) - only rows defined in the schema must match, any extra entry in row will be ignored 
 
-By default, ETL is initializing `StrictValidator`, but it's possible to override it by passing second argument to `ETL::validate()` method.
+By default, ETL is initializing `StrictValidator`, but it's possible to override it by passing second argument to `DataFrame::validate()` method.
 
 Example: 
 
 ```php 
 <?php
 
-ETL::read($from)
+$flow = new Flow();
+
+$flow->read($from)
   ->rows($transform)
   ->validate(
       new Schema(
@@ -673,7 +702,9 @@ Error Handling can be set directly at ETL:
 ```php
 <?php 
 
-ETL::read($extractor)
+$flow = new Flow();
+
+$flow->read($extractor)
     ->onError(new IgnoreError())
     ->transform($transformer)
     ->write($loader)
@@ -690,7 +721,9 @@ in just few megabytes of RAM.
 ```php
 <?php 
 
-$rows = ETL::read($extractor)
+$flow = new Flow();
+
+$rows = $flow->read($extractor)
     ->transform($transformer1)
     ->transform($transformer2)
     ->sortBy(Sort::desc('price'))
@@ -708,12 +741,14 @@ That way, sorting will happen in memory so make sure you have enough.
 
 ```php
 
-$rows = ETL::read($extractor)
+$flow = new Flow();
+
+$rows = $flow->read($extractor)
     ->transform($transformer1)
     ->transform($transformer2)
     ->fetch();
     
-ETL::process($rows->sortBy(Sort::desc('price')))
+$flow->process($rows->sortBy(Sort::desc('price')))
     ->write($loader);
     
 ```
@@ -736,7 +771,9 @@ do the whole job and others could benefit from the final form of dataset in a me
 ```php
 <?php 
 
-ETL::read($extractor)
+$flow = new Flow();
+
+$flow->read($extractor)
     ->transform($transformer1)
     ->transform($transformer2)
     ->cache()
@@ -750,7 +787,9 @@ ETL::read($extractor)
 ```php
 <?php 
 
-ETL::read($extractor)
+$flow = new Flow();
+
+$flow->read($extractor)
     ->transform($transformer1)
     ->transform($transformer2)
     ->collect()
@@ -767,18 +806,20 @@ lines, extractor might want to read only 1k lines at once.
 Those 1k lines will be represented as an instance of `Rows`. This means that through ETL pipeline we are
 going to push 10 rows, 1k row each.
 
-Main purpose of methods `ETL::collect()` and `ETL::parallelize()` is to adjust number of rows in the middle of processing.
+Main purpose of methods `DataFrame::collect()` and `DataFrame::parallelize()` is to adjust number of rows in the middle of processing.
 
-This means that Extractor can still extract 1k rows at once, but before using loader we can use `ETL::collect` which
+This means that Extractor can still extract 1k rows at once, but before using loader we can use `DataFrame::collect` which
 will wait for all rows to get extracted, then it will merge them and pass total 10k rows into `Loader`.
 
 Parallelize method is exactly opposite, it will not wait for all Rows in order to collect them, instead it will
-take any incoming Rows instance and split it into smaller chunks according to `ETL::parallelize(int $chunks)` method `chunks` argument.
+take any incoming Rows instance and split it into smaller chunks according to `DataFrame::parallelize(int $chunks)` method `chunks` argument.
 
 ```php
 <?php 
 
-ETL::read($extractor)
+$flow = new Flow();
+
+$flow->read($extractor)
     ->transform($transformer1)
     ->transform($transformer2)
     ->write($loader1)
@@ -794,12 +835,12 @@ ETL::read($extractor)
 The most important thing about performance to remember is that creating custom Loaders/Transformers might have negative impact to
 processing performance.
 
-### ETL::collect()
+### DataFrame::collect()
 
 Using collect on a large number of rows might end up without of memory exception, but it can also significantly increase
 loading time into datasink. It might be cheaper to do one big insert than multiple smaller inserts.
 
-### ETL::sortBy()
+### DataFrame::sortBy()
 
 Even that sortBy is memory efficient due to External Sort algorithm, it still might become a time bottleneck. 
 In many cases sorting is redundant, since data sinks like databases can deal with this way more efficient. 

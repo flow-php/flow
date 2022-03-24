@@ -7,9 +7,9 @@ namespace Flow\ETL\Tests\Unit;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\DSL\Transform;
 use Flow\ETL\ErrorHandler\IgnoreError;
-use Flow\ETL\ETL;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Flow;
 use Flow\ETL\GroupBy\Aggregation;
 use Flow\ETL\Loader;
 use Flow\ETL\Pipeline\Closure;
@@ -29,11 +29,11 @@ use Flow\ETL\Transformer;
 use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\TestCase;
 
-final class ETLTest extends TestCase
+final class DataFrameTest extends TestCase
 {
     public function test_drop() : void
     {
-        $rows = ETL::process(
+        $rows = (new Flow())->process(
             new Rows(
                 Row::create(Entry::integer('id', 1), Entry::string('name', 'foo'), Entry::boolean('active', true)),
                 Row::create(Entry::integer('id', 2), Entry::null('name'), Entry::boolean('active', false)),
@@ -117,7 +117,7 @@ final class ETLTest extends TestCase
             }
         };
 
-        ETL::read($extractor)
+        (new Flow())->read($extractor)
             ->onError(new IgnoreError())
             ->rows($addStampStringEntry)
             ->rows(new class implements Transformer {
@@ -164,7 +164,7 @@ final class ETLTest extends TestCase
 
     public function test_etl_display() : void
     {
-        $etl = ETL::extract(
+        $etl = (new Flow())->extract(
             new class implements Extractor {
                 /**
                  * @return \Generator<int, Rows, mixed, void>
@@ -241,7 +241,7 @@ ASCIITABLE,
 
     public function test_etl_display_with_very_long_entry_name() : void
     {
-        $etl = ETL::extract(
+        $etl = (new Flow())->extract(
             new class implements Extractor {
                 /**
                  * @return \Generator<int, Rows, mixed, void>
@@ -300,7 +300,7 @@ ASCIITABLE,
 
     public function test_etl_exceeding_the_limit_in_one_rows_set() : void
     {
-        $rows = ETL::extract(
+        $rows = (new Flow())->extract(
             new class implements Extractor {
                 /**
                  * @return \Generator<int, Rows, mixed, void>
@@ -324,7 +324,7 @@ ASCIITABLE,
 
     public function test_etl_fetch_limit_with_closure() : void
     {
-        $rows = ETL::extract(
+        $rows = (new Flow())->extract(
             new class implements Extractor {
                 /**
                  * @return \Generator<int, Rows, mixed, void>
@@ -374,7 +374,7 @@ ASCIITABLE,
 
     public function test_etl_fetch_with_limit() : void
     {
-        $rows = ETL::extract(
+        $rows = (new Flow())->extract(
             new class implements Extractor {
                 /**
                  * @return \Generator<int, Rows, mixed, void>
@@ -396,7 +396,7 @@ ASCIITABLE,
 
     public function test_etl_fetch_without_limit() : void
     {
-        $rows = ETL::extract(
+        $rows = (new Flow())->extract(
             new class implements Extractor {
                 /**
                  * @return \Generator<int, Rows, mixed, void>
@@ -418,7 +418,7 @@ ASCIITABLE,
 
     public function test_etl_filter() : void
     {
-        $rows = ETL::extract(
+        $rows = (new Flow())->extract(
             new class implements Extractor {
                 /**
                  * @return \Generator<int, Rows, mixed, void>
@@ -445,7 +445,7 @@ ASCIITABLE,
 
     public function test_etl_limit() : void
     {
-        $rows = ETL::extract(
+        $rows = (new Flow())->extract(
             new class implements Extractor {
                 /**
                  * @return \Generator<int, Rows, mixed, void>
@@ -469,7 +469,7 @@ ASCIITABLE,
 
     public function test_etl_limit_with_closure() : void
     {
-        ETL::extract(
+        (new Flow())->extract(
             new class implements Extractor {
                 /**
                  * @return \Generator<int, Rows, mixed, void>
@@ -519,7 +519,7 @@ ASCIITABLE,
 
     public function test_etl_limit_with_collecting() : void
     {
-        $rows = ETL::extract(
+        $rows = (new Flow())->extract(
             new class implements Extractor {
                 /**
                  * @return \Generator<int, Rows, mixed, void>
@@ -544,7 +544,7 @@ ASCIITABLE,
 
     public function test_etl_limit_with_parallelizing() : void
     {
-        $rows = ETL::extract(
+        $rows = (new Flow())->extract(
             new class implements Extractor {
                 /**
                  * @return \Generator<int, Rows, mixed, void>
@@ -569,7 +569,7 @@ ASCIITABLE,
 
     public function test_etl_map() : void
     {
-        $rows = ETL::extract(
+        $rows = (new Flow())->extract(
             new class implements Extractor {
                 /**
                  * @return \Generator<int, Rows, mixed, void>
@@ -607,7 +607,7 @@ ASCIITABLE,
 
     public function test_etl_process_constructor() : void
     {
-        $collectedRows = ETL::process(
+        $collectedRows = (new Flow())->process(
             $rows = new Rows(
                 Row::create(
                     new IntegerEntry('id', 101),
@@ -624,7 +624,7 @@ ASCIITABLE,
 
     public function test_etl_with_collecting() : void
     {
-        ETL::extract(
+        (new Flow())->extract(
             new class implements Extractor {
                 /**
                  * @return \Generator<int, Rows, mixed, void>
@@ -677,7 +677,7 @@ ASCIITABLE,
 
     public function test_etl_with_parallelizing() : void
     {
-        ETL::extract(
+        (new Flow())->extract(
             new class implements Extractor {
                 /**
                  * @return \Generator<int, Rows, mixed, void>
@@ -739,7 +739,7 @@ ASCIITABLE,
 
     public function test_etl_with_total_rows_below_the_limit() : void
     {
-        $rows = ETL::extract(
+        $rows = (new Flow())->extract(
             new class implements Extractor {
                 /**
                  * @return \Generator<int, Rows, mixed, void>
@@ -765,13 +765,13 @@ ASCIITABLE,
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("Fetch limit can't be lower or equal to 0");
 
-        ETL::process(new Rows())
+        (new Flow())->process(new Rows())
             ->fetch(-1);
     }
 
     public function test_foreach() : void
     {
-        ETL::process(
+        (new Flow())->process(
             new Rows(
                 Row::create(Entry::integer('id', 1), Entry::string('name', 'foo'), Entry::boolean('active', true)),
                 Row::create(Entry::integer('id', 2), Entry::null('name'), Entry::boolean('active', false)),
@@ -796,7 +796,7 @@ ASCIITABLE,
         $loader->expects($this->exactly(4))
             ->method('load');
 
-        $rows = ETL::process(
+        $rows = (new Flow())->process(
             new Rows(
                 Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20), Entry::string('gender', 'male')),
                 Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20), Entry::string('gender', 'male')),
@@ -826,7 +826,7 @@ ASCIITABLE,
 
     public function test_group_by_multiples_columns_with_avg_aggregation() : void
     {
-        $rows = ETL::process(
+        $rows = (new Flow())->process(
             new Rows(
                 Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20), Entry::string('gender', 'male')),
                 Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20), Entry::string('gender', 'male')),
@@ -855,7 +855,7 @@ ASCIITABLE,
 
     public function test_group_by_multiples_columns_with_avg_aggregation_with_null() : void
     {
-        $rows = ETL::process(
+        $rows = (new Flow())->process(
             new Rows(
                 Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20), Entry::string('gender', 'male')),
                 Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20), Entry::string('gender', 'male')),
@@ -885,7 +885,7 @@ ASCIITABLE,
 
     public function test_group_by_single_column() : void
     {
-        $rows = ETL::process(
+        $rows = (new Flow())->process(
             new Rows(
                 Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20)),
                 Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20)),
@@ -911,7 +911,7 @@ ASCIITABLE,
 
     public function test_group_by_single_column_with_avg_aggregation() : void
     {
-        $rows = ETL::process(
+        $rows = (new Flow())->process(
             new Rows(
                 Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20)),
                 Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20)),
@@ -941,13 +941,13 @@ ASCIITABLE,
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("Limit can't be lower or equal zero, given: -1");
 
-        ETL::process(new Rows())
+        (new Flow())->process(new Rows())
             ->limit(-1);
     }
 
     public function test_overriding_group_by() : void
     {
-        $rows = ETL::process(
+        $rows = (new Flow())->process(
             new Rows(
                 Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20)),
                 Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20)),
@@ -974,7 +974,7 @@ ASCIITABLE,
 
     public function test_rename() : void
     {
-        $rows = ETL::process(
+        $rows = (new Flow())->process(
             new Rows(
                 Row::create(Entry::integer('id', 1), Entry::string('name', 'foo'), Entry::boolean('active', true)),
                 Row::create(Entry::integer('id', 2), Entry::null('name'), Entry::boolean('active', false)),
@@ -996,7 +996,7 @@ ASCIITABLE,
 
     public function test_select() : void
     {
-        $rows = ETL::process(
+        $rows = (new Flow())->process(
             new Rows(
                 Row::create(Entry::integer('id', 1), Entry::string('name', 'foo'), Entry::boolean('active', true)),
                 Row::create(Entry::integer('id', 2), Entry::null('name'), Entry::boolean('active', false)),
@@ -1018,7 +1018,7 @@ ASCIITABLE,
 
     public function test_selective_validation_against_schema() : void
     {
-        $rows = ETL::process(
+        $rows = (new Flow())->process(
             new Rows(
                 Row::create(Entry::integer('id', 1), Entry::string('name', 'foo'), Entry::boolean('active', true)),
                 Row::create(Entry::integer('id', 2), Entry::null('name'), Entry::array('tags', ['foo', 'bar'])),
@@ -1041,7 +1041,7 @@ ASCIITABLE,
 
     public function test_standalone_avg_aggregation() : void
     {
-        $rows = ETL::process(
+        $rows = (new Flow())->process(
             new Rows(
                 Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20)),
                 Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20)),
@@ -1067,7 +1067,7 @@ ASCIITABLE,
 
     public function test_standalone_avg_and_max_aggregation() : void
     {
-        ETL::process(
+        (new Flow())->process(
             new Rows(
                 Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20)),
                 Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20)),
@@ -1095,7 +1095,7 @@ ASCIITABLE,
 
     public function test_strict_validation_against_schema() : void
     {
-        $rows = ETL::process(
+        $rows = (new Flow())->process(
             new Rows(
                 Row::create(Entry::integer('id', 1), Entry::string('name', 'foo'), Entry::boolean('active', true)),
                 Row::create(Entry::integer('id', 2), Entry::null('name'), Entry::boolean('active', false)),
@@ -1121,7 +1121,7 @@ ASCIITABLE,
 
     public function test_void() : void
     {
-        $rows = ETL::process(
+        $rows = (new Flow())->process(
             new Rows(
                 Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20)),
                 Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20)),

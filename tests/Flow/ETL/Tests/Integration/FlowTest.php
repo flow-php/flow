@@ -5,18 +5,18 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration;
 
 use Flow\ETL\Config;
-use Flow\ETL\ETL;
 use Flow\ETL\ExternalSort\MemorySort;
+use Flow\ETL\Flow;
 use Flow\ETL\Monitoring\Memory\Unit;
 use Flow\ETL\Row\Sort;
 use Flow\ETL\Tests\Double\AllRowTypesFakeExtractor;
 use Flow\ETL\Tests\Double\CacheSpy;
 
-final class ETLTest extends IntegrationTestCase
+final class FlowTest extends IntegrationTestCase
 {
     public function test_etl_cache() : void
     {
-        ETL::extract(new AllRowTypesFakeExtractor($rowsets = 20, $rows = 2))
+        (new Flow())->extract(new AllRowTypesFakeExtractor($rowsets = 20, $rows = 2))
             ->cache('test_etl_cache');
 
         $cacheContent = \array_values(\array_diff(\scandir($this->cacheDir), ['..', '.']));
@@ -28,13 +28,12 @@ final class ETLTest extends IntegrationTestCase
     {
         \ini_set('memory_limit', '500M');
 
-        $config = Config::builder()
-            ->id($id = 'test_etl_sort_by_in_memory')
-            ->cache($cacheSpy = new CacheSpy(Config::default()->cache()))
-            ->externalSort(new MemorySort($id, $cacheSpy, Unit::fromMb(10)))
-            ->build();
-
-        ETL::extract(new AllRowTypesFakeExtractor($rowsets = 50, $rows = 50), $config)
+        Flow::setUp(
+            Config::builder()
+                ->id($id = 'test_etl_sort_by_in_memory')
+                ->cache($cacheSpy = new CacheSpy(Config::default()->cache()))
+                ->externalSort(new MemorySort($id, $cacheSpy, Unit::fromMb(10)))
+        )->extract(new AllRowTypesFakeExtractor($rowsets = 50, $rows = 50))
             ->sortBy(Sort::asc('id'))
             ->run();
 
@@ -56,12 +55,11 @@ final class ETLTest extends IntegrationTestCase
     {
         \ini_set('memory_limit', '-1');
 
-        $config = Config::builder()
-            ->id($id = 'test_etl_sort_by_in_memory')
-            ->cache($cacheSpy = new CacheSpy(Config::default()->cache()))
-            ->build();
-
-        $rows = ETL::extract(new AllRowTypesFakeExtractor($rowsets = 20, $rows = 2), $config)
+        $rows = Flow::setUp(
+            Config::builder()
+                ->id($id = 'test_etl_sort_by_in_memory')
+                ->cache($cacheSpy = new CacheSpy(Config::default()->cache()))
+        )->extract(new AllRowTypesFakeExtractor($rowsets = 20, $rows = 2))
             ->sortBy(Sort::asc('id'))
             ->fetch();
 
