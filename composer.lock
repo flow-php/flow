@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/array-dot.git",
-                "reference": "d5adfe8e6c4304d8cc6b95f7e9c9db4447c2a06e"
+                "reference": "ac70f3beb693241c89455712f07b98b957f6766b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/array-dot/zipball/d5adfe8e6c4304d8cc6b95f7e9c9db4447c2a06e",
-                "reference": "d5adfe8e6c4304d8cc6b95f7e9c9db4447c2a06e",
+                "url": "https://api.github.com/repos/flow-php/array-dot/zipball/ac70f3beb693241c89455712f07b98b957f6766b",
+                "reference": "ac70f3beb693241c89455712f07b98b957f6766b",
                 "shasum": ""
             },
             "require": {
@@ -53,7 +53,7 @@
                 "issues": "https://github.com/flow-php/array-dot/issues",
                 "source": "https://github.com/flow-php/array-dot/tree/1.x"
             },
-            "time": "2022-03-04T21:12:40+00:00"
+            "time": "2022-03-24T21:19:03+00:00"
         }
     ],
     "packages-dev": [

@@ -95,4 +95,32 @@ final class Schema implements \Countable, Serializable
 
         return new self(...\array_values($newDefinitions));
     }
+
+    public function nullable() : self
+    {
+        $definitions = [];
+
+        foreach ($this->definitions as $definition) {
+            if (!$definition->isNullable()) {
+                $definitions[] = $definition->nullable();
+            } else {
+                $definitions[] = $definition;
+            }
+        }
+
+        return new self(...$definitions);
+    }
+
+    public function without(string ...$entries) : self
+    {
+        $definitions = [];
+
+        foreach ($this->definitions as $definition) {
+            if (!\in_array($definition->entry(), $entries, true)) {
+                $definitions[] = $definition;
+            }
+        }
+
+        return new self(...$definitions);
+    }
 }

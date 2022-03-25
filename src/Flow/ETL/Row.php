@@ -101,6 +101,14 @@ final class Row implements Serializable
         return new self(new Entries(...$this->entries->map($mapper)));
     }
 
+    /**
+     * @param Row $row
+     * @param string $prefix
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return self
+     */
     public function merge(self $row, string $prefix = '_') : self
     {
         return new self(

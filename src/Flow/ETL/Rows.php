@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use Flow\ETL\DSL\Entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Join\Condition;
 use Flow\ETL\Row\Comparator;
 use Flow\ETL\Row\Comparator\NativeComparator;
 use Flow\ETL\Row\Entries;
+use Flow\ETL\Row\Entry\NullEntry;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Row\Sort;
 use Flow\Serializer\Serializable;
@@ -270,6 +273,148 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
     public function getIterator() : \Iterator
     {
         return new \ArrayIterator($this->rows);
+    }
+
+    /**
+     * @param Rows $right
+     * @param Condition $condition
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return self
+     */
+    public function joinInner(self $right, Condition $condition) : self
+    {
+        /**
+         * @var array<Row> $joined
+         */
+        $joined = [];
+
+        foreach ($this->rows as $leftRow) {
+            /** @var ?Row $joinedRow */
+            $joinedRow = null;
+
+            foreach ($right as $rightRow) {
+                if ($condition->meet($leftRow, $rightRow)) {
+                    try {
+                        $joinedRow = $leftRow
+                            ->merge($rightRow, $condition->prefix())
+                            ->remove(...\array_map(fn (string $e) : string => $condition->prefix() . $e, $condition->right()));
+                    } catch (InvalidArgumentException $e) {
+                        throw new InvalidArgumentException($e->getMessage() . '. Please consider using Condition, join prefix option');
+                    }
+
+                    break;
+                }
+            }
+
+            if ($joinedRow) {
+                $joined[] = $joinedRow;
+            }
+        }
+
+        return new self(...$joined);
+    }
+
+    /**
+     * @param Rows $right
+     * @param Condition $condition
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return self
+     */
+    public function joinLeft(self $right, Condition $condition) : self
+    {
+        /**
+         * @var array<Row> $joined
+         */
+        $joined = [];
+
+        $rightSchema = $right->schema()->without(...$condition->right());
+
+        foreach ($this->rows as $leftRow) {
+            /** @var ?Row $joinedRow */
+            $joinedRow = null;
+
+            foreach ($right as $rightRow) {
+                if ($condition->meet($leftRow, $rightRow)) {
+                    try {
+                        $joinedRow = $leftRow
+                            ->merge($rightRow, $condition->prefix())
+                            ->remove(...\array_map(fn (string $e) : string => $condition->prefix() . $e, $condition->right()));
+                    } catch (InvalidArgumentException $e) {
+                        throw new InvalidArgumentException($e->getMessage() . '. Please consider using Condition, join prefix option');
+                    }
+
+                    break;
+                }
+            }
+
+            $joined[] = $joinedRow
+                ? $joinedRow
+                : $leftRow->merge(
+                    Row::create(
+                        ...\array_map(
+                            fn (string $e) : NullEntry => Entry::null($e),
+                            $rightSchema->entries()
+                        )
+                    ),
+                    $condition->prefix()
+                );
+        }
+
+        return new self(...$joined);
+    }
+
+    /**
+     * @param Rows $right
+     * @param Condition $condition
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return self
+     */
+    public function joinRight(self $right, Condition $condition) : self
+    {
+        /**
+         * @var array<Row> $joined
+         */
+        $joined = [];
+
+        $leftSchema = $this->schema()->without(...$condition->left());
+
+        foreach ($right->rows as $rightRow) {
+            /** @var ?Row $joinedRow */
+            $joinedRow = null;
+
+            foreach ($this->rows as $leftRow) {
+                if ($condition->meet($leftRow, $rightRow)) {
+                    try {
+                        $joinedRow = $rightRow
+                            ->merge($leftRow, $condition->prefix())
+                            ->remove(
+                                ...\array_map(fn (string $e) : string => $condition->prefix() . $e, $condition->left())
+                            );
+                    } catch (InvalidArgumentException $e) {
+                        throw new InvalidArgumentException($e->getMessage() . '. Please consider using Condition, join prefix option');
+                    }
+
+                    $joined[] = $joinedRow;
+                }
+            }
+
+            if ($joinedRow === null) {
+                $joined[] = $rightRow->merge(
+                    Row::create(
+                        ...\array_map(fn (string $e) : NullEntry => Entry::null($e), $leftSchema->entries())
+                    ),
+                    $condition->prefix()
+                );
+            }
+        }
+
+        return new self(...$joined);
     }
 
     /**

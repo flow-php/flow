@@ -40,6 +40,8 @@ final class StringEntry implements Entry
     }
 
     /**
+     * @psalm-pure
+     *
      * @throws InvalidArgumentException
      */
     public static function lowercase(string $name, string $value) : self
@@ -48,6 +50,8 @@ final class StringEntry implements Entry
     }
 
     /**
+     * @psalm-pure
+     *
      * @throws InvalidArgumentException
      */
     public static function uppercase(string $name, string $value) : self

@@ -10,6 +10,8 @@ use Flow\ETL\Row\Entry as RowEntry;
 class Entry
 {
     /**
+     * @psalm-pure
+     *
      * @param string $name
      * @param array<mixed> $data
      *
@@ -21,6 +23,8 @@ class Entry
     }
 
     /**
+     * @psalm-pure
+     *
      * @param string $name
      * @param bool $value
      *
@@ -34,6 +38,8 @@ class Entry
     }
 
     /**
+     * @psalm-pure
+     *
      * @param string $name
      * @param Entries ...$entries
      *
@@ -47,6 +53,8 @@ class Entry
     }
 
     /**
+     * @psalm-pure
+     *
      * @param string $name
      * @param \DateTimeInterface $value
      *
@@ -60,6 +68,8 @@ class Entry
     }
 
     /**
+     * @psalm-pure
+     *
      * @param RowEntry ...$entries
      *
      * @throws \Flow\ETL\Exception\InvalidArgumentException
@@ -72,6 +82,8 @@ class Entry
     }
 
     /**
+     * @psalm-pure
+     *
      * @param string $name
      * @param float $value
      *
@@ -85,6 +97,8 @@ class Entry
     }
 
     /**
+     * @psalm-pure
+     *
      * @param string $name
      * @param int $value
      *
@@ -98,6 +112,8 @@ class Entry
     }
 
     /**
+     * @psalm-pure
+     *
      * @param string $name
      * @param array<mixed> $data
      *
@@ -109,6 +125,8 @@ class Entry
     }
 
     /**
+     * @psalm-pure
+     *
      * @param string $name
      * @param array<mixed> $data
      *
@@ -120,6 +138,8 @@ class Entry
     }
 
     /**
+     * @psalm-pure
+     *
      * @param string $name
      *
      * @throws \Flow\ETL\Exception\InvalidArgumentException
@@ -132,6 +152,8 @@ class Entry
     }
 
     /**
+     * @psalm-pure
+     *
      * @param string $name
      * @param object $object
      *
@@ -145,6 +167,8 @@ class Entry
     }
 
     /**
+     * @psalm-pure
+     *
      * @param string $name
      * @param string $value
      *
@@ -158,6 +182,8 @@ class Entry
     }
 
     /**
+     * @psalm-pure
+     *
      * @param string $name
      * @param string $value
      *
@@ -171,6 +197,8 @@ class Entry
     }
 
     /**
+     * @psalm-pure
+     *
      * @param string $name
      * @param string $value
      *
@@ -184,6 +212,8 @@ class Entry
     }
 
     /**
+     * @psalm-pure
+     *
      * @param string $name
      * @param RowEntry ...$entries
      *

@@ -29,4 +29,35 @@ final class SchemaTest extends TestCase
 
         $this->assertSame(['id', 'Id'], $schema->entries());
     }
+
+    public function test_making_whole_schema_nullable() : void
+    {
+        $schema = new Schema(
+            Schema\Definition::integer('id', $nullable = false),
+            Schema\Definition::string('name', $nullable = true)
+        );
+
+        $this->assertEquals(
+            new Schema(
+                Schema\Definition::integer('id', $nullable = true),
+                Schema\Definition::string('name', $nullable = true)
+            ),
+            $schema->nullable()
+        );
+    }
+
+    public function test_removing_elements_from_schema() : void
+    {
+        $schema = new Schema(
+            Schema\Definition::integer('id'),
+            Schema\Definition::string('name'),
+        );
+
+        $this->assertEquals(
+            new Schema(
+                Schema\Definition::integer('id'),
+            ),
+            $schema->without('name', 'tags')
+        );
+    }
 }
