@@ -1,6 +1,9 @@
-## [Unreleased] - 2022-03-24
+## [Unreleased] - 2022-03-25
 
 ### Added
+- [#201](https://github.com/flow-php/etl/pull/201) - **Rows::joinLeft** - [@norberttech](https://github.com/norberttech)
+- [#201](https://github.com/flow-php/etl/pull/201) - **Rows::joinRight** - [@norberttech](https://github.com/norberttech)
+- [#201](https://github.com/flow-php/etl/pull/201) - **Rows::joinInner** - [@norberttech](https://github.com/norberttech)
 - [#199](https://github.com/flow-php/etl/pull/199) - **union type into schema definition** - [@norberttech](https://github.com/norberttech)
 - [#198](https://github.com/flow-php/etl/pull/198) - **Getting schema from existing Rows** - [@norberttech](https://github.com/norberttech)
 - [#197](https://github.com/flow-php/etl/pull/197) - **Flow class that will become entry point of data processing** - [@norberttech](https://github.com/norberttech)
