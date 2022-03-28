@@ -1,6 +1,7 @@
-## [Unreleased] - 2022-03-25
+## [Unreleased] - 2022-03-28
 
 ### Added
+- [#202](https://github.com/flow-php/etl/pull/202) - **DataFrame join** - [@norberttech](https://github.com/norberttech)
 - [#201](https://github.com/flow-php/etl/pull/201) - **Rows::joinLeft** - [@norberttech](https://github.com/norberttech)
 - [#201](https://github.com/flow-php/etl/pull/201) - **Rows::joinRight** - [@norberttech](https://github.com/norberttech)
 - [#201](https://github.com/flow-php/etl/pull/201) - **Rows::joinInner** - [@norberttech](https://github.com/norberttech)
