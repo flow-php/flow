@@ -518,6 +518,48 @@ $flow->read($extractor)
     ->run();
 ```
 
+## Join
+
+Join two data frames, left and right usig one of following types of join:
+
+* left
+* right
+* inner
+
+In the example below we are joining two lazy evaluated dataframes 
+on a condition that says that `country` entry from `$countries` (left) data frame
+matches `code` entry from `$names` (right) data frame.
+
+While performing join operation, right data frame will be whole fetched into memory
+which might be a limitation when joining large data sets.
+
+```php
+<?php 
+
+$countries = new Rows(
+    Row::create(Entry::integer('id', 1), Entry::string('country', 'PL')),
+    Row::create(Entry::integer('id', 2), Entry::string('country', 'PL')),
+    Row::create(Entry::integer('id', 3), Entry::string('country', 'PL')),
+    Row::create(Entry::integer('id', 4), Entry::string('country', 'PL')),
+    Row::create(Entry::integer('id', 5), Entry::string('country', 'US')),
+    Row::create(Entry::integer('id', 6), Entry::string('country', 'US')),
+    Row::create(Entry::integer('id', 7), Entry::string('country', 'US')),
+    Row::create(Entry::integer('id', 9), Entry::string('country', 'US')),
+);
+
+$names = (new Flow())->process(
+    new Rows(
+        Row::create(Entry::string('code', 'PL'), Entry::string('name', 'Poland')),
+        Row::create(Entry::string('code', 'US'), Entry::string('name', 'United States')),
+    )
+);
+
+$countriesWithNames = (new Flow())
+    ->process($countries)
+    ->join($names, Condition::on(['country' => 'code']), $type = "left")
+    ->fetch();
+```
+
 ## Fetch
 
 Loaders are a great way to load `Rows` into specific data sinks, however sometimes

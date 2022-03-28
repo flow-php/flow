@@ -11,6 +11,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Flow;
 use Flow\ETL\GroupBy\Aggregation;
+use Flow\ETL\Join\Condition;
 use Flow\ETL\Loader;
 use Flow\ETL\Pipeline\Closure;
 use Flow\ETL\Row;
@@ -931,6 +932,52 @@ ASCIITABLE,
             new Rows(
                 Row::create(Entry::string('country', 'PL'), Entry::float('age_avg', 23.75)),
                 Row::create(Entry::string('country', 'US'), Entry::float('age_avg', 43.75)),
+            ),
+            $rows
+        );
+    }
+
+    public function test_join() : void
+    {
+        $loader = $this->createMock(Loader::class);
+        $loader->expects($this->exactly(2))
+            ->method('load');
+
+        $rows = (new Flow())->process(
+            new Rows(
+                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL')),
+                Row::create(Entry::integer('id', 2), Entry::string('country', 'PL')),
+                Row::create(Entry::integer('id', 3), Entry::string('country', 'PL')),
+                Row::create(Entry::integer('id', 4), Entry::string('country', 'PL')),
+                Row::create(Entry::integer('id', 5), Entry::string('country', 'US')),
+                Row::create(Entry::integer('id', 6), Entry::string('country', 'US')),
+                Row::create(Entry::integer('id', 7), Entry::string('country', 'US')),
+                Row::create(Entry::integer('id', 9), Entry::string('country', 'US')),
+            )
+        )
+            ->parallelize(4)
+            ->join(
+                (new Flow())->process(
+                    new Rows(
+                        Row::create(Entry::string('code', 'PL'), Entry::string('name', 'Poland')),
+                        Row::create(Entry::string('code', 'US'), Entry::string('name', 'United States')),
+                    )
+                ),
+                Condition::on(['country' => 'code']),
+            )
+            ->write($loader)
+            ->fetch();
+
+        $this->assertEquals(
+            new Rows(
+                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::string('name', 'Poland')),
+                Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::string('name', 'Poland')),
+                Row::create(Entry::integer('id', 3), Entry::string('country', 'PL'), Entry::string('name', 'Poland')),
+                Row::create(Entry::integer('id', 4), Entry::string('country', 'PL'), Entry::string('name', 'Poland')),
+                Row::create(Entry::integer('id', 5), Entry::string('country', 'US'), Entry::string('name', 'United States')),
+                Row::create(Entry::integer('id', 6), Entry::string('country', 'US'), Entry::string('name', 'United States')),
+                Row::create(Entry::integer('id', 7), Entry::string('country', 'US'), Entry::string('name', 'United States')),
+                Row::create(Entry::integer('id', 9), Entry::string('country', 'US'), Entry::string('name', 'United States')),
             ),
             $rows
         );

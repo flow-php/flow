@@ -9,6 +9,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor\CacheExtractor;
 use Flow\ETL\Formatter\AsciiTableFormatter;
 use Flow\ETL\GroupBy\Aggregation;
+use Flow\ETL\Join\Condition;
 use Flow\ETL\Loader\SchemaValidationLoader;
 use Flow\ETL\Pipeline\CollectingPipeline;
 use Flow\ETL\Pipeline\GroupByPipeline;
@@ -19,6 +20,7 @@ use Flow\ETL\Row\Sort;
 use Flow\ETL\Transformer\CallbackRowTransformer;
 use Flow\ETL\Transformer\Filter\Filter\Callback;
 use Flow\ETL\Transformer\FilterRowsTransformer;
+use Flow\ETL\Transformer\JoinRowsTransformer;
 use Flow\ETL\Transformer\KeepEntriesTransformer;
 use Flow\ETL\Transformer\RemoveEntriesTransformer;
 
@@ -186,6 +188,23 @@ final class DataFrame
     {
         $this->groupBy = new GroupBy(...$entries);
         $this->pipeline = new GroupByPipeline($this->groupBy, $this->pipeline);
+
+        return $this;
+    }
+
+    /**
+     * @param DataFrame $dataFrame
+     * @param Condition $on
+     * @param string $type
+     * @psalm-param "left"|"right"|"inner" $type
+     *
+     * @return self
+     */
+    public function join(self $dataFrame, Condition $on, string $type = 'left') : self
+    {
+        /** @var Transformer $transformer */
+        $transformer = JoinRowsTransformer::$type($dataFrame, $on);
+        $this->pipeline->add($transformer);
 
         return $this;
     }

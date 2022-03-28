@@ -6,11 +6,14 @@ namespace Flow\ETL\Join;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
+use Flow\Serializer\Serializable;
 
 /**
+ * @implements Serializable<array{entries: array<string, string>, prefix: string}>
+ *
  * @psalm-immutable
  */
-final class Condition
+final class Condition implements Serializable
 {
     /**
      * @var array<string, string>
@@ -38,6 +41,20 @@ final class Condition
     public static function on(array $entries, string $joinPrefix = '') : self
     {
         return new self($entries, $joinPrefix);
+    }
+
+    public function __serialize() : array
+    {
+        return [
+            'entries' => $this->entries,
+            'prefix' => $this->joinPrefix,
+        ];
+    }
+
+    public function __unserialize(array $data) : void
+    {
+        $this->entries = $data['entries'];
+        $this->joinPrefix = $data['prefix'];
     }
 
     /**
