@@ -1,6 +1,7 @@
-## [Unreleased] - 2022-03-29
+## [Unreleased] - 2022-04-06
 
 ### Added
+- [#210](https://github.com/flow-php/etl/pull/210) - **Join each** - [@norberttech](https://github.com/norberttech)
 - [#204](https://github.com/flow-php/etl/pull/204) - **hash transformer for non cryptographic entry hashing** - [@norberttech](https://github.com/norberttech)
 - [#202](https://github.com/flow-php/etl/pull/202) - **DataFrame join** - [@norberttech](https://github.com/norberttech)
 - [#201](https://github.com/flow-php/etl/pull/201) - **Rows::joinLeft** - [@norberttech](https://github.com/norberttech)
