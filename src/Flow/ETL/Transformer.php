@@ -7,7 +7,7 @@ namespace Flow\ETL;
 use Flow\ETL\Pipeline\Pipe;
 
 /**
- * @template T of array
+ * @template T
  * @extends Pipe<T>
  * @psalm-immutable
  */

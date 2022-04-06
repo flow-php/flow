@@ -521,18 +521,25 @@ $flow->read($extractor)
 
 ## Join
 
-Join two data frames, left and right usig one of following types of join:
+Join two data frames, left and right using one of following types of join:
 
 * left
 * right
 * inner
 
+Three are two available join methods: 
+
+* DataFrame::join - right side is static for each left Rows set. 
+* DataFrame::joinEach - right side dynamically generated for each left Rows set.
+
+
+![joins](docs/img/join.png)
+
 In the example below we are joining two lazy evaluated dataframes 
 on a condition that says that `country` entry from `$countries` (left) data frame
 matches `code` entry from `$names` (right) data frame.
 
-While performing join operation, right data frame will be whole fetched into memory
-which might be a limitation when joining large data sets.
+In this case, right data frame will be whole fetched into memory which might be a limitation when joining large data sets (in such case use DataFrame::joinEach instead).
 
 ```php
 <?php 

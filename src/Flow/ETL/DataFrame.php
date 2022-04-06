@@ -20,6 +20,7 @@ use Flow\ETL\Row\Sort;
 use Flow\ETL\Transformer\CallbackRowTransformer;
 use Flow\ETL\Transformer\Filter\Filter\Callback;
 use Flow\ETL\Transformer\FilterRowsTransformer;
+use Flow\ETL\Transformer\JoinEachRowsTransformer;
 use Flow\ETL\Transformer\JoinRowsTransformer;
 use Flow\ETL\Transformer\KeepEntriesTransformer;
 use Flow\ETL\Transformer\RemoveEntriesTransformer;
@@ -204,6 +205,23 @@ final class DataFrame
     {
         /** @var Transformer $transformer */
         $transformer = JoinRowsTransformer::$type($dataFrame, $on);
+        $this->pipeline->add($transformer);
+
+        return $this;
+    }
+
+    /**
+     * @param DataFrameFactory $factory
+     * @param Condition $on
+     * @param string $type
+     * @psalm-param "left"|"right"|"inner" $type
+     *
+     * @return self
+     */
+    public function joinEach(DataFrameFactory $factory, Condition $on, string $type = 'left') : self
+    {
+        /** @var Transformer $transformer */
+        $transformer = JoinEachRowsTransformer::$type($factory, $on);
         $this->pipeline->add($transformer);
 
         return $this;
