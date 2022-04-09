@@ -1,6 +1,8 @@
-## [Unreleased] - 2022-04-06
+## [Unreleased] - 2022-04-09
 
 ### Added
+- [#211](https://github.com/flow-php/etl/pull/211) - **Schema constraint: IsInstanceOf** - [@norberttech](https://github.com/norberttech)
+- [#211](https://github.com/flow-php/etl/pull/211) - **Schema constraint: SameAs** - [@norberttech](https://github.com/norberttech)
 - [#210](https://github.com/flow-php/etl/pull/210) - **Join each** - [@norberttech](https://github.com/norberttech)
 - [#204](https://github.com/flow-php/etl/pull/204) - **hash transformer for non cryptographic entry hashing** - [@norberttech](https://github.com/norberttech)
 - [#202](https://github.com/flow-php/etl/pull/202) - **DataFrame join** - [@norberttech](https://github.com/norberttech)
