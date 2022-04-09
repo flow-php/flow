@@ -686,12 +686,20 @@ $flow->read($from)
       new Schema(
           Schema\Definition::integer('id', $nullable = false),
           Schema\Definition::string('name', $nullable = true),
-          Schema\Definition::boolean('active', $nullable = false),
+          Schema\Definition::boolean('active', $nullable = false, new SameAs(true)),
       )
   )
   ->write($to)
   ->run();
 ```
+
+### Schema Constraints
+
+- [all](src/Flow/ETL/Row/Schema/Constraint/All.php)
+- [any](src/Flow/ETL/Row/Schema/Constraint/Any.php)
+- [same as](src/Flow/ETL/Row/Schema/Constraint/SameAs.php)
+- [is instance of](src/Flow/ETL/Row/Schema/Constraint/IsInstanceOf.php)
+
 
 ### Schema Validator 
 
@@ -722,10 +730,6 @@ $flow->read($from)
   ->write($to)
   ->run();
 ```
-
-### Schema Constraints 
-
-@TODO 
 
 ## Error Handling 
 
