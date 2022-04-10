@@ -6,27 +6,19 @@ namespace Flow\ETL\Row\Entry;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\Schema\Definition;
 
 /**
+ * @implements Entry<\DOMDocument, array{name: string, value: string, encoding: null|string, version: null|string}>
  * @psalm-immutable
  */
-final class XMLEntry implements Entry
+final class XMLEntry implements \Stringable, Entry
 {
-    private string $key;
-
-    private string $name;
-
-    private \DOMDocument $value;
-
-    public function __construct(string $name, \DOMDocument $value)
+    public function __construct(private readonly string $name, private readonly \DOMDocument $value)
     {
         if ($name === '') {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
-
-        $this->key = \mb_strtolower($name);
-        $this->name = $name;
-        $this->value = $value;
     }
 
     public static function fromString(string $name, string $value, string $version = '1.0', string $encoding = '') : self
@@ -46,9 +38,6 @@ final class XMLEntry implements Entry
         return $this->toString();
     }
 
-    /**
-     * @return array{name: string, value: string, encoding: null|string, version: null|string}
-     */
     public function __serialize() : array
     {
         return [
@@ -62,12 +51,12 @@ final class XMLEntry implements Entry
     /**
      * @psalm-suppress MoreSpecificImplementedParamType
      * @psalm-suppress ImpureMethodCall
-     *
-     * @param array{name: string, value: string, encoding: null|string, version: null|string} $data
+     * @psalm-suppress MixedArrayAccess
+     * @psalm-suppress MixedArgument
      */
     public function __unserialize(array $data) : void
     {
-        $dom = new \DOMDocument($data['version'] ? $data['version'] : '', $data['encoding'] ? $data['encoding'] : '');
+        $dom = new \DOMDocument($data['version'] ?: '', $data['encoding'] ?: '');
         /** @psalm-suppress ArgumentTypeCoercion */
         $dom->loadXML($data['value']);
 
@@ -87,10 +76,10 @@ final class XMLEntry implements Entry
 
     public function is(string $name) : bool
     {
-        return $this->key === \mb_strtolower($name);
+        return $name === $this->name;
     }
 
-    public function rename(string $name) : Entry
+    public function rename(string $name) : self
     {
         return new self($name, $this->value);
     }
@@ -100,7 +89,7 @@ final class XMLEntry implements Entry
      * @psalm-suppress MoreSpecificImplementedParamType
      * @psalm-param pure-callable $mapper
      */
-    public function map(callable $mapper) : Entry
+    public function map(callable $mapper) : self
     {
         return new self($this->name, $mapper($this->value()));
     }
@@ -120,5 +109,10 @@ final class XMLEntry implements Entry
          * @psalm-suppress ImpureMethodCall
          */
         return (string) $this->value->saveXML();
+    }
+
+    public function definition() : Definition
+    {
+        return new Definition($this->name, [self::class]);
     }
 }
