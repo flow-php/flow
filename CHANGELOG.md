@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-03-20
+## [Unreleased] - 2022-04-10
 
 ### Added
 - [#95](https://github.com/flow-php/etl-adapter-csv/pull/95) - **Loader options: delimiter, enclouser, escape string** - [@norberttech](https://github.com/norberttech)
@@ -6,6 +6,7 @@
 - [#44](https://github.com/flow-php/etl-adapter-csv/pull/44) - **Workflow for aut-merging dependabot PRs** - [@tomaszhanc](https://github.com/tomaszhanc)
 
 ### Changed
+- [#104](https://github.com/flow-php/etl-adapter-csv/pull/104) - **Updated project to php 8.1** - [@norberttech](https://github.com/norberttech)
 - [#95](https://github.com/flow-php/etl-adapter-csv/pull/95) - **updated dependencies** - [@norberttech](https://github.com/norberttech)
 - [#82](https://github.com/flow-php/etl-adapter-csv/pull/82) - **Adjusted Adapter for Serialization** - [@norberttech](https://github.com/norberttech)
 - [#74](https://github.com/flow-php/etl-adapter-csv/pull/74) - **Instread of adding Rows to existing Rows, build array of Rows and instantiate object after** - [@norberttech](https://github.com/norberttech)
@@ -25,6 +26,7 @@
 - [63633c](https://github.com/flow-php/etl-adapter-csv/commit/63633cae23ccfa2222925a1c94c9acf9aca65e7d) - **docs** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#104](https://github.com/flow-php/etl-adapter-csv/pull/104) - **Deprecated classes** - [@norberttech](https://github.com/norberttech)
 - [#37](https://github.com/flow-php/etl-adapter-csv/pull/37) - **Remove unsued PHP-CS config** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [57c585](https://github.com/flow-php/etl-adapter-csv/commit/57c5858a31b76eb255c450d7ad0af9b2fac5f11d) - **redundant workflow** - [@norberttech](https://github.com/norberttech)
 
