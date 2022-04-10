@@ -14,17 +14,15 @@ use JsonMachine\Items;
  */
 final class JsonExtractor implements Extractor
 {
-    private Items $jsonItems;
+    private readonly Items $jsonItems;
 
-    private int $rowsInBatch;
-
-    private string $rowEntryName;
-
-    public function __construct(string $filePath, int $rowsInBatch, string $rowEntryName = 'row')
-    {
+    public function __construct(
+        string $filePath,
+        private readonly
+        int $rowsInBatch,
+        private readonly string $rowEntryName = 'row'
+    ) {
         $this->jsonItems = Items::fromFile($filePath);
-        $this->rowsInBatch = $rowsInBatch;
-        $this->rowEntryName = $rowEntryName;
     }
 
     public function extract() : \Generator

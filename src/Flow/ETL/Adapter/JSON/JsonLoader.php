@@ -9,21 +9,18 @@ use Flow\ETL\Loader;
 use Flow\ETL\Rows;
 use Ramsey\Uuid\Uuid;
 
+/**
+ * @implements Loader<array{path: string, safe_mode: boolean}>
+ */
 final class JsonLoader implements Loader
 {
-    private string $path;
-
-    private bool $safeMode;
-
     /**
      * @var null|resource
      */
     private $stream;
 
-    public function __construct(string $path, bool $safeMode = false)
+    public function __construct(private string $path, private bool $safeMode = false)
     {
-        $this->path = $path;
-        $this->safeMode = $safeMode;
     }
 
     /**
@@ -34,9 +31,6 @@ final class JsonLoader implements Loader
         \fclose($this->stream());
     }
 
-    /**
-     * @return array{path: string, safe_mode: boolean}
-     */
     public function __serialize() : array
     {
         return [
@@ -45,10 +39,6 @@ final class JsonLoader implements Loader
         ];
     }
 
-    /**
-     * @param array{path: string, safe_mode: boolean} $data
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->path = $data['path'];

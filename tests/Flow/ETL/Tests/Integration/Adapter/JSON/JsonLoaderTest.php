@@ -20,12 +20,10 @@ final class JsonLoaderTest extends TestCase
         $loader->load(
             new Rows(
                 ...\array_map(
-                    function (int $i) : Row {
-                        return Row::create(
-                            new Row\Entry\IntegerEntry('id', $i),
-                            new Row\Entry\StringEntry('name', 'name_' . $i)
-                        );
-                    },
+                    fn (int $i) : Row => Row::create(
+                        new Row\Entry\IntegerEntry('id', $i),
+                        new Row\Entry\StringEntry('name', 'name_' . $i)
+                    ),
                     \range(0, 5)
                 )
             )
@@ -34,12 +32,10 @@ final class JsonLoaderTest extends TestCase
         $loader->load(
             new Rows(
                 ...\array_map(
-                    function (int $i) : Row {
-                        return Row::create(
-                            new Row\Entry\IntegerEntry('id', $i),
-                            new Row\Entry\StringEntry('name', 'name_' . $i)
-                        );
-                    },
+                    fn (int $i) : Row => Row::create(
+                        new Row\Entry\IntegerEntry('id', $i),
+                        new Row\Entry\StringEntry('name', 'name_' . $i)
+                    ),
                     \range(6, 10)
                 )
             )
@@ -82,12 +78,10 @@ JSON,
         $loader->load(
             new Rows(
                 ...\array_map(
-                    function (int $i) : Row {
-                        return Row::create(
-                            new Row\Entry\IntegerEntry('id', $i),
-                            new Row\Entry\StringEntry('name', 'name_' . $i)
-                        );
-                    },
+                    fn (int $i) : Row => Row::create(
+                        new Row\Entry\IntegerEntry('id', $i),
+                        new Row\Entry\StringEntry('name', 'name_' . $i)
+                    ),
                     \range(0, 5)
                 )
             )
@@ -96,12 +90,10 @@ JSON,
         $loader->load(
             new Rows(
                 ...\array_map(
-                    function (int $i) : Row {
-                        return Row::create(
-                            new Row\Entry\IntegerEntry('id', $i),
-                            new Row\Entry\StringEntry('name', 'name_' . $i)
-                        );
-                    },
+                    fn (int $i) : Row => Row::create(
+                        new Row\Entry\IntegerEntry('id', $i),
+                        new Row\Entry\StringEntry('name', 'name_' . $i)
+                    ),
                     \range(6, 10)
                 )
             )

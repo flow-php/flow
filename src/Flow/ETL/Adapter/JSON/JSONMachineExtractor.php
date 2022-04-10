@@ -14,17 +14,11 @@ use JsonMachine\Items;
  */
 final class JSONMachineExtractor implements Extractor
 {
-    private Items $jsonItems;
-
-    private int $rowsInBatch;
-
-    private string $rowEntryName;
-
-    public function __construct(Items $jsonItems, int $rowsInBatch, string $rowEntryName = 'row')
-    {
-        $this->jsonItems = $jsonItems;
-        $this->rowsInBatch = $rowsInBatch;
-        $this->rowEntryName = $rowEntryName;
+    public function __construct(
+        private readonly Items $jsonItems,
+        private readonly int $rowsInBatch,
+        private readonly string $rowEntryName = 'row'
+    ) {
     }
 
     public function extract() : \Generator
