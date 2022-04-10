@@ -27,7 +27,7 @@ final class PostgreSqlBulkInsertTest extends IntegrationTestCase
                 [
                     new Column('id', Type::getType(Types::GUID), ['notnull' => true]),
                     new Column('age', Type::getType(Types::INTEGER), ['notnull' => true]),
-                    new Column('tags', Type::getType(Types::JSON_ARRAY), ['notnull' => true, 'platformOptions' => ['jsonb' => true]]),
+                    new Column('tags', Type::getType(Types::JSON), ['notnull' => true, 'platformOptions' => ['jsonb' => true]]),
                 ],
             ))
                 ->setPrimaryKey(['id'])
@@ -122,14 +122,17 @@ final class PostgreSqlBulkInsertTest extends IntegrationTestCase
             ])
         );
 
-        Bulk::create()->insertOrSkipOnConflict(
+        Bulk::create()->insert(
             $this->pgsqlDatabaseContext->connection(),
             $table,
             new BulkData([
                 ['id' => 2, 'name' => 'New Name Two', 'description' => 'New Description Two', 'active' => false],
                 ['id' => 3, 'name' => 'New Name Three', 'description' => 'New Description Three', 'active' => false],
                 ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Four', 'active' => false],
-            ])
+            ]),
+            [
+                'skip_conflicts' => true,
+            ]
         );
 
         $this->assertEquals(4, $this->pgsqlDatabaseContext->tableCount($table));
@@ -169,15 +172,17 @@ final class PostgreSqlBulkInsertTest extends IntegrationTestCase
             ])
         );
 
-        Bulk::create()->insertOrUpdateOnConstraintConflict(
+        Bulk::create()->insert(
             $this->pgsqlDatabaseContext->connection(),
             $table,
-            'flow_doctrine_bulk_test_pkey',
             new BulkData([
                 ['id' => 2, 'name' => 'New Name Two', 'description' => 'New Description Two', 'active' => true],
                 ['id' => 3, 'name' => 'New Name Three', 'description' => 'New Description Three', 'active' => false],
                 ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Three', 'active' => true],
-            ])
+            ]),
+            [
+                'constraint' => 'flow_doctrine_bulk_test_pkey',
+            ]
         );
 
         $this->assertEquals(4, $this->pgsqlDatabaseContext->tableCount($table));
@@ -217,15 +222,17 @@ final class PostgreSqlBulkInsertTest extends IntegrationTestCase
             ])
         );
 
-        Bulk::create()->insertOrUpdateOnConflict(
+        Bulk::create()->insert(
             $this->pgsqlDatabaseContext->connection(),
             $table,
-            ['id'],
             new BulkData([
                 ['id' => 2, 'name' => 'New Name Two', 'description' => 'New Description Two', 'active' => true],
                 ['id' => 3, 'name' => 'New Name Three', 'description' => 'New Description Three', 'active' => false],
                 ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Three', 'active' => true],
-            ])
+            ]),
+            [
+                'conflict_columns' => ['id'],
+            ]
         );
 
         $this->assertEquals(4, $this->pgsqlDatabaseContext->tableCount($table));
@@ -265,14 +272,16 @@ final class PostgreSqlBulkInsertTest extends IntegrationTestCase
             ])
         );
 
-        Bulk::create()->insertOrUpdateOnConflict(
+        Bulk::create()->insert(
             $this->pgsqlDatabaseContext->connection(),
             $table,
-            ['id'],
             new BulkData([
                 ['id' => 2, 'name' => 'New Name Two', 'description' => 'DESCRIPTION', 'active' => true],
             ]),
-            ['description']
+            [
+                'conflict_columns' => ['id'],
+                'update_columns' => ['description'],
+            ]
         );
 
         $this->assertEquals(3, $this->pgsqlDatabaseContext->tableCount($table));
