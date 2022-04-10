@@ -1,4 +1,4 @@
-name: Quality Assurance
+name: Test Suite
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ on:
 jobs:
   static-analyze:
     name: "Static Analyze"
-    uses: aeon-php/actions/.github/workflows/composer-script-static-analyze.yaml@main
+    uses: flow-php/actions/.github/workflows/composer-script-static-analyze.yaml@main
 
   mutation-tests:
     name: "Mutation Tests"
@@ -17,7 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         dependencies: [ locked ]
-        php-version: [ 7.4 ]
+        php-version: [ 8.1 ]
         operating-system: [ ubuntu-latest ]
 
     runs-on: ${{ matrix.operating-system }}
@@ -65,14 +65,14 @@ jobs:
       fail-fast: false
       matrix:
         dependencies: [ locked, lowest, highest ]
-        php-version: [ 7.4 , 8.0, 8.1 ]
+        php-version: [ 8.1 ]
         operating-system: [ ubuntu-latest ]
 
     runs-on: ${{ matrix.operating-system }}
 
     services:
       postgres:
-        image: postgres:11.2
+        image: postgres:13.6-alpine
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres

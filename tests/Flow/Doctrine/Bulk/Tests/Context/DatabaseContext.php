@@ -9,13 +9,10 @@ use Doctrine\DBAL\Schema\Table;
 
 final class DatabaseContext
 {
-    private Connection $connection;
+    private readonly InsertQueryCounter $sqlLogger;
 
-    private InsertQueryCounter $sqlLogger;
-
-    public function __construct(Connection $connection)
+    public function __construct(private readonly Connection $connection)
     {
-        $this->connection = $connection;
         $this->sqlLogger = new InsertQueryCounter();
 
         $this->connection->getConfiguration()->setSQLLogger($this->sqlLogger);

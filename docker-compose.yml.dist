@@ -1,6 +1,6 @@
 services:
     postgres:
-        image: postgres:11.3-alpine
+        image: postgres:13.6-alpine
         container_name: flow-test-db
         ports:
             - 5432:5432
