@@ -12,28 +12,23 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Loader;
 use Flow\ETL\Rows;
 
+/**
+ * @implements Loader<array{
+ *  table_name: string,
+ *  chunk_size: int,
+ *  connection_params: array<string, mixed>,
+ *  operation: string,
+ *  operation_options: array{
+ *    do_nothing?: boolean,
+ *    constraint?: string,
+ *    conflict_columns?: array<string>,
+ *    update_columns?: array<string>,
+ *    primary_key_columns?: array<string>
+ *  }
+ * }>
+ */
 final class DbalLoader implements Loader
 {
-    private string $tableName;
-
-    private int $chunkSize;
-
-    /**
-     * @var array<string, mixed>
-     */
-    private array $connectionParams;
-
-    /**
-     * @var array{
-     *    do_nothing?: boolean,
-     *    constraint?: string,
-     *    conflict_columns?: array<string>,
-     *    update_columns?: array<string>,
-     *    primary_key_columns?: array<string>
-     *  }
-     */
-    private array $operationOptions;
-
     private ?Connection $connection = null;
 
     private string $operation;
@@ -54,20 +49,15 @@ final class DbalLoader implements Loader
      * @throws InvalidArgumentException
      */
     public function __construct(
-        string $tableName,
-        int $chunkSize,
-        array $connectionParams,
-        array $operationOptions = [],
+        private string $tableName,
+        private int $chunkSize,
+        private array $connectionParams,
+        private array $operationOptions = [],
         string $operation = 'insert'
     ) {
         if (false === \in_array(\strtolower($operation), ['update', 'insert'], true)) {
             throw new InvalidArgumentException("Operation can be insert or update, {$operation} given.");
         }
-
-        $this->tableName = $tableName;
-        $this->chunkSize = $chunkSize;
-        $this->connectionParams = $connectionParams;
-        $this->operationOptions = $operationOptions;
         $this->operation = \strtolower($operation);
     }
 
@@ -103,21 +93,6 @@ final class DbalLoader implements Loader
         return $loader;
     }
 
-    /**
-     * @return array{
-     *  table_name: string,
-     *  chunk_size: int,
-     *  connection_params: array<string, mixed>,
-     *  operation: string,
-     *  operation_options: array{
-     *    do_nothing?: boolean,
-     *    constraint?: string,
-     *    conflict_columns?: array<string>,
-     *    update_columns?: array<string>,
-     *    primary_key_columns?: array<string>
-     *  }
-     * }
-     */
     public function __serialize() : array
     {
         return [
@@ -129,23 +104,6 @@ final class DbalLoader implements Loader
         ];
     }
 
-    /**
-     * @psalm-suppress MoreSpecificImplementedParamType
-     *
-     * @param array{
-     *  table_name: string,
-     *  chunk_size: int,
-     *  connection_params: array<string, mixed>,
-     *  operation: string,
-     *  operation_options: array{
-     *    do_nothing?: boolean,
-     *    constraint?: string,
-     *    conflict_columns?: array<string>,
-     *    update_columns?: array<string>,
-     *    primary_key_columns?: array<string>
-     *  }
-     * } $data
-     */
     public function __unserialize(array $data) : void
     {
         $this->tableName = $data['table_name'];

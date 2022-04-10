@@ -10,7 +10,7 @@ use Flow\ETL\Rows;
 
 final class ArrayExtractor implements Extractor
 {
-    private array $rows;
+    private readonly array $rows;
 
     public function __construct(array ...$rows)
     {

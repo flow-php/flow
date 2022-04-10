@@ -6,7 +6,7 @@
     "keywords": ["doctrine", "dbal", "bulk", "insert", "upsert", "etl", "loader"],
     "minimum-stability": "dev",
     "require": {
-        "php": "^7.4.2 || ~8.0",
+        "php": "~8.1",
         "flow-php/etl": "^1.0@dev",
         "doctrine/dbal": "^2.12 || ^3.1.4"
     },

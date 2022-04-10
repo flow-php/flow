@@ -8,7 +8,7 @@ use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
-use Flow\ETL\Adapter\Doctrine\DbalBulkLoader;
+use Flow\ETL\Adapter\Doctrine\DbalLoader;
 use Flow\ETL\Adapter\Doctrine\DbalQueryExtractor;
 use Flow\ETL\Adapter\Doctrine\ParametersSet;
 use Flow\ETL\Adapter\Doctrine\Tests\Double\Stub\ArrayExtractor;
@@ -39,7 +39,7 @@ final class DbalQueryExtractorTest extends IntegrationTestCase
         )->transform(
             new TransformTestData()
         )->load(
-            DbalBulkLoader::insert($this->pgsqlDatabaseContext->connection(), $bulkSize = 10, $table)
+            DbalLoader::fromConnection($this->pgsqlDatabaseContext->connection(), $table, chunkSize: 10)
         )->run();
 
         $rows = ETL::extract(
@@ -87,7 +87,7 @@ final class DbalQueryExtractorTest extends IntegrationTestCase
         )->transform(
             new TransformTestData()
         )->load(
-            DbalBulkLoader::insert($this->pgsqlDatabaseContext->connection(), $bulkSize = 10, $table)
+            DbalLoader::fromConnection($this->pgsqlDatabaseContext->connection(), $table, chunkSize: 10)
         )->run();
 
         $rows = ETL::extract(

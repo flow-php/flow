@@ -15,46 +15,23 @@ use Flow\ETL\Rows;
  */
 final class DbalQueryExtractor implements Extractor
 {
-    private Connection $connection;
-
-    private string $query;
-
     /**
      * @var ParametersSet
      */
-    private ParametersSet $parametersSet;
+    private readonly ParametersSet $parametersSet;
 
     /**
-     * @var array<int, null|int|string|Type>|array<string, null|int|string|Type>
-     */
-    private array $types;
-
-    private string $rowEntryName;
-
-    /**
-     * @param Connection $connection
-     * @param string $query
      * @param null|ParametersSet $parametersSet
      * @param array<int, null|int|string|Type>|array<string, null|int|string|Type> $types
-     * @param string $rowEntryName
      */
-    public function __construct(Connection $connection, string $query, ParametersSet $parametersSet = null, array $types = [], string $rowEntryName = 'row')
+    public function __construct(private readonly Connection $connection, private readonly string $query, ParametersSet $parametersSet = null, private readonly array $types = [], private readonly string $rowEntryName = 'row')
     {
-        $this->connection = $connection;
-        $this->query = $query;
-        $this->types = $types;
-        $this->rowEntryName = $rowEntryName;
-        $this->parametersSet = $parametersSet ? $parametersSet : new ParametersSet([]);
+        $this->parametersSet = $parametersSet ?: new ParametersSet([]);
     }
 
     /**
-     * @param Connection $connection
-     * @param string $query
      * @param array<string, mixed>|list<mixed> $parameters
      * @param array<int, null|int|string|Type>|array<string, null|int|string|Type> $types
-     * @param string $rowEntryName
-     *
-     * @return DbalQueryExtractor
      */
     public static function single(Connection $connection, string $query, array $parameters = [], array $types = [], string $rowEntryName = 'row') : self
     {

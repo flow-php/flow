@@ -1,7 +1,7 @@
 services:
     postgres:
-        image: postgres:11.3-alpine
-        container_name: flow-test-db
+        image: postgres:13.6-alpine
+        container_name: flow-adapter-doctrine-db
         ports:
             - 5432:5432
         environment:

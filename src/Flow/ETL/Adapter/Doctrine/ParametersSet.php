@@ -9,7 +9,7 @@ final class ParametersSet
     /**
      * @var array<array<string, mixed>>|array<list<mixed>>
      */
-    private array $parameters;
+    private readonly array $parameters;
 
     /**
      * @param array<string, mixed>|list<mixed> ...$parameters
