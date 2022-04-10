@@ -18,7 +18,7 @@ final class Configuration
 
         $limitConfig = \ini_get('memory_limit');
 
-        if ($limitConfig === false || \strpos($limitConfig, '-') === 0) {
+        if ($limitConfig === false || \str_starts_with($limitConfig, '-')) {
             $this->limit = null;
         } else {
             $this->limit = Unit::fromString($limitConfig)->percentage(100 - $safetyBufferPercentage);

@@ -13,17 +13,11 @@ use Flow\ETL\Rows;
  */
 final class CacheExtractor implements Extractor
 {
-    private Cache $cache;
-
-    private bool $clear;
-
-    private string $id;
-
-    public function __construct(string $id, Cache $cache, bool $clear = false)
-    {
-        $this->cache = $cache;
-        $this->id = $id;
-        $this->clear = $clear;
+    public function __construct(
+        private readonly string $id,
+        private readonly Cache $cache,
+        private readonly bool $clear = false
+    ) {
     }
 
     /**

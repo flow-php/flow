@@ -11,10 +11,5 @@ use Flow\Serializer\Serializable;
  */
 interface EntryConverter extends Serializable
 {
-    /**
-     * @param Entry $entry
-     *
-     * @return Entry
-     */
     public function convert(Entry $entry) : Entry;
 }

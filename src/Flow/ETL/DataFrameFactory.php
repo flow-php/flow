@@ -10,10 +10,5 @@ use Flow\Serializer\Serializable;
  */
 interface DataFrameFactory extends Serializable
 {
-    /**
-     * @param Rows $rows
-     *
-     * @return DataFrame
-     */
     public function from(Rows $rows) : DataFrame;
 }

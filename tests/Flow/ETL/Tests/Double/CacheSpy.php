@@ -9,8 +9,6 @@ use Flow\ETL\Rows;
 
 final class CacheSpy implements Cache
 {
-    private Cache $cache;
-
     /**
      * @var array<string, int>
      */
@@ -26,9 +24,8 @@ final class CacheSpy implements Cache
      */
     private array $writes = [];
 
-    public function __construct(Cache $cache)
+    public function __construct(private readonly Cache $cache)
     {
-        $this->cache = $cache;
     }
 
     public function add(string $id, Rows $rows) : void

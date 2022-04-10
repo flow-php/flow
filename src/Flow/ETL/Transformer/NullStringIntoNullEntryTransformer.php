@@ -17,7 +17,7 @@ final class NullStringIntoNullEntryTransformer implements Transformer
     /**
      * @var string[]
      */
-    private array $entryNames;
+    private readonly array $entryNames;
 
     public function __construct(string ...$entryNames)
     {

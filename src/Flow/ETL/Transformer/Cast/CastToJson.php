@@ -13,7 +13,6 @@ final class CastToJson extends CastEntries
 {
     /**
      * @param array<string> $entryNames
-     * @param bool $nullable
      */
     public function __construct(array $entryNames, bool $nullable = false)
     {

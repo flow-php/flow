@@ -11,7 +11,7 @@ use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Rows;
 use Flow\ETL\Serializer\Closure;
 use Flow\ETL\Transformer;
-use Opis\Closure\SerializableClosure;
+use Laravel\SerializableClosure\SerializableClosure;
 
 /**
  * @implements Transformer<array{entries: array<string>, callback: callable, entry_factory: EntryFactory}>
@@ -26,21 +26,14 @@ final class CallUserFunctionTransformer implements Transformer
     private $callback;
 
     /**
-     * @var array<string>
-     */
-    private array $entries;
-
-    private EntryFactory $entryFactory;
-
-    /**
      * @param array<string> $entries
-     * @param callable $callback
      */
-    public function __construct(array $entries, callable $callback, EntryFactory $entryFactory = null)
-    {
-        $this->entries = $entries;
+    public function __construct(
+        private readonly array $entries,
+        callable $callback,
+        private readonly EntryFactory $entryFactory = new NativeEntryFactory()
+    ) {
         $this->callback = $callback;
-        $this->entryFactory = $entryFactory ?? new NativeEntryFactory();
     }
 
     public function __serialize() : array
@@ -63,6 +56,7 @@ final class CallUserFunctionTransformer implements Transformer
         }
 
         $this->entries = $data['entries'];
+        /** @psalm-suppress ImpureMethodCall */
         $this->callback = $data['callback'] instanceof SerializableClosure ? $data['callback']->getClosure() : $data['callback'];
         $this->entryFactory = $data['entry_factory'];
     }

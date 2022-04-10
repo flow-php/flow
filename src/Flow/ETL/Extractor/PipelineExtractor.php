@@ -13,17 +13,10 @@ use Flow\ETL\Rows;
  */
 final class PipelineExtractor implements Extractor
 {
-    private ?int $limit;
-
-    /**
-     * @var Pipeline
-     */
-    private Pipeline $pipeline;
-
-    public function __construct(Pipeline $pipeline, ?int $limit = null)
-    {
-        $this->pipeline = $pipeline;
-        $this->limit = $limit;
+    public function __construct(
+        private readonly Pipeline $pipeline,
+        private readonly ?int $limit = null
+    ) {
     }
 
     /**

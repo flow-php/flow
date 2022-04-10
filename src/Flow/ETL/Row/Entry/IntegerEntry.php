@@ -12,29 +12,19 @@ use Flow\ETL\Row\Schema\Definition;
  * @implements Entry<int, array{name: string, value: integer}>
  * @psalm-immutable
  */
-final class IntegerEntry implements Entry
+final class IntegerEntry implements \Stringable, Entry
 {
-    private string $name;
-
-    private int $value;
-
     /**
      * @throws InvalidArgumentException
      */
-    public function __construct(string $name, int $value)
+    public function __construct(private readonly string $name, private readonly int $value)
     {
         if (!\strlen($name)) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
-
-        $this->name = $name;
-        $this->value = $value;
     }
 
-    /**
-     * @param float|int|string $value
-     */
-    public static function from(string $name, $value) : self
+    public static function from(string $name, float|int|string $value) : self
     {
         if (!\is_numeric($value) || $value != (int) $value) {
             throw InvalidArgumentException::because(\sprintf('Value "%s" can\'t be casted to integer.', $value));

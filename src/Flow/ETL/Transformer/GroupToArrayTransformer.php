@@ -15,14 +15,8 @@ use Flow\ETL\Transformer;
  */
 final class GroupToArrayTransformer implements Transformer
 {
-    private string $groupByEntry;
-
-    private string $newEntryName;
-
-    public function __construct(string $groupByEntry, string $newEntryName)
+    public function __construct(private readonly string $groupByEntry, private readonly string $newEntryName)
     {
-        $this->groupByEntry = $groupByEntry;
-        $this->newEntryName = $newEntryName;
     }
 
     public function __serialize() : array

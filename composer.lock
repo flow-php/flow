@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9f45a83b54f7ec52514c99abf77604a0",
+    "content-hash": "87623a1e47f2ceafa0a129c6c9bd8dd5",
     "packages": [
         {
             "name": "flow-php/array-dot",
@@ -12,16 +12,16 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/array-dot.git",
-                "reference": "ac70f3beb693241c89455712f07b98b957f6766b"
+                "reference": "c0688bb9e2c90f343779bc3b1761e11bd26da55f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/array-dot/zipball/ac70f3beb693241c89455712f07b98b957f6766b",
-                "reference": "ac70f3beb693241c89455712f07b98b957f6766b",
+                "url": "https://api.github.com/repos/flow-php/array-dot/zipball/c0688bb9e2c90f343779bc3b1761e11bd26da55f",
+                "reference": "c0688bb9e2c90f343779bc3b1761e11bd26da55f",
                 "shasum": ""
             },
             "require": {
-                "php": "^7.4 | ^8.0"
+                "php": "~8.1"
             },
             "default-branch": true,
             "type": "library",
@@ -53,7 +53,7 @@
                 "issues": "https://github.com/flow-php/array-dot/issues",
                 "source": "https://github.com/flow-php/array-dot/tree/1.x"
             },
-            "time": "2022-03-24T21:19:03+00:00"
+            "time": "2022-04-10T09:46:31+00:00"
         }
     ],
     "packages-dev": [
@@ -261,38 +261,36 @@
             "time": "2022-01-21T15:50:46+00:00"
         },
         {
-            "name": "opis/closure",
-            "version": "3.6.3",
+            "name": "laravel/serializable-closure",
+            "version": "v1.1.1",
             "source": {
                 "type": "git",
-                "url": "https://github.com/opis/closure.git",
-                "reference": "3d81e4309d2a927abbe66df935f4bb60082805ad"
+                "url": "https://github.com/laravel/serializable-closure.git",
+                "reference": "9e4b005daa20b0c161f3845040046dc9ddc1d74e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opis/closure/zipball/3d81e4309d2a927abbe66df935f4bb60082805ad",
-                "reference": "3d81e4309d2a927abbe66df935f4bb60082805ad",
+                "url": "https://api.github.com/repos/laravel/serializable-closure/zipball/9e4b005daa20b0c161f3845040046dc9ddc1d74e",
+                "reference": "9e4b005daa20b0c161f3845040046dc9ddc1d74e",
                 "shasum": ""
             },
             "require": {
-                "php": "^5.4 || ^7.0 || ^8.0"
+                "php": "^7.3|^8.0"
             },
             "require-dev": {
-                "jeremeamia/superclosure": "^2.0",
-                "phpunit/phpunit": "^4.0 || ^5.0 || ^6.0 || ^7.0 || ^8.0 || ^9.0"
+                "pestphp/pest": "^1.18",
+                "phpstan/phpstan": "^0.12.98",
+                "symfony/var-dumper": "^5.3"
             },
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "3.6.x-dev"
+                    "dev-master": "1.x-dev"
                 }
             },
             "autoload": {
-                "files": [
-                    "functions.php"
-                ],
                 "psr-4": {
-                    "Opis\\Closure\\": "src/"
+                    "Laravel\\SerializableClosure\\": "src/"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -301,51 +299,47 @@
             ],
             "authors": [
                 {
-                    "name": "Marius Sarca",
-                    "email": "marius.sarca@gmail.com"
+                    "name": "Taylor Otwell",
+                    "email": "taylor@laravel.com"
                 },
                 {
-                    "name": "Sorin Sarca",
-                    "email": "sarca_sorin@hotmail.com"
+                    "name": "Nuno Maduro",
+                    "email": "nuno@laravel.com"
                 }
             ],
-            "description": "A library that can be used to serialize closures (anonymous functions) and arbitrary objects.",
-            "homepage": "https://opis.io/closure",
+            "description": "Laravel Serializable Closure provides an easy and secure way to serialize closures in PHP.",
             "keywords": [
-                "anonymous functions",
                 "closure",
-                "function",
-                "serializable",
-                "serialization",
-                "serialize"
+                "laravel",
+                "serializable"
             ],
             "support": {
-                "issues": "https://github.com/opis/closure/issues",
-                "source": "https://github.com/opis/closure/tree/3.6.3"
+                "issues": "https://github.com/laravel/serializable-closure/issues",
+                "source": "https://github.com/laravel/serializable-closure"
             },
-            "time": "2022-01-27T09:35:39+00:00"
+            "time": "2022-02-11T19:23:53+00:00"
         },
         {
             "name": "symfony/deprecation-contracts",
-            "version": "v2.5.0",
+            "version": "v3.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/deprecation-contracts.git",
-                "reference": "6f981ee24cf69ee7ce9736146d1c57c2780598a8"
+                "reference": "26954b3d62a6c5fd0ea8a2a00c0353a14978d05c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/deprecation-contracts/zipball/6f981ee24cf69ee7ce9736146d1c57c2780598a8",
-                "reference": "6f981ee24cf69ee7ce9736146d1c57c2780598a8",
+                "url": "https://api.github.com/repos/symfony/deprecation-contracts/zipball/26954b3d62a6c5fd0ea8a2a00c0353a14978d05c",
+                "reference": "26954b3d62a6c5fd0ea8a2a00c0353a14978d05c",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7.1"
+                "php": ">=8.0.2"
             },
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-main": "2.5-dev"
+                    "dev-main": "3.0-dev"
                 },
                 "thanks": {
                     "name": "symfony/contracts",
@@ -374,7 +368,7 @@
             "description": "A generic function and convention to trigger deprecation notices",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/deprecation-contracts/tree/v2.5.0"
+                "source": "https://github.com/symfony/deprecation-contracts/tree/v3.0.1"
             },
             "funding": [
                 {
@@ -390,7 +384,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-07-12T14:48:14+00:00"
+            "time": "2022-01-02T09:55:41+00:00"
         },
         {
             "name": "symfony/polyfill-ctype",
@@ -800,20 +794,20 @@
         },
         {
             "name": "symfony/translation-contracts",
-            "version": "v2.5.0",
+            "version": "v3.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/translation-contracts.git",
-                "reference": "d28150f0f44ce854e942b671fc2620a98aae1b1e"
+                "reference": "c4183fc3ef0f0510893cbeedc7718fb5cafc9ac9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/translation-contracts/zipball/d28150f0f44ce854e942b671fc2620a98aae1b1e",
-                "reference": "d28150f0f44ce854e942b671fc2620a98aae1b1e",
+                "url": "https://api.github.com/repos/symfony/translation-contracts/zipball/c4183fc3ef0f0510893cbeedc7718fb5cafc9ac9",
+                "reference": "c4183fc3ef0f0510893cbeedc7718fb5cafc9ac9",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7.2.5"
+                "php": ">=8.0.2"
             },
             "suggest": {
                 "symfony/translation-implementation": ""
@@ -821,7 +815,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-main": "2.5-dev"
+                    "dev-main": "3.0-dev"
                 },
                 "thanks": {
                     "name": "symfony/contracts",
@@ -858,7 +852,7 @@
                 "standards"
             ],
             "support": {
-                "source": "https://github.com/symfony/translation-contracts/tree/v2.5.0"
+                "source": "https://github.com/symfony/translation-contracts/tree/v3.0.1"
             },
             "funding": [
                 {
@@ -874,7 +868,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-08-17T14:20:01+00:00"
+            "time": "2022-01-02T09:55:41+00:00"
         },
         {
             "name": "symfony/validator",
@@ -1056,7 +1050,7 @@
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": "^7.4.2 || ~8.0 || ~8.1",
+        "php": "~8.1",
         "ext-mbstring": "*",
         "ext-json": "*"
     },

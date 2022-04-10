@@ -20,7 +20,7 @@ final class ArrayDotRenameTransformer implements Transformer
     /**
      * @var ArrayKeyRename[]
      */
-    private array $arrayKeyRenames;
+    private readonly array $arrayKeyRenames;
 
     public function __construct(ArrayKeyRename ...$arrayKeyRenames)
     {
@@ -49,7 +49,7 @@ final class ArrayDotRenameTransformer implements Transformer
                 $arrayEntry = $row->get($arrayKeyRename->arrayEntry());
 
                 if (!$arrayEntry instanceof Row\Entry\ArrayEntry) {
-                    $entryClass = \get_class($arrayEntry);
+                    $entryClass = $arrayEntry::class;
 
                     throw new RuntimeException("{$arrayEntry->name()} is not ArrayEntry but {$entryClass}");
                 }

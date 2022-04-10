@@ -6,75 +6,45 @@ namespace Flow\ETL\Transformer;
 
 use Flow\ETL\DataFrameFactory;
 use Flow\ETL\Join\Condition;
+use Flow\ETL\Join\Join;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 /**
- * @implements Transformer<array{factory: DataFrameFactory, condition: Condition, type: "left"|"right"|"inner"}>
+ * @implements Transformer<array{factory: DataFrameFactory, condition: Condition, type: Join}>
  * @psalm-immutable
  */
 final class JoinEachRowsTransformer implements Transformer
 {
-    private Condition $condition;
-
-    private DataFrameFactory $factory;
-
-    /**
-     * @var string
-     * @psalm-var "left"|"right"|"inner"
-     */
-    private string $type;
-
-    /**
-     * @param DataFrameFactory $factory
-     * @param Condition $condition
-     * @param string $type
-     * @psalm-param "left"|"right"|"inner" $type
-     */
-    private function __construct(DataFrameFactory $factory, Condition $condition, string $type)
-    {
-        $this->factory = $factory;
-        $this->condition = $condition;
-        $this->type = $type;
+    private function __construct(
+        private readonly DataFrameFactory $factory,
+        private readonly Condition $condition,
+        private readonly Join $type
+    ) {
     }
 
     /**
      * @psalm-pure
-     *
-     * @param DataFrameFactory $right
-     * @param Condition $condition
-     *
-     * @return self
      */
     public static function inner(DataFrameFactory $right, Condition $condition) : self
     {
-        return new self($right, $condition, 'inner');
+        return new self($right, $condition, Join::inner);
     }
 
     /**
      * @psalm-pure
-     *
-     * @param DataFrameFactory $right
-     * @param Condition $condition
-     *
-     * @return self
      */
     public static function left(DataFrameFactory $right, Condition $condition) : self
     {
-        return new self($right, $condition, 'left');
+        return new self($right, $condition, Join::left);
     }
 
     /**
      * @psalm-pure
-     *
-     * @param DataFrameFactory $right
-     * @param Condition $condition
-     *
-     * @return self
      */
     public static function right(DataFrameFactory $right, Condition $condition) : self
     {
-        return new self($right, $condition, 'right');
+        return new self($right, $condition, Join::right);
     }
 
     public function __serialize() : array
@@ -96,22 +66,14 @@ final class JoinEachRowsTransformer implements Transformer
     /**
      * @psalm-suppress ImpureMethodCall
      *
-     * @param Rows $rows
-     *
      * @throws \Flow\ETL\Exception\InvalidArgumentException
-     *
-     * @return Rows
      */
     public function transform(Rows $rows) : Rows
     {
-        switch ($this->type) {
-            case 'left':
-                return $rows->joinLeft($this->factory->from($rows)->fetch(), $this->condition);
-            case 'right':
-                return $rows->joinRight($this->factory->from($rows)->fetch(), $this->condition);
-
-            default:
-                return $rows->joinInner($this->factory->from($rows)->fetch(), $this->condition);
-        }
+        return match ($this->type) {
+            Join::left => $rows->joinLeft($this->factory->from($rows)->fetch(), $this->condition),
+            Join::right => $rows->joinRight($this->factory->from($rows)->fetch(), $this->condition),
+            default => $rows->joinInner($this->factory->from($rows)->fetch(), $this->condition),
+        };
     }
 }

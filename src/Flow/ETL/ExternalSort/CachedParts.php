@@ -10,16 +10,10 @@ use Flow\ETL\Rows;
 final class CachedParts
 {
     /**
-     * @var array<string, \Generator<int, Rows, mixed, void>>
-     */
-    private array $generators;
-
-    /**
      * @param array<string, \Generator<int, Rows, mixed, void>> $generators
      */
-    public function __construct(array $generators)
+    public function __construct(private readonly array $generators)
     {
-        $this->generators = $generators;
     }
 
     /**
@@ -31,11 +25,7 @@ final class CachedParts
     }
 
     /**
-     * @param Sort ...$entries
-     *
      * @throws \Flow\ETL\Exception\InvalidArgumentException
-     *
-     * @return RowsMinHeap
      */
     public function createHeap(Sort ...$entries) : RowsMinHeap
     {
@@ -63,10 +53,6 @@ final class CachedParts
     }
 
     /**
-     * @param RowsMinHeap $heap
-     * @param string $cacheId
-     * @param BufferCache $cache
-     *
      * @throws \Flow\ETL\Exception\InvalidArgumentException
      */
     public function takeNext(RowsMinHeap $heap, string $cacheId, BufferCache $cache) : void

@@ -8,31 +8,29 @@ use Flow\ETL\DSL\From;
 use Flow\ETL\ErrorHandler;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Loader;
 use Flow\ETL\Pipeline;
+use Flow\ETL\Transformer;
 
 /**
  * @internal
  */
 final class ParallelizingPipeline implements Pipeline
 {
-    private Pipeline $nextPipeline;
+    private readonly Pipeline $nextPipeline;
 
-    private int $parallel;
-
-    private Pipeline $pipeline;
-
-    public function __construct(Pipeline $pipeline, int $parallel)
-    {
+    public function __construct(
+        private readonly Pipeline $pipeline,
+        private readonly int $parallel
+    ) {
         if ($parallel < 1) {
             throw new InvalidArgumentException("Parallel value can't be lower than 1.");
         }
 
-        $this->pipeline = $pipeline;
-        $this->parallel = $parallel;
         $this->nextPipeline = $pipeline->cleanCopy();
     }
 
-    public function add(Pipe $pipe) : void
+    public function add(Loader|Transformer $pipe) : void
     {
         $this->nextPipeline->add($pipe);
     }

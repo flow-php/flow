@@ -12,17 +12,8 @@ use Flow\Serializer\Serializable;
  */
 final class ArrayKeyRename implements Serializable
 {
-    private string $arrayEntry;
-
-    private string $newName;
-
-    private string $path;
-
-    public function __construct(string $arrayEntry, string $path, string $newName)
+    public function __construct(private string $arrayEntry, private string $path, private string $newName)
     {
-        $this->arrayEntry = $arrayEntry;
-        $this->path = $path;
-        $this->newName = $newName;
     }
 
     public function __serialize() : array

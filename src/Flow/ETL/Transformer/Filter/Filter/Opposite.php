@@ -13,14 +13,8 @@ use Flow\ETL\Transformer\Filter\Filter;
  */
 final class Opposite implements Filter
 {
-    /**
-     * @var Filter
-     */
-    private Filter $filter;
-
-    public function __construct(Filter $filter)
+    public function __construct(private Filter $filter)
     {
-        $this->filter = $filter;
     }
 
     public function __serialize() : array

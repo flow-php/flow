@@ -17,7 +17,7 @@ final class RenameEntriesTransformer implements Transformer
     /**
      * @var Rename\EntryRename[]
      */
-    private array $entryRenames;
+    private readonly array $entryRenames;
 
     public function __construct(Transformer\Rename\EntryRename ...$entryRenames)
     {
@@ -39,9 +39,7 @@ final class RenameEntriesTransformer implements Transformer
     public function transform(Rows $rows) : Rows
     {
         foreach ($this->entryRenames as $entryRename) {
-            $rows = $rows->map(function (Row $row) use ($entryRename) : Row {
-                return $row->rename($entryRename->from(), $entryRename->to());
-            });
+            $rows = $rows->map(fn (Row $row) : Row => $row->rename($entryRename->from(), $entryRename->to()));
         }
 
         return $rows;

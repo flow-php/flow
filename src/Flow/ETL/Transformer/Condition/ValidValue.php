@@ -9,17 +9,10 @@ use Flow\ETL\Transformer\Condition\ValidValue\Validator;
 
 final class ValidValue implements RowCondition
 {
-    private string $entryName;
-
-    private Validator $validator;
-
-    /**
-     * @param string $entryName
-     */
-    public function __construct(string $entryName, Validator $validator)
-    {
-        $this->entryName = $entryName;
-        $this->validator = $validator;
+    public function __construct(
+        private readonly string $entryName,
+        private readonly Validator $validator
+    ) {
     }
 
     public function isMetFor(Row $row) : bool

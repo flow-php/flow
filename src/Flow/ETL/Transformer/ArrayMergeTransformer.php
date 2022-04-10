@@ -16,20 +16,12 @@ use Flow\ETL\Transformer;
 final class ArrayMergeTransformer implements Transformer
 {
     /**
-     * @var array<string>
-     */
-    private array $arrayEntries;
-
-    private string $newEntryName;
-
-    /**
      * @param array<string> $arrayEntries
-     * @param string $newEntryName
      */
-    public function __construct(array $arrayEntries, string $newEntryName = 'merged')
-    {
-        $this->arrayEntries = $arrayEntries;
-        $this->newEntryName = $newEntryName;
+    public function __construct(
+        private readonly array $arrayEntries,
+        private readonly string $newEntryName = 'merged'
+    ) {
     }
 
     public function __serialize() : array

@@ -16,7 +16,7 @@ final class RowsMinHeap extends \SplMinHeap
     /**
      * @var Sort[]
      */
-    private array $entries;
+    private readonly array $entries;
 
     public function __construct(Sort ...$entries)
     {
@@ -26,15 +26,13 @@ final class RowsMinHeap extends \SplMinHeap
     /**
      * @return CachedRow
      */
-    public function extract()
+    public function extract() : mixed
     {
         return parent::extract();
     }
 
-    /**
-     * @param CachedRow $value
-     */
-    public function insert($value) : void
+    #[\ReturnTypeWillChange]
+    public function insert(mixed $value) : void
     {
         if (!$value instanceof CachedRow) {
             throw new InvalidArgumentException('Value inserted into RowsMinHeap must be an instance of Flow\\ETL\\ExternalSort\\CachedRow');

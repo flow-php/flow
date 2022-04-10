@@ -9,7 +9,7 @@ use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Serializer\Closure;
 use Flow\ETL\Transformer;
-use Opis\Closure\SerializableClosure;
+use Laravel\SerializableClosure\SerializableClosure;
 
 /**
  * @implements Transformer<array{generator: SerializableClosure}>
@@ -47,6 +47,7 @@ final class DynamicEntryTransformer implements Transformer
             throw new RuntimeException('DynamicEntryTransformer is not serializable without "opis/closure" library in your dependencies.');
         }
 
+        /** @psalm-suppress ImpureMethodCall */
         $this->generator = $data['generator']->getClosure();
     }
 
@@ -55,9 +56,7 @@ final class DynamicEntryTransformer implements Transformer
         /**
          * @psalm-var pure-callable(Row) : Row $transformer
          */
-        $transformer = function (Row $row) : Row {
-            return new Row($row->entries()->merge(($this->generator)($row)));
-        };
+        $transformer = fn (Row $row) : Row => new Row($row->entries()->merge(($this->generator)($row)));
 
         return $rows->map($transformer);
     }

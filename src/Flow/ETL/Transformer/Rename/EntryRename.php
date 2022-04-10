@@ -12,14 +12,8 @@ use Flow\Serializer\Serializable;
  */
 final class EntryRename implements Serializable
 {
-    private string $from;
-
-    private string $to;
-
-    public function __construct(string $from, string $to)
+    public function __construct(private string $from, private string $to)
     {
-        $this->from = $from;
-        $this->to = $to;
     }
 
     public function __serialize() : array
@@ -36,17 +30,11 @@ final class EntryRename implements Serializable
         $this->to = $data['to'];
     }
 
-    /**
-     * @return string
-     */
     public function from() : string
     {
         return $this->from;
     }
 
-    /**
-     * @return string
-     */
     public function to() : string
     {
         return $this->to;

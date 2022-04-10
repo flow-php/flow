@@ -12,8 +12,6 @@ interface RowsFactory extends Serializable
 {
     /**
      * @param array<array<mixed>> $data
-     *
-     * @return Rows
      */
     public function create(array $data) : Rows;
 }

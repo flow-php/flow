@@ -13,14 +13,10 @@ use Flow\ETL\Transformer;
  */
 final class TransformerLoader implements Loader
 {
-    private Loader $loader;
-
-    private Transformer $transformer;
-
-    public function __construct(Transformer $transformer, Loader $loader)
-    {
-        $this->transformer = $transformer;
-        $this->loader = $loader;
+    public function __construct(
+        private readonly Transformer $transformer,
+        private readonly Loader $loader
+    ) {
     }
 
     public function __serialize() : array

@@ -8,21 +8,8 @@ use Flow\ETL\Row;
 
 final class EntryValueGreaterThan implements RowCondition
 {
-    private string $entryName;
-
-    /**
-     * @var mixed
-     */
-    private $value;
-
-    /**
-     * @param string $entryName
-     * @param mixed $value
-     */
-    public function __construct(string $entryName, $value)
+    public function __construct(private readonly string $entryName, private readonly mixed $value)
     {
-        $this->entryName = $entryName;
-        $this->value = $value;
     }
 
     public function isMetFor(Row $row) : bool

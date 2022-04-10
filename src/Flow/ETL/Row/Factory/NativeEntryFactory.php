@@ -26,15 +26,12 @@ final class NativeEntryFactory implements EntryFactory
     }
 
     /**
-     * @param string $entryName
      * @param mixed $value
      *
      * @throws InvalidArgumentException
      * @throws \JsonException
-     *
-     * @return Entry
      */
-    public function create(string $entryName, $value) : Entry
+    public function create(string $entryName, mixed $value) : Entry
     {
         if (\is_string($value)) {
             if ($this->isJson($value)) {
@@ -89,7 +86,7 @@ final class NativeEntryFactory implements EntryFactory
             $value = \json_decode($string, true, self::JSON_DEPTH, JSON_THROW_ON_ERROR);
 
             return \is_array($value);
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             return false;
         }
     }

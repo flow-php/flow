@@ -36,9 +36,7 @@ final class ObjectEntryTest extends TestCase
 
         $this->assertEquals(
             $entry,
-            $entry->map(function (\stdClass $object) {
-                return $object;
-            })
+            $entry->map(fn (\stdClass $object) => $object)
         );
     }
 

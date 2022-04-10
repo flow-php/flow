@@ -7,15 +7,14 @@ namespace Flow\ETL\Loader;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Loader;
 use Flow\ETL\Rows;
-use Opis\Closure\SerializableClosure;
+use Flow\ETL\Serializer\Closure;
+use Laravel\SerializableClosure\SerializableClosure;
 
 /**
  * @implements Loader<array{callback: SerializableClosure}>
  */
 final class CallbackLoader implements Loader
 {
-    private static ?bool $isSerializable = null;
-
     /**
      * @phpstan-ignore-next-line
      *
@@ -30,7 +29,7 @@ final class CallbackLoader implements Loader
 
     public function __serialize() : array
     {
-        if (!self::isSerializable()) {
+        if (!Closure::isSerializable()) {
             throw new RuntimeException('CallbackLoader is not serializable without "opis/closure" library in your dependencies.');
         }
 
@@ -41,7 +40,7 @@ final class CallbackLoader implements Loader
 
     public function __unserialize(array $data) : void
     {
-        if (!self::isSerializable()) {
+        if (!Closure::isSerializable()) {
             throw new RuntimeException('CallbackLoader is not serializable without "opis/closure" library in your dependencies.');
         }
 
@@ -51,14 +50,5 @@ final class CallbackLoader implements Loader
     public function load(Rows $rows) : void
     {
         ($this->callback)($rows);
-    }
-
-    private static function isSerializable() : bool
-    {
-        if (self::$isSerializable === null) {
-            self::$isSerializable = \class_exists('Opis\Closure\SerializableClosure');
-        }
-
-        return self::$isSerializable;
     }
 }

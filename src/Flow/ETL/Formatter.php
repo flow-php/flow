@@ -4,5 +4,5 @@ namespace Flow\ETL;
 
 interface Formatter
 {
-    public function format(Rows $rows, int $truncate = 20) : string;
+    public function format(Rows $rows, int|bool $truncate = 20) : string;
 }

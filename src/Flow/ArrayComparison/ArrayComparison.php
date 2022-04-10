@@ -12,8 +12,6 @@ final class ArrayComparison
     /**
      * @param array<mixed> $a
      * @param array<mixed> $b
-     *
-     * @return int
      */
     public function compare(array $a, array $b) : int
     {
@@ -23,8 +21,6 @@ final class ArrayComparison
     /**
      * @param array<mixed> $a
      * @param array<mixed> $b
-     *
-     * @return bool
      */
     public function equals(array $a, array $b) : bool
     {
@@ -34,8 +30,6 @@ final class ArrayComparison
     /**
      * @param mixed $a
      * @param mixed $b
-     *
-     * @return bool
      */
     private function valueEquals($a, $b) : bool
     {

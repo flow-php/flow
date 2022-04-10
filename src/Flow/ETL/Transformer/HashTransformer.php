@@ -16,33 +16,21 @@ use Flow\ETL\Transformer;
  */
 final class HashTransformer implements Transformer
 {
-    private string $algorithm;
-
-    /**
-     * @var array<string>
-     */
-    private array $entries;
-
-    private string $newEntryName;
-
     /**
      * @psalm-suppress ImpureFunctionCall
      *
      * @param array<string> $entries
-     * @param string $algorithm
-     * @param string $newEntryName
      *
      * @throws InvalidArgumentException
      */
-    public function __construct(array $entries, string $algorithm, string $newEntryName = 'hash')
-    {
+    public function __construct(
+        private readonly array $entries,
+        private readonly string $algorithm,
+        private readonly string $newEntryName = 'hash'
+    ) {
         if (!\in_array($algorithm, \hash_algos(), true)) {
             throw new InvalidArgumentException("Unexpected hash algorithm: {$algorithm}");
         }
-
-        $this->algorithm = $algorithm;
-        $this->entries = $entries;
-        $this->newEntryName = $newEntryName;
     }
 
     public function __serialize() : array
@@ -72,7 +60,7 @@ final class HashTransformer implements Transformer
             foreach ($this->entries as $entry) {
                 try {
                     $values[] = $row->entries()->get($entry)->toString();
-                } catch (InvalidArgumentException $e) {
+                } catch (InvalidArgumentException) {
                     // entry not found, ignore
                 }
             }

@@ -359,12 +359,10 @@ final class RowsTest extends TestCase
             )
         );
 
-        $rows = $rows->flatMap(function (Row $row) : array {
-            return [
-                $row->add(new StringEntry('name', $row->valueOf('id') . '-name-01')),
-                $row->add(new StringEntry('name', $row->valueOf('id') . '-name-02')),
-            ];
-        });
+        $rows = $rows->flatMap(fn (Row $row) : array => [
+            $row->add(new StringEntry('name', $row->valueOf('id') . '-name-01')),
+            $row->add(new StringEntry('name', $row->valueOf('id') . '-name-02')),
+        ]);
 
         $this->assertSame(
             [
@@ -566,9 +564,7 @@ final class RowsTest extends TestCase
             $four  = Row::create(new IntegerEntry('number', 4), new StringEntry('name', 'four')),
         );
 
-        $sort = $rows->sort(function (Row $row, Row $nextRow) : int {
-            return $row->valueOf('number') <=> $nextRow->valueOf('number');
-        });
+        $sort = $rows->sort(fn (Row $row, Row $nextRow) : int => $row->valueOf('number') <=> $nextRow->valueOf('number'));
 
         $this->assertEquals(new Rows($one, $two, $three, $four, $five), $sort);
         $this->assertNotEquals($sort, $rows);

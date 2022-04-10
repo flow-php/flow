@@ -13,11 +13,8 @@ use Flow\ETL\Rows;
  */
 final class MemoryLoader implements Loader
 {
-    private Memory $memory;
-
-    public function __construct(Memory $memory)
+    public function __construct(private readonly Memory $memory)
     {
-        $this->memory = $memory;
     }
 
     public function __serialize() : array

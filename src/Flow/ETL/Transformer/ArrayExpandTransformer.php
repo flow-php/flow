@@ -18,17 +18,11 @@ use Flow\ETL\Transformer;
  */
 final class ArrayExpandTransformer implements Transformer
 {
-    private string $arrayEntryName;
-
-    private EntryFactory $entryFactory;
-
-    private string $expandEntryName;
-
-    public function __construct(string $arrayEntryName, string $expandEntryName = 'element', EntryFactory $entryFactory = null)
-    {
-        $this->arrayEntryName = $arrayEntryName;
-        $this->expandEntryName = $expandEntryName;
-        $this->entryFactory = $entryFactory ? $entryFactory : new NativeEntryFactory();
+    public function __construct(
+        private readonly string $arrayEntryName,
+        private readonly string $expandEntryName = 'element',
+        private readonly EntryFactory $entryFactory = new NativeEntryFactory()
+    ) {
     }
 
     public function __serialize() : array
@@ -56,7 +50,7 @@ final class ArrayExpandTransformer implements Transformer
             $arrayEntry = $row->get($this->arrayEntryName);
 
             if (!$arrayEntry instanceof Row\Entry\ArrayEntry) {
-                $entryClass = \get_class($arrayEntry);
+                $entryClass = $arrayEntry::class;
 
                 throw new RuntimeException("{$this->arrayEntryName} is not ArrayEntry but {$entryClass}");
             }
@@ -65,13 +59,11 @@ final class ArrayExpandTransformer implements Transformer
 
             return \array_values(
                 \array_map(
-                    function ($arrayElement) use ($row) : Row {
-                        return new Row(
-                            $row->entries()
-                                ->remove($this->arrayEntryName)
-                                ->merge(new Entries($this->entryFactory->create($this->expandEntryName, $arrayElement)))
-                        );
-                    },
+                    fn ($arrayElement) : Row => new Row(
+                        $row->entries()
+                            ->remove($this->arrayEntryName)
+                            ->merge(new Entries($this->entryFactory->create($this->expandEntryName, $arrayElement)))
+                    ),
                     $array
                 )
             );

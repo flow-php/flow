@@ -14,17 +14,8 @@ use Flow\ETL\Transformer;
  */
 final class AddStampToStringEntryTransformer implements Transformer
 {
-    private string $divider;
-
-    private string $entryName;
-
-    private string $stamp;
-
-    public function __construct(string $entryName, string $stamp, string $divider)
+    public function __construct(private string $entryName, private string $stamp, private string $divider)
     {
-        $this->entryName = $entryName;
-        $this->stamp = $stamp;
-        $this->divider = $divider;
     }
 
     public static function divideBySemicolon(string $entryName, string $stamp) : self

@@ -11,8 +11,6 @@ final class IsAssociativeArray
 {
     /**
      * @param array<mixed> $array
-     *
-     * @return bool
      */
     public function __invoke(array $array) : bool
     {

@@ -34,7 +34,7 @@ final class UnitTest extends TestCase
         $this->assertSame(1.0, Unit::fromKb(1000)->inMb());
         $this->assertSame(2.0, Unit::fromKb(2000)->inMb());
         $this->assertSame(0.0, Unit::fromBytes(128)->inMb());
-        $this->assertSame(2000000, Unit::fromMb(2)->inBytes());
+        $this->assertSame(2_000_000, Unit::fromMb(2)->inBytes());
     }
 
     public function test_memory_diff() : void

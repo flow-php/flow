@@ -24,14 +24,10 @@ use Flow\ETL\Rows;
  */
 final class CacheExternalSort implements ExternalSort
 {
-    private Cache $cache;
-
-    private string $id;
-
-    public function __construct(string $id, Cache $cache)
-    {
-        $this->cache = $cache;
-        $this->id = $id;
+    public function __construct(
+        private readonly string $id,
+        private readonly Cache $cache
+    ) {
     }
 
     public function sortBy(Sort ...$entries) : Extractor

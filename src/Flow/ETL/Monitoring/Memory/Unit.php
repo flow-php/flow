@@ -8,11 +8,8 @@ use Flow\ETL\Exception\InvalidArgumentException;
 
 final class Unit
 {
-    private int $bytes;
-
-    private function __construct(int $bytes)
+    private function __construct(private readonly int $bytes)
     {
-        $this->bytes = $bytes;
     }
 
     public static function fromBytes(int $bytes) : self
@@ -36,11 +33,7 @@ final class Unit
     }
 
     /**
-     * @param string $memoryString
-     *
      * @throws InvalidArgumentException
-     *
-     * @return self
      */
     public static function fromString(string $memoryString) : self
     {

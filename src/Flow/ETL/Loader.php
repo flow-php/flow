@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
-use Flow\ETL\Pipeline\Pipe;
+use Flow\Serializer\Serializable;
 
 /**
  * @template T
- * @extends Pipe<T>
+ * @extends Serializable<T>
  */
-interface Loader extends Pipe
+interface Loader extends Serializable
 {
     public function load(Rows $rows) : void;
 }

@@ -11,13 +11,10 @@ use Flow\ETL\Row\Entry;
 
 final class Sum implements Aggregator
 {
-    private string $entry;
-
     private float $sum;
 
-    public function __construct(string $entry)
+    public function __construct(private readonly string $entry)
     {
-        $this->entry = $entry;
         $this->sum = 0;
     }
 
@@ -30,7 +27,7 @@ final class Sum implements Aggregator
             if (\is_numeric($value)) {
                 $this->sum += $value;
             }
-        } catch (InvalidArgumentException $e) {
+        } catch (InvalidArgumentException) {
             // do nothing?
         }
     }

@@ -7,78 +7,47 @@ namespace Flow\ETL\Transformer;
 use Flow\ETL\DataFrame;
 use Flow\ETL\Flow;
 use Flow\ETL\Join\Condition;
+use Flow\ETL\Join\Join;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 /**
- * @implements Transformer<array{data_frame: ?DataFrame, condition: Condition, type: "left"|"right"|"inner", rows: ?Rows}>
+ * @implements Transformer<array{data_frame: ?DataFrame, condition: Condition, type: Join, rows: ?Rows}>
  * @psalm-immutable
  */
 final class JoinRowsTransformer implements Transformer
 {
-    private Condition $condition;
+    private ?Rows $rows = null;
 
-    private DataFrame $dataFrame;
-
-    private ?Rows $rows;
-
-    /**
-     * @var string
-     * @psalm-var "left"|"right"|"inner"
-     */
-    private string $type;
-
-    /**
-     * @param DataFrame $dataFrame
-     * @param Condition $condition
-     * @param string $type
-     * @psalm-param "left"|"right"|"inner" $type
-     */
-    private function __construct(DataFrame $dataFrame, Condition $condition, string $type)
-    {
-        $this->dataFrame = $dataFrame;
-        $this->rows = null;
-        $this->condition = $condition;
-        $this->type = $type;
+    private function __construct(
+        private readonly DataFrame $dataFrame,
+        private readonly Condition $condition,
+        private readonly Join $type
+    ) {
     }
 
     /**
      * @psalm-pure
-     *
-     * @param DataFrame $right
-     * @param Condition $condition
-     *
-     * @return self
      */
     public static function inner(DataFrame $right, Condition $condition) : self
     {
-        return new self($right, $condition, 'inner');
+        return new self($right, $condition, Join::inner);
     }
 
     /**
      * @psalm-pure
-     *
-     * @param DataFrame $right
-     * @param Condition $condition
-     *
-     * @return self
      */
     public static function left(DataFrame $right, Condition $condition) : self
     {
-        return new self($right, $condition, 'left');
+        return new self($right, $condition, Join::left);
     }
 
     /**
      * @psalm-pure
-     *
-     * @param DataFrame $right
-     * @param Condition $condition
-     *
-     * @return self
      */
     public static function right(DataFrame $right, Condition $condition) : self
     {
-        return new self($right, $condition, 'right');
+        return new self($right, $condition, Join::right);
     }
 
     public function __serialize() : array
@@ -104,15 +73,11 @@ final class JoinRowsTransformer implements Transformer
 
     public function transform(Rows $rows) : Rows
     {
-        switch ($this->type) {
-            case 'left':
-                return $rows->joinLeft($this->rows(), $this->condition);
-            case 'right':
-                return $rows->joinRight($this->rows(), $this->condition);
-
-            default:
-                return $rows->joinInner($this->rows(), $this->condition);
-        }
+        return match ($this->type) {
+            Join::left => $rows->joinLeft($this->rows(), $this->condition),
+            Join::right => $rows->joinRight($this->rows(), $this->condition),
+            default => $rows->joinInner($this->rows(), $this->condition),
+        };
     }
 
     /**

@@ -14,25 +14,22 @@ use Flow\ETL\Row\Schema\Definition;
  * @implements Entry<array<Entries>, array{name: string, entries: array<Entries>}>
  * @psalm-immutable
  */
-final class CollectionEntry implements Entry
+final class CollectionEntry implements \Stringable, Entry
 {
     /**
      * @var array<Entries>
      */
-    private array $entries;
-
-    private string $name;
+    private readonly array $entries;
 
     /**
      * @throws InvalidArgumentException
      */
-    public function __construct(string $name, Entries ...$entries)
+    public function __construct(private readonly string $name, Entries ...$entries)
     {
         if (!\strlen($name)) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        $this->name = $name;
         $this->entries = $entries;
     }
 
@@ -102,7 +99,7 @@ final class CollectionEntry implements Entry
             $array[] = $entriesArray;
         }
 
-        return (string) \json_encode($array);
+        return \json_encode($array, JSON_THROW_ON_ERROR);
     }
 
     public function value() : array

@@ -16,11 +16,8 @@ use Flow\ETL\Transformer;
  */
 final class ArrayReverseTransformer implements Transformer
 {
-    private string $arrayEntryName;
-
-    public function __construct(string $arrayEntry)
+    public function __construct(private readonly string $arrayEntryName)
     {
-        $this->arrayEntryName = $arrayEntry;
     }
 
     public function __serialize() : array

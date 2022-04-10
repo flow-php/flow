@@ -26,7 +26,7 @@ final class AnyToArrayCaster implements ValueConverter
      *
      * @return array<mixed>
      */
-    public function convert($value) : array
+    public function convert(mixed $value) : array
     {
         return (array) $value;
     }

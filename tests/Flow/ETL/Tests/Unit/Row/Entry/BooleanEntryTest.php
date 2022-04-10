@@ -56,9 +56,7 @@ final class BooleanEntryTest extends TestCase
 
         $this->assertEquals(
             $entry,
-            $entry->map(function (bool $value) {
-                return $value;
-            })
+            $entry->map(fn (bool $value) => $value)
         );
     }
 
@@ -85,9 +83,6 @@ final class BooleanEntryTest extends TestCase
         $this->assertTrue($newEntry->value());
     }
 
-    /**
-     * @return \Generator
-     */
     public function valid_false_entries() : \Generator
     {
         yield [false];
@@ -97,9 +92,6 @@ final class BooleanEntryTest extends TestCase
         yield ['no'];
     }
 
-    /**
-     * @return \Generator
-     */
     public function valid_true_entries() : \Generator
     {
         yield [true];

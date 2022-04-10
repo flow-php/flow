@@ -15,17 +15,8 @@ use Flow\ETL\Transformer;
  */
 final class StaticEntryTransformer implements Transformer
 {
-    /**
-     * @var EntrY
-     */
-    private Entry $entry;
-
-    /**
-     * @param Entry $entry
-     */
-    public function __construct(Entry $entry)
+    public function __construct(private readonly Entry $entry)
     {
-        $this->entry = $entry;
     }
 
     public function __serialize() : array

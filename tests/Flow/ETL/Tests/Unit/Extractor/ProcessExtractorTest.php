@@ -27,7 +27,7 @@ final class ProcessExtractorTest extends TestCase
         $data = [];
 
         foreach ($extractor->extract() as $rowsData) {
-            $data  = \array_merge($data, $rowsData->toArray());
+            $data  = [...$data, ...$rowsData->toArray()];
         }
 
         $this->assertSame(

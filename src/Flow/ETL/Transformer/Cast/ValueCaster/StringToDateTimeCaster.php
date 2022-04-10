@@ -13,10 +13,6 @@ use Flow\ETL\Row\ValueConverter;
  */
 final class StringToDateTimeCaster implements ValueConverter
 {
-    private ?string $timeZone;
-
-    private ?string $toTimeZone;
-
     /**
      * $timezone - this value should be used for datetime values that does not come with explicit tz to avoid using system default.
      * For example when the datetime is "2020-01-01 00:00:00" and we know that it's utc, then $timeZone should be set to 'UTC'.
@@ -29,10 +25,10 @@ final class StringToDateTimeCaster implements ValueConverter
      * @param null|string $timeZone
      * @param null|string $toTimeZone
      */
-    public function __construct(?string $timeZone = null, ?string $toTimeZone = null)
-    {
-        $this->timeZone = $timeZone;
-        $this->toTimeZone = $toTimeZone;
+    public function __construct(
+        private readonly ?string $timeZone = null,
+        private readonly ?string $toTimeZone = null
+    ) {
     }
 
     public function __serialize() : array
@@ -49,7 +45,7 @@ final class StringToDateTimeCaster implements ValueConverter
         $this->toTimeZone = $data['to_time_zone'];
     }
 
-    public function convert($value) : \DateTimeImmutable
+    public function convert(mixed $value) : \DateTimeImmutable
     {
         if (!\is_string($value)) {
             throw new InvalidArgumentException('Only string can be casted to DateTime, got ' . \gettype($value));

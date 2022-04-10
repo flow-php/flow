@@ -9,15 +9,8 @@ use Flow\ETL\Rows;
 
 final class SchemaValidationException extends RuntimeException
 {
-    private Rows $rows;
-
-    private Schema $schema;
-
-    public function __construct(Schema $schema, Rows $rows)
+    public function __construct(private readonly Schema $schema, private readonly Rows $rows)
     {
-        $this->schema = $schema;
-        $this->rows = $rows;
-
         parent::__construct('Row does not match schema.');
     }
 
@@ -26,9 +19,6 @@ final class SchemaValidationException extends RuntimeException
         return $this->rows;
     }
 
-    /**
-     * @return Schema
-     */
     public function schema() : Schema
     {
         return $this->schema;

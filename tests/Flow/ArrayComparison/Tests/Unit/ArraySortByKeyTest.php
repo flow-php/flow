@@ -117,8 +117,8 @@ final class ArraySortByKeyTest extends TestCase
         // serialize to JSON to be sure that array is sorted exactly as expected
 
         $this->assertEquals(
-            \json_encode($sorted),
-            \json_encode((new ArraySortByKey)($origin)),
+            \json_encode($sorted, JSON_THROW_ON_ERROR),
+            \json_encode((new ArraySortByKey)($origin), JSON_THROW_ON_ERROR),
         );
     }
 }

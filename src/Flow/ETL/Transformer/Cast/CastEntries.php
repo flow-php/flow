@@ -14,25 +14,11 @@ use Flow\ETL\Row\RowConverter;
  */
 class CastEntries implements RowConverter
 {
-    private EntryConverter $caster;
-
-    /**
-     * @var array<string>
-     */
-    private array $entryNames;
-
-    private bool $nullable;
-
     /**
      * @param array<string> $entryNames
-     * @param EntryConverter $caster
-     * @param bool $nullable
      */
-    public function __construct(array $entryNames, EntryConverter $caster, bool $nullable = false)
+    public function __construct(private array $entryNames, private EntryConverter $caster, private bool $nullable = false)
     {
-        $this->entryNames = $entryNames;
-        $this->nullable = $nullable;
-        $this->caster = $caster;
     }
 
     public function __serialize() : array

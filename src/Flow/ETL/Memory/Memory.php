@@ -13,8 +13,6 @@ use Flow\Serializer\Serializable;
 interface Memory extends Serializable
 {
     /**
-     * @param int $size
-     *
      * @return array<self>
      */
     public function chunks(int $size) : array;

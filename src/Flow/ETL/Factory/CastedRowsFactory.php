@@ -17,13 +17,12 @@ final class CastedRowsFactory implements RowsFactory
     /**
      * @var array<RowConverter>
      */
-    private array $castEntries;
+    private readonly array $castEntries;
 
-    private RowsFactory $factory;
-
-    public function __construct(RowsFactory $factory, RowConverter ...$castEntries)
-    {
-        $this->factory = $factory;
+    public function __construct(
+        private readonly RowsFactory $factory,
+        RowConverter ...$castEntries
+    ) {
         $this->castEntries = $castEntries;
     }
 
@@ -43,8 +42,6 @@ final class CastedRowsFactory implements RowsFactory
 
     /**
      * @param array<array<mixed>> $data
-     *
-     * @return Rows
      */
     public function create(array $data) : Rows
     {

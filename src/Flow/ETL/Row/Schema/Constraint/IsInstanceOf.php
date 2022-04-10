@@ -13,16 +13,10 @@ use Flow\ETL\Row\Schema\Constraint;
 final class IsInstanceOf implements Constraint
 {
     /**
-     * @var class-string
-     */
-    private string $class;
-
-    /**
      * @param class-string $class
      */
-    public function __construct(string $class)
+    public function __construct(private readonly string $class)
     {
-        $this->class = $class;
     }
 
     public function __serialize() : array

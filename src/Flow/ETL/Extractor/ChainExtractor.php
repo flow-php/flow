@@ -14,7 +14,7 @@ final class ChainExtractor implements Extractor
     /**
      * @var array<Extractor>
      */
-    private array $extractors;
+    private readonly array $extractors;
 
     public function __construct(Extractor ...$extractors)
     {

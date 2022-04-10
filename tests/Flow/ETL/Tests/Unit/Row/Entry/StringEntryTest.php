@@ -53,9 +53,7 @@ final class StringEntryTest extends TestCase
 
         $this->assertEquals(
             $entry,
-            $entry->map(function (string $value) {
-                return $value;
-            })
+            $entry->map(fn (string $value) => $value)
         );
     }
 

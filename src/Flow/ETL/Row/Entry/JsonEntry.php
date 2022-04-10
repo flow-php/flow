@@ -13,46 +13,31 @@ use Flow\ETL\Row\Schema\Definition;
  * @implements Entry<string, array{name: string, value: array<mixed>, object: boolean}>
  * @psalm-immutable
  */
-final class JsonEntry implements Entry
+final class JsonEntry implements \Stringable, Entry
 {
-    private string $name;
-
     private bool $object;
-
-    /**
-     * @var array<mixed>
-     */
-    private array $value;
 
     /**
      * JsonEntry constructor.
      *
-     * @param string $name
      * @param array<mixed> $value
      *
      * @throws InvalidArgumentException
      */
-    public function __construct(string $name, array $value)
+    public function __construct(private readonly string $name, private readonly array $value)
     {
         if (!\strlen($name)) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        $this->name = $name;
-        $this->value = $value;
         $this->object = false;
     }
 
     /**
      * @psalm-pure
      *
-     * @param string $name
-     * @param string $json
-     *
      * @throws InvalidArgumentException
      * @throws \JsonException
-     *
-     * @return static
      */
     public static function fromJsonString(string $name, string $json) : self
     {
@@ -82,12 +67,9 @@ final class JsonEntry implements Entry
     /**
      * @psalm-pure
      *
-     * @param string $name
      * @param array<mixed> $value
      *
      * @throws InvalidArgumentException
-     *
-     * @return JsonEntry
      */
     public static function object(string $name, array $value) : self
     {

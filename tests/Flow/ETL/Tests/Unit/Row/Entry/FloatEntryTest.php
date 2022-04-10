@@ -9,9 +9,6 @@ use PHPUnit\Framework\TestCase;
 
 final class FloatEntryTest extends TestCase
 {
-    /**
-     * @return \Generator
-     */
     public function invalid_entries() : \Generator
     {
         yield ['random_value'];
@@ -56,9 +53,7 @@ final class FloatEntryTest extends TestCase
 
         $this->assertEquals(
             $entry,
-            $entry->map(function (float $float) {
-                return $float;
-            })
+            $entry->map(fn (float $float) => $float)
         );
     }
 
@@ -99,9 +94,6 @@ final class FloatEntryTest extends TestCase
         $this->assertTrue($string->isEqual($unserialized));
     }
 
-    /**
-     * @return \Generator
-     */
     public function valid_float_entries() : \Generator
     {
         yield [100];

@@ -16,7 +16,7 @@ final class ConfigurationTest extends IntegrationTestCase
 
         $config = new Configuration(0);
 
-        $this->assertFalse($config->isLessThan(Unit::fromGb(1000000)));
+        $this->assertFalse($config->isLessThan(Unit::fromGb(1_000_000)));
     }
 
     public function test_less_than_for_set_memory() : void
@@ -25,7 +25,7 @@ final class ConfigurationTest extends IntegrationTestCase
 
         $config = new Configuration(0);
 
-        $this->assertTrue($config->isLessThan(Unit::fromGb(1000000)));
+        $this->assertTrue($config->isLessThan(Unit::fromGb(1_000_000)));
         $this->assertFalse($config->isLessThan(Unit::fromGb(1)));
         $this->assertFalse($config->isLessThan(Unit::fromMb(100)));
     }
@@ -85,6 +85,6 @@ final class ConfigurationTest extends IntegrationTestCase
 
         $config = new Configuration(0);
 
-        $this->assertTrue($config->isConsumptionBelow(Unit::fromGb(1000000), 10));
+        $this->assertTrue($config->isConsumptionBelow(Unit::fromGb(1_000_000), 10));
     }
 }

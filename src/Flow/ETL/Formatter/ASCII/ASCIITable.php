@@ -33,28 +33,32 @@ final class ASCIITable
      * This is the function that you will call to make the table. You must pass it at least the first variable.
      *
      * @param array<int, array<string, mixed>> $array A multi-dimensional array containing the data you want to build a table from
-     *
-     * @return string
      */
-    public function makeTable(array $array, int $truncate = 20) : string
+    public function makeTable(array $array, int|bool $truncate = 20) : string
     {
-        $autoAlignCells = true;
-
         // First things first lets get the variable ready
         $table = '';
         $this->colWidths = [];
         $this->colTypes = [];
 
+        if ($truncate === false) {
+            $truncate = 0;
+        }
+
+        if ($truncate === true) {
+            $truncate = 20;
+        }
+
         // Modify the table to support any line breaks that might exist
         $modifiedArray = [];
 
-        foreach ($array as $row => $rowData) {
+        foreach ($array as $rowData) {
             // This will break the cells up on line breaks and store them in $raw_array with the longest value for that column in $longest_cell
             $rowArray = [];
             $longestCell = 1;
 
             foreach ($rowData as $cell => $cellValue) {
-                $cellValue = \explode("\n", $cellValue);
+                $cellValue = \explode("\n", (string) $cellValue);
                 $rowArray[$cell] = $cellValue;
                 $longestCell = \max($longestCell, \count($cellValue));
             }
@@ -163,7 +167,7 @@ final class ASCIITable
         // If we have some array data loop through each row, then through each cell
         if (isset($array[0])) {
             foreach (\array_keys($array[0]) as $col) {
-                $length = \max(\max(\array_map([$this, 'len'], $this->arrCol($array, $col))), $this->len($col));
+                $length = \max(\max(\array_map([$this, 'len'], $this->arrCol($array, $col))), self::len($col));
                 $this->colWidths[$col] = ($truncate === 0)
                     ? $length
                     : \min($length, $truncate);

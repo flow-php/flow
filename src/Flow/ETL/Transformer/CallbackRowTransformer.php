@@ -9,7 +9,7 @@ use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Serializer\Closure;
 use Flow\ETL\Transformer;
-use Opis\Closure\SerializableClosure;
+use Laravel\SerializableClosure\SerializableClosure;
 
 /**
  * @implements Transformer<array{callable: SerializableClosure}>
@@ -50,6 +50,7 @@ final class CallbackRowTransformer implements Transformer
             throw new RuntimeException('CallbackRowTransformer is not serializable without "opis/closure" library in your dependencies.');
         }
 
+        /** @psalm-suppress ImpureMethodCall */
         $this->callable = $data['callable']->getClosure();
     }
 

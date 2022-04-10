@@ -23,8 +23,6 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
     private array $entries;
 
     /**
-     * @param Entry ...$entries
-     *
      * @throws InvalidArgumentException
      */
     public function __construct(Entry ...$entries)
@@ -53,8 +51,6 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
     }
 
     /**
-     * @param Entry ...$entries
-     *
      * @throws InvalidArgumentException
      *
      * @return $this
@@ -114,11 +110,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
     }
 
     /**
-     * @param string $name
-     *
      * @throws InvalidArgumentException
-     *
-     * @return Entry
      */
     public function get(string $name) : Entry
     {
@@ -223,8 +215,6 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
      * @param array-key $offset
      *
      * @throws InvalidArgumentException
-     *
-     * @return bool
      */
     public function offsetExists($offset) : bool
     {
@@ -239,8 +229,6 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
      * @param array-key $offset
      *
      * @throws InvalidArgumentException
-     *
-     * @return Entry
      */
     public function offsetGet($offset) : Entry
     {
@@ -255,7 +243,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
         throw new InvalidArgumentException("Entry {$offset} does not exists.");
     }
 
-    public function offsetSet($offset, $value) : self
+    public function offsetSet(mixed $offset, mixed $value) : void
     {
         throw new RuntimeException('In order to add new rows use Entries::add(Entry $entry) : self');
     }
@@ -265,10 +253,9 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
      *
      * @throws InvalidArgumentException
      *
-     * @return Entries
      * @psalm-suppress ImplementedReturnTypeMismatch
      */
-    public function offsetUnset($offset) : self
+    public function offsetUnset(mixed $offset) : void
     {
         throw new RuntimeException('In order to add new rows use Entries::remove(string $name) : self');
     }
@@ -306,8 +293,6 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
     }
 
     /**
-     * @param Entry ...$entries
-     *
      * @return $this
      */
     public function set(Entry ...$entries) : self
@@ -336,18 +321,12 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
      */
     public function toArray() : array
     {
-        /** @phpstan-ignore-next-line PHPStan knows that array_combine can also return false which is not going to happen here */
         return \array_combine(
             $this->map(fn (Entry $entry) => $entry->name()),
             $this->map(fn (Entry $entry) => $entry->value())
         );
     }
 
-    /**
-     * @param string $name
-     *
-     * @return null|Entry
-     */
     private function find(string $name) : ?Entry
     {
         if ($this->has($name)) {
@@ -364,8 +343,6 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
      * @psalm-pure
      *
      * @param array<string, Entry> $entries
-     *
-     * @return self
      */
     private static function recreate(array $entries) : self
     {

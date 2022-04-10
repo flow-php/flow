@@ -13,11 +13,8 @@ final class Count implements Aggregator
 {
     private int $count;
 
-    private string $entry;
-
-    public function __construct(string $entry)
+    public function __construct(private readonly string $entry)
     {
-        $this->entry = $entry;
         $this->count = 0;
     }
 
@@ -26,7 +23,7 @@ final class Count implements Aggregator
         try {
             $row->valueOf($this->entry);
             $this->count += 1;
-        } catch (InvalidArgumentException $e) {
+        } catch (InvalidArgumentException) {
             // do nothing?
         }
     }

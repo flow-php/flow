@@ -9,14 +9,10 @@ use Flow\ETL\Row;
 
 final class ArrayDotExists implements RowCondition
 {
-    private string $arrayEntryName;
-
-    private string $path;
-
-    public function __construct(string $arrayEntryName, string $path)
-    {
-        $this->arrayEntryName = $arrayEntryName;
-        $this->path = $path;
+    public function __construct(
+        private readonly string $arrayEntryName,
+        private readonly string $path
+    ) {
     }
 
     public function isMetFor(Row $row) : bool

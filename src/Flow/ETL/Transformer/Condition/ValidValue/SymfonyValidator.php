@@ -9,30 +9,24 @@ use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\Validation;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-if (!\class_exists('Symfony\Component\Validator\Validation')) {
+if (!\class_exists(\Symfony\Component\Validator\Validation::class)) {
     throw new RuntimeException("Symfony\Component\Validator\Validation class not found, please add symfony/validator dependency to the project first.");
 }
 
 final class SymfonyValidator implements Validator
 {
-    /**
-     * @var array<Constraint>
-     */
-    private array $constraints;
-
-    private ValidatorInterface $validator;
+    private readonly ValidatorInterface $validator;
 
     /**
      * @param array<Constraint> $constraints
      * @param null|ValidatorInterface $validator
      */
-    public function __construct(array $constraints = [], ValidatorInterface $validator = null)
+    public function __construct(private readonly array $constraints = [], ValidatorInterface $validator = null)
     {
-        $this->constraints = $constraints;
-        $this->validator = $validator ? $validator : Validation::createValidator();
+        $this->validator = $validator ?: Validation::createValidator();
     }
 
-    public function isValid($value) : bool
+    public function isValid(mixed $value) : bool
     {
         return $this->validator->validate($value, $this->constraints)->count() === 0;
     }

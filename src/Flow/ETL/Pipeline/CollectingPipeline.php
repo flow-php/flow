@@ -7,25 +7,24 @@ namespace Flow\ETL\Pipeline;
 use Flow\ETL\DSL\From;
 use Flow\ETL\ErrorHandler;
 use Flow\ETL\Extractor;
+use Flow\ETL\Loader;
 use Flow\ETL\Pipeline;
 use Flow\ETL\Rows;
+use Flow\ETL\Transformer;
 
 /**
  * @internal
  */
 final class CollectingPipeline implements Pipeline
 {
-    private Pipeline $nextPipeline;
+    private readonly Pipeline $nextPipeline;
 
-    private Pipeline $pipeline;
-
-    public function __construct(Pipeline $pipeline)
+    public function __construct(private readonly Pipeline $pipeline)
     {
-        $this->pipeline = $pipeline;
         $this->nextPipeline = $pipeline->cleanCopy();
     }
 
-    public function add(Pipe $pipe) : void
+    public function add(Loader|Transformer $pipe) : void
     {
         $this->nextPipeline->add($pipe);
     }

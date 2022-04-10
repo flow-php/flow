@@ -66,14 +66,14 @@ final class JsonObjectEntryTest extends TestCase
     {
         $item = ['item-id' => 1, 'name' => 'one'];
         $entry = (JsonEntry::object('item', $item))->map(function (string $value) {
-            $jsonValue = \json_decode($value, true);
+            $jsonValue = \json_decode($value, true, 512, JSON_THROW_ON_ERROR);
             \array_walk($jsonValue, function (&$v) : void {
                 if (\is_string($v)) {
                     $v = \mb_strtoupper($v);
                 }
             });
 
-            return \json_encode($jsonValue);
+            return \json_encode($jsonValue, JSON_THROW_ON_ERROR);
         });
 
         $this->assertEquals(

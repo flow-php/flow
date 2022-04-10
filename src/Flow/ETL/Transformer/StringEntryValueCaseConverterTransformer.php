@@ -18,16 +18,15 @@ final class StringEntryValueCaseConverterTransformer implements Transformer
 
     private const CASE_UPPER = 'upper';
 
-    private string $case;
-
     /**
      * @var string[]
      */
-    private array $entryNames;
+    private readonly array $entryNames;
 
-    private function __construct(string $case, string ...$entryNames)
-    {
-        $this->case = $case;
+    private function __construct(
+        private readonly string $case,
+        string ...$entryNames
+    ) {
         $this->entryNames = $entryNames;
     }
 

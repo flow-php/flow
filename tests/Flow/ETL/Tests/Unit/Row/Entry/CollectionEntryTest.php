@@ -66,9 +66,7 @@ final class CollectionEntryTest extends TestCase
 
         $this->assertEquals(
             $entry,
-            $entry->map(function (array $entries) {
-                return $entries;
-            })
+            $entry->map(fn (array $entries) => $entries)
         );
     }
 

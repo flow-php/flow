@@ -13,13 +13,10 @@ final class Average implements Aggregator
 {
     private int $count;
 
-    private string $entry;
-
     private float $sum;
 
-    public function __construct(string $entry)
+    public function __construct(private readonly string $entry)
     {
-        $this->entry = $entry;
         $this->count = 0;
         $this->sum = 0;
     }
@@ -34,7 +31,7 @@ final class Average implements Aggregator
                 $this->sum += $value;
                 $this->count++;
             }
-        } catch (InvalidArgumentException $e) {
+        } catch (InvalidArgumentException) {
             // do nothing?
         }
     }

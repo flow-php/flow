@@ -110,7 +110,7 @@ final class JsonEntryTest extends TestCase
             ['item-id' => 3, 'name' => 'three'],
         ];
         $entry = (new JsonEntry('items', $items))->map(function (string $value) {
-            $trimValue = \json_decode($value, true);
+            $trimValue = \json_decode($value, true, 512, JSON_THROW_ON_ERROR);
 
             \array_walk_recursive($trimValue, function (&$v) : void {
                 if (\is_string($v)) {
@@ -118,7 +118,7 @@ final class JsonEntryTest extends TestCase
                 }
             });
 
-            return \json_encode($trimValue);
+            return \json_encode($trimValue, JSON_THROW_ON_ERROR);
         });
 
         $this->assertEquals(

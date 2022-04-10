@@ -11,13 +11,10 @@ use Flow\ETL\Row\Entry;
 
 final class Max implements Aggregator
 {
-    private string $entry;
-
     private ?float $max;
 
-    public function __construct(string $entry)
+    public function __construct(private readonly string $entry)
     {
-        $this->entry = $entry;
         $this->max = null;
     }
 
@@ -36,7 +33,7 @@ final class Max implements Aggregator
                     $this->max = \max($this->max, (float) $value);
                 }
             }
-        } catch (InvalidArgumentException $e) {
+        } catch (InvalidArgumentException) {
             // do nothing?
         }
     }

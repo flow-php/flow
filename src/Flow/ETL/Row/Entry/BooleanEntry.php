@@ -12,29 +12,19 @@ use Flow\ETL\Row\Schema\Definition;
  * @implements Entry<bool, array{name: string, value: bool}>
  * @psalm-immutable
  */
-final class BooleanEntry implements Entry
+final class BooleanEntry implements \Stringable, Entry
 {
-    private string $name;
-
-    private bool $value;
-
     /**
      * @throws InvalidArgumentException
      */
-    public function __construct(string $name, bool $value)
+    public function __construct(private readonly string $name, private readonly bool $value)
     {
         if (!\strlen($name)) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
-
-        $this->name = $name;
-        $this->value = $value;
     }
 
-    /**
-     * @param bool|int|string $value
-     */
-    public static function from(string $name, $value) : self
+    public static function from(string $name, bool|int|string $value) : self
     {
         if (\is_bool($value)) {
             return new self($name, $value);

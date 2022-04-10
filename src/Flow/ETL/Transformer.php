@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
-use Flow\ETL\Pipeline\Pipe;
+use Flow\Serializer\Serializable;
 
 /**
  * @template T
- * @extends Pipe<T>
+ * @extends Serializable<T>
  * @psalm-immutable
  */
-interface Transformer extends Pipe
+interface Transformer extends Serializable
 {
     public function transform(Rows $rows) : Rows;
 }

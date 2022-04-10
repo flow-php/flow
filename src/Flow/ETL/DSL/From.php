@@ -17,20 +17,14 @@ class From
 {
     /**
      * @param array<array<string, mixed>> $array
-     * @param int $batch_size
+     * @param int<1, max> $batch_size
      * @param string $entry_row_name
      */
-    final public static function array(array $array, int $batch_size = 100, $entry_row_name = 'row') : Extractor
+    final public static function array(array $array, int $batch_size = 100, string $entry_row_name = 'row') : Extractor
     {
         return new MemoryExtractor(new ArrayMemory($array), $batch_size, $entry_row_name);
     }
 
-    /**
-     * @param Extractor $extractor
-     * @param int $maxRowsSize
-     *
-     * @return Extractor
-     */
     final public static function buffer(Extractor $extractor, int $maxRowsSize) : Extractor
     {
         return new Extractor\BufferExtractor($extractor, $maxRowsSize);
@@ -51,6 +45,13 @@ class From
         return new Extractor\ChunkExtractor($extractor, $chunkSize);
     }
 
+    /**
+     * @param Memory $memory
+     * @param int<1, max> $chunkSize
+     * @param string $rowEntryName
+     *
+     * @return Extractor
+     */
     final public static function memory(Memory $memory, int $chunkSize = 100, string $rowEntryName = 'row') : Extractor
     {
         return new MemoryExtractor($memory, $chunkSize, $rowEntryName);
@@ -61,11 +62,6 @@ class From
         return new Extractor\PipelineExtractor($pipeline, $limit);
     }
 
-    /**
-     * @param Rows ...$rows
-     *
-     * @return Extractor
-     */
     final public static function rows(Rows ...$rows) : Extractor
     {
         return new ProcessExtractor(...$rows);

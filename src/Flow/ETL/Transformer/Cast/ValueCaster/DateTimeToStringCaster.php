@@ -13,11 +13,8 @@ use Flow\ETL\Row\ValueConverter;
  */
 final class DateTimeToStringCaster implements ValueConverter
 {
-    private string $format;
-
-    public function __construct(string $format = \DateTimeInterface::ATOM)
+    public function __construct(private string $format = \DateTimeInterface::ATOM)
     {
-        $this->format = $format;
     }
 
     public function __serialize() : array
@@ -32,7 +29,7 @@ final class DateTimeToStringCaster implements ValueConverter
         $this->format = $data['format'];
     }
 
-    public function convert($value) : string
+    public function convert(mixed $value) : string
     {
         if (!$value instanceof \DateTimeInterface) {
             throw new InvalidArgumentException('Only \DateTimeInterface can be casted to string, got ' . \gettype($value));

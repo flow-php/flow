@@ -30,8 +30,6 @@ final class ArrayRowsFactory implements RowsFactory
      *
      * @throws InvalidArgumentException
      * @throws \Flow\ETL\Exception\RuntimeException
-     *
-     * @return Rows
      */
     public function create(array $data) : Rows
     {
@@ -44,9 +42,7 @@ final class ArrayRowsFactory implements RowsFactory
 
         return (new RemoveEntriesTransformer('element'))->transform(
             (new ArrayUnpackTransformer('element'))->transform(new Rows(...\array_map(
-                function (array $row) : Row {
-                    return Row::create(new Row\Entry\ArrayEntry('element', $row));
-                },
+                fn (array $row) : Row => Row::create(new Row\Entry\ArrayEntry('element', $row)),
                 $data
             )))
         );

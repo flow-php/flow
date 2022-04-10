@@ -4,14 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
-use Flow\ETL\Pipeline\Pipe;
-
 /**
  * @internal
  */
 interface Pipeline
 {
-    public function add(Pipe $pipe) : void;
+    public function add(Loader|Transformer $pipe) : void;
 
     /**
      * Create clean instance of pipeline, with empty pipes and without source.

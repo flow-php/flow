@@ -14,14 +14,10 @@ use Flow\ETL\Transformer;
  */
 final class StringFormatTransformer implements Transformer
 {
-    private string $entryName;
-
-    private string $format;
-
-    public function __construct(string $entryName, string $format)
-    {
-        $this->entryName = $entryName;
-        $this->format = $format;
+    public function __construct(
+        private readonly string $entryName,
+        private readonly string $format
+    ) {
     }
 
     public function __serialize() : array

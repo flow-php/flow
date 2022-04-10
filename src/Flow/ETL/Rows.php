@@ -27,7 +27,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
     /**
      * @var array<int, Row>
      */
-    private array $rows;
+    private readonly array $rows;
 
     public function __construct(Row ...$rows)
     {
@@ -248,7 +248,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
             throw new RuntimeException('First row does not exist in empty collection');
         }
 
-        return \reset($this->rows);
+        return $this->rows[0];
     }
 
     /**
@@ -276,12 +276,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
     }
 
     /**
-     * @param Rows $right
-     * @param Condition $condition
-     *
      * @throws InvalidArgumentException
-     *
-     * @return self
      */
     public function joinInner(self $right, Condition $condition) : self
     {
@@ -317,12 +312,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
     }
 
     /**
-     * @param Rows $right
-     * @param Condition $condition
-     *
      * @throws InvalidArgumentException
-     *
-     * @return self
      */
     public function joinLeft(self $right, Condition $condition) : self
     {
@@ -351,29 +341,22 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
                 }
             }
 
-            $joined[] = $joinedRow
-                ? $joinedRow
-                : $leftRow->merge(
-                    Row::create(
-                        ...\array_map(
-                            fn (string $e) : NullEntry => Entry::null($e),
-                            $rightSchema->entries()
-                        )
-                    ),
-                    $condition->prefix()
-                );
+            $joined[] = $joinedRow ?: $leftRow->merge(
+                Row::create(
+                    ...\array_map(
+                        fn (string $e) : NullEntry => Entry::null($e),
+                        $rightSchema->entries()
+                    )
+                ),
+                $condition->prefix()
+            );
         }
 
         return new self(...$joined);
     }
 
     /**
-     * @param Rows $right
-     * @param Condition $condition
-     *
      * @throws InvalidArgumentException
-     *
-     * @return self
      */
     public function joinRight(self $right, Condition $condition) : self
     {
@@ -450,8 +433,6 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
      * @param int $offset
      *
      * @throws InvalidArgumentException
-     *
-     * @return bool
      */
     public function offsetExists($offset) : bool
     {
@@ -467,8 +448,6 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
      * @param int $offset
      *
      * @throws InvalidArgumentException
-     *
-     * @return Row
      */
     public function offsetGet($offset) : Row
     {
@@ -479,7 +458,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
         throw new InvalidArgumentException("Row {$offset} does not exists.");
     }
 
-    public function offsetSet($offset, $value) : self
+    public function offsetSet(mixed $offset, mixed $value) : void
     {
         throw new RuntimeException('In order to add new rows use Rows::add(Row $row) : self');
     }
@@ -489,10 +468,9 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
      *
      * @throws InvalidArgumentException
      *
-     * @return Rows
      * @psalm-suppress ImplementedReturnTypeMismatch
      */
-    public function offsetUnset($offset) : self
+    public function offsetUnset(mixed $offset) : void
     {
         throw new RuntimeException('In order to add new rows use Rows::remove(int $offset) : self');
     }
@@ -515,8 +493,6 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
      * @psalm-suppress MixedReturnStatement
      * @psalm-suppress NullableReturnStatement
      * @psalm-suppress MixedInferredReturnType
-     *
-     * @param string $entryName
      *
      * @return mixed[]
      */
@@ -544,7 +520,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
         $rows = \iterator_to_array($this->getIterator());
         unset($rows[$offset]);
 
-        return new self(...\array_merge($rows));
+        return new self(...[...$rows]);
     }
 
     public function reverse() : self
@@ -585,8 +561,6 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
     }
 
     /**
-     * @param string $name
-     *
      * @throws InvalidArgumentException
      *
      * @return $this
@@ -600,8 +574,6 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
     }
 
     /**
-     * @param Sort ...$entries
-     *
      * @throws InvalidArgumentException
      *
      * @return $this
@@ -620,8 +592,6 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
     }
 
     /**
-     * @param string $name
-     *
      * @throws InvalidArgumentException
      *
      * @return $this
@@ -679,7 +649,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
 
     public function unique(Comparator $comparator = null) : self
     {
-        $comparator = $comparator === null ? new NativeComparator() : $comparator;
+        $comparator ??= new NativeComparator();
 
         /**
          * @var Row[] $uniqueRows

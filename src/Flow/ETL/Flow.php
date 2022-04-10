@@ -8,28 +8,16 @@ use Flow\ETL\Extractor\ProcessExtractor;
 
 final class Flow
 {
-    private ConfigBuilder $configBuilder;
-
-    public function __construct(ConfigBuilder $configBuilder = null)
-    {
-        $this->configBuilder = $configBuilder ?? new ConfigBuilder();
+    public function __construct(
+        private readonly ConfigBuilder $configBuilder = new ConfigBuilder()
+    ) {
     }
 
-    /**
-     * @param ConfigBuilder $configBuilder
-     *
-     * @return self
-     */
     public static function setUp(ConfigBuilder $configBuilder) : self
     {
         return new self($configBuilder);
     }
 
-    /**
-     * @param Extractor $extractor
-     *
-     * @return DataFrame
-     */
     public function extract(Extractor $extractor) : DataFrame
     {
         return new DataFrame(
@@ -38,11 +26,6 @@ final class Flow
         );
     }
 
-    /**
-     * @param Rows $rows
-     *
-     * @return DataFrame
-     */
     public function process(Rows $rows) : DataFrame
     {
         return new DataFrame(
@@ -53,10 +36,6 @@ final class Flow
 
     /**
      * Alias for Flow::extract function.
-     *
-     * @param Extractor $extractor
-     *
-     * @return DataFrame
      */
     public function read(Extractor $extractor) : DataFrame
     {

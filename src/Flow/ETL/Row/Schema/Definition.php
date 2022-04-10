@@ -26,37 +26,20 @@ use Flow\Serializer\Serializable;
 final class Definition implements Serializable
 {
     /**
-     * @var array<class-string<Entry>>
-     */
-    private array $classes;
-
-    private ?Constraint $constraint;
-
-    private string $entry;
-
-    /**
-     * @param string $entry
      * @param array<class-string<Entry>> $classes
-     * @param ?Constraint $constraint
      */
-    public function __construct(string $entry, array $classes, ?Constraint $constraint = null)
-    {
+    public function __construct(
+        private readonly string $entry,
+        private readonly array $classes,
+        private ?Constraint $constraint = null
+    ) {
         if (!\count($classes)) {
             throw new InvalidArgumentException('Schema definition must come with at least one entry class');
         }
-
-        $this->classes = $classes;
-        $this->constraint = $constraint;
-        $this->entry = $entry;
     }
 
     /**
      * @psalm-pure
-     *
-     * @param string $entry
-     * @param ?Constraint $constraint
-     *
-     * @return self
      */
     public static function array(string $entry, bool $nullable = false, ?Constraint $constraint = null) : self
     {
@@ -65,11 +48,6 @@ final class Definition implements Serializable
 
     /**
      * @psalm-pure
-     *
-     * @param string $entry
-     * @param ?Constraint $constraint
-     *
-     * @return self
      */
     public static function boolean(string $entry, bool $nullable = false, ?Constraint $constraint = null) : self
     {
@@ -78,12 +56,6 @@ final class Definition implements Serializable
 
     /**
      * @psalm-pure
-     *
-     * @param string $entry
-     * @param bool $nullable
-     * @param ?Constraint $constraint
-     *
-     * @return self
      */
     public static function collection(string $entry, bool $nullable = false, ?Constraint $constraint = null) : self
     {
@@ -92,12 +64,6 @@ final class Definition implements Serializable
 
     /**
      * @psalm-pure
-     *
-     * @param string $entry
-     * @param bool $nullable
-     * @param ?Constraint $constraint
-     *
-     * @return self
      */
     public static function dateTime(string $entry, bool $nullable = false, ?Constraint $constraint = null) : self
     {
@@ -106,12 +72,6 @@ final class Definition implements Serializable
 
     /**
      * @psalm-pure
-     *
-     * @param string $entry
-     * @param bool $nullable
-     * @param ?Constraint $constraint
-     *
-     * @return self
      */
     public static function float(string $entry, bool $nullable = false, ?Constraint $constraint = null) : self
     {
@@ -120,12 +80,6 @@ final class Definition implements Serializable
 
     /**
      * @psalm-pure
-     *
-     * @param string $entry
-     * @param bool $nullable
-     * @param ?Constraint $constraint
-     *
-     * @return self
      */
     public static function integer(string $entry, bool $nullable = false, ?Constraint $constraint = null) : self
     {
@@ -134,12 +88,6 @@ final class Definition implements Serializable
 
     /**
      * @psalm-pure
-     *
-     * @param string $entry
-     * @param bool $nullable
-     * @param ?Constraint $constraint
-     *
-     * @return self
      */
     public static function json(string $entry, bool $nullable = false, ?Constraint $constraint = null) : self
     {
@@ -148,10 +96,6 @@ final class Definition implements Serializable
 
     /**
      * @psalm-pure
-     *
-     * @param string $entry
-     *
-     * @return self
      */
     public static function null(string $entry) : self
     {
@@ -160,12 +104,6 @@ final class Definition implements Serializable
 
     /**
      * @psalm-pure
-     *
-     * @param string $entry
-     * @param bool $nullable
-     * @param ?Constraint $constraint
-     *
-     * @return self
      */
     public static function object(string $entry, bool $nullable = false, ?Constraint $constraint = null) : self
     {
@@ -174,12 +112,6 @@ final class Definition implements Serializable
 
     /**
      * @psalm-pure
-     *
-     * @param string $entry
-     * @param bool $nullable
-     * @param ?Constraint $constraint
-     *
-     * @return self
      */
     public static function string(string $entry, bool $nullable = false, ?Constraint $constraint = null) : self
     {
@@ -188,12 +120,6 @@ final class Definition implements Serializable
 
     /**
      * @psalm-pure
-     *
-     * @param string $entry
-     * @param bool $nullable
-     * @param ?Constraint $constraint
-     *
-     * @return self
      */
     public static function structure(string $entry, bool $nullable = false, ?Constraint $constraint = null) : self
     {
@@ -203,9 +129,7 @@ final class Definition implements Serializable
     /**
      * @psalm-pure
      *
-     * @param string $entry
      * @param array<class-string<Entry>> $entryClasses
-     * @param ?Constraint $constraint
      *
      * @return Definition
      */
@@ -253,11 +177,6 @@ final class Definition implements Serializable
         return \in_array(NullEntry::class, $this->classes, true);
     }
 
-    /**
-     * @param Entry $entry
-     *
-     * @return bool
-     */
     public function matches(Entry $entry) : bool
     {
         if ($this->isNullable() && $entry instanceof Entry\NullEntry && $entry->is($this->entry)) {

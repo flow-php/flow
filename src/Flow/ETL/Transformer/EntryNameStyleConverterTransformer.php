@@ -19,20 +19,16 @@ use Jawira\CaseConverter\Convert;
  */
 final class EntryNameStyleConverterTransformer implements Transformer
 {
-    private string $style;
-
-    public function __construct(string $style)
+    public function __construct(private readonly string $style)
     {
         /** @psalm-suppress ImpureFunctionCall */
-        if (!\class_exists('Jawira\CaseConverter\Convert')) {
+        if (!\class_exists(Convert::class)) {
             throw new RuntimeException("Jawira\CaseConverter\Convert class not found, please add jawira/case-converter dependency to the project first.");
         }
 
         if (!\in_array($style, StringStyles::ALL, true)) {
             throw new InvalidArgumentException("Unrecognized style {$style}, please use one of following: " . \implode(', ', StringStyles::ALL));
         }
-
-        $this->style = $style;
     }
 
     public function __serialize() : array
@@ -52,12 +48,10 @@ final class EntryNameStyleConverterTransformer implements Transformer
         /** @psalm-var pure-callable(Row $row) : Row $rowTransformer */
         $rowTransformer = function (Row $row) : Row {
             /** @psalm-var pure-callable(Entry) : Entry $valueMap */
-            $valueMap = function (Entry $entry) : Entry {
-                return $entry->rename(
-                    /** @phpstan-ignore-next-line */
-                    (string) \call_user_func([new Convert($entry->name()), 'to' . \ucfirst($this->style)])
-                );
-            };
+            $valueMap = fn (Entry $entry) : Entry => $entry->rename(
+                /** @phpstan-ignore-next-line */
+                (string) \call_user_func([new Convert($entry->name()), 'to' . \ucfirst($this->style)])
+            );
 
             return $row->map($valueMap);
         };

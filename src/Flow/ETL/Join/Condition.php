@@ -16,27 +16,16 @@ use Flow\Serializer\Serializable;
 final class Condition implements Serializable
 {
     /**
-     * @var array<string, string>
-     */
-    private array $entries;
-
-    private string $joinPrefix;
-
-    /**
      * @param array<string, string> $entries
-     * @param string $joinPrefix
      */
-    private function __construct(array $entries, string $joinPrefix = '')
-    {
-        $this->entries = $entries;
-        $this->joinPrefix = $joinPrefix;
+    private function __construct(
+        private array $entries,
+        private string $joinPrefix = ''
+    ) {
     }
 
     /**
      * @param array<string, string> $entries
-     * @param string $joinPrefix
-     *
-     * @return self
      */
     public static function on(array $entries, string $joinPrefix = '') : self
     {
@@ -72,7 +61,7 @@ final class Condition implements Serializable
                 if ($left->valueOf($leftEntry) !== $right->valueOf($rightEntry)) {
                     return false;
                 }
-            } catch (InvalidArgumentException $e) {
+            } catch (InvalidArgumentException) {
                 return false;
             }
         }
@@ -80,9 +69,6 @@ final class Condition implements Serializable
         return true;
     }
 
-    /**
-     * @return string
-     */
     public function prefix() : string
     {
         return $this->joinPrefix;

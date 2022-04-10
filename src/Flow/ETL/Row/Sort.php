@@ -9,14 +9,10 @@ namespace Flow\ETL\Row;
  */
 final class Sort
 {
-    private string $column;
-
-    private string $order;
-
-    private function __construct(string $column, string $order)
-    {
-        $this->column = $column;
-        $this->order = $order;
+    private function __construct(
+        private readonly string $column,
+        private readonly string $order
+    ) {
     }
 
     public static function asc(string $column) : self

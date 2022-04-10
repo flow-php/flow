@@ -17,36 +17,20 @@ use Flow\ETL\Transformer;
  */
 final class ArrayCollectionGetTransformer implements Transformer
 {
-    private string $arrayEntryName;
-
-    private string $index;
-
-    /**
-     * @var array<string>
-     */
-    private array $keys;
-
-    private string $newEntryName;
+    private string $index = '*';
 
     /**
      * @param array<string> $keys
-     * @param string $arrayEntryName
-     * @param string $newEntryName
      */
-    public function __construct(array $keys, string $arrayEntryName, string $newEntryName = 'element')
-    {
-        $this->keys = $keys;
-        $this->arrayEntryName = $arrayEntryName;
-        $this->newEntryName = $newEntryName;
-        $this->index = '*';
+    public function __construct(
+        private readonly array $keys,
+        private readonly string $arrayEntryName,
+        private readonly string $newEntryName = 'element'
+    ) {
     }
 
     /**
      * @param array<string> $keys
-     * @param string $arrayEntryName
-     * @param string $newEntryName
-     *
-     * @return static
      */
     public static function fromFirst(array $keys, string $arrayEntryName, string $newEntryName = 'element') : self
     {
@@ -85,7 +69,7 @@ final class ArrayCollectionGetTransformer implements Transformer
             $arrayEntry = $row->get($this->arrayEntryName);
 
             if (!$arrayEntry instanceof Row\Entry\ArrayEntry) {
-                $entryClass = \get_class($arrayEntry);
+                $entryClass = $arrayEntry::class;
 
                 throw new RuntimeException("{$this->arrayEntryName} is not ArrayEntry but {$entryClass}");
             }
@@ -96,7 +80,7 @@ final class ArrayCollectionGetTransformer implements Transformer
                 $array = ($this->index === '0') ? \array_values($arrayEntry->value()) : $arrayEntry->value();
 
                 $extractedValues = array_dot_get($array, $path);
-            } catch (InvalidPathException $e) {
+            } catch (InvalidPathException) {
                 throw new RuntimeException("{$this->arrayEntryName}, must be an array of array (collection of arrays) but it seems to be a regular array.");
             }
 

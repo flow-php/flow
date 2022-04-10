@@ -25,14 +25,12 @@ final class AnyToJsonCaster implements ValueConverter
     }
 
     /**
-     * @param mixed $value
-     *
      * @throws InvalidArgumentException
      * @throws \JsonException
      *
      * @return array<mixed>
      */
-    public function convert($value) : array
+    public function convert(mixed $value) : array
     {
         if (!\is_array($value)) {
             throw new InvalidArgumentException('Only array can be casted to Json, got ' . \gettype($value));

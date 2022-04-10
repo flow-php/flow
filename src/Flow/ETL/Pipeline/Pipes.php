@@ -4,24 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Pipeline;
 
+use Flow\ETL\Loader;
+use Flow\ETL\Transformer;
 use Flow\Serializer\Serializable;
 
 /**
- * @implements Serializable<array{pipes: array<int, Pipe>}>
+ * @implements Serializable<array{pipes: array<int, Loader|Transformer>}>
  */
 final class Pipes implements Serializable
 {
     /**
-     * @var array<int, Pipe>
+     * @param array<int, Loader|Transformer> $pipes
      */
-    private array $pipes;
-
-    /**
-     * @param array<int, Pipe> $pipes
-     */
-    public function __construct(array $pipes)
+    public function __construct(private array $pipes)
     {
-        $this->pipes = $pipes;
     }
 
     public static function empty() : self
@@ -41,13 +37,13 @@ final class Pipes implements Serializable
         $this->pipes = $data['pipes'];
     }
 
-    public function add(Pipe $pipe) : void
+    public function add(Loader|Transformer $pipe) : void
     {
         $this->pipes[] = $pipe;
     }
 
     /**
-     * @return array<Pipe>
+     * @return array<Loader|Transformer>
      */
     public function all() : array
     {

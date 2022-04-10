@@ -11,18 +11,13 @@ use Flow\Serializer\Serializer;
 
 final class LocalFilesystemCache implements Cache
 {
-    private string $path;
-
-    private Serializer $serializer;
-
-    public function __construct(string $path, Serializer $serializer)
-    {
+    public function __construct(
+        private readonly string $path,
+        private readonly Serializer $serializer
+    ) {
         if (!\file_exists($path) || !\is_dir($path)) {
             throw new InvalidArgumentException("Given cache path does not exists or it's not a directory: {$path}");
         }
-
-        $this->path = $path;
-        $this->serializer = $serializer;
     }
 
     public function add(string $id, Rows $rows) : void
@@ -46,8 +41,6 @@ final class LocalFilesystemCache implements Cache
     }
 
     /**
-     * @param string $id
-     *
      * @throws \Flow\ETL\Exception\RuntimeException
      *
      * @return \Generator<int, Rows, mixed, void>
@@ -70,11 +63,6 @@ final class LocalFilesystemCache implements Cache
         \fclose($cacheStream);
     }
 
-    /**
-     * @param string $id
-     *
-     * @return string
-     */
     private function cachePath(string $id) : string
     {
         return \rtrim($this->path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . \hash('sha256', $id);

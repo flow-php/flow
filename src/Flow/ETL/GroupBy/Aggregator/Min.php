@@ -11,13 +11,10 @@ use Flow\ETL\Row\Entry;
 
 final class Min implements Aggregator
 {
-    private string $entry;
-
     private ?float $min;
 
-    public function __construct(string $entry)
+    public function __construct(private readonly string $entry)
     {
-        $this->entry = $entry;
         $this->min = null;
     }
 
@@ -36,7 +33,7 @@ final class Min implements Aggregator
                     $this->min = \min($this->min, (float) $value);
                 }
             }
-        } catch (InvalidArgumentException $e) {
+        } catch (InvalidArgumentException) {
             // do nothing?
         }
     }

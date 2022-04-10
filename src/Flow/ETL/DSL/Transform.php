@@ -10,6 +10,7 @@ use Flow\ETL\Row;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\EntryFactory;
+use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Transformer;
 use Flow\ETL\Transformer\ArrayKeysStyleConverterTransformer;
 use Flow\ETL\Transformer\Cast\CastJsonToArray;
@@ -44,7 +45,6 @@ class Transform
     }
 
     /**
-     * @param string $name
      * @param array<mixed> $data
      */
     final public static function add_array(string $name, array $data) : Transformer
@@ -78,7 +78,6 @@ class Transform
     }
 
     /**
-     * @param string $name
      * @param array<mixed> $data
      */
     final public static function add_json(string $name, array $data) : Transformer
@@ -92,7 +91,6 @@ class Transform
     }
 
     /**
-     * @param string $name
      * @param array<mixed> $data
      */
     final public static function add_json_object(string $name, array $data) : Transformer
@@ -117,8 +115,6 @@ class Transform
 
     /**
      * @param array<string> $keys
-     * @param string $arrayEntryName
-     * @param string $newEntryName
      */
     final public static function array_collection_get(array $keys, string $arrayEntryName, string $newEntryName = 'element') : Transformer
     {
@@ -127,8 +123,6 @@ class Transform
 
     /**
      * @param array<string> $keys
-     * @param string $arrayEntryName
-     * @param string $newEntryName
      */
     final public static function array_collection_get_first(array $keys, string $arrayEntryName, string $newEntryName = 'element') : Transformer
     {
@@ -142,7 +136,7 @@ class Transform
 
     final public static function array_convert_keys(string $array_column, string $style) : Transformer
     {
-        if (!\class_exists('Jawira\CaseConverter\Convert')) {
+        if (!\class_exists(\Jawira\CaseConverter\Convert::class)) {
             throw new RuntimeException("Jawira\CaseConverter\Convert class not found, please require using 'composer require jawira/case-converter'");
         }
 
@@ -161,7 +155,6 @@ class Transform
 
     /**
      * @param string[] $array_names
-     * @param string $entry_name
      */
     final public static function array_merge(array $array_names, string $entry_name = 'merged') : Transformer
     {
@@ -184,8 +177,6 @@ class Transform
     }
 
     /**
-     * @param string $array_column
-     * @param string $entry_prefix
      * @param string[] $skip_keys
      */
     final public static function array_unpack(string $array_column, string $entry_prefix = '', array $skip_keys = []) : Transformer
@@ -225,7 +216,7 @@ class Transform
 
     final public static function convert_name(string $style) : Transformer
     {
-        if (!\class_exists('Jawira\CaseConverter\Convert')) {
+        if (!\class_exists(\Jawira\CaseConverter\Convert::class)) {
             throw new RuntimeException("Jawira\CaseConverter\Convert class not found, please require using 'composer require jawira/case-converter'");
         }
 
@@ -247,7 +238,6 @@ class Transform
     }
 
     /**
-     * @param string $entry
      * @param mixed $value
      */
     final public static function filter_equals(string $entry, $value) : Transformer
@@ -266,7 +256,6 @@ class Transform
     }
 
     /**
-     * @param string $entry
      * @param mixed $value
      */
     final public static function filter_not_equals(string $entry, $value) : Transformer
@@ -312,19 +301,14 @@ class Transform
     /**
      * @param array<string> $entries
      * @param null|string $algorithm
-     * @param string $newEntryName
      *
      * @throws \Flow\ETL\Exception\InvalidArgumentException
-     *
-     * @return Transformer
      */
     final public static function hash(array $entries, string $algorithm = null, string $newEntryName = 'hash') : Transformer
     {
         return new Transformer\HashTransformer(
             $entries,
-            $algorithm === null
-                ? (PHP_VERSION_ID >= 80100 ? 'murmur3f' : 'sha256')
-                : $algorithm,
+            $algorithm ?? (PHP_VERSION_ID >= 80100 ? 'murmur3f' : 'sha256'),
             $newEntryName
         );
     }
@@ -341,11 +325,8 @@ class Transform
 
     /**
      * @param array<string> $entries
-     * @param string $newEntryName
      *
      * @throws \Flow\ETL\Exception\InvalidArgumentException
-     *
-     * @return Transformer
      */
     final public static function murmur3(array $entries, string $newEntryName = 'hash') : Transformer
     {
@@ -357,9 +338,6 @@ class Transform
     }
 
     /**
-     * @param string $object_name
-     * @param string $method
-     * @param string $entry_name
      * @param array<mixed> $parameters
      */
     final public static function object_method(string $object_name, string $method, string $entry_name = 'method_entry', array $parameters = []) : Transformer
@@ -384,11 +362,8 @@ class Transform
 
     /**
      * @param array<string> $entries
-     * @param string $newEntryName
      *
      * @throws \Flow\ETL\Exception\InvalidArgumentException
-     *
-     * @return Transformer
      */
     final public static function sha256(array $entries, string $newEntryName = 'hash') : Transformer
     {
@@ -401,8 +376,6 @@ class Transform
 
     /**
      * @param string[] $string_columns
-     * @param string $glue
-     * @param string $entry_name
      */
     final public static function string_concat(array $string_columns, string $glue = '', string $entry_name = 'element') : Transformer
     {
@@ -441,7 +414,7 @@ class Transform
 
     final public static function to_array_from_object(string $entry) : Transformer
     {
-        if (!\class_exists('Laminas\Hydrator\ReflectionHydrator')) {
+        if (!\class_exists(\Laminas\Hydrator\ReflectionHydrator::class)) {
             throw new RuntimeException("Laminas\Hydrator\ReflectionHydrator class not found, please install it using 'composer require laminas/laminas-hydrator'");
         }
 
@@ -450,8 +423,6 @@ class Transform
 
     /**
      * @param string[] $entries
-     * @param ?string $timezone
-     * @param ?string $to_timezone
      */
     final public static function to_datetime(array $entries, ?string $timezone = null, ?string $to_timezone = null) : Transformer
     {
@@ -460,8 +431,6 @@ class Transform
 
     /**
      * @param array<string> $entries
-     * @param null|string $tz
-     * @param null|string $toTz
      */
     final public static function to_datetime_from_string(array $entries, ?string $tz = null, ?string $toTz = null) : Transformer
     {
@@ -490,7 +459,6 @@ class Transform
 
     /**
      * @param array<string> $entries
-     * @param string $format
      */
     final public static function to_string_from_datetime(array $entries, string $format) : Transformer
     {
@@ -504,12 +472,9 @@ class Transform
 
     /**
      * @param array<string> $entries
-     * @param callable $callback
-     * @param null|EntryFactory $entryFactory
-     *
-     * @return Transformer
+     * @param EntryFactory $entryFactory
      */
-    final public static function user_function(array $entries, callable $callback, EntryFactory $entryFactory = null) : Transformer
+    final public static function user_function(array $entries, callable $callback, EntryFactory $entryFactory = new NativeEntryFactory()) : Transformer
     {
         return new Transformer\CallUserFunctionTransformer($entries, $callback, $entryFactory);
     }

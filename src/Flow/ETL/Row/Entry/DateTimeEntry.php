@@ -12,23 +12,16 @@ use Flow\ETL\Row\Schema\Definition;
  * @implements Entry<\DateTimeInterface, array{name: string, value: \DateTimeInterface}>
  * @psalm-immutable
  */
-final class DateTimeEntry implements Entry
+final class DateTimeEntry implements \Stringable, Entry
 {
-    private string $name;
-
-    private \DateTimeInterface $value;
-
     /**
      * @throws InvalidArgumentException
      */
-    public function __construct(string $name, \DateTimeInterface $value)
+    public function __construct(private readonly string $name, private readonly \DateTimeInterface $value)
     {
         if (!\strlen($name)) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
-
-        $this->name = $name;
-        $this->value = $value;
     }
 
     public function __serialize() : array

@@ -21,7 +21,7 @@ final class GroupBy
     /**
      * @var array<string>
      */
-    private array $entries;
+    private readonly array $entries;
 
     /**
      * @var array<string, array{values?: array<string, mixed>, aggregators: array<Aggregator>}>
@@ -60,7 +60,7 @@ final class GroupBy
 
                     /** @psalm-suppress MixedAssignment */
                     $values[$entryName] = $value;
-                } catch (InvalidArgumentException $e) {
+                } catch (InvalidArgumentException) {
                     $values[$entryName] = null;
                 }
             }
@@ -112,8 +112,6 @@ final class GroupBy
 
     /**
      * @param array<array-key, mixed> $values
-     *
-     * @return string
      */
     private function hash(array $values) : string
     {

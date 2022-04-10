@@ -40,9 +40,7 @@ final class DateTimeEntryTest extends TestCase
 
         $this->assertEquals(
             $entry,
-            $entry->map(function (\DateTimeImmutable $dateTimeImmutable) {
-                return $dateTimeImmutable;
-            })
+            $entry->map(fn (\DateTimeImmutable $dateTimeImmutable) => $dateTimeImmutable)
         );
     }
 

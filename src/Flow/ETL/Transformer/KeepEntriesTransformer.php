@@ -18,7 +18,7 @@ final class KeepEntriesTransformer implements Transformer
     /**
      * @var string[]
      */
-    private array $names;
+    private readonly array $names;
 
     public function __construct(string ...$names)
     {

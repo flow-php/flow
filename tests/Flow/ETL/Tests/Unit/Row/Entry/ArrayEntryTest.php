@@ -98,9 +98,7 @@ final class ArrayEntryTest extends TestCase
 
         $this->assertEquals(
             $entry,
-            $entry->map(function (array $value) {
-                return $value;
-            })
+            $entry->map(fn (array $value) => $value)
         );
     }
 

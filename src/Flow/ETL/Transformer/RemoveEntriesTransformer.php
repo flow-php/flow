@@ -17,7 +17,7 @@ final class RemoveEntriesTransformer implements Transformer
     /**
      * @var string[]
      */
-    private array $names;
+    private readonly array $names;
 
     public function __construct(string ...$names)
     {
@@ -41,9 +41,7 @@ final class RemoveEntriesTransformer implements Transformer
         /**
          * @psalm-var pure-callable(Row $row) : Row $transformer
          */
-        $transformer = function (Row $row) : Row {
-            return $row->remove(...$this->names);
-        };
+        $transformer = fn (Row $row) : Row => $row->remove(...$this->names);
 
         return $rows->map($transformer);
     }

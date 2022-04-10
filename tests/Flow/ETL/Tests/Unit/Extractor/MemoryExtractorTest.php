@@ -7,7 +7,6 @@ namespace Flow\ETL\Tests\Unit\Extractor;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\DSL\From;
 use Flow\ETL\DSL\To;
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -21,14 +20,6 @@ final class MemoryExtractorTest extends TestCase
         yield [2];
         yield [3];
         yield [4];
-    }
-
-    public function test_chunk_size_must_be_greater_than_0() : void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Chunk size must be greater than 0');
-
-        From::memory(new ArrayMemory(), 0);
     }
 
     /**
@@ -53,7 +44,7 @@ final class MemoryExtractorTest extends TestCase
         $data = [];
 
         foreach ($extractor->extract() as $rowsData) {
-            $data  = \array_merge($data, $rowsData->toArray());
+            $data  = [...$data, ...$rowsData->toArray()];
         }
 
         $this->assertSame(

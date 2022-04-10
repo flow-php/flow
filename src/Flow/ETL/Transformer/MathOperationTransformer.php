@@ -15,20 +15,12 @@ use Flow\ETL\Transformer;
  */
 final class MathOperationTransformer implements Transformer
 {
-    private string $leftEntry;
-
-    private string $newEntryName;
-
-    private string $operation;
-
-    private string $rightEntry;
-
-    private function __construct(string $leftEntry, string $rightEntry, string $operation, string $newEntryName)
-    {
-        $this->leftEntry = $leftEntry;
-        $this->rightEntry = $rightEntry;
-        $this->operation = $operation;
-        $this->newEntryName = $newEntryName;
+    private function __construct(
+        private readonly string $leftEntry,
+        private readonly string $rightEntry,
+        private readonly string $operation,
+        private readonly string $newEntryName
+    ) {
     }
 
     public static function add(string $leftEntry, string $rightEntry, string $newEntryName = 'add') : self
@@ -104,35 +96,15 @@ final class MathOperationTransformer implements Transformer
                 throw new RuntimeException("\"{$this->rightEntry}\" is not IntegerEntry or FloatEntry");
             }
 
-            switch ($this->operation) {
-                case 'add':
-                    $value = $left->value() + $right->value();
-
-                    break;
-                case 'subtract':
-                    $value = $left->value() - $right->value();
-
-                    break;
-                case 'multiply':
-                    $value = $left->value() * $right->value();
-
-                    break;
-                case 'divide':
-                    $value = $left->value() / $right->value();
-
-                    break;
-                case 'modulo':
-                    $value = $left->value() % $right->value();
-
-                    break;
-                case 'power':
-                    $value = $left->value() ** $right->value();
-
-                    break;
-
-                default:
-                    throw new RuntimeException('Unknown operation');
-            }
+            $value = match ($this->operation) {
+                'add' => $left->value() + $right->value(),
+                'subtract' => $left->value() - $right->value(),
+                'multiply' => $left->value() * $right->value(),
+                'divide' => $left->value() / $right->value(),
+                'modulo' => $left->value() % $right->value(),
+                'power' => $left->value() ** $right->value(),
+                default => throw new RuntimeException('Unknown operation'),
+            };
 
             if (\is_float($value)) {
                 return $row->add(new Row\Entry\FloatEntry($this->newEntryName, $value));

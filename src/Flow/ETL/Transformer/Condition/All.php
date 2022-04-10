@@ -11,7 +11,7 @@ final class All implements RowCondition
     /**
      * @var RowCondition[]
      */
-    private array $conditions;
+    private readonly array $conditions;
 
     public function __construct(RowCondition ...$conditions)
     {

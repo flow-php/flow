@@ -12,28 +12,13 @@ final class Config
 
     public const EXTERNAL_SORT_MAX_MEMORY_ENV = 'FLOW_EXTERNAL_SORT_MAX_MEMORY';
 
-    private Cache $cache;
-
-    private ExternalSort $externalSort;
-
-    private string $id;
-
-    private Pipeline $pipeline;
-
-    private Serializer $serializer;
-
     public function __construct(
-        string $id,
-        Cache $cache,
-        ExternalSort $externalSort,
-        Pipeline $pipeline,
-        Serializer $serializer
+        private readonly string $id,
+        private readonly Cache $cache,
+        private readonly ExternalSort $externalSort,
+        private readonly Pipeline $pipeline,
+        private readonly Serializer $serializer
     ) {
-        $this->id = $id;
-        $this->cache = $cache;
-        $this->externalSort = $externalSort;
-        $this->pipeline = $pipeline;
-        $this->serializer = $serializer;
     }
 
     public static function builder() : ConfigBuilder

@@ -12,8 +12,6 @@ interface Validator extends Serializable
 {
     /**
      * @param mixed $value
-     *
-     * @return bool
      */
     public function isValid($value) : bool;
 }

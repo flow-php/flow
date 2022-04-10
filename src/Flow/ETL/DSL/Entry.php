@@ -12,7 +12,6 @@ class Entry
     /**
      * @psalm-pure
      *
-     * @param string $name
      * @param array<mixed> $data
      *
      * @return RowEntry\ArrayEntry
@@ -24,9 +23,6 @@ class Entry
 
     /**
      * @psalm-pure
-     *
-     * @param string $name
-     * @param bool $value
      *
      * @throws \Flow\ETL\Exception\InvalidArgumentException
      *
@@ -40,9 +36,6 @@ class Entry
     /**
      * @psalm-pure
      *
-     * @param string $name
-     * @param Entries ...$entries
-     *
      * @throws \Flow\ETL\Exception\InvalidArgumentException
      *
      * @return RowEntry\CollectionEntry
@@ -54,9 +47,6 @@ class Entry
 
     /**
      * @psalm-pure
-     *
-     * @param string $name
-     * @param \DateTimeInterface $value
      *
      * @throws \Flow\ETL\Exception\InvalidArgumentException
      *
@@ -70,11 +60,7 @@ class Entry
     /**
      * @psalm-pure
      *
-     * @param RowEntry ...$entries
-     *
      * @throws \Flow\ETL\Exception\InvalidArgumentException
-     *
-     * @return Entries
      */
     final public static function entries(RowEntry ...$entries) : Entries
     {
@@ -83,9 +69,6 @@ class Entry
 
     /**
      * @psalm-pure
-     *
-     * @param string $name
-     * @param float $value
      *
      * @throws \Flow\ETL\Exception\InvalidArgumentException
      *
@@ -99,9 +82,6 @@ class Entry
     /**
      * @psalm-pure
      *
-     * @param string $name
-     * @param int $value
-     *
      * @throws \Flow\ETL\Exception\InvalidArgumentException
      *
      * @return RowEntry\IntegerEntry
@@ -114,7 +94,6 @@ class Entry
     /**
      * @psalm-pure
      *
-     * @param string $name
      * @param array<mixed> $data
      *
      * @return RowEntry\JsonEntry
@@ -127,7 +106,6 @@ class Entry
     /**
      * @psalm-pure
      *
-     * @param string $name
      * @param array<mixed> $data
      *
      * @return RowEntry\JsonEntry
@@ -139,8 +117,6 @@ class Entry
 
     /**
      * @psalm-pure
-     *
-     * @param string $name
      *
      * @throws \Flow\ETL\Exception\InvalidArgumentException
      *
@@ -154,9 +130,6 @@ class Entry
     /**
      * @psalm-pure
      *
-     * @param string $name
-     * @param object $object
-     *
      * @throws \Flow\ETL\Exception\InvalidArgumentException
      *
      * @return RowEntry\ObjectEntry
@@ -168,9 +141,6 @@ class Entry
 
     /**
      * @psalm-pure
-     *
-     * @param string $name
-     * @param string $value
      *
      * @throws \Flow\ETL\Exception\InvalidArgumentException
      *
@@ -184,9 +154,6 @@ class Entry
     /**
      * @psalm-pure
      *
-     * @param string $name
-     * @param string $value
-     *
      * @throws \Flow\ETL\Exception\InvalidArgumentException
      *
      * @return RowEntry\StringEntry
@@ -199,9 +166,6 @@ class Entry
     /**
      * @psalm-pure
      *
-     * @param string $name
-     * @param string $value
-     *
      * @throws \Flow\ETL\Exception\InvalidArgumentException
      *
      * @return RowEntry\StringEntry
@@ -213,9 +177,6 @@ class Entry
 
     /**
      * @psalm-pure
-     *
-     * @param string $name
-     * @param RowEntry ...$entries
      *
      * @throws \Flow\ETL\Exception\InvalidArgumentException
      *

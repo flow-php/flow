@@ -38,21 +38,20 @@ final class ConfigBuilder
      */
     public function build() : Config
     {
-        $this->id = $this->id ?? \uniqid('flow_php');
-        $this->serializer = $this->serializer ?? new CompressingSerializer(new NativePHPSerializer());
-        $this->cache = $this->cache ?? new LocalFilesystemCache(
+        $this->id ??= \uniqid('flow_php');
+        $this->serializer ??= new CompressingSerializer(new NativePHPSerializer());
+        $this->cache ??= new LocalFilesystemCache(
             \is_string(\getenv(Config::CACHE_DIR_ENV))
                 ? \getenv(Config::CACHE_DIR_ENV)
                 : \sys_get_temp_dir(),
             $this->serializer
         );
-        $this->externalSort = $this->externalSort ??
-            new MemorySort(
-                $this->id,
-                $this->cache,
-                \is_string(\getenv(Config::EXTERNAL_SORT_MAX_MEMORY_ENV)) ? Unit::fromString(\getenv(Config::EXTERNAL_SORT_MAX_MEMORY_ENV)) : Unit::fromMb(200)
-            );
-        $this->pipeline = $this->pipeline ?? new SynchronousPipeline();
+        $this->externalSort ??= new MemorySort(
+            $this->id,
+            $this->cache,
+            \is_string(\getenv(Config::EXTERNAL_SORT_MAX_MEMORY_ENV)) ? Unit::fromString(\getenv(Config::EXTERNAL_SORT_MAX_MEMORY_ENV)) : Unit::fromMb(200)
+        );
+        $this->pipeline ??= new SynchronousPipeline();
 
         return new Config(
             $this->id,

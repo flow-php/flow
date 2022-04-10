@@ -6,8 +6,6 @@ interface Validator
 {
     /**
      * @param mixed $value
-     *
-     * @return bool
      */
-    public function isValid($value) : bool;
+    public function isValid(mixed $value) : bool;
 }

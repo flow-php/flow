@@ -16,7 +16,7 @@ final class ProcessExtractor implements Extractor
     /**
      * @var array<Rows>
      */
-    private array $rows;
+    private readonly array $rows;
 
     public function __construct(Rows ...$rows)
     {

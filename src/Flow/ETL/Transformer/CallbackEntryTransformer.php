@@ -10,7 +10,7 @@ use Flow\ETL\Row\Entry;
 use Flow\ETL\Rows;
 use Flow\ETL\Serializer\Closure;
 use Flow\ETL\Transformer;
-use Opis\Closure\SerializableClosure;
+use Laravel\SerializableClosure\SerializableClosure;
 
 /**
  * @implements Transformer<array{callables: array<SerializableClosure>}>
@@ -22,7 +22,7 @@ final class CallbackEntryTransformer implements Transformer
      * @psalm-var array<pure-callable(Entry) : Entry>
      * @phpstan-var array<callable(Entry) : Entry>
      */
-    private array $callables;
+    private readonly array $callables;
 
     /**
      * @psalm-param pure-callable(Entry) : Entry ...$callables
@@ -60,6 +60,7 @@ final class CallbackEntryTransformer implements Transformer
         $callables = [];
 
         foreach ($data['callables'] as $closure) {
+            /** @psalm-suppress ImpureMethodCall */
             $callables[] = $closure->getClosure();
         }
 

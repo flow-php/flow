@@ -15,18 +15,10 @@ use Flow\ETL\Transformer;
  */
 final class ArrayCollectionMergeTransformer implements Transformer
 {
-    private string $arrayEntryName;
-
-    private string $newEntryName;
-
-    /**
-     * @param string $arrayEntryName
-     * @param string $newEntryName
-     */
-    public function __construct(string $arrayEntryName, string $newEntryName = 'element')
-    {
-        $this->arrayEntryName = $arrayEntryName;
-        $this->newEntryName = $newEntryName;
+    public function __construct(
+        private readonly string $arrayEntryName,
+        private readonly string $newEntryName = 'element'
+    ) {
     }
 
     public function __serialize() : array
@@ -54,7 +46,7 @@ final class ArrayCollectionMergeTransformer implements Transformer
             $arrayEntry = $row->get($this->arrayEntryName);
 
             if (!$arrayEntry instanceof Row\Entry\ArrayEntry) {
-                $entryClass = \get_class($arrayEntry);
+                $entryClass = $arrayEntry::class;
 
                 throw new RuntimeException("{$this->arrayEntryName} is not ArrayEntry but {$entryClass}");
             }

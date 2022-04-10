@@ -17,35 +17,19 @@ use Flow\ETL\Transformer;
  */
 final class ObjectMethodTransformer implements Transformer
 {
-    private EntryFactory $entryFactory;
-
-    private string $method;
-
-    private string $newEntryName;
-
-    private string $objectEntryName;
-
-    /**
-     * @var array<mixed>
-     */
-    private array $parameters;
-
     /**
      * ObjectMethodTransformer constructor.
      *
-     * @param string $objectEntryName
-     * @param string $method
-     * @param string $newEntryName
      * @param array<mixed> $parameters
-     * @param null|EntryFactory $entryFactory
+     * @param EntryFactory $entryFactory
      */
-    public function __construct(string $objectEntryName, string $method, string $newEntryName = 'method_entry', array $parameters = [], EntryFactory $entryFactory = null)
-    {
-        $this->objectEntryName = $objectEntryName;
-        $this->method = $method;
-        $this->newEntryName = $newEntryName;
-        $this->parameters = $parameters;
-        $this->entryFactory = null === $entryFactory ? new NativeEntryFactory() : $entryFactory;
+    public function __construct(
+        private readonly string $objectEntryName,
+        private readonly string $method,
+        private readonly string $newEntryName = 'method_entry',
+        private readonly array $parameters = [],
+        private readonly EntryFactory $entryFactory = new NativeEntryFactory()
+    ) {
     }
 
     public function __serialize() : array

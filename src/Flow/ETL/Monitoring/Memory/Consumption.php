@@ -6,7 +6,7 @@ namespace Flow\ETL\Monitoring\Memory;
 
 final class Consumption
 {
-    private Unit $initial;
+    private readonly Unit $initial;
 
     public function __construct()
     {
@@ -23,9 +23,6 @@ final class Consumption
         return $this->current()->diff($this->initial);
     }
 
-    /**
-     * @return Unit
-     */
     public function initial() : Unit
     {
         return $this->initial;

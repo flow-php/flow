@@ -41,8 +41,6 @@ final class ArrayMemory implements \Countable, Memory
     }
 
     /**
-     * @param int $size
-     *
      * @return array<self>
      */
     public function chunks(int $size) : array

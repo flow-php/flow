@@ -9,9 +9,6 @@ use PHPUnit\Framework\TestCase;
 
 final class IntegerEntryTest extends TestCase
 {
-    /**
-     * @return \Generator
-     */
     public function invalid_entries() : \Generator
     {
         yield ['random_value'];
@@ -56,9 +53,7 @@ final class IntegerEntryTest extends TestCase
 
         $this->assertEquals(
             $entry,
-            $entry->map(function (int $int) {
-                return $int;
-            })
+            $entry->map(fn (int $int) => $int)
         );
     }
 
@@ -99,9 +94,6 @@ final class IntegerEntryTest extends TestCase
         $this->assertTrue($string->isEqual($unserialized));
     }
 
-    /**
-     * @return \Generator
-     */
     public function valid_integer_entries() : \Generator
     {
         yield [100];

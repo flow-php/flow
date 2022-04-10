@@ -13,29 +13,20 @@ use Flow\ETL\Row\Schema\Definition;
  * @implements Entry<array<mixed>, array{name: string, value: array<mixed>}>
  * @psalm-immutable
  */
-final class ArrayEntry implements Entry
+final class ArrayEntry implements \Stringable, Entry
 {
-    private string $name;
-
     /**
-     * @var array<mixed>
-     */
-    private array $value;
-
-    /**
-     * @param string $name
      * @param array<mixed> $value
      *
      * @throws InvalidArgumentException
      */
-    public function __construct(string $name, array $value)
-    {
+    public function __construct(
+        private readonly string $name,
+        private readonly array $value
+    ) {
         if (!\strlen($name)) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
-
-        $this->name = $name;
-        $this->value = $value;
     }
 
     public function __serialize() : array
@@ -86,7 +77,7 @@ final class ArrayEntry implements Entry
 
     public function toString() : string
     {
-        return (string) \json_encode($this->value());
+        return \json_encode($this->value(), JSON_THROW_ON_ERROR);
     }
 
     public function value() : array

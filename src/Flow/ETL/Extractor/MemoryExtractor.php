@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Extractor;
 
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Memory\Memory;
 use Flow\ETL\Row;
@@ -18,23 +17,15 @@ final class MemoryExtractor implements Extractor
     private const CHUNK_SIZE = 100;
 
     /**
-     * @var int<1, max>
+     * @param Memory $memory
+     * @param int<1, max> $chunkSize
+     * @param string $rowEntryName
      */
-    private int $chunkSize;
-
-    private Memory $memory;
-
-    private string $rowEntryName;
-
-    public function __construct(Memory $memory, int $chunkSize = self::CHUNK_SIZE, string $rowEntryName = 'row')
-    {
-        if ($chunkSize < 1) {
-            throw InvalidArgumentException::because('Chunk size must be greater than 0');
-        }
-
-        $this->memory = $memory;
-        $this->chunkSize = $chunkSize;
-        $this->rowEntryName = $rowEntryName;
+    public function __construct(
+        private readonly Memory $memory,
+        private readonly int $chunkSize = self::CHUNK_SIZE,
+        private readonly string $rowEntryName = 'row'
+    ) {
     }
 
     public function extract() : \Generator

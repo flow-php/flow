@@ -16,7 +16,7 @@ final class ChainTransformer implements Transformer
     /**
      * @var Transformer[]
      */
-    private array $transformers;
+    private readonly array $transformers;
 
     public function __construct(Transformer ...$transformers)
     {

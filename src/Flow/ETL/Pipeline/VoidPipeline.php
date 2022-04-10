@@ -6,22 +6,18 @@ namespace Flow\ETL\Pipeline;
 
 use Flow\ETL\ErrorHandler;
 use Flow\ETL\Extractor;
+use Flow\ETL\Loader;
 use Flow\ETL\Pipeline;
 use Flow\ETL\Rows;
+use Flow\ETL\Transformer;
 
 final class VoidPipeline implements Pipeline
 {
-    /**
-     * @var Pipeline
-     */
-    private Pipeline $pipeline;
-
-    public function __construct(Pipeline $pipeline)
+    public function __construct(private readonly Pipeline $pipeline)
     {
-        $this->pipeline = $pipeline;
     }
 
-    public function add(Pipe $pipe) : void
+    public function add(Loader|Transformer $pipe) : void
     {
     }
 

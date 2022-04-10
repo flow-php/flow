@@ -24,22 +24,20 @@ final class CompressingSerializerTest extends TestCase
     {
         $rows = new Rows(
             ...\array_map(
-                function () : Row {
-                    return Row::create(
+                fn () : Row => Row::create(
+                    Entry::integer('integer', 1),
+                    Entry::string('string', 'string'),
+                    Entry::boolean('boolean', true),
+                    Entry::datetime('datetime', new \DateTimeImmutable('2022-01-01 00:00:00')),
+                    Entry::null('null'),
+                    Entry::float('float', 0.12),
+                    Entry::object('object', new \ArrayIterator([1, 2, 3])),
+                    Entry::structure(
+                        'struct',
                         Entry::integer('integer', 1),
                         Entry::string('string', 'string'),
-                        Entry::boolean('boolean', true),
-                        Entry::datetime('datetime', new \DateTimeImmutable('2022-01-01 00:00:00')),
-                        Entry::null('null'),
-                        Entry::float('float', 0.12),
-                        Entry::object('object', new \ArrayIterator([1, 2, 3])),
-                        Entry::structure(
-                            'struct',
-                            Entry::integer('integer', 1),
-                            Entry::string('string', 'string'),
-                        )
-                    );
-                },
+                    )
+                ),
                 \range(0, 100)
             )
         );

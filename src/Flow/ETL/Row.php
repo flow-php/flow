@@ -16,21 +16,14 @@ use Flow\Serializer\Serializable;
  */
 final class Row implements Serializable
 {
-    private Entries $entries;
-
-    public function __construct(Entries $entries)
+    public function __construct(private readonly Entries $entries)
     {
-        $this->entries = $entries;
     }
 
     /**
      * @psalm-pure
      *
-     * @param Entry ...$entries
-     *
      * @throws InvalidArgumentException
-     *
-     * @return Row
      */
     public static function create(Entry ...$entries) : self
     {
@@ -48,8 +41,6 @@ final class Row implements Serializable
     }
 
     /**
-     * @param Entry ...$entries
-     *
      * @throws InvalidArgumentException
      *
      * @return $this
@@ -75,11 +66,7 @@ final class Row implements Serializable
     }
 
     /**
-     * @param string $name
-     *
      * @throws InvalidArgumentException
-     *
-     * @return Entry
      */
     public function get(string $name) : Entry
     {
@@ -102,12 +89,7 @@ final class Row implements Serializable
     }
 
     /**
-     * @param Row $row
-     * @param string $prefix
-     *
      * @throws InvalidArgumentException
-     *
-     * @return self
      */
     public function merge(self $row, string $prefix = '_') : self
     {
@@ -147,11 +129,6 @@ final class Row implements Serializable
         return new Schema(...$definitions);
     }
 
-    /**
-     * @param Entry ...$entries
-     *
-     * @return self
-     */
     public function set(Entry ...$entries) : self
     {
         return new self($this->entries->set(...$entries));
@@ -171,8 +148,6 @@ final class Row implements Serializable
     }
 
     /**
-     * @param string $name
-     *
      * @throws InvalidArgumentException
      *
      * @return mixed

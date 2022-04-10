@@ -32,8 +32,6 @@ final class CastToDateTime extends CastEntries
 
     /**
      * @param array<string> $entryNames
-     * @param null|string $timeZone
-     * @param null|string $toTimeZone
      */
     public static function nullable(array $entryNames, ?string $timeZone = null, ?string $toTimeZone = null) : self
     {

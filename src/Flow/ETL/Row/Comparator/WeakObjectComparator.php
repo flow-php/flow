@@ -29,7 +29,7 @@ final class WeakObjectComparator implements Comparator
             }
 
             return true;
-        } catch (InvalidArgumentException $e) {
+        } catch (InvalidArgumentException) {
             return false;
         }
     }

@@ -9,8 +9,6 @@ interface Cache
     public function clear(string $id) : void;
 
     /**
-     * @param string $id
-     *
      * @return \Generator<int, Rows, mixed, void>
      */
     public function read(string $id) : \Generator;

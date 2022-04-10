@@ -24,22 +24,13 @@ use Flow\ETL\Rows;
  */
 final class MemorySort implements ExternalSort
 {
-    private Cache $cache;
-
-    private string $cacheId;
-
-    private Configuration $configuration;
-
-    private Unit $maximumMemory;
+    private readonly Configuration $configuration;
 
     public function __construct(
-        string $cacheId,
-        Cache $cache,
-        Unit $maximumMemory
+        private readonly string $cacheId,
+        private readonly Cache $cache,
+        private Unit $maximumMemory
     ) {
-        $this->cache = $cache;
-        $this->cacheId = $cacheId;
-        $this->maximumMemory = $maximumMemory;
         $this->configuration = new Configuration($safetyBufferPercentage = 10);
 
         if ($this->configuration->isLessThan($maximumMemory) && !$this->configuration->isInfinite()) {

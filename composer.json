@@ -5,7 +5,7 @@
     "keywords": ["etl", "extract", "transform", "load"],
     "prefer-stable": true,
     "require": {
-        "php": "^7.4.2 || ~8.0 || ~8.1",
+        "php": "~8.1",
         "flow-php/array-dot": "^1.0@dev",
         "ext-mbstring": "*",
         "ext-json": "*"
@@ -13,7 +13,7 @@
     "require-dev": {
         "jawira/case-converter": "^3.4",
         "laminas/laminas-hydrator": "^4.0",
-        "opis/closure": "^3.5.1",
+        "laravel/serializable-closure": "^1.1",
         "symfony/validator": "^5.3"
     },
     "config": {

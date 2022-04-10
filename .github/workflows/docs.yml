@@ -1,4 +1,4 @@
-name: "Documentation Linter"
+name: Documentation Linter
 
 on:
   pull_request:

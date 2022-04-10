@@ -15,14 +15,8 @@ final class BufferLoader implements Closure, Loader
 {
     private Rows $buffer;
 
-    private int $bufferSize;
-
-    private Loader $overflowLoader;
-
-    public function __construct(Loader $overflowLoader, int $bufferSize)
+    public function __construct(private readonly Loader $overflowLoader, private readonly int $bufferSize)
     {
-        $this->overflowLoader = $overflowLoader;
-        $this->bufferSize = $bufferSize;
         $this->buffer = new Rows();
     }
 

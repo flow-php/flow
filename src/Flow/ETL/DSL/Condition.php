@@ -27,63 +27,32 @@ class Condition
         return new TransformerCondition\ArrayDotExists($entry, $path);
     }
 
-    /**
-     * @param string $entry
-     * @param string $path
-     * @param mixed $value
-     * @param bool $identical
-     */
-    final public static function array_value_equals(string $entry, string $path, $value, bool $identical = true) : RowCondition
+    final public static function array_value_equals(string $entry, string $path, mixed $value, bool $identical = true) : RowCondition
     {
         return new TransformerCondition\ArrayDotValueEqualsTo($entry, $path, $value, $identical);
     }
 
-    /**
-     * @param string $entry
-     * @param string $path
-     * @param mixed $value
-     */
-    final public static function array_value_greater_or_equal(string $entry, string $path, $value) : RowCondition
+    final public static function array_value_greater_or_equal(string $entry, string $path, mixed $value) : RowCondition
     {
         return new TransformerCondition\ArrayDotValueGreaterOrEqualThan($entry, $path, $value);
     }
 
-    /**
-     * @param string $entry
-     * @param string $path
-     * @param mixed $value
-     */
-    final public static function array_value_greater_than(string $entry, string $path, $value) : RowCondition
+    final public static function array_value_greater_than(string $entry, string $path, mixed $value) : RowCondition
     {
         return new TransformerCondition\ArrayDotValueGreaterThan($entry, $path, $value);
     }
 
-    /**
-     * @param string $entry
-     * @param string $path
-     * @param mixed $value
-     */
-    final public static function array_value_less_or_equal(string $entry, string $path, $value) : RowCondition
+    final public static function array_value_less_or_equal(string $entry, string $path, mixed $value) : RowCondition
     {
         return new TransformerCondition\ArrayDotValueLessOrEqualThan($entry, $path, $value);
     }
 
-    /**
-     * @param string $entry
-     * @param string $path
-     * @param mixed $value
-     */
-    final public static function array_value_less_than(string $entry, string $path, $value) : RowCondition
+    final public static function array_value_less_than(string $entry, string $path, mixed $value) : RowCondition
     {
         return new TransformerCondition\ArrayDotValueLessThan($entry, $path, $value);
     }
 
-    /**
-     * @param string $entry
-     * @param mixed $value
-     * @param bool $identical
-     */
-    final public static function equals_to_value(string $entry, $value, bool $identical = true) : RowCondition
+    final public static function equals_to_value(string $entry, mixed $value, bool $identical = true) : RowCondition
     {
         return new TransformerCondition\EntryValueEqualsTo($entry, $value, $identical);
     }
@@ -93,20 +62,12 @@ class Condition
         return new TransformerCondition\EntryExists($entry);
     }
 
-    /**
-     * @param string $entry
-     * @param mixed $value
-     */
-    final public static function greater_or_equals_to_value(string $entry, $value) : RowCondition
+    final public static function greater_or_equals_to_value(string $entry, mixed $value) : RowCondition
     {
         return new TransformerCondition\EntryValueGreaterOrEqualThan($entry, $value);
     }
 
-    /**
-     * @param string $entry
-     * @param mixed $value
-     */
-    final public static function greater_than_value(string $entry, $value) : RowCondition
+    final public static function greater_than_value(string $entry, mixed $value) : RowCondition
     {
         return new TransformerCondition\EntryValueGreaterThan($entry, $value);
     }
@@ -158,27 +119,19 @@ class Condition
 
     final public static function is_valid(string $entry, Constraint ...$constraints) : RowCondition
     {
-        if (!\class_exists('Symfony\Component\Validator\Validation')) {
+        if (!\class_exists(\Symfony\Component\Validator\Validation::class)) {
             throw new RuntimeException("Symfony\Component\Validator\Validation class not found, please add symfony/validator dependency to the project first.");
         }
 
         return new TransformerCondition\ValidValue($entry, new TransformerCondition\ValidValue\SymfonyValidator($constraints));
     }
 
-    /**
-     * @param string $entry
-     * @param mixed $value
-     */
-    final public static function less_or_equals_value(string $entry, $value) : RowCondition
+    final public static function less_or_equals_value(string $entry, mixed $value) : RowCondition
     {
         return new TransformerCondition\EntryValueLessOrEqualThan($entry, $value);
     }
 
-    /**
-     * @param string $entry
-     * @param mixed $value
-     */
-    final public static function less_than_value(string $entry, $value) : RowCondition
+    final public static function less_than_value(string $entry, mixed $value) : RowCondition
     {
         return new TransformerCondition\EntryValueLessThan($entry, $value);
     }

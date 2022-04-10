@@ -8,9 +8,7 @@ Data processing and manipulation library,
 
 Supported PHP versions
 
-* [![Supported PHP Version](https://img.shields.io/badge/php-7.4-8892BF.svg)](https://php.net/)
-* [![Supported PHP Version](https://img.shields.io/badge/php-8.0-8892BF.svg)](https://php.net/)
-* [![Supported PHP Version](https://img.shields.io/badge/php-8.1-8892BF.svg)](https://php.net/)
+* [![Supported PHP Version](https://img.shields.io/badge/php-~8.1-8892BF.svg)](https://php.net/)
 
 ## Description
 
@@ -143,7 +141,7 @@ All entries are available through [DSL\Entry](src/Flow/ETL/DSL/Entry.php)
 * [string](src/Flow/ETL/Row/Entry/StringEntry.php)
 * [structure](src/Flow/ETL/Row/Entry/StructureEntry.php)
 
-> Entry names are case sensitive, `entry` is not the same as `Entry`.
+> Entry names are case-sensitive, `entry` is not the same as `Entry`.
 
 ## Extractors aka Readers
 

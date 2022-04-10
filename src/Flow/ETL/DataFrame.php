@@ -10,6 +10,7 @@ use Flow\ETL\Extractor\CacheExtractor;
 use Flow\ETL\Formatter\AsciiTableFormatter;
 use Flow\ETL\GroupBy\Aggregation;
 use Flow\ETL\Join\Condition;
+use Flow\ETL\Join\Join;
 use Flow\ETL\Loader\SchemaValidationLoader;
 use Flow\ETL\Pipeline\CollectingPipeline;
 use Flow\ETL\Pipeline\GroupByPipeline;
@@ -27,13 +28,13 @@ use Flow\ETL\Transformer\RemoveEntriesTransformer;
 
 final class DataFrame
 {
-    private Cache $cache;
+    private readonly Cache $cache;
 
-    private ExternalSort $externalSort;
+    private readonly ExternalSort $externalSort;
 
     private ?GroupBy $groupBy;
 
-    private string $id;
+    private readonly string $id;
 
     private ?int $limit;
 
@@ -51,11 +52,7 @@ final class DataFrame
     }
 
     /**
-     * @param Aggregation ...$aggregations
-     *
      * @throws InvalidArgumentException
-     *
-     * @return self
      */
     public function aggregate(Aggregation ...$aggregations) : self
     {
@@ -78,12 +75,10 @@ final class DataFrame
      * By default everything is cached in system tmp dir.
      *
      * @param null|string $id
-     *
-     * @return self
      */
     public function cache(string $id = null) : self
     {
-        $this->cache->clear($id = $id ?? $this->id);
+        $this->cache->clear($id ??= $this->id);
 
         foreach ($this->pipeline->process($this->limit) as $rows) {
             $this->cache->add($id, $rows);
@@ -99,8 +94,6 @@ final class DataFrame
     /**
      * Keep extracting rows and passing them through all transformers up to this point.
      * From here all transformed Rows are collected and merged together before pushing them forward.
-     *
-     * @return self
      */
     public function collect() : self
     {
@@ -111,26 +104,20 @@ final class DataFrame
 
     /**
      * @param int $limit maximum numbers of rows to display
-     * @param int $truncate if set to 0 columns are not truncated
+     * @param bool|int $truncate false or if set to 0 columns are not truncated, otherwise default truncate to 20 characters
      * @param null|Formatter $formatter
      *
      * @throws InvalidArgumentException
-     *
-     * @return string
      */
-    public function display(int $limit = 20, int $truncate = 20, Formatter $formatter = null) : string
+    public function display(int $limit = 20, int|bool $truncate = 20, Formatter $formatter = null) : string
     {
-        $formatter = $formatter ?? new AsciiTableFormatter();
+        $formatter ??= new AsciiTableFormatter();
 
         return $formatter->format($this->fetch($limit), $truncate);
     }
 
     /**
      * Drop given entries.
-     *
-     * @param string ...$entries
-     *
-     * @return self
      */
     public function drop(string ...$entries) : self
     {
@@ -140,11 +127,7 @@ final class DataFrame
     }
 
     /**
-     * @param ?int $limit
-     *
      * @throws InvalidArgumentException
-     *
-     * @return Rows
      */
     public function fetch(?int $limit = null) : Rows
     {
@@ -162,8 +145,6 @@ final class DataFrame
     /**
      * @param callable(Row $row) : bool $callback
      * @psalm-param pure-callable(Row $row) : bool $callback
-     *
-     * @return self
      */
     public function filter(callable $callback) : self
     {
@@ -180,11 +161,6 @@ final class DataFrame
         $this->run($callback);
     }
 
-    /**
-     * @param string ...$entries
-     *
-     * @return self
-     */
     public function groupBy(string ...$entries) : self
     {
         $this->groupBy = new GroupBy(...$entries);
@@ -194,15 +170,14 @@ final class DataFrame
     }
 
     /**
-     * @param DataFrame $dataFrame
-     * @param Condition $on
-     * @param string $type
-     * @psalm-param "left"|"right"|"inner" $type
-     *
-     * @return self
+     * @psalm-param "left"|"right"|"inner"|Join $type
      */
-    public function join(self $dataFrame, Condition $on, string $type = 'left') : self
+    public function join(self $dataFrame, Condition $on, string|Join $type = Join::left) : self
     {
+        if ($type instanceof Join) {
+            $type = $type->name;
+        }
+
         /** @var Transformer $transformer */
         $transformer = JoinRowsTransformer::$type($dataFrame, $on);
         $this->pipeline->add($transformer);
@@ -211,15 +186,14 @@ final class DataFrame
     }
 
     /**
-     * @param DataFrameFactory $factory
-     * @param Condition $on
-     * @param string $type
-     * @psalm-param "left"|"right"|"inner" $type
-     *
-     * @return self
+     * @psalm-param "left"|"right"|"inner"|Join $type
      */
-    public function joinEach(DataFrameFactory $factory, Condition $on, string $type = 'left') : self
+    public function joinEach(DataFrameFactory $factory, Condition $on, string|Join $type = Join::left) : self
     {
+        if ($type instanceof Join) {
+            $type = $type->name;
+        }
+
         /** @var Transformer $transformer */
         $transformer = JoinEachRowsTransformer::$type($factory, $on);
         $this->pipeline->add($transformer);
@@ -228,11 +202,7 @@ final class DataFrame
     }
 
     /**
-     * @param int $limit
-     *
      * @throws InvalidArgumentException
-     *
-     * @return self
      */
     public function limit(int $limit) : self
     {
@@ -245,11 +215,6 @@ final class DataFrame
         return $this;
     }
 
-    /**
-     * @param Loader $loader
-     *
-     * @return self
-     */
     public function load(Loader $loader) : self
     {
         $this->pipeline->add($loader);
@@ -260,8 +225,6 @@ final class DataFrame
     /**
      * @param callable(Row $row) : Row $callback
      * @psalm-param pure-callable(Row $row) : Row $callback
-     *
-     * @return self
      */
     public function map(callable $callback) : self
     {
@@ -270,11 +233,6 @@ final class DataFrame
         return $this;
     }
 
-    /**
-     * @param ErrorHandler $handler
-     *
-     * @return self
-     */
     public function onError(ErrorHandler $handler) : self
     {
         $this->pipeline->onError($handler);
@@ -286,11 +244,7 @@ final class DataFrame
      * Keep extracting rows and passing them through all transformers up to this point.
      * From here each transformed Row is divided and pushed forward to following pipeline elements.
      *
-     * @param int $chunks
-     *
      * @throws InvalidArgumentException
-     *
-     * @return self
      */
     public function parallelize(int $chunks) : self
     {
@@ -299,12 +253,6 @@ final class DataFrame
         return $this;
     }
 
-    /**
-     * @param string $from
-     * @param string $to
-     *
-     * @return self
-     */
     public function rename(string $from, string $to) : self
     {
         $this->pipeline->add(Transform::rename($from, $to));
@@ -314,10 +262,6 @@ final class DataFrame
 
     /**
      * Alias for ETL::transform method.
-     *
-     * @param Transformer $transformer
-     *
-     * @return self
      */
     public function rows(Transformer $transformer) : self
     {
@@ -338,10 +282,6 @@ final class DataFrame
 
     /**
      * Keep only given entries.
-     *
-     * @param string ...$entries
-     *
-     * @return self
      */
     public function select(string ...$entries) : self
     {
@@ -350,11 +290,6 @@ final class DataFrame
         return $this;
     }
 
-    /**
-     * @param Sort ...$entries
-     *
-     * @return self
-     */
     public function sortBy(Sort ...$entries) : self
     {
         $this->cache($this->id);
@@ -364,11 +299,6 @@ final class DataFrame
         return $this;
     }
 
-    /**
-     * @param Transformer $transformer
-     *
-     * @return self
-     */
     public function transform(Transformer $transformer) : self
     {
         $this->pipeline->add($transformer);
@@ -377,10 +307,7 @@ final class DataFrame
     }
 
     /**
-     * @param Schema $schema
      * @param null|SchemaValidator $validator - when null, StrictValidator gets initialized
-     *
-     * @return self
      */
     public function validate(Schema $schema, SchemaValidator $validator = null) : self
     {
@@ -394,8 +321,6 @@ final class DataFrame
      * you want to pause processing at certain moment without
      * removing code. All operations will get processed up to this point,
      * from here no rows are passed forward.
-     *
-     * @return self
      */
     public function void() : self
     {
@@ -406,10 +331,6 @@ final class DataFrame
 
     /**
      * Alias for ETL::load function.
-     *
-     * @param Loader $loader
-     *
-     * @return self
      */
     public function write(Loader $loader) : self
     {

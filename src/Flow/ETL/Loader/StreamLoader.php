@@ -10,43 +10,35 @@ use Flow\ETL\Loader;
 use Flow\ETL\Rows;
 
 /**
- * @implements Loader<array{url: string, mode: string, truncate: int, formatter: Formatter}>
+ * @implements Loader<array{url: string, mode: string, truncate: int|bool, formatter: Formatter}>
  */
 final class StreamLoader implements Loader
 {
-    private Formatter $formatter;
-
-    private string $mode;
-
-    private int $truncate;
-
-    private string $url;
-
     /**
      * @param string $url all protocols supported by PHP are allowed https://www.php.net/manual/en/wrappers.php
      * @param string $mode only writing modes explained in https://www.php.net/manual/en/function.fopen.php are supported
-     * @param int $truncate if 0, then columns in display are not truncated
-     * @param null|Formatter $formatter - if not passed AsciiTableFormatter is used
+     * @param bool|int $truncate if false or 0, then columns in display are not truncated
+     * @param Formatter $formatter - if not passed AsciiTableFormatter is used
      */
-    public function __construct(string $url, string $mode = 'w', int $truncate = 20, Formatter $formatter = null)
-    {
-        $this->url = $url;
-        $this->mode = $mode;
-        $this->formatter = $formatter ?? new Formatter\AsciiTableFormatter();
-        $this->truncate = $truncate;
+    public function __construct(
+        private readonly string $url,
+        private readonly string $mode = 'w',
+        private readonly int|bool $truncate = 20,
+        private readonly Formatter $formatter = new Formatter\AsciiTableFormatter()
+    ) {
     }
 
-    public static function output(int $truncate = 20, Formatter $formatter = null) : self
+    public static function output(int|bool $truncate = 20, Formatter $formatter = new Formatter\AsciiTableFormatter()) : self
     {
         return new self('php://output', 'w', $truncate, $formatter);
     }
 
-    public static function stderr(int $truncate = 20, Formatter $formatter = null) : self
+    public static function stderr(int|bool $truncate = 20, Formatter $formatter = new Formatter\AsciiTableFormatter()) : self
     {
         return new self('php://stderr', 'w', $truncate, $formatter);
     }
 
-    public static function stdout(int $truncate = 20, Formatter $formatter = null) : self
+    public static function stdout(int|bool $truncate = 20, Formatter $formatter = new Formatter\AsciiTableFormatter()) : self
     {
         return new self('php://stdout', 'w', $truncate, $formatter);
     }

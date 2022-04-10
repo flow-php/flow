@@ -7,26 +7,26 @@ namespace Flow\ETL\Pipeline;
 use Flow\ETL\ErrorHandler;
 use Flow\ETL\Extractor;
 use Flow\ETL\GroupBy;
+use Flow\ETL\Loader;
 use Flow\ETL\Pipeline;
+use Flow\ETL\Transformer;
 
 final class GroupByPipeline implements Pipeline
 {
-    private GroupBy $groupBy;
+    private readonly Pipeline $nextPipeline;
 
-    private Pipeline $nextPipeline;
+    private readonly Pipeline $pipeline;
 
-    private Pipeline $pipeline;
-
-    public function __construct(GroupBy $groupBy, Pipeline $pipeline)
+    public function __construct(private readonly GroupBy $groupBy, Pipeline $pipeline)
     {
+        /** @phpstan-ignore-next-line */
         $existingPipeline = $pipeline instanceof self ? $pipeline->pipeline : $pipeline;
 
-        $this->groupBy = $groupBy;
         $this->pipeline = $existingPipeline;
         $this->nextPipeline = $existingPipeline->cleanCopy();
     }
 
-    public function add(Pipe $pipe) : void
+    public function add(Loader|Transformer $pipe) : void
     {
         $this->nextPipeline->add($pipe);
     }

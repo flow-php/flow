@@ -12,20 +12,16 @@ use Flow\ETL\Row\Schema\Definition;
  * @implements Entry<null, array{name: string}>
  * @psalm-immutable
  */
-final class NullEntry implements Entry
+final class NullEntry implements \Stringable, Entry
 {
-    private string $name;
-
     /**
      * @throws InvalidArgumentException
      */
-    public function __construct(string $name)
+    public function __construct(private readonly string $name)
     {
         if (!\strlen($name)) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
-
-        $this->name = $name;
     }
 
     public function __serialize() : array
