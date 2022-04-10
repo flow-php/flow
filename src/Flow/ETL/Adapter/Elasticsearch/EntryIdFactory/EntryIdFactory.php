@@ -9,20 +9,15 @@ use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
 
 /**
+ * @implements IdFactory<array{entry_name: string}>
  * @psalm-immutable
  */
 final class EntryIdFactory implements IdFactory
 {
-    private string $entryName;
-
-    public function __construct(string $entryName)
+    public function __construct(private string $entryName)
     {
-        $this->entryName = $entryName;
     }
 
-    /**
-     * @return array{entry_name: string}
-     */
     public function __serialize() : array
     {
         return [
@@ -30,10 +25,6 @@ final class EntryIdFactory implements IdFactory
         ];
     }
 
-    /**
-     * @param array{entry_name: string} $data
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->entryName = $data['entry_name'];

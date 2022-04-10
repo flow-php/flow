@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1404237fa5768cf4204baec045c613a5",
+    "content-hash": "cfb4bee63b494abcd0643fcd87592445",
     "packages": [
         {
             "name": "flow-php/array-dot",
@@ -12,16 +12,16 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/array-dot.git",
-                "reference": "3dfcefb27cf18c43f3cf64fa1572175a9c68e6ec"
+                "reference": "c0688bb9e2c90f343779bc3b1761e11bd26da55f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/array-dot/zipball/3dfcefb27cf18c43f3cf64fa1572175a9c68e6ec",
-                "reference": "3dfcefb27cf18c43f3cf64fa1572175a9c68e6ec",
+                "url": "https://api.github.com/repos/flow-php/array-dot/zipball/c0688bb9e2c90f343779bc3b1761e11bd26da55f",
+                "reference": "c0688bb9e2c90f343779bc3b1761e11bd26da55f",
                 "shasum": ""
             },
             "require": {
-                "php": "^7.4 | ^8.0"
+                "php": "~8.1"
             },
             "default-branch": true,
             "type": "library",
@@ -53,7 +53,7 @@
                 "issues": "https://github.com/flow-php/array-dot/issues",
                 "source": "https://github.com/flow-php/array-dot/tree/1.x"
             },
-            "time": "2022-02-18T21:14:35+00:00"
+            "time": "2022-04-10T09:46:31+00:00"
         },
         {
             "name": "flow-php/etl",
@@ -61,24 +61,24 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl.git",
-                "reference": "ce449b7ff68cd515eb0b8b645c015d2ffcfb4762"
+                "reference": "45780e12e2b7607ab39366eef1704fae005d03cd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl/zipball/ce449b7ff68cd515eb0b8b645c015d2ffcfb4762",
-                "reference": "ce449b7ff68cd515eb0b8b645c015d2ffcfb4762",
+                "url": "https://api.github.com/repos/flow-php/etl/zipball/45780e12e2b7607ab39366eef1704fae005d03cd",
+                "reference": "45780e12e2b7607ab39366eef1704fae005d03cd",
                 "shasum": ""
             },
             "require": {
                 "ext-json": "*",
                 "ext-mbstring": "*",
                 "flow-php/array-dot": "^1.0@dev",
-                "php": "^7.4.2 || ~8.0"
+                "php": "~8.1"
             },
             "require-dev": {
                 "jawira/case-converter": "^3.4",
                 "laminas/laminas-hydrator": "^4.0",
-                "opis/closure": "^3.5.1",
+                "laravel/serializable-closure": "^1.1",
                 "symfony/validator": "^5.3"
             },
             "suggest": {
@@ -110,7 +110,7 @@
                 "issues": "https://github.com/flow-php/etl/issues",
                 "source": "https://github.com/flow-php/etl/tree/1.x"
             },
-            "time": "2022-02-20T16:39:36+00:00"
+            "time": "2022-04-10T10:14:58+00:00"
         }
     ],
     "packages-dev": [
@@ -293,30 +293,30 @@
         },
         {
             "name": "psr/log",
-            "version": "1.1.4",
+            "version": "3.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/php-fig/log.git",
-                "reference": "d49695b909c3b7628b6289db5479a1c204601f11"
+                "reference": "fe5ea303b0887d5caefd3d431c3e61ad47037001"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/php-fig/log/zipball/d49695b909c3b7628b6289db5479a1c204601f11",
-                "reference": "d49695b909c3b7628b6289db5479a1c204601f11",
+                "url": "https://api.github.com/repos/php-fig/log/zipball/fe5ea303b0887d5caefd3d431c3e61ad47037001",
+                "reference": "fe5ea303b0887d5caefd3d431c3e61ad47037001",
                 "shasum": ""
             },
             "require": {
-                "php": ">=5.3.0"
+                "php": ">=8.0.0"
             },
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "1.1.x-dev"
+                    "dev-master": "3.x-dev"
                 }
             },
             "autoload": {
                 "psr-4": {
-                    "Psr\\Log\\": "Psr/Log/"
+                    "Psr\\Log\\": "src"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -337,9 +337,9 @@
                 "psr-3"
             ],
             "support": {
-                "source": "https://github.com/php-fig/log/tree/1.1.4"
+                "source": "https://github.com/php-fig/log/tree/3.0.0"
             },
-            "time": "2021-05-03T11:20:27+00:00"
+            "time": "2021-07-14T16:46:02+00:00"
         },
         {
             "name": "react/promise",
@@ -426,7 +426,7 @@
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": "^7.4 || ~8.0",
+        "php": "~8.1",
         "ext-json": "*"
     },
     "platform-dev": [],

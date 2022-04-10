@@ -6,17 +6,13 @@ namespace Flow\ETL\Adapter\Elasticsearch\Tests\Context;
 
 use Elasticsearch\Client;
 use Elasticsearch\ClientBuilder;
-use Elasticsearch\Common\Exceptions\BadRequest400Exception;
 
 final class ElasticsearchContext
 {
-    private array $hosts;
-
     private ?Client $client = null;
 
-    public function __construct(array $host)
+    public function __construct(private readonly array $hosts)
     {
-        $this->hosts = $host;
     }
 
     public function clientConfig() : array
@@ -49,7 +45,7 @@ final class ElasticsearchContext
             ];
 
             $response = $this->client()->indices()->create($params);
-        } catch (BadRequest400Exception $exception) {
+        } catch (BadRequest400Exception) {
         }
     }
 
@@ -60,7 +56,7 @@ final class ElasticsearchContext
                 'index' => $name,
             ];
             $response = $this->client()->indices()->delete($deleteParams);
-        } catch (BadRequest400Exception $exception) {
+        } catch (BadRequest400Exception) {
         }
     }
 }

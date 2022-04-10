@@ -1,7 +1,7 @@
 version: '2.2'
 services:
     elasticsearch:
-        image: elasticsearch:7.12.0
+        image: elasticsearch:8.1.2
         container_name: flow-test-elasticsearch
         ports:
             - 9200:9200
@@ -10,9 +10,3 @@ services:
           - discovery.type=single-node
           - bootstrap.memory_lock=true
           - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-        networks:
-          - elastic
-
-networks:
-  elastic:
-    driver: bridge

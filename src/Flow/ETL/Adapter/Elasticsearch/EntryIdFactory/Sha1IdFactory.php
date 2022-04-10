@@ -9,6 +9,7 @@ use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
 
 /**
+ * @implements IdFactory<array{entry_names: array<string>}>
  * @psalm-immutable
  */
 final class Sha1IdFactory implements IdFactory
@@ -23,9 +24,6 @@ final class Sha1IdFactory implements IdFactory
         $this->entryNames = $entryNames;
     }
 
-    /**
-     * @return array{entry_names: array<string>}
-     */
     public function __serialize() : array
     {
         return [
@@ -33,10 +31,6 @@ final class Sha1IdFactory implements IdFactory
         ];
     }
 
-    /**
-     * @param array{entry_names: array<string>} $data
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->entryNames = $data['entry_names'];
@@ -47,6 +41,7 @@ final class Sha1IdFactory implements IdFactory
         return new Row\Entry\StringEntry(
             'id',
             \sha1(
+                /** @phpstan-ignore-next-line */
                 \implode(':', \array_map(fn (string $name) : string => (string) $row->valueOf($name), $this->entryNames))
             )
         );
