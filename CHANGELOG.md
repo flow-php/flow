@@ -1,10 +1,11 @@
-## [Unreleased] - 2022-02-20
+## [Unreleased] - 2022-04-10
 
 ### Added
 - [#88](https://github.com/flow-php/etl-adapter-json/pull/88) - **Added JsonLoader** - [@norberttech](https://github.com/norberttech)
 - [#44](https://github.com/flow-php/etl-adapter-json/pull/44) - **Workflow for aut-merging dependabot PRs** - [@tomaszhanc](https://github.com/tomaszhanc)
 
 ### Changed
+- [#107](https://github.com/flow-php/etl-adapter-json/pull/107) - **Updated project to php 8.1** - [@norberttech](https://github.com/norberttech)
 - [2d6583](https://github.com/flow-php/etl-adapter-json/commit/2d65834efb90ea60daafbcbac2f6c210132366b2) - **Moved JsonEntry to flow-php/etl library** - [@norberttech](https://github.com/norberttech)
 - [#86](https://github.com/flow-php/etl-adapter-json/pull/86) - **Adjust adapter for Serialization** - [@norberttech](https://github.com/norberttech)
 - [ebbcfd](https://github.com/flow-php/etl-adapter-json/commit/ebbcfd15251e734c344d9b7f18adbc91ad11952c) - **Adjusted JsonEntry to the lastest changes** - [@norberttech](https://github.com/norberttech)
