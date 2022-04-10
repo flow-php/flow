@@ -1,6 +1,7 @@
-## [Unreleased] - 2022-04-09
+## [Unreleased] - 2022-04-10
 
 ### Added
+- [#212](https://github.com/flow-php/etl/pull/212) - **Updated project to PHP 8.1** - [@norberttech](https://github.com/norberttech)
 - [#211](https://github.com/flow-php/etl/pull/211) - **Schema constraint: IsInstanceOf** - [@norberttech](https://github.com/norberttech)
 - [#211](https://github.com/flow-php/etl/pull/211) - **Schema constraint: SameAs** - [@norberttech](https://github.com/norberttech)
 - [#210](https://github.com/flow-php/etl/pull/210) - **Join each** - [@norberttech](https://github.com/norberttech)
