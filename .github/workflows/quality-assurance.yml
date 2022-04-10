@@ -1,4 +1,4 @@
-name: Quality Assurance
+name: Test Case
 
 on:
   pull_request:
@@ -9,15 +9,15 @@ on:
 jobs:
   tests:
     name: "Tests"
-    uses: aeon-php/actions/.github/workflows/composer-script-test.yaml@main
+    uses: flow-php/actions/.github/workflows/composer-script-test.yaml@main
 
   static-analyze:
     name: "Static Analyze"
-    uses: aeon-php/actions/.github/workflows/composer-script-static-analyze.yaml@main
+    uses: flow-php/actions/.github/workflows/composer-script-static-analyze.yaml@main
 
   mutation-tests:
     name: "Mutation Tests"
-    uses: aeon-php/actions/.github/workflows/composer-script-mutation.yaml@main
+    uses: flow-php/actions/.github/workflows/composer-script-mutation.yaml@main
     secrets:
       infection_badge_api_key: ${{ secrets.INFECTION_BADGE_API_KEY }}
       stryker_dashboard_api_key: ${{ secrets.STRYKER_DASHBOARD_API_KEY }}

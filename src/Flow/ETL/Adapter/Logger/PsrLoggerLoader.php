@@ -10,24 +10,15 @@ use Flow\ETL\Rows;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 
+/**
+ * @implements Loader<array{logger: LoggerInterface, log_level: string, message: string}>
+ */
 final class PsrLoggerLoader implements Loader
 {
-    private LoggerInterface $logger;
-
-    private string $logLevel;
-
-    private string $message;
-
-    public function __construct(LoggerInterface $logger, string $message, string $logLeve = LogLevel::DEBUG)
+    public function __construct(private LoggerInterface $logger, private string $message, private string $logLevel = LogLevel::DEBUG)
     {
-        $this->logger = $logger;
-        $this->logLevel = $logLeve;
-        $this->message = $message;
     }
 
-    /**
-     * @return array{logger: LoggerInterface, log_level: string, message: string}
-     */
     public function __serialize() : array
     {
         return [
@@ -37,10 +28,6 @@ final class PsrLoggerLoader implements Loader
         ];
     }
 
-    /**
-     * @param array{logger: LoggerInterface, log_level: string, message: string} $data
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function __unserialize(array $data) : void
     {
         $this->logger = $data['logger'];
