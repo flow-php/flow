@@ -28,7 +28,7 @@ final class ResponseEntriesFactory
         $responseType = 'html';
 
         foreach ($response->getHeader('Content-Type') as $header) {
-            if (\strpos('application/json', $header) !== false) {
+            if (\str_contains('application/json', $header)) {
                 $responseType = 'json';
             }
         }
@@ -48,7 +48,7 @@ final class ResponseEntriesFactory
 
             switch ($responseType) {
                 case 'json':
-                    if (\class_exists('Flow\ETL\Row\Entry\JsonEntry')) {
+                    if (\class_exists(\Flow\ETL\Row\Entry\JsonEntry::class)) {
                         $responseBodyEntry = new Row\Entry\JsonEntry('response_body', (array) \json_decode($responseBodyContent, true, 512, JSON_THROW_ON_ERROR));
                     } else {
                         $responseBodyEntry = new Row\Entry\StringEntry('response_body', $responseBodyContent);

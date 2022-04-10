@@ -29,13 +29,13 @@ final class RequestEntriesFactory
 
         if ($request->hasHeader('Content-Type')) {
             foreach ($request->getHeader('Content-Type') as $header) {
-                if (\strpos('application/json', $header) !== false) {
+                if (\str_contains('application/json', $header)) {
                     $requestType = 'json';
                 }
             }
         } else {
             foreach ($request->getHeader('Accept') as $header) {
-                if (\strpos('application/json', $header) !== false) {
+                if (\str_contains('application/json', $header)) {
                     $requestType = 'json';
                 }
             }
@@ -58,7 +58,7 @@ final class RequestEntriesFactory
             if (!empty($requestBodyContent)) {
                 switch ($requestType) {
                     case 'json':
-                        if (\class_exists('Flow\ETL\Row\Entry\JsonEntry')) {
+                        if (\class_exists(\Flow\ETL\Row\Entry\JsonEntry::class)) {
                             $requestBodyEntry = new Row\Entry\JsonEntry('request_body', (array) \json_decode($requestBodyContent, true, 512, JSON_THROW_ON_ERROR));
                         } else {
                             $requestBodyEntry = new Row\Entry\StringEntry('request_body', $requestBodyContent);

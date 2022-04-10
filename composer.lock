@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0de6d5169ba107a923d5585423fbd3fc",
+    "content-hash": "9e4fd27a50fa6dabdf42b6143f3c1000",
     "packages": [
         {
             "name": "flow-php/array-dot",
@@ -12,16 +12,16 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/array-dot.git",
-                "reference": "3dfcefb27cf18c43f3cf64fa1572175a9c68e6ec"
+                "reference": "c0688bb9e2c90f343779bc3b1761e11bd26da55f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/array-dot/zipball/3dfcefb27cf18c43f3cf64fa1572175a9c68e6ec",
-                "reference": "3dfcefb27cf18c43f3cf64fa1572175a9c68e6ec",
+                "url": "https://api.github.com/repos/flow-php/array-dot/zipball/c0688bb9e2c90f343779bc3b1761e11bd26da55f",
+                "reference": "c0688bb9e2c90f343779bc3b1761e11bd26da55f",
                 "shasum": ""
             },
             "require": {
-                "php": "^7.4 | ^8.0"
+                "php": "~8.1"
             },
             "default-branch": true,
             "type": "library",
@@ -53,7 +53,7 @@
                 "issues": "https://github.com/flow-php/array-dot/issues",
                 "source": "https://github.com/flow-php/array-dot/tree/1.x"
             },
-            "time": "2022-02-18T21:14:35+00:00"
+            "time": "2022-04-10T09:46:31+00:00"
         },
         {
             "name": "flow-php/etl",
@@ -61,24 +61,24 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl.git",
-                "reference": "8a1a119964e9cc1c7dee949e584eb8103810a85b"
+                "reference": "45780e12e2b7607ab39366eef1704fae005d03cd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl/zipball/8a1a119964e9cc1c7dee949e584eb8103810a85b",
-                "reference": "8a1a119964e9cc1c7dee949e584eb8103810a85b",
+                "url": "https://api.github.com/repos/flow-php/etl/zipball/45780e12e2b7607ab39366eef1704fae005d03cd",
+                "reference": "45780e12e2b7607ab39366eef1704fae005d03cd",
                 "shasum": ""
             },
             "require": {
                 "ext-json": "*",
                 "ext-mbstring": "*",
                 "flow-php/array-dot": "^1.0@dev",
-                "php": "^7.4.2 || ~8.0"
+                "php": "~8.1"
             },
             "require-dev": {
                 "jawira/case-converter": "^3.4",
                 "laminas/laminas-hydrator": "^4.0",
-                "opis/closure": "^3.5.1",
+                "laravel/serializable-closure": "^1.1",
                 "symfony/validator": "^5.3"
             },
             "suggest": {
@@ -110,7 +110,7 @@
                 "issues": "https://github.com/flow-php/etl/issues",
                 "source": "https://github.com/flow-php/etl/tree/1.x"
             },
-            "time": "2022-02-20T16:41:15+00:00"
+            "time": "2022-04-10T10:14:58+00:00"
         },
         {
             "name": "psr/http-client",
@@ -221,16 +221,16 @@
     "packages-dev": [
         {
             "name": "clue/stream-filter",
-            "version": "v1.5.0",
+            "version": "v1.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/clue/stream-filter.git",
-                "reference": "aeb7d8ea49c7963d3b581378955dbf5bc49aa320"
+                "reference": "d6169430c7731d8509da7aecd0af756a5747b78e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/clue/stream-filter/zipball/aeb7d8ea49c7963d3b581378955dbf5bc49aa320",
-                "reference": "aeb7d8ea49c7963d3b581378955dbf5bc49aa320",
+                "url": "https://api.github.com/repos/clue/stream-filter/zipball/d6169430c7731d8509da7aecd0af756a5747b78e",
+                "reference": "d6169430c7731d8509da7aecd0af756a5747b78e",
                 "shasum": ""
             },
             "require": {
@@ -271,7 +271,7 @@
             ],
             "support": {
                 "issues": "https://github.com/clue/stream-filter/issues",
-                "source": "https://github.com/clue/stream-filter/tree/v1.5.0"
+                "source": "https://github.com/clue/stream-filter/tree/v1.6.0"
             },
             "funding": [
                 {
@@ -283,7 +283,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2020-10-02T12:38:20+00:00"
+            "time": "2022-02-21T13:15:14+00:00"
         },
         {
             "name": "nyholm/psr7",
@@ -501,16 +501,16 @@
         },
         {
             "name": "php-http/httplug",
-            "version": "2.2.0",
+            "version": "2.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/php-http/httplug.git",
-                "reference": "191a0a1b41ed026b717421931f8d3bd2514ffbf9"
+                "reference": "f640739f80dfa1152533976e3c112477f69274eb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/php-http/httplug/zipball/191a0a1b41ed026b717421931f8d3bd2514ffbf9",
-                "reference": "191a0a1b41ed026b717421931f8d3bd2514ffbf9",
+                "url": "https://api.github.com/repos/php-http/httplug/zipball/f640739f80dfa1152533976e3c112477f69274eb",
+                "reference": "f640739f80dfa1152533976e3c112477f69274eb",
                 "shasum": ""
             },
             "require": {
@@ -557,9 +557,9 @@
             ],
             "support": {
                 "issues": "https://github.com/php-http/httplug/issues",
-                "source": "https://github.com/php-http/httplug/tree/master"
+                "source": "https://github.com/php-http/httplug/tree/2.3.0"
             },
-            "time": "2020-07-13T15:43:23+00:00"
+            "time": "2022-02-21T09:52:22+00:00"
         },
         {
             "name": "php-http/message",
@@ -803,25 +803,25 @@
         },
         {
             "name": "symfony/deprecation-contracts",
-            "version": "v2.5.0",
+            "version": "v3.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/deprecation-contracts.git",
-                "reference": "6f981ee24cf69ee7ce9736146d1c57c2780598a8"
+                "reference": "26954b3d62a6c5fd0ea8a2a00c0353a14978d05c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/deprecation-contracts/zipball/6f981ee24cf69ee7ce9736146d1c57c2780598a8",
-                "reference": "6f981ee24cf69ee7ce9736146d1c57c2780598a8",
+                "url": "https://api.github.com/repos/symfony/deprecation-contracts/zipball/26954b3d62a6c5fd0ea8a2a00c0353a14978d05c",
+                "reference": "26954b3d62a6c5fd0ea8a2a00c0353a14978d05c",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7.1"
+                "php": ">=8.0.2"
             },
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-main": "2.5-dev"
+                    "dev-main": "3.0-dev"
                 },
                 "thanks": {
                     "name": "symfony/contracts",
@@ -850,7 +850,7 @@
             "description": "A generic function and convention to trigger deprecation notices",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/deprecation-contracts/tree/v2.5.0"
+                "source": "https://github.com/symfony/deprecation-contracts/tree/v3.0.1"
             },
             "funding": [
                 {
@@ -866,27 +866,25 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-07-12T14:48:14+00:00"
+            "time": "2022-01-02T09:55:41+00:00"
         },
         {
             "name": "symfony/options-resolver",
-            "version": "v5.4.3",
+            "version": "v6.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/options-resolver.git",
-                "reference": "cc1147cb11af1b43f503ac18f31aa3bec213aba8"
+                "reference": "51f7006670febe4cbcbae177cbffe93ff833250d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/options-resolver/zipball/cc1147cb11af1b43f503ac18f31aa3bec213aba8",
-                "reference": "cc1147cb11af1b43f503ac18f31aa3bec213aba8",
+                "url": "https://api.github.com/repos/symfony/options-resolver/zipball/51f7006670febe4cbcbae177cbffe93ff833250d",
+                "reference": "51f7006670febe4cbcbae177cbffe93ff833250d",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7.2.5",
-                "symfony/deprecation-contracts": "^2.1|^3",
-                "symfony/polyfill-php73": "~1.0",
-                "symfony/polyfill-php80": "^1.16"
+                "php": ">=8.0.2",
+                "symfony/deprecation-contracts": "^2.1|^3"
             },
             "type": "library",
             "autoload": {
@@ -919,7 +917,7 @@
                 "options"
             ],
             "support": {
-                "source": "https://github.com/symfony/options-resolver/tree/v5.4.3"
+                "source": "https://github.com/symfony/options-resolver/tree/v6.0.3"
             },
             "funding": [
                 {
@@ -935,169 +933,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-01-02T09:53:40+00:00"
-        },
-        {
-            "name": "symfony/polyfill-php73",
-            "version": "v1.24.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/symfony/polyfill-php73.git",
-                "reference": "cc5db0e22b3cb4111010e48785a97f670b350ca5"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-php73/zipball/cc5db0e22b3cb4111010e48785a97f670b350ca5",
-                "reference": "cc5db0e22b3cb4111010e48785a97f670b350ca5",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=7.1"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-main": "1.23-dev"
-                },
-                "thanks": {
-                    "name": "symfony/polyfill",
-                    "url": "https://github.com/symfony/polyfill"
-                }
-            },
-            "autoload": {
-                "files": [
-                    "bootstrap.php"
-                ],
-                "psr-4": {
-                    "Symfony\\Polyfill\\Php73\\": ""
-                },
-                "classmap": [
-                    "Resources/stubs"
-                ]
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Nicolas Grekas",
-                    "email": "p@tchwork.com"
-                },
-                {
-                    "name": "Symfony Community",
-                    "homepage": "https://symfony.com/contributors"
-                }
-            ],
-            "description": "Symfony polyfill backporting some PHP 7.3+ features to lower PHP versions",
-            "homepage": "https://symfony.com",
-            "keywords": [
-                "compatibility",
-                "polyfill",
-                "portable",
-                "shim"
-            ],
-            "support": {
-                "source": "https://github.com/symfony/polyfill-php73/tree/v1.24.0"
-            },
-            "funding": [
-                {
-                    "url": "https://symfony.com/sponsor",
-                    "type": "custom"
-                },
-                {
-                    "url": "https://github.com/fabpot",
-                    "type": "github"
-                },
-                {
-                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
-                    "type": "tidelift"
-                }
-            ],
-            "time": "2021-06-05T21:20:04+00:00"
-        },
-        {
-            "name": "symfony/polyfill-php80",
-            "version": "v1.24.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/symfony/polyfill-php80.git",
-                "reference": "57b712b08eddb97c762a8caa32c84e037892d2e9"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-php80/zipball/57b712b08eddb97c762a8caa32c84e037892d2e9",
-                "reference": "57b712b08eddb97c762a8caa32c84e037892d2e9",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=7.1"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-main": "1.23-dev"
-                },
-                "thanks": {
-                    "name": "symfony/polyfill",
-                    "url": "https://github.com/symfony/polyfill"
-                }
-            },
-            "autoload": {
-                "files": [
-                    "bootstrap.php"
-                ],
-                "psr-4": {
-                    "Symfony\\Polyfill\\Php80\\": ""
-                },
-                "classmap": [
-                    "Resources/stubs"
-                ]
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Ion Bazan",
-                    "email": "ion.bazan@gmail.com"
-                },
-                {
-                    "name": "Nicolas Grekas",
-                    "email": "p@tchwork.com"
-                },
-                {
-                    "name": "Symfony Community",
-                    "homepage": "https://symfony.com/contributors"
-                }
-            ],
-            "description": "Symfony polyfill backporting some PHP 8.0+ features to lower PHP versions",
-            "homepage": "https://symfony.com",
-            "keywords": [
-                "compatibility",
-                "polyfill",
-                "portable",
-                "shim"
-            ],
-            "support": {
-                "source": "https://github.com/symfony/polyfill-php80/tree/v1.24.0"
-            },
-            "funding": [
-                {
-                    "url": "https://symfony.com/sponsor",
-                    "type": "custom"
-                },
-                {
-                    "url": "https://github.com/fabpot",
-                    "type": "github"
-                },
-                {
-                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
-                    "type": "tidelift"
-                }
-            ],
-            "time": "2021-09-13T13:58:33+00:00"
+            "time": "2022-01-02T09:55:41+00:00"
         }
     ],
     "aliases": [],
@@ -1108,7 +944,7 @@
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": "^7.4 || ~8.0",
+        "php": "~8.1",
         "ext-json": "*"
     },
     "platform-dev": [],

@@ -41,7 +41,7 @@ final class PsrHttpClientDynamicExtractorTest extends TestCase
 
         $this->assertSame(1, $rows->current()->count());
         $this->assertSame('flow-php', $body['login']);
-        $this->assertSame(73495297, $body['id']);
+        $this->assertSame(73_495_297, $body['id']);
         $this->assertSame(['GitHub.com'], $rows->current()->first()->valueOf('response_headers')['Server']);
         $this->assertSame(200, $rows->current()->first()->valueOf('response_status_code'));
         $this->assertSame('1.1', $rows->current()->first()->valueOf('response_protocol_version'));
