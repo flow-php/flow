@@ -15,41 +15,20 @@ use Ramsey\Uuid\Uuid;
  */
 final class CSVLoader implements Loader
 {
-    private string $path;
-
-    private string $openMode;
-
-    private bool $withHeader;
-
     private ?Writer $writer = null;
 
     private bool $headerAdded;
 
-    private bool $safeMode;
-
-    private string $delimiter;
-
-    private string $enclosure;
-
-    private string $escape;
-
     public function __construct(
-        string $path,
-        string $openMode = 'w+',
-        bool $withHeader = true,
-        bool $safeMode = true,
-        string $delimiter = ',',
-        string $enclosure = '"',
-        string $escape = '\\'
+        private string $path,
+        private string $openMode = 'w+',
+        private bool $withHeader = true,
+        private bool $safeMode = true,
+        private string $delimiter = ',',
+        private string $enclosure = '"',
+        private string $escape = '\\'
     ) {
         $this->headerAdded = false;
-        $this->path = $path;
-        $this->openMode = $openMode;
-        $this->withHeader = $withHeader;
-        $this->safeMode = $safeMode;
-        $this->delimiter = $delimiter;
-        $this->enclosure = $enclosure;
-        $this->escape = $escape;
     }
 
     public function __serialize() : array

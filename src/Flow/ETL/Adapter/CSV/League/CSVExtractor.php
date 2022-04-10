@@ -14,43 +14,19 @@ use League\Csv\Reader;
  */
 final class CSVExtractor implements Extractor
 {
-    private string $path;
-
-    private int $rowsInBatch;
-
-    private ?int $headerOffset;
-
-    private string $operationMode;
-
-    private string $rowEntryName;
-
     private ?Reader $reader;
 
-    private string $delimiter;
-
-    private string $enclosure;
-
-    private string $escape;
-
     public function __construct(
-        string $path,
-        int $rowsInBatch,
-        int $headerOffset = null,
-        string $operationMode = 'r',
-        string $rowEntryName = 'row',
-        string $delimiter = ',',
-        string $enclosure = '"',
-        string $escape = '\\'
+        private readonly string $path,
+        private readonly int $rowsInBatch,
+        private readonly ?int $headerOffset = null,
+        private readonly string $operationMode = 'r',
+        private readonly string $rowEntryName = 'row',
+        private readonly string $delimiter = ',',
+        private readonly string $enclosure = '"',
+        private readonly string $escape = '\\'
     ) {
-        $this->path = $path;
-        $this->rowsInBatch = $rowsInBatch;
-        $this->operationMode = $operationMode;
-        $this->rowEntryName = $rowEntryName;
         $this->reader = null;
-        $this->headerOffset = $headerOffset;
-        $this->delimiter = $delimiter;
-        $this->enclosure = $enclosure;
-        $this->escape = $escape;
     }
 
     public function extract() : \Generator

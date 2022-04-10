@@ -5,6 +5,7 @@
     "phpunit/phpunit": "^9.5",
     "vimeo/psalm": "^4.6",
     "phpstan/phpstan": "^1.0.0",
-    "friendsofphp/php-cs-fixer": "^3.1"
+    "friendsofphp/php-cs-fixer": "^3.1",
+    "rector/rector": "^0.12.20"
   }
 }
