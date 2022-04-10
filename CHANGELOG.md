@@ -1,6 +1,7 @@
-## [Unreleased] - 2022-02-23
+## [Unreleased] - 2022-04-10
 
 ### Added
+- [#110](https://github.com/flow-php/doctrine-dbal-bulk/pull/110) - **Updated to PHP 8.1** - [@norberttech](https://github.com/norberttech)
 - [#88](https://github.com/flow-php/doctrine-dbal-bulk/pull/88) - **Added json_array doctrine type to bulk data** - [@owsiakl](https://github.com/owsiakl)
 - [#87](https://github.com/flow-php/doctrine-dbal-bulk/pull/87) - **Detect JSON type values and automatically cast them from string to array in order to satisfy dbal** - [@norberttech](https://github.com/norberttech)
 - [#86](https://github.com/flow-php/doctrine-dbal-bulk/pull/86) - **Update multiple rows at once** - [@DawidSajdak](https://github.com/DawidSajdak)
