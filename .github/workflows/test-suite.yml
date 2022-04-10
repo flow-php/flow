@@ -9,8 +9,8 @@ on:
 jobs:
   tests:
     name: "Tests"
-    uses: aeon-php/actions/.github/workflows/composer-script-test.yaml@main
+    uses: flow-php/actions/.github/workflows/composer-script-test.yaml@main
 
   static-analyze:
     name: "Static Analyze"
-    uses: aeon-php/actions/.github/workflows/composer-script-static-analyze.yaml@main
+    uses: flow-php/actions/.github/workflows/composer-script-static-analyze.yaml@main

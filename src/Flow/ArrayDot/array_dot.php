@@ -20,8 +20,8 @@ function array_dot_steps(string $path) : array
         throw new InvalidPathException("Path can't be empty.");
     }
 
-    if (\strpos($path, '{') !== false) {
-        if (\strpos($path, '}') === false) {
+    if (\str_contains($path, '{')) {
+        if (!\str_contains($path, '}')) {
             throw new InvalidPathException('Multimatch syntax not closed');
         }
 
@@ -36,7 +36,7 @@ function array_dot_steps(string $path) : array
         $path = \str_replace($multiMatchPath[2], '__MULTIMATCH_PATH__', $path);
     }
 
-    if (\strpos($path, '{') === 0 && \strpos($path, '}') !== false) {
+    if (\str_starts_with($path, '{') && \str_contains($path, '}')) {
         $pathSteps = [$path];
     } else {
         $pathSteps = \explode('.', $path);
@@ -116,7 +116,7 @@ function array_dot_set(array $array, string $path, $value) : array
  *
  * @return mixed
  */
-function array_dot_get(array $array, string $path)
+function array_dot_get(array $array, string $path) : mixed
 {
     if (\count($array) === 0) {
         throw new InvalidPathException(
@@ -201,20 +201,20 @@ function array_dot_get(array $array, string $path)
 
         $nullSafe = false;
 
-        if (\strpos($step, '?') === 0 && $step !== '?*') {
+        if (\str_starts_with($step, '?') && $step !== '?*') {
             $nullSafe = true;
             $step = \ltrim($step, '?');
             \array_pop($takenSteps);
             $takenSteps[] = $step;
         }
 
-        if (\strpos($step, '\\{') !== false) {
+        if (\str_contains($step, '\\{')) {
             $step = \str_replace('\\{', '{', $step);
             \array_pop($takenSteps);
             $takenSteps[] = $step;
         }
 
-        if (\strpos($step, '\\}') !== false) {
+        if (\str_contains($step, '\\}')) {
             $step = \str_replace('\\}', '}', $step);
             \array_pop($takenSteps);
             $takenSteps[] = $step;
@@ -328,7 +328,7 @@ function array_dot_exists(array $array, string $path) : bool
         array_dot_get($array, $path);
 
         return true;
-    } catch (InvalidPathException $e) {
+    } catch (InvalidPathException) {
         return false;
     }
 }

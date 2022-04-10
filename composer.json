@@ -6,7 +6,7 @@
     "prefer-stable": true,
     "minimum-stability": "dev",
     "require": {
-        "php": "^7.4 | ^8.0"
+        "php": "~8.1"
     },
     "config": {
         "optimize-autoloader": true,
