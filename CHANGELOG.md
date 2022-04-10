@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-02-18
+## [Unreleased] - 2022-04-10
 
 ### Added
 - [#28](https://github.com/flow-php/array-dot/pull/28) - **Workflow for aut-merging dependabot PRs** - [@tomaszhanc](https://github.com/tomaszhanc)
@@ -8,13 +8,14 @@
 - [484348](https://github.com/flow-php/array-dot/commit/4843488e18bdd6d2879ec254f05bd298c7d7dc37) - **multiselect syntax** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#86](https://github.com/flow-php/array-dot/pull/86) - **Upgrade php81** - [@norberttech](https://github.com/norberttech)
 - [#52](https://github.com/flow-php/array-dot/pull/52) - **Reuse workflows from aeon-php/actions** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#41](https://github.com/flow-php/array-dot/pull/41) - **Skip errors from PHPStan** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [94ffb8](https://github.com/flow-php/array-dot/commit/94ffb8d4f888c176fae941c99014998668a89454) - **Extract array_dot_path function from array_dot_get** - [@norberttech](https://github.com/norberttech)
 - [4461ea](https://github.com/flow-php/array-dot/commit/4461ea9906c4a4160c2a1f58a6d17667bf7822f5) - **Initial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
-- [d2c3af](https://github.com/flow-php/array-dot/commit/d2c3af6b22917e3148a123212fd301ca8dc9b185) - **array_dot edge case of accessing non array through wildcard (#66)** - [@norberttech](https://github.com/norberttech)
+- [#66](https://github.com/flow-php/array-dot/pull/66) - **array_dot edge case of accessing non array through wildcard** - [@norberttech](https://github.com/norberttech)
 - [1f0da0](https://github.com/flow-php/array-dot/commit/1f0da0a7b831283ef7c40c94f4394a302b881b1c) - **multiselect nested paths** - [@norberttech](https://github.com/norberttech)
 - [#5](https://github.com/flow-php/array-dot/pull/5) - **Added missing keys to multiselect result array** - [@norberttech](https://github.com/norberttech)
 
