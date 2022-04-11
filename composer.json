@@ -14,7 +14,7 @@
         "jawira/case-converter": "^3.4",
         "laminas/laminas-hydrator": "^4.0",
         "laravel/serializable-closure": "^1.1",
-        "symfony/validator": "^5.3"
+        "symfony/validator": "^5.3 || ^6.0"
     },
     "config": {
         "optimize-autoloader": true,
