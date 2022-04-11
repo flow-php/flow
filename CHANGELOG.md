@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-04-10
+## [Unreleased] - 2022-04-11
 
 ### Added
 - [#212](https://github.com/flow-php/etl/pull/212) - **Updated project to PHP 8.1** - [@norberttech](https://github.com/norberttech)
@@ -158,6 +158,7 @@
 - [1a6eec](https://github.com/flow-php/etl/commit/1a6eec01837f25cf1d6ff7c041996ff7b8b017e7) - **failing tests** - [@norberttech](https://github.com/norberttech)
 
 ### Updated
+- [518e6a](https://github.com/flow-php/etl/commit/518e6a07a9ac50fd2c2233385eacf611718bc806) - **dependabot-auto-merge.yml** - [@norberttech](https://github.com/norberttech)
 - [56df9b](https://github.com/flow-php/etl/commit/56df9b34a9b5fcf54771f3bc3c971c2ca5b1cba6) - **README.md** - [@norberttech](https://github.com/norberttech)
 - [6521a2](https://github.com/flow-php/etl/commit/6521a26b7a182d063ac0ba0fdabb7415003fb12d) - **tools dependencies** - [@norberttech](https://github.com/norberttech)
 - [eb8a5c](https://github.com/flow-php/etl/commit/eb8a5cfec26d1408f1d45694bd593dc824d257ea) - **README.md** - [@norberttech](https://github.com/norberttech)
