@@ -28,6 +28,7 @@ schema
 |-- name: [Flow\ETL\Row\Entry\StringEntry, Flow\ETL\Row\Entry\NullEntry] (nullable = true)
 |-- number: [Flow\ETL\Row\Entry\IntegerEntry, Flow\ETL\Row\Entry\FloatEntry] (nullable = false)
 |-- tags: Flow\ETL\Row\Entry\ArrayEntry (nullable = false)
+
 SCHEMA,
             (new ASCIISchemaFormatter())->format($schema)
         );

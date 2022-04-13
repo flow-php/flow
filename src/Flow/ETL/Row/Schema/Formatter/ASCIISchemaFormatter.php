@@ -28,6 +28,6 @@ final class ASCIISchemaFormatter implements SchemaFormatter
         $output = "schema\n";
         $output .= \implode("\n", $entries);
 
-        return $output;
+        return $output . "\n";
     }
 }

@@ -60,6 +60,7 @@ final class StreamLoaderTest extends TestCase
 schema
 |-- id: Flow\ETL\Row\Entry\IntegerEntry (nullable = false)
 |-- name: Flow\ETL\Row\Entry\StringEntry (nullable = false)
+
 ASCII,
             $output
         );
@@ -117,6 +118,7 @@ TABLE,
 schema
 |-- id: Flow\ETL\Row\Entry\IntegerEntry (nullable = false)
 |-- name: Flow\ETL\Row\Entry\StringEntry (nullable = false)
+
 ASCII,
             $output
         );

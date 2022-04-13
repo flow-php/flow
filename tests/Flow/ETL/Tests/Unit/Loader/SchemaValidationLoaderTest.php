@@ -26,6 +26,7 @@ schema
 Does not match rows: 
 schema
 |-- id: Flow\ETL\Row\Entry\StringEntry (nullable = false)
+
 EXCEPTION
         );
 
