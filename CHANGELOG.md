@@ -1,6 +1,7 @@
-## [Unreleased] - 2022-04-11
+## [Unreleased] - 2022-04-13
 
 ### Added
+- [#214](https://github.com/flow-php/etl/pull/214) - **SchemaFormatter** - [@norberttech](https://github.com/norberttech)
 - [#212](https://github.com/flow-php/etl/pull/212) - **Updated project to PHP 8.1** - [@norberttech](https://github.com/norberttech)
 - [#211](https://github.com/flow-php/etl/pull/211) - **Schema constraint: IsInstanceOf** - [@norberttech](https://github.com/norberttech)
 - [#211](https://github.com/flow-php/etl/pull/211) - **Schema constraint: SameAs** - [@norberttech](https://github.com/norberttech)
@@ -103,6 +104,7 @@
 - [856870](https://github.com/flow-php/etl/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#214](https://github.com/flow-php/etl/pull/214) - **allow to display rows, rows & schema, schema in StreamLoader** - [@norberttech](https://github.com/norberttech)
 - [#197](https://github.com/flow-php/etl/pull/197) - **Extracted DataFrame from ETL** - [@norberttech](https://github.com/norberttech)
 - [#197](https://github.com/flow-php/etl/pull/197) - **Deprecated ETL class** - [@norberttech](https://github.com/norberttech)
 - [#186](https://github.com/flow-php/etl/pull/186) - **Make entry names case sensitive** - [@norberttech](https://github.com/norberttech)
