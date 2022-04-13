@@ -52,6 +52,14 @@ final class Schema implements \Countable, Serializable
     }
 
     /**
+     * @return array<Definition>
+     */
+    public function definitions() : array
+    {
+        return $this->definitions;
+    }
+
+    /**
      * @return array<string>
      */
     public function entries() : array

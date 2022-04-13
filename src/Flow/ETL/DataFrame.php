@@ -105,14 +105,12 @@ final class DataFrame
     /**
      * @param int $limit maximum numbers of rows to display
      * @param bool|int $truncate false or if set to 0 columns are not truncated, otherwise default truncate to 20 characters
-     * @param null|Formatter $formatter
+     * @param Formatter $formatter
      *
      * @throws InvalidArgumentException
      */
-    public function display(int $limit = 20, int|bool $truncate = 20, Formatter $formatter = null) : string
+    public function display(int $limit = 20, int|bool $truncate = 20, Formatter $formatter = new AsciiTableFormatter()) : string
     {
-        $formatter ??= new AsciiTableFormatter();
-
         return $formatter->format($this->fetch($limit), $truncate);
     }
 

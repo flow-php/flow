@@ -7,10 +7,13 @@ namespace Flow\ETL\Loader;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Formatter;
 use Flow\ETL\Loader;
+use Flow\ETL\Loader\StreamLoader\Output;
+use Flow\ETL\Row\Schema\Formatter\ASCIISchemaFormatter;
+use Flow\ETL\Row\Schema\SchemaFormatter;
 use Flow\ETL\Rows;
 
 /**
- * @implements Loader<array{url: string, mode: string, truncate: int|bool, formatter: Formatter}>
+ * @implements Loader<array{url: string, mode: string, truncate: int|bool, output: Output, formatter: Formatter, schema_formatter: SchemaFormatter}>
  */
 final class StreamLoader implements Loader
 {
@@ -24,23 +27,25 @@ final class StreamLoader implements Loader
         private readonly string $url,
         private readonly string $mode = 'w',
         private readonly int|bool $truncate = 20,
-        private readonly Formatter $formatter = new Formatter\AsciiTableFormatter()
+        private readonly Output $output = Output::rows,
+        private readonly Formatter $formatter = new Formatter\AsciiTableFormatter(),
+        private readonly SchemaFormatter $schemaFormatter = new ASCIISchemaFormatter()
     ) {
     }
 
-    public static function output(int|bool $truncate = 20, Formatter $formatter = new Formatter\AsciiTableFormatter()) : self
+    public static function output(int|bool $truncate = 20, Output $output = Output::rows, Formatter $formatter = new Formatter\AsciiTableFormatter(), SchemaFormatter $schemaFormatter = new ASCIISchemaFormatter()) : self
     {
-        return new self('php://output', 'w', $truncate, $formatter);
+        return new self('php://output', 'w', $truncate, $output, $formatter, $schemaFormatter);
     }
 
-    public static function stderr(int|bool $truncate = 20, Formatter $formatter = new Formatter\AsciiTableFormatter()) : self
+    public static function stderr(int|bool $truncate = 20, Output $output = Output::rows, Formatter $formatter = new Formatter\AsciiTableFormatter(), SchemaFormatter $schemaFormatter = new ASCIISchemaFormatter()) : self
     {
-        return new self('php://stderr', 'w', $truncate, $formatter);
+        return new self('php://stderr', 'w', $truncate, $output, $formatter, $schemaFormatter);
     }
 
-    public static function stdout(int|bool $truncate = 20, Formatter $formatter = new Formatter\AsciiTableFormatter()) : self
+    public static function stdout(int|bool $truncate = 20, Output $output = Output::rows, Formatter $formatter = new Formatter\AsciiTableFormatter(), SchemaFormatter $schemaFormatter = new ASCIISchemaFormatter()) : self
     {
-        return new self('php://stdout', 'w', $truncate, $formatter);
+        return new self('php://stdout', 'w', $truncate, $output, $formatter, $schemaFormatter);
     }
 
     public function __serialize() : array
@@ -49,7 +54,9 @@ final class StreamLoader implements Loader
             'url' => $this->url,
             'mode' => $this->mode,
             'truncate' => $this->truncate,
+            'output' => $this->output,
             'formatter' => $this->formatter,
+            'schema_formatter' => $this->schemaFormatter,
         ];
     }
 
@@ -58,7 +65,9 @@ final class StreamLoader implements Loader
         $this->url = $data['url'];
         $this->mode = $data['mode'];
         $this->truncate = $data['truncate'];
+        $this->output = $data['output'];
         $this->formatter = $data['formatter'];
+        $this->schemaFormatter = $data['schema_formatter'];
     }
 
     public function load(Rows $rows) : void
@@ -72,7 +81,16 @@ final class StreamLoader implements Loader
         if ($stream === false) {
             throw new RuntimeException("Can't open stream for url: {$this->url} in mode: {$this->mode}");
         }
-        \fwrite($stream, $this->formatter->format($rows, $this->truncate));
+
+        \fwrite(
+            $stream,
+            match ($this->output) {
+                Output::rows => $this->formatter->format($rows, $this->truncate),
+                Output::schema => $this->schemaFormatter->format($rows->schema()),
+                Output::rows_and_schema => $this->formatter->format($rows, $this->truncate) . "\n" . $this->schemaFormatter->format($rows->schema())
+            }
+        );
+
         \fclose($stream);
     }
 }

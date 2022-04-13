@@ -17,6 +17,17 @@ final class SchemaValidationLoaderTest extends TestCase
     public function test_schema_validation_failed() : void
     {
         $this->expectException(SchemaValidationException::class);
+        $this->expectDeprecationMessage(
+            <<<EXCEPTION
+Given schema:
+schema
+|-- id: Flow\ETL\Row\Entry\IntegerEntry (nullable = false)
+
+Does not match rows: 
+schema
+|-- id: Flow\ETL\Row\Entry\StringEntry (nullable = false)
+EXCEPTION
+        );
 
         $loader = new SchemaValidationLoader(
             new Schema(
