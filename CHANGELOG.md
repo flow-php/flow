@@ -140,6 +140,7 @@
 - [e48062](https://github.com/flow-php/etl/commit/e48062890cd84e655e1162305086f67148347b83) - **Intial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#215](https://github.com/flow-php/etl/pull/215) - **schema ascii formatter separators** - [@norberttech](https://github.com/norberttech)
 - [#193](https://github.com/flow-php/etl/pull/193) - **sum aggregation float alias** - [@norberttech](https://github.com/norberttech)
 - [#192](https://github.com/flow-php/etl/pull/192) - **GroupByPipeline execution** - [@norberttech](https://github.com/norberttech)
 - [#177](https://github.com/flow-php/etl/pull/177) - **Psalm types detection** - [@norberttech](https://github.com/norberttech)
