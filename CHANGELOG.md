@@ -1,6 +1,7 @@
 ## [Unreleased] - 2022-04-14
 
 ### Added
+- [#218](https://github.com/flow-php/etl/pull/218) - **math value operation transformer** - [@norberttech](https://github.com/norberttech)
 - [#216](https://github.com/flow-php/etl/pull/216) - **EnumEntry** - [@norberttech](https://github.com/norberttech)
 - [#214](https://github.com/flow-php/etl/pull/214) - **SchemaFormatter** - [@norberttech](https://github.com/norberttech)
 - [#212](https://github.com/flow-php/etl/pull/212) - **Updated project to PHP 8.1** - [@norberttech](https://github.com/norberttech)
