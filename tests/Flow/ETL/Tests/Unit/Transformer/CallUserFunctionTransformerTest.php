@@ -12,6 +12,144 @@ use PHPUnit\Framework\TestCase;
 
 final class CallUserFunctionTransformerTest extends TestCase
 {
+    public function test_ceil() : void
+    {
+        $transformer = Transform::ceil('float');
+
+        $rows = $transformer->transform(
+            new Rows(
+                Row::create(
+                    new Row\Entry\FloatEntry('float', 10.54613),
+                )
+            )
+        );
+
+        $this->assertEquals(new Rows(
+            Row::create(
+                new Row\Entry\FloatEntry('float', 11),
+            )
+        ), $rows);
+    }
+
+    public function test_floor() : void
+    {
+        $transformer = Transform::floor('float');
+
+        $rows = $transformer->transform(
+            new Rows(
+                Row::create(
+                    new Row\Entry\FloatEntry('float', 10.54613),
+                )
+            )
+        );
+
+        $this->assertEquals(new Rows(
+            Row::create(
+                new Row\Entry\FloatEntry('float', 10),
+            )
+        ), $rows);
+    }
+
+    public function test_ltrim() : void
+    {
+        $callbackTransformer = Transform::ltrim('string');
+
+        $rows = $callbackTransformer->transform(
+            new Rows(
+                Row::create(
+                    new Entry\StringEntry('string', '  Something  ')
+                )
+            )
+        );
+
+        $this->assertEquals(new Rows(
+            Row::create(
+                new Entry\StringEntry('string', 'Something  ')
+            )
+        ), $rows);
+    }
+
+    public function test_round() : void
+    {
+        $transformer = Transform::round('float', 2, \PHP_ROUND_HALF_DOWN);
+
+        $rows = $transformer->transform(
+            new Rows(
+                Row::create(
+                    new Row\Entry\FloatEntry('float', 10.54613),
+                )
+            )
+        );
+
+        $this->assertEquals(new Rows(
+            Row::create(
+                new Row\Entry\FloatEntry('float', 10.55),
+            )
+        ), $rows);
+    }
+
+    public function test_rtrim() : void
+    {
+        $callbackTransformer = Transform::rtrim('string');
+
+        $rows = $callbackTransformer->transform(
+            new Rows(
+                Row::create(
+                    new Entry\StringEntry('string', '  Something  ')
+                )
+            )
+        );
+
+        $this->assertEquals(new Rows(
+            Row::create(
+                new Entry\StringEntry('string', '  Something')
+            )
+        ), $rows);
+    }
+
+    public function test_str_pad() : void
+    {
+        $callbackTransformer = Transform::str_pad(
+            'string',
+            5,
+            '-',
+            \STR_PAD_LEFT
+        );
+
+        $rows = $callbackTransformer->transform(
+            new Rows(
+                Row::create(
+                    new Row\Entry\StringEntry('string', 'N'),
+                )
+            )
+        );
+
+        $this->assertEquals(new Rows(
+            Row::create(
+                new Entry\StringEntry('string', '----N')
+            )
+        ), $rows);
+    }
+
+    public function test_trim() : void
+    {
+        $callbackTransformer = Transform::trim('string');
+
+        $rows = $callbackTransformer->transform(
+            new Rows(
+                Row::create(
+                    new Entry\StringEntry('string', '  Something  ')
+                )
+            )
+        );
+
+        $this->assertEquals(new Rows(
+            Row::create(
+                new Entry\StringEntry('string', 'Something')
+            )
+        ), $rows);
+    }
+
     public function test_unique_array() : void
     {
         $callbackTransformer = Transform::user_function(

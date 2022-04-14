@@ -14,7 +14,7 @@ use Flow\ETL\Transformer;
 use Laravel\SerializableClosure\SerializableClosure;
 
 /**
- * @implements Transformer<array{entries: array<string>, callback: callable, entry_factory: EntryFactory}>
+ * @implements Transformer<array{entries: array<string>, callback: callable, extra_arguments: array<mixed>, entry_factory: EntryFactory}>
  * @psalm-immutable
  */
 final class CallUserFunctionTransformer implements Transformer
@@ -27,10 +27,12 @@ final class CallUserFunctionTransformer implements Transformer
 
     /**
      * @param array<string> $entries
+     * @param array<mixed> $extraArguments
      */
     public function __construct(
         private readonly array $entries,
         callable $callback,
+        private readonly array $extraArguments = [],
         private readonly EntryFactory $entryFactory = new NativeEntryFactory()
     ) {
         $this->callback = $callback;
@@ -45,6 +47,7 @@ final class CallUserFunctionTransformer implements Transformer
         return [
             'entries' => $this->entries,
             'callback' => $this->callback instanceof \Closure ? new SerializableClosure(\Closure::fromCallable($this->callback)) : $this->callback,
+            'extra_arguments' => $this->extraArguments,
             'entry_factory' => $this->entryFactory,
         ];
     }
@@ -58,6 +61,7 @@ final class CallUserFunctionTransformer implements Transformer
         $this->entries = $data['entries'];
         /** @psalm-suppress ImpureMethodCall */
         $this->callback = $data['callback'] instanceof SerializableClosure ? $data['callback']->getClosure() : $data['callback'];
+        $this->extraArguments = $data['extra_arguments'];
         $this->entryFactory = $data['entry_factory'];
     }
 
@@ -73,7 +77,7 @@ final class CallUserFunctionTransformer implements Transformer
                 if (\in_array($entry->name(), $this->entries, true)) {
                     $entry = $this->entryFactory->create(
                         $entry->name(),
-                        \call_user_func($this->callback, $entry->value())
+                        \call_user_func($this->callback, ...\array_merge([$entry->value()], $this->extraArguments))
                     );
                 }
 

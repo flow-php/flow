@@ -40,9 +40,9 @@ use Symfony\Component\Validator\Constraint;
 
 class Transform
 {
-    final public static function add(string $leftEntry, string $rightEntry, string $newEntryName = 'add') : Transformer
+    final public static function add(string $leftEntry, string $rightEntry, string $new_entry_name = 'add') : Transformer
     {
-        return MathOperationTransformer::add($leftEntry, $rightEntry, $newEntryName);
+        return MathOperationTransformer::add($leftEntry, $rightEntry, $new_entry_name);
     }
 
     /**
@@ -114,30 +114,30 @@ class Transform
         return new Transformer\StaticEntryTransformer(DSLEntry::string($name, $value));
     }
 
-    final public static function add_value(string $leftEntry, int|float $value, string $newEntryName = 'add') : Transformer
+    final public static function add_value(string $leftEntry, int|float $value, string $new_entry_name = 'add') : Transformer
     {
-        return MathValueOperationTransformer::add($leftEntry, $value, $newEntryName);
+        return MathValueOperationTransformer::add($leftEntry, $value, $new_entry_name);
     }
 
     /**
      * @param array<string> $keys
      */
-    final public static function array_collection_get(array $keys, string $arrayEntryName, string $newEntryName = 'element') : Transformer
+    final public static function array_collection_get(array $keys, string $arrayEntryName, string $new_entry_name = 'element') : Transformer
     {
-        return new Transformer\ArrayCollectionGetTransformer($keys, $arrayEntryName, $newEntryName);
+        return new Transformer\ArrayCollectionGetTransformer($keys, $arrayEntryName, $new_entry_name);
     }
 
     /**
      * @param array<string> $keys
      */
-    final public static function array_collection_get_first(array $keys, string $arrayEntryName, string $newEntryName = 'element') : Transformer
+    final public static function array_collection_get_first(array $keys, string $arrayEntryName, string $new_entry_name = 'element') : Transformer
     {
-        return Transformer\ArrayCollectionGetTransformer::fromFirst($keys, $arrayEntryName, $newEntryName);
+        return Transformer\ArrayCollectionGetTransformer::fromFirst($keys, $arrayEntryName, $new_entry_name);
     }
 
-    final public static function array_collection_merge(string $arrayEntryName, string $newEntryName = 'element') : Transformer
+    final public static function array_collection_merge(string $arrayEntryName, string $new_entry_name = 'element') : Transformer
     {
-        return new Transformer\ArrayCollectionMergeTransformer($arrayEntryName, $newEntryName);
+        return new Transformer\ArrayCollectionMergeTransformer($arrayEntryName, $new_entry_name);
     }
 
     final public static function array_convert_keys(string $array_column, string $style) : Transformer
@@ -210,6 +210,11 @@ class Transform
         return new Transformer\CallbackRowTransformer($callable);
     }
 
+    final public static function ceil(string $entry) : Transformer
+    {
+        return self::user_function([$entry], 'ceil');
+    }
+
     final public static function chain(Transformer ...$transformers) : Transformer
     {
         return new Transformer\ChainTransformer(...$transformers);
@@ -229,14 +234,14 @@ class Transform
         return new Transformer\EntryNameStyleConverterTransformer($style);
     }
 
-    final public static function divide(string $leftEntry, string $rightEntry, string $newEntryName = 'divide') : Transformer
+    final public static function divide(string $leftEntry, string $rightEntry, string $new_entry_name = 'divide') : Transformer
     {
-        return MathOperationTransformer::divide($leftEntry, $rightEntry, $newEntryName);
+        return MathOperationTransformer::divide($leftEntry, $rightEntry, $new_entry_name);
     }
 
-    final public static function divide_by(string $leftEntry, int|float $value, string $newEntryName = 'divide') : Transformer
+    final public static function divide_by(string $leftEntry, int|float $value, string $new_entry_name = 'divide') : Transformer
     {
-        return MathValueOperationTransformer::divide($leftEntry, $value, $newEntryName);
+        return MathValueOperationTransformer::divide($leftEntry, $value, $new_entry_name);
     }
 
     /**
@@ -304,9 +309,14 @@ class Transform
         return new FilterRowsTransformer(new Opposite(new ValidValue($entry, new ValidValue\SymfonyValidator($constraints))));
     }
 
-    final public static function group_to_array(string $groupByEntry, string $newEntryName) : Transformer
+    final public static function floor(string $entry) : Transformer
     {
-        return new Transformer\GroupToArrayTransformer($groupByEntry, $newEntryName);
+        return self::user_function([$entry], 'floor');
+    }
+
+    final public static function group_to_array(string $groupByEntry, string $new_entry_name) : Transformer
+    {
+        return new Transformer\GroupToArrayTransformer($groupByEntry, $new_entry_name);
     }
 
     /**
@@ -315,12 +325,12 @@ class Transform
      *
      * @throws \Flow\ETL\Exception\InvalidArgumentException
      */
-    final public static function hash(array $entries, string $algorithm = null, string $newEntryName = 'hash') : Transformer
+    final public static function hash(array $entries, string $algorithm = null, string $new_entry_name = 'hash') : Transformer
     {
         return new Transformer\HashTransformer(
             $entries,
             $algorithm ?? (PHP_VERSION_ID >= 80100 ? 'murmur3f' : 'sha256'),
-            $newEntryName
+            $new_entry_name
         );
     }
 
@@ -329,24 +339,29 @@ class Transform
         return new KeepEntriesTransformer(...$entries);
     }
 
-    final public static function modulo(string $leftEntry, string $rightEntry, string $newEntryName = 'modulo') : Transformer
+    final public static function ltrim(string $entry, string $characters = " \n\r\t\v\x00") : Transformer
     {
-        return MathOperationTransformer::modulo($leftEntry, $rightEntry, $newEntryName);
+        return self::user_function([$entry], 'ltrim', [$characters]);
     }
 
-    final public static function modulo_by(string $leftEntry, int|float $value, string $newEntryName = 'modulo') : Transformer
+    final public static function modulo(string $leftEntry, string $rightEntry, string $new_entry_name = 'modulo') : Transformer
     {
-        return MathValueOperationTransformer::modulo($leftEntry, $value, $newEntryName);
+        return MathOperationTransformer::modulo($leftEntry, $rightEntry, $new_entry_name);
     }
 
-    final public static function multiply(string $leftEntry, string $rightEntry, string $newEntryName = 'multiply') : Transformer
+    final public static function modulo_by(string $leftEntry, int|float $value, string $new_entry_name = 'modulo') : Transformer
     {
-        return MathOperationTransformer::multiply($leftEntry, $rightEntry, $newEntryName);
+        return MathValueOperationTransformer::modulo($leftEntry, $value, $new_entry_name);
     }
 
-    final public static function multiply_by(string $leftEntry, int|float $value, string $newEntryName = 'multiply') : Transformer
+    final public static function multiply(string $leftEntry, string $rightEntry, string $new_entry_name = 'multiply') : Transformer
     {
-        return MathValueOperationTransformer::multiply($leftEntry, $value, $newEntryName);
+        return MathOperationTransformer::multiply($leftEntry, $rightEntry, $new_entry_name);
+    }
+
+    final public static function multiply_by(string $leftEntry, int|float $value, string $new_entry_name = 'multiply') : Transformer
+    {
+        return MathValueOperationTransformer::multiply($leftEntry, $value, $new_entry_name);
     }
 
     /**
@@ -354,12 +369,12 @@ class Transform
      *
      * @throws \Flow\ETL\Exception\InvalidArgumentException
      */
-    final public static function murmur3(array $entries, string $newEntryName = 'hash') : Transformer
+    final public static function murmur3(array $entries, string $new_entry_name = 'hash') : Transformer
     {
         return new Transformer\HashTransformer(
             $entries,
             'murmur3f',
-            $newEntryName
+            $new_entry_name
         );
     }
 
@@ -371,14 +386,14 @@ class Transform
         return new Transformer\ObjectMethodTransformer($object_name, $method, $entry_name, $parameters);
     }
 
-    final public static function power(string $leftEntry, string $rightEntry, string $newEntryName = 'power') : Transformer
+    final public static function power(string $leftEntry, string $rightEntry, string $new_entry_name = 'power') : Transformer
     {
-        return MathOperationTransformer::power($leftEntry, $rightEntry, $newEntryName);
+        return MathOperationTransformer::power($leftEntry, $rightEntry, $new_entry_name);
     }
 
-    final public static function power_of(string $leftEntry, int|float $value, string $newEntryName = 'power') : Transformer
+    final public static function power_of(string $leftEntry, int|float $value, string $new_entry_name = 'power') : Transformer
     {
-        return MathValueOperationTransformer::power($leftEntry, $value, $newEntryName);
+        return MathValueOperationTransformer::power($leftEntry, $value, $new_entry_name);
     }
 
     final public static function remove(string ...$entries) : Transformer
@@ -391,18 +406,33 @@ class Transform
         return new RenameEntriesTransformer(new EntryRename($from, $to));
     }
 
+    final public static function round(string $entry, int $precision = 0, int $mode = \PHP_ROUND_HALF_UP) : Transformer
+    {
+        return self::user_function([$entry], 'round', [$precision, $mode]);
+    }
+
+    final public static function rtrim(string $entry, string $characters = " \n\r\t\v\x00") : Transformer
+    {
+        return self::user_function([$entry], 'rtrim', [$characters]);
+    }
+
     /**
      * @param array<string> $entries
      *
      * @throws \Flow\ETL\Exception\InvalidArgumentException
      */
-    final public static function sha256(array $entries, string $newEntryName = 'hash') : Transformer
+    final public static function sha256(array $entries, string $new_entry_name = 'hash') : Transformer
     {
         return new Transformer\HashTransformer(
             $entries,
             'sha256',
-            $newEntryName
+            $new_entry_name
         );
+    }
+
+    final public static function str_pad(string $entry, int $length, string $pad_string = ' ', int $type = STR_PAD_RIGHT) : Transformer
+    {
+        return self::user_function([$entry], 'str_pad', [$length, $pad_string, $type]);
     }
 
     /**
@@ -413,29 +443,29 @@ class Transform
         return new Transformer\StringConcatTransformer($string_columns, $glue, $entry_name);
     }
 
-    final public static function string_format(string $entryName, string $format) : Transformer
+    final public static function string_format(string $entry_name, string $format) : Transformer
     {
-        return new Transformer\StringFormatTransformer($entryName, $format);
+        return new Transformer\StringFormatTransformer($entry_name, $format);
     }
 
-    final public static function string_lower(string ...$entryNames) : Transformer
+    final public static function string_lower(string ...$entry_names) : Transformer
     {
-        return StringEntryValueCaseConverterTransformer::lower(...$entryNames);
+        return StringEntryValueCaseConverterTransformer::lower(...$entry_names);
     }
 
-    final public static function string_upper(string ...$entryNames) : Transformer
+    final public static function string_upper(string ...$entry_names) : Transformer
     {
-        return StringEntryValueCaseConverterTransformer::upper(...$entryNames);
+        return StringEntryValueCaseConverterTransformer::upper(...$entry_names);
     }
 
-    final public static function subtract(string $leftEntry, string $rightEntry, string $newEntryName = 'subtract') : Transformer
+    final public static function subtract(string $leftEntry, string $rightEntry, string $new_entry_name = 'subtract') : Transformer
     {
-        return MathOperationTransformer::subtract($leftEntry, $rightEntry, $newEntryName);
+        return MathOperationTransformer::subtract($leftEntry, $rightEntry, $new_entry_name);
     }
 
-    final public static function subtract_value(string $leftEntry, int|float $value, string $newEntryName = 'subtract') : Transformer
+    final public static function subtract_value(string $leftEntry, int|float $value, string $new_entry_name = 'subtract') : Transformer
     {
-        return MathValueOperationTransformer::subtract($leftEntry, $value, $newEntryName);
+        return MathValueOperationTransformer::subtract($leftEntry, $value, $new_entry_name);
     }
 
     final public static function to_array(string ...$entries) : Transformer
@@ -468,9 +498,9 @@ class Transform
     /**
      * @param array<string> $entries
      */
-    final public static function to_datetime_from_string(array $entries, ?string $tz = null, ?string $toTz = null) : Transformer
+    final public static function to_datetime_from_string(array $entries, ?string $tz = null, ?string $to_tz = null) : Transformer
     {
-        return new CastTransformer(new Transformer\Cast\CastEntries($entries, new StringToDateTimeEntryCaster($tz, $toTz), true));
+        return new CastTransformer(new Transformer\Cast\CastEntries($entries, new StringToDateTimeEntryCaster($tz, $to_tz), true));
     }
 
     final public static function to_integer(string ...$entries) : Transformer
@@ -506,12 +536,18 @@ class Transform
         return new Transformer\ConditionalTransformer($condition, $transformer);
     }
 
+    final public static function trim(string $entry, string $characters = " \n\r\t\v\x00") : Transformer
+    {
+        return self::user_function([$entry], 'trim', [$characters]);
+    }
+
     /**
      * @param array<string> $entries
-     * @param EntryFactory $entryFactory
+     * @param array<mixed> $extra_arguments
+     * @param EntryFactory $entry_factory
      */
-    final public static function user_function(array $entries, callable $callback, EntryFactory $entryFactory = new NativeEntryFactory()) : Transformer
+    final public static function user_function(array $entries, callable $callback, array $extra_arguments = [], EntryFactory $entry_factory = new NativeEntryFactory()) : Transformer
     {
-        return new Transformer\CallUserFunctionTransformer($entries, $callback, $entryFactory);
+        return new Transformer\CallUserFunctionTransformer($entries, $callback, $extra_arguments, $entry_factory);
     }
 }
