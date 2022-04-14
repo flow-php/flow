@@ -30,6 +30,7 @@ use Flow\ETL\Transformer\Filter\Filter\ValidValue;
 use Flow\ETL\Transformer\FilterRowsTransformer;
 use Flow\ETL\Transformer\KeepEntriesTransformer;
 use Flow\ETL\Transformer\MathOperationTransformer;
+use Flow\ETL\Transformer\MathValueOperationTransformer;
 use Flow\ETL\Transformer\Rename\ArrayKeyRename;
 use Flow\ETL\Transformer\Rename\EntryRename;
 use Flow\ETL\Transformer\RenameEntriesTransformer;
@@ -39,9 +40,9 @@ use Symfony\Component\Validator\Constraint;
 
 class Transform
 {
-    final public static function add(string $leftEntry, string $rightEntry) : Transformer
+    final public static function add(string $leftEntry, string $rightEntry, string $newEntryName = 'add') : Transformer
     {
-        return MathOperationTransformer::add($leftEntry, $rightEntry);
+        return MathOperationTransformer::add($leftEntry, $rightEntry, $newEntryName);
     }
 
     /**
@@ -111,6 +112,11 @@ class Transform
     final public static function add_string(string $name, string $value) : Transformer
     {
         return new Transformer\StaticEntryTransformer(DSLEntry::string($name, $value));
+    }
+
+    final public static function add_value(string $leftEntry, int|float $value, string $newEntryName = 'add') : Transformer
+    {
+        return MathValueOperationTransformer::add($leftEntry, $value, $newEntryName);
     }
 
     /**
@@ -223,9 +229,14 @@ class Transform
         return new Transformer\EntryNameStyleConverterTransformer($style);
     }
 
-    final public static function divide(string $leftEntry, string $rightEntry) : Transformer
+    final public static function divide(string $leftEntry, string $rightEntry, string $newEntryName = 'divide') : Transformer
     {
-        return MathOperationTransformer::divide($leftEntry, $rightEntry);
+        return MathOperationTransformer::divide($leftEntry, $rightEntry, $newEntryName);
+    }
+
+    final public static function divide_by(string $leftEntry, int|float $value, string $newEntryName = 'divide') : Transformer
+    {
+        return MathValueOperationTransformer::divide($leftEntry, $value, $newEntryName);
     }
 
     /**
@@ -318,9 +329,24 @@ class Transform
         return new KeepEntriesTransformer(...$entries);
     }
 
-    final public static function multiply(string $leftEntry, string $rightEntry) : Transformer
+    final public static function modulo(string $leftEntry, string $rightEntry, string $newEntryName = 'modulo') : Transformer
     {
-        return MathOperationTransformer::multiply($leftEntry, $rightEntry);
+        return MathOperationTransformer::modulo($leftEntry, $rightEntry, $newEntryName);
+    }
+
+    final public static function modulo_by(string $leftEntry, int|float $value, string $newEntryName = 'modulo') : Transformer
+    {
+        return MathValueOperationTransformer::modulo($leftEntry, $value, $newEntryName);
+    }
+
+    final public static function multiply(string $leftEntry, string $rightEntry, string $newEntryName = 'multiply') : Transformer
+    {
+        return MathOperationTransformer::multiply($leftEntry, $rightEntry, $newEntryName);
+    }
+
+    final public static function multiply_by(string $leftEntry, int|float $value, string $newEntryName = 'multiply') : Transformer
+    {
+        return MathValueOperationTransformer::multiply($leftEntry, $value, $newEntryName);
     }
 
     /**
@@ -345,9 +371,14 @@ class Transform
         return new Transformer\ObjectMethodTransformer($object_name, $method, $entry_name, $parameters);
     }
 
-    final public static function power(string $leftEntry, string $rightEntry) : Transformer
+    final public static function power(string $leftEntry, string $rightEntry, string $newEntryName = 'power') : Transformer
     {
-        return MathOperationTransformer::power($leftEntry, $rightEntry);
+        return MathOperationTransformer::power($leftEntry, $rightEntry, $newEntryName);
+    }
+
+    final public static function power_of(string $leftEntry, int|float $value, string $newEntryName = 'power') : Transformer
+    {
+        return MathValueOperationTransformer::power($leftEntry, $value, $newEntryName);
     }
 
     final public static function remove(string ...$entries) : Transformer
@@ -397,9 +428,14 @@ class Transform
         return StringEntryValueCaseConverterTransformer::upper(...$entryNames);
     }
 
-    final public static function subtract(string $leftEntry, string $rightEntry) : Transformer
+    final public static function subtract(string $leftEntry, string $rightEntry, string $newEntryName = 'subtract') : Transformer
     {
-        return MathOperationTransformer::subtract($leftEntry, $rightEntry);
+        return MathOperationTransformer::subtract($leftEntry, $rightEntry, $newEntryName);
+    }
+
+    final public static function subtract_value(string $leftEntry, int|float $value, string $newEntryName = 'subtract') : Transformer
+    {
+        return MathValueOperationTransformer::subtract($leftEntry, $value, $newEntryName);
     }
 
     final public static function to_array(string ...$entries) : Transformer
@@ -414,7 +450,7 @@ class Transform
 
     final public static function to_array_from_object(string $entry) : Transformer
     {
-        if (!\class_exists(\Laminas\Hydrator\ReflectionHydrator::class)) {
+        if (!\class_exists("\Laminas\Hydrator\ReflectionHydrator")) {
             throw new RuntimeException("Laminas\Hydrator\ReflectionHydrator class not found, please install it using 'composer require laminas/laminas-hydrator'");
         }
 

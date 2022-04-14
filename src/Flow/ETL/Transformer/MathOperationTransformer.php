@@ -8,9 +8,10 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
+use Flow\ETL\Transformer\Math\Operation;
 
 /**
- * @implements Transformer<array{left_entry: string, right_entry: string, operation: string, new_entry_name: string}>
+ * @implements Transformer<array{left_entry: string, right_entry: string, operation: Operation|string, new_entry_name: string}>
  * @psalm-immutable
  */
 final class MathOperationTransformer implements Transformer
@@ -18,39 +19,39 @@ final class MathOperationTransformer implements Transformer
     private function __construct(
         private readonly string $leftEntry,
         private readonly string $rightEntry,
-        private readonly string $operation,
+        private readonly Operation|string $operation,
         private readonly string $newEntryName
     ) {
     }
 
     public static function add(string $leftEntry, string $rightEntry, string $newEntryName = 'add') : self
     {
-        return new self($leftEntry, $rightEntry, 'add', $newEntryName);
+        return new self($leftEntry, $rightEntry, Operation::add, $newEntryName);
     }
 
     public static function divide(string $leftEntry, string $rightEntry, string $newEntryName = 'divide') : self
     {
-        return new self($leftEntry, $rightEntry, 'divide', $newEntryName);
+        return new self($leftEntry, $rightEntry, Operation::divide, $newEntryName);
     }
 
     public static function modulo(string $leftEntry, string $rightEntry, string $newEntryName = 'modulo') : self
     {
-        return new self($leftEntry, $rightEntry, 'modulo', $newEntryName);
+        return new self($leftEntry, $rightEntry, Operation::modulo, $newEntryName);
     }
 
     public static function multiply(string $leftEntry, string $rightEntry, string $newEntryName = 'multiply') : self
     {
-        return new self($leftEntry, $rightEntry, 'multiply', $newEntryName);
+        return new self($leftEntry, $rightEntry, Operation::multiply, $newEntryName);
     }
 
     public static function power(string $leftEntry, string $rightEntry, string $newEntryName = 'power') : self
     {
-        return new self($leftEntry, $rightEntry, 'power', $newEntryName);
+        return new self($leftEntry, $rightEntry, Operation::power, $newEntryName);
     }
 
     public static function subtract(string $leftEntry, string $rightEntry, string $newEntryName = 'subtract') : self
     {
-        return new self($leftEntry, $rightEntry, 'subtract', $newEntryName);
+        return new self($leftEntry, $rightEntry, Operation::subtract, $newEntryName);
     }
 
     public function __serialize() : array
@@ -96,13 +97,17 @@ final class MathOperationTransformer implements Transformer
                 throw new RuntimeException("\"{$this->rightEntry}\" is not IntegerEntry or FloatEntry");
             }
 
-            $value = match ($this->operation) {
-                'add' => $left->value() + $right->value(),
-                'subtract' => $left->value() - $right->value(),
-                'multiply' => $left->value() * $right->value(),
-                'divide' => $left->value() / $right->value(),
-                'modulo' => $left->value() % $right->value(),
-                'power' => $left->value() ** $right->value(),
+            $operation = \is_string($this->operation)
+                ? Operation::from($this->operation)
+                : $this->operation;
+
+            $value = match ($operation) {
+                Operation::add => $left->value() + $right->value(),
+                Operation::subtract => $left->value() - $right->value(),
+                Operation::multiply => $left->value() * $right->value(),
+                Operation::divide => $left->value() / $right->value(),
+                Operation::modulo => $left->value() % $right->value(),
+                Operation::power => $left->value() ** $right->value(),
                 default => throw new RuntimeException('Unknown operation'),
             };
 
