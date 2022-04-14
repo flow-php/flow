@@ -167,6 +167,7 @@ final class ASCIITable
         // If we have some array data loop through each row, then through each cell
         if (isset($array[0])) {
             foreach (\array_keys($array[0]) as $col) {
+                $col = (string) $col;
                 $length = \max(\max(\array_map([$this, 'len'], $this->arrCol($array, $col))), self::len($col));
                 $this->colWidths[$col] = ($truncate === 0)
                     ? $length
@@ -206,6 +207,7 @@ final class ASCIITable
 
         // Loop though the col widths, adding the cleaned title and needed padding
         foreach ($this->colWidths as $col => $length) {
+            $col = (string) $col;
             // Add title
             $alignment = STR_PAD_LEFT;
 
