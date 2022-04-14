@@ -1,6 +1,12 @@
 ## [Unreleased] - 2022-04-14
 
 ### Added
+- [#219](https://github.com/flow-php/etl/pull/219) - **Transform::trim** - [@norberttech](https://github.com/norberttech)
+- [#219](https://github.com/flow-php/etl/pull/219) - **Transform::ltrim** - [@norberttech](https://github.com/norberttech)
+- [#219](https://github.com/flow-php/etl/pull/219) - **Transform::rtrim** - [@norberttech](https://github.com/norberttech)
+- [#219](https://github.com/flow-php/etl/pull/219) - **Transform::round** - [@norberttech](https://github.com/norberttech)
+- [#219](https://github.com/flow-php/etl/pull/219) - **Transform::floor** - [@norberttech](https://github.com/norberttech)
+- [#219](https://github.com/flow-php/etl/pull/219) - **Transform::ceil** - [@norberttech](https://github.com/norberttech)
 - [#218](https://github.com/flow-php/etl/pull/218) - **math value operation transformer** - [@norberttech](https://github.com/norberttech)
 - [#216](https://github.com/flow-php/etl/pull/216) - **EnumEntry** - [@norberttech](https://github.com/norberttech)
 - [#214](https://github.com/flow-php/etl/pull/214) - **SchemaFormatter** - [@norberttech](https://github.com/norberttech)
