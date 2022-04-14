@@ -647,10 +647,8 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
         return $array;
     }
 
-    public function unique(Comparator $comparator = null) : self
+    public function unique(Comparator $comparator = new NativeComparator()) : self
     {
-        $comparator ??= new NativeComparator();
-
         /**
          * @var Row[] $uniqueRows
          */

@@ -8,6 +8,7 @@ use Flow\ETL\DSL\Entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
+use Flow\ETL\Row\Comparator\NativeComparator;
 use Flow\ETL\Row\Entry\BooleanEntry;
 use Flow\ETL\Row\Entry\DateTimeEntry;
 use Flow\ETL\Row\Entry\IntegerEntry;
@@ -549,7 +550,7 @@ final class RowsTest extends TestCase
     /**
      * @dataProvider unique_rows_provider
      */
-    public function test_rows_unique(Rows $expected, Rows $notUnique, ?Row\Comparator $comparator = null) : void
+    public function test_rows_unique(Rows $expected, Rows $notUnique, Row\Comparator $comparator = new NativeComparator()) : void
     {
         $this->assertEquals($expected, $notUnique->unique($comparator));
     }
@@ -796,7 +797,7 @@ final class RowsTest extends TestCase
                 Row::create(new IntegerEntry('number', 1)),
                 Row::create(new IntegerEntry('number', 1))
             ),
-            $comparator = null,
+            $comparator = new NativeComparator(),
         ];
 
         yield 'simple identical rows with objects' => [

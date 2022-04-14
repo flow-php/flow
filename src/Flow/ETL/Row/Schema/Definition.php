@@ -10,6 +10,7 @@ use Flow\ETL\Row\Entry\ArrayEntry;
 use Flow\ETL\Row\Entry\BooleanEntry;
 use Flow\ETL\Row\Entry\CollectionEntry;
 use Flow\ETL\Row\Entry\DateTimeEntry;
+use Flow\ETL\Row\Entry\EnumEntry;
 use Flow\ETL\Row\Entry\FloatEntry;
 use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Row\Entry\JsonEntry;
@@ -68,6 +69,14 @@ final class Definition implements Serializable
     public static function dateTime(string $entry, bool $nullable = false, ?Constraint $constraint = null) : self
     {
         return new self($entry, ($nullable) ? [DateTimeEntry::class, NullEntry::class] : [DateTimeEntry::class], $constraint);
+    }
+
+    /**
+     * @psalm-pure
+     */
+    public static function enum(string $entry, bool $nullable = false, ?Constraint $constraint = null) : self
+    {
+        return new self($entry, ($nullable) ? [EnumEntry::class, NullEntry::class] : [EnumEntry::class], $constraint);
     }
 
     /**

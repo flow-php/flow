@@ -8,6 +8,7 @@ use Flow\ETL\DSL\Entry;
 use Flow\ETL\Extractor;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
+use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 
 final class AllRowTypesFakeExtractor implements Extractor
 {
@@ -51,7 +52,8 @@ final class AllRowTypesFakeExtractor implements Extractor
                         new Row\Entries(Entry::integer('item-id', 2), Entry::string('name', 'two')),
                         new Row\Entries(Entry::integer('item-id', 3), Entry::string('name', 'three'))
                     ),
-                    Entry::object('object', new \ArrayIterator([1, 2, 3]))
+                    Entry::object('object', new \ArrayIterator([1, 2, 3])),
+                    Entry::enum('enum', BackedStringEnum::three)
                 );
             }
 

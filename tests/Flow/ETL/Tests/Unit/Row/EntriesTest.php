@@ -10,10 +10,12 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry\BooleanEntry;
 use Flow\ETL\Row\Entry\DateTimeEntry;
+use Flow\ETL\Row\Entry\EnumEntry;
 use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Row\Entry\NullEntry;
 use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Row\Entry\StructureEntry;
+use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
 use PHPUnit\Framework\TestCase;
 
 final class EntriesTest extends TestCase
@@ -379,7 +381,8 @@ final class EntriesTest extends TestCase
                 new StringEntry('name', 'two'),
                 new IntegerEntry('item-id', 3),
                 new StringEntry('name', 'three')
-            )
+            ),
+            new EnumEntry('enum', BasicEnum::three)
         );
 
         $this->assertEquals(
@@ -396,6 +399,7 @@ final class EntriesTest extends TestCase
                     new IntegerEntry('item-id', 3),
                     new StringEntry('name', 'three'),
                 ],
+                'enum' => BasicEnum::three,
             ],
             $entries->toArray()
         );
