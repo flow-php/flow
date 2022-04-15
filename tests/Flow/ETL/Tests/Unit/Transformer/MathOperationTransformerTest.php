@@ -33,16 +33,15 @@ final class MathOperationTransformerTest extends TestCase
         $this->assertSame(
             [
                 [
-                    'left' => $leftEntry->value(),
+                    'left' => $result,
                     'right' => $rightEntry->value(),
-                    $operation => $result,
                 ],
             ],
             $rows->toArray()
         );
         $this->assertInstanceOf(
             $resultClass,
-            $rows->first()->get($operation)
+            $rows->first()->get($leftEntry->name())
         );
     }
 }

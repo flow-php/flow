@@ -40,9 +40,9 @@ use Symfony\Component\Validator\Constraint;
 
 class Transform
 {
-    final public static function add(string $leftEntry, string $rightEntry, string $new_entry_name = 'add') : Transformer
+    final public static function add(string $left_entry, string $right_entry, string $new_entry_name  = null) : Transformer
     {
-        return MathOperationTransformer::add($leftEntry, $rightEntry, $new_entry_name);
+        return MathOperationTransformer::add($left_entry, $right_entry, $new_entry_name ?? $left_entry);
     }
 
     /**
@@ -114,9 +114,9 @@ class Transform
         return new Transformer\StaticEntryTransformer(DSLEntry::string($name, $value));
     }
 
-    final public static function add_value(string $leftEntry, int|float $value, string $new_entry_name = 'add') : Transformer
+    final public static function add_value(string $left_entry, int|float $value, string $new_entry_name = null) : Transformer
     {
-        return MathValueOperationTransformer::add($leftEntry, $value, $new_entry_name);
+        return MathValueOperationTransformer::add($left_entry, $value, $new_entry_name ?? $left_entry);
     }
 
     /**
@@ -234,14 +234,14 @@ class Transform
         return new Transformer\EntryNameStyleConverterTransformer($style);
     }
 
-    final public static function divide(string $leftEntry, string $rightEntry, string $new_entry_name = 'divide') : Transformer
+    final public static function divide(string $left_entry, string $right_entry, string $new_entry_name = null) : Transformer
     {
-        return MathOperationTransformer::divide($leftEntry, $rightEntry, $new_entry_name);
+        return MathOperationTransformer::divide($left_entry, $right_entry, $new_entry_name ?? $left_entry);
     }
 
-    final public static function divide_by(string $leftEntry, int|float $value, string $new_entry_name = 'divide') : Transformer
+    final public static function divide_by(string $left_entry, int|float $value, string $new_entry_name = null) : Transformer
     {
-        return MathValueOperationTransformer::divide($leftEntry, $value, $new_entry_name);
+        return MathValueOperationTransformer::divide($left_entry, $value, $new_entry_name ?? $left_entry);
     }
 
     /**
@@ -344,24 +344,24 @@ class Transform
         return self::user_function([$entry], 'ltrim', [$characters]);
     }
 
-    final public static function modulo(string $leftEntry, string $rightEntry, string $new_entry_name = 'modulo') : Transformer
+    final public static function modulo(string $left_entry, string $right_entry, string $new_entry_name = null) : Transformer
     {
-        return MathOperationTransformer::modulo($leftEntry, $rightEntry, $new_entry_name);
+        return MathOperationTransformer::modulo($left_entry, $right_entry, $new_entry_name ?? $left_entry);
     }
 
-    final public static function modulo_by(string $leftEntry, int|float $value, string $new_entry_name = 'modulo') : Transformer
+    final public static function modulo_by(string $left_entry, int|float $value, string $new_entry_name = null) : Transformer
     {
-        return MathValueOperationTransformer::modulo($leftEntry, $value, $new_entry_name);
+        return MathValueOperationTransformer::modulo($left_entry, $value, $new_entry_name ?? $left_entry);
     }
 
-    final public static function multiply(string $leftEntry, string $rightEntry, string $new_entry_name = 'multiply') : Transformer
+    final public static function multiply(string $left_entry, string $right_entry, string $new_entry_name = null) : Transformer
     {
-        return MathOperationTransformer::multiply($leftEntry, $rightEntry, $new_entry_name);
+        return MathOperationTransformer::multiply($left_entry, $right_entry, $new_entry_name ?? $left_entry);
     }
 
-    final public static function multiply_by(string $leftEntry, int|float $value, string $new_entry_name = 'multiply') : Transformer
+    final public static function multiply_by(string $left_entry, int|float $value, string $new_entry_name = null) : Transformer
     {
-        return MathValueOperationTransformer::multiply($leftEntry, $value, $new_entry_name);
+        return MathValueOperationTransformer::multiply($left_entry, $value, $new_entry_name ?? $left_entry);
     }
 
     /**
@@ -386,14 +386,14 @@ class Transform
         return new Transformer\ObjectMethodTransformer($object_name, $method, $entry_name, $parameters);
     }
 
-    final public static function power(string $leftEntry, string $rightEntry, string $new_entry_name = 'power') : Transformer
+    final public static function power(string $left_entry, string $right_entry, string $new_entry_name = null) : Transformer
     {
-        return MathOperationTransformer::power($leftEntry, $rightEntry, $new_entry_name);
+        return MathOperationTransformer::power($left_entry, $right_entry, $new_entry_name ?? $left_entry);
     }
 
-    final public static function power_of(string $leftEntry, int|float $value, string $new_entry_name = 'power') : Transformer
+    final public static function power_of(string $left_entry, int|float $value, string $new_entry_name = null) : Transformer
     {
-        return MathValueOperationTransformer::power($leftEntry, $value, $new_entry_name);
+        return MathValueOperationTransformer::power($left_entry, $value, $new_entry_name ?? $left_entry);
     }
 
     final public static function remove(string ...$entries) : Transformer
@@ -458,14 +458,14 @@ class Transform
         return StringEntryValueCaseConverterTransformer::upper(...$entry_names);
     }
 
-    final public static function subtract(string $leftEntry, string $rightEntry, string $new_entry_name = 'subtract') : Transformer
+    final public static function subtract(string $left_entry, string $right_entry, string $new_entry_name = null) : Transformer
     {
-        return MathOperationTransformer::subtract($leftEntry, $rightEntry, $new_entry_name);
+        return MathOperationTransformer::subtract($left_entry, $right_entry, $new_entry_name ?? $left_entry);
     }
 
-    final public static function subtract_value(string $leftEntry, int|float $value, string $new_entry_name = 'subtract') : Transformer
+    final public static function subtract_value(string $left_entry, int|float $value, string $new_entry_name = null) : Transformer
     {
-        return MathValueOperationTransformer::subtract($leftEntry, $value, $new_entry_name);
+        return MathValueOperationTransformer::subtract($left_entry, $value, $new_entry_name ?? $left_entry);
     }
 
     final public static function to_array(string ...$entries) : Transformer
