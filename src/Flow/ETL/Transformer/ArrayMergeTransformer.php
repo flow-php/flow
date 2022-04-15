@@ -56,7 +56,7 @@ final class ArrayMergeTransformer implements Transformer
                 $entryValues[] = $arrayEntry->value();
             }
 
-            return $row->add(new Row\Entry\ArrayEntry(
+            return $row->set(new Row\Entry\ArrayEntry(
                 $this->newEntryName,
                 \array_merge(...$entryValues)
             ));

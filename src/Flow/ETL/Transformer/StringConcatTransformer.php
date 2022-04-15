@@ -56,7 +56,7 @@ final class StringConcatTransformer implements Transformer
                 $values[] = $entry->toString();
             }
 
-            return $row->add(
+            return $row->set(
                 new Row\Entry\StringEntry(
                     $this->newEntryName,
                     \implode($this->glue, $values)

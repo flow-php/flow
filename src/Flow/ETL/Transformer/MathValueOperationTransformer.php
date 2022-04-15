@@ -103,10 +103,10 @@ final class MathValueOperationTransformer implements Transformer
             };
 
             if (\is_float($value)) {
-                return $row->add(new Row\Entry\FloatEntry($this->newEntryName, $value));
+                return $row->set(new Row\Entry\FloatEntry($this->newEntryName, $value));
             }
 
-            return $row->add(new Row\Entry\IntegerEntry($this->newEntryName, $value));
+            return $row->set(new Row\Entry\IntegerEntry($this->newEntryName, $value));
         };
 
         return $rows->map($transformer);

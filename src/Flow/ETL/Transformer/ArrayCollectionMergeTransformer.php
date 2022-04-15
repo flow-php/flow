@@ -60,7 +60,7 @@ final class ArrayCollectionMergeTransformer implements Transformer
             }
 
             /** @psalm-suppress MixedArgument */
-            return $row->add(
+            return $row->set(
                 new Row\Entry\ArrayEntry(
                     $this->newEntryName,
                     /** @phpstan-ignore-next-line  */

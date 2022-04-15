@@ -58,7 +58,7 @@ final class ArrayDotGetTransformer implements Transformer
                 throw new RuntimeException("{$this->arrayEntryName} is not ArrayEntry but {$entryClass}");
             }
 
-            return $row->add(
+            return $row->set(
                 $this->entryFactory->create(
                     $this->newEntryName,
                     array_dot_get($arrayEntry->value(), $this->path)

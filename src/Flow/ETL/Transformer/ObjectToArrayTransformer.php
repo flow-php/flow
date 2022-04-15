@@ -47,8 +47,7 @@ final class ObjectToArrayTransformer implements Transformer
             }
 
             $entries = $row->entries()
-                ->remove($this->objectEntryName)
-                ->add(
+                ->set(
                     new Row\Entry\ArrayEntry(
                         $this->objectEntryName,
                         $this->hydrator->extract(

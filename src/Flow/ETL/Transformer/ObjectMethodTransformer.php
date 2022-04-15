@@ -76,7 +76,7 @@ final class ObjectMethodTransformer implements Transformer
                 throw new RuntimeException("\"{$this->objectEntryName}\" is object does not have \"{$this->method}\" method.");
             }
 
-            return $row->add($this->entryFactory->create(
+            return $row->set($this->entryFactory->create(
                 $this->newEntryName,
                 /** @phpstan-ignore-next-line */
                 \call_user_func([$object, $this->method], ...$this->parameters)

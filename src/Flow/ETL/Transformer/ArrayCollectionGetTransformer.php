@@ -90,7 +90,7 @@ final class ArrayCollectionGetTransformer implements Transformer
                 throw new RuntimeException("Extracted value from path \"{$path}\" is not array but {$type}");
             }
 
-            return $row->add(
+            return $row->set(
                 new Row\Entry\ArrayEntry(
                     $this->newEntryName,
                     $extractedValues

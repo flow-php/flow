@@ -36,7 +36,7 @@ final class StaticEntryTransformer implements Transformer
         /**
          * @psalm-var pure-callable(Row $row) : Row $transformer
          */
-        $transformer = fn (Row $row) : Row => $row->add($this->entry);
+        $transformer = fn (Row $row) : Row => $row->set($this->entry);
 
         return $rows->map($transformer);
     }

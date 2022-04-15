@@ -65,7 +65,7 @@ final class HashTransformer implements Transformer
                 }
             }
 
-            return $row->add(Entry::string($this->newEntryName, \hash($this->algorithm, \implode('', $values), false)));
+            return $row->set(Entry::string($this->newEntryName, \hash($this->algorithm, \implode('', $values), false)));
         };
 
         return $rows->map($transformer);
