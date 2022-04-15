@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-04-14
+## [Unreleased] - 2022-04-15
 
 ### Added
 - [#219](https://github.com/flow-php/etl/pull/219) - **Transform::trim** - [@norberttech](https://github.com/norberttech)
@@ -112,6 +112,7 @@
 - [856870](https://github.com/flow-php/etl/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#220](https://github.com/flow-php/etl/pull/220) - **default transformers behavior from Entries::add to Entries::set** - [@norberttech](https://github.com/norberttech)
 - [#214](https://github.com/flow-php/etl/pull/214) - **allow to display rows, rows & schema, schema in StreamLoader** - [@norberttech](https://github.com/norberttech)
 - [#197](https://github.com/flow-php/etl/pull/197) - **Extracted DataFrame from ETL** - [@norberttech](https://github.com/norberttech)
 - [#197](https://github.com/flow-php/etl/pull/197) - **Deprecated ETL class** - [@norberttech](https://github.com/norberttech)
