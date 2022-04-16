@@ -1,6 +1,7 @@
 ## [Unreleased] - 2022-04-16
 
 ### Added
+- [#223](https://github.com/flow-php/etl/pull/223) - **in memory cache implementation** - [@norberttech](https://github.com/norberttech)
 - [#222](https://github.com/flow-php/etl/pull/222) - **entry/prefix DSL methods** - [@norberttech](https://github.com/norberttech)
 - [#219](https://github.com/flow-php/etl/pull/219) - **Transform::trim** - [@norberttech](https://github.com/norberttech)
 - [#219](https://github.com/flow-php/etl/pull/219) - **Transform::ltrim** - [@norberttech](https://github.com/norberttech)
