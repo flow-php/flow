@@ -396,6 +396,11 @@ class Transform
         return MathValueOperationTransformer::power($left_entry, $value, $new_entry_name ?? $left_entry);
     }
 
+    final public static function prefix(string $entry, string $prefix) : Transformer
+    {
+        return new Transformer\StringFormatTransformer($entry, \str_replace('%', '%%', $prefix) . '%s');
+    }
+
     final public static function remove(string ...$entries) : Transformer
     {
         return new Transformer\RemoveEntriesTransformer(...$entries);
@@ -466,6 +471,11 @@ class Transform
     final public static function subtract_value(string $left_entry, int|float $value, string $new_entry_name = null) : Transformer
     {
         return MathValueOperationTransformer::subtract($left_entry, $value, $new_entry_name ?? $left_entry);
+    }
+
+    final public static function suffix(string $entry, string $suffix) : Transformer
+    {
+        return new Transformer\StringFormatTransformer($entry, '%s' . \str_replace('%', '%%', $suffix));
     }
 
     final public static function to_array(string ...$entries) : Transformer
