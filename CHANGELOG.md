@@ -1,6 +1,7 @@
-## [Unreleased] - 2022-04-16
+## [Unreleased] - 2022-04-18
 
 ### Added
+- [#224](https://github.com/flow-php/etl/pull/224) - **@infection-ignore-all annotation to DSL** - [@norberttech](https://github.com/norberttech)
 - [#223](https://github.com/flow-php/etl/pull/223) - **in memory cache implementation** - [@norberttech](https://github.com/norberttech)
 - [#222](https://github.com/flow-php/etl/pull/222) - **entry/prefix DSL methods** - [@norberttech](https://github.com/norberttech)
 - [#219](https://github.com/flow-php/etl/pull/219) - **Transform::trim** - [@norberttech](https://github.com/norberttech)
@@ -114,6 +115,10 @@
 - [856870](https://github.com/flow-php/etl/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#224](https://github.com/flow-php/etl/pull/224) - **limit is now stored in Configuration** - [@norberttech](https://github.com/norberttech)
+- [#224](https://github.com/flow-php/etl/pull/224) - **ErrorHandler is now stored in Configuration** - [@norberttech](https://github.com/norberttech)
+- [#224](https://github.com/flow-php/etl/pull/224) - **Pipeline is now fully internal, without possibility to pass it into DataFrame** - [@norberttech](https://github.com/norberttech)
+- [#224](https://github.com/flow-php/etl/pull/224) - **Pipeline expected full config instead of only nullable limit parameter** - [@norberttech](https://github.com/norberttech)
 - [#221](https://github.com/flow-php/etl/pull/221) - **DSL Unifications** - [@norberttech](https://github.com/norberttech)
 - [#220](https://github.com/flow-php/etl/pull/220) - **default transformers behavior from Entries::add to Entries::set** - [@norberttech](https://github.com/norberttech)
 - [#214](https://github.com/flow-php/etl/pull/214) - **allow to display rows, rows & schema, schema in StreamLoader** - [@norberttech](https://github.com/norberttech)
@@ -195,6 +200,7 @@
 - [55faa8](https://github.com/flow-php/etl/commit/55faa8edfed3973f54e31b3af57a4ba171050a85) - **README.md** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#224](https://github.com/flow-php/etl/pull/224) - **ETL facade** - [@norberttech](https://github.com/norberttech)
 - [#199](https://github.com/flow-php/etl/pull/199) - **nullable flag from schema definition** - [@norberttech](https://github.com/norberttech)
 - [#195](https://github.com/flow-php/etl/pull/195) - **callbacks from pipeline process** - [@norberttech](https://github.com/norberttech)
 - [#191](https://github.com/flow-php/etl/pull/191) - **Row::groupBy** - [@norberttech](https://github.com/norberttech)
