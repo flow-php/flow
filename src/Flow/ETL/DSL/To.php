@@ -12,6 +12,9 @@ use Flow\ETL\Row\Schema\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Row\Schema\SchemaFormatter;
 use Flow\ETL\Transformer;
 
+/**
+ * @infection-ignore-all
+ */
 class To
 {
     final public static function buffer(Loader $overflowLoader, int $bufferSize) : Loader

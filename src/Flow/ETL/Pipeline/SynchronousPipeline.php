@@ -4,52 +4,42 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Pipeline;
 
+use Flow\ETL\Config;
 use Flow\ETL\DSL\From;
-use Flow\ETL\ErrorHandler;
-use Flow\ETL\ErrorHandler\ThrowError;
 use Flow\ETL\Extractor;
 use Flow\ETL\Loader;
 use Flow\ETL\Pipeline;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
-/**
- * @internal
- */
 final class SynchronousPipeline implements Pipeline
 {
-    private ErrorHandler $errorHandler;
-
     private Extractor $extractor;
 
     private readonly Pipes $pipes;
 
     public function __construct()
     {
-        $this->errorHandler = new ThrowError();
         $this->pipes = Pipes::empty();
         $this->extractor = From::rows(new Rows());
     }
 
-    public function add(Loader|Transformer $pipe) : void
+    public function add(Loader|Transformer $pipe) : self
     {
         $this->pipes->add($pipe);
+
+        return $this;
     }
 
     public function cleanCopy() : Pipeline
     {
-        $newPipeline = new self();
-        $newPipeline->errorHandler = $this->errorHandler;
-
-        return $newPipeline;
+        return new self();
     }
 
-    public function onError(ErrorHandler $errorHandler) : void
-    {
-        $this->errorHandler = $errorHandler;
-    }
-
-    public function process(?int $limit = null) : \Generator
+    /**
+     * @psalm-suppress PossiblyNullOperand
+     */
+    public function process(Config $config) : \Generator
     {
         $total = 0;
 
@@ -61,10 +51,10 @@ final class SynchronousPipeline implements Pipeline
             $total += $rows->count();
             $generator->next();
 
-            if ($limit !== null) {
-                if ($total > $limit) {
-                    $rows = $rows->dropRight($total - $limit);
-                    $total = $limit;
+            if ($config->hasLimit()) {
+                if ($total > $config->limit()) {
+                    $rows = $rows->dropRight($total - $config->limit());
+                    $total = $config->limit();
                 }
             }
 
@@ -79,16 +69,16 @@ final class SynchronousPipeline implements Pipeline
                     if ($pipe instanceof Pipeline\Closure) {
                         if ($generator->valid() === false) {
                             $pipe->closure($rows);
-                        } elseif ($limit !== null && $total === $limit) {
+                        } elseif ($config->limit() !== null && $total === $config->limit()) {
                             $pipe->closure($rows);
                         }
                     }
                 } catch (\Throwable $exception) {
-                    if ($this->errorHandler->throw($exception, $rows)) {
+                    if ($config->errorHandler()->throw($exception, $rows)) {
                         throw $exception;
                     }
 
-                    if ($this->errorHandler->skipRows($exception, $rows)) {
+                    if ($config->errorHandler()->skipRows($exception, $rows)) {
                         break;
                     }
                 }
@@ -96,14 +86,16 @@ final class SynchronousPipeline implements Pipeline
 
             yield $rows;
 
-            if ($limit !== null && $total === $limit) {
+            if ($config->hasLimit() && $total === $config->limit()) {
                 break;
             }
         }
     }
 
-    public function source(Extractor $extractor) : void
+    public function source(Extractor $extractor) : self
     {
         $this->extractor = $extractor;
+
+        return $this;
     }
 }

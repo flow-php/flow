@@ -38,6 +38,9 @@ use Flow\ETL\Transformer\StringEntryValueCaseConverterTransformer;
 use Laminas\Hydrator\ReflectionHydrator;
 use Symfony\Component\Validator\Constraint;
 
+/**
+ * @infection-ignore-all
+ */
 class Transform
 {
     final public static function add(string $left_entry, string $right_entry, string $new_entry_name  = null) : Transformer

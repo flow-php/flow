@@ -771,7 +771,7 @@ ASCIITABLE,
     public function test_fetch_with_limit_below_0() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("Fetch limit can't be lower or equal to 0");
+        $this->expectExceptionMessage("Limit can't be lower or equal zero, given: -1");
 
         (new Flow())->process(new Rows())
             ->fetch(-1);

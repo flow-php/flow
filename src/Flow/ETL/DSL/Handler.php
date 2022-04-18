@@ -6,6 +6,9 @@ namespace Flow\ETL\DSL;
 
 use Flow\ETL\ErrorHandler;
 
+/**
+ * @infection-ignore-all
+ */
 class Handler
 {
     final public static function ignore_error() : ErrorHandler

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Pipeline;
 
-use Flow\ETL\ETL;
+use Flow\ETL\Flow;
 use Flow\ETL\Loader;
 use Flow\ETL\Pipeline\Closure;
 use Flow\ETL\Rows;
@@ -15,7 +15,8 @@ final class ClosureTest extends TestCase
 {
     public function test_loader_closure() : void
     {
-        ETL::extract(new AllRowTypesFakeExtractor(20, 2))
+        (new Flow())
+            ->extract(new AllRowTypesFakeExtractor(20, 2))
             ->load($loader = new class implements Closure, Loader {
                 public bool $closureCalled = false;
 

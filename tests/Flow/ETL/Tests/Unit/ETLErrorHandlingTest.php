@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit;
 
 use Flow\ETL\DSL\Handler;
-use Flow\ETL\ETL;
 use Flow\ETL\Extractor;
+use Flow\ETL\Flow;
 use Flow\ETL\Loader;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\BooleanEntry;
@@ -84,7 +84,8 @@ final class ETLErrorHandlingTest extends TestCase
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Transformer Exception');
 
-        ETL::extract($extractor)
+        (new Flow())
+            ->extract($extractor)
             ->onError(Handler::throw_error())
             ->transform($brokenTransformer)
             ->load($loader)
@@ -154,7 +155,8 @@ final class ETLErrorHandlingTest extends TestCase
             }
         };
 
-        ETL::extract($extractor)
+        (new Flow())
+            ->extract($extractor)
             ->onError(Handler::ignore_error())
             ->transform($brokenTransformer)
             ->load($loader)
@@ -245,7 +247,8 @@ final class ETLErrorHandlingTest extends TestCase
             }
         };
 
-        ETL::extract($extractor)
+        (new Flow())
+            ->extract($extractor)
             ->onError(Handler::skip_rows())
             ->transform($brokenTransformer)
             ->load($loader)

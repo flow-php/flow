@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL;
 
 use Flow\ETL\Extractor\ProcessExtractor;
+use Flow\ETL\Pipeline\SynchronousPipeline;
 
 final class Flow
 {
-    public function __construct(
-        private readonly ConfigBuilder $configBuilder = new ConfigBuilder()
-    ) {
+    public function __construct(private readonly ConfigBuilder $configBuilder = new ConfigBuilder())
+    {
     }
 
     public static function setUp(ConfigBuilder $configBuilder) : self
@@ -21,16 +21,20 @@ final class Flow
     public function extract(Extractor $extractor) : DataFrame
     {
         return new DataFrame(
-            $extractor,
-            $this->configBuilder->build()
+            (new SynchronousPipeline())->source($extractor),
+            $this
+                ->configBuilder
+                ->build()
         );
     }
 
     public function process(Rows $rows) : DataFrame
     {
         return new DataFrame(
-            new ProcessExtractor($rows),
-            $this->configBuilder->build()
+            (new SynchronousPipeline())->source(new ProcessExtractor($rows)),
+            $this
+                ->configBuilder
+                ->build()
         );
     }
 

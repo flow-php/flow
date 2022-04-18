@@ -28,26 +28,10 @@ use Flow\ETL\Transformer\RemoveEntriesTransformer;
 
 final class DataFrame
 {
-    private readonly Cache $cache;
-
-    private readonly ExternalSort $externalSort;
-
     private ?GroupBy $groupBy;
 
-    private readonly string $id;
-
-    private ?int $limit;
-
-    private Pipeline $pipeline;
-
-    public function __construct(Extractor $extractor, Config $configuration)
+    public function __construct(private Pipeline $pipeline, private readonly Config $configuration)
     {
-        $this->id = $configuration->id();
-        $this->pipeline = $configuration->pipeline();
-        $this->pipeline->source($extractor);
-        $this->limit = null;
-        $this->cache = $configuration->cache();
-        $this->externalSort = $configuration->externalSort();
         $this->groupBy = null;
     }
 
@@ -78,15 +62,15 @@ final class DataFrame
      */
     public function cache(string $id = null) : self
     {
-        $this->cache->clear($id ??= $this->id);
+        $this->configuration->cache()->clear($id ??= $this->configuration->id());
 
-        foreach ($this->pipeline->process($this->limit) as $rows) {
-            $this->cache->add($id, $rows);
+        foreach ($this->pipeline->process($this->configuration) as $rows) {
+            $this->configuration->cache()->add($id, $rows);
         }
 
         $this->pipeline = $this->pipeline->cleanCopy();
-        $this->limit = null;
-        $this->pipeline->source(new CacheExtractor($id, $this->cache));
+        $this->configuration->clearLimit();
+        $this->pipeline->source(new CacheExtractor($id, $this->configuration->cache()));
 
         return $this;
     }
@@ -130,14 +114,12 @@ final class DataFrame
     public function fetch(?int $limit = null) : Rows
     {
         if ($limit !== null) {
-            if ($limit <= 0) {
-                throw new InvalidArgumentException("Fetch limit can't be lower or equal to 0");
-            }
-
-            $this->limit = $limit;
+            $this->configuration->setLimit($limit);
         }
 
-        return (new Rows())->merge(...\iterator_to_array($this->pipeline->process($this->limit)));
+        return (new Rows())->merge(
+            ...\iterator_to_array($this->pipeline->process($this->configuration))
+        );
     }
 
     /**
@@ -204,11 +186,7 @@ final class DataFrame
      */
     public function limit(int $limit) : self
     {
-        if ($limit <= 0) {
-            throw new InvalidArgumentException("Limit can't be lower or equal zero, given: {$limit}");
-        }
-
-        $this->limit = $limit;
+        $this->configuration->setLimit($limit);
 
         return $this;
     }
@@ -233,7 +211,7 @@ final class DataFrame
 
     public function onError(ErrorHandler $handler) : self
     {
-        $this->pipeline->onError($handler);
+        $this->configuration->setErrorHandler($handler);
 
         return $this;
     }
@@ -271,7 +249,7 @@ final class DataFrame
      */
     public function run(callable $callback = null) : void
     {
-        foreach ($this->pipeline->process($this->limit) as $rows) {
+        foreach ($this->pipeline->process($this->configuration) as $rows) {
             if ($callback !== null) {
                 $callback($rows);
             }
@@ -290,9 +268,9 @@ final class DataFrame
 
     public function sortBy(Sort ...$entries) : self
     {
-        $this->cache($this->id);
+        $this->cache($this->configuration->id());
 
-        $this->pipeline->source($this->externalSort->sortBy(...$entries));
+        $this->pipeline->source($this->configuration->externalSort()->sortBy(...$entries));
 
         return $this;
     }

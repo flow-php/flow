@@ -9,6 +9,9 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Rows;
 use Flow\Serializer\Serializer;
 
+/**
+ * @infection-ignore-all
+ */
 final class LocalFilesystemCache implements Cache
 {
     public function __construct(

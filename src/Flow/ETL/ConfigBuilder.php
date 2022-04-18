@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL;
 
 use Flow\ETL\Cache\LocalFilesystemCache;
+use Flow\ETL\ErrorHandler\ThrowError;
 use Flow\ETL\ExternalSort\MemorySort;
 use Flow\ETL\Monitoring\Memory\Unit;
-use Flow\ETL\Pipeline\SynchronousPipeline;
 use Flow\Serializer\CompressingSerializer;
 use Flow\Serializer\NativePHPSerializer;
 use Flow\Serializer\Serializer;
@@ -16,11 +16,11 @@ final class ConfigBuilder
 {
     private ?Cache $cache;
 
+    private ?ErrorHandler $errorHandler;
+
     private ?ExternalSort $externalSort;
 
     private ?string $id;
-
-    private ?Pipeline $pipeline;
 
     private ?Serializer $serializer;
 
@@ -29,8 +29,8 @@ final class ConfigBuilder
         $this->id = null;
         $this->cache = null;
         $this->externalSort = null;
-        $this->pipeline = null;
         $this->serializer = null;
+        $this->errorHandler = null;
     }
 
     /**
@@ -51,14 +51,14 @@ final class ConfigBuilder
             $this->cache,
             \is_string(\getenv(Config::EXTERNAL_SORT_MAX_MEMORY_ENV)) ? Unit::fromString(\getenv(Config::EXTERNAL_SORT_MAX_MEMORY_ENV)) : Unit::fromMb(200)
         );
-        $this->pipeline ??= new SynchronousPipeline();
+        $this->errorHandler ??= new ThrowError();
 
         return new Config(
             $this->id,
             $this->cache,
             $this->externalSort,
-            $this->pipeline,
-            $this->serializer
+            $this->serializer,
+            $this->errorHandler
         );
     }
 
@@ -79,13 +79,6 @@ final class ConfigBuilder
     public function id(string $id) : self
     {
         $this->id = $id;
-
-        return $this;
-    }
-
-    public function pipeline(Pipeline $pipeline) : self
-    {
-        $this->pipeline = $pipeline;
 
         return $this;
     }

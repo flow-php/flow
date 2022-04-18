@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Pipeline;
 
-use Flow\ETL\ErrorHandler;
+use Flow\ETL\Config;
 use Flow\ETL\Extractor;
 use Flow\ETL\GroupBy;
 use Flow\ETL\Loader;
@@ -26,9 +26,11 @@ final class GroupByPipeline implements Pipeline
         $this->nextPipeline = $existingPipeline->cleanCopy();
     }
 
-    public function add(Loader|Transformer $pipe) : void
+    public function add(Loader|Transformer $pipe) : self
     {
         $this->nextPipeline->add($pipe);
+
+        return $this;
     }
 
     public function cleanCopy() : Pipeline
@@ -36,27 +38,23 @@ final class GroupByPipeline implements Pipeline
         return $this->pipeline->cleanCopy();
     }
 
-    public function onError(ErrorHandler $errorHandler) : void
+    public function process(Config $config) : \Generator
     {
-        $this->pipeline->onError($errorHandler);
-        $this->nextPipeline->onError($errorHandler);
-    }
-
-    public function process(?int $limit = null) : \Generator
-    {
-        foreach ($this->pipeline->process($limit) as $nextRows) {
+        foreach ($this->pipeline->process($config) as $nextRows) {
             $this->groupBy->group($nextRows);
         }
 
         $this->nextPipeline->source(new Extractor\ProcessExtractor($this->groupBy->result()));
 
-        foreach ($this->nextPipeline->process() as $nextRows) {
+        foreach ($this->nextPipeline->process($config) as $nextRows) {
             yield $nextRows;
         }
     }
 
-    public function source(Extractor $extractor) : void
+    public function source(Extractor $extractor) : self
     {
         $this->pipeline->source($extractor);
+
+        return $this;
     }
 }

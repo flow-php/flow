@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Pipeline;
 
+use Flow\ETL\Config;
 use Flow\ETL\DSL\From;
-use Flow\ETL\ErrorHandler;
 use Flow\ETL\Extractor;
 use Flow\ETL\Loader;
 use Flow\ETL\Pipeline;
@@ -24,9 +24,11 @@ final class CollectingPipeline implements Pipeline
         $this->nextPipeline = $pipeline->cleanCopy();
     }
 
-    public function add(Loader|Transformer $pipe) : void
+    public function add(Loader|Transformer $pipe) : self
     {
         $this->nextPipeline->add($pipe);
+
+        return $this;
     }
 
     public function cleanCopy() : Pipeline
@@ -34,22 +36,19 @@ final class CollectingPipeline implements Pipeline
         return new self($this->pipeline);
     }
 
-    public function onError(ErrorHandler $errorHandler) : void
-    {
-        $this->nextPipeline->onError($errorHandler);
-    }
-
-    public function process(?int $limit = null) : \Generator
+    public function process(Config $config) : \Generator
     {
         $this->nextPipeline->source(From::rows(
-            (new Rows())->merge(...\iterator_to_array($this->pipeline->process($limit)))
+            (new Rows())->merge(...\iterator_to_array($this->pipeline->process($config)))
         ));
 
-        return $this->nextPipeline->process();
+        return $this->nextPipeline->process($config);
     }
 
-    public function source(Extractor $extractor) : void
+    public function source(Extractor $extractor) : self
     {
         $this->pipeline->source($extractor);
+
+        return $this;
     }
 }

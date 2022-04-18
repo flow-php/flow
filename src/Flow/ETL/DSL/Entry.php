@@ -7,6 +7,9 @@ namespace Flow\ETL\DSL;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry as RowEntry;
 
+/**
+ * @infection-ignore-all
+ */
 class Entry
 {
     /**

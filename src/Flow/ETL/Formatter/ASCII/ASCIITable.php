@@ -21,11 +21,15 @@ final class ASCIITable
 {
     /**
      * An array that contains the column types.
+     *
+     * @var array<string, "numeric"|"string">
      */
     private array $colTypes = [];
 
     /**
      * An array that contains the max character width of each column (not including buffer spacing).
+     *
+     * @var array<string, int>
      */
     private array $colWidths = [];
 

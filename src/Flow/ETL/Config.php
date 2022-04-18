@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\Serializer\Serializer;
 
 final class Config
@@ -12,12 +13,14 @@ final class Config
 
     public const EXTERNAL_SORT_MAX_MEMORY_ENV = 'FLOW_EXTERNAL_SORT_MAX_MEMORY';
 
+    private ?int $limit = null;
+
     public function __construct(
-        private readonly string $id,
-        private readonly Cache $cache,
-        private readonly ExternalSort $externalSort,
-        private readonly Pipeline $pipeline,
-        private readonly Serializer $serializer
+        private string $id,
+        private Cache $cache,
+        private ExternalSort $externalSort,
+        private Serializer $serializer,
+        private ErrorHandler $errorHandler
     ) {
     }
 
@@ -36,9 +39,26 @@ final class Config
         return $this->cache;
     }
 
+    public function clearLimit() : self
+    {
+        $this->limit = null;
+
+        return $this;
+    }
+
+    public function errorHandler() : ErrorHandler
+    {
+        return $this->errorHandler;
+    }
+
     public function externalSort() : ExternalSort
     {
         return $this->externalSort;
+    }
+
+    public function hasLimit() : bool
+    {
+        return $this->limit !== null;
     }
 
     public function id() : string
@@ -46,13 +66,31 @@ final class Config
         return $this->id;
     }
 
-    public function pipeline() : Pipeline
+    public function limit() : ?int
     {
-        return $this->pipeline;
+        return $this->limit;
     }
 
     public function serializer() : Serializer
     {
         return $this->serializer;
+    }
+
+    public function setErrorHandler(ErrorHandler $errorHandler) : self
+    {
+        $this->errorHandler = $errorHandler;
+
+        return $this;
+    }
+
+    public function setLimit(int $limit) : self
+    {
+        if ($limit <= 0) {
+            throw new InvalidArgumentException("Limit can't be lower or equal zero, given: {$limit}");
+        }
+
+        $this->limit = $limit;
+
+        return $this;
     }
 }

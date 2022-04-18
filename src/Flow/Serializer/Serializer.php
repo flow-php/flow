@@ -2,6 +2,9 @@
 
 namespace Flow\Serializer;
 
+/**
+ * @internal
+ */
 interface Serializer
 {
     public function serialize(Serializable $serializable) : string;

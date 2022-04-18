@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Extractor;
 
+use Flow\ETL\Config;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\Extractor\PipelineExtractor;
 use Flow\ETL\Extractor\ProcessExtractor;
@@ -23,7 +24,7 @@ final class PipelineExtractorTest extends TestCase
             new Rows(Row::create(Entry::integer('id', 5)), Row::create(Entry::integer('id', 6))),
         ));
 
-        $extractor = new PipelineExtractor($pipeline);
+        $extractor = new PipelineExtractor($pipeline, Config::default());
 
         $this->assertCount(
             3,
