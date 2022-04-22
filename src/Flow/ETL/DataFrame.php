@@ -14,6 +14,7 @@ use Flow\ETL\Join\Join;
 use Flow\ETL\Loader\SchemaValidationLoader;
 use Flow\ETL\Pipeline\CollectingPipeline;
 use Flow\ETL\Pipeline\GroupByPipeline;
+use Flow\ETL\Pipeline\NestedPipeline;
 use Flow\ETL\Pipeline\ParallelizingPipeline;
 use Flow\ETL\Pipeline\VoidPipeline;
 use Flow\ETL\Row\Schema;
@@ -225,6 +226,13 @@ final class DataFrame
     public function parallelize(int $chunks) : self
     {
         $this->pipeline = new ParallelizingPipeline($this->pipeline, $chunks);
+
+        return $this;
+    }
+
+    public function pipeline(Pipeline $pipeline) : self
+    {
+        $this->pipeline = new NestedPipeline($this->pipeline, $pipeline);
 
         return $this;
     }

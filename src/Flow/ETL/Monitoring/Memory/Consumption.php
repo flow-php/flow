@@ -8,14 +8,30 @@ final class Consumption
 {
     private readonly Unit $initial;
 
+    private Unit $max;
+
+    private Unit $min;
+
     public function __construct()
     {
         $this->initial = Unit::fromBytes(\memory_get_usage());
+        $this->min = $this->initial;
+        $this->max = $this->initial;
     }
 
     public function current() : Unit
     {
-        return Unit::fromBytes(\memory_get_usage());
+        $current = Unit::fromBytes(\memory_get_usage());
+
+        if ($current->isGreaterThan($this->max)) {
+            $this->max = $current;
+        }
+
+        if ($current->isLowerThan($this->min)) {
+            $this->min = $current;
+        }
+
+        return $current;
     }
 
     public function currentDiff() : Unit

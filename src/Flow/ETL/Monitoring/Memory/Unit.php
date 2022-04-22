@@ -94,6 +94,11 @@ final class Unit
         return $this->bytes > $unit->bytes;
     }
 
+    public function isLowerThan(self $unit) : bool
+    {
+        return $this->bytes < $unit->bytes;
+    }
+
     public function percentage(int $value) : self
     {
         return new self((int) \round(($value / 100) * $this->bytes));
