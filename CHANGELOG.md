@@ -1,6 +1,8 @@
-## [Unreleased] - 2022-04-18
+## [Unreleased] - 2022-04-22
 
 ### Added
+- [#225](https://github.com/flow-php/etl/pull/225) - **Nested pipeline** - [@norberttech](https://github.com/norberttech)
+- [#225](https://github.com/flow-php/etl/pull/225) - **max/min memory consumption** - [@norberttech](https://github.com/norberttech)
 - [#224](https://github.com/flow-php/etl/pull/224) - **@infection-ignore-all annotation to DSL** - [@norberttech](https://github.com/norberttech)
 - [#223](https://github.com/flow-php/etl/pull/223) - **in memory cache implementation** - [@norberttech](https://github.com/norberttech)
 - [#222](https://github.com/flow-php/etl/pull/222) - **entry/prefix DSL methods** - [@norberttech](https://github.com/norberttech)
