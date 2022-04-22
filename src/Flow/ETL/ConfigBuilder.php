@@ -9,7 +9,6 @@ use Flow\ETL\ErrorHandler\ThrowError;
 use Flow\ETL\ExternalSort\MemorySort;
 use Flow\ETL\Monitoring\Memory\Unit;
 use Flow\Serializer\CompressingSerializer;
-use Flow\Serializer\NativePHPSerializer;
 use Flow\Serializer\Serializer;
 
 final class ConfigBuilder
@@ -39,7 +38,7 @@ final class ConfigBuilder
     public function build() : Config
     {
         $this->id ??= \uniqid('flow_php');
-        $this->serializer ??= new CompressingSerializer(new NativePHPSerializer());
+        $this->serializer ??= new CompressingSerializer();
         $this->cache ??= new LocalFilesystemCache(
             \is_string(\getenv(Config::CACHE_DIR_ENV))
                 ? \getenv(Config::CACHE_DIR_ENV)

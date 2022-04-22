@@ -8,10 +8,14 @@ use Flow\ETL\Exception\RuntimeException;
 
 final class CompressingSerializer implements Serializer
 {
-    public function __construct(
-        private readonly Serializer $serializer,
-        private readonly int $compressionLevel = 9
-    ) {
+    private readonly int $compressionLevel;
+
+    private readonly Serializer $serializer;
+
+    public function __construct()
+    {
+        $this->serializer = new NativePHPSerializer();
+        $this->compressionLevel = 9;
     }
 
     public function serialize(Serializable $serializable) : string

@@ -8,6 +8,10 @@ use Flow\ETL\Exception\RuntimeException;
 
 final class NativePHPSerializer implements Serializer
 {
+    public function __construct()
+    {
+    }
+
     public function serialize(Serializable $serializable) : string
     {
         return \serialize($serializable);

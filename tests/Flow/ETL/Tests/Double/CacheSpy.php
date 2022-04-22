@@ -7,6 +7,9 @@ namespace Flow\ETL\Tests\Double;
 use Flow\ETL\Cache;
 use Flow\ETL\Rows;
 
+/**
+ * @implements Cache<array<mixed>>
+ */
 final class CacheSpy implements Cache
 {
     /**
@@ -25,6 +28,15 @@ final class CacheSpy implements Cache
     private array $writes = [];
 
     public function __construct(private readonly Cache $cache)
+    {
+    }
+
+    public function __serialize() : array
+    {
+        return [];
+    }
+
+    public function __unserialize(array $data) : void
     {
     }
 
