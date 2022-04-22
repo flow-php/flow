@@ -1,6 +1,7 @@
 ## [Unreleased] - 2022-04-22
 
 ### Added
+- [#226](https://github.com/flow-php/etl/pull/226) - **Cache serialization** - [@norberttech](https://github.com/norberttech)
 - [#225](https://github.com/flow-php/etl/pull/225) - **Nested pipeline** - [@norberttech](https://github.com/norberttech)
 - [#225](https://github.com/flow-php/etl/pull/225) - **max/min memory consumption** - [@norberttech](https://github.com/norberttech)
 - [#224](https://github.com/flow-php/etl/pull/224) - **@infection-ignore-all annotation to DSL** - [@norberttech](https://github.com/norberttech)
