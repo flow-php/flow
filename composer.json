@@ -15,6 +15,7 @@
     "require": {
         "php": "~8.1",
         "ext-json": "*",
+        "amphp/process": "^2",
         "amphp/socket": "^2",
         "flow-php/etl": "^1.0@dev",
         "monolog/monolog": "^2.0"
@@ -52,7 +53,6 @@
             "tools/vendor/bin/infection -j2"
         ],
         "static:analyze": [
-            "tools/vendor/bin/psalm --output-format=compact",
             "tools/vendor/bin/phpstan analyze -c phpstan.neon",
             "tools/vendor/bin/php-cs-fixer fix --dry-run"
         ],

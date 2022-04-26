@@ -1,9 +1,9 @@
 #!/usr/bin/env php
 <?php
 
-use Flow\ETL\Async\TCP\TCPClientCLI;
+use Flow\ETL\Async\Amp\Worker\SocketClient;
+use Flow\ETL\Async\Socket\Worker\SocketLocalWorkerCLI;
 use Flow\ETL\CLI\Input;
-use Flow\Serializer\CompressingSerializer;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
@@ -47,4 +47,4 @@ $stderrHandler->setFormatter($formatter);
 $logger->pushHandler($stderrHandler);
 $logger->pushHandler($stdoutHandler);
 
-//exit((new TCPClientCLI($logger, new TCPClient($logger)))->run(new Input($argv)));
+exit((new SocketLocalWorkerCLI($logger, new SocketClient($logger)))->run(new Input($argv)));
