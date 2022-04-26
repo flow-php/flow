@@ -211,6 +211,41 @@ Adapters might also define some custom transformers.
 
 Some transformers come with complex configuration, please find more details [here](/docs/complex_transformers.md).
 
+### Asynchronous Processing 
+
+Currently Flow is supporting only local multiprocess asynchronous processing.
+
+In order to process data asynchronously one of the following adapters must be first installed:
+
+* [etl-adapter-amphp](https://github.com/flow-php/etl-adapter-amphp)
+* [etl-adapter-reactphp](https://github.com/flow-php/etl-adapter-reactphp)
+
+Code example: 
+
+```php
+<?php
+(Flow::setUp(Config::builder()))
+    ->read(new CSVExtractor($path = __DIR__ . '/data/dataset.csv', 10_000, 0))
+    ->pipeline(
+        new LocalSocketPipeline(
+            SocketServer::unixDomain(__DIR__ . "/var/run/", $logger),
+            new ChildProcessLauncher(__DIR__ . "/vendor/bin/worker-amp", $logger),
+            $workers = 8
+        )
+    )
+    ->rows(Transform::array_unpack('row'))
+    ->drop('row')
+    ->rows(Transform::to_integer("id"))
+    ->rows(Transform::string_concat(['name', 'last_name'], ' ', 'name'))
+    ->drop('last_name')
+    ->load(new DbalLoader($tableName, $chunkSize = 1000, $dbConnectionParams))
+    ->run();
+```
+
+Following ilustration presents current state and future plans of the asynchronouse processing in flow 
+
+![async](docs/img/processing_modes.png)
+
 ### Serialization
 
 In order to allow serialization of callable based transformers please
