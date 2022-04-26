@@ -1,5 +1,8 @@
 ## [Unreleased] - 2022-04-26
 
+### Added
+- [864b6e](https://github.com/flow-php/etl-adapter-reactphp/commit/864b6e6c86aaac595e85da303a80a0683fd4e824) - **missing tests** - [@norberttech](https://github.com/norberttech)
+
 ### Changed
 - [b9e0b4](https://github.com/flow-php/etl-adapter-reactphp/commit/b9e0b4178cf59a0fd65dcd7ebf19ebb11c539cd6) - **Adjusted to latest changes in Flow** - [@norberttech](https://github.com/norberttech)
 - [4e3589](https://github.com/flow-php/etl-adapter-reactphp/commit/4e35897dbe4c14de117f87d7bde851c479312c2d) - **Simplified worker and updated README** - [@norberttech](https://github.com/norberttech)
