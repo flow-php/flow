@@ -5,13 +5,6 @@
     "keywords": ["etl", "extract", "transform", "load", "async", "amphp"],
     "prefer-stable": true,
     "minimum-stability": "dev",
-    "repositories": [
-        {
-            "type": "path",
-            "url": "../etl",
-            "symlink": true
-        }
-    ],
     "require": {
         "php": "~8.1",
         "amphp/process": "^2",

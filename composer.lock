@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "35d5042e8d441a83b0b336143c3d1b16",
+    "content-hash": "e11755bcb5d8d1ab1079182526385141",
     "packages": [
         {
             "name": "amphp/amp",
@@ -888,10 +888,16 @@
         {
             "name": "flow-php/etl",
             "version": "1.x-dev",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/flow-php/etl.git",
+                "reference": "aead49745e78368ea0f2689b47e059eca3bd8219"
+            },
             "dist": {
-                "type": "path",
-                "url": "../etl",
-                "reference": "e0eb55dcd0ad99f506473d754e6f5bd5cfc33bdc"
+                "type": "zip",
+                "url": "https://api.github.com/repos/flow-php/etl/zipball/aead49745e78368ea0f2689b47e059eca3bd8219",
+                "reference": "aead49745e78368ea0f2689b47e059eca3bd8219",
+                "shasum": ""
             },
             "require": {
                 "ext-json": "*",
@@ -910,6 +916,7 @@
                 "laminas/laminas-hydrator": "Help converting ObjectEntry into ArrayEntry that can be later unpack into standalone Entries",
                 "ocramius/generated-hydrator": "Provieds generated hydrator that implemenets Laminas\\Hydrator\\HydratorInterface"
             },
+            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -918,41 +925,7 @@
                     ]
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Flow\\": "tests/Flow"
-                }
-            },
-            "scripts": {
-                "build": [
-                    "@static:analyze",
-                    "@test",
-                    "@test:mutation"
-                ],
-                "test": [
-                    "tools/vendor/bin/phpunit"
-                ],
-                "test:mutation": [
-                    "tools/vendor/bin/infection -j2"
-                ],
-                "static:analyze": [
-                    "tools/vendor/bin/psalm --output-format=compact",
-                    "tools/vendor/bin/phpstan analyze -c phpstan.neon",
-                    "tools/vendor/bin/php-cs-fixer fix --dry-run"
-                ],
-                "cs:php:fix": [
-                    "tools/vendor/bin/php-cs-fixer fix"
-                ],
-                "tools:install": [
-                    "composer install --working-dir=./tools"
-                ],
-                "post-install-cmd": [
-                    "@tools:install"
-                ],
-                "post-update-cmd": [
-                    "@tools:install"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -963,9 +936,11 @@
                 "load",
                 "transform"
             ],
-            "transport-options": {
-                "relative": true
-            }
+            "support": {
+                "issues": "https://github.com/flow-php/etl/issues",
+                "source": "https://github.com/flow-php/etl/tree/1.x"
+            },
+            "time": "2022-04-26T20:14:52+00:00"
         },
         {
             "name": "kelunik/certificate",
