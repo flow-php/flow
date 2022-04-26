@@ -31,6 +31,8 @@ final class SocketServer implements Server
 
     private ?string $socketPath;
 
+    private ?ServerProtocol $handler;
+
     private function __construct(
         private readonly string $host,
         private readonly LoggerInterface $logger,
@@ -40,6 +42,7 @@ final class SocketServer implements Server
         $this->server = null;
         $this->connections = [];
         $this->socketPath = null;
+        $this->handler = null;
     }
 
     public static function tcp(
@@ -61,7 +64,11 @@ final class SocketServer implements Server
             throw new InvalidArgumentException("Given path does not exists or is not valid folder: {$socketPath}");
         }
 
-        $socketPath = "{$socketPath}/" . \uniqid('socket', true) . '.sock';
+        $socketPath = "{$socketPath}/" . \uniqid('socket') . '.sock';
+
+        if (\strlen($socketPath) > 104) {
+            throw new InvalidArgumentException('Given socket path is too long, max characters 104, given: ' . \strlen($socketPath));
+        }
 
         $server = new self("unix://{$socketPath}", $logger, $serializer);
         $server->socketPath = $socketPath;
@@ -72,7 +79,7 @@ final class SocketServer implements Server
     public function initialize(ServerProtocol $handler) : void
     {
         if ($this->server) {
-            throw new RuntimeException('Server already started.');
+            throw new RuntimeException('Server already initialized.');
         }
 
         $this->logger->debug('initializing server', [
@@ -82,13 +89,24 @@ final class SocketServer implements Server
         $this->loop = Loop::get();
         $this->server = new ReactSocketServer($this->host, [], $this->loop);
 
+        $this->handler = $handler;
+    }
+
+    public function start() : void
+    {
+        if ($this->loop === null) {
+            throw new RuntimeException('Server not initialized.');
+        }
+
+        $this->logger->debug('starting server');
+
         $buffer = new MessageBuffer($this->serializer);
 
-        $this->server->on('connection', function (ConnectionInterface $connection) use ($handler, &$buffer) : void {
+        $this->server->on('connection', function (ConnectionInterface $connection) use (&$buffer) : void {
             $this->connections[] = $connection;
             $this->logger->debug('client connected', ['address' => $connection->getRemoteAddress()]);
 
-            $connection->on('data', function ($data) use ($connection, $handler, &$buffer) : void {
+            $connection->on('data', function ($data) use ($connection, &$buffer) : void {
                 $message = $buffer->buffer($connection, $data);
 
                 if ($message !== null) {
@@ -100,7 +118,7 @@ final class SocketServer implements Server
                         ],
                     ]);
 
-                    $handler->handle($message, new SocketClient($connection, $this->serializer), $this);
+                    $this->handler->handle($message, new SocketClient($connection, $this->serializer), $this);
                 }
             });
 
@@ -114,15 +132,6 @@ final class SocketServer implements Server
                 ]);
             });
         });
-    }
-
-    public function start() : void
-    {
-        if ($this->loop === null) {
-            throw new RuntimeException('Server already stopped.');
-        }
-
-        $this->logger->debug('starting server');
 
         $this->loop->run();
     }
@@ -146,6 +155,7 @@ final class SocketServer implements Server
 
         $this->loop = null;
         $this->server = null;
+        $this->handler = null;
 
         if ($this->socketPath !== null && \file_exists($this->socketPath)) {
             \unlink($this->socketPath);
