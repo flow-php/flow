@@ -7,6 +7,9 @@
 - [4b1f78](https://github.com/flow-php/etl-adapter-amphp/commit/4b1f78d0d493798a47c3654edc7a5e5d1acee5d1) - **Initial commit** - [@norberttech](https://github.com/norberttech)
 - [94c83b](https://github.com/flow-php/etl-adapter-amphp/commit/94c83b89837f9aa89974573f977f8237c986babd) - **Initial commit** - [@norberttech](https://github.com/norberttech)
 
+### Updated
+- [a7139f](https://github.com/flow-php/etl-adapter-amphp/commit/a7139f4037bbcc20ae9c87a1c4337ecb3899aa51) - **flow-php dependency** - [@norberttech](https://github.com/norberttech)
+
 ### Removed
 - [838278](https://github.com/flow-php/etl-adapter-amphp/commit/8382789397009081a21840a1ea9fdf099bc50d58) - **psalm config** - [@norberttech](https://github.com/norberttech)
 
