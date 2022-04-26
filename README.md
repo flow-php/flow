@@ -16,8 +16,6 @@ Flow is a most advanced and flexible PHP, data processing library.
 
 Except typical ETL use cases (Extract, Transform, Load), Flow can be also used for memory-safe data analysis.
 
-By default, all operations are synchronous, but for bigger datasets Flow offers also an [asynchronous](https://github.com/flow-php/etl-async) pipeline. 
-
 ## Installation
 
 ```bash

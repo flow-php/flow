@@ -191,7 +191,7 @@ return (new PhpCsFixer\Config())
         'phpdoc_var_without_name' => true,
         'pow_to_exponentiation' => true,
         'protected_to_private' => true,
-        'return_assignment' => true,
+        'return_assignment' => false,
         'return_type_declaration' => ['space_before' => 'one'],
         'self_accessor' => true,
         'self_static_accessor' => true,
