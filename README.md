@@ -1,83 +1,76 @@
-# ETL - Asynchronous Pipeline ReactPHP Implementation
+# ETL Adapter: [ReactPHP](https://reactphp.org/)
 
-This repository provides implementation for [flow-php/etl-async](https://github.com/flow-php/etl-async) based on [ReactPHP](https://reactphp.org/) components.
+This adapter providers async local pipeline server/worker elements implemented on [reactphp](https://reactphp.org/).
+
+Following communication protocols are supported: 
+
+- TCP/IP (only local) - `127.0.0.1:6651`
+- Unix Domain Socket - `uinx:///var/run/etl.sock`
+
+# Installation
+
+```
+composer require flow-php/etl-adapter-reactphp
+```
 
 Working example:
 
 ```php
 <?php
 
-use Flow\ETL\Async\LocalPipeline;
+use Aeon\Calendar\Stopwatch;
+use Doctrine\DBAL\DriverManager;
+use Doctrine\DBAL\Schema\Column;
+use Doctrine\DBAL\Schema\Table;
+use Doctrine\DBAL\Types\Type;
+use Doctrine\DBAL\Types\Types;
+use Flow\ETL\Adapter\CSV\League\CSVExtractor;
+use Flow\ETL\Adapter\Doctrine\DbalLoader;
+use Flow\ETL\Cache\InMemoryCache;
+use Flow\ETL\Config;
+use Flow\ETL\Monitoring\Memory\Consumption;
+use Flow\ETL\Pipeline\LocalSocketPipeline;
 use Flow\ETL\Async\ReactPHP\Worker\ChildProcessLauncher;
-use Flow\ETL\Async\ReactPHP\Server\TCPServer;
-use Flow\ETL\ETL;
-use Flow\ETL\Transformer\ArrayUnpackTransformer;
-use Flow\ETL\Transformer\Cast\CastToInteger;
-use Flow\ETL\Transformer\CastTransformer;
-use Flow\ETL\Transformer\RemoveEntriesTransformer;
-use Flow\ETL\Transformer\Rename\EntryRename;
-use Flow\ETL\Transformer\RenameEntriesTransformer;
-use Flow\ETL\Transformer\StringConcatTransformer;
-use Monolog\Handler\StreamHandler;
-use Monolog\Logger;
-
-$extractor = new SomeComplexExtractor();
-
-$logger = new Logger('server');
-$logger->pushHandler(new StreamHandler(__DIR__ . '/var/logs/error.log', Logger::ERROR, false));
-
-$pipeline = new LocalPipeline(
-    new TCPServer($port = 6651, $logger),
-    new ChildProcessLauncher(__DIR__ . "/bin/worker", $port, $logger),
-    $workers = 6
-);
-
-ETL::extract($extractor, $pipeline)
-    ->transform(new ArrayUnpackTransformer('row'))
-    ->transform(new RemoveEntriesTransformer('row'))
-    ->transform(new CastTransformer(new CastToInteger(['id'])))
-    ->transform(new StringConcatTransformer(['name', 'last name'], ' ', '_name'))
-    ->transform(new RemoveEntriesTransformer('name', 'last name'))
-    ->transform(new RenameEntriesTransformer(new EntryRename('_name', 'name')))
-    ->run();
-```
-
-## Worker CLI
-
-In most cases [bin/worker-reactphp](bin/worker-reactphp) should work just fine, however sometimes you might
-want to add some custom logic to the worker, in that case you need to create your own worker script. 
-
-Please find minimalistic loader worker example below: 
-
-`my-worker.php`
-
-```php
-#!/usr/bin/env php
-<?php
-
-use Flow\ETL\Async\ReactPHP\Worker\TCPClient;
-use Flow\ETL\Async\Client\CLI;
-use Flow\ETL\Async\Client\CLI\Input;
-use Flow\Serializer\CompressingSerializer;
-use Flow\Serializer\NativePHPSerializer;
+use Flow\ETL\Async\ReactPHP\Server\SocketServer;
+use Flow\ETL\DSL\Transform;
+use Flow\ETL\Flow;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use Psr\Log\LogLevel;
 
-require __DIR__ . "/vendor/autoload.php";
+require __DIR__ . '/vendor/autoload.php';
 
-$logger = new Logger('worker');
-$logger->pushHandler(new StreamHandler(__DIR__ . "/var/logs/worker.log", LogLevel::DEBUG));
+$logger = new Logger('server');
+$logger->pushHandler(new StreamHandler("php://stdout", LogLevel::DEBUG, false));
+$logger->pushHandler(new StreamHandler("php://stderr", LogLevel::ERROR, false));
 
-$serializer = new CompressingSerializer(new NativePHPSerializer());
+$stopwatch = new Stopwatch();
+$stopwatch->start();
 
-$cli = new CLI($logger, new TCPClient($logger, $serializer));
+$memory = new Consumption();
 
-exit($cli->run(new Input($argv)));
+(new Flow)
+    ->read(new CSVExtractor(
+        $path = __DIR__ . '/data/dataset.csv',
+        10_000,
+        0
+    ))
+    ->pipeline(
+        new LocalSocketPipeline(
+            SocketServer::unixDomain(__DIR__ . "/var/run/", $logger),
+            new ChildProcessLauncher(__DIR__ . "/vendor/bin/worker-reactphp", $logger),
+            $workers = 8
+        )
+    )
+    ->rows(Transform::array_unpack('row'))
+    ->drop('row')
+    ->rows(Transform::to_integer("id"))
+    ->rows(Transform::string_concat(['name', 'last_name'], ' ', 'name'))
+    ->drop('last_name')
+    ->load(new DbalLoader($tableName, $chunkSize = 1000, $dbConnectionParams))
+    ->run();
 ```
 
-Don't forget to setup proper permissions by:
-
-```
-chmod +x my-worker
-```
+This adapter comes with built-in [worker](bin/worker-reactphp) CLI application
+but feel free to create custom.
+Customization of the works will let you adjust logger or autoloader.

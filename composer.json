@@ -1,22 +1,16 @@
 {
-    "name": "flow-php/etl-async-adapter-reactphp",
+    "name": "flow-php/etl-adapter-reactphp",
     "type": "library",
     "description": "PHP ETL - Asynchronous Adapter on ReactPHP",
     "keywords": ["etl", "extract", "transform", "load", "async", "reactphp"],
     "prefer-stable": true,
     "minimum-stability": "dev",
     "require": {
-        "php": "^7.4.2 || ~8.0",
-        "ext-json": "*",
-        "flow-php/etl-async": "^1.0@dev",
+        "php": "~8.1",
+        "flow-php/etl": "^1.0@dev",
         "react/child-process": "^0.6.4",
         "react/socket": "^1.11",
         "monolog/monolog": "^2.0"
-    },
-    "require-dev": {
-        "flow-php/doctrine-dbal-bulk": "1.x-dev",
-        "flow-php/etl-adapter-doctrine": "1.x-dev",
-        "flow-php/etl-transformer": "^1.0@dev"
     },
     "config": {
         "optimize-autoloader": true,
@@ -51,7 +45,6 @@
             "tools/vendor/bin/infection -j2"
         ],
         "static:analyze": [
-            "tools/vendor/bin/psalm --output-format=compact",
             "tools/vendor/bin/phpstan analyze -c phpstan.neon",
             "tools/vendor/bin/php-cs-fixer fix --dry-run"
         ],

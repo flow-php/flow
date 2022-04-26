@@ -1,11 +1,11 @@
 #!/usr/bin/env php
 <?php
 
-use Flow\ETL\Async\ReactPHP\Worker\TCPClient;
-use Flow\ETL\Async\Client\CLI;
-use Flow\ETL\Async\Client\CLI\Input;
+use Flow\ETL\Async\ReactPHP\Worker\SocketClient;
+use Flow\ETL\Async\Socket\Worker\SocketLocalWorkerCLI;
+use Flow\ETL\CLI\Input;
 use Flow\Serializer\CompressingSerializer;
-use Flow\Serializer\NativePHPSerializer;
+use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use Psr\Log\LogLevel;
@@ -37,10 +37,15 @@ if (\is_string($autoloadPathEnv) && \file_exists($autoloadPathEnv)) {
 
 $logger = new Logger('worker');
 $stderrHandler = new StreamHandler("php://stderr", LogLevel::ERROR, false);
+$stdoutHandler = new StreamHandler("php://stdout", LogLevel::DEBUG, false);
+
+$output = "[worker.%level_name%]: %datetime%: %message% %context% %extra%\n";
+$formatter = new LineFormatter($output);
+
+$stdoutHandler->setFormatter($formatter);
+$stderrHandler->setFormatter($formatter);
+
 $logger->pushHandler($stderrHandler);
+$logger->pushHandler($stdoutHandler);
 
-$serializer = new CompressingSerializer(new NativePHPSerializer());
-
-$cli = new CLI($logger, new TCPClient($logger, $serializer));
-
-exit($cli->run(new Input($argv)));
+exit((new SocketLocalWorkerCLI($logger, new SocketClient($logger, new CompressingSerializer())))->run(new Input($argv)));

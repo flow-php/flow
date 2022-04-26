@@ -6,7 +6,7 @@ namespace Flow\ETL\Async\Tests\Unit\ReactPHP\Server;
 
 use PHPUnit\Framework\TestCase;
 
-final class TCPClientTest extends TestCase
+final class SocketClientTest extends TestCase
 {
     public function test() : void
     {
