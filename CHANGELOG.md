@@ -1,6 +1,7 @@
-## [Unreleased] - 2022-04-22
+## [Unreleased] - 2022-04-26
 
 ### Added
+- [#227](https://github.com/flow-php/etl/pull/227) - **Local Socket Pipeline and async processing abstraction** - [@norberttech](https://github.com/norberttech)
 - [#226](https://github.com/flow-php/etl/pull/226) - **Cache serialization** - [@norberttech](https://github.com/norberttech)
 - [#225](https://github.com/flow-php/etl/pull/225) - **Nested pipeline** - [@norberttech](https://github.com/norberttech)
 - [#225](https://github.com/flow-php/etl/pull/225) - **max/min memory consumption** - [@norberttech](https://github.com/norberttech)
