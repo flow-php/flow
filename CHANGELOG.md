@@ -1,6 +1,7 @@
-## [Unreleased] - 2022-04-10
+## [Unreleased] - 2022-04-28
 
 ### Added
+- [#105](https://github.com/flow-php/etl-adapter-csv/pull/105) - **DSL layer** - [@norberttech](https://github.com/norberttech)
 - [#95](https://github.com/flow-php/etl-adapter-csv/pull/95) - **Loader options: delimiter, enclouser, escape string** - [@norberttech](https://github.com/norberttech)
 - [#95](https://github.com/flow-php/etl-adapter-csv/pull/95) - **Extractor options: delimiter, enclouser, escape string** - [@norberttech](https://github.com/norberttech)
 - [#44](https://github.com/flow-php/etl-adapter-csv/pull/44) - **Workflow for aut-merging dependabot PRs** - [@tomaszhanc](https://github.com/tomaszhanc)
