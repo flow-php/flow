@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\CSV\Tests\Integration\League;
 
 use Flow\ETL\Adapter\CSV\League\CSVExtractor;
+use Flow\ETL\DSL\CSV;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use PHPUnit\Framework\TestCase;
@@ -49,7 +50,7 @@ final class CSVExtractorTest extends TestCase
 
     public function test_extracting_csv_files_without_header() : void
     {
-        $extractor = new CSVExtractor(
+        $extractor = CSV::from_file(
             __DIR__ . '/../../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv',
             5
         );
@@ -68,5 +69,25 @@ final class CSVExtractorTest extends TestCase
         }
 
         $this->assertSame(32446, $total);
+    }
+
+    public function test_extracting_csv_files_from_directory_recursively() : void
+    {
+        $extractor = CSV::from_directory(__DIR__ . '/../../Fixtures/');
+
+        $total = 0;
+        /** @var Rows $rows */
+        foreach ($extractor->extract() as $rows) {
+            $rows->each(function (Row $row) : void {
+                $this->assertInstanceOf(Row\Entry\ArrayEntry::class, $row->get('row'));
+                $this->assertSame(
+                    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+                    \array_keys($row->valueOf('row'))
+                );
+            });
+            $total += $rows->count();
+        }
+
+        $this->assertSame(64892, $total);
     }
 }

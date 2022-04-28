@@ -8,10 +8,16 @@ use Flow\ETL\Loader;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Rows;
 use League\Csv\Writer;
-use Ramsey\Uuid\Uuid;
 
 /**
- * @implements Loader<array{path: string, open_mode: string, with_header: boolean, safe_mode: boolean, delimiter: string, enclosure: string, escape: string}>
+ * @implements Loader<array{
+ *   path: string,
+ *   open_mode: string,
+ *   with_header: boolean,
+ *   safe_mode: boolean,
+ *   delimiter: string,
+ *   enclosure: string, escape: string
+ * }>
  */
 final class CSVLoader implements Loader
 {
@@ -75,7 +81,7 @@ final class CSVLoader implements Loader
     {
         if ($this->writer === null) {
             $path = ($this->safeMode)
-                ? (\rtrim($this->path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . Uuid::uuid4()->toString() . '.csv')
+                ? (\rtrim($this->path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . \uniqid() . '.csv')
                 : $this->path;
 
             if ($this->safeMode) {
