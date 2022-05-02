@@ -104,4 +104,30 @@ CSV,
             \unlink($path);
         }
     }
+
+    public function test_loading_csv_files_with_empty_row() : void
+    {
+        $path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.csv';
+
+        $loader = CSV::to_file($path, 'w+', $withHeader = true);
+
+        $loader->load(new Rows(
+        ));
+
+        $loader->load(new Rows(
+            Row::create(new Row\Entry\IntegerEntry('id', 1), new Row\Entry\StringEntry('name', 'Norbert')),
+        ));
+
+        $this->assertStringContainsString(
+            <<<'CSV'
+id,name
+1,Norbert
+CSV,
+            \file_get_contents($path)
+        );
+
+        if (\file_exists($path)) {
+            \unlink($path);
+        }
+    }
 }

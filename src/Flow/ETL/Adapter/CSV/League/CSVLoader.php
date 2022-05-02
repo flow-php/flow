@@ -69,6 +69,10 @@ final class CSVLoader implements Loader
      */
     public function load(Rows $rows) : void
     {
+        if ($rows->empty()) {
+            return;
+        }
+
         if ($this->withHeader && !$this->headerAdded) {
             $this->writer()->insertOne($rows->first()->entries()->map(fn (Entry $entry) => $entry->name()));
             $this->headerAdded = true;
