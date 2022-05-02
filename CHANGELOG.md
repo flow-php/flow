@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-04-28
+## [Unreleased] - 2022-05-02
 
 ### Added
 - [#105](https://github.com/flow-php/etl-adapter-csv/pull/105) - **DSL layer** - [@norberttech](https://github.com/norberttech)
@@ -16,6 +16,7 @@
 - [c68ad6](https://github.com/flow-php/etl-adapter-csv/commit/c68ad6c579a3954471e3c9c7233d3bed27cc1eb2) - **Initial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#106](https://github.com/flow-php/etl-adapter-csv/pull/106) - **CSV Loader fails to write headers when first Rows object is empty** - [@scyzoryck](https://github.com/scyzoryck)
 - [#15](https://github.com/flow-php/etl-adapter-csv/pull/15) - **CSVLoader** - [@norberttech](https://github.com/norberttech)
 - [f0ef40](https://github.com/flow-php/etl-adapter-csv/commit/f0ef40204297eb924a9d0cbb8ef89510ba9bde8a) - **invalid variable name** - [@norberttech](https://github.com/norberttech)
 
