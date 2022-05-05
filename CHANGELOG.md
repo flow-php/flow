@@ -1,6 +1,7 @@
-## [Unreleased] - 2022-04-26
+## [Unreleased] - 2022-05-05
 
 ### Added
+- [#230](https://github.com/flow-php/etl/pull/230) - **ListEntry with a strong typing that supports scalar types and objects/interfaces** - [@norberttech](https://github.com/norberttech)
 - [#227](https://github.com/flow-php/etl/pull/227) - **Local Socket Pipeline and async processing abstraction** - [@norberttech](https://github.com/norberttech)
 - [#226](https://github.com/flow-php/etl/pull/226) - **Cache serialization** - [@norberttech](https://github.com/norberttech)
 - [#225](https://github.com/flow-php/etl/pull/225) - **Nested pipeline** - [@norberttech](https://github.com/norberttech)
@@ -119,6 +120,7 @@
 - [856870](https://github.com/flow-php/etl/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#230](https://github.com/flow-php/etl/pull/230) - **[BC Break] Native entry factory will check if array is a list of a single type and it will try to create ListEntry instead of ArrayEntry** - [@norberttech](https://github.com/norberttech)
 - [#224](https://github.com/flow-php/etl/pull/224) - **limit is now stored in Configuration** - [@norberttech](https://github.com/norberttech)
 - [#224](https://github.com/flow-php/etl/pull/224) - **ErrorHandler is now stored in Configuration** - [@norberttech](https://github.com/norberttech)
 - [#224](https://github.com/flow-php/etl/pull/224) - **Pipeline is now fully internal, without possibility to pass it into DataFrame** - [@norberttech](https://github.com/norberttech)
