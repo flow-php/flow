@@ -18,6 +18,7 @@ use Flow\ETL\Transformer\Cast\CastToDateTime;
 use Flow\ETL\Transformer\Cast\CastToInteger;
 use Flow\ETL\Transformer\Cast\CastToJson;
 use Flow\ETL\Transformer\Cast\CastToString;
+use Flow\ETL\Transformer\Cast\EntryCaster\ArrayToListCaster;
 use Flow\ETL\Transformer\Cast\EntryCaster\DateTimeToStringEntryCaster;
 use Flow\ETL\Transformer\Cast\EntryCaster\StringToDateTimeEntryCaster;
 use Flow\ETL\Transformer\CastTransformer;
@@ -524,6 +525,61 @@ class Transform
     final public static function to_json(string ...$entries) : Transformer
     {
         return new CastTransformer(CastToJson::nullable($entries));
+    }
+
+    public static function to_list_boolean(string $entry) : Transformer
+    {
+        return new CastTransformer(
+            new Transformer\Cast\CastEntries(
+                [$entry],
+                new ArrayToListCaster(Entry\TypedCollection\ScalarType::boolean),
+                true
+            )
+        );
+    }
+
+    public static function to_list_datetime(string $entry) : Transformer
+    {
+        return new CastTransformer(
+            new Transformer\Cast\CastEntries(
+                [$entry],
+                new ArrayToListCaster(Entry\TypedCollection\ObjectType::of(\DateTimeInterface::class)),
+                true
+            )
+        );
+    }
+
+    public static function to_list_float(string $entry) : Transformer
+    {
+        return new CastTransformer(
+            new Transformer\Cast\CastEntries(
+                [$entry],
+                new ArrayToListCaster(Entry\TypedCollection\ScalarType::float),
+                true
+            )
+        );
+    }
+
+    public static function to_list_integer(string $entry) : Transformer
+    {
+        return new CastTransformer(
+            new Transformer\Cast\CastEntries(
+                [$entry],
+                new ArrayToListCaster(Entry\TypedCollection\ScalarType::integer),
+                true
+            )
+        );
+    }
+
+    public static function to_list_string(string $entry) : Transformer
+    {
+        return new CastTransformer(
+            new Transformer\Cast\CastEntries(
+                [$entry],
+                new ArrayToListCaster(Entry\TypedCollection\ScalarType::string),
+                true
+            )
+        );
     }
 
     final public static function to_null_from_null_string(string ...$entries) : Transformer

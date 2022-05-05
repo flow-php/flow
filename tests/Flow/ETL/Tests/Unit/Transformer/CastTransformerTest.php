@@ -29,6 +29,18 @@ final class CastTransformerTest extends TestCase
         $this->assertSame('{"foo":"bar"}', $rows->first()->valueOf('collection'));
     }
 
+    public function test_cast_array_to_list() : void
+    {
+        $entry = new ArrayEntry('collection', ['foo', 'bar']);
+
+        $transformer = Transform::to_list_string('collection');
+
+        $rows = $transformer->transform(new Rows(new Row(new Row\Entries($entry))));
+
+        $this->assertInstanceOf(Row\Entry\ListEntry::class, $rows->first()->get('collection'));
+        $this->assertSame(['foo', 'bar'], $rows->first()->valueOf('collection'));
+    }
+
     public function test_casts_multiple_entries_with_null_entry_in_betwee() : void
     {
         $transformer = Transform::to_integer('id', 'limit', 'current');

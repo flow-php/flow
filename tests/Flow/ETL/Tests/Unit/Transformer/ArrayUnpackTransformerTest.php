@@ -8,6 +8,7 @@ use Flow\ETL\DSL\Transform;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
+use Flow\ETL\Row\Entry\TypedCollection\ScalarType;
 use Flow\ETL\Rows;
 use PHPUnit\Framework\TestCase;
 
@@ -83,7 +84,7 @@ final class ArrayUnpackTransformerTest extends TestCase
                     new Row\Entry\StringEntry('status', 'PENDING'),
                     new Row\Entry\BooleanEntry('enabled', true),
                     new Row\Entry\DateTimeEntry('datetime', new \DateTimeImmutable('2020-01-01 00:00:00 UTC')),
-                    new Row\Entry\ArrayEntry('array', ['foo', 'bar']),
+                    new Row\Entry\ListEntry('array', ScalarType::string, ['foo', 'bar']),
                     new Row\Entry\JsonEntry('json', ['foo', 'bar']),
                     new Row\Entry\ObjectEntry('object', new \stdClass()),
                     new Row\Entry\NullEntry('null'),
@@ -126,7 +127,7 @@ final class ArrayUnpackTransformerTest extends TestCase
                     new Row\Entry\StringEntry('1', 'PENDING'),
                     new Row\Entry\BooleanEntry('2', true),
                     new Row\Entry\DateTimeEntry('3', new \DateTimeImmutable('2020-01-01 00:00:00 UTC')),
-                    new Row\Entry\ArrayEntry('4', ['foo', 'bar']),
+                    new Row\Entry\ListEntry('4', ScalarType::string, ['foo', 'bar']),
                     new Row\Entry\JsonEntry('5', ['foo', 'bar']),
                     new Row\Entry\ObjectEntry('6', new \stdClass()),
                     new Row\Entry\NullEntry('7'),

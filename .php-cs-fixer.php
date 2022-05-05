@@ -140,6 +140,7 @@ return (new PhpCsFixer\Config())
                 'constant_public',
                 'constant_protected',
                 'constant_private',
+                'case',
                 'property_public_static',
                 'property_protected_static',
                 'property_private_static',

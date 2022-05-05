@@ -6,6 +6,7 @@ namespace Flow\ETL\DSL;
 
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry as RowEntry;
+use Flow\ETL\Row\Entry\TypedCollection\ScalarType;
 
 /**
  * @infection-ignore-all
@@ -128,6 +129,91 @@ class Entry
     final public static function json_object(string $name, array $data) : RowEntry
     {
         return RowEntry\JsonEntry::object($name, $data);
+    }
+
+    /**
+     * @psalm-pure
+     *
+     * @param array<bool> $value
+     *
+     * @throws \Flow\ETL\Exception\InvalidArgumentException
+     *
+     * @return RowEntry\ListEntry
+     */
+    final public static function list_of_boolean(string $name, array $value) : RowEntry
+    {
+        return new RowEntry\ListEntry($name, ScalarType::boolean, $value);
+    }
+
+    /**
+     * @psalm-pure
+     *
+     * @param array<\DateTimeInterface> $value
+     *
+     * @throws \Flow\ETL\Exception\InvalidArgumentException
+     *
+     * @return RowEntry\ListEntry
+     */
+    final public static function list_of_datetime(string $name, array $value) : RowEntry
+    {
+        return new RowEntry\ListEntry($name, new RowEntry\TypedCollection\ObjectType(\DateTimeInterface::class), $value);
+    }
+
+    /**
+     * @psalm-pure
+     *
+     * @param array<float> $value
+     *
+     * @throws \Flow\ETL\Exception\InvalidArgumentException
+     *
+     * @return RowEntry\ListEntry
+     */
+    final public static function list_of_float(string $name, array $value) : RowEntry
+    {
+        return new RowEntry\ListEntry($name, ScalarType::float, $value);
+    }
+
+    /**
+     * @psalm-pure
+     *
+     * @param array<int> $value
+     *
+     * @throws \Flow\ETL\Exception\InvalidArgumentException
+     *
+     * @return RowEntry\ListEntry
+     */
+    final public static function list_of_int(string $name, array $value) : RowEntry
+    {
+        return new RowEntry\ListEntry($name, ScalarType::integer, $value);
+    }
+
+    /**
+     * @psalm-pure
+     *
+     * @param array<\DateTimeInterface> $value
+     * @param class-string $class
+     *
+     * @throws \Flow\ETL\Exception\InvalidArgumentException
+     *
+     * @return RowEntry\ListEntry
+     */
+    final public static function list_of_objects(string $name, string $class, array $value) : RowEntry
+    {
+        return new RowEntry\ListEntry($name, new RowEntry\TypedCollection\ObjectType($class), $value);
+    }
+
+    /**
+     * @psalm-pure
+     *
+     * @param array<string> $value
+     *
+     * @throws \Flow\ETL\Exception\InvalidArgumentException
+     *
+     * @return RowEntry\ListEntry
+     */
+    final public static function list_of_string(string $name, array $value) : RowEntry
+    {
+        return new RowEntry\ListEntry($name, ScalarType::string, $value);
     }
 
     /**

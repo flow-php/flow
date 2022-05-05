@@ -15,6 +15,7 @@ use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Row\Entry\NullEntry;
 use Flow\ETL\Row\Entry\ObjectEntry;
 use Flow\ETL\Row\Entry\StringEntry;
+use Flow\ETL\Row\Entry\TypedCollection\ScalarType;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Rows;
@@ -514,7 +515,7 @@ final class RowsTest extends TestCase
     {
         $rows = new Rows(
             Row::create(Entry::integer('id', 1), Entry::string('name', 'foo')),
-            Row::create(Entry::integer('id', 1), Entry::null('name')),
+            Row::create(Entry::integer('id', 1), Entry::null('name'), Entry::list_of_int('list', [1, 2])),
             Row::create(Entry::integer('id', 1), Entry::string('name', 'bar'), Entry::array('tags', ['a', 'b'])),
             Row::create(Entry::integer('id', 1), Entry::integer('name', 25)),
         );
@@ -522,8 +523,9 @@ final class RowsTest extends TestCase
         $this->assertEquals(
             new Schema(
                 Definition::integer('id'),
-                Definition::union('name', [StringEntry::class, NullEntry::class, IntegerEntry::class]),
-                Definition::array('tags', $nullable = true)
+                Definition::union('name', [IntegerEntry::class, StringEntry::class, NullEntry::class]),
+                Definition::array('tags', $nullable = true),
+                Definition::list('list', ScalarType::integer, $nullable = true)
             ),
             $rows->schema()
         );

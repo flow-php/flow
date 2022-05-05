@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\Transformer;
 use Flow\ETL\DSL\Transform;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\Entry\TypedCollection\ScalarType;
 use Flow\ETL\Rows;
 use PHPUnit\Framework\TestCase;
 
@@ -174,7 +175,7 @@ final class CallUserFunctionTransformerTest extends TestCase
 
         $this->assertEquals(new Rows(
             Row::create(
-                new Row\Entry\ArrayEntry('array_list', [1, 2, 3, 4]),
+                new Row\Entry\ListEntry('array_list', ScalarType::integer, [1, 2, 3, 4]),
             )
         ), $rows);
     }
@@ -203,7 +204,7 @@ final class CallUserFunctionTransformerTest extends TestCase
 
         $this->assertEquals(new Rows(
             Row::create(
-                new Row\Entry\ArrayEntry('array_list', [1, 2, 3, 4]),
+                new Row\Entry\ListEntry('array_list', ScalarType::integer, [1, 2, 3, 4]),
             )
         ), $rows);
     }

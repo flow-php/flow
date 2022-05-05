@@ -92,12 +92,8 @@ final class Schema implements \Countable, Serializable
         foreach ($schema->definitions as $entry => $definition) {
             if (!\array_key_exists($definition->entry(), $newDefinitions)) {
                 $newDefinitions[$entry] = $definition->nullable();
-            }
-
-            if (!$newDefinitions[$entry]->isEqualType($definition)) {
-                $types = \array_unique(\array_merge($newDefinitions[$entry]->types(), $definition->types()));
-
-                $newDefinitions[$entry] = Definition::union($entry, $types);
+            } elseif (!$newDefinitions[$entry]->isEqual($definition)) {
+                $newDefinitions[$entry] = $definition->merge($newDefinitions[$entry]);
             }
         }
 
