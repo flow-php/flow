@@ -1,6 +1,8 @@
-## [Unreleased] - 2022-05-05
+## [Unreleased] - 2022-05-06
 
 ### Added
+- [#231](https://github.com/flow-php/etl/pull/231) - **Additional metadata for schema definitions** - [@norberttech](https://github.com/norberttech)
+- [#231](https://github.com/flow-php/etl/pull/231) - **VoidConstraint in order to avoid null constraints inside of definition** - [@norberttech](https://github.com/norberttech)
 - [#230](https://github.com/flow-php/etl/pull/230) - **ListEntry with a strong typing that supports scalar types and objects/interfaces** - [@norberttech](https://github.com/norberttech)
 - [#227](https://github.com/flow-php/etl/pull/227) - **Local Socket Pipeline and async processing abstraction** - [@norberttech](https://github.com/norberttech)
 - [#226](https://github.com/flow-php/etl/pull/226) - **Cache serialization** - [@norberttech](https://github.com/norberttech)
@@ -120,6 +122,7 @@
 - [856870](https://github.com/flow-php/etl/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#231](https://github.com/flow-php/etl/pull/231) - **AnyToListConverter that can convert any entry into a list entry** - [@norberttech](https://github.com/norberttech)
 - [#230](https://github.com/flow-php/etl/pull/230) - **[BC Break] Native entry factory will check if array is a list of a single type and it will try to create ListEntry instead of ArrayEntry** - [@norberttech](https://github.com/norberttech)
 - [#224](https://github.com/flow-php/etl/pull/224) - **limit is now stored in Configuration** - [@norberttech](https://github.com/norberttech)
 - [#224](https://github.com/flow-php/etl/pull/224) - **ErrorHandler is now stored in Configuration** - [@norberttech](https://github.com/norberttech)
