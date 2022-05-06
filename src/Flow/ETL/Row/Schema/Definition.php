@@ -20,139 +20,154 @@ use Flow\ETL\Row\Entry\ObjectEntry;
 use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Row\Entry\StructureEntry;
 use Flow\ETL\Row\Entry\TypedCollection\Type;
-use Flow\ETL\Row\Schema\Constraint\All;
 use Flow\ETL\Row\Schema\Constraint\Any;
-use Flow\ETL\Row\Schema\Constraint\CollectionType;
+use Flow\ETL\Row\Schema\Constraint\VoidConstraint;
 use Flow\Serializer\Serializable;
 
 /**
  * @psalm-immutable
- * @implements Serializable<array{entry: string, classes:array<class-string<Entry>>, constraint: null|Constraint}>
+ * @implements Serializable<array{
+ *     entry: string,
+ *     classes:array<class-string<Entry>>,
+ *     constraint: Constraint,
+ *     metadata: Metadata
+ * }>
  */
 final class Definition implements Serializable
 {
+    public const METADATA_LIST_ENTRY_TYPE = 'flow_list_entry_type';
+
+    private Constraint $constraint;
+
+    private Metadata $metadata;
+
     /**
      * @param array<class-string<Entry>> $classes
      */
     public function __construct(
         private readonly string $entry,
         private readonly array $classes,
-        private ?Constraint $constraint = null
+        ?Constraint $constraint = null,
+        ?Metadata $metadata = null
     ) {
         if (!\count($classes)) {
             throw new InvalidArgumentException('Schema definition must come with at least one entry class');
         }
+
+        $this->metadata = $metadata ?? Metadata::empty();
+        $this->constraint = $constraint ?? new VoidConstraint();
     }
 
     /**
      * @psalm-pure
      */
-    public static function array(string $entry, bool $nullable = false, ?Constraint $constraint = null) : self
+    public static function array(string $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
-        return new self($entry, ($nullable) ? [ArrayEntry::class, NullEntry::class] : [ArrayEntry::class], $constraint);
+        return new self($entry, ($nullable) ? [ArrayEntry::class, NullEntry::class] : [ArrayEntry::class], $constraint, $metadata);
     }
 
     /**
      * @psalm-pure
      */
-    public static function boolean(string $entry, bool $nullable = false, ?Constraint $constraint = null) : self
+    public static function boolean(string $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
-        return new self($entry, ($nullable) ? [BooleanEntry::class, NullEntry::class] : [BooleanEntry::class], $constraint);
+        return new self($entry, ($nullable) ? [BooleanEntry::class, NullEntry::class] : [BooleanEntry::class], $constraint, $metadata);
     }
 
     /**
      * @psalm-pure
      */
-    public static function collection(string $entry, bool $nullable = false, ?Constraint $constraint = null) : self
+    public static function collection(string $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
-        return new self($entry, ($nullable) ? [CollectionEntry::class, NullEntry::class] : [CollectionEntry::class], $constraint);
+        return new self($entry, ($nullable) ? [CollectionEntry::class, NullEntry::class] : [CollectionEntry::class], $constraint, $metadata);
     }
 
     /**
      * @psalm-pure
      */
-    public static function dateTime(string $entry, bool $nullable = false, ?Constraint $constraint = null) : self
+    public static function dateTime(string $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
-        return new self($entry, ($nullable) ? [DateTimeEntry::class, NullEntry::class] : [DateTimeEntry::class], $constraint);
+        return new self($entry, ($nullable) ? [DateTimeEntry::class, NullEntry::class] : [DateTimeEntry::class], $constraint, $metadata);
     }
 
     /**
      * @psalm-pure
      */
-    public static function enum(string $entry, bool $nullable = false, ?Constraint $constraint = null) : self
+    public static function enum(string $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
-        return new self($entry, ($nullable) ? [EnumEntry::class, NullEntry::class] : [EnumEntry::class], $constraint);
+        return new self($entry, ($nullable) ? [EnumEntry::class, NullEntry::class] : [EnumEntry::class], $constraint, $metadata);
     }
 
     /**
      * @psalm-pure
      */
-    public static function float(string $entry, bool $nullable = false, ?Constraint $constraint = null) : self
+    public static function float(string $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
-        return new self($entry, ($nullable) ? [FloatEntry::class, NullEntry::class] : [FloatEntry::class], $constraint);
+        return new self($entry, ($nullable) ? [FloatEntry::class, NullEntry::class] : [FloatEntry::class], $constraint, $metadata);
     }
 
     /**
      * @psalm-pure
      */
-    public static function integer(string $entry, bool $nullable = false, ?Constraint $constraint = null) : self
+    public static function integer(string $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
-        return new self($entry, ($nullable) ? [IntegerEntry::class, NullEntry::class] : [IntegerEntry::class], $constraint);
+        return new self($entry, ($nullable) ? [IntegerEntry::class, NullEntry::class] : [IntegerEntry::class], $constraint, $metadata);
     }
 
     /**
      * @psalm-pure
      */
-    public static function json(string $entry, bool $nullable = false, ?Constraint $constraint = null) : self
+    public static function json(string $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
-        return new self($entry, ($nullable) ? [JsonEntry::class, NullEntry::class] : [JsonEntry::class], $constraint);
+        return new self($entry, ($nullable) ? [JsonEntry::class, NullEntry::class] : [JsonEntry::class], $constraint, $metadata);
     }
 
     /**
      * @psalm-pure
      * @psalm-suppress ImpureMethodCall
      */
-    public static function list(string $entry, Type $type, bool $nullable = false, ?Constraint $constraint = null) : self
+    public static function list(string $entry, Type $type, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
         return new self(
             $entry,
             ($nullable) ? [ListEntry::class, NullEntry::class] : [ListEntry::class],
-            $constraint
-                ? new All(new CollectionType($type), $constraint)
-                : new CollectionType($type)
+            $constraint,
+            ($metadata ?? Metadata::empty())->merge(
+                Metadata::empty()->add(self::METADATA_LIST_ENTRY_TYPE, $type)
+            )
         );
     }
 
     /**
      * @psalm-pure
      */
-    public static function null(string $entry) : self
+    public static function null(string $entry, ?Metadata $metadata = null) : self
     {
-        return new self($entry, [NullEntry::class]);
+        return new self($entry, [NullEntry::class], null, $metadata);
     }
 
     /**
      * @psalm-pure
      */
-    public static function object(string $entry, bool $nullable = false, ?Constraint $constraint = null) : self
+    public static function object(string $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
-        return new self($entry, ($nullable) ? [ObjectEntry::class, NullEntry::class] : [ObjectEntry::class], $constraint);
+        return new self($entry, ($nullable) ? [ObjectEntry::class, NullEntry::class] : [ObjectEntry::class], $constraint, $metadata);
     }
 
     /**
      * @psalm-pure
      */
-    public static function string(string $entry, bool $nullable = false, ?Constraint $constraint = null) : self
+    public static function string(string $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
-        return new self($entry, ($nullable) ? [StringEntry::class, NullEntry::class] : [StringEntry::class], $constraint);
+        return new self($entry, ($nullable) ? [StringEntry::class, NullEntry::class] : [StringEntry::class], $constraint, $metadata);
     }
 
     /**
      * @psalm-pure
      */
-    public static function structure(string $entry, bool $nullable = false, ?Constraint $constraint = null) : self
+    public static function structure(string $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
-        return new self($entry, ($nullable) ? [StructureEntry::class, NullEntry::class] : [StructureEntry::class], $constraint);
+        return new self($entry, ($nullable) ? [StructureEntry::class, NullEntry::class] : [StructureEntry::class], $constraint, $metadata);
     }
 
     /**
@@ -162,13 +177,15 @@ final class Definition implements Serializable
      *
      * @return Definition
      */
-    public static function union(string $entry, array $entryClasses, ?Constraint $constraint = null)
+    public static function union(string $entry, array $entryClasses, ?Constraint $constraint = null, ?Metadata $metadata = null)
     {
-        if (!\count($entryClasses) > 1) {
-            throw new InvalidArgumentException('Union type requires at least two entry types.');
+        $types = \array_values(\array_unique($entryClasses));
+
+        if (\count($types) <= 1) {
+            throw new InvalidArgumentException('Union type requires at least two unique entry types.');
         }
 
-        return new self($entry, $entryClasses, $constraint);
+        return new self($entry, $types, $constraint, $metadata);
     }
 
     // @codeCoverageIgnoreStart
@@ -178,6 +195,7 @@ final class Definition implements Serializable
             'entry' => $this->entry,
             'classes' => $this->classes,
             'constraint' => $this->constraint,
+            'metadata' => $this->metadata,
         ];
     }
 
@@ -186,7 +204,9 @@ final class Definition implements Serializable
         $this->entry = $data['entry'];
         $this->classes = $data['classes'];
         $this->constraint = $data['constraint'];
+        $this->metadata = $data['metadata'];
     }
+    // @codeCoverageIgnoreEnd
 
     public function entry() : string
     {
@@ -205,13 +225,30 @@ final class Definition implements Serializable
             return false;
         }
 
-        return $this->constraint == $definition->constraint;
+        if ($this->constraint != $definition->constraint) {
+            return false;
+        }
+
+        /** @psalm-suppress ImpureMethodCall */
+        return $this->metadata->isEqual($definition->metadata);
     }
-    // @codeCoverageIgnoreEnd
 
     public function isNullable() : bool
     {
         return \in_array(NullEntry::class, $this->classes, true);
+    }
+
+    public function isUnion() : bool
+    {
+        $types = [];
+
+        foreach ($this->types() as $type) {
+            if ($type !== NullEntry::class) {
+                $types[] = $type;
+            }
+        }
+
+        return \count($types) > 1;
     }
 
     public function matches(Entry $entry) : bool
@@ -238,44 +275,35 @@ final class Definition implements Serializable
             return false;
         }
 
-        if ($this->constraint !== null) {
-            /** @psalm-suppress ImpureMethodCall */
-            return $this->constraint->isSatisfiedBy($entry);
-        }
-
-        return true;
+        /** @psalm-suppress ImpureMethodCall */
+        return $this->constraint->isSatisfiedBy($entry);
     }
 
     public function merge(self $definition) : self
     {
-        $leftConstraint = $this->constraint;
-        $rightConstraint = $definition->constraint;
+        $constraint = new Any($this->constraint, $definition->constraint);
 
-        $constraint = null;
-
-        if ($leftConstraint !== null && $rightConstraint === null) {
-            $constraint = $leftConstraint;
+        if ($this->constraint instanceof VoidConstraint) {
+            $constraint = $definition->constraint;
         }
 
-        if ($leftConstraint === null && $rightConstraint !== null) {
-            $constraint = $rightConstraint;
+        if ($definition->constraint instanceof VoidConstraint) {
+            $constraint = $this->constraint;
         }
 
-        if ($leftConstraint !== null && $rightConstraint !== null) {
-            $constraint = new Any($leftConstraint, $rightConstraint);
-        }
-
+        /** @psalm-suppress ImpureMethodCall */
         return new self(
             $this->entry,
             \array_values(\array_unique(\array_merge($this->types(), $definition->types()))),
-            $constraint
+            $constraint,
+            $this->metadata->merge($definition->metadata)
         );
     }
 
     public function nullable() : self
     {
         if (!\in_array(NullEntry::class, $this->classes, true)) {
-            return new self($this->entry, \array_merge($this->classes, [NullEntry::class]), $this->constraint);
+            return new self($this->entry, \array_merge($this->classes, [NullEntry::class]), $this->constraint, $this->metadata);
         }
 
         return $this;

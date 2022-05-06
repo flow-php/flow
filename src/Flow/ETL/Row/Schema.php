@@ -93,7 +93,7 @@ final class Schema implements \Countable, Serializable
             if (!\array_key_exists($definition->entry(), $newDefinitions)) {
                 $newDefinitions[$entry] = $definition->nullable();
             } elseif (!$newDefinitions[$entry]->isEqual($definition)) {
-                $newDefinitions[$entry] = $definition->merge($newDefinitions[$entry]);
+                $newDefinitions[$entry] = $newDefinitions[$entry]->merge($definition);
             }
         }
 

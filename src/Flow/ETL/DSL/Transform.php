@@ -11,6 +11,7 @@ use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
+use Flow\ETL\Row\ValueConverter;
 use Flow\ETL\Transformer;
 use Flow\ETL\Transformer\ArrayKeysStyleConverterTransformer;
 use Flow\ETL\Transformer\Cast\CastJsonToArray;
@@ -18,7 +19,7 @@ use Flow\ETL\Transformer\Cast\CastToDateTime;
 use Flow\ETL\Transformer\Cast\CastToInteger;
 use Flow\ETL\Transformer\Cast\CastToJson;
 use Flow\ETL\Transformer\Cast\CastToString;
-use Flow\ETL\Transformer\Cast\EntryCaster\ArrayToListCaster;
+use Flow\ETL\Transformer\Cast\EntryCaster\AnyToListCaster;
 use Flow\ETL\Transformer\Cast\EntryCaster\DateTimeToStringEntryCaster;
 use Flow\ETL\Transformer\Cast\EntryCaster\StringToDateTimeEntryCaster;
 use Flow\ETL\Transformer\CastTransformer;
@@ -527,56 +528,74 @@ class Transform
         return new CastTransformer(CastToJson::nullable($entries));
     }
 
-    public static function to_list_boolean(string $entry) : Transformer
+    public static function to_list_of_boolean(string $entry) : Transformer
     {
         return new CastTransformer(
             new Transformer\Cast\CastEntries(
                 [$entry],
-                new ArrayToListCaster(Entry\TypedCollection\ScalarType::boolean),
+                new AnyToListCaster(Entry\TypedCollection\ScalarType::boolean),
                 true
             )
         );
     }
 
-    public static function to_list_datetime(string $entry) : Transformer
+    public static function to_list_of_datetime(string $entry) : Transformer
     {
         return new CastTransformer(
             new Transformer\Cast\CastEntries(
                 [$entry],
-                new ArrayToListCaster(Entry\TypedCollection\ObjectType::of(\DateTimeInterface::class)),
+                new AnyToListCaster(Entry\TypedCollection\ObjectType::of(\DateTimeInterface::class)),
                 true
             )
         );
     }
 
-    public static function to_list_float(string $entry) : Transformer
+    public static function to_list_of_float(string $entry) : Transformer
     {
         return new CastTransformer(
             new Transformer\Cast\CastEntries(
                 [$entry],
-                new ArrayToListCaster(Entry\TypedCollection\ScalarType::float),
+                new AnyToListCaster(Entry\TypedCollection\ScalarType::float),
                 true
             )
         );
     }
 
-    public static function to_list_integer(string $entry) : Transformer
+    public static function to_list_of_integer(string $entry) : Transformer
     {
         return new CastTransformer(
             new Transformer\Cast\CastEntries(
                 [$entry],
-                new ArrayToListCaster(Entry\TypedCollection\ScalarType::integer),
+                new AnyToListCaster(Entry\TypedCollection\ScalarType::integer),
                 true
             )
         );
     }
 
-    public static function to_list_string(string $entry) : Transformer
+    /**
+     * @param string $entry
+     * @param class-string $class
+     * @param null|ValueConverter $value_converter
+     *
+     * @return Transformer
+     */
+    public static function to_list_of_object(string $entry, string $class, ValueConverter $value_converter = null) : Transformer
     {
         return new CastTransformer(
             new Transformer\Cast\CastEntries(
                 [$entry],
-                new ArrayToListCaster(Entry\TypedCollection\ScalarType::string),
+                new AnyToListCaster(Entry\TypedCollection\ObjectType::of($class), $value_converter),
+                true
+            )
+        );
+    }
+
+    public static function to_list_of_string(string $entry) : Transformer
+    {
+        return new CastTransformer(
+            new Transformer\Cast\CastEntries(
+                [$entry],
+                new AnyToListCaster(Entry\TypedCollection\ScalarType::string),
                 true
             )
         );
@@ -612,8 +631,11 @@ class Transform
 
     /**
      * @param array<string> $entries
+     * @param callable $callback
      * @param array<mixed> $extra_arguments
      * @param EntryFactory $entry_factory
+     *
+     * @return Transformer
      */
     final public static function user_function(array $entries, callable $callback, array $extra_arguments = [], EntryFactory $entry_factory = new NativeEntryFactory()) : Transformer
     {

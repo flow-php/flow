@@ -523,10 +523,23 @@ final class RowsTest extends TestCase
         $this->assertEquals(
             new Schema(
                 Definition::integer('id'),
-                Definition::union('name', [IntegerEntry::class, StringEntry::class, NullEntry::class]),
+                Definition::union('name', [StringEntry::class, NullEntry::class, IntegerEntry::class]),
                 Definition::array('tags', $nullable = true),
                 Definition::list('list', ScalarType::integer, $nullable = true)
             ),
+            $rows->schema()
+        );
+    }
+
+    public function test_rows_schema_when_rows_have_different_list_types() : void
+    {
+        $rows = new Rows(
+            Row::create(Entry::list_of_string('list', ['one', 'two'])),
+            Row::create(Entry::list_of_int('list', [1, 2])),
+        );
+
+        $this->assertEquals(
+            new Schema(Definition::list('list', ScalarType::integer)),
             $rows->schema()
         );
     }

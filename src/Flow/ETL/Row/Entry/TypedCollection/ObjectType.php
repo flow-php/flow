@@ -14,7 +14,7 @@ final class ObjectType implements Type
     /**
      * @param class-string $class
      */
-    public function __construct(private readonly string $class)
+    public function __construct(public readonly string $class)
     {
         /** @psalm-suppress ImpureFunctionCall */
         if (!\class_exists($class) && !\interface_exists($this->class)) {

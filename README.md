@@ -371,7 +371,7 @@ Code example:
     ->run();
 ```
 
-Following ilustration presents current state and future plans of the asynchronouse processing in flow
+Following illustration presents current state and future plans of the asynchronouse processing in flow
 
 ![async](docs/img/processing_modes.png)
 
@@ -700,17 +700,18 @@ $rows = $flow->read($extractor)  // extract non empty rows
 // $rows are empty instance of Rows();
 ```
 
-## Schema Validation
+## Schema
 
-> Entry names are case sensitive, `entry` is not the same as `Entry`.
+> Entry names are case-sensitive, `entry` is not the same as `Entry`.
 
 Before loading data to sink it might be a good idea to validate it against the schema.
 Row Schema is built from Entry Definitions, each definition is created from: 
 
-* entry - name of entry
-* type - type of entry (class string)
-* nullable - if `true` NullEntry with matching name will also pass the validation regardless of the type
-* constraint - additional, flexible validation. Useful for checking if entry value is for example one of expected values
+* `entry` - name of entry
+* `type` - type of entry (class string)
+* `nullable` - if `true` NullEntry with matching name will also pass the validation regardless of the type
+* `constraint` - additional, flexible validation. Useful for checking if entry value is for example one of expected values
+* `metadata` - additional key-value collection that can carry additional context for the definition   
 
 Example: 
 
@@ -725,7 +726,7 @@ $flow->read($from)
       new Schema(
           Schema\Definition::integer('id', $nullable = false),
           Schema\Definition::string('name', $nullable = true),
-          Schema\Definition::boolean('active', $nullable = false, new SameAs(true)),
+          Schema\Definition::boolean('active', $nullable = false, new SameAs(true), Metadata::empty()->add('key', 'value')),
       )
   )
   ->write($to)

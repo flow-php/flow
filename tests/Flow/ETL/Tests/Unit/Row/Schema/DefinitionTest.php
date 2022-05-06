@@ -13,6 +13,7 @@ use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Row\Entry\TypedCollection\ScalarType;
 use Flow\ETL\Row\Schema\Constraint;
 use Flow\ETL\Row\Schema\Definition;
+use Flow\ETL\Row\Schema\Metadata;
 use PHPUnit\Framework\TestCase;
 
 final class DefinitionTest extends TestCase
@@ -109,7 +110,11 @@ final class DefinitionTest extends TestCase
     public function test_merge_definitions_with_left_side_constraints() : void
     {
         $this->assertEquals(
-            Definition::union('id', [StringEntry::class, IntegerEntry::class], new Constraint\SameAs(1))->nullable(),
+            Definition::union(
+                'id',
+                [StringEntry::class, IntegerEntry::class],
+                new Constraint\SameAs(1)
+            )->nullable(),
             Definition::string('id', false, new Constraint\SameAs(1))->merge(Definition::integer('id', true))
         );
     }
@@ -117,8 +122,12 @@ final class DefinitionTest extends TestCase
     public function test_merge_definitions_with_right_side_constraints() : void
     {
         $this->assertEquals(
-            Definition::union('id', [StringEntry::class, IntegerEntry::class], new Constraint\SameAs(2))->nullable(),
-            Definition::string('id', false)->merge(Definition::integer('id', true, new Constraint\SameAs(2)))
+            Definition::union(
+                'id',
+                [StringEntry::class, IntegerEntry::class],
+                new Constraint\SameAs(2)
+            )->nullable(),
+            Definition::string('id')->merge(Definition::integer('id', true, new Constraint\SameAs(2)))
         );
     }
 
@@ -126,37 +135,27 @@ final class DefinitionTest extends TestCase
     {
         $this->assertEquals(
             Definition::union('id', [StringEntry::class, IntegerEntry::class])->nullable(),
-            Definition::string('id', false)->merge(Definition::integer('id', true))
+            Definition::string('id')->merge(Definition::integer('id', true))
         );
     }
 
-    public function test_merge_list_definitions_with_both_side_constraints() : void
-    {
-        $this->assertEquals(
-            Definition::union(
-                'list',
-                [ListEntry::class],
-                new Constraint\Any(
-                    new Constraint\CollectionType(ScalarType::string),
-                    new Constraint\CollectionType(ScalarType::integer),
-                )
-            ),
-            Definition::list('list', ScalarType::string)
-                ->merge(Definition::list('list', ScalarType::integer))
-        );
-    }
-
-    public function test_merging_two_different_lists_should_give_another_list() : void
+    public function test_merging_two_different_lists_should_give_an_array() : void
     {
         $this->assertEquals(
             new Definition(
                 'list',
                 [ListEntry::class, NullEntry::class],
-                new Constraint\Any(new Constraint\CollectionType(ScalarType::integer), new Constraint\CollectionType(ScalarType::string))
+                null,
+                Metadata::empty()->add(Definition::METADATA_LIST_ENTRY_TYPE, ScalarType::string)
             ),
             Definition::list('list', ScalarType::integer)
                 ->merge(Definition::list('list', ScalarType::string, true))
         );
+    }
+
+    public function test_multi_types_is_not_union() : void
+    {
+        $this->assertTrue(Definition::union('id', [IntegerEntry::class, StringEntry::class, NullEntry::class])->isUnion());
     }
 
     public function test_not_matches_when_constraint_not_satisfied() : void
@@ -192,6 +191,11 @@ final class DefinitionTest extends TestCase
         $this->assertFalse($def->matches(Entry::integer('not-test', 1)));
     }
 
+    public function test_nullable_is_not_union() : void
+    {
+        $this->assertFalse(Definition::string('id', true)->isUnion());
+    }
+
     public function test_union_type_definition() : void
     {
         $def = Definition::union('test', [IntegerEntry::class, StringEntry::class]);
@@ -200,5 +204,12 @@ final class DefinitionTest extends TestCase
         $this->assertTrue($def->matches(Entry::integer('test', 1)));
         $this->assertTrue($def->matches(Entry::string('test', 'test')));
         $this->assertFalse($def->matches(Entry::boolean('test', false)));
+    }
+
+    public function test_union_type_from_non_unique_types() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        Definition::union('test', [ListEntry::class, ListEntry::class]);
     }
 }

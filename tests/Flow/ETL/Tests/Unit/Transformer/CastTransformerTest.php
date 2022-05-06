@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use Flow\ETL\DSL\Entry;
 use Flow\ETL\DSL\Transform;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\ArrayEntry;
@@ -33,12 +34,35 @@ final class CastTransformerTest extends TestCase
     {
         $entry = new ArrayEntry('collection', ['foo', 'bar']);
 
-        $transformer = Transform::to_list_string('collection');
+        $transformer = Transform::to_list_of_string('collection');
 
         $rows = $transformer->transform(new Rows(new Row(new Row\Entries($entry))));
 
         $this->assertInstanceOf(Row\Entry\ListEntry::class, $rows->first()->get('collection'));
         $this->assertSame(['foo', 'bar'], $rows->first()->valueOf('collection'));
+    }
+
+    public function test_cast_string_to_list_of_datetimes() : void
+    {
+        $this->assertEquals(
+            new Rows(Row::create(Entry::list_of_datetime('e', [new \DateTimeImmutable('2020-01-01 00:00:00')]))),
+            Transform::to_list_of_datetime('e')->transform(new Rows(Row::create(Entry::string('e', '2020-01-01 00:00:00'))))
+        );
+    }
+
+    public function test_cast_string_to_list_of_strings() : void
+    {
+        $this->assertEquals(
+            new Rows(Row::create(Entry::list_of_string('e', ['test']))),
+            Transform::to_list_of_string('e')->transform(new Rows(Row::create(Entry::string('e', 'test'))))
+        );
+    }
+
+    public function test_cast_string_to_object() : void
+    {
+        $this->expectExceptionMessage("Value string can't be automatically cast object<ArrayObject>, please provide custom ValueConverter.");
+
+        Transform::to_list_of_object('e', \ArrayObject::class)->transform(new Rows(Row::create(Entry::string('e', '1'))));
     }
 
     public function test_casts_multiple_entries_with_null_entry_in_betwee() : void

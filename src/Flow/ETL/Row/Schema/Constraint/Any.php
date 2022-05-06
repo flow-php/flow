@@ -22,7 +22,6 @@ final class Any implements Constraint
         $this->constraints = $constraints;
     }
 
-    // @codeCoverageIgnoreStart
     public function __serialize() : array
     {
         return [
@@ -34,7 +33,6 @@ final class Any implements Constraint
     {
         $this->constraints = $data['constraints'];
     }
-    // @codeCoverageIgnoreEnd
 
     public function isSatisfiedBy(Entry $entry) : bool
     {

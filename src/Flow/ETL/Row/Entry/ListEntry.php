@@ -9,6 +9,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\TypedCollection\Type;
 use Flow\ETL\Row\Schema\Definition;
+use Flow\ETL\Row\Schema\Metadata;
 
 /**
  * @template T
@@ -61,7 +62,13 @@ final class ListEntry implements Entry, TypedCollection
 
     public function definition() : Definition
     {
-        return Definition::list($this->name, $this->type);
+        /** @psalm-suppress ImpureMethodCall */
+        return Definition::list(
+            $this->name,
+            $this->type,
+            metadata: Metadata::empty()
+                ->add(Definition::METADATA_LIST_ENTRY_TYPE, $this->type())
+        );
     }
 
     public function is(string $name) : bool
