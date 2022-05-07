@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-05-06
+## [Unreleased] - 2022-05-07
 
 ### Added
 - [#231](https://github.com/flow-php/etl/pull/231) - **Additional metadata for schema definitions** - [@norberttech](https://github.com/norberttech)
@@ -122,6 +122,8 @@
 - [856870](https://github.com/flow-php/etl/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#232](https://github.com/flow-php/etl/pull/232) - **Native entry factory can now recognize json object** - [@norberttech](https://github.com/norberttech)
+- [#232](https://github.com/flow-php/etl/pull/232) - **Native entry factory will detect and create list of DateTimeInterface** - [@norberttech](https://github.com/norberttech)
 - [#231](https://github.com/flow-php/etl/pull/231) - **AnyToListConverter that can convert any entry into a list entry** - [@norberttech](https://github.com/norberttech)
 - [#230](https://github.com/flow-php/etl/pull/230) - **[BC Break] Native entry factory will check if array is a list of a single type and it will try to create ListEntry instead of ArrayEntry** - [@norberttech](https://github.com/norberttech)
 - [#224](https://github.com/flow-php/etl/pull/224) - **limit is now stored in Configuration** - [@norberttech](https://github.com/norberttech)
