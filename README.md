@@ -311,6 +311,11 @@ data entries.
       <td>✅</td>
   </tr>
   <tr>
+      <td><a href="https://github.com/flow-php/etl-adapter-parquet">Parquet</a></td>
+      <td>✅</td>
+      <td>✅</td>
+  </tr>
+  <tr>
       <td><a href="https://github.com/flow-php/etl-adapter-xml">XML</a></td>
       <td>✅</td>
       <td>N/A</td>
