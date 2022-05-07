@@ -16,7 +16,7 @@ composer require flow-php/etl-adapter-csv
 composer require league/csv
 ```
 
-> League CSV adapter is not implicitly required, you need to make sure it is available in your composer.json file.
+> League CSV adapter is not explicitly required, you need to make sure it is available in your composer.json file.
 
 ## Extractor - League CSVExtractor
 

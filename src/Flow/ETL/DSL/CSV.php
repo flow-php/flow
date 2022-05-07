@@ -53,7 +53,7 @@ class CSV
         int $rows_in_batch = 1000,
         ?int $header_offset = null,
         string $operation_mode = 'r',
-        string $rowEntry_name = 'row',
+        string $row_entry_name = 'row',
         string $delimiter = ',',
         string $enclosure = '"',
         string $escape = '\\'
@@ -85,7 +85,7 @@ class CSV
                 $rows_in_batch,
                 $header_offset,
                 $operation_mode,
-                $rowEntry_name,
+                $row_entry_name,
                 $delimiter,
                 $enclosure,
                 $escape
