@@ -190,6 +190,7 @@
 - [1a6eec](https://github.com/flow-php/etl/commit/1a6eec01837f25cf1d6ff7c041996ff7b8b017e7) - **failing tests** - [@norberttech](https://github.com/norberttech)
 
 ### Updated
+- [b8b05f](https://github.com/flow-php/etl/commit/b8b05feb65abfdb0388fc09f9146991e574b3643) - **README.md** - [@norberttech](https://github.com/norberttech)
 - [ab1ca3](https://github.com/flow-php/etl/commit/ab1ca3db4f9dc8fae2f1059551831471ff1f0932) - **README.md** - [@norberttech](https://github.com/norberttech)
 - [518e6a](https://github.com/flow-php/etl/commit/518e6a07a9ac50fd2c2233385eacf611718bc806) - **dependabot-auto-merge.yml** - [@norberttech](https://github.com/norberttech)
 - [56df9b](https://github.com/flow-php/etl/commit/56df9b34a9b5fcf54771f3bc3c971c2ca5b1cba6) - **README.md** - [@norberttech](https://github.com/norberttech)
