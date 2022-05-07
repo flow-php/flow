@@ -43,4 +43,30 @@ final class Consumption
     {
         return $this->initial;
     }
+
+    /**
+     * @return Unit
+     */
+    public function max() : Unit
+    {
+        return $this->max;
+    }
+
+    public function maxDiff() : Unit
+    {
+        return $this->max()->diff($this->initial());
+    }
+
+    /**
+     * @return Unit
+     */
+    public function min() : Unit
+    {
+        return $this->min;
+    }
+
+    public function minDiff() : Unit
+    {
+        return $this->min()->diff($this->initial());
+    }
 }
