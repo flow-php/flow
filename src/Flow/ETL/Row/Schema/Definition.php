@@ -206,6 +206,11 @@ final class Definition implements Serializable
         $this->constraint = $data['constraint'];
         $this->metadata = $data['metadata'];
     }
+
+    public function constraint() : Constraint
+    {
+        return $this->constraint;
+    }
     // @codeCoverageIgnoreEnd
 
     public function entry() : string
@@ -298,6 +303,11 @@ final class Definition implements Serializable
             $constraint,
             $this->metadata->merge($definition->metadata)
         );
+    }
+
+    public function metadata() : Metadata
+    {
+        return $this->metadata;
     }
 
     public function nullable() : self

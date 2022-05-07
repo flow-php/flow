@@ -41,27 +41,11 @@ final class JsonEntry implements \Stringable, Entry
      */
     public static function fromJsonString(string $name, string $json) : self
     {
-        /** @var array<mixed> $arrayValue */
-        $arrayValue = \json_decode($json, true, 515, JSON_THROW_ON_ERROR);
-        $onlyArrays = true;
-        $onlyStringEntries = true;
-
-        /** @var mixed $entry */
-        foreach ($arrayValue as $key => $entry) {
-            if (!\is_array($entry)) {
-                $onlyArrays = false;
-            }
-
-            if (!\is_string($key)) {
-                $onlyStringEntries = false;
-            }
+        if (\str_starts_with($json, '{') && \str_ends_with($json, '}')) {
+            return self::object($name, (array) \json_decode($json, true, 515, JSON_THROW_ON_ERROR));
         }
 
-        if ($onlyArrays && !$onlyStringEntries) {
-            return new self($name, $arrayValue);
-        }
-
-        return self::object($name, $arrayValue);
+        return new self($name, (array) \json_decode($json, true, 515, JSON_THROW_ON_ERROR));
     }
 
     /**

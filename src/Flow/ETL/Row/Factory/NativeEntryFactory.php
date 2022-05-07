@@ -35,8 +35,7 @@ final class NativeEntryFactory implements EntryFactory
     {
         if (\is_string($value)) {
             if ($this->isJson($value)) {
-                /** @psalm-suppress MixedArgument */
-                return new Row\Entry\JsonEntry($entryName, (array) \json_decode($value, true, self::JSON_DEPTH, JSON_THROW_ON_ERROR));
+                return Row\Entry\JsonEntry::fromJsonString($entryName, $value);
             }
 
             return new Row\Entry\StringEntry($entryName, $value);
@@ -78,7 +77,7 @@ final class NativeEntryFactory implements EntryFactory
 
                 if ($type === 'object' && $class === null) {
                     /** @psalm-suppress MixedArgument */
-                    $class = \get_class($valueElement);
+                    $class = $this->getClass($valueElement);
                 }
 
                 if ($type !== \gettype($valueElement)) {
@@ -86,15 +85,17 @@ final class NativeEntryFactory implements EntryFactory
                 }
 
                 /** @psalm-suppress MixedArgument */
-                if ($class !== null && $class !== \get_class($valueElement)) {
+                if ($class !== null && $class !== $this->getClass($valueElement)) {
                     return new Row\Entry\ArrayEntry($entryName, $value);
                 }
             }
 
             if ($class !== null) {
+                if ($class === \DateTimeImmutable::class || $class === \DateTime::class) {
+                    $class = \DateTimeInterface::class;
+                }
                 /**
                  * @psalm-suppress PossiblyNullArgument
-                 * @phpstan-ignore-next-line
                  */
                 return new Entry\ListEntry($entryName, Entry\TypedCollection\ObjectType::of($class), $value);
             }
@@ -113,6 +114,20 @@ final class NativeEntryFactory implements EntryFactory
         $type = \gettype($value);
 
         throw new InvalidArgumentException("{$type} can't be converted to any known Entry");
+    }
+
+    /**
+     * @return class-string
+     */
+    private function getClass(object $object) : string
+    {
+        $class = \get_class($object);
+
+        if ($class === \DateTimeImmutable::class || $class === \DateTime::class) {
+            $class = \DateTimeInterface::class;
+        }
+
+        return $class;
     }
 
     private function isJson(string $string) : bool

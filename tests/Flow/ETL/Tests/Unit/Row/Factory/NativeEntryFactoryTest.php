@@ -53,7 +53,7 @@ final class NativeEntryFactoryTest extends TestCase
     public function test_json() : void
     {
         $this->assertEquals(
-            Entry::json('e', ['id' => 1]),
+            Entry::json_object('e', ['id' => 1]),
             (new NativeEntryFactory())->create('e', '{"id":1}')
         );
     }
@@ -61,7 +61,7 @@ final class NativeEntryFactoryTest extends TestCase
     public function test_list_of_datetimes() : void
     {
         $this->assertEquals(
-            Entry::list_of_objects('e', \DateTimeImmutable::class, $list = [new \DateTimeImmutable(), new \DateTimeImmutable()]),
+            Entry::list_of_objects('e', \DateTimeInterface::class, $list = [new \DateTimeImmutable(), new \DateTime()]),
             (new NativeEntryFactory())->create('e', $list)
         );
     }
