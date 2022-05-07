@@ -1,6 +1,7 @@
 ## [Unreleased] - 2022-05-07
 
 ### Added
+- [#233](https://github.com/flow-php/etl/pull/233) - **Memory\Consumption min/max methods** - [@norberttech](https://github.com/norberttech)
 - [#231](https://github.com/flow-php/etl/pull/231) - **Additional metadata for schema definitions** - [@norberttech](https://github.com/norberttech)
 - [#231](https://github.com/flow-php/etl/pull/231) - **VoidConstraint in order to avoid null constraints inside of definition** - [@norberttech](https://github.com/norberttech)
 - [#230](https://github.com/flow-php/etl/pull/230) - **ListEntry with a strong typing that supports scalar types and objects/interfaces** - [@norberttech](https://github.com/norberttech)
