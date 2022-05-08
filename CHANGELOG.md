@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-05-07
+## [Unreleased] - 2022-05-08
 
 ### Added
 - [#105](https://github.com/flow-php/etl-adapter-csv/pull/105) - **DSL layer** - [@norberttech](https://github.com/norberttech)
@@ -29,6 +29,7 @@
 - [63633c](https://github.com/flow-php/etl-adapter-csv/commit/63633cae23ccfa2222925a1c94c9acf9aca65e7d) - **docs** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [a58cef](https://github.com/flow-php/etl-adapter-csv/commit/a58cef65fe01e59c69e12e0ce29d4010b6904223) - **unused php extensions dependencies** - [@norberttech](https://github.com/norberttech)
 - [#104](https://github.com/flow-php/etl-adapter-csv/pull/104) - **Deprecated classes** - [@norberttech](https://github.com/norberttech)
 - [#37](https://github.com/flow-php/etl-adapter-csv/pull/37) - **Remove unsued PHP-CS config** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [57c585](https://github.com/flow-php/etl-adapter-csv/commit/57c5858a31b76eb255c450d7ad0af9b2fac5f11d) - **redundant workflow** - [@norberttech](https://github.com/norberttech)
