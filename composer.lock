@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c30d60b3b8fdd1fc7123e87194d12b20",
+    "content-hash": "bac5e47395ef8d8ff44fe46723325f45",
     "packages": [
         {
             "name": "flow-php/array-dot",
@@ -61,12 +61,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl.git",
-                "reference": "45780e12e2b7607ab39366eef1704fae005d03cd"
+                "reference": "e2d140b1e13bf1cbb8e99bb8ea8755a45ff4ea11"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl/zipball/45780e12e2b7607ab39366eef1704fae005d03cd",
-                "reference": "45780e12e2b7607ab39366eef1704fae005d03cd",
+                "url": "https://api.github.com/repos/flow-php/etl/zipball/e2d140b1e13bf1cbb8e99bb8ea8755a45ff4ea11",
+                "reference": "e2d140b1e13bf1cbb8e99bb8ea8755a45ff4ea11",
                 "shasum": ""
             },
             "require": {
@@ -79,7 +79,7 @@
                 "jawira/case-converter": "^3.4",
                 "laminas/laminas-hydrator": "^4.0",
                 "laravel/serializable-closure": "^1.1",
-                "symfony/validator": "^5.3"
+                "symfony/validator": "^5.3 || ^6.0"
             },
             "suggest": {
                 "jawira/case-converter": "Provides CaseConverter that is required by the EntryNameCaseConverterTransformer",
@@ -110,7 +110,7 @@
                 "issues": "https://github.com/flow-php/etl/issues",
                 "source": "https://github.com/flow-php/etl/tree/1.x"
             },
-            "time": "2022-04-10T10:14:58+00:00"
+            "time": "2022-05-08T06:17:53+00:00"
         }
     ],
     "packages-dev": [],
@@ -122,10 +122,10 @@
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": "^7.4 || ~8.0",
+        "php": "~8.1",
         "ext-xmlreader": "*",
         "ext-dom": "*"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.3.0"
 }

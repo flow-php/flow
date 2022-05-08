@@ -1,11 +1,19 @@
-<root>
-    <items>
-        <item><id>1</id></item>
-        <item><id>2</id></item>
-        <item><id>3</id></item>
-        <item><id>4</id></item>
-        <item><id>5</id></item>
-        <item><id>6</id></item>
-
+<root root_attribute_01="1">
+    <items items_attribute_01="1" items_attribute_02="2">
+        <item item_attribute_01="1">
+            <id id_attribute_01="1">1</id>
+        </item>
+        <item item_attribute_01="2">
+            <id id_attribute_01="2">2</id>
+        </item>
+        <item item_attribute_01="3">
+            <id id_attribute_01="3">3</id>
+        </item>
+        <item item_attribute_01="4">
+            <id id_attribute_01="4">4</id>
+        </item>
+        <item item_attribute_01="5">
+            <id id_attribute_01="5">5</id>
+        </item>
     </items>
 </root>

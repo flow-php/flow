@@ -3,7 +3,7 @@ name: Dependabot - Auto Merge
 on:
   workflow_run:
     types: [ completed ]
-    workflows: [ "Quality Assurance" ]
+    workflows: [ "Test Suite" ]
 
 jobs:
   merge-me:

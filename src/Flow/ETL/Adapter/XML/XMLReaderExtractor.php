@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\XML;
 
-use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\DSL\Entry;
 use Flow\ETL\Extractor;
 use Flow\ETL\Row;
-use Flow\ETL\Row\Entry\XMLEntry;
 use Flow\ETL\Rows;
 
 /**
@@ -32,13 +31,10 @@ final class XMLReaderExtractor implements Extractor
      */
     public function __construct(
         private readonly string $xmlFilePath,
-        private readonly string $xmlNodePath,
-        private readonly int $rowsInBatch,
+        private readonly string $xmlNodePath = '',
+        private readonly int $rowsInBatch = 1000,
         private readonly string $rowEntryName = 'row'
     ) {
-        if (!\strlen($xmlNodePath)) {
-            throw new InvalidArgumentException('XML Node Path cant be empty');
-        }
     }
 
     /**
@@ -52,7 +48,7 @@ final class XMLReaderExtractor implements Extractor
         $previousDepth = 0;
         $currentPathBreadCrumbs = [];
 
-        $rows = new Rows();
+        $rows = [];
 
         while ($xmlReader->read()) {
             if ($xmlReader->nodeType === \XMLReader::ELEMENT) {
@@ -71,22 +67,116 @@ final class XMLReaderExtractor implements Extractor
 
                 $currentPath = \implode('/', $currentPathBreadCrumbs);
 
-                if ($currentPath === $this->xmlNodePath) {
-                    $rows = $rows->add(Row::create(XMLEntry::fromString($this->rowEntryName, $xmlReader->readOuterXml())));
+                if ($currentPath === $this->xmlNodePath || ($this->xmlNodePath === '' && $xmlReader->depth === 0)) {
+                    $node = new \DOMDocument('1.0', '');
+                    /** @psalm-suppress ArgumentTypeCoercion */
+                    $node->loadXML($xmlReader->readOuterXml());
 
-                    if ($rows->count() >= $this->rowsInBatch) {
-                        yield $rows;
-                        $rows = new Rows();
+                    $rows[] = Row::create(Entry::array($this->rowEntryName, $this->convertDOMDocument($node)));
+
+                    if (\count($rows) >= $this->rowsInBatch) {
+                        yield new Rows(...$rows);
+                        $rows = [];
                     }
                 }
+
                 $previousDepth = $xmlReader->depth;
             }
         }
 
         $xmlReader->close();
 
-        if ($rows->count()) {
-            yield $rows;
+        if (\count($rows)) {
+            yield new Rows(...$rows);
         }
+    }
+
+    /**
+     * @param \DOMDocument $document
+     *
+     * @return array<mixed>
+     */
+    private function convertDOMDocument(\DOMDocument $document) : array
+    {
+        $xmlArray = [];
+
+        /** @psalm-suppress ImpureMethodCall */
+        if ($document->hasChildNodes()) {
+            $children = $document->childNodes;
+
+            foreach ($children as $child) {
+                /** @psalm-suppress ArgumentTypeCoercion */
+                $xmlArray[$child->nodeName] = $this->convertDOMElement($child);
+            }
+        }
+
+        return $xmlArray;
+    }
+
+    /**
+     * @psalm-suppress ArgumentTypeCoercion
+     * @psalm-suppress PossiblyNullArgument
+     * @psalm-suppress UnnecessaryVarAnnotation
+     * @psalm-suppress ImpureMethodCall
+     * @psalm-suppress PossiblyNullIterator
+     *
+     * @return array<mixed>
+     */
+    private function convertDOMElement(\DOMElement|\DOMNode $element) : array
+    {
+        $xmlArray = [];
+
+        if ($element->hasAttributes()) {
+            /**
+             * @var \DOMAttr $attribute
+             * @phpstan-ignore-next-line
+             */
+            foreach ($element->attributes as $attribute) {
+                $xmlArray['@attributes'][$attribute->name] = $attribute->value;
+            }
+        }
+
+        foreach ($element->childNodes as $childNode) {
+            if ($childNode->nodeType === XML_TEXT_NODE) {
+                /** @phpstan-ignore-next-line  */
+                if (\trim($childNode->nodeValue)) {
+                    $xmlArray['@value'] = $childNode->nodeValue;
+                }
+            }
+
+            if ($childNode->nodeType === XML_ELEMENT_NODE) {
+                if ($this->isElementCollection($element)) {
+                    $xmlArray[$childNode->nodeName][] = $this->convertDOMElement($childNode);
+                } else {
+                    $xmlArray[$childNode->nodeName] = $this->convertDOMElement($childNode);
+                }
+            }
+        }
+
+        return $xmlArray;
+    }
+
+    /**
+     * @psalm-suppress ImpureMethodCall
+     */
+    private function isElementCollection(\DOMElement|\DOMNode $element) : bool
+    {
+        if ($element->childNodes->count() <= 1) {
+            return false;
+        }
+
+        $nodeNames = [];
+        /** @var \DOMElement $childNode */
+        foreach ($element->childNodes as $childNode) {
+            if ($childNode->nodeType === XML_ELEMENT_NODE) {
+                $nodeNames[] = $childNode->nodeName;
+            }
+        }
+
+        if (!\count($nodeNames) || \count($nodeNames) === 1) {
+            return false;
+        }
+
+        return \count(\array_unique($nodeNames)) === 1;
     }
 }

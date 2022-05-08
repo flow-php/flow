@@ -6,16 +6,6 @@
 
 ETL Adapter that provides memory safe XML support for ETL.
 
-## Entry - XMLEntry
-
-```php 
-<?php
-
-use Flow\ETL\Row\Entry\XMLEntry;
-
-$entry = XMLEntry::fromString('xml_entry', '<xml><name>node</name></xml>')
-```
-
 ## Extractor - XMLExtractor
 
 Memory safe XML extractor 
@@ -36,22 +26,25 @@ Memory safe XML extractor
 ```
 
 ```php 
+<?php
 
-$extractor = new XMLReaderExtractor(
-    $xmlFile = __DIR__ . '/xml/simple_items.xml', 
-    $xmlNodePath = 'root/items/item', 
-    $rowsInBatch = 5, 
-    $rowEntryName = 'row'
-);
-$rowsGenerator = $extractor->extract();
+(new Flow())
+    ->read(XML::from_file(__DIR__ . '/xml/simple_items.xml', 'root/items/item'))
+    ->fetch()
+```
 
-$this->assertSame(5, $rowsGenerator->current()->count());
-$this->assertInstanceOf(\DOMDocument::class, $xml = $rowsGenerator->current()->first()->valueOf('row'));
-$this->assertXmlStringEqualsXmlString('<item><id>1</id></item>', $xml->saveHTML());
+Above code will generate Rows with 5 entries like the one below:
 
-$rowsGenerator->next();
+```php
+<?php
 
-$this->assertSame(1, $rowsGenerator->current()->count());
-$this->assertInstanceOf(\DOMDocument::class, $xml = $rowsGenerator->current()->first()->valueOf('row'));
-$this->assertXmlStringEqualsXmlString('<item><id>6</id></item>', $xml->saveHTML());
+Row::create(
+    Entry::array('row', [
+        'item' => [
+            'id' => [
+                '@value' => 1
+            ]
+        ]
+    ])
+)
 ```
