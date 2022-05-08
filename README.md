@@ -61,7 +61,8 @@ $array = new ArrayMemory();
     ->read(From::rows(new Rows()))
     ->rows(Transform::keep(['id', 'name', 'status']))
     ->sortBy(Sort::desc('status'))
-    ->write(To::memory($array);
+    ->write(To::memory($array)
+    ->run();
 ```
 
 ## DSL - Domain Specific Language
