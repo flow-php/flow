@@ -39,6 +39,8 @@ data structure, filter out things that didn't change, and load in bulk into the 
 
 This is a perfect scenario for ETL.
 
+### [More Examples](https://github.com/flow-php/etl-examples)
+
 ## Usage
 
 Examples: 
