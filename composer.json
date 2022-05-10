@@ -10,7 +10,7 @@
         "amphp/process": "^2",
         "amphp/socket": "^2",
         "flow-php/etl": "^1.0@dev",
-        "monolog/monolog": "^2.0"
+        "monolog/monolog": "^2.0 || ^3.0"
     },
     "config": {
         "optimize-autoloader": true,
