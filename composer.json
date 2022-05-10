@@ -10,7 +10,7 @@
         "flow-php/etl": "^1.0@dev",
         "react/child-process": "^0.6.4",
         "react/socket": "^1.11",
-        "monolog/monolog": "^2.0"
+        "monolog/monolog": "^2.0 || ^3.0"
     },
     "config": {
         "optimize-autoloader": true,
