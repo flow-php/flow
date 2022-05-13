@@ -32,6 +32,17 @@ final class Metadata implements Serializable
         return new self([]);
     }
 
+    /**
+     * @param string $key
+     * @param array<mixed>|bool|float|int|object|string $value
+     *
+     * @return $this
+     */
+    public static function with(string $key, int|string|bool|float|object|array $value) : self
+    {
+        return new self([$key => $value]);
+    }
+
     public function __serialize() : array
     {
         return [

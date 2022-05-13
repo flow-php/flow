@@ -6,6 +6,7 @@ namespace Flow\ETL\Row\Entry;
 
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Schema\Definition;
+use Flow\ETL\Row\Schema\Metadata;
 
 /**
  * @implements Entry<\UnitEnum, array{name: string, value: \UnitEnum}>
@@ -40,7 +41,11 @@ final class EnumEntry implements Entry
 
     public function definition() : Definition
     {
-        return Definition::enum($this->name);
+        /** @psalm-suppress ImpureMethodCall */
+        return Definition::enum(
+            $this->name,
+            metadata: Metadata::with(Definition::METADATA_ENUM_CASES, $this->value::cases())
+        );
     }
 
     public function is(string $name) : bool
