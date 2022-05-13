@@ -1,6 +1,7 @@
-## [Unreleased] - 2022-05-09
+## [Unreleased] - 2022-05-13
 
 ### Added
+- [#235](https://github.com/flow-php/etl/pull/235) - **default metadata to EnumEntry type** - [@norberttech](https://github.com/norberttech)
 - [#233](https://github.com/flow-php/etl/pull/233) - **Memory\Consumption min/max methods** - [@norberttech](https://github.com/norberttech)
 - [#231](https://github.com/flow-php/etl/pull/231) - **Additional metadata for schema definitions** - [@norberttech](https://github.com/norberttech)
 - [#231](https://github.com/flow-php/etl/pull/231) - **VoidConstraint in order to avoid null constraints inside of definition** - [@norberttech](https://github.com/norberttech)
