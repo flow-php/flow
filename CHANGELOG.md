@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-04-10
+## [Unreleased] - 2022-05-14
 
 ### Added
 - [#110](https://github.com/flow-php/doctrine-dbal-bulk/pull/110) - **Updated to PHP 8.1** - [@norberttech](https://github.com/norberttech)
@@ -21,6 +21,9 @@
 ### Fixed
 - [#84](https://github.com/flow-php/doctrine-dbal-bulk/pull/84) - **Use proper dbal types when executing insert statement allowing to bulk inser objects like DateTime** - [@norberttech](https://github.com/norberttech)
 - [#7](https://github.com/flow-php/doctrine-dbal-bulk/pull/7) - **Github Action for checking PR description** - [@tomaszhanc](https://github.com/tomaszhanc)
+
+### Updated
+- [d8858c](https://github.com/flow-php/doctrine-dbal-bulk/commit/d8858c1d325837ec0fdf0943ec3dc9c9723bd38a) - **dependencies** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
 - [28579b](https://github.com/flow-php/doctrine-dbal-bulk/commit/28579b10e771cab7cf5e3a27ac516e0ecf9d69ff) - **deprecated code** - [@norberttech](https://github.com/norberttech)
