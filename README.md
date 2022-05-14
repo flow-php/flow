@@ -5,7 +5,9 @@
 
 ## Description
 
-It provides bulk inserts and updates for Doctrine DBAL. To use it, create a `Bulk` object:
+Doctrine Bulk is mising bulk upsert/insert abstraction for Doctrine DBAL.
+
+## Usage Examples
 
 Insert:
 ```php
@@ -41,16 +43,33 @@ $bulk->update(
 
 ```
 
-*Currently, it supports only PostgreSQL*, so if you need a different database platform, feel free to create a pull request
-to the repository or create `Bulk` object on your own:
+## Supported Dialects 
 
-```php
-$bulk = new Bulk(new YourQueryFactory());
-```
+* PostgreSQL
 
-For your implementation, you need to implement the `QueryFactory` interface. To make it easier for you, the default
-implementation of that interface ([DbalQueryFactory](src/Flow/Doctrine/Bulk/QueryFactory/DbalQueryFactory.php))
-is not as final, so you can extend it and make some adjustments if needed.
+### Adding new Dialects 
+
+[Dialect](src/Flow/Doctrine/Bulk/Dialect/Dialect.php) is basic abstraction of this library.  
+The main role of Dialect is to prepare SQL insert/update statement based on [BulkData](src/Flow/Doctrine/Bulk/BulkData.php)
+and provided `options`.
+
+* `$insertOptions`
+* `$updateOptions`
+
+Options are key => value maps without predefined structure that allows to manipulate building SQL statement. 
+Each dialect should define it own structure for options in order to support db engine features, including those
+that are specific for given engine. 
+
+[QueryFactory](src/Flow/Doctrine/Bulk/QueryFactory.php) is abstraction for creating queries, there is currently only one 
+implementation, DbalPlatform. QueryFactory `insertOptions` and `updateOptions` is combination of all options provided
+by supported Dialects where each entry must be optional. 
+
+example:
+`dialect_option?: string`
+
+[DbalPlatform](src/Flow/Doctrine/Bulk/DbalPlatform.php) is a factory that detects which Dialect should be used for given
+Doctrine DBAL Platform. 
+
 
 ## Local test environment with docker
 
