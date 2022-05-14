@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<psalm
+    resolveFromConfigFile="true"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="https://getpsalm.org/schema/config"
+    xsi:schemaLocation="https://getpsalm.org/schema/config tools/vendor/vimeo/psalm/config.xsd"
+    cacheDirectory="var/psalm/cache"
+    errorLevel="1"
+>
+    <projectFiles>
+        <directory name="src"/>
+        <ignoreFiles>
+            <directory name="vendor"/>
+
+            <!-- Fix this later, mostly issues with using arrays-->
+            <file name="src/Flow/ETL/Adapter/Avro/FlixTech/SchemaConverter.php" />
+            <file name="src/Flow/ETL/Adapter/Avro/FlixTech/ValueConverter.php" />
+        </ignoreFiles>
+    </projectFiles>
+</psalm>

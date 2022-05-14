@@ -1,0 +1,10 @@
+parameters:
+    checkGenericClassInNonGenericObjectType: false
+    checkMissingIterableValueType: false
+    level: max
+    paths:
+        - src
+    excludePaths:
+        - src/Flow/ETL/Adapter/Avro/FlixTech/SchemaConverter.php
+        - src/Flow/ETL/Adapter/Avro/FlixTech/ValueConverter.php
+    tmpDir: var/phpstan/cache
