@@ -12,11 +12,11 @@ Following implementation are available:
 ## Installation 
 
 ``` 
-composer require flow-php/etl-adapter-parquet
+composer require flow-php/etl-adapter-avro
 composer require flix-tech/avro-php
 ```
 
-## Extractor - Flix Tech Parquet
+## Extractor - Flix Tech Avro
 
 ```php
 <?php
@@ -29,7 +29,7 @@ composer require flix-tech/avro-php
 
 ```
 
-## Loader - Flix Tech Parquet
+## Loader - Flix Tech Avro
 
 ```php 
 <?php
