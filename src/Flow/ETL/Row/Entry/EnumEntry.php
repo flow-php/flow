@@ -6,6 +6,7 @@ namespace Flow\ETL\Row\Entry;
 
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Schema\Definition;
+use Flow\ETL\Row\Schema\FlowMetadata;
 use Flow\ETL\Row\Schema\Metadata;
 
 /**
@@ -44,7 +45,8 @@ final class EnumEntry implements Entry
         /** @psalm-suppress ImpureMethodCall */
         return Definition::enum(
             $this->name,
-            metadata: Metadata::with(Definition::METADATA_ENUM_CASES, $this->value::cases())
+            metadata: Metadata::with(FlowMetadata::METADATA_ENUM_CASES, $this->value::cases())
+                ->add(FlowMetadata::METADATA_ENUM_CLASS, \get_class($this->value))
         );
     }
 

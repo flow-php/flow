@@ -1,0 +1,14 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Row\Schema;
+
+final class FlowMetadata
+{
+    public const METADATA_ENUM_CASES = 'flow_enum_values';
+
+    public const METADATA_ENUM_CLASS = 'flow_enum_class';
+
+    public const METADATA_LIST_ENTRY_TYPE = 'flow_list_entry_type';
+}

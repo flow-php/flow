@@ -35,10 +35,6 @@ use Flow\Serializer\Serializable;
  */
 final class Definition implements Serializable
 {
-    public const METADATA_ENUM_CASES = 'flow_enum_vales';
-
-    public const METADATA_LIST_ENTRY_TYPE = 'flow_list_entry_type';
-
     private Constraint $constraint;
 
     private Metadata $metadata;
@@ -135,7 +131,7 @@ final class Definition implements Serializable
             ($nullable) ? [ListEntry::class, NullEntry::class] : [ListEntry::class],
             $constraint,
             ($metadata ?? Metadata::empty())->merge(
-                Metadata::empty()->add(self::METADATA_LIST_ENTRY_TYPE, $type)
+                Metadata::empty()->add(FlowMetadata::METADATA_LIST_ENTRY_TYPE, $type)
             )
         );
     }

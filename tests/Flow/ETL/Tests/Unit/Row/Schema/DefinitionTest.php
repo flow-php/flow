@@ -13,6 +13,7 @@ use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Row\Entry\TypedCollection\ScalarType;
 use Flow\ETL\Row\Schema\Constraint;
 use Flow\ETL\Row\Schema\Definition;
+use Flow\ETL\Row\Schema\FlowMetadata;
 use Flow\ETL\Row\Schema\Metadata;
 use PHPUnit\Framework\TestCase;
 
@@ -146,7 +147,7 @@ final class DefinitionTest extends TestCase
                 'list',
                 [ListEntry::class, NullEntry::class],
                 null,
-                Metadata::empty()->add(Definition::METADATA_LIST_ENTRY_TYPE, ScalarType::string)
+                Metadata::empty()->add(FlowMetadata::METADATA_LIST_ENTRY_TYPE, ScalarType::string)
             ),
             Definition::list('list', ScalarType::integer)
                 ->merge(Definition::list('list', ScalarType::string, true))
