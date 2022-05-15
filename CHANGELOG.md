@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-05-14
+## [Unreleased] - 2022-05-15
 
 ### Added
 - [#235](https://github.com/flow-php/etl/pull/235) - **default metadata to EnumEntry type** - [@norberttech](https://github.com/norberttech)
@@ -124,6 +124,7 @@
 - [856870](https://github.com/flow-php/etl/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#236](https://github.com/flow-php/etl/pull/236) - **Moved default entries metadata to dedicated class** - [@norberttech](https://github.com/norberttech)
 - [#232](https://github.com/flow-php/etl/pull/232) - **Native entry factory can now recognize json object** - [@norberttech](https://github.com/norberttech)
 - [#232](https://github.com/flow-php/etl/pull/232) - **Native entry factory will detect and create list of DateTimeInterface** - [@norberttech](https://github.com/norberttech)
 - [#231](https://github.com/flow-php/etl/pull/231) - **AnyToListConverter that can convert any entry into a list entry** - [@norberttech](https://github.com/norberttech)
