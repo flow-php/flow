@@ -1,6 +1,7 @@
 ## [Unreleased] - 2022-05-15
 
 ### Added
+- [#237](https://github.com/flow-php/etl/pull/237) - **Define schema for array unpack to support complex types unpacking** - [@norberttech](https://github.com/norberttech)
 - [#235](https://github.com/flow-php/etl/pull/235) - **default metadata to EnumEntry type** - [@norberttech](https://github.com/norberttech)
 - [#233](https://github.com/flow-php/etl/pull/233) - **Memory\Consumption min/max methods** - [@norberttech](https://github.com/norberttech)
 - [#231](https://github.com/flow-php/etl/pull/231) - **Additional metadata for schema definitions** - [@norberttech](https://github.com/norberttech)
