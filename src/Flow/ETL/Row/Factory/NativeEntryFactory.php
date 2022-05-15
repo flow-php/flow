@@ -4,25 +4,35 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Factory;
 
+use Flow\ETL\DSL\Entry as EntryDSL;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\Entry\TypedCollection\Type;
 use Flow\ETL\Row\EntryFactory;
+use Flow\ETL\Row\Schema;
 
 /**
- * @implements EntryFactory<array<mixed>>
+ * @implements EntryFactory<array{schema: ?Schema}>
  */
 final class NativeEntryFactory implements EntryFactory
 {
     private const JSON_DEPTH = 512;
 
+    public function __construct(private readonly ?Schema $schema = null)
+    {
+    }
+
     public function __serialize() : array
     {
-        return [];
+        return [
+            'schema' => $this->schema,
+        ];
     }
 
     public function __unserialize(array $data) : void
     {
+        $this->schema = $data['schema'];
     }
 
     /**
@@ -33,6 +43,14 @@ final class NativeEntryFactory implements EntryFactory
      */
     public function create(string $entryName, mixed $value) : Entry
     {
+        if ($this->schema !== null && $this->schema->findDefinition($entryName) !== null) {
+            /**
+             * @psalm-suppress PossiblyNullArgument
+             * @phpstan-ignore-next-line
+             */
+            return $this->fromDefinition($this->schema->getDefinition($entryName), $value);
+        }
+
         if (\is_string($value)) {
             if ($this->isJson($value)) {
                 return Row\Entry\JsonEntry::fromJsonString($entryName, $value);
@@ -116,6 +134,112 @@ final class NativeEntryFactory implements EntryFactory
         throw new InvalidArgumentException("{$type} can't be converted to any known Entry");
     }
 
+    private function fromDefinition(Schema\Definition $definition, mixed $value) : Entry
+    {
+        if ($definition->isNullable() && null === $value) {
+            return EntryDSL::null($definition->entry());
+        }
+
+        foreach ($definition->types() as $type) {
+            if ($type === Entry\StringEntry::class && \is_string($value)) {
+                return EntryDSL::string($definition->entry(), $value);
+            }
+
+            if ($type === Entry\IntegerEntry::class && \is_int($value)) {
+                return EntryDSL::integer($definition->entry(), $value);
+            }
+
+            if ($type === Entry\FloatEntry::class && \is_float($value)) {
+                return EntryDSL::float($definition->entry(), $value);
+            }
+
+            if ($type === Entry\BooleanEntry::class && \is_bool($value)) {
+                return EntryDSL::boolean($definition->entry(), $value);
+            }
+
+            if ($type === Entry\JsonEntry::class && \is_string($value)) {
+                return EntryDSL::json_string($definition->entry(), $value);
+            }
+
+            if ($type === Entry\JsonEntry::class && \is_array($value)) {
+                try {
+                    return EntryDSL::json_object($definition->entry(), $value);
+                } catch (InvalidArgumentException $e) {
+                    return EntryDSL::json($definition->entry(), $value);
+                }
+            }
+
+            if ($type === Entry\ObjectEntry::class && \is_object($value)) {
+                return EntryDSL::object($definition->entry(), $value);
+            }
+
+            if ($type === Entry\DateTimeEntry::class && $value instanceof \DateTimeInterface) {
+                return EntryDSL::datetime($definition->entry(), $value);
+            }
+
+            if ($type === Entry\DateTimeEntry::class && \is_string($value)) {
+                return EntryDSL::datetime($definition->entry(), new \DateTimeImmutable($value));
+            }
+
+            if ($type === Entry\ArrayEntry::class && \is_array($value)) {
+                return EntryDSL::array($definition->entry(), $value);
+            }
+
+            if ($type === Entry\EnumEntry::class && \is_string($value)) {
+                /** @var class-string<\UnitEnum> $enumClass */
+                $enumClass = $definition->metadata()->get(Schema\FlowMetadata::METADATA_ENUM_CLASS);
+                /** @var array<\UnitEnum> $cases */
+                $cases = $definition->metadata()->get(Schema\FlowMetadata::METADATA_ENUM_CASES);
+
+                foreach ($cases as $case) {
+                    if ($case->name === $value) {
+                        return EntryDSL::enum($definition->entry(), $case);
+                    }
+                }
+
+                throw new InvalidArgumentException("Value \"not_valid\" can't be converted to " . $enumClass . ' enum');
+            }
+
+            if ($type === Entry\ListEntry::class && \is_array($value) && \array_is_list($value)) {
+                try {
+                    /** @var Type $listType */
+                    $listType = $definition->metadata()->get(Schema\FlowMetadata::METADATA_LIST_ENTRY_TYPE);
+
+                    if (!\count($value)) {
+                        return new Entry\ListEntry(
+                            $definition->entry(),
+                            $listType,
+                            []
+                        );
+                    }
+
+                    if ($listType instanceof Entry\TypedCollection\ObjectType) {
+                        /** @var mixed $firstValue */
+                        $firstValue = \current($value);
+
+                        if (\is_a($listType->class, \DateTimeInterface::class, true) && \is_string($firstValue)) {
+                            return new Entry\ListEntry(
+                                $definition->entry(),
+                                $listType,
+                                \array_map(fn (string $datetime) : \DateTimeImmutable => new \DateTimeImmutable($datetime), $value)
+                            );
+                        }
+                    }
+
+                    return new Entry\ListEntry(
+                        $definition->entry(),
+                        $listType,
+                        $value
+                    );
+                } catch (InvalidArgumentException $e) {
+                    throw new InvalidArgumentException("Field \"{$definition->entry()}\" conversion exception. {$e->getMessage()}", previous: $e);
+                }
+            }
+        }
+
+        throw new InvalidArgumentException("Can't convert value into entry \"{$definition->entry()}\"");
+    }
+
     /**
      * @return class-string
      */
@@ -133,14 +257,7 @@ final class NativeEntryFactory implements EntryFactory
     private function isJson(string $string) : bool
     {
         try {
-            /**
-             * @psalm-suppress UnusedFunctionCall
-             *
-             * @var mixed $value
-             */
-            $value = \json_decode($string, true, self::JSON_DEPTH, JSON_THROW_ON_ERROR);
-
-            return \is_array($value);
+            return \is_array(\json_decode($string, true, self::JSON_DEPTH, JSON_THROW_ON_ERROR));
         } catch (\Exception) {
             return false;
         }

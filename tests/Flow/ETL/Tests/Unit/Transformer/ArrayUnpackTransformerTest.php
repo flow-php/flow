@@ -10,10 +10,45 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\TypedCollection\ScalarType;
 use Flow\ETL\Rows;
+use Flow\ETL\Tests\Fixtures\Enum\BackedIntEnum;
 use PHPUnit\Framework\TestCase;
 
 final class ArrayUnpackTransformerTest extends TestCase
 {
+    public function test_array_unpack_enum_with_schema() : void
+    {
+        $arrayUnpackTransformer = Transform::array_unpack(
+            'array_entry',
+            schema: new Row\Schema(Row\Schema\Definition::enum('enum', BackedIntEnum::class))
+        );
+
+        $rows = (Transform::remove('array_entry'))->transform(
+            $arrayUnpackTransformer->transform(
+                new Rows(
+                    Row::create(
+                        new Row\Entry\ArrayEntry(
+                            'array_entry',
+                            [
+                                'enum' => 'one',
+                                'id' => 1,
+                            ]
+                        ),
+                    ),
+                ),
+            )
+        );
+
+        $this->assertEquals(
+            new Rows(
+                Row::create(
+                    new Row\Entry\EnumEntry('enum', BackedIntEnum::one),
+                    new Row\Entry\IntegerEntry('id', 1)
+                ),
+            ),
+            $rows
+        );
+    }
+
     public function test_array_unpack_for_not_array_entry() : void
     {
         $this->expectException(RuntimeException::class);

@@ -6,8 +6,6 @@ namespace Flow\ETL\Tests\Unit\Row\Entry;
 
 use Flow\ETL\Row\Entry\EnumEntry;
 use Flow\ETL\Row\Schema\Definition;
-use Flow\ETL\Row\Schema\FlowMetadata;
-use Flow\ETL\Row\Schema\Metadata;
 use Flow\ETL\Tests\Fixtures\Enum\BackedIntEnum;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
@@ -59,8 +57,7 @@ final class EnumEntryTest extends TestCase
         $this->assertEquals(
             Definition::enum(
                 'enum',
-                metadata: Metadata::with(FlowMetadata::METADATA_ENUM_CASES, BackedStringEnum::cases())
-                    ->add(FlowMetadata::METADATA_ENUM_CLASS, BackedStringEnum::class)
+                BackedStringEnum::class
             ),
             (new EnumEntry('enum', BackedStringEnum::one))->definition()
         );

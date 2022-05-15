@@ -89,11 +89,27 @@ final class Definition implements Serializable
     }
 
     /**
+     * @param class-string<\UnitEnum> $type
      * @psalm-pure
      */
-    public static function enum(string $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function enum(string $entry, string $type, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
-        return new self($entry, ($nullable) ? [EnumEntry::class, NullEntry::class] : [EnumEntry::class], $constraint, $metadata);
+        if (!\enum_exists($type)) {
+            throw new InvalidArgumentException("Enum of type \"{$type}\" not found");
+        }
+
+        /**
+         * @psalm-suppress ImpureMethodCall
+         */
+        return new self(
+            $entry,
+            ($nullable) ? [EnumEntry::class, NullEntry::class] : [EnumEntry::class],
+            $constraint,
+            ($metadata ?? Metadata::empty())->merge(
+                Metadata::with(FlowMetadata::METADATA_ENUM_CLASS, $type)
+                    ->add(FlowMetadata::METADATA_ENUM_CASES, $type::cases())
+            )
+        );
     }
 
     /**

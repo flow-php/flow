@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace Flow\ETL\DSL;
 
 use Flow\ETL\DSL\Entry as DSLEntry;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
+use Flow\ETL\Row\Schema;
 use Flow\ETL\Row\ValueConverter;
 use Flow\ETL\Transformer;
 use Flow\ETL\Transformer\ArrayKeysStyleConverterTransformer;
@@ -145,23 +146,55 @@ class Transform
         return new Transformer\ArrayCollectionMergeTransformer($arrayEntryName, $new_entry_name);
     }
 
-    final public static function array_convert_keys(string $array_column, string $style) : Transformer
+    /**
+     * @param string $array_column
+     * @param string $style
+     * @param ?Schema $schema Desired schema of unpacked elements. Elements not found in schema will be auto detected.
+     *                        It is allowed to provide definitions only for selected elements, like for example
+     *                        when converting enum string value into specific Enum.
+     *
+     * @throws InvalidArgumentException|RuntimeException
+     */
+    final public static function array_convert_keys(string $array_column, string $style, ?Schema $schema = null) : Transformer
     {
         if (!\class_exists(\Jawira\CaseConverter\Convert::class)) {
             throw new RuntimeException("Jawira\CaseConverter\Convert class not found, please require using 'composer require jawira/case-converter'");
         }
 
-        return new ArrayKeysStyleConverterTransformer($array_column, $style);
+        return new ArrayKeysStyleConverterTransformer(
+            $array_column,
+            $style,
+            new NativeEntryFactory($schema)
+        );
     }
 
-    final public static function array_expand(string $array_column, string $expanded_name = 'element') : Transformer
+    /**
+     * @param ?Schema $schema Desired schema of unpacked elements. Elements not found in schema will be auto detected.
+     *                        It is allowed to provide definitions only for selected elements, like for example
+     *                        when converting enum string value into specific Enum.
+     */
+    final public static function array_expand(string $array_column, string $expanded_name = 'element', ?Schema $schema = null) : Transformer
     {
-        return new Transformer\ArrayExpandTransformer($array_column, $expanded_name);
+        return new Transformer\ArrayExpandTransformer(
+            $array_column,
+            $expanded_name,
+            new NativeEntryFactory($schema)
+        );
     }
 
-    final public static function array_get(string $array_name, string $path, string $entry_name = 'element') : Transformer
+    /**
+     * @param ?Schema $schema Desired schema of unpacked elements. Elements not found in schema will be auto detected.
+     *                        It is allowed to provide definitions only for selected elements, like for example
+     *                        when converting enum string value into specific Enum.
+     */
+    final public static function array_get(string $array_name, string $path, string $entry_name = 'element', ?Schema $schema = null) : Transformer
     {
-        return new Transformer\ArrayDotGetTransformer($array_name, $path, $entry_name);
+        return new Transformer\ArrayDotGetTransformer(
+            $array_name,
+            $path,
+            $entry_name,
+            new NativeEntryFactory($schema)
+        );
     }
 
     /**
@@ -189,10 +222,18 @@ class Transform
 
     /**
      * @param string[] $skip_keys
+     * @param ?Schema $schema Desired schema of unpacked elements. Elements not found in schema will be auto detected.
+     *                        It is allowed to provide definitions only for selected elements, like for example
+     *                        when converting enum string value into specific Enum.
      */
-    final public static function array_unpack(string $array_column, string $entry_prefix = '', array $skip_keys = []) : Transformer
+    final public static function array_unpack(string $array_column, string $entry_prefix = '', array $skip_keys = [], Schema $schema = null) : Transformer
     {
-        return new Transformer\ArrayUnpackTransformer($array_column, $skip_keys, $entry_prefix);
+        return new Transformer\ArrayUnpackTransformer(
+            $array_column,
+            $skip_keys,
+            $entry_prefix,
+            new NativeEntryFactory($schema)
+        );
     }
 
     /**
@@ -633,12 +674,11 @@ class Transform
      * @param array<string> $entries
      * @param callable $callback
      * @param array<mixed> $extra_arguments
-     * @param EntryFactory $entry_factory
      *
      * @return Transformer
      */
-    final public static function user_function(array $entries, callable $callback, array $extra_arguments = [], EntryFactory $entry_factory = new NativeEntryFactory()) : Transformer
+    final public static function user_function(array $entries, callable $callback, array $extra_arguments = []) : Transformer
     {
-        return new Transformer\CallUserFunctionTransformer($entries, $callback, $extra_arguments, $entry_factory);
+        return new Transformer\CallUserFunctionTransformer($entries, $callback, $extra_arguments);
     }
 }

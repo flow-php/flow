@@ -6,23 +6,31 @@ namespace Flow\ETL\Row\Factory;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
+use Flow\ETL\Row\Schema;
 use Flow\ETL\Rows;
 use Flow\ETL\RowsFactory;
 use Flow\ETL\Transformer\ArrayUnpackTransformer;
 use Flow\ETL\Transformer\RemoveEntriesTransformer;
 
 /**
- * @implements RowsFactory<array<mixed>>
+ * @implements RowsFactory<array{schema: ?Schema}>
  */
 final class ArrayRowsFactory implements RowsFactory
 {
+    public function __construct(private readonly ?Schema $schema = null)
+    {
+    }
+
     public function __serialize() : array
     {
-        return [];
+        return [
+            'schema' => $this->schema,
+        ];
     }
 
     public function __unserialize(array $data) : void
     {
+        $this->schema = $data['schema'];
     }
 
     /**
@@ -41,10 +49,11 @@ final class ArrayRowsFactory implements RowsFactory
         }
 
         return (new RemoveEntriesTransformer('element'))->transform(
-            (new ArrayUnpackTransformer('element'))->transform(new Rows(...\array_map(
-                fn (array $row) : Row => Row::create(new Row\Entry\ArrayEntry('element', $row)),
-                $data
-            )))
+            (new ArrayUnpackTransformer('element', entryFactory: new NativeEntryFactory($this->schema)))
+                ->transform(new Rows(...\array_map(
+                    fn (array $row) : Row => Row::create(new Row\Entry\ArrayEntry('element', $row)),
+                    $data
+                )))
         );
     }
 }
