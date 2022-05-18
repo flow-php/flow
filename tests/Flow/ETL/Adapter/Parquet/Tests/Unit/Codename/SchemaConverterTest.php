@@ -10,6 +10,7 @@ use codename\parquet\data\DateTimeDataField;
 use codename\parquet\data\Schema as ParquetSchema;
 use Flow\ETL\Adapter\Parquet\Codename\SchemaConverter;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Row\Entry\TypedCollection\ScalarType;
 use Flow\ETL\Row\Schema;
 use PHPUnit\Framework\TestCase;
 
@@ -41,7 +42,7 @@ final class SchemaConverterTest extends TestCase
         $this->expectExceptionMessage("Flow\ETL\Row\Entry\EnumEntry is not yet supported.");
 
         (new SchemaConverter())->toParquet(new Schema(
-            Schema\Definition::enum('enum')
+            Schema\Definition::enum('enum', ScalarType::class)
         ));
     }
 
