@@ -1,7 +1,10 @@
-## [Unreleased] - 2022-05-14
+## [Unreleased] - 2022-05-18
 
 ### Changed
 - [867681](https://github.com/flow-php/etl-adapter-avro/commit/86768169151d7d667e02e344327b6923de33ac2c) - **Initial commit** - [@norberttech](https://github.com/norberttech)
+
+### Fixed
+- [00122b](https://github.com/flow-php/etl-adapter-avro/commit/00122b3b1501c7b1859eca612e91af65346ce08e) - **BC break** - [@norberttech](https://github.com/norberttech)
 
 ### Updated
 - [617d79](https://github.com/flow-php/etl-adapter-avro/commit/617d79cff0d3b643193b09e57de15a94d2ee8d1e) - **README.md** - [@norberttech](https://github.com/norberttech)
