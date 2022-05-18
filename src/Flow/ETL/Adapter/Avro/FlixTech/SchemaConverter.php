@@ -60,7 +60,7 @@ final class SchemaConverter
     private function convertType(string $type, Definition $definition) : array
     {
         if ($type === ListEntry::class) {
-            $listType = $definition->metadata()->get(Definition::METADATA_LIST_ENTRY_TYPE);
+            $listType = $definition->metadata()->get(Schema\FlowMetadata::METADATA_LIST_ENTRY_TYPE);
 
             if ($listType instanceof ScalarType) {
                 return match ($listType) {

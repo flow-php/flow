@@ -10,7 +10,6 @@ use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\DateTimeEntry;
 use Flow\ETL\Row\Entry\TypedCollection\ObjectType;
 use Flow\ETL\Row\Schema;
-use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Rows;
 
 /**
@@ -117,7 +116,7 @@ final class AvroLoader implements Closure, Loader
 
     private function listEntryToValues(Row\Entry\ListEntry $entry) : array
     {
-        $listType = $entry->definition()->metadata()->get(Definition::METADATA_LIST_ENTRY_TYPE);
+        $listType = $entry->definition()->metadata()->get(Schema\FlowMetadata::METADATA_LIST_ENTRY_TYPE);
 
         if ($listType instanceof ObjectType) {
             if (\is_a($listType->class, \DateTimeInterface::class, true)) {
