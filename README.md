@@ -257,6 +257,42 @@ class NotNorbertTransformer implements Transformer
 }
 ```
 
+### Transformations Grouping 
+
+While working on datasets that requires complex transformations it might be helpful to divide 
+the pipeline into smaller, testable pieces. 
+
+[Transformation](src/Flow/ETL/Transformation.php) is an interface that takes and returns [DataFrame](src/Flow/ETL/DataFrame.php). 
+It can be used like in the following example: 
+
+
+```php
+<?php
+
+use Flow\ETL\Transformation;
+use Flow\ETL\DataFrame;
+
+final class MyTransformation implements Transformation
+{
+    public function transform(DataFrame $dataFrame) : DataFrame
+    {
+        return $dataFrame->rows(Transform:abc())
+                  ->rows(Transform::abc())
+                  ->rows(Transform::foo())
+                  ->rows(Transform::bar())
+                  ->rows(Transform::xyz())
+                  ->rows(Transform::zzz())
+                  ->rows(Transform::baz());
+    }
+}
+
+(new Flow)
+    ->read(From::source())
+    ->rows(new MyTransformation())
+    ->write(To::sink())
+    ->run();
+```
+
 ## Loaders aka Writers 
 
 All generic loaders are available through [DSL\To](src/Flow/ETL/DSL/To.php)

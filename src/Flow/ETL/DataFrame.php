@@ -247,7 +247,7 @@ final class DataFrame
     /**
      * Alias for ETL::transform method.
      */
-    public function rows(Transformer $transformer) : self
+    public function rows(Transformer|Transformation $transformer) : self
     {
         return $this->transform($transformer);
     }
@@ -283,11 +283,15 @@ final class DataFrame
         return $this;
     }
 
-    public function transform(Transformer $transformer) : self
+    public function transform(Transformer|Transformation $transformer) : self
     {
-        $this->pipeline->add($transformer);
+        if ($transformer instanceof Transformer) {
+            $this->pipeline->add($transformer);
 
-        return $this;
+            return $this;
+        }
+
+        return $transformer->transform($this);
     }
 
     /**

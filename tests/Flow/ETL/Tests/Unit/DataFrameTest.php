@@ -29,6 +29,7 @@ use Flow\ETL\Row\Schema;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Double\AddStampToStringEntryTransformer;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
+use Flow\ETL\Transformation;
 use Flow\ETL\Transformer;
 use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\TestCase;
@@ -52,6 +53,53 @@ final class DataFrameTest extends TestCase
                 Row::create(Entry::string('name', 'foo'), Entry::boolean('active', true)),
                 Row::create(Entry::null('name'), Entry::boolean('active', false)),
                 Row::create(Entry::string('name', 'bar'), Entry::boolean('active', false)),
+            ),
+            $rows
+        );
+    }
+
+    public function test_encapsulate_transformations() : void
+    {
+        $rows = (new Flow())->process(
+            new Rows(
+                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20), Entry::string('gender', 'male')),
+                Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20), Entry::string('gender', 'male')),
+                Row::create(Entry::integer('id', 3), Entry::string('country', 'PL'), Entry::integer('age', 25), Entry::string('gender', 'male')),
+                Row::create(Entry::integer('id', 4), Entry::string('country', 'PL'), Entry::integer('age', 30), Entry::string('gender', 'female')),
+                Row::create(Entry::integer('id', 5), Entry::string('country', 'US'), Entry::integer('age', 40), Entry::string('gender', 'female')),
+                Row::create(Entry::integer('id', 6), Entry::string('country', 'US'), Entry::integer('age', 40), Entry::string('gender', 'male')),
+                Row::create(Entry::integer('id', 7), Entry::string('country', 'US'), Entry::integer('age', 45), Entry::string('gender', 'female')),
+                Row::create(Entry::integer('id', 9), Entry::string('country', 'US'), Entry::integer('age', 50), Entry::string('gender', 'male')),
+            )
+        )
+            ->rows(new class implements Transformation {
+                public function transform(DataFrame $dataFrame) : DataFrame
+                {
+                    return $dataFrame->transform(Transform::string_lower('country'))
+                        ->transform(Transform::divide_by('age', 10));
+                }
+            })
+            ->rows(
+                new class implements Transformation {
+                    public function transform(DataFrame $dataFrame) : DataFrame
+                    {
+                        return $dataFrame->drop('gender')
+                            ->drop('id');
+                    }
+                }
+            )
+            ->fetch();
+
+        $this->assertEquals(
+            new Rows(
+                Row::create(Entry::string('country', 'pl'), Entry::integer('age', 2)),
+                Row::create(Entry::string('country', 'pl'), Entry::integer('age', 2)),
+                Row::create(Entry::string('country', 'pl'), Entry::float('age', 2.5)),
+                Row::create(Entry::string('country', 'pl'), Entry::integer('age', 3)),
+                Row::create(Entry::string('country', 'us'), Entry::integer('age', 4)),
+                Row::create(Entry::string('country', 'us'), Entry::integer('age', 4)),
+                Row::create(Entry::string('country', 'us'), Entry::float('age', 4.5)),
+                Row::create(Entry::string('country', 'us'), Entry::integer('age', 5)),
             ),
             $rows
         );
