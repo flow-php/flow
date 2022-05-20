@@ -1,6 +1,7 @@
-## [Unreleased] - 2022-05-15
+## [Unreleased] - 2022-05-20
 
 ### Added
+- [#242](https://github.com/flow-php/etl/pull/242) - **Transformation interface allowing to group transformations and register them all at once at DataFrame** - [@norberttech](https://github.com/norberttech)
 - [#237](https://github.com/flow-php/etl/pull/237) - **Define schema for array unpack to support complex types unpacking** - [@norberttech](https://github.com/norberttech)
 - [#235](https://github.com/flow-php/etl/pull/235) - **default metadata to EnumEntry type** - [@norberttech](https://github.com/norberttech)
 - [#233](https://github.com/flow-php/etl/pull/233) - **Memory\Consumption min/max methods** - [@norberttech](https://github.com/norberttech)
