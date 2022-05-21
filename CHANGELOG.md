@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-04-10
+## [Unreleased] - 2022-05-21
 
 ### Added
 - [#88](https://github.com/flow-php/etl-adapter-json/pull/88) - **Added JsonLoader** - [@norberttech](https://github.com/norberttech)
@@ -16,6 +16,7 @@
 - [e2a1c6](https://github.com/flow-php/etl-adapter-json/commit/e2a1c672b89845bc1df33ca189a14b68e3d4cbc7) - **Initial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#108](https://github.com/flow-php/etl-adapter-json/pull/108) - **Unified JsonLoader behavior** - [@norberttech](https://github.com/norberttech)
 - [#18](https://github.com/flow-php/etl-adapter-json/pull/18) - **ArrayWeakComparison is not available anymore, we should use ArrayComparison** - [@tomaszhanc](https://github.com/tomaszhanc)
 
 ### Updated
