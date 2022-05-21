@@ -6,13 +6,14 @@ namespace Flow\ETL\Adapter\JSON;
 
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Loader;
+use Flow\ETL\Pipeline\Closure;
 use Flow\ETL\Rows;
 use Ramsey\Uuid\Uuid;
 
 /**
  * @implements Loader<array{path: string, safe_mode: boolean}>
  */
-final class JsonLoader implements Loader
+final class JsonLoader implements Closure, Loader
 {
     /**
      * @var null|resource
@@ -21,14 +22,6 @@ final class JsonLoader implements Loader
 
     public function __construct(private string $path, private bool $safeMode = false)
     {
-    }
-
-    /**
-     * @psalm-suppress InvalidPassByReference
-     */
-    public function __destruct()
-    {
-        \fclose($this->stream());
     }
 
     public function __serialize() : array
@@ -53,16 +46,25 @@ final class JsonLoader implements Loader
         /** @var array{size:int} $stats */
         $stats = \fstat($this->stream());
 
+        $json = \substr(\substr(\json_encode($rows->toArray(), JSON_THROW_ON_ERROR), 0, -1), 1);
         $json = ($stats['size'] > 2)
-            ? ',' . \json_encode($rows->toArray(), JSON_THROW_ON_ERROR) . ']'
-            : \json_encode($rows->toArray(), JSON_THROW_ON_ERROR) . ']';
+            ? ',' . $json
+            : $json;
 
-        \fseek($this->stream(), $stats['size'] - 1);
         \fwrite($this->stream(), $json);
+    }
+
+    public function closure(Rows $rows) : void
+    {
+        $stream = $this->stream();
+
+        \fwrite($stream, ']');
+        \fclose($stream);
     }
 
     /**
      * @return resource
+     * @psalm-suppress InvalidNullableReturnType
      */
     private function stream()
     {
@@ -81,9 +83,8 @@ final class JsonLoader implements Loader
                 throw new RuntimeException("Unable to open stream for path {$this->path}.");
             }
 
-            \fwrite($stream, '[]');
-
             $this->stream = $stream;
+            \fwrite($this->stream, '[');
         }
 
         return $this->stream;

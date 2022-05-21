@@ -16,7 +16,7 @@ final class JSONMachineExtractor implements Extractor
 {
     public function __construct(
         private readonly Items $jsonItems,
-        private readonly int $rowsInBatch,
+        private readonly int $rowsInBatch = 1000,
         private readonly string $rowEntryName = 'row'
     ) {
     }

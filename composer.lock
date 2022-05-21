@@ -121,12 +121,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl.git",
-                "reference": "45780e12e2b7607ab39366eef1704fae005d03cd"
+                "reference": "c767f3c7c437781880ddedbe39f27c98aee11d27"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl/zipball/45780e12e2b7607ab39366eef1704fae005d03cd",
-                "reference": "45780e12e2b7607ab39366eef1704fae005d03cd",
+                "url": "https://api.github.com/repos/flow-php/etl/zipball/c767f3c7c437781880ddedbe39f27c98aee11d27",
+                "reference": "c767f3c7c437781880ddedbe39f27c98aee11d27",
                 "shasum": ""
             },
             "require": {
@@ -139,7 +139,7 @@
                 "jawira/case-converter": "^3.4",
                 "laminas/laminas-hydrator": "^4.0",
                 "laravel/serializable-closure": "^1.1",
-                "symfony/validator": "^5.3"
+                "symfony/validator": "^5.3 || ^6.0"
             },
             "suggest": {
                 "jawira/case-converter": "Provides CaseConverter that is required by the EntryNameCaseConverterTransformer",
@@ -170,7 +170,7 @@
                 "issues": "https://github.com/flow-php/etl/issues",
                 "source": "https://github.com/flow-php/etl/tree/1.x"
             },
-            "time": "2022-04-10T10:14:58+00:00"
+            "time": "2022-05-20T09:48:10+00:00"
         },
         {
             "name": "ramsey/collection",
@@ -497,5 +497,5 @@
         "ext-json": "*"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.3.0"
 }
