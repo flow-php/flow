@@ -41,9 +41,17 @@ final class Handler
             : null;
 
         if ($this->safeMode) {
-            $context
-                ? \mkdir(\rtrim($stream->uri(), DIRECTORY_SEPARATOR), 0777, false, $context)
-                : \mkdir(\rtrim($stream->uri(), DIRECTORY_SEPARATOR));
+            if ($stream instanceof LocalFile) {
+                if (!\file_exists($stream->uri())) {
+                    $context
+                        ? \mkdir(\rtrim($stream->uri(), DIRECTORY_SEPARATOR), 0777, true, $context)
+                        : \mkdir(\rtrim($stream->uri(), DIRECTORY_SEPARATOR), 0777, true);
+                }
+            } else {
+                $context
+                    ? \mkdir(\rtrim($stream->uri(), DIRECTORY_SEPARATOR), 0777, true, $context)
+                    : \mkdir(\rtrim($stream->uri(), DIRECTORY_SEPARATOR), 0777, true);
+            }
         }
 
         $resource = $context
