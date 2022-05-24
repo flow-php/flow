@@ -220,6 +220,33 @@ Adapters might also define some custom transformers.
 
 Some transformers come with complex configuration, please find more details [here](/docs/complex_transformers.md).
 
+### File Streams
+
+Flow allows to create data transformation pipelines with low memory consumption. 
+In order to make it possible we need to be able to read/write files in chunks, in a linear way.
+
+This repository defines a thin abstraction that unifies streaming.
+
+[FileStream](src/Flow/ETL/Stream/FileStream.php) is an interface with following implementations: 
+
+* [RemoteFile](src/Flow/ETL/Stream/RemoteFile.php)
+* [LocalFile](src/Flow/ETL/Stream/LocalFile.php)
+
+Those are just value holders that are later used by [Handler](src/Flow/ETL/Stream/Handler.php) to 
+open a `resource` which can be used directly or passed to underlying implementation. 
+
+In order to fully support concurrency, while writing to stream we can't write to a single stream,
+but instead each concurrent execution needs to work with it own stream.
+
+DSL for Loaders/Extractors should be prepared to take following input types: 
+
+- `FileStream` - if remote files are not supported than it should be narrowed to `LocalFile`
+- `array<FileStream>` 
+
+By design Flow should use [StreamWrappers](https://www.php.net/manual/en/stream.streamwrapper.example-1.php)
+with a custom protocol that starts from `flow-`, for example `flow-aws-s3` or `flow-azure-blob`. 
+[StreamWrapper](src/Flow/ETL/Stream/StreamWrapper.php) should be used to register custom wrappers. 
+
 ### Serialization
 
 In order to allow serialization of callable based transformers please

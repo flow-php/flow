@@ -10,6 +10,7 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Loader\StreamLoader;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
+use Flow\ETL\Stream\Mode;
 use PHPUnit\Framework\TestCase;
 
 final class StreamLoaderTest extends TestCase
@@ -68,7 +69,7 @@ ASCII,
 
     public function test_loading_rows_into_php_memory_stream() : void
     {
-        $loader = new StreamLoader('php://output', 'w', 0);
+        $loader = new StreamLoader('php://output', Mode::WRITE, 0);
 
         \ob_start();
 
@@ -99,7 +100,7 @@ TABLE,
 
     public function test_loading_schema_into_php_memory_stream() : void
     {
-        $loader = new StreamLoader('php://output', 'w', 0, StreamLoader\Output::schema);
+        $loader = new StreamLoader('php://output', Mode::WRITE, 0, StreamLoader\Output::schema);
 
         \ob_start();
 

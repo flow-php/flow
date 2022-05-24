@@ -11,21 +11,22 @@ use Flow\ETL\Loader\StreamLoader\Output;
 use Flow\ETL\Row\Schema\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Row\Schema\SchemaFormatter;
 use Flow\ETL\Rows;
+use Flow\ETL\Stream\Mode;
 
 /**
- * @implements Loader<array{url: string, mode: string, truncate: int|bool, output: Output, formatter: Formatter, schema_formatter: SchemaFormatter}>
+ * @implements Loader<array{url: string, mode: Mode, truncate: int|bool, output: Output, formatter: Formatter, schema_formatter: SchemaFormatter}>
  */
 final class StreamLoader implements Loader
 {
     /**
      * @param string $url all protocols supported by PHP are allowed https://www.php.net/manual/en/wrappers.php
-     * @param string $mode only writing modes explained in https://www.php.net/manual/en/function.fopen.php are supported
+     * @param Mode $mode only writing modes explained in https://www.php.net/manual/en/function.fopen.php are supported
      * @param bool|int $truncate if false or 0, then columns in display are not truncated
      * @param Formatter $formatter - if not passed AsciiTableFormatter is used
      */
     public function __construct(
         private readonly string $url,
-        private readonly string $mode = 'w',
+        private readonly Mode $mode = Mode::WRITE,
         private readonly int|bool $truncate = 20,
         private readonly Output $output = Output::rows,
         private readonly Formatter $formatter = new Formatter\AsciiTableFormatter(),
@@ -35,17 +36,17 @@ final class StreamLoader implements Loader
 
     public static function output(int|bool $truncate = 20, Output $output = Output::rows, Formatter $formatter = new Formatter\AsciiTableFormatter(), SchemaFormatter $schemaFormatter = new ASCIISchemaFormatter()) : self
     {
-        return new self('php://output', 'w', $truncate, $output, $formatter, $schemaFormatter);
+        return new self('php://output', Mode::WRITE, $truncate, $output, $formatter, $schemaFormatter);
     }
 
     public static function stderr(int|bool $truncate = 20, Output $output = Output::rows, Formatter $formatter = new Formatter\AsciiTableFormatter(), SchemaFormatter $schemaFormatter = new ASCIISchemaFormatter()) : self
     {
-        return new self('php://stderr', 'w', $truncate, $output, $formatter, $schemaFormatter);
+        return new self('php://stderr', Mode::WRITE, $truncate, $output, $formatter, $schemaFormatter);
     }
 
     public static function stdout(int|bool $truncate = 20, Output $output = Output::rows, Formatter $formatter = new Formatter\AsciiTableFormatter(), SchemaFormatter $schemaFormatter = new ASCIISchemaFormatter()) : self
     {
-        return new self('php://stdout', 'w', $truncate, $output, $formatter, $schemaFormatter);
+        return new self('php://stdout', Mode::WRITE, $truncate, $output, $formatter, $schemaFormatter);
     }
 
     public function __serialize() : array
@@ -73,13 +74,13 @@ final class StreamLoader implements Loader
     public function load(Rows $rows) : void
     {
         try {
-            $stream = \fopen($this->url, $this->mode);
+            $stream = \fopen($this->url, $this->mode->value);
         } catch (\Throwable $e) {
-            throw new RuntimeException("Can't open stream for url: {$this->url} in mode: {$this->mode}. Reason: " . $e->getMessage(), (int) $e->getCode(), $e);
+            throw new RuntimeException("Can't open stream for url: {$this->url} in mode: {$this->mode->value}. Reason: " . $e->getMessage(), (int) $e->getCode(), $e);
         }
 
         if ($stream === false) {
-            throw new RuntimeException("Can't open stream for url: {$this->url} in mode: {$this->mode}");
+            throw new RuntimeException("Can't open stream for url: {$this->url} in mode: {$this->mode->value}");
         }
 
         \fwrite(
