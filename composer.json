@@ -8,8 +8,7 @@
     "require": {
         "php": "~8.1",
         "ext-json": "*",
-        "flow-php/etl": "^1.0@dev",
-        "ramsey/uuid": "^4.0"
+        "flow-php/etl": "^1.0@dev"
     },
     "require-dev": {
         "halaxa/json-machine": "^0.8.0 || ^1.0.0"

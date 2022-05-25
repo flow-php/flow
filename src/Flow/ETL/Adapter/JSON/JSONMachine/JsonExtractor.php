@@ -7,6 +7,10 @@ namespace Flow\ETL\Adapter\JSON\JSONMachine;
 use Flow\ETL\Extractor;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
+use Flow\ETL\Stream\FileStream;
+use Flow\ETL\Stream\Handler;
+use Flow\ETL\Stream\LocalFile;
+use Flow\ETL\Stream\Mode;
 use JsonMachine\Items;
 
 /**
@@ -14,15 +18,18 @@ use JsonMachine\Items;
  */
 final class JsonExtractor implements Extractor
 {
-    private readonly Items $jsonItems;
+    private FileStream $stream;
 
     public function __construct(
-        string $filePath,
-        private readonly
-        int $rowsInBatch,
+        FileStream|string $stream,
+        private readonly int $rowsInBatch = 1000,
         private readonly string $rowEntryName = 'row'
     ) {
-        $this->jsonItems = Items::fromFile($filePath);
+        if (\is_string($stream)) {
+            $this->stream = new LocalFile($stream);
+        } else {
+            $this->stream = $stream;
+        }
     }
 
     public function extract() : \Generator
@@ -34,7 +41,7 @@ final class JsonExtractor implements Extractor
          *
          * @var array|object $row
          */
-        foreach ($this->jsonItems->getIterator() as $row) {
+        foreach ($this->items()->getIterator() as $row) {
             $rows = $rows->add(Row::create(new Row\Entry\ArrayEntry($this->rowEntryName, (array) $row)));
 
             if ($rows->count() >= $this->rowsInBatch) {
@@ -47,5 +54,13 @@ final class JsonExtractor implements Extractor
         if ($rows->count()) {
             yield $rows;
         }
+    }
+
+    /**
+     * @psalm-suppress ImpureMethodCall
+     */
+    private function items() : Items
+    {
+        return Items::fromStream(Handler::file()->open($this->stream, Mode::READ));
     }
 }

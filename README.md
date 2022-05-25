@@ -14,20 +14,12 @@ Following implementation are available:
 ```php
 <?php
 
+use Flow\ETL\Stream\LocalFile;
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonExtractor;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
-use JsonMachine\JsonMachine;
 
-$extractor = new JsonExtractor(
-    __DIR__ . '/../Fixtures/timezones.json', 
-    5
-);
-
-/** @var Rows $rows */
-foreach ($extractor->extract() as $rows) {
-    // Do something with Row 
-}
+$rows = (new Flow())
+    ->read(Json::from(new LocalFile(__DIR__ . '/../Fixtures/timezones.json'), 5))
+    ->fetch()
 ```
 
 ## Loader - JsonLoader
@@ -35,8 +27,26 @@ foreach ($extractor->extract() as $rows) {
 ```php
 <?php
 
-$loader = new JsonLoader(\sys_get_temp_dir() . '/file.json');
-$loader->load(new Rows(...));
+use Flow\ETL\Adapter\JSON\JsonLoader;
+use Flow\ETL\Flow;
+use Flow\ETL\Row;
+use Flow\ETL\Rows;
+use Flow\ETL\Stream\LocalFile;
+
+(new Flow())
+    ->process(
+        new Rows(
+            ...\array_map(
+                fn (int $i) : Row => Row::create(
+                    new Row\Entry\IntegerEntry('id', $i),
+                    new Row\Entry\StringEntry('name', 'name_' . $i)
+                ),
+                \range(0, 10)
+            )
+        )
+    )
+    ->write(Json::to(new LocalFile(\sys_get_temp_dir() . '/file.json')))
+    ->run();
 ```
 
 ## Development

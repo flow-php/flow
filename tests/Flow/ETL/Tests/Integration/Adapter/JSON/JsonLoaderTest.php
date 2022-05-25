@@ -5,43 +5,33 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Adapter\JSON;
 
 use Flow\ETL\Adapter\JSON\JsonLoader;
+use Flow\ETL\DSL\Json;
+use Flow\ETL\Flow;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
+use Flow\ETL\Stream\LocalFile;
 use PHPUnit\Framework\TestCase;
 
 final class JsonLoaderTest extends TestCase
 {
     public function test_json_loader() : void
     {
-        $path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.json';
+        $stream = new LocalFile(\sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.json');
 
-        $loader = new JsonLoader($path);
-
-        $loader->load(
-            new Rows(
-                ...\array_map(
-                    fn (int $i) : Row => Row::create(
-                        new Row\Entry\IntegerEntry('id', $i),
-                        new Row\Entry\StringEntry('name', 'name_' . $i)
-                    ),
-                    \range(0, 5)
+        (new Flow())
+            ->process(
+                new Rows(
+                    ...\array_map(
+                        fn (int $i) : Row => Row::create(
+                            new Row\Entry\IntegerEntry('id', $i),
+                            new Row\Entry\StringEntry('name', 'name_' . $i)
+                        ),
+                        \range(0, 10)
+                    )
                 )
             )
-        );
-
-        $loader->load(
-            new Rows(
-                ...\array_map(
-                    fn (int $i) : Row => Row::create(
-                        new Row\Entry\IntegerEntry('id', $i),
-                        new Row\Entry\StringEntry('name', 'name_' . $i)
-                    ),
-                    \range(6, 10)
-                )
-            )
-        );
-
-        $loader->closure(new Rows());
+            ->write(Json::to($stream))
+            ->run();
 
         $this->assertJsonStringEqualsJsonString(
             <<<'JSON'
@@ -59,19 +49,19 @@ final class JsonLoaderTest extends TestCase
   {"id":10,"name":"name_10"}
 ]
 JSON,
-            \file_get_contents($path)
+            \file_get_contents($stream->uri())
         );
 
-        if (\file_exists($path)) {
-            \unlink($path);
+        if (\file_exists($stream->uri())) {
+            \unlink($stream->uri());
         }
     }
 
     public function test_json_loader_loading_empty_string() : void
     {
-        $path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.json';
+        $stream = new LocalFile(\sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.json');
 
-        $loader = new JsonLoader($path);
+        $loader = new JsonLoader($stream);
 
         $loader->load(new Rows());
 
@@ -82,19 +72,19 @@ JSON,
 [
 ]
 JSON,
-            \file_get_contents($path)
+            \file_get_contents($stream->uri())
         );
 
-        if (\file_exists($path)) {
-            \unlink($path);
+        if (\file_exists($stream->uri())) {
+            \unlink($stream->uri());
         }
     }
 
     public function test_json_loader_with_a_safe_mode() : void
     {
-        $path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.json';
+        $stream = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.json';
 
-        $loader = new JsonLoader($path, $safeMode = true);
+        $loader = new JsonLoader($stream, safeMode: true);
 
         $loader->load(
             new Rows(
@@ -120,7 +110,7 @@ JSON,
             )
         );
 
-        $files = \array_values(\array_diff(\scandir($path), ['..', '.']));
+        $files = \array_values(\array_diff(\scandir($stream), ['..', '.']));
 
         $loader->closure(new Rows());
 
@@ -140,11 +130,11 @@ JSON,
       {"id":10,"name":"name_10"}
 ]
 JSON,
-            \file_get_contents($path . DIRECTORY_SEPARATOR . $files[0])
+            \file_get_contents($stream . DIRECTORY_SEPARATOR . $files[0])
         );
 
-        if (\file_exists($path . DIRECTORY_SEPARATOR . $files[0])) {
-            \unlink($path . DIRECTORY_SEPARATOR . $files[0]);
+        if (\file_exists($stream . DIRECTORY_SEPARATOR . $files[0])) {
+            \unlink($stream . DIRECTORY_SEPARATOR . $files[0]);
         }
     }
 }
