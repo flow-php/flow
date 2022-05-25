@@ -1,6 +1,7 @@
-## [Unreleased] - 2022-05-24
+## [Unreleased] - 2022-05-25
 
 ### Added
+- [#245](https://github.com/flow-php/etl/pull/245) - **missing dependency exception** - [@norberttech](https://github.com/norberttech)
 - [#243](https://github.com/flow-php/etl/pull/243) - **File stream abstraction** - [@norberttech](https://github.com/norberttech)
 - [#242](https://github.com/flow-php/etl/pull/242) - **Transformation interface allowing to group transformations and register them all at once at DataFrame** - [@norberttech](https://github.com/norberttech)
 - [#237](https://github.com/flow-php/etl/pull/237) - **Define schema for array unpack to support complex types unpacking** - [@norberttech](https://github.com/norberttech)
