@@ -39,8 +39,6 @@ data structure, filter out things that didn't change, and load in bulk into the 
 
 This is a perfect scenario for ETL.
 
-### [More Examples](https://github.com/flow-php/etl-examples)
-
 ## Usage
 
 Examples: 
@@ -66,6 +64,8 @@ $array = new ArrayMemory();
     ->write(To::memory($array)
     ->run();
 ```
+
+### [More Examples](https://github.com/flow-php/etl-examples)
 
 ## DSL - Domain Specific Language
 
@@ -246,6 +246,8 @@ DSL for Loaders/Extractors should be prepared to take following input types:
 By design Flow should use [StreamWrappers](https://www.php.net/manual/en/stream.streamwrapper.example-1.php)
 with a custom protocol that starts from `flow-`, for example `flow-aws-s3` or `flow-azure-blob`. 
 [StreamWrapper](src/Flow/ETL/Stream/StreamWrapper.php) should be used to register custom wrappers. 
+
+[flow-php/etl-adapter-streams](https://github.com/flow-php/etl-adapter-streams) provides support for popular remote filesystems. 
 
 ### Serialization
 
