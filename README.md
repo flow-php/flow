@@ -5,69 +5,47 @@
 ## Description
 
 ETL Adapter that provides Loaders and Extractors that works with CSV files.
-
-Following implementation are available: 
-- [League CSV](https://csv.thephpleague.com/) 
+It does not require any external dependencies, it's working on internal PHP functions.
 
 ## Installation 
 
 ``` 
 composer require flow-php/etl-adapter-csv
-composer require league/csv
 ```
 
-> League CSV adapter is not explicitly required, you need to make sure it is available in your composer.json file.
-
-## Extractor - League CSVExtractor
+## Extractor 
 
 ```php
 <?php
 
 use Flow\ETL\DSL\CSV;
-use Flow\ETL\Adapter\CSV\League\CSVExtractor;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
-use League\Csv\Reader;
+use Flow\ETL\Flow;
 
-$extractor = CSV::from_file(
-    __DIR__ . '/../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv',
-    $rowsInBatch = 5,
-    $offsetHeader = 0
-);
-
-/** @var Rows $rows */
-foreach ($extractor->extract() as $rows) {
-    // Do something with Row 
-}
+$rows = (new Flow())
+    ->read(CSV::from(new LocalFile($path)))
+    ->fetch();
 ```
 
-## Loader - League CSVLoader
+## Loader 
 
 ```php 
 <?php
 
 use Flow\ETL\DSL\CSV;
-use Flow\ETL\Adapter\CSV\League\CSVLoader;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
-use League\Csv\Writer;
 
-$loader = new CSV::to_file(
-    $path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.csv'
-);
-
-$loader->load(new Rows(
-    Row::create(new Row\Entry\ArrayEntry('row', ['id', 'name'])),
-    Row::create(new Row\Entry\ArrayEntry('row', [1, 'Norbert'])),
-));
-$loader->load(new Rows(
-    Row::create(new Row\Entry\ArrayEntry('row', [2, 'Tomek'])),
-    Row::create(new Row\Entry\ArrayEntry('row', [3, 'Dawid'])),
-));
+(new Flow())
+    ->process(
+        new Rows(
+            Row::create(new Row\Entry\IntegerEntry('id', 1), new Row\Entry\StringEntry('name', 'Norbert')),
+            Row::create(new Row\Entry\IntegerEntry('id', 2), new Row\Entry\StringEntry('name', 'Tomek')),
+            Row::create(new Row\Entry\IntegerEntry('id', 3), new Row\Entry\StringEntry('name', 'Dawid')),
+        )
+    )
+    ->load(CSV::to($path, true, true))
+    ->run();
 ```
-
-> If `CSV::to_file` will be used in async pipeline due to concurrency issues it will be turned into
-> `CSV::to_directory`. Each process will write random file in the directory.
 
 ## Development
 

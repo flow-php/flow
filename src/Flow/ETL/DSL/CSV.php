@@ -4,41 +4,51 @@ declare(strict_types=1);
 
 namespace Flow\ETL\DSL;
 
-use Flow\ETL\Adapter\CSV\League\CSVExtractor;
-use Flow\ETL\Adapter\CSV\League\CSVLoader;
-use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Adapter\CSV\CSVExtractor;
+use Flow\ETL\Adapter\CSV\CSVLoader;
 use Flow\ETL\Extractor;
 use Flow\ETL\Loader;
+use Flow\ETL\Stream\FileStream;
+use Flow\ETL\Stream\LocalFile;
 
 class CSV
 {
-    /**
-     * @throws InvalidArgumentException
-     */
-    final public static function from_file(
-        string $file_name,
+    final public static function from(
+        string|FileStream|array $stream,
         int $rows_in_batch = 1000,
-        ?int $header_offset = null,
-        string $operation_mode = 'r',
-        string $rowEntry_name = 'row',
+        bool $with_header = true,
+        bool $empty_to_null = true,
+        string $row_entry_name = 'row',
         string $delimiter = ',',
         string $enclosure = '"',
         string $escape = '\\'
     ) : Extractor {
-        if (!\class_exists('League\Csv\Reader')) {
-            throw new InvalidArgumentException("Missing League CSV dependency, please run 'composer require league/csv'");
-        }
+        if (\is_array($stream)) {
+            $extractors = [];
 
-        if (!\file_exists($file_name)) {
-            throw new InvalidArgumentException("File {$file_name} not found.'");
+            /** @var FileStream $file_stream */
+            foreach ($stream as $file_stream) {
+                $extractors[] = new CSVExtractor(
+                    $file_stream,
+                    $rows_in_batch,
+                    $with_header,
+                    $empty_to_null,
+                    $row_entry_name,
+                    $delimiter,
+                    $enclosure,
+                    $escape
+                );
+            }
+
+            return new Extractor\ChainExtractor(...$extractors);
         }
 
         return new CSVExtractor(
-            $file_name,
+            \is_string($stream) ? new LocalFile($stream) : $stream,
             $rows_in_batch,
-            $header_offset,
-            $operation_mode,
-            $rowEntry_name,
+            $with_header,
+            $empty_to_null,
+            $row_entry_name,
             $delimiter,
             $enclosure,
             $escape
@@ -46,106 +56,33 @@ class CSV
     }
 
     /**
-     * @throws InvalidArgumentException
+     * @param FileStream|string $uri
+     * @param bool $with_header
+     * @param bool $safe_mode - when set to true, stream or destination path will be used as a directory and output is going to be written into randomly generated file name
+     * @param string $separator
+     * @param string $enclosure
+     * @param string $escape
+     * @param string $new_line_separator
+     *
+     * @return Loader
      */
-    final public static function from_directory(
-        string $folder_path,
-        int $rows_in_batch = 1000,
-        ?int $header_offset = null,
-        string $operation_mode = 'r',
-        string $row_entry_name = 'row',
-        string $delimiter = ',',
+    final public static function to(
+        string|FileStream $uri,
+        bool $with_header = true,
+        bool $safe_mode = false,
+        string $separator = ',',
         string $enclosure = '"',
-        string $escape = '\\'
-    ) : Extractor {
-        if (!\class_exists('League\Csv\Reader')) {
-            throw new InvalidArgumentException("Missing League CSV dependency, please run 'composer require league/csv'");
-        }
-
-        if (!\file_exists($folder_path) || !\is_dir($folder_path)) {
-            throw new InvalidArgumentException("Directory {$folder_path} not found.'");
-        }
-
-        $directoryIterator = new \RecursiveDirectoryIterator($folder_path);
-        $directoryIterator->setFlags(\RecursiveDirectoryIterator::SKIP_DOTS);
-
-        $regexIterator = new \RegexIterator(
-            new \RecursiveIteratorIterator($directoryIterator),
-            '/^.+\.csv$/i',
-            \RecursiveRegexIterator::GET_MATCH
+        string $escape = '\\',
+        string $new_line_separator = PHP_EOL
+    ) : Loader {
+        return new CSVLoader(
+            \is_string($uri) ? new LocalFile($uri) : $uri,
+            $with_header,
+            $safe_mode,
+            $separator,
+            $enclosure,
+            $escape,
+            $new_line_separator
         );
-
-        $extractors = [];
-
-        /** @var array<string> $filePath */
-        foreach ($regexIterator as $filePath) {
-            $extractors[] = new CSVExtractor(
-                /** @phpstan-ignore-next-line */
-                \current($filePath),
-                $rows_in_batch,
-                $header_offset,
-                $operation_mode,
-                $row_entry_name,
-                $delimiter,
-                $enclosure,
-                $escape
-            );
-        }
-
-        return new Extractor\ChainExtractor(...$extractors);
-    }
-
-    /**
-     * @param string $file_name
-     * @param string $open_mode
-     * @param bool $with_header
-     * @param string $delimiter
-     * @param string $enclosure
-     * @param string $escape
-     *
-     *@throws InvalidArgumentException
-     *
-     * @return Loader
-     */
-    final public static function to_file(
-        string $file_name,
-        string $open_mode = 'w+',
-        bool $with_header = true,
-        string $delimiter = ',',
-        string $enclosure = '"',
-        string $escape = '\\'
-    ) : Loader {
-        if (!\class_exists('League\Csv\Reader')) {
-            throw new InvalidArgumentException("Missing League CSV dependency, please run 'composer require league/csv'");
-        }
-
-        return new CSVLoader($file_name, $open_mode, $with_header, false, $delimiter, $enclosure, $escape);
-    }
-
-    /**
-     * @param string $file_name
-     * @param string $open_mode
-     * @param bool $with_header
-     * @param string $delimiter
-     * @param string $enclosure
-     * @param string $escape
-     *
-     *@throws InvalidArgumentException
-     *
-     * @return Loader
-     */
-    final public static function to_directory(
-        string $file_name,
-        string $open_mode = 'w+',
-        bool $with_header = true,
-        string $delimiter = ',',
-        string $enclosure = '"',
-        string $escape = '\\'
-    ) : Loader {
-        if (!\class_exists('League\Csv\Reader')) {
-            throw new InvalidArgumentException("Missing League CSV dependency, please run 'composer require league/csv'");
-        }
-
-        return new CSVLoader($file_name, $open_mode, true, $with_header, $delimiter, $enclosure, $escape);
     }
 }
