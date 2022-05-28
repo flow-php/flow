@@ -19,7 +19,7 @@ use Flow\ETL\Stream\Mode;
 
 /**
  * @implements Loader<array{
- *   path: string,
+ *   stream: FileStream,
  *   rows_per_group: int,
  *   safe_mode: bool
  * }>
@@ -62,7 +62,7 @@ final class ParquetLoader implements Closure, Loader
     public function __serialize() : array
     {
         return [
-            'path' => $this->stream,
+            'stream' => $this->stream,
             'rows_per_group' => $this->rowsPerGroup,
             'safe_mode' => $this->safeMode,
         ];
@@ -70,9 +70,11 @@ final class ParquetLoader implements Closure, Loader
 
     public function __unserialize(array $data) : void
     {
-        $this->stream = $data['path'];
+        $this->stream = $data['stream'];
         $this->safeMode = $data['safe_mode'];
         $this->rowsPerGroup = $data['rows_per_group'];
+        $this->handler = $this->safeMode ? Handler::directory('parquet') : Handler::file();
+        $this->resource = null;
     }
 
     public function load(Rows $rows) : void
@@ -112,6 +114,7 @@ final class ParquetLoader implements Closure, Loader
         $this->writeRowGroup();
 
         if (\is_resource($this->resource)) {
+            /** @psalm-suppress InvalidPropertyAssignmentValue */
             \fclose($this->resource);
         }
     }
@@ -170,6 +173,7 @@ final class ParquetLoader implements Closure, Loader
         $this->writer()->finish();
 
         if (\is_resource($this->resource)) {
+            /** @psalm-suppress InvalidPropertyAssignmentValue */
             \fclose($this->resource);
         }
 

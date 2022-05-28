@@ -36,7 +36,7 @@ class Parquet
 
         if (\is_array($uri)) {
             $extractors = [];
-            /** @var FileStream $filePath */
+
             foreach ($uri as $filePath) {
                 $extractors[] = new ParquetExtractor(
                     $filePath,
