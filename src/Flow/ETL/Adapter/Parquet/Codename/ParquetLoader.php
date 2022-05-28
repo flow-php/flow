@@ -13,10 +13,13 @@ use Flow\ETL\Pipeline\Closure;
 use Flow\ETL\Row\Entry\ListEntry;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Rows;
+use Flow\ETL\Stream\FileStream;
+use Flow\ETL\Stream\Handler;
+use Flow\ETL\Stream\Mode;
 
 /**
  * @implements Loader<array{
- *   path: string,
+ *   stream: FileStream,
  *   rows_per_group: int,
  *   safe_mode: bool
  * }>
@@ -39,19 +42,27 @@ final class ParquetLoader implements Closure, Loader
      */
     private array $dataRepetitionsBuffer = [];
 
+    private Handler $handler;
+
+    /**
+     * @var null|resource
+     */
+    private $resource;
+
     public function __construct(
-        private readonly string $path,
+        private readonly FileStream $stream,
         private readonly int $rowsPerGroup = 1000,
         private readonly bool $safeMode = true,
         private readonly ?Schema $schema = null
     ) {
         $this->converter = new SchemaConverter();
+        $this->handler = $this->safeMode ? Handler::directory('parquet') : Handler::file();
     }
 
     public function __serialize() : array
     {
         return [
-            'path' => $this->path,
+            'stream' => $this->stream,
             'rows_per_group' => $this->rowsPerGroup,
             'safe_mode' => $this->safeMode,
         ];
@@ -59,9 +70,11 @@ final class ParquetLoader implements Closure, Loader
 
     public function __unserialize(array $data) : void
     {
-        $this->path = $data['path'];
+        $this->stream = $data['stream'];
         $this->safeMode = $data['safe_mode'];
         $this->rowsPerGroup = $data['rows_per_group'];
+        $this->handler = $this->safeMode ? Handler::directory('parquet') : Handler::file();
+        $this->resource = null;
     }
 
     public function load(Rows $rows) : void
@@ -99,6 +112,11 @@ final class ParquetLoader implements Closure, Loader
     public function closure(Rows $rows) : void
     {
         $this->writeRowGroup();
+
+        if (\is_resource($this->resource)) {
+            /** @psalm-suppress InvalidPropertyAssignmentValue */
+            \fclose($this->resource);
+        }
     }
 
     private function writer() : ParquetWriter
@@ -107,21 +125,11 @@ final class ParquetLoader implements Closure, Loader
             return $this->writer;
         }
 
-        $path = ($this->safeMode)
-            ? (\rtrim($this->path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . \uniqid() . '.parquet')
-            : $this->path;
-
-        if ($this->safeMode && !\file_exists(\rtrim($this->path, DIRECTORY_SEPARATOR))) {
-            \mkdir(\rtrim($this->path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR);
+        if ($this->resource === null) {
+            $this->resource = $this->handler->open($this->stream, Mode::WRITE);
         }
 
-        if (!\file_exists($path)) {
-            /** @phpstan-ignore-next-line  */
-            $this->writer = new ParquetWriter($this->converter->toParquet($this->schema()), \fopen($path, 'w'));
-        } else {
-            /** @phpstan-ignore-next-line  */
-            $this->writer = new ParquetWriter($this->converter->toParquet($this->schema()), \fopen($path, 'r+'), null, true);
-        }
+        $this->writer = new ParquetWriter($this->converter->toParquet($this->schema()), $this->resource);
 
         return $this->writer;
     }
@@ -164,6 +172,12 @@ final class ParquetLoader implements Closure, Loader
         $rg->finish();
         $this->writer()->finish();
 
+        if (\is_resource($this->resource)) {
+            /** @psalm-suppress InvalidPropertyAssignmentValue */
+            \fclose($this->resource);
+        }
+
+        $this->resource = null;
         $this->writer = null;
         $this->dataBuffer = [];
         $this->dataRepetitionsBuffer = [];

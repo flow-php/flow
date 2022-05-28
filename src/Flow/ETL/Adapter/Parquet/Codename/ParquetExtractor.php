@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Parquet\Codename;
 
 use codename\parquet\ParquetReader;
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
+use Flow\ETL\Stream\FileStream;
+use Flow\ETL\Stream\Handler;
+use Flow\ETL\Stream\Mode;
 
 /**
  * @psalm-suppress MissingImmutableAnnotation
@@ -18,15 +20,15 @@ final class ParquetExtractor implements Extractor
     private ?ParquetReader $reader = null;
 
     /**
-     * @param string $path
+     * @param FileStream $stream
      * @param string $rowEntryName
      * @param array<string> $fields
      */
-    public function __construct(private readonly string $path, private readonly string $rowEntryName = 'row', private readonly array $fields = [])
-    {
-        if (!\file_exists($path)) {
-            throw new InvalidArgumentException("Parquet file not found in path: {$path}");
-        }
+    public function __construct(
+        private readonly FileStream $stream,
+        private readonly string $rowEntryName = 'row',
+        private readonly array $fields = []
+    ) {
     }
 
     public function extract() : \Generator
@@ -80,7 +82,7 @@ final class ParquetExtractor implements Extractor
     private function reader() : ParquetReader
     {
         if ($this->reader === null) {
-            $this->reader = new ParquetReader(\fopen($this->path, 'r'));
+            $this->reader = new ParquetReader(Handler::file()->open($this->stream, Mode::READ));
         }
 
         return $this->reader;

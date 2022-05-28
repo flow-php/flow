@@ -11,13 +11,14 @@ use Flow\ETL\DSL\Transform;
 use Flow\ETL\Flow;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
+use Flow\ETL\Stream\LocalFile;
 use PHPUnit\Framework\TestCase;
 
 final class ParquetTest extends TestCase
 {
     public function test_writing_and_reading_parquet_with_all_supported_types() : void
     {
-        $this->removeFile($path = \sys_get_temp_dir() . '/file.parquet');
+        $this->removeFile($path = __DIR__ . '/file.parquet');
 
         (new Flow)
             ->read(From::rows(
@@ -37,7 +38,7 @@ final class ParquetTest extends TestCase
                     }, \range(1, 100))
                 )
             ))
-            ->write(Parquet::to_file($path))
+            ->write(Parquet::to($path))
             ->run();
 
         $this->assertFileExists($path);
@@ -45,7 +46,7 @@ final class ParquetTest extends TestCase
         $this->assertEquals(
             $rows,
             (new Flow())
-                ->read(Parquet::from_file($path))
+                ->read(Parquet::from($path))
                 ->transform(Transform::array_unpack('row'))
                 ->drop('row')
                 ->fetch()
@@ -76,7 +77,7 @@ final class ParquetTest extends TestCase
                     }, \range(1, 100))
                 )
             ))
-            ->write(Parquet::to_file($path))
+            ->write(Parquet::to($path))
             ->run();
 
         $this->assertFileExists($path);
@@ -88,7 +89,7 @@ final class ParquetTest extends TestCase
                 }, \range(1, 100))
             ),
             (new Flow())
-                ->read(Parquet::from_file($path, 'row', ['integer']))
+                ->read(Parquet::from($path, 'row', ['integer']))
                 ->transform(Transform::array_unpack('row'))
                 ->drop('row')
                 ->fetch()
@@ -119,15 +120,20 @@ final class ParquetTest extends TestCase
                     }, \range(1, 100))
                 )
             ))
-            ->write(Parquet::to_directory($path, 50))
+            ->write(Parquet::to($path, 50, true))
             ->run();
 
         $this->assertFileExists($path);
 
+        $paths = \array_map(
+            fn (string $fileName) : LocalFile => new LocalFile($path . '/' . $fileName),
+            \array_values(\array_diff(\scandir($path), ['..', '.']))
+        );
+
         $this->assertEquals(
             $rows,
             (new Flow())
-                ->read(Parquet::from_directory($path))
+                ->read(Parquet::from($paths))
                 ->transform(Transform::array_unpack('row'))
                 ->drop('row')
                 ->sortBy(Row\Sort::asc('integer'))

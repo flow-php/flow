@@ -6,9 +6,12 @@ namespace Flow\ETL\DSL;
 
 use Flow\ETL\Adapter\Parquet\Codename\ParquetExtractor;
 use Flow\ETL\Adapter\Parquet\Codename\ParquetLoader;
-use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\MissingDependencyException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Loader;
+use Flow\ETL\Row\Schema;
+use Flow\ETL\Stream\FileStream;
+use Flow\ETL\Stream\LocalFile;
 
 /**
  * @infection-ignore-all
@@ -16,107 +19,67 @@ use Flow\ETL\Loader;
 class Parquet
 {
     /**
-     * @param string $file_name
+     * @param array<FileStream>|FileStream|string $uri
      * @param string $row_entry_name
      * @param array<string> $fields
      *
-     * @throws InvalidArgumentException
-     *
      * @return Extractor
      */
-    final public static function from_file(
-        string $file_name,
+    final public static function from(
+        string|FileStream|array $uri,
         string $row_entry_name = 'row',
         array $fields = []
     ) : Extractor {
         if (!\class_exists('codename\parquet\ParquetReader')) {
-            throw new InvalidArgumentException("Missing Codename Parquet dependency, please run 'composer require codename/parquet'");
+            throw new MissingDependencyException('Codename Parquet', 'codename/parquet');
         }
 
-        if (!\file_exists($file_name)) {
-            throw new InvalidArgumentException("File {$file_name} not found.'");
+        if (\is_array($uri)) {
+            $extractors = [];
+
+            foreach ($uri as $filePath) {
+                $extractors[] = new ParquetExtractor(
+                    $filePath,
+                    $row_entry_name,
+                    $fields
+                );
+            }
+
+            return new Extractor\ChainExtractor(...$extractors);
         }
 
-        return new ParquetExtractor($file_name, $row_entry_name, $fields);
-    }
-
-    /**
-     * @param string $folder_path
-     * @param string $row_entry_name
-     * @param array<string> $fields - only given fields will be read from the file
-     *
-     * @throws InvalidArgumentException
-     *
-     * @return Extractor
-     */
-    final public static function from_directory(
-        string $folder_path,
-        string $row_entry_name = 'row',
-        array $fields = []
-    ) : Extractor {
-        if (!\class_exists('codename\parquet\ParquetReader')) {
-            throw new InvalidArgumentException("Missing Codename Parquet dependency, please run 'composer require codename/parquet'");
-        }
-
-        if (!\file_exists($folder_path) || !\is_dir($folder_path)) {
-            throw new InvalidArgumentException("Directory {$folder_path} not found.'");
-        }
-
-        $directoryIterator = new \RecursiveDirectoryIterator($folder_path);
-        $directoryIterator->setFlags(\RecursiveDirectoryIterator::SKIP_DOTS);
-
-        $regexIterator = new \RegexIterator(
-            new \RecursiveIteratorIterator($directoryIterator),
-            '/^.+\.parquet$/i',
-            \RecursiveRegexIterator::GET_MATCH
+        return new ParquetExtractor(
+            \is_string($uri) ? new LocalFile($uri) : $uri,
+            $row_entry_name,
+            $fields
         );
-
-        $extractors = [];
-
-        /** @var array<string> $filePath */
-        foreach ($regexIterator as $filePath) {
-            /** @phpstan-ignore-next-line */
-            $extractors[] = new ParquetExtractor(\current($filePath), $row_entry_name, $fields);
-        }
-
-        return new Extractor\ChainExtractor(...$extractors);
     }
 
     /**
-     * @param string $file_name
+     * @param FileStream|string $uri
      * @param int $rows_in_group
+     * @param bool $safe_mode
+     * @param null|Schema $schema
      *
-     * @throws InvalidArgumentException
+     * @throws MissingDependencyException
      *
      * @return Loader
      */
-    final public static function to_file(
-        string $file_name,
-        int $rows_in_group = 1000
+    final public static function to(
+        string|FileStream $uri,
+        int $rows_in_group = 1000,
+        bool $safe_mode = false,
+        Schema $schema = null
     ) : Loader {
         if (!\class_exists('codename\parquet\ParquetReader')) {
-            throw new InvalidArgumentException("Missing Codename Parquet dependency, please run 'composer require codename/parquet'");
+            throw new MissingDependencyException('Codename Parquet', 'codename/parquet');
         }
 
-        return new ParquetLoader($file_name, $rows_in_group, false);
-    }
-
-    /**
-     * @param string $file_name
-     * @param int $rows_in_group
-     *
-     * @throws InvalidArgumentException
-     *
-     * @return Loader
-     */
-    final public static function to_directory(
-        string $file_name,
-        int $rows_in_group = 1000
-    ) : Loader {
-        if (!\class_exists('codename\parquet\ParquetReader')) {
-            throw new InvalidArgumentException("Missing Codename Parquet dependency, please run 'composer require codename/parquet'");
-        }
-
-        return new ParquetLoader($file_name, $rows_in_group, true);
+        return new ParquetLoader(
+            \is_string($uri) ? new LocalFile($uri) : $uri,
+            $rows_in_group,
+            $safe_mode,
+            $schema
+        );
     }
 }
