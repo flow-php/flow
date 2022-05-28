@@ -1,12 +1,14 @@
-## [Unreleased] - 2022-05-08
+## [Unreleased] - 2022-05-28
 
 ### Added
+- [#108](https://github.com/flow-php/etl-adapter-csv/pull/108) - **Support for reading/writing into FileStream** - [@norberttech](https://github.com/norberttech)
 - [#105](https://github.com/flow-php/etl-adapter-csv/pull/105) - **DSL layer** - [@norberttech](https://github.com/norberttech)
 - [#95](https://github.com/flow-php/etl-adapter-csv/pull/95) - **Loader options: delimiter, enclouser, escape string** - [@norberttech](https://github.com/norberttech)
 - [#95](https://github.com/flow-php/etl-adapter-csv/pull/95) - **Extractor options: delimiter, enclouser, escape string** - [@norberttech](https://github.com/norberttech)
 - [#44](https://github.com/flow-php/etl-adapter-csv/pull/44) - **Workflow for aut-merging dependabot PRs** - [@tomaszhanc](https://github.com/tomaszhanc)
 
 ### Changed
+- [#108](https://github.com/flow-php/etl-adapter-csv/pull/108) - **Defualt CSV reader library to native PHP functions** - [@norberttech](https://github.com/norberttech)
 - [#104](https://github.com/flow-php/etl-adapter-csv/pull/104) - **Updated project to php 8.1** - [@norberttech](https://github.com/norberttech)
 - [#95](https://github.com/flow-php/etl-adapter-csv/pull/95) - **updated dependencies** - [@norberttech](https://github.com/norberttech)
 - [#82](https://github.com/flow-php/etl-adapter-csv/pull/82) - **Adjusted Adapter for Serialization** - [@norberttech](https://github.com/norberttech)
@@ -29,6 +31,7 @@
 - [63633c](https://github.com/flow-php/etl-adapter-csv/commit/63633cae23ccfa2222925a1c94c9acf9aca65e7d) - **docs** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#108](https://github.com/flow-php/etl-adapter-csv/pull/108) - **League/CSV dependency** - [@norberttech](https://github.com/norberttech)
 - [a58cef](https://github.com/flow-php/etl-adapter-csv/commit/a58cef65fe01e59c69e12e0ce29d4010b6904223) - **unused php extensions dependencies** - [@norberttech](https://github.com/norberttech)
 - [#104](https://github.com/flow-php/etl-adapter-csv/pull/104) - **Deprecated classes** - [@norberttech](https://github.com/norberttech)
 - [#37](https://github.com/flow-php/etl-adapter-csv/pull/37) - **Remove unsued PHP-CS config** - [@tomaszhanc](https://github.com/tomaszhanc)
