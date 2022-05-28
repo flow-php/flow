@@ -1,6 +1,7 @@
-## [Unreleased] - 2022-05-18
+## [Unreleased] - 2022-05-28
 
 ### Changed
+- [#1](https://github.com/flow-php/etl-adapter-parquet/pull/1) - **Uset FileStream instead of string paths** - [@norberttech](https://github.com/norberttech)
 - [429b67](https://github.com/flow-php/etl-adapter-parquet/commit/429b67acc886e23903781186f635234bb7d3e769) - **Initial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
