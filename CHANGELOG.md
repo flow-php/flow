@@ -1,6 +1,8 @@
-## [Unreleased] - 2022-05-25
+## [Unreleased] - 2022-05-29
 
 ### Added
+- [#246](https://github.com/flow-php/etl/pull/246) - **Added First aggregation** - [@norberttech](https://github.com/norberttech)
+- [#246](https://github.com/flow-php/etl/pull/246) - **Added Last aggregation** - [@norberttech](https://github.com/norberttech)
 - [#245](https://github.com/flow-php/etl/pull/245) - **missing dependency exception** - [@norberttech](https://github.com/norberttech)
 - [#243](https://github.com/flow-php/etl/pull/243) - **File stream abstraction** - [@norberttech](https://github.com/norberttech)
 - [#242](https://github.com/flow-php/etl/pull/242) - **Transformation interface allowing to group transformations and register them all at once at DataFrame** - [@norberttech](https://github.com/norberttech)
