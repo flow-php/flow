@@ -1,5 +1,4 @@
-# Flow PHP
-Data processing and manipulation library,
+![img](docs/img/banner.png)
 
 [![Latest Stable Version](https://poser.pugx.org/flow-php/etl/v)](https://packagist.org/packages/flow-php/etl)
 [![Latest Unstable Version](https://poser.pugx.org/flow-php/etl/v/unstable)](https://packagist.org/packages/flow-php/etl)
