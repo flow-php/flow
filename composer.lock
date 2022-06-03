@@ -4,20 +4,128 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a17bb2b58b6a2c5c47da7a2d15c8fbc3",
+    "content-hash": "a3e90c8db5433588ae30a8078cbea0c3",
     "packages": [
         {
-            "name": "doctrine/cache",
-            "version": "2.1.1",
+            "name": "flow-php/array-dot",
+            "version": "1.x-dev",
             "source": {
                 "type": "git",
-                "url": "https://github.com/doctrine/cache.git",
-                "reference": "331b4d5dbaeab3827976273e9356b3b453c300ce"
+                "url": "https://github.com/flow-php/array-dot.git",
+                "reference": "c0688bb9e2c90f343779bc3b1761e11bd26da55f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/doctrine/cache/zipball/331b4d5dbaeab3827976273e9356b3b453c300ce",
-                "reference": "331b4d5dbaeab3827976273e9356b3b453c300ce",
+                "url": "https://api.github.com/repos/flow-php/array-dot/zipball/c0688bb9e2c90f343779bc3b1761e11bd26da55f",
+                "reference": "c0688bb9e2c90f343779bc3b1761e11bd26da55f",
+                "shasum": ""
+            },
+            "require": {
+                "php": "~8.1"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "src/Flow/ArrayDot/array_dot.php"
+                ],
+                "psr-4": {
+                    "Flow\\": [
+                        "src/Flow"
+                    ]
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "PHP ETL - Array Dot fuctions",
+            "keywords": [
+                "array",
+                "dot",
+                "etl",
+                "extract",
+                "filter",
+                "load",
+                "transform"
+            ],
+            "support": {
+                "issues": "https://github.com/flow-php/array-dot/issues",
+                "source": "https://github.com/flow-php/array-dot/tree/1.x"
+            },
+            "time": "2022-04-10T09:46:31+00:00"
+        },
+        {
+            "name": "flow-php/etl",
+            "version": "1.x-dev",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/flow-php/etl.git",
+                "reference": "91753b873fece5368e7d1d89d58eec980b0dcad1"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/flow-php/etl/zipball/91753b873fece5368e7d1d89d58eec980b0dcad1",
+                "reference": "91753b873fece5368e7d1d89d58eec980b0dcad1",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "ext-mbstring": "*",
+                "flow-php/array-dot": "^1.0@dev",
+                "php": "~8.1"
+            },
+            "require-dev": {
+                "jawira/case-converter": "^3.4",
+                "laminas/laminas-hydrator": "^4.0",
+                "laravel/serializable-closure": "^1.1",
+                "symfony/validator": "^5.3 || ^6.0"
+            },
+            "suggest": {
+                "jawira/case-converter": "Provides CaseConverter that is required by the EntryNameCaseConverterTransformer",
+                "laminas/laminas-hydrator": "Help converting ObjectEntry into ArrayEntry that can be later unpack into standalone Entries",
+                "ocramius/generated-hydrator": "Provieds generated hydrator that implemenets Laminas\\Hydrator\\HydratorInterface"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Flow\\": [
+                        "src/Flow"
+                    ]
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "PHP ETL - Extract Transform Load - Abstraction",
+            "keywords": [
+                "etl",
+                "extract",
+                "load",
+                "transform"
+            ],
+            "support": {
+                "issues": "https://github.com/flow-php/etl/issues",
+                "source": "https://github.com/flow-php/etl/tree/1.x"
+            },
+            "time": "2022-06-03T06:03:02+00:00"
+        }
+    ],
+    "packages-dev": [
+        {
+            "name": "doctrine/cache",
+            "version": "2.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/doctrine/cache.git",
+                "reference": "1ca8f21980e770095a31456042471a57bc4c68fb"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/doctrine/cache/zipball/1ca8f21980e770095a31456042471a57bc4c68fb",
+                "reference": "1ca8f21980e770095a31456042471a57bc4c68fb",
                 "shasum": ""
             },
             "require": {
@@ -27,18 +135,12 @@
                 "doctrine/common": ">2.2,<2.4"
             },
             "require-dev": {
-                "alcaeus/mongo-php-adapter": "^1.1",
                 "cache/integration-tests": "dev-master",
-                "doctrine/coding-standard": "^8.0",
-                "mongodb/mongodb": "^1.1",
-                "phpunit/phpunit": "^7.0 || ^8.0 || ^9.0",
-                "predis/predis": "~1.0",
+                "doctrine/coding-standard": "^9",
+                "phpunit/phpunit": "^7.5 || ^8.5 || ^9.5",
                 "psr/cache": "^1.0 || ^2.0 || ^3.0",
-                "symfony/cache": "^4.4 || ^5.2 || ^6.0@dev",
-                "symfony/var-exporter": "^4.4 || ^5.2 || ^6.0@dev"
-            },
-            "suggest": {
-                "alcaeus/mongo-php-adapter": "Required to use legacy MongoDB driver"
+                "symfony/cache": "^4.4 || ^5.4 || ^6",
+                "symfony/var-exporter": "^4.4 || ^5.4 || ^6"
             },
             "type": "library",
             "autoload": {
@@ -87,7 +189,7 @@
             ],
             "support": {
                 "issues": "https://github.com/doctrine/cache/issues",
-                "source": "https://github.com/doctrine/cache/tree/2.1.1"
+                "source": "https://github.com/doctrine/cache/tree/2.2.0"
             },
             "funding": [
                 {
@@ -103,26 +205,26 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-07-17T14:49:29+00:00"
+            "time": "2022-05-20T20:07:39+00:00"
         },
         {
             "name": "doctrine/dbal",
-            "version": "3.3.5",
+            "version": "3.3.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/doctrine/dbal.git",
-                "reference": "719663b15983278227669c8595151586a2ff3327"
+                "reference": "9e7f76dd1cde81c62574fdffa5a9c655c847ad21"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/doctrine/dbal/zipball/719663b15983278227669c8595151586a2ff3327",
-                "reference": "719663b15983278227669c8595151586a2ff3327",
+                "url": "https://api.github.com/repos/doctrine/dbal/zipball/9e7f76dd1cde81c62574fdffa5a9c655c847ad21",
+                "reference": "9e7f76dd1cde81c62574fdffa5a9c655c847ad21",
                 "shasum": ""
             },
             "require": {
                 "composer-runtime-api": "^2",
                 "doctrine/cache": "^1.11|^2.0",
-                "doctrine/deprecations": "^0.5.3",
+                "doctrine/deprecations": "^0.5.3|^1",
                 "doctrine/event-manager": "^1.0",
                 "php": "^7.3 || ^8.0",
                 "psr/cache": "^1|^2|^3",
@@ -130,15 +232,15 @@
             },
             "require-dev": {
                 "doctrine/coding-standard": "9.0.0",
-                "jetbrains/phpstorm-stubs": "2021.1",
-                "phpstan/phpstan": "1.5.3",
-                "phpstan/phpstan-strict-rules": "^1.1",
-                "phpunit/phpunit": "9.5.16",
+                "jetbrains/phpstorm-stubs": "2022.1",
+                "phpstan/phpstan": "1.6.3",
+                "phpstan/phpstan-strict-rules": "^1.2",
+                "phpunit/phpunit": "9.5.20",
                 "psalm/plugin-phpunit": "0.16.1",
                 "squizlabs/php_codesniffer": "3.6.2",
                 "symfony/cache": "^5.2|^6.0",
                 "symfony/console": "^2.7|^3.0|^4.0|^5.0|^6.0",
-                "vimeo/psalm": "4.22.0"
+                "vimeo/psalm": "4.23.0"
             },
             "suggest": {
                 "symfony/console": "For helpful console commands such as SQL execution and import of files."
@@ -198,7 +300,7 @@
             ],
             "support": {
                 "issues": "https://github.com/doctrine/dbal/issues",
-                "source": "https://github.com/doctrine/dbal/tree/3.3.5"
+                "source": "https://github.com/doctrine/dbal/tree/3.3.6"
             },
             "funding": [
                 {
@@ -214,29 +316,29 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-04-05T09:50:18+00:00"
+            "time": "2022-05-02T17:21:01+00:00"
         },
         {
             "name": "doctrine/deprecations",
-            "version": "v0.5.3",
+            "version": "v1.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/doctrine/deprecations.git",
-                "reference": "9504165960a1f83cc1480e2be1dd0a0478561314"
+                "reference": "0e2a4f1f8cdfc7a92ec3b01c9334898c806b30de"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/doctrine/deprecations/zipball/9504165960a1f83cc1480e2be1dd0a0478561314",
-                "reference": "9504165960a1f83cc1480e2be1dd0a0478561314",
+                "url": "https://api.github.com/repos/doctrine/deprecations/zipball/0e2a4f1f8cdfc7a92ec3b01c9334898c806b30de",
+                "reference": "0e2a4f1f8cdfc7a92ec3b01c9334898c806b30de",
                 "shasum": ""
             },
             "require": {
                 "php": "^7.1|^8.0"
             },
             "require-dev": {
-                "doctrine/coding-standard": "^6.0|^7.0|^8.0",
-                "phpunit/phpunit": "^7.0|^8.0|^9.0",
-                "psr/log": "^1.0"
+                "doctrine/coding-standard": "^9",
+                "phpunit/phpunit": "^7.5|^8.5|^9.5",
+                "psr/log": "^1|^2|^3"
             },
             "suggest": {
                 "psr/log": "Allows logging deprecations via PSR-3 logger implementation"
@@ -255,9 +357,9 @@
             "homepage": "https://www.doctrine-project.org/",
             "support": {
                 "issues": "https://github.com/doctrine/deprecations/issues",
-                "source": "https://github.com/doctrine/deprecations/tree/v0.5.3"
+                "source": "https://github.com/doctrine/deprecations/tree/v1.0.0"
             },
-            "time": "2021-03-21T12:59:47+00:00"
+            "time": "2022-05-02T15:47:09+00:00"
         },
         {
             "name": "doctrine/event-manager",
@@ -354,91 +456,32 @@
             "time": "2020-05-29T18:28:51+00:00"
         },
         {
-            "name": "flow-php/array-dot",
+            "name": "flow-php/doctrine-dbal-bulk",
             "version": "1.x-dev",
             "source": {
                 "type": "git",
-                "url": "https://github.com/flow-php/array-dot.git",
-                "reference": "c0688bb9e2c90f343779bc3b1761e11bd26da55f"
+                "url": "https://github.com/flow-php/doctrine-dbal-bulk.git",
+                "reference": "90c1192ae70aecd2e219fb09b58803e09cca8a37"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/array-dot/zipball/c0688bb9e2c90f343779bc3b1761e11bd26da55f",
-                "reference": "c0688bb9e2c90f343779bc3b1761e11bd26da55f",
+                "url": "https://api.github.com/repos/flow-php/doctrine-dbal-bulk/zipball/90c1192ae70aecd2e219fb09b58803e09cca8a37",
+                "reference": "90c1192ae70aecd2e219fb09b58803e09cca8a37",
                 "shasum": ""
             },
             "require": {
-                "php": "~8.1"
-            },
-            "default-branch": true,
-            "type": "library",
-            "autoload": {
-                "files": [
-                    "src/Flow/ArrayDot/array_dot.php"
-                ],
-                "psr-4": {
-                    "Flow\\": [
-                        "src/Flow"
-                    ]
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "PHP ETL - Array Dot fuctions",
-            "keywords": [
-                "array",
-                "dot",
-                "etl",
-                "extract",
-                "filter",
-                "load",
-                "transform"
-            ],
-            "support": {
-                "issues": "https://github.com/flow-php/array-dot/issues",
-                "source": "https://github.com/flow-php/array-dot/tree/1.x"
-            },
-            "time": "2022-04-10T09:46:31+00:00"
-        },
-        {
-            "name": "flow-php/etl",
-            "version": "1.x-dev",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/flow-php/etl.git",
-                "reference": "45780e12e2b7607ab39366eef1704fae005d03cd"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl/zipball/45780e12e2b7607ab39366eef1704fae005d03cd",
-                "reference": "45780e12e2b7607ab39366eef1704fae005d03cd",
-                "shasum": ""
-            },
-            "require": {
-                "ext-json": "*",
-                "ext-mbstring": "*",
-                "flow-php/array-dot": "^1.0@dev",
+                "doctrine/dbal": "^2.12 | ^3.1.4",
                 "php": "~8.1"
             },
             "require-dev": {
-                "jawira/case-converter": "^3.4",
-                "laminas/laminas-hydrator": "^4.0",
-                "laravel/serializable-closure": "^1.1",
-                "symfony/validator": "^5.3"
-            },
-            "suggest": {
-                "jawira/case-converter": "Provides CaseConverter that is required by the EntryNameCaseConverterTransformer",
-                "laminas/laminas-hydrator": "Help converting ObjectEntry into ArrayEntry that can be later unpack into standalone Entries",
-                "ocramius/generated-hydrator": "Provieds generated hydrator that implemenets Laminas\\Hydrator\\HydratorInterface"
+                "ramsey/uuid": "^4.0"
             },
             "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Flow\\": [
-                        "src/Flow"
+                    "Flow\\Doctrine\\Bulk\\": [
+                        "src/Flow/Doctrine/Bulk"
                     ]
                 }
             },
@@ -446,18 +489,19 @@
             "license": [
                 "MIT"
             ],
-            "description": "PHP ETL - Extract Transform Load - Abstraction",
+            "description": "Bulk inserts and updates for Doctrine DBAL",
             "keywords": [
-                "etl",
-                "extract",
-                "load",
-                "transform"
+                "bulk",
+                "dbal",
+                "doctrine",
+                "insert",
+                "upsert"
             ],
             "support": {
-                "issues": "https://github.com/flow-php/etl/issues",
-                "source": "https://github.com/flow-php/etl/tree/1.x"
+                "issues": "https://github.com/flow-php/doctrine-dbal-bulk/issues",
+                "source": "https://github.com/flow-php/doctrine-dbal-bulk/tree/1.x"
             },
-            "time": "2022-04-10T10:14:58+00:00"
+            "time": "2022-05-14T16:27:54+00:00"
         },
         {
             "name": "psr/cache",
@@ -559,56 +603,6 @@
             "time": "2021-07-14T16:46:02+00:00"
         }
     ],
-    "packages-dev": [
-        {
-            "name": "flow-php/doctrine-dbal-bulk",
-            "version": "1.x-dev",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/flow-php/doctrine-dbal-bulk.git",
-                "reference": "28579b10e771cab7cf5e3a27ac516e0ecf9d69ff"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/doctrine-dbal-bulk/zipball/28579b10e771cab7cf5e3a27ac516e0ecf9d69ff",
-                "reference": "28579b10e771cab7cf5e3a27ac516e0ecf9d69ff",
-                "shasum": ""
-            },
-            "require": {
-                "doctrine/dbal": "^2.12 | ^3.1.4",
-                "php": "~8.1"
-            },
-            "require-dev": {
-                "ramsey/uuid": "^4.0"
-            },
-            "default-branch": true,
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Flow\\Doctrine\\Bulk\\": [
-                        "src/Flow/Doctrine/Bulk"
-                    ]
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "Bulk inserts and updates for Doctrine DBAL",
-            "keywords": [
-                "bulk",
-                "dbal",
-                "doctrine",
-                "insert",
-                "upsert"
-            ],
-            "support": {
-                "issues": "https://github.com/flow-php/doctrine-dbal-bulk/issues",
-                "source": "https://github.com/flow-php/doctrine-dbal-bulk/tree/1.x"
-            },
-            "time": "2022-04-10T10:45:39+00:00"
-        }
-    ],
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
@@ -621,5 +615,5 @@
         "php": "~8.1"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.3.0"
 }

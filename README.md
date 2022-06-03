@@ -3,6 +3,13 @@
 [![Supported PHP Version](https://img.shields.io/badge/php-~8.1-8892BF.svg)](https://php.net/)
 ![Tests](https://github.com/flow-php/etl-adapter-doctrine/workflows/Tests/badge.svg?branch=1.x)
 
+## Installation 
+
+```
+composer require flow-php/etl-adapter-doctrine
+composer require flow-php/doctrine-dbal-bulk
+```
+
 ## Description
 
 Adapter for [ETL](https://github.com/flow-php/etl) using bulk operations from [Doctrine Dbal Bulk](https://github.com/flow-php/doctrine-dbal-bulk).

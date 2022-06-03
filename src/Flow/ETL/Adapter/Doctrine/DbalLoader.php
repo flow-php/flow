@@ -128,7 +128,10 @@ final class DbalLoader implements Loader
     private function connection() : Connection
     {
         if ($this->connection === null) {
-            /** @psalm-suppress ArgumentTypeCoercion */
+            /**
+             * @psalm-suppress ArgumentTypeCoercion
+             * @phpstan-ignore-next-line
+             */
             $this->connection = DriverManager::getConnection($this->connectionParams);
         }
 

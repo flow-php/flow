@@ -12,8 +12,8 @@ use Flow\ETL\Adapter\Doctrine\DbalLoader;
 use Flow\ETL\Adapter\Doctrine\Tests\Double\Stub\ArrayExtractor;
 use Flow\ETL\Adapter\Doctrine\Tests\Double\Stub\TransformTestData;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
-use Flow\ETL\ETL;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Flow;
 use Flow\Serializer\CompressingSerializer;
 use Flow\Serializer\NativePHPSerializer;
 
@@ -114,7 +114,7 @@ final class DbalLoaderTest extends IntegrationTestCase
 
         $loader = new DbalLoader($table, $bulkSize = 10, $this->connectionParams());
 
-        ETL::extract(
+        (new Flow())->extract(
             new ArrayExtractor(
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
@@ -143,7 +143,7 @@ final class DbalLoaderTest extends IntegrationTestCase
         $insertLoader = new DbalLoader($table, $bulkSize = 10, $this->connectionParams());
         $updateLoader = new DbalLoader($table, $bulkSize = 10, $this->connectionParams(), ['primary_key_columns' => ['id'], ['update_columns' => ['name']]], 'update');
 
-        ETL::extract(
+        (new Flow())->extract(
             new ArrayExtractor(
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
@@ -154,7 +154,7 @@ final class DbalLoaderTest extends IntegrationTestCase
         )->load($insertLoader)
         ->run();
 
-        ETL::extract(
+        (new Flow())->extract(
             new ArrayExtractor(
                 ['id' => 1, 'name' => 'Changed Name One', 'description' => 'Description One'],
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
@@ -193,7 +193,7 @@ final class DbalLoaderTest extends IntegrationTestCase
 
         $loader = DbalLoader::fromConnection($this->pgsqlDatabaseContext->connection(), $table, $bulkSize = 10, $this->connectionParams());
 
-        ETL::extract(
+        (new Flow())->extract(
             new ArrayExtractor(
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
@@ -225,7 +225,7 @@ final class DbalLoaderTest extends IntegrationTestCase
         $serializer = new CompressingSerializer(new NativePHPSerializer());
         $loaderSerialized = $serializer->serialize(new DbalLoader($table, $bulkSize = 10, $this->connectionParams()));
 
-        ETL::extract(
+        (new Flow())->extract(
             new ArrayExtractor(
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
@@ -251,7 +251,7 @@ final class DbalLoaderTest extends IntegrationTestCase
         ))
             ->setPrimaryKey(['id']));
 
-        ETL::extract(
+        (new Flow())->extract(
             new ArrayExtractor(
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
@@ -277,7 +277,7 @@ final class DbalLoaderTest extends IntegrationTestCase
             ],
         ))
             ->setPrimaryKey(['id']));
-        ETL::extract(
+        (new Flow())->extract(
             new ArrayExtractor(
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
@@ -289,7 +289,7 @@ final class DbalLoaderTest extends IntegrationTestCase
             new DbalLoader($table, $bulkSize = 10, $this->connectionParams())
         )->run();
 
-        ETL::extract(
+        (new Flow())->extract(
             new ArrayExtractor(
                 ['id' => 2, 'name' => 'New Name Two', 'description' => 'New Description Two'],
                 ['id' => 3, 'name' => 'New Name Three', 'description' => 'New Description Three'],
@@ -327,7 +327,7 @@ final class DbalLoaderTest extends IntegrationTestCase
             ->setPrimaryKey(['id'])
         );
 
-        ETL::extract(
+        (new Flow())->extract(
             new ArrayExtractor(
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
@@ -339,7 +339,7 @@ final class DbalLoaderTest extends IntegrationTestCase
             new DbalLoader($table, $bulkSize = 10, $this->connectionParams())
         )->run();
 
-        ETL::extract(
+        (new Flow())->extract(
             new ArrayExtractor(
                 ['id' => 2, 'name' => 'New Name Two', 'description' => 'New Description Two'],
                 ['id' => 3, 'name' => 'New Name Three', 'description' => 'New Description Three'],

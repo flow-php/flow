@@ -14,7 +14,7 @@ use Flow\ETL\Adapter\Doctrine\ParametersSet;
 use Flow\ETL\Adapter\Doctrine\Tests\Double\Stub\ArrayExtractor;
 use Flow\ETL\Adapter\Doctrine\Tests\Double\Stub\TransformTestData;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
-use Flow\ETL\ETL;
+use Flow\ETL\Flow;
 
 final class DbalQueryExtractorTest extends IntegrationTestCase
 {
@@ -30,7 +30,7 @@ final class DbalQueryExtractorTest extends IntegrationTestCase
         ))
             ->setPrimaryKey(['id']));
 
-        ETL::extract(
+        (new Flow())->extract(
             new ArrayExtractor(
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
@@ -42,7 +42,7 @@ final class DbalQueryExtractorTest extends IntegrationTestCase
             DbalLoader::fromConnection($this->pgsqlDatabaseContext->connection(), $table, chunkSize: 10)
         )->run();
 
-        $rows = ETL::extract(
+        $rows = (new Flow())->extract(
             DbalQueryExtractor::single(
                 $this->pgsqlDatabaseContext->connection(),
                 "SELECT * FROM {$table} ORDER BY id"
@@ -71,7 +71,7 @@ final class DbalQueryExtractorTest extends IntegrationTestCase
         ))
             ->setPrimaryKey(['id']));
 
-        ETL::extract(
+        (new Flow())->extract(
             new ArrayExtractor(
                 ['id' => 1, 'name' => 'Name', 'description' => 'Description'],
                 ['id' => 2, 'name' => 'Name', 'description' => 'Description'],
@@ -90,7 +90,7 @@ final class DbalQueryExtractorTest extends IntegrationTestCase
             DbalLoader::fromConnection($this->pgsqlDatabaseContext->connection(), $table, chunkSize: 10)
         )->run();
 
-        $rows = ETL::extract(
+        $rows = (new Flow())->extract(
             new DbalQueryExtractor(
                 $this->pgsqlDatabaseContext->connection(),
                 "SELECT * FROM {$table} ORDER BY id LIMIT :limit OFFSET :offset",
