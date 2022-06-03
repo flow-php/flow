@@ -45,7 +45,7 @@ use Flow\ETL\Rows;
             Row::create(new Row\Entry\StringEntry('name', 'Dawid')),
         )
     )
-    ->load(Text::to($path, true, true))
+    ->load(Text::to($path))
     ->run();
 ```
 
