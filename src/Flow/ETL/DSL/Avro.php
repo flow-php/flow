@@ -6,10 +6,12 @@ namespace Flow\ETL\DSL;
 
 use Flow\ETL\Adapter\Avro\FlixTech\AvroExtractor;
 use Flow\ETL\Adapter\Avro\FlixTech\AvroLoader;
-use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\MissingDependencyException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Loader;
 use Flow\ETL\Row\Schema;
+use Flow\ETL\Stream\FileStream;
+use Flow\ETL\Stream\LocalFile;
 
 /**
  * @infection-ignore-all
@@ -17,103 +19,64 @@ use Flow\ETL\Row\Schema;
 class Avro
 {
     /**
-     * @param string $file_name
+     * @param array<FileStream>|FileStream|string $uri
      * @param int $rows_in_batch
      * @param string $row_entry_name
      *
-     * @throws InvalidArgumentException
+     * @throws MissingDependencyException
      *
      * @return Extractor
      */
-    final public static function from_file(
-        string $file_name,
+    final public static function from(
+        FileStream|string|array $uri,
         int $rows_in_batch = 1000,
         string $row_entry_name = 'row'
     ) : Extractor {
         if (!\class_exists('AvroDataIO')) {
-            throw new InvalidArgumentException("Missing Flix Tech Avro dependency, please run 'composer require flix-tech/avro-php'");
+            throw new MissingDependencyException('Flix Tech Avro', 'flix-tech/avro-php');
         }
 
-        if (!\file_exists($file_name)) {
-            throw new InvalidArgumentException("File {$file_name} not found.'");
+        if (\is_array($uri)) {
+            /** @var array<Extractor> $extractors */
+            $extractors = [];
+
+            foreach ($uri as $fileStream) {
+                $extractors[] = new AvroExtractor(
+                    $fileStream,
+                    $rows_in_batch,
+                    $row_entry_name
+                );
+            }
+
+            return new Extractor\ChainExtractor(...$extractors);
         }
 
-        return new AvroExtractor($file_name, $rows_in_batch, $row_entry_name);
-    }
-
-    /**
-     * @param string $folder_path
-     * @param int $rows_in_batch
-     * @param string $row_entry_name
-     *
-     * @throws InvalidArgumentException
-     *
-     * @return Extractor
-     */
-    final public static function from_directory(
-        string $folder_path,
-        int $rows_in_batch = 1000,
-        string $row_entry_name = 'row',
-    ) : Extractor {
-        if (!\class_exists('AvroDataIO')) {
-            throw new InvalidArgumentException("Missing Flix Tech Avro dependency, please run 'composer require flix-tech/avro-php'");
-        }
-
-        if (!\file_exists($folder_path) || !\is_dir($folder_path)) {
-            throw new InvalidArgumentException("Directory {$folder_path} not found.'");
-        }
-
-        $directoryIterator = new \RecursiveDirectoryIterator($folder_path);
-        $directoryIterator->setFlags(\RecursiveDirectoryIterator::SKIP_DOTS);
-
-        $regexIterator = new \RegexIterator(
-            new \RecursiveIteratorIterator($directoryIterator),
-            '/^.+\.avro$/i',
-            \RecursiveRegexIterator::GET_MATCH
+        return new AvroExtractor(
+            \is_string($uri) ? new LocalFile($uri) : $uri,
+            $rows_in_batch,
+            $row_entry_name
         );
-
-        $extractors = [];
-
-        /** @var array<string> $filePath */
-        foreach ($regexIterator as $filePath) {
-            /** @phpstan-ignore-next-line */
-            $extractors[] = new AvroExtractor(\current($filePath), $rows_in_batch, $row_entry_name);
-        }
-
-        return new Extractor\ChainExtractor(...$extractors);
     }
 
     /**
-     * @param string $file_name
+     * @param FileStream|string $uri
      * @param null|Schema $schema
+     * @param bool $safe_mode
      *
-     * @throws InvalidArgumentException
+     * @throws MissingDependencyException
      *
      * @return Loader
      */
-    final public static function to_file(string $file_name, Schema $schema = null) : Loader
+    final public static function to(FileStream|string $uri, Schema $schema = null, bool $safe_mode = false) : Loader
     {
         if (!\class_exists('AvroDataIO')) {
-            throw new InvalidArgumentException("Missing Flix Tech Avro dependency, please run 'composer require flix-tech/avro-php'");
+            throw new MissingDependencyException('Flix Tech Avro', 'flix-tech/avro-php');
         }
 
-        return new AvroLoader($file_name, false);
-    }
-
-    /**
-     * @param string $file_name
-     * @param null|Schema $schema
-     *
-     * @throws InvalidArgumentException
-     *
-     * @return Loader
-     */
-    final public static function to_directory(string $file_name, Schema $schema = null) : Loader
-    {
-        if (!\class_exists('AvroDataIO')) {
-            throw new InvalidArgumentException("Missing Flix Tech Avro dependency, please run 'composer require flix-tech/avro-php'");
-        }
-
-        return new AvroLoader($file_name, true, $schema);
+        return new AvroLoader(
+            \is_string($uri) ? new LocalFile($uri) : $uri,
+            $safe_mode,
+            $schema
+        );
     }
 }

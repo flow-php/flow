@@ -22,7 +22,7 @@ composer require flix-tech/avro-php
 <?php
 
 (new Flow())
-    ->read(Avro::from_file($path))
+    ->read(Avro::from($path))
     ->transform(Transform::array_unpack('row'))
     ->drop('row')
     ->fetch()
@@ -52,7 +52,7 @@ composer require flix-tech/avro-php
             }, \range(1, 100))
         )
     ))
-    ->write(Avro::to_file($path))
+    ->write(Avro::to($path))
     ->run();
 ```
 

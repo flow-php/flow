@@ -11,9 +11,12 @@ use Flow\ETL\Row\Entry\DateTimeEntry;
 use Flow\ETL\Row\Entry\TypedCollection\ObjectType;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Rows;
+use Flow\ETL\Stream\FileStream;
+use Flow\ETL\Stream\Handler;
+use Flow\ETL\Stream\Mode;
 
 /**
- * @implements Loader<array{path: string, safe_mode: bool, schema: ?Schema}>
+ * @implements Loader<array{stream: FileStream, safe_mode: bool, schema: ?Schema}>
  */
 final class AvroLoader implements Closure, Loader
 {
@@ -21,17 +24,20 @@ final class AvroLoader implements Closure, Loader
 
     private ?Schema $inferredSchema = null;
 
+    private Handler $handler;
+
     public function __construct(
-        private readonly string $path,
+        private readonly FileStream $stream,
         private readonly bool $safeMode = true,
         private readonly ?Schema $schema = null
     ) {
+        $this->handler = $this->safeMode ? Handler::directory('avro') : Handler::file();
     }
 
     public function __serialize() : array
     {
         return [
-            'path' => $this->path,
+            'stream' => $this->stream,
             'safe_mode' => $this->safeMode,
             'schema' => $this->schema,
         ];
@@ -39,9 +45,10 @@ final class AvroLoader implements Closure, Loader
 
     public function __unserialize(array $data) : void
     {
-        $this->path = $data['path'];
+        $this->stream = $data['stream'];
         $this->safeMode = $data['safe_mode'];
         $this->schema = $data['schema'];
+        $this->safeMode ? Handler::directory('avro') : Handler::file();
     }
 
     public function load(Rows $rows) : void
@@ -88,15 +95,14 @@ final class AvroLoader implements Closure, Loader
             return $this->writer;
         }
 
-        $path = ($this->safeMode)
-            ? (\rtrim($this->path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . \uniqid() . '.avro')
-            : $this->path;
+        $schema = \AvroSchema::parse($this->schema());
 
-        if ($this->safeMode && !\file_exists(\rtrim($this->path, DIRECTORY_SEPARATOR))) {
-            \mkdir(\rtrim($this->path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR);
-        }
-
-        $this->writer = \AvroDataIO::open_file($path, \AvroFile::WRITE_MODE, $this->schema());
+        $this->writer =  new \AvroDataIOWriter(
+            new AvroResource($this->handler->open($this->stream, Mode::WRITE)),
+            new \AvroIODatumWriter($schema),
+            $schema,
+            'null'
+        );
 
         return $this->writer;
     }

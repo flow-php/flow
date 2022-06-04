@@ -11,6 +11,7 @@ use Flow\ETL\DSL\Transform;
 use Flow\ETL\Flow;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
+use Flow\ETL\Stream\LocalFile;
 use PHPUnit\Framework\TestCase;
 
 final class AvroTest extends TestCase
@@ -37,7 +38,7 @@ final class AvroTest extends TestCase
                     }, \range(1, 100))
                 )
             ))
-            ->write(Avro::to_file($path))
+            ->write(Avro::to($path))
             ->run();
 
         $this->assertFileExists($path);
@@ -45,7 +46,7 @@ final class AvroTest extends TestCase
         $this->assertEquals(
             $rows,
             (new Flow())
-                ->read(Avro::from_file($path))
+                ->read(Avro::from($path))
                 ->transform(Transform::array_unpack('row'))
                 ->drop('row')
                 ->fetch()
@@ -56,7 +57,7 @@ final class AvroTest extends TestCase
 
     public function test_safe_writing_and_reading_avro_with_all_supported_types() : void
     {
-        $this->removeFile($path = \sys_get_temp_dir() . '/directory.avro');
+        $this->cleanDirectory($path = \sys_get_temp_dir() . '/directory.avro');
 
         (new Flow)
             ->read(From::rows(
@@ -76,15 +77,20 @@ final class AvroTest extends TestCase
                     }, \range(1, 100))
                 )
             ))
-            ->write(Avro::to_directory($path))
+            ->write(Avro::to($path, safe_mode: true))
             ->run();
+
+        $paths = \array_map(
+            fn (string $fileName) : LocalFile => new LocalFile($path . '/' . $fileName),
+            \array_values(\array_diff(\scandir($path), ['..', '.']))
+        );
 
         $this->assertFileExists($path);
 
         $this->assertEquals(
             $rows,
             (new Flow())
-                ->read(Avro::from_directory($path))
+                ->read(Avro::from($paths))
                 ->transform(Transform::array_unpack('row'))
                 ->drop('row')
                 ->fetch()

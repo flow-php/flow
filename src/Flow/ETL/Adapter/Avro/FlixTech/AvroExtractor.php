@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Avro\FlixTech;
 
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
+use Flow\ETL\Stream\FileStream;
+use Flow\ETL\Stream\Handler;
+use Flow\ETL\Stream\Mode;
 
 /**
  * @psalm-immutable
@@ -17,18 +19,14 @@ final class AvroExtractor implements Extractor
     private ?\AvroDataIOReader $reader = null;
 
     /**
-     * @param string $path
+     * @param FileStream $stream
      * @param string $rowEntryName
      */
     public function __construct(
-        private readonly string $path,
+        private readonly FileStream $stream,
         private readonly int $rowsInBach = 1000,
         private readonly string $rowEntryName = 'row'
     ) {
-        /** @psalm-suppress ImpureFunctionCall */
-        if (!\file_exists($path)) {
-            throw new InvalidArgumentException("Avro file not found in path: {$path}");
-        }
     }
 
     /**
@@ -71,10 +69,11 @@ final class AvroExtractor implements Extractor
             return $this->reader;
         }
 
-        /** @phpstan-ignore-next-line */
-        $this->reader = \AvroDataIO::open_file($this->path);
+        $this->reader = new \AvroDataIOReader(
+            new AvroResource(Handler::file()->open($this->stream, Mode::READ)),
+            new \AvroIODatumReader(null, null),
+        );
 
-        /** @phpstan-ignore-next-line */
         return $this->reader;
     }
 }
