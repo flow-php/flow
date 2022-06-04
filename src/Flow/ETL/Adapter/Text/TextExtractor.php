@@ -45,7 +45,7 @@ final class TextExtractor implements Extractor
         }
 
         while ($rowData !== false) {
-            $rows[] = Row::create(new Row\Entry\StringEntry($this->rowEntryName, $rowData));
+            $rows[] = Row::create(new Row\Entry\StringEntry($this->rowEntryName, \rtrim($rowData)));
 
             if (\count($rows) >= $this->rowsInBatch) {
                 yield new Rows(...$rows);
