@@ -5,6 +5,7 @@
 - [867681](https://github.com/flow-php/etl-adapter-avro/commit/86768169151d7d667e02e344327b6923de33ac2c) - **Initial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [ebb301](https://github.com/flow-php/etl-adapter-avro/commit/ebb3012ac8675e37b98c20800505686d3bc5d082) - **stream reading mode** - [@norberttech](https://github.com/norberttech)
 - [00122b](https://github.com/flow-php/etl-adapter-avro/commit/00122b3b1501c7b1859eca612e91af65346ce08e) - **BC break** - [@norberttech](https://github.com/norberttech)
 
 ### Updated
