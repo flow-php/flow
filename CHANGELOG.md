@@ -1,6 +1,7 @@
-## [Unreleased] - 2022-06-03
+## [Unreleased] - 2022-06-04
 
 ### Added
+- [#250](https://github.com/flow-php/etl/pull/250) - **binary flag to stream read mode** - [@norberttech](https://github.com/norberttech)
 - [09c246](https://github.com/flow-php/etl/commit/09c24605a185fbe89cc4a670764be2256b4b96cb) - **banner** - [@norberttech](https://github.com/norberttech)
 - [#246](https://github.com/flow-php/etl/pull/246) - **Added First aggregation** - [@norberttech](https://github.com/norberttech)
 - [#246](https://github.com/flow-php/etl/pull/246) - **Added Last aggregation** - [@norberttech](https://github.com/norberttech)
