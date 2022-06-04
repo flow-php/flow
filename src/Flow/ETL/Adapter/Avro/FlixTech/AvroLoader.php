@@ -98,7 +98,7 @@ final class AvroLoader implements Closure, Loader
         $schema = \AvroSchema::parse($this->schema());
 
         $this->writer =  new \AvroDataIOWriter(
-            new AvroResource($this->handler->open($this->stream, Mode::WRITE)),
+            new AvroResource($this->handler->open($this->stream, Mode::WRITE_BINARY)),
             new \AvroIODatumWriter($schema),
             $schema,
             'null'

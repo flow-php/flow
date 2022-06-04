@@ -70,7 +70,7 @@ final class AvroExtractor implements Extractor
         }
 
         $this->reader = new \AvroDataIOReader(
-            new AvroResource(Handler::file()->open($this->stream, Mode::READ)),
+            new AvroResource(Handler::file()->open($this->stream, Mode::READ_BINARY)),
             new \AvroIODatumReader(null, null),
         );
 
