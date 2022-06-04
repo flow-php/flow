@@ -1,6 +1,7 @@
-## [Unreleased] - 2022-05-18
+## [Unreleased] - 2022-06-04
 
 ### Changed
+- [#1](https://github.com/flow-php/etl-adapter-avro/pull/1) - **reading/writing into path now allows flow streams** - [@norberttech](https://github.com/norberttech)
 - [867681](https://github.com/flow-php/etl-adapter-avro/commit/86768169151d7d667e02e344327b6923de33ac2c) - **Initial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
