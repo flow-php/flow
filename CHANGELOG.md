@@ -1,6 +1,7 @@
-## [Unreleased] - 2022-06-03
+## [Unreleased] - 2022-06-04
 
 ### Changed
+- [#1](https://github.com/flow-php/etl-adapter-text/pull/1) - **rtrim row values in extractor** - [@norberttech](https://github.com/norberttech)
 - [906337](https://github.com/flow-php/etl-adapter-text/commit/90633782afaf670796f803efe76bca7172d3857f) - **Initial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Updated
