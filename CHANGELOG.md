@@ -180,6 +180,7 @@
 - [e48062](https://github.com/flow-php/etl/commit/e48062890cd84e655e1162305086f67148347b83) - **Intial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#254](https://github.com/flow-php/etl/pull/254) - **ascii table rendering when working with multibyte strings** - [@norberttech](https://github.com/norberttech)
 - [#253](https://github.com/flow-php/etl/pull/253) - **expanding lists, not only arrays** - [@norberttech](https://github.com/norberttech)
 - [#252](https://github.com/flow-php/etl/pull/252) - **Aggregations facade** - [@norberttech](https://github.com/norberttech)
 - [#244](https://github.com/flow-php/etl/pull/244) - **Stream Handler behavior when working with local files** - [@norberttech](https://github.com/norberttech)
