@@ -172,7 +172,11 @@ final class ASCIITable
         if (isset($array[0])) {
             foreach (\array_keys($array[0]) as $col) {
                 $col = (string) $col;
-                $length = \max(\max(\array_map([$this, 'len'], $this->arrCol($array, $col))), self::len($col));
+                $length = \max(
+                    \max(...\array_map([$this, 'len'], $this->arrCol($array, $col))),
+                    self::len($col)
+                );
+
                 $this->colWidths[$col] = ($truncate === 0)
                     ? $length
                     : \min($length, $truncate);
@@ -216,17 +220,17 @@ final class ASCIITable
             $alignment = STR_PAD_LEFT;
 
             if ($trucate === 0) {
-                $row .= \str_pad($col, $this->colWidths[$col], ' ', $alignment);
+                $row .= $this->mb_str_pad($col, $this->colWidths[$col], ' ', $alignment);
             } else {
                 if (self::len($col) > $trucate) {
-                    $row .= \str_pad(
+                    $row .= $this->mb_str_pad(
                         self::substr($col, 0, $trucate - 3) . '...',
                         $this->colWidths[$col],
                         ' ',
                         $alignment
                     );
                 } else {
-                    $row .= \str_pad($col, $this->colWidths[$col], ' ', $alignment);
+                    $row .= $this->mb_str_pad($col, $this->colWidths[$col], ' ', $alignment);
                 }
             }
 
@@ -261,17 +265,17 @@ final class ASCIITable
                 $alignment = STR_PAD_LEFT;
 
                 if ($trucate === 0) {
-                    $rows .= \str_pad($value, $this->colWidths[$col], ' ', $alignment);
+                    $rows .= $this->mb_str_pad($value, $this->colWidths[$col], ' ', $alignment);
                 } else {
                     if (self::len($value) > $trucate) {
-                        $rows .= \str_pad(
+                        $rows .= $this->mb_str_pad(
                             self::substr($value, 0, $trucate - 3) . '...',
                             $this->colWidths[$col],
                             ' ',
                             $alignment
                         );
                     } else {
-                        $rows .= \str_pad($value, $this->colWidths[$col], ' ', $alignment);
+                        $rows .= $this->mb_str_pad($value, $this->colWidths[$col], ' ', $alignment);
                     }
                 }
 
@@ -285,6 +289,38 @@ final class ASCIITable
 
         // Return the row
         return $rows;
+    }
+
+    /**
+     * Solution and all credits goes to https://stackoverflow.com/a/58272671.
+     *
+     * @param string $input
+     * @param int $length
+     * @param string $padding
+     * @param int $padType
+     * @param string $encoding
+     *
+     * @return string
+     */
+    private function mb_str_pad(string $input, int $length, string $padding = ' ', int $padType = STR_PAD_RIGHT, string $encoding = 'UTF-8') : string
+    {
+        $result = $input;
+
+        if (($paddingRequired = $length - \mb_strlen($input, $encoding)) > 0) {
+            switch ($padType) {
+                case STR_PAD_LEFT:
+                    return \mb_substr(\str_repeat($padding, $paddingRequired), 0, $paddingRequired, $encoding) . $input;
+                case STR_PAD_RIGHT:
+                    return $input . \mb_substr(\str_repeat($padding, $paddingRequired), 0, $paddingRequired, $encoding);
+                case STR_PAD_BOTH:
+                    $leftPaddingLength = (int) \floor($paddingRequired / 2);
+                    $rightPaddingLength = $paddingRequired - $leftPaddingLength;
+
+                    return \mb_substr(\str_repeat($padding, $leftPaddingLength), 0, $leftPaddingLength, $encoding) . $input . \mb_substr(\str_repeat($padding, $rightPaddingLength), 0, $rightPaddingLength, $encoding);
+            }
+        }
+
+        return $result;
     }
 
     /**
