@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-06-04
+## [Unreleased] - 2022-06-05
 
 ### Added
 - [#250](https://github.com/flow-php/etl/pull/250) - **binary flag to stream read mode** - [@norberttech](https://github.com/norberttech)
@@ -132,6 +132,7 @@
 - [856870](https://github.com/flow-php/etl/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#251](https://github.com/flow-php/etl/pull/251) - **Allowed to use more advanced callbacks in call user function transformer** - [@norberttech](https://github.com/norberttech)
 - [#236](https://github.com/flow-php/etl/pull/236) - **Moved default entries metadata to dedicated class** - [@norberttech](https://github.com/norberttech)
 - [#232](https://github.com/flow-php/etl/pull/232) - **Native entry factory can now recognize json object** - [@norberttech](https://github.com/norberttech)
 - [#232](https://github.com/flow-php/etl/pull/232) - **Native entry factory will detect and create list of DateTimeInterface** - [@norberttech](https://github.com/norberttech)
