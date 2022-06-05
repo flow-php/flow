@@ -157,7 +157,7 @@ class Transform
      */
     final public static function array_convert_keys(string $array_column, string $style, ?Schema $schema = null) : Transformer
     {
-        if (!\class_exists(\Jawira\CaseConverter\Convert::class)) {
+        if (!\class_exists('\Jawira\CaseConverter\Convert')) {
             throw new RuntimeException("Jawira\CaseConverter\Convert class not found, please require using 'composer require jawira/case-converter'");
         }
 
@@ -273,7 +273,7 @@ class Transform
 
     final public static function convert_name(string $style) : Transformer
     {
-        if (!\class_exists(\Jawira\CaseConverter\Convert::class)) {
+        if (!\class_exists('\Jawira\CaseConverter\Convert')) {
             throw new RuntimeException("Jawira\CaseConverter\Convert class not found, please require using 'composer require jawira/case-converter'");
         }
 
@@ -299,10 +299,12 @@ class Transform
         return new Transformer\DynamicEntryTransformer($generator);
     }
 
-    /**
-     * @param mixed $value
-     */
-    final public static function filter_equals(string $entry, $value) : Transformer
+    final public static function explode(string $entry, string $separator) : Transformer
+    {
+        return self::user_function($entry, 'explode', ['separator' => $separator], 'string');
+    }
+
+    final public static function filter_equals(string $entry, mixed $value) : Transformer
     {
         return new FilterRowsTransformer(new EntryEqualsTo($entry, $value));
     }
@@ -317,10 +319,7 @@ class Transform
         return new FilterRowsTransformer(new ValidValue($entry, new ValidValue\SymfonyValidator($constraints)));
     }
 
-    /**
-     * @param mixed $value
-     */
-    final public static function filter_not_equals(string $entry, $value) : Transformer
+    final public static function filter_not_equals(string $entry, mixed $value) : Transformer
     {
         return new FilterRowsTransformer(new Opposite(new EntryEqualsTo($entry, $value)));
     }
@@ -360,29 +359,29 @@ class Transform
         return self::user_function([$entry], 'floor');
     }
 
-    final public static function group_to_array(string $groupByEntry, string $new_entry_name) : Transformer
+    final public static function group_to_array(string $group_by_entry, string $new_entry_name) : Transformer
     {
-        return new Transformer\GroupToArrayTransformer($groupByEntry, $new_entry_name);
+        return new Transformer\GroupToArrayTransformer($group_by_entry, $new_entry_name);
     }
 
     /**
-     * @param array<string> $entries
+     * @param array<string>|string $entry
      * @param null|string $algorithm
      *
      * @throws \Flow\ETL\Exception\InvalidArgumentException
      */
-    final public static function hash(array $entries, string $algorithm = null, string $new_entry_name = 'hash') : Transformer
+    final public static function hash(string|array $entry, string $algorithm = null, string $new_entry_name = 'hash') : Transformer
     {
         return new Transformer\HashTransformer(
-            $entries,
+            \is_string($entry) ? [$entry] : $entry,
             $algorithm ?? (PHP_VERSION_ID >= 80100 ? 'murmur3f' : 'sha256'),
             $new_entry_name
         );
     }
 
-    final public static function keep(string ...$entries) : Transformer
+    final public static function keep(string ...$entry) : Transformer
     {
-        return new KeepEntriesTransformer(...$entries);
+        return new KeepEntriesTransformer(...$entry);
     }
 
     final public static function ltrim(string $entry, string $characters = " \n\r\t\v\x00") : Transformer
@@ -411,14 +410,14 @@ class Transform
     }
 
     /**
-     * @param array<string> $entries
+     * @param array<string>|string $entry
      *
      * @throws \Flow\ETL\Exception\InvalidArgumentException
      */
-    final public static function murmur3(array $entries, string $new_entry_name = 'hash') : Transformer
+    final public static function murmur3(string|array $entry, string $new_entry_name = 'hash') : Transformer
     {
         return new Transformer\HashTransformer(
-            $entries,
+            \is_string($entry) ? [$entry] : $entry,
             'murmur3f',
             $new_entry_name
         );
@@ -460,9 +459,9 @@ class Transform
         return self::user_function([$entry], 'preg_replace', ['pattern' => $pattern, 'replacement' => $replacement, 'limit' => $limit], 'subject');
     }
 
-    final public static function remove(string ...$entries) : Transformer
+    final public static function remove(string ...$entry) : Transformer
     {
-        return new Transformer\RemoveEntriesTransformer(...$entries);
+        return new Transformer\RemoveEntriesTransformer(...$entry);
     }
 
     final public static function rename(string $from, string $to) : Transformer
@@ -472,23 +471,23 @@ class Transform
 
     final public static function round(string $entry, int $precision = 0, int $mode = \PHP_ROUND_HALF_UP) : Transformer
     {
-        return self::user_function([$entry], 'round', [$precision, $mode]);
+        return self::user_function($entry, 'round', [$precision, $mode]);
     }
 
     final public static function rtrim(string $entry, string $characters = " \n\r\t\v\x00") : Transformer
     {
-        return self::user_function([$entry], 'rtrim', [$characters]);
+        return self::user_function($entry, 'rtrim', [$characters]);
     }
 
     /**
-     * @param array<string> $entries
+     * @param array<string>|string $entry
      *
      * @throws \Flow\ETL\Exception\InvalidArgumentException
      */
-    final public static function sha256(array $entries, string $new_entry_name = 'hash') : Transformer
+    final public static function sha256(string|array $entry, string $new_entry_name = 'hash') : Transformer
     {
         return new Transformer\HashTransformer(
-            $entries,
+            \is_string($entry) ? [$entry] : $entry,
             'sha256',
             $new_entry_name
         );
@@ -496,7 +495,7 @@ class Transform
 
     final public static function str_pad(string $entry, int $length, string $pad_string = ' ', int $type = STR_PAD_RIGHT) : Transformer
     {
-        return self::user_function([$entry], 'str_pad', [$length, $pad_string, $type]);
+        return self::user_function($entry, 'str_pad', [$length, $pad_string, $type]);
     }
 
     /**
@@ -508,7 +507,7 @@ class Transform
      */
     final public static function str_replace(string $entry, string|array $search, string|array $replace) : Transformer
     {
-        return self::user_function([$entry], 'str_replace', ['search' => $search, 'replace' => $replace], 'subject');
+        return self::user_function($entry, 'str_replace', ['search' => $search, 'replace' => $replace], 'subject');
     }
 
     /**
@@ -549,14 +548,14 @@ class Transform
         return new Transformer\StringFormatTransformer($entry, '%s' . \str_replace('%', '%%', $suffix));
     }
 
-    final public static function to_array(string ...$entries) : Transformer
+    final public static function to_array(string ...$entry) : Transformer
     {
-        return new CastTransformer(Transformer\Cast\CastToArray::nullable($entries));
+        return new CastTransformer(Transformer\Cast\CastToArray::nullable($entry));
     }
 
-    final public static function to_array_from_json(string ...$entries) : Transformer
+    final public static function to_array_from_json(string ...$entry) : Transformer
     {
-        return new CastTransformer(CastJsonToArray::nullable($entries));
+        return new CastTransformer(CastJsonToArray::nullable($entry));
     }
 
     final public static function to_array_from_object(string $entry) : Transformer
@@ -569,19 +568,19 @@ class Transform
     }
 
     /**
-     * @param string[] $entries
+     * @param array<string>|string $entry
      */
-    final public static function to_datetime(array $entries, ?string $timezone = null, ?string $to_timezone = null) : Transformer
+    final public static function to_datetime(string|array $entry, ?string $timezone = null, ?string $to_timezone = null) : Transformer
     {
-        return new CastTransformer(CastToDateTime::nullable($entries, $timezone, $to_timezone));
+        return new CastTransformer(CastToDateTime::nullable(\is_string($entry) ? [$entry] : $entry, $timezone, $to_timezone));
     }
 
     /**
-     * @param array<string> $entries
+     * @param array<string>|string $entry
      */
-    final public static function to_datetime_from_string(array $entries, ?string $tz = null, ?string $to_tz = null) : Transformer
+    final public static function to_datetime_from_string(string|array $entry, ?string $tz = null, ?string $to_tz = null) : Transformer
     {
-        return new CastTransformer(new Transformer\Cast\CastEntries($entries, new StringToDateTimeEntryCaster($tz, $to_tz), true));
+        return new CastTransformer(new Transformer\Cast\CastEntries(\is_string($entry) ? [$entry] : $entry, new StringToDateTimeEntryCaster($tz, $to_tz), true));
     }
 
     final public static function to_integer(string ...$entries) : Transformer
@@ -692,19 +691,19 @@ class Transform
 
     final public static function trim(string $entry, string $characters = " \n\r\t\v\x00") : Transformer
     {
-        return self::user_function([$entry], 'trim', [$characters]);
+        return self::user_function($entry, 'trim', [$characters]);
     }
 
     /**
-     * @param array<string> $entries
+     * @param array<string>|string $entry
      * @param callable $callback
      * @param array<mixed> $extra_arguments
      * @param null|string $value_argument_name - when used, row value is passed to callback function under argument with given name
      *
      * @return Transformer
      */
-    final public static function user_function(array $entries, callable $callback, array $extra_arguments = [], string $value_argument_name = null) : Transformer
+    final public static function user_function(array|string $entry, callable $callback, array $extra_arguments = [], string $value_argument_name = null) : Transformer
     {
-        return new Transformer\CallUserFunctionTransformer($entries, $callback, $extra_arguments, $value_argument_name);
+        return new Transformer\CallUserFunctionTransformer(\is_string($entry) ? [$entry] : $entry, $callback, $extra_arguments, $value_argument_name);
     }
 }
