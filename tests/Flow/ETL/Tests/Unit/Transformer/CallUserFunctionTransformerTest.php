@@ -70,6 +70,25 @@ final class CallUserFunctionTransformerTest extends TestCase
         ), $rows);
     }
 
+    public function test_preg_replace_callback() : void
+    {
+        $callbackTransformer = Transform::preg_replace('string', '/^\[[0-9]+\][[0-9]+\]/', '');
+
+        $rows = $callbackTransformer->transform(
+            new Rows(
+                Row::create(
+                    new Entry\StringEntry('string', '[90321][90346]/Frodo...')
+                )
+            )
+        );
+
+        $this->assertEquals(new Rows(
+            Row::create(
+                new Entry\StringEntry('string', '/Frodo...')
+            )
+        ), $rows);
+    }
+
     public function test_round() : void
     {
         $transformer = Transform::round('float', 2, \PHP_ROUND_HALF_DOWN);
@@ -128,6 +147,25 @@ final class CallUserFunctionTransformerTest extends TestCase
         $this->assertEquals(new Rows(
             Row::create(
                 new Entry\StringEntry('string', '----N')
+            )
+        ), $rows);
+    }
+
+    public function test_str_replace_callback() : void
+    {
+        $callbackTransformer = Transform::str_replace('string', 'thing', '');
+
+        $rows = $callbackTransformer->transform(
+            new Rows(
+                Row::create(
+                    new Entry\StringEntry('string', 'Something')
+                )
+            )
+        );
+
+        $this->assertEquals(new Rows(
+            Row::create(
+                new Entry\StringEntry('string', 'Some')
             )
         ), $rows);
     }

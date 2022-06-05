@@ -447,6 +447,19 @@ class Transform
         return new Transformer\StringFormatTransformer($entry, \str_replace('%', '%%', $prefix) . '%s');
     }
 
+    /**
+     * @param string $entry
+     * @param array<string>|string $pattern
+     * @param array<string>|string $replacement
+     * @param int $limit
+     *
+     * @return Transformer
+     */
+    final public static function preg_replace(string $entry, string|array $pattern, string|array $replacement, int $limit = -1) : Transformer
+    {
+        return self::user_function([$entry], 'preg_replace', ['pattern' => $pattern, 'replacement' => $replacement, 'limit' => $limit], 'subject');
+    }
+
     final public static function remove(string ...$entries) : Transformer
     {
         return new Transformer\RemoveEntriesTransformer(...$entries);
@@ -484,6 +497,18 @@ class Transform
     final public static function str_pad(string $entry, int $length, string $pad_string = ' ', int $type = STR_PAD_RIGHT) : Transformer
     {
         return self::user_function([$entry], 'str_pad', [$length, $pad_string, $type]);
+    }
+
+    /**
+     * @param string $entry
+     * @param array<string>|string $search
+     * @param array<string>|string $replace
+     *
+     * @return Transformer
+     */
+    final public static function str_replace(string $entry, string|array $search, string|array $replace) : Transformer
+    {
+        return self::user_function([$entry], 'str_replace', ['search' => $search, 'replace' => $replace], 'subject');
     }
 
     /**
@@ -674,11 +699,12 @@ class Transform
      * @param array<string> $entries
      * @param callable $callback
      * @param array<mixed> $extra_arguments
+     * @param null|string $value_argument_name - when used, row value is passed to callback function under argument with given name
      *
      * @return Transformer
      */
-    final public static function user_function(array $entries, callable $callback, array $extra_arguments = []) : Transformer
+    final public static function user_function(array $entries, callable $callback, array $extra_arguments = [], string $value_argument_name = null) : Transformer
     {
-        return new Transformer\CallUserFunctionTransformer($entries, $callback, $extra_arguments);
+        return new Transformer\CallUserFunctionTransformer($entries, $callback, $extra_arguments, $value_argument_name);
     }
 }

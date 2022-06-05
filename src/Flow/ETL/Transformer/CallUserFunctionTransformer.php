@@ -14,7 +14,13 @@ use Flow\ETL\Transformer;
 use Laravel\SerializableClosure\SerializableClosure;
 
 /**
- * @implements Transformer<array{entries: array<string>, callback: callable, extra_arguments: array<mixed>, entry_factory: EntryFactory}>
+ * @implements Transformer<array{
+ *     entries: array<string>,
+ *     callback: callable,
+ *     extra_arguments: array<mixed>,
+ *     value_argument_name: ?string,
+ *     entry_factory: EntryFactory
+ *  }>
  * @psalm-immutable
  */
 final class CallUserFunctionTransformer implements Transformer
@@ -27,12 +33,16 @@ final class CallUserFunctionTransformer implements Transformer
 
     /**
      * @param array<string> $entries
+     * @param callable $callback
      * @param array<mixed> $extraArguments
+     * @param null|string $valueArgumentName
+     * @param EntryFactory $entryFactory
      */
     public function __construct(
         private readonly array $entries,
         callable $callback,
         private readonly array $extraArguments = [],
+        private readonly ?string $valueArgumentName = null,
         private readonly EntryFactory $entryFactory = new NativeEntryFactory()
     ) {
         $this->callback = $callback;
@@ -49,6 +59,7 @@ final class CallUserFunctionTransformer implements Transformer
             'callback' => $this->callback instanceof \Closure ? new SerializableClosure(\Closure::fromCallable($this->callback)) : $this->callback,
             'extra_arguments' => $this->extraArguments,
             'entry_factory' => $this->entryFactory,
+            'value_argument_name' => $this->valueArgumentName,
         ];
     }
 
@@ -63,6 +74,7 @@ final class CallUserFunctionTransformer implements Transformer
         $this->callback = $data['callback'] instanceof SerializableClosure ? $data['callback']->getClosure() : $data['callback'];
         $this->extraArguments = $data['extra_arguments'];
         $this->entryFactory = $data['entry_factory'];
+        $this->valueArgumentName = $data['value_argument_name'];
     }
 
     public function transform(Rows $rows) : Rows
@@ -77,7 +89,15 @@ final class CallUserFunctionTransformer implements Transformer
                 if (\in_array($entry->name(), $this->entries, true)) {
                     $entry = $this->entryFactory->create(
                         $entry->name(),
-                        \call_user_func($this->callback, ...\array_merge([$entry->value()], $this->extraArguments))
+                        \call_user_func(
+                            $this->callback,
+                            ...\array_merge(
+                                $this->valueArgumentName
+                                    ? [$this->valueArgumentName => $entry->value()]
+                                    : [$entry->value()],
+                                $this->extraArguments
+                            )
+                        )
                     );
                 }
 
