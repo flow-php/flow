@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\Transformer;
 use Flow\ETL\DSL\Transform;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
+use Flow\ETL\Row\Entry\TypedCollection\ScalarType;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer\ArrayUnpackTransformer;
 use Flow\ETL\Transformer\RemoveEntriesTransformer;
@@ -131,6 +132,31 @@ final class ArrayExpandTransformerTest extends TestCase
                 [
                     'element' => 2,
                     'string_entry' => 'foo',
+                ],
+            ],
+            $rows->toArray()
+        );
+    }
+
+    public function test_array_expand_list_of_string() : void
+    {
+        $arrayExpandTransformer = Transform::array_expand('array_entry');
+
+        $rows = $arrayExpandTransformer->transform(
+            new Rows(
+                Row::create(
+                    new Row\Entry\ListEntry('array_entry', ScalarType::string, ['1', '2']),
+                ),
+            ),
+        );
+
+        $this->assertEquals(
+            [
+                [
+                    'element' => 1,
+                ],
+                [
+                    'element' => 2,
                 ],
             ],
             $rows->toArray()
