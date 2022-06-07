@@ -1,10 +1,11 @@
-## [Unreleased] - 2022-04-10
+## [Unreleased] - 2022-06-07
 
 ### Added
 - [#36](https://github.com/flow-php/etl-adapter-logger/pull/36) - **Workflow for aut-merging dependabot PRs** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [456cb1](https://github.com/flow-php/etl-adapter-logger/commit/456cb16247a93c277795474e40f36d676d2dca05) - **readme and fixed logger class name** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [4e77cf](https://github.com/flow-php/etl-adapter-logger/commit/4e77cfc6021664d8eb074d0800a39e6eff96140b) - **Create LICENSE** - [@norberttech](https://github.com/norberttech)
 - [#102](https://github.com/flow-php/etl-adapter-logger/pull/102) - **Updated project to php 8.1** - [@norberttech](https://github.com/norberttech)
 - [#80](https://github.com/flow-php/etl-adapter-logger/pull/80) - **Adjusted adapter for serialization** - [@norberttech](https://github.com/norberttech)
 - [#62](https://github.com/flow-php/etl-adapter-logger/pull/62) - **Reuse workflows from aeon-php/actions** - [@tomaszhanc](https://github.com/tomaszhanc)
