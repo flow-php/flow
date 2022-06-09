@@ -1,6 +1,7 @@
-## [Unreleased] - 2022-06-07
+## [Unreleased] - 2022-06-09
 
 ### Added
+- [e4021b](https://github.com/flow-php/etl-adapter-json/commit/e4021b63765964e6a576b0e7f81acbfbeb72c007) - **installation section to the docs** - [@norberttech](https://github.com/norberttech)
 - [#109](https://github.com/flow-php/etl-adapter-json/pull/109) - **JSON DSL** - [@norberttech](https://github.com/norberttech)
 - [#109](https://github.com/flow-php/etl-adapter-json/pull/109) - **FileStream support** - [@norberttech](https://github.com/norberttech)
 - [#88](https://github.com/flow-php/etl-adapter-json/pull/88) - **Added JsonLoader** - [@norberttech](https://github.com/norberttech)
