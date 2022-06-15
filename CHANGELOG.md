@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-06-03
+## [Unreleased] - 2022-06-15
 
 ### Added
 - [#102](https://github.com/flow-php/etl-adapter-doctrine/pull/102) - **Updated project to php 8.1** - [@norberttech](https://github.com/norberttech)
@@ -10,6 +10,7 @@
 - [#1](https://github.com/flow-php/etl-adapter-doctrine/pull/1) - **DbalQueryExtractor** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [b760d6](https://github.com/flow-php/etl-adapter-doctrine/commit/b760d66cfc8b44d11e2d1f2b32713ba8c2017dbb) - **doctrine-dbal-bulk into mandatory dependency** - [@norberttech](https://github.com/norberttech)
 - [#75](https://github.com/flow-php/etl-adapter-doctrine/pull/75) - **Adjusted adapter for serialization** - [@norberttech](https://github.com/norberttech)
 - [#73](https://github.com/flow-php/etl-adapter-doctrine/pull/73) - **Build Rows object on the end of foreach loop** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#54](https://github.com/flow-php/etl-adapter-doctrine/pull/54) - **Reuse workflows from aeon-php/actions** - [@tomaszhanc](https://github.com/tomaszhanc)
