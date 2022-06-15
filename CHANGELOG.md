@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-06-07
+## [Unreleased] - 2022-06-15
 
 ### Added
 - [#90](https://github.com/flow-php/etl-adapter-elasticsearch/pull/90) - **Partial update** - [@norberttech](https://github.com/norberttech)
@@ -7,6 +7,7 @@
 - [#2](https://github.com/flow-php/etl-adapter-elasticsearch/pull/2) - **PHP 8.0 to the testsuite** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [752d9f](https://github.com/flow-php/etl-adapter-elasticsearch/commit/752d9f2196045369226eaa7f5160b55bc0dbf27d) - **elasticsearch into mandatory dependency** - [@norberttech](https://github.com/norberttech)
 - [ee72a1](https://github.com/flow-php/etl-adapter-elasticsearch/commit/ee72a19f6f48de255ced2abce594d17eec15f1e4) - **Create LICENSE** - [@norberttech](https://github.com/norberttech)
 - [#109](https://github.com/flow-php/etl-adapter-elasticsearch/pull/109) - **Updated project to php 8.1** - [@norberttech](https://github.com/norberttech)
 - [#88](https://github.com/flow-php/etl-adapter-elasticsearch/pull/88) - **Adjusted adapter for serialization** - [@norberttech](https://github.com/norberttech)
