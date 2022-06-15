@@ -13,7 +13,6 @@ Following implementation are available:
 
 ``` 
 composer require flow-php/etl-adapter-avro
-composer require flix-tech/avro-php
 ```
 
 ## Extractor - Flix Tech Avro
