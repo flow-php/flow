@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-06-09
+## [Unreleased] - 2022-06-15
 
 ### Added
 - [e4021b](https://github.com/flow-php/etl-adapter-json/commit/e4021b63765964e6a576b0e7f81acbfbeb72c007) - **installation section to the docs** - [@norberttech](https://github.com/norberttech)
@@ -8,6 +8,7 @@
 - [#44](https://github.com/flow-php/etl-adapter-json/pull/44) - **Workflow for aut-merging dependabot PRs** - [@tomaszhanc](https://github.com/tomaszhanc)
 
 ### Changed
+- [83b30a](https://github.com/flow-php/etl-adapter-json/commit/83b30ab9aace1d32c0f7429584d34d4bad9a64f3) - **json-machine into mandatory dependency** - [@norberttech](https://github.com/norberttech)
 - [2df9c1](https://github.com/flow-php/etl-adapter-json/commit/2df9c12aa40e59cd4161b13fe354d447eafb926d) - **Create LICENSE** - [@norberttech](https://github.com/norberttech)
 - [#107](https://github.com/flow-php/etl-adapter-json/pull/107) - **Updated project to php 8.1** - [@norberttech](https://github.com/norberttech)
 - [2d6583](https://github.com/flow-php/etl-adapter-json/commit/2d65834efb90ea60daafbcbac2f6c210132366b2) - **Moved JsonEntry to flow-php/etl library** - [@norberttech](https://github.com/norberttech)
