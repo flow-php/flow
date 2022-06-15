@@ -4,8 +4,61 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "66b78c0ec3cfb39b09573a4a87d09b98",
+    "content-hash": "98200b6f1b4cb9e9ce7f60d603a89052",
     "packages": [
+        {
+            "name": "codename/parquet",
+            "version": "v0.6.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/codename-hub/php-parquet.git",
+                "reference": "6407bb1749786c59bcdb979e1d9b71ce6c0f8798"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/codename-hub/php-parquet/zipball/6407bb1749786c59bcdb979e1d9b71ce6c0f8798",
+                "reference": "6407bb1749786c59bcdb979e1d9b71ce6c0f8798",
+                "shasum": ""
+            },
+            "require": {
+                "ext-bcmath": "*",
+                "ext-gmp": "*",
+                "ext-zlib": "*",
+                "nelexa/buffer": "^1.3",
+                "packaged/thrift": "^0.13.0",
+                "pear/math_biginteger": "^1.0",
+                "php": ">=7.3 <=8.1.99"
+            },
+            "require-dev": {
+                "phpunit/php-code-coverage": "^9.2",
+                "phpunit/phpunit": "^9.0"
+            },
+            "suggest": {
+                "ext-snappy": "Install/compile snappy extension to get support for snappy compression reading/writing"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "codename\\parquet\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Kevin Dargel",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Thrift-based PHP implementation for using the Apache Parquet format",
+            "support": {
+                "issues": "https://github.com/codename-hub/php-parquet/issues",
+                "source": "https://github.com/codename-hub/php-parquet/tree/v0.6.2"
+            },
+            "time": "2022-04-10T09:58:33+00:00"
+        },
         {
             "name": "flow-php/array-dot",
             "version": "1.x-dev",
@@ -61,12 +114,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl.git",
-                "reference": "22ff0c2a877f80d99df8f01196de242274623c64"
+                "reference": "342a9245ed9d566c70b8e43b78a6a185066f2b49"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl/zipball/22ff0c2a877f80d99df8f01196de242274623c64",
-                "reference": "22ff0c2a877f80d99df8f01196de242274623c64",
+                "url": "https://api.github.com/repos/flow-php/etl/zipball/342a9245ed9d566c70b8e43b78a6a185066f2b49",
+                "reference": "342a9245ed9d566c70b8e43b78a6a185066f2b49",
                 "shasum": ""
             },
             "require": {
@@ -110,62 +163,7 @@
                 "issues": "https://github.com/flow-php/etl/issues",
                 "source": "https://github.com/flow-php/etl/tree/1.x"
             },
-            "time": "2022-05-25T10:39:58+00:00"
-        }
-    ],
-    "packages-dev": [
-        {
-            "name": "codename/parquet",
-            "version": "v0.6.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/codename-hub/php-parquet.git",
-                "reference": "6407bb1749786c59bcdb979e1d9b71ce6c0f8798"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/codename-hub/php-parquet/zipball/6407bb1749786c59bcdb979e1d9b71ce6c0f8798",
-                "reference": "6407bb1749786c59bcdb979e1d9b71ce6c0f8798",
-                "shasum": ""
-            },
-            "require": {
-                "ext-bcmath": "*",
-                "ext-gmp": "*",
-                "ext-zlib": "*",
-                "nelexa/buffer": "^1.3",
-                "packaged/thrift": "^0.13.0",
-                "pear/math_biginteger": "^1.0",
-                "php": ">=7.3 <=8.1.99"
-            },
-            "require-dev": {
-                "phpunit/php-code-coverage": "^9.2",
-                "phpunit/phpunit": "^9.0"
-            },
-            "suggest": {
-                "ext-snappy": "Install/compile snappy extension to get support for snappy compression reading/writing"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "codename\\parquet\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Kevin Dargel",
-                    "role": "Developer"
-                }
-            ],
-            "description": "Thrift-based PHP implementation for using the Apache Parquet format",
-            "support": {
-                "issues": "https://github.com/codename-hub/php-parquet/issues",
-                "source": "https://github.com/codename-hub/php-parquet/tree/v0.6.2"
-            },
-            "time": "2022-04-10T09:58:33+00:00"
+            "time": "2022-06-10T06:08:49+00:00"
         },
         {
             "name": "nelexa/buffer",
@@ -320,6 +318,7 @@
             "time": "2016-04-12T05:46:52+00:00"
         }
     ],
+    "packages-dev": [],
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
