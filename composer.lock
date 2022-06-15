@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "74ee2190e78ff43be6434f3d194e45b3",
+    "content-hash": "a771062e1ebd4ddb38602cc015870392",
     "packages": [
         {
             "name": "flow-php/array-dot",
@@ -61,12 +61,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl.git",
-                "reference": "f286198a0fde4e99e8968ba98d0b8614b9d10867"
+                "reference": "342a9245ed9d566c70b8e43b78a6a185066f2b49"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl/zipball/f286198a0fde4e99e8968ba98d0b8614b9d10867",
-                "reference": "f286198a0fde4e99e8968ba98d0b8614b9d10867",
+                "url": "https://api.github.com/repos/flow-php/etl/zipball/342a9245ed9d566c70b8e43b78a6a185066f2b49",
+                "reference": "342a9245ed9d566c70b8e43b78a6a185066f2b49",
                 "shasum": ""
             },
             "require": {
@@ -110,10 +110,8 @@
                 "issues": "https://github.com/flow-php/etl/issues",
                 "source": "https://github.com/flow-php/etl/tree/1.x"
             },
-            "time": "2022-05-25T07:13:58+00:00"
-        }
-    ],
-    "packages-dev": [
+            "time": "2022-06-10T06:08:49+00:00"
+        },
         {
             "name": "halaxa/json-machine",
             "version": "1.1.1",
@@ -173,6 +171,7 @@
             "time": "2022-03-03T11:02:11+00:00"
         }
     ],
+    "packages-dev": [],
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
