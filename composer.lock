@@ -4,8 +4,49 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2782f3386cf3bf3710665a0cba384be1",
+    "content-hash": "491ec67262f2d825c01be97c12b063e9",
     "packages": [
+        {
+            "name": "flix-tech/avro-php",
+            "version": "4.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/flix-tech/avro-php.git",
+                "reference": "d56613999a042c26dad8d5f2d53012cd3db4b8f7"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/flix-tech/avro-php/zipball/d56613999a042c26dad8d5f2d53012cd3db4b8f7",
+                "reference": "d56613999a042c26dad8d5f2d53012cd3db4b8f7",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.1"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^5.0"
+            },
+            "suggest": {
+                "ext-gmp": "Large integer support for 32-bit platforms.",
+                "ext-snappy": "Snappy support for Snappy codec (mainly Google).",
+                "ext-zlib": "Zlib support for Deflate codec."
+            },
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "lib/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "Apache-2.0"
+            ],
+            "description": "Avro schema encoder/decoder. Fork of rg/avro-php",
+            "support": {
+                "source": "https://github.com/flix-tech/avro-php/tree/4.2.0"
+            },
+            "time": "2022-01-12T13:54:45+00:00"
+        },
         {
             "name": "flow-php/array-dot",
             "version": "1.x-dev",
@@ -61,12 +102,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl.git",
-                "reference": "f8f54c695fdaefe22e0f02ff0259e08cb10b5af1"
+                "reference": "342a9245ed9d566c70b8e43b78a6a185066f2b49"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl/zipball/f8f54c695fdaefe22e0f02ff0259e08cb10b5af1",
-                "reference": "f8f54c695fdaefe22e0f02ff0259e08cb10b5af1",
+                "url": "https://api.github.com/repos/flow-php/etl/zipball/342a9245ed9d566c70b8e43b78a6a185066f2b49",
+                "reference": "342a9245ed9d566c70b8e43b78a6a185066f2b49",
                 "shasum": ""
             },
             "require": {
@@ -110,52 +151,10 @@
                 "issues": "https://github.com/flow-php/etl/issues",
                 "source": "https://github.com/flow-php/etl/tree/1.x"
             },
-            "time": "2022-06-04T08:50:42+00:00"
+            "time": "2022-06-10T06:08:49+00:00"
         }
     ],
-    "packages-dev": [
-        {
-            "name": "flix-tech/avro-php",
-            "version": "4.2.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/flix-tech/avro-php.git",
-                "reference": "d56613999a042c26dad8d5f2d53012cd3db4b8f7"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/flix-tech/avro-php/zipball/d56613999a042c26dad8d5f2d53012cd3db4b8f7",
-                "reference": "d56613999a042c26dad8d5f2d53012cd3db4b8f7",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=7.1"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "^5.0"
-            },
-            "suggest": {
-                "ext-gmp": "Large integer support for 32-bit platforms.",
-                "ext-snappy": "Snappy support for Snappy codec (mainly Google).",
-                "ext-zlib": "Zlib support for Deflate codec."
-            },
-            "type": "library",
-            "autoload": {
-                "classmap": [
-                    "lib/"
-                ]
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "Apache-2.0"
-            ],
-            "description": "Avro schema encoder/decoder. Fork of rg/avro-php",
-            "support": {
-                "source": "https://github.com/flix-tech/avro-php/tree/4.2.0"
-            },
-            "time": "2022-01-12T13:54:45+00:00"
-        }
-    ],
+    "packages-dev": [],
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
