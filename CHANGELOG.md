@@ -1,6 +1,7 @@
-## [Unreleased] - 2022-06-07
+## [Unreleased] - 2022-06-15
 
 ### Changed
+- [35c2ef](https://github.com/flow-php/etl-adapter-avro/commit/35c2ef25d6f2162ee6f6905abbc611a5fc6ecf8a) - **avro-php into mandatory dependency** - [@norberttech](https://github.com/norberttech)
 - [712ed0](https://github.com/flow-php/etl-adapter-avro/commit/712ed083469bd4c1699bb2c218005c94aa5e20da) - **Create LICENSE** - [@norberttech](https://github.com/norberttech)
 - [#1](https://github.com/flow-php/etl-adapter-avro/pull/1) - **reading/writing into path now allows flow streams** - [@norberttech](https://github.com/norberttech)
 - [867681](https://github.com/flow-php/etl-adapter-avro/commit/86768169151d7d667e02e344327b6923de33ac2c) - **Initial commit** - [@norberttech](https://github.com/norberttech)
