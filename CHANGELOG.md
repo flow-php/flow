@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-06-03
+## [Unreleased] - 2022-06-15
 
 ### Added
 - [#110](https://github.com/flow-php/doctrine-dbal-bulk/pull/110) - **Updated to PHP 8.1** - [@norberttech](https://github.com/norberttech)
@@ -27,6 +27,7 @@
 - [d8858c](https://github.com/flow-php/doctrine-dbal-bulk/commit/d8858c1d325837ec0fdf0943ec3dc9c9723bd38a) - **dependencies** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [6b7826](https://github.com/flow-php/doctrine-dbal-bulk/commit/6b7826bbcb790977b98de38ad7533e0ecf36fe49) - **uuid dev dependency** - [@norberttech](https://github.com/norberttech)
 - [28579b](https://github.com/flow-php/doctrine-dbal-bulk/commit/28579b10e771cab7cf5e3a27ac516e0ecf9d69ff) - **deprecated code** - [@norberttech](https://github.com/norberttech)
 - [#47](https://github.com/flow-php/doctrine-dbal-bulk/pull/47) - **Support for Doctrine Dbal 2.x** - [@tomaszhanc](https://github.com/tomaszhanc)
 
