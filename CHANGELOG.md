@@ -1,6 +1,7 @@
-## [Unreleased] - 2022-06-07
+## [Unreleased] - 2022-06-15
 
 ### Changed
+- [9ad0eb](https://github.com/flow-php/etl-adapter-parquet/commit/9ad0ebc241d02cf467fff963f656ee1d482d6589) - **parquet into mandatory dependency** - [@norberttech](https://github.com/norberttech)
 - [109e26](https://github.com/flow-php/etl-adapter-parquet/commit/109e264aea4442d07b1df1ae68d81551da2d473d) - **Create LICENSE** - [@norberttech](https://github.com/norberttech)
 - [#1](https://github.com/flow-php/etl-adapter-parquet/pull/1) - **Uset FileStream instead of string paths** - [@norberttech](https://github.com/norberttech)
 - [429b67](https://github.com/flow-php/etl-adapter-parquet/commit/429b67acc886e23903781186f635234bb7d3e769) - **Initial commit** - [@norberttech](https://github.com/norberttech)
