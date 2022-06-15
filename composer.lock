@@ -4,116 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a3e90c8db5433588ae30a8078cbea0c3",
+    "content-hash": "f959e7553cd9ac32bc5f4d2098292559",
     "packages": [
-        {
-            "name": "flow-php/array-dot",
-            "version": "1.x-dev",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/flow-php/array-dot.git",
-                "reference": "c0688bb9e2c90f343779bc3b1761e11bd26da55f"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/array-dot/zipball/c0688bb9e2c90f343779bc3b1761e11bd26da55f",
-                "reference": "c0688bb9e2c90f343779bc3b1761e11bd26da55f",
-                "shasum": ""
-            },
-            "require": {
-                "php": "~8.1"
-            },
-            "default-branch": true,
-            "type": "library",
-            "autoload": {
-                "files": [
-                    "src/Flow/ArrayDot/array_dot.php"
-                ],
-                "psr-4": {
-                    "Flow\\": [
-                        "src/Flow"
-                    ]
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "PHP ETL - Array Dot fuctions",
-            "keywords": [
-                "array",
-                "dot",
-                "etl",
-                "extract",
-                "filter",
-                "load",
-                "transform"
-            ],
-            "support": {
-                "issues": "https://github.com/flow-php/array-dot/issues",
-                "source": "https://github.com/flow-php/array-dot/tree/1.x"
-            },
-            "time": "2022-04-10T09:46:31+00:00"
-        },
-        {
-            "name": "flow-php/etl",
-            "version": "1.x-dev",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/flow-php/etl.git",
-                "reference": "91753b873fece5368e7d1d89d58eec980b0dcad1"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl/zipball/91753b873fece5368e7d1d89d58eec980b0dcad1",
-                "reference": "91753b873fece5368e7d1d89d58eec980b0dcad1",
-                "shasum": ""
-            },
-            "require": {
-                "ext-json": "*",
-                "ext-mbstring": "*",
-                "flow-php/array-dot": "^1.0@dev",
-                "php": "~8.1"
-            },
-            "require-dev": {
-                "jawira/case-converter": "^3.4",
-                "laminas/laminas-hydrator": "^4.0",
-                "laravel/serializable-closure": "^1.1",
-                "symfony/validator": "^5.3 || ^6.0"
-            },
-            "suggest": {
-                "jawira/case-converter": "Provides CaseConverter that is required by the EntryNameCaseConverterTransformer",
-                "laminas/laminas-hydrator": "Help converting ObjectEntry into ArrayEntry that can be later unpack into standalone Entries",
-                "ocramius/generated-hydrator": "Provieds generated hydrator that implemenets Laminas\\Hydrator\\HydratorInterface"
-            },
-            "default-branch": true,
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Flow\\": [
-                        "src/Flow"
-                    ]
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "PHP ETL - Extract Transform Load - Abstraction",
-            "keywords": [
-                "etl",
-                "extract",
-                "load",
-                "transform"
-            ],
-            "support": {
-                "issues": "https://github.com/flow-php/etl/issues",
-                "source": "https://github.com/flow-php/etl/tree/1.x"
-            },
-            "time": "2022-06-03T06:03:02+00:00"
-        }
-    ],
-    "packages-dev": [
         {
             "name": "doctrine/cache",
             "version": "2.2.0",
@@ -456,25 +348,71 @@
             "time": "2020-05-29T18:28:51+00:00"
         },
         {
+            "name": "flow-php/array-dot",
+            "version": "1.x-dev",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/flow-php/array-dot.git",
+                "reference": "c0688bb9e2c90f343779bc3b1761e11bd26da55f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/flow-php/array-dot/zipball/c0688bb9e2c90f343779bc3b1761e11bd26da55f",
+                "reference": "c0688bb9e2c90f343779bc3b1761e11bd26da55f",
+                "shasum": ""
+            },
+            "require": {
+                "php": "~8.1"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "src/Flow/ArrayDot/array_dot.php"
+                ],
+                "psr-4": {
+                    "Flow\\": [
+                        "src/Flow"
+                    ]
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "PHP ETL - Array Dot fuctions",
+            "keywords": [
+                "array",
+                "dot",
+                "etl",
+                "extract",
+                "filter",
+                "load",
+                "transform"
+            ],
+            "support": {
+                "issues": "https://github.com/flow-php/array-dot/issues",
+                "source": "https://github.com/flow-php/array-dot/tree/1.x"
+            },
+            "time": "2022-04-10T09:46:31+00:00"
+        },
+        {
             "name": "flow-php/doctrine-dbal-bulk",
             "version": "1.x-dev",
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/doctrine-dbal-bulk.git",
-                "reference": "90c1192ae70aecd2e219fb09b58803e09cca8a37"
+                "reference": "c4569c799d50a0f2e51f444f6b3ed984ed55fe83"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/doctrine-dbal-bulk/zipball/90c1192ae70aecd2e219fb09b58803e09cca8a37",
-                "reference": "90c1192ae70aecd2e219fb09b58803e09cca8a37",
+                "url": "https://api.github.com/repos/flow-php/doctrine-dbal-bulk/zipball/c4569c799d50a0f2e51f444f6b3ed984ed55fe83",
+                "reference": "c4569c799d50a0f2e51f444f6b3ed984ed55fe83",
                 "shasum": ""
             },
             "require": {
                 "doctrine/dbal": "^2.12 | ^3.1.4",
                 "php": "~8.1"
-            },
-            "require-dev": {
-                "ramsey/uuid": "^4.0"
             },
             "default-branch": true,
             "type": "library",
@@ -501,7 +439,64 @@
                 "issues": "https://github.com/flow-php/doctrine-dbal-bulk/issues",
                 "source": "https://github.com/flow-php/doctrine-dbal-bulk/tree/1.x"
             },
-            "time": "2022-05-14T16:27:54+00:00"
+            "time": "2022-06-15T08:41:01+00:00"
+        },
+        {
+            "name": "flow-php/etl",
+            "version": "1.x-dev",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/flow-php/etl.git",
+                "reference": "342a9245ed9d566c70b8e43b78a6a185066f2b49"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/flow-php/etl/zipball/342a9245ed9d566c70b8e43b78a6a185066f2b49",
+                "reference": "342a9245ed9d566c70b8e43b78a6a185066f2b49",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "ext-mbstring": "*",
+                "flow-php/array-dot": "^1.0@dev",
+                "php": "~8.1"
+            },
+            "require-dev": {
+                "jawira/case-converter": "^3.4",
+                "laminas/laminas-hydrator": "^4.0",
+                "laravel/serializable-closure": "^1.1",
+                "symfony/validator": "^5.3 || ^6.0"
+            },
+            "suggest": {
+                "jawira/case-converter": "Provides CaseConverter that is required by the EntryNameCaseConverterTransformer",
+                "laminas/laminas-hydrator": "Help converting ObjectEntry into ArrayEntry that can be later unpack into standalone Entries",
+                "ocramius/generated-hydrator": "Provieds generated hydrator that implemenets Laminas\\Hydrator\\HydratorInterface"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Flow\\": [
+                        "src/Flow"
+                    ]
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "PHP ETL - Extract Transform Load - Abstraction",
+            "keywords": [
+                "etl",
+                "extract",
+                "load",
+                "transform"
+            ],
+            "support": {
+                "issues": "https://github.com/flow-php/etl/issues",
+                "source": "https://github.com/flow-php/etl/tree/1.x"
+            },
+            "time": "2022-06-10T06:08:49+00:00"
         },
         {
             "name": "psr/cache",
@@ -603,6 +598,7 @@
             "time": "2021-07-14T16:46:02+00:00"
         }
     ],
+    "packages-dev": [],
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {

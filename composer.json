@@ -7,13 +7,8 @@
     "minimum-stability": "dev",
     "require": {
         "php": "~8.1",
-        "flow-php/etl": "^1.0@dev"
-    },
-    "require-dev": {
+        "flow-php/etl": "^1.0@dev",
         "flow-php/doctrine-dbal-bulk": "^1.0@dev"
-    },
-    "suggest": {
-        "flow-php/doctrine-dbal-bulk" : "Read/Write data int bulks from Databases"
     },
     "autoload": {
         "psr-4": {
