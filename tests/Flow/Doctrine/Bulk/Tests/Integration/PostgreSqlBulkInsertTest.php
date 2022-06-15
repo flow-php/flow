@@ -11,7 +11,6 @@ use Doctrine\DBAL\Types\Types;
 use Flow\Doctrine\Bulk\Bulk;
 use Flow\Doctrine\Bulk\BulkData;
 use Flow\Doctrine\Bulk\Tests\IntegrationTestCase;
-use Ramsey\Uuid\Uuid;
 
 final class PostgreSqlBulkInsertTest extends IntegrationTestCase
 {
@@ -62,7 +61,7 @@ final class PostgreSqlBulkInsertTest extends IntegrationTestCase
             (new Table(
                 $table = 'flow_doctrine_bulk_test',
                 [
-                    new Column('id', Type::getType(Types::GUID), ['notnull' => true]),
+                    new Column('id', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
                     new Column('age', Type::getType(Types::INTEGER), ['notnull' => true]),
                     new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
                     new Column('description', Type::getType(Types::STRING), ['notnull' => false]),
@@ -78,9 +77,9 @@ final class PostgreSqlBulkInsertTest extends IntegrationTestCase
             $this->pgsqlDatabaseContext->connection(),
             $table,
             new BulkData([
-                ['id' => $id1 = Uuid::uuid4()->toString(), 'age' => 20, 'name' => 'Name One', 'description' => 'Description One', 'active' => false, 'updated_at' => $date1 = new \DateTimeImmutable(), 'tags' => \json_encode(['a', 'b', 'c'])],
-                ['id' => $id2 = Uuid::uuid4()->toString(), 'age' => 30, 'name' => 'Name Two', 'description' => null, 'active' => true, 'updated_at' => $date2 = new \DateTimeImmutable(), 'tags' => \json_encode(['a', 'b', 'c'])],
-                ['id' => $id3 = Uuid::uuid4()->toString(), 'age' => 40, 'name' => 'Name Three', 'description' => 'Description Three', 'active' => false, 'updated_at' => $date3 = new \DateTimeImmutable(), 'tags' => \json_encode(['a', 'b', 'c'])],
+                ['id' => $id1 = \uniqid(), 'age' => 20, 'name' => 'Name One', 'description' => 'Description One', 'active' => false, 'updated_at' => $date1 = new \DateTimeImmutable(), 'tags' => \json_encode(['a', 'b', 'c'])],
+                ['id' => $id2 = \uniqid(), 'age' => 30, 'name' => 'Name Two', 'description' => null, 'active' => true, 'updated_at' => $date2 = new \DateTimeImmutable(), 'tags' => \json_encode(['a', 'b', 'c'])],
+                ['id' => $id3 = \uniqid(), 'age' => 40, 'name' => 'Name Three', 'description' => 'Description Three', 'active' => false, 'updated_at' => $date3 = new \DateTimeImmutable(), 'tags' => \json_encode(['a', 'b', 'c'])],
             ])
         );
 
