@@ -13,7 +13,6 @@ Following implementation are available:
 
 ``` 
 composer require flow-php/etl-adapter-json
-composer require halaxa/json-machine
 ```
 
 > Json library is not explicitly required, you need to make sure it is available in your composer.json file.
