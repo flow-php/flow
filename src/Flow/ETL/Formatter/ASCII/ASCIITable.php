@@ -172,10 +172,15 @@ final class ASCIITable
         if (isset($array[0])) {
             foreach (\array_keys($array[0]) as $col) {
                 $col = (string) $col;
-                $length = \max(
-                    \max(...\array_map([$this, 'len'], $this->arrCol($array, $col))),
-                    self::len($col)
-                );
+
+                if (\count($this->arrCol($array, $col)) === 1) {
+                    $length = \max($this->len(\current($this->arrCol($array, $col))), self::len($col));
+                } else {
+                    $length = \max(
+                        \max(...\array_map([$this, 'len'], $this->arrCol($array, $col))),
+                        self::len($col)
+                    );
+                }
 
                 $this->colWidths[$col] = ($truncate === 0)
                     ? $length

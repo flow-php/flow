@@ -68,4 +68,22 @@ TABLE,
             (new ASCIITable())->makeTable($table, true)
         );
     }
+
+    public function test_ascii_table_with_single_row() : void
+    {
+        $table = [
+            ['id' => 1, 'name' => 'EN'],
+        ];
+
+        $this->assertStringContainsString(
+            <<<'TABLE'
++--+----+
+|id|name|
++--+----+
+| 1|  EN|
++--+----+
+TABLE,
+            (new ASCIITable())->makeTable($table, false)
+        );
+    }
 }
