@@ -711,16 +711,16 @@
         },
         {
             "name": "infection/infection",
-            "version": "0.26.11",
+            "version": "0.26.12",
             "source": {
                 "type": "git",
                 "url": "https://github.com/infection/infection.git",
-                "reference": "11df4ea052367bb2e2168611b69a0f5f8953ef70"
+                "reference": "dbc0b430d8dfbb5d57e61f09d6ac89265ea0087f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/infection/infection/zipball/11df4ea052367bb2e2168611b69a0f5f8953ef70",
-                "reference": "11df4ea052367bb2e2168611b69a0f5f8953ef70",
+                "url": "https://api.github.com/repos/infection/infection/zipball/dbc0b430d8dfbb5d57e61f09d6ac89265ea0087f",
+                "reference": "dbc0b430d8dfbb5d57e61f09d6ac89265ea0087f",
                 "shasum": ""
             },
             "require": {
@@ -740,10 +740,10 @@
                 "sanmai/pipeline": "^5.1 || ^6",
                 "sebastian/diff": "^3.0.2 || ^4.0",
                 "seld/jsonlint": "^1.7",
-                "symfony/console": "^3.4.29 || ^4.1.19 || ^5.0 || ^6.0",
+                "symfony/console": "^5.4 || ^6.0",
                 "symfony/filesystem": "^5.4 || ^6.0",
-                "symfony/finder": "^3.4.29 || ^4.1.19 || ^5.0 || ^6.0",
-                "symfony/process": "^3.4.29 || ^4.1.19 || ^5.0 || ^6.0",
+                "symfony/finder": "^5.4 || ^6.0",
+                "symfony/process": "^5.4 || ^6.0",
                 "thecodingmachine/safe": "^2.1.2",
                 "webmozart/assert": "^1.3"
             },
@@ -762,8 +762,8 @@
                 "phpstan/phpstan-strict-rules": "^1.1.0",
                 "phpstan/phpstan-webmozart-assert": "^1.0.2",
                 "phpunit/phpunit": "^9.5.5",
-                "symfony/phpunit-bridge": "^4.4.18 || ^5.1.10",
-                "symfony/yaml": "^5.0",
+                "symfony/phpunit-bridge": "^5.4 || ^6.0",
+                "symfony/yaml": "^5.4 || ^6.0",
                 "thecodingmachine/phpstan-safe-rule": "^1.2.0"
             },
             "bin": [
@@ -820,7 +820,7 @@
             ],
             "support": {
                 "issues": "https://github.com/infection/infection/issues",
-                "source": "https://github.com/infection/infection/tree/0.26.11"
+                "source": "https://github.com/infection/infection/tree/0.26.12"
             },
             "funding": [
                 {
@@ -832,7 +832,7 @@
                     "type": "open_collective"
                 }
             ],
-            "time": "2022-06-09T08:41:21+00:00"
+            "time": "2022-06-21T20:46:07+00:00"
         },
         {
             "name": "justinrainbow/json-schema",
