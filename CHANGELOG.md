@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-06-07
+## [Unreleased] - 2022-06-22
 
 ### Added
 - [#44](https://github.com/flow-php/etl-adapter-http/pull/44) - **Workflow for aut-merging dependabot PRs** - [@tomaszhanc](https://github.com/tomaszhanc)
