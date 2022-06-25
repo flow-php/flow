@@ -19,6 +19,7 @@
 - [cdbc76](https://github.com/flow-php/doctrine-dbal-bulk/commit/cdbc76af8c863f40d6181aa81a60e4f1d33d6519) - **Initial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [338cf6](https://github.com/flow-php/doctrine-dbal-bulk/commit/338cf6f18f3124d864b99255e310224076bf5847) - **codding standard** - [@norberttech](https://github.com/norberttech)
 - [afc893](https://github.com/flow-php/doctrine-dbal-bulk/commit/afc893652e5c457a53cce67b71a26d09b4f794ae) - **missing dependency** - [@norberttech](https://github.com/norberttech)
 - [#84](https://github.com/flow-php/doctrine-dbal-bulk/pull/84) - **Use proper dbal types when executing insert statement allowing to bulk inser objects like DateTime** - [@norberttech](https://github.com/norberttech)
 - [#7](https://github.com/flow-php/doctrine-dbal-bulk/pull/7) - **Github Action for checking PR description** - [@tomaszhanc](https://github.com/tomaszhanc)
