@@ -36,9 +36,9 @@ final class PostgreSqlBulkInsertTest extends IntegrationTestCase
             $this->pgsqlDatabaseContext->connection(),
             $table,
             new BulkData([
-                ['id' => $id1 = Uuid::uuid4()->toString(), 'age' => 20, 'tags' => \json_encode(['a', 'b', 'c'])],
-                ['id' => $id2 = Uuid::uuid4()->toString(), 'age' => 30, 'tags' => \json_encode(['a', 'b', 'c'])],
-                ['id' => $id3 = Uuid::uuid4()->toString(), 'age' => 40, 'tags' => \json_encode(['a', 'b', 'c'])],
+                ['id' => $id1 = uniqid(), 'age' => 20, 'tags' => \json_encode(['a', 'b', 'c'])],
+                ['id' => $id2 = uniqid(), 'age' => 30, 'tags' => \json_encode(['a', 'b', 'c'])],
+                ['id' => $id3 = uniqid(), 'age' => 40, 'tags' => \json_encode(['a', 'b', 'c'])],
             ])
         );
 
