@@ -24,7 +24,7 @@ final class PostgreSqlBulkInsertTest extends IntegrationTestCase
             (new Table(
                 $table = 'flow_doctrine_bulk_test',
                 [
-                    new Column('id', Type::getType(Types::GUID), ['notnull' => true]),
+                    new Column('id', Type::getType(Types::STRING), ['notnull' => true]),
                     new Column('age', Type::getType(Types::INTEGER), ['notnull' => true]),
                     new Column('tags', Type::getType(Types::JSON), ['notnull' => true, 'platformOptions' => ['jsonb' => true]]),
                 ],
