@@ -21,7 +21,7 @@ final class ArraySortByKey
             $array
         );
 
-        if ((new IsAssociativeArray)($array) === false) {
+        if (\array_is_list($array)) {
             \usort($array, fn ($a, $b) : int => $a <=> $b);
         } else {
             \uksort($array, fn ($a, $b) : int => $a <=> $b);
