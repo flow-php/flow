@@ -26,7 +26,7 @@ final class CollectionEntry implements \Stringable, Entry
      */
     public function __construct(private readonly string $name, Entries ...$entries)
     {
-        if (!\strlen($name)) {
+        if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
@@ -59,7 +59,7 @@ final class CollectionEntry implements \Stringable, Entry
 
     public function is(string $name) : bool
     {
-        return $name === $name;
+        return $name === $this->name;
     }
 
     public function isEqual(Entry $entry) : bool
