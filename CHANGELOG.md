@@ -182,6 +182,7 @@
 - [e48062](https://github.com/flow-php/etl/commit/e48062890cd84e655e1162305086f67148347b83) - **Intial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#263](https://github.com/flow-php/etl/pull/263) - **Fixed wrong name comparison in `CollectionEntry` class** - [@stloyd](https://github.com/stloyd)
 - [#260](https://github.com/flow-php/etl/pull/260) - **single row ASCII table** - [@norberttech](https://github.com/norberttech)
 - [#254](https://github.com/flow-php/etl/pull/254) - **ascii table rendering when working with multibyte strings** - [@norberttech](https://github.com/norberttech)
 - [#253](https://github.com/flow-php/etl/pull/253) - **expanding lists, not only arrays** - [@norberttech](https://github.com/norberttech)
@@ -237,6 +238,7 @@
 - [55faa8](https://github.com/flow-php/etl/commit/55faa8edfed3973f54e31b3af57a4ba171050a85) - **README.md** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#262](https://github.com/flow-php/etl/pull/262) - **Remove `IsAssociativeArray` class in favor of `array_is_list()` native function** - [@stloyd](https://github.com/stloyd)
 - [#261](https://github.com/flow-php/etl/pull/261) - **`tests/bootstrap.php` file** - [@stloyd](https://github.com/stloyd)
 - [#224](https://github.com/flow-php/etl/pull/224) - **ETL facade** - [@norberttech](https://github.com/norberttech)
 - [#199](https://github.com/flow-php/etl/pull/199) - **nullable flag from schema definition** - [@norberttech](https://github.com/norberttech)
