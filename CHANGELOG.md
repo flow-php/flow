@@ -132,6 +132,8 @@
 - [856870](https://github.com/flow-php/etl/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#266](https://github.com/flow-php/etl/pull/266) - **Prevent duplicate `.` in extension name** - [@stloyd](https://github.com/stloyd)
+- [#266](https://github.com/flow-php/etl/pull/266) - **Reduce duplicate calls to `->uri()` method** - [@stloyd](https://github.com/stloyd)
 - [#261](https://github.com/flow-php/etl/pull/261) - **Added env variable directly into `phpunit.xml`** - [@stloyd](https://github.com/stloyd)
 - [#261](https://github.com/flow-php/etl/pull/261) - **Marked `var/cache` directly as existing in git** - [@stloyd](https://github.com/stloyd)
 - [#251](https://github.com/flow-php/etl/pull/251) - **Allowed to use more advanced callbacks in call user function transformer** - [@norberttech](https://github.com/norberttech)
@@ -239,6 +241,7 @@
 - [55faa8](https://github.com/flow-php/etl/commit/55faa8edfed3973f54e31b3af57a4ba171050a85) - **README.md** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#266](https://github.com/flow-php/etl/pull/266) - **Changed file/directory mask from 0777 to 0755** - [@stloyd](https://github.com/stloyd)
 - [#262](https://github.com/flow-php/etl/pull/262) - **Remove `IsAssociativeArray` class in favor of `array_is_list()` native function** - [@stloyd](https://github.com/stloyd)
 - [#261](https://github.com/flow-php/etl/pull/261) - **`tests/bootstrap.php` file** - [@stloyd](https://github.com/stloyd)
 - [#224](https://github.com/flow-php/etl/pull/224) - **ETL facade** - [@norberttech](https://github.com/norberttech)
