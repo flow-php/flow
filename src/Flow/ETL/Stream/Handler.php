@@ -16,7 +16,7 @@ final class Handler
 
     public static function directory(string $extension) : self
     {
-        return new self(true, $extension);
+        return new self(true, \ltrim($extension, '.'));
     }
 
     public static function file() : self
@@ -34,26 +34,25 @@ final class Handler
             : null;
 
         if ($this->safeMode) {
-            $fullPath = (\rtrim($stream->uri(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . \bin2hex(\random_bytes(13)) . '.' . ($this->extension ?: ''));
+            $dirname = \rtrim($stream->uri(), DIRECTORY_SEPARATOR);
+            $fullPath = $dirname . DIRECTORY_SEPARATOR . \bin2hex(\random_bytes(13)) . '.' . ($this->extension ?: '');
 
             if ($stream instanceof LocalFile) {
                 if (!\file_exists($stream->uri())) {
                     $context
-                        ? \mkdir(\rtrim($stream->uri(), DIRECTORY_SEPARATOR), 0777, true, $context)
-                        : \mkdir(\rtrim($stream->uri(), DIRECTORY_SEPARATOR), 0777, true);
+                        ? \mkdir($dirname, 0755, true, $context)
+                        : \mkdir($dirname, 0755, true);
                 }
             } else {
                 $context
-                    ? \mkdir(\rtrim($stream->uri(), DIRECTORY_SEPARATOR), 0777, true, $context)
-                    : \mkdir(\rtrim($stream->uri(), DIRECTORY_SEPARATOR), 0777, true);
+                    ? \mkdir($dirname, 0755, true, $context)
+                    : \mkdir($dirname, 0755, true);
             }
         } else {
             $fullPath = $stream->uri();
         }
 
-        $resource = $context
-            ? \fopen($fullPath, $mode->value, false, $context)
-            : \fopen($fullPath, $mode->value);
+        $resource = \fopen($fullPath, $mode->value, null !== $context, $context);
 
         if ($resource === false) {
             throw new RuntimeException("Unable to open stream for path {$stream->uri()}.");
