@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-06-26
+## [Unreleased] - 2022-06-27
 
 ### Added
 - [#250](https://github.com/flow-php/etl/pull/250) - **binary flag to stream read mode** - [@norberttech](https://github.com/norberttech)
@@ -182,6 +182,7 @@
 - [e48062](https://github.com/flow-php/etl/commit/e48062890cd84e655e1162305086f67148347b83) - **Intial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#264](https://github.com/flow-php/etl/pull/264) - **Function `uniqid()` must be used with 2nd parameter to increase uniqueness** - [@stloyd](https://github.com/stloyd)
 - [#263](https://github.com/flow-php/etl/pull/263) - **Fixed wrong name comparison in `CollectionEntry` class** - [@stloyd](https://github.com/stloyd)
 - [#260](https://github.com/flow-php/etl/pull/260) - **single row ASCII table** - [@norberttech](https://github.com/norberttech)
 - [#254](https://github.com/flow-php/etl/pull/254) - **ascii table rendering when working with multibyte strings** - [@norberttech](https://github.com/norberttech)
