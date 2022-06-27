@@ -55,7 +55,7 @@ final class LocalSocketPipeline implements Pipeline
     {
         $pool = Pool::generate($this->totalWorkers);
 
-        $id = \uniqid('flow_async_pipeline');
+        $id = \uniqid('flow_async_pipeline', true);
 
         $this->server->initialize(new ServerProtocol($config, $id, $pool, $this->extractor, $this->pipes));
 

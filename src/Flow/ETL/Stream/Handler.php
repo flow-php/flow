@@ -25,22 +25,17 @@ final class Handler
     }
 
     /**
-     * @param FileStream $stream
-     *
      * @return resource
      */
     public function open(FileStream $stream, Mode $mode)
     {
-        /** @psalm-suppress PossiblyNullOperand */
-        $fullPath = ($this->safeMode)
-            ? (\rtrim($stream->uri(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . \uniqid() . '.' . $this->extension)
-            : $stream->uri();
-
         $context = \count($stream->options())
             ? \stream_context_create([$stream->scheme() => $stream->options()])
             : null;
 
         if ($this->safeMode) {
+            $fullPath = (\rtrim($stream->uri(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . \bin2hex(\random_bytes(13)) . '.' . ($this->extension ?: ''));
+
             if ($stream instanceof LocalFile) {
                 if (!\file_exists($stream->uri())) {
                     $context
@@ -52,6 +47,8 @@ final class Handler
                     ? \mkdir(\rtrim($stream->uri(), DIRECTORY_SEPARATOR), 0777, true, $context)
                     : \mkdir(\rtrim($stream->uri(), DIRECTORY_SEPARATOR), 0777, true);
             }
+        } else {
+            $fullPath = $stream->uri();
         }
 
         $resource = $context

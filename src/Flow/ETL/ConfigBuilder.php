@@ -37,7 +37,7 @@ final class ConfigBuilder
      */
     public function build() : Config
     {
-        $this->id ??= \uniqid('flow_php');
+        $this->id ??= \uniqid('flow_php', true);
         $this->serializer ??= new CompressingSerializer();
         $this->cache ??= new LocalFilesystemCache(
             \is_string(\getenv(Config::CACHE_DIR_ENV))
