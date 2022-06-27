@@ -59,21 +59,21 @@
     "packages-dev": [
         {
             "name": "jawira/case-converter",
-            "version": "v3.4.6",
+            "version": "v3.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/jawira/case-converter.git",
-                "reference": "2f284c0760ee8085ab463f57275cf1f887fb78ae"
+                "reference": "f11ac9b097ca16af8aa1842947df2e6635c2675e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/jawira/case-converter/zipball/2f284c0760ee8085ab463f57275cf1f887fb78ae",
-                "reference": "2f284c0760ee8085ab463f57275cf1f887fb78ae",
+                "url": "https://api.github.com/repos/jawira/case-converter/zipball/f11ac9b097ca16af8aa1842947df2e6635c2675e",
+                "reference": "f11ac9b097ca16af8aa1842947df2e6635c2675e",
                 "shasum": ""
             },
             "require": {
                 "ext-mbstring": "*",
-                "php": "^7.1 || ^8.0"
+                "php": ">=7.4"
             },
             "require-dev": {
                 "behat/behat": "^3.0",
@@ -120,9 +120,9 @@
             ],
             "support": {
                 "issues": "https://github.com/jawira/case-converter/issues",
-                "source": "https://github.com/jawira/case-converter/tree/v3.4.6"
+                "source": "https://github.com/jawira/case-converter/tree/v3.5.0"
             },
-            "time": "2021-11-21T19:52:51+00:00"
+            "time": "2022-06-23T20:32:12+00:00"
         },
         {
             "name": "laminas/laminas-hydrator",
