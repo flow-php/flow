@@ -132,7 +132,7 @@
 - [856870](https://github.com/flow-php/etl/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
-- [#271](https://github.com/flow-php/etl/pull/271) - **Allow infection/extension-installer in tools** - [@szepeviktor](https://github.com/szepeviktor)
+- [#271](https://github.com/flow-php/etl/pull/271) - **Disallow Composer plugins in tools** - [@szepeviktor](https://github.com/szepeviktor)
 - [#266](https://github.com/flow-php/etl/pull/266) - **Prevent duplicate `.` in extension name** - [@stloyd](https://github.com/stloyd)
 - [#266](https://github.com/flow-php/etl/pull/266) - **Reduce duplicate calls to `->uri()` method** - [@stloyd](https://github.com/stloyd)
 - [#261](https://github.com/flow-php/etl/pull/261) - **Added env variable directly into `phpunit.xml`** - [@stloyd](https://github.com/stloyd)
