@@ -126,42 +126,43 @@
         },
         {
             "name": "laminas/laminas-hydrator",
-            "version": "4.3.1",
+            "version": "4.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laminas/laminas-hydrator.git",
-                "reference": "cc5ea6b42d318dbac872d94e8dca2d3013a37ab5"
+                "reference": "bc849d46fb44e96dd93f7479e21266185ad3def3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laminas/laminas-hydrator/zipball/cc5ea6b42d318dbac872d94e8dca2d3013a37ab5",
-                "reference": "cc5ea6b42d318dbac872d94e8dca2d3013a37ab5",
+                "url": "https://api.github.com/repos/laminas/laminas-hydrator/zipball/bc849d46fb44e96dd93f7479e21266185ad3def3",
+                "reference": "bc849d46fb44e96dd93f7479e21266185ad3def3",
                 "shasum": ""
             },
             "require": {
                 "laminas/laminas-stdlib": "^3.3",
-                "php": "^7.3 || ~8.0.0 || ~8.1.0",
+                "php": "^7.4 || ~8.0.0 || ~8.1.0",
                 "webmozart/assert": "^1.10"
             },
             "conflict": {
+                "laminas/laminas-servicemanager": "<3.14.0",
                 "zendframework/zend-hydrator": "*"
             },
             "require-dev": {
                 "laminas/laminas-coding-standard": "~2.3.0",
-                "laminas/laminas-eventmanager": "^3.2.1",
-                "laminas/laminas-modulemanager": "^2.8",
-                "laminas/laminas-serializer": "^2.9",
-                "laminas/laminas-servicemanager": "^3.3.2",
-                "phpbench/phpbench": "^1.0",
-                "phpunit/phpunit": "~9.5.5",
-                "psalm/plugin-phpunit": "^0.16.1",
+                "laminas/laminas-eventmanager": "^3.5.0",
+                "laminas/laminas-modulemanager": "^2.11.0",
+                "laminas/laminas-serializer": "^2.13.0",
+                "laminas/laminas-servicemanager": "^3.14.0",
+                "phpbench/phpbench": "^1.2.5",
+                "phpunit/phpunit": "~9.5.21",
+                "psalm/plugin-phpunit": "^0.17.0",
                 "psr/cache": "1.0.1",
-                "vimeo/psalm": "^4.8.1"
+                "vimeo/psalm": "^4.24.0"
             },
             "suggest": {
                 "laminas/laminas-eventmanager": "^3.2, to support aggregate hydrator usage",
                 "laminas/laminas-serializer": "^2.9, to use the SerializableStrategy",
-                "laminas/laminas-servicemanager": "^3.3, to support hydrator plugin manager usage"
+                "laminas/laminas-servicemanager": "^3.14, to support hydrator plugin manager usage"
             },
             "type": "library",
             "extra": {
@@ -199,20 +200,20 @@
                     "type": "community_bridge"
                 }
             ],
-            "time": "2021-09-09T09:55:00+00:00"
+            "time": "2022-07-13T13:58:31+00:00"
         },
         {
             "name": "laminas/laminas-stdlib",
-            "version": "3.7.1",
+            "version": "3.10.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laminas/laminas-stdlib.git",
-                "reference": "bcd869e2fe88d567800057c1434f2380354fe325"
+                "reference": "0d669074845fc80a99add0f64025192f143ef836"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laminas/laminas-stdlib/zipball/bcd869e2fe88d567800057c1434f2380354fe325",
-                "reference": "bcd869e2fe88d567800057c1434f2380354fe325",
+                "url": "https://api.github.com/repos/laminas/laminas-stdlib/zipball/0d669074845fc80a99add0f64025192f143ef836",
+                "reference": "0d669074845fc80a99add0f64025192f143ef836",
                 "shasum": ""
             },
             "require": {
@@ -258,7 +259,7 @@
                     "type": "community_bridge"
                 }
             ],
-            "time": "2022-01-21T15:50:46+00:00"
+            "time": "2022-06-10T14:49:09+00:00"
         },
         {
             "name": "laravel/serializable-closure",
@@ -742,21 +743,21 @@
         },
         {
             "name": "webmozart/assert",
-            "version": "1.10.0",
+            "version": "1.11.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/webmozarts/assert.git",
-                "reference": "6964c76c7804814a842473e0c8fd15bab0f18e25"
+                "reference": "11cb2199493b2f8a3b53e7f19068fc6aac760991"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/webmozarts/assert/zipball/6964c76c7804814a842473e0c8fd15bab0f18e25",
-                "reference": "6964c76c7804814a842473e0c8fd15bab0f18e25",
+                "url": "https://api.github.com/repos/webmozarts/assert/zipball/11cb2199493b2f8a3b53e7f19068fc6aac760991",
+                "reference": "11cb2199493b2f8a3b53e7f19068fc6aac760991",
                 "shasum": ""
             },
             "require": {
-                "php": "^7.2 || ^8.0",
-                "symfony/polyfill-ctype": "^1.8"
+                "ext-ctype": "*",
+                "php": "^7.2 || ^8.0"
             },
             "conflict": {
                 "phpstan/phpstan": "<0.12.20",
@@ -794,9 +795,9 @@
             ],
             "support": {
                 "issues": "https://github.com/webmozarts/assert/issues",
-                "source": "https://github.com/webmozarts/assert/tree/1.10.0"
+                "source": "https://github.com/webmozarts/assert/tree/1.11.0"
             },
-            "time": "2021-03-09T10:59:23+00:00"
+            "time": "2022-06-03T18:03:27+00:00"
         }
     ],
     "aliases": [],
