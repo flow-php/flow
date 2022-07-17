@@ -8,8 +8,6 @@
     "friendsofphp/php-cs-fixer": "^3.1"
   },
   "config": {
-    "allow-plugins": {
-      "composer/package-versions-deprecated": true
-    }
+    "allow-plugins": false
   }
 }
