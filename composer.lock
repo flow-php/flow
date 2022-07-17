@@ -8,16 +8,16 @@
     "packages": [
         {
             "name": "amphp/amp",
-            "version": "v3.0.0-beta.6",
+            "version": "v3.0.0-beta.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/amphp/amp.git",
-                "reference": "d8d0b8fabe62cc52749cd01242d1730a43c4802e"
+                "reference": "354a2ec25269b630ece65f149e1ccb438380f56c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/amphp/amp/zipball/d8d0b8fabe62cc52749cd01242d1730a43c4802e",
-                "reference": "d8d0b8fabe62cc52749cd01242d1730a43c4802e",
+                "url": "https://api.github.com/repos/amphp/amp/zipball/354a2ec25269b630ece65f149e1ccb438380f56c",
+                "reference": "354a2ec25269b630ece65f149e1ccb438380f56c",
                 "shasum": ""
             },
             "require": {
@@ -84,7 +84,7 @@
             ],
             "support": {
                 "issues": "https://github.com/amphp/amp/issues",
-                "source": "https://github.com/amphp/amp/tree/v3.0.0-beta.6"
+                "source": "https://github.com/amphp/amp/tree/v3.0.0-beta.9"
             },
             "funding": [
                 {
@@ -92,20 +92,20 @@
                     "type": "github"
                 }
             ],
-            "time": "2022-04-20T04:52:32+00:00"
+            "time": "2022-07-12T20:19:22+00:00"
         },
         {
             "name": "amphp/byte-stream",
-            "version": "v2.0.0-beta.8",
+            "version": "v2.0.0-beta.10",
             "source": {
                 "type": "git",
                 "url": "https://github.com/amphp/byte-stream.git",
-                "reference": "00adeed1340e79ce5851c4b0d275afb2004854a1"
+                "reference": "0c2b2ab89517fa0fcc50f91400cc66275af03301"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/amphp/byte-stream/zipball/00adeed1340e79ce5851c4b0d275afb2004854a1",
-                "reference": "00adeed1340e79ce5851c4b0d275afb2004854a1",
+                "url": "https://api.github.com/repos/amphp/byte-stream/zipball/0c2b2ab89517fa0fcc50f91400cc66275af03301",
+                "reference": "0c2b2ab89517fa0fcc50f91400cc66275af03301",
                 "shasum": ""
             },
             "require": {
@@ -164,7 +164,7 @@
             ],
             "support": {
                 "issues": "https://github.com/amphp/byte-stream/issues",
-                "source": "https://github.com/amphp/byte-stream/tree/v2.0.0-beta.8"
+                "source": "https://github.com/amphp/byte-stream/tree/v2.0.0-beta.10"
             },
             "funding": [
                 {
@@ -172,7 +172,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2022-04-03T17:06:46+00:00"
+            "time": "2022-06-25T17:15:00+00:00"
         },
         {
             "name": "amphp/cache",
@@ -458,22 +458,22 @@
         },
         {
             "name": "amphp/process",
-            "version": "v2.0.0-beta.3",
+            "version": "v2.0.0-beta.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/amphp/process.git",
-                "reference": "509742a0ac6e9253cfd38f10039ddd8768300d57"
+                "reference": "432c72e21bfca2a45a323ed152fcf05a0b847f6d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/amphp/process/zipball/509742a0ac6e9253cfd38f10039ddd8768300d57",
-                "reference": "509742a0ac6e9253cfd38f10039ddd8768300d57",
+                "url": "https://api.github.com/repos/amphp/process/zipball/432c72e21bfca2a45a323ed152fcf05a0b847f6d",
+                "reference": "432c72e21bfca2a45a323ed152fcf05a0b847f6d",
                 "shasum": ""
             },
             "require": {
                 "amphp/amp": "^3",
                 "amphp/byte-stream": "^2",
-                "php": ">=8",
+                "php": ">=8.1",
                 "revolt/event-loop": "^0.2"
             },
             "require-dev": {
@@ -514,7 +514,7 @@
             "homepage": "https://github.com/amphp/process",
             "support": {
                 "issues": "https://github.com/amphp/process/issues",
-                "source": "https://github.com/amphp/process/tree/v2.0.0-beta.3"
+                "source": "https://github.com/amphp/process/tree/v2.0.0-beta.4"
             },
             "funding": [
                 {
@@ -522,7 +522,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2022-02-02T23:08:25+00:00"
+            "time": "2022-07-07T03:28:18+00:00"
         },
         {
             "name": "amphp/serialization",
@@ -671,16 +671,16 @@
         },
         {
             "name": "amphp/sync",
-            "version": "v2.0.0-beta.4",
+            "version": "v2.0.0-beta.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/amphp/sync.git",
-                "reference": "f25b8d23e7c268d0427e4d315d9734e26ae19aa8"
+                "reference": "707c74a304160a2c71c0a3d8c9b25d98401601b0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/amphp/sync/zipball/f25b8d23e7c268d0427e4d315d9734e26ae19aa8",
-                "reference": "f25b8d23e7c268d0427e4d315d9734e26ae19aa8",
+                "url": "https://api.github.com/repos/amphp/sync/zipball/707c74a304160a2c71c0a3d8c9b25d98401601b0",
+                "reference": "707c74a304160a2c71c0a3d8c9b25d98401601b0",
                 "shasum": ""
             },
             "require": {
@@ -730,7 +730,7 @@
             ],
             "support": {
                 "issues": "https://github.com/amphp/sync/issues",
-                "source": "https://github.com/amphp/sync/tree/v2.0.0-beta.4"
+                "source": "https://github.com/amphp/sync/tree/v2.0.0-beta.5"
             },
             "funding": [
                 {
@@ -738,7 +738,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2022-04-03T16:54:49+00:00"
+            "time": "2022-07-13T17:19:49+00:00"
         },
         {
             "name": "amphp/windows-registry",
@@ -842,12 +842,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/array-dot.git",
-                "reference": "c0688bb9e2c90f343779bc3b1761e11bd26da55f"
+                "reference": "d2e312eb54d307027b8ddfce0bf6c3fc7fcd2769"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/array-dot/zipball/c0688bb9e2c90f343779bc3b1761e11bd26da55f",
-                "reference": "c0688bb9e2c90f343779bc3b1761e11bd26da55f",
+                "url": "https://api.github.com/repos/flow-php/array-dot/zipball/d2e312eb54d307027b8ddfce0bf6c3fc7fcd2769",
+                "reference": "d2e312eb54d307027b8ddfce0bf6c3fc7fcd2769",
                 "shasum": ""
             },
             "require": {
@@ -883,7 +883,7 @@
                 "issues": "https://github.com/flow-php/array-dot/issues",
                 "source": "https://github.com/flow-php/array-dot/tree/1.x"
             },
-            "time": "2022-04-10T09:46:31+00:00"
+            "time": "2022-07-13T21:19:44+00:00"
         },
         {
             "name": "flow-php/etl",
@@ -891,12 +891,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl.git",
-                "reference": "aead49745e78368ea0f2689b47e059eca3bd8219"
+                "reference": "84da26a2ff827ef5465fff032235af9c726d19f8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl/zipball/aead49745e78368ea0f2689b47e059eca3bd8219",
-                "reference": "aead49745e78368ea0f2689b47e059eca3bd8219",
+                "url": "https://api.github.com/repos/flow-php/etl/zipball/84da26a2ff827ef5465fff032235af9c726d19f8",
+                "reference": "84da26a2ff827ef5465fff032235af9c726d19f8",
                 "shasum": ""
             },
             "require": {
@@ -940,7 +940,7 @@
                 "issues": "https://github.com/flow-php/etl/issues",
                 "source": "https://github.com/flow-php/etl/tree/1.x"
             },
-            "time": "2022-04-26T20:14:52+00:00"
+            "time": "2022-07-14T06:12:43+00:00"
         },
         {
             "name": "kelunik/certificate",
@@ -997,33 +997,36 @@
         },
         {
             "name": "league/uri",
-            "version": "6.5.0",
+            "version": "6.7.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/thephpleague/uri.git",
-                "reference": "c68ca445abb04817d740ddd6d0b3551826ef0c5a"
+                "reference": "2d7c87a0860f3126a39f44a8a9bf2fed402dcfea"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/thephpleague/uri/zipball/c68ca445abb04817d740ddd6d0b3551826ef0c5a",
-                "reference": "c68ca445abb04817d740ddd6d0b3551826ef0c5a",
+                "url": "https://api.github.com/repos/thephpleague/uri/zipball/2d7c87a0860f3126a39f44a8a9bf2fed402dcfea",
+                "reference": "2d7c87a0860f3126a39f44a8a9bf2fed402dcfea",
                 "shasum": ""
             },
             "require": {
                 "ext-json": "*",
                 "league/uri-interfaces": "^2.3",
-                "php": "^7.3 || ^8.0",
+                "php": "^7.4 || ^8.0",
                 "psr/http-message": "^1.0"
             },
             "conflict": {
                 "league/uri-schemes": "^1.0"
             },
             "require-dev": {
-                "friendsofphp/php-cs-fixer": "^2.19 || ^3.0",
-                "phpstan/phpstan": "^0.12.90",
-                "phpstan/phpstan-phpunit": "^0.12.22",
-                "phpstan/phpstan-strict-rules": "^0.12.11",
-                "phpunit/phpunit": "^8.0 || ^9.0",
+                "friendsofphp/php-cs-fixer": "^v3.3.2",
+                "nyholm/psr7": "^1.5",
+                "php-http/psr7-integration-tests": "^1.1",
+                "phpstan/phpstan": "^1.2.0",
+                "phpstan/phpstan-deprecation-rules": "^1.0",
+                "phpstan/phpstan-phpunit": "^1.0.0",
+                "phpstan/phpstan-strict-rules": "^1.1.0",
+                "phpunit/phpunit": "^9.5.10",
                 "psr/http-factory": "^1.0"
             },
             "suggest": {
@@ -1055,7 +1058,7 @@
                 }
             ],
             "description": "URI manipulation library",
-            "homepage": "http://uri.thephpleague.com",
+            "homepage": "https://uri.thephpleague.com",
             "keywords": [
                 "data-uri",
                 "file-uri",
@@ -1081,7 +1084,7 @@
                 "docs": "https://uri.thephpleague.com",
                 "forum": "https://thephpleague.slack.com",
                 "issues": "https://github.com/thephpleague/uri/issues",
-                "source": "https://github.com/thephpleague/uri/tree/6.5.0"
+                "source": "https://github.com/thephpleague/uri/tree/6.7.1"
             },
             "funding": [
                 {
@@ -1089,7 +1092,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2021-08-27T09:54:07+00:00"
+            "time": "2022-06-29T09:48:18+00:00"
         },
         {
             "name": "league/uri-interfaces",

@@ -11,8 +11,6 @@
     "friendsofphp/php-cs-fixer": "^3.1"
   },
   "config": {
-    "allow-plugins": {
-      "composer/package-versions-deprecated": false
-    }
+    "allow-plugins": false
   }
 }
