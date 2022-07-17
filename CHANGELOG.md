@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-04-26
+## [Unreleased] - 2022-07-17
 
 ### Added
 - [a3e49e](https://github.com/flow-php/etl-adapter-amphp/commit/a3e49e82409c546ff331249d6abf9fe4749b5c71) - **github actions configuration** - [@norberttech](https://github.com/norberttech)
@@ -8,6 +8,7 @@
 - [94c83b](https://github.com/flow-php/etl-adapter-amphp/commit/94c83b89837f9aa89974573f977f8237c986babd) - **Initial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Updated
+- [53ca28](https://github.com/flow-php/etl-adapter-amphp/commit/53ca28ad4ed29ca8b42e3816bbc601561a938f0b) - **dependencies** - [@norberttech](https://github.com/norberttech)
 - [a7139f](https://github.com/flow-php/etl-adapter-amphp/commit/a7139f4037bbcc20ae9c87a1c4337ecb3899aa51) - **flow-php dependency** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
