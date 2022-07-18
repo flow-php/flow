@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer;
 
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
@@ -36,7 +37,7 @@ final class RenameEntriesTransformer implements Transformer
         $this->entryRenames = $data['entry_renames'];
     }
 
-    public function transform(Rows $rows) : Rows
+    public function transform(Rows $rows, FlowContext $context) : Rows
     {
         foreach ($this->entryRenames as $entryRename) {
             $rows = $rows->map(fn (Row $row) : Row => $row->rename($entryRename->from(), $entryRename->to()));

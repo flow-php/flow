@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use Flow\ETL\Config;
 use Flow\ETL\DSL\Transform;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\TypedCollection\ScalarType;
 use Flow\ETL\Rows;
@@ -27,7 +29,7 @@ final class ArrayExpandTransformerTest extends TestCase
                             'id' => 1,
                             'status' => 'PENDING',
                             'enabled' => true,
-                            'datetime' =>  new \DateTimeImmutable('2020-01-01 00:00:00 UTC'),
+                            'datetime' => new \DateTimeImmutable('2020-01-01 00:00:00 UTC'),
                             'array' => ['foo', 'bar'],
                             'json' => '["foo", "bar"]',
                             'object' => new \stdClass(),
@@ -39,7 +41,7 @@ final class ArrayExpandTransformerTest extends TestCase
                             'id' => 2,
                             'status' => 'NEW',
                             'enabled' => true,
-                            'datetime' =>  new \DateTimeImmutable('2020-01-05 00:00:00 UTC'),
+                            'datetime' => new \DateTimeImmutable('2020-01-05 00:00:00 UTC'),
                             'array' => ['foo', 'bar'],
                             'json' => '["foo", "bar"]',
                             'object' => new \stdClass(),
@@ -50,6 +52,7 @@ final class ArrayExpandTransformerTest extends TestCase
                     ]),
                 ),
             ),
+            new FlowContext(Config::default())
         );
 
         $this->assertEquals(
@@ -80,7 +83,8 @@ final class ArrayExpandTransformerTest extends TestCase
                 ],
             ],
             (new RemoveEntriesTransformer('element'))->transform(
-                (new ArrayUnpackTransformer('element'))->transform($rows)
+                (new ArrayUnpackTransformer('element'))->transform($rows, new FlowContext(Config::default())),
+                new FlowContext(Config::default())
             )->toArray()
         );
     }
@@ -95,6 +99,7 @@ final class ArrayExpandTransformerTest extends TestCase
                     new Row\Entry\ArrayEntry('array_entry', [1, 2]),
                 ),
             ),
+            new FlowContext(Config::default())
         );
 
         $this->assertEquals(
@@ -121,6 +126,7 @@ final class ArrayExpandTransformerTest extends TestCase
                     new Row\Entry\ArrayEntry('array_entry', [1, 2]),
                 ),
             ),
+            new FlowContext(Config::default())
         );
 
         $this->assertEquals(
@@ -148,6 +154,7 @@ final class ArrayExpandTransformerTest extends TestCase
                     new Row\Entry\ListEntry('array_entry', ScalarType::string, ['1', '2']),
                 ),
             ),
+            new FlowContext(Config::default())
         );
 
         $this->assertEquals(
@@ -176,6 +183,7 @@ final class ArrayExpandTransformerTest extends TestCase
                     new Row\Entry\IntegerEntry('integer_entry', 1),
                 ),
             ),
+            new FlowContext(Config::default())
         );
     }
 }

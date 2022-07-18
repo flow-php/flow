@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Pipeline;
 
-use Flow\ETL\Config;
 use Flow\ETL\DSL\From;
 use Flow\ETL\Extractor;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Pipeline;
 use Flow\ETL\Rows;
@@ -36,13 +36,13 @@ final class CollectingPipeline implements Pipeline
         return new self($this->pipeline);
     }
 
-    public function process(Config $config) : \Generator
+    public function process(FlowContext $context) : \Generator
     {
         $this->nextPipeline->source(From::rows(
-            (new Rows())->merge(...\iterator_to_array($this->pipeline->process($config)))
+            (new Rows())->merge(...\iterator_to_array($this->pipeline->process($context)))
         ));
 
-        return $this->nextPipeline->process($config);
+        return $this->nextPipeline->process($context);
     }
 
     public function source(Extractor $extractor) : self

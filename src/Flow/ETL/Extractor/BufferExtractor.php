@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Extractor;
 
 use Flow\ETL\Extractor;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 
 /**
@@ -19,13 +20,15 @@ final class BufferExtractor implements Extractor
     }
 
     /**
+     * @param FlowContext $context
+     *
      * @return \Generator<int, Rows, mixed, void>
      */
-    public function extract() : \Generator
+    public function extract(FlowContext $context) : \Generator
     {
         $rows = new Rows();
 
-        foreach ($this->extractor->extract() as $nextRows) {
+        foreach ($this->extractor->extract($context) as $nextRows) {
             if ($nextRows->count() >= $this->maxRowsSize) {
                 foreach ($nextRows->chunks($this->maxRowsSize) as $nextRowsChunk) {
                     if ($nextRowsChunk->count() === $this->maxRowsSize) {

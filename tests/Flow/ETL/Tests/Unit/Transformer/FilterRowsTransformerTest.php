@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use Flow\ETL\Config;
 use Flow\ETL\DSL\Transform;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use PHPUnit\Framework\TestCase;
@@ -19,7 +21,8 @@ final class FilterRowsTransformerTest extends TestCase
             new Rows(
                 Row::create(new Row\Entry\IntegerEntry('number', 2), new Row\Entry\StringEntry('text', 'test')),
                 Row::create(new Row\Entry\StringEntry('text', 'test')),
-            )
+            ),
+            new FlowContext(Config::default())
         );
 
         $this->assertEquals(
@@ -38,7 +41,8 @@ final class FilterRowsTransformerTest extends TestCase
             new Rows(
                 Row::create(new Row\Entry\IntegerEntry('number', 2), new Row\Entry\StringEntry('text', 'test')),
                 Row::create(new Row\Entry\StringEntry('text', 'test')),
-            )
+            ),
+            new FlowContext(Config::default())
         );
 
         $this->assertEquals(
@@ -58,7 +62,8 @@ final class FilterRowsTransformerTest extends TestCase
                 Row::create(new Row\Entry\IntegerEntry('number', 2), new Row\Entry\StringEntry('text', 'test')),
                 Row::create(new Row\Entry\NullEntry('number'), new Row\Entry\StringEntry('text', 'test')),
                 Row::create(new Row\Entry\IntegerEntry('number', 5), new Row\Entry\StringEntry('text', 'test')),
-            )
+            ),
+            new FlowContext(Config::default())
         );
 
         $this->assertEquals(
@@ -79,7 +84,8 @@ final class FilterRowsTransformerTest extends TestCase
                 Row::create(new Row\Entry\IntegerEntry('number', 2)),
                 Row::create(new Row\Entry\IntegerEntry('number', 10)),
                 Row::create(new Row\Entry\IntegerEntry('number', 5)),
-            )
+            ),
+            new FlowContext(Config::default())
         );
 
         $this->assertEquals(
@@ -99,7 +105,8 @@ final class FilterRowsTransformerTest extends TestCase
                 Row::create(new Row\Entry\StringEntry('status', 'PENDING')),
                 Row::create(new Row\Entry\StringEntry('status', 'SHIPPED')),
                 Row::create(new Row\Entry\StringEntry('status', 'NEW')),
-            )
+            ),
+            new FlowContext(Config::default())
         );
 
         $this->assertEquals(

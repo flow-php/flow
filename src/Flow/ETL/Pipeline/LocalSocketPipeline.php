@@ -8,10 +8,10 @@ use Flow\ETL\Async\Socket\Server\Server;
 use Flow\ETL\Async\Socket\Server\ServerProtocol;
 use Flow\ETL\Async\Socket\Worker\Pool;
 use Flow\ETL\Async\Socket\Worker\WorkerLauncher;
-use Flow\ETL\Config;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\ProcessExtractor;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Pipeline;
 use Flow\ETL\Rows;
@@ -51,19 +51,19 @@ final class LocalSocketPipeline implements Pipeline
         return new Pipeline\SynchronousPipeline();
     }
 
-    public function process(Config $config) : \Generator
+    public function process(FlowContext $context) : \Generator
     {
         $pool = Pool::generate($this->totalWorkers);
 
         $id = \uniqid('flow_async_pipeline', true);
 
-        $this->server->initialize(new ServerProtocol($config, $id, $pool, $this->extractor, $this->pipes));
+        $this->server->initialize(new ServerProtocol($context, $id, $pool, $this->extractor, $this->pipes));
 
         $this->launcher->launch($pool, $this->server->host());
 
         $this->server->start();
 
-        return $config->cache()->read($id);
+        return $context->config->cache()->read($id);
     }
 
     public function source(Extractor $extractor) : self

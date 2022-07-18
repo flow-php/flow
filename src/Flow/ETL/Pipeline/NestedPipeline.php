@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Pipeline;
 
-use Flow\ETL\Config;
 use Flow\ETL\Extractor;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Pipeline;
 use Flow\ETL\Transformer;
@@ -33,9 +33,9 @@ final class NestedPipeline implements Pipeline
         );
     }
 
-    public function process(Config $config) : \Generator
+    public function process(FlowContext $context) : \Generator
     {
-        foreach ($this->nextPipeline->source(new Extractor\PipelineExtractor($this->currentPipeline, $config))->process($config) as $rows) {
+        foreach ($this->nextPipeline->source(new Extractor\PipelineExtractor($this->currentPipeline))->process($context) as $rows) {
             yield $rows;
         }
     }

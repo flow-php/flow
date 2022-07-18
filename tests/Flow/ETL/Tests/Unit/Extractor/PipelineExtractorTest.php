@@ -8,6 +8,7 @@ use Flow\ETL\Config;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\Extractor\PipelineExtractor;
 use Flow\ETL\Extractor\ProcessExtractor;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Pipeline\SynchronousPipeline;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -28,7 +29,7 @@ final class PipelineExtractorTest extends TestCase
 
         $this->assertCount(
             3,
-            \iterator_to_array($extractor->extract())
+            \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
         );
     }
 }

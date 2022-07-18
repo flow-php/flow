@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use Flow\ETL\Config;
 use Flow\ETL\DSL\Transform;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\TypedCollection\ScalarType;
 use Flow\ETL\Rows;
@@ -35,7 +37,9 @@ final class ArrayUnpackTransformerTest extends TestCase
                         ),
                     ),
                 ),
-            )
+                $context = new FlowContext(Config::default())
+            ),
+            $context
         );
 
         $this->assertEquals(
@@ -63,7 +67,9 @@ final class ArrayUnpackTransformerTest extends TestCase
                         new Row\Entry\IntegerEntry('integer_entry', 1),
                     ),
                 ),
-            )
+                $context = new FlowContext(Config::default())
+            ),
+            $context
         );
     }
 
@@ -81,7 +87,9 @@ final class ArrayUnpackTransformerTest extends TestCase
                         new Row\Entry\IntegerEntry('integer_entry', 1),
                     ),
                 ),
-            )
+                $context = new FlowContext(Config::default())
+            ),
+            $context
         );
     }
 
@@ -98,7 +106,7 @@ final class ArrayUnpackTransformerTest extends TestCase
                             'id' => 1,
                             'status' => 'PENDING',
                             'enabled' => true,
-                            'datetime' =>  new \DateTimeImmutable('2020-01-01 00:00:00 UTC'),
+                            'datetime' => new \DateTimeImmutable('2020-01-01 00:00:00 UTC'),
                             'array' => ['foo', 'bar'],
                             'json' => '["foo", "bar"]',
                             'object' => new \stdClass(),
@@ -108,7 +116,9 @@ final class ArrayUnpackTransformerTest extends TestCase
                         ]),
                     ),
                 ),
-            )
+                $context = new FlowContext(Config::default()),
+            ),
+            $context
         );
 
         $this->assertEquals(
@@ -152,7 +162,9 @@ final class ArrayUnpackTransformerTest extends TestCase
                         ]),
                     ),
                 ),
-            )
+                $context = new FlowContext(Config::default())
+            ),
+            $context
         );
 
         $this->assertEquals(
@@ -182,7 +194,9 @@ final class ArrayUnpackTransformerTest extends TestCase
                 new Rows(
                     Row::create(new Row\Entry\ArrayEntry('array_entry', ['id' => '1']), ),
                 ),
-            )
+                $context = new FlowContext(Config::default())
+            ),
+            $context
         );
 
         $this->assertEquals(
@@ -202,7 +216,9 @@ final class ArrayUnpackTransformerTest extends TestCase
                 new Rows(
                     Row::create(new Row\Entry\ArrayEntry('array_entry', ['status' => 'null']), ),
                 ),
-            )
+                $context = new FlowContext(Config::default())
+            ),
+            $context
         );
 
         $this->assertEquals(
@@ -219,7 +235,8 @@ final class ArrayUnpackTransformerTest extends TestCase
             ->transform(
                 new Rows(
                     Row::create(new Row\Entry\ArrayEntry('inventory', ['total' => 100, 'available' => 100, 'damaged' => 0]))
-                )
+                ),
+                new FlowContext(Config::default())
             );
 
         $this->assertSame(
@@ -241,7 +258,8 @@ final class ArrayUnpackTransformerTest extends TestCase
             ->transform(
                 new Rows(
                     Row::create(new Row\Entry\ArrayEntry('inventory', ['total' => 100, 'available' => 100, 'damaged' => 0]))
-                )
+                ),
+                new FlowContext(Config::default())
             );
 
         $this->assertSame(

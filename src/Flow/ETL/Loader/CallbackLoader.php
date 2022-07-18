@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Loader;
 
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Rows;
 use Flow\ETL\Serializer\Closure;
@@ -18,7 +19,7 @@ final class CallbackLoader implements Loader
     /**
      * @phpstan-ignore-next-line
      *
-     * @param callable(Rows $row) : void $callback
+     * @param callable(Rows $row, Context $context) : void $callback
      */
     private $callback;
 
@@ -47,8 +48,8 @@ final class CallbackLoader implements Loader
         $this->callback = $data['callback']->getClosure();
     }
 
-    public function load(Rows $rows) : void
+    public function load(Rows $rows, FlowContext $context) : void
     {
-        ($this->callback)($rows);
+        ($this->callback)($rows, $context);
     }
 }

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use Flow\ETL\Config;
 use Flow\ETL\DSL\Transform;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\ArrayEntry;
 use Flow\ETL\Rows;
@@ -37,7 +39,7 @@ final class ArraySortTransformerTest extends TestCase
                     ],
                 ],
             ],
-            $transformer->transform(new Rows(Row::create($arrayEntry)))->toArray()
+            $transformer->transform(new Rows(Row::create($arrayEntry)), new FlowContext(Config::default()))->toArray()
         );
     }
 
@@ -61,7 +63,7 @@ final class ArraySortTransformerTest extends TestCase
                     'array' => [3, 4, 5, 10],
                 ],
             ],
-            $transformer->transform(new Rows(Row::create($arrayEntry)))->toArray()
+            $transformer->transform(new Rows(Row::create($arrayEntry)), new FlowContext(Config::default()))->toArray()
         );
     }
 }

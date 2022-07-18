@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer;
 
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Rows;
@@ -33,7 +34,7 @@ final class GroupToArrayTransformer implements Transformer
         $this->newEntryName = $data['new_entry_name'];
     }
 
-    public function transform(Rows $rows) : Rows
+    public function transform(Rows $rows, FlowContext $context) : Rows
     {
         /** @var array<array-key, array<mixed>> $entries */
         $entries = [];

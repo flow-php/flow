@@ -6,6 +6,7 @@ namespace Flow\ETL\Transformer;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
@@ -32,7 +33,7 @@ final class ArrayReverseTransformer implements Transformer
         $this->arrayEntryName = $data['array_entry_name'];
     }
 
-    public function transform(Rows $rows) : Rows
+    public function transform(Rows $rows, FlowContext $context) : Rows
     {
         /**
          * @psalm-var pure-callable(Row $row) : Row $transformer

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use Flow\ETL\Config;
 use Flow\ETL\DSL\Entry;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer\HashTransformer;
@@ -18,7 +20,7 @@ final class HashTransformerTest extends TestCase
 
         $rows = $transformer->transform(new Rows(
             Row::create(Entry::integer('id', 1), Entry::string('name', 'Johny'))
-        ));
+        ), new FlowContext(Config::default()));
 
         $this->assertEquals(
             new Rows(
@@ -34,7 +36,7 @@ final class HashTransformerTest extends TestCase
 
         $rows = $transformer->transform(new Rows(
             Row::create(Entry::integer('id', 1), Entry::string('name', 'Johny'))
-        ));
+        ), new FlowContext(Config::default()));
 
         $this->assertEquals(
             new Rows(

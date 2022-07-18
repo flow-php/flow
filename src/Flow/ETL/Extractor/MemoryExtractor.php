@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Extractor;
 
 use Flow\ETL\Extractor;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Memory\Memory;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -28,7 +29,7 @@ final class MemoryExtractor implements Extractor
     ) {
     }
 
-    public function extract() : \Generator
+    public function extract(FlowContext $context) : \Generator
     {
         foreach (\array_chunk($this->memory->dump(), $this->chunkSize) as $chunk) {
             $rows = [];

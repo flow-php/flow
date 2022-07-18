@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Transformer;
 
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
@@ -77,7 +78,7 @@ final class CallUserFunctionTransformer implements Transformer
         $this->valueArgumentName = $data['value_argument_name'];
     }
 
-    public function transform(Rows $rows) : Rows
+    public function transform(Rows $rows, FlowContext $context) : Rows
     {
         /**
          * @var callable(Row) : Row $transform

@@ -19,7 +19,7 @@ interface Pipeline
     /**
      * @return \Generator<int, Rows, mixed, void>
      */
-    public function process(Config $config) : \Generator;
+    public function process(FlowContext $context) : \Generator;
 
     public function source(Extractor $extractor) : self;
 }

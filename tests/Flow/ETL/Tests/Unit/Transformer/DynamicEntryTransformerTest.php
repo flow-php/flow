@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use Flow\ETL\Config;
 use Flow\ETL\DSL\Transform;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\Serializer\NativePHPSerializer;
@@ -21,7 +23,7 @@ final class DynamicEntryTransformerTest extends TestCase
         $rows = $transformer->transform(new Rows(
             Row::create(new Row\Entry\IntegerEntry('id', 1)),
             Row::create(new Row\Entry\IntegerEntry('id', 2)),
-        ));
+        ), new FlowContext(Config::default()));
 
         $this->assertEquals(
             [
@@ -43,7 +45,7 @@ final class DynamicEntryTransformerTest extends TestCase
         $rows = $serializer->unserialize($serializer->serialize($transformer))->transform(new Rows(
             Row::create(new Row\Entry\IntegerEntry('id', 1)),
             Row::create(new Row\Entry\IntegerEntry('id', 2)),
-        ));
+        ), new FlowContext(Config::default()));
 
         $this->assertEquals(
             [

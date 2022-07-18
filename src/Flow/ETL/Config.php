@@ -16,10 +16,11 @@ final class Config
     private ?int $limit = null;
 
     public function __construct(
-        private string $id,
-        private Cache $cache,
-        private ExternalSort $externalSort,
-        private Serializer $serializer,
+        private readonly string $id,
+        private readonly Cache $cache,
+        private readonly ExternalSort $externalSort,
+        private readonly Serializer $serializer,
+        private readonly Filesystem $filesystem,
         private ErrorHandler $errorHandler
     ) {
     }
@@ -54,6 +55,11 @@ final class Config
     public function externalSort() : ExternalSort
     {
         return $this->externalSort;
+    }
+
+    public function filesystem() : Filesystem
+    {
+        return $this->filesystem;
     }
 
     public function hasLimit() : bool

@@ -8,6 +8,7 @@ use Flow\ETL\Config;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\DSL\Transform;
 use Flow\ETL\Extractor\ProcessExtractor;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Pipeline\NestedPipeline;
 use Flow\ETL\Pipeline\ParallelizingPipeline;
 use Flow\ETL\Pipeline\SynchronousPipeline;
@@ -40,7 +41,7 @@ final class NestedPipelineTest extends TestCase
                     Row::create(Entry::integer('id', 2), Entry::boolean('active', true))
                 ),
             ],
-            \iterator_to_array($pipeline->process(Config::default()))
+            \iterator_to_array($pipeline->process(new FlowContext(Config::default())))
         );
     }
 }

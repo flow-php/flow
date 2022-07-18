@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Loader;
 
+use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Memory\Memory;
 use Flow\ETL\Rows;
@@ -29,7 +30,7 @@ final class MemoryLoader implements Loader
         $this->memory = $data['memory'];
     }
 
-    public function load(Rows $rows) : void
+    public function load(Rows $rows, FlowContext $context) : void
     {
         $this->memory->save($rows->toArray());
     }

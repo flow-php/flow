@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Loader;
 
+use Flow\ETL\Config;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\DSL\To;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\Serializer\NativePHPSerializer;
@@ -24,7 +26,7 @@ final class CallbackLoaderTest extends TestCase
 
         To::callback(function (Rows $rows) use (&$data) : void {
             $data = $rows->toArray();
-        })->load($rows);
+        })->load($rows, new FlowContext(Config::default()));
 
         $this->assertEquals($rows->toArray(), $data);
     }
@@ -47,7 +49,7 @@ final class CallbackLoaderTest extends TestCase
         $serializer = new NativePHPSerializer();
         $serializedLoader = $serializer->serialize($loader);
 
-        $serializer->unserialize($serializedLoader)->load($rows);
+        $serializer->unserialize($serializedLoader)->load($rows, new FlowContext(Config::default()));
 
         $this->assertEquals(\print_r($rows->toArray(), true), \file_get_contents($path));
 

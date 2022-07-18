@@ -7,8 +7,8 @@ namespace Flow\ETL\Async\Socket\Server;
 use Flow\ETL\Async\Socket\Communication\Message;
 use Flow\ETL\Async\Socket\Communication\Protocol;
 use Flow\ETL\Async\Socket\Worker\Pool;
-use Flow\ETL\Config;
 use Flow\ETL\Extractor;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Pipeline\Pipes;
 use Flow\ETL\Rows;
 
@@ -22,13 +22,13 @@ final class ServerProtocol
     private \Generator $generator;
 
     public function __construct(
-        private readonly Config $config,
+        private readonly FlowContext $context,
         private readonly string $cacheId,
         private readonly Pool $workers,
         private readonly Extractor $extractor,
         private readonly Pipes $pipes
     ) {
-        $this->generator = $this->extractor->extract();
+        $this->generator = $this->extractor->extract($this->context);
     }
 
     public function handle(Message $message, Client $client, Server $server) : void
@@ -37,7 +37,7 @@ final class ServerProtocol
             case Protocol::CLIENT_IDENTIFY:
                 if ($this->workers->has($message->payload()['id'] ?? '')) {
                     $this->workers->connect($message->payload()['id'] ?? '');
-                    $client->send(Message::setup($this->pipes, $this->config->cache(), $this->cacheId));
+                    $client->send(Message::setup($this->pipes, $this->context->config->cache(), $this->cacheId));
                 } else {
                     $client->disconnect();
                 }

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use Flow\ETL\Config;
 use Flow\ETL\DSL\Transform;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\TypedCollection\ScalarType;
@@ -22,7 +24,8 @@ final class CallUserFunctionTransformerTest extends TestCase
                 Row::create(
                     new Row\Entry\FloatEntry('float', 10.54613),
                 )
-            )
+            ),
+            new FlowContext(Config::default())
         );
 
         $this->assertEquals(new Rows(
@@ -41,7 +44,8 @@ final class CallUserFunctionTransformerTest extends TestCase
                 Row::create(
                     new Row\Entry\FloatEntry('float', 10.54613),
                 )
-            )
+            ),
+            new FlowContext(Config::default())
         );
 
         $this->assertEquals(new Rows(
@@ -60,7 +64,8 @@ final class CallUserFunctionTransformerTest extends TestCase
                 Row::create(
                     new Entry\StringEntry('string', '  Something  ')
                 )
-            )
+            ),
+            new FlowContext(Config::default())
         );
 
         $this->assertEquals(new Rows(
@@ -79,7 +84,8 @@ final class CallUserFunctionTransformerTest extends TestCase
                 Row::create(
                     new Entry\StringEntry('string', '[90321][90346]/Frodo...')
                 )
-            )
+            ),
+            new FlowContext(Config::default())
         );
 
         $this->assertEquals(new Rows(
@@ -98,7 +104,8 @@ final class CallUserFunctionTransformerTest extends TestCase
                 Row::create(
                     new Row\Entry\FloatEntry('float', 10.54613),
                 )
-            )
+            ),
+            new FlowContext(Config::default())
         );
 
         $this->assertEquals(new Rows(
@@ -117,7 +124,8 @@ final class CallUserFunctionTransformerTest extends TestCase
                 Row::create(
                     new Entry\StringEntry('string', '  Something  ')
                 )
-            )
+            ),
+            new FlowContext(Config::default())
         );
 
         $this->assertEquals(new Rows(
@@ -141,7 +149,8 @@ final class CallUserFunctionTransformerTest extends TestCase
                 Row::create(
                     new Row\Entry\StringEntry('string', 'N'),
                 )
-            )
+            ),
+            new FlowContext(Config::default())
         );
 
         $this->assertEquals(new Rows(
@@ -160,7 +169,8 @@ final class CallUserFunctionTransformerTest extends TestCase
                 Row::create(
                     new Entry\StringEntry('string', 'Something')
                 )
-            )
+            ),
+            new FlowContext(Config::default())
         );
 
         $this->assertEquals(new Rows(
@@ -179,7 +189,8 @@ final class CallUserFunctionTransformerTest extends TestCase
                 Row::create(
                     new Entry\StringEntry('string', '  Something  ')
                 )
-            )
+            ),
+            new FlowContext(Config::default())
         );
 
         $this->assertEquals(new Rows(
@@ -201,7 +212,8 @@ final class CallUserFunctionTransformerTest extends TestCase
                 Row::create(
                     new Row\Entry\ArrayEntry('array_list', [1, 1, 1, 2, 3, 4]),
                 )
-            )
+            ),
+            new FlowContext(Config::default())
         );
 
         $callbackTransformer = Transform::user_function(
@@ -209,7 +221,7 @@ final class CallUserFunctionTransformerTest extends TestCase
             'array_values'
         );
 
-        $rows = $callbackTransformer->transform($rows);
+        $rows = $callbackTransformer->transform($rows, new FlowContext(Config::default()));
 
         $this->assertEquals(new Rows(
             Row::create(
@@ -230,7 +242,8 @@ final class CallUserFunctionTransformerTest extends TestCase
                 Row::create(
                     new Row\Entry\ArrayEntry('array_list', [1, 1, 1, 2, 3, 4]),
                 )
-            )
+            ),
+            new FlowContext(Config::default())
         );
 
         $callbackTransformer = Transform::user_function(
@@ -238,7 +251,7 @@ final class CallUserFunctionTransformerTest extends TestCase
             'array_values'
         );
 
-        $rows = $callbackTransformer->transform($rows);
+        $rows = $callbackTransformer->transform($rows, new FlowContext(Config::default()));
 
         $this->assertEquals(new Rows(
             Row::create(
@@ -260,7 +273,8 @@ final class CallUserFunctionTransformerTest extends TestCase
                     new Row\Entry\IntegerEntry('old-int', 1000),
                     new Entry\StringEntry('string-entry', 'String entry')
                 )
-            )
+            ),
+            new FlowContext(Config::default())
         );
 
         $this->assertEquals(new Rows(

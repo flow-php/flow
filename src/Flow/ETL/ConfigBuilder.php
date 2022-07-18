@@ -7,6 +7,7 @@ namespace Flow\ETL;
 use Flow\ETL\Cache\LocalFilesystemCache;
 use Flow\ETL\ErrorHandler\ThrowError;
 use Flow\ETL\ExternalSort\MemorySort;
+use Flow\ETL\Filesystem\FlysystemFS;
 use Flow\ETL\Monitoring\Memory\Unit;
 use Flow\Serializer\CompressingSerializer;
 use Flow\Serializer\Serializer;
@@ -19,6 +20,8 @@ final class ConfigBuilder
 
     private ?ExternalSort $externalSort;
 
+    private ?Filesystem $filesystem;
+
     private ?string $id;
 
     private ?Serializer $serializer;
@@ -30,6 +33,7 @@ final class ConfigBuilder
         $this->externalSort = null;
         $this->serializer = null;
         $this->errorHandler = null;
+        $this->filesystem = null;
     }
 
     /**
@@ -51,12 +55,14 @@ final class ConfigBuilder
             \is_string(\getenv(Config::EXTERNAL_SORT_MAX_MEMORY_ENV)) ? Unit::fromString(\getenv(Config::EXTERNAL_SORT_MAX_MEMORY_ENV)) : Unit::fromMb(200)
         );
         $this->errorHandler ??= new ThrowError();
+        $this->filesystem ??= new FlysystemFS();
 
         return new Config(
             $this->id,
             $this->cache,
             $this->externalSort,
             $this->serializer,
+            $this->filesystem,
             $this->errorHandler
         );
     }
@@ -71,6 +77,13 @@ final class ConfigBuilder
     public function externalSort(ExternalSort $externalSort) : self
     {
         $this->externalSort = $externalSort;
+
+        return $this;
+    }
+
+    public function filesystem(Filesystem $filesystem) : self
+    {
+        $this->filesystem = $filesystem;
 
         return $this;
     }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Stream;
+namespace Flow\ETL\Filesystem\Stream;
 
 enum Mode: string
 {

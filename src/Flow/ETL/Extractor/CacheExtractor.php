@@ -6,6 +6,7 @@ namespace Flow\ETL\Extractor;
 
 use Flow\ETL\Cache;
 use Flow\ETL\Extractor;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 
 /**
@@ -21,11 +22,12 @@ final class CacheExtractor implements Extractor
     }
 
     /**
+     * @param FlowContext $context
      * @psalm-suppress ImpureMethodCall
      *
      * @return \Generator<int, Rows, mixed, void>
      */
-    public function extract() : \Generator
+    public function extract(FlowContext $context) : \Generator
     {
         foreach ($this->cache->read($this->id) as $rows) {
             yield $rows;

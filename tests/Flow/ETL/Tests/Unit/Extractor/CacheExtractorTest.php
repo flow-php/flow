@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Extractor;
 
 use Flow\ETL\Cache;
+use Flow\ETL\Config;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\DSL\From;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use PHPUnit\Framework\TestCase;
@@ -40,7 +42,7 @@ final class CacheExtractorTest extends TestCase
                 new Rows(Row::create(Entry::integer('id', 2))),
                 new Rows(Row::create(Entry::integer('id', 3))),
             ],
-            \iterator_to_array($extractor->extract())
+            \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
         );
     }
 
@@ -63,6 +65,6 @@ final class CacheExtractorTest extends TestCase
             ->method('clear')
             ->with('id');
 
-        \iterator_to_array((From::cache('id', $cache, $clear = true))->extract());
+        \iterator_to_array((From::cache('id', $cache, $clear = true))->extract(new FlowContext(Config::default())));
     }
 }

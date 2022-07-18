@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Transformer;
 
+use Flow\ETL\Config;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer\Filter\Filter\ValidValue;
@@ -38,7 +40,7 @@ final class FilterRowsTransformerTest extends TestCase
                     'email' => 'email@email.com',
                 ],
             ],
-            $transformer->transform($rows)->toArray()
+            $transformer->transform($rows, new FlowContext(Config::default()))->toArray()
         );
     }
 }

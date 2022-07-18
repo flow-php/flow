@@ -7,6 +7,7 @@ namespace Flow\ETL\Transformer;
 use function Flow\ArrayDot\array_dot_get;
 use Flow\ArrayDot\Exception\InvalidPathException;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
@@ -58,7 +59,7 @@ final class ArrayCollectionGetTransformer implements Transformer
         $this->index = $data['index'];
     }
 
-    public function transform(Rows $rows) : Rows
+    public function transform(Rows $rows, FlowContext $context) : Rows
     {
         /**
          * @psalm-var pure-callable(Row $row) : Row $transformer

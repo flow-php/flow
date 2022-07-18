@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use Flow\ETL\Config;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\DSL\Transform;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\ArrayEntry;
 use Flow\ETL\Row\Entry\DateTimeEntry;
@@ -24,7 +26,7 @@ final class CastTransformerTest extends TestCase
 
         $transformer = Transform::to_json('collection');
 
-        $rows = $transformer->transform(new Rows(new Row(new Row\Entries($entry))));
+        $rows = $transformer->transform(new Rows(new Row(new Row\Entries($entry))), new FlowContext(Config::default()));
 
         $this->assertInstanceOf(Row\Entry\JsonEntry::class, $rows->first()->get('collection'));
         $this->assertSame('{"foo":"bar"}', $rows->first()->valueOf('collection'));
@@ -36,7 +38,7 @@ final class CastTransformerTest extends TestCase
 
         $transformer = Transform::to_list_of_string('collection');
 
-        $rows = $transformer->transform(new Rows(new Row(new Row\Entries($entry))));
+        $rows = $transformer->transform(new Rows(new Row(new Row\Entries($entry))), new FlowContext(Config::default()));
 
         $this->assertInstanceOf(Row\Entry\ListEntry::class, $rows->first()->get('collection'));
         $this->assertSame(['foo', 'bar'], $rows->first()->valueOf('collection'));
@@ -46,7 +48,7 @@ final class CastTransformerTest extends TestCase
     {
         $this->assertEquals(
             new Rows(Row::create(Entry::list_of_datetime('e', [new \DateTimeImmutable('2020-01-01 00:00:00')]))),
-            Transform::to_list_of_datetime('e')->transform(new Rows(Row::create(Entry::string('e', '2020-01-01 00:00:00'))))
+            Transform::to_list_of_datetime('e')->transform(new Rows(Row::create(Entry::string('e', '2020-01-01 00:00:00'))), new FlowContext(Config::default()))
         );
     }
 
@@ -54,7 +56,7 @@ final class CastTransformerTest extends TestCase
     {
         $this->assertEquals(
             new Rows(Row::create(Entry::list_of_string('e', ['test']))),
-            Transform::to_list_of_string('e')->transform(new Rows(Row::create(Entry::string('e', 'test'))))
+            Transform::to_list_of_string('e')->transform(new Rows(Row::create(Entry::string('e', 'test'))), new FlowContext(Config::default()))
         );
     }
 
@@ -62,7 +64,7 @@ final class CastTransformerTest extends TestCase
     {
         $this->expectExceptionMessage("Value string can't be automatically cast object<ArrayObject>, please provide custom ValueConverter.");
 
-        Transform::to_list_of_object('e', \ArrayObject::class)->transform(new Rows(Row::create(Entry::string('e', '1'))));
+        Transform::to_list_of_object('e', \ArrayObject::class)->transform(new Rows(Row::create(Entry::string('e', '1'))), new FlowContext(Config::default()));
     }
 
     public function test_casts_multiple_entries_with_null_entry_in_betwee() : void
@@ -75,7 +77,7 @@ final class CastTransformerTest extends TestCase
                 new NullEntry('limit'),
                 new StringEntry('current', '10')
             )
-        ));
+        ), new FlowContext(Config::default()));
 
         $this->assertInstanceOf(IntegerEntry::class, $rows->first()->get('id'));
         $this->assertSame(1, $rows->first()->valueOf('id'));
@@ -92,7 +94,7 @@ final class CastTransformerTest extends TestCase
 
         $transformer = Transform::to_datetime(['date']);
 
-        $rows = $transformer->transform(new Rows(new Row(new Row\Entries($entry))));
+        $rows = $transformer->transform(new Rows(new Row(new Row\Entries($entry))), new FlowContext(Config::default()));
 
         $this->assertInstanceOf(NullEntry::class, $rows->first()->get('date'));
         $this->assertNull($rows->first()->valueOf('date'));
@@ -104,7 +106,7 @@ final class CastTransformerTest extends TestCase
 
         $transformer = Transform::to_datetime(['date']);
 
-        $rows = $transformer->transform(new Rows(new Row(new Row\Entries($entry))));
+        $rows = $transformer->transform(new Rows(new Row(new Row\Entries($entry))), new FlowContext(Config::default()));
 
         $this->assertInstanceOf(DateTimeEntry::class, $rows->first()->get('date'));
         $this->assertEquals(new \DateTimeImmutable('2020-01-01 00:00:00.+00:00'), $rows->first()->valueOf('date'));
@@ -116,7 +118,7 @@ final class CastTransformerTest extends TestCase
 
         $transformer = Transform::to_datetime(['date'], null, 'Europe/Warsaw');
 
-        $rows = $transformer->transform(new Rows(new Row(new Row\Entries($entry))));
+        $rows = $transformer->transform(new Rows(new Row(new Row\Entries($entry))), new FlowContext(Config::default()));
 
         $this->assertInstanceOf(DateTimeEntry::class, $rows->first()->get('date'));
         $this->assertEquals(new \DateTimeImmutable('2020-01-01 01:00:00.+01:00'), $rows->first()->valueOf('date'));
@@ -128,7 +130,7 @@ final class CastTransformerTest extends TestCase
 
         $transformer = Transform::to_datetime(['date'], 'America/Los_Angeles');
 
-        $rows = $transformer->transform(new Rows(new Row(new Row\Entries($entry))));
+        $rows = $transformer->transform(new Rows(new Row(new Row\Entries($entry))), new FlowContext(Config::default()));
 
         $this->assertInstanceOf(DateTimeEntry::class, $rows->first()->get('date'));
         $this->assertEquals(new \DateTimeImmutable('2020-01-01 00:00:00.-08:00'), $rows->first()->valueOf('date'));
@@ -140,7 +142,7 @@ final class CastTransformerTest extends TestCase
 
         $transformer = Transform::to_datetime(['date'], 'UTC', 'America/Los_Angeles');
 
-        $rows = $transformer->transform(new Rows(new Row(new Row\Entries($entry))));
+        $rows = $transformer->transform(new Rows(new Row(new Row\Entries($entry))), new FlowContext(Config::default()));
 
         $this->assertInstanceOf(DateTimeEntry::class, $rows->first()->get('date'));
         $this->assertEquals(new \DateTimeImmutable('2019-12-31 16:00:00.-08:00'), $rows->first()->valueOf('date'));
@@ -152,7 +154,7 @@ final class CastTransformerTest extends TestCase
 
         $transformer = Transform::to_datetime(['date'], null, 'UTC');
 
-        $rows = $transformer->transform(new Rows(new Row(new Row\Entries($entry))));
+        $rows = $transformer->transform(new Rows(new Row(new Row\Entries($entry))), new FlowContext(Config::default()));
 
         $this->assertInstanceOf(DateTimeEntry::class, $rows->first()->get('date'));
         $this->assertEquals(new \DateTimeImmutable('2020-01-01 08:00:00.+00:00'), $rows->first()->valueOf('date'));
@@ -164,7 +166,7 @@ final class CastTransformerTest extends TestCase
 
         $transformer = Transform::to_array('ids');
 
-        $rows = $transformer->transform(new Rows(new Row(new Row\Entries($entry))));
+        $rows = $transformer->transform(new Rows(new Row(new Row\Entries($entry))), new FlowContext(Config::default()));
 
         $this->assertInstanceOf(Row\Entry\ArrayEntry::class, $rows->first()->get('ids'));
         $this->assertSame([123456], $rows->first()->valueOf('ids'));
@@ -176,7 +178,7 @@ final class CastTransformerTest extends TestCase
 
         $transformer = Transform::to_string('id');
 
-        $rows = $transformer->transform(new Rows(new Row(new Row\Entries($entry))));
+        $rows = $transformer->transform(new Rows(new Row(new Row\Entries($entry))), new FlowContext(Config::default()));
 
         $this->assertInstanceOf(Row\Entry\StringEntry::class, $rows->first()->get('id'));
         $this->assertSame('123456', $rows->first()->valueOf('id'));
@@ -188,7 +190,7 @@ final class CastTransformerTest extends TestCase
 
         $transformer = Transform::to_array_from_json('ids');
 
-        $rows = $transformer->transform(new Rows(new Row(new Row\Entries($entry))));
+        $rows = $transformer->transform(new Rows(new Row(new Row\Entries($entry))), new FlowContext(Config::default()));
 
         $this->assertInstanceOf(Row\Entry\ArrayEntry::class, $rows->first()->get('ids'));
         $this->assertSame([123456], $rows->first()->valueOf('ids'));
@@ -202,7 +204,7 @@ final class CastTransformerTest extends TestCase
 
         $transformer = Transform::to_datetime(['start_date', 'end_date']);
 
-        $rows = $transformer->transform(new Rows(new Row(new Row\Entries($start, $current, $end))));
+        $rows = $transformer->transform(new Rows(new Row(new Row\Entries($start, $current, $end))), new FlowContext(Config::default()));
 
         $this->assertInstanceOf(DateTimeEntry::class, $rows->first()->get('start_date'));
         $this->assertEquals(new \DateTimeImmutable('2020-01-01 00:00:00.+00:00'), $rows->first()->valueOf('start_date'));
@@ -220,7 +222,7 @@ final class CastTransformerTest extends TestCase
 
         $transformer = Transform::to_array_from_json('ids');
 
-        $rows = $transformer->transform(new Rows(new Row(new Row\Entries($entry))));
+        $rows = $transformer->transform(new Rows(new Row(new Row\Entries($entry))), new FlowContext(Config::default()));
 
         $this->assertInstanceOf(Row\Entry\ArrayEntry::class, $rows->first()->get('ids'));
         $this->assertSame([123456], $rows->first()->valueOf('ids'));
@@ -232,7 +234,7 @@ final class CastTransformerTest extends TestCase
 
         $transformer = Transform::to_integer('id');
 
-        $rows = $transformer->transform(new Rows(new Row(new Row\Entries($entry))));
+        $rows = $transformer->transform(new Rows(new Row(new Row\Entries($entry))), new FlowContext(Config::default()));
 
         $this->assertInstanceOf(Row\Entry\IntegerEntry::class, $rows->first()->get('id'));
         $this->assertSame(123456, $rows->first()->valueOf('id'));

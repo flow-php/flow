@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use Flow\ETL\Config;
 use Flow\ETL\DSL\Transform;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use PHPUnit\Framework\TestCase;
@@ -21,7 +23,7 @@ final class ObjectMethodTransformerTest extends TestCase
 
         $transformer->transform(new Rows(
             Row::create(new Row\Entry\StringEntry('name', 'test'))
-        ));
+        ), new FlowContext(Config::default()));
     }
 
     public function test_transformer_for_non_object() : void
@@ -33,7 +35,7 @@ final class ObjectMethodTransformerTest extends TestCase
 
         $transformer->transform(new Rows(
             Row::create(new Row\Entry\StringEntry('non_object', 'test'))
-        ));
+        ), new FlowContext(Config::default()));
     }
 
     public function test_transformer_for_object() : void
@@ -50,7 +52,7 @@ final class ObjectMethodTransformerTest extends TestCase
                     ];
                 }
             }))
-        ));
+        ), new FlowContext(Config::default()));
 
         $this->assertSame(
             [
@@ -75,6 +77,6 @@ final class ObjectMethodTransformerTest extends TestCase
 
         $transformer->transform(new Rows(
             Row::create(new Row\Entry\ObjectEntry('object', new \stdClass()))
-        ));
+        ), new FlowContext(Config::default()));
     }
 }

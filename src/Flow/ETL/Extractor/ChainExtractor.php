@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Extractor;
 
 use Flow\ETL\Extractor;
+use Flow\ETL\FlowContext;
 
 /**
  * @psalm-immutable
@@ -21,10 +22,10 @@ final class ChainExtractor implements Extractor
         $this->extractors = $extractors;
     }
 
-    public function extract() : \Generator
+    public function extract(FlowContext $context) : \Generator
     {
         foreach ($this->extractors as $extractor) {
-            foreach ($extractor->extract() as $rows) {
+            foreach ($extractor->extract($context) as $rows) {
                 yield $rows;
             }
         }

@@ -29,11 +29,14 @@ use Flow\ETL\Transformer\RemoveEntriesTransformer;
 
 final class DataFrame
 {
+    private FlowContext $context;
+
     private ?GroupBy $groupBy;
 
-    public function __construct(private Pipeline $pipeline, private readonly Config $configuration)
+    public function __construct(private Pipeline $pipeline, Config $configuration)
     {
         $this->groupBy = null;
+        $this->context = new FlowContext($configuration);
     }
 
     /**
@@ -63,15 +66,15 @@ final class DataFrame
      */
     public function cache(string $id = null) : self
     {
-        $this->configuration->cache()->clear($id ??= $this->configuration->id());
+        $this->context->config->cache()->clear($id ??= $this->context->config->id());
 
-        foreach ($this->pipeline->process($this->configuration) as $rows) {
-            $this->configuration->cache()->add($id, $rows);
+        foreach ($this->pipeline->process($this->context) as $rows) {
+            $this->context->config->cache()->add($id, $rows);
         }
 
         $this->pipeline = $this->pipeline->cleanCopy();
-        $this->configuration->clearLimit();
-        $this->pipeline->source(new CacheExtractor($id, $this->configuration->cache()));
+        $this->context->config->clearLimit();
+        $this->pipeline->source(new CacheExtractor($id, $this->context->config->cache()));
 
         return $this;
     }
@@ -115,11 +118,27 @@ final class DataFrame
     public function fetch(?int $limit = null) : Rows
     {
         if ($limit !== null) {
-            $this->configuration->setLimit($limit);
+            $this->context->config->setLimit($limit);
+        }
+
+        if (\count($this->context->partitionEntries())) {
+            $rows = (new Rows())->merge(
+                ...\iterator_to_array($this->pipeline->process($this->context))
+            );
+
+            $fetchedRows = (new Rows());
+
+            foreach ($rows->partitionBy(...$this->context->partitionEntries()) as $partitionedRows) {
+                if ($this->context->partitionFilter()->keep(...$partitionedRows->partitions)) {
+                    $fetchedRows = $fetchedRows->merge($partitionedRows->rows);
+                }
+            }
+
+            return $fetchedRows;
         }
 
         return (new Rows())->merge(
-            ...\iterator_to_array($this->pipeline->process($this->configuration))
+            ...\iterator_to_array($this->pipeline->process($this->context))
         );
     }
 
@@ -130,6 +149,13 @@ final class DataFrame
     public function filter(callable $callback) : self
     {
         $this->pipeline->add(new FilterRowsTransformer(new Callback($callback)));
+
+        return $this;
+    }
+
+    public function filterPartitions(Partition\PartitionFilter $filter) : self
+    {
+        $this->context->filterPartitions($filter);
 
         return $this;
     }
@@ -187,7 +213,7 @@ final class DataFrame
      */
     public function limit(int $limit) : self
     {
-        $this->configuration->setLimit($limit);
+        $this->context->config->setLimit($limit);
 
         return $this;
     }
@@ -212,7 +238,7 @@ final class DataFrame
 
     public function onError(ErrorHandler $handler) : self
     {
-        $this->configuration->setErrorHandler($handler);
+        $this->context->config->setErrorHandler($handler);
 
         return $this;
     }
@@ -226,6 +252,15 @@ final class DataFrame
     public function parallelize(int $chunks) : self
     {
         $this->pipeline = new ParallelizingPipeline($this->pipeline, $chunks);
+
+        return $this;
+    }
+
+    public function partitionBy(string $entry, string ...$entries) : self
+    {
+        \array_unshift($entries, $entry);
+
+        $this->context->partitionBy(...$entries);
 
         return $this;
     }
@@ -257,7 +292,7 @@ final class DataFrame
      */
     public function run(callable $callback = null) : void
     {
-        foreach ($this->pipeline->process($this->configuration) as $rows) {
+        foreach ($this->pipeline->process($this->context) as $rows) {
             if ($callback !== null) {
                 $callback($rows);
             }
@@ -276,9 +311,9 @@ final class DataFrame
 
     public function sortBy(Sort ...$entries) : self
     {
-        $this->cache($this->configuration->id());
+        $this->cache($this->context->config->id());
 
-        $this->pipeline->source($this->configuration->externalSort()->sortBy(...$entries));
+        $this->pipeline->source($this->context->config->externalSort()->sortBy(...$entries));
 
         return $this;
     }

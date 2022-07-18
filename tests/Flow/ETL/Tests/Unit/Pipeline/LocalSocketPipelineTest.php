@@ -13,6 +13,7 @@ use Flow\ETL\Config;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor\ProcessExtractor;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Pipeline\LocalSocketPipeline;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -62,7 +63,7 @@ final class LocalSocketPipelineTest extends TestCase
                     Row::create(Entry::integer('id', 3)),
                 )
             ))
-            ->process(Config::builder()->cache($cache = new CacheSpy(new InMemoryCache()))->build());
+            ->process(new FlowContext(Config::builder()->cache($cache = new CacheSpy(new InMemoryCache()))->build()));
 
         $this->assertSame(1, $cache->reads());
     }

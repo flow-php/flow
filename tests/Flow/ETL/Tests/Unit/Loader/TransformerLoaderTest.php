@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Loader;
 
+use Flow\ETL\Config;
 use Flow\ETL\DSL\To;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
@@ -29,7 +31,7 @@ final class TransformerLoaderTest extends TestCase
             $loaderMock
         );
 
-        $transformer->load(new Rows());
+        $transformer->load(new Rows(), new FlowContext(Config::default()));
     }
 
     public function test_transformer_loader_with_serialization() : void

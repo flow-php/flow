@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use Flow\ETL\Config;
 use Flow\ETL\DSL\Transform;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Rows;
@@ -30,12 +32,12 @@ final class MathValueOperationTransformerTest extends TestCase
     public function test_math_operations(Entry $leftEntry, int|float $rightValue, Operation $operation, int|float $result, string $resultClass) : void
     {
         $rows = match ($operation) {
-            Operation::add => Transform::add_value($leftEntry->name(), $rightValue)->transform(new Rows(Row::create($leftEntry))),
-            Operation::subtract => Transform::subtract_value($leftEntry->name(), $rightValue)->transform(new Rows(Row::create($leftEntry))),
-            Operation::divide => Transform::divide_by($leftEntry->name(), $rightValue)->transform(new Rows(Row::create($leftEntry))),
-            Operation::multiply => Transform::multiply_by($leftEntry->name(), $rightValue)->transform(new Rows(Row::create($leftEntry))),
-            Operation::modulo => Transform::modulo_by($leftEntry->name(), $rightValue)->transform(new Rows(Row::create($leftEntry))),
-            Operation::power => Transform::power_of($leftEntry->name(), $rightValue)->transform(new Rows(Row::create($leftEntry))),
+            Operation::add => Transform::add_value($leftEntry->name(), $rightValue)->transform(new Rows(Row::create($leftEntry)), new FlowContext(Config::default())),
+            Operation::subtract => Transform::subtract_value($leftEntry->name(), $rightValue)->transform(new Rows(Row::create($leftEntry)), new FlowContext(Config::default())),
+            Operation::divide => Transform::divide_by($leftEntry->name(), $rightValue)->transform(new Rows(Row::create($leftEntry)), new FlowContext(Config::default())),
+            Operation::multiply => Transform::multiply_by($leftEntry->name(), $rightValue)->transform(new Rows(Row::create($leftEntry)), new FlowContext(Config::default())),
+            Operation::modulo => Transform::modulo_by($leftEntry->name(), $rightValue)->transform(new Rows(Row::create($leftEntry)), new FlowContext(Config::default())),
+            Operation::power => Transform::power_of($leftEntry->name(), $rightValue)->transform(new Rows(Row::create($leftEntry)), new FlowContext(Config::default())),
         };
 
         $this->assertSame(

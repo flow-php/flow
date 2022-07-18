@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace Flow\ETL\Loader;
 
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Filesystem\Stream\Mode;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Formatter;
 use Flow\ETL\Loader;
 use Flow\ETL\Loader\StreamLoader\Output;
 use Flow\ETL\Row\Schema\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Row\Schema\SchemaFormatter;
 use Flow\ETL\Rows;
-use Flow\ETL\Stream\Mode;
 
 /**
  * @implements Loader<array{url: string, mode: Mode, truncate: int|bool, output: Output, formatter: Formatter, schema_formatter: SchemaFormatter}>
@@ -71,7 +72,7 @@ final class StreamLoader implements Loader
         $this->schemaFormatter = $data['schema_formatter'];
     }
 
-    public function load(Rows $rows) : void
+    public function load(Rows $rows, FlowContext $context) : void
     {
         try {
             $stream = \fopen($this->url, $this->mode->value);

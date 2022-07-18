@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Pipeline;
 
-use Flow\ETL\Config;
 use Flow\ETL\Extractor;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Pipeline;
 use Flow\ETL\Rows;
@@ -30,9 +30,9 @@ final class VoidPipeline implements Pipeline
     /**
      * @psalm-suppress UnusedForeachValue
      */
-    public function process(Config $config) : \Generator
+    public function process(FlowContext $context) : \Generator
     {
-        foreach ($this->pipeline->process($config) as $rows) {
+        foreach ($this->pipeline->process($context) as $rows) {
             // do nothing, put those rows into void
         }
 

@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use Flow\ETL\Config;
 use Flow\ETL\DSL\Transform;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer\StyleConverter\StringStyles;
@@ -22,7 +24,7 @@ final class EntryNameStyleConverterTransformerTest extends TestCase
                 new Row\Entry\StringEntry('CamelCaseEntryName', 'test'),
                 new Row\Entry\StringEntry('otherCaseEntryName', 'test'),
             )
-        ));
+        ), new FlowContext(Config::default()));
 
         $this->assertSame(
             [

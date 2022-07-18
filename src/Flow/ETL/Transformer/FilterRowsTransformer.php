@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer;
 
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
@@ -37,7 +38,7 @@ final class FilterRowsTransformer implements Transformer
         $this->filters = $data['filters'];
     }
 
-    public function transform(Rows $rows) : Rows
+    public function transform(Rows $rows, FlowContext $context) : Rows
     {
         /** @psalm-var pure-callable(Row) : bool $filter */
         $filter = function (Row $row) : bool {

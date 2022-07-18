@@ -2,6 +2,7 @@
 
 namespace Flow\ETL\Pipeline;
 
+use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 
 /**
@@ -10,5 +11,5 @@ use Flow\ETL\Rows;
  */
 interface Closure
 {
-    public function closure(Rows $rows) : void;
+    public function closure(Rows $rows, FlowContext $context) : void;
 }

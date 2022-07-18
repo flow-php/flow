@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer;
 
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
@@ -34,14 +35,14 @@ final class ConditionalTransformer implements Transformer
         $this->transformer = $data['transformer'];
     }
 
-    public function transform(Rows $rows) : Rows
+    public function transform(Rows $rows, FlowContext $context) : Rows
     {
         /**
          * @psalm-var pure-callable(Row $row) : array<Row> $transformer
          */
-        $transformer = function (Row $row) : array {
+        $transformer = function (Row $row) use ($context) : array {
             if ($this->condition->isMetFor($row)) {
-                return (array) $this->transformer->transform(new Rows($row))->getIterator();
+                return (array) $this->transformer->transform(new Rows($row), $context)->getIterator();
             }
 
             return [$row];

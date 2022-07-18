@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Extractor;
 
+use Flow\ETL\Config;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\DSL\From;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use PHPUnit\Framework\TestCase;
@@ -26,7 +28,7 @@ final class ProcessExtractorTest extends TestCase
 
         $data = [];
 
-        foreach ($extractor->extract() as $rowsData) {
+        foreach ($extractor->extract(new FlowContext(Config::default())) as $rowsData) {
             $data  = [...$data, ...$rowsData->toArray()];
         }
 

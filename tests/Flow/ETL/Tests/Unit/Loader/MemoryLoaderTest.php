@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Loader;
 
+use Flow\ETL\Config;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\DSL\To;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -22,7 +24,7 @@ final class MemoryLoaderTest extends TestCase
 
         $memory = new ArrayMemory();
 
-        To::memory($memory)->load($rows);
+        To::memory($memory)->load($rows, new FlowContext(Config::default()));
 
         $this->assertEquals($rows->toArray(), $memory->dump());
     }

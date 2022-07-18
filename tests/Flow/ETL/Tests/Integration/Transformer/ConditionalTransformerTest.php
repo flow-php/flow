@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Transformer;
 
+use Flow\ETL\Config;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer\ArrayExpandTransformer;
@@ -33,7 +35,8 @@ final class ConditionalTransformerTest extends TestCase
                     new Row\Entry\StringEntry('name', 'with array entry'),
                     new Row\Entry\ArrayEntry('array_entry', ['red', 'blue'])
                 ))
-            )
+            ),
+            new FlowContext(Config::default())
         );
 
         $this->assertEquals(3, $rows->count());
@@ -87,7 +90,7 @@ final class ConditionalTransformerTest extends TestCase
                     'valid' => true,
                 ],
             ],
-            $transformer->transform($rows)->toArray()
+            $transformer->transform($rows, new FlowContext(Config::default()))->toArray()
         );
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Extractor;
 
 use Flow\ETL\Extractor;
+use Flow\ETL\FlowContext;
 
 /**
  * @psalm-immutable
@@ -17,9 +18,9 @@ final class ChunkExtractor implements Extractor
     ) {
     }
 
-    public function extract() : \Generator
+    public function extract(FlowContext $context) : \Generator
     {
-        foreach ($this->extractor->extract() as $rows) {
+        foreach ($this->extractor->extract($context) as $rows) {
             foreach ($rows->chunks($this->chunkSize) as $rowsChunk) {
                 yield $rowsChunk;
             }

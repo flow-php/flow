@@ -12,5 +12,5 @@ use Flow\Serializer\Serializable;
  */
 interface Loader extends Serializable
 {
-    public function load(Rows $rows) : void;
+    public function load(Rows $rows, FlowContext $context) : void;
 }

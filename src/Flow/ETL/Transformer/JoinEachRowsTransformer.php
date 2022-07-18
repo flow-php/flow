@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Transformer;
 
 use Flow\ETL\DataFrameFactory;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Join\Condition;
 use Flow\ETL\Join\Join;
 use Flow\ETL\Rows;
@@ -64,11 +65,12 @@ final class JoinEachRowsTransformer implements Transformer
     }
 
     /**
+     * @param FlowContext $context
      * @psalm-suppress ImpureMethodCall
      *
      * @throws \Flow\ETL\Exception\InvalidArgumentException
      */
-    public function transform(Rows $rows) : Rows
+    public function transform(Rows $rows, FlowContext $context) : Rows
     {
         return match ($this->type) {
             Join::left => $rows->joinLeft($this->factory->from($rows)->fetch(), $this->condition),

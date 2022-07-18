@@ -7,11 +7,13 @@ namespace Flow\ETL\Tests\Unit;
 use Flow\ETL\DataFrame;
 use Flow\ETL\DataFrameFactory;
 use Flow\ETL\DSL\Entry;
+use Flow\ETL\DSL\Partitions;
 use Flow\ETL\DSL\Transform;
 use Flow\ETL\ErrorHandler\IgnoreError;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Flow;
+use Flow\ETL\FlowContext;
 use Flow\ETL\GroupBy\Aggregation;
 use Flow\ETL\Join\Condition;
 use Flow\ETL\Loader;
@@ -109,9 +111,11 @@ final class DataFrameTest extends TestCase
     {
         $extractor = new class implements Extractor {
             /**
+             * @param FlowContext $context
+             *
              * @return \Generator<int, Rows, mixed, void>
              */
-            public function extract() : \Generator
+            public function extract(FlowContext $context) : \Generator
             {
                 yield new Rows(
                     Row::create(
@@ -134,7 +138,7 @@ final class DataFrameTest extends TestCase
         };
 
         $addStampStringEntry = new class implements Transformer {
-            public function transform(Rows $rows) : Rows
+            public function transform(Rows $rows, FlowContext $context) : Rows
             {
                 return $rows->map(
                     fn (Row $row) : Row => $row->set(new StringEntry('stamp', 'zero'))
@@ -154,7 +158,7 @@ final class DataFrameTest extends TestCase
         $loader = new class implements Loader {
             public array $result = [];
 
-            public function load(Rows $rows) : void
+            public function load(Rows $rows, FlowContext $context) : void
             {
                 $this->result = \array_merge($this->result, $rows->toArray());
             }
@@ -173,7 +177,7 @@ final class DataFrameTest extends TestCase
             ->onError(new IgnoreError())
             ->rows($addStampStringEntry)
             ->rows(new class implements Transformer {
-                public function transform(Rows $rows) : Rows
+                public function transform(Rows $rows, FlowContext $context) : Rows
                 {
                     throw new \RuntimeException('Unexpected exception');
                 }
@@ -221,7 +225,7 @@ final class DataFrameTest extends TestCase
                 /**
                  * @return \Generator<int, Rows, mixed, void>
                  */
-                public function extract() : \Generator
+                public function extract(FlowContext $context) : \Generator
                 {
                     for ($i = 0; $i < 20; $i++) {
                         yield new Rows(
@@ -300,9 +304,11 @@ ASCIITABLE,
         $etl = (new Flow())->extract(
             new class implements Extractor {
                 /**
+                 * @param FlowContext $context
+                 *
                  * @return \Generator<int, Rows, mixed, void>
                  */
-                public function extract() : \Generator
+                public function extract(FlowContext $context) : \Generator
                 {
                     for ($i = 0; $i < 20; $i++) {
                         yield new Rows(
@@ -359,9 +365,11 @@ ASCIITABLE,
         $rows = (new Flow())->extract(
             new class implements Extractor {
                 /**
+                 * @param FlowContext $context
+                 *
                  * @return \Generator<int, Rows, mixed, void>
                  */
-                public function extract() : \Generator
+                public function extract(FlowContext $context) : \Generator
                 {
                     for ($i = 0; $i < 1000; $i++) {
                         yield new Rows(
@@ -383,9 +391,11 @@ ASCIITABLE,
         $rows = (new Flow())->extract(
             new class implements Extractor {
                 /**
+                 * @param FlowContext $context
+                 *
                  * @return \Generator<int, Rows, mixed, void>
                  */
-                public function extract() : \Generator
+                public function extract(FlowContext $context) : \Generator
                 {
                     for ($i = 0; $i < 1000; $i++) {
                         yield new Rows(
@@ -400,14 +410,14 @@ ASCIITABLE,
 
                 public int $rowsTransformed = 0;
 
-                public function transform(Rows $rows) : Rows
+                public function transform(Rows $rows, FlowContext $context) : Rows
                 {
                     $this->rowsTransformed += 1;
 
                     return $rows;
                 }
 
-                public function closure(Rows $rows) : void
+                public function closure(Rows $rows, FlowContext $context) : void
                 {
                     $this->closureCalled = true;
                 }
@@ -433,9 +443,11 @@ ASCIITABLE,
         $rows = (new Flow())->extract(
             new class implements Extractor {
                 /**
+                 * @param FlowContext $context
+                 *
                  * @return \Generator<int, Rows, mixed, void>
                  */
-                public function extract() : \Generator
+                public function extract(FlowContext $context) : \Generator
                 {
                     for ($i = 0; $i < 1000; $i++) {
                         yield new Rows(
@@ -455,9 +467,11 @@ ASCIITABLE,
         $rows = (new Flow())->extract(
             new class implements Extractor {
                 /**
+                 * @param FlowContext $context
+                 *
                  * @return \Generator<int, Rows, mixed, void>
                  */
-                public function extract() : \Generator
+                public function extract(FlowContext $context) : \Generator
                 {
                     for ($i = 0; $i < 20; $i++) {
                         yield new Rows(
@@ -477,9 +491,11 @@ ASCIITABLE,
         $rows = (new Flow())->extract(
             new class implements Extractor {
                 /**
+                 * @param FlowContext $context
+                 *
                  * @return \Generator<int, Rows, mixed, void>
                  */
-                public function extract() : \Generator
+                public function extract(FlowContext $context) : \Generator
                 {
                     for ($i = 1; $i <= 10; $i++) {
                         yield new Rows(
@@ -504,9 +520,11 @@ ASCIITABLE,
         $rows = (new Flow())->extract(
             new class implements Extractor {
                 /**
+                 * @param FlowContext $context
+                 *
                  * @return \Generator<int, Rows, mixed, void>
                  */
-                public function extract() : \Generator
+                public function extract(FlowContext $context) : \Generator
                 {
                     for ($i = 0; $i < 1000; $i++) {
                         yield new Rows(
@@ -528,9 +546,11 @@ ASCIITABLE,
         (new Flow())->extract(
             new class implements Extractor {
                 /**
+                 * @param FlowContext $context
+                 *
                  * @return \Generator<int, Rows, mixed, void>
                  */
-                public function extract() : \Generator
+                public function extract(FlowContext $context) : \Generator
                 {
                     for ($i = 0; $i < 1000; $i++) {
                         yield new Rows(
@@ -545,14 +565,14 @@ ASCIITABLE,
 
                 public int $rowsTransformed = 0;
 
-                public function transform(Rows $rows) : Rows
+                public function transform(Rows $rows, FlowContext $context) : Rows
                 {
                     $this->rowsTransformed += 1;
 
                     return $rows;
                 }
 
-                public function closure(Rows $rows) : void
+                public function closure(Rows $rows, FlowContext $context) : void
                 {
                     $this->closureCalled = true;
                 }
@@ -578,9 +598,11 @@ ASCIITABLE,
         $rows = (new Flow())->extract(
             new class implements Extractor {
                 /**
+                 * @param FlowContext $context
+                 *
                  * @return \Generator<int, Rows, mixed, void>
                  */
-                public function extract() : \Generator
+                public function extract(FlowContext $context) : \Generator
                 {
                     for ($i = 0; $i < 1000; $i++) {
                         yield new Rows(
@@ -603,9 +625,11 @@ ASCIITABLE,
         $rows = (new Flow())->extract(
             new class implements Extractor {
                 /**
+                 * @param FlowContext $context
+                 *
                  * @return \Generator<int, Rows, mixed, void>
                  */
-                public function extract() : \Generator
+                public function extract(FlowContext $context) : \Generator
                 {
                     for ($i = 0; $i < 1000; $i++) {
                         yield new Rows(
@@ -628,9 +652,11 @@ ASCIITABLE,
         $rows = (new Flow())->extract(
             new class implements Extractor {
                 /**
+                 * @param FlowContext $context
+                 *
                  * @return \Generator<int, Rows, mixed, void>
                  */
-                public function extract() : \Generator
+                public function extract(FlowContext $context) : \Generator
                 {
                     for ($i = 1; $i <= 10; $i++) {
                         yield new Rows(
@@ -683,9 +709,11 @@ ASCIITABLE,
         (new Flow())->extract(
             new class implements Extractor {
                 /**
+                 * @param FlowContext $context
+                 *
                  * @return \Generator<int, Rows, mixed, void>
                  */
-                public function extract() : \Generator
+                public function extract(FlowContext $context) : \Generator
                 {
                     yield new Rows(Row::create(new IntegerEntry('id', 1)));
                     yield new Rows(Row::create(new IntegerEntry('id', 2)));
@@ -695,7 +723,7 @@ ASCIITABLE,
         )
             ->transform(
                 new class implements Transformer {
-                    public function transform(Rows $rows) : Rows
+                    public function transform(Rows $rows, FlowContext $context) : Rows
                     {
                         return $rows->map(fn (Row $row) => $row->rename('id', 'new_id'));
                     }
@@ -713,7 +741,7 @@ ASCIITABLE,
             ->collect()
             ->load(
                 new class implements Loader {
-                    public function load(Rows $rows) : void
+                    public function load(Rows $rows, FlowContext $context) : void
                     {
                         Assert::assertCount(3, $rows);
                     }
@@ -736,9 +764,11 @@ ASCIITABLE,
         (new Flow())->extract(
             new class implements Extractor {
                 /**
+                 * @param FlowContext $context
+                 *
                  * @return \Generator<int, Rows, mixed, void>
                  */
-                public function extract() : \Generator
+                public function extract(FlowContext $context) : \Generator
                 {
                     yield new Rows(
                         Row::create(new IntegerEntry('id', 1)),
@@ -757,7 +787,7 @@ ASCIITABLE,
         )
             ->transform(
                 new class implements Transformer {
-                    public function transform(Rows $rows) : Rows
+                    public function transform(Rows $rows, FlowContext $context) : Rows
                     {
                         return $rows->map(fn (Row $row) => $row->rename('id', 'new_id'));
                     }
@@ -775,7 +805,7 @@ ASCIITABLE,
             ->parallelize(2)
             ->load(
                 new class implements Loader {
-                    public function load(Rows $rows) : void
+                    public function load(Rows $rows, FlowContext $context) : void
                     {
                         Assert::assertCount(2, $rows);
                     }
@@ -798,9 +828,11 @@ ASCIITABLE,
         $rows = (new Flow())->extract(
             new class implements Extractor {
                 /**
+                 * @param FlowContext $context
+                 *
                  * @return \Generator<int, Rows, mixed, void>
                  */
-                public function extract() : \Generator
+                public function extract(FlowContext $context) : \Generator
                 {
                     for ($i = 0; $i < 5; $i++) {
                         yield new Rows(
@@ -823,6 +855,35 @@ ASCIITABLE,
 
         (new Flow())->process(new Rows())
             ->fetch(-1);
+    }
+
+    public function test_filter_partitions() : void
+    {
+        $partitionedRows = (new Flow())->process(
+            new Rows(
+                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20)),
+                Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20)),
+                Row::create(Entry::integer('id', 3), Entry::string('country', 'PL'), Entry::integer('age', 25)),
+                Row::create(Entry::integer('id', 4), Entry::string('country', 'PL'), Entry::integer('age', 30)),
+                Row::create(Entry::integer('id', 5), Entry::string('country', 'US'), Entry::integer('age', 40)),
+                Row::create(Entry::integer('id', 6), Entry::string('country', 'US'), Entry::integer('age', 40)),
+                Row::create(Entry::integer('id', 7), Entry::string('country', 'US'), Entry::integer('age', 45)),
+                Row::create(Entry::integer('id', 9), Entry::string('country', 'US'), Entry::integer('age', 50)),
+            )
+        )
+            ->partitionBy('country')
+            ->filterPartitions(Partitions::chain(Partitions::only('country', 'US')))
+            ->fetch();
+
+        $this->assertEquals(
+            new Rows(
+                Row::create(Entry::integer('id', 5), Entry::string('country', 'US'), Entry::integer('age', 40)),
+                Row::create(Entry::integer('id', 6), Entry::string('country', 'US'), Entry::integer('age', 40)),
+                Row::create(Entry::integer('id', 7), Entry::string('country', 'US'), Entry::integer('age', 45)),
+                Row::create(Entry::integer('id', 9), Entry::string('country', 'US'), Entry::integer('age', 50)),
+            ),
+            $partitionedRows
+        );
     }
 
     public function test_foreach() : void

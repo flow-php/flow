@@ -7,6 +7,7 @@
     "require": {
         "php": "~8.1",
         "flow-php/array-dot": "^1.0@dev",
+        "league/flysystem": "^3.0",
         "ext-mbstring": "*",
         "ext-json": "*"
     },
@@ -14,7 +15,9 @@
         "jawira/case-converter": "^3.4",
         "laminas/laminas-hydrator": "^4.0",
         "laravel/serializable-closure": "^1.1",
-        "symfony/validator": "^5.3 || ^6.0"
+        "symfony/validator": "^5.3 || ^6.0",
+        "league/flysystem-aws-s3-v3": "^3.0",
+        "league/flysystem-azure-blob-storage": "^3.0"
     },
     "config": {
         "optimize-autoloader": true,

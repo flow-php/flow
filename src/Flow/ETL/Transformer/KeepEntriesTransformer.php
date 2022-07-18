@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer;
 
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Rows;
@@ -37,7 +38,7 @@ final class KeepEntriesTransformer implements Transformer
         $this->names = $data['names'];
     }
 
-    public function transform(Rows $rows) : Rows
+    public function transform(Rows $rows, FlowContext $context) : Rows
     {
         /** @psalm-var pure-callable(Row) : Row $transformer */
         $transformer = function (Row $row) : Row {

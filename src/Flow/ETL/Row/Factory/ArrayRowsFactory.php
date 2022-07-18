@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Factory;
 
+use Flow\ETL\Config;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Rows;
@@ -53,7 +55,8 @@ final class ArrayRowsFactory implements RowsFactory
                 ->transform(new Rows(...\array_map(
                     fn (array $row) : Row => Row::create(new Row\Entry\ArrayEntry('element', $row)),
                     $data
-                )))
+                )), $context = new FlowContext(Config::default())),
+            $context
         );
     }
 }

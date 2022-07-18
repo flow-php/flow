@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\DSL;
 
+use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\Formatter;
 use Flow\ETL\Loader;
 use Flow\ETL\Loader\StreamLoader\Output;
 use Flow\ETL\Memory\Memory;
 use Flow\ETL\Row\Schema\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Row\Schema\SchemaFormatter;
-use Flow\ETL\Stream\Mode;
 use Flow\ETL\Transformer;
 
 /**

@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Extractor;
 
+use Flow\ETL\Config;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\DSL\From;
 use Flow\ETL\DSL\To;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -37,13 +39,13 @@ final class MemoryExtractorTest extends TestCase
 
         $memory = new ArrayMemory();
 
-        (To::memory($memory))->load($rows);
+        (To::memory($memory))->load($rows, new FlowContext(Config::default()));
 
         $extractor = From::memory($memory, $chunkSize);
 
         $data = [];
 
-        foreach ($extractor->extract() as $rowsData) {
+        foreach ($extractor->extract(new FlowContext(Config::default())) as $rowsData) {
             $data  = [...$data, ...$rowsData->toArray()];
         }
 

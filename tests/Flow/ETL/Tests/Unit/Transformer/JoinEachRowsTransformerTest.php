@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use Flow\ETL\Config;
 use Flow\ETL\DataFrame;
 use Flow\ETL\DataFrameFactory;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\Flow;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Join\Condition;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -53,7 +55,7 @@ final class JoinEachRowsTransformerTest extends TestCase
                 Row::create(Entry::string('name', 'Poland'), Entry::integer('id', 1), Entry::string('country', 'PL')),
                 Row::create(Entry::string('name', 'United States'), Entry::integer('id', 2), Entry::string('country', 'US')),
             ),
-            $transformer->transform($left)
+            $transformer->transform($left, new FlowContext(Config::default()))
         );
     }
 
@@ -94,7 +96,7 @@ final class JoinEachRowsTransformerTest extends TestCase
                 Row::create(Entry::integer('id', 2), Entry::string('country', 'US'), Entry::string('name', 'United States')),
                 Row::create(Entry::integer('id', 3), Entry::string('country', 'FR'), Entry::null('name')),
             ),
-            $transformer->transform($left)
+            $transformer->transform($left, new FlowContext(Config::default()))
         );
     }
 
@@ -135,7 +137,7 @@ final class JoinEachRowsTransformerTest extends TestCase
                 Row::create(Entry::string('name', 'United States'), Entry::string('code', 'US'), Entry::integer('id', 2)),
                 Row::create(Entry::string('name', 'Great Britain'), Entry::string('code', 'GB'), Entry::null('id')),
             ),
-            $transformer->transform($left)
+            $transformer->transform($left, new FlowContext(Config::default()))
         );
     }
 }

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Factory;
 
+use Flow\ETL\Config;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row\RowConverter;
 use Flow\ETL\Rows;
 use Flow\ETL\RowsFactory;
@@ -45,6 +47,6 @@ final class CastedRowsFactory implements RowsFactory
      */
     public function create(array $data) : Rows
     {
-        return (new CastTransformer(...$this->castEntries))->transform($this->factory->create($data));
+        return (new CastTransformer(...$this->castEntries))->transform($this->factory->create($data), new FlowContext(Config::default()));
     }
 }

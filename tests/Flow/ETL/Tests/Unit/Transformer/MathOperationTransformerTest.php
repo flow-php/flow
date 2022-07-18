@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use Flow\ETL\Config;
 use Flow\ETL\DSL\Transform;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Rows;
@@ -28,7 +30,7 @@ final class MathOperationTransformerTest extends TestCase
     public function test_math_operations(Entry $leftEntry, Entry $rightEntry, string $operation, $result, $resultClass) : void
     {
         $rows = Transform::$operation($leftEntry->name(), $rightEntry->name())
-            ->transform(new Rows(Row::create($leftEntry, $rightEntry)));
+            ->transform(new Rows(Row::create($leftEntry, $rightEntry)), new FlowContext(Config::default()));
 
         $this->assertSame(
             [

@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Loader;
 
+use Flow\ETL\Config;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\DSL\To;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -29,7 +31,8 @@ final class BufferLoaderTest extends TestCase
             new Rows(
                 Row::create(Entry::integer('id', 1)),
                 Row::create(Entry::integer('id', 2)),
-            )
+            ),
+            new FlowContext(Config::default())
         );
     }
 
@@ -55,13 +58,15 @@ final class BufferLoaderTest extends TestCase
             new Rows(
                 Row::create(Entry::integer('id', 1)),
                 Row::create(Entry::integer('id', 2)),
-            )
+            ),
+            new FlowContext(Config::default())
         );
         $loader->closure(
             new Rows(
                 Row::create(Entry::integer('id', 1)),
                 Row::create(Entry::integer('id', 2)),
-            )
+            ),
+            new FlowContext(Config::default())
         );
     }
 
@@ -89,17 +94,19 @@ final class BufferLoaderTest extends TestCase
             new Rows(
                 Row::create(Entry::integer('id', 1)),
                 Row::create(Entry::integer('id', 2)),
-            )
+            ),
+            new FlowContext(Config::default())
         );
 
         $loader->load(
             new Rows(
                 Row::create(Entry::integer('id', 3)),
                 Row::create(Entry::integer('id', 4)),
-            )
+            ),
+            new FlowContext(Config::default())
         );
 
-        $loader->closure(new Rows());
+        $loader->closure(new Rows(), new FlowContext(Config::default()));
     }
 
     public function test_buffer_extractor_with_more_than_max_rows_size() : void
@@ -125,7 +132,8 @@ final class BufferLoaderTest extends TestCase
                 Row::create(Entry::integer('id', 1)),
                 Row::create(Entry::integer('id', 2)),
                 Row::create(Entry::integer('id', 3)),
-            )
+            ),
+            new FlowContext(Config::default())
         );
     }
 }

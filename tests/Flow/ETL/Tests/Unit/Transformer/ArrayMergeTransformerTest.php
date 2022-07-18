@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use Flow\ETL\Config;
 use Flow\ETL\DSL\Transform;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\ArrayEntry;
 use Flow\ETL\Rows;
@@ -43,7 +45,7 @@ final class ArrayMergeTransformerTest extends TestCase
                     'merged' => [5, 3, 10, 4, 'A', 'Z', 'C', 'O'],
                 ],
             ],
-            $transformer->transform(new Rows(Row::create($arrayOneEntry, $arrayTwoEntry)))->toArray()
+            $transformer->transform(new Rows(Row::create($arrayOneEntry, $arrayTwoEntry)), new FlowContext(Config::default()))->toArray()
         );
     }
 }

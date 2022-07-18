@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Double;
 
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\Extractor;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
@@ -17,9 +18,11 @@ final class AllRowTypesFakeExtractor implements Extractor
     }
 
     /**
+     * @param FlowContext $context
+     *
      * @return \Generator<int, Rows, mixed, void>
      */
-    public function extract() : \Generator
+    public function extract(FlowContext $context) : \Generator
     {
         for ($i = 0; $i < $this->total; $i++) {
             $id = $this->rowsSize * $i;

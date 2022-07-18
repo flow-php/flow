@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Pipeline;
 
-use Flow\ETL\Config;
 use Flow\ETL\DSL\From;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Pipeline;
 use Flow\ETL\Transformer;
@@ -42,16 +42,16 @@ final class ParallelizingPipeline implements Pipeline
         return new self($this->pipeline, $this->parallel);
     }
 
-    public function process(Config $config) : \Generator
+    public function process(FlowContext $context) : \Generator
     {
         $this->nextPipeline->source(
             From::chunks_from(
-                From::pipeline($this->pipeline, $config),
+                From::pipeline($this->pipeline),
                 $this->parallel
             )
         );
 
-        return $this->nextPipeline->process($config);
+        return $this->nextPipeline->process($context);
     }
 
     public function source(Extractor $extractor) : self

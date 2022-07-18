@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Pipeline;
 
 use Flow\ETL\Flow;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Pipeline\Closure;
 use Flow\ETL\Rows;
@@ -22,12 +23,12 @@ final class ClosureTest extends TestCase
 
                 public int $rowsLoaded = 0;
 
-                public function load(Rows $rows) : void
+                public function load(Rows $rows, FlowContext $context) : void
                 {
                     $this->rowsLoaded += 1;
                 }
 
-                public function closure(Rows $rows) : void
+                public function closure(Rows $rows, FlowContext $context) : void
                 {
                     $this->closureCalled = true;
                 }

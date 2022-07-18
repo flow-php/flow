@@ -476,6 +476,84 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
     }
 
     /**
+     * @param string $entry
+     * @param string ...$entries
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return array<PartitionedRows>
+     */
+    public function partitionBy(string $entry, string ...$entries) : array
+    {
+        \array_unshift($entries, $entry);
+
+        /** @var array<string, array<mixed>> $partitions */
+        $partitions = [];
+
+        foreach ($entries as $entry) {
+            $partitions[$entry] = \array_unique($this->reduceToArray($entry));
+        }
+
+        /**
+         * @source https://stackoverflow.com/a/15973172
+         *
+         * @param array<string, array<mixed>> $input
+         *
+         * @return array<string, array<mixed>>
+         *
+         * @psalm-suppress MixedAssignment
+         * @psalm-pure
+         */
+        $cartesianProduct = static function (array $input) : array {
+            $result = [[]];
+
+            foreach ($input as $key => $values) {
+                $append = [];
+
+                foreach ($result as $product) {
+                    foreach ($values as $item) {
+                        $product[$key] = $item;
+                        $append[] = $product;
+                    }
+                }
+
+                $result = $append;
+            }
+
+            return $result;
+        };
+
+        /** @var array<PartitionedRows> $partitionedRows */
+        $partitionedRows = [];
+
+        /**
+         * @psalm-suppress ImpureFunctionCall
+         *
+         * @var array<string, mixed> $partitionsData
+         */
+        foreach ($cartesianProduct($partitions) as $partitionsData) {
+            $rows = $this->filter(function (Row $row) use ($partitionsData) : bool {
+                /**
+                 * @var mixed $value
+                 */
+                foreach ($partitionsData as $entry => $value) {
+                    if ($row->valueOf($entry) !== $value) {
+                        return false;
+                    }
+                }
+
+                return true;
+            });
+
+            if ($rows->count()) {
+                $partitionedRows[] = new PartitionedRows($rows, ...Partition::fromArray($partitionsData));
+            }
+        }
+
+        return $partitionedRows;
+    }
+
+    /**
      * @psalm-param pure-callable(mixed, Row) : mixed $callable
      *
      * @param callable(mixed, Row) : mixed $callable

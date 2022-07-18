@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Transformer;
 
 use Flow\ArrayDot\Exception\InvalidPathException;
+use Flow\ETL\Config;
 use Flow\ETL\DSL\Transform;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use PHPUnit\Framework\TestCase;
@@ -37,6 +39,7 @@ final class ArrayDotRenameTransformerTest extends TestCase
                     ]),
                 ),
             ),
+            new FlowContext(Config::default())
         );
 
         $this->assertEquals(
@@ -74,6 +77,7 @@ final class ArrayDotRenameTransformerTest extends TestCase
                     ]),
                 ),
             ),
+            new FlowContext(Config::default())
         );
 
         $this->assertEquals(
@@ -109,6 +113,7 @@ final class ArrayDotRenameTransformerTest extends TestCase
                     ]),
                 ),
             ),
+            new FlowContext(Config::default())
         );
     }
 
@@ -125,6 +130,7 @@ final class ArrayDotRenameTransformerTest extends TestCase
                     new Row\Entry\IntegerEntry('integer_entry', 1),
                 ),
             ),
+            new FlowContext(Config::default())
         );
     }
 }

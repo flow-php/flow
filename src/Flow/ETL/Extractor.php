@@ -12,5 +12,5 @@ interface Extractor
     /**
      * @return \Generator<int, Rows, mixed, void>
      */
-    public function extract() : \Generator;
+    public function extract(FlowContext $context) : \Generator;
 }

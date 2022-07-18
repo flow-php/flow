@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Loader;
 
+use Flow\ETL\Config;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\DSL\To;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Filesystem\Stream\Mode;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Loader\StreamLoader;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
-use Flow\ETL\Stream\Mode;
 use PHPUnit\Framework\TestCase;
 
 final class StreamLoaderTest extends TestCase
@@ -27,7 +29,8 @@ final class StreamLoaderTest extends TestCase
                 Row::create(Entry::integer('id', 1), Entry::string('name', 'id_1')),
                 Row::create(Entry::integer('id', 2), Entry::string('name', 'id_2')),
                 Row::create(Entry::integer('id', 3), Entry::string('name', 'id_3'))
-            )
+            ),
+            new FlowContext(Config::default())
         );
     }
 
@@ -42,7 +45,8 @@ final class StreamLoaderTest extends TestCase
                 Row::create(Entry::integer('id', 1), Entry::string('name', 'id_1')),
                 Row::create(Entry::integer('id', 2), Entry::string('name', 'id_2')),
                 Row::create(Entry::integer('id', 3), Entry::string('name', 'id_3'))
-            )
+            ),
+            new FlowContext(Config::default())
         );
         $output = \ob_get_contents();
         \ob_end_clean();
@@ -78,7 +82,8 @@ ASCII,
                 Row::create(Entry::integer('id', 1), Entry::string('name', 'id_1')),
                 Row::create(Entry::integer('id', 2), Entry::string('name', 'id_2')),
                 Row::create(Entry::integer('id', 3), Entry::string('name', 'id_3'))
-            )
+            ),
+            new FlowContext(Config::default())
         );
         $output = \ob_get_contents();
         \ob_end_clean();
@@ -109,7 +114,8 @@ TABLE,
                 Row::create(Entry::integer('id', 1), Entry::string('name', 'id_1')),
                 Row::create(Entry::integer('id', 2), Entry::string('name', 'id_2')),
                 Row::create(Entry::integer('id', 3), Entry::string('name', 'id_3'))
-            )
+            ),
+            new FlowContext(Config::default())
         );
         $output = \ob_get_contents();
         \ob_end_clean();

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use Flow\ETL\Config;
 use Flow\ETL\DSL\Transform;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Rows;
@@ -24,7 +26,8 @@ class CallbackEntryTransformerTest extends TestCase
                 Row::create(
                     new Entry\StringEntry('string entry ', 'String entry')
                 )
-            )
+            ),
+            new FlowContext(Config::default())
         );
 
         $this->assertEquals(new Rows(
@@ -47,7 +50,8 @@ class CallbackEntryTransformerTest extends TestCase
                 Row::create(
                     new Entry\StringEntry('string entry ', 'String entry')
                 )
-            )
+            ),
+            new FlowContext(Config::default())
         );
 
         $this->assertEquals(new Rows(
@@ -69,7 +73,8 @@ class CallbackEntryTransformerTest extends TestCase
                     new Row\Entry\IntegerEntry('old-int', 1000),
                     new Entry\StringEntry('string-entry ', 'String entry')
                 )
-            )
+            ),
+            new FlowContext(Config::default())
         );
 
         $this->assertEquals(new Rows(

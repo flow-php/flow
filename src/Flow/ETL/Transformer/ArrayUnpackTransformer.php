@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Transformer;
 
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
@@ -46,7 +47,7 @@ final class ArrayUnpackTransformer implements Transformer
         $this->entryPrefix = $data['entry_prefix'];
     }
 
-    public function transform(Rows $rows) : Rows
+    public function transform(Rows $rows, FlowContext $context) : Rows
     {
         /**
          * @psalm-var pure-callable(Row) : Row $rowsMap

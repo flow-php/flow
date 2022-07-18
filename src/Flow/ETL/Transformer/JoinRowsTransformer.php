@@ -6,6 +6,7 @@ namespace Flow\ETL\Transformer;
 
 use Flow\ETL\DataFrame;
 use Flow\ETL\Flow;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Join\Condition;
 use Flow\ETL\Join\Join;
 use Flow\ETL\Rows;
@@ -71,7 +72,7 @@ final class JoinRowsTransformer implements Transformer
         $this->rows = null;
     }
 
-    public function transform(Rows $rows) : Rows
+    public function transform(Rows $rows, FlowContext $context) : Rows
     {
         return match ($this->type) {
             Join::left => $rows->joinLeft($this->rows(), $this->condition),

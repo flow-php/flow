@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\DSL;
 
 use Flow\ETL\Cache;
-use Flow\ETL\Config;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\MemoryExtractor;
 use Flow\ETL\Extractor\ProcessExtractor;
@@ -61,9 +60,9 @@ class From
         return new MemoryExtractor($memory, $chunkSize, $rowEntryName);
     }
 
-    final public static function pipeline(Pipeline $pipeline, Config $config = null) : Extractor
+    final public static function pipeline(Pipeline $pipeline) : Extractor
     {
-        return new Extractor\PipelineExtractor($pipeline, $config ?? Config::default());
+        return new Extractor\PipelineExtractor($pipeline);
     }
 
     final public static function rows(Rows ...$rows) : Extractor

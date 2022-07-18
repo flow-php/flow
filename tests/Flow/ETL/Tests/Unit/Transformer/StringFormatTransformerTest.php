@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use Flow\ETL\Config;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\DSL\Transform;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use PHPUnit\Framework\TestCase;
@@ -20,7 +22,7 @@ final class StringFormatTransformerTest extends TestCase
             Row::create(Entry::string('string', '1')),
             Row::create(Entry::string('string', '2')),
             Row::create(Entry::string('string', '3')),
-        ));
+        ), new FlowContext(Config::default()));
 
         $this->assertSame(
             [
@@ -40,7 +42,7 @@ final class StringFormatTransformerTest extends TestCase
             new Row(new Row\Entries(new Row\Entry\IntegerEntry('id', 1))),
             new Row(new Row\Entries(new Row\Entry\IntegerEntry('id', 2))),
             new Row(new Row\Entries(new Row\Entry\IntegerEntry('id', 3))),
-        ));
+        ), new FlowContext(Config::default()));
 
         $this->assertSame(
             [
@@ -60,7 +62,7 @@ final class StringFormatTransformerTest extends TestCase
             Row::create(Entry::integer('percentage', 1)),
             Row::create(Entry::integer('percentage', 2)),
             Row::create(Entry::integer('percentage', 3)),
-        ));
+        ), new FlowContext(Config::default()));
 
         $this->assertSame(
             [

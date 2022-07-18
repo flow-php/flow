@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use Flow\ETL\Config;
 use Flow\ETL\DSL\Transform;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use PHPUnit\Framework\TestCase;
@@ -23,7 +25,7 @@ final class StringConcatTransformerTest extends TestCase
                 new Row\Entry\StringEntry('first_name', 'Norbert'),
                 new Row\Entry\StringEntry('last_name', 'Orzechowicz'),
             )
-        ));
+        ), new FlowContext(Config::default()));
 
         $this->assertSame(
             [
@@ -50,7 +52,7 @@ final class StringConcatTransformerTest extends TestCase
                 new Row\Entry\StringEntry('first_name', 'Norbert'),
                 new Row\Entry\StringEntry('last_name', 'Orzechowicz'),
             )
-        ));
+        ), new FlowContext(Config::default()));
 
         $this->assertSame(
             [

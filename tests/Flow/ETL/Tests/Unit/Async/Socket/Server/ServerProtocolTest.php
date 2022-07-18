@@ -12,6 +12,7 @@ use Flow\ETL\Async\Socket\Worker\Pool;
 use Flow\ETL\Cache\InMemoryCache;
 use Flow\ETL\Config;
 use Flow\ETL\Extractor\ProcessExtractor;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Pipeline\Pipes;
 use Flow\ETL\Rows;
 use PHPUnit\Framework\TestCase;
@@ -21,7 +22,7 @@ final class ServerProtocolTest extends TestCase
     public function test_disconnecting_client_after_unsuccessful_identification() : void
     {
         $serverProtocol = new ServerProtocol(
-            Config::builder()->cache(new InMemoryCache())->build(),
+            new FlowContext(Config::builder()->cache(new InMemoryCache())->build()),
             'cache_id',
             $pool = Pool::generate(1),
             (new ProcessExtractor(new Rows())),
@@ -44,7 +45,7 @@ final class ServerProtocolTest extends TestCase
     public function test_send_rows_after_fetch_when_there_are_still_some_rows_left_otherwise_stop_server() : void
     {
         $serverProtocol = new ServerProtocol(
-            Config::builder()->cache(new InMemoryCache())->build(),
+            new Flowcontext(Config::builder()->cache(new InMemoryCache())->build()),
             'cache_id',
             $pool = Pool::generate(1),
             new ProcessExtractor($rows = new Rows()),
@@ -83,7 +84,7 @@ final class ServerProtocolTest extends TestCase
     public function test_sending_pipes_after_successful_identification() : void
     {
         $serverProtocol = new ServerProtocol(
-            Config::builder()->cache($cache = new InMemoryCache())->build(),
+            new FlowContext(Config::builder()->cache($cache = new InMemoryCache())->build()),
             'cache_id',
             $pool = Pool::generate(1),
             (new ProcessExtractor(new Rows())),
@@ -107,7 +108,7 @@ final class ServerProtocolTest extends TestCase
     public function test_stop_server_when_last_client_is_disconnected() : void
     {
         $serverProtocol = new ServerProtocol(
-            Config::builder()->cache($cache = new InMemoryCache())->build(),
+            new FlowContext(Config::builder()->cache($cache = new InMemoryCache())->build()),
             'cache_id',
             $pool = Pool::generate(2),
             new ProcessExtractor(),

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use Flow\ETL\Config;
 use Flow\ETL\DSL\Transform;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\ArrayEntry;
 use Flow\ETL\Rows;
@@ -32,7 +34,7 @@ final class ArrayReverseTransformerTest extends TestCase
                     'array' => [4, 10, 3, 5],
                 ],
             ],
-            $transformer->transform(new Rows(Row::create($arrayEntry)))->toArray()
+            $transformer->transform(new Rows(Row::create($arrayEntry)), new FlowContext(Config::default()))->toArray()
         );
     }
 }

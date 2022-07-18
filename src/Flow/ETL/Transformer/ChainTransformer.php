@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer;
 
+use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
@@ -35,10 +36,10 @@ final class ChainTransformer implements Transformer
         $this->transformers = $data['transformers'];
     }
 
-    public function transform(Rows $rows) : Rows
+    public function transform(Rows $rows, FlowContext $context) : Rows
     {
         foreach ($this->transformers as $transformer) {
-            $rows = $transformer->transform($rows);
+            $rows = $transformer->transform($rows, $context);
         }
 
         return $rows;

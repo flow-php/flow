@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Rows;
@@ -35,7 +36,7 @@ final class AddStampToStringEntryTransformer implements Transformer
         $this->divider = $data['divider'];
     }
 
-    public function transform(Rows $rows) : Rows
+    public function transform(Rows $rows, FlowContext $context) : Rows
     {
         return $rows->map(
             fn (Row $row) : Row => $row->set(

@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use Flow\ETL\Config;
 use Flow\ETL\DSL\Transform;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use PHPUnit\Framework\TestCase;
@@ -25,6 +27,7 @@ final class ArrayCollectionGetTransformerTest extends TestCase
                     new Row\Entry\IntegerEntry('invalid_entry', 1),
                 ),
             ),
+            new FlowContext(Config::default())
         );
     }
 
@@ -49,6 +52,7 @@ final class ArrayCollectionGetTransformerTest extends TestCase
                     ),
                 ),
             ),
+            new FlowContext(Config::default())
         );
 
         $this->assertEquals(
@@ -83,6 +87,7 @@ final class ArrayCollectionGetTransformerTest extends TestCase
                     ]),
                 ),
             ),
+            new FlowContext(Config::default())
         );
 
         $this->assertEquals(
@@ -119,6 +124,7 @@ final class ArrayCollectionGetTransformerTest extends TestCase
                     ]),
                 ),
             ),
+            new FlowContext(Config::default())
         );
 
         $this->assertEquals(
@@ -154,6 +160,7 @@ final class ArrayCollectionGetTransformerTest extends TestCase
                     ]),
                 ),
             ),
+            new FlowContext(Config::default())
         );
 
         $this->assertEquals(

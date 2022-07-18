@@ -6,6 +6,7 @@ namespace Flow\ETL\Transformer;
 
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
@@ -49,7 +50,7 @@ final class HashTransformer implements Transformer
         $this->newEntryName = $data['new_entry_name'];
     }
 
-    public function transform(Rows $rows) : Rows
+    public function transform(Rows $rows, FlowContext $context) : Rows
     {
         /**
          * @psalm-var pure-callable(Row $row) : Row $transformer

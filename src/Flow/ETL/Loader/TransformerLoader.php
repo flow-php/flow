@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Loader;
 
+use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
@@ -33,8 +34,8 @@ final class TransformerLoader implements Loader
         $this->loader = $data['loader'];
     }
 
-    public function load(Rows $rows) : void
+    public function load(Rows $rows, FlowContext $context) : void
     {
-        $this->loader->load($this->transformer->transform($rows));
+        $this->loader->load($this->transformer->transform($rows, $context), $context);
     }
 }

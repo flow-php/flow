@@ -6,6 +6,7 @@ namespace Flow\ETL\Transformer;
 
 use function Flow\ArrayDot\array_dot_rename;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
@@ -39,7 +40,7 @@ final class ArrayDotRenameTransformer implements Transformer
         $this->arrayKeyRenames = $data['array_key_renames'];
     }
 
-    public function transform(Rows $rows) : Rows
+    public function transform(Rows $rows, FlowContext $context) : Rows
     {
         /**
          * @psalm-var pure-callable(Row $row) : Row $transformer

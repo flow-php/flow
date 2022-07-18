@@ -6,6 +6,7 @@ namespace Flow\ETL\Transformer;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Rows;
@@ -43,7 +44,7 @@ final class EntryNameStyleConverterTransformer implements Transformer
         $this->style = $data['style'];
     }
 
-    public function transform(Rows $rows) : Rows
+    public function transform(Rows $rows, FlowContext $context) : Rows
     {
         /** @psalm-var pure-callable(Row $row) : Row $rowTransformer */
         $rowTransformer = function (Row $row) : Row {

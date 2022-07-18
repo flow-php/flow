@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Extractor;
 
+use Flow\ETL\Config;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\DSL\From;
 use Flow\ETL\Extractor;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use PHPUnit\Framework\TestCase;
@@ -17,7 +19,7 @@ final class BufferExtractorTest extends TestCase
     {
         $extractor = From::buffer(
             new class implements Extractor {
-                public function extract() : \Generator
+                public function extract(FlowContext $context) : \Generator
                 {
                     yield new Rows(Row::create(Entry::integer('id', 1)));
                     yield new Rows(Row::create(Entry::integer('id', 2)));
@@ -51,7 +53,7 @@ final class BufferExtractorTest extends TestCase
                     Row::create(Entry::integer('id', 8))
                 ),
             ],
-            \iterator_to_array($extractor->extract())
+            \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
         );
     }
 
@@ -59,7 +61,7 @@ final class BufferExtractorTest extends TestCase
     {
         $extractor = From::buffer(
             new class implements Extractor {
-                public function extract() : \Generator
+                public function extract(FlowContext $context) : \Generator
                 {
                     yield new Rows(Row::create(Entry::integer('id', 1)));
                     yield new Rows(Row::create(Entry::integer('id', 2)));
@@ -91,7 +93,7 @@ final class BufferExtractorTest extends TestCase
                     Row::create(Entry::integer('id', 7)),
                 ),
             ],
-            \iterator_to_array($extractor->extract())
+            \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
         );
     }
 
@@ -99,7 +101,7 @@ final class BufferExtractorTest extends TestCase
     {
         $extractor = From::buffer(
             new class implements Extractor {
-                public function extract() : \Generator
+                public function extract(FlowContext $context) : \Generator
                 {
                     yield new Rows(Row::create(Entry::integer('id', 1)));
                     yield new Rows(Row::create(Entry::integer('id', 2)));
@@ -129,7 +131,7 @@ final class BufferExtractorTest extends TestCase
                     Row::create(Entry::integer('id', 7)),
                 ),
             ],
-            \iterator_to_array($extractor->extract())
+            \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
         );
     }
 
@@ -137,7 +139,7 @@ final class BufferExtractorTest extends TestCase
     {
         $extractor = From::buffer(
             new class implements Extractor {
-                public function extract() : \Generator
+                public function extract(FlowContext $context) : \Generator
                 {
                     yield new Rows(
                         Row::create(Entry::integer('id', 1)),
@@ -155,7 +157,7 @@ final class BufferExtractorTest extends TestCase
                     Row::create(Entry::integer('id', 2)),
                 ),
             ],
-            \iterator_to_array($extractor->extract())
+            \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
         );
     }
 
@@ -163,7 +165,7 @@ final class BufferExtractorTest extends TestCase
     {
         $extractor = From::buffer(
             new class implements Extractor {
-                public function extract() : \Generator
+                public function extract(FlowContext $context) : \Generator
                 {
                     yield new Rows(
                         Row::create(Entry::integer('id', 1)),
@@ -181,7 +183,7 @@ final class BufferExtractorTest extends TestCase
                     Row::create(Entry::integer('id', 2)),
                 ),
             ],
-            \iterator_to_array($extractor->extract())
+            \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
         );
     }
 
@@ -189,7 +191,7 @@ final class BufferExtractorTest extends TestCase
     {
         $extractor = From::buffer(
             new class implements Extractor {
-                public function extract() : \Generator
+                public function extract(FlowContext $context) : \Generator
                 {
                     yield new Rows(
                         Row::create(Entry::integer('id', 1)),
@@ -228,7 +230,7 @@ final class BufferExtractorTest extends TestCase
                     Row::create(Entry::integer('id', 8)),
                 ),
             ],
-            \iterator_to_array($extractor->extract())
+            \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
         );
     }
 
@@ -236,7 +238,7 @@ final class BufferExtractorTest extends TestCase
     {
         $extractor = From::buffer(
             new class implements Extractor {
-                public function extract() : \Generator
+                public function extract(FlowContext $context) : \Generator
                 {
                     yield new Rows(
                         Row::create(Entry::integer('id', 1)),
@@ -273,7 +275,7 @@ final class BufferExtractorTest extends TestCase
                     Row::create(Entry::integer('id', 7)),
                 ),
             ],
-            \iterator_to_array($extractor->extract())
+            \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
         );
     }
 }

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Extractor;
 
+use Flow\ETL\Config;
 use Flow\ETL\Extractor\ChunkExtractor;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Tests\Double\AllRowTypesFakeExtractor;
 use PHPUnit\Framework\TestCase;
 
@@ -16,7 +18,7 @@ final class ChunkExtractorTest extends TestCase
 
         $this->assertCount(
             $rowsNumber / $chunkSize * $batches,
-            \iterator_to_array($extractor->extract())
+            \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
         );
     }
 }

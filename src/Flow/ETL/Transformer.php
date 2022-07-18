@@ -13,5 +13,5 @@ use Flow\Serializer\Serializable;
  */
 interface Transformer extends Serializable
 {
-    public function transform(Rows $rows) : Rows;
+    public function transform(Rows $rows, FlowContext $context) : Rows;
 }

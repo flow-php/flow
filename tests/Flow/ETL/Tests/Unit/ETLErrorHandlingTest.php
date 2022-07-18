@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit;
 use Flow\ETL\DSL\Handler;
 use Flow\ETL\Extractor;
 use Flow\ETL\Flow;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\BooleanEntry;
@@ -23,9 +24,11 @@ final class ETLErrorHandlingTest extends TestCase
     {
         $extractor = new class implements Extractor {
             /**
+             * @param FlowContext $context
+             *
              * @return \Generator<int, Rows, mixed, void>
              */
-            public function extract() : \Generator
+            public function extract(FlowContext $context) : \Generator
             {
                 yield new Rows(
                     Row::create(
@@ -48,7 +51,7 @@ final class ETLErrorHandlingTest extends TestCase
         };
 
         $brokenTransformer = new class implements Transformer {
-            public function transform(Rows $rows) : Rows
+            public function transform(Rows $rows, FlowContext $context) : Rows
             {
                 throw new \RuntimeException('Transformer Exception');
             }
@@ -66,7 +69,7 @@ final class ETLErrorHandlingTest extends TestCase
         $loader = new class implements Loader {
             public array $result = [];
 
-            public function load(Rows $rows) : void
+            public function load(Rows $rows, FlowContext $context) : void
             {
                 $this->result = \array_merge($this->result, $rows->toArray());
             }
@@ -96,9 +99,11 @@ final class ETLErrorHandlingTest extends TestCase
     {
         $extractor = new class implements Extractor {
             /**
+             * @param FlowContext $context
+             *
              * @return \Generator<int, Rows, mixed, void>
              */
-            public function extract() : \Generator
+            public function extract(FlowContext $context) : \Generator
             {
                 yield new Rows(
                     Row::create(
@@ -121,7 +126,7 @@ final class ETLErrorHandlingTest extends TestCase
         };
 
         $brokenTransformer = new class implements Transformer {
-            public function transform(Rows $rows) : Rows
+            public function transform(Rows $rows, FlowContext $context) : Rows
             {
                 throw new \RuntimeException('Transformer Exception');
             }
@@ -140,7 +145,7 @@ final class ETLErrorHandlingTest extends TestCase
         $loader = new class implements Loader {
             public array $result = [];
 
-            public function load(Rows $rows) : void
+            public function load(Rows $rows, FlowContext $context) : void
             {
                 $this->result = \array_merge($this->result, $rows->toArray());
             }
@@ -185,9 +190,11 @@ final class ETLErrorHandlingTest extends TestCase
     {
         $extractor = new class implements Extractor {
             /**
+             * @param FlowContext $context
+             *
              * @return \Generator<int, Rows, mixed, void>
              */
-            public function extract() : \Generator
+            public function extract(FlowContext $context) : \Generator
             {
                 yield new Rows(
                     Row::create(
@@ -210,7 +217,7 @@ final class ETLErrorHandlingTest extends TestCase
         };
 
         $brokenTransformer = new class implements Transformer {
-            public function transform(Rows $rows) : Rows
+            public function transform(Rows $rows, FlowContext $context) : Rows
             {
                 if ($rows->first()->valueOf('id') === 101) {
                     throw new \RuntimeException('Transformer Exception');
@@ -232,7 +239,7 @@ final class ETLErrorHandlingTest extends TestCase
         $loader = new class implements Loader {
             public array $result = [];
 
-            public function load(Rows $rows) : void
+            public function load(Rows $rows, FlowContext $context) : void
             {
                 $this->result = \array_merge($this->result, $rows->toArray());
             }
