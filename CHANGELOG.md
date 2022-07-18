@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-06-22
+## [Unreleased] - 2022-07-18
 
 ### Added
 - [#44](https://github.com/flow-php/etl-adapter-http/pull/44) - **Workflow for aut-merging dependabot PRs** - [@tomaszhanc](https://github.com/tomaszhanc)
@@ -7,6 +7,7 @@
 - [#4](https://github.com/flow-php/etl-adapter-http/pull/4) - **Static HTTP extractor to extract rows from predefined collection of requests** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [5f4f3d](https://github.com/flow-php/etl-adapter-http/commit/5f4f3d47a93bc1971d39efb4a666694bdbe672c5) - **Adjust adapter to the latest changes in core etl library** - [@norberttech](https://github.com/norberttech)
 - [53ae6f](https://github.com/flow-php/etl-adapter-http/commit/53ae6f87775898fc5575dad27d809703d6d79e68) - **Create LICENSE** - [@norberttech](https://github.com/norberttech)
 - [#111](https://github.com/flow-php/etl-adapter-http/pull/111) - **Updated project to php 8.1** - [@norberttech](https://github.com/norberttech)
 - [#72](https://github.com/flow-php/etl-adapter-http/pull/72) - **Reuse workflows from aeon-php/actions** - [@tomaszhanc](https://github.com/tomaszhanc)
