@@ -81,7 +81,7 @@ final class XMLReaderExtractorTest extends TestCase
                 )
             ),
             (new Flow())
-                ->read(XML::from_file(__DIR__ . '/xml/simple_items.xml'))
+                ->read(XML::from(__DIR__ . '/xml/simple_items.xml'))
                 ->fetch()
         );
     }
@@ -149,7 +149,7 @@ final class XMLReaderExtractorTest extends TestCase
                 )
             ),
             (new Flow())
-                ->read(XML::from_file(__DIR__ . '/xml/simple_items.xml', 'root/items'))
+                ->read(XML::from(__DIR__ . '/xml/simple_items.xml', 'root/items'))
                 ->fetch()
         );
     }
@@ -225,7 +225,7 @@ final class XMLReaderExtractorTest extends TestCase
                 )
             ),
             (new Flow())
-                ->read(XML::from_file(__DIR__ . '/xml/simple_items.xml', 'root/items/item'))
+                ->read(XML::from(__DIR__ . '/xml/simple_items.xml', 'root/items/item'))
                 ->fetch()
         );
     }
@@ -276,7 +276,7 @@ final class XMLReaderExtractorTest extends TestCase
                 )
             ),
             (new Flow())
-                ->read(XML::from_file(__DIR__ . '/xml/simple_items.xml', 'root/items/item/id'))
+                ->read(XML::from(__DIR__ . '/xml/simple_items.xml', 'root/items/item/id'))
                 ->fetch()
         );
     }
