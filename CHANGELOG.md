@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-06-07
+## [Unreleased] - 2022-07-18
 
 ### Added
 - [#103](https://github.com/flow-php/etl-adapter-xml/pull/103) - **XML DSL class** - [@norberttech](https://github.com/norberttech)
@@ -6,6 +6,7 @@
 - [#13](https://github.com/flow-php/etl-adapter-xml/pull/13) - **memory safe XMLReaderExtractor** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [546393](https://github.com/flow-php/etl-adapter-xml/commit/546393077f71c26dbeee3376bf56b1e8b2e87328) - **Adjust adapter to the latest changes in core etl library** - [@norberttech](https://github.com/norberttech)
 - [ca56e1](https://github.com/flow-php/etl-adapter-xml/commit/ca56e1500d28abc55f60268e23d1b9edf7fa445b) - **Create LICENSE** - [@norberttech](https://github.com/norberttech)
 - [#103](https://github.com/flow-php/etl-adapter-xml/pull/103) - **XMLReaderExtractor is now turning XML's into arrays instead of creating XMLEntry** - [@norberttech](https://github.com/norberttech)
 - [#102](https://github.com/flow-php/etl-adapter-xml/pull/102) - **Updated project to php 8.1** - [@norberttech](https://github.com/norberttech)
