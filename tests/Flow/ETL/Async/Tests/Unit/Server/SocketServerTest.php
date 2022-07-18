@@ -11,6 +11,7 @@ use Flow\ETL\Config;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Extractor\ProcessExtractor;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Pipeline\Pipes;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
@@ -42,7 +43,7 @@ final class SocketServerTest extends TestCase
         $server = SocketServer::tcp(6541, $logger = new NullLogger());
 
         $server->initialize(new ServerProtocol(
-            Config::default(),
+            new FlowContext(Config::default()),
             'cache_id',
             Pool::generate(1),
             new ProcessExtractor(),
@@ -50,7 +51,7 @@ final class SocketServerTest extends TestCase
         ));
 
         $server->initialize(new ServerProtocol(
-            Config::default(),
+            new FlowContext(Config::default()),
             'cache_id',
             Pool::generate(1),
             new ProcessExtractor(),
