@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-06-25
+## [Unreleased] - 2022-07-18
 
 ### Added
 - [#110](https://github.com/flow-php/doctrine-dbal-bulk/pull/110) - **Updated to PHP 8.1** - [@norberttech](https://github.com/norberttech)
@@ -19,6 +19,7 @@
 - [cdbc76](https://github.com/flow-php/doctrine-dbal-bulk/commit/cdbc76af8c863f40d6181aa81a60e4f1d33d6519) - **Initial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [6ceb80](https://github.com/flow-php/doctrine-dbal-bulk/commit/6ceb8016a3519d63681ceb7ce6d20dee9e49cf4e) - **tools/composer.json - disabled plugins** - [@norberttech](https://github.com/norberttech)
 - [820189](https://github.com/flow-php/doctrine-dbal-bulk/commit/820189c082972039c33d32e248db4a8b5ecef275) - **invalid dbal type in tests** - [@norberttech](https://github.com/norberttech)
 - [338cf6](https://github.com/flow-php/doctrine-dbal-bulk/commit/338cf6f18f3124d864b99255e310224076bf5847) - **codding standard** - [@norberttech](https://github.com/norberttech)
 - [afc893](https://github.com/flow-php/doctrine-dbal-bulk/commit/afc893652e5c457a53cce67b71a26d09b4f794ae) - **missing dependency** - [@norberttech](https://github.com/norberttech)
