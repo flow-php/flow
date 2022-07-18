@@ -8,18 +8,19 @@ use codename\parquet\data\DataColumn;
 use codename\parquet\data\DataField;
 use codename\parquet\ParquetWriter;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Filesystem\Path;
+use Flow\ETL\Filesystem\Stream\FileStream;
+use Flow\ETL\Filesystem\Stream\Mode;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Pipeline\Closure;
 use Flow\ETL\Row\Entry\ListEntry;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Rows;
-use Flow\ETL\Stream\FileStream;
-use Flow\ETL\Stream\Handler;
-use Flow\ETL\Stream\Mode;
 
 /**
  * @implements Loader<array{
- *   stream: FileStream,
+ *   path: Path,
  *   rows_per_group: int,
  *   safe_mode: bool
  * }>
@@ -42,27 +43,22 @@ final class ParquetLoader implements Closure, Loader
      */
     private array $dataRepetitionsBuffer = [];
 
-    private Handler $handler;
-
-    /**
-     * @var null|resource
-     */
-    private $resource;
+    private ?FileStream $fileStream;
 
     public function __construct(
-        private readonly FileStream $stream,
+        private readonly Path $path,
         private readonly int $rowsPerGroup = 1000,
         private readonly bool $safeMode = true,
         private readonly ?Schema $schema = null
     ) {
         $this->converter = new SchemaConverter();
-        $this->handler = $this->safeMode ? Handler::directory('parquet') : Handler::file();
+        $this->fileStream = null;
     }
 
     public function __serialize() : array
     {
         return [
-            'stream' => $this->stream,
+            'path' => $this->path,
             'rows_per_group' => $this->rowsPerGroup,
             'safe_mode' => $this->safeMode,
         ];
@@ -70,15 +66,18 @@ final class ParquetLoader implements Closure, Loader
 
     public function __unserialize(array $data) : void
     {
-        $this->stream = $data['stream'];
+        $this->path = $data['path'];
         $this->safeMode = $data['safe_mode'];
         $this->rowsPerGroup = $data['rows_per_group'];
-        $this->handler = $this->safeMode ? Handler::directory('parquet') : Handler::file();
-        $this->resource = null;
+        $this->fileStream = null;
     }
 
-    public function load(Rows $rows) : void
+    public function load(Rows $rows, FlowContext $context) : void
     {
+        if (\count($context->partitionEntries())) {
+            throw new RuntimeException('Partitioning is not supported yet');
+        }
+
         if ($this->schema === null) {
             $this->inferSchema($rows);
         }
@@ -103,33 +102,35 @@ final class ParquetLoader implements Closure, Loader
             }
 
             if ($write === true) {
-                $this->writeRowGroup();
+                $this->writeRowGroup($context);
                 $write = false;
             }
         }
     }
 
-    public function closure(Rows $rows) : void
+    public function closure(Rows $rows, FlowContext $context) : void
     {
-        $this->writeRowGroup();
+        $this->writeRowGroup($context);
 
-        if (\is_resource($this->resource)) {
-            /** @psalm-suppress InvalidPropertyAssignmentValue */
-            \fclose($this->resource);
+        if ($this->fileStream !== null && $this->fileStream->isOpen()) {
+            $this->fileStream->close();
         }
     }
 
-    private function writer() : ParquetWriter
+    private function writer(FlowContext $context) : ParquetWriter
     {
         if ($this->writer !== null) {
             return $this->writer;
         }
 
-        if ($this->resource === null) {
-            $this->resource = $this->handler->open($this->stream, Mode::WRITE);
+        if ($this->fileStream === null) {
+            $this->fileStream = $context->fs()->open(
+                $this->safeMode ? $this->path->randomize() : $this->path,
+                Mode::WRITE
+            );
         }
 
-        $this->writer = new ParquetWriter($this->converter->toParquet($this->schema()), $this->resource);
+        $this->writer = new ParquetWriter($this->converter->toParquet($this->schema()), $this->fileStream->resource());
 
         return $this->writer;
     }
@@ -137,7 +138,7 @@ final class ParquetLoader implements Closure, Loader
     /**
      * @throws \Exception
      */
-    private function writeRowGroup() : void
+    private function writeRowGroup(FlowContext $context) : void
     {
         foreach ($this->dataBuffer as $fieldData) {
             if (!\count($fieldData)) {
@@ -147,9 +148,9 @@ final class ParquetLoader implements Closure, Loader
 
         $this->prepareDataBuffer();
 
-        $rg = $this->writer()->CreateRowGroup();
+        $rg = $this->writer($context)->CreateRowGroup();
 
-        foreach ($this->writer()->schema->fields as $field) {
+        foreach ($this->writer($context)->schema->fields as $field) {
             if (!$field instanceof DataField) {
                 throw new RuntimeException('Only DataFields are currently supported, given: ' . \get_class($field));
             }
@@ -170,14 +171,13 @@ final class ParquetLoader implements Closure, Loader
         }
 
         $rg->finish();
-        $this->writer()->finish();
+        $this->writer($context)->finish();
 
-        if (\is_resource($this->resource)) {
-            /** @psalm-suppress InvalidPropertyAssignmentValue */
-            \fclose($this->resource);
+        if ($this->fileStream !== null && $this->fileStream->isOpen()) {
+            $this->fileStream->close();
         }
 
-        $this->resource = null;
+        $this->fileStream = null;
         $this->writer = null;
         $this->dataBuffer = [];
         $this->dataRepetitionsBuffer = [];

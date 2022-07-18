@@ -8,10 +8,10 @@ use Flow\ETL\DSL\Entry;
 use Flow\ETL\DSL\From;
 use Flow\ETL\DSL\Parquet;
 use Flow\ETL\DSL\Transform;
+use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Flow;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
-use Flow\ETL\Stream\LocalFile;
 use PHPUnit\Framework\TestCase;
 
 final class ParquetTest extends TestCase
@@ -126,7 +126,7 @@ final class ParquetTest extends TestCase
         $this->assertFileExists($path);
 
         $paths = \array_map(
-            fn (string $fileName) : LocalFile => new LocalFile($path . '/' . $fileName),
+            fn (string $fileName) : Path => new Path($path . '/' . $fileName),
             \array_values(\array_diff(\scandir($path), ['..', '.']))
         );
 
@@ -152,7 +152,11 @@ final class ParquetTest extends TestCase
             $files = \array_values(\array_diff(\scandir($path), ['..', '.']));
 
             foreach ($files as $file) {
-                $this->removeFile($path . DIRECTORY_SEPARATOR . $file);
+                if (\is_file($path . DIRECTORY_SEPARATOR . $file)) {
+                    $this->removeFile($path . DIRECTORY_SEPARATOR . $file);
+                } else {
+                    $this->cleanDirectory($path . DIRECTORY_SEPARATOR . $file);
+                }
             }
 
             \rmdir($path);

@@ -8,10 +8,9 @@ use Flow\ETL\Adapter\Parquet\Codename\ParquetExtractor;
 use Flow\ETL\Adapter\Parquet\Codename\ParquetLoader;
 use Flow\ETL\Exception\MissingDependencyException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Loader;
 use Flow\ETL\Row\Schema;
-use Flow\ETL\Stream\FileStream;
-use Flow\ETL\Stream\LocalFile;
 
 /**
  * @infection-ignore-all
@@ -19,21 +18,17 @@ use Flow\ETL\Stream\LocalFile;
 class Parquet
 {
     /**
-     * @param array<FileStream>|FileStream|string $uri
+     * @param array<Path>|Path|string $uri
      * @param string $row_entry_name
      * @param array<string> $fields
      *
      * @return Extractor
      */
     final public static function from(
-        string|FileStream|array $uri,
+        string|Path|array $uri,
         string $row_entry_name = 'row',
         array $fields = []
     ) : Extractor {
-        if (!\class_exists('codename\parquet\ParquetReader')) {
-            throw new MissingDependencyException('Codename Parquet', 'codename/parquet');
-        }
-
         if (\is_array($uri)) {
             $extractors = [];
 
@@ -49,34 +44,30 @@ class Parquet
         }
 
         return new ParquetExtractor(
-            \is_string($uri) ? new LocalFile($uri) : $uri,
+            \is_string($uri) ? Path::realpath($uri) : $uri,
             $row_entry_name,
             $fields
         );
     }
 
     /**
-     * @param FileStream|string $uri
+     * @param Path|string $path
      * @param int $rows_in_group
      * @param bool $safe_mode
      * @param null|Schema $schema
      *
-     * @throws MissingDependencyException
+     *@throws MissingDependencyException
      *
      * @return Loader
      */
     final public static function to(
-        string|FileStream $uri,
+        string|Path $path,
         int $rows_in_group = 1000,
         bool $safe_mode = false,
         Schema $schema = null
     ) : Loader {
-        if (!\class_exists('codename\parquet\ParquetReader')) {
-            throw new MissingDependencyException('Codename Parquet', 'codename/parquet');
-        }
-
         return new ParquetLoader(
-            \is_string($uri) ? new LocalFile($uri) : $uri,
+            \is_string($path) ? Path::realpath($path) : $path,
             $rows_in_group,
             $safe_mode,
             $schema
