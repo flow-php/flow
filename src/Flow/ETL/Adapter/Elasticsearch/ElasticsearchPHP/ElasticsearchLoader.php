@@ -7,6 +7,7 @@ namespace Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP;
 use Elasticsearch\Client;
 use Elasticsearch\ClientBuilder;
 use Flow\ETL\Adapter\Elasticsearch\IdFactory;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -92,7 +93,7 @@ final class ElasticsearchLoader implements Loader
         $this->client = null;
     }
 
-    public function load(Rows $rows) : void
+    public function load(Rows $rows, FlowContext $context) : void
     {
         if (!$rows->count()) {
             return;

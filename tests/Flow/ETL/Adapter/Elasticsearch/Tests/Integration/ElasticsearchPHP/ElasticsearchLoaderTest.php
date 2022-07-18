@@ -8,6 +8,8 @@ use Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\ElasticsearchLoader;
 use Flow\ETL\Adapter\Elasticsearch\EntryIdFactory\EntryIdFactory;
 use Flow\ETL\Adapter\Elasticsearch\EntryIdFactory\Sha1IdFactory;
 use Flow\ETL\Adapter\Elasticsearch\Tests\Integration\TestCase;
+use Flow\ETL\Config;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\Serializer\CompressingSerializer;
@@ -52,7 +54,7 @@ final class ElasticsearchLoaderTest extends TestCase
                 new Row\Entry\IntegerEntry('id', 4),
                 new Row\Entry\StringEntry('name', 'Tomek')
             ),
-        ));
+        ), new FlowContext(Config::default()));
 
         $params = [
             'index' => self::INDEX_NAME,
@@ -86,7 +88,7 @@ final class ElasticsearchLoaderTest extends TestCase
                 new Row\Entry\IntegerEntry('id', 1),
                 Row\Entry\JsonEntry::object('json', ['foo' => 'bar'])
             ),
-        ));
+        ), new FlowContext(Config::default()));
 
         $params = [
             'index' => self::INDEX_NAME,
@@ -115,7 +117,7 @@ final class ElasticsearchLoaderTest extends TestCase
                 new Row\Entry\IntegerEntry('id', 1),
                 Row\Entry\JsonEntry::object('json', ['foo' => 'bar'])
             ),
-        ));
+        ), new FlowContext(Config::default()));
 
         $params = [
             'index' => self::INDEX_NAME,
@@ -156,7 +158,7 @@ final class ElasticsearchLoaderTest extends TestCase
                 new Row\Entry\StringEntry('id', \sha1(\uniqid('id', true))),
                 new Row\Entry\StringEntry('name', 'Tomek')
             ),
-        ));
+        ), new FlowContext(Config::default()));
 
         $params = [
             'index' => self::INDEX_NAME,
@@ -181,8 +183,7 @@ final class ElasticsearchLoaderTest extends TestCase
     {
         $loader = new ElasticsearchLoader($this->elasticsearchContext->clientConfig(), 2, self::INDEX_NAME, new EntryIdFactory('id'), ['refresh' => true]);
 
-        $loader->load(new Rows(
-        ));
+        $loader->load(new Rows(), new FlowContext(Config::default()));
 
         $params = [
             'index' => self::INDEX_NAME,
@@ -209,7 +210,7 @@ final class ElasticsearchLoaderTest extends TestCase
                 new Row\Entry\StringEntry('status', 'NEW'),
                 new Row\Entry\DateTimeEntry('updated_at', new \DateTimeImmutable('2022-01-01 00:00:00'))
             ),
-        ));
+        ), new FlowContext(Config::default()));
 
         $updateLoader = ElasticsearchLoader::update($this->elasticsearchContext->clientConfig(), 2, self::INDEX_NAME, new Sha1IdFactory('id'), ['refresh' => true]);
 
@@ -218,7 +219,7 @@ final class ElasticsearchLoaderTest extends TestCase
                 new Row\Entry\IntegerEntry('id', 1),
                 new Row\Entry\StringEntry('name', 'Other Name'),
             ),
-        ));
+        ), new FlowContext(Config::default()));
 
         $params = [
             'index' => self::INDEX_NAME,
