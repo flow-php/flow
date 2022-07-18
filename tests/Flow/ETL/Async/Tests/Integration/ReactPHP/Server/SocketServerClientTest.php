@@ -15,6 +15,7 @@ use Flow\ETL\Config;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\DSL\Transform;
 use Flow\ETL\Extractor\ProcessExtractor;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Pipeline\Pipes;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -32,7 +33,7 @@ final class SocketServerClientTest extends TestCase
         $cacheId = \uniqid('cache_id');
 
         $server->initialize(new ServerProtocol(
-            Config::builder()->cache($cache)->build(),
+            new FlowContext(Config::builder()->cache($cache)->build()),
             $cacheId,
             $pool = Pool::generate(1),
             new ProcessExtractor(
@@ -71,7 +72,7 @@ final class SocketServerClientTest extends TestCase
         $cacheId = \uniqid('cache_id');
 
         $server->initialize(new ServerProtocol(
-            Config::builder()->cache($cache)->build(),
+            new FlowContext(Config::builder()->cache($cache)->build()),
             $cacheId,
             $pool = Pool::generate(1),
             new ProcessExtractor(
