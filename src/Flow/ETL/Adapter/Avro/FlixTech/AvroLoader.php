@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Avro\FlixTech;
 
+use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Filesystem\Path;
+use Flow\ETL\Filesystem\Stream\Mode;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Pipeline\Closure;
 use Flow\ETL\Row;
@@ -11,12 +15,9 @@ use Flow\ETL\Row\Entry\DateTimeEntry;
 use Flow\ETL\Row\Entry\TypedCollection\ObjectType;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Rows;
-use Flow\ETL\Stream\FileStream;
-use Flow\ETL\Stream\Handler;
-use Flow\ETL\Stream\Mode;
 
 /**
- * @implements Loader<array{stream: FileStream, safe_mode: bool, schema: ?Schema}>
+ * @implements Loader<array{path: Path, safe_mode: bool, schema: ?Schema}>
  */
 final class AvroLoader implements Closure, Loader
 {
@@ -24,20 +25,17 @@ final class AvroLoader implements Closure, Loader
 
     private ?Schema $inferredSchema = null;
 
-    private Handler $handler;
-
     public function __construct(
-        private readonly FileStream $stream,
+        private readonly Path $path,
         private readonly bool $safeMode = true,
         private readonly ?Schema $schema = null
     ) {
-        $this->handler = $this->safeMode ? Handler::directory('avro') : Handler::file();
     }
 
     public function __serialize() : array
     {
         return [
-            'stream' => $this->stream,
+            'path' => $this->path,
             'safe_mode' => $this->safeMode,
             'schema' => $this->schema,
         ];
@@ -45,14 +43,17 @@ final class AvroLoader implements Closure, Loader
 
     public function __unserialize(array $data) : void
     {
-        $this->stream = $data['stream'];
+        $this->path = $data['path'];
         $this->safeMode = $data['safe_mode'];
         $this->schema = $data['schema'];
-        $this->safeMode ? Handler::directory('avro') : Handler::file();
     }
 
-    public function load(Rows $rows) : void
+    public function load(Rows $rows, FlowContext $context) : void
     {
+        if (\count($context->partitionEntries())) {
+            throw new RuntimeException('Partitioning is not supported yet');
+        }
+
         if ($this->schema === null) {
             if ($this->inferredSchema === null) {
                 $this->inferredSchema = $rows->schema();
@@ -80,16 +81,16 @@ final class AvroLoader implements Closure, Loader
                 };
             }
 
-            $this->writer()->append($rowData);
+            $this->writer($context)->append($rowData);
         }
     }
 
-    public function closure(Rows $rows) : void
+    public function closure(Rows $rows, FlowContext $context) : void
     {
-        $this->writer()->close();
+        $this->writer($context)->close();
     }
 
-    private function writer() : \AvroDataIOWriter
+    private function writer(FlowContext $context) : \AvroDataIOWriter
     {
         if ($this->writer !== null) {
             return $this->writer;
@@ -98,7 +99,12 @@ final class AvroLoader implements Closure, Loader
         $schema = \AvroSchema::parse($this->schema());
 
         $this->writer =  new \AvroDataIOWriter(
-            new AvroResource($this->handler->open($this->stream, Mode::WRITE_BINARY)),
+            new AvroResource(
+                $context->fs()->open(
+                    $this->safeMode ? $this->path->randomize() : $this->path,
+                    Mode::WRITE_BINARY
+                )->resource()
+            ),
             new \AvroIODatumWriter($schema),
             $schema,
             'null'

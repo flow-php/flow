@@ -8,10 +8,10 @@ use Flow\ETL\DSL\Avro;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\DSL\From;
 use Flow\ETL\DSL\Transform;
+use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Flow;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
-use Flow\ETL\Stream\LocalFile;
 use PHPUnit\Framework\TestCase;
 
 final class AvroTest extends TestCase
@@ -81,7 +81,7 @@ final class AvroTest extends TestCase
             ->run();
 
         $paths = \array_map(
-            fn (string $fileName) : LocalFile => new LocalFile($path . '/' . $fileName),
+            fn (string $fileName) : Path => new Path($path . '/' . $fileName),
             \array_values(\array_diff(\scandir($path), ['..', '.']))
         );
 
