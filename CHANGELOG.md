@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-06-07
+## [Unreleased] - 2022-07-18
 
 ### Added
 - [#108](https://github.com/flow-php/etl-adapter-csv/pull/108) - **Support for reading/writing into FileStream** - [@norberttech](https://github.com/norberttech)
@@ -8,6 +8,7 @@
 - [#44](https://github.com/flow-php/etl-adapter-csv/pull/44) - **Workflow for aut-merging dependabot PRs** - [@tomaszhanc](https://github.com/tomaszhanc)
 
 ### Changed
+- [219ea7](https://github.com/flow-php/etl-adapter-csv/commit/219ea779599d2f5efb2ccfef905c7bad3b20369f) - **Adjust adapter to the latest changes in core etl library** - [@norberttech](https://github.com/norberttech)
 - [b59dec](https://github.com/flow-php/etl-adapter-csv/commit/b59dec7264df55323a180d2156f285de3febbe03) - **Create LICENSE** - [@norberttech](https://github.com/norberttech)
 - [#108](https://github.com/flow-php/etl-adapter-csv/pull/108) - **Defualt CSV reader library to native PHP functions** - [@norberttech](https://github.com/norberttech)
 - [#104](https://github.com/flow-php/etl-adapter-csv/pull/104) - **Updated project to php 8.1** - [@norberttech](https://github.com/norberttech)
