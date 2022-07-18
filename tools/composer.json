@@ -7,5 +7,8 @@
     "phpstan/phpstan": "^1.0.0",
     "infection/infection": "^0.26.0",
     "friendsofphp/php-cs-fixer": "^3.2"
+  },
+  "config": {
+    "allow-plugins": false
   }
 }

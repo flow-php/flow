@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Http;
 
 use Flow\ETL\Extractor;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Psr\Http\Client\ClientInterface;
@@ -41,7 +42,7 @@ final class PsrHttpClientStaticExtractor implements Extractor
         $this->postRequest = $postRequest;
     }
 
-    public function extract() : \Generator
+    public function extract(FlowContext $context) : \Generator
     {
         $responseFactory = new ResponseEntriesFactory();
         $requestFactory = new RequestEntriesFactory();

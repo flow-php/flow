@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Functional;
 
 use Flow\ETL\Adapter\Http\PsrHttpClientStaticExtractor;
+use Flow\ETL\Config;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Http\Client\Curl\Client;
 use Nyholm\Psr7\Factory\Psr17Factory;
@@ -31,7 +33,7 @@ final class PsrHttpClientStaticExtractorTest extends TestCase
 
         $extractor = new PsrHttpClientStaticExtractor($psr18Client, $requests());
 
-        $rowsGenerator = $extractor->extract();
+        $rowsGenerator = $extractor->extract(new FlowContext(Config::default()));
 
         /** @var Rows $norbertRows */
         $norbertRows = $rowsGenerator->current();

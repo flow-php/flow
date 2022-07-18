@@ -6,6 +6,8 @@ namespace Flow\ETL\Tests\Functional;
 
 use Flow\ETL\Adapter\Http\DynamicExtractor\NextRequestFactory;
 use Flow\ETL\Adapter\Http\PsrHttpClientDynamicExtractor;
+use Flow\ETL\Config;
+use Flow\ETL\FlowContext;
 use Http\Client\Curl\Client;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use PHPUnit\Framework\TestCase;
@@ -35,7 +37,7 @@ final class PsrHttpClientDynamicExtractorTest extends TestCase
             }
         });
 
-        $rows = $extractor->extract();
+        $rows = $extractor->extract(new FlowContext(Config::default()));
 
         $body = \json_decode($rows->current()->first()->valueOf('response_body'), true, 512, JSON_THROW_ON_ERROR);
 
