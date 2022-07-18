@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV\Tests\Integration;
 
+use Flow\ETL\Config;
 use Flow\ETL\DSL\CSV;
+use Flow\ETL\DSL\Transform;
+use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Flow;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
-use Flow\ETL\Stream\LocalFile;
 use PHPUnit\Framework\TestCase;
 
 final class CSVExtractorTest extends TestCase
@@ -18,7 +21,7 @@ final class CSVExtractorTest extends TestCase
         $path = __DIR__ . '/../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv';
 
         $rows = (new Flow())
-            ->read(CSV::from(new LocalFile($path)))
+            ->read(CSV::from($path))
             ->fetch();
 
         foreach ($rows as $row) {
@@ -54,7 +57,7 @@ final class CSVExtractorTest extends TestCase
 
         $total = 0;
         /** @var Rows $rows */
-        foreach ($extractor->extract() as $rows) {
+        foreach ($extractor->extract(new FlowContext(Config::default())) as $rows) {
             $rows->each(function (Row $row) : void {
                 $this->assertInstanceOf(Row\Entry\ArrayEntry::class, $row->get('row'));
                 $this->assertSame(
@@ -72,8 +75,8 @@ final class CSVExtractorTest extends TestCase
     {
         $extractor = CSV::from(
             [
-                new LocalFile(__DIR__ . '/../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv'),
-                new LocalFile(__DIR__ . '/../Fixtures/nested/annual-enterprise-survey-2019-financial-year-provisional-csv.csv'),
+                Path::realpath(__DIR__ . '/../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv'),
+                Path::realpath(__DIR__ . '/../Fixtures/nested/annual-enterprise-survey-2019-financial-year-provisional-csv.csv'),
             ],
             1000,
             false
@@ -81,7 +84,7 @@ final class CSVExtractorTest extends TestCase
 
         $total = 0;
         /** @var Rows $rows */
-        foreach ($extractor->extract() as $rows) {
+        foreach ($extractor->extract(new FlowContext(Config::default())) as $rows) {
             $rows->each(function (Row $row) : void {
                 $this->assertInstanceOf(Row\Entry\ArrayEntry::class, $row->get('row'));
                 $this->assertSame(
@@ -98,12 +101,12 @@ final class CSVExtractorTest extends TestCase
     public function test_extracting_csv_with_more_columns_than_headers() : void
     {
         $extractor = CSV::from(
-            new LocalFile(__DIR__ . '/../Fixtures/more_columns_than_headers.csv')
+            __DIR__ . '/../Fixtures/more_columns_than_headers.csv'
         );
 
         $total = 0;
         /** @var Rows $rows */
-        foreach ($extractor->extract() as $rows) {
+        foreach ($extractor->extract(new FlowContext(Config::default())) as $rows) {
             $rows->each(function (Row $row) : void {
                 $this->assertInstanceOf(Row\Entry\ArrayEntry::class, $row->get('row'));
                 $this->assertSame(
@@ -120,12 +123,12 @@ final class CSVExtractorTest extends TestCase
     public function test_extracting_csv_with_more_headers_than_columns() : void
     {
         $extractor = CSV::from(
-            new LocalFile(__DIR__ . '/../Fixtures/more_headers_than_columns.csv')
+            Path::realpath(__DIR__ . '/../Fixtures/more_headers_than_columns.csv')
         );
 
         $total = 0;
         /** @var Rows $rows */
-        foreach ($extractor->extract() as $rows) {
+        foreach ($extractor->extract(new FlowContext(Config::default())) as $rows) {
             $rows->each(function (Row $row) : void {
                 $this->assertInstanceOf(Row\Entry\ArrayEntry::class, $row->get('row'));
                 $this->assertSame(
@@ -142,7 +145,7 @@ final class CSVExtractorTest extends TestCase
     public function test_extracting_csv_empty_columns_as_null() : void
     {
         $extractor = CSV::from(
-            new LocalFile(__DIR__ . '/../Fixtures/file_with_empty_columns.csv')
+            __DIR__ . '/../Fixtures/file_with_empty_columns.csv'
         );
 
         $this->assertSame(
@@ -162,14 +165,14 @@ final class CSVExtractorTest extends TestCase
                     ],
                 ],
             ],
-            \iterator_to_array($extractor->extract())[0]->toArray()
+            \iterator_to_array($extractor->extract(new FlowContext(Config::default())))[0]->toArray()
         );
     }
 
     public function test_extracting_csv_empty_columns_as_empty_strings() : void
     {
         $extractor = CSV::from(
-            new LocalFile(__DIR__ . '/../Fixtures/file_with_empty_columns.csv'),
+            __DIR__ . '/../Fixtures/file_with_empty_columns.csv',
             empty_to_null: false
         );
 
@@ -190,7 +193,31 @@ final class CSVExtractorTest extends TestCase
                     ],
                 ],
             ],
-            \iterator_to_array($extractor->extract())[0]->toArray()
+            \iterator_to_array($extractor->extract(new FlowContext(Config::default())))[0]->toArray()
+        );
+    }
+
+    public function test_loading_data_from_all_partitions() : void
+    {
+        $this->assertSame(
+            [
+                ['group' => '1', 'id' => 1, 'value' => 'a'],
+                ['group' => '1', 'id' => 2, 'value' => 'b'],
+                ['group' => '1', 'id' => 3, 'value' => 'c'],
+                ['group' => '1', 'id' => 4, 'value' => 'd'],
+                ['group' => '2', 'id' => 5, 'value' => 'e'],
+                ['group' => '2', 'id' => 6, 'value' => 'f'],
+                ['group' => '2', 'id' => 7, 'value' => 'g'],
+                ['group' => '2', 'id' => 8, 'value' => 'h'],
+            ],
+            (new Flow())
+                ->read(CSV::from(__DIR__ . '/../Fixtures/partitioned/group=*'))
+                ->rows(Transform::array_unpack('row'))
+                ->rows(Transform::to_integer('id'))
+                ->drop('row')
+                ->sortBy(Row\Sort::asc('id'))
+                ->fetch()
+                ->toArray()
         );
     }
 }

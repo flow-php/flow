@@ -7,14 +7,27 @@ namespace Flow\ETL\DSL;
 use Flow\ETL\Adapter\CSV\CSVExtractor;
 use Flow\ETL\Adapter\CSV\CSVLoader;
 use Flow\ETL\Extractor;
+use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Loader;
-use Flow\ETL\Stream\FileStream;
-use Flow\ETL\Stream\LocalFile;
 
 class CSV
 {
+    /**
+     * @param array<Path|string>|Path|string $uri
+     * @param int $rows_in_batch
+     * @param bool $with_header
+     * @param bool $empty_to_null
+     * @param string $row_entry_name
+     * @param string $delimiter
+     * @param string $enclosure
+     * @param string $escape
+     *
+     * @throws \Flow\ETL\Exception\InvalidArgumentException
+     *
+     * @return Extractor
+     */
     final public static function from(
-        string|FileStream|array $stream,
+        string|Path|array $uri,
         int $rows_in_batch = 1000,
         bool $with_header = true,
         bool $empty_to_null = true,
@@ -23,13 +36,12 @@ class CSV
         string $enclosure = '"',
         string $escape = '\\'
     ) : Extractor {
-        if (\is_array($stream)) {
+        if (\is_array($uri)) {
             $extractors = [];
 
-            /** @var FileStream $file_stream */
-            foreach ($stream as $file_stream) {
+            foreach ($uri as $file_uri) {
                 $extractors[] = new CSVExtractor(
-                    $file_stream,
+                    \is_string($file_uri) ? Path::realpath($file_uri) : $file_uri,
                     $rows_in_batch,
                     $with_header,
                     $empty_to_null,
@@ -44,7 +56,7 @@ class CSV
         }
 
         return new CSVExtractor(
-            \is_string($stream) ? new LocalFile($stream) : $stream,
+            \is_string($uri) ? Path::realpath($uri) : $uri,
             $rows_in_batch,
             $with_header,
             $empty_to_null,
@@ -56,7 +68,7 @@ class CSV
     }
 
     /**
-     * @param FileStream|string $uri
+     * @param Path|string $uri
      * @param bool $with_header
      * @param bool $safe_mode - when set to true, stream or destination path will be used as a directory and output is going to be written into randomly generated file name
      * @param string $separator
@@ -67,7 +79,7 @@ class CSV
      * @return Loader
      */
     final public static function to(
-        string|FileStream $uri,
+        string|Path $uri,
         bool $with_header = true,
         bool $safe_mode = false,
         string $separator = ',',
@@ -76,7 +88,7 @@ class CSV
         string $new_line_separator = PHP_EOL
     ) : Loader {
         return new CSVLoader(
-            \is_string($uri) ? new LocalFile($uri) : $uri,
+            \is_string($uri) ? Path::realpath($uri) : $uri,
             $with_header,
             $safe_mode,
             $separator,
