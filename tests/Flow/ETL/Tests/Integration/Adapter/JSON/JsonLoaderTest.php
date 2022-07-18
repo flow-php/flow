@@ -5,18 +5,20 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Adapter\JSON;
 
 use Flow\ETL\Adapter\JSON\JsonLoader;
+use Flow\ETL\Config;
 use Flow\ETL\DSL\Json;
+use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Flow;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
-use Flow\ETL\Stream\LocalFile;
 use PHPUnit\Framework\TestCase;
 
 final class JsonLoaderTest extends TestCase
 {
     public function test_json_loader() : void
     {
-        $stream = new LocalFile(\sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.json');
+        $stream = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.json';
 
         (new Flow())
             ->process(
@@ -49,34 +51,34 @@ final class JsonLoaderTest extends TestCase
   {"id":10,"name":"name_10"}
 ]
 JSON,
-            \file_get_contents($stream->uri())
+            \file_get_contents($stream)
         );
 
-        if (\file_exists($stream->uri())) {
-            \unlink($stream->uri());
+        if (\file_exists($stream)) {
+            \unlink($stream);
         }
     }
 
     public function test_json_loader_loading_empty_string() : void
     {
-        $stream = new LocalFile(\sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.json');
+        $stream = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.json';
 
-        $loader = new JsonLoader($stream);
+        $loader = new JsonLoader(Path::realpath($stream));
 
-        $loader->load(new Rows());
+        $loader->load(new Rows(), $context = new FlowContext(Config::default()));
 
-        $loader->closure(new Rows());
+        $loader->closure(new Rows(), $context);
 
         $this->assertJsonStringEqualsJsonString(
             <<<'JSON'
 [
 ]
 JSON,
-            \file_get_contents($stream->uri())
+            \file_get_contents($stream)
         );
 
-        if (\file_exists($stream->uri())) {
-            \unlink($stream->uri());
+        if (\file_exists($stream)) {
+            \unlink($stream);
         }
     }
 
@@ -84,7 +86,7 @@ JSON,
     {
         $stream = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.json';
 
-        $loader = new JsonLoader($stream, safeMode: true);
+        $loader = new JsonLoader(Path::realpath($stream), safeMode: true);
 
         $loader->load(
             new Rows(
@@ -95,7 +97,8 @@ JSON,
                     ),
                     \range(0, 5)
                 )
-            )
+            ),
+            $context = new FlowContext(Config::default())
         );
 
         $loader->load(
@@ -107,12 +110,13 @@ JSON,
                     ),
                     \range(6, 10)
                 )
-            )
+            ),
+            $context
         );
 
         $files = \array_values(\array_diff(\scandir($stream), ['..', '.']));
 
-        $loader->closure(new Rows());
+        $loader->closure(new Rows(), $context);
 
         $this->assertJsonStringEqualsJsonString(
             <<<'JSON'

@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Adapter\JSON\JSONMachine;
 
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonExtractor;
+use Flow\ETL\Config;
 use Flow\ETL\DSL\Json;
+use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Flow;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
-use Flow\ETL\Stream\LocalFile;
 use PHPUnit\Framework\TestCase;
 
 final class JsonExtractorTest extends TestCase
@@ -17,7 +19,7 @@ final class JsonExtractorTest extends TestCase
     public function test_extracting_json_from_local_file_stream() : void
     {
         $rows = (new Flow())
-            ->read(Json::from(new LocalFile(__DIR__ . '/../Fixtures/timezones.json'), 5))
+            ->read(Json::from(__DIR__ . '/../Fixtures/timezones.json', 5))
             ->fetch();
 
         foreach ($rows as $row) {
@@ -40,11 +42,11 @@ final class JsonExtractorTest extends TestCase
 
     public function test_extracting_json_from_local_file_string_uri() : void
     {
-        $extractor = new JsonExtractor(new LocalFile(__DIR__ . '/../Fixtures/timezones.json'), 5);
+        $extractor = new JsonExtractor(Path::realpath(__DIR__ . '/../Fixtures/timezones.json'), 5);
 
         $total = 0;
         /** @var Rows $rows */
-        foreach ($extractor->extract() as $rows) {
+        foreach ($extractor->extract(new FlowContext(Config::default())) as $rows) {
             $rows->each(function (Row $row) : void {
                 $this->assertInstanceOf(Row\Entry\ArrayEntry::class, $row->get('row'));
                 $this->assertSame(

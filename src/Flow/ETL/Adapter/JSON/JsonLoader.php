@@ -5,92 +5,86 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\JSON;
 
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Filesystem\Path;
+use Flow\ETL\Filesystem\Stream\FileStream;
+use Flow\ETL\Filesystem\Stream\Mode;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Pipeline\Closure;
 use Flow\ETL\Rows;
-use Flow\ETL\Stream\FileStream;
-use Flow\ETL\Stream\Handler;
-use Flow\ETL\Stream\LocalFile;
-use Flow\ETL\Stream\Mode;
 
 /**
- * @implements Loader<array{stream: FileStream, safe_mode: boolean}>
+ * @implements Loader<array{path: Path, safe_mode: boolean}>
  */
 final class JsonLoader implements Closure, Loader
 {
-    /**
-     * @var null|resource
-     */
-    private $resource;
-
-    private Handler $handler;
+    private ?FileStream $fileStream;
 
     private int $writes = 0;
 
-    private FileStream $stream;
-
     public function __construct(
-        FileStream|string $stream,
+        private readonly Path $path,
         private bool $safeMode = false
     ) {
-        if (\is_string($stream)) {
-            $this->stream = new LocalFile($stream);
-        } else {
-            $this->stream = $stream;
-        }
-
-        $this->handler = $this->safeMode ? Handler::directory('json') : Handler::file();
+        $this->fileStream = null;
     }
 
     public function __serialize() : array
     {
         return [
-            'stream' => $this->stream,
+            'path' => $this->path,
             'safe_mode' => $this->safeMode,
         ];
     }
 
     public function __unserialize(array $data) : void
     {
-        $this->stream = $data['stream'];
+        $this->path = $data['path'];
         $this->safeMode = $data['safe_mode'];
     }
 
     /**
      * @psalm-suppress PossiblyNullArgument
      */
-    public function load(Rows $rows) : void
+    public function load(Rows $rows, FlowContext $context) : void
     {
+        if (\count($context->partitionEntries())) {
+            throw new RuntimeException('Partitioning is not supported yet');
+        }
+
         $json = \substr(\substr(\json_encode($rows->toArray(), JSON_THROW_ON_ERROR), 0, -1), 1);
         $json = ($this->writes > 0) ? ',' . $json : $json;
 
-        \fwrite($this->stream(), $json);
+        \fwrite($this->stream($context)->resource(), $json);
 
         $this->writes += 1;
     }
 
-    public function closure(Rows $rows) : void
+    public function closure(Rows $rows, FlowContext $context) : void
     {
-        $stream = $this->stream();
+        $stream = $this->stream($context);
 
-        \fwrite($stream, ']');
-        \fclose($stream);
+        \fwrite($stream->resource(), ']');
+        $stream->close();
+        $this->fileStream = null;
     }
 
     /**
      * @throws RuntimeException
      *
-     * @return resource
      * @psalm-suppress InvalidNullableReturnType
      */
-    private function stream()
+    private function stream(FlowContext $context) : FileStream
     {
-        if ($this->resource === null) {
-            $this->resource = $this->handler->open($this->stream, Mode::WRITE);
+        if ($this->fileStream === null) {
+            $this->fileStream = $context->fs()->open(
+                $this->safeMode ? $this->path->randomize() : $this->path,
+                Mode::WRITE
+            );
 
-            \fwrite($this->resource, '[');
+            \fwrite($this->fileStream->resource(), '[');
         }
 
-        return $this->resource;
+        return $this->fileStream;
     }
 }
