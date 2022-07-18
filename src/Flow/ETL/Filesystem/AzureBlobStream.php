@@ -25,6 +25,9 @@ final class AzureBlobStream extends FlysystemWrapper
         }
     }
 
+    /**
+     * @psalm-suppress MixedArrayAccess
+     */
     protected function filesystem() : Filesystem
     {
         if (!\is_resource($this->context)) {
@@ -46,7 +49,8 @@ final class AzureBlobStream extends FlysystemWrapper
              */
             $clientOptions = \array_merge(
                 ['connection-string' => ''],
-                $contextOptions[self::PROTOCOL]['connection-string'] ?? []
+                /** @phpstan-ignore-next-line */
+                ['connection-string' => $contextOptions[self::PROTOCOL]['connection-string']] ?? []
             );
 
             /** @var string $container */
