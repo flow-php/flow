@@ -27,7 +27,7 @@ abstract class FlysystemWrapper implements StreamWrapper
     protected $stream;
 
     /**
-     * @var null|array{path: string, host: string}
+     * @var null|array{path: ?string, host: string}
      */
     protected ?array $url = null;
 
@@ -178,6 +178,10 @@ abstract class FlysystemWrapper implements StreamWrapper
 
     private function path() : string
     {
+        if ($this->url === null) {
+            return '';
+        }
+
         return $this->url['path'] ?? $this->url['host'];
     }
 }

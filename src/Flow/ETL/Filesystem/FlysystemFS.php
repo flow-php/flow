@@ -46,10 +46,13 @@ final class FlysystemFS implements Filesystem
             if (!$fs->directoryExists($path->parentDirectory()->path())) {
                 $fs->createDirectory($path->parentDirectory()->path());
             }
+
+            /** @phpstan-ignore-next-line */
+            return new FileStream($path, \fopen($path->path(), $mode->value, false, $path->context()->resource()));
         }
 
         /** @phpstan-ignore-next-line */
-        return new FileStream($path, \fopen($path->path(), $mode->value, false, $path->context()->resource()));
+        return new FileStream($path, \fopen($path->uri(), $mode->value, false, $path->context()->resource()));
     }
 
     /**
