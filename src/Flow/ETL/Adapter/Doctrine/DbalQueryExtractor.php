@@ -7,6 +7,7 @@ namespace Flow\ETL\Adapter\Doctrine;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Types\Type;
 use Flow\ETL\Extractor;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 
@@ -38,7 +39,7 @@ final class DbalQueryExtractor implements Extractor
         return new self($connection, $query, new ParametersSet($parameters), $types, $rowEntryName);
     }
 
-    public function extract() : \Generator
+    public function extract(FlowContext $context) : \Generator
     {
         foreach ($this->parametersSet->all() as $parameters) {
             $rows = [];

@@ -9,6 +9,7 @@ use Doctrine\DBAL\DriverManager;
 use Flow\Doctrine\Bulk\Bulk;
 use Flow\Doctrine\Bulk\BulkData;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Rows;
 
@@ -113,7 +114,7 @@ final class DbalLoader implements Loader
         $this->operationOptions = $data['operation_options'];
     }
 
-    public function load(Rows $rows) : void
+    public function load(Rows $rows, FlowContext $context) : void
     {
         foreach ($rows->chunks($this->chunkSize) as $chunk) {
             Bulk::create()->{$this->operation}(
