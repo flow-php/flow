@@ -7,24 +7,29 @@ namespace Flow\ETL\DSL;
 use Flow\ETL\Adapter\Text\TextExtractor;
 use Flow\ETL\Adapter\Text\TextLoader;
 use Flow\ETL\Extractor;
+use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Loader;
-use Flow\ETL\Stream\FileStream;
-use Flow\ETL\Stream\LocalFile;
 
 class Text
 {
+    /**
+     * @param array<Path|string>|Path|string $path
+     * @param int $rows_in_batch
+     * @param string $row_entry_name
+     *
+     * @return Extractor
+     */
     final public static function from(
-        string|FileStream|array $stream,
+        string|Path|array $path,
         int $rows_in_batch = 1000,
         string $row_entry_name = 'row'
     ) : Extractor {
-        if (\is_array($stream)) {
+        if (\is_array($path)) {
             $extractors = [];
 
-            /** @var FileStream $file_stream */
-            foreach ($stream as $file_stream) {
+            foreach ($path as $file_path) {
                 $extractors[] = new TextExtractor(
-                    $file_stream,
+                    \is_string($file_path) ? Path::realpath($file_path) : $file_path,
                     $rows_in_batch,
                     $row_entry_name,
                 );
@@ -34,26 +39,26 @@ class Text
         }
 
         return new TextExtractor(
-            \is_string($stream) ? new LocalFile($stream) : $stream,
+            \is_string($path) ? Path::realpath($path) : $path,
             $rows_in_batch,
             $row_entry_name,
         );
     }
 
     /**
-     * @param FileStream|string $uri
+     * @param Path|string $path
      * @param bool $safe_mode - when set to true, stream or destination path will be used as a directory and output is going to be written into randomly generated file name
      * @param string $new_line_separator
      *
      * @return Loader
      */
     final public static function to(
-        string|FileStream $uri,
+        string|Path $path,
         bool $safe_mode = false,
         string $new_line_separator = PHP_EOL
     ) : Loader {
         return new TextLoader(
-            \is_string($uri) ? new LocalFile($uri) : $uri,
+            \is_string($path) ? Path::realpath($path) : $path,
             $safe_mode,
             $new_line_separator
         );

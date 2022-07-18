@@ -4,27 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Text;
 
-use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Filesystem\Path;
+use Flow\ETL\Filesystem\Stream\Mode;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
-use Flow\ETL\Stream\FileStream;
-use Flow\ETL\Stream\Handler;
-use Flow\ETL\Stream\Mode;
 
 /**
  * @psalm-immutable
  */
 final class TextExtractor implements Extractor
 {
-    /**
-     * @var null|resource
-     * @psalm-allow-private-mutation
-     */
-    private $resource;
-
     public function __construct(
-        private readonly FileStream $stream,
+        private readonly Path $path,
         private readonly int $rowsInBatch = 1000,
         private readonly string $rowEntryName = 'row'
     ) {
@@ -32,52 +25,38 @@ final class TextExtractor implements Extractor
 
     /**
      * @psalm-suppress ImpureFunctionCall
+     * @psalm-suppress ImpureMethodCall
      */
-    public function extract() : \Generator
+    public function extract(FlowContext $context) : \Generator
     {
         /** @var array<Row> $rows */
         $rows = [];
 
-        $rowData = \fgets($this->stream());
+        foreach ($context->fs()->scan($this->path, $context->partitionFilter()) as $filePath) {
+            $fileStream = $context->fs()->open($filePath, Mode::READ);
 
-        if ($rowData === false) {
-            return;
-        }
+            $rowData = \fgets($fileStream->resource());
 
-        while ($rowData !== false) {
-            $rows[] = Row::create(new Row\Entry\StringEntry($this->rowEntryName, \rtrim($rowData)));
-
-            if (\count($rows) >= $this->rowsInBatch) {
-                yield new Rows(...$rows);
-
-                /** @var array<Row> $rows */
-                $rows = [];
+            if ($rowData === false) {
+                return;
             }
 
-            $rowData = \fgets($this->stream());
-        }
+            while ($rowData !== false) {
+                $rows[] = Row::create(new Row\Entry\StringEntry($this->rowEntryName, \rtrim($rowData)));
 
-        if (\count($rows)) {
-            yield new Rows(...$rows);
-        }
-    }
+                if (\count($rows) >= $this->rowsInBatch) {
+                    yield new Rows(...$rows);
 
-    /**
-     * @throws RuntimeException
-     * @psalm-suppress InvalidNullableReturnType
-     * @psalm-suppress ImpureMethodCall
-     *
-     * @return resource
-     */
-    private function stream()
-    {
-        if ($this->resource === null) {
-            $this->resource = Handler::file()->open($this->stream, Mode::READ);
-        }
+                    /** @var array<Row> $rows */
+                    $rows = [];
+                }
 
-        /**
-         * @psalm-suppress NullableReturnStatement
-         */
-        return $this->resource;
+                $rowData = \fgets($fileStream->resource());
+            }
+
+            if (\count($rows)) {
+                yield new Rows(...$rows);
+            }
+        }
     }
 }
