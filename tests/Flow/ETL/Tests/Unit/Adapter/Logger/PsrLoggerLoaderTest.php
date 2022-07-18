@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Adapter\Logger;
 
 use Flow\ETL\Adapter\Logger\PsrLoggerLoader;
+use Flow\ETL\Config;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\Serializer\NativePHPSerializer;
@@ -25,7 +27,7 @@ final class PsrLoggerLoaderTest extends TestCase
                 new Row\Entry\IntegerEntry('id', 12345),
                 Row\Entry\StringEntry::lowercase('name', 'Norbert')
             )
-        ));
+        ), new FlowContext(Config::default()));
 
         $this->assertTrue($logger->hasErrorRecords());
         $this->assertTrue($logger->hasError('row log'));

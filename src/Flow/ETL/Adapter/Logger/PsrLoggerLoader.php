@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Logger;
 
+use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -35,7 +36,7 @@ final class PsrLoggerLoader implements Loader
         $this->message = $data['message'];
     }
 
-    public function load(Rows $rows) : void
+    public function load(Rows $rows, FlowContext $context) : void
     {
         /**
          * @psalm-var pure-callable(Row) : void $loader
