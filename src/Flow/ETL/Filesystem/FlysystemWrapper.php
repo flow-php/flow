@@ -178,6 +178,6 @@ abstract class FlysystemWrapper implements StreamWrapper
 
     private function path() : string
     {
-        return $this->url['path'] ?? '';
+        return $this->url['path'] ?? $this->url['host'];
     }
 }
