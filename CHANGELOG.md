@@ -1,6 +1,10 @@
-## [Unreleased] - 2022-07-12
+## [Unreleased] - 2022-07-18
 
 ### Added
+- [#278](https://github.com/flow-php/etl/pull/278) - **Partitioning** - [@norberttech](https://github.com/norberttech)
+- [#278](https://github.com/flow-php/etl/pull/278) - **Filesystem abstraction** - [@norberttech](https://github.com/norberttech)
+- [#278](https://github.com/flow-php/etl/pull/278) - **Path** - [@norberttech](https://github.com/norberttech)
+- [#278](https://github.com/flow-php/etl/pull/278) - **FlowContext** - [@norberttech](https://github.com/norberttech)
 - [#250](https://github.com/flow-php/etl/pull/250) - **binary flag to stream read mode** - [@norberttech](https://github.com/norberttech)
 - [09c246](https://github.com/flow-php/etl/commit/09c24605a185fbe89cc4a670764be2256b4b96cb) - **banner** - [@norberttech](https://github.com/norberttech)
 - [#246](https://github.com/flow-php/etl/pull/246) - **Added First aggregation** - [@norberttech](https://github.com/norberttech)
@@ -132,6 +136,8 @@
 - [856870](https://github.com/flow-php/etl/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#278](https://github.com/flow-php/etl/pull/278) - **API for Extractors, Transformers, Loaders by adding FlowContext** - [@norberttech](https://github.com/norberttech)
+- [#278](https://github.com/flow-php/etl/pull/278) - **Filestream** - [@norberttech](https://github.com/norberttech)
 - [#271](https://github.com/flow-php/etl/pull/271) - **Disallow Composer plugins in tools** - [@szepeviktor](https://github.com/szepeviktor)
 - [#266](https://github.com/flow-php/etl/pull/266) - **Prevent duplicate `.` in extension name** - [@stloyd](https://github.com/stloyd)
 - [#266](https://github.com/flow-php/etl/pull/266) - **Reduce duplicate calls to `->uri()` method** - [@stloyd](https://github.com/stloyd)
