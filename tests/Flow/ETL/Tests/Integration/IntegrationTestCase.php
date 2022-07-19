@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration;
 
 use Flow\ETL\Config;
+use Flow\ETL\Filesystem\Path;
+use League\Flysystem\Filesystem;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 use PHPUnit\Framework\TestCase;
 
 abstract class IntegrationTestCase extends TestCase
@@ -13,16 +16,20 @@ abstract class IntegrationTestCase extends TestCase
 
     private string $baseMemoryLimit;
 
+    private Filesystem $fs;
+
     protected function setUp() : void
     {
         $this->baseMemoryLimit = \ini_get('memory_limit');
-        $this->cacheDir = \getenv(Config::CACHE_DIR_ENV);
+        $this->cacheDir = Path::realpath(\getenv(Config::CACHE_DIR_ENV))->path();
 
-        if (!\file_exists($this->cacheDir)) {
-            \mkdir($this->cacheDir);
+        $this->fs = new Filesystem(new LocalFilesystemAdapter(DIRECTORY_SEPARATOR));
+
+        $this->fs->directoryExists($this->cacheDir);
+
+        if (!$this->fs->directoryExists($this->cacheDir)) {
+            $this->fs->createDirectory($this->cacheDir);
         }
-
-        $this->cleanupCacheDir($this->cacheDir);
     }
 
     protected function tearDown() : void
@@ -36,14 +43,17 @@ abstract class IntegrationTestCase extends TestCase
 
     private function cleanupCacheDir(string $directory) : void
     {
-        if (\file_exists($directory)) {
-            foreach (\array_diff(\scandir($directory), ['.', '..']) as $fileName) {
-                $filePath = $directory . DIRECTORY_SEPARATOR . $fileName;
-
-                if (\is_file($filePath)) {
-                    \unlink($filePath);
-                }
-            }
+        if ($this->fs->directoryExists($directory)) {
+            $this->fs->deleteDirectory($directory);
         }
+//        if (\file_exists($directory)) {
+//            foreach (\array_diff(\scandir($directory), ['.', '..']) as $fileName) {
+//                $filePath = $directory . DIRECTORY_SEPARATOR . $fileName;
+//
+//                if (\is_file($filePath)) {
+//                    \unlink($filePath);
+//                }
+//            }
+//        }
     }
 }
