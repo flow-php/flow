@@ -44,7 +44,7 @@ final class ConfigBuilder
         $this->id ??= \uniqid('flow_php', true);
         $this->serializer ??= new CompressingSerializer();
         $this->cache ??= new LocalFilesystemCache(
-            \is_string(\getenv(Config::CACHE_DIR_ENV))
+            \is_string(\getenv(Config::CACHE_DIR_ENV)) && \realpath(\getenv(Config::CACHE_DIR_ENV))
                 ? \getenv(Config::CACHE_DIR_ENV)
                 : \sys_get_temp_dir(),
             $this->serializer
