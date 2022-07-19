@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "480002b1d33ddf85ffce6e21e01ac3e8",
+    "content-hash": "005aaf1d60da39058fee3cd9b7be5bfa",
     "packages": [
         {
             "name": "amphp/amp",
@@ -458,16 +458,16 @@
         },
         {
             "name": "amphp/process",
-            "version": "v2.0.0-beta.4",
+            "version": "v2.0.0-beta.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/amphp/process.git",
-                "reference": "432c72e21bfca2a45a323ed152fcf05a0b847f6d"
+                "reference": "ad241280d9ec9fa3cefa4f5dade74014ef9e6a3f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/amphp/process/zipball/432c72e21bfca2a45a323ed152fcf05a0b847f6d",
-                "reference": "432c72e21bfca2a45a323ed152fcf05a0b847f6d",
+                "url": "https://api.github.com/repos/amphp/process/zipball/ad241280d9ec9fa3cefa4f5dade74014ef9e6a3f",
+                "reference": "ad241280d9ec9fa3cefa4f5dade74014ef9e6a3f",
                 "shasum": ""
             },
             "require": {
@@ -514,7 +514,7 @@
             "homepage": "https://github.com/amphp/process",
             "support": {
                 "issues": "https://github.com/amphp/process/issues",
-                "source": "https://github.com/amphp/process/tree/v2.0.0-beta.4"
+                "source": "https://github.com/amphp/process/tree/v2.0.0-beta.5"
             },
             "funding": [
                 {
@@ -522,7 +522,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2022-07-07T03:28:18+00:00"
+            "time": "2022-07-12T20:32:51+00:00"
         },
         {
             "name": "amphp/serialization",

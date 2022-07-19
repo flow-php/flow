@@ -7,7 +7,7 @@
     "minimum-stability": "dev",
     "require": {
         "php": "~8.1",
-        "amphp/process": "^2",
+        "amphp/process": "^2 || ^2",
         "amphp/socket": "^2",
         "flow-php/etl": "^1.0@dev",
         "monolog/monolog": "^2.0 || ^3.0"
