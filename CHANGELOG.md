@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-07-18
+## [Unreleased] - 2022-07-19
 
 ### Added
 - [#278](https://github.com/flow-php/etl/pull/278) - **Partitioning** - [@norberttech](https://github.com/norberttech)
@@ -191,6 +191,9 @@
 - [e48062](https://github.com/flow-php/etl/commit/e48062890cd84e655e1162305086f67148347b83) - **Intial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [ffe5ae](https://github.com/flow-php/etl/commit/ffe5aed90cad74b56af4f2430edad9577bf7a8a7) - **FlysystemWrapper path and tests cache path** - [@norberttech](https://github.com/norberttech)
+- [5d0b3a](https://github.com/flow-php/etl/commit/5d0b3a71f43d26ecdb839f3949d8ffe0e7cc118e) - **accessing connection string in azure blob stream adapter** - [@norberttech](https://github.com/norberttech)
+- [bd9465](https://github.com/flow-php/etl/commit/bd946556dd8f57cff05ef2f3f53bee4d31dee58b) - **FlysystemFS::open - use uri for remote resources** - [@norberttech](https://github.com/norberttech)
 - [f3f2ba](https://github.com/flow-php/etl/commit/f3f2bac6ec866fcbfd8915f85ebafe635196ed5a) - **FlysystemWrapper: fallback to host when path not present** - [@norberttech](https://github.com/norberttech)
 - [#264](https://github.com/flow-php/etl/pull/264) - **Function `uniqid()` must be used with 2nd parameter to increase uniqueness** - [@stloyd](https://github.com/stloyd)
 - [#263](https://github.com/flow-php/etl/pull/263) - **Fixed wrong name comparison in `CollectionEntry` class** - [@stloyd](https://github.com/stloyd)
