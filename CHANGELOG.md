@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-07-18
+## [Unreleased] - 2022-07-19
 
 ### Added
 - [e4021b](https://github.com/flow-php/etl-adapter-json/commit/e4021b63765964e6a576b0e7f81acbfbeb72c007) - **installation section to the docs** - [@norberttech](https://github.com/norberttech)
@@ -26,6 +26,7 @@
 - [#18](https://github.com/flow-php/etl-adapter-json/pull/18) - **ArrayWeakComparison is not available anymore, we should use ArrayComparison** - [@tomaszhanc](https://github.com/tomaszhanc)
 
 ### Updated
+- [d4ad4f](https://github.com/flow-php/etl-adapter-json/commit/d4ad4f765d2cd4a2c4ac45d11c6671ac810251e7) - **dependabot-auto-merge.yml** - [@norberttech](https://github.com/norberttech)
 - [c9c197](https://github.com/flow-php/etl-adapter-json/commit/c9c1970df94916638f43509d5c14d865c407055c) - **README** - [@norberttech](https://github.com/norberttech)
 - [577e7d](https://github.com/flow-php/etl-adapter-json/commit/577e7dea1157952a5d45050e769abaf48243d07b) - **dependencies** - [@norberttech](https://github.com/norberttech)
 - [247c2f](https://github.com/flow-php/etl-adapter-json/commit/247c2fe106da6a29612354f99ea090cb4a002b3b) - **dependencies** - [@norberttech](https://github.com/norberttech)
