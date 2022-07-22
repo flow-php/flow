@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-07-18
+## [Unreleased] - 2022-07-22
 
 ### Changed
 - [d77206](https://github.com/flow-php/etl-adapter-parquet/commit/d772069591838b4595e5544131b13bb473cc5c68) - **Adjust adapter to the latest changes in core etl library** - [@norberttech](https://github.com/norberttech)
