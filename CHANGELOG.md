@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-07-18
+## [Unreleased] - 2022-07-23
 
 ### Added
 - [#90](https://github.com/flow-php/etl-adapter-elasticsearch/pull/90) - **Partial update** - [@norberttech](https://github.com/norberttech)
