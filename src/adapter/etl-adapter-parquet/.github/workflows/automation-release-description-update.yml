@@ -1,0 +1,11 @@
+name: Automation - Release Description Update
+
+on:
+  release:
+    types: [ created ]
+
+jobs:
+  automation:
+    uses: aeon-php/actions/.github/workflows/automation-release-description-update.yml@main
+    secrets:
+      automation_github_token: "${{ secrets.GITHUB_TOKEN }}"
