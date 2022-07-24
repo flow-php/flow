@@ -174,3 +174,7 @@ The role of adapter is usually to provide Extractors and Loaders, occasionally a
 Flow PHP is sponsored by:
 
 - [Blackfire](https://blackfire.io/) - the best PHP profiling and monitoring tool! 
+
+## Development
+
+For the code coverage, please install [pcov](https://pecl.php.net/package/pcov).
