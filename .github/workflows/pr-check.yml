@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: codelytv/pr-size-labeler@v1
         with:
-          GITHUB_TOKEN: "${{ secrets.ACCESS_TOKEN }}"
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
           xs_label: 'size: XS'
           xs_max_size: 50
           s_label: 'size: S'
@@ -37,8 +37,11 @@ jobs:
     name: "Label PR Type"
     runs-on: ubuntu-latest
     continue-on-error: true
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/labeler@v4
         with:
-          repo-token: "${{ secrets.ACCESS_TOKEN }}"
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
           sync-labels: true
