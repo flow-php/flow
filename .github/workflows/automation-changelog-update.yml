@@ -8,4 +8,4 @@ jobs:
   automation:
     uses: aeon-php/actions/.github/workflows/automation-changelog-update.yml@main
     secrets:
-      automation_github_token: "${{ secrets.GITHUB_TOKEN }}"
+      automation_github_token: "${{ secrets.ACCESS_TOKEN }}"
