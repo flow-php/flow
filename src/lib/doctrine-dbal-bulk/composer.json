@@ -6,7 +6,7 @@
     "keywords": ["doctrine", "dbal", "bulk", "insert", "upsert"],
     "require": {
         "php": "~8.1",
-        "doctrine/dbal": "^2.12 | ^3.1.4"
+        "doctrine/dbal": "^2.12 || ^3.1.4"
     },
     "autoload": {
         "psr-4": {
@@ -22,7 +22,6 @@
             ]
         }
     },
-    "prefer-stable": true,
     "config": {
         "optimize-autoloader": true,
         "sort-packages": true
@@ -52,5 +51,6 @@
         "post-update-cmd": [
             "@tools:install"
         ]
-    }
+    },
+    "prefer-stable": true
 }
