@@ -16,7 +16,7 @@ Changes merged to monorepo are automatically propagated into sub repositories.
 ## Installation 
 
 ``` 
-composer require flow-php/etl-adapter-csv
+composer require flow-php/etl-adapter-csv:1.x@dev
 ```
 
 ## Extractor 

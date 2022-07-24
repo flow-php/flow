@@ -7,6 +7,12 @@ open PR against [flow](https://github.com/flow-php/flow) monorepo.
 
 Changes merged to monorepo are automatically propagated into sub repositories.
 
+## Installation
+
+```
+composer require flow-php/array-dot:1.x@dev
+```
+
 ## Description
 
 Array Dot is a set of functions that allows to manipulate PHP arrays using custom **dot notation** known

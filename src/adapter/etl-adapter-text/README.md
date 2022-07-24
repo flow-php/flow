@@ -12,10 +12,10 @@ Changes merged to monorepo are automatically propagated into sub repositories.
 ETL Adapter that provides Loaders and Extractors that works with Text files.
 It does not require any external dependencies, it's working on internal PHP functions.
 
-## Installation 
+## Installation
 
-``` 
-composer require flow-php/etl-adapter-text
+```
+composer require flow-php/etl-adapter-text:1.x@dev
 ```
 
 ## Extractor 

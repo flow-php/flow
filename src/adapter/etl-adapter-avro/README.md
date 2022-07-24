@@ -18,7 +18,7 @@ Changes merged to monorepo are automatically propagated into sub repositories.
 ## Installation 
 
 ``` 
-composer require flow-php/etl-adapter-avro
+composer require flow-php/etl-adapter-avro:1.x@dev
 ```
 
 ## Extractor - Flix Tech Avro

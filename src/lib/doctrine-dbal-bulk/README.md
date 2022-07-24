@@ -9,7 +9,13 @@ Changes merged to monorepo are automatically propagated into sub repositories.
 
 ## Description
 
-Doctrine Bulk is mising bulk upsert/insert abstraction for Doctrine DBAL.
+Doctrine Bulk is missing bulk upsert/insert abstraction for Doctrine DBAL.
+
+## Installation
+
+```
+composer require flow-php/doctrine-dbal-bulk:1.x@dev
+```
 
 ## Usage Examples
 

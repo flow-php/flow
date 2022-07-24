@@ -16,9 +16,10 @@ Following implementation are available:
 
 ## Installation
 
-``` 
-composer require flow-php/etl-adapter-json
 ```
+composer require flow-php/etl-adapter-json:1.x@dev
+```
+
 
 > Json library is not explicitly required, you need to make sure it is available in your composer.json file.
 > If you are only using Loader, this dependency is optional.

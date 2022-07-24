@@ -14,10 +14,10 @@ ETL Adapter that provides Loaders and Extractors that works with Parquet files.
 Following implementation are available: 
 - [Codename Parquet](https://github.com/codename-hub/php-parquet) 
 
-## Installation 
+## Installation
 
-``` 
-composer require flow-php/etl-adapter-parquet
+```
+composer require flow-php/etl-adapter-parquet:1.x@dev
 ```
 
 > Parquet library is not explicitly required, you need to make sure it is available in your composer.json file.

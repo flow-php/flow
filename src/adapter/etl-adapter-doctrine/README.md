@@ -7,12 +7,10 @@ open PR against [flow](https://github.com/flow-php/flow) monorepo.
 
 Changes merged to monorepo are automatically propagated into sub repositories.
 
-
 ## Installation 
 
 ```
-composer require flow-php/etl-adapter-doctrine
-composer require flow-php/doctrine-dbal-bulk
+composer require flow-php/etl-adapter-doctrine:1.x@dev
 ```
 
 ## Description

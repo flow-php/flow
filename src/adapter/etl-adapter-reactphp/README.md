@@ -14,10 +14,10 @@ open PR against [flow](https://github.com/flow-php/flow) monorepo.
 
 Changes merged to monorepo are automatically propagated into sub repositories.
 
-# Installation
+## Installation
 
 ```
-composer require flow-php/etl-adapter-reactphp
+composer require flow-php/etl-adapter-reactphp:1.x@dev
 ```
 
 Working example:

@@ -11,6 +11,12 @@ Changes merged to monorepo are automatically propagated into sub repositories.
 
 ETL Adapter that provides PSR Logger support for ETL.
 
+## Installation
+
+```
+composer require flow-php/etl-adapter-logger:1.x@dev
+```
+
 ## Loader - PsrLogger
 
 Load each row into PsrLoggerInterface implementation.

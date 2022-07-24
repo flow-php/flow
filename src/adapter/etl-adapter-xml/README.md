@@ -11,6 +11,12 @@ Changes merged to monorepo are automatically propagated into sub repositories.
 
 ETL Adapter that provides memory safe XML support for ETL.
 
+## Installation
+
+```
+composer require flow-php/etl-adapter-xml:1.x@dev
+```
+
 ## Extractor - XMLExtractor
 
 Memory safe XML extractor 
