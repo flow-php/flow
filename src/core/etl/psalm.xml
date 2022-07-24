@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<psalm
+    errorLevel="1"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="https://getpsalm.org/schema/config"
+    xsi:schemaLocation="https://getpsalm.org/schema/config"
+    cacheDirectory="var/psalm/cache"
+>
+    <projectFiles>
+        <directory name="src"/>
+        <ignoreFiles>
+            <directory name="vendor"/>
+            <file name="src/Flow/ETL/Formatter/ASCII/ASCIITable.php" />
+            <file name="src/Flow/ETL/ExternalSort/RowsMinHeap.php" />
+        </ignoreFiles>
+    </projectFiles>
+</psalm>

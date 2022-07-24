@@ -1,0 +1,35 @@
+{
+  "source": {
+    "directories": [
+      "src"
+    ]
+  },
+  "logs": {
+    "text": "./var/infection/infection.log",
+    "summary": "./var/infection/infection_summary.log",
+    "debug": "./var/infection/infection_summary.log",
+    "stryker": {
+      "badge": "1.x"
+    }
+  },
+  "mutators": {
+    "@default": true,
+    "ArrayItem": {
+      "ignore": [
+        "*::__serialize"
+      ]
+    },
+    "ArrayItemRemoval": {
+      "ignore": [
+        "*::__serialize"
+      ]
+    }
+  },
+  "bootstrap": "./vendor/autoload.php",
+  "phpUnit": {
+    "customPath": "tools\/vendor\/bin\/phpunit"
+  },
+  "testFrameworkOptions": "--testsuite=unit",
+  "minMsi": 50,
+  "minCoveredMsi": 50
+}
