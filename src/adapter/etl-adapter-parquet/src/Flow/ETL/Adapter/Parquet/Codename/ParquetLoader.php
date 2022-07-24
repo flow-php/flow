@@ -27,11 +27,7 @@ use Flow\ETL\Rows;
  */
 final class ParquetLoader implements Closure, Loader
 {
-    private ?ParquetWriter $writer = null;
-
     private readonly SchemaConverter $converter;
-
-    private ?Schema $inferredSchema = null;
 
     /**
      * @var array<string, array<mixed>>
@@ -44,6 +40,10 @@ final class ParquetLoader implements Closure, Loader
     private array $dataRepetitionsBuffer = [];
 
     private ?FileStream $fileStream;
+
+    private ?Schema $inferredSchema = null;
+
+    private ?ParquetWriter $writer = null;
 
     public function __construct(
         private readonly Path $path,
@@ -70,6 +70,15 @@ final class ParquetLoader implements Closure, Loader
         $this->safeMode = $data['safe_mode'];
         $this->rowsPerGroup = $data['rows_per_group'];
         $this->fileStream = null;
+    }
+
+    public function closure(Rows $rows, FlowContext $context) : void
+    {
+        $this->writeRowGroup($context);
+
+        if ($this->fileStream !== null && $this->fileStream->isOpen()) {
+            $this->fileStream->close();
+        }
     }
 
     public function load(Rows $rows, FlowContext $context) : void
@@ -108,13 +117,36 @@ final class ParquetLoader implements Closure, Loader
         }
     }
 
-    public function closure(Rows $rows, FlowContext $context) : void
+    private function inferSchema(Rows $rows) : void
     {
-        $this->writeRowGroup($context);
-
-        if ($this->fileStream !== null && $this->fileStream->isOpen()) {
-            $this->fileStream->close();
+        if ($this->inferredSchema === null) {
+            $this->inferredSchema = $rows->schema();
+        } else {
+            $this->inferredSchema = $this->inferredSchema->merge($rows->schema());
         }
+    }
+
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
+    private function prepareDataBuffer() : void
+    {
+        foreach ($this->schema()->entries() as $entry) {
+            if (!\array_key_exists($entry, $this->dataBuffer)) {
+                $this->dataBuffer[$entry] = [];
+                $this->dataRepetitionsBuffer[$entry] = [];
+            }
+        }
+    }
+
+    /**
+     * @psalm-suppress InvalidNullableReturnType
+     * @psalm-suppress NullableReturnStatement
+     */
+    private function schema() : Schema
+    {
+        /** @phpstan-ignore-next-line  */
+        return $this->schema ?? $this->inferredSchema;
     }
 
     private function writer(FlowContext $context) : ParquetWriter
@@ -183,37 +215,5 @@ final class ParquetLoader implements Closure, Loader
         $this->dataRepetitionsBuffer = [];
 
         $this->prepareDataBuffer();
-    }
-
-    private function inferSchema(Rows $rows) : void
-    {
-        if ($this->inferredSchema === null) {
-            $this->inferredSchema = $rows->schema();
-        } else {
-            $this->inferredSchema = $this->inferredSchema->merge($rows->schema());
-        }
-    }
-
-    /**
-     * @psalm-suppress PossiblyNullReference
-     */
-    private function prepareDataBuffer() : void
-    {
-        foreach ($this->schema()->entries() as $entry) {
-            if (!\array_key_exists($entry, $this->dataBuffer)) {
-                $this->dataBuffer[$entry] = [];
-                $this->dataRepetitionsBuffer[$entry] = [];
-            }
-        }
-    }
-
-    /**
-     * @psalm-suppress InvalidNullableReturnType
-     * @psalm-suppress NullableReturnStatement
-     */
-    private function schema() : Schema
-    {
-        /** @phpstan-ignore-next-line  */
-        return $this->schema ?? $this->inferredSchema;
     }
 }

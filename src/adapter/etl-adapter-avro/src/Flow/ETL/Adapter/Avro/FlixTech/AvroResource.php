@@ -28,21 +28,56 @@ final class AvroResource extends \AvroIO
     }
 
     /**
-     * @param string $arg
+     * Closes the file.
      *
-     *@throws \AvroIOException if write failed
+     * @throws \AvroIOException if there was an error closing the file
      *
-     * @return int count of bytes written
+     * @return bool true if successful
      */
-    public function write($arg)
+    public function close()
     {
-        $len = \fwrite($this->file_handle, $arg);
+        /** @psalm-suppress InvalidPropertyAssignmentValue */
+        $res = \fclose($this->file_handle);
 
-        if (false === $len) {
-            throw new \AvroIOException(\sprintf('Could not write to file'));
+        if (false === $res) {
+            throw new \AvroIOException('Error closing file.');
         }
 
-        return $len;
+        return $res;
+    }
+
+    /**
+     * @throws \AvroIOException if there was an error flushing the file
+     *
+     * @return bool true if the flush was successful
+     */
+    public function flush()
+    {
+        $res = \fflush($this->file_handle);
+
+        if (false === $res) {
+            throw new \AvroIOException('Could not flush file.');
+        }
+
+        return true;
+    }
+
+    /**
+     * @return bool true if the pointer is at the end of the file,
+     *              and false otherwise
+     *
+     * @see AvroIO::is_eof() as behavior differs from feof()
+     */
+    public function is_eof()
+    {
+        $this->read(1);
+
+        if (\feof($this->file_handle)) {
+            return true;
+        }
+        $this->seek(-1, self::SEEK_CUR);
+
+        return false;
     }
 
     /**
@@ -74,22 +109,6 @@ final class AvroResource extends \AvroIO
     }
 
     /**
-     * @throws \AvroIOException
-     *
-     * @return int current position within the file
-     */
-    public function tell()
-    {
-        $position = \ftell($this->file_handle);
-
-        if (false === $position) {
-            throw new \AvroIOException('Could not execute tell on reader');
-        }
-
-        return $position;
-    }
-
-    /**
      * @param int $offset
      * @param int $whence
      *
@@ -117,55 +136,36 @@ final class AvroResource extends \AvroIO
     }
 
     /**
-     * Closes the file.
+     * @throws \AvroIOException
      *
-     * @throws \AvroIOException if there was an error closing the file
-     *
-     * @return bool true if successful
+     * @return int current position within the file
      */
-    public function close()
+    public function tell()
     {
-        /** @psalm-suppress InvalidPropertyAssignmentValue */
-        $res = \fclose($this->file_handle);
+        $position = \ftell($this->file_handle);
 
-        if (false === $res) {
-            throw new \AvroIOException('Error closing file.');
+        if (false === $position) {
+            throw new \AvroIOException('Could not execute tell on reader');
         }
 
-        return $res;
+        return $position;
     }
 
     /**
-     * @return bool true if the pointer is at the end of the file,
-     *              and false otherwise
+     * @param string $arg
      *
-     * @see AvroIO::is_eof() as behavior differs from feof()
-     */
-    public function is_eof()
-    {
-        $this->read(1);
-
-        if (\feof($this->file_handle)) {
-            return true;
-        }
-        $this->seek(-1, self::SEEK_CUR);
-
-        return false;
-    }
-
-    /**
-     * @throws \AvroIOException if there was an error flushing the file
+     *@throws \AvroIOException if write failed
      *
-     * @return bool true if the flush was successful
+     * @return int count of bytes written
      */
-    public function flush()
+    public function write($arg)
     {
-        $res = \fflush($this->file_handle);
+        $len = \fwrite($this->file_handle, $arg);
 
-        if (false === $res) {
-            throw new \AvroIOException('Could not flush file.');
+        if (false === $len) {
+            throw new \AvroIOException(\sprintf('Could not write to file'));
         }
 
-        return true;
+        return $len;
     }
 }

@@ -111,34 +111,6 @@ final class PostgreSQLDialect implements Dialect
     }
 
     /**
-     * @param array<string> $updateColumns
-     * @param Columns $columns
-     *
-     * @return string
-     */
-    private function updatedSelectedColumns(array $updateColumns, Columns $columns) : string
-    {
-        /**
-         * https://www.postgresql.org/docs/9.5/sql-insert.html#SQL-ON-CONFLICT
-         * The SET and WHERE clauses in ON CONFLICT DO UPDATE have access to the existing row using the
-         * table's name (or an alias), and to rows proposed for insertion using the special EXCLUDED table.
-         */
-        return \count($updateColumns)
-            ? \implode(',', \array_map(fn (string $column) : string => "{$column} = excluded.{$column}", $updateColumns))
-            : $this->updateAllColumns($columns);
-    }
-
-    /**
-     * @param array<string> $updateColumns
-     *
-     * @return string
-     */
-    private function updatedIndexColumns(array $updateColumns) : string
-    {
-        return \implode(' AND ', \array_map(fn (string $column) : string => "existing_table.{$column} = excluded.{$column}", $updateColumns));
-    }
-
-    /**
      * @param Columns $columns
      *
      * @return string
@@ -156,5 +128,33 @@ final class PostgreSQLDialect implements Dialect
                 fn (string $column) : string => "{$column} = excluded.{$column}"
             )
         );
+    }
+
+    /**
+     * @param array<string> $updateColumns
+     *
+     * @return string
+     */
+    private function updatedIndexColumns(array $updateColumns) : string
+    {
+        return \implode(' AND ', \array_map(fn (string $column) : string => "existing_table.{$column} = excluded.{$column}", $updateColumns));
+    }
+
+    /**
+     * @param array<string> $updateColumns
+     * @param Columns $columns
+     *
+     * @return string
+     */
+    private function updatedSelectedColumns(array $updateColumns, Columns $columns) : string
+    {
+        /**
+         * https://www.postgresql.org/docs/9.5/sql-insert.html#SQL-ON-CONFLICT
+         * The SET and WHERE clauses in ON CONFLICT DO UPDATE have access to the existing row using the
+         * table's name (or an alias), and to rows proposed for insertion using the special EXCLUDED table.
+         */
+        return \count($updateColumns)
+            ? \implode(',', \array_map(fn (string $column) : string => "{$column} = excluded.{$column}", $updateColumns))
+            : $this->updateAllColumns($columns);
     }
 }

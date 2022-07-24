@@ -16,45 +16,6 @@ use PHPUnit\Framework\TestCase;
 
 final class AvroTest extends TestCase
 {
-    public function test_writing_and_reading_avro_with_all_supported_types() : void
-    {
-        $this->removeFile($path = \sys_get_temp_dir() . '/file.avro');
-
-        (new Flow)
-            ->read(From::rows(
-                $rows = new Rows(
-                    ...\array_map(function (int $i) : Row {
-                        return Row::create(
-                            Entry::integer('integer', $i),
-                            Entry::float('float', 1.5),
-                            Entry::string('string', 'name_' . $i),
-                            Entry::boolean('boolean', true),
-                            Entry::datetime('datetime', new \DateTimeImmutable()),
-                            Entry::json_object('json_object', ['id' => 1, 'name' => 'test']),
-                            Entry::json('json', [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']]),
-                            Entry::list_of_string('list_of_strings', ['a', 'b', 'c']),
-                            Entry::list_of_datetime('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()])
-                        );
-                    }, \range(1, 100))
-                )
-            ))
-            ->write(Avro::to($path))
-            ->run();
-
-        $this->assertFileExists($path);
-
-        $this->assertEquals(
-            $rows,
-            (new Flow())
-                ->read(Avro::from($path))
-                ->transform(Transform::array_unpack('row'))
-                ->drop('row')
-                ->fetch()
-        );
-
-        $this->removeFile($path);
-    }
-
     public function test_safe_writing_and_reading_avro_with_all_supported_types() : void
     {
         $this->cleanDirectory($path = \sys_get_temp_dir() . '/directory.avro');
@@ -97,6 +58,45 @@ final class AvroTest extends TestCase
         );
 
         $this->cleanDirectory($path);
+    }
+
+    public function test_writing_and_reading_avro_with_all_supported_types() : void
+    {
+        $this->removeFile($path = \sys_get_temp_dir() . '/file.avro');
+
+        (new Flow)
+            ->read(From::rows(
+                $rows = new Rows(
+                    ...\array_map(function (int $i) : Row {
+                        return Row::create(
+                            Entry::integer('integer', $i),
+                            Entry::float('float', 1.5),
+                            Entry::string('string', 'name_' . $i),
+                            Entry::boolean('boolean', true),
+                            Entry::datetime('datetime', new \DateTimeImmutable()),
+                            Entry::json_object('json_object', ['id' => 1, 'name' => 'test']),
+                            Entry::json('json', [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']]),
+                            Entry::list_of_string('list_of_strings', ['a', 'b', 'c']),
+                            Entry::list_of_datetime('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()])
+                        );
+                    }, \range(1, 100))
+                )
+            ))
+            ->write(Avro::to($path))
+            ->run();
+
+        $this->assertFileExists($path);
+
+        $this->assertEquals(
+            $rows,
+            (new Flow())
+                ->read(Avro::from($path))
+                ->transform(Transform::array_unpack('row'))
+                ->drop('row')
+                ->fetch()
+        );
+
+        $this->removeFile($path);
     }
 
     /**

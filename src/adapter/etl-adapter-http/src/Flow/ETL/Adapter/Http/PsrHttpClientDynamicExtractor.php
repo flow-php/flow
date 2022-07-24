@@ -19,18 +19,18 @@ use Psr\Http\Message\ResponseInterface;
 final class PsrHttpClientDynamicExtractor implements Extractor
 {
     /**
-     * @psalm-var pure-callable(RequestInterface) : void|null
-     *
-     * @var null|callable(RequestInterface) : void
-     */
-    private $preRequest;
-
-    /**
      * @psalm-var pure-callable(RequestInterface, ResponseInterface) : void|null
      *
      * @var null|callable(RequestInterface, ResponseInterface) : void
      */
     private $postRequest;
+
+    /**
+     * @psalm-var pure-callable(RequestInterface) : void|null
+     *
+     * @var null|callable(RequestInterface) : void
+     */
+    private $preRequest;
 
     /**
      * @psalm-param pure-callable(RequestInterface) : void|null $preRequest

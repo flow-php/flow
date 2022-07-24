@@ -26,22 +26,12 @@ final class Columns
         $this->columns = $columns;
     }
 
-    public function suffix(string $suffix) : self
+    /**
+     * @return array<string>
+     */
+    public function all() : array
     {
-        return new self(
-            ...$this->map(
-                fn (string $column) : string => $column . $suffix
-            )
-        );
-    }
-
-    public function prefix(string $prefix) : self
-    {
-        return new self(
-            ...$this->map(
-                fn (string $column) : string => $prefix . $column
-            )
-        );
+        return $this->columns;
     }
 
     public function concat(string $separator) : string
@@ -50,11 +40,13 @@ final class Columns
     }
 
     /**
-     * @return array<string>
+     * @param string ...$columnNames
+     *
+     * @return bool
      */
-    public function all() : array
+    public function has(string ...$columnNames) : bool
     {
-        return $this->columns;
+        return \count(\array_unique(\array_merge($this->columns, $columnNames))) === \count($this->columns);
     }
 
     /**
@@ -74,14 +66,22 @@ final class Columns
         return $columns;
     }
 
-    /**
-     * @param string ...$columnNames
-     *
-     * @return bool
-     */
-    public function has(string ...$columnNames) : bool
+    public function prefix(string $prefix) : self
     {
-        return \count(\array_unique(\array_merge($this->columns, $columnNames))) === \count($this->columns);
+        return new self(
+            ...$this->map(
+                fn (string $column) : string => $prefix . $column
+            )
+        );
+    }
+
+    public function suffix(string $suffix) : self
+    {
+        return new self(
+            ...$this->map(
+                fn (string $column) : string => $column . $suffix
+            )
+        );
     }
 
     /**

@@ -9,30 +9,6 @@ use PHPUnit\Framework\TestCase;
 
 final class ArrayDotRenameTest extends TestCase
 {
-    public function test_renames_array_root_key_name() : void
-    {
-        $this->assertEquals(
-            [
-                'admins' => [
-                    ['id' => 1, 'name' => 'John'],
-                    ['id' => 2, 'date' => 'Paul'],
-                ],
-                'status' => 'active',
-            ],
-            array_dot_rename(
-                [
-                    'users' => [
-                        ['id' => 1, 'name' => 'John'],
-                        ['id' => 2, 'date' => 'Paul'],
-                    ],
-                    'status' => 'active',
-                ],
-                'users',
-                'admins'
-            )
-        );
-    }
-
     public function test_renames_array_by_path() : void
     {
         $this->assertSame(
@@ -154,6 +130,30 @@ final class ArrayDotRenameTest extends TestCase
                 'transactions.*.packages.*.id',
                 'label_id'
             ),
+        );
+    }
+
+    public function test_renames_array_root_key_name() : void
+    {
+        $this->assertEquals(
+            [
+                'admins' => [
+                    ['id' => 1, 'name' => 'John'],
+                    ['id' => 2, 'date' => 'Paul'],
+                ],
+                'status' => 'active',
+            ],
+            array_dot_rename(
+                [
+                    'users' => [
+                        ['id' => 1, 'name' => 'John'],
+                        ['id' => 2, 'date' => 'Paul'],
+                    ],
+                    'status' => 'active',
+                ],
+                'users',
+                'admins'
+            )
         );
     }
 }

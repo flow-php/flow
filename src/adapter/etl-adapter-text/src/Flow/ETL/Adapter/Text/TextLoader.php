@@ -49,6 +49,16 @@ final class TextLoader implements Closure, Loader
         $this->fileStream = null;
     }
 
+    /**
+     * @psalm-suppress InvalidPropertyAssignmentValue
+     */
+    public function closure(Rows $rows, FlowContext $context) : void
+    {
+        if ($this->fileStream !== null && $this->fileStream->isOpen()) {
+            $this->fileStream->close();
+        }
+    }
+
     public function load(Rows $rows, FlowContext $context) : void
     {
         if (\count($context->partitionEntries())) {
@@ -61,16 +71,6 @@ final class TextLoader implements Closure, Loader
             }
 
             \fwrite($this->stream($context)->resource(), $row->entries()->all()[0]->toString() . $this->newLineSeparator);
-        }
-    }
-
-    /**
-     * @psalm-suppress InvalidPropertyAssignmentValue
-     */
-    public function closure(Rows $rows, FlowContext $context) : void
-    {
-        if ($this->fileStream !== null && $this->fileStream->isOpen()) {
-            $this->fileStream->close();
         }
     }
 

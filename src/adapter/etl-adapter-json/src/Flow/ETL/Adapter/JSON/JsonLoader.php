@@ -43,6 +43,15 @@ final class JsonLoader implements Closure, Loader
         $this->safeMode = $data['safe_mode'];
     }
 
+    public function closure(Rows $rows, FlowContext $context) : void
+    {
+        $stream = $this->stream($context);
+
+        \fwrite($stream->resource(), ']');
+        $stream->close();
+        $this->fileStream = null;
+    }
+
     /**
      * @psalm-suppress PossiblyNullArgument
      */
@@ -58,15 +67,6 @@ final class JsonLoader implements Closure, Loader
         \fwrite($this->stream($context)->resource(), $json);
 
         $this->writes += 1;
-    }
-
-    public function closure(Rows $rows, FlowContext $context) : void
-    {
-        $stream = $this->stream($context);
-
-        \fwrite($stream->resource(), ']');
-        $stream->close();
-        $this->fileStream = null;
     }
 
     /**

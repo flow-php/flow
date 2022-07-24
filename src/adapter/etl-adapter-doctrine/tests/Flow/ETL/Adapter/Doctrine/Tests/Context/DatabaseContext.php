@@ -37,6 +37,22 @@ final class DatabaseContext
         $schemaManager->createTable($table);
     }
 
+    public function dropAllTables() : void
+    {
+        foreach ($this->connection->getSchemaManager()->listTables() as $table) {
+            $this->connection->getSchemaManager()->dropTable($table->getName());
+        }
+    }
+
+    public function numberOfExecutedInsertQueries() : int
+    {
+        if ($this->sqlLogger instanceof InsertQueryCounter) {
+            return $this->sqlLogger->count;
+        }
+
+        return 0;
+    }
+
     public function selectAll(string $tableName) : array
     {
         return $this->connection->fetchAllAssociative(
@@ -60,21 +76,5 @@ final class DatabaseContext
                 ->from($tableName)
                 ->getSQL()
         );
-    }
-
-    public function numberOfExecutedInsertQueries() : int
-    {
-        if ($this->sqlLogger instanceof InsertQueryCounter) {
-            return $this->sqlLogger->count;
-        }
-
-        return 0;
-    }
-
-    public function dropAllTables() : void
-    {
-        foreach ($this->connection->getSchemaManager()->listTables() as $table) {
-            $this->connection->getSchemaManager()->dropTable($table->getName());
-        }
     }
 }

@@ -15,11 +15,24 @@ use PHPUnit\Framework\TestCase;
 
 final class BulkDataTest extends TestCase
 {
-    public function test_prevents_creating_empty_bulk_data() : void
+    public function test_prevents_creating_bulk_data_for_different_rows() : void
     {
-        $this->expectExceptionMessage('Bulk data cannot be empty');
+        $this->expectExceptionMessage('Each row must be have the same keys in the same order');
 
-        new BulkData([]);
+        new BulkData([
+            [
+                'date' => 'today',
+                'title' => 'Title One',
+                'description' => 'Description One',
+                'quantity' => 101,
+            ],
+            [
+                'title' => 'Title One',
+                'date' => 'today',
+                'quantity' => 101,
+                'description' => 'Description One',
+            ],
+        ]);
     }
 
     public function test_prevents_creating_bulk_data_from_invalid_rows() : void
@@ -44,24 +57,56 @@ final class BulkDataTest extends TestCase
         ]);
     }
 
-    public function test_prevents_creating_bulk_data_for_different_rows() : void
+    public function test_prevents_creating_empty_bulk_data() : void
     {
-        $this->expectExceptionMessage('Each row must be have the same keys in the same order');
+        $this->expectExceptionMessage('Bulk data cannot be empty');
 
-        new BulkData([
+        new BulkData([]);
+    }
+
+    public function test_returns_all_sql_parameters_as_one_dimensional_array_with_placeholders_as_keys() : void
+    {
+        $bulkData = new BulkData([
             [
                 'date' => 'today',
                 'title' => 'Title One',
                 'description' => 'Description One',
                 'quantity' => 101,
+                'errors' => '[]',
             ],
             [
-                'title' => 'Title One',
                 'date' => 'today',
-                'quantity' => 101,
-                'description' => 'Description One',
+                'title' => 'Title Two',
+                'description' => 'Description Two',
+                'quantity' => 102,
+                'errors' => '[]',
             ],
         ]);
+
+        $this->assertEquals(
+            [
+                'date_0' => 'today',
+                'title_0' => 'Title One',
+                'description_0' => 'Description One',
+                'quantity_0' => 101,
+                'errors_0' => [],
+                'date_1' => 'today',
+                'title_1' => 'Title Two',
+                'description_1' => 'Description Two',
+                'quantity_1' => 102,
+                'errors_1' => [],
+            ],
+            $bulkData->toSqlParameters(
+                new TableDefinition(
+                    'test',
+                    new Column('date', new StringType()),
+                    new Column('title', new StringType()),
+                    new Column('description', new StringType()),
+                    new Column('quantity', new IntegerType()),
+                    new Column('errors', new JsonType()),
+                )
+            )
+        );
     }
 
     public function test_returns_columns() : void
@@ -156,51 +201,6 @@ final class BulkDataTest extends TestCase
                 ],
             ],
             $bulkData->sqlRows()
-        );
-    }
-
-    public function test_returns_all_sql_parameters_as_one_dimensional_array_with_placeholders_as_keys() : void
-    {
-        $bulkData = new BulkData([
-            [
-                'date' => 'today',
-                'title' => 'Title One',
-                'description' => 'Description One',
-                'quantity' => 101,
-                'errors' => '[]',
-            ],
-            [
-                'date' => 'today',
-                'title' => 'Title Two',
-                'description' => 'Description Two',
-                'quantity' => 102,
-                'errors' => '[]',
-            ],
-        ]);
-
-        $this->assertEquals(
-            [
-                'date_0' => 'today',
-                'title_0' => 'Title One',
-                'description_0' => 'Description One',
-                'quantity_0' => 101,
-                'errors_0' => [],
-                'date_1' => 'today',
-                'title_1' => 'Title Two',
-                'description_1' => 'Description Two',
-                'quantity_1' => 102,
-                'errors_1' => [],
-            ],
-            $bulkData->toSqlParameters(
-                new TableDefinition(
-                    'test',
-                    new Column('date', new StringType()),
-                    new Column('title', new StringType()),
-                    new Column('description', new StringType()),
-                    new Column('quantity', new IntegerType()),
-                    new Column('errors', new JsonType()),
-                )
-            )
         );
     }
 

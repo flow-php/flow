@@ -61,6 +61,28 @@ jobs:
 
     runs-on: ${{ matrix.operating-system }}
 
+    services:
+      elasticsearch:
+        image: elasticsearch:7.17.2
+        env:
+          discovery.type: single-node
+        options: >-
+          --health-cmd "curl http://localhost:9200/_cluster/health"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+        ports:
+          - 9200:9200
+      postgres:
+        image: postgres:13.6-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432/tcp
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
     strategy:
       fail-fast: false
       matrix:

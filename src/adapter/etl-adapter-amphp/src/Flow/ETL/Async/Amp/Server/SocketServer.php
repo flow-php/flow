@@ -18,9 +18,9 @@ use Psr\Log\LoggerInterface;
 
 final class SocketServer implements Server
 {
-    private ?AmpSocketServer $server;
-
     private ?ServerProtocol $protocol;
+
+    private ?AmpSocketServer $server;
 
     private ?string $socketPath;
 
@@ -32,6 +32,14 @@ final class SocketServer implements Server
         $this->server = null;
         $this->protocol = null;
         $this->socketPath = null;
+    }
+
+    public static function tcp(
+        int $port,
+        LoggerInterface $logger,
+        Serializer $serializer = new CompressingSerializer()
+    ) : self {
+        return new self("tcp://127.0.0.1:{$port}", $logger, $serializer);
     }
 
     public static function unixDomain(
@@ -57,12 +65,9 @@ final class SocketServer implements Server
         return $server;
     }
 
-    public static function tcp(
-        int $port,
-        LoggerInterface $logger,
-        Serializer $serializer = new CompressingSerializer()
-    ) : self {
-        return new self("tcp://127.0.0.1:{$port}", $logger, $serializer);
+    public function host() : string
+    {
+        return $this->host;
     }
 
     public function initialize(ServerProtocol $handler) : void
@@ -73,6 +78,11 @@ final class SocketServer implements Server
 
         $this->server = Socket\listen($this->host);
         $this->protocol = $handler;
+    }
+
+    public function isRunning() : bool
+    {
+        return $this->server !== null;
     }
 
     public function start() : void
@@ -111,15 +121,5 @@ final class SocketServer implements Server
         }
 
         $this->server = null;
-    }
-
-    public function host() : string
-    {
-        return $this->host;
-    }
-
-    public function isRunning() : bool
-    {
-        return $this->server !== null;
     }
 }

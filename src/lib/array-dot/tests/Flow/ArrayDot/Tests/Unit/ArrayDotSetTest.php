@@ -9,18 +9,6 @@ use PHPUnit\Framework\TestCase;
 
 final class ArrayDotSetTest extends TestCase
 {
-    public function test_set_value_on_empty_array() : void
-    {
-        $this->assertSame(
-            [
-                'foo' => [
-                    'bar' => 'baz',
-                ],
-            ],
-            array_dot_set([], 'foo.bar', 'baz')
-        );
-    }
-
     public function test_replace_value_on_non_empty_array() : void
     {
         $this->assertSame(
@@ -40,6 +28,30 @@ final class ArrayDotSetTest extends TestCase
                 'foo.bar',
                 'baz'
             )
+        );
+    }
+
+    public function test_set_value_on_empty_array() : void
+    {
+        $this->assertSame(
+            [
+                'foo' => [
+                    'bar' => 'baz',
+                ],
+            ],
+            array_dot_set([], 'foo.bar', 'baz')
+        );
+    }
+
+    public function test_set_value_on_empty_array_using_escaped_wildcard() : void
+    {
+        $this->assertSame(
+            [
+                'foo' => [
+                    '*' => 'baz',
+                ],
+            ],
+            array_dot_set([], 'foo.\\*', 'baz')
         );
     }
 
@@ -72,18 +84,6 @@ final class ArrayDotSetTest extends TestCase
                 'users.*.status',
                 'active'
             )
-        );
-    }
-
-    public function test_set_value_on_empty_array_using_escaped_wildcard() : void
-    {
-        $this->assertSame(
-            [
-                'foo' => [
-                    '*' => 'baz',
-                ],
-            ],
-            array_dot_set([], 'foo.\\*', 'baz')
         );
     }
 }

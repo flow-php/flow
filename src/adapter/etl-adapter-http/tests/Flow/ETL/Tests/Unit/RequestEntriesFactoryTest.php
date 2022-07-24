@@ -14,19 +14,6 @@ use Psr\Http\Message\RequestInterface;
 
 final class RequestEntriesFactoryTest extends TestCase
 {
-    /**
-     * @dataProvider requests
-     */
-    public function test_uses_expected_entry_for_request_body(string $expectedRequestBodyEntryClass, RequestInterface $request) : void
-    {
-        $entryFactory = new RequestEntriesFactory();
-
-        $this->assertInstanceOf(
-            $expectedRequestBodyEntryClass,
-            $entryFactory->create($request)->get('request_body')
-        );
-    }
-
     public function requests() : \Generator
     {
         $messageFactory = new Psr17Factory();
@@ -57,5 +44,18 @@ final class RequestEntriesFactoryTest extends TestCase
                 ->createRequest('POST', 'https://flow-php.io/example')
                 ->withHeader('Content-Type', 'application/json'),
         ];
+    }
+
+    /**
+     * @dataProvider requests
+     */
+    public function test_uses_expected_entry_for_request_body(string $expectedRequestBodyEntryClass, RequestInterface $request) : void
+    {
+        $entryFactory = new RequestEntriesFactory();
+
+        $this->assertInstanceOf(
+            $expectedRequestBodyEntryClass,
+            $entryFactory->create($request)->get('request_body')
+        );
     }
 }

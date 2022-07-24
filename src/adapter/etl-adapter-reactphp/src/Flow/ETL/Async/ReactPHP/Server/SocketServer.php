@@ -20,18 +20,18 @@ use React\Socket\SocketServer as ReactSocketServer;
 
 final class SocketServer implements Server
 {
-    private ?LoopInterface $loop;
-
-    private ?ServerInterface $server;
-
     /**
      * @var array<ConnectionInterface>
      */
     private array $connections;
 
-    private ?string $socketPath;
-
     private ?ServerProtocol $handler;
+
+    private ?LoopInterface $loop;
+
+    private ?ServerInterface $server;
+
+    private ?string $socketPath;
 
     private function __construct(
         private readonly string $host,
@@ -76,6 +76,11 @@ final class SocketServer implements Server
         return $server;
     }
 
+    public function host() : string
+    {
+        return $this->host;
+    }
+
     public function initialize(ServerProtocol $handler) : void
     {
         if ($this->server) {
@@ -90,6 +95,11 @@ final class SocketServer implements Server
         $this->server = new ReactSocketServer($this->host, [], $this->loop);
 
         $this->handler = $handler;
+    }
+
+    public function isRunning() : bool
+    {
+        return $this->server !== null;
     }
 
     public function start() : void
@@ -162,15 +172,5 @@ final class SocketServer implements Server
         }
 
         $this->logger->debug('server stopped', []);
-    }
-
-    public function isRunning() : bool
-    {
-        return $this->server !== null;
-    }
-
-    public function host() : string
-    {
-        return $this->host;
     }
 }

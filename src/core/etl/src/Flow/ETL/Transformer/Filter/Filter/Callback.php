@@ -30,9 +30,6 @@ final class Callback implements Filter
         $this->callback = $callback;
     }
 
-    /**
-     * @phpstan-ignore-next-line
-     */
     public function __serialize() : array
     {
         return [
@@ -40,9 +37,6 @@ final class Callback implements Filter
         ];
     }
 
-    /**
-     * @phpstan-ignore-next-line
-     */
     public function __unserialize(array $data) : void
     {
         $this->callback = $data['callback'];

@@ -26,16 +26,6 @@ final class SchemaConverterTest extends TestCase
         ));
     }
 
-    public function test_convert_object_entry_to_parquet_array() : void
-    {
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage("Flow\ETL\Row\Entry\ObjectEntry is not yet supported.");
-
-        (new SchemaConverter())->toParquet(new Schema(
-            Schema\Definition::object('object')
-        ));
-    }
-
     public function test_convert_enum_entry_to_parquet_array() : void
     {
         $this->expectException(RuntimeException::class);
@@ -66,5 +56,15 @@ final class SchemaConverterTest extends TestCase
                 Schema\Definition::json('json'),
             ))
         );
+    }
+
+    public function test_convert_object_entry_to_parquet_array() : void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage("Flow\ETL\Row\Entry\ObjectEntry is not yet supported.");
+
+        (new SchemaConverter())->toParquet(new Schema(
+            Schema\Definition::object('object')
+        ));
     }
 }

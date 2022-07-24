@@ -9,20 +9,6 @@ use PHPUnit\Framework\TestCase;
 
 final class ColumnsTest extends TestCase
 {
-    public function test_prevents_creating_empty_columns() : void
-    {
-        $this->expectExceptionMessage('Columns cannot be empty');
-
-        new Columns();
-    }
-
-    public function test_prevents_creating_duplicated_columns() : void
-    {
-        $this->expectExceptionMessage('All columns must be unique');
-
-        new Columns('date', 'title', 'date');
-    }
-
     public function test_adds_index_on_the_end_of_all_columns() : void
     {
         $columns = new Columns('date', 'title', 'description', 'quantity');
@@ -33,24 +19,18 @@ final class ColumnsTest extends TestCase
         );
     }
 
-    public function test_transforms_all_columns_to_placeholders() : void
+    public function test_prevents_creating_duplicated_columns() : void
     {
-        $columns = new Columns('date', 'title', 'description', 'quantity');
+        $this->expectExceptionMessage('All columns must be unique');
 
-        $this->assertEquals(
-            new Columns(':date', ':title', ':description', ':quantity'),
-            $columns->prefix(':')
-        );
+        new Columns('date', 'title', 'date');
     }
 
-    public function test_transforms_columns_to_string_using_comma_as_a_separator() : void
+    public function test_prevents_creating_empty_columns() : void
     {
-        $columns = new Columns('date', 'title', 'description', 'quantity');
+        $this->expectExceptionMessage('Columns cannot be empty');
 
-        $this->assertEquals(
-            'date,title,description,quantity',
-            $columns->concat(',')
-        );
+        new Columns();
     }
 
     public function test_that_collection_contains_columns() : void
@@ -74,6 +54,26 @@ final class ColumnsTest extends TestCase
         $this->assertEquals(
             new Columns('title', 'quantity'),
             $columns->without('date', 'description')
+        );
+    }
+
+    public function test_transforms_all_columns_to_placeholders() : void
+    {
+        $columns = new Columns('date', 'title', 'description', 'quantity');
+
+        $this->assertEquals(
+            new Columns(':date', ':title', ':description', ':quantity'),
+            $columns->prefix(':')
+        );
+    }
+
+    public function test_transforms_columns_to_string_using_comma_as_a_separator() : void
+    {
+        $columns = new Columns('date', 'title', 'description', 'quantity');
+
+        $this->assertEquals(
+            'date,title,description,quantity',
+            $columns->concat(',')
         );
     }
 }

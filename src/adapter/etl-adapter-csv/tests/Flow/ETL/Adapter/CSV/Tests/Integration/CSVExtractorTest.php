@@ -16,6 +16,88 @@ use PHPUnit\Framework\TestCase;
 
 final class CSVExtractorTest extends TestCase
 {
+    public function test_extracting_csv_empty_columns_as_empty_strings() : void
+    {
+        $extractor = CSV::from(
+            __DIR__ . '/../Fixtures/file_with_empty_columns.csv',
+            empty_to_null: false
+        );
+
+        $this->assertSame(
+            [
+                [
+                    'row' => [
+                        'id' => '',
+                        'name' => '',
+                        'active' => 'false',
+                    ],
+                ],
+                [
+                    'row' => [
+                        'id' => '1',
+                        'name' => 'Norbert',
+                        'active' => '',
+                    ],
+                ],
+            ],
+            \iterator_to_array($extractor->extract(new FlowContext(Config::default())))[0]->toArray()
+        );
+    }
+
+    public function test_extracting_csv_empty_columns_as_null() : void
+    {
+        $extractor = CSV::from(
+            __DIR__ . '/../Fixtures/file_with_empty_columns.csv'
+        );
+
+        $this->assertSame(
+            [
+                [
+                    'row' => [
+                        'id' => null,
+                        'name' => null,
+                        'active' => 'false',
+                    ],
+                ],
+                [
+                    'row' => [
+                        'id' => '1',
+                        'name' => 'Norbert',
+                        'active' => null,
+                    ],
+                ],
+            ],
+            \iterator_to_array($extractor->extract(new FlowContext(Config::default())))[0]->toArray()
+        );
+    }
+
+    public function test_extracting_csv_files_from_directory_recursively() : void
+    {
+        $extractor = CSV::from(
+            [
+                Path::realpath(__DIR__ . '/../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv'),
+                Path::realpath(__DIR__ . '/../Fixtures/nested/annual-enterprise-survey-2019-financial-year-provisional-csv.csv'),
+            ],
+            1000,
+            false
+        );
+
+        $total = 0;
+        /** @var Rows $rows */
+        foreach ($extractor->extract(new FlowContext(Config::default())) as $rows) {
+            $rows->each(function (Row $row) : void {
+                $this->assertInstanceOf(Row\Entry\ArrayEntry::class, $row->get('row'));
+                $this->assertSame(
+                    ['e00', 'e01', 'e02', 'e03', 'e04', 'e05', 'e06', 'e07', 'e08', 'e09'],
+                    \array_keys($row->valueOf('row'))
+                );
+            });
+            $total += $rows->count();
+        }
+
+        $this->assertSame(64892, $total);
+    }
+
     public function test_extracting_csv_files_with_header() : void
     {
         $path = __DIR__ . '/../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv';
@@ -71,33 +153,6 @@ final class CSVExtractorTest extends TestCase
         $this->assertSame(32446, $total);
     }
 
-    public function test_extracting_csv_files_from_directory_recursively() : void
-    {
-        $extractor = CSV::from(
-            [
-                Path::realpath(__DIR__ . '/../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv'),
-                Path::realpath(__DIR__ . '/../Fixtures/nested/annual-enterprise-survey-2019-financial-year-provisional-csv.csv'),
-            ],
-            1000,
-            false
-        );
-
-        $total = 0;
-        /** @var Rows $rows */
-        foreach ($extractor->extract(new FlowContext(Config::default())) as $rows) {
-            $rows->each(function (Row $row) : void {
-                $this->assertInstanceOf(Row\Entry\ArrayEntry::class, $row->get('row'));
-                $this->assertSame(
-                    ['e00', 'e01', 'e02', 'e03', 'e04', 'e05', 'e06', 'e07', 'e08', 'e09'],
-                    \array_keys($row->valueOf('row'))
-                );
-            });
-            $total += $rows->count();
-        }
-
-        $this->assertSame(64892, $total);
-    }
-
     public function test_extracting_csv_with_more_columns_than_headers() : void
     {
         $extractor = CSV::from(
@@ -140,61 +195,6 @@ final class CSVExtractorTest extends TestCase
         }
 
         $this->assertSame(1, $total);
-    }
-
-    public function test_extracting_csv_empty_columns_as_null() : void
-    {
-        $extractor = CSV::from(
-            __DIR__ . '/../Fixtures/file_with_empty_columns.csv'
-        );
-
-        $this->assertSame(
-            [
-                [
-                    'row' => [
-                        'id' => null,
-                        'name' => null,
-                        'active' => 'false',
-                    ],
-                ],
-                [
-                    'row' => [
-                        'id' => '1',
-                        'name' => 'Norbert',
-                        'active' => null,
-                    ],
-                ],
-            ],
-            \iterator_to_array($extractor->extract(new FlowContext(Config::default())))[0]->toArray()
-        );
-    }
-
-    public function test_extracting_csv_empty_columns_as_empty_strings() : void
-    {
-        $extractor = CSV::from(
-            __DIR__ . '/../Fixtures/file_with_empty_columns.csv',
-            empty_to_null: false
-        );
-
-        $this->assertSame(
-            [
-                [
-                    'row' => [
-                        'id' => '',
-                        'name' => '',
-                        'active' => 'false',
-                    ],
-                ],
-                [
-                    'row' => [
-                        'id' => '1',
-                        'name' => 'Norbert',
-                        'active' => '',
-                    ],
-                ],
-            ],
-            \iterator_to_array($extractor->extract(new FlowContext(Config::default())))[0]->toArray()
-        );
     }
 
     public function test_loading_data_from_all_partitions() : void

@@ -15,13 +15,6 @@ final class ElasticsearchContext
     {
     }
 
-    public function clientConfig() : array
-    {
-        return [
-            'hosts' => $this->hosts,
-        ];
-    }
-
     public function client() : Client
     {
         if ($this->client === null) {
@@ -29,6 +22,13 @@ final class ElasticsearchContext
         }
 
         return $this->client;
+    }
+
+    public function clientConfig() : array
+    {
+        return [
+            'hosts' => $this->hosts,
+        ];
     }
 
     public function createIndex(string $name) : void

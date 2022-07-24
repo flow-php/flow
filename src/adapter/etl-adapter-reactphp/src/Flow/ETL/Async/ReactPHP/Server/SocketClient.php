@@ -15,16 +15,16 @@ final class SocketClient implements Client
     {
     }
 
+    public function disconnect() : void
+    {
+        $this->connection->close();
+    }
+
     public function send(Message $message) : void
     {
         $serializedMessage = $this->serializer->serialize($message);
         $packet = '|' . $serializedMessage . '|';
 
         $this->connection->write($packet);
-    }
-
-    public function disconnect() : void
-    {
-        $this->connection->close();
     }
 }

@@ -10,12 +10,12 @@ use Flow\Doctrine\Bulk\Exception\RuntimeException;
 
 final class TableDefinition
 {
-    private string $name;
-
     /**
      * @var Column[]
      */
     private array $columns;
+
+    private string $name;
 
     public function __construct(string $name, Column ...$columns)
     {
@@ -24,11 +24,17 @@ final class TableDefinition
     }
 
     /**
-     * @return string
+     * @throws RuntimeException
      */
-    public function name() : string
+    public function dbalColumn(string $columnName) : Column
     {
-        return $this->name;
+        $dbColumnNames = \array_filter($this->columns, fn (Column $dbColumn) : bool => $dbColumn->getName() === $columnName);
+
+        if (\count($dbColumnNames) !== 1) {
+            throw new RuntimeException("Column with name {$columnName}, not found in table: {$this->name}");
+        }
+
+        return \current($dbColumnNames);
     }
 
     /**
@@ -51,6 +57,14 @@ final class TableDefinition
         }
 
         return $types;
+    }
+
+    /**
+     * @return string
+     */
+    public function name() : string
+    {
+        return $this->name;
     }
 
     /**
@@ -86,19 +100,5 @@ final class TableDefinition
                 $bulkData->rows(),
             )
         );
-    }
-
-    /**
-     * @throws RuntimeException
-     */
-    public function dbalColumn(string $columnName) : Column
-    {
-        $dbColumnNames = \array_filter($this->columns, fn (Column $dbColumn) : bool => $dbColumn->getName() === $columnName);
-
-        if (\count($dbColumnNames) !== 1) {
-            throw new RuntimeException("Column with name {$columnName}, not found in table: {$this->name}");
-        }
-
-        return \current($dbColumnNames);
     }
 }

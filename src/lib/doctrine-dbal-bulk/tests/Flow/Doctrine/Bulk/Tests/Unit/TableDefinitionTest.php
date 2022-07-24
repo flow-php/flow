@@ -14,6 +14,28 @@ use PHPUnit\Framework\TestCase;
 
 final class TableDefinitionTest extends TestCase
 {
+    public function test_getting_sql_typed_placeholders() : void
+    {
+        $data = new BulkData(
+            [
+                ['id' => 1, 'name' => 'test', 'updated_at' => new \DateTimeImmutable()],
+                ['id' => 2, 'name' => 'test', 'updated_at' => new \DateTimeImmutable()],
+            ]
+        );
+
+        $table = new TableDefinition(
+            'test',
+            new Column('id', Type::getType('integer')),
+            new Column('name', Type::getType('string')),
+            new Column('updated_at', Type::getType('datetime_immutable')),
+        );
+
+        $this->assertSame(
+            '(CAST(:id_0 as INT),CAST(:name_0 as VARCHAR(255)),CAST(:updated_at_0 as TIMESTAMP(0) WITHOUT TIME ZONE)),(CAST(:id_1 as INT),CAST(:name_1 as VARCHAR(255)),CAST(:updated_at_1 as TIMESTAMP(0) WITHOUT TIME ZONE))',
+            $table->toSqlCastedPlaceholders($data, new PostgreSQL100Platform())
+        );
+    }
+
     public function test_getting_types_from_bulk_data() : void
     {
         $data = new BulkData(
@@ -40,28 +62,6 @@ final class TableDefinitionTest extends TestCase
                 'updated_at_1' => 'datetime_immutable',
             ],
             $table->dbalTypes($data)
-        );
-    }
-
-    public function test_getting_sql_typed_placeholders() : void
-    {
-        $data = new BulkData(
-            [
-                ['id' => 1, 'name' => 'test', 'updated_at' => new \DateTimeImmutable()],
-                ['id' => 2, 'name' => 'test', 'updated_at' => new \DateTimeImmutable()],
-            ]
-        );
-
-        $table = new TableDefinition(
-            'test',
-            new Column('id', Type::getType('integer')),
-            new Column('name', Type::getType('string')),
-            new Column('updated_at', Type::getType('datetime_immutable')),
-        );
-
-        $this->assertSame(
-            '(CAST(:id_0 as INT),CAST(:name_0 as VARCHAR(255)),CAST(:updated_at_0 as TIMESTAMP(0) WITHOUT TIME ZONE)),(CAST(:id_1 as INT),CAST(:name_1 as VARCHAR(255)),CAST(:updated_at_1 as TIMESTAMP(0) WITHOUT TIME ZONE))',
-            $table->toSqlCastedPlaceholders($data, new PostgreSQL100Platform())
         );
     }
 

@@ -21,9 +21,9 @@ use Flow\ETL\Rows;
  */
 final class AvroLoader implements Closure, Loader
 {
-    private ?\AvroDataIOWriter $writer = null;
-
     private ?Schema $inferredSchema = null;
+
+    private ?\AvroDataIOWriter $writer = null;
 
     public function __construct(
         private readonly Path $path,
@@ -46,6 +46,11 @@ final class AvroLoader implements Closure, Loader
         $this->path = $data['path'];
         $this->safeMode = $data['safe_mode'];
         $this->schema = $data['schema'];
+    }
+
+    public function closure(Rows $rows, FlowContext $context) : void
+    {
+        $this->writer($context)->close();
     }
 
     public function load(Rows $rows, FlowContext $context) : void
@@ -85,47 +90,6 @@ final class AvroLoader implements Closure, Loader
         }
     }
 
-    public function closure(Rows $rows, FlowContext $context) : void
-    {
-        $this->writer($context)->close();
-    }
-
-    private function writer(FlowContext $context) : \AvroDataIOWriter
-    {
-        if ($this->writer !== null) {
-            return $this->writer;
-        }
-
-        $schema = \AvroSchema::parse($this->schema());
-
-        $this->writer =  new \AvroDataIOWriter(
-            new AvroResource(
-                $context->fs()->open(
-                    $this->safeMode ? $this->path->randomize() : $this->path,
-                    Mode::WRITE_BINARY
-                )->resource()
-            ),
-            new \AvroIODatumWriter($schema),
-            $schema,
-            'null'
-        );
-
-        return $this->writer;
-    }
-
-    private function schema() : string
-    {
-        if ($this->schema !== null) {
-            (new SchemaConverter())->toAvroJsonSchema($this->schema);
-        }
-
-        /**
-         * @psalm-suppress PossiblyNullArgument
-         * @phpstan-ignore-next-line
-         */
-        return (new SchemaConverter())->toAvroJsonSchema($this->inferredSchema);
-    }
-
     private function listEntryToValues(Row\Entry\ListEntry $entry) : array
     {
         $listType = $entry->definition()->metadata()->get(Schema\FlowMetadata::METADATA_LIST_ENTRY_TYPE);
@@ -149,5 +113,41 @@ final class AvroLoader implements Closure, Loader
         }
 
         return $entry->value();
+    }
+
+    private function schema() : string
+    {
+        if ($this->schema !== null) {
+            (new SchemaConverter())->toAvroJsonSchema($this->schema);
+        }
+
+        /**
+         * @psalm-suppress PossiblyNullArgument
+         * @phpstan-ignore-next-line
+         */
+        return (new SchemaConverter())->toAvroJsonSchema($this->inferredSchema);
+    }
+
+    private function writer(FlowContext $context) : \AvroDataIOWriter
+    {
+        if ($this->writer !== null) {
+            return $this->writer;
+        }
+
+        $schema = \AvroSchema::parse($this->schema());
+
+        $this->writer =  new \AvroDataIOWriter(
+            new AvroResource(
+                $context->fs()->open(
+                    $this->safeMode ? $this->path->randomize() : $this->path,
+                    Mode::WRITE_BINARY
+                )->resource()
+            ),
+            new \AvroIODatumWriter($schema),
+            $schema,
+            'null'
+        );
+
+        return $this->writer;
     }
 }

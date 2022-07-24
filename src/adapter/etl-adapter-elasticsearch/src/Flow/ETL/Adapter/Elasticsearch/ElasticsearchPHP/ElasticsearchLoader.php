@@ -107,7 +107,6 @@ final class ElasticsearchLoader implements Loader
 
             /**
              * @var array<int, array{body:array,id:string}> $dataCollection
-             * @phpstan-ignore-next-line
              */
             $dataCollection = $chunk->map(fn (Row $row) : Row => Row::create(
                 $factory->create($row),

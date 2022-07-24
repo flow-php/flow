@@ -49,9 +49,57 @@ final class BulkData
         $this->rows = \array_values($rows);
     }
 
+    public function columns() : Columns
+    {
+        return $this->columns;
+    }
+
     public function count() : int
     {
         return \count($this->rows);
+    }
+
+    /**
+     * Example:.
+     *
+     * [
+     *   ['id' => 1, 'name' => 'some name'],
+     *   ['id' => 2, 'name' => 'other name'],
+     * ]
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function rows() : array
+    {
+        return $this->rows;
+    }
+
+    /**
+     * Example:.
+     *
+     * [
+     *   ['id_0' => 1, 'name_0' => 'some name'],
+     *   ['id_1' => 2, 'name_1' => 'other name'],
+     * ]
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function sqlRows() : array
+    {
+        $rows = [];
+
+        foreach ($this->rows as $index => $row) {
+            /**
+             * @psalm-suppress MixedAssignment
+             *
+             * @var mixed $entry
+             */
+            foreach ($row as $column => $entry) {
+                $rows[$index][$column . '_' . $index] = $entry;
+            }
+        }
+
+        return $rows;
     }
 
     /**
@@ -102,53 +150,5 @@ final class BulkData
                 $this->sqlRows()
             )
         );
-    }
-
-    public function columns() : Columns
-    {
-        return $this->columns;
-    }
-
-    /**
-     * Example:.
-     *
-     * [
-     *   ['id_0' => 1, 'name_0' => 'some name'],
-     *   ['id_1' => 2, 'name_1' => 'other name'],
-     * ]
-     *
-     * @return array<int, array<string, mixed>>
-     */
-    public function sqlRows() : array
-    {
-        $rows = [];
-
-        foreach ($this->rows as $index => $row) {
-            /**
-             * @psalm-suppress MixedAssignment
-             *
-             * @var mixed $entry
-             */
-            foreach ($row as $column => $entry) {
-                $rows[$index][$column . '_' . $index] = $entry;
-            }
-        }
-
-        return $rows;
-    }
-
-    /**
-     * Example:.
-     *
-     * [
-     *   ['id' => 1, 'name' => 'some name'],
-     *   ['id' => 2, 'name' => 'other name'],
-     * ]
-     *
-     * @return array<int, array<string, mixed>>
-     */
-    public function rows() : array
-    {
-        return $this->rows;
     }
 }

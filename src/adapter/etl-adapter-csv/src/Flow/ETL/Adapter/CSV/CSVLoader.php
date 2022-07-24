@@ -70,6 +70,16 @@ final class CSVLoader implements Closure, Loader
         $this->resources = [];
     }
 
+    /**
+     * @psalm-suppress InvalidPropertyAssignmentValue
+     */
+    public function closure(Rows $rows, FlowContext $context) : void
+    {
+        foreach ($this->resources as $resource) {
+            $resource->close();
+        }
+    }
+
     public function load(Rows $rows, FlowContext $context) : void
     {
         if (!$rows->count()) {
@@ -96,16 +106,6 @@ final class CSVLoader implements Closure, Loader
                  */
                 $this->writeRow($row->toArray(), [], $headers, $context);
             }
-        }
-    }
-
-    /**
-     * @psalm-suppress InvalidPropertyAssignmentValue
-     */
-    public function closure(Rows $rows, FlowContext $context) : void
-    {
-        foreach ($this->resources as $resource) {
-            $resource->close();
         }
     }
 

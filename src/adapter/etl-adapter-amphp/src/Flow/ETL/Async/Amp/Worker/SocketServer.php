@@ -11,9 +11,9 @@ use Flow\Serializer\Serializer;
 
 final class SocketServer implements Server
 {
-    private EncryptableSocket $socket;
-
     private Serializer $serializer;
+
+    private EncryptableSocket $socket;
 
     public function __construct(EncryptableSocket $socket, Serializer $serializer)
     {
