@@ -9,36 +9,36 @@ jobs:
     uses: "aeon-php/actions/.github/workflows/automation-pr-description-validate.yml@main"
     secrets:
       automation_github_token: "${{ secrets.ACCESS_TOKEN }}"
-
-  pull-request-size:
-    name: "Label PR Size"
-    runs-on: ubuntu-latest
-    continue-on-error: true
-    steps:
-      - uses: codelytv/pr-size-labeler@v1
-        with:
-          GITHUB_TOKEN: "${{ secrets.ACCESS_TOKEN }}"
-          xs_label: 'size: XS'
-          xs_max_size: 50
-          s_label: 'size: S'
-          s_max_size: 250
-          m_label: 'size: M'
-          m_max_size: 500
-          l_label: 'size: L'
-          l_max_size: 1000
-          xl_label: 'size: XL'
-          fail_if_xl: false
-          message_if_xl: >
-            'This PR exceeds the recommended size of 1000 lines.
-            Please make sure you are NOT addressing multiple issues with one PR.
-            Note this PR might be rejected due to its size.’
-
-  pull-request-type:
-    name: "Label PR Type"
-    runs-on: ubuntu-latest
-    continue-on-error: true
-    steps:
-      - uses: actions/labeler@v4
-        with:
-          repo-token: "${{ secrets.ACCESS_TOKEN }}"
-          sync-labels: true
+#
+#  pull-request-size:
+#    name: "Label PR Size"
+#    runs-on: ubuntu-latest
+#    continue-on-error: true
+#    steps:
+#      - uses: codelytv/pr-size-labeler@v1
+#        with:
+#          GITHUB_TOKEN: "${{ secrets.ACCESS_TOKEN }}"
+#          xs_label: 'size: XS'
+#          xs_max_size: 50
+#          s_label: 'size: S'
+#          s_max_size: 250
+#          m_label: 'size: M'
+#          m_max_size: 500
+#          l_label: 'size: L'
+#          l_max_size: 1000
+#          xl_label: 'size: XL'
+#          fail_if_xl: false
+#          message_if_xl: >
+#            'This PR exceeds the recommended size of 1000 lines.
+#            Please make sure you are NOT addressing multiple issues with one PR.
+#            Note this PR might be rejected due to its size.’
+#
+#  pull-request-type:
+#    name: "Label PR Type"
+#    runs-on: ubuntu-latest
+#    continue-on-error: true
+#    steps:
+#      - uses: actions/labeler@v4
+#        with:
+#          repo-token: "${{ secrets.ACCESS_TOKEN }}"
+#          sync-labels: true
