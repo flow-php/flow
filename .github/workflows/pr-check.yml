@@ -6,21 +6,18 @@ on:
 
 jobs:
   pull-request-description:
-    uses: aeon-php/actions/.github/workflows/automation-pr-description-validate.yml@main
+    uses: "aeon-php/actions/.github/workflows/automation-pr-description-validate.yml@main"
     secrets:
       automation_github_token: "${{ secrets.ACCESS_TOKEN }}"
 
   pull-request-size:
     name: "Label PR Size"
-    permissions:
-      contents: read
-      pull-requests: write
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
       - uses: codelytv/pr-size-labeler@v1
         with:
-          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          GITHUB_TOKEN: "${{ secrets.ACCESS_TOKEN }}"
           xs_label: 'size: XS'
           xs_max_size: 50
           s_label: 'size: S'
@@ -38,13 +35,10 @@ jobs:
 
   pull-request-type:
     name: "Label PR Type"
-    permissions:
-      contents: read
-      pull-requests: write
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
       - uses: actions/labeler@v4
         with:
-          repo-token: ${{ secrets.ACCESS_TOKEN }}
+          repo-token: "${{ secrets.ACCESS_TOKEN }}"
           sync-labels: true
