@@ -1,0 +1,51 @@
+{
+    "name": "flow-php/etl-adapter-text",
+    "type": "library",
+    "description": "PHP ETL - Adapter - Text",
+    "keywords": ["etl", "extract", "transform", "load", "text", "adapter"],
+    "prefer-stable": true,
+    "minimum-stability": "dev",
+    "require": {
+        "php": "~8.1",
+        "flow-php/etl": "^1.0@dev"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Flow\\": [
+                "src/Flow"
+            ]
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Flow\\": "tests/Flow"
+        }
+    },
+    "scripts": {
+        "build": [
+            "@static:analyze",
+            "@test"
+        ],
+        "test": [
+            "tools/vendor/bin/phpunit"
+        ],
+        "static:analyze": [
+            "tools/vendor/bin/psalm --output-format=compact",
+            "tools/vendor/bin/phpstan analyze -c phpstan.neon",
+            "tools/vendor/bin/php-cs-fixer fix --dry-run"
+        ],
+        "cs:php:fix": "tools/vendor/bin/php-cs-fixer fix",
+        "tools:install": "composer install --working-dir=./tools",
+        "post-install-cmd": [
+            "@tools:install"
+        ],
+        "post-update-cmd": [
+            "@tools:install"
+        ]
+    }
+}
