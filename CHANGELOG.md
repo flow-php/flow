@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-07-23
+## [Unreleased] - 2022-07-24
 
 ### Added
 - [e4021b](https://github.com/flow-php/etl-adapter-json/commit/e4021b63765964e6a576b0e7f81acbfbeb72c007) - **installation section to the docs** - [@norberttech](https://github.com/norberttech)
