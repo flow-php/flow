@@ -18,7 +18,7 @@ final class JsonLoaderTest extends TestCase
 {
     public function test_json_loader() : void
     {
-        $stream = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.json';
+        $stream = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_json_loader', true) . '.json';
 
         (new Flow())
             ->process(
@@ -61,7 +61,7 @@ JSON,
 
     public function test_json_loader_loading_empty_string() : void
     {
-        $stream = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.json';
+        $stream = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_json_loader', true) . '.json';
 
         $loader = new JsonLoader(Path::realpath($stream));
 
@@ -84,7 +84,7 @@ JSON,
 
     public function test_json_loader_with_a_safe_mode() : void
     {
-        $stream = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.json';
+        $stream = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_json_loader', true) . '.json';
 
         $loader = new JsonLoader(Path::realpath($stream), safeMode: true);
 

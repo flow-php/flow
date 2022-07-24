@@ -34,28 +34,64 @@ Please check below packages and select only those that you are going to use:
   - [array-dot](src/lib/array-dot/README.md) - auto included                  
   - [doctrine-dbal-bulk](src/lib/doctrine-dbal-bulk/README.md)
 
+## Contributing 
+
+In order to run tests locally please make sure you have [docker](https://www.docker.com/) up and running.
+You also need [PHP 8.1](https://www.php.net/) and [composer](https://getcomposer.org/) to be available from your CLI.
+
+For the code coverage, please install [pcov](https://pecl.php.net/package/pcov).
+
+### Prepare Project:
+
+```
+cp docker-compose.yml.dist docker-compose.yml
+composer install 
+docker compose up -d
+```
+
+### Run Test Suite 
+
+```
+composer test
+```
+
+### Run Static Analyze 
+
+```
+composer static:analyze
+```
+
+### Test everything
+
+This command will execute exactly the same tests as we run at Github Actions before PR can get merged.
+If it passes locally, you are good to open pull request. 
+
+```
+composer build 
+```
 
 ## Usage
 
 In order to understand how Flow works, please read [documentation](src/core/etl/README.md)
 
-
 ### [Usage Examples](https://github.com/flow-php/etl-examples)
 
 ## Features
 
-* constant memory consumption
+* low and constant memory consumption
 * asynchronous data processing
-* caching
 * reading from any data source
 * writing to any data source
 * rich collection of data transformation functions
+* direct access to remote filesystems
+* partitioning 
 * grouping & aggregating
 * remote files processing
 * joins
 * sorting
 * displaying datasets as ASCII table
 * validation against schema
+* caching
 
 ## Asynchronous Processing
 
@@ -175,6 +211,3 @@ Flow PHP is sponsored by:
 
 - [Blackfire](https://blackfire.io/) - the best PHP profiling and monitoring tool! 
 
-## Development
-
-For the code coverage, please install [pcov](https://pecl.php.net/package/pcov).

@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV;
 
-use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\Stream\FileStream;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
-use Flow\ETL\Partition;
 use Flow\ETL\Pipeline\Closure;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Rows;
@@ -28,10 +27,7 @@ use Flow\ETL\Rows;
  */
 final class CSVLoader implements Closure, Loader
 {
-    /**
-     * @var array<string, FileStream>
-     */
-    private array $resources;
+    private ?FilesystemStreams $streams;
 
     public function __construct(
         private readonly Path $path,
@@ -42,7 +38,7 @@ final class CSVLoader implements Closure, Loader
         private string $escape = '\\',
         private string $newLineSeparator = PHP_EOL
     ) {
-        $this->resources = [];
+        $this->streams = null;
     }
 
     public function __serialize() : array
@@ -67,7 +63,7 @@ final class CSVLoader implements Closure, Loader
         $this->escape = $data['escape'];
         $this->enclosure = $data['enclosure'];
         $this->newLineSeparator = $data['new_line_separator'];
-        $this->resources = [];
+        $this->streams = null;
     }
 
     /**
@@ -75,8 +71,8 @@ final class CSVLoader implements Closure, Loader
      */
     public function closure(Rows $rows, FlowContext $context) : void
     {
-        foreach ($this->resources as $resource) {
-            $resource->close();
+        if ($this->streams !== null) {
+            $this->streams->close();
         }
     }
 
@@ -86,70 +82,63 @@ final class CSVLoader implements Closure, Loader
             return;
         }
 
+        if ($this->streams === null) {
+            $this->streams = new FilesystemStreams($context->fs());
+        }
+
+        $streams = $this->streams;
+
         $headers = $rows->first()->entries()->map(fn (Entry $entry) => $entry->name());
 
         if (\count($context->partitionEntries())) {
             foreach ($rows->partitionBy(...$context->partitionEntries()) as $partitionedRows) {
+                if ($this->header && !$streams->exists($this->path, $partitionedRows->partitions)) {
+                    $this->append(
+                        $headers,
+                        $streams->open($this->path, 'csv', Mode::WRITE, $this->safeMode, $partitionedRows->partitions)
+                    );
+                }
+
                 foreach ($partitionedRows->rows as $row) {
                     /**
                      * @psalm-suppress MixedArgumentTypeCoercion
-                     * @phpstan-ignore-next-line
                      */
-                    $this->writeRow($row->toArray(), $partitionedRows->partitions, $headers, $context);
+                    $this->append(
+                        $row->toArray(),
+                        $streams->open($this->path, 'csv', Mode::WRITE, $this->safeMode, $partitionedRows->partitions)
+                    );
                 }
             }
         } else {
+            if ($this->header && !$streams->exists($this->path)) {
+                $this->append(
+                    $headers,
+                    $streams->open($this->path, 'csv', Mode::WRITE, $this->safeMode)
+                );
+            }
+
             foreach ($rows as $row) {
+
                 /**
                  * @psalm-suppress MixedArgumentTypeCoercion
-                 * @phpstan-ignore-next-line
                  */
-                $this->writeRow($row->toArray(), [], $headers, $context);
+                $this->append(
+                    $row->toArray(),
+                    $streams->open($this->path, 'csv', Mode::WRITE, $this->safeMode)
+                );
             }
         }
     }
 
-    /**
-     * @param array<array-key, null|scalar|\Stringable> $row
-     * @param array<Partition> $partitions
-     * @param array<string> $headers
-     *
-     * @throws RuntimeException
-     */
-    private function writeRow(array $row, array $partitions, array $headers, FlowContext $context) : void
+    private function append(array $row, FileStream $destination) : void
     {
-        $destination = \count($partitions)
-            ? $this->path->addPartitions(...$partitions)
-            : $this->path;
-
-        if (!\array_key_exists($destination->uri(), $this->resources)) {
-            $this->resources[$destination->uri()] = $context->fs()->open(
-                ($this->safeMode || \count($partitions)) ? $destination->randomize()->setExtension('csv') : $destination,
-                Mode::WRITE
-            );
-
-            if ($this->header) {
-                /**
-                 * @psalm-suppress TooManyArguments
-                 * @psalm-suppress InvalidNamedArgument
-                 */
-                \fputcsv(
-                    stream: $this->resources[$destination->uri()]->resource(),
-                    fields: $headers,
-                    separator: $this->separator,
-                    enclosure: $this->enclosure,
-                    escape: $this->escape,
-                    eol: $this->newLineSeparator
-                );
-            }
-        }
-
         /**
          * @psalm-suppress TooManyArguments
          * @psalm-suppress InvalidNamedArgument
+         * @psalm-suppress MixedArgumentTypeCoercion
          */
         \fputcsv(
-            stream: $this->resources[$destination->uri()]->resource(),
+            stream: $destination->resource(),
             fields: $row,
             separator: $this->separator,
             enclosure: $this->enclosure,
