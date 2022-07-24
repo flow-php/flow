@@ -135,6 +135,8 @@ jobs:
 
       - name: "Test"
         run: "composer test"
+        env:
+          PGSQL_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?serverVersion=11&charset=utf8
 
   mutation-tests:
     name: "Mutation Tests"
