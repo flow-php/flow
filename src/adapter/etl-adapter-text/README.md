@@ -18,6 +18,8 @@ It does not require any external dependencies, it's working on internal PHP func
 composer require flow-php/etl-adapter-text:1.x@dev
 ```
 
+something
+
 ## Extractor 
 
 ```php
