@@ -1,0 +1,106 @@
+name: Test Suite
+
+on:
+  pull_request:
+  push:
+    branches: [ 1.x ]
+  schedule: [ { cron: '0 8 * * *' } ]
+
+jobs:
+  static-analyze:
+    name: "Static Analyze"
+    uses: flow-php/actions/.github/workflows/composer-script-static-analyze.yaml@main
+
+  mutation-tests:
+    name: "Mutation Tests"
+    strategy:
+      fail-fast: false
+      matrix:
+        dependencies: [ locked ]
+        php-version: [ 8.1 ]
+        operating-system: [ ubuntu-latest ]
+
+    runs-on: ${{ matrix.operating-system }}
+
+    services:
+      postgres:
+        image: postgres:13.6-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432/tcp
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          coverage: pcov
+          tools: composer:v2
+          php-version: ${{ matrix.php-version }}
+          ini-values: memory_limit=-1
+        env:
+          COMPOSER_TOKEN: ${{ secrets.PRIVATE_REPOSITORY_ACCESS }}
+
+      - name: Install dependencies
+        uses: ramsey/composer-install@v2
+        with:
+          dependency-versions: ${{ matrix.dependencies }}
+
+      - name: Mutation Tests
+        run: composer test:mutation
+        env:
+          PGSQL_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?serverVersion=11&charset=utf8
+          INFECTION_BADGE_API_KEY: ${{ secrets.infection_badge_api_key }}
+          STRYKER_DASHBOARD_API_KEY: ${{ secrets.stryker_dashboard_api_key }}
+
+  tests:
+    name: "Tests"
+    strategy:
+      fail-fast: false
+      matrix:
+        dependencies: [ locked, lowest, highest ]
+        php-version: [ 8.1 ]
+        operating-system: [ ubuntu-latest ]
+
+    runs-on: ${{ matrix.operating-system }}
+
+    services:
+      postgres:
+        image: postgres:13.6-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432/tcp
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          coverage: pcov
+          tools: composer:v2
+          php-version: ${{ matrix.php-version }}
+          ini-values: memory_limit=-1
+        env:
+          COMPOSER_TOKEN: ${{ secrets.PRIVATE_REPOSITORY_ACCESS }}
+
+      - name: Install dependencies
+        uses: ramsey/composer-install@v2
+        with:
+          dependency-versions: ${{ matrix.dependencies }}
+
+      - name: Tests
+        run: composer test
+        env:
+          PGSQL_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?serverVersion=11&charset=utf8

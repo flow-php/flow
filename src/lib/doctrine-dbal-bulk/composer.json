@@ -1,0 +1,56 @@
+{
+    "name": "flow-php/doctrine-dbal-bulk",
+    "type": "library",
+    "license": "MIT",
+    "description": "Bulk inserts and updates for Doctrine DBAL",
+    "keywords": ["doctrine", "dbal", "bulk", "insert", "upsert"],
+    "require": {
+        "php": "~8.1",
+        "doctrine/dbal": "^2.12 | ^3.1.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "Flow\\Doctrine\\Bulk\\": [
+                "src/Flow/Doctrine/Bulk"
+            ]
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Flow\\Doctrine\\Bulk\\Tests\\": [
+                "tests/Flow/Doctrine/Bulk/Tests"
+            ]
+        }
+    },
+    "prefer-stable": true,
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "scripts": {
+        "tools:install": "composer install --working-dir=./tools",
+        "build": [
+            "@static:analyze",
+            "@test",
+            "@test:mutation"
+        ],
+        "static:analyze": [
+            "tools/vendor/bin/psalm",
+            "tools/vendor/bin/phpstan analyze -c phpstan.neon",
+            "tools/vendor/bin/php-cs-fixer fix --dry-run"
+        ],
+        "test": [
+            "tools/vendor/bin/phpunit"
+        ],
+        "test:mutation": [
+            "tools/vendor/bin/infection -j2"
+        ],
+        "cs:php:fix": "tools/vendor/bin/php-cs-fixer fix",
+        "post-install-cmd": [
+            "@tools:install"
+        ],
+        "post-update-cmd": [
+            "@tools:install"
+        ]
+    }
+}
