@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<psalm
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="https://getpsalm.org/schema/config"
+        xsi:schemaLocation="https://getpsalm.org/schema/config"
+        cacheDirectory="var/psalm/cache"
+        errorLevel="1"
+        autoloader="tools/psalm/vendor/autoload.php"
+>
+    <projectFiles>
+<!--        <directory name="src/adapter/etl-adapter-amphp/src" />-->
+        <directory name="src/adapter/etl-adapter-avro/src" />
+        <directory name="src/adapter/etl-adapter-csv/src" />
+        <directory name="src/adapter/etl-adapter-doctrine/src" />
+        <directory name="src/adapter/etl-adapter-elasticsearch/src" />
+        <directory name="src/adapter/etl-adapter-http/src" />
+        <directory name="src/adapter/etl-adapter-json/src" />
+        <directory name="src/adapter/etl-adapter-logger/src" />
+        <directory name="src/adapter/etl-adapter-parquet/src" />
+<!--        <directory name="src/adapter/etl-adapter-reactphp/src" />-->
+        <directory name="src/adapter/etl-adapter-text/src" />
+        <directory name="src/adapter/etl-adapter-xml/src" />
+        <directory name="src/core/etl/src" />
+        <directory name="src/lib/array-dot/src" />
+        <directory name="src/lib/doctrine-dbal-bulk/src" />
+        <ignoreFiles>
+            <directory name="vendor"/>
+
+            <file name="src/core/etl/src/Flow/ETL/Formatter/ASCII/ASCIITable.php" />
+            <file name="src/core/etl/src/Flow/ETL/ExternalSort/RowsMinHeap.php" />
+
+            <file name="src/adapter/etl-adapter-avro/src/Flow/ETL/Adapter/Avro/FlixTech/SchemaConverter.php" />
+            <file name="src/adapter/etl-adapter-avro/src/Flow/ETL/Adapter/Avro/FlixTech/ValueConverter.php" />
+        </ignoreFiles>
+    </projectFiles>
+</psalm>

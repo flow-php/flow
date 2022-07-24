@@ -1,0 +1,84 @@
+name: 'Packages Split'
+
+on:
+  push:
+    branches:
+      - 1.x
+    tags:
+      - '*'
+
+env:
+  GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+
+jobs:
+  packages_split:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # define package to repository map
+        package:
+          - local_path: 'src/core/etl'
+            split_repository: 'etl'
+
+          - local_path: 'src/lib/array-dot'
+            split_repository: 'array-dot'
+          - local_path: 'src/lib/doctrine-dbal-bulk'
+            split_repository: 'doctrine-dbal-bulk'
+
+          - local_path: 'src/adapter/etl-adapter-amphp'
+            split_repository: 'etl-adapter-amphp'
+          - local_path: 'src/adapter/etl-adapter-avro'
+            split_repository: 'etl-adapter-avro'
+          - local_path: 'src/adapter/etl-adapter-csv'
+            split_repository: 'etl-adapter-csv'
+          - local_path: 'src/adapter/etl-adapter-doctrine'
+            split_repository: 'etl-adapter-doctrine'
+          - local_path: 'src/adapter/etl-adapter-elasticsearch'
+            split_repository: 'etl-adapter-elasticsearch'
+          - local_path: 'src/adapter/etl-adapter-http'
+            split_repository: 'etl-adapter-http'
+          - local_path: 'src/adapter/etl-adapter-json'
+            split_repository: 'etl-adapter-json'
+          - local_path: 'src/adapter/etl-adapter-logger'
+            split_repository: 'etl-adapter-logger'
+          - local_path: 'src/adapter/etl-adapter-parquet'
+            split_repository: 'etl-adapter-parquet'
+          - local_path: 'src/adapter/etl-adapter-reactphp'
+            split_repository: 'etl-adapter-reactphp'
+          - local_path: 'src/adapter/etl-adapter-text'
+            split_repository: 'etl-adapter-text'
+          - local_path: 'src/adapter/etl-adapter-xml'
+            split_repository: 'etl-adapter-xml'
+
+    steps:
+      -   uses: actions/checkout@v2
+
+      # no tag
+      -
+        if: "!startsWith(github.ref, 'refs/tags/')"
+        uses: "symplify/monorepo-split-github-action@2.1"
+        with:
+          package_directory: 'packages/${{ matrix.package.local_path }}'
+
+          repository_organization: 'flow-php'
+          repository_name: '${{ matrix.package.split_repository }}'
+
+          user_name: "norberttech"
+          user_email: "norbert@orzechowicz.pl"
+
+      # with tag
+      -
+        if: "startsWith(github.ref, 'refs/tags/')"
+        uses: "symplify/monorepo-split-github-action@2.1"
+        with:
+          tag: ${GITHUB_REF#refs/tags/}
+
+          package_directory: 'packages/${{ matrix.package.local_path }}'
+
+          repository_organization: 'flow-php'
+          repository_name: '${{ matrix.package.split_repository }}'
+
+          user_name: "norberttech"
+          user_email: "norbert@orzechowicz.pl"

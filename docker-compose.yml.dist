@@ -1,0 +1,20 @@
+services:
+    postgres:
+        image: postgres:13.6-alpine
+        container_name: flow-php-postgres
+        ports:
+            - 5432:5432
+        environment:
+            - POSTGRES_USER=postgres
+            - POSTGRES_PASSWORD=postgres
+            - POSTGRES_DB=postgres
+    elasticsearch:
+        image: elasticsearch:7.17.2
+        container_name: flow-php-elasticsearch
+        ports:
+            - 9200:9200
+        environment:
+            - node.name=es01
+            - discovery.type=single-node
+            - bootstrap.memory_lock=true
+            - "ES_JAVA_OPTS=-Xms512m -Xmx512m"

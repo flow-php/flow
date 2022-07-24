@@ -1,0 +1,158 @@
+{
+    "name": "flow-php/flow",
+    "type": "library",
+    "description": "PHP ETL - Extract Transform Load - Data processing framework",
+    "keywords": ["etl", "extract", "transform", "load"],
+    "license": "MIT",
+    "require": {
+        "php": "~8.1",
+        "ext-dom": "*",
+        "ext-json": "*",
+        "ext-mbstring": "*",
+        "ext-xmlreader": "*",
+        "amphp/process": "^2 || ^2",
+        "amphp/socket": "^2",
+        "codename/parquet": "^0.6.2",
+        "doctrine/dbal": "^2.12 | ^3.1.4",
+        "elasticsearch/elasticsearch": "^7.6",
+        "flix-tech/avro-php": "^4.2",
+        "halaxa/json-machine": "^0.8.0 || ^1.0.0",
+        "league/flysystem": "^3.0",
+        "monolog/monolog": "^2.0 || ^3.0",
+        "psr/http-client": "^1.0",
+        "psr/log": "^1.1",
+        "react/child-process": "^0.6.4",
+        "react/socket": "^1.11"
+    },
+    "require-dev": {
+        "jawira/case-converter": "^3.4",
+        "laminas/laminas-hydrator": "^4.0",
+        "laravel/serializable-closure": "^1.1",
+        "league/flysystem-aws-s3-v3": "^3.0",
+        "league/flysystem-azure-blob-storage": "^3.0",
+        "nyholm/psr7": "^1.4",
+        "php-http/curl-client": "^2.2",
+        "rector/rector": "^0.13.8",
+        "symfony/validator": "^5.3 || ^6.0"
+    },
+    "autoload": {
+        "files": [
+            "src/lib/array-dot/src/Flow/ArrayDot/array_dot.php"
+        ],
+        "psr-4": {
+            "Flow\\": [
+                "src/adapter/etl-adapter-amphp/src/Flow",
+                "src/adapter/etl-adapter-avro/src/Flow",
+                "src/adapter/etl-adapter-csv/src/Flow",
+                "src/adapter/etl-adapter-doctrine/src/Flow",
+                "src/adapter/etl-adapter-elasticsearch/src/Flow",
+                "src/adapter/etl-adapter-http/src/Flow",
+                "src/adapter/etl-adapter-json/src/Flow",
+                "src/adapter/etl-adapter-logger/src/Flow",
+                "src/adapter/etl-adapter-parquet/src/Flow",
+                "src/adapter/etl-adapter-reactphp/src/Flow",
+                "src/adapter/etl-adapter-text/src/Flow",
+                "src/adapter/etl-adapter-xml/src/Flow",
+                "src/core/etl/src/Flow",
+                "src/lib/array-dot/src/Flow",
+                "src/lib/doctrine-dbal-bulk/src/Flow"
+            ],
+            "Flow\\Doctrine\\Bulk\\": [
+                "src/lib/doctrine-dbal-bulk/src/Flow/Doctrine/Bulk"
+            ],
+            "Flow\\ETL\\Adapter\\Doctrine\\": [
+                "src/adapter/etl-adapter-doctrine/src/Flow/ETL/Adapter/Doctrine"
+            ]
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Flow\\": [
+                "src/adapter/etl-adapter-amphp/tests/Flow",
+                "src/adapter/etl-adapter-avro/tests/Flow",
+                "src/adapter/etl-adapter-csv/tests/Flow",
+                "src/adapter/etl-adapter-doctrine/tests/Flow",
+                "src/adapter/etl-adapter-elasticsearch/tests/Flow",
+                "src/adapter/etl-adapter-http/tests/Flow",
+                "src/adapter/etl-adapter-json/tests/Flow",
+                "src/adapter/etl-adapter-logger/tests/Flow",
+                "src/adapter/etl-adapter-parquet/tests/Flow",
+                "src/adapter/etl-adapter-reactphp/tests/Flow",
+                "src/adapter/etl-adapter-text/tests/Flow",
+                "src/adapter/etl-adapter-xml/tests/Flow",
+                "src/core/etl/tests/Flow",
+                "src/lib/array-dot/tests/Flow",
+                "src/lib/doctrine-dbal-bulk/tests/Flow"
+            ],
+            "Flow\\Doctrine\\Bulk\\Tests\\": [
+                "src/lib/doctrine-dbal-bulk/tests/Flow/Doctrine/Bulk/Tests"
+            ],
+            "Flow\\ETL\\Adapter\\Doctrine\\Tests\\": [
+                "src/adapter/etl-adapter-doctrine/tests/Flow/ETL/Adapter/Doctrine/Tests"
+            ]
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true,
+        "allow-plugins": false
+    },
+    "replace": {
+        "flow-php/array-dot": "self.version",
+        "flow-php/doctrine-dbal-bulk": "self.version",
+        "flow-php/doctrine-dbal-bulk-tools": "self.version",
+        "flow-php/etl": "self.version",
+        "flow-php/etl-adapter-amphp": "self.version",
+        "flow-php/etl-adapter-avro": "self.version",
+        "flow-php/etl-adapter-csv": "self.version",
+        "flow-php/etl-adapter-dbal-tools": "self.version",
+        "flow-php/etl-adapter-doctrine": "self.version",
+        "flow-php/etl-adapter-elasticsearch": "self.version",
+        "flow-php/etl-adapter-http": "self.version",
+        "flow-php/etl-adapter-json": "self.version",
+        "flow-php/etl-adapter-logger": "self.version",
+        "flow-php/etl-adapter-logger-tools": "self.version",
+        "flow-php/etl-adapter-parquet": "self.version",
+        "flow-php/etl-adapter-reactphp": "self.version",
+        "flow-php/etl-adapter-text": "self.version",
+        "flow-php/etl-adapter-xml": "self.version",
+        "flow-php/etl-tools": "self.version"
+    },
+    "scripts": {
+        "build": [
+            "@static:analyze",
+            "@test",
+            "@test:mutation"
+        ],
+        "test": [
+            "tools/phpunit/vendor/bin/phpunit"
+        ],
+        "test:mutation": [
+            "tools/infection/vendor/bin/infection -j2"
+        ],
+        "static:analyze": [
+            "tools/psalm/vendor/bin/psalm.phar --output-format=compact",
+            "tools/phpstan/vendor/bin/phpstan analyze -c phpstan.neon",
+            "tools/cs-fixer/vendor/bin/php-cs-fixer fix --dry-run"
+        ],
+        "cs:php:fix": [
+            "tools/cs-fixer/vendor/bin/php-cs-fixer fix"
+        ],
+        "post-install-cmd": [
+            "@tools:install"
+        ],
+        "post-update-cmd": [
+            "@tools:install"
+        ],
+        "tools:install": [
+            "composer install --working-dir=./tools/cs-fixer",
+            "composer install --working-dir=./tools/infection",
+            "composer install --working-dir=./tools/monorepo",
+            "composer install --working-dir=./tools/phpstan",
+            "composer install --working-dir=./tools/psalm",
+            "composer install --working-dir=./tools/phpunit"
+        ]
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

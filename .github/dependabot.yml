@@ -1,0 +1,36 @@
+version: 2
+updates:
+  - package-ecosystem: "composer"
+    directory: "/"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "composer"
+    directory: "/tools/cs-fixer"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "composer"
+    directory: "/tools/infection"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "composer"
+    directory: "/tools/monorepo"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "composer"
+    directory: "/tools/phpstan"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "composer"
+    directory: "/tools/phpunit"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "composer"
+    directory: "/tools/psalm"
+    schedule:
+      interval: "daily"

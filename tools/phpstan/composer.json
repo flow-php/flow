@@ -1,0 +1,10 @@
+{
+  "name": "flow-php/etl-tools",
+  "description": "Flow PHP ETL - Tools",
+  "require-dev": {
+    "phpstan/phpstan": "^1.0.0"
+  },
+  "config": {
+    "allow-plugins": false
+  }
+}
