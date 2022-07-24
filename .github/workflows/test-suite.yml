@@ -10,7 +10,19 @@ jobs:
   static-analyze:
     name: "Static Analyze"
 
-    runs-on: "ubuntu-latest"
+    runs-on: ${{ matrix.operating-system }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        dependencies:
+          - "locked"
+          - "lowest"
+          - "highest"
+        php-version:
+          - "8.1"
+        operating-system:
+          - "ubuntu-latest"
 
     steps:
       - name: "Checkout"
@@ -21,7 +33,7 @@ jobs:
         with:
           coverage: pcov
           tools: composer:v2
-          php-version: "${{ inputs.php-version }}"
+          php-version: "${{ matrix.php-version }}"
           ini-values: memory_limit=-1
 
       - name: "Get Composer Cache Directory"
@@ -34,9 +46,9 @@ jobs:
         with:
           path: |
             ${{ steps.composer-cache.outputs.dir }}
-          key: "php-${{ inputs.php-version }}-locked-composer-${{ hashFiles('**/composer.lock') }}"
+          key: "php-${{ matrix.php-version }}-locked-composer-${{ hashFiles('**/composer.lock') }}"
           restore-keys: |
-            php-${{ inputs.php-version }}-locked-composer-
+            php-${{ matrix.php-version }}-locked-composer-
 
       - name: "Install locked dependencies"
         run: "composer install --no-interaction --no-progress --no-suggest"
@@ -104,7 +116,21 @@ jobs:
 
   mutation-tests:
     name: "Mutation Tests"
-    runs-on: "ubuntu-latest"
+
+    runs-on: ${{ matrix.operating-system }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        dependencies:
+          - "locked"
+          - "lowest"
+          - "highest"
+        php-version:
+          - "8.1"
+        operating-system:
+          - "ubuntu-latest"
+
     steps:
       - name: "Checkout"
         uses: "actions/checkout@v2"
@@ -114,7 +140,7 @@ jobs:
         with:
           coverage: pcov
           tools: composer:v2
-          php-version: "${{ inputs.php-version }}"
+          php-version: "${{ matrix.php-version }}"
           ini-values: memory_limit=-1
 
       - name: "Get Composer Cache Directory"
@@ -129,7 +155,7 @@ jobs:
             ${{ steps.composer-cache.outputs.dir }}
           key: "php-${{ matrix.php-version }}-locked-composer-${{ hashFiles('**/composer.lock') }}"
           restore-keys: |
-            php-${{ inputs.php-version }}-locked-composer-
+            php-${{ matrix.php-version }}-locked-composer-
 
       - name: "Install locked dependencies"
         run: "composer install --no-interaction --no-progress --no-suggest"
