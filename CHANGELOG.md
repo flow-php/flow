@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-07-22
+## [Unreleased] - 2022-07-24
 
 ### Added
 - [#44](https://github.com/flow-php/etl-adapter-http/pull/44) - **Workflow for aut-merging dependabot PRs** - [@tomaszhanc](https://github.com/tomaszhanc)
@@ -21,6 +21,7 @@
 - [#7](https://github.com/flow-php/etl-adapter-http/pull/7) - **Setting up response body** - [@jpiatko](https://github.com/jpiatko)
 
 ### Updated
+- [25aa47](https://github.com/flow-php/etl-adapter-http/commit/25aa47f5246da8a1f37e53f75d5e516d2f36fb50) - **dependencies** - [@norberttech](https://github.com/norberttech)
 - [6a3d0e](https://github.com/flow-php/etl-adapter-http/commit/6a3d0e9d6ea6933043776621f849a0ed9d7df4ca) - **dependabot-auto-merge.yml** - [@norberttech](https://github.com/norberttech)
 - [0f01ff](https://github.com/flow-php/etl-adapter-http/commit/0f01ff6b7d2c74cdc13ffd61b097cd61811ef2ed) - **dependencies** - [@norberttech](https://github.com/norberttech)
 
