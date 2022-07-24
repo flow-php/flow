@@ -1,0 +1,32 @@
+{
+    "timeout": 100,
+    "source": {
+        "directories": [
+            "src"
+        ]
+    },
+    "logs": {
+        "text": "./var/infection/infection.log",
+        "summary": "./var/infection/infection_summary.log",
+        "debug": "./var/infection/infection_debug.log",
+        "stryker": {
+            "badge": "1.x"
+        }
+    },
+    "mutators": {
+        "@default": true,
+        "Throw_": {
+            "ignore": [
+                "Flow\\ETL\\Adapter\\Doctrine\\DbalBulkLoader::__serialize",
+                "Flow\\ETL\\Adapter\\Doctrine\\DbalBulkLoader::__unserialize"
+            ]
+        }
+    },
+    "testFramework": "phpunit",
+    "bootstrap": "./vendor/autoload.php",
+    "phpUnit": {
+        "customPath": "tools/vendor/bin/phpunit"
+    },
+    "minMsi": 100,
+    "minCoveredMsi": 100
+}
