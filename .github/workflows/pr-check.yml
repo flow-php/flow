@@ -8,7 +8,7 @@ jobs:
   pull-request-description:
     uses: "aeon-php/actions/.github/workflows/automation-pr-description-validate.yml@main"
     secrets:
-      automation_github_token: "${{ secrets.ACCESS_TOKEN }}"
+      automation_github_token: "${{ secrets.GITHUB_TOKEN }}"
 
   pull-request-size:
     name: "Label PR Size"
