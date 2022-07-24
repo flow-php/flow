@@ -490,8 +490,8 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
         /** @var array<string, array<mixed>> $partitions */
         $partitions = [];
 
-        foreach ($entries as $entry) {
-            $partitions[$entry] = \array_unique($this->reduceToArray($entry));
+        foreach ($entries as $nextEntry) {
+            $partitions[$nextEntry] = \array_unique($this->reduceToArray($nextEntry));
         }
 
         /**

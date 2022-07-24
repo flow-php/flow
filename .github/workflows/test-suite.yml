@@ -17,8 +17,6 @@ jobs:
       matrix:
         dependencies:
           - "locked"
-          - "lowest"
-          - "highest"
         php-version:
           - "8.1"
         operating-system:
@@ -148,8 +146,6 @@ jobs:
       matrix:
         dependencies:
           - "locked"
-          - "lowest"
-          - "highest"
         php-version:
           - "8.1"
         operating-system:

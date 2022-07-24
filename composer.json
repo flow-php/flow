@@ -132,7 +132,7 @@
             "tools/infection/vendor/bin/infection -j2"
         ],
         "static:analyze": [
-            "tools/psalm/vendor/bin/psalm.phar --output-format=compact",
+            "tools/psalm/vendor/bin/psalm.phar",
             "tools/phpstan/vendor/bin/phpstan analyze -c phpstan.neon",
             "tools/cs-fixer/vendor/bin/php-cs-fixer fix --dry-run"
         ],
