@@ -1,13 +1,11 @@
-![img](docs/img/banner.png)
+# FLow PHP - ETL
 
-[![Latest Stable Version](https://poser.pugx.org/flow-php/etl/v)](https://packagist.org/packages/flow-php/etl)
-[![Latest Unstable Version](https://poser.pugx.org/flow-php/etl/v/unstable)](https://packagist.org/packages/flow-php/etl)
-[![License](https://poser.pugx.org/flow-php/etl/license)](https://packagist.org/packages/flow-php/etl)
-![Tests](https://github.com/flow-php/etl/workflows/Tests/badge.svg?branch=1.x)
+# Contributing
 
-Supported PHP versions
+This repo is **READ ONLY**, in order to contribute to Flow PHP project, please
+open PR against [flow](https://github.com/flow-php/flow) monorepo.
 
-* [![Supported PHP Version](https://img.shields.io/badge/php-~8.1-8892BF.svg)](https://php.net/)
+Changes merged to monorepo are automatically propagated into sub repositories.
 
 ## Description
 
