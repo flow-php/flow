@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/array-dot.git",
-                "reference": "d2e312eb54d307027b8ddfce0bf6c3fc7fcd2769"
+                "reference": "871463806a84d893a9c27bf60168d23be4040d6b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/array-dot/zipball/d2e312eb54d307027b8ddfce0bf6c3fc7fcd2769",
-                "reference": "d2e312eb54d307027b8ddfce0bf6c3fc7fcd2769",
+                "url": "https://api.github.com/repos/flow-php/array-dot/zipball/871463806a84d893a9c27bf60168d23be4040d6b",
+                "reference": "871463806a84d893a9c27bf60168d23be4040d6b",
                 "shasum": ""
             },
             "require": {
@@ -53,7 +53,7 @@
                 "issues": "https://github.com/flow-php/array-dot/issues",
                 "source": "https://github.com/flow-php/array-dot/tree/1.x"
             },
-            "time": "2022-07-13T21:19:44+00:00"
+            "time": "2022-07-22T21:14:19+00:00"
         },
         {
             "name": "flow-php/etl",
@@ -61,12 +61,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/etl.git",
-                "reference": "dd5a8f14fbb7849075c03bc5ccdc4dc0c732e31d"
+                "reference": "40803f243af0728addac493a6de0dec0080c6ad5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl/zipball/dd5a8f14fbb7849075c03bc5ccdc4dc0c732e31d",
-                "reference": "dd5a8f14fbb7849075c03bc5ccdc4dc0c732e31d",
+                "url": "https://api.github.com/repos/flow-php/etl/zipball/40803f243af0728addac493a6de0dec0080c6ad5",
+                "reference": "40803f243af0728addac493a6de0dec0080c6ad5",
                 "shasum": ""
             },
             "require": {
@@ -113,20 +113,20 @@
                 "issues": "https://github.com/flow-php/etl/issues",
                 "source": "https://github.com/flow-php/etl/tree/1.x"
             },
-            "time": "2022-07-18T05:53:05+00:00"
+            "time": "2022-07-19T09:43:39+00:00"
         },
         {
             "name": "league/flysystem",
-            "version": "3.1.0",
+            "version": "3.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/thephpleague/flysystem.git",
-                "reference": "34a68067b7ae3b836ea5e57e1fc432478372a4f5"
+                "reference": "1a941703dfb649f9b821e7bc425e782f576a805e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/thephpleague/flysystem/zipball/34a68067b7ae3b836ea5e57e1fc432478372a4f5",
-                "reference": "34a68067b7ae3b836ea5e57e1fc432478372a4f5",
+                "url": "https://api.github.com/repos/thephpleague/flysystem/zipball/1a941703dfb649f9b821e7bc425e782f576a805e",
+                "reference": "1a941703dfb649f9b821e7bc425e782f576a805e",
                 "shasum": ""
             },
             "require": {
@@ -187,7 +187,7 @@
             ],
             "support": {
                 "issues": "https://github.com/thephpleague/flysystem/issues",
-                "source": "https://github.com/thephpleague/flysystem/tree/3.1.0"
+                "source": "https://github.com/thephpleague/flysystem/tree/3.1.1"
             },
             "funding": [
                 {
@@ -203,7 +203,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-06-29T17:29:54+00:00"
+            "time": "2022-07-18T09:59:40+00:00"
         },
         {
             "name": "league/mime-type-detection",
