@@ -1,0 +1,39 @@
+ci/cd:
+  - any: [".github/**/*"]
+docs:
+  - any: ["**/*.md"]
+
+core:
+  - any: ["src/core/etl/**/*"]
+
+lib-array-dot:
+  - any: ["src/lib/array-dot/**/*"]
+lib-doctrine-dbal-bulk:
+  - any: ["src/lib/doctrine-dbal-bulk/**/*"]
+
+adapter-amphp:
+  - any: ["src/adapter/etl-adapter-amphp/**/*"]
+adapter-ampavrohp:
+  - any: ["src/adapter/etl-adapter-avro/**/*"]
+adapter-csv:
+  - any: ["src/adapter/etl-adapter-csv/**/*"]
+adapter-doctrine:
+  - any: ["src/adapter/etl-adapter-doctrine/**/*"]
+adapter-elasticsearch:
+  - any: ["src/adapter/etl-adapter-elasticsearch/**/*"]
+adapter-http:
+  - any: ["src/adapter/etl-adapter-http/**/*"]
+adapter-json:
+  - any: ["src/adapter/etl-adapter-json/**/*"]
+adapter-logger:
+  - any: ["src/adapter/etl-adapter-logger/**/*"]
+adapter-parquet:
+  - any: ["src/adapter/etl-adapter-parquet/**/*"]
+adapter-reactphp:
+  - any: ["src/adapter/etl-adapter-reactphp/**/*"]
+adapter-text:
+  - any: ["src/adapter/etl-adapter-text/**/*"]
+adapter-xml:
+  - any: ["src/adapter/etl-adapter-xml/**/*"]
+
+
