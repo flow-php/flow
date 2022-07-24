@@ -22,7 +22,8 @@
         "psr/http-client": "^1.0",
         "psr/log": "^1.1",
         "react/child-process": "^0.6.4",
-        "react/socket": "^1.11"
+        "react/socket": "^1.11",
+        "react/promise": "^2.9.0"
     },
     "require-dev": {
         "jawira/case-converter": "^3.4",
