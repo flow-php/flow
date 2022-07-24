@@ -1,9 +1,0 @@
-parameters:
-    level: max
-    excludePaths:
-        - src/Flow/ETL/Async/ReactPHP
-        - src/Flow/ETL/Async/Communication/Message.php
-    paths:
-        - src
-
-    tmpDir: var/phpstan/cache

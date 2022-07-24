@@ -1,8 +1,0 @@
-parameters:
-    checkGenericClassInNonGenericObjectType: false
-    checkMissingIterableValueType: false
-    level: max
-    paths:
-        - src
-
-    tmpDir: var/phpstan/cache
