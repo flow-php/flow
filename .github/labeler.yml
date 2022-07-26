@@ -3,6 +3,9 @@ ci/cd:
 docs:
   - any: ["**/*.md"]
 
+examples:
+  - any: ["src/examples/**/*"]
+
 core:
   - any: ["src/core/etl/**/*"]
 
