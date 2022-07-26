@@ -9,7 +9,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 /**
  * @psalm-immutable
  */
-enum ScalarType: string implements Type
+enum ScalarType : string implements Type
 {
     case boolean = 'boolean';
     case float = 'float';

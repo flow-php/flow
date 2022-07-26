@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Filesystem\Stream;
 
-enum Mode: string
+enum Mode : string
 {
     case READ = 'r';
 

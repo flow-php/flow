@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer\Math;
 
-enum Operation: string
+enum Operation : string
 {
     case add = 'add';
     case divide = 'divide';
