@@ -8,7 +8,8 @@ $finder = PhpCsFixer\Finder::create()
         __DIR__ . '/src/adapter/**/src',
         __DIR__ . '/src/adapter/**/tests',
         __DIR__ . '/src/lib/**/src',
-        __DIR__ . '/src/lib/**/tests'
+        __DIR__ . '/src/lib/**/tests',
+        __DIR__ . '/examples',
     ]);
 
 if (!\file_exists(__DIR__ . '/var')) {

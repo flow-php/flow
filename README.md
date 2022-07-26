@@ -74,7 +74,7 @@ composer build
 
 In order to understand how Flow works, please read [documentation](src/core/etl/README.md)
 
-### [Usage Examples](https://github.com/flow-php/etl-examples)
+### [Usage Examples](examples/README.md)
 
 ## Features
 
