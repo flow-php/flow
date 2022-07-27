@@ -10,7 +10,7 @@ namespace Flow\ETL;
 interface Extractor
 {
     /**
-     * @return \Generator<int, Rows, mixed, void>
+     * @return \Generator<Rows>
      */
     public function extract(FlowContext $context) : \Generator;
 }

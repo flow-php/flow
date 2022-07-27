@@ -22,7 +22,7 @@ final class PipelineExtractor implements Extractor
     /**
      * @param FlowContext $context
      *
-     * @return \Generator<int, Rows, mixed, void>
+     * @return \Generator<Rows>
      */
     public function extract(FlowContext $context) : \Generator
     {
