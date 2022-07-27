@@ -4,7 +4,7 @@ docs:
   - any: ["**/*.md"]
 
 examples:
-  - any: ["src/examples/**/*"]
+  - any: ["examples/**/*"]
 
 core:
   - any: ["src/core/etl/**/*"]
