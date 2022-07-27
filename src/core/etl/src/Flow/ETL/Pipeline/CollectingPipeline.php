@@ -33,7 +33,7 @@ final class CollectingPipeline implements Pipeline
 
     public function cleanCopy() : Pipeline
     {
-        return new self($this->pipeline);
+        return $this->pipeline->cleanCopy();
     }
 
     public function process(FlowContext $context) : \Generator

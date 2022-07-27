@@ -17,7 +17,7 @@ interface Pipeline
     public function cleanCopy() : self;
 
     /**
-     * @return \Generator<int, Rows, mixed, void>
+     * @return \Generator<Rows>
      */
     public function process(FlowContext $context) : \Generator;
 
