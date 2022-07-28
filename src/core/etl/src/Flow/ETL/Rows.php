@@ -494,6 +494,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
             $partitionEntryValues = [];
 
             foreach ($this->rows as $row) {
+                /** @psalm-suppress MixedAssignment */
                 $partitionEntryValues[] = $row->get($nextEntry)->value();
             }
 
