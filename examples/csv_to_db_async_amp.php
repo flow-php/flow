@@ -25,6 +25,8 @@ if (!\is_dir(__DIR__ . '/var/run/')) {
 
 $dbConnection = require __DIR__ . '/db_clean.php';
 
+\putenv('FLOW_PHP_ASYNC_AUTOLOAD=' . __DIR__ . '/../vendor/autoload.php');
+
 $logger = new Logger('server');
 //$logger->pushHandler(new StreamHandler('php://stdout', LogLevel::DEBUG, false));
 $logger->pushHandler(new StreamHandler('php://stderr', LogLevel::ERROR, false));
@@ -40,8 +42,8 @@ $stopwatch->start();
     ->pipeline(
         new LocalSocketPipeline(
             SocketServer::unixDomain(__DIR__ . '/var/run/', $logger),
-            ////SocketServer::tcp(6651, $logger),
-            new ChildProcessLauncher(__DIR__ . '/vendor/bin/worker-amp', $logger),
+//            SocketServer::tcp(6651, $logger),
+            new ChildProcessLauncher(__DIR__ . '/../src/adapter/etl-adapter-amphp/bin/worker-amp', $logger),
             $workers = 8
         )
     )
