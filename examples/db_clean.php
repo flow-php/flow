@@ -23,7 +23,8 @@ $dbConnection->createSchemaManager()->createTable(
             new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
             new Column('phone', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
-            new Column('allocation_group', Type::getType(Types::INTEGER), ['notnull' => true]),
+            new Column('country_code', Type::getType(Types::STRING), ['notnull' => true, 'length' => 2]),
+            new Column('color', Type::getType(Types::STRING), ['notnull' => true, 'length' => 64]),
         ],
     ))
     ->setPrimaryKey(['id'])

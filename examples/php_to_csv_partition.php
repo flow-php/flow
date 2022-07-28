@@ -24,13 +24,13 @@ $memory->current();
     ->read($extractor)
     ->rows(Transform::array_unpack('row'))
     ->drop('row')
-    ->write(To::callback(function (Rows $rows) use (&$total, $memory) : void {
+    ->write(To::callback(static function (Rows $rows) use (&$total, $memory) : void {
         $total += $rows->count();
 
         $memory->current();
     }))
-    ->partitionBy('allocation_group')
-    ->write(CSV::to(__DIR__ . '/output/dataset.csv'))
+    ->partitionBy('country_code', 'color')
+    ->write(CSV::to(__DIR__ . '/output/partitioned'))
     ->run();
 
 $memory->current();

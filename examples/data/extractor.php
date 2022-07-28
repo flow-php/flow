@@ -7,6 +7,10 @@ use Flow\ETL\Row\Entry\ArrayEntry;
 use Flow\ETL\Rows;
 
 return new class implements Extractor {
+    private static array $colors = ['red', 'green', 'blue'];
+
+    private static array $countries = ['us', 'pl', 'gb', 'fr', 'de', 'it'];
+
     public function extract(FlowContext $context) : Generator
     {
         $rows = [];
@@ -15,7 +19,14 @@ return new class implements Extractor {
             $rows[] = Row::create(
                 new ArrayEntry(
                     'row',
-                    ['id' => $i, 'name' => 'Name', 'last name' => 'Last Name', 'phone' => '123 123 123', 'allocation_group' => \random_int(1, 5)]
+                    [
+                        'id' => $i,
+                        'name' => 'Name',
+                        'last name' => 'Last Name',
+                        'phone' => '123 123 123',
+                        'color' => self::$colors[\array_rand(self::$colors)],
+                        'country_code' => self::$countries[\array_rand(self::$countries)],
+                    ]
                 ),
             );
 
