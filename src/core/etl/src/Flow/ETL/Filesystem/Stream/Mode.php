@@ -6,6 +6,7 @@ namespace Flow\ETL\Filesystem\Stream;
 
 enum Mode : string
 {
+    case APPEND = 'a';
     case READ = 'r';
 
     case READ_BINARY = 'rb';

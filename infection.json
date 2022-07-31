@@ -2,7 +2,6 @@
   "source": {
     "directories": [
         "src/core/etl/src",
-        "src/adapter/etl-adapter-amphp/src",
         "src/adapter/etl-adapter-avro/src",
         "src/adapter/etl-adapter-csv/src",
         "src/adapter/etl-adapter-doctrine/src",
@@ -11,7 +10,6 @@
         "src/adapter/etl-adapter-json/src",
         "src/adapter/etl-adapter-logger/src",
         "src/adapter/etl-adapter-parquet/src",
-        "src/adapter/etl-adapter-reactphp/src",
         "src/adapter/etl-adapter-text/src",
         "src/adapter/etl-adapter-xml/src",
         "src/lib/array-dot/src",

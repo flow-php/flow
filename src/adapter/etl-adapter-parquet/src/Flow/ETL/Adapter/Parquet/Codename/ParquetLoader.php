@@ -8,7 +8,9 @@ use codename\parquet\data\DataColumn;
 use codename\parquet\data\DataField;
 use codename\parquet\ParquetWriter;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Filesystem\Path;
+use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Filesystem\Stream\FileStream;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
@@ -43,6 +45,8 @@ final class ParquetLoader implements Closure, Loader
 
     private ?Schema $inferredSchema = null;
 
+    private ?FilesystemStreams $streams = null;
+
     private ?ParquetWriter $writer = null;
 
     public function __construct(
@@ -70,6 +74,7 @@ final class ParquetLoader implements Closure, Loader
         $this->safeMode = $data['safe_mode'];
         $this->rowsPerGroup = $data['rows_per_group'];
         $this->fileStream = null;
+        $this->streams = null;
     }
 
     public function closure(Rows $rows, FlowContext $context) : void
@@ -87,6 +92,24 @@ final class ParquetLoader implements Closure, Loader
             throw new RuntimeException('Partitioning is not supported yet');
         }
 
+        $streams = $this->streams($context);
+
+        if ($context->mode() === SaveMode::ExceptionIfExists && $streams->exists($this->path)) {
+            throw new RuntimeException('Destination path "' . $this->path->uri() . '" already exists, please change path to different or set different SaveMode');
+        }
+
+        if ($context->mode() === SaveMode::Ignore && $streams->exists($this->path) && !$streams->isOpen($this->path)) {
+            return;
+        }
+
+        if ($context->mode() === SaveMode::Overwrite && $streams->exists($this->path) && !$streams->isOpen($this->path)) {
+            $streams->rm($this->path);
+        }
+
+        if ($context->mode() === SaveMode::Append && $streams->exists($this->path)) {
+            throw new RuntimeException('Append SaveMode is not yet supported in ParquetLoader');
+        }
+
         if ($this->schema === null) {
             $this->inferSchema($rows);
         }
@@ -100,7 +123,9 @@ final class ParquetLoader implements Closure, Loader
                 $this->dataBuffer[$entry->name()][] = $entry->value();
 
                 if ($entry instanceof ListEntry) {
-                    for ($repetition = 0; $repetition < \count($entry->value()); $repetition++) {
+                    $total = \count($entry->value());
+
+                    for ($repetition = 0; $repetition < $total; $repetition++) {
                         $this->dataRepetitionsBuffer[$entry->name()][] = $repetition === 0 ? 0 : 1;
                     }
                 }
@@ -147,6 +172,15 @@ final class ParquetLoader implements Closure, Loader
     {
         /** @phpstan-ignore-next-line  */
         return $this->schema ?? $this->inferredSchema;
+    }
+
+    private function streams(FlowContext $context) : FilesystemStreams
+    {
+        if ($this->streams === null) {
+            $this->streams = new FilesystemStreams($context->fs());
+        }
+
+        return $this->streams;
     }
 
     private function writer(FlowContext $context) : ParquetWriter

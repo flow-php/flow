@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\CSV\Tests\Integration;
 
 use Flow\ETL\DSL\CSV;
 use Flow\ETL\DSL\Entry;
+use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Flow;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -14,6 +15,51 @@ use PHPUnit\Framework\TestCase;
 
 final class CSVLoaderTest extends TestCase
 {
+    public function test_loading_append_to_csv() : void
+    {
+        $path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.csv';
+
+        (new Flow())
+            ->process(
+                new Rows(
+                    Row::create(Entry::integer('id', 1), Entry::string('name', 'Norbert')),
+                    Row::create(Entry::integer('id', 2), Entry::string('name', 'Tomek')),
+                    Row::create(Entry::integer('id', 3), Entry::string('name', 'Dawid')),
+                )
+            )
+            ->load(CSV::to($path))
+            ->run();
+
+        (new Flow())
+            ->process(
+                new Rows(
+                    Row::create(Entry::integer('id', 1), Entry::string('name', 'Norbert')),
+                    Row::create(Entry::integer('id', 2), Entry::string('name', 'Tomek')),
+                    Row::create(Entry::integer('id', 3), Entry::string('name', 'Dawid')),
+                )
+            )
+            ->mode(SaveMode::Append)
+            ->load(CSV::to($path))
+            ->run();
+
+        $this->assertStringContainsString(
+            <<<'CSV'
+id,name
+1,Norbert
+2,Tomek
+3,Dawid
+1,Norbert
+2,Tomek
+3,Dawid
+CSV,
+            \file_get_contents($path)
+        );
+
+        if (\file_exists($path)) {
+            \unlink($path);
+        }
+    }
+
     public function test_loading_csv_files_with_safe_mode() : void
     {
         $path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.csv';
@@ -157,6 +203,48 @@ CSV,
         );
 
         $this->cleanDirectory($path);
+    }
+
+    public function test_loading_overwrite_csv() : void
+    {
+        $path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.csv';
+
+        (new Flow())
+            ->process(
+                new Rows(
+                    Row::create(Entry::integer('id', 1), Entry::string('name', 'Norbert')),
+                    Row::create(Entry::integer('id', 2), Entry::string('name', 'Tomek')),
+                    Row::create(Entry::integer('id', 3), Entry::string('name', 'Dawid')),
+                )
+            )
+            ->load(CSV::to($path))
+            ->run();
+
+        (new Flow())
+            ->process(
+                new Rows(
+                    Row::create(Entry::integer('id', 1), Entry::string('name', 'Norbert')),
+                    Row::create(Entry::integer('id', 2), Entry::string('name', 'Tomek')),
+                    Row::create(Entry::integer('id', 3), Entry::string('name', 'Dawid')),
+                )
+            )
+            ->mode(SaveMode::Overwrite)
+            ->load(CSV::to($path))
+            ->run();
+
+        $this->assertStringContainsString(
+            <<<'CSV'
+id,name
+1,Norbert
+2,Tomek
+3,Dawid
+CSV,
+            \file_get_contents($path)
+        );
+
+        if (\file_exists($path)) {
+            \unlink($path);
+        }
     }
 
     /**

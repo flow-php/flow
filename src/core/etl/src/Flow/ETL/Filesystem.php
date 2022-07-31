@@ -16,10 +16,14 @@ use Flow\Serializer\Serializable;
  */
 interface Filesystem extends Serializable
 {
+    public function exists(Path $path) : bool;
+
     public function open(Path $path, Mode $mode) : FileStream;
 
+    public function rm(Path $path) : void;
+
     /**
-     * @return \Generator<int, Path>
+     * @return \Generator<Path>
      */
     public function scan(Path $path, PartitionFilter $partitionFilter) : \Generator;
 }

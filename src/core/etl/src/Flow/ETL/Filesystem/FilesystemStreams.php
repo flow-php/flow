@@ -2,6 +2,7 @@
 
 namespace Flow\ETL\Filesystem;
 
+use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Filesystem;
 use Flow\ETL\Filesystem\Stream\FileStream;
 use Flow\ETL\Filesystem\Stream\Mode;
@@ -36,10 +37,7 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
     }
 
     /**
-     * @param Path $basePath
      * @param array<Partition> $partitions
-     *
-     * @return bool
      */
     public function exists(Path $basePath, array $partitions = []) : bool
     {
@@ -47,7 +45,7 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
             ? $basePath->addPartitions(...$partitions)
             : $basePath;
 
-        return \array_key_exists($destination->uri(), $this->streams);
+        return $this->filesystem->exists($destination);
     }
 
     /**
@@ -59,19 +57,33 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
     }
 
     /**
-     * @param Path $basePath
-     * @param string $extension
-     * @param Mode $mode
-     * @param bool $safe
      * @param array<Partition> $partitions
-     *
-     * @return FileStream
+     */
+    public function isOpen(Path $basePath, array $partitions = []) : bool
+    {
+        $destination = \count($partitions)
+            ? $basePath->addPartitions(...$partitions)
+            : $basePath;
+
+        return \array_key_exists($destination->uri(), $this->streams);
+    }
+
+    /**
+     * @param array<Partition> $partitions
      */
     public function open(Path $basePath, string $extension, Mode $mode, bool $safe, array $partitions = []) : FileStream
     {
         $destination = \count($partitions)
             ? $basePath->addPartitions(...$partitions)
             : $basePath;
+
+        if (\array_key_exists($destination->uri(), $this->streams)) {
+            return $this->streams[$destination->uri()];
+        }
+
+        if ($destination->isPattern()) {
+            throw new RuntimeException("Destination path can't be patter, given:" . $destination->uri());
+        }
 
         if (!\array_key_exists($destination->uri(), $this->streams)) {
             $this->streams[$destination->uri()] = $this->filesystem->open(
@@ -81,5 +93,20 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
         }
 
         return $this->streams[$destination->uri()];
+    }
+
+    /**
+     * @param Path $basePath
+     * @param array<Partition> $partitions
+     */
+    public function rm(Path $basePath, array $partitions = []) : void
+    {
+        $destination = \count($partitions)
+            ? $basePath->addPartitions(...$partitions)
+            : $basePath;
+
+        if ($this->filesystem->exists($destination)) {
+            $this->filesystem->rm($destination);
+        }
     }
 }

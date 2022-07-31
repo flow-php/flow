@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Partition\NoopFilter;
 use Flow\ETL\Partition\PartitionFilter;
 use Flow\Serializer\Serializer;
 
 final class FlowContext
 {
+    private SaveMode $mode = SaveMode::ExceptionIfExists;
+
     private PartitionFilter $partitionFilter;
 
     /**
@@ -40,6 +43,11 @@ final class FlowContext
         return $this->config->filesystem();
     }
 
+    public function mode() : SaveMode
+    {
+        return $this->mode;
+    }
+
     public function partitionBy(string ...$entry) : self
     {
         $this->partitions = $entry;
@@ -63,5 +71,12 @@ final class FlowContext
     public function serializer() : Serializer
     {
         return $this->config->serializer();
+    }
+
+    public function setMode(SaveMode $mode) : self
+    {
+        $this->mode = $mode;
+
+        return $this;
     }
 }

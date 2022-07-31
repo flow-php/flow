@@ -24,7 +24,7 @@ $dbConnection->createSchemaManager()->createTable(
             new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
             new Column('phone', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
             new Column('country_code', Type::getType(Types::STRING), ['notnull' => true, 'length' => 2]),
-            new Column('color', Type::getType(Types::STRING), ['notnull' => true, 'length' => 64]),
+            new Column('t_shirt_color', Type::getType(Types::STRING), ['notnull' => true, 'length' => 64]),
         ],
     ))
     ->setPrimaryKey(['id'])
