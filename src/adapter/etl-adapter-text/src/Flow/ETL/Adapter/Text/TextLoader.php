@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Text;
 
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Filesystem\Path;
+use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Filesystem\Stream\FileStream;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
@@ -23,6 +25,8 @@ use Flow\ETL\Rows;
 final class TextLoader implements Closure, Loader
 {
     private ?FileStream $fileStream;
+
+    private ?FilesystemStreams $streams = null;
 
     public function __construct(
         private readonly Path $path,
@@ -65,6 +69,24 @@ final class TextLoader implements Closure, Loader
             throw new RuntimeException('Partitioning is not supported yet');
         }
 
+        $streams = $this->streams($context);
+
+        if ($context->mode() === SaveMode::ExceptionIfExists && $streams->exists($this->path)) {
+            throw new RuntimeException('Destination path "' . $this->path->uri() . '" already exists, please change path to different or set different SaveMode');
+        }
+
+        if ($context->mode() === SaveMode::Ignore && $streams->exists($this->path) && !$streams->isOpen($this->path)) {
+            return;
+        }
+
+        if ($context->mode() === SaveMode::Overwrite && $streams->exists($this->path) && !$streams->isOpen($this->path)) {
+            $streams->rm($this->path);
+        }
+
+        if ($context->mode() === SaveMode::Append && $streams->exists($this->path)) {
+            throw new RuntimeException('Append SaveMode is not yet supported in TextLoader');
+        }
+
         foreach ($rows as $row) {
             if ($row->entries()->count() > 1) {
                 throw new RuntimeException(\sprintf('Text data loader supports only a single entry rows, and you have %d rows.', $row->entries()->count()));
@@ -89,5 +111,14 @@ final class TextLoader implements Closure, Loader
         }
 
         return $this->fileStream;
+    }
+
+    private function streams(FlowContext $context) : FilesystemStreams
+    {
+        if ($this->streams === null) {
+            $this->streams = new FilesystemStreams($context->fs());
+        }
+
+        return $this->streams;
     }
 }

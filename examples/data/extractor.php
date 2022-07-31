@@ -24,7 +24,7 @@ return new class implements Extractor {
                         'name' => 'Name',
                         'last name' => 'Last Name',
                         'phone' => '123 123 123',
-                        'color' => self::$colors[\array_rand(self::$colors)],
+                        't_shirt_color' => self::$colors[\array_rand(self::$colors)],
                         'country_code' => self::$countries[\array_rand(self::$countries)],
                     ]
                 ),

@@ -13,6 +13,48 @@ use PHPUnit\Framework\TestCase;
 
 final class FlysystemFSTest extends TestCase
 {
+    public function test_append_mode() : void
+    {
+        $fs = new FlysystemFS();
+
+        $stream = $fs->open(Path::realpath(\sys_get_temp_dir() . '/flow-fs-test/append.txt'), Mode::APPEND);
+        \fwrite($stream->resource(), "some data to make file not empty\n");
+        $stream->close();
+
+        $appendStream = $fs->open(Path::realpath(\sys_get_temp_dir() . '/flow-fs-test/append.txt'), Mode::APPEND);
+        \fwrite($appendStream->resource(), "some more data to make file not empty\n");
+        $appendStream->close();
+
+        $this->assertStringContainsString(
+            <<<'STRING'
+some data to make file not empty
+some more data to make file not empty
+STRING,
+            \file_get_contents($appendStream->path()->path())
+        );
+
+        $fs->rm($stream->path());
+        $this->assertFalse($fs->exists($stream->path()));
+    }
+
+    public function test_dir_exists() : void
+    {
+        $this->assertTrue((new FlysystemFS())->exists(new Path(__DIR__)));
+        $this->assertFalse((new FlysystemFS())->exists(new Path(__DIR__ . '/not_existing_directory')));
+    }
+
+    public function test_fie_exists() : void
+    {
+        $this->assertTrue((new FlysystemFS())->exists(new Path(__FILE__)));
+        $this->assertFalse((new FlysystemFS())->exists(new Path(__DIR__ . '/not_existing_file.php')));
+    }
+
+    public function test_file_pattern_exists() : void
+    {
+        $this->assertTrue((new FlysystemFS())->exists(new Path(__DIR__ . '/**/*.txt')));
+        $this->assertFalse((new FlysystemFS())->exists(new Path(__DIR__ . '/**/*.pdf')));
+    }
+
     public function test_open_file_stream_for_existing_file() : void
     {
         $stream = (new FlysystemFS())->open(new Path(__FILE__), Mode::READ);
@@ -98,5 +140,53 @@ final class FlysystemFSTest extends TestCase
             ],
             $paths
         );
+    }
+
+    public function test_remove_directory_with_content_when_exists() : void
+    {
+        $fs = new FlysystemFS();
+
+        $dirPath = Path::realpath(\sys_get_temp_dir() . '/flow-fs-test-directory/');
+
+        $stream = $fs->open(Path::realpath($dirPath->path() . '/remove_file_when_exists.txt'), Mode::WRITE);
+        \fwrite($stream->resource(), 'some data to make file not empty');
+        $stream->close();
+
+        $this->assertTrue($fs->exists($dirPath));
+        $this->assertTrue($fs->exists($stream->path()));
+        $fs->rm($dirPath);
+        $this->assertFalse($fs->exists($dirPath));
+        $this->assertFalse($fs->exists($stream->path()));
+    }
+
+    public function test_remove_file_when_exists() : void
+    {
+        $fs = new FlysystemFS();
+
+        $stream = $fs->open(Path::realpath(\sys_get_temp_dir() . '/flow-fs-test/remove_file_when_exists.txt'), Mode::WRITE);
+        \fwrite($stream->resource(), 'some data to make file not empty');
+        $stream->close();
+
+        $this->assertTrue($fs->exists($stream->path()));
+        $fs->rm($stream->path());
+        $this->assertFalse($fs->exists($stream->path()));
+    }
+
+    public function test_remove_pattern() : void
+    {
+        $fs = new FlysystemFS();
+
+        $dirPath = Path::realpath(\sys_get_temp_dir() . '/flow-fs-test-directory/');
+
+        $stream = $fs->open(Path::realpath($dirPath->path() . '/remove_file_when_exists.txt'), Mode::WRITE);
+        \fwrite($stream->resource(), 'some data to make file not empty');
+        $stream->close();
+
+        $this->assertTrue($fs->exists($dirPath));
+        $this->assertTrue($fs->exists($stream->path()));
+        $fs->rm(Path::realpath($dirPath->path() . '/*.txt'));
+        $this->assertTrue($fs->exists($dirPath));
+        $this->assertFalse($fs->exists($stream->path()));
+        $fs->rm($dirPath);
     }
 }

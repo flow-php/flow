@@ -8,6 +8,7 @@ use Flow\ETL\Adapter\JSON\JsonLoader;
 use Flow\ETL\Config;
 use Flow\ETL\DSL\Json;
 use Flow\ETL\Filesystem\Path;
+use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Flow;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
@@ -82,7 +83,35 @@ JSON,
         }
     }
 
-    public function test_json_loader_with_a_safe_mode() : void
+    public function test_json_loader_with_a_safe_mode_and_append_mode() : void
+    {
+        $this->expectExceptionMessage('Append SaveMode is not yet supported in JSONLoader');
+
+        $stream = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_json_loader', true) . '.json';
+
+        \file_put_contents($stream, '[]');
+
+        $loader = new JsonLoader(Path::realpath($stream), safeMode: true);
+
+        $loader->load(
+            new Rows(
+                ...\array_map(
+                    fn (int $i) : Row => Row::create(
+                        new Row\Entry\IntegerEntry('id', $i),
+                        new Row\Entry\StringEntry('name', 'name_' . $i)
+                    ),
+                    \range(0, 5)
+                )
+            ),
+            (new FlowContext(Config::default()))->setMode(SaveMode::Append)
+        );
+
+        if (\file_exists($stream)) {
+            \unlink($stream);
+        }
+    }
+
+    public function test_json_loader_with_a_safe_mode_and_overwrite() : void
     {
         $stream = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_json_loader', true) . '.json';
 
@@ -98,7 +127,7 @@ JSON,
                     \range(0, 5)
                 )
             ),
-            $context = new FlowContext(Config::default())
+            new FlowContext(Config::default())
         );
 
         $loader->load(
@@ -111,12 +140,12 @@ JSON,
                     \range(6, 10)
                 )
             ),
-            $context
+            $context = (new FlowContext(Config::default()))->setMode(SaveMode::Overwrite)
         );
 
-        $files = \array_values(\array_diff(\scandir($stream), ['..', '.']));
-
         $loader->closure(new Rows(), $context);
+
+        $files = \array_values(\array_diff(\scandir($stream), ['..', '.']));
 
         $this->assertJsonStringEqualsJsonString(
             <<<'JSON'

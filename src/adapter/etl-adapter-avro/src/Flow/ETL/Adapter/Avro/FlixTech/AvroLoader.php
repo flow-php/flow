@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Avro\FlixTech;
 
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Filesystem\Path;
+use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
@@ -22,6 +24,8 @@ use Flow\ETL\Rows;
 final class AvroLoader implements Closure, Loader
 {
     private ?Schema $inferredSchema = null;
+
+    private ?FilesystemStreams $streams = null;
 
     private ?\AvroDataIOWriter $writer = null;
 
@@ -46,10 +50,17 @@ final class AvroLoader implements Closure, Loader
         $this->path = $data['path'];
         $this->safeMode = $data['safe_mode'];
         $this->schema = $data['schema'];
+        $this->streams = null;
     }
 
     public function closure(Rows $rows, FlowContext $context) : void
     {
+        $streams = $this->streams($context);
+
+        if ($context->mode() === SaveMode::Ignore && $streams->exists($this->path) && !$streams->isOpen($this->path)) {
+            return;
+        }
+
         $this->writer($context)->close();
     }
 
@@ -57,6 +68,24 @@ final class AvroLoader implements Closure, Loader
     {
         if (\count($context->partitionEntries())) {
             throw new RuntimeException('Partitioning is not supported yet');
+        }
+
+        $streams = $this->streams($context);
+
+        if ($context->mode() === SaveMode::ExceptionIfExists && $streams->exists($this->path) && !$streams->isOpen($this->path)) {
+            throw new RuntimeException('Destination path "' . $this->path->uri() . '" already exists, please change path to different or set different SaveMode');
+        }
+
+        if ($context->mode() === SaveMode::Ignore && $streams->exists($this->path)) {
+            return;
+        }
+
+        if ($context->mode() === SaveMode::Overwrite && $streams->exists($this->path) && !$streams->isOpen($this->path)) {
+            $streams->rm($this->path);
+        }
+
+        if ($context->mode() === SaveMode::Append && $streams->exists($this->path)) {
+            throw new RuntimeException('Append SaveMode is not yet supported in AvroLoader');
         }
 
         if ($this->schema === null) {
@@ -126,6 +155,15 @@ final class AvroLoader implements Closure, Loader
          * @phpstan-ignore-next-line
          */
         return (new SchemaConverter())->toAvroJsonSchema($this->inferredSchema);
+    }
+
+    private function streams(FlowContext $context) : FilesystemStreams
+    {
+        if ($this->streams === null) {
+            $this->streams = new FilesystemStreams($context->fs());
+        }
+
+        return $this->streams;
     }
 
     private function writer(FlowContext $context) : \AvroDataIOWriter

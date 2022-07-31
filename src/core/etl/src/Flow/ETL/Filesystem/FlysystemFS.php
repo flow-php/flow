@@ -7,9 +7,11 @@ namespace Flow\ETL\Filesystem;
 use Aws\S3\S3Client;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\MissingDependencyException;
+use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Filesystem;
 use Flow\ETL\Filesystem\Stream\FileStream;
 use Flow\ETL\Filesystem\Stream\Mode;
+use Flow\ETL\Partition\NoopFilter;
 use Flow\ETL\Partition\PartitionFilter;
 use League\Flysystem\AwsS3V3\AwsS3V3Adapter;
 use League\Flysystem\AzureBlobStorage\AzureBlobStorageAdapter;
@@ -34,6 +36,33 @@ final class FlysystemFS implements Filesystem
     {
     }
 
+    /**
+     * @psalm-suppress UnusedForeachValue
+     */
+    public function exists(Path $path) : bool
+    {
+        $fs = match ($path->scheme()) {
+            AwsS3Stream::PROTOCOL => $this->aws($path),
+            AzureBlobStream::PROTOCOL => $this->azure($path),
+            'file' => $this->local(),
+            default => throw new InvalidArgumentException('Unexpected scheme: ' . $path->scheme())
+        };
+
+        if ($path->isPattern()) {
+            $anyFileExistsInPattern = false;
+
+            foreach ($this->scan($path, new NoopFilter()) as $nextPath) {
+                $anyFileExistsInPattern = true;
+
+                break;
+            }
+
+            return $anyFileExistsInPattern;
+        }
+
+        return $fs->fileExists($path->path()) || $fs->directoryExists($path->path());
+    }
+
     public function open(Path $path, Mode $mode) : FileStream
     {
         if ($path->isPattern()) {
@@ -55,12 +84,48 @@ final class FlysystemFS implements Filesystem
         return new FileStream($path, \fopen($path->uri(), $mode->value, false, $path->context()->resource()));
     }
 
+    public function rm(Path $path) : void
+    {
+        $fs = match ($path->scheme()) {
+            AwsS3Stream::PROTOCOL => $this->aws($path),
+            AzureBlobStream::PROTOCOL => $this->azure($path),
+            'file' => $this->local(),
+            default => throw new InvalidArgumentException('Unexpected scheme: ' . $path->scheme())
+        };
+
+        if ($path->isPattern()) {
+            foreach ($this->scan($path, new NoopFilter()) as $nextPath) {
+                if ($fs->fileExists($nextPath->path())) {
+                    $fs->delete($nextPath->path());
+                } else {
+                    $fs->deleteDirectory($nextPath->path());
+                }
+            }
+
+            return;
+        }
+
+        if ($fs->fileExists($path->path())) {
+            $fs->delete($path->path());
+
+            return;
+        }
+
+        if ($fs->directoryExists($path->path())) {
+            $fs->deleteDirectory($path->path());
+
+            return;
+        }
+
+        throw new RuntimeException("Can't remove path because it does not exists, path: " . $path->uri());
+    }
+
     /**
      * @throws InvalidArgumentException
      * @throws MissingDependencyException
      * @throws FilesystemException
      *
-     * @return \Generator<int, Path>
+     * @return \Generator<Path>
      */
     public function scan(Path $path, PartitionFilter $partitionFilter) : \Generator
     {

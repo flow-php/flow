@@ -7,6 +7,7 @@ namespace Flow\ETL;
 use Flow\ETL\DSL\Transform;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor\CacheExtractor;
+use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Formatter\AsciiTableFormatter;
 use Flow\ETL\GroupBy\Aggregation;
 use Flow\ETL\Join\Condition;
@@ -232,6 +233,21 @@ final class DataFrame
     public function map(callable $callback) : self
     {
         $this->pipeline->add(new CallbackRowTransformer($callback));
+
+        return $this;
+    }
+
+    /**
+     * SaveMode defines how Flow should behave when writing to a file/files that already exists.
+     * For more details please see SaveMode enum.
+     *
+     * @param SaveMode $mode
+     *
+     * @return $this
+     */
+    public function mode(SaveMode $mode) : self
+    {
+        $this->context->setMode($mode);
 
         return $this;
     }
