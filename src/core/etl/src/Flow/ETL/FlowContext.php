@@ -20,6 +20,8 @@ final class FlowContext
      */
     private array $partitions;
 
+    private bool $threadSafe = false;
+
     public function __construct(public readonly Config $config)
     {
         $this->partitionFilter = new NoopFilter();
@@ -78,5 +80,17 @@ final class FlowContext
         $this->mode = $mode;
 
         return $this;
+    }
+
+    public function setThreadSafe(bool $threadSafe = true) : self
+    {
+        $this->threadSafe = $threadSafe;
+
+        return $this;
+    }
+
+    public function threadSafe() : bool
+    {
+        return $this->threadSafe;
     }
 }

@@ -19,7 +19,7 @@ use Flow\ETL\Row\Schema;
 use Flow\ETL\Rows;
 
 /**
- * @implements Loader<array{path: Path, safe_mode: bool, schema: ?Schema}>
+ * @implements Loader<array{path: Path, schema: ?Schema}>
  */
 final class AvroLoader implements Closure, Loader
 {
@@ -31,7 +31,6 @@ final class AvroLoader implements Closure, Loader
 
     public function __construct(
         private readonly Path $path,
-        private readonly bool $safeMode = true,
         private readonly ?Schema $schema = null
     ) {
     }
@@ -40,7 +39,6 @@ final class AvroLoader implements Closure, Loader
     {
         return [
             'path' => $this->path,
-            'safe_mode' => $this->safeMode,
             'schema' => $this->schema,
         ];
     }
@@ -48,7 +46,6 @@ final class AvroLoader implements Closure, Loader
     public function __unserialize(array $data) : void
     {
         $this->path = $data['path'];
-        $this->safeMode = $data['safe_mode'];
         $this->schema = $data['schema'];
         $this->streams = null;
     }
@@ -76,7 +73,7 @@ final class AvroLoader implements Closure, Loader
             throw new RuntimeException('Destination path "' . $this->path->uri() . '" already exists, please change path to different or set different SaveMode');
         }
 
-        if ($context->mode() === SaveMode::Ignore && $streams->exists($this->path)) {
+        if ($context->mode() === SaveMode::Ignore && $streams->exists($this->path) && !$streams->isOpen($this->path)) {
             return;
         }
 
@@ -177,7 +174,7 @@ final class AvroLoader implements Closure, Loader
         $this->writer =  new \AvroDataIOWriter(
             new AvroResource(
                 $context->fs()->open(
-                    $this->safeMode ? $this->path->randomize() : $this->path,
+                    $context->threadSafe() ? $this->path->randomize() : $this->path,
                     Mode::WRITE_BINARY
                 )->resource()
             ),

@@ -60,7 +60,7 @@ CSV,
         }
     }
 
-    public function test_loading_csv_files_with_safe_mode() : void
+    public function test_loading_csv_files_with_threadsafe() : void
     {
         $path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.csv';
 
@@ -72,7 +72,8 @@ CSV,
                     Row::create(new Row\Entry\IntegerEntry('id', 3), new Row\Entry\StringEntry('name', 'Dawid')),
                 )
             )
-            ->load(CSV::to($path, true, true))
+            ->threadSafe()
+            ->load(CSV::to($path))
             ->run();
 
         $files = \array_values(\array_diff(\scandir($path), ['..', '.']));
@@ -92,9 +93,11 @@ CSV,
         }
     }
 
-    public function test_loading_csv_files_without_safe_mode() : void
+    public function test_loading_csv_files_without_thread_safe_and_with_serialization() : void
     {
         $path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.csv';
+
+        $serializer = new CompressingSerializer();
 
         (new Flow())
             ->process(
@@ -104,7 +107,7 @@ CSV,
                     Row::create(Entry::integer('id', 3), Entry::string('name', 'Dawid')),
                 )
             )
-            ->load(CSV::to($path))
+            ->load($serializer->unserialize($serializer->serialize(CSV::to($path, $withHeader = true))))
             ->run();
 
         $this->assertStringContainsString(
@@ -122,11 +125,9 @@ CSV,
         }
     }
 
-    public function test_loading_csv_files_without_safe_mode_and_with_serialization() : void
+    public function test_loading_csv_files_without_threadsafe() : void
     {
         $path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.csv';
-
-        $serializer = new CompressingSerializer();
 
         (new Flow())
             ->process(
@@ -136,7 +137,7 @@ CSV,
                     Row::create(Entry::integer('id', 3), Entry::string('name', 'Dawid')),
                 )
             )
-            ->load($serializer->unserialize($serializer->serialize(CSV::to($path, $withHeader = true, $safeMode = false))))
+            ->load(CSV::to($path))
             ->run();
 
         $this->assertStringContainsString(

@@ -11,5 +11,5 @@ require __DIR__ . '/../../vendor/autoload.php';
     ->read(CSV::from(Path::realpath(__DIR__ . '/issue289.csv')))
     ->rows(Transform::array_unpack('row'))
     ->drop('row')
-    ->write(CSV::to(Path::realpath(__DIR__ . '/issue289_new.csv'), true, false, ',', "'"))
+    ->write(CSV::to(Path::realpath(__DIR__ . '/issue289_new.csv'), true, ',', "'"))
     ->run();

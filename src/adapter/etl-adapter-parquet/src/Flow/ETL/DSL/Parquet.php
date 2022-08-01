@@ -53,7 +53,6 @@ class Parquet
     /**
      * @param Path|string $path
      * @param int $rows_in_group
-     * @param bool $safe_mode
      * @param null|Schema $schema
      *
      *@throws MissingDependencyException
@@ -63,13 +62,11 @@ class Parquet
     final public static function to(
         string|Path $path,
         int $rows_in_group = 1000,
-        bool $safe_mode = false,
         Schema $schema = null
     ) : Loader {
         return new ParquetLoader(
             \is_string($path) ? Path::realpath($path) : $path,
             $rows_in_group,
-            $safe_mode,
             $schema
         );
     }

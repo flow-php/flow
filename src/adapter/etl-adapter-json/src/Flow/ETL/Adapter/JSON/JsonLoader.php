@@ -17,7 +17,7 @@ use Flow\ETL\Pipeline\Closure;
 use Flow\ETL\Rows;
 
 /**
- * @implements Loader<array{path: Path, safe_mode: boolean}>
+ * @implements Loader<array{path: Path}>
  */
 final class JsonLoader implements Closure, Loader
 {
@@ -29,8 +29,7 @@ final class JsonLoader implements Closure, Loader
     private array $writes = [];
 
     public function __construct(
-        private readonly Path $path,
-        private bool $safeMode = false
+        private readonly Path $path
     ) {
         $this->streams = null;
     }
@@ -39,14 +38,12 @@ final class JsonLoader implements Closure, Loader
     {
         return [
             'path' => $this->path,
-            'safe_mode' => $this->safeMode,
         ];
     }
 
     public function __unserialize(array $data) : void
     {
         $this->path = $data['path'];
-        $this->safeMode = $data['safe_mode'];
         $this->streams = null;
     }
 
@@ -82,7 +79,7 @@ final class JsonLoader implements Closure, Loader
         $mode = Mode::WRITE;
         $streams = $this->streams($context);
 
-        if ($context->mode() === SaveMode::ExceptionIfExists && $streams->exists($this->path, $partitions)) {
+        if ($context->mode() === SaveMode::ExceptionIfExists && $streams->exists($this->path, $partitions) && !$streams->isOpen($this->path)) {
             throw new RuntimeException('Destination path "' . $this->path->uri() . '" already exists, please change path to different or set different SaveMode');
         }
 
@@ -99,11 +96,11 @@ final class JsonLoader implements Closure, Loader
         }
 
         if (!$streams->isOpen($this->path, $partitions)) {
-            $stream = $streams->open($this->path, 'json', $mode, $this->safeMode, $partitions);
+            $stream = $streams->open($this->path, 'json', $mode, $context->threadSafe(), $partitions);
 
             $this->init($stream);
         } else {
-            $stream = $streams->open($this->path, 'json', $mode, $this->safeMode, $partitions);
+            $stream = $streams->open($this->path, 'json', $mode, $context->threadSafe(), $partitions);
         }
 
         $this->writeJSON($nextRows, $stream);

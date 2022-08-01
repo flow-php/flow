@@ -13,7 +13,7 @@ use PHPUnit\Framework\TestCase;
 
 final class TextLoaderTest extends TestCase
 {
-    public function test_loading_text_files_with_safe_mode() : void
+    public function test_loading_text_files_with_thread_safe() : void
     {
         $path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.csv';
 
@@ -25,7 +25,8 @@ final class TextLoaderTest extends TestCase
                     Row::create(new Row\Entry\StringEntry('name', 'Dawid')),
                 )
             )
-            ->load(Text::to($path, true))
+            ->load(Text::to($path))
+            ->threadSafe()
             ->run();
 
         $files = \array_values(\array_diff(\scandir($path), ['..', '.']));

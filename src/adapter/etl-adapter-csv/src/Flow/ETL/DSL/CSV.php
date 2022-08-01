@@ -70,7 +70,6 @@ class CSV
     /**
      * @param Path|string $uri
      * @param bool $with_header
-     * @param bool $safe_mode - when set to true, stream or destination path will be used as a directory and output is going to be written into randomly generated file name
      * @param string $separator
      * @param string $enclosure
      * @param string $escape
@@ -81,7 +80,6 @@ class CSV
     final public static function to(
         string|Path $uri,
         bool $with_header = true,
-        bool $safe_mode = false,
         string $separator = ',',
         string $enclosure = '"',
         string $escape = '\\',
@@ -90,7 +88,6 @@ class CSV
         return new CSVLoader(
             \is_string($uri) ? Path::realpath($uri) : $uri,
             $with_header,
-            $safe_mode,
             $separator,
             $enclosure,
             $escape,
