@@ -83,7 +83,7 @@ JSON,
         }
     }
 
-    public function test_json_loader_with_a_safe_mode_and_append_mode() : void
+    public function test_json_loader_with_a_thread_safe_and_append_mode() : void
     {
         $this->expectExceptionMessage('Append SaveMode is not yet supported in JSONLoader');
 
@@ -91,7 +91,7 @@ JSON,
 
         \file_put_contents($stream, '[]');
 
-        $loader = new JsonLoader(Path::realpath($stream), safeMode: true);
+        $loader = new JsonLoader(Path::realpath($stream));
 
         $loader->load(
             new Rows(
@@ -103,7 +103,7 @@ JSON,
                     \range(0, 5)
                 )
             ),
-            (new FlowContext(Config::default()))->setMode(SaveMode::Append)
+            (new FlowContext(Config::default()))->setMode(SaveMode::Append)->setThreadSafe()
         );
 
         if (\file_exists($stream)) {
@@ -111,11 +111,11 @@ JSON,
         }
     }
 
-    public function test_json_loader_with_a_safe_mode_and_overwrite() : void
+    public function test_json_loader_with_a_thread_safe_and_overwrite() : void
     {
         $stream = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_json_loader', true) . '.json';
 
-        $loader = new JsonLoader(Path::realpath($stream), safeMode: true);
+        $loader = new JsonLoader(Path::realpath($stream));
 
         $loader->load(
             new Rows(
@@ -127,7 +127,7 @@ JSON,
                     \range(0, 5)
                 )
             ),
-            new FlowContext(Config::default())
+            (new FlowContext(Config::default()))->setThreadSafe()
         );
 
         $loader->load(
@@ -140,7 +140,7 @@ JSON,
                     \range(6, 10)
                 )
             ),
-            $context = (new FlowContext(Config::default()))->setMode(SaveMode::Overwrite)
+            $context = (new FlowContext(Config::default()))->setMode(SaveMode::Overwrite)->setThreadSafe()
         );
 
         $loader->closure(new Rows(), $context);

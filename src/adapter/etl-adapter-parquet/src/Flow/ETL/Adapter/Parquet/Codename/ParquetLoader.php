@@ -23,8 +23,7 @@ use Flow\ETL\Rows;
 /**
  * @implements Loader<array{
  *   path: Path,
- *   rows_per_group: int,
- *   safe_mode: bool
+ *   rows_per_group: int
  * }>
  */
 final class ParquetLoader implements Closure, Loader
@@ -52,7 +51,6 @@ final class ParquetLoader implements Closure, Loader
     public function __construct(
         private readonly Path $path,
         private readonly int $rowsPerGroup = 1000,
-        private readonly bool $safeMode = true,
         private readonly ?Schema $schema = null
     ) {
         $this->converter = new SchemaConverter();
@@ -64,14 +62,12 @@ final class ParquetLoader implements Closure, Loader
         return [
             'path' => $this->path,
             'rows_per_group' => $this->rowsPerGroup,
-            'safe_mode' => $this->safeMode,
         ];
     }
 
     public function __unserialize(array $data) : void
     {
         $this->path = $data['path'];
-        $this->safeMode = $data['safe_mode'];
         $this->rowsPerGroup = $data['rows_per_group'];
         $this->fileStream = null;
         $this->streams = null;
@@ -94,7 +90,7 @@ final class ParquetLoader implements Closure, Loader
 
         $streams = $this->streams($context);
 
-        if ($context->mode() === SaveMode::ExceptionIfExists && $streams->exists($this->path)) {
+        if ($context->mode() === SaveMode::ExceptionIfExists && $streams->exists($this->path) && !$streams->isOpen($this->path)) {
             throw new RuntimeException('Destination path "' . $this->path->uri() . '" already exists, please change path to different or set different SaveMode');
         }
 
@@ -191,7 +187,7 @@ final class ParquetLoader implements Closure, Loader
 
         if ($this->fileStream === null) {
             $this->fileStream = $context->fs()->open(
-                $this->safeMode ? $this->path->randomize() : $this->path,
+                $context->threadSafe() ? $this->path->randomize() : $this->path,
                 Mode::WRITE
             );
         }

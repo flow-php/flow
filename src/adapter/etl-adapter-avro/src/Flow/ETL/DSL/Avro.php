@@ -53,15 +53,13 @@ class Avro
     /**
      * @param Path|string $path
      * @param null|Schema $schema
-     * @param bool $safe_mode
      *
      * @return Loader
      */
-    final public static function to(Path|string $path, Schema $schema = null, bool $safe_mode = false) : Loader
+    final public static function to(Path|string $path, Schema $schema = null) : Loader
     {
         return new AvroLoader(
             \is_string($path) ? Path::realpath($path) : $path,
-            $safe_mode,
             $schema
         );
     }

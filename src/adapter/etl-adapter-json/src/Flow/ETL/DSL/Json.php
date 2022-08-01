@@ -44,15 +44,13 @@ class Json
 
     /**
      * @param Path|string $path
-     * @param bool $safe_mode - when set to true, stream or destination path will be used as a directory and output is going to be written into randomly generated file name
      *
      * @return Loader
      */
-    public static function to(string|Path $path, bool $safe_mode = false) : Loader
+    public static function to(string|Path $path) : Loader
     {
         return new JsonLoader(
             \is_string($path) ? Path::realpath($path) : $path,
-            $safe_mode
         );
     }
 }

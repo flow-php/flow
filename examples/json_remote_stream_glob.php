@@ -45,5 +45,5 @@ AzureBlobStream::register();
     ->rows(Transform::to_integer('id'))
     ->rows(Transform::string_concat(['name', 'last name'], ' ', 'name'))
     ->drop('last name')
-    ->write(CSV::to(new Path('flow-azure-blob://output.csv', $azure_blob_connection_string), false))
+    ->write(CSV::to(new Path('flow-azure-blob://output.csv', $azure_blob_connection_string)))
     ->run();

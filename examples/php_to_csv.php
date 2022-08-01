@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 use Aeon\Calendar\Stopwatch;
 use Flow\ETL\DSL\CSV;
-use Flow\ETL\DSL\To;
 use Flow\ETL\DSL\Transform;
 use Flow\ETL\Flow;
 use Flow\ETL\Monitoring\Memory\Consumption;
-use Flow\ETL\Rows;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -24,12 +22,7 @@ $memory->current();
     ->read($extractor)
     ->rows(Transform::array_unpack('row'))
     ->drop('row')
-    ->write(To::callback(function (Rows $rows) use (&$total, $memory) : void {
-        $total += $rows->count();
-
-        $memory->current();
-    }))
-    ->write(CSV::to(__DIR__ . '/output/dataset.csv', safe_mode: false))
+    ->write(CSV::to(__DIR__ . '/output/dataset.csv'))
     ->run();
 
 $memory->current();

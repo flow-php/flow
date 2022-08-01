@@ -28,7 +28,7 @@ $dbConnection = require __DIR__ . '/db_clean.php';
 \putenv('FLOW_PHP_ASYNC_AUTOLOAD=' . __DIR__ . '/../vendor/autoload.php');
 
 $logger = new Logger('server');
-//$logger->pushHandler(new StreamHandler('php://stdout', LogLevel::DEBUG, false));
+$logger->pushHandler(new StreamHandler('php://stdout', LogLevel::DEBUG, false));
 $logger->pushHandler(new StreamHandler('php://stderr', LogLevel::ERROR, false));
 
 $csvFileSize = \round(\filesize(__DIR__ . '/output/dataset.csv') / 1024 / 1024);

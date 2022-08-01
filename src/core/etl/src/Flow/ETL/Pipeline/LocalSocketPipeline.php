@@ -53,17 +53,19 @@ final class LocalSocketPipeline implements Pipeline
 
     public function process(FlowContext $context) : \Generator
     {
+        $threadSafeContext = $context->setThreadSafe();
+
         $pool = Pool::generate($this->totalWorkers);
 
         $id = \uniqid('flow_async_pipeline', true);
 
-        $this->server->initialize(new ServerProtocol($context, $id, $pool, $this->extractor, $this->pipes));
+        $this->server->initialize(new ServerProtocol($threadSafeContext, $id, $pool, $this->extractor, $this->pipes));
 
         $this->launcher->launch($pool, $this->server->host());
 
         $this->server->start();
 
-        return $context->config->cache()->read($id);
+        return $threadSafeContext->config->cache()->read($id);
     }
 
     public function source(Extractor $extractor) : self

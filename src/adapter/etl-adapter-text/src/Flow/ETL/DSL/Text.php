@@ -47,19 +47,16 @@ class Text
 
     /**
      * @param Path|string $path
-     * @param bool $safe_mode - when set to true, stream or destination path will be used as a directory and output is going to be written into randomly generated file name
      * @param string $new_line_separator
      *
      * @return Loader
      */
     final public static function to(
         string|Path $path,
-        bool $safe_mode = false,
         string $new_line_separator = PHP_EOL
     ) : Loader {
         return new TextLoader(
             \is_string($path) ? Path::realpath($path) : $path,
-            $safe_mode,
             $new_line_separator
         );
     }

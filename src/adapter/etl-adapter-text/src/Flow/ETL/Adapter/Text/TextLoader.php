@@ -18,7 +18,6 @@ use Flow\ETL\Rows;
 /**
  * @implements Loader<array{
  *     path: Path,
- *     safe_mode: boolean,
  *     new_line_separator: string
  *  }>
  */
@@ -30,7 +29,6 @@ final class TextLoader implements Closure, Loader
 
     public function __construct(
         private readonly Path $path,
-        private readonly bool $safeMode = false,
         private string $newLineSeparator = PHP_EOL,
     ) {
         $this->fileStream = null;
@@ -40,7 +38,6 @@ final class TextLoader implements Closure, Loader
     {
         return [
             'path' => $this->path,
-            'safe_mode' => $this->safeMode,
             'new_line_separator' => $this->newLineSeparator,
         ];
     }
@@ -48,7 +45,6 @@ final class TextLoader implements Closure, Loader
     public function __unserialize(array $data) : void
     {
         $this->path = $data['path'];
-        $this->safeMode = $data['safe_mode'];
         $this->newLineSeparator = $data['new_line_separator'];
         $this->fileStream = null;
     }
@@ -71,7 +67,7 @@ final class TextLoader implements Closure, Loader
 
         $streams = $this->streams($context);
 
-        if ($context->mode() === SaveMode::ExceptionIfExists && $streams->exists($this->path)) {
+        if ($context->mode() === SaveMode::ExceptionIfExists && $streams->exists($this->path) && !$streams->isOpen($this->path)) {
             throw new RuntimeException('Destination path "' . $this->path->uri() . '" already exists, please change path to different or set different SaveMode');
         }
 
@@ -105,7 +101,7 @@ final class TextLoader implements Closure, Loader
     {
         if ($this->fileStream === null) {
             $this->fileStream = $context->fs()->open(
-                $this->safeMode ? $this->path->randomize() : $this->path,
+                $context->threadSafe() ? $this->path->randomize() : $this->path,
                 Mode::WRITE
             );
         }

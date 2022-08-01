@@ -120,7 +120,8 @@ final class ParquetTest extends TestCase
                     }, \range(1, 100))
                 )
             ))
-            ->write(Parquet::to($path, 50, true))
+            ->threadSafe()
+            ->write(Parquet::to($path, 50))
             ->run();
 
         $this->assertFileExists($path);

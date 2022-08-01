@@ -68,7 +68,8 @@ final class AvroTest extends TestCase
                     }, \range(1, 100))
                 )
             ))
-            ->write(Avro::to($path, safe_mode: true))
+            ->threadSafe()
+            ->write(Avro::to($path))
             ->run();
 
         $paths = \array_map(

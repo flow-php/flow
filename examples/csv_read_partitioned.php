@@ -38,7 +38,7 @@ print "Reading partitioned CSV dataset with partition filtering...\n";
     ->rows(Transform::array_unpack('row'))
     ->drop('row')
     ->collect()
-    ->filterPartitions(Partitions::only('color', 'green'))
+    ->filterPartitions(Partitions::only('t_shirt_color', 'green'))
     ->sortBy(Sort::asc('id'))
     ->write(To::output())
     ->run();

@@ -334,6 +334,20 @@ final class DataFrame
         return $this;
     }
 
+    /**
+     * When set to true, files are never written under the origin name but instead initial path is turend
+     * into a folder in which each process writes to a new file.
+     * Otherwise parallel processing would not be possible due to a single file bottleneck.
+     * In a single process pipelines there is not much added value from this setting unless
+     * there is a chance that the same pipeline execution might overlap.
+     */
+    public function threadSafe(bool $threadSafe = true) : self
+    {
+        $this->context->setThreadSafe($threadSafe);
+
+        return $this;
+    }
+
     public function transform(Transformer|Transformation $transformer) : self
     {
         if ($transformer instanceof Transformer) {
