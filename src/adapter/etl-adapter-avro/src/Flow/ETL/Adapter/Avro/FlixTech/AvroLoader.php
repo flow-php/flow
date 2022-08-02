@@ -48,17 +48,14 @@ final class AvroLoader implements Closure, Loader
         $this->path = $data['path'];
         $this->schema = $data['schema'];
         $this->streams = null;
+        $this->writer = null;
     }
 
     public function closure(Rows $rows, FlowContext $context) : void
     {
-        $streams = $this->streams($context);
-
-        if ($context->mode() === SaveMode::Ignore && $streams->exists($this->path) && !$streams->isOpen($this->path)) {
-            return;
+        if ($this->writer !== null) {
+            $this->writer($context)->close();
         }
-
-        $this->writer($context)->close();
     }
 
     public function load(Rows $rows, FlowContext $context) : void
@@ -173,9 +170,11 @@ final class AvroLoader implements Closure, Loader
 
         $this->writer =  new \AvroDataIOWriter(
             new AvroResource(
-                $context->fs()->open(
-                    $context->threadSafe() ? $this->path->randomize() : $this->path,
-                    Mode::WRITE_BINARY
+                $this->streams($context)->open(
+                    $this->path,
+                    'avro',
+                    Mode::WRITE_BINARY,
+                    $context->threadSafe()
                 )->resource()
             ),
             new \AvroIODatumWriter($schema),

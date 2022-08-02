@@ -28,6 +28,12 @@ final class SchemaConverter
         $fields = [];
 
         foreach ($schema->definitions() as $definition) {
+            if (!\AvroName::is_well_formed_name($definition->entry())) {
+                throw new RuntimeException(
+                    'Avro support only entry with names matching following regular expression: "' . \AvroName::NAME_REGEXP . '", entry "' . $definition->entry() . '" does not match it. Consider using DataFrame::rename method before writing to Avro format.'
+                );
+            }
+
             if (\count($definition->types()) === 2 && $definition->isNullable()) {
                 /** @var class-string<Entry> $type */
                 $type = \current(\array_diff($definition->types(), [NullEntry::class]));
@@ -89,7 +95,7 @@ final class SchemaConverter
                     'type' => \AvroSchema::ENUM_SCHEMA,
                     'symbols' => \array_map(
                         fn (\UnitEnum $e) => $e->name,
-                        $definition->metadata()->get(Definition::METADATA_ENUM_CASES)
+                        $definition->metadata()->get(Schema\FlowMetadata::METADATA_ENUM_CASES)
                     ),
                 ],
             ],

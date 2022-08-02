@@ -11,7 +11,6 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\SaveMode;
-use Flow\ETL\Filesystem\Stream\FileStream;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
@@ -40,8 +39,6 @@ final class ParquetLoader implements Closure, Loader
      */
     private array $dataRepetitionsBuffer = [];
 
-    private ?FileStream $fileStream;
-
     private ?Schema $inferredSchema = null;
 
     private ?FilesystemStreams $streams = null;
@@ -54,7 +51,6 @@ final class ParquetLoader implements Closure, Loader
         private readonly ?Schema $schema = null
     ) {
         $this->converter = new SchemaConverter();
-        $this->fileStream = null;
     }
 
     public function __serialize() : array
@@ -69,17 +65,30 @@ final class ParquetLoader implements Closure, Loader
     {
         $this->path = $data['path'];
         $this->rowsPerGroup = $data['rows_per_group'];
-        $this->fileStream = null;
         $this->streams = null;
     }
 
     public function closure(Rows $rows, FlowContext $context) : void
     {
-        $this->writeRowGroup($context);
+        $write = true;
 
-        if ($this->fileStream !== null && $this->fileStream->isOpen()) {
-            $this->fileStream->close();
+        foreach ($this->dataBuffer as $fieldData) {
+            if (!\count($fieldData)) {
+                $write = false;
+
+                break;
+            }
         }
+
+        if (!\count($this->dataBuffer)) {
+            $write = false;
+        }
+
+        if ($write) {
+            $this->writeRowGroup($context);
+        }
+
+        $this->streams($context)->close();
     }
 
     public function load(Rows $rows, FlowContext $context) : void
@@ -185,14 +194,15 @@ final class ParquetLoader implements Closure, Loader
             return $this->writer;
         }
 
-        if ($this->fileStream === null) {
-            $this->fileStream = $context->fs()->open(
-                $context->threadSafe() ? $this->path->randomize() : $this->path,
-                Mode::WRITE
-            );
-        }
-
-        $this->writer = new ParquetWriter($this->converter->toParquet($this->schema()), $this->fileStream->resource());
+        $this->writer = new ParquetWriter(
+            $this->converter->toParquet($this->schema()),
+            $this->streams($context)->open(
+                $this->path,
+                'parquet',
+                Mode::WRITE,
+                $context->threadSafe()
+            )->resource()
+        );
 
         return $this->writer;
     }
@@ -202,14 +212,6 @@ final class ParquetLoader implements Closure, Loader
      */
     private function writeRowGroup(FlowContext $context) : void
     {
-        foreach ($this->dataBuffer as $fieldData) {
-            if (!\count($fieldData)) {
-                return;
-            }
-        }
-
-        $this->prepareDataBuffer();
-
         $rg = $this->writer($context)->CreateRowGroup();
 
         foreach ($this->writer($context)->schema->fields as $field) {
@@ -235,15 +237,7 @@ final class ParquetLoader implements Closure, Loader
         $rg->finish();
         $this->writer($context)->finish();
 
-        if ($this->fileStream !== null && $this->fileStream->isOpen()) {
-            $this->fileStream->close();
-        }
-
-        $this->fileStream = null;
-        $this->writer = null;
         $this->dataBuffer = [];
         $this->dataRepetitionsBuffer = [];
-
-        $this->prepareDataBuffer();
     }
 }
