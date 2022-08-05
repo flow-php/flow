@@ -44,7 +44,7 @@ final class KeepEntriesTransformerTest extends TestCase
 
         $transformer = Transform::keep('not_existing');
         $this->assertSame(
-            [[]],
+            [['not_existing' => null]],
             $transformer->transform($rows, new FlowContext(Config::default()))->toArray()
         );
     }

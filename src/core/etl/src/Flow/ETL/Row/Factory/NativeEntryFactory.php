@@ -80,6 +80,10 @@ final class NativeEntryFactory implements EntryFactory
         }
 
         if (\is_array($value)) {
+            if (!\count($value)) {
+                return new Row\Entry\ArrayEntry($entryName, $value);
+            }
+
             if (!\array_is_list($value)) {
                 return new Row\Entry\ArrayEntry($entryName, $value);
             }
@@ -108,6 +112,10 @@ final class NativeEntryFactory implements EntryFactory
                 }
             }
 
+            if ($type === 'array') {
+                return new Row\Entry\ArrayEntry($entryName, $value);
+            }
+
             if ($class !== null) {
                 if ($class === \DateTimeImmutable::class || $class === \DateTime::class) {
                     $class = \DateTimeInterface::class;
@@ -118,10 +126,6 @@ final class NativeEntryFactory implements EntryFactory
                 return new Entry\ListEntry($entryName, Entry\TypedCollection\ObjectType::of($class), $value);
             }
 
-            /**
-             * @psalm-suppress PossiblyNullArgument
-             * @phpstan-ignore-next-line
-             */
             return new Entry\ListEntry($entryName, Entry\TypedCollection\ScalarType::fromString($type), $value);
         }
 
