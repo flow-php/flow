@@ -212,9 +212,13 @@ final class DataFrame
     /**
      * @throws InvalidArgumentException
      */
-    public function limit(int $limit) : self
+    public function limit(?int $limit) : self
     {
-        $this->context->config->setLimit($limit);
+        if ($limit === null) {
+            $this->context->config->clearLimit();
+        } else {
+            $this->context->config->setLimit($limit);
+        }
 
         return $this;
     }

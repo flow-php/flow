@@ -100,11 +100,11 @@ final class CSVLoader implements Closure, Loader
         $mode = Mode::WRITE;
         $streams = $this->streams($context);
 
-        if ($context->mode() === SaveMode::ExceptionIfExists && $streams->exists($this->path, $partitions) && !$streams->isOpen($this->path)) {
+        if ($context->mode() === SaveMode::ExceptionIfExists && $streams->exists($this->path, $partitions) && !$streams->isOpen($this->path, $partitions)) {
             throw new RuntimeException('Destination path "' . $this->path->uri() . '" already exists, please change path to different or set different SaveMode');
         }
 
-        if ($context->mode() === SaveMode::Ignore && $streams->exists($this->path, $partitions) && !$streams->isOpen($this->path)) {
+        if ($context->mode() === SaveMode::Ignore && $streams->exists($this->path, $partitions) && !$streams->isOpen($this->path, $partitions)) {
             return;
         }
 
