@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use Flow\ETL\DSL\To;
 use Flow\ETL\DSL\Transform;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor\CacheExtractor;
@@ -13,6 +14,7 @@ use Flow\ETL\GroupBy\Aggregation;
 use Flow\ETL\Join\Condition;
 use Flow\ETL\Join\Join;
 use Flow\ETL\Loader\SchemaValidationLoader;
+use Flow\ETL\Loader\StreamLoader\Output;
 use Flow\ETL\Pipeline\CollectingPipeline;
 use Flow\ETL\Pipeline\GroupByPipeline;
 use Flow\ETL\Pipeline\NestedPipeline;
@@ -290,6 +292,31 @@ final class DataFrame
         $this->pipeline = new NestedPipeline($this->pipeline, $pipeline);
 
         return $this;
+    }
+
+    public function printRows(int|null $limit = 20, int|bool $truncate = 20, Formatter $formatter = new AsciiTableFormatter()) : void
+    {
+        if ($limit === null) {
+            $this->context->config->clearLimit();
+        } else {
+            $this->context->config->setLimit($limit);
+        }
+
+        $this->load(To::output($truncate, Output::rows, $formatter));
+
+        $this->run();
+    }
+
+    public function printSchema(int|null $limit = 20, Schema\SchemaFormatter $formatter = new Schema\Formatter\ASCIISchemaFormatter()) : void
+    {
+        if ($limit === null) {
+            $this->context->config->clearLimit();
+        } else {
+            $this->context->config->setLimit($limit);
+        }
+        $this->load(To::output(false, Output::schema, schemaFormatter: $formatter));
+
+        $this->run();
     }
 
     public function rename(string $from, string $to) : self

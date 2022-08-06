@@ -89,6 +89,14 @@ final class Schema implements \Countable, Serializable
     {
         $newDefinitions = $this->definitions;
 
+        if (!$this->count()) {
+            return $schema;
+        }
+
+        if (!$schema->count()) {
+            return $this;
+        }
+
         foreach ($schema->definitions as $entry => $definition) {
             if (!\array_key_exists($definition->entry(), $newDefinitions)) {
                 $newDefinitions[$entry] = $definition->nullable();

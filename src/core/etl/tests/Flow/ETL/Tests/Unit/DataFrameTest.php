@@ -1195,6 +1195,76 @@ ASCIITABLE,
         );
     }
 
+    public function test_print_rows() : void
+    {
+        \ob_start();
+        (new Flow())->process(
+            new Rows(
+                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20)),
+                Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20)),
+                Row::create(Entry::integer('id', 3), Entry::string('country', 'PL'), Entry::integer('age', 25)),
+            ),
+            new Rows(
+                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20), Entry::integer('salary', 5000)),
+                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20), Entry::null('salary')),
+            )
+        )->printRows();
+        $output = \ob_get_clean();
+
+        $this->assertStringContainsString(
+            <<<'ASCII'
++--+-------+---+
+|id|country|age|
++--+-------+---+
+| 1|     PL| 20|
+| 2|     PL| 20|
+| 3|     PL| 25|
++--+-------+---+
+3 rows
++--+-------+---+------+
+|id|country|age|salary|
++--+-------+---+------+
+| 1|     PL| 20|  5000|
+| 1|     PL| 20|  null|
++--+-------+---+------+
+2 rows
+ASCII,
+            $output
+        );
+    }
+
+    public function test_print_schema() : void
+    {
+        \ob_start();
+        (new Flow())->process(
+            new Rows(
+                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20)),
+                Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20)),
+                Row::create(Entry::integer('id', 3), Entry::string('country', 'PL'), Entry::integer('age', 25)),
+            ),
+            new Rows(
+                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20), Entry::integer('salary', 5000)),
+                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20), Entry::null('salary')),
+            )
+        )->printSchema();
+        $output = \ob_get_clean();
+
+        $this->assertStringContainsString(
+            <<<ASCII
+schema
+|-- age: Flow\ETL\Row\Entry\IntegerEntry (nullable = false)
+|-- country: Flow\ETL\Row\Entry\StringEntry (nullable = false)
+|-- id: Flow\ETL\Row\Entry\IntegerEntry (nullable = false)
+schema
+|-- age: Flow\ETL\Row\Entry\IntegerEntry (nullable = false)
+|-- country: Flow\ETL\Row\Entry\StringEntry (nullable = false)
+|-- id: Flow\ETL\Row\Entry\IntegerEntry (nullable = false)
+|-- salary: [Flow\ETL\Row\Entry\IntegerEntry, Flow\ETL\Row\Entry\NullEntry] (nullable = true)
+ASCII,
+            $output
+        );
+    }
+
     public function test_rename() : void
     {
         $rows = (new Flow())->process(
