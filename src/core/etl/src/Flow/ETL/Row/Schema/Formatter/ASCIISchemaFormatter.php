@@ -15,12 +15,14 @@ final class ASCIISchemaFormatter implements SchemaFormatter
         $entries = [];
 
         foreach ($schema->definitions() as $definition) {
+            $entry = $definition->entry();
+
             $type = match (\count($definition->types())) {
                 1 => $definition->types()[0],
                 default => '[' . \implode(', ', $definition->types()) . ']'
             };
 
-            $entries[$definition->entry()] = '|-- ' . $definition->entry() . ': ' . $type . ' (nullable = ' . ($definition->isNullable() ? 'true' : 'false') . ')';
+            $entries[$entry] = '|-- ' . $entry . ': ' . $type . ' (nullable = ' . ($definition->isNullable() ? 'true' : 'false') . ')';
         }
 
         \ksort($entries);

@@ -28,10 +28,10 @@ final class Flow
         );
     }
 
-    public function process(Rows $rows) : DataFrame
+    public function process(Rows ...$rows) : DataFrame
     {
         return new DataFrame(
-            (new SynchronousPipeline())->source(new ProcessExtractor($rows)),
+            (new SynchronousPipeline())->source(new ProcessExtractor(...$rows)),
             $this
                 ->configBuilder
                 ->build()
