@@ -111,6 +111,7 @@ final class BulkData
      * ]
      *
      * @return array<string, mixed>
+     * @psalm-suppress DeprecatedMethod
      */
     public function toSqlParameters(TableDefinition $table) : array
     {

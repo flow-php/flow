@@ -46,14 +46,5 @@ abstract class IntegrationTestCase extends TestCase
         if ($this->fs->directoryExists($directory)) {
             $this->fs->deleteDirectory($directory);
         }
-//        if (\file_exists($directory)) {
-//            foreach (\array_diff(\scandir($directory), ['.', '..']) as $fileName) {
-//                $filePath = $directory . DIRECTORY_SEPARATOR . $fileName;
-//
-//                if (\is_file($filePath)) {
-//                    \unlink($filePath);
-//                }
-//            }
-//        }
     }
 }

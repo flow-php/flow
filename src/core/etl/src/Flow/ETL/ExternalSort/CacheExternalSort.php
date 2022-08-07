@@ -32,10 +32,11 @@ final class CacheExternalSort implements ExternalSort
 
     public function sortBy(Sort ...$entries) : Extractor
     {
-        /** @var array<string, \Generator<int, Rows, mixed, void>> $cachedPartsArray */
+        /** @var array<string, \Generator<Rows>> $cachedPartsArray */
         $cachedPartsArray = [];
         $maxRowsSize = 0;
 
+        /** @var int $i */
         foreach ($this->cache->read($this->id) as $i => $rows) {
             $maxRowsSize = \max($maxRowsSize, $rows->count());
             /** @var Rows $singleRowRows */
