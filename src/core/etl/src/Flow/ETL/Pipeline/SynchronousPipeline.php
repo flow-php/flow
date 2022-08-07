@@ -41,35 +41,33 @@ final class SynchronousPipeline implements Pipeline
      */
     public function process(FlowContext $context) : \Generator
     {
-        $total = 0;
-
         $generator = $this->extractor->extract($context);
+        $reductor = new Limiter($context->config->limit());
 
         while ($generator->valid()) {
-            /** @var Rows $rows */
-            $rows = $generator->current();
-            $total += $rows->count();
+            $rows = $reductor->limit($generator->current());
             $generator->next();
 
-            if ($context->config->hasLimit()) {
-                if ($total > $context->config->limit()) {
-                    $rows = $rows->dropRight($total - $context->config->limit());
-                    $total = $context->config->limit();
+            if ($rows === null) {
+                foreach ($this->pipes->all() as $pipe) {
+                    if ($pipe instanceof Pipeline\Closure) {
+                        $pipe->closure($reductor->latest(), $context);
+                    }
                 }
+
+                break;
             }
 
             foreach ($this->pipes->all() as $pipe) {
                 try {
                     if ($pipe instanceof Transformer) {
-                        $rows = $pipe->transform($rows, $context);
+                        $rows = $reductor->limitTransformed($pipe->transform($rows, $context));
                     } elseif ($pipe instanceof Loader) {
                         $pipe->load($rows, $context);
                     }
 
                     if ($pipe instanceof Pipeline\Closure) {
                         if ($generator->valid() === false) {
-                            $pipe->closure($rows, $context);
-                        } elseif ($context->config->limit() !== null && $total === $context->config->limit()) {
                             $pipe->closure($rows, $context);
                         }
                     }
@@ -85,10 +83,6 @@ final class SynchronousPipeline implements Pipeline
             }
 
             yield $rows;
-
-            if ($context->config->hasLimit() && $total === $context->config->limit()) {
-                break;
-            }
         }
     }
 
