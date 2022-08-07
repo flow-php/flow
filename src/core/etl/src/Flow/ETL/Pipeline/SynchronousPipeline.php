@@ -74,11 +74,11 @@ final class SynchronousPipeline implements Pipeline
                         }
                     }
                 } catch (\Throwable $exception) {
-                    if ($context->config->errorHandler()->throw($exception, $rows)) {
+                    if ($context->errorHandler()->throw($exception, $rows)) {
                         throw $exception;
                     }
 
-                    if ($context->config->errorHandler()->skipRows($exception, $rows)) {
+                    if ($context->errorHandler()->skipRows($exception, $rows)) {
                         break;
                     }
                 }
