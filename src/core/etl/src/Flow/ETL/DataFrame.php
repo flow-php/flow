@@ -260,7 +260,7 @@ final class DataFrame
 
     public function onError(ErrorHandler $handler) : self
     {
-        $this->context->config->setErrorHandler($handler);
+        $this->context->setErrorHandler($handler);
 
         return $this;
     }
