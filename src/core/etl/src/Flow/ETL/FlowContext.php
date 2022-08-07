@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use Flow\ETL\ErrorHandler\ThrowError;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Partition\NoopFilter;
 use Flow\ETL\Partition\PartitionFilter;
@@ -11,6 +12,8 @@ use Flow\Serializer\Serializer;
 
 final class FlowContext
 {
+    private ErrorHandler $errorHandler;
+
     private SaveMode $mode = SaveMode::ExceptionIfExists;
 
     private PartitionFilter $partitionFilter;
@@ -25,12 +28,18 @@ final class FlowContext
     public function __construct(public readonly Config $config)
     {
         $this->partitionFilter = new NoopFilter();
+        $this->errorHandler = new ThrowError();
         $this->partitions = [];
     }
 
     public function cache() : Cache
     {
         return $this->config->cache();
+    }
+
+    public function errorHandler() : ErrorHandler
+    {
+        return $this->errorHandler;
     }
 
     public function filterPartitions(PartitionFilter $filter) : self
@@ -73,6 +82,13 @@ final class FlowContext
     public function serializer() : Serializer
     {
         return $this->config->serializer();
+    }
+
+    public function setErrorHandler(ErrorHandler $handler) : self
+    {
+        $this->errorHandler = $handler;
+
+        return $this;
     }
 
     public function setMode(SaveMode $mode) : self

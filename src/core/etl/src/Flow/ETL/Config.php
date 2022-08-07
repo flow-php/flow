@@ -20,8 +20,7 @@ final class Config
         private readonly Cache $cache,
         private readonly ExternalSort $externalSort,
         private readonly Serializer $serializer,
-        private readonly Filesystem $filesystem,
-        private ErrorHandler $errorHandler
+        private readonly Filesystem $filesystem
     ) {
     }
 
@@ -45,11 +44,6 @@ final class Config
         $this->limit = null;
 
         return $this;
-    }
-
-    public function errorHandler() : ErrorHandler
-    {
-        return $this->errorHandler;
     }
 
     public function externalSort() : ExternalSort
@@ -80,13 +74,6 @@ final class Config
     public function serializer() : Serializer
     {
         return $this->serializer;
-    }
-
-    public function setErrorHandler(ErrorHandler $errorHandler) : self
-    {
-        $this->errorHandler = $errorHandler;
-
-        return $this;
     }
 
     public function setLimit(int $limit) : self
