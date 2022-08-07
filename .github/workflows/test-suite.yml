@@ -49,7 +49,7 @@ jobs:
             php-${{ matrix.php-version }}-locked-composer-
 
       - name: "Install locked dependencies"
-        run: "composer install --no-interaction --no-progress --no-suggest"
+        run: "composer install --no-interaction --no-progress"
 
       - name: "Static Analyze"
         run: "composer static:analyze"
