@@ -9,7 +9,8 @@
         "flow-php/array-dot": "^1.0@dev",
         "league/flysystem": "^3.0",
         "ext-mbstring": "*",
-        "ext-json": "*"
+        "ext-json": "*",
+        "psr/simple-cache": "^1.0 || ^2.0 || ^3.0"
     },
     "require-dev": {
         "jawira/case-converter": "^3.4",

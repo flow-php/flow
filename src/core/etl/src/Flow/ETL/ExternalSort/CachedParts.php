@@ -10,7 +10,7 @@ use Flow\ETL\Rows;
 final class CachedParts
 {
     /**
-     * @param array<string, \Generator<int, Rows, mixed, void>> $generators
+     * @param array<string, \Generator<Rows>> $generators
      */
     public function __construct(private readonly array $generators)
     {

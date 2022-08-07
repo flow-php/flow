@@ -21,9 +21,10 @@
         "monolog/monolog": "^2.0 || ^3.0",
         "psr/http-client": "^1.0",
         "psr/log": "^1.1",
+        "psr/simple-cache": "^1.0 || ^2.0 || ^3.0",
         "react/child-process": "^0.6.4",
-        "react/socket": "^1.11",
-        "react/promise": "^2.9.0"
+        "react/promise": "^2.9.0",
+        "react/socket": "^1.11"
     },
     "require-dev": {
         "aeon-php/calendar": "^1.0",
@@ -35,6 +36,7 @@
         "nyholm/psr7": "^1.4",
         "php-http/curl-client": "^2.2",
         "rector/rector": "^0.13.8",
+        "symfony/cache": "^6.1",
         "symfony/dotenv": "^6.1",
         "symfony/validator": "^5.3 || ^6.0"
     },

@@ -15,7 +15,7 @@ interface Cache extends Serializable
     public function clear(string $id) : void;
 
     /**
-     * @return \Generator<int, Rows, mixed, void>
+     * @return \Generator<Rows>
      */
     public function read(string $id) : \Generator;
 }

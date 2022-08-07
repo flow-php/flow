@@ -935,6 +935,34 @@ $flow->read($extractor)
     ->run();
 ```
 
+By default, Flow is using Filesystem Cache, location of the cache storage can be adjusted through 
+environment variable `CACHE_DIR_ENV`. 
+
+In order to use different cache implementation please use `ConfigBuilder`
+
+```php
+
+Config::default()
+  ->cache(
+    new PSRSimpleCache(
+        new Psr16Cache(
+            new ArrayAdapter()
+        ),
+        new NativePHPSerializer()
+    )
+  );
+```
+
+Following implementations are available out of the box: 
+
+* [InMemory](src/Flow/ETL/Cache/InMemoryCache.php)
+* [LocalFilesystem](src/Flow/ETL/Cache/LocalFilesystemCache.php)
+* [Null](src/Flow/ETL/Cache/NullCache.php)
+* [PSRSimpleCache](src/Flow/ETL/Cache/PSRSimpleCache.php)
+
+PSRSimpleCache makes possible to use any of the [psr/simple-cache-implementation](https://packagist.org/providers/psr/simple-cache-implementation)
+but it does not come with any out of the box.
+
 ## Collect/Parallelize
 
 ```php

@@ -43,7 +43,7 @@ final class BufferCache
             }
         }
 
-        if ($this->buffers[$id]->count() == $this->bufferSize) {
+        if ($this->buffers[$id]->count() === $this->bufferSize) {
             $this->overflowCache->add($id, $this->buffers[$id]);
             $this->buffers[$id] = new Rows();
         }
