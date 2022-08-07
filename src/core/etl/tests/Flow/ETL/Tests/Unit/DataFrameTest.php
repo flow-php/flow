@@ -1208,7 +1208,8 @@ ASCIITABLE,
                         $this->assertSame(3, $rows->count());
                     }
                 ) implements
-                Closure, Loader
+                    Closure,
+                Loader
                 {
 
                     private $load;
