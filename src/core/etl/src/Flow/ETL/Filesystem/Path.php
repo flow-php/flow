@@ -87,7 +87,7 @@ final class Path implements Serializable
         $realPath = $path;
 
         if ($realPath[0] === '~') {
-            $homeEnv = $_ENV['HOME'];
+            $homeEnv = \getenv('HOME');
 
             if (\is_string($homeEnv)) {
                 $realPath = $homeEnv . DIRECTORY_SEPARATOR . \substr($realPath, 1);
