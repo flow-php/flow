@@ -3722,16 +3722,16 @@
         },
         {
             "name": "jawira/case-converter",
-            "version": "v3.5.0",
+            "version": "v3.5.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/jawira/case-converter.git",
-                "reference": "f11ac9b097ca16af8aa1842947df2e6635c2675e"
+                "reference": "2be05b98dcb743bef60ab6f849145bd3434ed003"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/jawira/case-converter/zipball/f11ac9b097ca16af8aa1842947df2e6635c2675e",
-                "reference": "f11ac9b097ca16af8aa1842947df2e6635c2675e",
+                "url": "https://api.github.com/repos/jawira/case-converter/zipball/2be05b98dcb743bef60ab6f849145bd3434ed003",
+                "reference": "2be05b98dcb743bef60ab6f849145bd3434ed003",
                 "shasum": ""
             },
             "require": {
@@ -3783,9 +3783,9 @@
             ],
             "support": {
                 "issues": "https://github.com/jawira/case-converter/issues",
-                "source": "https://github.com/jawira/case-converter/tree/v3.5.0"
+                "source": "https://github.com/jawira/case-converter/tree/v3.5.1"
             },
-            "time": "2022-06-23T20:32:12+00:00"
+            "time": "2022-08-14T11:40:18+00:00"
         },
         {
             "name": "laminas/laminas-hydrator",
