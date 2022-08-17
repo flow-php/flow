@@ -2,7 +2,7 @@
   "name": "flow-php/etl-tools",
   "description": "Flow PHP ETL - Tools",
   "require-dev": {
-    "symplify/monorepo-builder": "11.1.4"
+    "symplify/monorepo-builder": "11.1.5"
   },
   "config": {
     "allow-plugins": false
