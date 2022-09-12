@@ -3142,20 +3142,20 @@
     "packages-dev": [
         {
             "name": "aeon-php/calendar",
-            "version": "1.0.6",
+            "version": "1.0.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aeon-php/calendar.git",
-                "reference": "0ea9a520a058e8a18ee70bfddad1117f490f0ffb"
+                "reference": "49e3167815ca6af1f4215eed0719c3d83d749571"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aeon-php/calendar/zipball/0ea9a520a058e8a18ee70bfddad1117f490f0ffb",
-                "reference": "0ea9a520a058e8a18ee70bfddad1117f490f0ffb",
+                "url": "https://api.github.com/repos/aeon-php/calendar/zipball/49e3167815ca6af1f4215eed0719c3d83d749571",
+                "reference": "49e3167815ca6af1f4215eed0719c3d83d749571",
                 "shasum": ""
             },
             "require": {
-                "php": "^7.4.2 || ~8.0 || ~8.1"
+                "php": "^7.4.2 || ~8.0 || ~8.1.10"
             },
             "require-dev": {
                 "ext-bcmath": "*"
@@ -3185,9 +3185,9 @@
             ],
             "support": {
                 "issues": "https://github.com/aeon-php/calendar/issues",
-                "source": "https://github.com/aeon-php/calendar/tree/1.0.6"
+                "source": "https://github.com/aeon-php/calendar/tree/1.0.7"
             },
-            "time": "2022-08-22T16:52:49+00:00"
+            "time": "2022-09-10T13:11:14+00:00"
         },
         {
             "name": "aws/aws-crt-php",
