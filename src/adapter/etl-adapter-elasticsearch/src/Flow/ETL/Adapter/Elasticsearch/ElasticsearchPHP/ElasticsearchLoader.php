@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP;
 
-use Elasticsearch\Client;
-use Elasticsearch\ClientBuilder;
 use Flow\ETL\Adapter\Elasticsearch\IdFactory;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
@@ -13,6 +11,8 @@ use Flow\ETL\Row;
 use Flow\ETL\Rows;
 
 /**
+ * @psalm-suppress UndefinedClass
+ *
  * @implements Loader<array{
  *  config: array{
  *    hosts?: array<string>,
@@ -34,7 +34,8 @@ use Flow\ETL\Rows;
  */
 final class ElasticsearchLoader implements Loader
 {
-    private ?Client $client;
+    /** @phpstan-ignore-next-line */
+    private \Elasticsearch\Client|\Elastic\Elasticsearch\Client|null $client;
 
     private string $method;
 
@@ -136,14 +137,31 @@ final class ElasticsearchLoader implements Loader
                 }
             }
 
+            /**
+             * @psalm-suppress UndefinedClass
+             *
+             * @phpstan-ignore-next-line
+             */
             $this->client()->bulk($parameters);
         }
     }
 
-    private function client() : Client
+    /**
+     * @psalm-suppress UndefinedClass
+     * @psalm-suppress MixedAssignment
+     * @psalm-suppress MixedReturnStatement
+     * @psalm-suppress MixedInferredReturnType
+     *
+     * @phpstan-ignore-next-line
+     */
+    private function client() : \Elasticsearch\Client|\Elastic\Elasticsearch\Client
     {
         if ($this->client === null) {
-            $this->client = ClientBuilder::fromConfig($this->config);
+            if (\class_exists("Elasticsearch\ClientBuilder")) {
+                $this->client = \Elasticsearch\ClientBuilder::fromConfig($this->config);
+            } else {
+                $this->client = \Elastic\Elasticsearch\ClientBuilder::fromConfig($this->config);
+            }
         }
 
         return $this->client;
