@@ -14,7 +14,7 @@
         "amphp/socket": "^2",
         "codename/parquet": "^0.6.2",
         "doctrine/dbal": "^2.12 || ^3.1.4",
-        "elasticsearch/elasticsearch": "^7.6",
+        "elasticsearch/elasticsearch": "^7.6 || ^8.0",
         "flix-tech/avro-php": "~4.2.0",
         "halaxa/json-machine": "^0.8.0 || ^1.0.0",
         "league/flysystem": "^3.0",
