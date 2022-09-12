@@ -3,13 +3,11 @@
     "type": "library",
     "description": "PHP ETL - Adapter - Elasticsearch",
     "keywords": ["etl", "extract", "transform", "load", "elasticsearch", "adapter"],
-    "prefer-stable": true,
-    "minimum-stability": "dev",
     "require": {
         "php": "~8.1",
         "ext-json": "*",
-        "flow-php/etl": "^1.0@dev",
-        "elasticsearch/elasticsearch": "^7.6"
+        "elasticsearch/elasticsearch": "^7.6|^8.0",
+        "flow-php/etl": "^1.0@dev"
     },
     "config": {
         "optimize-autoloader": true,
@@ -49,5 +47,7 @@
         "post-update-cmd": [
             "@tools:install"
         ]
-    }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }
