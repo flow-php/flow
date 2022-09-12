@@ -10,7 +10,9 @@ use Flow\Serializer\Serializable;
 /**
  * @template TValue
  * @template TSerialized
+ *
  * @extends Serializable<TSerialized>
+ *
  * @psalm-immutable
  */
 interface Entry extends Serializable

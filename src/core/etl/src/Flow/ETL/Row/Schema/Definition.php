@@ -26,6 +26,7 @@ use Flow\Serializer\Serializable;
 
 /**
  * @psalm-immutable
+ *
  * @implements Serializable<array{
  *     entry: string,
  *     classes:array<class-string<Entry>>,
@@ -90,6 +91,7 @@ final class Definition implements Serializable
 
     /**
      * @param class-string<\UnitEnum> $type
+     *
      * @psalm-pure
      */
     public static function enum(string $entry, string $type, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
@@ -138,6 +140,7 @@ final class Definition implements Serializable
 
     /**
      * @psalm-pure
+     *
      * @psalm-suppress ImpureMethodCall
      */
     public static function list(string $entry, Type $type, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self

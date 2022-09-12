@@ -18,6 +18,7 @@ use Jawira\CaseConverter\Convert;
 
 /**
  * @implements Transformer<array{array_entry_name: string, style: string, entry_factory: EntryFactory}>
+ *
  * @psalm-immutable
  */
 final class ArrayKeysStyleConverterTransformer implements Transformer
@@ -69,6 +70,7 @@ final class ArrayKeysStyleConverterTransformer implements Transformer
 
             /**
              * @phpstan-ignore-next-line
+             *
              * @psalm-var pure-callable(string) : string $converter
              */
             $converter = fn (string $key) : string => (string) \call_user_func([new Convert($key), 'to' . \ucfirst($this->style)]);

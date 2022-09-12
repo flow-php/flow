@@ -133,6 +133,7 @@ final class XMLReaderExtractor implements Extractor
         if ($element->hasAttributes()) {
             /**
              * @var \DOMAttr $attribute
+             *
              * @phpstan-ignore-next-line
              */
             foreach ($element->attributes as $attribute) {
@@ -150,6 +151,7 @@ final class XMLReaderExtractor implements Extractor
 
             if ($childNode->nodeType === XML_ELEMENT_NODE) {
                 if ($this->isElementCollection($element)) {
+                    /** @phpstan-ignore-next-line */
                     $xmlArray[$childNode->nodeName][] = $this->convertDOMElement($childNode);
                 } else {
                     $xmlArray[$childNode->nodeName] = $this->convertDOMElement($childNode);

@@ -11,6 +11,7 @@ use Flow\ETL\Transformer;
 
 /**
  * @implements Transformer<array{condition: Condition\RowCondition, transformer: Transformer}>
+ *
  * @psalm-immutable
  */
 final class ConditionalTransformer implements Transformer

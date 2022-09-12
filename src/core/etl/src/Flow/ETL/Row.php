@@ -12,6 +12,7 @@ use Flow\Serializer\Serializable;
 
 /**
  * @implements Serializable<array{entries: Entries}>
+ *
  * @psalm-immutable
  */
 final class Row implements Serializable

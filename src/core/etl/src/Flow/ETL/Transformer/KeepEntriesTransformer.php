@@ -13,6 +13,7 @@ use Flow\ETL\Transformer;
 
 /**
  * @implements Transformer<array{names: array<string>}>
+ *
  * @psalm-immutable
  */
 final class KeepEntriesTransformer implements Transformer

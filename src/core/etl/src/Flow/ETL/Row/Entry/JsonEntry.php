@@ -11,6 +11,7 @@ use Flow\ETL\Row\Schema\Definition;
 
 /**
  * @implements Entry<string, array{name: string, value: array<mixed>, object: boolean}>
+ *
  * @psalm-immutable
  */
 final class JsonEntry implements \Stringable, Entry

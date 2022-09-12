@@ -35,6 +35,7 @@ final class Bulk
      * } $insertOptions $insertOptions
      *
      * @throws Exception|RuntimeException
+     *
      * @psalm-suppress DeprecatedMethod
      */
     public function insert(Connection $connection, string $table, BulkData $bulkData, array $insertOptions = []) : void
@@ -58,6 +59,7 @@ final class Bulk
      * } $updateOptions $updateOptions
      *
      * @throws Exception|RuntimeException
+     *
      * @psalm-suppress DeprecatedMethod
      */
     public function update(Connection $connection, string $table, BulkData $bulkData, array $updateOptions = []) : void

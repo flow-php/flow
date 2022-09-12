@@ -55,7 +55,6 @@ final class Unit
                 }
 
                 throw new InvalidArgumentException("Can't extract memory limit in bytes from php ini value: {$limit}");
-
         }
     }
 

@@ -71,6 +71,7 @@ class Entry
      */
     final public static function datetime_string(string $name, string $value) : RowEntry
     {
+        /** @psalm-suppress ImpureMethodCall */
         return new RowEntry\DateTimeEntry($name, new \DateTimeImmutable($value));
     }
 

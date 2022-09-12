@@ -15,6 +15,7 @@ use Flow\ETL\Transformer;
 
 /**
  * @implements Transformer<array{array_entry_name: string, path: string, new_entry_name: string, entry_factory: EntryFactory}>
+ *
  * @psalm-immutable
  */
 final class ArrayDotGetTransformer implements Transformer

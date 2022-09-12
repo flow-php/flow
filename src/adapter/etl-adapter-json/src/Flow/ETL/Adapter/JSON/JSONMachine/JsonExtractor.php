@@ -32,7 +32,6 @@ final class JsonExtractor implements Extractor
         $rows = new Rows();
 
         foreach ($context->fs()->scan($this->path, $context->partitionFilter()) as $filePath) {
-
             /**
              * @psalm-suppress ImpureMethodCall
              *

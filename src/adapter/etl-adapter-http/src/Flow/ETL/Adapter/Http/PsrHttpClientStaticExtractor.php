@@ -33,6 +33,7 @@ final class PsrHttpClientStaticExtractor implements Extractor
 
     /**
      * @param iterable<RequestInterface> $requests
+     *
      * @psalm-param pure-callable(RequestInterface) : void|null $preRequest
      * @psalm-param pure-callable(RequestInterface, ResponseInterface) : void|null $postRequest
      */

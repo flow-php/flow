@@ -122,7 +122,6 @@ final class ElasticsearchLoader implements Loader
             ))->toArray();
 
             foreach ($dataCollection as $data) {
-                /** @phpstan-ignore-next-line  */
                 $parameters['body'][] = [
                     $this->method => [
                         '_id' => $data['id'],
@@ -131,10 +130,8 @@ final class ElasticsearchLoader implements Loader
                 ];
 
                 if ($this->method === 'update') {
-                    /** @phpstan-ignore-next-line  */
                     $parameters['body'][] = ['doc' => $data['body']];
                 } else {
-                    /** @phpstan-ignore-next-line  */
                     $parameters['body'][] = $data['body'];
                 }
             }

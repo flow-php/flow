@@ -8,6 +8,7 @@ use Flow\Serializer\Serializable;
 
 /**
  * @template T
+ *
  * @extends Serializable<T>
  */
 interface Loader extends Serializable

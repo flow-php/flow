@@ -16,6 +16,7 @@ use Jawira\CaseConverter\Convert;
 
 /**
  * @implements Transformer<array{style: string}>
+ *
  * @psalm-immutable
  */
 final class EntryNameStyleConverterTransformer implements Transformer

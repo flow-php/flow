@@ -13,6 +13,7 @@ use Flow\ETL\Transformer;
 
 /**
  * @implements Transformer<array{factory: DataFrameFactory, condition: Condition, type: Join}>
+ *
  * @psalm-immutable
  */
 final class JoinEachRowsTransformer implements Transformer
@@ -66,6 +67,7 @@ final class JoinEachRowsTransformer implements Transformer
 
     /**
      * @param FlowContext $context
+     *
      * @psalm-suppress ImpureMethodCall
      *
      * @throws \Flow\ETL\Exception\InvalidArgumentException

@@ -14,6 +14,7 @@ use Flow\ETL\Transformer\Rename\ArrayKeyRename;
 
 /**
  * @implements Transformer<array{array_key_renames: array<ArrayKeyRename>}>
+ *
  * @psalm-immutable
  */
 final class ArrayDotRenameTransformer implements Transformer

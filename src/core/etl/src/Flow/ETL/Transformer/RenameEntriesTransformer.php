@@ -11,6 +11,7 @@ use Flow\ETL\Transformer;
 
 /**
  * @implements Transformer<array{entry_renames: array<Transformer\Rename\EntryRename>}>
+ *
  * @psalm-immutable
  */
 final class RenameEntriesTransformer implements Transformer

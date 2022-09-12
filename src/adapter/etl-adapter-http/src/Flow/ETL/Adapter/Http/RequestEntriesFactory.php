@@ -17,7 +17,9 @@ final class RequestEntriesFactory
      * @throws InvalidArgumentException
      *
      * @return Row\Entries
+     *
      * @psalm-pure
+     *
      * @psalm-suppress ImpureMethodCall
      * @psalm-suppress InvalidLiteralArgument
      * @psalm-suppress ImpureFunctionCall

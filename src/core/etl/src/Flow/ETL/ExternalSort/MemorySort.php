@@ -36,6 +36,7 @@ final class MemorySort implements ExternalSort
         if ($this->configuration->isLessThan($maximumMemory) && !$this->configuration->isInfinite()) {
             /**
              * @psalm-suppress PossiblyNullReference
+             *
              * @phpstan-ignore-next-line
              */
             $this->maximumMemory = $this->configuration->limit()->percentage(90);

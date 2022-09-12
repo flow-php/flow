@@ -13,6 +13,7 @@ use Flow\ETL\Transformer;
 
 /**
  * @implements Transformer<array{algorithm: string, entries: array<string>, new_entry_name: string}>
+ *
  * @psalm-immutable
  */
 final class HashTransformer implements Transformer

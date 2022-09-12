@@ -10,6 +10,7 @@ use Flow\ETL\Row\Schema\Definition;
 
 /**
  * @implements Entry<\DateTimeInterface, array{name: string, value: \DateTimeInterface}>
+ *
  * @psalm-immutable
  */
 final class DateTimeEntry implements \Stringable, Entry

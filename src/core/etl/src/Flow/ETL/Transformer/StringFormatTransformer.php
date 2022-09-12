@@ -11,6 +11,7 @@ use Flow\ETL\Transformer;
 
 /**
  * @implements Transformer<array{entry_name:string,format:string}>
+ *
  * @psalm-immutable
  */
 final class StringFormatTransformer implements Transformer

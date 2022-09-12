@@ -9,6 +9,7 @@ use Flow\ETL\Row\Schema\Definition;
 
 /**
  * @implements Entry<\UnitEnum, array{name: string, value: \UnitEnum}>
+ *
  * @psalm-immutable
  */
 final class EnumEntry implements Entry

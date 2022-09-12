@@ -10,6 +10,7 @@ use Flow\ETL\Row\Schema\Definition;
 
 /**
  * @implements Entry<int, array{name: string, value: integer}>
+ *
  * @psalm-immutable
  */
 final class IntegerEntry implements \Stringable, Entry

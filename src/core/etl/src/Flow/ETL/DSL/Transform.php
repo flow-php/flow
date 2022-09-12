@@ -292,6 +292,7 @@ class Transform
 
     /**
      * @param callable(Row $row) : Entries $generator
+     *
      * @psalm-param pure-callable(Row $row) : Entries $generator
      */
     final public static function dynamic(callable $generator) : Transformer

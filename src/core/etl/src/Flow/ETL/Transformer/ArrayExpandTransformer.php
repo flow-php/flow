@@ -15,6 +15,7 @@ use Flow\ETL\Transformer;
 
 /**
  * @implements Transformer<array{array_entry_name: string, expand_entry_name: string, entry_factory: EntryFactory}>
+ *
  * @psalm-immutable
  */
 final class ArrayExpandTransformer implements Transformer

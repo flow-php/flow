@@ -14,6 +14,7 @@ use Flow\ETL\Transformer;
 
 /**
  * @implements Transformer<array{array_entry_name: string, skip_entry_names: array<string>, entry_factory: EntryFactory, entry_prefix: null|string}>
+ *
  * @psalm-immutable
  */
 final class ArrayUnpackTransformer implements Transformer

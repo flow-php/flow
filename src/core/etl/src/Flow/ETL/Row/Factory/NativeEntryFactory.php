@@ -46,6 +46,7 @@ final class NativeEntryFactory implements EntryFactory
         if ($this->schema !== null && $this->schema->findDefinition($entryName) !== null) {
             /**
              * @psalm-suppress PossiblyNullArgument
+             *
              * @phpstan-ignore-next-line
              */
             return $this->fromDefinition($this->schema->getDefinition($entryName), $value);

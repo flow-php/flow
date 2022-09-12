@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use MonorepoBuilder202207\Symplify\ComposerJsonManipulator\ValueObject\ComposerJsonSection;
+use Symplify\ComposerJsonManipulator\ValueObject\ComposerJsonSection;
 use Symplify\MonorepoBuilder\Config\MBConfig;
 
 return static function (MBConfig $config): void {

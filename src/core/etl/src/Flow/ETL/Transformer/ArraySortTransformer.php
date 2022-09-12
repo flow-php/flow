@@ -12,6 +12,7 @@ use Flow\ETL\Transformer;
 
 /**
  * @implements Transformer<array{array_entry_name: string, sorting_flag: int}>
+ *
  * @psalm-immutable
  */
 final class ArraySortTransformer implements Transformer

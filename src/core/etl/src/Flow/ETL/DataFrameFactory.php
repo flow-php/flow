@@ -6,6 +6,7 @@ use Flow\Serializer\Serializable;
 
 /**
  * @template T
+ *
  * @extends Serializable<T>
  */
 interface DataFrameFactory extends Serializable

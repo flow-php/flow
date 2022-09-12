@@ -1211,7 +1211,6 @@ ASCIITABLE,
                     Closure,
                 Loader
                 {
-
                     private $load;
 
                     private $closure;
