@@ -11,6 +11,7 @@ use Flow\ETL\Row\Schema\Definition;
 
 /**
  * @implements Entry<array<Entry>, array{name: string, entries: array<Entry>}>
+ *
  * @psalm-immutable
  */
 final class StructureEntry implements \Stringable, Entry

@@ -13,6 +13,7 @@ final class Closure
     /**
      * @psalm-suppress ImpureStaticProperty
      * @psalm-suppress ImpureFunctionCall
+     *
      * @psalm-pure
      */
     public static function isSerializable() : bool

@@ -11,6 +11,7 @@ use Flow\ETL\Transformer;
 
 /**
  * @implements Transformer<array{from: string, to: string}>
+ *
  * @psalm-immutable
  */
 final class CloneEntryTransformer implements Transformer

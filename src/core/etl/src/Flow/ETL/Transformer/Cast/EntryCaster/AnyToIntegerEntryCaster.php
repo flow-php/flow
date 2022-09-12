@@ -11,6 +11,7 @@ use Flow\ETL\Transformer\Cast\ValueCaster\AnyToIntegerCaster;
 
 /**
  * @implements EntryConverter<array{value_caster: AnyToIntegerCaster}>
+ *
  * @psalm-immutable
  */
 final class AnyToIntegerEntryCaster implements EntryConverter

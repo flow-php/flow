@@ -56,6 +56,7 @@ final class PSRSimpleCache implements Cache
             if ($this->cache->has($entry)) {
                 /**
                  * @var Rows $rows
+                 *
                  * @phpstan-ignore-next-line
                  */
                 $rows = $this->serializer->unserialize((string) $this->cache->get($entry));

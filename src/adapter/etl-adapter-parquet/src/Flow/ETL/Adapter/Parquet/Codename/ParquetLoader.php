@@ -223,6 +223,7 @@ final class ParquetLoader implements Closure, Loader
                 if ($field->isArray) {
                     /**
                      * @psalm-suppress MixedArgument
+                     *
                      * @phpstan-ignore-next-line
                      */
                     $rg->WriteColumn(new DataColumn($field, \array_merge(...$this->dataBuffer[$field->name]), $this->dataRepetitionsBuffer[$field->name]));

@@ -14,12 +14,14 @@ use Laravel\SerializableClosure\SerializableClosure;
 
 /**
  * @implements Transformer<array{callable: SerializableClosure}>
+ *
  * @psalm-immutable
  */
 final class CallbackRowTransformer implements Transformer
 {
     /**
      * @psalm-var pure-callable(Row) : Row
+     *
      * @phpstan-var callable(Row) : Row
      */
     private $callable;

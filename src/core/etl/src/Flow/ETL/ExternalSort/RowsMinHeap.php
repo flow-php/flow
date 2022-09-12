@@ -9,6 +9,7 @@ use Flow\ETL\Row\Sort;
 
 /**
  * @template HeapElement
+ *
  * @implements \SplMinHeap<HeapElement>
  */
 final class RowsMinHeap extends \SplMinHeap

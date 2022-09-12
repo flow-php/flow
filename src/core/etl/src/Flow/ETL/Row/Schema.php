@@ -10,6 +10,7 @@ use Flow\Serializer\Serializable;
 
 /**
  * @psalm-immutable
+ *
  * @implements Serializable<array{definitions: array<string, Definition>}>
  */
 final class Schema implements \Countable, Serializable

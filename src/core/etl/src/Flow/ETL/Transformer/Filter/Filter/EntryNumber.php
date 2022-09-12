@@ -9,6 +9,7 @@ use Flow\ETL\Transformer\Filter\Filter;
 
 /**
  * @implements Filter<array{entry_name: string}>
+ *
  * @psalm-immutable
  */
 final class EntryNumber implements Filter

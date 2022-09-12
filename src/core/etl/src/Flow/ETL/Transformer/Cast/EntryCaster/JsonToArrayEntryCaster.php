@@ -11,6 +11,7 @@ use Flow\ETL\Transformer\Cast\ValueCaster\JsonToArrayCaster;
 
 /**
  * @implements EntryConverter<array{value_caster: JsonToArrayCaster}>
+ *
  * @psalm-immutable
  */
 final class JsonToArrayEntryCaster implements EntryConverter

@@ -55,6 +55,7 @@ abstract class FlysystemWrapper implements StreamWrapper
 
         /**
          * @psalm-suppress PossiblyNullArgument
+         *
          * @phpstan-ignore-next-line
          */
         return \feof($this->stream);
@@ -73,6 +74,7 @@ abstract class FlysystemWrapper implements StreamWrapper
     {
         /**
          * @psalm-suppress PossiblyNullArgument
+         *
          * @phpstan-ignore-next-line
          */
         return \flock($this->stream, $operation);
@@ -83,6 +85,7 @@ abstract class FlysystemWrapper implements StreamWrapper
         $this->path = $path;
         /**
          * @psalm-suppress PropertyTypeCoercion
+         *
          * @phpstan-ignore-next-line
          */
         $this->url = \parse_url($this->path);
@@ -101,6 +104,7 @@ abstract class FlysystemWrapper implements StreamWrapper
 
         /**
          * @psalm-suppress PossiblyNullArgument
+         *
          * @phpstan-ignore-next-line
          */
         return \fread($this->stream, $count);

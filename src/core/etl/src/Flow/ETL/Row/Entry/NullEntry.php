@@ -10,6 +10,7 @@ use Flow\ETL\Row\Schema\Definition;
 
 /**
  * @implements Entry<null, array{name: string}>
+ *
  * @psalm-immutable
  */
 final class NullEntry implements \Stringable, Entry

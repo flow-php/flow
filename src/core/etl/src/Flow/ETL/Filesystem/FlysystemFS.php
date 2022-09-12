@@ -192,6 +192,7 @@ final class FlysystemFS implements Filesystem
 
         /**
          * @psalm-suppress MixedArgument
+         *
          * @phpstan-ignore-next-line
          */
         return new Flysystem(new AwsS3V3Adapter(new S3Client($options['client']), $options['bucket']));
@@ -220,6 +221,7 @@ final class FlysystemFS implements Filesystem
 
         /**
          * @psalm-suppress MixedArgument
+         *
          * @phpstan-ignore-next-line
          */
         return new Flysystem(new AzureBlobStorageAdapter(BlobRestProxy::createBlobService($options['connection-string']), $options['container']));

@@ -15,12 +15,14 @@ use Laravel\SerializableClosure\SerializableClosure;
 
 /**
  * @implements Transformer<array{callables: array<SerializableClosure>}>
+ *
  * @psalm-immutable
  */
 final class CallbackEntryTransformer implements Transformer
 {
     /**
      * @psalm-var array<pure-callable(Entry) : Entry>
+     *
      * @phpstan-var array<callable(Entry) : Entry>
      */
     private readonly array $callables;
@@ -72,6 +74,7 @@ final class CallbackEntryTransformer implements Transformer
     {
         /**
          * @var callable(Row) : Row $transform
+         *
          * @psalm-var pure-callable(Row) : Row $transform
          */
         $transform = function (Row $row) : Row {

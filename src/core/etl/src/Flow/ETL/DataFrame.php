@@ -147,6 +147,7 @@ final class DataFrame
 
     /**
      * @param callable(Row $row) : bool $callback
+     *
      * @psalm-param pure-callable(Row $row) : bool $callback
      */
     public function filter(callable $callback) : self
@@ -234,6 +235,7 @@ final class DataFrame
 
     /**
      * @param callable(Row $row) : Row $callback
+     *
      * @psalm-param pure-callable(Row $row) : Row $callback
      */
     public function map(callable $callback) : self

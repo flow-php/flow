@@ -10,6 +10,7 @@ use Flow\ETL\Row\Schema\Definition;
 
 /**
  * @implements Entry<bool, array{name: string, value: bool}>
+ *
  * @psalm-immutable
  */
 final class BooleanEntry implements \Stringable, Entry

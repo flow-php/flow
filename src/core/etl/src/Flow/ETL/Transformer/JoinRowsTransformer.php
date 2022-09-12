@@ -14,6 +14,7 @@ use Flow\ETL\Transformer;
 
 /**
  * @implements Transformer<array{data_frame: ?DataFrame, condition: Condition, type: Join, rows: ?Rows}>
+ *
  * @psalm-immutable
  */
 final class JoinRowsTransformer implements Transformer

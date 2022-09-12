@@ -10,6 +10,7 @@ use Flow\ETL\Row\Entry;
 
 /**
  * @implements IdFactory<array{entry_name: string}>
+ *
  * @psalm-immutable
  */
 final class EntryIdFactory implements IdFactory

@@ -9,6 +9,7 @@ use Flow\ETL\Transformer\Filter\Filter;
 
 /**
  * @implements Filter<array{callback: pure-callable(Row $row) : bool}>
+ *
  * @psalm-immutable
  */
 final class Callback implements Filter

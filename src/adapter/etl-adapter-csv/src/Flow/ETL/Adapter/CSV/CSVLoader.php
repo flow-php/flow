@@ -125,7 +125,6 @@ final class CSVLoader implements Closure, Loader
         }
 
         foreach ($nextRows as $row) {
-
             /**
              * @psalm-suppress MixedArgumentTypeCoercion
              */

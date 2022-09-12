@@ -40,6 +40,7 @@ final class Partition
      * @param array<string, mixed> $data
      *
      * @return array<Partition>
+     *
      * @psalm-suppress ImpureMethodCall
      * @psalm-suppress MixedAssignment
      */

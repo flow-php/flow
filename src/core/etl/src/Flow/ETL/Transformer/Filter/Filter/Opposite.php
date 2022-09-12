@@ -9,6 +9,7 @@ use Flow\ETL\Transformer\Filter\Filter;
 
 /**
  * @implements Filter<array{filter: Filter}>
+ *
  * @psalm-immutable
  */
 final class Opposite implements Filter

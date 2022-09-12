@@ -10,6 +10,7 @@ use Flow\Serializer\Serializable;
 
 /**
  * @psalm-allow-private-mutation
+ *
  * @implements Serializable<array{map: array<string, array<mixed>|int|string|bool|float|object>}>
  */
 final class Metadata implements Serializable

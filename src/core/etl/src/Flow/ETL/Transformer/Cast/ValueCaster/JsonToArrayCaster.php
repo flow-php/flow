@@ -9,6 +9,7 @@ use Flow\ETL\Row\ValueConverter;
 
 /**
  * @implements ValueConverter<array<mixed>>
+ *
  * @psalm-immutable
  */
 final class JsonToArrayCaster implements ValueConverter

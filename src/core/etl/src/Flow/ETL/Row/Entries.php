@@ -13,6 +13,7 @@ use Flow\Serializer\Serializable;
  * @implements \ArrayAccess<string, Entry>
  * @implements \IteratorAggregate<string, Entry>
  * @implements Serializable<array{entries: array<string, Entry>}>
+ *
  * @psalm-immutable
  */
 final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Serializable

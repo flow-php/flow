@@ -9,6 +9,7 @@ use Flow\ETL\Transformer\Filter\Filter;
 
 /**
  * @implements Filter<array{entry_name: string, entry_value: mixed}>
+ *
  * @psalm-immutable
  */
 final class EntryNotEqualsTo implements Filter

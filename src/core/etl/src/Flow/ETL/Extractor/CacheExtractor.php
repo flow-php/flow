@@ -23,6 +23,7 @@ final class CacheExtractor implements Extractor
 
     /**
      * @param FlowContext $context
+     *
      * @psalm-suppress ImpureMethodCall
      *
      * @return \Generator<int, Rows, mixed, void>

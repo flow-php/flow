@@ -14,7 +14,9 @@ use Flow\ETL\Row\Schema\Metadata;
 
 /**
  * @template T
+ *
  * @implements Entry<array<T>, array{name: string, type: Type, value: array<T>}>
+ *
  * @psalm-immutable
  */
 final class ListEntry implements Entry, TypedCollection

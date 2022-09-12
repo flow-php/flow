@@ -43,6 +43,7 @@ final class TableDefinition
      * @throws RuntimeException
      *
      * @return array<string, string>
+     *
      * @psalm-suppress DeprecatedMethod
      */
     public function dbalTypes(BulkData $bulkData) : array

@@ -11,6 +11,7 @@ use Flow\ETL\Transformer;
 
 /**
  * @implements Transformer<array{entry_names: array<string>}>
+ *
  * @psalm-immutable
  */
 final class NullStringIntoNullEntryTransformer implements Transformer

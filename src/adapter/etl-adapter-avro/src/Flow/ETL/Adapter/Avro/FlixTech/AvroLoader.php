@@ -126,6 +126,7 @@ final class AvroLoader implements Closure, Loader
                 foreach ($entry->value() as $value) {
                     /**
                      * @psalm-suppress MixedMethodCall
+                     *
                      * @phpstan-ignore-next-line
                      */
                     $data[] = (int) $value->format('Uu');
@@ -146,6 +147,7 @@ final class AvroLoader implements Closure, Loader
 
         /**
          * @psalm-suppress PossiblyNullArgument
+         *
          * @phpstan-ignore-next-line
          */
         return (new SchemaConverter())->toAvroJsonSchema($this->inferredSchema);

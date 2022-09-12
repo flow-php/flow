@@ -20,6 +20,7 @@ use Flow\Serializer\Serializable;
  * @implements \ArrayAccess<int, Row>
  * @implements \IteratorAggregate<int, Row>
  * @implements Serializable<array{rows: array<int, Row>}>
+ *
  * @psalm-immutable
  */
 final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serializable
@@ -146,6 +147,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
 
     /**
      * @psalm-suppress UnusedFunctionCall
+     *
      * @psalm-param pure-callable(Row) : void $callable
      *
      * @param callable(Row) : void $callable
@@ -509,6 +511,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
          * @return array<string, array<mixed>>
          *
          * @psalm-suppress MixedAssignment
+         *
          * @psalm-pure
          */
         $cartesianProduct = static function (array $input) : array {
