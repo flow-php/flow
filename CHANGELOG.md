@@ -1,6 +1,20 @@
-## [Unreleased] - 2022-07-24
+## [Unreleased] - 2022-09-21
 
 ### Added
+- [#149](https://github.com/flow-php/flow/pull/149) - **support for Elasticsearch 8 client** - [@norberttech](https://github.com/norberttech)
+- [#112](https://github.com/flow-php/flow/pull/112) - **Added PSRSimpleCache implementation of Flow Cache** - [@norberttech](https://github.com/norberttech)
+- [#109](https://github.com/flow-php/flow/pull/109) - **Print Rows/Schema alias to improve DX by not making dev to remember about To:: formatters** - [@norberttech](https://github.com/norberttech)
+- [#103](https://github.com/flow-php/flow/pull/103) - **Added threadSafe flag to FlowContext** - [@norberttech](https://github.com/norberttech)
+- [#101](https://github.com/flow-php/flow/pull/101) - **SaveMode allowing to control how to deal with existing files** - [@norberttech](https://github.com/norberttech)
+- [#101](https://github.com/flow-php/flow/pull/101) - **Filesystem::exists** - [@norberttech](https://github.com/norberttech)
+- [#101](https://github.com/flow-php/flow/pull/101) - **Filesystem::rm** - [@norberttech](https://github.com/norberttech)
+- [#101](https://github.com/flow-php/flow/pull/101) - **few missing unit tests** - [@norberttech](https://github.com/norberttech)
+- [#96](https://github.com/flow-php/flow/pull/96) - **reading partitioned CSV example** - [@norberttech](https://github.com/norberttech)
+- [#95](https://github.com/flow-php/flow/pull/95) - **examples into the main flow repository** - [@norberttech](https://github.com/norberttech)
+- [#93](https://github.com/flow-php/flow/pull/93) - **more PR checks to github actions** - [@norberttech](https://github.com/norberttech)
+- [#92](https://github.com/flow-php/flow/pull/92) - **[Core] Filesystem Streams** - [@norberttech](https://github.com/norberttech)
+- [#92](https://github.com/flow-php/flow/pull/92) - **[Json] Partitioning** - [@norberttech](https://github.com/norberttech)
+- [#92](https://github.com/flow-php/flow/pull/92) - **[Monorepo] Contributing section in README** - [@norberttech](https://github.com/norberttech)
 - [0e0952](https://github.com/flow-php/flow/commit/0e095203fad064567f2478abb24e6c407c8dfe60) - **changelog** - [@norberttech](https://github.com/norberttech)
 - [04858c](https://github.com/flow-php/flow/commit/04858c432e24c37f2a904bec67d0c27972b845b9) - **PGSQL database url to testsuite setup** - [@norberttech](https://github.com/norberttech)
 - [27ee7a](https://github.com/flow-php/flow/commit/27ee7a709bb315cbf39aaf492c2106421f5c8a29) - **monorepo tools and settings** - [@norberttech](https://github.com/norberttech)
@@ -101,6 +115,16 @@
 - [856870](https://github.com/flow-php/flow/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#148](https://github.com/flow-php/flow/pull/148) - **Updated tools & project dependencies** - [@norberttech](https://github.com/norberttech)
+- [0488f3](https://github.com/flow-php/flow/commit/0488f3a4fd05428c0b342913fc5394f7520d71c5) - **Lock avro in order to avoid BC breaks** - [@norberttech](https://github.com/norberttech)
+- [#111](https://github.com/flow-php/flow/pull/111) - **Moved ErrorHandler to FlowContext** - [@norberttech](https://github.com/norberttech)
+- [#104](https://github.com/flow-php/flow/pull/104) - **Simplified Parquet Loader writing to groups** - [@norberttech](https://github.com/norberttech)
+- [#101](https://github.com/flow-php/flow/pull/101) - **renamed color into t_shirt_color in examples** - [@norberttech](https://github.com/norberttech)
+- [#97](https://github.com/flow-php/flow/pull/97) - **Improved partitioning performance** - [@norberttech](https://github.com/norberttech)
+- [ead619](https://github.com/flow-php/flow/commit/ead6197bbaa6db40a7a77d02bdaf3b4edc37ee8c) - **Use pull_request_target for labeler** - [@norberttech](https://github.com/norberttech)
+- [595617](https://github.com/flow-php/flow/commit/5956175ecf8dd48f36c4738543dd4bdb70536978) - **Disabled labelers due to github security issues** - [@norberttech](https://github.com/norberttech)
+- [#92](https://github.com/flow-php/flow/pull/92) - **[CSV] Partitioning is now using Filesystem Streams** - [@norberttech](https://github.com/norberttech)
+- [d9ef9b](https://github.com/flow-php/flow/commit/d9ef9bc57a21fd319c54e50bb4da38aa69122de1) - **Unified installation guide in all readme files** - [@norberttech](https://github.com/norberttech)
 - [1ec7b6](https://github.com/flow-php/flow/commit/1ec7b67b8fdaf03f86a6e1c0f0f6a504ca5a87e3) - **Merge etl-adapter-xml/1.x** - [@norberttech](https://github.com/norberttech)
 - [0f4399](https://github.com/flow-php/flow/commit/0f439976d7c5552081c88fa9d3304661082ac233) - **Merge etl-adapter-text/1.x** - [@norberttech](https://github.com/norberttech)
 - [2cabd8](https://github.com/flow-php/flow/commit/2cabd8285282881d9f13a1c243fa265eefa8786e) - **Merge etl-adapter-reactphp/1.x** - [@norberttech](https://github.com/norberttech)
@@ -509,6 +533,18 @@
 - [e48062](https://github.com/flow-php/flow/commit/e48062890cd84e655e1162305086f67148347b83) - **Intial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#110](https://github.com/flow-php/flow/pull/110) - **limit behavior when expanding rows during transformations** - [@norberttech](https://github.com/norberttech)
+- [#108](https://github.com/flow-php/flow/pull/108) - **keep_entries transformer behavior for missing entries** - [@norberttech](https://github.com/norberttech)
+- [#108](https://github.com/flow-php/flow/pull/108) - **native entry factory behavior for empty lists** - [@norberttech](https://github.com/norberttech)
+- [#108](https://github.com/flow-php/flow/pull/108) - **CSV Loader SaveMode when used with partitions** - [@norberttech](https://github.com/norberttech)
+- [#104](https://github.com/flow-php/flow/pull/104) - **Avro Loader - detecting already existing file** - [@norberttech](https://github.com/norberttech)
+- [#104](https://github.com/flow-php/flow/pull/104) - **Avro Loader - error message when converting entries with name not supported by Avro library** - [@norberttech](https://github.com/norberttech)
+- [#104](https://github.com/flow-php/flow/pull/104) - **Parquet Loder - detecting already existing files** - [@norberttech](https://github.com/norberttech)
+- [#103](https://github.com/flow-php/flow/pull/103) - **SaveMode ExceptionIfExists behavior across all loaders.** - [@norberttech](https://github.com/norberttech)
+- [#101](https://github.com/flow-php/flow/pull/101) - **opening single stream more than once in FilesystemStreams** - [@norberttech](https://github.com/norberttech)
+- [#97](https://github.com/flow-php/flow/pull/97) - **amphp react parallel processing examples** - [@norberttech](https://github.com/norberttech)
+- [#96](https://github.com/flow-php/flow/pull/96) - **Sort behavior when used after DataFrame::collect()** - [@norberttech](https://github.com/norberttech)
+- [915c80](https://github.com/flow-php/flow/commit/915c80f1b60f72a65f0fe931c13b8b3c4e864475) - **broken markdown links in documentation** - [@norberttech](https://github.com/norberttech)
 - [c05fc1](https://github.com/flow-php/flow/commit/c05fc1dc8808e33133f741d93a6e64cc50d58be3) - **invalid access token in workflows** - [@norberttech](https://github.com/norberttech)
 - [3909b0](https://github.com/flow-php/flow/commit/3909b0a0d287ef6d7e0fb809931ce9ed4658b497) - **restore remvoved composer json from array-dot library** - [@norberttech](https://github.com/norberttech)
 - [86407c](https://github.com/flow-php/flow/commit/86407cb430f91d9f3ea357518122ca49462d40bf) - **lowest dependencies tests in test suite** - [@norberttech](https://github.com/norberttech)
@@ -578,6 +614,10 @@
 - [1a6eec](https://github.com/flow-php/flow/commit/1a6eec01837f25cf1d6ff7c041996ff7b8b017e7) - **failing tests** - [@norberttech](https://github.com/norberttech)
 
 ### Updated
+- [0c5830](https://github.com/flow-php/flow/commit/0c5830c4e47a4a33e02ad0a2c17aebccefb45a04) - **dependencies** - [@norberttech](https://github.com/norberttech)
+- [413739](https://github.com/flow-php/flow/commit/41373913aa84bc42f53b093ef9b85f607822a0dc) - **labeler.yml** - [@norberttech](https://github.com/norberttech)
+- [ffa5c2](https://github.com/flow-php/flow/commit/ffa5c27818732a2c424db30c7a9bc5692648cae8) - **dependencies** - [@norberttech](https://github.com/norberttech)
+- [193040](https://github.com/flow-php/flow/commit/193040584fe1c4f318a07ced6baf7f3dbf8cb0a8) - **pr-check.yml** - [@norberttech](https://github.com/norberttech)
 - [fb496d](https://github.com/flow-php/flow/commit/fb496d4dff5d68ad6e90a8c8b339ac4dfbf4e311) - **doctrine/dbal dependency** - [@norberttech](https://github.com/norberttech)
 - [573ab1](https://github.com/flow-php/flow/commit/573ab1dbae71bfc6d5b6df3e80d844deb26efe43) - **README** - [@norberttech](https://github.com/norberttech)
 - [25aa47](https://github.com/flow-php/flow/commit/25aa47f5246da8a1f37e53f75d5e516d2f36fb50) - **dependencies** - [@norberttech](https://github.com/norberttech)
@@ -655,6 +695,7 @@
 - [55faa8](https://github.com/flow-php/flow/commit/55faa8edfed3973f54e31b3af57a4ba171050a85) - **README.md** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#103](https://github.com/flow-php/flow/pull/103) - **safe_mode argument from all loaders constructors** - [@norberttech](https://github.com/norberttech)
 - [fd8072](https://github.com/flow-php/flow/commit/fd80722c81205cac9ce7e5e2cad33055c52850ce) - **github actions and tools settings from readonly repositories** - [@norberttech](https://github.com/norberttech)
 - [155e5d](https://github.com/flow-php/flow/commit/155e5d7a065897a68d648060a7e6d839a60aae28) - **failing test in dbal platform** - [@norberttech](https://github.com/norberttech)
 - [6b7826](https://github.com/flow-php/flow/commit/6b7826bbcb790977b98de38ad7533e0ecf36fe49) - **uuid dev dependency** - [@norberttech](https://github.com/norberttech)
