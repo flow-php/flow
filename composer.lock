@@ -1280,7 +1280,7 @@
         },
         {
             "name": "elasticsearch/elasticsearch",
-            "version": "v8.4.1",
+            "version": "v8.4.2",
             "source": {
                 "type": "git",
                 "url": "git@github.com:elastic/elasticsearch-php.git",
