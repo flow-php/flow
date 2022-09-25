@@ -289,14 +289,6 @@ final class Path implements Serializable
 
     public function startsWith(self $path) : bool
     {
-//        if ($this->isPattern()) {
-//            return false;
-//        }
-//
-//        if ($path->isPattern()) {
-//            return false;
-//        }
-
         return \str_starts_with($this->path, $path->path);
     }
 
