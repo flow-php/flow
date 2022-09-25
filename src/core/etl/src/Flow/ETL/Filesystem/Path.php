@@ -287,6 +287,11 @@ final class Path implements Serializable
         return new self($this->uri() . '.' . $extension, $this->options());
     }
 
+    public function startsWith(self $path) : bool
+    {
+        return \str_starts_with($this->path, $path->path);
+    }
+
     public function staticPart() : self
     {
         if (!$this->isPathPattern($this->path)) {

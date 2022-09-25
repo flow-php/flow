@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\CSV;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Filesystem\Stream\FileStream;
@@ -29,8 +28,6 @@ use Flow\ETL\Rows;
  */
 final class CSVLoader implements Closure, Loader
 {
-    private ?FilesystemStreams $streams;
-
     public function __construct(
         private readonly Path $path,
         private bool $header = true,
@@ -39,7 +36,9 @@ final class CSVLoader implements Closure, Loader
         private string $escape = '\\',
         private string $newLineSeparator = PHP_EOL
     ) {
-        $this->streams = null;
+        if ($this->path->isPattern()) {
+            throw new \InvalidArgumentException("CSVLoader path can't be pattern, given: " . $this->path->path());
+        }
     }
 
     public function __serialize() : array
@@ -62,7 +61,6 @@ final class CSVLoader implements Closure, Loader
         $this->escape = $data['escape'];
         $this->enclosure = $data['enclosure'];
         $this->newLineSeparator = $data['new_line_separator'];
-        $this->streams = null;
     }
 
     /**
@@ -70,9 +68,7 @@ final class CSVLoader implements Closure, Loader
      */
     public function closure(Rows $rows, FlowContext $context) : void
     {
-        if ($this->streams !== null) {
-            $this->streams->close();
-        }
+        $context->streams()->close($this->path);
     }
 
     public function load(Rows $rows, FlowContext $context) : void
@@ -98,7 +94,7 @@ final class CSVLoader implements Closure, Loader
     public function write(Rows $nextRows, array $headers, FlowContext $context, array $partitions) : void
     {
         $mode = Mode::WRITE;
-        $streams = $this->streams($context);
+        $streams = $context->streams();
 
         if ($context->mode() === SaveMode::ExceptionIfExists && $streams->exists($this->path, $partitions) && !$streams->isOpen($this->path, $partitions)) {
             throw new RuntimeException('Destination path "' . $this->path->uri() . '" already exists, please change path to different or set different SaveMode');
@@ -133,15 +129,6 @@ final class CSVLoader implements Closure, Loader
                 $streams->open($this->path, 'csv', $mode, $context->threadSafe(), $partitions)
             );
         }
-    }
-
-    private function streams(FlowContext $context) : FilesystemStreams
-    {
-        if ($this->streams === null) {
-            $this->streams = new FilesystemStreams($context->fs());
-        }
-
-        return $this->streams;
     }
 
     private function writeCSV(array $row, FileStream $destination) : void

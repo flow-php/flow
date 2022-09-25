@@ -31,13 +31,13 @@ final class JsonExtractor implements Extractor
     {
         $rows = new Rows();
 
-        foreach ($context->fs()->scan($this->path, $context->partitionFilter()) as $filePath) {
+        foreach ($context->streams()->fs()->scan($this->path, $context->partitionFilter()) as $filePath) {
             /**
              * @psalm-suppress ImpureMethodCall
              *
              * @var array|object $row
              */
-            foreach (Items::fromStream($context->fs()->open($filePath, Mode::READ)->resource())->getIterator() as $row) {
+            foreach (Items::fromStream($context->streams()->fs()->open($filePath, Mode::READ)->resource())->getIterator() as $row) {
                 $rows = $rows->add(Row::create(new Row\Entry\ArrayEntry($this->rowEntryName, (array) $row)));
 
                 if ($rows->count() >= $this->rowsInBatch) {

@@ -83,8 +83,8 @@ final class ParquetExtractor implements Extractor
      */
     private function readers(FlowContext $context) : \Generator
     {
-        foreach ($context->fs()->scan($this->path, $context->partitionFilter()) as $filePath) {
-            yield new ParquetReader($context->fs()->open($filePath, Mode::READ)->resource());
+        foreach ($context->streams()->fs()->scan($this->path, $context->partitionFilter()) as $filePath) {
+            yield new ParquetReader($context->streams()->fs()->open($filePath, Mode::READ)->resource());
         }
     }
 }

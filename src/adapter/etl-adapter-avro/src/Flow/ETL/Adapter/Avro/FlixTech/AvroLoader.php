@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Avro\FlixTech;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Filesystem\Stream\Mode;
@@ -25,14 +24,15 @@ final class AvroLoader implements Closure, Loader
 {
     private ?Schema $inferredSchema = null;
 
-    private ?FilesystemStreams $streams = null;
-
     private ?\AvroDataIOWriter $writer = null;
 
     public function __construct(
         private readonly Path $path,
         private readonly ?Schema $schema = null
     ) {
+        if ($this->path->isPattern()) {
+            throw new \InvalidArgumentException("AvroLoader path can't be pattern, given: " . $this->path->path());
+        }
     }
 
     public function __serialize() : array
@@ -47,7 +47,6 @@ final class AvroLoader implements Closure, Loader
     {
         $this->path = $data['path'];
         $this->schema = $data['schema'];
-        $this->streams = null;
         $this->writer = null;
     }
 
@@ -56,6 +55,8 @@ final class AvroLoader implements Closure, Loader
         if ($this->writer !== null) {
             $this->writer($context)->close();
         }
+
+        $context->streams()->close($this->path);
     }
 
     public function load(Rows $rows, FlowContext $context) : void
@@ -64,7 +65,7 @@ final class AvroLoader implements Closure, Loader
             throw new RuntimeException('Partitioning is not supported yet');
         }
 
-        $streams = $this->streams($context);
+        $streams = $context->streams();
 
         if ($context->mode() === SaveMode::ExceptionIfExists && $streams->exists($this->path) && !$streams->isOpen($this->path)) {
             throw new RuntimeException('Destination path "' . $this->path->uri() . '" already exists, please change path to different or set different SaveMode');
@@ -153,15 +154,6 @@ final class AvroLoader implements Closure, Loader
         return (new SchemaConverter())->toAvroJsonSchema($this->inferredSchema);
     }
 
-    private function streams(FlowContext $context) : FilesystemStreams
-    {
-        if ($this->streams === null) {
-            $this->streams = new FilesystemStreams($context->fs());
-        }
-
-        return $this->streams;
-    }
-
     private function writer(FlowContext $context) : \AvroDataIOWriter
     {
         if ($this->writer !== null) {
@@ -172,7 +164,7 @@ final class AvroLoader implements Closure, Loader
 
         $this->writer =  new \AvroDataIOWriter(
             new AvroResource(
-                $this->streams($context)->open(
+                $context->streams()->open(
                     $this->path,
                     'avro',
                     Mode::WRITE_BINARY,

@@ -91,6 +91,13 @@ final class AvroTest extends TestCase
         $this->cleanDirectory($path);
     }
 
+    public function test_using_pattern_path() : void
+    {
+        $this->expectExceptionMessage("AvroLoader path can't be pattern, given: /path/*/pattern.avro");
+
+        Avro::to(new Path('/path/*/pattern.avro'));
+    }
+
     public function test_writing_and_reading_avro_with_all_supported_types() : void
     {
         $this->removeFile($path = \sys_get_temp_dir() . '/file.avro');

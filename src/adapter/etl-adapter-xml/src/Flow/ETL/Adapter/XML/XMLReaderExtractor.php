@@ -44,7 +44,7 @@ final class XMLReaderExtractor implements Extractor
      */
     public function extract(FlowContext $context) : \Generator
     {
-        foreach ($context->fs()->scan($this->path, $context->partitionFilter()) as $filePath) {
+        foreach ($context->streams()->fs()->scan($this->path, $context->partitionFilter()) as $filePath) {
             $xmlReader = new \XMLReader();
             $xmlReader->open($filePath->path());
 

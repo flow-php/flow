@@ -16,6 +16,13 @@ use PHPUnit\Framework\TestCase;
 
 final class ParquetTest extends TestCase
 {
+    public function test_using_pattern_path() : void
+    {
+        $this->expectExceptionMessage("ParquetLoader path can't be pattern, given: /path/*/pattern.parquet");
+
+        Parquet::to(new Path('/path/*/pattern.parquet'));
+    }
+
     public function test_writing_and_reading_only_given_fields() : void
     {
         $this->removeFile($path = \sys_get_temp_dir() . '/file.parquet');

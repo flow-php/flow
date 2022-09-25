@@ -20,15 +20,21 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
         $this->streams = [];
     }
 
-    public function close() : void
+    public function close(Path $basePath) : void
     {
-        foreach ($this->streams as $fileStream) {
-            if ($fileStream->isOpen()) {
-                $fileStream->close();
+        $streams = [];
+
+        foreach ($this->streams as $key => $fileStream) {
+            if ($fileStream->path()->startsWith($basePath)) {
+                if ($fileStream->isOpen()) {
+                    $fileStream->close();
+                }
+            } else {
+                $streams[$key] = $fileStream;
             }
         }
 
-        $this->streams = [];
+        $this->streams = $streams;
     }
 
     public function count() : int
@@ -46,6 +52,11 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
             : $basePath;
 
         return $this->filesystem->exists($destination);
+    }
+
+    public function fs() : Filesystem
+    {
+        return $this->filesystem;
     }
 
     /**

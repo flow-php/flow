@@ -90,6 +90,14 @@ final class PathTest extends TestCase
         $this->assertSame($dirPath, (new Path($uri))->parentDirectory()->path());
     }
 
+    public function test_equal_paths_starts_with() : void
+    {
+        $this->assertTrue(
+            Path::realpath(\sys_get_temp_dir() . '/some/path/file.json')
+                ->startsWith(Path::realpath(\sys_get_temp_dir() . '/some/path/file.json'))
+        );
+    }
+
     public function test_extension() : void
     {
         $this->assertSame('php', (new Path(__FILE__))->extension());
@@ -134,6 +142,22 @@ final class PathTest extends TestCase
         $this->assertEquals($partitions, (new Path($uri))->partitions());
     }
 
+    public function test_path_starting_with_other_path() : void
+    {
+        $this->assertTrue(
+            Path::realpath(\sys_get_temp_dir() . '/some/path/file.json')
+                ->startsWith(Path::realpath(\sys_get_temp_dir() . '/some/path'))
+        );
+    }
+
+    public function test_pattern_path_starting_with_realpath_path() : void
+    {
+        $this->assertTrue(
+            Path::realpath(\sys_get_temp_dir() . '/some/path/*.json')
+                ->startsWith(Path::realpath(\sys_get_temp_dir() . '/some/path'))
+        );
+    }
+
     public function test_randomization_file_path() : void
     {
         $path = new Path('flow-file://var/file/test.csv', []);
@@ -155,6 +179,14 @@ final class PathTest extends TestCase
         $this->assertStringStartsWith(
             'flow-file://var/file/folder/',
             $path->randomize()->uri()
+        );
+    }
+
+    public function test_realpath_starting_with_non_realpath_path() : void
+    {
+        $this->assertFalse(
+            Path::realpath(\sys_get_temp_dir() . '/some/path/file.json')
+                ->startsWith(new Path('/some/path'))
         );
     }
 
