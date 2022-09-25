@@ -32,8 +32,8 @@ final class TextExtractor implements Extractor
         /** @var array<Row> $rows */
         $rows = [];
 
-        foreach ($context->fs()->scan($this->path, $context->partitionFilter()) as $filePath) {
-            $fileStream = $context->fs()->open($filePath, Mode::READ);
+        foreach ($context->streams()->fs()->scan($this->path, $context->partitionFilter()) as $filePath) {
+            $fileStream = $context->streams()->fs()->open($filePath, Mode::READ);
 
             $rowData = \fgets($fileStream->resource());
 

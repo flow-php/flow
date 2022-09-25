@@ -37,10 +37,10 @@ final class AvroExtractor implements Extractor
         /** @var array<Row> $rows */
         $rows = [];
 
-        foreach ($context->fs()->scan($this->path, $context->partitionFilter()) as $filePath) {
+        foreach ($context->streams()->fs()->scan($this->path, $context->partitionFilter()) as $filePath) {
             $reader = new \AvroDataIOReader(
                 new AvroResource(
-                    $context->fs()->open(
+                    $context->streams()->fs()->open(
                         $filePath,
                         Mode::READ_BINARY
                     )->resource()

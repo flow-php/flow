@@ -66,4 +66,11 @@ final class JsonExtractorTest extends TestCase
 
         $this->assertSame(247, $total);
     }
+
+    public function test_using_pattern_path() : void
+    {
+        $this->expectExceptionMessage("JsonLoader path can't be pattern, given: /path/*/pattern.json");
+
+        Json::to(new Path('/path/*/pattern.json'));
+    }
 }

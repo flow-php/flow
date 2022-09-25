@@ -127,7 +127,7 @@ JSON,
                     \range(0, 5)
                 )
             ),
-            (new FlowContext(Config::default()))->setThreadSafe()
+            ($context = new FlowContext(Config::default()))->setThreadSafe()
         );
 
         $loader->load(
@@ -140,7 +140,7 @@ JSON,
                     \range(6, 10)
                 )
             ),
-            $context = (new FlowContext(Config::default()))->setMode(SaveMode::Overwrite)->setThreadSafe()
+            $context = ($context)->setMode(SaveMode::Overwrite)->setThreadSafe()
         );
 
         $loader->closure(new Rows(), $context);

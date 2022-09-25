@@ -13,6 +13,21 @@ use PHPUnit\Framework\TestCase;
 
 class FilesystemStreamsTest extends TestCase
 {
+    public function test_closing_stream_with_non_thread_safe_base_path() : void
+    {
+        $streams = (new FilesystemStreams(new FlysystemFS()));
+
+        $streams->open($csvPath = Path::realpath(\sys_get_temp_dir() . '/file.csv'), 'csv', Mode::APPEND, false);
+        $streams->open($jsonPath = Path::realpath(\sys_get_temp_dir() . '/file.json'), 'json', Mode::APPEND, false);
+
+        $streams->close($jsonPath);
+
+        $this->assertEquals(
+            $csvPath,
+            \current(\iterator_to_array($streams))->path()
+        );
+    }
+
     public function test_open_partitioned_rows() : void
     {
         $rows = (new Rows(...[
@@ -42,7 +57,7 @@ class FilesystemStreamsTest extends TestCase
 
     public function test_open_rows() : void
     {
-        $rows = (new Rows(...[
+        (new Rows(...[
             Row::create(Entry::integer('id', 1), Entry::string('group', 'a')),
             Row::create(Entry::integer('id', 2), Entry::string('group', 'a')),
             Row::create(Entry::integer('id', 3), Entry::string('group', 'b')),

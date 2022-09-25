@@ -34,8 +34,8 @@ final class CSVExtractor implements Extractor
      */
     public function extract(FlowContext $context) : \Generator
     {
-        foreach ($context->fs()->scan($this->uri, $context->partitionFilter()) as $path) {
-            $stream = $context->fs()->open($path, Mode::READ);
+        foreach ($context->streams()->fs()->scan($this->uri, $context->partitionFilter()) as $path) {
+            $stream = $context->streams()->fs()->open($path, Mode::READ);
 
             /** @var array<Row> $rows */
             $rows = [];

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Text\Tests\Integration;
 
 use Flow\ETL\DSL\Text;
+use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Flow;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -103,5 +104,12 @@ TEXT,
         if (\file_exists($path)) {
             \unlink($path);
         }
+    }
+
+    public function test_using_pattern_path() : void
+    {
+        $this->expectExceptionMessage("TextLoader path can't be pattern, given: /path/*/pattern.csv");
+
+        Text::to(new Path('/path/*/pattern.csv'));
     }
 }

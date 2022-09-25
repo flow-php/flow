@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Text;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Filesystem\Stream\FileStream;
@@ -25,13 +24,15 @@ final class TextLoader implements Closure, Loader
 {
     private ?FileStream $fileStream;
 
-    private ?FilesystemStreams $streams = null;
-
     public function __construct(
         private readonly Path $path,
         private string $newLineSeparator = PHP_EOL,
     ) {
         $this->fileStream = null;
+
+        if ($this->path->isPattern()) {
+            throw new \InvalidArgumentException("TextLoader path can't be pattern, given: " . $this->path->path());
+        }
     }
 
     public function __serialize() : array
@@ -57,6 +58,8 @@ final class TextLoader implements Closure, Loader
         if ($this->fileStream !== null && $this->fileStream->isOpen()) {
             $this->fileStream->close();
         }
+
+        $context->streams()->close($this->path);
     }
 
     public function load(Rows $rows, FlowContext $context) : void
@@ -65,7 +68,7 @@ final class TextLoader implements Closure, Loader
             throw new RuntimeException('Partitioning is not supported yet');
         }
 
-        $streams = $this->streams($context);
+        $streams = $context->streams();
 
         if ($context->mode() === SaveMode::ExceptionIfExists && $streams->exists($this->path) && !$streams->isOpen($this->path)) {
             throw new RuntimeException('Destination path "' . $this->path->uri() . '" already exists, please change path to different or set different SaveMode');
@@ -100,21 +103,12 @@ final class TextLoader implements Closure, Loader
     private function stream(FlowContext $context) : FileStream
     {
         if ($this->fileStream === null) {
-            $this->fileStream = $context->fs()->open(
+            $this->fileStream = $context->streams()->fs()->open(
                 $context->threadSafe() ? $this->path->randomize() : $this->path,
                 Mode::WRITE
             );
         }
 
         return $this->fileStream;
-    }
-
-    private function streams(FlowContext $context) : FilesystemStreams
-    {
-        if ($this->streams === null) {
-            $this->streams = new FilesystemStreams($context->fs());
-        }
-
-        return $this->streams;
     }
 }

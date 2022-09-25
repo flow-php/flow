@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\CSV\Tests\Integration;
 
 use Flow\ETL\DSL\CSV;
 use Flow\ETL\DSL\Entry;
+use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Flow;
 use Flow\ETL\Row;
@@ -246,6 +247,13 @@ CSV,
         if (\file_exists($path)) {
             \unlink($path);
         }
+    }
+
+    public function test_using_pattern_path() : void
+    {
+        $this->expectExceptionMessage("CSVLoader path can't be pattern, given: /path/*/pattern.csv");
+
+        CSV::to(new Path('/path/*/pattern.csv'));
     }
 
     /**

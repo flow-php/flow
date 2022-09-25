@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\JSON;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Filesystem\Stream\FileStream;
@@ -21,17 +20,16 @@ use Flow\ETL\Rows;
  */
 final class JsonLoader implements Closure, Loader
 {
-    private ?FilesystemStreams $streams;
-
     /**
      * @var array<string, int>
      */
     private array $writes = [];
 
-    public function __construct(
-        private readonly Path $path
-    ) {
-        $this->streams = null;
+    public function __construct(private readonly Path $path)
+    {
+        if ($this->path->isPattern()) {
+            throw new \InvalidArgumentException("JsonLoader path can't be pattern, given: " . $this->path->path());
+        }
     }
 
     public function __serialize() : array
@@ -44,20 +42,15 @@ final class JsonLoader implements Closure, Loader
     public function __unserialize(array $data) : void
     {
         $this->path = $data['path'];
-        $this->streams = null;
     }
 
     public function closure(Rows $rows, FlowContext $context) : void
     {
-        $streams = $this->streams;
-
-        if ($streams !== null) {
-            foreach ($streams as $stream) {
-                $this->close($stream);
-            }
-
-            $streams->close();
+        foreach ($context->streams() as $stream) {
+            $this->close($stream);
         }
+
+        $context->streams()->close($this->path);
     }
 
     public function load(Rows $rows, FlowContext $context) : void
@@ -77,7 +70,7 @@ final class JsonLoader implements Closure, Loader
     public function write(Rows $nextRows, array $partitions, FlowContext $context) : void
     {
         $mode = Mode::WRITE;
-        $streams = $this->streams($context);
+        $streams = $context->streams();
 
         if ($context->mode() === SaveMode::ExceptionIfExists && $streams->exists($this->path, $partitions) && !$streams->isOpen($this->path)) {
             throw new RuntimeException('Destination path "' . $this->path->uri() . '" already exists, please change path to different or set different SaveMode');
@@ -140,14 +133,5 @@ final class JsonLoader implements Closure, Loader
         }
 
         \fwrite($stream->resource(), '[');
-    }
-
-    private function streams(FlowContext $context) : FilesystemStreams
-    {
-        if ($this->streams === null) {
-            $this->streams = new FilesystemStreams($context->fs());
-        }
-
-        return $this->streams;
     }
 }

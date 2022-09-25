@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL;
 
 use Flow\ETL\ErrorHandler\ThrowError;
+use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Partition\NoopFilter;
 use Flow\ETL\Partition\PartitionFilter;
@@ -22,6 +23,8 @@ final class FlowContext
      * @var array<string>
      */
     private array $partitions;
+
+    private ?FilesystemStreams $streams = null;
 
     private bool $threadSafe = false;
 
@@ -47,11 +50,6 @@ final class FlowContext
         $this->partitionFilter = $filter;
 
         return $this;
-    }
-
-    public function fs() : Filesystem
-    {
-        return $this->config->filesystem();
     }
 
     public function mode() : SaveMode
@@ -103,6 +101,15 @@ final class FlowContext
         $this->threadSafe = $threadSafe;
 
         return $this;
+    }
+
+    public function streams() : FilesystemStreams
+    {
+        if ($this->streams === null) {
+            $this->streams = new FilesystemStreams($this->config->filesystem());
+        }
+
+        return $this->streams;
     }
 
     public function threadSafe() : bool
