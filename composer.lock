@@ -1751,16 +1751,16 @@
         },
         {
             "name": "halaxa/json-machine",
-            "version": "1.1.1",
+            "version": "1.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/halaxa/json-machine.git",
-                "reference": "b4086dfe72670df060d2bd481f01bc9e450a5640"
+                "reference": "21057a6ffc52f8f691c555dcd42330fbe11620ec"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/halaxa/json-machine/zipball/b4086dfe72670df060d2bd481f01bc9e450a5640",
-                "reference": "b4086dfe72670df060d2bd481f01bc9e450a5640",
+                "url": "https://api.github.com/repos/halaxa/json-machine/zipball/21057a6ffc52f8f691c555dcd42330fbe11620ec",
+                "reference": "21057a6ffc52f8f691c555dcd42330fbe11620ec",
                 "shasum": ""
             },
             "require": {
@@ -1797,7 +1797,7 @@
             "description": "Efficient, easy-to-use and fast JSON pull parser",
             "support": {
                 "issues": "https://github.com/halaxa/json-machine/issues",
-                "source": "https://github.com/halaxa/json-machine/tree/1.1.1"
+                "source": "https://github.com/halaxa/json-machine/tree/1.1.2"
             },
             "funding": [
                 {
@@ -1805,7 +1805,7 @@
                     "type": "other"
                 }
             ],
-            "time": "2022-03-03T11:02:11+00:00"
+            "time": "2022-09-29T15:12:17+00:00"
         },
         {
             "name": "kelunik/certificate",
