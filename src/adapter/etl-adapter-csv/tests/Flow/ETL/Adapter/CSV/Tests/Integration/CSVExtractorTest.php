@@ -220,4 +220,46 @@ final class CSVExtractorTest extends TestCase
                 ->toArray()
         );
     }
+
+    public function test_extracting_csv_with_more_than_1000_characters_per_line() : void
+    {
+        $extractor = CSV::from(
+            __DIR__ . '/../Fixtures/more_than_1000_characters_per_line.csv'
+        );
+
+        $total = 0;
+        /** @var Rows $rows */
+        foreach ($extractor->extract(new FlowContext(Config::default())) as $rows) {
+            $rows->each(function (Row $row) : void {
+                $this->assertInstanceOf(Row\Entry\ArrayEntry::class, $row->get('row'));
+                $this->assertSame(
+                    ['id', 'name'],
+                    \array_keys($row->valueOf('row'))
+                );
+            });
+            $total += $rows->count();
+        }
+
+        $this->assertSame(2, $total, 'Long line was broken down into two.');
+
+        $extractor = CSV::from(
+            __DIR__ . '/../Fixtures/more_than_1000_characters_per_line.csv',
+            charactersReadInLine: 2000
+        );
+
+        $total = 0;
+        /** @var Rows $rows */
+        foreach ($extractor->extract(new FlowContext(Config::default())) as $rows) {
+            $rows->each(function (Row $row) : void {
+                $this->assertInstanceOf(Row\Entry\ArrayEntry::class, $row->get('row'));
+                $this->assertSame(
+                    ['id', 'name'],
+                    \array_keys($row->valueOf('row'))
+                );
+            });
+            $total += $rows->count();
+        }
+
+        $this->assertSame(1, $total, 'Long line was read as one row.');
+    }
 }

@@ -34,7 +34,8 @@ class CSV
         string $row_entry_name = 'row',
         string $delimiter = ',',
         string $enclosure = '"',
-        string $escape = '\\'
+        string $escape = '\\',
+        int $charactersReadInLine = 1000
     ) : Extractor {
         if (\is_array($uri)) {
             $extractors = [];
@@ -48,7 +49,8 @@ class CSV
                     $row_entry_name,
                     $delimiter,
                     $enclosure,
-                    $escape
+                    $escape,
+                    $charactersReadInLine
                 );
             }
 
@@ -63,7 +65,8 @@ class CSV
             $row_entry_name,
             $delimiter,
             $enclosure,
-            $escape
+            $escape,
+            $charactersReadInLine
         );
     }
 
