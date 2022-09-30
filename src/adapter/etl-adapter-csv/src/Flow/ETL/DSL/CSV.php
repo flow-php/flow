@@ -21,6 +21,7 @@ class CSV
      * @param string $delimiter
      * @param string $enclosure
      * @param string $escape
+     * @param int<0, max> $charactersReadInLine
      *
      * @throws \Flow\ETL\Exception\InvalidArgumentException
      *
@@ -34,7 +35,8 @@ class CSV
         string $row_entry_name = 'row',
         string $delimiter = ',',
         string $enclosure = '"',
-        string $escape = '\\'
+        string $escape = '\\',
+        int $charactersReadInLine = 1000
     ) : Extractor {
         if (\is_array($uri)) {
             $extractors = [];
@@ -48,7 +50,8 @@ class CSV
                     $row_entry_name,
                     $delimiter,
                     $enclosure,
-                    $escape
+                    $escape,
+                    $charactersReadInLine
                 );
             }
 
@@ -63,7 +66,8 @@ class CSV
             $row_entry_name,
             $delimiter,
             $enclosure,
-            $escape
+            $escape,
+            $charactersReadInLine
         );
     }
 

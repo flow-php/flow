@@ -197,6 +197,34 @@ final class CSVExtractorTest extends TestCase
         $this->assertSame(1, $total);
     }
 
+    public function test_extracting_csv_with_more_than_1000_characters_per_line_splits_rows() : void
+    {
+        $this->assertCount(
+            2,
+            (new Flow())
+                ->read(CSV::from(__DIR__ . '/../Fixtures/more_than_1000_characters_per_line.csv'))
+                ->rows(Transform::array_unpack('row'))
+                ->drop('row')
+                ->fetch()
+                ->toArray(),
+            'Long line was broken down into two rows.'
+        );
+    }
+
+    public function test_extracting_csv_with_more_than_1000_characters_per_line_with_increased_read_in_line_option() : void
+    {
+        $this->assertCount(
+            1,
+            (new Flow())
+                ->read(CSV::from(__DIR__ . '/../Fixtures/more_than_1000_characters_per_line.csv', charactersReadInLine: 2000))
+                ->rows(Transform::array_unpack('row'))
+                ->drop('row')
+                ->fetch()
+                ->toArray(),
+            'Long line was read as one row.'
+        );
+    }
+
     public function test_loading_data_from_all_partitions() : void
     {
         $this->assertSame(
