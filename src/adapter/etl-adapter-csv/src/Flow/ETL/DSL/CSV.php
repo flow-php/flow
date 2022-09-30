@@ -21,6 +21,7 @@ class CSV
      * @param string $delimiter
      * @param string $enclosure
      * @param string $escape
+     * @param int<0, max> $charactersReadInLine
      *
      * @throws \Flow\ETL\Exception\InvalidArgumentException
      *

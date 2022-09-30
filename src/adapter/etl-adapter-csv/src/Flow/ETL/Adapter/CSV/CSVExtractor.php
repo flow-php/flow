@@ -16,6 +16,9 @@ use Flow\ETL\Rows;
  */
 final class CSVExtractor implements Extractor
 {
+    /**
+     * @param int<0, max> $charactersReadInLine
+     */
     public function __construct(
         private readonly Path $uri,
         private readonly int $rowsInBatch = 1000,
