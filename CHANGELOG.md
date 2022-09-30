@@ -1,6 +1,7 @@
 ## [Unreleased] - 2022-09-30
 
 ### Added
+- [#164](https://github.com/flow-php/flow/pull/164) - **Allow configuring amount of characters per line in CSV extractor** - [@stloyd](https://github.com/stloyd)
 - [#153](https://github.com/flow-php/flow/pull/153) - **Added assertion preventing from using pattern paths in filesystem based loders** - [@norberttech](https://github.com/norberttech)
 - [#149](https://github.com/flow-php/flow/pull/149) - **support for Elasticsearch 8 client** - [@norberttech](https://github.com/norberttech)
 - [#112](https://github.com/flow-php/flow/pull/112) - **Added PSRSimpleCache implementation of Flow Cache** - [@norberttech](https://github.com/norberttech)
