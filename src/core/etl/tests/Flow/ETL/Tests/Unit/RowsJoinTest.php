@@ -102,6 +102,49 @@ final class RowsJoinTest extends TestCase
         );
     }
 
+    public function test_left_anti_join() : void
+    {
+        $left = new Rows(
+            Row::create(Entry::integer('id', 1), Entry::string('country', 'PL')),
+            Row::create(Entry::integer('id', 2), Entry::string('country', 'US')),
+            Row::create(Entry::integer('id', 3), Entry::string('country', 'FR')),
+        );
+
+        $joined = $left->joinLeftAnti(
+            new Rows(
+                Row::create(Entry::string('code', 'US'), Entry::string('name', 'United States')),
+                Row::create(Entry::string('code', 'FR'), Entry::string('name', 'France')),
+            ),
+            Condition::on(['country' => 'code'])
+        );
+
+        $this->assertEquals(
+            new Rows(
+                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL')),
+            ),
+            $joined
+        );
+    }
+
+    public function test_left_anti_join_on_empty() : void
+    {
+        $left = new Rows(
+            Row::create(Entry::integer('id', 1), Entry::string('country', 'PL')),
+            Row::create(Entry::integer('id', 2), Entry::string('country', 'US')),
+            Row::create(Entry::integer('id', 3), Entry::string('country', 'FR')),
+        );
+
+        $joined = $left->joinLeftAnti(
+            new Rows(),
+            Condition::on(['country' => 'code'])
+        );
+
+        $this->assertEquals(
+            $left,
+            $joined
+        );
+    }
+
     public function test_left_join() : void
     {
         $left = new Rows(

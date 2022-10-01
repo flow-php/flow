@@ -181,7 +181,7 @@ final class DataFrame
     }
 
     /**
-     * @psalm-param "left"|"right"|"inner"|Join $type
+     * @psalm-param "left"|"left_anti"|"right"|"inner"|Join $type
      */
     public function join(self $dataFrame, Condition $on, string|Join $type = Join::left) : self
     {
@@ -189,15 +189,22 @@ final class DataFrame
             $type = $type->name;
         }
 
-        /** @var Transformer $transformer */
-        $transformer = JoinRowsTransformer::$type($dataFrame, $on);
+        $transformer = match (\strtolower($type)) {
+            Join::left->value => JoinRowsTransformer::left($dataFrame, $on),
+            Join::left_anti->value => JoinRowsTransformer::leftAnti($dataFrame, $on),
+            Join::right->value => JoinRowsTransformer::right($dataFrame, $on),
+            Join::inner->value => JoinRowsTransformer::inner($dataFrame, $on),
+            /** @phpstan-ignore-next-line  */
+            default => throw new InvalidArgumentException("Unsupported join type: {$type}")
+        };
+
         $this->pipeline->add($transformer);
 
         return $this;
     }
 
     /**
-     * @psalm-param "left"|"right"|"inner"|Join $type
+     * @psalm-param "left"|"left_anti"|"right"|"inner"|Join $type
      */
     public function joinEach(DataFrameFactory $factory, Condition $on, string|Join $type = Join::left) : self
     {
@@ -205,8 +212,14 @@ final class DataFrame
             $type = $type->name;
         }
 
-        /** @var Transformer $transformer */
-        $transformer = JoinEachRowsTransformer::$type($factory, $on);
+        $transformer = match (\strtolower($type)) {
+            Join::left->value => JoinEachRowsTransformer::left($factory, $on),
+            Join::left_anti->value => JoinEachRowsTransformer::leftAnti($factory, $on),
+            Join::right->value => JoinEachRowsTransformer::right($factory, $on),
+            Join::inner->value => JoinEachRowsTransformer::inner($factory, $on),
+            /** @phpstan-ignore-next-line  */
+            default => throw new InvalidArgumentException("Unsupported join type: {$type}")
+        };
         $this->pipeline->add($transformer);
 
         return $this;

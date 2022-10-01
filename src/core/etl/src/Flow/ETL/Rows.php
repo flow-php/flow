@@ -360,6 +360,34 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
     /**
      * @throws InvalidArgumentException
      */
+    public function joinLeftAnti(self $right, Condition $condition) : self
+    {
+        /**
+         * @var array<Row> $joined
+         */
+        $joined = [];
+
+        foreach ($this->rows as $leftRow) {
+            $foundRight = false;
+
+            foreach ($right as $rightRow) {
+                if (!$condition->meet($leftRow, $rightRow)) {
+                    continue;
+                }
+                $foundRight = true;
+            }
+
+            if (!$foundRight) {
+                $joined[] = $leftRow;
+            }
+        }
+
+        return new self(...$joined);
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
     public function joinRight(self $right, Condition $condition) : self
     {
         /**
