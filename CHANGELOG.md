@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-09-30
+## [Unreleased] - 2022-10-01
 
 ### Added
 - [#164](https://github.com/flow-php/flow/pull/164) - **Allow configuring amount of characters per line in CSV extractor** - [@stloyd](https://github.com/stloyd)
@@ -536,6 +536,7 @@
 - [e48062](https://github.com/flow-php/flow/commit/e48062890cd84e655e1162305086f67148347b83) - **Intial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#166](https://github.com/flow-php/flow/pull/166) - **Typo in code example** - [@drupol](https://github.com/drupol)
 - [#110](https://github.com/flow-php/flow/pull/110) - **limit behavior when expanding rows during transformations** - [@norberttech](https://github.com/norberttech)
 - [#108](https://github.com/flow-php/flow/pull/108) - **keep_entries transformer behavior for missing entries** - [@norberttech](https://github.com/norberttech)
 - [#108](https://github.com/flow-php/flow/pull/108) - **native entry factory behavior for empty lists** - [@norberttech](https://github.com/norberttech)
