@@ -1,6 +1,8 @@
 ## [Unreleased] - 2022-10-01
 
 ### Added
+- [#167](https://github.com/flow-php/flow/pull/167) - **left_anti join** - [@norberttech](https://github.com/norberttech)
+- [#165](https://github.com/flow-php/flow/pull/165) - **Pipeline Execution Plan** - [@norberttech](https://github.com/norberttech)
 - [#164](https://github.com/flow-php/flow/pull/164) - **Allow configuring amount of characters per line in CSV extractor** - [@stloyd](https://github.com/stloyd)
 - [#153](https://github.com/flow-php/flow/pull/153) - **Added assertion preventing from using pattern paths in filesystem based loders** - [@norberttech](https://github.com/norberttech)
 - [#149](https://github.com/flow-php/flow/pull/149) - **support for Elasticsearch 8 client** - [@norberttech](https://github.com/norberttech)
