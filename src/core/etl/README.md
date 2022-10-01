@@ -621,6 +621,7 @@ the result of the expansion.
 Join two data frames, left and right using one of following types of join:
 
 * left
+* left_anti (keep in left only what does not exist in right)
 * right
 * inner
 

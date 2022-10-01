@@ -44,6 +44,14 @@ final class JoinEachRowsTransformer implements Transformer
     /**
      * @psalm-pure
      */
+    public static function leftAnti(DataFrameFactory $right, Condition $condition) : self
+    {
+        return new self($right, $condition, Join::left_anti);
+    }
+
+    /**
+     * @psalm-pure
+     */
     public static function right(DataFrameFactory $right, Condition $condition) : self
     {
         return new self($right, $condition, Join::right);
@@ -76,6 +84,7 @@ final class JoinEachRowsTransformer implements Transformer
     {
         return match ($this->type) {
             Join::left => $rows->joinLeft($this->factory->from($rows)->fetch(), $this->condition),
+            Join::left_anti => $rows->joinLeftAnti($this->factory->from($rows)->fetch(), $this->condition),
             Join::right => $rows->joinRight($this->factory->from($rows)->fetch(), $this->condition),
             default => $rows->joinInner($this->factory->from($rows)->fetch(), $this->condition),
         };
