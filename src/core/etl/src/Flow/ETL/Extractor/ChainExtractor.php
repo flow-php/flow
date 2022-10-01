@@ -10,7 +10,7 @@ use Flow\ETL\FlowContext;
 /**
  * @psalm-immutable
  */
-final class ChainExtractor implements Extractor
+final class ChainExtractor implements Extractor, OverridingExtractor
 {
     /**
      * @var array<Extractor>
@@ -29,5 +29,10 @@ final class ChainExtractor implements Extractor
                 yield $rows;
             }
         }
+    }
+
+    public function extractors() : array
+    {
+        return $this->extractors;
     }
 }

@@ -16,9 +16,10 @@ use PHPUnit\Framework\TestCase;
 
 final class CSVLoaderTest extends TestCase
 {
-    public function test_loading_append_to_csv() : void
+    public function test_appending_to_csv_in_non_thread_safe() : void
     {
         $path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.csv';
+        $this->expectExceptionMessage("Appending to destination \"file:/{$path}\" in non thread safe mode is not supported.");
 
         (new Flow())
             ->process(
@@ -42,19 +43,6 @@ final class CSVLoaderTest extends TestCase
             ->mode(SaveMode::Append)
             ->load(CSV::to($path))
             ->run();
-
-        $this->assertStringContainsString(
-            <<<'CSV'
-id,name
-1,Norbert
-2,Tomek
-3,Dawid
-1,Norbert
-2,Tomek
-3,Dawid
-CSV,
-            \file_get_contents($path)
-        );
 
         if (\file_exists($path)) {
             \unlink($path);

@@ -49,4 +49,20 @@ final class Pipes implements Serializable
     {
         return $this->pipes;
     }
+
+    /**
+     * @return array<Loader>
+     */
+    public function loaders() : array
+    {
+        $loaders = [];
+
+        foreach ($this->pipes as $pipe) {
+            if ($pipe instanceof Loader) {
+                $loaders[] = $pipe;
+            }
+        }
+
+        return $loaders;
+    }
 }

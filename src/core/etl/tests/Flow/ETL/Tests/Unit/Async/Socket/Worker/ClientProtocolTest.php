@@ -9,6 +9,8 @@ use Flow\ETL\Async\Socket\Worker\ClientProtocol;
 use Flow\ETL\Async\Socket\Worker\Processor;
 use Flow\ETL\Async\Socket\Worker\Server;
 use Flow\ETL\Cache\InMemoryCache;
+use Flow\ETL\Config;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Pipeline\Pipes;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -27,7 +29,9 @@ final class ClientProtocolTest extends TestCase
             ->method('send')
             ->with(Message::fetch('id'));
 
-        $protocol->handle('id', Message::setup(Pipes::empty(), $cache = new InMemoryCache(), 'cache_id'), $server);
+        $context = new FlowContext(Config::builder()->cache($cache = new InMemoryCache())->build());
+
+        $protocol->handle('id', Message::setup(Pipes::empty(), $context, 'cache_id'), $server);
         $protocol->handle(
             'id',
             Message::process($rows = new Rows(Row::create(new Row\Entry\IntegerEntry('id', 1)))),
@@ -44,6 +48,8 @@ final class ClientProtocolTest extends TestCase
     {
         $protocol = new ClientProtocol(new Processor('worker', new NullLogger()));
 
+        $context = new FlowContext(Config::builder()->cache(new InMemoryCache())->build());
+
         $server = $this->createMock(Server::class);
 
         $server->expects($this->once())
@@ -52,7 +58,7 @@ final class ClientProtocolTest extends TestCase
 
         $protocol->handle(
             'id',
-            Message::setup(Pipes::empty(), new InMemoryCache(), \uniqid()),
+            Message::setup(Pipes::empty(), $context, \uniqid()),
             $server
         );
     }

@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Integration\Adapter\JSON;
 use Flow\ETL\Adapter\JSON\JsonLoader;
 use Flow\ETL\Config;
 use Flow\ETL\DSL\Json;
+use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Flow;
@@ -85,26 +86,31 @@ JSON,
 
     public function test_json_loader_with_a_thread_safe_and_append_mode() : void
     {
-        $this->expectExceptionMessage('Append SaveMode is not yet supported in JSONLoader');
-
         $stream = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_json_loader', true) . '.json';
 
         \file_put_contents($stream, '[]');
 
         $loader = new JsonLoader(Path::realpath($stream));
 
-        $loader->load(
-            new Rows(
-                ...\array_map(
-                    fn (int $i) : Row => Row::create(
-                        new Row\Entry\IntegerEntry('id', $i),
-                        new Row\Entry\StringEntry('name', 'name_' . $i)
-                    ),
-                    \range(0, 5)
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage("Appending to existing single file destination \"file:/{$stream}\" in non thread safe mode is not supported.");
+
+        (new Flow())
+            ->process(
+                new Rows(
+                    ...\array_map(
+                        fn (int $i) : Row => Row::create(
+                            new Row\Entry\IntegerEntry('id', $i),
+                            new Row\Entry\StringEntry('name', 'name_' . $i)
+                        ),
+                        \range(0, 5)
+                    )
                 )
-            ),
-            (new FlowContext(Config::default()))->setMode(SaveMode::Append)->setThreadSafe()
-        );
+            )
+            ->mode(SaveMode::Append)
+            ->threadSafe()
+            ->load($loader)
+            ->run();
 
         if (\file_exists($stream)) {
             \unlink($stream);

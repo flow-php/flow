@@ -5,8 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\Serializer\Serializable;
 
-final class Partition
+/**
+ * @implements Serializable<array{name: string, value: string}>
+ */
+final class Partition implements Serializable
 {
     /**
      * @var array<string>
@@ -72,5 +76,19 @@ final class Partition
         }
 
         return $partitions;
+    }
+
+    public function __serialize() : array
+    {
+        return [
+            'name' => $this->name,
+            'value' => $this->value,
+        ];
+    }
+
+    public function __unserialize(array $data) : void
+    {
+        $this->name = $data['name'];
+        $this->value = $data['value'];
     }
 }

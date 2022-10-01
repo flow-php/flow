@@ -6,7 +6,6 @@ namespace Flow\ETL\Adapter\JSON;
 
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Filesystem\Path;
-use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Filesystem\Stream\FileStream;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
@@ -18,7 +17,7 @@ use Flow\ETL\Rows;
 /**
  * @implements Loader<array{path: Path}>
  */
-final class JsonLoader implements Closure, Loader
+final class JsonLoader implements Closure, Loader, Loader\FileLoader
 {
     /**
      * @var array<string, int>
@@ -53,6 +52,11 @@ final class JsonLoader implements Closure, Loader
         $context->streams()->close($this->path);
     }
 
+    public function destination() : Path
+    {
+        return $this->path;
+    }
+
     public function load(Rows $rows, FlowContext $context) : void
     {
         if (\count($context->partitionEntries())) {
@@ -71,22 +75,6 @@ final class JsonLoader implements Closure, Loader
     {
         $mode = Mode::WRITE;
         $streams = $context->streams();
-
-        if ($context->mode() === SaveMode::ExceptionIfExists && $streams->exists($this->path, $partitions) && !$streams->isOpen($this->path)) {
-            throw new RuntimeException('Destination path "' . $this->path->uri() . '" already exists, please change path to different or set different SaveMode');
-        }
-
-        if ($context->mode() === SaveMode::Ignore && $streams->exists($this->path, $partitions) && !$streams->isOpen($this->path)) {
-            return;
-        }
-
-        if ($context->mode() === SaveMode::Overwrite && $streams->exists($this->path, $partitions) && !$streams->isOpen($this->path, $partitions)) {
-            $streams->rm($this->path, $partitions);
-        }
-
-        if ($context->mode() === SaveMode::Append && $streams->exists($this->path, $partitions)) {
-            throw new RuntimeException('Append SaveMode is not yet supported in JSONLoader');
-        }
 
         if (!$streams->isOpen($this->path, $partitions)) {
             $stream = $streams->open($this->path, 'json', $mode, $context->threadSafe(), $partitions);

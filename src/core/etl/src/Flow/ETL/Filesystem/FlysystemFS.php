@@ -36,10 +36,54 @@ final class FlysystemFS implements Filesystem
     {
     }
 
+    public function directoryExists(Path $path) : bool
+    {
+        $fs = match ($path->scheme()) {
+            AwsS3Stream::PROTOCOL => $this->aws($path),
+            AzureBlobStream::PROTOCOL => $this->azure($path),
+            'file' => $this->local(),
+            default => throw new InvalidArgumentException('Unexpected scheme: ' . $path->scheme())
+        };
+
+        if ($path->isPattern()) {
+            return false;
+        }
+
+        return $fs->directoryExists($path->path());
+    }
+
     /**
      * @psalm-suppress UnusedForeachValue
      */
     public function exists(Path $path) : bool
+    {
+        $fs = match ($path->scheme()) {
+            AwsS3Stream::PROTOCOL => $this->aws($path),
+            AzureBlobStream::PROTOCOL => $this->azure($path),
+            'file' => $this->local(),
+            default => throw new InvalidArgumentException('Unexpected scheme: ' . $path->scheme())
+        };
+
+        if ($path->isPattern()) {
+            $anyFileExistsInPattern = false;
+
+            /** @psalm-suppress UnusedForeachValue */
+            foreach ($this->scan($path, new NoopFilter()) as $nextPath) {
+                $anyFileExistsInPattern = true;
+
+                break;
+            }
+
+            return $anyFileExistsInPattern;
+        }
+
+        return $fs->fileExists($path->path()) || $fs->directoryExists($path->path());
+    }
+
+    /**
+     * @psalm-suppress UnusedForeachValue
+     */
+    public function fileExists(Path $path) : bool
     {
         $fs = match ($path->scheme()) {
             AwsS3Stream::PROTOCOL => $this->aws($path),
@@ -60,7 +104,7 @@ final class FlysystemFS implements Filesystem
             return $anyFileExistsInPattern;
         }
 
-        return $fs->fileExists($path->path()) || $fs->directoryExists($path->path());
+        return $fs->fileExists($path->path());
     }
 
     public function open(Path $path, Mode $mode) : FileStream

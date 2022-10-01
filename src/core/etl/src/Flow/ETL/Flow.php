@@ -9,22 +9,23 @@ use Flow\ETL\Pipeline\SynchronousPipeline;
 
 final class Flow
 {
-    public function __construct(private readonly ConfigBuilder $configBuilder = new ConfigBuilder())
+    private readonly Config $config;
+
+    public function __construct(Config $config = null)
     {
+        $this->config = $config ?: Config::default();
     }
 
-    public static function setUp(ConfigBuilder $configBuilder) : self
+    public static function setUp(ConfigBuilder|Config $config) : self
     {
-        return new self($configBuilder);
+        return new self($config instanceof ConfigBuilder ? $config->build() : $config);
     }
 
     public function extract(Extractor $extractor) : DataFrame
     {
         return new DataFrame(
             (new SynchronousPipeline())->source($extractor),
-            $this
-                ->configBuilder
-                ->build()
+            $this->config
         );
     }
 
@@ -32,9 +33,7 @@ final class Flow
     {
         return new DataFrame(
             (new SynchronousPipeline())->source(new ProcessExtractor(...$rows)),
-            $this
-                ->configBuilder
-                ->build()
+            $this->config
         );
     }
 
@@ -43,6 +42,6 @@ final class Flow
      */
     public function read(Extractor $extractor) : DataFrame
     {
-        return self::extract($extractor);
+        return $this->extract($extractor);
     }
 }

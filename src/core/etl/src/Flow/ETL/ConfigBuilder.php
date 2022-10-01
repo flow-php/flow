@@ -6,8 +6,11 @@ namespace Flow\ETL;
 
 use Flow\ETL\Cache\LocalFilesystemCache;
 use Flow\ETL\ExternalSort\MemorySort;
+use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Filesystem\FlysystemFS;
 use Flow\ETL\Monitoring\Memory\Unit;
+use Flow\ETL\Pipeline\Execution\Processor\FilesystemProcessor;
+use Flow\ETL\Pipeline\Execution\Processors;
 use Flow\Serializer\CompressingSerializer;
 use Flow\Serializer\Serializer;
 
@@ -57,7 +60,10 @@ final class ConfigBuilder
             $this->cache,
             $this->externalSort,
             $this->serializer,
-            $this->filesystem
+            new FilesystemStreams($this->filesystem),
+            new Processors(
+                new FilesystemProcessor()
+            )
         );
     }
 

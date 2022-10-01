@@ -37,7 +37,7 @@ final class ServerProtocol
             case Protocol::CLIENT_IDENTIFY:
                 if ($this->workers->has($message->payload()['id'] ?? '')) {
                     $this->workers->connect($message->payload()['id'] ?? '');
-                    $client->send(Message::setup($this->pipes, $this->context->config->cache(), $this->cacheId));
+                    $client->send(Message::setup($this->pipes, $this->context, $this->cacheId));
                 } else {
                     $client->disconnect();
                 }

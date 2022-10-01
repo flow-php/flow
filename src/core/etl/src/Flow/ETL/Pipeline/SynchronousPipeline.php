@@ -41,27 +41,32 @@ final class SynchronousPipeline implements Pipeline
      */
     public function process(FlowContext $context) : \Generator
     {
-        $generator = $this->extractor->extract($context);
-        $reductor = new Limiter($context->config->limit());
+        $plan = $context
+            ->config
+            ->processors()
+            ->process(new Pipeline\Execution\LogicalPlan($this->extractor, $this->pipes), $context);
+
+        $generator = $plan->extractor->extract($context);
+        $limiter = new Limiter($context->config->limit());
 
         while ($generator->valid()) {
-            $rows = $reductor->limit($generator->current());
+            $rows = $limiter->limit($generator->current());
             $generator->next();
 
             if ($rows === null) {
-                foreach ($this->pipes->all() as $pipe) {
+                foreach ($plan->pipes->all() as $pipe) {
                     if ($pipe instanceof Pipeline\Closure) {
-                        $pipe->closure($reductor->latest(), $context);
+                        $pipe->closure($limiter->latest(), $context);
                     }
                 }
 
                 break;
             }
 
-            foreach ($this->pipes->all() as $pipe) {
+            foreach ($plan->pipes->all() as $pipe) {
                 try {
                     if ($pipe instanceof Transformer) {
-                        $rows = $reductor->limitTransformed($pipe->transform($rows, $context));
+                        $rows = $limiter->limitTransformed($pipe->transform($rows, $context));
                     } elseif ($pipe instanceof Loader) {
                         $pipe->load($rows, $context);
                     }
