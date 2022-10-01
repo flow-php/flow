@@ -1,6 +1,8 @@
-## [Unreleased] - 2022-09-21
+## [Unreleased] - 2022-09-30
 
 ### Added
+- [#164](https://github.com/flow-php/flow/pull/164) - **Allow configuring amount of characters per line in CSV extractor** - [@stloyd](https://github.com/stloyd)
+- [#153](https://github.com/flow-php/flow/pull/153) - **Added assertion preventing from using pattern paths in filesystem based loders** - [@norberttech](https://github.com/norberttech)
 - [#149](https://github.com/flow-php/flow/pull/149) - **support for Elasticsearch 8 client** - [@norberttech](https://github.com/norberttech)
 - [#112](https://github.com/flow-php/flow/pull/112) - **Added PSRSimpleCache implementation of Flow Cache** - [@norberttech](https://github.com/norberttech)
 - [#109](https://github.com/flow-php/flow/pull/109) - **Print Rows/Schema alias to improve DX by not making dev to remember about To:: formatters** - [@norberttech](https://github.com/norberttech)
@@ -115,6 +117,7 @@
 - [856870](https://github.com/flow-php/flow/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#153](https://github.com/flow-php/flow/pull/153) - **Moved streams to FlowContext** - [@norberttech](https://github.com/norberttech)
 - [#148](https://github.com/flow-php/flow/pull/148) - **Updated tools & project dependencies** - [@norberttech](https://github.com/norberttech)
 - [0488f3](https://github.com/flow-php/flow/commit/0488f3a4fd05428c0b342913fc5394f7520d71c5) - **Lock avro in order to avoid BC breaks** - [@norberttech](https://github.com/norberttech)
 - [#111](https://github.com/flow-php/flow/pull/111) - **Moved ErrorHandler to FlowContext** - [@norberttech](https://github.com/norberttech)
