@@ -39,7 +39,7 @@ final class FlowTest extends IntegrationTestCase
                     ),
                     new NativePHPSerializer()
                 )
-            )
+            )->build()
         ))->extract(new AllRowTypesFakeExtractor($rowsets = 20, $rows = 2))
             ->cache('test_etl_cache');
 

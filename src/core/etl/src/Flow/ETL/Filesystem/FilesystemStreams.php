@@ -11,7 +11,7 @@ use Flow\ETL\Partition;
 final class FilesystemStreams implements \Countable, \IteratorAggregate
 {
     /**
-     * @var array<string, FileStream>
+     * @var array<string, array<string, FileStream>>
      */
     private array $streams;
 
@@ -24,13 +24,15 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
     {
         $streams = [];
 
-        foreach ($this->streams as $key => $fileStream) {
-            if ($fileStream->path()->startsWith($basePath)) {
-                if ($fileStream->isOpen()) {
-                    $fileStream->close();
+        foreach ($this->streams as $nextBasePath => $nextStreams) {
+            if ($basePath->uri() === $nextBasePath) {
+                foreach ($nextStreams as $fileStream) {
+                    if ($fileStream->isOpen()) {
+                        $fileStream->close();
+                    }
                 }
             } else {
-                $streams[$key] = $fileStream;
+                $streams[$nextBasePath] = $nextStreams;
             }
         }
 
@@ -64,7 +66,7 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
      */
     public function getIterator() : \Traversable
     {
-        return new \ArrayIterator($this->streams);
+        return new \ArrayIterator(\array_merge(...\array_values($this->streams)));
     }
 
     /**
@@ -72,11 +74,15 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
      */
     public function isOpen(Path $basePath, array $partitions = []) : bool
     {
+        if (!\array_key_exists($basePath->uri(), $this->streams)) {
+            return false;
+        }
+
         $destination = \count($partitions)
             ? $basePath->addPartitions(...$partitions)
             : $basePath;
 
-        return \array_key_exists($destination->uri(), $this->streams);
+        return \array_key_exists($destination->uri(), $this->streams[$basePath->uri()]);
     }
 
     /**
@@ -84,26 +90,30 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
      */
     public function open(Path $basePath, string $extension, Mode $mode, bool $safe, array $partitions = []) : FileStream
     {
+        if (!\array_key_exists($basePath->uri(), $this->streams)) {
+            $this->streams[$basePath->uri()] = [];
+        }
+
         $destination = \count($partitions)
             ? $basePath->addPartitions(...$partitions)
             : $basePath;
 
-        if (\array_key_exists($destination->uri(), $this->streams)) {
-            return $this->streams[$destination->uri()];
+        if (\array_key_exists($destination->uri(), $this->streams[$basePath->uri()])) {
+            return $this->streams[$basePath->uri()][$destination->uri()];
         }
 
         if ($destination->isPattern()) {
             throw new RuntimeException("Destination path can't be patter, given:" . $destination->uri());
         }
 
-        if (!\array_key_exists($destination->uri(), $this->streams)) {
-            $this->streams[$destination->uri()] = $this->filesystem->open(
+        if (!\array_key_exists($destination->uri(), $this->streams[$basePath->uri()])) {
+            $this->streams[$basePath->uri()][$destination->uri()] = $this->filesystem->open(
                 (\count($partitions) || $safe === true)  ? $destination->randomize()->setExtension($extension) : $basePath,
                 $mode
             );
         }
 
-        return $this->streams[$destination->uri()];
+        return $this->streams[$basePath->uri()][$destination->uri()];
     }
 
     /**

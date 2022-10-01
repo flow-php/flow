@@ -12,7 +12,7 @@ use Flow\ETL\Rows;
 /**
  * @implements Loader<array{overflow_loader: Loader, buffer_size: int}>
  */
-final class BufferLoader implements Closure, Loader
+final class BufferLoader implements Closure, Loader, OverridingLoader
 {
     private Rows $buffer;
 
@@ -64,5 +64,10 @@ final class BufferLoader implements Closure, Loader
 
             $this->buffer = new Rows();
         }
+    }
+
+    public function loaders() : array
+    {
+        return [$this->overflowLoader];
     }
 }

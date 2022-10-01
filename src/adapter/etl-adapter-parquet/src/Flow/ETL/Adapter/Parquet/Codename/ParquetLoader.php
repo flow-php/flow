@@ -9,7 +9,6 @@ use codename\parquet\data\DataField;
 use codename\parquet\ParquetWriter;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Filesystem\Path;
-use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
@@ -24,7 +23,7 @@ use Flow\ETL\Rows;
  *   rows_per_group: int
  * }>
  */
-final class ParquetLoader implements Closure, Loader
+final class ParquetLoader implements Closure, Loader, Loader\FileLoader
 {
     private readonly SchemaConverter $converter;
 
@@ -91,28 +90,15 @@ final class ParquetLoader implements Closure, Loader
         $context->streams()->close($this->path);
     }
 
+    public function destination() : Path
+    {
+        return $this->path;
+    }
+
     public function load(Rows $rows, FlowContext $context) : void
     {
         if (\count($context->partitionEntries())) {
             throw new RuntimeException('Partitioning is not supported yet');
-        }
-
-        $streams = $context->streams();
-
-        if ($context->mode() === SaveMode::ExceptionIfExists && $streams->exists($this->path) && !$streams->isOpen($this->path)) {
-            throw new RuntimeException('Destination path "' . $this->path->uri() . '" already exists, please change path to different or set different SaveMode');
-        }
-
-        if ($context->mode() === SaveMode::Ignore && $streams->exists($this->path) && !$streams->isOpen($this->path)) {
-            return;
-        }
-
-        if ($context->mode() === SaveMode::Overwrite && $streams->exists($this->path) && !$streams->isOpen($this->path)) {
-            $streams->rm($this->path);
-        }
-
-        if ($context->mode() === SaveMode::Append && $streams->exists($this->path)) {
-            throw new RuntimeException('Append SaveMode is not yet supported in ParquetLoader');
         }
 
         if ($this->schema === null) {

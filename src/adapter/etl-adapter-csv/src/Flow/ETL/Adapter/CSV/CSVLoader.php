@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV;
 
-use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Filesystem\Path;
-use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Filesystem\Stream\FileStream;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
@@ -26,7 +24,7 @@ use Flow\ETL\Rows;
  *     new_line_separator: string
  *  }>
  */
-final class CSVLoader implements Closure, Loader
+final class CSVLoader implements Closure, Loader, Loader\FileLoader
 {
     public function __construct(
         private readonly Path $path,
@@ -71,6 +69,11 @@ final class CSVLoader implements Closure, Loader
         $context->streams()->close($this->path);
     }
 
+    public function destination() : Path
+    {
+        return $this->path;
+    }
+
     public function load(Rows $rows, FlowContext $context) : void
     {
         if (!$rows->count()) {
@@ -93,30 +96,10 @@ final class CSVLoader implements Closure, Loader
      */
     public function write(Rows $nextRows, array $headers, FlowContext $context, array $partitions) : void
     {
-        $mode = Mode::WRITE;
-        $streams = $context->streams();
-
-        if ($context->mode() === SaveMode::ExceptionIfExists && $streams->exists($this->path, $partitions) && !$streams->isOpen($this->path, $partitions)) {
-            throw new RuntimeException('Destination path "' . $this->path->uri() . '" already exists, please change path to different or set different SaveMode');
-        }
-
-        if ($context->mode() === SaveMode::Ignore && $streams->exists($this->path, $partitions) && !$streams->isOpen($this->path, $partitions)) {
-            return;
-        }
-
-        if ($context->mode() === SaveMode::Overwrite && $streams->exists($this->path, $partitions) && !$streams->isOpen($this->path, $partitions)) {
-            $streams->rm($this->path, $partitions);
-        }
-
-        if ($context->mode() === SaveMode::Append && $streams->exists($this->path, $partitions)) {
-            $this->header = false;
-            $mode = Mode::APPEND;
-        }
-
-        if ($this->header && !$streams->exists($this->path, $partitions)) {
+        if ($this->header && !$context->streams()->exists($this->path, $partitions)) {
             $this->writeCSV(
                 $headers,
-                $streams->open($this->path, 'csv', $mode, $context->threadSafe(), $partitions)
+                $context->streams()->open($this->path, 'csv', Mode::WRITE, $context->threadSafe(), $partitions)
             );
         }
 
@@ -126,7 +109,7 @@ final class CSVLoader implements Closure, Loader
              */
             $this->writeCSV(
                 $row->toArray(),
-                $streams->open($this->path, 'csv', $mode, $context->threadSafe(), $partitions)
+                $context->streams()->open($this->path, 'csv', Mode::WRITE, $context->threadSafe(), $partitions)
             );
         }
     }

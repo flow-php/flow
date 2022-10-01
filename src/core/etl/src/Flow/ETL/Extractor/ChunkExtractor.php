@@ -10,7 +10,7 @@ use Flow\ETL\FlowContext;
 /**
  * @psalm-immutable
  */
-final class ChunkExtractor implements Extractor
+final class ChunkExtractor implements Extractor, OverridingExtractor
 {
     public function __construct(
         private readonly Extractor $extractor,
@@ -25,5 +25,10 @@ final class ChunkExtractor implements Extractor
                 yield $rowsChunk;
             }
         }
+    }
+
+    public function extractors() : array
+    {
+        return [$this->extractor];
     }
 }

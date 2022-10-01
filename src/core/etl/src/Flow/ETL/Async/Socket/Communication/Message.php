@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Async\Socket\Communication;
 
 use Flow\ETL\Cache;
+use Flow\ETL\FlowContext;
+use Flow\ETL\Partition\PartitionFilter;
 use Flow\ETL\Pipeline\Pipes;
 use Flow\ETL\Rows;
 use Flow\Serializer\Serializable;
@@ -18,7 +20,9 @@ use Flow\Serializer\Serializer;
  *      pipes?: Pipes,
  *      cache?: Cache,
  *      cache_id?: string,
- *      rows?: Rows
+ *      rows?: Rows,
+ *      partition_entries?: array<string>,
+ *      partition_filter?: PartitionFilter
  *     }
  * }>
  */
@@ -31,7 +35,9 @@ final class Message implements Serializable
      *     pipes?: Pipes,
      *     cache?: Cache,
      *     cache_id?: string,
-     *     rows?: Rows
+     *     rows?: Rows,
+     *     partition_entries?: array<string>,
+     *     partition_filter?: PartitionFilter
      * } $payload
      */
     private function __construct(private string $type, private array $payload)
@@ -82,14 +88,16 @@ final class Message implements Serializable
         $this->payload = $data['payload'];
     }
 
-    public static function setup(Pipes $pipes, Cache $cache, string $cacheId) : self
+    public static function setup(Pipes $pipes, FlowContext $context, string $cacheId) : self
     {
         return new self(
             Protocol::SERVER_SETUP,
             [
                 'pipes' => $pipes,
-                'cache' => $cache,
+                'cache' => $context->cache(),
                 'cache_id' => $cacheId,
+                'partition_entries' => $context->partitionEntries(),
+                'partition_filter' => $context->partitionFilter(),
             ]
         );
     }
@@ -100,7 +108,9 @@ final class Message implements Serializable
      *     pipes?: Pipes,
      *     cache?: Cache,
      *     cache_id?: string,
-     *     rows?: Rows
+     *     rows?: Rows,
+     *     partition_entries?: array<string>,
+     *     partition_filter?: PartitionFilter
      * }
      */
     public function payload() : array

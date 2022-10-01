@@ -5,8 +5,14 @@ declare(strict_types=1);
 namespace Flow\ETL;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Filesystem\FilesystemStreams;
+use Flow\ETL\Pipeline\Execution\Processors;
 use Flow\Serializer\Serializer;
 
+/**
+ * Immutable configuration that can be used to initialize many contexts.
+ * Configuration must not be changed after it's passed to FlowContext.
+ */
 final class Config
 {
     public const CACHE_DIR_ENV = 'FLOW_LOCAL_FILESYSTEM_CACHE_DIR';
@@ -20,7 +26,8 @@ final class Config
         private readonly Cache $cache,
         private readonly ExternalSort $externalSort,
         private readonly Serializer $serializer,
-        private readonly Filesystem $filesystem
+        private readonly FilesystemStreams $filesystemStreams,
+        private readonly Processors $processors
     ) {
     }
 
@@ -51,9 +58,9 @@ final class Config
         return $this->externalSort;
     }
 
-    public function filesystem() : Filesystem
+    public function filesystemStreams() : FilesystemStreams
     {
-        return $this->filesystem;
+        return $this->filesystemStreams;
     }
 
     public function hasLimit() : bool
@@ -69,6 +76,11 @@ final class Config
     public function limit() : ?int
     {
         return $this->limit;
+    }
+
+    public function processors() : Processors
+    {
+        return $this->processors;
     }
 
     public function serializer() : Serializer

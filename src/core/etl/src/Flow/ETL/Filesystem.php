@@ -17,7 +17,11 @@ use Flow\Serializer\Serializable;
  */
 interface Filesystem extends Serializable
 {
+    public function directoryExists(Path $path) : bool;
+
     public function exists(Path $path) : bool;
+
+    public function fileExists(Path $path) : bool;
 
     public function open(Path $path, Mode $mode) : FileStream;
 

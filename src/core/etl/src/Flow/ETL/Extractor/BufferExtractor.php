@@ -11,7 +11,7 @@ use Flow\ETL\Rows;
 /**
  * @psalm-immutable
  */
-final class BufferExtractor implements Extractor
+final class BufferExtractor implements Extractor, OverridingExtractor
 {
     public function __construct(
         private readonly Extractor $extractor,
@@ -58,5 +58,10 @@ final class BufferExtractor implements Extractor
         if ($rows->count()) {
             yield $rows;
         }
+    }
+
+    public function extractors() : array
+    {
+        return [$this->extractor];
     }
 }

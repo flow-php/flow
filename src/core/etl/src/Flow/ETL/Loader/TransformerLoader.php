@@ -12,7 +12,7 @@ use Flow\ETL\Transformer;
 /**
  * @implements Loader<array{transformer: Transformer, loader: Loader}>
  */
-final class TransformerLoader implements Loader
+final class TransformerLoader implements Loader, OverridingLoader
 {
     public function __construct(
         private readonly Transformer $transformer,
@@ -37,5 +37,10 @@ final class TransformerLoader implements Loader
     public function load(Rows $rows, FlowContext $context) : void
     {
         $this->loader->load($this->transformer->transform($rows, $context), $context);
+    }
+
+    public function loaders() : array
+    {
+        return [$this->loader];
     }
 }

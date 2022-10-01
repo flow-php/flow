@@ -84,7 +84,7 @@ final class ServerProtocolTest extends TestCase
     public function test_sending_pipes_after_successful_identification() : void
     {
         $serverProtocol = new ServerProtocol(
-            new FlowContext(Config::builder()->cache($cache = new InMemoryCache())->build()),
+            $contetx = new FlowContext(Config::builder()->cache(new InMemoryCache())->build()),
             'cache_id',
             $pool = Pool::generate(1),
             (new ProcessExtractor(new Rows())),
@@ -96,7 +96,7 @@ final class ServerProtocolTest extends TestCase
 
         $client->expects($this->once())
             ->method('send')
-            ->with(Message::setup($pipes, $cache, 'cache_id'));
+            ->with(Message::setup($pipes, $contetx, 'cache_id'));
 
         $serverProtocol->handle(
             Message::identify(\current($pool->ids())),
@@ -108,7 +108,7 @@ final class ServerProtocolTest extends TestCase
     public function test_stop_server_when_last_client_is_disconnected() : void
     {
         $serverProtocol = new ServerProtocol(
-            new FlowContext(Config::builder()->cache($cache = new InMemoryCache())->build()),
+            $context = new FlowContext(Config::builder()->cache(new InMemoryCache())->build()),
             'cache_id',
             $pool = Pool::generate(2),
             new ProcessExtractor(),
@@ -122,10 +122,10 @@ final class ServerProtocolTest extends TestCase
         // send to client setup message after successful identification
         $client1->expects($this->once())
             ->method('send')
-            ->with(Message::setup($pipes, $cache, 'cache_id'));
+            ->with(Message::setup($pipes, $context, 'cache_id'));
         $client2->expects($this->once())
             ->method('send')
-            ->with(Message::setup($pipes, $cache, 'cache_id'));
+            ->with(Message::setup($pipes, $context, 'cache_id'));
 
         // disconnect clients after attempt to fetch rows when there are no rows left
         $client1->expects($this->once())

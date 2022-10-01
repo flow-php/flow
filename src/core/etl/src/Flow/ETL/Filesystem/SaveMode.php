@@ -2,25 +2,25 @@
 
 namespace Flow\ETL\Filesystem;
 
-enum SaveMode
+enum SaveMode : string
 {
     /**
      * If data sink already exists, data will be appended, this solution might cause data duplication
      * since it's not check if given rows already existed.
      */
-    case Append;
+    case Append = 'append';
     /**
      * If data sink already exists error will be thrown.
      */
-    case ExceptionIfExists;
+    case ExceptionIfExists = 'exception_if_exists';
 
     /**
      * If data sink already exists, writing will be skipped.
      */
-    case Ignore;
+    case Ignore = 'ignore';
 
     /**
      * If data sink already exists, it will be removed and writen again.
      */
-    case Overwrite;
+    case Overwrite = 'overwrite';
 }

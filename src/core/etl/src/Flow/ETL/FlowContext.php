@@ -11,6 +11,10 @@ use Flow\ETL\Partition\NoopFilter;
 use Flow\ETL\Partition\PartitionFilter;
 use Flow\Serializer\Serializer;
 
+/**
+ * Mutable Flow execution context.
+ * It can be modified through the DataFrame.
+ */
 final class FlowContext
 {
     private ErrorHandler $errorHandler;
@@ -23,8 +27,6 @@ final class FlowContext
      * @var array<string>
      */
     private array $partitions;
-
-    private ?FilesystemStreams $streams = null;
 
     private bool $threadSafe = false;
 
@@ -105,11 +107,7 @@ final class FlowContext
 
     public function streams() : FilesystemStreams
     {
-        if ($this->streams === null) {
-            $this->streams = new FilesystemStreams($this->config->filesystem());
-        }
-
-        return $this->streams;
+        return $this->config->filesystemStreams();
     }
 
     public function threadSafe() : bool

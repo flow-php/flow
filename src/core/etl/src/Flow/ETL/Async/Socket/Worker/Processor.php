@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Async\Socket\Worker;
 
+use Flow\ETL\Config;
+use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Flow;
 use Flow\ETL\Loader;
 use Flow\ETL\Monitoring\Memory\Consumption;
+use Flow\ETL\Partition\NoopFilter;
+use Flow\ETL\Partition\PartitionFilter;
 use Flow\ETL\Pipeline\Pipes;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
@@ -14,11 +18,23 @@ use Psr\Log\LoggerInterface;
 
 final class Processor
 {
+    private ?Config $config;
+
+    /**
+     * @var array<string>
+     */
+    private array $partitionEntries;
+
+    private PartitionFilter $partitionFilter;
+
     private Pipes $pipes;
 
     public function __construct(private readonly string $workerId, private readonly LoggerInterface $logger)
     {
         $this->pipes = Pipes::empty();
+        $this->partitionFilter = new NoopFilter();
+        $this->partitionEntries = [];
+        $this->config = null;
     }
 
     public function process(Rows $rows) : Rows
@@ -30,7 +46,20 @@ final class Processor
             'id' => $this->workerId,
         ]);
 
-        $dataFrame = (new Flow())->process($rows);
+        $dataFrame = (new Flow($this->config()))
+            ->process($rows)
+            ->filterPartitions($this->partitionFilter)
+            /**
+             * At the worker level only Append mode is accepted as true mode is set at the server level.
+             * So for example if server is set to Overwrite and worker would also get Overwrite
+             * each worker would remove all files created by other workers.
+             */
+            ->mode(SaveMode::Append)
+            ->threadSafe();
+
+        if (\count($this->partitionEntries)) {
+            $dataFrame = $dataFrame->partitionBy(...$this->partitionEntries);
+        }
 
         foreach ($this->pipes->all() as $pipe) {
             if ($pipe instanceof Transformer) {
@@ -52,8 +81,32 @@ final class Processor
         return $result;
     }
 
+    /**
+     * @param array<string> $partitionEntries
+     */
+    public function setPartitionEntries(array $partitionEntries) : void
+    {
+        $this->partitionEntries = $partitionEntries;
+    }
+
+    public function setPartitionFilter(PartitionFilter $partitionFilter) : void
+    {
+        $this->partitionFilter = $partitionFilter;
+    }
+
     public function setPipes(Pipes $pipes) : void
     {
         $this->pipes = $pipes;
+    }
+
+    private function config() : Config
+    {
+        if ($this->config !== null) {
+            return $this->config;
+        }
+
+        $this->config = Config::default();
+
+        return $this->config;
     }
 }
