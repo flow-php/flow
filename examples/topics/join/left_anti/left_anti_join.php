@@ -11,7 +11,7 @@ use Flow\ETL\Join\Join;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 
-require __DIR__ . '/../../../vendor/autoload.php';
+require __DIR__ . '/../../../bootstrap.php';
 
 $externalProducts = new Rows(
     Row::create(Entry::integer('id', 1), Entry::string('sku', 'PRODUCT01')),

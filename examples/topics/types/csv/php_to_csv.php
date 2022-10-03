@@ -8,9 +8,9 @@ use Flow\ETL\DSL\Transform;
 use Flow\ETL\Flow;
 use Flow\ETL\Monitoring\Memory\Consumption;
 
-require __DIR__ . '/../vendor/autoload.php';
+require __DIR__ . '/../../../bootstrap.php';
 
-$extractor = require __DIR__ . '/data/extractor.php';
+$extractor = require __FLOW_DATA__ . '/extractor.php';
 
 $stopwatch = new Stopwatch();
 $stopwatch->start();
@@ -22,7 +22,7 @@ $memory->current();
     ->read($extractor)
     ->rows(Transform::array_unpack('row'))
     ->drop('row')
-    ->write(CSV::to(__DIR__ . '/output/dataset.csv'))
+    ->write(CSV::to(__FLOW_OUTPUT__ . '/dataset.csv'))
     ->run();
 
 $memory->current();

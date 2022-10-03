@@ -10,7 +10,7 @@ use Flow\ETL\DSL\Transform;
 use Flow\ETL\Flow;
 use Flow\ETL\Row\Sort;
 
-require __DIR__ . '/../vendor/autoload.php';
+require __DIR__ . '/../../../bootstrap.php';
 
 print "Reading partitioned CSV dataset...\n";
 
@@ -19,7 +19,7 @@ $stopwatch->start();
 $total = 0;
 
 (new Flow())
-    ->read(CSV::from(__DIR__ . '/data/partitioned'))
+    ->read(CSV::from(__FLOW_DATA__ . '/partitioned'))
     ->rows(Transform::array_unpack('row'))
     ->drop('row')
     ->collect()
@@ -34,7 +34,7 @@ print "Total elapsed time: {$stopwatch->elapsedTime(1)->inSecondsPrecise()}s\n\n
 print "Reading partitioned CSV dataset with partition filtering...\n";
 
 (new Flow())
-    ->read(CSV::from(__DIR__ . '/data/partitioned'))
+    ->read(CSV::from(__FLOW_DATA__ . '/partitioned'))
     ->rows(Transform::array_unpack('row'))
     ->drop('row')
     ->collect()

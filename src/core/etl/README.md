@@ -404,6 +404,7 @@ Code example:
 
 ```php
 <?php
+
 (Flow::setUp(Config::builder()))
     ->read(new CSVExtractor($path = __DIR__ . '/data/dataset.csv', 10_000, 0))
     ->pipeline(

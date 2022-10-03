@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-use Flow\ETL\DSL\Json;
+use Flow\ETL\DSL\CSV;
 use Flow\ETL\DSL\Transform;
 use Flow\ETL\Filesystem\AwsS3Stream;
 use Flow\ETL\Filesystem\AzureBlobStream;
@@ -8,10 +8,10 @@ use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Flow;
 use Symfony\Component\Dotenv\Dotenv;
 
-require __DIR__ . '/../vendor/autoload.php';
+require __DIR__ . '/../../../../vendor/autoload.php';
 
 $dotenv = new Dotenv();
-$dotenv->load(__DIR__ . '/.env');
+$dotenv->load(__FLOW_EXAMPLES_AUTOLOAD__ . '/.env');
 
 $s3_client_option = [
     'client' => [
@@ -33,17 +33,15 @@ $azure_blob_connection_string = [
     'container' => 'flow-php',
 ];
 
-require __DIR__ . '/../vendor/autoload.php';
-
 AwsS3Stream::register();
 AzureBlobStream::register();
 
 (new Flow())
-    ->read(Json::from(new Path('flow-aws-s3://dataset.json', $s3_client_option), 10))
+    ->read(CSV::from(new Path('flow-aws-s3://nested/**/*.csv', $s3_client_option), 10))
     ->rows(Transform::array_unpack('row'))
     ->drop('row')
     ->rows(Transform::to_integer('id'))
     ->rows(Transform::string_concat(['name', 'last name'], ' ', 'name'))
     ->drop('last name')
-    ->write(Json::to(new Path('flow-azure-blob://dataset_test.json', $azure_blob_connection_string)))
+    ->write(CSV::to(new Path('flow-azure-blob://output.csv', $azure_blob_connection_string)))
     ->run();

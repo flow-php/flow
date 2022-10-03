@@ -2,4 +2,10 @@
 
 List of all Flow PHP usage examples
 
-* [Joins](/examples/join/left_anti/README.md)
+* [Aggregations](/examples/topics/aggregations/power_plant.php)
+* [Asynchronous Processing](/examples/topics/async/README.md)
+* [Joins](/examples/topics/join/left_anti/README.md)
+* Filesystem
+  * [Remote](/examples/topics/fs/remote/README.md)
+* File Types
+  * [CSV](/examples/topics/types/csv/README.md) 

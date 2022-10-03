@@ -9,13 +9,13 @@ use Flow\ETL\Flow;
 use Flow\ETL\Monitoring\Memory\Consumption;
 use Flow\ETL\Rows;
 
-require __DIR__ . '/../vendor/autoload.php';
+require __DIR__ . '/../../../bootstrap.php';
 
-if (\file_exists(__DIR__ . '/output/dataset.json')) {
-    \unlink(__DIR__ . '/output/dataset.json');
+if (\file_exists(__FLOW_OUTPUT__ . '/dataset.json')) {
+    \unlink(__FLOW_OUTPUT__ . '/dataset.json');
 }
 
-$csvFileSize = \round(\filesize(__DIR__ . '/output/dataset.csv') / 1024 / 1024);
+$csvFileSize = \round(\filesize(__FLOW_OUTPUT__ . '/dataset.csv') / 1024 / 1024);
 print "Converting CSV {$csvFileSize}Mb file into json...\n";
 
 $stopwatch = new Stopwatch();
@@ -25,7 +25,7 @@ $memory = new Consumption();
 $memory->current();
 
 (new Flow())
-    ->read(CSV::from(__DIR__ . '/output/dataset.csv'))
+    ->read(CSV::from(__FLOW_OUTPUT__ . '/dataset.csv'))
     ->rows(Transform::array_unpack('row'))
     ->drop('row')
     ->write(To::callback(function (Rows $rows) use (&$total, $memory) : void {
@@ -33,7 +33,7 @@ $memory->current();
 
         $memory->current();
     }))
-    ->write(Json::to(__DIR__ . '/output/dataset.json'))
+    ->write(Json::to(__FLOW_OUTPUT__ . '/dataset.json'))
     ->run();
 
 $memory->current();
@@ -42,5 +42,5 @@ $stopwatch->stop();
 print "Memory consumption, max: {$memory->max()->inMb()}Mb\n";
 print "Total elapsed time: {$stopwatch->totalElapsedTime()->inSecondsPrecise()}s\n";
 
-$jsonFileSize = \round(\filesize(__DIR__ . '/output/dataset.json') / 1024 / 1024);
+$jsonFileSize = \round(\filesize(__FLOW_OUTPUT__ . '/dataset.json') / 1024 / 1024);
 print "Output JSON file size: {$jsonFileSize}Mb\n";

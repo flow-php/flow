@@ -7,15 +7,7 @@ use Flow\ETL\Adapter\Doctrine\ParametersSet;
 use Flow\ETL\DSL\Transform;
 use Flow\ETL\Flow;
 
-require __DIR__ . '/../vendor/autoload.php';
-
-if (!\is_dir(__DIR__ . '/var')) {
-    \mkdir(__DIR__ . '/var');
-}
-
-if (!\is_dir(__DIR__ . '/var/run/')) {
-    \mkdir(__DIR__ . '/var/run/');
-}
+require __DIR__ . '/../../bootstrap.php';
 
 // target db connection
 $dbConnection = require __DIR__ . '/db_clean.php';

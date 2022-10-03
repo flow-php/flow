@@ -8,10 +8,10 @@ use Flow\ETL\DSL\Transform;
 use Flow\ETL\Flow;
 use Flow\ETL\GroupBy\Aggregation;
 
-require __DIR__ . '/../vendor/autoload.php';
+require __DIR__ . '/../../bootstrap.php';
 
 (new Flow())
-    ->read(CSV::from(__DIR__ . '/data/power-plant-daily.csv', 10, delimiter: ';'))
+    ->read(CSV::from(__FLOW_DATA__ . '/power-plant-daily.csv', 10, delimiter: ';'))
     ->rows(Transform::array_unpack('row'))
     ->rows(Transform::rename('Produkcja(kWh)', 'production_kwh'))
     ->rows(Transform::rename('Zużycie(kWh)', 'consumption_kwh'))
