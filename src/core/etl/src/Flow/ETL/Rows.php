@@ -7,7 +7,7 @@ namespace Flow\ETL;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Join\Condition;
+use Flow\ETL\Join\Expression;
 use Flow\ETL\Row\Comparator;
 use Flow\ETL\Row\Comparator\NativeComparator;
 use Flow\ETL\Row\Entries;
@@ -280,7 +280,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
     /**
      * @throws InvalidArgumentException
      */
-    public function joinInner(self $right, Condition $condition) : self
+    public function joinInner(self $right, Expression $expression) : self
     {
         /**
          * @var array<Row> $joined
@@ -292,11 +292,11 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
             $joinedRow = null;
 
             foreach ($right as $rightRow) {
-                if ($condition->meet($leftRow, $rightRow)) {
+                if ($expression->meet($leftRow, $rightRow)) {
                     try {
                         $joinedRow = $leftRow
-                            ->merge($rightRow, $condition->prefix())
-                            ->remove(...\array_map(fn (string $e) : string => $condition->prefix() . $e, $condition->right()));
+                            ->merge($rightRow, $expression->prefix())
+                            ->remove(...\array_map(fn (string $e) : string => $expression->prefix() . $e, $expression->right()));
                     } catch (InvalidArgumentException $e) {
                         throw new InvalidArgumentException($e->getMessage() . '. Please consider using Condition, join prefix option');
                     }
@@ -316,25 +316,25 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
     /**
      * @throws InvalidArgumentException
      */
-    public function joinLeft(self $right, Condition $condition) : self
+    public function joinLeft(self $right, Expression $expression) : self
     {
         /**
          * @var array<Row> $joined
          */
         $joined = [];
 
-        $rightSchema = $right->schema()->without(...$condition->right());
+        $rightSchema = $right->schema()->without(...$expression->right());
 
         foreach ($this->rows as $leftRow) {
             /** @var ?Row $joinedRow */
             $joinedRow = null;
 
             foreach ($right as $rightRow) {
-                if ($condition->meet($leftRow, $rightRow)) {
+                if ($expression->meet($leftRow, $rightRow)) {
                     try {
                         $joinedRow = $leftRow
-                            ->merge($rightRow, $condition->prefix())
-                            ->remove(...\array_map(fn (string $e) : string => $condition->prefix() . $e, $condition->right()));
+                            ->merge($rightRow, $expression->prefix())
+                            ->remove(...\array_map(fn (string $e) : string => $expression->prefix() . $e, $expression->right()));
                     } catch (InvalidArgumentException $e) {
                         throw new InvalidArgumentException($e->getMessage() . '. Please consider using Condition, join prefix option');
                     }
@@ -350,7 +350,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
                         $rightSchema->entries()
                     )
                 ),
-                $condition->prefix()
+                $expression->prefix()
             );
         }
 
@@ -360,7 +360,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
     /**
      * @throws InvalidArgumentException
      */
-    public function joinLeftAnti(self $right, Condition $condition) : self
+    public function joinLeftAnti(self $right, Expression $expression) : self
     {
         /**
          * @var array<Row> $joined
@@ -371,7 +371,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
             $foundRight = false;
 
             foreach ($right as $rightRow) {
-                if (!$condition->meet($leftRow, $rightRow)) {
+                if (!$expression->meet($leftRow, $rightRow)) {
                     continue;
                 }
                 $foundRight = true;
@@ -388,26 +388,26 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
     /**
      * @throws InvalidArgumentException
      */
-    public function joinRight(self $right, Condition $condition) : self
+    public function joinRight(self $right, Expression $expression) : self
     {
         /**
          * @var array<Row> $joined
          */
         $joined = [];
 
-        $leftSchema = $this->schema()->without(...$condition->left());
+        $leftSchema = $this->schema()->without(...$expression->left());
 
         foreach ($right->rows as $rightRow) {
             /** @var ?Row $joinedRow */
             $joinedRow = null;
 
             foreach ($this->rows as $leftRow) {
-                if ($condition->meet($leftRow, $rightRow)) {
+                if ($expression->meet($leftRow, $rightRow)) {
                     try {
                         $joinedRow = $rightRow
-                            ->merge($leftRow, $condition->prefix())
+                            ->merge($leftRow, $expression->prefix())
                             ->remove(
-                                ...\array_map(fn (string $e) : string => $condition->prefix() . $e, $condition->left())
+                                ...\array_map(fn (string $e) : string => $expression->prefix() . $e, $expression->left())
                             );
                     } catch (InvalidArgumentException $e) {
                         throw new InvalidArgumentException($e->getMessage() . '. Please consider using Condition, join prefix option');
@@ -422,7 +422,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
                     Row::create(
                         ...\array_map(fn (string $e) : NullEntry => Entry::null($e), $leftSchema->entries())
                     ),
-                    $condition->prefix()
+                    $expression->prefix()
                 );
             }
         }

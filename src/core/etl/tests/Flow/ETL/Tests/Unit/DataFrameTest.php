@@ -16,7 +16,7 @@ use Flow\ETL\Extractor;
 use Flow\ETL\Flow;
 use Flow\ETL\FlowContext;
 use Flow\ETL\GroupBy\Aggregation;
-use Flow\ETL\Join\Condition;
+use Flow\ETL\Join\Expression;
 use Flow\ETL\Loader;
 use Flow\ETL\Pipeline\Closure;
 use Flow\ETL\Row;
@@ -1080,7 +1080,7 @@ ASCIITABLE,
                         Row::create(Entry::string('code', 'US'), Entry::string('name', 'United States')),
                     )
                 ),
-                Condition::on(['country' => 'code']),
+                Expression::on(['country' => 'code']),
             )
             ->write($loader)
             ->fetch();
@@ -1140,7 +1140,7 @@ ASCIITABLE,
                     {
                     }
                 },
-                Condition::on(['country' => 'code']),
+                Expression::on(['country' => 'code']),
             )
             ->write($loader)
             ->fetch();

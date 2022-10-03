@@ -627,8 +627,8 @@ Join two data frames, left and right using one of following types of join:
 
 Three are two available join methods: 
 
-* DataFrame::join - right side is static for each left Rows set. 
-* DataFrame::joinEach - right side dynamically generated for each left Rows set.
+* `DataFrame::join` - right side is static for each left Rows set. 
+* `DataFrame::joinEach` - right side dynamically generated for each left Rows set.
 
 
 ![joins](docs/img/join.png)
@@ -662,7 +662,7 @@ $names = (new Flow())->process(
 
 $countriesWithNames = (new Flow())
     ->process($countries)
-    ->join($names, Condition::on(['country' => 'code']), $type = "left")
+    ->join($names, Expression::on(new Equal('country','code')), $type = "left")
     ->fetch();
 ```
 
