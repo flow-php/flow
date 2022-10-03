@@ -11,7 +11,7 @@ use Flow\ETL\Extractor\CacheExtractor;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Formatter\AsciiTableFormatter;
 use Flow\ETL\GroupBy\Aggregation;
-use Flow\ETL\Join\Condition;
+use Flow\ETL\Join\Expression;
 use Flow\ETL\Join\Join;
 use Flow\ETL\Loader\SchemaValidationLoader;
 use Flow\ETL\Loader\StreamLoader\Output;
@@ -183,7 +183,7 @@ final class DataFrame
     /**
      * @psalm-param "left"|"left_anti"|"right"|"inner"|Join $type
      */
-    public function join(self $dataFrame, Condition $on, string|Join $type = Join::left) : self
+    public function join(self $dataFrame, Expression $on, string|Join $type = Join::left) : self
     {
         if ($type instanceof Join) {
             $type = $type->name;
@@ -206,7 +206,7 @@ final class DataFrame
     /**
      * @psalm-param "left"|"left_anti"|"right"|"inner"|Join $type
      */
-    public function joinEach(DataFrameFactory $factory, Condition $on, string|Join $type = Join::left) : self
+    public function joinEach(DataFrameFactory $factory, Expression $on, string|Join $type = Join::left) : self
     {
         if ($type instanceof Join) {
             $type = $type->name;

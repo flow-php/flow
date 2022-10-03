@@ -10,7 +10,7 @@ use Flow\ETL\DataFrameFactory;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\Flow;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Join\Condition;
+use Flow\ETL\Join\Expression;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer\JoinEachRowsTransformer;
@@ -48,7 +48,7 @@ final class JoinEachRowsTransformerTest extends TestCase
             }
         };
 
-        $transformer = JoinEachRowsTransformer::inner($right, Condition::on(['country' => 'code']));
+        $transformer = JoinEachRowsTransformer::inner($right, Expression::on(['country' => 'code']));
 
         $this->assertEquals(
             new Rows(
@@ -88,7 +88,7 @@ final class JoinEachRowsTransformerTest extends TestCase
             }
         };
 
-        $transformer = JoinEachRowsTransformer::left($right, Condition::on(['country' => 'code']));
+        $transformer = JoinEachRowsTransformer::left($right, Expression::on(['country' => 'code']));
 
         $this->assertEquals(
             new Rows(
@@ -129,7 +129,7 @@ final class JoinEachRowsTransformerTest extends TestCase
             }
         };
 
-        $transformer = JoinEachRowsTransformer::right($right, Condition::on(['country' => 'code']));
+        $transformer = JoinEachRowsTransformer::right($right, Expression::on(['country' => 'code']));
 
         $this->assertEquals(
             new Rows(

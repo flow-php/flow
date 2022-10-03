@@ -7,13 +7,13 @@ namespace Flow\ETL\Transformer;
 use Flow\ETL\DataFrame;
 use Flow\ETL\Flow;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Join\Condition;
+use Flow\ETL\Join\Expression;
 use Flow\ETL\Join\Join;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 /**
- * @implements Transformer<array{data_frame: ?DataFrame, condition: Condition, type: Join, rows: ?Rows}>
+ * @implements Transformer<array{data_frame: ?DataFrame, condition: Expression, type: Join, rows: ?Rows}>
  *
  * @psalm-immutable
  */
@@ -23,7 +23,7 @@ final class JoinRowsTransformer implements Transformer
 
     private function __construct(
         private readonly DataFrame $dataFrame,
-        private readonly Condition $condition,
+        private readonly Expression $condition,
         private readonly Join $type
     ) {
     }
@@ -31,7 +31,7 @@ final class JoinRowsTransformer implements Transformer
     /**
      * @psalm-pure
      */
-    public static function inner(DataFrame $right, Condition $condition) : self
+    public static function inner(DataFrame $right, Expression $condition) : self
     {
         return new self($right, $condition, Join::inner);
     }
@@ -39,7 +39,7 @@ final class JoinRowsTransformer implements Transformer
     /**
      * @psalm-pure
      */
-    public static function left(DataFrame $right, Condition $condition) : self
+    public static function left(DataFrame $right, Expression $condition) : self
     {
         return new self($right, $condition, Join::left);
     }
@@ -47,7 +47,7 @@ final class JoinRowsTransformer implements Transformer
     /**
      * @psalm-pure
      */
-    public static function leftAnti(DataFrame $right, Condition $condition) : self
+    public static function leftAnti(DataFrame $right, Expression $condition) : self
     {
         return new self($right, $condition, Join::left_anti);
     }
@@ -55,7 +55,7 @@ final class JoinRowsTransformer implements Transformer
     /**
      * @psalm-pure
      */
-    public static function right(DataFrame $right, Condition $condition) : self
+    public static function right(DataFrame $right, Expression $condition) : self
     {
         return new self($right, $condition, Join::right);
     }

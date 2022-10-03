@@ -6,7 +6,7 @@ namespace Flow\ETL\Tests\Unit;
 
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Join\Condition;
+use Flow\ETL\Join\Expression;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use PHPUnit\Framework\TestCase;
@@ -24,7 +24,7 @@ final class RowsJoinTest extends TestCase
 
         $joined = $left->joinInner(
             new Rows(),
-            Condition::on(['country' => 'code'])
+            Expression::on(['country' => 'code'])
         );
 
         $this->assertEquals(
@@ -48,7 +48,7 @@ final class RowsJoinTest extends TestCase
                 Row::create(Entry::string('code', 'US'), Entry::string('name', 'United States')),
                 Row::create(Entry::string('code', 'GB'), Entry::string('name', 'Great Britain')),
             ),
-            Condition::on(['country' => 'code'])
+            Expression::on(['country' => 'code'])
         );
 
         $this->assertEquals(
@@ -71,7 +71,7 @@ final class RowsJoinTest extends TestCase
                 Row::create(Entry::string('code', 'US'), Entry::string('name', 'United States')),
                 Row::create(Entry::string('code', 'GB'), Entry::string('name', 'Great Britain')),
             ),
-            Condition::on(['country' => 'code'])
+            Expression::on(['country' => 'code'])
         );
 
         $this->assertEquals(
@@ -98,7 +98,7 @@ final class RowsJoinTest extends TestCase
                 Row::create(Entry::integer('id', 102), Entry::string('code', 'US'), Entry::string('name', 'United States')),
                 Row::create(Entry::integer('id', 103), Entry::string('code', 'GB'), Entry::string('name', 'Great Britain')),
             ),
-            Condition::on(['country' => 'code'])
+            Expression::on(['country' => 'code'])
         );
     }
 
@@ -115,7 +115,7 @@ final class RowsJoinTest extends TestCase
                 Row::create(Entry::string('code', 'US'), Entry::string('name', 'United States')),
                 Row::create(Entry::string('code', 'FR'), Entry::string('name', 'France')),
             ),
-            Condition::on(['country' => 'code'])
+            Expression::on(['country' => 'code'])
         );
 
         $this->assertEquals(
@@ -136,7 +136,7 @@ final class RowsJoinTest extends TestCase
 
         $joined = $left->joinLeftAnti(
             new Rows(),
-            Condition::on(['country' => 'code'])
+            Expression::on(['country' => 'code'])
         );
 
         $this->assertEquals(
@@ -159,7 +159,7 @@ final class RowsJoinTest extends TestCase
                 Row::create(Entry::string('code', 'US'), Entry::string('name', 'United States')),
                 Row::create(Entry::string('code', 'GB'), Entry::string('name', 'Great Britain')),
             ),
-            Condition::on(['country' => 'code'])
+            Expression::on(['country' => 'code'])
         );
 
         $this->assertEquals(
@@ -182,7 +182,7 @@ final class RowsJoinTest extends TestCase
 
         $joined = $left->joinLeft(
             new Rows(),
-            Condition::on(['country' => 'code'])
+            Expression::on(['country' => 'code'])
         );
 
         $this->assertEquals(
@@ -205,7 +205,7 @@ final class RowsJoinTest extends TestCase
                 Row::create(Entry::string('code', 'US'), Entry::string('name', 'United States')),
                 Row::create(Entry::string('code', 'GB'), Entry::string('name', 'Great Britain')),
             ),
-            Condition::on(['country' => 'code'])
+            Expression::on(['country' => 'code'])
         );
 
         $this->assertEquals(
@@ -231,7 +231,7 @@ final class RowsJoinTest extends TestCase
                 Row::create(Entry::integer('id', 101), Entry::string('code', 'US'), Entry::string('name', 'United States')),
                 Row::create(Entry::integer('id', 102), Entry::string('code', 'GB'), Entry::string('name', 'Great Britain')),
             ),
-            Condition::on(['country' => 'code'])
+            Expression::on(['country' => 'code'])
         );
     }
 
@@ -250,7 +250,7 @@ final class RowsJoinTest extends TestCase
                 Row::create(Entry::string('code', 'US'), Entry::string('name', 'United States')),
                 Row::create(Entry::string('code', 'GB'), Entry::string('name', 'Great Britain')),
             ),
-            Condition::on(['country' => 'code'])
+            Expression::on(['country' => 'code'])
         );
 
         $this->assertEquals(
@@ -275,7 +275,7 @@ final class RowsJoinTest extends TestCase
 
         $joined = $left->joinRight(
             new Rows(),
-            Condition::on(['country' => 'code'])
+            Expression::on(['country' => 'code'])
         );
 
         $this->assertEquals(
@@ -294,7 +294,7 @@ final class RowsJoinTest extends TestCase
                 Row::create(Entry::string('code', 'US'), Entry::string('name', 'United States')),
                 Row::create(Entry::string('code', 'GB'), Entry::string('name', 'Great Britain')),
             ),
-            Condition::on(['country' => 'code'])
+            Expression::on(['country' => 'code'])
         );
 
         $this->assertEquals(
@@ -325,7 +325,7 @@ final class RowsJoinTest extends TestCase
                 Row::create(Entry::integer('id', 102), Entry::string('code', 'US'), Entry::string('name', 'United States')),
                 Row::create(Entry::integer('id', 103), Entry::string('code', 'GB'), Entry::string('name', 'Great Britain')),
             ),
-            Condition::on(['country' => 'code'])
+            Expression::on(['country' => 'code'])
         );
     }
 }
