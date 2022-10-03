@@ -1,6 +1,8 @@
 ## [Unreleased] - 2022-10-03
 
 ### Added
+- [#170](https://github.com/flow-php/flow/pull/170) - **Advanced Join Expression** - [@norberttech](https://github.com/norberttech)
+- [#170](https://github.com/flow-php/flow/pull/170) - **Join usage examples** - [@norberttech](https://github.com/norberttech)
 - [#167](https://github.com/flow-php/flow/pull/167) - **left_anti join** - [@norberttech](https://github.com/norberttech)
 - [#165](https://github.com/flow-php/flow/pull/165) - **Pipeline Execution Plan** - [@norberttech](https://github.com/norberttech)
 - [#164](https://github.com/flow-php/flow/pull/164) - **Allow configuring amount of characters per line in CSV extractor** - [@stloyd](https://github.com/stloyd)
