@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-10-03
+## [Unreleased] - 2022-10-04
 
 ### Added
 - [#170](https://github.com/flow-php/flow/pull/170) - **Advanced Join Expression** - [@norberttech](https://github.com/norberttech)
@@ -121,6 +121,7 @@
 - [856870](https://github.com/flow-php/flow/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#171](https://github.com/flow-php/flow/pull/171) - **Examples cleanup** - [@norberttech](https://github.com/norberttech)
 - [#153](https://github.com/flow-php/flow/pull/153) - **Moved streams to FlowContext** - [@norberttech](https://github.com/norberttech)
 - [#148](https://github.com/flow-php/flow/pull/148) - **Updated tools & project dependencies** - [@norberttech](https://github.com/norberttech)
 - [0488f3](https://github.com/flow-php/flow/commit/0488f3a4fd05428c0b342913fc5394f7520d71c5) - **Lock avro in order to avoid BC breaks** - [@norberttech](https://github.com/norberttech)
