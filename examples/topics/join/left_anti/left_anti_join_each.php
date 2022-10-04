@@ -15,7 +15,7 @@ use Flow\ETL\Join\Join;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 
-require __DIR__ . '/../../../vendor/autoload.php';
+require __DIR__ . '/../../../bootstrap.php';
 
 $apiExtractor = new class implements Extractor {
     public function extract(FlowContext $context) : Generator
