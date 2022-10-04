@@ -225,8 +225,6 @@ final class Path implements Serializable
         }
 
         $path = \pathinfo($this->path);
-
-        /** @phpstan-ignore-next-line */
         $dirname = (\array_key_exists('dirname', $path)) ? (\ltrim($path['dirname'], DIRECTORY_SEPARATOR)) : '';
 
         $dirname = $dirname === '' ? '/' : $dirname;
@@ -279,7 +277,7 @@ final class Path implements Serializable
             }
 
             $pathinfo = \pathinfo($this->path);
-            $path = $pathinfo['dirname'] . DIRECTORY_SEPARATOR . $pathinfo['filename'] . '.' . $extension;
+            $path = ($pathinfo['dirname'] ?? '') . DIRECTORY_SEPARATOR . $pathinfo['filename'] . '.' . $extension;
 
             return new self($this->scheme() . '://' . \ltrim($path, DIRECTORY_SEPARATOR), $this->options());
         }
