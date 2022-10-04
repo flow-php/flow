@@ -22,7 +22,7 @@ Typical use case is to synchronize data with external systems, for example sync 
 
 
 ```SQL
-external_products AS ep JOIN left_anti intenral_product AS ip ON ep.id = ip.id
+external_products AS ep JOIN left_anti internal_products AS ip ON ep.id = ip.id
 ```
 
 **Result**
