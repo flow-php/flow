@@ -541,6 +541,7 @@
 - [e48062](https://github.com/flow-php/flow/commit/e48062890cd84e655e1162305086f67148347b83) - **Intial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#172](https://github.com/flow-php/flow/pull/172) - **Documentation typos for left anti join** - [@Wirone](https://github.com/Wirone)
 - [#166](https://github.com/flow-php/flow/pull/166) - **Typo in code example** - [@drupol](https://github.com/drupol)
 - [#110](https://github.com/flow-php/flow/pull/110) - **limit behavior when expanding rows during transformations** - [@norberttech](https://github.com/norberttech)
 - [#108](https://github.com/flow-php/flow/pull/108) - **keep_entries transformer behavior for missing entries** - [@norberttech](https://github.com/norberttech)
@@ -623,6 +624,7 @@
 - [1a6eec](https://github.com/flow-php/flow/commit/1a6eec01837f25cf1d6ff7c041996ff7b8b017e7) - **failing tests** - [@norberttech](https://github.com/norberttech)
 
 ### Updated
+- [5a8c01](https://github.com/flow-php/flow/commit/5a8c01e38327d1d67f09a41c7cb1331ee392aa33) - **phpstan** - [@norberttech](https://github.com/norberttech)
 - [0c5830](https://github.com/flow-php/flow/commit/0c5830c4e47a4a33e02ad0a2c17aebccefb45a04) - **dependencies** - [@norberttech](https://github.com/norberttech)
 - [413739](https://github.com/flow-php/flow/commit/41373913aa84bc42f53b093ef9b85f607822a0dc) - **labeler.yml** - [@norberttech](https://github.com/norberttech)
 - [ffa5c2](https://github.com/flow-php/flow/commit/ffa5c27818732a2c424db30c7a9bc5692648cae8) - **dependencies** - [@norberttech](https://github.com/norberttech)
