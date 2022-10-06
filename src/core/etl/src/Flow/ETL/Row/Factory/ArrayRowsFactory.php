@@ -4,35 +4,31 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Factory;
 
-use Flow\ETL\Config;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
-use Flow\ETL\Row\Schema;
 use Flow\ETL\Rows;
 use Flow\ETL\RowsFactory;
-use Flow\ETL\Transformer\ArrayUnpackTransformer;
-use Flow\ETL\Transformer\RemoveEntriesTransformer;
 
 /**
- * @implements RowsFactory<array{schema: ?Schema}>
+ * @implements RowsFactory<array{entry_factory: Row\EntryFactory}>
  */
 final class ArrayRowsFactory implements RowsFactory
 {
-    public function __construct(private readonly ?Schema $schema = null)
-    {
+    public function __construct(
+        private readonly Row\EntryFactory $entryFactory = new NativeEntryFactory()
+    ) {
     }
 
     public function __serialize() : array
     {
         return [
-            'schema' => $this->schema,
+            'entry_factory' => $this->entryFactory,
         ];
     }
 
     public function __unserialize(array $data) : void
     {
-        $this->schema = $data['schema'];
+        $this->entryFactory = $data['entry_factory'];
     }
 
     /**
@@ -50,13 +46,21 @@ final class ArrayRowsFactory implements RowsFactory
             }
         }
 
-        return (new RemoveEntriesTransformer('element'))->transform(
-            (new ArrayUnpackTransformer('element', entryFactory: new NativeEntryFactory($this->schema)))
-                ->transform(new Rows(...\array_map(
-                    fn (array $row) : Row => Row::create(new Row\Entry\ArrayEntry('element', $row)),
-                    $data
-                )), $context = new FlowContext(Config::default())),
-            $context
-        );
+        $rows = new Rows();
+
+        foreach ($data as $dataRow) {
+            $entries = [];
+
+            /**
+             * @var mixed $value
+             */
+            foreach ($dataRow as $entry => $value) {
+                $entries[] = $this->entryFactory->create((string) $entry, $value);
+            }
+
+            $rows = $rows->add(Row::create(...$entries));
+        }
+
+        return $rows;
     }
 }

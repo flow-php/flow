@@ -44,6 +44,11 @@ final class DatabaseContext
         }
     }
 
+    public function insert(string $tableName, array $data, array $types = []) : void
+    {
+        $this->connection->insert($tableName, $data, $types);
+    }
+
     public function numberOfExecutedInsertQueries() : int
     {
         if ($this->sqlLogger instanceof InsertQueryCounter) {
