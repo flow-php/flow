@@ -25,8 +25,13 @@ final class DbalQueryExtractor implements Extractor
      * @param null|ParametersSet $parametersSet
      * @param array<int, null|int|string|Type>|array<string, null|int|string|Type> $types
      */
-    public function __construct(private readonly Connection $connection, private readonly string $query, ParametersSet $parametersSet = null, private readonly array $types = [], private readonly string $rowEntryName = 'row')
-    {
+    public function __construct(
+        private readonly Connection $connection,
+        private readonly string $query,
+        ParametersSet $parametersSet = null,
+        private readonly array $types = [],
+        private readonly string $rowEntryName = 'row'
+    ) {
         $this->parametersSet = $parametersSet ?: new ParametersSet([]);
     }
 

@@ -9,11 +9,11 @@ use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
 use Flow\ETL\Adapter\Doctrine\DbalLoader;
-use Flow\ETL\Adapter\Doctrine\DbalQueryExtractor;
 use Flow\ETL\Adapter\Doctrine\ParametersSet;
 use Flow\ETL\Adapter\Doctrine\Tests\Double\Stub\ArrayExtractor;
 use Flow\ETL\Adapter\Doctrine\Tests\Double\Stub\TransformTestData;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
+use Flow\ETL\DSL\Dbal;
 use Flow\ETL\Flow;
 
 final class DbalQueryExtractorTest extends IntegrationTestCase
@@ -43,7 +43,7 @@ final class DbalQueryExtractorTest extends IntegrationTestCase
         )->run();
 
         $rows = (new Flow())->extract(
-            DbalQueryExtractor::single(
+            Dbal::from_query(
                 $this->pgsqlDatabaseContext->connection(),
                 "SELECT * FROM {$table} ORDER BY id"
             )
@@ -91,7 +91,7 @@ final class DbalQueryExtractorTest extends IntegrationTestCase
         )->run();
 
         $rows = (new Flow())->extract(
-            new DbalQueryExtractor(
+            Dbal::from_queries(
                 $this->pgsqlDatabaseContext->connection(),
                 "SELECT * FROM {$table} ORDER BY id LIMIT :limit OFFSET :offset",
                 new ParametersSet(

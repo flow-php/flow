@@ -11,8 +11,6 @@ use Flow\ETL\DSL\CSV;
 use Flow\ETL\DSL\Transform;
 use Flow\ETL\Flow;
 
-require __DIR__ . '/../../bootstrap.php';
-
 $dbConnectionString = 'postgresql://postgres:postgres@127.0.0.1:5432/postgres?serverVersion=11%26charset=utf8';
 $dbConnection = DriverManager::getConnection($dbConnectionParams = ['url' => $dbConnectionString]);
 

@@ -12,16 +12,14 @@
     },
     "autoload": {
         "psr-4": {
-            "Flow\\ETL\\Adapter\\Doctrine\\": [
-                "src/Flow/ETL/Adapter/Doctrine"
+            "Flow\\": [
+                "src/Flow"
             ]
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Flow\\ETL\\Adapter\\Doctrine\\Tests\\": [
-                "tests/Flow/ETL/Adapter/Doctrine/Tests"
-            ]
+            "Flow\\": "tests/Flow"
         }
     },
     "prefer-stable": true,

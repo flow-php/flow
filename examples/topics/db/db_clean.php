@@ -7,8 +7,6 @@ use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
 
-require __DIR__ . '/../../bootstrap.php';
-
 $dbConnectionString = 'postgresql://postgres:postgres@127.0.0.1:5432/postgres?serverVersion=11%26charset=utf8';
 $dbConnection = DriverManager::getConnection($dbConnectionParams = ['url' => $dbConnectionString]);
 
