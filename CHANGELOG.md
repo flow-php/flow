@@ -1,6 +1,8 @@
 ## [Unreleased] - 2022-10-06
 
 ### Added
+- [#175](https://github.com/flow-php/flow/pull/175) - **Dbal DSL** - [@norberttech](https://github.com/norberttech)
+- [#175](https://github.com/flow-php/flow/pull/175) - **DbalLimitOffsetExractor** - [@norberttech](https://github.com/norberttech)
 - [#170](https://github.com/flow-php/flow/pull/170) - **Advanced Join Expression** - [@norberttech](https://github.com/norberttech)
 - [#170](https://github.com/flow-php/flow/pull/170) - **Join usage examples** - [@norberttech](https://github.com/norberttech)
 - [#167](https://github.com/flow-php/flow/pull/167) - **left_anti join** - [@norberttech](https://github.com/norberttech)
