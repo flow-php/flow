@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-10-07
+## [Unreleased] - 2022-10-09
 
 ### Added
 - [#175](https://github.com/flow-php/flow/pull/175) - **Dbal DSL** - [@norberttech](https://github.com/norberttech)
@@ -708,6 +708,7 @@
 - [55faa8](https://github.com/flow-php/flow/commit/55faa8edfed3973f54e31b3af57a4ba171050a85) - **README.md** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#177](https://github.com/flow-php/flow/pull/177) - **psalm-immutable annotation from transformers and extractors** - [@norberttech](https://github.com/norberttech)
 - [#103](https://github.com/flow-php/flow/pull/103) - **safe_mode argument from all loaders constructors** - [@norberttech](https://github.com/norberttech)
 - [fd8072](https://github.com/flow-php/flow/commit/fd80722c81205cac9ce7e5e2cad33055c52850ce) - **github actions and tools settings from readonly repositories** - [@norberttech](https://github.com/norberttech)
 - [155e5d](https://github.com/flow-php/flow/commit/155e5d7a065897a68d648060a7e6d839a60aae28) - **failing test in dbal platform** - [@norberttech](https://github.com/norberttech)
