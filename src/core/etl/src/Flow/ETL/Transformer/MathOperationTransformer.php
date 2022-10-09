@@ -13,8 +13,6 @@ use Flow\ETL\Transformer\Math\Operation;
 
 /**
  * @implements Transformer<array{left_entry: string, right_entry: string, operation: Operation|string, new_entry_name: string}>
- *
- * @psalm-immutable
  */
 final class MathOperationTransformer implements Transformer
 {

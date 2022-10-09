@@ -7,9 +7,6 @@ namespace Flow\ETL\Extractor;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 
-/**
- * @psalm-immutable
- */
 final class ChunkExtractor implements Extractor, OverridingExtractor
 {
     public function __construct(

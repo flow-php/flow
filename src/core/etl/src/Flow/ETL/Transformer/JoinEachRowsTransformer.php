@@ -13,8 +13,6 @@ use Flow\ETL\Transformer;
 
 /**
  * @implements Transformer<array{factory: DataFrameFactory, condition: Expression, type: Join}>
- *
- * @psalm-immutable
  */
 final class JoinEachRowsTransformer implements Transformer
 {
@@ -25,33 +23,21 @@ final class JoinEachRowsTransformer implements Transformer
     ) {
     }
 
-    /**
-     * @psalm-pure
-     */
     public static function inner(DataFrameFactory $right, Expression $condition) : self
     {
         return new self($right, $condition, Join::inner);
     }
 
-    /**
-     * @psalm-pure
-     */
     public static function left(DataFrameFactory $right, Expression $condition) : self
     {
         return new self($right, $condition, Join::left);
     }
 
-    /**
-     * @psalm-pure
-     */
     public static function leftAnti(DataFrameFactory $right, Expression $condition) : self
     {
         return new self($right, $condition, Join::left_anti);
     }
 
-    /**
-     * @psalm-pure
-     */
     public static function right(DataFrameFactory $right, Expression $condition) : self
     {
         return new self($right, $condition, Join::right);
@@ -75,8 +61,6 @@ final class JoinEachRowsTransformer implements Transformer
 
     /**
      * @param FlowContext $context
-     *
-     * @psalm-suppress ImpureMethodCall
      *
      * @throws \Flow\ETL\Exception\InvalidArgumentException
      */

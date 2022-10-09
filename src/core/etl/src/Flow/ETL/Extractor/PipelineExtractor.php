@@ -9,9 +9,6 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Pipeline;
 use Flow\ETL\Rows;
 
-/**
- * @psalm-immutable
- */
 final class PipelineExtractor implements Extractor
 {
     public function __construct(

@@ -8,9 +8,6 @@ use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 
-/**
- * @psalm-immutable
- */
 final class BufferExtractor implements Extractor, OverridingExtractor
 {
     public function __construct(

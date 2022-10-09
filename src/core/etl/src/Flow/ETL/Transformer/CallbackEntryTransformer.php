@@ -15,8 +15,6 @@ use Laravel\SerializableClosure\SerializableClosure;
 
 /**
  * @implements Transformer<array{callables: array<SerializableClosure>}>
- *
- * @psalm-immutable
  */
 final class CallbackEntryTransformer implements Transformer
 {

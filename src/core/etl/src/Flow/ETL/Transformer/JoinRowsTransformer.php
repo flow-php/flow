@@ -14,8 +14,6 @@ use Flow\ETL\Transformer;
 
 /**
  * @implements Transformer<array{data_frame: ?DataFrame, condition: Expression, type: Join, rows: ?Rows}>
- *
- * @psalm-immutable
  */
 final class JoinRowsTransformer implements Transformer
 {
@@ -28,33 +26,21 @@ final class JoinRowsTransformer implements Transformer
     ) {
     }
 
-    /**
-     * @psalm-pure
-     */
     public static function inner(DataFrame $right, Expression $condition) : self
     {
         return new self($right, $condition, Join::inner);
     }
 
-    /**
-     * @psalm-pure
-     */
     public static function left(DataFrame $right, Expression $condition) : self
     {
         return new self($right, $condition, Join::left);
     }
 
-    /**
-     * @psalm-pure
-     */
     public static function leftAnti(DataFrame $right, Expression $condition) : self
     {
         return new self($right, $condition, Join::left_anti);
     }
 
-    /**
-     * @psalm-pure
-     */
     public static function right(DataFrame $right, Expression $condition) : self
     {
         return new self($right, $condition, Join::right);
@@ -74,7 +60,6 @@ final class JoinRowsTransformer implements Transformer
     {
         /** @var Rows $rows */
         $rows = $data['rows'];
-        /** @psalm-suppress ImpureMethodCall */
         $this->dataFrame = (new Flow())->process($rows);
         $this->condition = $data['condition'];
         $this->type = $data['type'];
@@ -95,7 +80,6 @@ final class JoinRowsTransformer implements Transformer
      * @psalm-suppress InvalidNullableReturnType
      * @psalm-suppress NullableReturnStatement
      * @psalm-suppress InaccessibleProperty
-     * @psalm-suppress ImpureMethodCall
      */
     private function rows() : Rows
     {

@@ -11,9 +11,6 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 
-/**
- * @psalm-immutable
- */
 final class XMLReaderExtractor implements Extractor
 {
     /**
@@ -39,9 +36,6 @@ final class XMLReaderExtractor implements Extractor
     ) {
     }
 
-    /**
-     * @psalm-suppress ImpureMethodCall
-     */
     public function extract(FlowContext $context) : \Generator
     {
         foreach ($context->streams()->fs()->scan($this->path, $context->partitionFilter()) as $filePath) {

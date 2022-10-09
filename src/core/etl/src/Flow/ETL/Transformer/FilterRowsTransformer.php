@@ -12,8 +12,6 @@ use Flow\ETL\Transformer\Filter\Filter;
 
 /**
  * @implements Transformer<array{filters: array<Filter>}>
- *
- * @psalm-immutable
  */
 final class FilterRowsTransformer implements Transformer
 {

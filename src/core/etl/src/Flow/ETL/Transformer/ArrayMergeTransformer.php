@@ -12,8 +12,6 @@ use Flow\ETL\Transformer;
 
 /**
  * @implements Transformer<array{array_entries: array<string>, new_entry_name: string}>
- *
- * @psalm-immutable
  */
 final class ArrayMergeTransformer implements Transformer
 {

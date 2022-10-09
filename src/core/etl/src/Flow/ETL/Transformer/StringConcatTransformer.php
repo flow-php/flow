@@ -11,8 +11,6 @@ use Flow\ETL\Transformer;
 
 /**
  * @implements Transformer<array{string_entry_names: array<string>, glue: string, new_entry_name: string}>
- *
- * @psalm-immutable
  */
 final class StringConcatTransformer implements Transformer
 {

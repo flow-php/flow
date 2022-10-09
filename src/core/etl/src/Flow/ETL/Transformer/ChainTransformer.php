@@ -10,8 +10,6 @@ use Flow\ETL\Transformer;
 
 /**
  * @implements Transformer<array{transformers: array<Transformer>}>
- *
- * @psalm-immutable
  */
 final class ChainTransformer implements Transformer
 {

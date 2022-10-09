@@ -12,8 +12,6 @@ use Flow\ETL\Transformer;
 
 /**
  * @implements Transformer<array{group_by_entry: string, new_entry_name: string}>
- *
- * @psalm-immutable
  */
 final class GroupToArrayTransformer implements Transformer
 {

@@ -12,9 +12,6 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 
-/**
- * @psalm-suppress MissingImmutableAnnotation
- */
 final class ParquetExtractor implements Extractor
 {
     /**

@@ -11,8 +11,6 @@ use Flow\ETL\Transformer;
 
 /**
  * @implements Transformer<array{names: array<string>}>
- *
- * @psalm-immutable
  */
 final class RemoveEntriesTransformer implements Transformer
 {

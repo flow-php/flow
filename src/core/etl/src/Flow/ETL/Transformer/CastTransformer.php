@@ -12,8 +12,6 @@ use Flow\ETL\Transformer;
 
 /**
  * @implements Transformer<array{row_casts: array<RowConverter>}>
- *
- * @psalm-immutable
  */
 final class CastTransformer implements Transformer
 {

@@ -11,8 +11,6 @@ use Flow\ETL\Transformer;
 
 /**
  * @implements Transformer<array{case: string, entry_names: array<string>}>
- *
- * @psalm-immutable
  */
 final class StringEntryValueCaseConverterTransformer implements Transformer
 {

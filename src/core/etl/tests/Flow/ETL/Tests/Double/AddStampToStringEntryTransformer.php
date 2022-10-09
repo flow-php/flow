@@ -10,9 +10,6 @@ use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
-/**
- * @psalm-immutable
- */
 final class AddStampToStringEntryTransformer implements Transformer
 {
     public function __construct(private string $entryName, private string $stamp, private string $divider)

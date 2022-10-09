@@ -12,30 +12,22 @@ use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
-/**
- * @psalm-immutable
- */
 final class PsrHttpClientStaticExtractor implements Extractor
 {
     /**
-     * @psalm-var pure-callable(RequestInterface, ResponseInterface) : void|null
-     *
      * @var null|callable(RequestInterface, ResponseInterface) : void
      */
     private $postRequest;
 
     /**
-     * @psalm-var pure-callable(RequestInterface) : void|null
-     *
      * @var null|callable(RequestInterface) : void
      */
     private $preRequest;
 
     /**
      * @param iterable<RequestInterface> $requests
-     *
-     * @psalm-param pure-callable(RequestInterface) : void|null $preRequest
-     * @psalm-param pure-callable(RequestInterface, ResponseInterface) : void|null $postRequest
+     * @param null|callable(RequestInterface) : void $preRequest
+     * @param null|callable(RequestInterface, ResponseInterface) : void $postRequest
      */
     public function __construct(private readonly ClientInterface $client, private readonly iterable $requests, ?callable $preRequest = null, ?callable $postRequest = null)
     {
@@ -53,7 +45,6 @@ final class PsrHttpClientStaticExtractor implements Extractor
                 ($this->preRequest)($request);
             }
 
-            /** @psalm-suppress ImpureMethodCall */
             $response = $this->client->sendRequest($request);
 
             if ($this->postRequest) {
