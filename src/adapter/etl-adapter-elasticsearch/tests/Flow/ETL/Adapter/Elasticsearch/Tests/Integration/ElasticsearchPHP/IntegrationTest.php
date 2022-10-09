@@ -72,11 +72,11 @@ final class IntegrationTest extends TestCase
             ->limit($limit = 20)
             ->load(
                 Elasticsearch::bulk_index(
-                $this->elasticsearchContext->clientConfig(),
-                chunk_size: 100,
-                index: self::DESTINATION_INDEX,
-                id_factory: new EntryIdFactory('id')
-            )
+                    $this->elasticsearchContext->clientConfig(),
+                    chunk_size: 100,
+                    index: self::DESTINATION_INDEX,
+                    id_factory: new EntryIdFactory('id')
+                )
             )
             ->fetch();
 
