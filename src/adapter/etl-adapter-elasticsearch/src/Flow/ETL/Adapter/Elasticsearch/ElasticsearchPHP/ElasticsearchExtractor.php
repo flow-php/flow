@@ -9,9 +9,6 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
 
-/**
- * @psalm-immutable
- */
 final class ElasticsearchExtractor implements Extractor
 {
     /**
@@ -57,6 +54,7 @@ final class ElasticsearchExtractor implements Extractor
          * @psalm-suppress UndefinedClass
          */
         $pit = \is_array($this->pointInTimeParams)
+            /** @phpstan-ignore-next-line  */
             ? $this->client()->openPointInTime($this->pointInTimeParams)->asArray()
             : null;
 
@@ -66,6 +64,8 @@ final class ElasticsearchExtractor implements Extractor
 
         /**
          * @psalm-suppress UndefinedClass
+         *
+         * @phpstan-ignore-next-line
          */
         $results = new SearchResults($this->client()->search($params->asArray())->asArray());
 
@@ -86,6 +86,8 @@ final class ElasticsearchExtractor implements Extractor
 
                 /**
                  * @psalm-suppress UndefinedClass
+                 *
+                 * @phpstan-ignore-next-line
                  */
                 $nextResults = new SearchResults($this->client()->search($nextPageParams->asArray())->asArray());
                 $lastHitSort = $nextResults->lastHitSort();
@@ -120,6 +122,8 @@ final class ElasticsearchExtractor implements Extractor
 
                 /**
                  * @psalm-suppress UndefinedClass
+                 *
+                 * @phpstan-ignore-next-line
                  */
                 $nextResults = new SearchResults($this->client()->search($nextPageParams->asArray())->asArray());
 
@@ -164,7 +168,11 @@ final class ElasticsearchExtractor implements Extractor
     private function closePointInTime(?array $pit) : void
     {
         if (\is_array($pit)) {
-            /** @psalm-suppress UndefinedClass */
+            /**
+             * @psalm-suppress UndefinedClass
+             *
+             * @phpstan-ignore-next-line
+             */
             $this->client()->closePointInTime(['body' => ['id' => $pit['id']]]);
         }
     }

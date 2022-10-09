@@ -13,8 +13,6 @@ use Flow\ETL\Transformer;
 
 /**
  * @implements Transformer<array{entry_factory: EntryFactory}>
- *
- * @psalm-immutable
  */
 final class HitsIntoRowsTransformer implements Transformer
 {
