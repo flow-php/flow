@@ -6,6 +6,8 @@ namespace Flow\ETL\Adapter\Elasticsearch\Tests\Context;
 
 use Elasticsearch\Client;
 use Elasticsearch\ClientBuilder;
+use Elasticsearch\Common\Exceptions\BadRequest400Exception;
+use Elasticsearch\Common\Exceptions\Missing404Exception;
 use Flow\ETL\Adapter\Elasticsearch\IdFactory;
 use Flow\ETL\Config;
 use Flow\ETL\DSL\Elasticsearch;
@@ -61,7 +63,7 @@ final class Elasticsearch7Context implements ElasticsearchContext
                 'index' => $name,
             ];
             $response = $this->client()->indices()->delete($deleteParams);
-        } catch (BadRequest400Exception) {
+        } catch (Missing404Exception) {
         }
     }
 

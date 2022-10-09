@@ -49,25 +49,27 @@ final class ElasticsearchExtractor implements Extractor
     public function extract(FlowContext $context) : \Generator
     {
         /**
-         * @var ?array{id: string} $pit
-         *
          * @psalm-suppress UndefinedClass
+         * @psalm-suppress PossiblyInvalidArgument
          */
         $pit = \is_array($this->pointInTimeParams)
-            /** @phpstan-ignore-next-line  */
-            ? $this->client()->openPointInTime($this->pointInTimeParams)->asArray()
+            /**
+             * @phpstan-ignore-next-line
+             */
+            ? new PointInTime($this->client()->openPointInTime($this->pointInTimeParams))
             : null;
 
-        $params = (\is_array($pit))
-            ? new SearchParams(\array_merge($this->params, ['pit' => ['id' => $pit['id']]]))
+        $params = ($pit)
+            ? new SearchParams(\array_merge($this->params, ['pit' => ['id' => $pit->id()]]))
             : new SearchParams($this->params);
 
         /**
          * @psalm-suppress UndefinedClass
+         * @psalm-suppress PossiblyInvalidArgument
          *
          * @phpstan-ignore-next-line
          */
-        $results = new SearchResults($this->client()->search($params->asArray())->asArray());
+        $results = new SearchResults($this->client()->search($params->asArray()));
 
         if ($results->size() === 0) {
             $this->closePointInTime($pit);
@@ -86,10 +88,11 @@ final class ElasticsearchExtractor implements Extractor
 
                 /**
                  * @psalm-suppress UndefinedClass
+                 * @psalm-suppress PossiblyInvalidArgument
                  *
                  * @phpstan-ignore-next-line
                  */
-                $nextResults = new SearchResults($this->client()->search($nextPageParams->asArray())->asArray());
+                $nextResults = new SearchResults($this->client()->search($nextPageParams->asArray()));
                 $lastHitSort = $nextResults->lastHitSort();
 
                 if (!$nextResults->size()) {
@@ -122,10 +125,11 @@ final class ElasticsearchExtractor implements Extractor
 
                 /**
                  * @psalm-suppress UndefinedClass
+                 * @psalm-suppress PossiblyInvalidArgument
                  *
                  * @phpstan-ignore-next-line
                  */
-                $nextResults = new SearchResults($this->client()->search($nextPageParams->asArray())->asArray());
+                $nextResults = new SearchResults($this->client()->search($nextPageParams->asArray()));
 
                 $fetched += $nextResults->size();
 
@@ -160,20 +164,18 @@ final class ElasticsearchExtractor implements Extractor
     /**
      * @psalm-suppress ImpureMethodCall
      *
-     * @param null|array{id: string} $pit
-     *
      * @throws \Elastic\Elasticsearch\Exception\ClientResponseException
      * @throws \Elastic\Elasticsearch\Exception\ServerResponseException
      */
-    private function closePointInTime(?array $pit) : void
+    private function closePointInTime(?PointInTime $pit) : void
     {
-        if (\is_array($pit)) {
+        if ($pit) {
             /**
              * @psalm-suppress UndefinedClass
              *
              * @phpstan-ignore-next-line
              */
-            $this->client()->closePointInTime(['body' => ['id' => $pit['id']]]);
+            $this->client()->closePointInTime(['body' => ['id' => $pit->id()]]);
         }
     }
 }

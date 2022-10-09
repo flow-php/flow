@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP;
 
+use Elastic\Elasticsearch\Response\Elasticsearch;
 use Flow\ETL\Row;
 use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Rows;
@@ -11,10 +12,16 @@ use Flow\ETL\Rows;
 final class SearchResults
 {
     /**
-     * @param array<mixed> $results
+     * @var array<mixed>
      */
-    public function __construct(private readonly array $results)
+    private readonly array $results;
+
+    /**
+     * @param array<mixed>|Elasticsearch $results
+     */
+    public function __construct(array|Elasticsearch $results)
     {
+        $this->results = (\is_array($results)) ? $results : $results->asArray();
     }
 
     public function lastHitSort() : ?array
