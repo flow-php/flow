@@ -43,8 +43,13 @@ final class ElasticsearchLoader implements Loader
      * @param array{hosts?: array<string>, connectionParams?: array<mixed>, retries?: int, sniffOnStart?: boolean, sslCert?: array<string>, sslKey?: array<string>, sslVerification?: (boolean | string), elasticMetaHeader?: boolean, includePortInHostHeader?: boolean} $config
      * @param array<mixed> $parameters
      */
-    public function __construct(private array $config, private int $chunkSize, private string $index, private IdFactory $idFactory, private array $parameters = [])
-    {
+    public function __construct(
+        private array $config,
+        private int $chunkSize,
+        private string $index,
+        private IdFactory $idFactory,
+        private array $parameters = []
+    ) {
         $this->client = null;
         $this->method = 'index';
     }

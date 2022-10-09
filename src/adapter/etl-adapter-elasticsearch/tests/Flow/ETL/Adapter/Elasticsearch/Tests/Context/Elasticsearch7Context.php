@@ -6,6 +6,11 @@ namespace Flow\ETL\Adapter\Elasticsearch\Tests\Context;
 
 use Elasticsearch\Client;
 use Elasticsearch\ClientBuilder;
+use Flow\ETL\Adapter\Elasticsearch\IdFactory;
+use Flow\ETL\Config;
+use Flow\ETL\DSL\Elasticsearch;
+use Flow\ETL\FlowContext;
+use Flow\ETL\Rows;
 
 final class Elasticsearch7Context implements ElasticsearchContext
 {
@@ -58,5 +63,17 @@ final class Elasticsearch7Context implements ElasticsearchContext
             $response = $this->client()->indices()->delete($deleteParams);
         } catch (BadRequest400Exception) {
         }
+    }
+
+    public function loadRows(Rows $rows, string $index, IdFactory $idFactory) : void
+    {
+        Elasticsearch::bulk_index(
+            $this->clientConfig(),
+            100,
+            $index,
+            $idFactory,
+            ['refresh' => true]
+        )
+            ->load($rows, new FlowContext(Config::default()));
     }
 }

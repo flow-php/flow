@@ -74,6 +74,11 @@ final class Row implements Serializable
         return $this->entries->get($name);
     }
 
+    public function has(string $name) : bool
+    {
+        return $this->entries->has($name);
+    }
+
     public function isEqual(self $row) : bool
     {
         return $this->entries->isEqual($row->entries());
