@@ -11,9 +11,6 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 
-/**
- * @psalm-immutable
- */
 final class DbalQueryExtractor implements Extractor
 {
     /**

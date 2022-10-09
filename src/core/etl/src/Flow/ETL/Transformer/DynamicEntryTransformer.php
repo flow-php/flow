@@ -14,8 +14,6 @@ use Laravel\SerializableClosure\SerializableClosure;
 
 /**
  * @implements Transformer<array{generator: SerializableClosure}>
- *
- * @psalm-immutable
  */
 final class DynamicEntryTransformer implements Transformer
 {

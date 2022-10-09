@@ -11,9 +11,6 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 
-/**
- * @psalm-immutable
- */
 final class DbalLimitOffsetExtractor implements Extractor
 {
     /**
@@ -32,9 +29,6 @@ final class DbalLimitOffsetExtractor implements Extractor
         }
     }
 
-    /**
-     * @psalm-suppress ImpureMethodCall
-     */
     public function extract(FlowContext $context) : \Generator
     {
         if (isset($this->maximum)) {

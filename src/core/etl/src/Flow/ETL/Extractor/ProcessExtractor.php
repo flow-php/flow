@@ -10,8 +10,6 @@ use Flow\ETL\Rows;
 
 /**
  * @internal
- *
- * @psalm-immutable
  */
 final class ProcessExtractor implements Extractor
 {

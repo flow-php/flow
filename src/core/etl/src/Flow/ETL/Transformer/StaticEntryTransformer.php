@@ -12,8 +12,6 @@ use Flow\ETL\Transformer;
 
 /**
  * @implements Transformer<array{entry: Entry}>
- *
- * @psalm-immutable
  */
 final class StaticEntryTransformer implements Transformer
 {

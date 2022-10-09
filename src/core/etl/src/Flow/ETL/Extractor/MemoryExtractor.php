@@ -10,9 +10,6 @@ use Flow\ETL\Memory\Memory;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 
-/**
- * @psalm-immutable
- */
 final class MemoryExtractor implements Extractor
 {
     private const CHUNK_SIZE = 100;

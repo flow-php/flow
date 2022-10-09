@@ -13,8 +13,6 @@ use Laminas\Hydrator\HydratorInterface;
 
 /**
  * @implements Transformer<array{object_entry_name: string, hydrator: HydratorInterface}>
- *
- * @psalm-immutable
  */
 final class ObjectToArrayTransformer implements Transformer
 {

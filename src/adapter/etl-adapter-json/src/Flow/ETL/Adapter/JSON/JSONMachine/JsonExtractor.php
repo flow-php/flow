@@ -12,9 +12,6 @@ use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use JsonMachine\Items;
 
-/**
- * @psalm-immutable
- */
 final class JsonExtractor implements Extractor
 {
     public function __construct(
@@ -24,17 +21,12 @@ final class JsonExtractor implements Extractor
     ) {
     }
 
-    /**
-     * @psalm-suppress ImpureMethodCall
-     */
     public function extract(FlowContext $context) : \Generator
     {
         $rows = new Rows();
 
         foreach ($context->streams()->fs()->scan($this->path, $context->partitionFilter()) as $filePath) {
             /**
-             * @psalm-suppress ImpureMethodCall
-             *
              * @var array|object $row
              */
             foreach (Items::fromStream($context->streams()->fs()->open($filePath, Mode::READ)->resource())->getIterator() as $row) {

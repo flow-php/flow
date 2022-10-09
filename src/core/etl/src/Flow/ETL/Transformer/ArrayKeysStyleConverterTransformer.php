@@ -18,8 +18,6 @@ use Jawira\CaseConverter\Convert;
 
 /**
  * @implements Transformer<array{array_entry_name: string, style: string, entry_factory: EntryFactory}>
- *
- * @psalm-immutable
  */
 final class ArrayKeysStyleConverterTransformer implements Transformer
 {

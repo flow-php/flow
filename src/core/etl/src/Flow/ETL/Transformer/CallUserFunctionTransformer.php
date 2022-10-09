@@ -22,8 +22,6 @@ use Laravel\SerializableClosure\SerializableClosure;
  *     value_argument_name: ?string,
  *     entry_factory: EntryFactory
  *  }>
- *
- * @psalm-immutable
  */
 final class CallUserFunctionTransformer implements Transformer
 {
