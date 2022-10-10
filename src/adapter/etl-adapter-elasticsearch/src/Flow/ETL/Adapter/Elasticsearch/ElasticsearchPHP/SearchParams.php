@@ -32,6 +32,17 @@ final class SearchParams
         return \array_key_exists('sort', $this->params);
     }
 
+    public function remove(string $key) : self
+    {
+        $params = $this->params;
+
+        if (\array_key_exists($key, $params)) {
+            unset($params[$key]);
+        }
+
+        return new self($params);
+    }
+
     public function set(string $key, mixed $value) : self
     {
         return new self(\array_merge($this->params, [$key => $value]));

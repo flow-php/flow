@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Elasticsearch\Tests\Integration\ElasticsearchPHP;
 
 use Flow\ETL\Adapter\Elasticsearch\EntryIdFactory\EntryIdFactory;
-use Flow\ETL\Adapter\Elasticsearch\Tests\Context\Elasticsearch7Context;
 use Flow\ETL\Adapter\Elasticsearch\Tests\Integration\TestCase;
 use Flow\ETL\Config;
 use Flow\ETL\DSL\Elasticsearch;
@@ -35,10 +34,6 @@ final class ElasticsearchExtractorTest extends TestCase
 
     public function test_empty_extraction() : void
     {
-        if ($this->elasticsearchContext instanceof Elasticsearch7Context) {
-            $this->markTestSkipped('Point in time is not available in ES 7 client as a parameter of search.');
-        }
-
         $loader = Elasticsearch::bulk_index($this->elasticsearchContext->clientConfig(), 100, self::INDEX_NAME, new EntryIdFactory('id'), ['refresh' => true]);
 
         $loader->load(new Rows(
@@ -148,10 +143,6 @@ final class ElasticsearchExtractorTest extends TestCase
 
     public function test_extraction_index_with_search_after_with_point_in_time() : void
     {
-        if ($this->elasticsearchContext instanceof Elasticsearch7Context) {
-            $this->markTestSkipped('Point in time is not available in ES 7 client as a parameter of search.');
-        }
-
         $loader = Elasticsearch::bulk_index($this->elasticsearchContext->clientConfig(), 100, self::INDEX_NAME, new EntryIdFactory('id'), ['refresh' => true]);
 
         $loader->load(new Rows(
@@ -193,10 +184,6 @@ final class ElasticsearchExtractorTest extends TestCase
 
     public function test_extraction_whole_index_with_point_in_time() : void
     {
-        if ($this->elasticsearchContext instanceof Elasticsearch7Context) {
-            $this->markTestSkipped('Point in time is not available in ES 7 client as a parameter of search.');
-        }
-
         $loader = Elasticsearch::bulk_index($this->elasticsearchContext->clientConfig(), 100, self::INDEX_NAME, new EntryIdFactory('id'), ['refresh' => true]);
 
         $loader->load(new Rows(

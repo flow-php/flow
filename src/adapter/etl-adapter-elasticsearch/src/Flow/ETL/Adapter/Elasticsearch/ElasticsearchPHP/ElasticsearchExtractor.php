@@ -60,7 +60,7 @@ final class ElasticsearchExtractor implements Extractor
             : null;
 
         $params = ($pit)
-            ? new SearchParams(\array_merge($this->params, ['pit' => ['id' => $pit->id()]]))
+            ? (new SearchParams($this->params))->setBody('pit', ['id' => $pit->id()])->remove('index')
             : new SearchParams($this->params);
 
         /**
