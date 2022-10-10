@@ -1,6 +1,8 @@
 ## [Unreleased] - 2022-10-10
 
 ### Added
+- [#178](https://github.com/flow-php/flow/pull/178) - **Elasticsearch Exractor** - [@norberttech](https://github.com/norberttech)
+- [#178](https://github.com/flow-php/flow/pull/178) - **Elasticsearch Hits to Rows transformer** - [@norberttech](https://github.com/norberttech)
 - [#175](https://github.com/flow-php/flow/pull/175) - **Dbal DSL** - [@norberttech](https://github.com/norberttech)
 - [#175](https://github.com/flow-php/flow/pull/175) - **DbalLimitOffsetExractor** - [@norberttech](https://github.com/norberttech)
 - [#170](https://github.com/flow-php/flow/pull/170) - **Advanced Join Expression** - [@norberttech](https://github.com/norberttech)
@@ -123,6 +125,7 @@
 - [856870](https://github.com/flow-php/flow/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#178](https://github.com/flow-php/flow/pull/178) - **excluded composer.lock from PR size calculation** - [@norberttech](https://github.com/norberttech)
 - [#171](https://github.com/flow-php/flow/pull/171) - **Examples cleanup** - [@norberttech](https://github.com/norberttech)
 - [#153](https://github.com/flow-php/flow/pull/153) - **Moved streams to FlowContext** - [@norberttech](https://github.com/norberttech)
 - [#148](https://github.com/flow-php/flow/pull/148) - **Updated tools & project dependencies** - [@norberttech](https://github.com/norberttech)
