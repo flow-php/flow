@@ -29,6 +29,10 @@
             <file name="src/core/etl/src/Flow/ETL/Formatter/ASCII/ASCIITable.php" />
             <file name="src/core/etl/src/Flow/ETL/ExternalSort/RowsMinHeap.php" />
 
+            <file name="src/adapter/etl-adapter-elasticsearch/src/Flow/ETL/Adapter/Elasticsearch/ElasticsearchPHP/SearchResults.php"/>
+            <file name="src/adapter/etl-adapter-elasticsearch/src/Flow/ETL/Adapter/Elasticsearch/ElasticsearchPHP/PointInTime.php"/>
+            <file name="src/adapter/etl-adapter-elasticsearch/src/Flow/ETL/Adapter/Elasticsearch/ElasticsearchPHP/SearchParams.php"/>
+
             <file name="src/adapter/etl-adapter-avro/src/Flow/ETL/Adapter/Avro/FlixTech/SchemaConverter.php" />
             <file name="src/adapter/etl-adapter-avro/src/Flow/ETL/Adapter/Avro/FlixTech/ValueConverter.php" />
         </ignoreFiles>
