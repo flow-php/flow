@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-10-10
+## [Unreleased] - 2022-10-12
 
 ### Added
 - [#178](https://github.com/flow-php/flow/pull/178) - **Elasticsearch Exractor** - [@norberttech](https://github.com/norberttech)
