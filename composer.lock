@@ -1862,16 +1862,16 @@
         },
         {
             "name": "league/flysystem",
-            "version": "3.6.0",
+            "version": "3.7.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/thephpleague/flysystem.git",
-                "reference": "8eded334b9894dc90ebdcb7be81e3a1c9413f709"
+                "reference": "0deb0ff21094cbd37b13cbda085c076312708e6c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/thephpleague/flysystem/zipball/8eded334b9894dc90ebdcb7be81e3a1c9413f709",
-                "reference": "8eded334b9894dc90ebdcb7be81e3a1c9413f709",
+                "url": "https://api.github.com/repos/thephpleague/flysystem/zipball/0deb0ff21094cbd37b13cbda085c076312708e6c",
+                "reference": "0deb0ff21094cbd37b13cbda085c076312708e6c",
                 "shasum": ""
             },
             "require": {
@@ -1933,7 +1933,7 @@
             ],
             "support": {
                 "issues": "https://github.com/thephpleague/flysystem/issues",
-                "source": "https://github.com/thephpleague/flysystem/tree/3.6.0"
+                "source": "https://github.com/thephpleague/flysystem/tree/3.7.0"
             },
             "funding": [
                 {
@@ -1949,7 +1949,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-10-13T20:05:14+00:00"
+            "time": "2022-10-17T07:23:36+00:00"
         },
         {
             "name": "league/mime-type-detection",
@@ -4345,20 +4345,20 @@
         },
         {
             "name": "league/flysystem-azure-blob-storage",
-            "version": "3.6.0",
+            "version": "3.7.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/thephpleague/flysystem-azure-blob-storage.git",
-                "reference": "4ad90d3f486fb649f89356b812e442cd857995b4"
+                "reference": "71d1a30af4b5c4312fcb6b73c94ae702ed37c437"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/thephpleague/flysystem-azure-blob-storage/zipball/4ad90d3f486fb649f89356b812e442cd857995b4",
-                "reference": "4ad90d3f486fb649f89356b812e442cd857995b4",
+                "url": "https://api.github.com/repos/thephpleague/flysystem-azure-blob-storage/zipball/71d1a30af4b5c4312fcb6b73c94ae702ed37c437",
+                "reference": "71d1a30af4b5c4312fcb6b73c94ae702ed37c437",
                 "shasum": ""
             },
             "require": {
-                "league/flysystem": "^3.0.0",
+                "league/flysystem": "^3.7.0",
                 "microsoft/azure-storage-blob": "^1.1",
                 "php": "^8.0.2"
             },
@@ -4380,7 +4380,7 @@
             ],
             "support": {
                 "issues": "https://github.com/thephpleague/flysystem-azure-blob-storage/issues",
-                "source": "https://github.com/thephpleague/flysystem-azure-blob-storage/tree/3.6.0"
+                "source": "https://github.com/thephpleague/flysystem-azure-blob-storage/tree/3.7.0"
             },
             "funding": [
                 {
@@ -4396,7 +4396,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-10-05T14:39:28+00:00"
+            "time": "2022-10-16T21:21:26+00:00"
         },
         {
             "name": "microsoft/azure-storage-blob",
