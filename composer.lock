@@ -3852,16 +3852,16 @@
         },
         {
             "name": "aws/aws-sdk-php",
-            "version": "3.238.4",
+            "version": "3.238.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aws/aws-sdk-php.git",
-                "reference": "3b87356aea911fa7a5596802a27baefe59062ee6"
+                "reference": "79a76b438bd20ae687394561b4f28cb6c10db08e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/3b87356aea911fa7a5596802a27baefe59062ee6",
-                "reference": "3b87356aea911fa7a5596802a27baefe59062ee6",
+                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/79a76b438bd20ae687394561b4f28cb6c10db08e",
+                "reference": "79a76b438bd20ae687394561b4f28cb6c10db08e",
                 "shasum": ""
             },
             "require": {
@@ -3940,9 +3940,9 @@
             "support": {
                 "forum": "https://forums.aws.amazon.com/forum.jspa?forumID=80",
                 "issues": "https://github.com/aws/aws-sdk-php/issues",
-                "source": "https://github.com/aws/aws-sdk-php/tree/3.238.4"
+                "source": "https://github.com/aws/aws-sdk-php/tree/3.238.6"
             },
-            "time": "2022-10-13T18:18:23+00:00"
+            "time": "2022-10-17T18:17:10+00:00"
         },
         {
             "name": "clue/stream-filter",
@@ -4275,21 +4275,21 @@
         },
         {
             "name": "league/flysystem-aws-s3-v3",
-            "version": "3.6.0",
+            "version": "3.7.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/thephpleague/flysystem-aws-s3-v3.git",
-                "reference": "5518ab783314c91bfd781b81fea912f553afb323"
+                "reference": "8c884379593dd2081ec07394842665be6fe6fd61"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/thephpleague/flysystem-aws-s3-v3/zipball/5518ab783314c91bfd781b81fea912f553afb323",
-                "reference": "5518ab783314c91bfd781b81fea912f553afb323",
+                "url": "https://api.github.com/repos/thephpleague/flysystem-aws-s3-v3/zipball/8c884379593dd2081ec07394842665be6fe6fd61",
+                "reference": "8c884379593dd2081ec07394842665be6fe6fd61",
                 "shasum": ""
             },
             "require": {
                 "aws/aws-sdk-php": "^3.132.4",
-                "league/flysystem": "^3.6.0",
+                "league/flysystem": "^3.7.0",
                 "league/mime-type-detection": "^1.0.0",
                 "php": "^8.0.2"
             },
@@ -4325,7 +4325,7 @@
             ],
             "support": {
                 "issues": "https://github.com/thephpleague/flysystem-aws-s3-v3/issues",
-                "source": "https://github.com/thephpleague/flysystem-aws-s3-v3/tree/3.6.0"
+                "source": "https://github.com/thephpleague/flysystem-aws-s3-v3/tree/3.7.0"
             },
             "funding": [
                 {
@@ -4341,7 +4341,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-10-13T19:38:48+00:00"
+            "time": "2022-10-16T21:21:26+00:00"
         },
         {
             "name": "league/flysystem-azure-blob-storage",
