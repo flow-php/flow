@@ -4345,20 +4345,20 @@
         },
         {
             "name": "league/flysystem-azure-blob-storage",
-            "version": "3.7.0",
+            "version": "3.8.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/thephpleague/flysystem-azure-blob-storage.git",
-                "reference": "71d1a30af4b5c4312fcb6b73c94ae702ed37c437"
+                "reference": "08a83fa7e4986194ea590b9645061e78cb55ef21"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/thephpleague/flysystem-azure-blob-storage/zipball/71d1a30af4b5c4312fcb6b73c94ae702ed37c437",
-                "reference": "71d1a30af4b5c4312fcb6b73c94ae702ed37c437",
+                "url": "https://api.github.com/repos/thephpleague/flysystem-azure-blob-storage/zipball/08a83fa7e4986194ea590b9645061e78cb55ef21",
+                "reference": "08a83fa7e4986194ea590b9645061e78cb55ef21",
                 "shasum": ""
             },
             "require": {
-                "league/flysystem": "^3.7.0",
+                "league/flysystem": "^3.8.0",
                 "microsoft/azure-storage-blob": "^1.1",
                 "php": "^8.0.2"
             },
@@ -4380,7 +4380,7 @@
             ],
             "support": {
                 "issues": "https://github.com/thephpleague/flysystem-azure-blob-storage/issues",
-                "source": "https://github.com/thephpleague/flysystem-azure-blob-storage/tree/3.7.0"
+                "source": "https://github.com/thephpleague/flysystem-azure-blob-storage/tree/3.8.0"
             },
             "funding": [
                 {
@@ -4396,7 +4396,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-10-16T21:21:26+00:00"
+            "time": "2022-10-18T06:40:06+00:00"
         },
         {
             "name": "microsoft/azure-storage-blob",
