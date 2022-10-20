@@ -8,6 +8,15 @@ services:
             - POSTGRES_USER=postgres
             - POSTGRES_PASSWORD=postgres
             - POSTGRES_DB=postgres
+    mysql:
+        image: mysql:8.0.31-debian
+        ports:
+            - 3306:3306
+        environment:
+            MYSQL_USER: mysql
+            MYSQL_PASSWORD: mysql
+            MYSQL_DATABASE: mysql
+            MYSQL_ROOT_PASSWORD: root
     elasticsearch:
         image: elasticsearch:7.17.2
         container_name: flow-php-elasticsearch
