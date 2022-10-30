@@ -84,7 +84,7 @@ jobs:
         image: mysql:8.0.31-debian
         ports:
           - 3306/tcp
-        environment:
+        env:
           MYSQL_USER: mysql
           MYSQL_PASSWORD: mysql
           MYSQL_DATABASE: mysql
