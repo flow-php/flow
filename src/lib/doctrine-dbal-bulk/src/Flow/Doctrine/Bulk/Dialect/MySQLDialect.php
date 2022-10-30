@@ -24,7 +24,6 @@ final class MySQLDialect implements Dialect
      * @param BulkData $bulkData
      * @param array{
      *  skip_conflicts?: boolean,
-     *  constraint?: string,
      *  conflict_columns?: array<string>,
      *  update_columns?: array<string>
      * } $insertOptions $insertOptions
@@ -67,7 +66,6 @@ final class MySQLDialect implements Dialect
      * @param TableDefinition $table
      * @param BulkData $bulkData
      * @param array{
-     *  primary_key_columns?: array<string>,
      *  update_columns?: array<string>
      * } $updateOptions $updateOptions
      *
@@ -103,16 +101,6 @@ final class MySQLDialect implements Dialect
                 fn (string $column) : string => "{$column} = VALUES({$column})"
             )
         );
-    }
-
-    /**
-     * @param array<string> $updateColumns
-     *
-     * @return string
-     */
-    private function updatedIndexColumns(array $updateColumns) : string
-    {
-        return \implode(' AND ', \array_map(fn (string $column) : string => "existing_table.{$column} = {$column}", $updateColumns));
     }
 
     /**
