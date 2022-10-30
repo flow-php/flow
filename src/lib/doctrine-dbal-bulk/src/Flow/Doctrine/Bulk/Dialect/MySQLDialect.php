@@ -12,13 +12,6 @@ use Flow\Doctrine\Bulk\TableDefinition;
 
 final class MySQLDialect implements Dialect
 {
-    private AbstractPlatform $platform;
-
-    public function __construct(AbstractPlatform $platform)
-    {
-        $this->platform = $platform;
-    }
-
     /**
      * @param TableDefinition $table
      * @param BulkData $bulkData
@@ -32,18 +25,6 @@ final class MySQLDialect implements Dialect
      */
     public function prepareInsert(TableDefinition $table, BulkData $bulkData, array $insertOptions = []) : string
     {
-        if (\array_key_exists('conflict_columns', $insertOptions)) {
-            return \sprintf(
-                'INSERT INTO %s (%s) VALUES %s ON DUPLICATE KEY UPDATE %s',
-                $table->name(),
-                $bulkData->columns()->concat(','),
-                $bulkData->toSqlPlaceholders(),
-                (\array_key_exists('update_columns', $insertOptions) && \count($insertOptions['update_columns']))
-                    ? $this->updatedSelectedColumns($insertOptions['update_columns'], $bulkData->columns())
-                    : $this->updateAllColumns($bulkData->columns())
-            );
-        }
-
         if (\array_key_exists('skip_conflicts', $insertOptions) && $insertOptions['skip_conflicts'] === true) {
             return \sprintf(
                 'INSERT INTO %s (%s) VALUES %s ON DUPLICATE KEY UPDATE %4$s=%4$s',

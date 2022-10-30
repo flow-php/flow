@@ -27,7 +27,7 @@ final class DbalPlatform
         }
 
         if ($this->isMysql()) {
-            return new MySQLDialect($this->platform);
+            return new MySQLDialect();
         }
 
         throw new RuntimeException(\sprintf(
