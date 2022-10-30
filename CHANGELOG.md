@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-10-28
+## [Unreleased] - 2022-10-30
 
 ### Added
 - [#178](https://github.com/flow-php/flow/pull/178) - **Elasticsearch Exractor** - [@norberttech](https://github.com/norberttech)
@@ -629,6 +629,7 @@
 - [1a6eec](https://github.com/flow-php/flow/commit/1a6eec01837f25cf1d6ff7c041996ff7b8b017e7) - **failing tests** - [@norberttech](https://github.com/norberttech)
 
 ### Updated
+- [a68ae3](https://github.com/flow-php/flow/commit/a68ae3ec68e6c5ff6ef466c57e7a84e5f834ada4) - **dependencies** - [@norberttech](https://github.com/norberttech)
 - [5a8c01](https://github.com/flow-php/flow/commit/5a8c01e38327d1d67f09a41c7cb1331ee392aa33) - **phpstan** - [@norberttech](https://github.com/norberttech)
 - [0c5830](https://github.com/flow-php/flow/commit/0c5830c4e47a4a33e02ad0a2c17aebccefb45a04) - **dependencies** - [@norberttech](https://github.com/norberttech)
 - [413739](https://github.com/flow-php/flow/commit/41373913aa84bc42f53b093ef9b85f607822a0dc) - **labeler.yml** - [@norberttech](https://github.com/norberttech)
