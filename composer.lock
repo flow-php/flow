@@ -1280,20 +1280,20 @@
         },
         {
             "name": "elasticsearch/elasticsearch",
-            "version": "v8.4.3",
+            "version": "v8.5.0",
             "source": {
                 "type": "git",
                 "url": "git@github.com:elastic/elasticsearch-php.git",
-                "reference": "078ac89240b4c02524a4881de33b0dd8d36e60d6"
+                "reference": "accfca2a5b028bd0aaad028af0670e2961cb2aa4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/elastic/elasticsearch-php/zipball/078ac89240b4c02524a4881de33b0dd8d36e60d6",
-                "reference": "078ac89240b4c02524a4881de33b0dd8d36e60d6",
+                "url": "https://api.github.com/repos/elastic/elasticsearch-php/zipball/accfca2a5b028bd0aaad028af0670e2961cb2aa4",
+                "reference": "accfca2a5b028bd0aaad028af0670e2961cb2aa4",
                 "shasum": ""
             },
             "require": {
-                "elastic/transport": "^8.4",
+                "elastic/transport": "^8.5",
                 "guzzlehttp/guzzle": "^7.0",
                 "php": "^7.4 || ^8.0",
                 "psr/http-client": "^1.0",
@@ -1328,7 +1328,7 @@
                 "elasticsearch",
                 "search"
             ],
-            "time": "2022-09-27T07:48:48+00:00"
+            "time": "2022-10-18T13:38:48+00:00"
         },
         {
             "name": "evenement/evenement",
