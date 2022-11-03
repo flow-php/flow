@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Doctrine;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Query\QueryBuilder;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
@@ -13,19 +14,23 @@ use Flow\ETL\Rows;
 
 final class DbalLimitOffsetExtractor implements Extractor
 {
-    /**
-     * @param array<OrderBy> $orderBy
-     */
     public function __construct(
         private readonly Connection $connection,
-        private readonly Table $table,
-        private readonly array $orderBy,
+        private readonly QueryBuilder $queryBuilder,
         private readonly int $pageSize = 1000,
         private readonly ?int $maximum = null,
-        private readonly string $rowEntryName = 'row'
+        private readonly string $rowEntryName = 'row',
     ) {
-        if (!\count($this->orderBy)) {
+        if ($this->queryBuilder->getQueryPart('orderBy') === []) { //we could check for some other required query parts same way, like FROM or SELECT
             throw new InvalidArgumentException('There must be at least one column to order by, zero given');
+        }
+
+        if ($this->queryBuilder->getQueryPart('select') === []) { //we could check for some other required query parts same way, like FROM or SELECT
+            throw new InvalidArgumentException('There must be at least one column to select from, zero given');
+        }
+
+        if ($this->queryBuilder->getQueryPart('from') === []) { //we could check for some other required query parts same way, like FROM or SELECT
+            throw new InvalidArgumentException('There must be table to select from, none given');
         }
     }
 
@@ -34,11 +39,15 @@ final class DbalLimitOffsetExtractor implements Extractor
         if (isset($this->maximum)) {
             $total = $this->maximum;
         } else {
-            $countQuery = $this->connection->createQueryBuilder()->select('COUNT(*)')
-                ->from($this->table->name);
+            $countQuery = (clone $this->queryBuilder)->select('COUNT(*)');
+            $countQuery->resetQueryPart('orderBy');
 
             /** @phpstan-ignore-next-line */
-            $total = (int) $this->connection->fetchOne($countQuery->getSQL(), $countQuery->getParameters(), $countQuery->getParameterTypes());
+            $total = (int) $this->connection->fetchOne(
+                $countQuery->getSQL(),
+                $countQuery->getParameters(),
+                $countQuery->getParameterTypes()
+            );
         }
 
         $totalFetched = 0;
@@ -46,18 +55,9 @@ final class DbalLimitOffsetExtractor implements Extractor
         for ($page = 0; $page <= (new Pages($total, $this->pageSize))->pages(); $page++) {
             $offset = $page * $this->pageSize;
 
-            $pageQuery = $this->connection->createQueryBuilder()->select('*')
-                ->from($this->table->name)
+            $pageQuery = $this->queryBuilder
                 ->setMaxResults($this->pageSize)
                 ->setFirstResult($offset);
-
-            if (\is_array($this->table->columns) && \count($this->table->columns)) {
-                $pageQuery = $pageQuery->select($this->table->columns);
-            }
-
-            foreach ($this->orderBy as $orderBy) {
-                $pageQuery = $pageQuery->orderBy($orderBy->column, $orderBy->order->name);
-            }
 
             $rows = [];
 

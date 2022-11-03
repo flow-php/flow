@@ -26,7 +26,7 @@ print "Loading {$rows} rows into postgresql...\n";
         Dbal::from_limit_offset(
             $sourceDbConnection,
             'source_dataset_table',
-            new OrderBy('id', Order::DESC)
+           ['id' => Order::DESC]
         )
     )
     ->rows(Transform::array_unpack('row'))

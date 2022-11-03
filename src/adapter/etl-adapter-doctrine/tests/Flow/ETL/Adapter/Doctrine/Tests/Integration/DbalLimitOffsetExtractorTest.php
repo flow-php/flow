@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine\Tests\Integration;
 
+use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
+use Flow\ETL\Adapter\Doctrine\DbalLimitOffsetExtractor;
 use Flow\ETL\Adapter\Doctrine\Order;
 use Flow\ETL\Adapter\Doctrine\OrderBy;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
@@ -105,7 +107,7 @@ final class DbalLimitOffsetExtractorTest extends IntegrationTestCase
         );
     }
 
-    public function test_extracting_selcted_columns() : void
+    public function test_extracting_selected_columns() : void
     {
         $this->pgsqlDatabaseContext->createTable((new Table(
             $table = 'flow_doctrine_bulk_test',
@@ -146,6 +148,33 @@ final class DbalLimitOffsetExtractorTest extends IntegrationTestCase
                 ['name' => 'name_7'],
             ],
             $data->toArray()
+        );
+    }
+
+    public function test_querybuilder_must_have_order_by_parts_defined(): void
+    {
+        $this->expectExceptionMessageMatches('/order by/');
+        new DbalLimitOffsetExtractor(
+            $conn = $this->pgsqlDatabaseContext->connection(),
+            (new QueryBuilder($conn))->from('any')->select('*'),
+        );
+    }
+
+    public function test_querybuilder_must_have_from_parts_defined(): void
+    {
+        $this->expectExceptionMessageMatches('/table to select from/');
+        new DbalLimitOffsetExtractor(
+            $conn = $this->pgsqlDatabaseContext->connection(),
+            (new QueryBuilder($conn))->orderBy('any')->select('*'),
+        );
+    }
+
+    public function test_querybuilder_must_have_columns_defined(): void
+    {
+        $this->expectExceptionMessageMatches('/at least one column/');
+        new DbalLimitOffsetExtractor(
+            $conn = $this->pgsqlDatabaseContext->connection(),
+            (new QueryBuilder($conn))->orderBy('any')->from('table'),
         );
     }
 }

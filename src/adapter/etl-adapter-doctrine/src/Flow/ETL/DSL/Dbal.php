@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\DSL;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Types\Type;
 use Flow\ETL\Adapter\Doctrine\DbalLimitOffsetExtractor;
 use Flow\ETL\Adapter\Doctrine\DbalLoader;
@@ -38,10 +39,27 @@ class Dbal
         ?int $maximum = null,
         string $row_entry_name = 'row'
     ) : Extractor {
+        if (!$table instanceof Table) {
+            $table = new Table($table);
+        }
+        $qb = (new QueryBuilder($connection))->from($table->name);
+        if ($table->columns === []) {
+            $qb->select('*');
+        } else {
+            $qb->select(... $table->columns);
+        }
+
+        if (!is_array($order_by)) {
+            $order_by = [$order_by];
+        }
+
+        foreach ($order_by as $order) {
+            $qb->addOrderBy($order->column, $order->order->name);
+        }
+
         return new DbalLimitOffsetExtractor(
             $connection,
-            \is_string($table) ? new Table($table) : $table,
-            $order_by instanceof OrderBy ? [$order_by] : $order_by,
+            $qb,
             $page_size,
             $maximum,
             $row_entry_name
