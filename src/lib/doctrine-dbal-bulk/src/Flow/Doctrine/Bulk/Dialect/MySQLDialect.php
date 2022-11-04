@@ -17,8 +17,6 @@ final class MySQLDialect implements Dialect
      * @param BulkData $bulkData
      * @param array{
      *  skip_conflicts?: boolean,
-     *  conflict_columns?: array<string>,
-     *  update_columns?: array<string>
      * } $insertOptions $insertOptions
      *
      * @return string
