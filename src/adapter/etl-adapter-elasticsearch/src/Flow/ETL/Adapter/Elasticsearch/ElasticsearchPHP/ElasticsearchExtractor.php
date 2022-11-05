@@ -118,6 +118,8 @@ final class ElasticsearchExtractor implements Extractor
 
                 /**
                  * @psalm-suppress MixedOperand
+                 *
+                 * @phpstan-ignore-next-line
                  */
                 if ($nextPageParams->asArray()['from'] + $nextPageParams->asArray()['size'] > $results->total()) {
                     $nextPageParams = $nextPageParams->set('size', $results->total() - $fetched);

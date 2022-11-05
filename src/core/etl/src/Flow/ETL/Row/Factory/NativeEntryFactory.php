@@ -99,7 +99,7 @@ final class NativeEntryFactory implements EntryFactory
                 }
 
                 if ($type === 'object' && $class === null) {
-                    /** @psalm-suppress MixedArgument */
+                    /** @var object $valueElement */
                     $class = $this->getClass($valueElement);
                 }
 
@@ -107,7 +107,7 @@ final class NativeEntryFactory implements EntryFactory
                     return new Row\Entry\ArrayEntry($entryName, $value);
                 }
 
-                /** @psalm-suppress MixedArgument */
+                /** @var object $valueElement */
                 if ($class !== null && $class !== $this->getClass($valueElement)) {
                     return new Row\Entry\ArrayEntry($entryName, $value);
                 }
@@ -226,7 +226,8 @@ final class NativeEntryFactory implements EntryFactory
                             return new Entry\ListEntry(
                                 $definition->entry(),
                                 $listType,
-                                \array_map(fn (string $datetime) : \DateTimeImmutable => new \DateTimeImmutable($datetime), $value)
+                                /** @phpstan-ignore-next-line */
+                                \array_map(static fn (string $datetime) : \DateTimeImmutable => new \DateTimeImmutable($datetime), $value)
                             );
                         }
                     }
