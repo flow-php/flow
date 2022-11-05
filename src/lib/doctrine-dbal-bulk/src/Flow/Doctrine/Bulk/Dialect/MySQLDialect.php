@@ -61,7 +61,7 @@ final class MySQLDialect implements Dialect
             $table->name(),
             $bulkData->columns()->concat(','),
             $bulkData->toSqlPlaceholders(),
-            (\count($updateOptions['update_columns'] ?? []))
+            \array_key_exists('update_columns', $updateOptions) && \count($updateOptions['update_columns'])
                 ? $this->updatedSelectedColumns($updateOptions['update_columns'], $bulkData->columns())
                 : $this->updateAllColumns($bulkData->columns())
         );
