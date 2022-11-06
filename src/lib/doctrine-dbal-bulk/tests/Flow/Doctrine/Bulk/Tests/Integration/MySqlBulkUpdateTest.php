@@ -10,7 +10,6 @@ use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
 use Flow\Doctrine\Bulk\Bulk;
 use Flow\Doctrine\Bulk\BulkData;
-use Flow\Doctrine\Bulk\Exception\RuntimeException;
 use Flow\Doctrine\Bulk\Tests\MysqlIntegrationTestCase;
 
 final class MySqlBulkUpdateTest extends MysqlIntegrationTestCase

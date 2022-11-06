@@ -14,6 +14,13 @@ use PHPUnit\Framework\TestCase;
 
 final class DbalPlatformTest extends TestCase
 {
+    public function test_is_mysql() : void
+    {
+        $platform = new DbalPlatform(new MySQL80Platform());
+
+        $this->assertInstanceOf(MySQLDialect::class, $platform->dialect());
+    }
+
     public function test_is_no_postgres_sql() : void
     {
         $platform = new DbalPlatform(new SqlitePlatform());
@@ -42,12 +49,5 @@ final class DbalPlatformTest extends TestCase
         $platform = new DbalPlatform(new PostgreSQL94Platform());
 
         $this->assertInstanceOf(PostgreSQLDialect::class, $platform->dialect());
-    }
-
-    public function test_is_mysql() : void
-    {
-        $platform = new DbalPlatform(new MySQL80Platform());
-
-        $this->assertInstanceOf(MySQLDialect::class, $platform->dialect());
     }
 }

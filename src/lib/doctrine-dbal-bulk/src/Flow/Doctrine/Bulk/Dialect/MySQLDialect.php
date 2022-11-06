@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk\Dialect;
 
-use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Flow\Doctrine\Bulk\BulkData;
 use Flow\Doctrine\Bulk\Columns;
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
@@ -29,7 +28,7 @@ final class MySQLDialect implements Dialect
                 $table->name(),
                 $bulkData->columns()->concat(','),
                 $bulkData->toSqlPlaceholders(),
-                current($bulkData->columns()->all())
+                \current($bulkData->columns()->all())
             );
         }
 

@@ -3,7 +3,6 @@
 namespace Flow\Doctrine\Bulk;
 
 use Doctrine\DBAL\Platforms\AbstractPlatform;
-use Doctrine\DBAL\Platforms\MySQL80Platform;
 use Doctrine\DBAL\Platforms\MySQLPlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Flow\Doctrine\Bulk\Dialect\Dialect;
@@ -36,19 +35,6 @@ final class DbalPlatform
         ));
     }
 
-    private function isPostgreSQL() : bool
-    {
-        // DBAL version >= 3.2
-        if (\class_exists(PostgreSQLPlatform::class)) {
-            return $this->platform instanceof PostgreSQLPlatform;
-        }
-
-        /**
-         * @psalm-suppress DeprecatedMethod
-         */
-        return $this->platform->getName() === 'postgresql';
-    }
-
     private function isMysql() : bool
     {
         // DBAL version >= 3.2
@@ -60,5 +46,18 @@ final class DbalPlatform
          * @psalm-suppress DeprecatedMethod
          */
         return $this->platform->getName() === 'mysql';
+    }
+
+    private function isPostgreSQL() : bool
+    {
+        // DBAL version >= 3.2
+        if (\class_exists(PostgreSQLPlatform::class)) {
+            return $this->platform instanceof PostgreSQLPlatform;
+        }
+
+        /**
+         * @psalm-suppress DeprecatedMethod
+         */
+        return $this->platform->getName() === 'postgresql';
     }
 }
