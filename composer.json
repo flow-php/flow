@@ -10,7 +10,7 @@
         "ext-json": "*",
         "ext-mbstring": "*",
         "ext-xmlreader": "*",
-        "amphp/process": "^2 || ^2",
+        "amphp/process": "^2 || ^2 || ^2",
         "amphp/socket": "^2",
         "codename/parquet": "^0.6.2",
         "doctrine/dbal": "^2.12 || ^3.1.4",

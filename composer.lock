@@ -4,25 +4,25 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6162658db851bd987e755f2f09eed619",
+    "content-hash": "df7d97e47c20ab246f6103cf201ebe57",
     "packages": [
         {
             "name": "amphp/amp",
-            "version": "v3.0.0-beta.9",
+            "version": "v3.0.0-beta.10",
             "source": {
                 "type": "git",
                 "url": "https://github.com/amphp/amp.git",
-                "reference": "354a2ec25269b630ece65f149e1ccb438380f56c"
+                "reference": "352d8c030a74c17fc4bcf389956f85ad401f0c40"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/amphp/amp/zipball/354a2ec25269b630ece65f149e1ccb438380f56c",
-                "reference": "354a2ec25269b630ece65f149e1ccb438380f56c",
+                "url": "https://api.github.com/repos/amphp/amp/zipball/352d8c030a74c17fc4bcf389956f85ad401f0c40",
+                "reference": "352d8c030a74c17fc4bcf389956f85ad401f0c40",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.1",
-                "revolt/event-loop": "^0.2 || ^0.1"
+                "revolt/event-loop": "^1 || ^0.2"
             },
             "require-dev": {
                 "amphp/php-cs-fixer-config": "^2-dev",
@@ -84,7 +84,7 @@
             ],
             "support": {
                 "issues": "https://github.com/amphp/amp/issues",
-                "source": "https://github.com/amphp/amp/tree/v3.0.0-beta.9"
+                "source": "https://github.com/amphp/amp/tree/v3.0.0-beta.10"
             },
             "funding": [
                 {
@@ -92,20 +92,20 @@
                     "type": "github"
                 }
             ],
-            "time": "2022-07-12T20:19:22+00:00"
+            "time": "2022-11-06T21:19:31+00:00"
         },
         {
             "name": "amphp/byte-stream",
-            "version": "v2.0.0-beta.11",
+            "version": "v2.0.0-beta.12",
             "source": {
                 "type": "git",
                 "url": "https://github.com/amphp/byte-stream.git",
-                "reference": "198ea3dae45de95880aa0b0fb9ec2dcc3a03c42b"
+                "reference": "a4aa2af367f655188b3924a403ee9748098f23d0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/amphp/byte-stream/zipball/198ea3dae45de95880aa0b0fb9ec2dcc3a03c42b",
-                "reference": "198ea3dae45de95880aa0b0fb9ec2dcc3a03c42b",
+                "url": "https://api.github.com/repos/amphp/byte-stream/zipball/a4aa2af367f655188b3924a403ee9748098f23d0",
+                "reference": "a4aa2af367f655188b3924a403ee9748098f23d0",
                 "shasum": ""
             },
             "require": {
@@ -115,7 +115,7 @@
                 "amphp/serialization": "^1",
                 "amphp/sync": "^2",
                 "php": ">=8.1",
-                "revolt/event-loop": "^0.2.3"
+                "revolt/event-loop": "^1 || ^0.2.3"
             },
             "require-dev": {
                 "amphp/php-cs-fixer-config": "^2-dev",
@@ -164,7 +164,7 @@
             ],
             "support": {
                 "issues": "https://github.com/amphp/byte-stream/issues",
-                "source": "https://github.com/amphp/byte-stream/tree/v2.0.0-beta.11"
+                "source": "https://github.com/amphp/byte-stream/tree/v2.0.0-beta.12"
             },
             "funding": [
                 {
@@ -172,7 +172,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2022-09-11T20:16:57+00:00"
+            "time": "2022-11-07T21:02:34+00:00"
         },
         {
             "name": "amphp/cache",
@@ -385,22 +385,22 @@
         },
         {
             "name": "amphp/pipeline",
-            "version": "v1.0.0-beta.5",
+            "version": "v1.0.0-beta.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/amphp/pipeline.git",
-                "reference": "dc38b82915ff90a1f9cb0493c4e432353201d229"
+                "reference": "c1580cf29c8744e90d4c8d9c33d83c71bcc3f89e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/amphp/pipeline/zipball/dc38b82915ff90a1f9cb0493c4e432353201d229",
-                "reference": "dc38b82915ff90a1f9cb0493c4e432353201d229",
+                "url": "https://api.github.com/repos/amphp/pipeline/zipball/c1580cf29c8744e90d4c8d9c33d83c71bcc3f89e",
+                "reference": "c1580cf29c8744e90d4c8d9c33d83c71bcc3f89e",
                 "shasum": ""
             },
             "require": {
                 "amphp/amp": "^3",
                 "php": ">=8.1",
-                "revolt/event-loop": "^0.2"
+                "revolt/event-loop": "^1 || ^0.2"
             },
             "require-dev": {
                 "amphp/php-cs-fixer-config": "^2-dev",
@@ -446,7 +446,7 @@
             ],
             "support": {
                 "issues": "https://github.com/amphp/pipeline/issues",
-                "source": "https://github.com/amphp/pipeline/tree/v1.0.0-beta.5"
+                "source": "https://github.com/amphp/pipeline/tree/v1.0.0-beta.6"
             },
             "funding": [
                 {
@@ -454,27 +454,27 @@
                     "type": "github"
                 }
             ],
-            "time": "2022-04-08T14:53:26+00:00"
+            "time": "2022-11-07T21:32:29+00:00"
         },
         {
             "name": "amphp/process",
-            "version": "v2.0.0-beta.6",
+            "version": "v2.0.0-beta.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/amphp/process.git",
-                "reference": "270f828a7dc85c7bac75499ce2970a93932557f6"
+                "reference": "ad46c8b2fbea65d9ef09fd473b4477cfd33d102e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/amphp/process/zipball/270f828a7dc85c7bac75499ce2970a93932557f6",
-                "reference": "270f828a7dc85c7bac75499ce2970a93932557f6",
+                "url": "https://api.github.com/repos/amphp/process/zipball/ad46c8b2fbea65d9ef09fd473b4477cfd33d102e",
+                "reference": "ad46c8b2fbea65d9ef09fd473b4477cfd33d102e",
                 "shasum": ""
             },
             "require": {
                 "amphp/amp": "^3",
                 "amphp/byte-stream": "^2",
                 "php": ">=8.1",
-                "revolt/event-loop": "^0.2"
+                "revolt/event-loop": "^1 || ^0.2"
             },
             "require-dev": {
                 "amphp/php-cs-fixer-config": "^2-dev",
@@ -514,7 +514,7 @@
             "homepage": "https://github.com/amphp/process",
             "support": {
                 "issues": "https://github.com/amphp/process/issues",
-                "source": "https://github.com/amphp/process/tree/v2.0.0-beta.6"
+                "source": "https://github.com/amphp/process/tree/v2.0.0-beta.7"
             },
             "funding": [
                 {
@@ -522,7 +522,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2022-09-26T19:20:38+00:00"
+            "time": "2022-11-07T22:07:42+00:00"
         },
         {
             "name": "amphp/serialization",
@@ -671,16 +671,16 @@
         },
         {
             "name": "amphp/sync",
-            "version": "v2.0.0-beta.5",
+            "version": "v2.0.0-beta.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/amphp/sync.git",
-                "reference": "707c74a304160a2c71c0a3d8c9b25d98401601b0"
+                "reference": "fd142c33fec3d6cb631c701a3cc9194d1e537a3f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/amphp/sync/zipball/707c74a304160a2c71c0a3d8c9b25d98401601b0",
-                "reference": "707c74a304160a2c71c0a3d8c9b25d98401601b0",
+                "url": "https://api.github.com/repos/amphp/sync/zipball/fd142c33fec3d6cb631c701a3cc9194d1e537a3f",
+                "reference": "fd142c33fec3d6cb631c701a3cc9194d1e537a3f",
                 "shasum": ""
             },
             "require": {
@@ -688,7 +688,7 @@
                 "amphp/pipeline": "^1",
                 "amphp/serialization": "^1",
                 "php": ">=8.1",
-                "revolt/event-loop": "^0.2"
+                "revolt/event-loop": "^1 || ^0.2"
             },
             "require-dev": {
                 "amphp/php-cs-fixer-config": "^2-dev",
@@ -715,6 +715,10 @@
                     "email": "aaron@trowski.com"
                 },
                 {
+                    "name": "Niklas Keller",
+                    "email": "me@kelunik.com"
+                },
+                {
                     "name": "Stephen Coakley",
                     "email": "me@stephencoakley.com"
                 }
@@ -730,7 +734,7 @@
             ],
             "support": {
                 "issues": "https://github.com/amphp/sync/issues",
-                "source": "https://github.com/amphp/sync/tree/v2.0.0-beta.5"
+                "source": "https://github.com/amphp/sync/tree/v2.0.0-beta.6"
             },
             "funding": [
                 {
@@ -738,7 +742,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2022-07-13T17:19:49+00:00"
+            "time": "2022-11-07T21:41:33+00:00"
         },
         {
             "name": "amphp/windows-registry",
