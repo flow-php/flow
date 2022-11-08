@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "df7d97e47c20ab246f6103cf201ebe57",
+    "content-hash": "ebc07d3dd318f139001633e198519144",
     "packages": [
         {
             "name": "amphp/amp",
@@ -176,30 +176,30 @@
         },
         {
             "name": "amphp/cache",
-            "version": "v2.0.0-beta.2",
+            "version": "v2.0.0-beta.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/amphp/cache.git",
-                "reference": "4c231a40ff9218c3003b1639e9a490b0851dcabc"
+                "reference": "1196b6cba4ec527ddca52172a5acb8b5bdf99e1f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/amphp/cache/zipball/4c231a40ff9218c3003b1639e9a490b0851dcabc",
-                "reference": "4c231a40ff9218c3003b1639e9a490b0851dcabc",
+                "url": "https://api.github.com/repos/amphp/cache/zipball/1196b6cba4ec527ddca52172a5acb8b5bdf99e1f",
+                "reference": "1196b6cba4ec527ddca52172a5acb8b5bdf99e1f",
                 "shasum": ""
             },
             "require": {
                 "amphp/amp": "^3",
                 "amphp/serialization": "^1",
                 "amphp/sync": "^2",
-                "php": ">=8",
-                "revolt/event-loop": "^0.2"
+                "php": ">=8.1",
+                "revolt/event-loop": "^1 || ^0.2"
             },
             "require-dev": {
                 "amphp/php-cs-fixer-config": "^2-dev",
                 "amphp/phpunit-util": "^3",
                 "phpunit/phpunit": "^9",
-                "psalm/phar": "^4.15"
+                "psalm/phar": "^4.29"
             },
             "type": "library",
             "autoload": {
@@ -229,7 +229,7 @@
             "homepage": "https://github.com/amphp/cache",
             "support": {
                 "issues": "https://github.com/amphp/cache/issues",
-                "source": "https://github.com/amphp/cache/tree/v2.0.0-beta.2"
+                "source": "https://github.com/amphp/cache/tree/v2.0.0-beta.3"
             },
             "funding": [
                 {
@@ -237,20 +237,20 @@
                     "type": "github"
                 }
             ],
-            "time": "2022-02-03T21:00:40+00:00"
+            "time": "2022-11-07T21:52:30+00:00"
         },
         {
             "name": "amphp/dns",
-            "version": "v2.0.0-beta.3",
+            "version": "v2.0.0-beta.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/amphp/dns.git",
-                "reference": "30b2247dbb55ffe684e145eceeba94a4fe703891"
+                "reference": "24f3eeac0ca62000055e1cec789f3334490557ff"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/amphp/dns/zipball/30b2247dbb55ffe684e145eceeba94a4fe703891",
-                "reference": "30b2247dbb55ffe684e145eceeba94a4fe703891",
+                "url": "https://api.github.com/repos/amphp/dns/zipball/24f3eeac0ca62000055e1cec789f3334490557ff",
+                "reference": "24f3eeac0ca62000055e1cec789f3334490557ff",
                 "shasum": ""
             },
             "require": {
@@ -263,7 +263,7 @@
                 "ext-filter": "*",
                 "ext-json": "*",
                 "php": ">=8.1",
-                "revolt/event-loop": "^0.2"
+                "revolt/event-loop": "^1 || ^0.2"
             },
             "require-dev": {
                 "amphp/php-cs-fixer-config": "^2-dev",
@@ -318,7 +318,7 @@
             ],
             "support": {
                 "issues": "https://github.com/amphp/dns/issues",
-                "source": "https://github.com/amphp/dns/tree/v2.0.0-beta.3"
+                "source": "https://github.com/amphp/dns/tree/v2.0.0-beta.4"
             },
             "funding": [
                 {
@@ -326,7 +326,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2022-02-22T23:21:48+00:00"
+            "time": "2022-11-07T22:13:32+00:00"
         },
         {
             "name": "amphp/parser",
@@ -584,16 +584,16 @@
         },
         {
             "name": "amphp/socket",
-            "version": "v2.0.0-beta.6",
+            "version": "v2.0.0-beta.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/amphp/socket.git",
-                "reference": "e13c35a9d1f23f9da63dc9c3831dd40efb83860e"
+                "reference": "b86b45be48f64379844fa002a576add541fb6aaf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/amphp/socket/zipball/e13c35a9d1f23f9da63dc9c3831dd40efb83860e",
-                "reference": "e13c35a9d1f23f9da63dc9c3831dd40efb83860e",
+                "url": "https://api.github.com/repos/amphp/socket/zipball/b86b45be48f64379844fa002a576add541fb6aaf",
+                "reference": "b86b45be48f64379844fa002a576add541fb6aaf",
                 "shasum": ""
             },
             "require": {
@@ -604,7 +604,7 @@
                 "kelunik/certificate": "^1.1",
                 "league/uri": "^6.5",
                 "php": ">=8.1",
-                "revolt/event-loop": "^0.2"
+                "revolt/event-loop": "^1 || ^0.2"
             },
             "require-dev": {
                 "amphp/php-cs-fixer-config": "^2-dev",
@@ -659,7 +659,7 @@
             ],
             "support": {
                 "issues": "https://github.com/amphp/socket/issues",
-                "source": "https://github.com/amphp/socket/tree/v2.0.0-beta.6"
+                "source": "https://github.com/amphp/socket/tree/v2.0.0-beta.7"
             },
             "funding": [
                 {
@@ -667,7 +667,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2022-04-03T17:16:29+00:00"
+            "time": "2022-11-07T22:29:32+00:00"
         },
         {
             "name": "amphp/sync",
@@ -3616,16 +3616,16 @@
         },
         {
             "name": "revolt/event-loop",
-            "version": "v0.2.5",
+            "version": "v1.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/revoltphp/event-loop.git",
-                "reference": "4e7455506d9ff61f3705b76a20a8f12ad4dc1552"
+                "reference": "81dd825a0a7fa7a39cae25ef731bb944f3e18295"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/revoltphp/event-loop/zipball/4e7455506d9ff61f3705b76a20a8f12ad4dc1552",
-                "reference": "4e7455506d9ff61f3705b76a20a8f12ad4dc1552",
+                "url": "https://api.github.com/repos/revoltphp/event-loop/zipball/81dd825a0a7fa7a39cae25ef731bb944f3e18295",
+                "reference": "81dd825a0a7fa7a39cae25ef731bb944f3e18295",
                 "shasum": ""
             },
             "require": {
@@ -3682,9 +3682,9 @@
             ],
             "support": {
                 "issues": "https://github.com/revoltphp/event-loop/issues",
-                "source": "https://github.com/revoltphp/event-loop/tree/v0.2.5"
+                "source": "https://github.com/revoltphp/event-loop/tree/v1.0.0"
             },
-            "time": "2022-08-01T03:01:07+00:00"
+            "time": "2022-11-02T21:46:22+00:00"
         },
         {
             "name": "symfony/deprecation-contracts",
