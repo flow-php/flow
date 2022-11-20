@@ -17,7 +17,8 @@ final class JsonExtractor implements Extractor
     public function __construct(
         private readonly Path $path,
         private readonly int $rowsInBatch = 1000,
-        private readonly string $rowEntryName = 'row'
+        private readonly string $rowEntryName = 'row',
+        private readonly ?string $pointer = null
     ) {
     }
 
@@ -29,7 +30,7 @@ final class JsonExtractor implements Extractor
             /**
              * @var array|object $row
              */
-            foreach (Items::fromStream($context->streams()->fs()->open($filePath, Mode::READ)->resource())->getIterator() as $row) {
+            foreach (Items::fromStream($context->streams()->fs()->open($filePath, Mode::READ)->resource(), $this->readerOptions())->getIterator() as $row) {
                 $rows = $rows->add(Row::create(new Row\Entry\ArrayEntry($this->rowEntryName, (array) $row)));
 
                 if ($rows->count() >= $this->rowsInBatch) {
@@ -43,5 +44,19 @@ final class JsonExtractor implements Extractor
                 yield $rows;
             }
         }
+    }
+
+    /**
+     * @return {pointer?: string}
+     */
+    private function readerOptions() : array
+    {
+        $options = [];
+
+        if ($this->pointer !== null) {
+            $options['pointer'] = $this->pointer;
+        }
+
+        return $options;
     }
 }
