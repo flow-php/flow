@@ -1,6 +1,7 @@
-## [Unreleased] - 2022-11-16
+## [Unreleased] - 2022-11-20
 
 ### Added
+- [#225](https://github.com/flow-php/flow/pull/225) - **Allow to read complex nested jsons from a specific pointer** - [@norberttech](https://github.com/norberttech)
 - [#178](https://github.com/flow-php/flow/pull/178) - **Elasticsearch Exractor** - [@norberttech](https://github.com/norberttech)
 - [#178](https://github.com/flow-php/flow/pull/178) - **Elasticsearch Hits to Rows transformer** - [@norberttech](https://github.com/norberttech)
 - [#175](https://github.com/flow-php/flow/pull/175) - **Dbal DSL** - [@norberttech](https://github.com/norberttech)
