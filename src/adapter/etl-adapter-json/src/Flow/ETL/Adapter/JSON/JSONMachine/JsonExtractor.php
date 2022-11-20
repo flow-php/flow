@@ -47,7 +47,7 @@ final class JsonExtractor implements Extractor
     }
 
     /**
-     * @return {pointer?: string}
+     * @return array{pointer?: string}
      */
     private function readerOptions() : array
     {
