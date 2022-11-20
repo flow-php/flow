@@ -40,6 +40,30 @@ final class JsonExtractorTest extends TestCase
         $this->assertSame(247, $rows->count());
     }
 
+    public function test_extracting_json_from_local_file_stream_using_pointer() : void
+    {
+        $rows = (new Flow())
+            ->read(Json::from(__DIR__ . '/../Fixtures/nested_timezones.json', 5, pointer: '/timezones'))
+            ->fetch();
+
+        foreach ($rows as $row) {
+            $this->assertInstanceOf(Row\Entry\ArrayEntry::class, $row->get('row'));
+            $this->assertSame(
+                [
+                    'timezones',
+                    'latlng',
+                    'name',
+                    'country_code',
+                    'capital',
+
+                ],
+                \array_keys($row->valueOf('row'))
+            );
+        }
+
+        $this->assertSame(247, $rows->count());
+    }
+
     public function test_extracting_json_from_local_file_string_uri() : void
     {
         $extractor = new JsonExtractor(Path::realpath(__DIR__ . '/../Fixtures/timezones.json'), 5);
