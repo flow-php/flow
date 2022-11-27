@@ -17,6 +17,7 @@ final class MySQLDialect implements Dialect
      * @param array{
      *  skip_conflicts?: boolean,
      *  upsert?: boolean,
+     *  update_columns?: array<string>
      * } $insertOptions $insertOptions
      *
      * @return string
@@ -72,19 +73,6 @@ final class MySQLDialect implements Dialect
             $bulkData->columns()->concat(','),
             $bulkData->toSqlPlaceholders()
         );
-    }
-
-    /**
-     * @param array<string> $updateColumns
-     * @param Columns $columns
-     *
-     * @return string
-     */
-    private function replaceSelectedColumns(array $updateColumns, Columns $columns) : string
-    {
-        return \count($updateColumns)
-            ? \implode(',', \array_map(fn (string $column) : string => "{$column} = VALUES({$column})", $updateColumns))
-            : $this->updateAllColumns($columns);
     }
 
     /**
