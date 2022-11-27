@@ -16,6 +16,7 @@ final class MySQLDialect implements Dialect
      * @param BulkData $bulkData
      * @param array{
      *  skip_conflicts?: boolean,
+     *  upsert?: boolean,
      * } $insertOptions $insertOptions
      *
      * @return string
@@ -32,6 +33,20 @@ final class MySQLDialect implements Dialect
             );
         }
 
+        if (\array_key_exists('upsert', $insertOptions) && $insertOptions['upsert'] === true) {
+            return \sprintf(
+                'INSERT INTO %s (%s) 
+                VALUES %s 
+                ON DUPLICATE KEY UPDATE %s',
+                $table->name(),
+                $bulkData->columns()->concat(','),
+                $bulkData->toSqlPlaceholders(),
+                \array_key_exists('update_columns', $insertOptions) && \count($insertOptions['update_columns'])
+                    ? $this->updateSelectedColumns($insertOptions['update_columns'], $bulkData->columns())
+                    : $this->updateAllColumns($bulkData->columns())
+            );
+        }
+
         return \sprintf(
             'INSERT INTO %s (%s) VALUES %s',
             $table->name(),
@@ -43,9 +58,7 @@ final class MySQLDialect implements Dialect
     /**
      * @param TableDefinition $table
      * @param BulkData $bulkData
-     * @param array{
-     *  update_columns?: array<string>
-     * } $updateOptions $updateOptions
+     * @param array $updateOptions
      *
      * @throws RuntimeException
      *
@@ -54,16 +67,24 @@ final class MySQLDialect implements Dialect
     public function prepareUpdate(TableDefinition $table, BulkData $bulkData, array $updateOptions = []) : string
     {
         return \sprintf(
-            'INSERT INTO %s (%s) 
-            VALUES %s 
-            ON DUPLICATE KEY UPDATE %s',
+            'REPLACE INTO %s (%s) VALUES %s',
             $table->name(),
             $bulkData->columns()->concat(','),
-            $bulkData->toSqlPlaceholders(),
-            \array_key_exists('update_columns', $updateOptions) && \count($updateOptions['update_columns'])
-                ? $this->updatedSelectedColumns($updateOptions['update_columns'], $bulkData->columns())
-                : $this->updateAllColumns($bulkData->columns())
+            $bulkData->toSqlPlaceholders()
         );
+    }
+
+    /**
+     * @param array<string> $updateColumns
+     * @param Columns $columns
+     *
+     * @return string
+     */
+    private function replaceSelectedColumns(array $updateColumns, Columns $columns) : string
+    {
+        return \count($updateColumns)
+            ? \implode(',', \array_map(fn (string $column) : string => "{$column} = VALUES({$column})", $updateColumns))
+            : $this->updateAllColumns($columns);
     }
 
     /**
@@ -87,7 +108,7 @@ final class MySQLDialect implements Dialect
      *
      * @return string
      */
-    private function updatedSelectedColumns(array $updateColumns, Columns $columns) : string
+    private function updateSelectedColumns(array $updateColumns, Columns $columns) : string
     {
         return \count($updateColumns)
             ? \implode(',', \array_map(fn (string $column) : string => "{$column} = VALUES({$column})", $updateColumns))

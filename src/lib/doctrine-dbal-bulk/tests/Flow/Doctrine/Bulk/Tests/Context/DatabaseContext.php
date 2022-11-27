@@ -43,6 +43,10 @@ final class DatabaseContext
                 continue;
             }
 
+            if (\str_contains($table->getName(), 'mysql')) {
+                continue;
+            }
+
             $this->connection->getSchemaManager()->dropTable($table->getName());
         }
     }

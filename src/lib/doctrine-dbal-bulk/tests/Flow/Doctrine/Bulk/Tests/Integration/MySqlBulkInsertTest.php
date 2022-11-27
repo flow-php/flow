@@ -146,4 +146,107 @@ final class MySqlBulkInsertTest extends MysqlIntegrationTestCase
             $this->mysqlDatabaseContext->selectAll($table)
         );
     }
+
+    public function test_inserts_new_rows_and_update_already_existed() : void
+    {
+        $this->mysqlDatabaseContext->createTable(
+            (new Table(
+                $table = 'flow_doctrine_bulk_test',
+                [
+                    new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                    new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                    new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                    new Column('active', Type::getType(Types::BOOLEAN), ['notnull' => true]),
+                ],
+            ))
+                ->setPrimaryKey(['id'])
+        );
+
+        Bulk::create()->insert(
+            $this->mysqlDatabaseContext->connection(),
+            $table,
+            new BulkData([
+                ['id' => 1, 'name' => 'Name One', 'description' => 'Description One', 'active' => true],
+                ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two', 'active' => true],
+                ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three', 'active' => true],
+            ])
+        );
+
+        Bulk::create()->insert(
+            $this->mysqlDatabaseContext->connection(),
+            $table,
+            new BulkData([
+                ['id' => 2, 'name' => 'New Name Two', 'description' => 'New Description Two', 'active' => false],
+                ['id' => 3, 'name' => 'New Name Three', 'description' => 'New Description Three', 'active' => false],
+                ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Four', 'active' => false],
+            ]),
+            [
+                'upsert' => true,
+            ]
+        );
+
+        $this->assertEquals(4, $this->mysqlDatabaseContext->tableCount($table));
+        $this->assertEquals(2, $this->mysqlDatabaseContext->numberOfExecutedInsertQueries());
+        $this->assertEquals(
+            [
+                ['id' => 1, 'name' => 'Name One', 'description' => 'Description One', 'active' => true],
+                ['id' => 2, 'name' => 'New Name Two', 'description' => 'New Description Two', 'active' => false],
+                ['id' => 3, 'name' => 'New Name Three', 'description' => 'New Description Three', 'active' => false],
+                ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Four', 'active' => false],
+            ],
+            $this->mysqlDatabaseContext->selectAll($table)
+        );
+    }
+
+    public function test_inserts_new_rows_and_update_selected_columns_only_of_already_existed() : void
+    {
+        $this->mysqlDatabaseContext->createTable(
+            (new Table(
+                $table = 'flow_doctrine_bulk_test',
+                [
+                    new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                    new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                    new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                    new Column('active', Type::getType(Types::BOOLEAN), ['notnull' => true]),
+                ],
+            ))
+                ->setPrimaryKey(['id'])
+        );
+
+        Bulk::create()->insert(
+            $this->mysqlDatabaseContext->connection(),
+            $table,
+            new BulkData([
+                ['id' => 1, 'name' => 'Name One', 'description' => 'Description One', 'active' => true],
+                ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two', 'active' => true],
+                ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three', 'active' => true],
+            ])
+        );
+
+        Bulk::create()->insert(
+            $this->mysqlDatabaseContext->connection(),
+            $table,
+            new BulkData([
+                ['id' => 2, 'name' => 'New Name Two', 'description' => 'New Description Two', 'active' => false],
+                ['id' => 3, 'name' => 'New Name Three', 'description' => 'New Description Three', 'active' => false],
+                ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Four', 'active' => false],
+            ]),
+            [
+                'upsert' => true,
+                'update_columns' => ['description'],
+            ]
+        );
+
+        $this->assertEquals(4, $this->mysqlDatabaseContext->tableCount($table));
+        $this->assertEquals(2, $this->mysqlDatabaseContext->numberOfExecutedInsertQueries());
+        $this->assertEquals(
+            [
+                ['id' => 1, 'name' => 'Name One', 'description' => 'Description One', 'active' => true],
+                ['id' => 2, 'name' => 'Name Two', 'description' => 'New Description Two', 'active' => true],
+                ['id' => 3, 'name' => 'Name Three', 'description' => 'New Description Three', 'active' => true],
+                ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Four', 'active' => false],
+            ],
+            $this->mysqlDatabaseContext->selectAll($table)
+        );
+    }
 }
