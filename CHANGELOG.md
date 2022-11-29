@@ -547,6 +547,7 @@
 - [e48062](https://github.com/flow-php/flow/commit/e48062890cd84e655e1162305086f67148347b83) - **Intial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [1e7ced](https://github.com/flow-php/flow/commit/1e7ced5259985d7d7ffded71668b1044db6b26c4) - **static analysis** - [@norberttech](https://github.com/norberttech)
 - [#172](https://github.com/flow-php/flow/pull/172) - **Documentation typos for left anti join** - [@Wirone](https://github.com/Wirone)
 - [#166](https://github.com/flow-php/flow/pull/166) - **Typo in code example** - [@drupol](https://github.com/drupol)
 - [#110](https://github.com/flow-php/flow/pull/110) - **limit behavior when expanding rows during transformations** - [@norberttech](https://github.com/norberttech)
