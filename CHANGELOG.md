@@ -128,6 +128,7 @@
 - [856870](https://github.com/flow-php/flow/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#235](https://github.com/flow-php/flow/pull/235) - **minimum required avro php version** - [@norberttech](https://github.com/norberttech)
 - [#234](https://github.com/flow-php/flow/pull/234) - **Updated psalm to the latest version** - [@norberttech](https://github.com/norberttech)
 - [#178](https://github.com/flow-php/flow/pull/178) - **excluded composer.lock from PR size calculation** - [@norberttech](https://github.com/norberttech)
 - [#171](https://github.com/flow-php/flow/pull/171) - **Examples cleanup** - [@norberttech](https://github.com/norberttech)
