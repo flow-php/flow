@@ -1,6 +1,7 @@
-## [Unreleased] - 2022-11-29
+## [Unreleased] - 2022-12-03
 
 ### Added
+- [#197](https://github.com/flow-php/flow/pull/197) - **Mysql dialect for bulk update/insert/upsert** - [@mleczakm](https://github.com/mleczakm)
 - [#225](https://github.com/flow-php/flow/pull/225) - **Allow to read complex nested jsons from a specific pointer** - [@norberttech](https://github.com/norberttech)
 - [#178](https://github.com/flow-php/flow/pull/178) - **Elasticsearch Exractor** - [@norberttech](https://github.com/norberttech)
 - [#178](https://github.com/flow-php/flow/pull/178) - **Elasticsearch Hits to Rows transformer** - [@norberttech](https://github.com/norberttech)
