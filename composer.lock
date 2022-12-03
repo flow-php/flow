@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ebc07d3dd318f139001633e198519144",
+    "content-hash": "6289b86fc5decf30ecfc7909d7fda383",
     "packages": [
         {
             "name": "amphp/amp",
@@ -1383,23 +1383,23 @@
         },
         {
             "name": "flix-tech/avro-php",
-            "version": "4.2.0",
+            "version": "4.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/flix-tech/avro-php.git",
-                "reference": "d56613999a042c26dad8d5f2d53012cd3db4b8f7"
+                "reference": "5936698fab7d3593ef73b6632f2c0d07ba2267f6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flix-tech/avro-php/zipball/d56613999a042c26dad8d5f2d53012cd3db4b8f7",
-                "reference": "d56613999a042c26dad8d5f2d53012cd3db4b8f7",
+                "url": "https://api.github.com/repos/flix-tech/avro-php/zipball/5936698fab7d3593ef73b6632f2c0d07ba2267f6",
+                "reference": "5936698fab7d3593ef73b6632f2c0d07ba2267f6",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7.1"
+                "php": ">=7.4|>=8.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "^5.0"
+                "phpunit/phpunit": "~8.5"
             },
             "suggest": {
                 "ext-gmp": "Large integer support for 32-bit platforms.",
@@ -1418,9 +1418,9 @@
             ],
             "description": "Avro schema encoder/decoder. Fork of rg/avro-php",
             "support": {
-                "source": "https://github.com/flix-tech/avro-php/tree/4.2.0"
+                "source": "https://github.com/flix-tech/avro-php/tree/4.3.0"
             },
-            "time": "2022-01-12T13:54:45+00:00"
+            "time": "2022-08-10T07:34:07+00:00"
         },
         {
             "name": "guzzlehttp/guzzle",
