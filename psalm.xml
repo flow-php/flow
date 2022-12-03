@@ -35,6 +35,9 @@
 
             <file name="src/adapter/etl-adapter-avro/src/Flow/ETL/Adapter/Avro/FlixTech/SchemaConverter.php" />
             <file name="src/adapter/etl-adapter-avro/src/Flow/ETL/Adapter/Avro/FlixTech/ValueConverter.php" />
+
+            <file name="src/core/etl/src/Flow/ETL/Filesystem/AwsS3Stream.php" />
+            <file name="src/core/etl/src/Flow/ETL/Filesystem/AzureBlobStream.php" />
         </ignoreFiles>
     </projectFiles>
 </psalm>

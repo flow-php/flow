@@ -12,13 +12,15 @@ use Flow\Doctrine\Bulk\TableDefinition;
 final class MySQLDialect implements Dialect
 {
     /**
+     * @psalm-suppress MoreSpecificImplementedParamType
+     *
      * @param TableDefinition $table
      * @param BulkData $bulkData
      * @param array{
      *  skip_conflicts?: boolean,
      *  upsert?: boolean,
      *  update_columns?: array<string>
-     * } $insertOptions $insertOptions
+     * } $insertOptions
      *
      * @return string
      */
@@ -57,6 +59,8 @@ final class MySQLDialect implements Dialect
     }
 
     /**
+     * @psalm-suppress MoreSpecificImplementedParamType
+     *
      * @param TableDefinition $table
      * @param BulkData $bulkData
      * @param array $updateOptions

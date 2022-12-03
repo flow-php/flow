@@ -29,6 +29,9 @@ final class NullCache implements Cache
     {
     }
 
+    /**
+     * @psalm-suppress InvalidReturnType
+     */
     public function read(string $id) : \Generator
     {
         yield from [];

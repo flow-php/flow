@@ -10,12 +10,7 @@ interface Dialect
     /**
      * @param TableDefinition $table
      * @param BulkData $bulkData
-     * @param array{
-     *  skip_conflicts?: boolean,
-     *  constraint?: string,
-     *  conflict_columns?: array<string>,
-     *  update_columns?: array<string>
-     * } $insertOptions $insertOptions
+     * @param array<mixed> $insertOptions
      *
      * @return string
      */
@@ -24,10 +19,7 @@ interface Dialect
     /**
      * @param TableDefinition $table
      * @param BulkData $bulkData
-     * @param array{
-     *  primary_key_columns?: array<string>,
-     *  update_columns?: array<string>
-     * } $updateOptions $updateOptions
+     * @param array<mixed> $updateOptions
      *
      * @return string
      */

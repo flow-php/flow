@@ -10,6 +10,9 @@ use League\Flysystem\AzureBlobStorage\AzureBlobStorageAdapter;
 use League\Flysystem\Filesystem;
 use MicrosoftAzure\Storage\Blob\BlobRestProxy;
 
+/**
+ * @psalm-suppress InvalidClassConstantType
+ */
 final class AzureBlobStream extends FlysystemWrapper
 {
     public const PROTOCOL = 'flow-azure-blob';

@@ -105,6 +105,7 @@ function array_dot_set(array $array, string $path, $value) : array
      */
     $currentElement = $value;
 
+    /** @var array<array-key, mixed> $newArray */
     return \array_merge($array, $newArray);
 }
 
