@@ -8,6 +8,9 @@ use Flow\ETL\Filesystem\Stream\FileStream;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\Partition;
 
+/**
+ * @psalm-suppress MissingTemplateParam
+ */
 final class FilesystemStreams implements \Countable, \IteratorAggregate
 {
     /**
