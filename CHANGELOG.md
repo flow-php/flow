@@ -1,6 +1,7 @@
 ## [Unreleased] - 2022-12-03
 
 ### Added
+- [#234](https://github.com/flow-php/flow/pull/234) - **Allow to use QueryBuilder while creating DBAL limit offset extractor for more advanced use cases** - [@norberttech](https://github.com/norberttech)
 - [#197](https://github.com/flow-php/flow/pull/197) - **Mysql dialect for bulk update/insert/upsert** - [@mleczakm](https://github.com/mleczakm)
 - [#225](https://github.com/flow-php/flow/pull/225) - **Allow to read complex nested jsons from a specific pointer** - [@norberttech](https://github.com/norberttech)
 - [#178](https://github.com/flow-php/flow/pull/178) - **Elasticsearch Exractor** - [@norberttech](https://github.com/norberttech)
@@ -127,6 +128,7 @@
 - [856870](https://github.com/flow-php/flow/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#234](https://github.com/flow-php/flow/pull/234) - **Updated psalm to the latest version** - [@norberttech](https://github.com/norberttech)
 - [#178](https://github.com/flow-php/flow/pull/178) - **excluded composer.lock from PR size calculation** - [@norberttech](https://github.com/norberttech)
 - [#171](https://github.com/flow-php/flow/pull/171) - **Examples cleanup** - [@norberttech](https://github.com/norberttech)
 - [#153](https://github.com/flow-php/flow/pull/153) - **Moved streams to FlowContext** - [@norberttech](https://github.com/norberttech)
@@ -548,6 +550,7 @@
 - [e48062](https://github.com/flow-php/flow/commit/e48062890cd84e655e1162305086f67148347b83) - **Intial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#233](https://github.com/flow-php/flow/pull/233) - **Skip corrupted (more columns than headers) rows in CSV extractor** - [@norberttech](https://github.com/norberttech)
 - [1e7ced](https://github.com/flow-php/flow/commit/1e7ced5259985d7d7ffded71668b1044db6b26c4) - **static analysis** - [@norberttech](https://github.com/norberttech)
 - [#172](https://github.com/flow-php/flow/pull/172) - **Documentation typos for left anti join** - [@Wirone](https://github.com/Wirone)
 - [#166](https://github.com/flow-php/flow/pull/166) - **Typo in code example** - [@drupol](https://github.com/drupol)
