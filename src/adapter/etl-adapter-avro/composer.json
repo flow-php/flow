@@ -6,7 +6,7 @@
     "require": {
         "php": "~8.1",
         "ext-json": "*",
-        "flix-tech/avro-php": "~4.2.0",
+        "flix-tech/avro-php": "~4.2.0 || ~4.3.0",
         "flow-php/etl": "^1.0@dev"
     },
     "config": {
