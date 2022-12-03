@@ -35,7 +35,15 @@ final class ValueConverter
             $avroType = $this->type($entry);
 
             if ($avroType !== null && \is_array($avroType[\AvroSchema::TYPE_ATTR])) {
-                if ($avroType[\AvroSchema::TYPE_ATTR][\AvroSchema::TYPE_ATTR] === \AvroSchema::ARRAY_SCHEMA
+                if ($avroType[\AvroSchema::TYPE_ATTR][\AvroSchema::TYPE_ATTR] === \AvroSchema::LONG_TYPE
+                    && \array_key_exists(\AvroSchema::LOGICAL_TYPE_ATTR, $avroType)
+                    && $avroType[\AvroSchema::LOGICAL_TYPE_ATTR] === 'timestamp-micros'
+                ) {
+                    $convertedData[$entry] = \DateTimeImmutable::createFromFormat(
+                        'U.u',
+                        \implode('.', \str_split((string) $value, 10))
+                    );
+                } elseif ($avroType[\AvroSchema::TYPE_ATTR][\AvroSchema::TYPE_ATTR] === \AvroSchema::ARRAY_SCHEMA
                     && \array_key_exists(\AvroSchema::LOGICAL_TYPE_ATTR, $avroType[\AvroSchema::TYPE_ATTR])
                     && $avroType[\AvroSchema::TYPE_ATTR][\AvroSchema::LOGICAL_TYPE_ATTR] === 'timestamp-micros'
                 ) {

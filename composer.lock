@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ebc07d3dd318f139001633e198519144",
+    "content-hash": "6289b86fc5decf30ecfc7909d7fda383",
     "packages": [
         {
             "name": "amphp/amp",
@@ -1383,23 +1383,23 @@
         },
         {
             "name": "flix-tech/avro-php",
-            "version": "4.2.0",
+            "version": "4.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/flix-tech/avro-php.git",
-                "reference": "d56613999a042c26dad8d5f2d53012cd3db4b8f7"
+                "reference": "5936698fab7d3593ef73b6632f2c0d07ba2267f6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flix-tech/avro-php/zipball/d56613999a042c26dad8d5f2d53012cd3db4b8f7",
-                "reference": "d56613999a042c26dad8d5f2d53012cd3db4b8f7",
+                "url": "https://api.github.com/repos/flix-tech/avro-php/zipball/5936698fab7d3593ef73b6632f2c0d07ba2267f6",
+                "reference": "5936698fab7d3593ef73b6632f2c0d07ba2267f6",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7.1"
+                "php": ">=7.4|>=8.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "^5.0"
+                "phpunit/phpunit": "~8.5"
             },
             "suggest": {
                 "ext-gmp": "Large integer support for 32-bit platforms.",
@@ -1418,9 +1418,9 @@
             ],
             "description": "Avro schema encoder/decoder. Fork of rg/avro-php",
             "support": {
-                "source": "https://github.com/flix-tech/avro-php/tree/4.2.0"
+                "source": "https://github.com/flix-tech/avro-php/tree/4.3.0"
             },
-            "time": "2022-01-12T13:54:45+00:00"
+            "time": "2022-08-10T07:34:07+00:00"
         },
         {
             "name": "guzzlehttp/guzzle",
@@ -1866,16 +1866,16 @@
         },
         {
             "name": "league/flysystem",
-            "version": "3.10.4",
+            "version": "3.11.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/thephpleague/flysystem.git",
-                "reference": "a7790f3dd1b27af81d380e6b2afa77c16ab7e181"
+                "reference": "7e423e5dd240a60adfab9bde058d7668863b7731"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/thephpleague/flysystem/zipball/a7790f3dd1b27af81d380e6b2afa77c16ab7e181",
-                "reference": "a7790f3dd1b27af81d380e6b2afa77c16ab7e181",
+                "url": "https://api.github.com/repos/thephpleague/flysystem/zipball/7e423e5dd240a60adfab9bde058d7668863b7731",
+                "reference": "7e423e5dd240a60adfab9bde058d7668863b7731",
                 "shasum": ""
             },
             "require": {
@@ -1937,7 +1937,7 @@
             ],
             "support": {
                 "issues": "https://github.com/thephpleague/flysystem/issues",
-                "source": "https://github.com/thephpleague/flysystem/tree/3.10.4"
+                "source": "https://github.com/thephpleague/flysystem/tree/3.11.0"
             },
             "funding": [
                 {
@@ -1953,7 +1953,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-11-26T19:48:01+00:00"
+            "time": "2022-12-02T14:39:57+00:00"
         },
         {
             "name": "league/mime-type-detection",
@@ -2978,16 +2978,16 @@
         },
         {
             "name": "react/cache",
-            "version": "v1.1.1",
+            "version": "v1.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/reactphp/cache.git",
-                "reference": "4bf736a2cccec7298bdf745db77585966fc2ca7e"
+                "reference": "d47c472b64aa5608225f47965a484b75c7817d5b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/reactphp/cache/zipball/4bf736a2cccec7298bdf745db77585966fc2ca7e",
-                "reference": "4bf736a2cccec7298bdf745db77585966fc2ca7e",
+                "url": "https://api.github.com/repos/reactphp/cache/zipball/d47c472b64aa5608225f47965a484b75c7817d5b",
+                "reference": "d47c472b64aa5608225f47965a484b75c7817d5b",
                 "shasum": ""
             },
             "require": {
@@ -2995,7 +2995,7 @@
                 "react/promise": "^3.0 || ^2.0 || ^1.1"
             },
             "require-dev": {
-                "phpunit/phpunit": "^9.3 || ^5.7 || ^4.8.35"
+                "phpunit/phpunit": "^9.5 || ^5.7 || ^4.8.35"
             },
             "type": "library",
             "autoload": {
@@ -3038,19 +3038,15 @@
             ],
             "support": {
                 "issues": "https://github.com/reactphp/cache/issues",
-                "source": "https://github.com/reactphp/cache/tree/v1.1.1"
+                "source": "https://github.com/reactphp/cache/tree/v1.2.0"
             },
             "funding": [
                 {
-                    "url": "https://github.com/WyriHaximus",
-                    "type": "github"
-                },
-                {
-                    "url": "https://github.com/clue",
-                    "type": "github"
+                    "url": "https://opencollective.com/reactphp",
+                    "type": "open_collective"
                 }
             ],
-            "time": "2021-02-02T06:47:52+00:00"
+            "time": "2022-11-30T15:59:55+00:00"
         },
         {
             "name": "react/child-process",
@@ -3856,16 +3852,16 @@
         },
         {
             "name": "aws/aws-sdk-php",
-            "version": "3.250.0",
+            "version": "3.252.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aws/aws-sdk-php.git",
-                "reference": "ea3b594a4fcc6a25caaaa7a9886c919ec7e4666d"
+                "reference": "5cc35b5f66d026d99ba843dba6fe1783571c20af"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/ea3b594a4fcc6a25caaaa7a9886c919ec7e4666d",
-                "reference": "ea3b594a4fcc6a25caaaa7a9886c919ec7e4666d",
+                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/5cc35b5f66d026d99ba843dba6fe1783571c20af",
+                "reference": "5cc35b5f66d026d99ba843dba6fe1783571c20af",
                 "shasum": ""
             },
             "require": {
@@ -3944,9 +3940,9 @@
             "support": {
                 "forum": "https://forums.aws.amazon.com/forum.jspa?forumID=80",
                 "issues": "https://github.com/aws/aws-sdk-php/issues",
-                "source": "https://github.com/aws/aws-sdk-php/tree/3.250.0"
+                "source": "https://github.com/aws/aws-sdk-php/tree/3.252.1"
             },
-            "time": "2022-11-29T19:20:34+00:00"
+            "time": "2022-12-02T19:21:15+00:00"
         },
         {
             "name": "clue/stream-filter",
@@ -4160,16 +4156,16 @@
         },
         {
             "name": "laminas/laminas-stdlib",
-            "version": "3.15.0",
+            "version": "3.16.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laminas/laminas-stdlib.git",
-                "reference": "63b66bd4b696f024f42616b9d95cdb10e5109c27"
+                "reference": "f4f773641807c7ccee59b758bfe4ac4ba33ecb17"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laminas/laminas-stdlib/zipball/63b66bd4b696f024f42616b9d95cdb10e5109c27",
-                "reference": "63b66bd4b696f024f42616b9d95cdb10e5109c27",
+                "url": "https://api.github.com/repos/laminas/laminas-stdlib/zipball/f4f773641807c7ccee59b758bfe4ac4ba33ecb17",
+                "reference": "f4f773641807c7ccee59b758bfe4ac4ba33ecb17",
                 "shasum": ""
             },
             "require": {
@@ -4180,10 +4176,10 @@
             },
             "require-dev": {
                 "laminas/laminas-coding-standard": "^2.4.0",
-                "phpbench/phpbench": "^1.2.6",
-                "phpunit/phpunit": "^9.5.25",
-                "psalm/plugin-phpunit": "^0.17.0",
-                "vimeo/psalm": "^4.28"
+                "phpbench/phpbench": "^1.2.7",
+                "phpunit/phpunit": "^9.5.26",
+                "psalm/plugin-phpunit": "^0.18.0",
+                "vimeo/psalm": "^5.0.0"
             },
             "type": "library",
             "autoload": {
@@ -4215,7 +4211,7 @@
                     "type": "community_bridge"
                 }
             ],
-            "time": "2022-10-10T19:10:24+00:00"
+            "time": "2022-12-03T18:48:01+00:00"
         },
         {
             "name": "laravel/serializable-closure",
@@ -5253,16 +5249,16 @@
         },
         {
             "name": "symfony/options-resolver",
-            "version": "v6.1.0",
+            "version": "v6.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/options-resolver.git",
-                "reference": "a3016f5442e28386ded73c43a32a5b68586dd1c4"
+                "reference": "d28f02acde71ff75e957082cd36e973df395f626"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/options-resolver/zipball/a3016f5442e28386ded73c43a32a5b68586dd1c4",
-                "reference": "a3016f5442e28386ded73c43a32a5b68586dd1c4",
+                "url": "https://api.github.com/repos/symfony/options-resolver/zipball/d28f02acde71ff75e957082cd36e973df395f626",
+                "reference": "d28f02acde71ff75e957082cd36e973df395f626",
                 "shasum": ""
             },
             "require": {
@@ -5300,7 +5296,7 @@
                 "options"
             ],
             "support": {
-                "source": "https://github.com/symfony/options-resolver/tree/v6.1.0"
+                "source": "https://github.com/symfony/options-resolver/tree/v6.2.0"
             },
             "funding": [
                 {
@@ -5316,7 +5312,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-02-25T11:15:52+00:00"
+            "time": "2022-11-02T09:08:04+00:00"
         },
         {
             "name": "symfony/polyfill-ctype",
