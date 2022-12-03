@@ -61,6 +61,52 @@ final class DbalLimitOffsetExtractorTest extends IntegrationTestCase
         );
     }
 
+    public function test_extracting_entire_table_using_qb() : void
+    {
+        $this->pgsqlDatabaseContext->createTable((new Table(
+            $table = 'flow_doctrine_bulk_test',
+            [
+                new Column('id', Type::getType(Types::INTEGER), ['notnull' => true]),
+                new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+                new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
+            ],
+        ))
+            ->setPrimaryKey(['id']));
+
+        for ($i = 1; $i <= 8; $i++) {
+            $this->pgsqlDatabaseContext->insert($table, ['id' => $i, 'name' => 'name_' . $i, 'description' => 'description_' . $i]);
+        }
+
+        $data = (new Flow())
+            ->extract(
+                Dbal::from_limit_offset_qb(
+                    $this->pgsqlDatabaseContext->connection(),
+                    $this->pgsqlDatabaseContext->connection()->createQueryBuilder()
+                        ->from($table)
+                        ->select('*')
+                        ->orderBy('id', 'ASC'),
+                    5
+                )
+            )
+            ->transform(Transform::array_unpack('row'))
+            ->drop('row')
+            ->fetch();
+
+        $this->assertSame(
+            [
+                ['id' => 1, 'name' => 'name_1', 'description' => 'description_1'],
+                ['id' => 2, 'name' => 'name_2', 'description' => 'description_2'],
+                ['id' => 3, 'name' => 'name_3', 'description' => 'description_3'],
+                ['id' => 4, 'name' => 'name_4', 'description' => 'description_4'],
+                ['id' => 5, 'name' => 'name_5', 'description' => 'description_5'],
+                ['id' => 6, 'name' => 'name_6', 'description' => 'description_6'],
+                ['id' => 7, 'name' => 'name_7', 'description' => 'description_7'],
+                ['id' => 8, 'name' => 'name_8', 'description' => 'description_8'],
+            ],
+            $data->toArray()
+        );
+    }
+
     public function test_extracting_limited_number_of_rows_from_table() : void
     {
         $this->pgsqlDatabaseContext->createTable((new Table(
