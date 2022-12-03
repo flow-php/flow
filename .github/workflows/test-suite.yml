@@ -80,6 +80,15 @@ jobs:
         ports:
           - 5432/tcp
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+      mysql:
+        image: mysql:8.0.31-debian
+        ports:
+          - 3306/tcp
+        env:
+          MYSQL_USER: mysql
+          MYSQL_PASSWORD: mysql
+          MYSQL_DATABASE: mysql
+          MYSQL_ROOT_PASSWORD: root
 
     strategy:
       fail-fast: false
@@ -135,6 +144,7 @@ jobs:
         run: "composer test"
         env:
           PGSQL_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?serverVersion=11&charset=utf8
+          MYSQL_DATABASE_URL: mysql://mysql:mysql@127.0.0.1:${{ job.services.mysql.ports[3306] }}/mysql
 
   mutation-tests:
     name: "Mutation Tests"
