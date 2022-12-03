@@ -39,6 +39,14 @@ final class DatabaseContext
     public function dropAllTables() : void
     {
         foreach ($this->connection->getSchemaManager()->listTables() as $table) {
+            if (\str_contains($table->getName(), 'innodb')) {
+                continue;
+            }
+
+            if (\str_contains($table->getName(), 'mysql')) {
+                continue;
+            }
+
             $this->connection->getSchemaManager()->dropTable($table->getName());
         }
     }
