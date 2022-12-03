@@ -153,6 +153,17 @@ final class CSVExtractorTest extends TestCase
         $this->assertSame(32446, $total);
     }
 
+    public function test_extracting_csv_with_corrupted_row() : void
+    {
+        $rows = (new Flow())
+            ->extract(CSV::from(__DIR__ . '/../Fixtures/corrupted_row.csv'))
+            ->transform(Transform::array_unpack('row'))
+            ->drop('row')
+            ->fetch();
+
+        $this->assertSame(2, $rows->count());
+    }
+
     public function test_extracting_csv_with_more_columns_than_headers() : void
     {
         $extractor = CSV::from(

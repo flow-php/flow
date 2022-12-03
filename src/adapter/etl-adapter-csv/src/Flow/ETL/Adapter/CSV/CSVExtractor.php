@@ -80,6 +80,12 @@ final class CSVExtractor implements Extractor
                     }
                 }
 
+                if (\count($headers) !== \count($rowData)) {
+                    $rowData = \fgetcsv($stream->resource(), $this->charactersReadInLine, $this->separator, $this->enclosure, $this->escape);
+
+                    continue;
+                }
+
                 $rows[] = Row::create(new Row\Entry\ArrayEntry($this->rowEntryName, \array_combine($headers, $rowData)));
 
                 if (\count($rows) >= $this->rowsInBatch) {
