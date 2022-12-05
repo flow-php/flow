@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-12-03
+## [Unreleased] - 2022-12-05
 
 ### Added
 - [#234](https://github.com/flow-php/flow/pull/234) - **Allow to use QueryBuilder while creating DBAL limit offset extractor for more advanced use cases** - [@norberttech](https://github.com/norberttech)
