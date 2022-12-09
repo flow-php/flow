@@ -1,6 +1,7 @@
 ## [Unreleased] - 2022-12-09
 
 ### Added
+- [#241](https://github.com/flow-php/flow/pull/241) - **Reference - representing reference to given entry/entries in DataFrame** - [@norberttech](https://github.com/norberttech)
 - [#240](https://github.com/flow-php/flow/pull/240) - **Aggregation::collect_unique** - [@norberttech](https://github.com/norberttech)
 - [#240](https://github.com/flow-php/flow/pull/240) - **Aggregation::collect** - [@norberttech](https://github.com/norberttech)
 - [#234](https://github.com/flow-php/flow/pull/234) - **Allow to use QueryBuilder while creating DBAL limit offset extractor for more advanced use cases** - [@norberttech](https://github.com/norberttech)
