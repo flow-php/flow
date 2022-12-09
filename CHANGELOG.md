@@ -1,6 +1,8 @@
 ## [Unreleased] - 2022-12-09
 
 ### Added
+- [#240](https://github.com/flow-php/flow/pull/240) - **Aggregation::collect_unique** - [@norberttech](https://github.com/norberttech)
+- [#240](https://github.com/flow-php/flow/pull/240) - **Aggregation::collect** - [@norberttech](https://github.com/norberttech)
 - [#234](https://github.com/flow-php/flow/pull/234) - **Allow to use QueryBuilder while creating DBAL limit offset extractor for more advanced use cases** - [@norberttech](https://github.com/norberttech)
 - [#197](https://github.com/flow-php/flow/pull/197) - **Mysql dialect for bulk update/insert/upsert** - [@mleczakm](https://github.com/mleczakm)
 - [#225](https://github.com/flow-php/flow/pull/225) - **Allow to read complex nested jsons from a specific pointer** - [@norberttech](https://github.com/norberttech)
