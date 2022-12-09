@@ -8,13 +8,17 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\GroupBy\Aggregator;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\EntryReference;
 
 final class Max implements Aggregator
 {
+    private readonly EntryReference $entry;
+
     private ?float $max;
 
-    public function __construct(private readonly string $entry)
+    public function __construct(string|EntryReference $entry)
     {
+        $this->entry = \is_string($entry) ? new EntryReference($entry) : $entry;
         $this->max = null;
     }
 
@@ -22,7 +26,7 @@ final class Max implements Aggregator
     {
         try {
             /** @var mixed $value */
-            $value = $row->valueOf($this->entry);
+            $value = $row->valueOf($this->entry->to());
 
             if ($this->max === null) {
                 if (\is_numeric($value)) {
@@ -40,16 +44,20 @@ final class Max implements Aggregator
 
     public function result() : Entry
     {
+        if (!$this->entry->hasAlias()) {
+            $this->entry->as($this->entry->to() . '_max');
+        }
+
         if ($this->max === null) {
-            return \Flow\ETL\DSL\Entry::null($this->entry . '_max');
+            return \Flow\ETL\DSL\Entry::null($this->entry->name());
         }
 
         $resultInt = (int) $this->max;
 
         if ($this->max - $resultInt === 0.0) {
-            return \Flow\ETL\DSL\Entry::integer($this->entry . '_max', (int) $this->max);
+            return \Flow\ETL\DSL\Entry::integer($this->entry->name(), (int) $this->max);
         }
 
-        return \Flow\ETL\DSL\Entry::float($this->entry . '_max', $this->max);
+        return \Flow\ETL\DSL\Entry::float($this->entry->name(), $this->max);
     }
 }

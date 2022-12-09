@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV;
 
+use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\Stream\FileStream;
 use Flow\ETL\Filesystem\Stream\Mode;
@@ -116,6 +117,16 @@ final class CSVLoader implements Closure, Loader, Loader\FileLoader
 
     private function writeCSV(array $row, FileStream $destination) : void
     {
+        /**
+         * @var string $entry
+         * @var mixed $value
+         */
+        foreach ($row as $entry => $value) {
+            if (\is_array($value)) {
+                throw new RuntimeException("Entry \"{$entry}\" is an list|array, please cast to string before writing to CSV. Easiest way to cast arrays to string is to use Transform::to_json transformer.");
+            }
+        }
+
         /**
          * @psalm-suppress TooManyArguments
          * @psalm-suppress InvalidNamedArgument
