@@ -7,6 +7,8 @@ namespace Flow\ETL\GroupBy;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\GroupBy\Aggregator\Average;
+use Flow\ETL\GroupBy\Aggregator\Collect;
+use Flow\ETL\GroupBy\Aggregator\CollectUnique;
 use Flow\ETL\GroupBy\Aggregator\Count;
 use Flow\ETL\GroupBy\Aggregator\First;
 use Flow\ETL\GroupBy\Aggregator\Last;
@@ -26,7 +28,7 @@ final class Aggregation
         private readonly string $type,
         private readonly string $entry
     ) {
-        if (!\in_array($type, ['avg', 'count', 'max', 'min', 'sum', 'first', 'last'], true)) {
+        if (!\in_array($type, ['avg', 'count', 'max', 'min', 'sum', 'first', 'last', 'collect', 'collect_unique'], true)) {
             throw new InvalidArgumentException("Unknown aggregation \"{$type}\", expected one of: 'avg', 'count', 'max', 'min', 'sum', 'first', 'last'");
         }
     }
@@ -34,6 +36,16 @@ final class Aggregation
     public static function avg(string $entry) : self
     {
         return new self('avg', $entry);
+    }
+
+    public static function collect(string $entry) : self
+    {
+        return new self('collect', $entry);
+    }
+
+    public static function collect_unique(string $entry) : self
+    {
+        return new self('collect_unique', $entry);
     }
 
     public static function count(string $entry) : self
@@ -76,6 +88,8 @@ final class Aggregation
             'sum' => new Sum($this->entry),
             'first' => new First($this->entry),
             'last' => new Last($this->entry),
+            'collect' => new Collect($this->entry),
+            'collect_unique' => new CollectUnique($this->entry),
             default => throw new RuntimeException("Unknown aggregation \"{$this->type}\", expected one of: 'avg', 'count', 'max', 'min', 'sum'"),
         };
     }
