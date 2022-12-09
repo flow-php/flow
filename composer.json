@@ -42,7 +42,8 @@
     },
     "autoload": {
         "files": [
-            "src/lib/array-dot/src/Flow/ArrayDot/array_dot.php"
+            "src/lib/array-dot/src/Flow/ArrayDot/array_dot.php",
+            "src/core/etl/src/Flow/ETL/DSL/functions.php"
         ],
         "psr-4": {
             "Flow\\": [

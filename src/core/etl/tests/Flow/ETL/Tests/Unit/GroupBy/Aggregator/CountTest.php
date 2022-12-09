@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\GroupBy\Aggregator;
 
+use function Flow\ETL\DSL\entry;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\GroupBy\Aggregator\Count;
 use Flow\ETL\Row;
@@ -13,7 +14,7 @@ final class CountTest extends TestCase
 {
     public function test_sum_from_numeric_values() : void
     {
-        $aggregator = new Count('int');
+        $aggregator = new Count(entry('int'));
 
         $aggregator->aggregate(Row::create(Entry::string('int', '10')));
         $aggregator->aggregate(Row::create(Entry::string('int', '20')));
@@ -29,7 +30,7 @@ final class CountTest extends TestCase
 
     public function test_sum_with_float_result() : void
     {
-        $aggregator = new Count('int');
+        $aggregator = new Count(entry('int'));
 
         $aggregator->aggregate(Row::create(Entry::float('int', 10.25)));
         $aggregator->aggregate(Row::create(Entry::integer('int', 20)));
@@ -44,7 +45,7 @@ final class CountTest extends TestCase
 
     public function test_when_row_does_not_have_entry() : void
     {
-        $aggregator = new Count('int');
+        $aggregator = new Count(entry('int'));
 
         $aggregator->aggregate(Row::create(Entry::integer('int', 10)));
         $aggregator->aggregate(Row::create(Entry::integer('int', 20)));

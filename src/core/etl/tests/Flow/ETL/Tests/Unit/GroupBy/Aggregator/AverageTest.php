@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\GroupBy\Aggregator;
 
+use function Flow\ETL\DSL\entry;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\GroupBy\Aggregator\Average;
 use Flow\ETL\Row;
@@ -13,7 +14,7 @@ final class AverageTest extends TestCase
 {
     public function test_average_from_numeric_values() : void
     {
-        $aggregator = new Average('int');
+        $aggregator = new Average(entry('int'));
 
         $aggregator->aggregate(Row::create(Entry::string('int', '10')));
         $aggregator->aggregate(Row::create(Entry::string('int', '20')));

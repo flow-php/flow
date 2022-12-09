@@ -470,10 +470,18 @@ is missing it will be skipped or grouped into `null` entry.
 ### Aggregations
 
 * avg - arithmetic mean algorithm
+* collect - collect values from each row entry into array
+* collect_unique - collect values from each row entry into array removing duplicates
 * count
+* first
+* last
 * max
 * min
 * sum
+
+**heads up**
+> If you need to collect multiple columns into array of structures please 
+> use `\Flow\ETL\DSL\struct(...$entries)` function. 
 
 ```php 
 <?php

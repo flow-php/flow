@@ -8,13 +8,17 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\GroupBy\Aggregator;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\EntryReference;
 
 final class First  implements Aggregator
 {
+    private readonly EntryReference $entry;
+
     private ?Entry $first;
 
-    public function __construct(private readonly string $entry)
+    public function __construct(string|EntryReference $entry)
     {
+        $this->entry = \is_string($entry) ? new EntryReference($entry) : $entry;
         $this->first = null;
     }
 
@@ -22,7 +26,7 @@ final class First  implements Aggregator
     {
         if ($this->first === null) {
             try {
-                $this->first = $row->get($this->entry);
+                $this->first = $row->get($this->entry->to());
             } catch (InvalidArgumentException $e) {
                 // entry not found
             }
@@ -31,6 +35,6 @@ final class First  implements Aggregator
 
     public function result() : Entry
     {
-        return $this->first ?? new Entry\NullEntry($this->entry);
+        return $this->first ?? new Entry\NullEntry($this->entry->name());
     }
 }

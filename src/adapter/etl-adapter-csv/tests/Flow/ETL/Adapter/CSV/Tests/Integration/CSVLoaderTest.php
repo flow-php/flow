@@ -49,6 +49,26 @@ final class CSVLoaderTest extends TestCase
         }
     }
 
+    public function test_loading_array_entry() : void
+    {
+        $path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.csv';
+
+        $this->expectExceptionMessage('Entry "data" is an list|array, please cast to string before writing to CSV. Easiest way to cast arrays to string is to use Transform::to_json transformer.');
+
+        (new Flow())
+            ->process(
+                new Rows(
+                    Row::create(Entry::integer('id', 1), Entry::array('data', ['foo' => 'bar'])),
+                )
+            )
+            ->write(CSV::to($path))
+            ->run();
+
+        if (\file_exists($path)) {
+            \unlink($path);
+        }
+    }
+
     public function test_loading_csv_files_with_threadsafe() : void
     {
         $path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.csv';
