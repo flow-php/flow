@@ -48,4 +48,29 @@ final class ArrayMergeTransformerTest extends TestCase
             $transformer->transform(new Rows(Row::create($arrayOneEntry, $arrayTwoEntry)), new FlowContext(Config::default()))->toArray()
         );
     }
+
+    public function test_array_merge_when_left_not_exists() : void
+    {
+        $arrayTwoEntry = new ArrayEntry(
+            'array_two',
+            [
+                'A',
+                'Z',
+                'C',
+                'O',
+            ]
+        );
+
+        $transformer = Transform::array_merge(['array_one', 'array_two']);
+
+        $this->assertSame(
+            [
+                [
+                    'array_two' => ['A', 'Z', 'C', 'O'],
+                    'merged' => ['A', 'Z', 'C', 'O'],
+                ],
+            ],
+            $transformer->transform(new Rows(Row::create($arrayTwoEntry)), new FlowContext(Config::default()))->toArray()
+        );
+    }
 }
