@@ -24,6 +24,7 @@ use Flow\ETL\Transformer\Cast\EntryCaster\AnyToListCaster;
 use Flow\ETL\Transformer\Cast\EntryCaster\DateTimeToStringEntryCaster;
 use Flow\ETL\Transformer\Cast\EntryCaster\StringToDateTimeEntryCaster;
 use Flow\ETL\Transformer\CastTransformer;
+use Flow\ETL\Transformer\Condition\RowCondition;
 use Flow\ETL\Transformer\Filter\Filter\EntryEqualsTo;
 use Flow\ETL\Transformer\Filter\Filter\EntryExists;
 use Flow\ETL\Transformer\Filter\Filter\EntryNotNull;
@@ -699,7 +700,7 @@ class Transform
         return new CastTransformer(new Transformer\Cast\CastEntries($entries, new DateTimeToStringEntryCaster($format), true));
     }
 
-    final public static function transform_if(Transformer\Condition\RowCondition $condition, Transformer $transformer) : Transformer
+    final public static function transform_if(RowCondition $condition, Transformer $transformer) : Transformer
     {
         return new Transformer\ConditionalTransformer($condition, $transformer);
     }

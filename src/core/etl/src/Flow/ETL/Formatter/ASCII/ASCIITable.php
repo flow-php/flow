@@ -273,12 +273,16 @@ final class ASCIITable
                     $rows .= $this->mb_str_pad($value, $this->colWidths[$col], ' ', $alignment);
                 } else {
                     if (self::len($value) > $trucate) {
-                        $rows .= $this->mb_str_pad(
-                            self::substr($value, 0, $trucate - 3) . '...',
-                            $this->colWidths[$col],
-                            ' ',
-                            $alignment
-                        );
+                        if (!\array_key_exists($col, $this->colWidths)) {
+                            $rows .= $this->mb_str_pad($value, $trucate, ' ', $alignment);
+                        } else {
+                            $rows .= $this->mb_str_pad(
+                                self::substr($value, 0, $trucate - 3) . '...',
+                                $this->colWidths[$col],
+                                ' ',
+                                $alignment
+                            );
+                        }
                     } else {
                         $rows .= $this->mb_str_pad($value, $this->colWidths[$col], ' ', $alignment);
                     }
