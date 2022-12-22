@@ -122,7 +122,7 @@ class Condition
 
     final public static function is_valid(string $entry, Constraint ...$constraints) : RowCondition
     {
-        if (!\class_exists(\Symfony\Component\Validator\Validation::class)) {
+        if (!\class_exists('\Symfony\Component\Validator\Validation')) {
             throw new RuntimeException("Symfony\Component\Validator\Validation class not found, please add symfony/validator dependency to the project first.");
         }
 

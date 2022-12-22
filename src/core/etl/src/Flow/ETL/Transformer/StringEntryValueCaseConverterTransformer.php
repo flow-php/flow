@@ -61,12 +61,13 @@ final class StringEntryValueCaseConverterTransformer implements Transformer
          */
         $transformer = function (Row $row) : Row {
             foreach ($this->entryNames as $entryName) {
-                /** @var Row\Entry\StringEntry $entry */
                 $entry = $row->get($entryName);
 
-                $row = $row->set(
-                    new Row\Entry\StringEntry($entry->name(), ($this->case === self::CASE_UPPER) ? \mb_strtoupper($entry->value()) : \mb_strtolower($entry->value()))
-                );
+                if ($entry instanceof Row\Entry\StringEntry) {
+                    $row = $row->set(
+                        new Row\Entry\StringEntry($entry->name(), ($this->case === self::CASE_UPPER) ? \mb_strtoupper($entry->value()) : \mb_strtolower($entry->value()))
+                    );
+                }
             }
 
             return $row;

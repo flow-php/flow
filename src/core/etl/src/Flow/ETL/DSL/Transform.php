@@ -24,6 +24,7 @@ use Flow\ETL\Transformer\Cast\EntryCaster\AnyToListCaster;
 use Flow\ETL\Transformer\Cast\EntryCaster\DateTimeToStringEntryCaster;
 use Flow\ETL\Transformer\Cast\EntryCaster\StringToDateTimeEntryCaster;
 use Flow\ETL\Transformer\CastTransformer;
+use Flow\ETL\Transformer\Condition\RowCondition;
 use Flow\ETL\Transformer\Filter\Filter\EntryEqualsTo;
 use Flow\ETL\Transformer\Filter\Filter\EntryExists;
 use Flow\ETL\Transformer\Filter\Filter\EntryNotNull;
@@ -203,6 +204,20 @@ class Transform
     final public static function array_merge(array $array_names, string $entry_name = 'merged') : Transformer
     {
         return new Transformer\ArrayMergeTransformer($array_names, $entry_name);
+    }
+
+    /**
+     * Pushes static values into existing array entry, if array entry does not exist, this transformer
+     * will create one.
+     *
+     * @param string $array_entry
+     * @param array<mixed> $values
+     *
+     * @return Transformer
+     */
+    final public static function array_push(string $array_entry, array $values = []) : Transformer
+    {
+        return new Transformer\ArrayPushTransformer($array_entry, $values);
     }
 
     final public static function array_rename_keys(string $array_column, string $path, string $new_name) : Transformer
@@ -685,7 +700,7 @@ class Transform
         return new CastTransformer(new Transformer\Cast\CastEntries($entries, new DateTimeToStringEntryCaster($format), true));
     }
 
-    final public static function transform_if(Transformer\Condition\RowCondition $condition, Transformer $transformer) : Transformer
+    final public static function transform_if(RowCondition $condition, Transformer $transformer) : Transformer
     {
         return new Transformer\ConditionalTransformer($condition, $transformer);
     }

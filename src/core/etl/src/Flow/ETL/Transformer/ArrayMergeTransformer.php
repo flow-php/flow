@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer;
 
+use Flow\ETL\DSL\Entry;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
@@ -47,7 +48,11 @@ final class ArrayMergeTransformer implements Transformer
             $entryValues = [];
 
             foreach ($this->arrayEntries as $entryName) {
-                $arrayEntry = $row->entries()->get($entryName);
+                if (!$row->entries()->has($entryName)) {
+                    $arrayEntry = Entry::array($entryName, []);
+                } else {
+                    $arrayEntry = $row->entries()->get($entryName);
+                }
 
                 if (!$arrayEntry instanceof Row\Entry\ArrayEntry) {
                     throw new RuntimeException("\"{$entryName}\" is not ArrayEntry");
