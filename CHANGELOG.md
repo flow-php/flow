@@ -1,6 +1,7 @@
-## [Unreleased] - 2022-12-09
+## [Unreleased] - 2022-12-22
 
 ### Added
+- [#243](https://github.com/flow-php/flow/pull/243) - **array push transformer** - [@norberttech](https://github.com/norberttech)
 - [#241](https://github.com/flow-php/flow/pull/241) - **Reference - representing reference to given entry/entries in DataFrame** - [@norberttech](https://github.com/norberttech)
 - [#240](https://github.com/flow-php/flow/pull/240) - **Aggregation::collect_unique** - [@norberttech](https://github.com/norberttech)
 - [#240](https://github.com/flow-php/flow/pull/240) - **Aggregation::collect** - [@norberttech](https://github.com/norberttech)
