@@ -4079,16 +4079,16 @@
         },
         {
             "name": "laminas/laminas-hydrator",
-            "version": "4.11.0",
+            "version": "4.12.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laminas/laminas-hydrator.git",
-                "reference": "acc18274748d58f18259413016eae49f9bb9136c"
+                "reference": "78fa8f8a29a2866b1fccdf1b0c260557b6bb595e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laminas/laminas-hydrator/zipball/acc18274748d58f18259413016eae49f9bb9136c",
-                "reference": "acc18274748d58f18259413016eae49f9bb9136c",
+                "url": "https://api.github.com/repos/laminas/laminas-hydrator/zipball/78fa8f8a29a2866b1fccdf1b0c260557b6bb595e",
+                "reference": "78fa8f8a29a2866b1fccdf1b0c260557b6bb595e",
                 "shasum": ""
             },
             "require": {
@@ -4152,7 +4152,7 @@
                     "type": "community_bridge"
                 }
             ],
-            "time": "2022-12-14T11:49:03+00:00"
+            "time": "2022-12-21T04:00:01+00:00"
         },
         {
             "name": "laminas/laminas-stdlib",
