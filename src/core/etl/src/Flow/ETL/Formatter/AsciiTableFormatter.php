@@ -16,19 +16,7 @@ final class AsciiTableFormatter implements Formatter
             return '';
         }
 
-        $array = [];
-
-        foreach ($rows as $row) {
-            $rowsArray = [];
-
-            foreach ($row->entries()->all() as $entry) {
-                $rowsArray[$entry->name()] = (string) $entry;
-            }
-
-            $array[] = $rowsArray;
-        }
-
-        return (new ASCIITable())->makeTable($array, $truncate)
-            . "{$rows->count()} rows\n";
+        return (new ASCIITable($rows))->print($truncate) . PHP_EOL
+            . "{$rows->count()} rows" . PHP_EOL;
     }
 }

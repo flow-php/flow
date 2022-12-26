@@ -269,11 +269,11 @@ final class DataFrameTest extends TestCase
 +----+------+---+-------+--------------------+-----+--------------------+--------------------+--------------------+--------------------+-----+
 |  id| price|100|deleted|          created-at|phase|               array|               items|                tags|              object| enum|
 +----+------+---+-------+--------------------+-----+--------------------+--------------------+--------------------+--------------------+-----+
-|1234|123.45|100|  false|2020-07-13T15:00:...| null|[{"id":1,"status"...|{"item-id":"1","n...|[{"item-id":"1","...|ArrayIterator Obj...|three|
-|1234|123.45|100|  false|2020-07-13T15:00:...| null|[{"id":1,"status"...|{"item-id":"1","n...|[{"item-id":"1","...|ArrayIterator Obj...|three|
-|1234|123.45|100|  false|2020-07-13T15:00:...| null|[{"id":1,"status"...|{"item-id":"1","n...|[{"item-id":"1","...|ArrayIterator Obj...|three|
-|1234|123.45|100|  false|2020-07-13T15:00:...| null|[{"id":1,"status"...|{"item-id":"1","n...|[{"item-id":"1","...|ArrayIterator Obj...|three|
-|1234|123.45|100|  false|2020-07-13T15:00:...| null|[{"id":1,"status"...|{"item-id":"1","n...|[{"item-id":"1","...|ArrayIterator Obj...|three|
+|1234|123.45|100|  false|2020-07-13T15:00:00+| null|[{"id":1,"status":"N|{"item-id":"1","name|[{"item-id":"1","nam|ArrayIterator Object|three|
+|1234|123.45|100|  false|2020-07-13T15:00:00+| null|[{"id":1,"status":"N|{"item-id":"1","name|[{"item-id":"1","nam|ArrayIterator Object|three|
+|1234|123.45|100|  false|2020-07-13T15:00:00+| null|[{"id":1,"status":"N|{"item-id":"1","name|[{"item-id":"1","nam|ArrayIterator Object|three|
+|1234|123.45|100|  false|2020-07-13T15:00:00+| null|[{"id":1,"status":"N|{"item-id":"1","name|[{"item-id":"1","nam|ArrayIterator Object|three|
+|1234|123.45|100|  false|2020-07-13T15:00:00+| null|[{"id":1,"status":"N|{"item-id":"1","name|[{"item-id":"1","nam|ArrayIterator Object|three|
 +----+------+---+-------+--------------------+-----+--------------------+--------------------+--------------------+--------------------+-----+
 5 rows
 
@@ -331,13 +331,13 @@ ASCIITABLE,
         $this->assertStringContainsString(
             <<<'ASCIITABLE'
 +--------------------+
-|this is very long...|
+|this is very long en|
 +--------------------+
-|[{"id":1,"status"...|
-|[{"id":1,"status"...|
-|[{"id":1,"status"...|
-|[{"id":1,"status"...|
-|[{"id":1,"status"...|
+|[{"id":1,"status":"N|
+|[{"id":1,"status":"N|
+|[{"id":1,"status":"N|
+|[{"id":1,"status":"N|
+|[{"id":1,"status":"N|
 +--------------------+
 5 rows
 ASCIITABLE,
