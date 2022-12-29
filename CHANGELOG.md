@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-12-26
+## [Unreleased] - 2022-12-29
 
 ### Added
 - [c52568](https://github.com/flow-php/flow/commit/c52568fcad74df2e8874f82f4c027d8943ac1403) - **more verbose error for failing tests** - [@norberttech](https://github.com/norberttech)
@@ -557,6 +557,7 @@
 - [e48062](https://github.com/flow-php/flow/commit/e48062890cd84e655e1162305086f67148347b83) - **Intial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [88b413](https://github.com/flow-php/flow/commit/88b4139a98cee15e44b3fd89a07c63a49180643b) - **json_encode in test suite** - [@norberttech](https://github.com/norberttech)
 - [894ecb](https://github.com/flow-php/flow/commit/894ecb2a23d68ceb19246285ede4939f9297b845) - **type in code** - [@norberttech](https://github.com/norberttech)
 - [#233](https://github.com/flow-php/flow/pull/233) - **Skip corrupted (more columns than headers) rows in CSV extractor** - [@norberttech](https://github.com/norberttech)
 - [1e7ced](https://github.com/flow-php/flow/commit/1e7ced5259985d7d7ffded71668b1044db6b26c4) - **static analysis** - [@norberttech](https://github.com/norberttech)
