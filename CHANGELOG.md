@@ -1,4 +1,4 @@
-## [Unreleased] - 2022-12-29
+## [Unreleased] - 2023-01-02
 
 ### Added
 - [c52568](https://github.com/flow-php/flow/commit/c52568fcad74df2e8874f82f4c027d8943ac1403) - **more verbose error for failing tests** - [@norberttech](https://github.com/norberttech)
@@ -134,6 +134,7 @@
 - [856870](https://github.com/flow-php/flow/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#263](https://github.com/flow-php/flow/pull/263) - **Rewritten ASCII table formatted** - [@norberttech](https://github.com/norberttech)
 - [#235](https://github.com/flow-php/flow/pull/235) - **minimum required avro php version** - [@norberttech](https://github.com/norberttech)
 - [#234](https://github.com/flow-php/flow/pull/234) - **Updated psalm to the latest version** - [@norberttech](https://github.com/norberttech)
 - [#178](https://github.com/flow-php/flow/pull/178) - **excluded composer.lock from PR size calculation** - [@norberttech](https://github.com/norberttech)
