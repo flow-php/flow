@@ -39,7 +39,6 @@ final class GroupToArrayTransformer implements Transformer
         $entries = [];
 
         foreach ($rows as $row) {
-            /** @var array<array-key, array<mixed>> $entries */
             $groupValue = $row->get($this->groupByEntry)->toString();
 
             if (!\array_key_exists($groupValue, $entries)) {
@@ -51,7 +50,6 @@ final class GroupToArrayTransformer implements Transformer
 
         $rows = new Rows();
 
-        /** @var array<mixed> $entry */
         foreach ($entries as $entry) {
             $rows = $rows->add(
                 Row::create(

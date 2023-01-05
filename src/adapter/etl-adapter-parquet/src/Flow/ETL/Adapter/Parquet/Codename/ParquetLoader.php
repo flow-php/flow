@@ -199,6 +199,7 @@ final class ParquetLoader implements Closure, Loader, Loader\FileLoader
             try {
                 if ($field->isArray) {
                     /**
+                     * @psalm-suppress NamedArgumentNotAllowed
                      * @psalm-suppress MixedArgument
                      *
                      * @phpstan-ignore-next-line

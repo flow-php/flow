@@ -31,6 +31,7 @@ final class Expression implements Serializable
     public static function on(array|Comparison $comparison, string $joinPrefix = '') : self
     {
         if (\is_array($comparison)) {
+            /** @var array<Comparison> $comparisons */
             $comparisons = [];
 
             foreach ($comparison as $left => $right) {
