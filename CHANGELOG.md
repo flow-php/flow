@@ -134,6 +134,7 @@
 - [856870](https://github.com/flow-php/flow/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#271](https://github.com/flow-php/flow/pull/271) - **Updated dependencies** - [@norberttech](https://github.com/norberttech)
 - [#263](https://github.com/flow-php/flow/pull/263) - **Rewritten ASCII table formatted** - [@norberttech](https://github.com/norberttech)
 - [#235](https://github.com/flow-php/flow/pull/235) - **minimum required avro php version** - [@norberttech](https://github.com/norberttech)
 - [#234](https://github.com/flow-php/flow/pull/234) - **Updated psalm to the latest version** - [@norberttech](https://github.com/norberttech)
