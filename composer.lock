@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d0d71bc4b7cf0521f5e3a9b635f400de",
+    "content-hash": "371cafe6035af4ade005721837ed4143",
     "packages": [
         {
             "name": "amphp/amp",
@@ -89,21 +89,21 @@
         },
         {
             "name": "amphp/byte-stream",
-            "version": "v2.0.0-beta.14",
+            "version": "v2.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/amphp/byte-stream.git",
-                "reference": "970327a54d6132a2f671c3987fed23370bfbecb4"
+                "reference": "c102b620c14f44e83436b6f9bced6f40ca482bff"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/amphp/byte-stream/zipball/970327a54d6132a2f671c3987fed23370bfbecb4",
-                "reference": "970327a54d6132a2f671c3987fed23370bfbecb4",
+                "url": "https://api.github.com/repos/amphp/byte-stream/zipball/c102b620c14f44e83436b6f9bced6f40ca482bff",
+                "reference": "c102b620c14f44e83436b6f9bced6f40ca482bff",
                 "shasum": ""
             },
             "require": {
                 "amphp/amp": "^3",
-                "amphp/parser": "^1",
+                "amphp/parser": "^1.1",
                 "amphp/pipeline": "^1",
                 "amphp/serialization": "^1",
                 "amphp/sync": "^2",
@@ -111,11 +111,10 @@
                 "revolt/event-loop": "^1 || ^0.2.3"
             },
             "require-dev": {
-                "amphp/php-cs-fixer-config": "^2-dev",
+                "amphp/php-cs-fixer-config": "^2",
                 "amphp/phpunit-util": "^3",
-                "jetbrains/phpstorm-stubs": "^2019.3",
                 "phpunit/phpunit": "^9",
-                "psalm/phar": "^4.27"
+                "psalm/phar": "^5.4"
             },
             "type": "library",
             "autoload": {
@@ -152,7 +151,7 @@
             ],
             "support": {
                 "issues": "https://github.com/amphp/byte-stream/issues",
-                "source": "https://github.com/amphp/byte-stream/tree/v2.0.0-beta.14"
+                "source": "https://github.com/amphp/byte-stream/tree/v2.0.0"
             },
             "funding": [
                 {
@@ -160,20 +159,20 @@
                     "type": "github"
                 }
             ],
-            "time": "2022-12-23T23:07:07+00:00"
+            "time": "2023-01-07T16:05:54+00:00"
         },
         {
             "name": "amphp/cache",
-            "version": "v2.0.0-beta.3",
+            "version": "v2.0.0-beta.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/amphp/cache.git",
-                "reference": "1196b6cba4ec527ddca52172a5acb8b5bdf99e1f"
+                "reference": "1ade827298cc2922f97dca318dbeb70ae421f721"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/amphp/cache/zipball/1196b6cba4ec527ddca52172a5acb8b5bdf99e1f",
-                "reference": "1196b6cba4ec527ddca52172a5acb8b5bdf99e1f",
+                "url": "https://api.github.com/repos/amphp/cache/zipball/1ade827298cc2922f97dca318dbeb70ae421f721",
+                "reference": "1ade827298cc2922f97dca318dbeb70ae421f721",
                 "shasum": ""
             },
             "require": {
@@ -184,10 +183,10 @@
                 "revolt/event-loop": "^1 || ^0.2"
             },
             "require-dev": {
-                "amphp/php-cs-fixer-config": "^2-dev",
+                "amphp/php-cs-fixer-config": "^2",
                 "amphp/phpunit-util": "^3",
                 "phpunit/phpunit": "^9",
-                "psalm/phar": "^4.29"
+                "psalm/phar": "^5.4"
             },
             "type": "library",
             "autoload": {
@@ -217,7 +216,7 @@
             "homepage": "https://github.com/amphp/cache",
             "support": {
                 "issues": "https://github.com/amphp/cache/issues",
-                "source": "https://github.com/amphp/cache/tree/v2.0.0-beta.3"
+                "source": "https://github.com/amphp/cache/tree/v2.0.0-beta.4"
             },
             "funding": [
                 {
@@ -225,7 +224,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2022-11-07T21:52:30+00:00"
+            "time": "2023-01-07T19:37:28+00:00"
         },
         {
             "name": "amphp/dns",
@@ -573,16 +572,16 @@
         },
         {
             "name": "amphp/socket",
-            "version": "v2.0.0-beta.7",
+            "version": "v2.0.0-beta.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/amphp/socket.git",
-                "reference": "b86b45be48f64379844fa002a576add541fb6aaf"
+                "reference": "b059ae6eeebf4187cc7be4e8d6a895f2b3fe1670"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/amphp/socket/zipball/b86b45be48f64379844fa002a576add541fb6aaf",
-                "reference": "b86b45be48f64379844fa002a576add541fb6aaf",
+                "url": "https://api.github.com/repos/amphp/socket/zipball/b059ae6eeebf4187cc7be4e8d6a895f2b3fe1670",
+                "reference": "b059ae6eeebf4187cc7be4e8d6a895f2b3fe1670",
                 "shasum": ""
             },
             "require": {
@@ -598,8 +597,9 @@
             "require-dev": {
                 "amphp/php-cs-fixer-config": "^2-dev",
                 "amphp/phpunit-util": "^3",
+                "amphp/process": "^2",
                 "phpunit/phpunit": "^9",
-                "psalm/phar": "^4.20"
+                "psalm/phar": "^5.4"
             },
             "type": "library",
             "extra": {
@@ -648,7 +648,7 @@
             ],
             "support": {
                 "issues": "https://github.com/amphp/socket/issues",
-                "source": "https://github.com/amphp/socket/tree/v2.0.0-beta.7"
+                "source": "https://github.com/amphp/socket/tree/v2.0.0-beta.8"
             },
             "funding": [
                 {
@@ -656,7 +656,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2022-11-07T22:29:32+00:00"
+            "time": "2023-01-08T05:46:44+00:00"
         },
         {
             "name": "amphp/sync",
