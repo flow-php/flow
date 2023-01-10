@@ -446,30 +446,30 @@
         },
         {
             "name": "amphp/process",
-            "version": "v2.0.0-beta.7",
+            "version": "v2.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/amphp/process.git",
-                "reference": "ad46c8b2fbea65d9ef09fd473b4477cfd33d102e"
+                "reference": "9c9247fe8283b22e00a254746bf822da4b0b5ea4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/amphp/process/zipball/ad46c8b2fbea65d9ef09fd473b4477cfd33d102e",
-                "reference": "ad46c8b2fbea65d9ef09fd473b4477cfd33d102e",
+                "url": "https://api.github.com/repos/amphp/process/zipball/9c9247fe8283b22e00a254746bf822da4b0b5ea4",
+                "reference": "9c9247fe8283b22e00a254746bf822da4b0b5ea4",
                 "shasum": ""
             },
             "require": {
                 "amphp/amp": "^3",
                 "amphp/byte-stream": "^2",
+                "amphp/sync": "^2",
                 "php": ">=8.1",
                 "revolt/event-loop": "^1 || ^0.2"
             },
             "require-dev": {
-                "amphp/php-cs-fixer-config": "^2-dev",
+                "amphp/php-cs-fixer-config": "^2",
                 "amphp/phpunit-util": "^3",
-                "jetbrains/phpstorm-attributes": "^1.0",
                 "phpunit/phpunit": "^9",
-                "psalm/phar": "^4.15"
+                "psalm/phar": "^5.4"
             },
             "type": "library",
             "autoload": {
@@ -499,10 +499,10 @@
                 }
             ],
             "description": "A fiber-aware process manager based on Amp and Revolt.",
-            "homepage": "https://github.com/amphp/process",
+            "homepage": "https://amphp.org/process",
             "support": {
                 "issues": "https://github.com/amphp/process/issues",
-                "source": "https://github.com/amphp/process/tree/v2.0.0-beta.7"
+                "source": "https://github.com/amphp/process/tree/v2.0.0"
             },
             "funding": [
                 {
@@ -510,7 +510,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2022-11-07T22:07:42+00:00"
+            "time": "2023-01-09T21:32:38+00:00"
         },
         {
             "name": "amphp/serialization",
