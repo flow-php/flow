@@ -11,7 +11,7 @@
         "ext-mbstring": "*",
         "ext-xmlreader": "*",
         "amphp/process": "^2",
-        "amphp/socket": "^2 || ^2",
+        "amphp/socket": "^2 || ^2 || ^2",
         "codename/parquet": "^0.6.2",
         "doctrine/dbal": "^2.12 || ^3.1.4",
         "elasticsearch/elasticsearch": "^7.6|^8.0",
