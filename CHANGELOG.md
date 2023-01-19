@@ -1,6 +1,8 @@
-## [Unreleased] - 2023-01-06
+## [Unreleased] - 2023-01-19
 
 ### Added
+- [#292](https://github.com/flow-php/flow/pull/292) - **PHP 8.2 support** - [@norberttech](https://github.com/norberttech)
+- [#292](https://github.com/flow-php/flow/pull/292) - **execute tests at PHP 8.2** - [@norberttech](https://github.com/norberttech)
 - [c52568](https://github.com/flow-php/flow/commit/c52568fcad74df2e8874f82f4c027d8943ac1403) - **more verbose error for failing tests** - [@norberttech](https://github.com/norberttech)
 - [#259](https://github.com/flow-php/flow/pull/259) - **array_push transformer** - [@norberttech](https://github.com/norberttech)
 - [#243](https://github.com/flow-php/flow/pull/243) - **array push transformer** - [@norberttech](https://github.com/norberttech)
