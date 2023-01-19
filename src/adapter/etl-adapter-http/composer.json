@@ -2,17 +2,9 @@
     "name": "flow-php/etl-adapter-http",
     "type": "library",
     "description": "PHP ETL - Adapter - Http",
-    "keywords": [
-        "etl",
-        "extract",
-        "transform",
-        "load",
-        "http"
-    ],
-    "minimum-stability": "dev",
-    "prefer-stable": true,
+    "keywords": ["etl", "extract", "transform", "load", "http"],
     "require": {
-        "php": "~8.1",
+        "php": "~8.1 || ~8.2",
         "ext-json": "*",
         "flow-php/etl": "^1.0@dev",
         "psr/http-client": "^1.0"
@@ -63,5 +55,7 @@
         "post-update-cmd": [
             "@tools:install"
         ]
-    }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }
