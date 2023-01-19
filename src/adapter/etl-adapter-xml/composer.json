@@ -3,13 +3,11 @@
     "type": "library",
     "description": "PHP ETL - Adapter - XML",
     "keywords": ["etl", "extract", "transform", "load", "xml", "adapter"],
-    "prefer-stable": true,
-    "minimum-stability": "dev",
     "require": {
-        "php": "~8.1",
+        "php": "~8.1 || ~8.2",
+        "ext-dom": "*",
         "ext-xmlreader": "*",
-        "flow-php/etl": "^1.0@dev",
-        "ext-dom": "*"
+        "flow-php/etl": "^1.0@dev"
     },
     "config": {
         "optimize-autoloader": true,
@@ -49,5 +47,7 @@
         "post-update-cmd": [
             "@tools:install"
         ]
-    }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }

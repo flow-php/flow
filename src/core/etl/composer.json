@@ -3,31 +3,30 @@
     "type": "library",
     "description": "PHP ETL - Extract Transform Load - Abstraction",
     "keywords": ["etl", "extract", "transform", "load"],
-    "prefer-stable": true,
     "require": {
-        "php": "~8.1",
+        "php": "~8.1 || ~8.2",
+        "ext-json": "*",
+        "ext-mbstring": "*",
         "flow-php/array-dot": "^1.0@dev",
         "league/flysystem": "^3.0",
-        "ext-mbstring": "*",
-        "ext-json": "*",
         "psr/simple-cache": "^1.0 || ^2.0 || ^3.0"
     },
     "require-dev": {
         "jawira/case-converter": "^3.4",
         "laminas/laminas-hydrator": "^4.0",
         "laravel/serializable-closure": "^1.1",
-        "symfony/validator": "^5.3 || ^6.0",
         "league/flysystem-aws-s3-v3": "^3.0",
-        "league/flysystem-azure-blob-storage": "^3.0"
+        "league/flysystem-azure-blob-storage": "^3.0",
+        "symfony/validator": "^5.3 || ^6.0"
     },
     "config": {
         "optimize-autoloader": true,
         "sort-packages": true
     },
     "suggest": {
-        "laminas/laminas-hydrator" : "Help converting ObjectEntry into ArrayEntry that can be later unpack into standalone Entries",
-        "ocramius/generated-hydrator" : "Provieds generated hydrator that implemenets Laminas\\Hydrator\\HydratorInterface",
-        "jawira/case-converter" : "Provides CaseConverter that is required by the EntryNameCaseConverterTransformer"
+        "laminas/laminas-hydrator": "Help converting ObjectEntry into ArrayEntry that can be later unpack into standalone Entries",
+        "ocramius/generated-hydrator": "Provieds generated hydrator that implemenets Laminas\\Hydrator\\HydratorInterface",
+        "jawira/case-converter": "Provides CaseConverter that is required by the EntryNameCaseConverterTransformer"
     },
     "license": "MIT",
     "autoload": {
@@ -67,5 +66,6 @@
         "post-update-cmd": [
             "@tools:install"
         ]
-    }
+    },
+    "prefer-stable": true
 }

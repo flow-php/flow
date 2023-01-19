@@ -3,13 +3,11 @@
     "type": "library",
     "description": "PHP ETL - Adapter - Parquet",
     "keywords": ["etl", "extract", "transform", "load", "parquet", "adapter"],
-    "prefer-stable": true,
-    "minimum-stability": "dev",
     "require": {
-        "php": "~8.1",
+        "php": "~8.1 || ~8.2",
         "ext-json": "*",
-        "flow-php/etl": "^1.0@dev",
-        "codename/parquet": "^0.6.2"
+        "codename/parquet": "~0.6.2 || ~0.7.0",
+        "flow-php/etl": "^1.0@dev"
     },
     "config": {
         "optimize-autoloader": true,
@@ -49,5 +47,7 @@
         "post-update-cmd": [
             "@tools:install"
         ]
-    }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }

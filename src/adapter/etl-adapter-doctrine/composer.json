@@ -4,11 +4,10 @@
     "license": "MIT",
     "description": "PHP ETL - Adapter - Doctrine Dbal",
     "keywords": ["doctrine", "dbal", "bulk", "insert", "upsert", "etl", "loader"],
-    "minimum-stability": "dev",
     "require": {
-        "php": "~8.1",
-        "flow-php/etl": "^1.0@dev",
-        "flow-php/doctrine-dbal-bulk": "^1.0@dev"
+        "php": "~8.1 || ~8.2",
+        "flow-php/doctrine-dbal-bulk": "^1.0@dev",
+        "flow-php/etl": "^1.0@dev"
     },
     "autoload": {
         "psr-4": {
@@ -22,7 +21,6 @@
             "Flow\\": "tests/Flow"
         }
     },
-    "prefer-stable": true,
     "config": {
         "optimize-autoloader": true,
         "sort-packages": true
@@ -52,5 +50,7 @@
         "post-update-cmd": [
             "@tools:install"
         ]
-    }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }
