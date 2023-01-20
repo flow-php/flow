@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-01-19
+## [Unreleased] - 2023-01-20
 
 ### Added
 - [#292](https://github.com/flow-php/flow/pull/292) - **PHP 8.2 support** - [@norberttech](https://github.com/norberttech)
