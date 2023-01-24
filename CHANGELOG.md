@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-01-20
+## [Unreleased] - 2023-01-24
 
 ### Added
 - [#292](https://github.com/flow-php/flow/pull/292) - **PHP 8.2 support** - [@norberttech](https://github.com/norberttech)
@@ -648,6 +648,7 @@
 - [1a6eec](https://github.com/flow-php/flow/commit/1a6eec01837f25cf1d6ff7c041996ff7b8b017e7) - **failing tests** - [@norberttech](https://github.com/norberttech)
 
 ### Updated
+- [fa6a6f](https://github.com/flow-php/flow/commit/fa6a6f9f4b1376ec48eccfc278ff1f8fedc2a84c) - **dependencies** - [@norberttech](https://github.com/norberttech)
 - [6c08cf](https://github.com/flow-php/flow/commit/6c08cf1ccdaea996a94b61a88d06715a23a7799c) - **dependencies** - [@norberttech](https://github.com/norberttech)
 - [756543](https://github.com/flow-php/flow/commit/75654385104d60f02f3a07f47fac0730a9a02bf3) - **tools dependencies** - [@norberttech](https://github.com/norberttech)
 - [808687](https://github.com/flow-php/flow/commit/8086873a6e46c768d483ccb85fa3362255c5b5c5) - **dependencies** - [@norberttech](https://github.com/norberttech)
