@@ -228,16 +228,16 @@
         },
         {
             "name": "amphp/dns",
-            "version": "v2.0.0",
+            "version": "v2.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/amphp/dns.git",
-                "reference": "ac877da1685741723f8227b10bc4fb0a1e460f05"
+                "reference": "e42876aa8306c754abd1b3e71a44e13066909fd1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/amphp/dns/zipball/ac877da1685741723f8227b10bc4fb0a1e460f05",
-                "reference": "ac877da1685741723f8227b10bc4fb0a1e460f05",
+                "url": "https://api.github.com/repos/amphp/dns/zipball/e42876aa8306c754abd1b3e71a44e13066909fd1",
+                "reference": "e42876aa8306c754abd1b3e71a44e13066909fd1",
                 "shasum": ""
             },
             "require": {
@@ -304,7 +304,7 @@
             ],
             "support": {
                 "issues": "https://github.com/amphp/dns/issues",
-                "source": "https://github.com/amphp/dns/tree/v2.0.0"
+                "source": "https://github.com/amphp/dns/tree/v2.0.1"
             },
             "funding": [
                 {
@@ -312,7 +312,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2023-01-10T22:42:54+00:00"
+            "time": "2023-01-21T16:00:09+00:00"
         },
         {
             "name": "amphp/parser",
@@ -576,12 +576,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/amphp/socket.git",
-                "reference": "a70c9ee9928cef31140ade7dc0dc87bba17f66bb"
+                "reference": "a96e3070c73d222d4d11a41f2faaeb63063b8cfe"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/amphp/socket/zipball/a70c9ee9928cef31140ade7dc0dc87bba17f66bb",
-                "reference": "a70c9ee9928cef31140ade7dc0dc87bba17f66bb",
+                "url": "https://api.github.com/repos/amphp/socket/zipball/a96e3070c73d222d4d11a41f2faaeb63063b8cfe",
+                "reference": "a96e3070c73d222d4d11a41f2faaeb63063b8cfe",
                 "shasum": ""
             },
             "require": {
@@ -644,7 +644,7 @@
             ],
             "support": {
                 "issues": "https://github.com/amphp/socket/issues",
-                "source": "https://github.com/amphp/socket/tree/v2.0.0-beta.9"
+                "source": "https://github.com/amphp/socket/tree/2.x"
             },
             "funding": [
                 {
@@ -652,7 +652,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2023-01-11T04:50:31+00:00"
+            "time": "2023-01-22T16:27:05+00:00"
         },
         {
             "name": "amphp/sync",
@@ -3776,16 +3776,16 @@
         },
         {
             "name": "aws/aws-sdk-php",
-            "version": "3.257.4",
+            "version": "3.257.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aws/aws-sdk-php.git",
-                "reference": "5791e496e3fc0847f40c86515ed8659b0ecd5991"
+                "reference": "de8666f4dc87b6c4eeef1388c8aea09722549d92"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/5791e496e3fc0847f40c86515ed8659b0ecd5991",
-                "reference": "5791e496e3fc0847f40c86515ed8659b0ecd5991",
+                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/de8666f4dc87b6c4eeef1388c8aea09722549d92",
+                "reference": "de8666f4dc87b6c4eeef1388c8aea09722549d92",
                 "shasum": ""
             },
             "require": {
@@ -3864,9 +3864,9 @@
             "support": {
                 "forum": "https://forums.aws.amazon.com/forum.jspa?forumID=80",
                 "issues": "https://github.com/aws/aws-sdk-php/issues",
-                "source": "https://github.com/aws/aws-sdk-php/tree/3.257.4"
+                "source": "https://github.com/aws/aws-sdk-php/tree/3.257.6"
             },
-            "time": "2023-01-19T21:18:37+00:00"
+            "time": "2023-01-23T19:28:48+00:00"
         },
         {
             "name": "clue/stream-filter",
@@ -4867,16 +4867,16 @@
         },
         {
             "name": "rector/rector",
-            "version": "0.15.7",
+            "version": "0.15.10",
             "source": {
                 "type": "git",
                 "url": "https://github.com/rectorphp/rector.git",
-                "reference": "a43370e1f4c47aaa96c0f85bf9db73db1be7552f"
+                "reference": "000bfb6f7974449399f39e1a210458395b75c887"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/rectorphp/rector/zipball/a43370e1f4c47aaa96c0f85bf9db73db1be7552f",
-                "reference": "a43370e1f4c47aaa96c0f85bf9db73db1be7552f",
+                "url": "https://api.github.com/repos/rectorphp/rector/zipball/000bfb6f7974449399f39e1a210458395b75c887",
+                "reference": "000bfb6f7974449399f39e1a210458395b75c887",
                 "shasum": ""
             },
             "require": {
@@ -4911,7 +4911,7 @@
             "description": "Instant Upgrade and Automated Refactoring of any PHP code",
             "support": {
                 "issues": "https://github.com/rectorphp/rector/issues",
-                "source": "https://github.com/rectorphp/rector/tree/0.15.7"
+                "source": "https://github.com/rectorphp/rector/tree/0.15.10"
             },
             "funding": [
                 {
@@ -4919,7 +4919,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2023-01-13T21:14:19+00:00"
+            "time": "2023-01-21T14:30:16+00:00"
         },
         {
             "name": "symfony/cache",
