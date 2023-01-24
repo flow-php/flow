@@ -61,10 +61,13 @@ final class CallbackEntryTransformer implements Transformer
         $callables = [];
 
         foreach ($data['callables'] as $closure) {
-            /** @psalm-suppress ImpureMethodCall */
+            /**
+             * @psalm-suppress ImpureMethodCall
+             */
             $callables[] = $closure->getClosure();
         }
 
+        /** @psalm-suppress PropertyTypeCoercion */
         $this->callables = $callables;
     }
 

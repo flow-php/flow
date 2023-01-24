@@ -6,6 +6,8 @@
         cacheDirectory="var/psalm/cache"
         errorLevel="1"
         autoloader="tools/psalm/vendor/autoload.php"
+        findUnusedBaselineEntry="true"
+        findUnusedCode="false"
 >
     <projectFiles>
 <!--        <directory name="src/adapter/etl-adapter-amphp/src" />-->

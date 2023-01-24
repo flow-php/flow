@@ -47,7 +47,10 @@ final class DynamicEntryTransformer implements Transformer
             throw new RuntimeException('DynamicEntryTransformer is not serializable without "opis/closure" library in your dependencies.');
         }
 
-        /** @psalm-suppress ImpureMethodCall */
+        /**
+         * @psalm-suppress ImpureMethodCall
+         * @psalm-suppress MixedPropertyTypeCoercion
+         */
         $this->generator = $data['generator']->getClosure();
     }
 

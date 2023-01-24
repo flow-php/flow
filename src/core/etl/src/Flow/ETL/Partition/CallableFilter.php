@@ -44,6 +44,7 @@ final class CallableFilter implements PartitionFilter
             throw new RuntimeException('CallbackEntryTransformer is not serializable without "opis/closure" library in your dependencies.');
         }
 
+        /** @psalm-suppress MixedPropertyTypeCoercion */
         $this->filter = $data['filter']->getClosure();
     }
 
