@@ -35,6 +35,7 @@
             <directory>src/adapter/etl-adapter-doctrine/tests/Flow/ETL/Adapter/Doctrine/Tests/Unit</directory>
             <directory>src/adapter/etl-adapter-parquet/tests/Flow/ETL/Adapter/Parquet/Tests/Unit</directory>
             <directory>src/adapter/etl-adapter-reactphp/tests/Flow/ETL/Async/Tests/Unit</directory>
+            <directory>src/adapter/etl-adapter-google-sheet/tests/Flow/ETL/Adapter/GoogleSheet/Tests/Unit</directory>
         </testsuite>
 
         <testsuite name="integration">
