@@ -12,11 +12,6 @@
         "optimize-autoloader": true,
         "sort-packages": true
     },
-    "extra": {
-        "google/apiclient-services": [
-            "Sheets"
-        ]
-    },
     "license": "MIT",
     "autoload": {
         "psr-4": {
@@ -31,9 +26,6 @@
         }
     },
     "scripts": {
-        "pre-autoload-dump": [
-            "Google\\Task\\Composer::cleanup"
-        ],
         "build": [
             "@static:analyze",
             "@test"
