@@ -17,7 +17,7 @@ final class GoogleSheetExtractor implements Extractor
     public function __construct(
         private readonly Sheets $service,
         private readonly string $spreadsheetId,
-        private readonly GoogleSheetColumnRange $columnRange,
+        private readonly Columns $columnRange,
         private readonly bool $withHeader,
         private readonly int $rowsInBatch,
         private readonly string $rowEntryName='row',
@@ -27,7 +27,7 @@ final class GoogleSheetExtractor implements Extractor
 
     public function extract(FlowContext $context) : \Generator
     {
-        $cellsRange = new GoogleSheetCellsRange($this->columnRange, 1, $this->rowsInBatch);
+        $cellsRange = new SheetRange($this->columnRange, 1, $this->rowsInBatch);
         $headers = [];
 
         $totalRows = 0;

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\DSL;
 
-use Flow\ETL\Adapter\GoogleSheet\GoogleSheetColumnRange;
+use Flow\ETL\Adapter\GoogleSheet\Columns;
 use Flow\ETL\Adapter\GoogleSheet\GoogleSheetExtractor;
 use Flow\ETL\Extractor;
 use Google\Client;
@@ -32,7 +32,7 @@ class GoogleSheet
         $client->setScopes(Sheets::SPREADSHEETS_READONLY);
         $client->setAuthConfig($auth_config);
 
-        return new GoogleSheetExtractor(new Sheets($client), $spreadsheet_id, new GoogleSheetColumnRange($sheet_name, 'A', 'Z'), $with_header, $rows_in_batch, $row_entry_name);
+        return new GoogleSheetExtractor(new Sheets($client), $spreadsheet_id, new Columns($sheet_name, 'A', 'Z'), $with_header, $rows_in_batch, $row_entry_name);
     }
 
     /**
@@ -43,7 +43,7 @@ class GoogleSheet
      *
      * @return Extractor
      */
-    public static function fromColumn(
+    public static function from_columns(
         array $auth_config,
         string $spreadsheet_id,
         string $sheet_name,
@@ -57,6 +57,6 @@ class GoogleSheet
         $client->setScopes(Sheets::SPREADSHEETS_READONLY);
         $client->setAuthConfig($auth_config);
 
-        return new GoogleSheetExtractor(new Sheets($client), $spreadsheet_id, new GoogleSheetColumnRange($sheet_name, $start_range_column, $end_range_column), $with_header, $rows_in_batch, $row_entry_name);
+        return new GoogleSheetExtractor(new Sheets($client), $spreadsheet_id, new Columns($sheet_name, $start_range_column, $end_range_column), $with_header, $rows_in_batch, $row_entry_name);
     }
 }

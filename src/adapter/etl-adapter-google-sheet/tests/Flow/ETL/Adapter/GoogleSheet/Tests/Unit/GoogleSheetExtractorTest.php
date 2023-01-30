@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\GoogleSheet\Tests\Unit;
 
-use Flow\ETL\Adapter\GoogleSheet\GoogleSheetColumnRange;
+use Flow\ETL\Adapter\GoogleSheet\Columns;
 use Flow\ETL\Adapter\GoogleSheet\GoogleSheetExtractor;
 use Flow\ETL\ConfigBuilder;
 use Flow\ETL\FlowContext;
@@ -21,7 +21,7 @@ final class GoogleSheetExtractorTest extends TestCase
         $extractor = new GoogleSheetExtractor(
             $service = $this->createMock(Sheets::class),
             $spreadSheetId ='spread-id',
-            new GoogleSheetColumnRange('sheet', 'A', 'B'),
+            new Columns('sheet', 'A', 'B'),
             true,
             2,
             $entryRowName = 'row'
@@ -55,7 +55,7 @@ final class GoogleSheetExtractorTest extends TestCase
         $extractor = new GoogleSheetExtractor(
             $service = $this->createMock(Sheets::class),
             'spread-id',
-            new GoogleSheetColumnRange('sheet', 'A', 'B'),
+            new Columns('sheet', 'A', 'B'),
             true,
             20
         );

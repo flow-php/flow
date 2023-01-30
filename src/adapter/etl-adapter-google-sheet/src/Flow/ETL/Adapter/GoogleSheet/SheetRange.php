@@ -6,10 +6,10 @@ namespace Flow\ETL\Adapter\GoogleSheet;
 
 use Webmozart\Assert\Assert;
 
-final class GoogleSheetCellsRange
+final class SheetRange
 {
     public function __construct(
-        public readonly GoogleSheetColumnRange $columnRange,
+        public readonly Columns $columnRange,
         public readonly int $startRow,
         public readonly int $endRow,
     ) {
