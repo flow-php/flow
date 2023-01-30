@@ -38,7 +38,7 @@ final class GoogleSheetRange
             $this->startColumn,
             $this->endRow + 1,
             $this->endColumn,
-            $this->endRow + $count + 1,
+            $this->endRow + $count,
         );
     }
 
