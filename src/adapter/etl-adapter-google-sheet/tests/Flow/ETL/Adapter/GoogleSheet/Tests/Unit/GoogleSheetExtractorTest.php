@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\GoogleSheet\Tests\Unit;
 
+use Flow\ETL\Adapter\GoogleSheet\GoogleSheetColumnRange;
 use Flow\ETL\Adapter\GoogleSheet\GoogleSheetExtractor;
-use Flow\ETL\Adapter\GoogleSheet\GoogleSheetRange;
 use Flow\ETL\ConfigBuilder;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Row\Entry\ArrayEntry;
 use Flow\ETL\Rows;
 use Google\Service\Sheets;
 use Google\Service\Sheets\Resource\SpreadsheetsValues;
@@ -19,23 +20,34 @@ final class GoogleSheetExtractorTest extends TestCase
     {
         $extractor = new GoogleSheetExtractor(
             $service = $this->createMock(Sheets::class),
-            'spread-id',
-            GoogleSheetRange::create('sheet', 'A', 1, 'B', 10),
+            $spreadSheetId ='spread-id',
+            new GoogleSheetColumnRange('sheet', 'A', 'B'),
             true,
-            20
+            2,
+            $entryRowName = 'row'
         );
-        $ValueRangeMock = $this->createMock(Sheets\ValueRange::class);
-        $ValueRangeMock->method('getValues')->willReturn([
+        $firstValueRangeMock = $this->createMock(Sheets\ValueRange::class);
+        $firstValueRangeMock->method('getValues')->willReturn([
             ['header'],
             ['row1'],
+        ]);
+        $secondValueRangeMock = $this->createMock(Sheets\ValueRange::class);
+        $secondValueRangeMock->method('getValues')->willReturn([
             ['row2'],
         ]);
         $service->spreadsheets_values = ($spreadsheetsValues = $this->createMock(SpreadsheetsValues::class));
-        $spreadsheetsValues->method('get')->willReturn($ValueRangeMock);
+
+        $spreadsheetsValues->method('get')
+            ->withConsecutive([$spreadSheetId, 'sheet!A1:B2'], [$spreadSheetId, 'sheet!A3:B4'])
+            ->willReturnOnConsecutiveCalls($firstValueRangeMock, $secondValueRangeMock);
+
         /** @var array<Rows> $rowsArray */
         $rowsArray = \iterator_to_array($extractor->extract(new FlowContext((new ConfigBuilder())->build())));
-        $this->assertCount(1, $rowsArray);
-        $this->assertSame(2, $rowsArray[0]->count());
+        $this->assertCount(2, $rowsArray);
+        $this->assertSame(1, $rowsArray[0]->count());
+        $this->assertEquals(new ArrayEntry('row', ['header'=>'row1']), $rowsArray[0]->first()->get($entryRowName));
+        $this->assertSame(1, $rowsArray[1]->count());
+        $this->assertEquals(new ArrayEntry('row', ['header'=>'row2']), $rowsArray[1]->first()->get($entryRowName));
     }
 
     public function test_works_for_no_data() : void
@@ -43,7 +55,7 @@ final class GoogleSheetExtractorTest extends TestCase
         $extractor = new GoogleSheetExtractor(
             $service = $this->createMock(Sheets::class),
             'spread-id',
-            GoogleSheetRange::create('sheet', 'A', 1, 'B', 10),
+            new GoogleSheetColumnRange('sheet', 'A', 'B'),
             true,
             20
         );

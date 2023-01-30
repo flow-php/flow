@@ -27,11 +27,9 @@ use Flow\ETL\Adapter\GoogleSheet\GoogleSheetRange;
 use Flow\ETL\DSL\GoogleSheet;
 use Flow\ETL\Flow;
 
-$client = new Google\Client();
-//...
         
 $rows = (new Flow())
-    ->read(GoogleSheet::from('spread-sheet-id', $client, GoogleSheetRange::create('Sheet', 'A', 1, 'B', 2)))
+    ->read(GoogleSheet::from($auth_config, $spreadsheet_document_id, $sheet_name)))
     ->fetch();
 ```
 
@@ -53,3 +51,14 @@ composer build
 
 It's recommended to use [pcov](https://pecl.php.net/package/pcov) for code coverage however you can also use
 xdebug by setting `XDEBUG_MODE=coverage` env variable.
+
+## Needed parameters:
+- `$auth_config` 
+
+  - Create project: [console.cloud.google.com](https://console.cloud.google.com/projectcreate) choosing the right organization.
+  - Enable google sheet API for created project on [api sheets.googleapis.com](https://console.cloud.google.com/apis/library/sheets.googleapis.com)
+  - To work with google sheet enable it on [serviceaccounts](https://console.cloud.google.com/iam-admin/serviceaccounts/create) this will generate email for example `serviceaccounts@project.iam.gserviceaccount.com`
+  - Generate json (auth config)  for created serviceaccounts on `Keys` tab.
+
+- `$spreadsheet_document_id` Id need to be readed from the document we want to use, example for url `https://docs.google.com/spreadsheets/d/xyzID-for-documentxyz/edit` id is `xyzID-for-documentxyz`
+- `$sheet_name` - Name of sheet from document you want to read.
