@@ -106,11 +106,6 @@
         "sort-packages": true,
         "allow-plugins": false
     },
-    "extra": {
-        "google/apiclient-services": [
-            "Sheets"
-        ]
-    },
     "replace": {
         "flow-php/array-dot": "self.version",
         "flow-php/doctrine-dbal-bulk": "self.version",
@@ -134,9 +129,6 @@
         "flow-php/etl-tools": "self.version"
     },
     "scripts": {
-        "pre-autoload-dump": [
-            "Google\\Task\\Composer::cleanup"
-        ],
         "build": [
             "@static:analyze",
             "@test",
