@@ -27,14 +27,22 @@ final class GoogleSheetExtractor implements Extractor
     }
 
     /**
+     * @param array{type: string, project_id: string, private_key_id: string, private_key: string, client_email: string, client_id: string, auth_uri: string, token_uri: string, auth_provider_x509_cert_url: string, client_x509_cert_url: string} $authConfig
+     * @param string $spreadsheetId
+     * @param GoogleSheetRange $initialDataRange
+     * @param bool $withHeader
+     * @param int $rowsInBatch
+     *
      * @throws Exception
      * @throws \JsonException
+     *
+     * @return self
      */
-    public static function create(string $authJson, string $spreadsheetId, GoogleSheetRange $initialDataRange, bool $withHeader = true, int $rowsInBatch = 500) : self
+    public static function create(array $authConfig, string $spreadsheetId, GoogleSheetRange $initialDataRange, bool $withHeader = true, int $rowsInBatch = 500) : self
     {
         $client = new Client();
         $client->setScopes(Sheets::SPREADSHEETS_READONLY);
-        $client->setAuthConfig(\json_decode($authJson, true, 512, JSON_THROW_ON_ERROR));
+        $client->setAuthConfig($authConfig);
 
         return new self(new Sheets($client), $spreadsheetId, $initialDataRange, $withHeader, $rowsInBatch);
     }
