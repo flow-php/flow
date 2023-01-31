@@ -24,6 +24,8 @@ adapter-doctrine:
   - any: ["src/adapter/etl-adapter-doctrine/**/*"]
 adapter-elasticsearch:
   - any: ["src/adapter/etl-adapter-elasticsearch/**/*"]
+adapter-google-sheet:
+  - any: ["src/adapter/etl-adapter-google-sheet/**/*"]
 adapter-http:
   - any: ["src/adapter/etl-adapter-http/**/*"]
 adapter-json:
