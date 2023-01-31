@@ -8,6 +8,7 @@ use Flow\ETL\DSL\Entry;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
+use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Rows;
 use Google\Service\Sheets;
 use Webmozart\Assert\Assert;
@@ -21,6 +22,8 @@ final class GoogleSheetExtractor implements Extractor
         private readonly bool $withHeader,
         private readonly int $rowsInBatch,
         private readonly string $rowEntryName='row',
+        private readonly string $spreadSheetIdEntryName='spread_sheet_id',
+        private readonly string $sheetNameEntryName='sheet_name',
     ) {
         Assert::greaterThan($rowsInBatch, 0);
     }
@@ -62,7 +65,11 @@ final class GoogleSheetExtractor implements Extractor
                         }
                         $totalRows++;
 
-                        return Row::create(Entry::array($this->rowEntryName, \array_combine($headers, $rowData)));
+                        return Row::create(
+                            Entry::array($this->rowEntryName, \array_combine($headers, $rowData)),
+                            new StringEntry($this->spreadSheetIdEntryName, $this->spreadsheetId),
+                            new StringEntry($this->sheetNameEntryName, $this->columnRange->sheetName),
+                        );
                     },
                     $values
                 )

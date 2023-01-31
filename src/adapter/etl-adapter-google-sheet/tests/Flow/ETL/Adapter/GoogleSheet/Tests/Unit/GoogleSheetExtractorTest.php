@@ -8,7 +8,9 @@ use Flow\ETL\Adapter\GoogleSheet\Columns;
 use Flow\ETL\Adapter\GoogleSheet\GoogleSheetExtractor;
 use Flow\ETL\ConfigBuilder;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\ArrayEntry;
+use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Rows;
 use Google\Service\Sheets;
 use Google\Service\Sheets\Resource\SpreadsheetsValues;
@@ -21,11 +23,13 @@ final class GoogleSheetExtractorTest extends TestCase
         $extractor = new GoogleSheetExtractor(
             $service = $this->createMock(Sheets::class),
             $spreadSheetId ='spread-id',
-            new Columns('sheet', 'A', 'B'),
+            new Columns($sheetName = 'sheet', 'A', 'B'),
             true,
             2,
-            $entryRowName = 'row'
+            'row'
         );
+        $spreadSheetIdEntry = new StringEntry('spread_sheet_id', $spreadSheetId);
+        $sheetNameEntry = new StringEntry('sheet_name', $sheetName);
         $firstValueRangeMock = $this->createMock(Sheets\ValueRange::class);
         $firstValueRangeMock->method('getValues')->willReturn([
             ['header'],
@@ -45,9 +49,9 @@ final class GoogleSheetExtractorTest extends TestCase
         $rowsArray = \iterator_to_array($extractor->extract(new FlowContext((new ConfigBuilder())->build())));
         $this->assertCount(2, $rowsArray);
         $this->assertSame(1, $rowsArray[0]->count());
-        $this->assertEquals(new ArrayEntry('row', ['header'=>'row1']), $rowsArray[0]->first()->get($entryRowName));
+        $this->assertEquals(Row::create($sheetNameEntry, $spreadSheetIdEntry, new ArrayEntry('row', ['header'=>'row1'])), $rowsArray[0]->first());
         $this->assertSame(1, $rowsArray[1]->count());
-        $this->assertEquals(new ArrayEntry('row', ['header'=>'row2']), $rowsArray[1]->first()->get($entryRowName));
+        $this->assertEquals(Row::create($sheetNameEntry, $spreadSheetIdEntry, new ArrayEntry('row', ['header'=>'row2'])), $rowsArray[1]->first());
     }
 
     public function test_works_for_no_data() : void

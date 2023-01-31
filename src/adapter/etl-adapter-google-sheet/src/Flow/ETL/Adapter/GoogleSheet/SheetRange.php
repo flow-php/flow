@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\GoogleSheet;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Webmozart\Assert\Assert;
 
 final class SheetRange
@@ -13,9 +14,27 @@ final class SheetRange
         public readonly int $startRow,
         public readonly int $endRow,
     ) {
-        Assert::greaterThan($startRow, 0);
-        Assert::greaterThan($endRow, 0);
-        Assert::greaterThanEq($endRow, $startRow);
+        if ($this->startRow<=0) {
+            throw new InvalidArgumentException(\sprintf(
+                'Start row `%d` must be greater than 0',
+                $this->startRow
+            ));
+        }
+
+        if ($this->endRow<=0) {
+            throw new InvalidArgumentException(\sprintf(
+                'End row `%d` must be greater than 0',
+                $this->endRow
+            ));
+        }
+
+        if ($this->endRow<$this->startRow) {
+            throw new InvalidArgumentException(\sprintf(
+                'End row `%d` must be greater or equal to start row `%d`',
+                $this->endRow,
+                $this->startRow
+            ));
+        }
     }
 
     public function nextRows(int $count) : self

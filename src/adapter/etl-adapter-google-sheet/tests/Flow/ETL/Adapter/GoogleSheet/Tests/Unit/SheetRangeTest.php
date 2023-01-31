@@ -28,6 +28,32 @@ final class SheetRangeTest extends TestCase
         ];
     }
 
+    public function invalid_cases() : \Generator
+    {
+        yield 'start row under 0' => [
+            0, 1,
+            'Start row `0` must be greater than 0',
+        ];
+        yield 'end row under 0' => [
+            1, 0,
+            'End row `0` must be greater than 0',
+        ];
+        yield 'end row greater or equal to start row 0' => [
+            19, 10,
+            'End row `10` must be greater or equal to start row `19`',
+        ];
+    }
+
+    /**
+     * @dataProvider invalid_cases
+     */
+    public function test_assertions(int $startRow, int $endRow, string $expectedExceptionMessage) : void
+    {
+        $columnRange = new Columns('Sheet2', 'A', 'B');
+        $this->expectExceptionMessage($expectedExceptionMessage);
+        new SheetRange($columnRange, $startRow, $endRow);
+    }
+
     public function test_next_rows_range() : void
     {
         $range = new SheetRange(new Columns('Sheet2', 'A', 'B'), 1, 10);
