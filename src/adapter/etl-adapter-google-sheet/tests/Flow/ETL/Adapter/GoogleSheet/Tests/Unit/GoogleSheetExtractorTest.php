@@ -46,7 +46,7 @@ final class GoogleSheetExtractorTest extends TestCase
             ->willReturnOnConsecutiveCalls($firstValueRangeMock, $secondValueRangeMock);
 
         /** @var array<Rows> $rowsArray */
-        $rowsArray = \iterator_to_array($extractor->extract(new FlowContext((new ConfigBuilder())->build())));
+        $rowsArray = \iterator_to_array($extractor->extract(new FlowContext((new ConfigBuilder())->putInputIntoRows()->build())));
         $this->assertCount(2, $rowsArray);
         $this->assertSame(1, $rowsArray[0]->count());
         $this->assertEquals(Row::create($sheetNameEntry, $spreadSheetIdEntry, new ArrayEntry('row', ['header'=>'row1'])), $rowsArray[0]->first());

@@ -86,7 +86,14 @@ final class CSVExtractor implements Extractor
                     continue;
                 }
 
-                $rows[] = Row::create(new Row\Entry\ArrayEntry($this->rowEntryName, \array_combine($headers, $rowData)));
+                if ($context->config->shouldPutInputIntoRows()) {
+                    $rows[] = Row::create(
+                        new Row\Entry\ArrayEntry($this->rowEntryName, \array_combine($headers, $rowData)),
+                        new Row\Entry\StringEntry('input_file_uri', $stream->path()->uri())
+                    );
+                } else {
+                    $rows[] = Row::create(new Row\Entry\ArrayEntry($this->rowEntryName, \array_combine($headers, $rowData)));
+                }
 
                 if (\count($rows) >= $this->rowsInBatch) {
                     yield new Rows(...$rows);

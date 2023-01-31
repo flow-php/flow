@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\Doctrine;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Types\Type;
+use Flow\ETL\DSL\Entry;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
@@ -48,7 +49,7 @@ final class DbalQueryExtractor implements Extractor
 
             /** @psalm-suppress ImpureMethodCall */
             foreach ($this->connection->fetchAllAssociative($this->query, $parameters, $this->types) as $row) {
-                $rows[] = Row::create(new Row\Entry\ArrayEntry($this->rowEntryName, $row));
+                $rows[] = Row::create(Entry::array($this->rowEntryName, $row));
             }
 
             yield new Rows(...$rows);

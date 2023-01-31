@@ -69,7 +69,14 @@ final class XMLReaderExtractor implements Extractor
                         /** @psalm-suppress ArgumentTypeCoercion */
                         $node->loadXML($xmlReader->readOuterXml());
 
-                        $rows[] = Row::create(Entry::array($this->rowEntryName, $this->convertDOMDocument($node)));
+                        if ($context->config->shouldPutInputIntoRows()) {
+                            $rows[] = Row::create(
+                                Entry::array($this->rowEntryName, $this->convertDOMDocument($node)),
+                                Entry::string('input_file_uri', $filePath->uri())
+                            );
+                        } else {
+                            $rows[] = Row::create(Entry::array($this->rowEntryName, $this->convertDOMDocument($node)));
+                        }
 
                         if (\count($rows) >= $this->rowsInBatch) {
                             yield new Rows(...$rows);

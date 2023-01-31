@@ -27,7 +27,8 @@ final class Config
         private readonly ExternalSort $externalSort,
         private readonly Serializer $serializer,
         private readonly FilesystemStreams $filesystemStreams,
-        private readonly Processors $processors
+        private readonly Processors $processors,
+        private readonly bool $putInputIntoRows
     ) {
     }
 
@@ -97,5 +98,10 @@ final class Config
         $this->limit = $limit;
 
         return $this;
+    }
+
+    public function shouldPutInputIntoRows() : bool
+    {
+        return $this->putInputIntoRows;
     }
 }

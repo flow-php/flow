@@ -24,6 +24,8 @@ final class ConfigBuilder
 
     private ?string $id;
 
+    private bool $putInputIntoRows;
+
     private ?Serializer $serializer;
 
     public function __construct()
@@ -33,6 +35,7 @@ final class ConfigBuilder
         $this->externalSort = null;
         $this->serializer = null;
         $this->filesystem = null;
+        $this->putInputIntoRows = false;
     }
 
     /**
@@ -63,13 +66,21 @@ final class ConfigBuilder
             new FilesystemStreams($this->filesystem),
             new Processors(
                 new FilesystemProcessor()
-            )
+            ),
+            $this->putInputIntoRows
         );
     }
 
     public function cache(Cache $cache) : self
     {
         $this->cache = $cache;
+
+        return $this;
+    }
+
+    public function dontPutInputIntoRows() : self
+    {
+        $this->putInputIntoRows = false;
 
         return $this;
     }
@@ -91,6 +102,17 @@ final class ConfigBuilder
     public function id(string $id) : self
     {
         $this->id = $id;
+
+        return $this;
+    }
+
+    /**
+     * When set, each extractor will try to put additional rows with input parameters, like for example uri to the source file from which
+     * data is extracted.
+     */
+    public function putInputIntoRows() : self
+    {
+        $this->putInputIntoRows = true;
 
         return $this;
     }

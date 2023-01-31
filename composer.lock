@@ -4237,16 +4237,16 @@
         },
         {
             "name": "aws/aws-sdk-php",
-            "version": "3.257.6",
+            "version": "3.257.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aws/aws-sdk-php.git",
-                "reference": "de8666f4dc87b6c4eeef1388c8aea09722549d92"
+                "reference": "97c41c42690e4fd7846915eae520e508d71c0baf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/de8666f4dc87b6c4eeef1388c8aea09722549d92",
-                "reference": "de8666f4dc87b6c4eeef1388c8aea09722549d92",
+                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/97c41c42690e4fd7846915eae520e508d71c0baf",
+                "reference": "97c41c42690e4fd7846915eae520e508d71c0baf",
                 "shasum": ""
             },
             "require": {
@@ -4325,9 +4325,9 @@
             "support": {
                 "forum": "https://forums.aws.amazon.com/forum.jspa?forumID=80",
                 "issues": "https://github.com/aws/aws-sdk-php/issues",
-                "source": "https://github.com/aws/aws-sdk-php/tree/3.257.6"
+                "source": "https://github.com/aws/aws-sdk-php/tree/3.257.9"
             },
-            "time": "2023-01-23T19:28:48+00:00"
+            "time": "2023-01-26T19:21:26+00:00"
         },
         {
             "name": "clue/stream-filter",
@@ -5633,16 +5633,16 @@
         },
         {
             "name": "symfony/options-resolver",
-            "version": "v6.2.0",
+            "version": "v6.2.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/options-resolver.git",
-                "reference": "d28f02acde71ff75e957082cd36e973df395f626"
+                "reference": "e8324d44f5af99ec2ccec849934a242f64458f86"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/options-resolver/zipball/d28f02acde71ff75e957082cd36e973df395f626",
-                "reference": "d28f02acde71ff75e957082cd36e973df395f626",
+                "url": "https://api.github.com/repos/symfony/options-resolver/zipball/e8324d44f5af99ec2ccec849934a242f64458f86",
+                "reference": "e8324d44f5af99ec2ccec849934a242f64458f86",
                 "shasum": ""
             },
             "require": {
@@ -5680,7 +5680,7 @@
                 "options"
             ],
             "support": {
-                "source": "https://github.com/symfony/options-resolver/tree/v6.2.0"
+                "source": "https://github.com/symfony/options-resolver/tree/v6.2.5"
             },
             "funding": [
                 {
@@ -5696,7 +5696,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-11-02T09:08:04+00:00"
+            "time": "2023-01-01T08:38:09+00:00"
         },
         {
             "name": "symfony/polyfill-ctype",

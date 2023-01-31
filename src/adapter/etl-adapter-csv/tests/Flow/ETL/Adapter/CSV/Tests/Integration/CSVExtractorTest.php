@@ -19,8 +19,8 @@ final class CSVExtractorTest extends TestCase
     public function test_extracting_csv_empty_columns_as_empty_strings() : void
     {
         $extractor = CSV::from(
-            __DIR__ . '/../Fixtures/file_with_empty_columns.csv',
-            empty_to_null: false
+            $path = Path::realpath(__DIR__ . '/../Fixtures/file_with_empty_columns.csv'),
+            empty_to_null: false,
         );
 
         $this->assertSame(
@@ -31,6 +31,7 @@ final class CSVExtractorTest extends TestCase
                         'name' => '',
                         'active' => 'false',
                     ],
+                    'input_file_uri' => $path->uri(),
                 ],
                 [
                     'row' => [
@@ -38,9 +39,10 @@ final class CSVExtractorTest extends TestCase
                         'name' => 'Norbert',
                         'active' => '',
                     ],
+                    'input_file_uri' => $path->uri(),
                 ],
             ],
-            \iterator_to_array($extractor->extract(new FlowContext(Config::default())))[0]->toArray()
+            \iterator_to_array($extractor->extract(new FlowContext(Config::builder()->putInputIntoRows()->build())))[0]->toArray()
         );
     }
 
@@ -227,7 +229,7 @@ final class CSVExtractorTest extends TestCase
         $this->assertCount(
             1,
             (new Flow())
-                ->read(CSV::from(__DIR__ . '/../Fixtures/more_than_1000_characters_per_line.csv', charactersReadInLine: 2000))
+                ->read(CSV::from(__DIR__ . '/../Fixtures/more_than_1000_characters_per_line.csv', characters_read_in_line: 2000))
                 ->rows(Transform::array_unpack('row'))
                 ->drop('row')
                 ->fetch()

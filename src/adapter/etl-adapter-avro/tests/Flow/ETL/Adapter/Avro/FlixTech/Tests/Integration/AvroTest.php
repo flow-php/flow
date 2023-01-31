@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Avro\FlixTech\Tests\Integration;
 
+use Flow\ETL\Config;
 use Flow\ETL\DSL\Avro;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\DSL\From;
@@ -128,10 +129,11 @@ final class AvroTest extends TestCase
 
         $this->assertEquals(
             $rows,
-            (new Flow())
+            Flow::setUp(Config::builder()->putInputIntoRows()->build())
                 ->read(Avro::from($path))
                 ->transform(Transform::array_unpack('row'))
                 ->drop('row')
+                ->drop('input_file_uri')
                 ->fetch()
         );
 

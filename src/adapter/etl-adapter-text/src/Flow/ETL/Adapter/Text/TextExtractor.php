@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Text;
 
+use Flow\ETL\DSL\Entry;
 use Flow\ETL\Extractor;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\Stream\Mode;
@@ -39,7 +40,14 @@ final class TextExtractor implements Extractor
             }
 
             while ($rowData !== false) {
-                $rows[] = Row::create(new Row\Entry\StringEntry($this->rowEntryName, \rtrim($rowData)));
+                if ($context->config->shouldPutInputIntoRows()) {
+                    $rows[] = Row::create(
+                        Entry::string($this->rowEntryName, \rtrim($rowData)),
+                        Entry::string('input_file_uri', $filePath->uri())
+                    );
+                } else {
+                    $rows[] = Row::create(Entry::string($this->rowEntryName, \rtrim($rowData)));
+                }
 
                 if (\count($rows) >= $this->rowsInBatch) {
                     yield new Rows(...$rows);
