@@ -31,7 +31,14 @@ final class JsonExtractor implements Extractor
              * @var array|object $row
              */
             foreach (Items::fromStream($context->streams()->fs()->open($filePath, Mode::READ)->resource(), $this->readerOptions())->getIterator() as $row) {
-                $rows = $rows->add(Row::create(new Row\Entry\ArrayEntry($this->rowEntryName, (array) $row)));
+                if ($context->config->shouldPutInputIntoRows()) {
+                    $rows = $rows->add(Row::create(
+                        new Row\Entry\ArrayEntry($this->rowEntryName, (array) $row),
+                        new Row\Entry\StringEntry('input_file_uri', $filePath->uri())
+                    ));
+                } else {
+                    $rows = $rows->add(Row::create(new Row\Entry\ArrayEntry($this->rowEntryName, (array) $row)));
+                }
 
                 if ($rows->count() >= $this->rowsInBatch) {
                     yield $rows;

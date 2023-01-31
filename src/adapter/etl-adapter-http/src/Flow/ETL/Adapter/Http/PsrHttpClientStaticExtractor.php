@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Http;
 
+use Flow\ETL\DSL\Entry;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
@@ -51,9 +52,28 @@ final class PsrHttpClientStaticExtractor implements Extractor
                 ($this->postRequest)($request, $response);
             }
 
-            yield new Rows(
-                Row::create(...\array_merge($responseFactory->create($response)->all(), $requestFactory->create($request)->all()))
-            );
+            if ($context->config->shouldPutInputIntoRows()) {
+                yield new Rows(
+                    Row::create(
+                        ...\array_merge(
+                            $responseFactory->create($response)->all(),
+                            $requestFactory->create($request)->all(),
+                            [
+                                Entry::string('request_uri', (string) $request->getUri()),
+                                Entry::string('request_method', $request->getMethod()),
+                                Entry::array('request_headers', $request->getHeaders()),
+                            ]
+                        )
+                    )
+                );
+            } else {
+                yield new Rows(
+                    Row::create(...\array_merge(
+                        $responseFactory->create($response)->all(),
+                        $requestFactory->create($request)->all()
+                    ))
+                );
+            }
         }
     }
 }

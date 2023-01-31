@@ -22,8 +22,6 @@ final class GoogleSheetExtractor implements Extractor
         private readonly bool $withHeader,
         private readonly int $rowsInBatch,
         private readonly string $rowEntryName='row',
-        private readonly string $spreadSheetIdEntryName='spread_sheet_id',
-        private readonly string $sheetNameEntryName='sheet_name',
     ) {
         Assert::greaterThan($rowsInBatch, 0);
     }
@@ -47,7 +45,7 @@ final class GoogleSheetExtractor implements Extractor
         while (\is_array($values) && \count($values) > 0) {
             yield new Rows(
                 ...\array_map(
-                    function ($rowData) use ($headers, &$totalRows) {
+                    function ($rowData) use ($headers, $context, &$totalRows) {
                         if (\count($headers) > \count($rowData)) {
                             \array_push(
                                 $rowData,
@@ -65,11 +63,15 @@ final class GoogleSheetExtractor implements Extractor
                         }
                         $totalRows++;
 
-                        return Row::create(
-                            Entry::array($this->rowEntryName, \array_combine($headers, $rowData)),
-                            new StringEntry($this->spreadSheetIdEntryName, $this->spreadsheetId),
-                            new StringEntry($this->sheetNameEntryName, $this->columnRange->sheetName),
-                        );
+                        if ($context->config->shouldPutInputIntoRows()) {
+                            return Row::create(
+                                Entry::array($this->rowEntryName, \array_combine($headers, $rowData)),
+                                new StringEntry('spread_sheet_id', $this->spreadsheetId),
+                                new StringEntry('sheet_name', $this->columnRange->sheetName),
+                            );
+                        }
+
+                        return Row::create(Entry::array($this->rowEntryName, \array_combine($headers, $rowData)));
                     },
                     $values
                 )

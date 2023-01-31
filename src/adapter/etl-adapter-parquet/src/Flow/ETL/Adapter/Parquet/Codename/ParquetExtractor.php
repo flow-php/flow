@@ -28,11 +28,11 @@ final class ParquetExtractor implements Extractor
 
     public function extract(FlowContext $context) : \Generator
     {
-        foreach ($this->readers($context) as $reader) {
-            $dataFields = $reader->schema->getDataFields();
+        foreach ($this->readers($context) as $readerData) {
+            $dataFields = $readerData['reader']->schema->getDataFields();
 
-            for ($i = 0; $i < $reader->getRowGroupCount(); $i++) {
-                $groupReader = $reader->OpenRowGroupReader($i);
+            for ($i = 0; $i < $readerData['reader']->getRowGroupCount(); $i++) {
+                $groupReader = $readerData['reader']->OpenRowGroupReader($i);
                 /** @var array<int, array<mixed>> $data */
                 $data = [];
 
@@ -65,7 +65,14 @@ final class ParquetExtractor implements Extractor
                 $rows = [];
 
                 foreach ($data as $rowData) {
-                    $rows[] = Row::create(new Row\Entry\ArrayEntry($this->rowEntryName, $rowData));
+                    if ($context->config->shouldPutInputIntoRows()) {
+                        $rows[] = Row::create(
+                            new Row\Entry\ArrayEntry($this->rowEntryName, $rowData),
+                            new Row\Entry\StringEntry('input_file_uri', $readerData['uri'])
+                        );
+                    } else {
+                        $rows[] = Row::create(new Row\Entry\ArrayEntry($this->rowEntryName, $rowData));
+                    }
                 }
 
                 yield new Rows(...$rows);
@@ -76,12 +83,12 @@ final class ParquetExtractor implements Extractor
     /**
      * @psalm-suppress NullableReturnStatement
      *
-     * @return \Generator<int, ParquetReader>
+     * @return \Generator<int, array{reader: ParquetReader, uri: string}>
      */
     private function readers(FlowContext $context) : \Generator
     {
         foreach ($context->streams()->fs()->scan($this->path, $context->partitionFilter()) as $filePath) {
-            yield new ParquetReader($context->streams()->fs()->open($filePath, Mode::READ)->resource());
+            yield ['reader' => new ParquetReader($context->streams()->fs()->open($filePath, Mode::READ)->resource()), 'uri' => $filePath->uri()];
         }
     }
 }

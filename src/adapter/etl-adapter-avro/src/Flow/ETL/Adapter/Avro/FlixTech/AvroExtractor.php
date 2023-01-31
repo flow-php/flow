@@ -49,7 +49,14 @@ final class AvroExtractor implements Extractor
             $valueConverter = new ValueConverter(\json_decode($reader->metadata['avro.schema'], true));
 
             foreach ($reader->data() as $rowData) {
-                $rows[] = Row::create(new Row\Entry\ArrayEntry($this->rowEntryName, $valueConverter->convert($rowData)));
+                if ($context->config->shouldPutInputIntoRows()) {
+                    $rows[] = Row::create(
+                        new Row\Entry\ArrayEntry($this->rowEntryName, $valueConverter->convert($rowData)),
+                        new Row\Entry\StringEntry('input_file_uri', $filePath->uri())
+                    );
+                } else {
+                    $rows[] = Row::create(new Row\Entry\ArrayEntry($this->rowEntryName, $valueConverter->convert($rowData)));
+                }
 
                 if (\count($rows) >= $this->rowsInBach) {
                     yield new Rows(...$rows);

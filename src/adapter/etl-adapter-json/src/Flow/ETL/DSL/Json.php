@@ -20,8 +20,12 @@ class Json
      *
      * @return Extractor
      */
-    public static function from(string|Path|array $path, int $rows_in_batch = 1000, string $row_entry_name = 'row', string $pointer = null) : Extractor
-    {
+    public static function from(
+        string|Path|array $path,
+        int $rows_in_batch = 1000,
+        string $row_entry_name = 'row',
+        string $pointer = null
+    ) : Extractor {
         if (\is_array($path)) {
             $extractors = [];
 
