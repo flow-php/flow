@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-01-31
+## [Unreleased] - 2023-02-12
 
 ### Added
 - [#305](https://github.com/flow-php/flow/pull/305) - **config option that can be later used by extractor to decide if input options should be added to extracted rows** - [@norberttech](https://github.com/norberttech)
@@ -563,6 +563,7 @@
 - [e48062](https://github.com/flow-php/flow/commit/e48062890cd84e655e1162305086f67148347b83) - **Intial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#319](https://github.com/flow-php/flow/pull/319) - **Fixed typos in Github PR template** - [@stloyd](https://github.com/stloyd)
 - [88b413](https://github.com/flow-php/flow/commit/88b4139a98cee15e44b3fd89a07c63a49180643b) - **json_encode in test suite** - [@norberttech](https://github.com/norberttech)
 - [894ecb](https://github.com/flow-php/flow/commit/894ecb2a23d68ceb19246285ede4939f9297b845) - **type in code** - [@norberttech](https://github.com/norberttech)
 - [#233](https://github.com/flow-php/flow/pull/233) - **Skip corrupted (more columns than headers) rows in CSV extractor** - [@norberttech](https://github.com/norberttech)
