@@ -563,6 +563,9 @@
 - [e48062](https://github.com/flow-php/flow/commit/e48062890cd84e655e1162305086f67148347b83) - **Intial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#318](https://github.com/flow-php/flow/pull/318) - **Fixed dependency for `amphp/socket` & `amphp/process`** - [@stloyd](https://github.com/stloyd)
+- [#318](https://github.com/flow-php/flow/pull/318) - **Fixed wrong class name used in amphp `SocketServer` class** - [@stloyd](https://github.com/stloyd)
+- [#318](https://github.com/flow-php/flow/pull/318) - **Don't use do real http calls in tests** - [@stloyd](https://github.com/stloyd)
 - [#319](https://github.com/flow-php/flow/pull/319) - **Fixed typos in Github PR template** - [@stloyd](https://github.com/stloyd)
 - [88b413](https://github.com/flow-php/flow/commit/88b4139a98cee15e44b3fd89a07c63a49180643b) - **json_encode in test suite** - [@norberttech](https://github.com/norberttech)
 - [894ecb](https://github.com/flow-php/flow/commit/894ecb2a23d68ceb19246285ede4939f9297b845) - **type in code** - [@norberttech](https://github.com/norberttech)
