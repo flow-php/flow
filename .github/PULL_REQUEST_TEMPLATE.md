@@ -23,11 +23,11 @@
   </ul>  
   <h4>Security</h4> 
   <ul id="security">
-    <!-- <li>Something that was security issue, is not an issue anymore</li> -->
+    <!-- <li>Something that was a security issue, is not an issue anymore</li> -->
   </ul>     
 </div>
 <hr/>
 
 <h2>Description</h2>
 
-<!-- Please provide a shore description of changes in this section, feel free to use markdown syntax -->
+<!-- Please provide a short description of changes in this section, feel free to use markdown syntax -->
