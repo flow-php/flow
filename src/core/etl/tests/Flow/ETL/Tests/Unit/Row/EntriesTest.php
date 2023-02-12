@@ -42,7 +42,7 @@ final class EntriesTest extends TestCase
         $entries = new Entries(new IntegerEntry('integer-entry', 100));
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectDeprecationMessage('Added entries names must be unique, given: [integer-entry, string-name] + [string-name]');
+        $this->expectExceptionMessage('Added entries names must be unique, given: [integer-entry, string-name] + [string-name]');
 
         $entries->add($stringEntry)->add($booleanEntry);
     }

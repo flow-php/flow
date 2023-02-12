@@ -19,7 +19,7 @@ final class SchemaValidationLoaderTest extends TestCase
     public function test_schema_validation_failed() : void
     {
         $this->expectException(SchemaValidationException::class);
-        $this->expectDeprecationMessage(
+        $this->expectExceptionMessage(
             <<<EXCEPTION
 Given schema:
 schema
