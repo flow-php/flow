@@ -8,8 +8,9 @@ use Flow\ETL\Adapter\Http\PsrHttpClientStaticExtractor;
 use Flow\ETL\Config;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
-use Http\Client\Curl\Client;
+use Http\Mock\Client;
 use Nyholm\Psr7\Factory\Psr17Factory;
+use Nyholm\Psr7\Response;
 use PHPUnit\Framework\TestCase;
 
 final class PsrHttpClientStaticExtractorTest extends TestCase
@@ -17,9 +18,15 @@ final class PsrHttpClientStaticExtractorTest extends TestCase
     public function test_http_extractor() : void
     {
         $psr17Factory = new Psr17Factory();
-        $psr18Client = new Client($psr17Factory, $psr17Factory);
+        $psr18Client = new Client($psr17Factory);
+        $psr18Client->addResponse(
+            new Response(200, [], \file_get_contents(__DIR__ . '/../json/norberttech.json')),
+        );
+        $psr18Client->addResponse(
+            new Response(200, [], \file_get_contents(__DIR__ . '/../json/tomaszhanc.json')),
+        );
 
-        $requests = function () use ($psr17Factory) : \Generator {
+        $requests = static function () use ($psr17Factory) : \Generator {
             yield $psr17Factory
                 ->createRequest('GET', 'https://api.github.com/users/norberttech')
                 ->withHeader('Accept', 'application/vnd.github.v3+json')

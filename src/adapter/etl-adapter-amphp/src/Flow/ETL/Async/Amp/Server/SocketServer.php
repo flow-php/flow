@@ -6,7 +6,7 @@ namespace Flow\ETL\Async\Amp\Server;
 
 use function Amp\async;
 use Amp\Socket;
-use Amp\Socket\SocketServer as AmpSocketServer;
+use Amp\Socket\ServerSocket as AmpSocketServer;
 use Flow\ETL\Async\Socket\Communication\MessageBuffer;
 use Flow\ETL\Async\Socket\Server\Server;
 use Flow\ETL\Async\Socket\Server\ServerProtocol;
