@@ -1375,14 +1375,14 @@ ASCII,
                 Row::create(Entry::integer('id', 2), Entry::string('name', 'bar'), Entry::boolean('active', false)),
             )
         )
-            ->select('id')
+            ->select('name', 'id')
             ->fetch();
 
         $this->assertEquals(
             new Rows(
-                Row::create(Entry::integer('id', 1)),
-                Row::create(Entry::integer('id', 2)),
-                Row::create(Entry::integer('id', 2)),
+                Row::create(Entry::string('name', 'foo'), Entry::integer('id', 1)),
+                Row::create(Entry::null('name'), Entry::integer('id', 2)),
+                Row::create(Entry::string('name', 'bar'), Entry::integer('id', 2)),
             ),
             $rows
         );

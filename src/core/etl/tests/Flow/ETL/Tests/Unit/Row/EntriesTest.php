@@ -221,6 +221,40 @@ final class EntriesTest extends TestCase
         );
     }
 
+    public function test_order_entries() : void
+    {
+        $entries = new Entries(
+            new IntegerEntry('integer', 100),
+            new StringEntry('string', 'new string entry'),
+            new BooleanEntry('bool', true),
+        );
+
+        $this->assertEquals(
+            ['integer', 'string', 'bool'],
+            $entries->map(fn (\Flow\ETL\Row\Entry $e) => $e->name())
+        );
+
+        $entries = $entries->order('bool', 'string', 'integer');
+
+        $this->assertEquals(
+            ['bool', 'string', 'integer'],
+            $entries->map(fn (\Flow\ETL\Row\Entry $e) => $e->name())
+        );
+    }
+
+    public function test_order_entries_without_providing_all_entry_names() : void
+    {
+        $this->expectExceptionMessage('In order to sort entries in a given order you need to provide all entry names, given: "bool", "string", expected: "integer", "string", "bool"');
+
+        $entries = new Entries(
+            new IntegerEntry('integer', 100),
+            new StringEntry('string', 'new string entry'),
+            new BooleanEntry('bool', true),
+        );
+
+        $entries->order('bool', 'string');
+    }
+
     public function test_overwrites_entry_when_it_exists() : void
     {
         $stringEntry = new StringEntry('entry-name', 'just a string');
