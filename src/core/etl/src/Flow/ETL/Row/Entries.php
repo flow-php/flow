@@ -261,6 +261,37 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
         throw new RuntimeException('In order to add new rows use Entries::remove(string $name) : self');
     }
 
+    public function order(string ...$entriesNames) : self
+    {
+        $sortedEntries = [];
+
+        if (\count($entriesNames) !== \count($this->entries)) {
+            throw InvalidArgumentException::because(
+                \sprintf(
+                    'In order to sort entries in a given order you need to provide all entry names, given: "%s", expected: "%s"',
+                    \implode('", "', $entriesNames),
+                    \implode('", "', \array_map(fn (Entry $entry) => $entry->name(), $this->entries)),
+                )
+            );
+        }
+
+        foreach ($entriesNames as $entryName) {
+            if (!\array_key_exists($entryName, $this->entries)) {
+                throw InvalidArgumentException::because(
+                    \sprintf(
+                        'There is no entry with name \"%s\" in the dataset, available names: \"%s\"',
+                        $entryName,
+                        \implode('", "', \array_map(fn (Entry $entry) => $entry->name(), $this->entries)),
+                    )
+                );
+            }
+
+            $sortedEntries[$entryName] = $this->entries[$entryName];
+        }
+
+        return self::recreate($sortedEntries);
+    }
+
     public function remove(string ...$names) : self
     {
         $entries = $this->entries;

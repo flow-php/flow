@@ -8,8 +8,8 @@ use Flow\ETL\Adapter\Http\DynamicExtractor\NextRequestFactory;
 use Flow\ETL\Adapter\Http\PsrHttpClientDynamicExtractor;
 use Flow\ETL\Config;
 use Flow\ETL\FlowContext;
-use Http\Client\Curl\Client;
 use Nyholm\Psr7\Factory\Psr17Factory;
+use Nyholm\Psr7\Response;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -19,7 +19,13 @@ final class PsrHttpClientDynamicExtractorTest extends TestCase
     public function test_http_extractor() : void
     {
         $psr17Factory = new Psr17Factory();
-        $psr18Client = new Client($psr17Factory, $psr17Factory);
+        $psr18Client = new \Http\Mock\Client($psr17Factory);
+
+        $psr18Client->addResponse(
+            new Response(200, [
+                'Server' => 'GitHub.com',
+            ], \file_get_contents(__DIR__ . '/../json/flow-php.json')),
+        );
 
         $extractor = new PsrHttpClientDynamicExtractor($psr18Client, new class implements NextRequestFactory {
             public function create(?ResponseInterface $previousResponse = null) : ?RequestInterface
