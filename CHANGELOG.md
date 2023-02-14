@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-02-12
+## [Unreleased] - 2023-02-14
 
 ### Added
 - [#305](https://github.com/flow-php/flow/pull/305) - **config option that can be later used by extractor to decide if input options should be added to extracted rows** - [@norberttech](https://github.com/norberttech)
@@ -138,6 +138,7 @@
 - [856870](https://github.com/flow-php/flow/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#317](https://github.com/flow-php/flow/pull/317) - **Update PHPUnit to `^9.6` & fix deprecated code usage** - [@stloyd](https://github.com/stloyd)
 - [#271](https://github.com/flow-php/flow/pull/271) - **Updated dependencies** - [@norberttech](https://github.com/norberttech)
 - [#263](https://github.com/flow-php/flow/pull/263) - **Rewritten ASCII table formatted** - [@norberttech](https://github.com/norberttech)
 - [#235](https://github.com/flow-php/flow/pull/235) - **minimum required avro php version** - [@norberttech](https://github.com/norberttech)
@@ -563,6 +564,7 @@
 - [e48062](https://github.com/flow-php/flow/commit/e48062890cd84e655e1162305086f67148347b83) - **Intial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#320](https://github.com/flow-php/flow/pull/320) - **Sort entries when using select** - [@norberttech](https://github.com/norberttech)
 - [#318](https://github.com/flow-php/flow/pull/318) - **Fixed dependency for `amphp/socket` & `amphp/process`** - [@stloyd](https://github.com/stloyd)
 - [#318](https://github.com/flow-php/flow/pull/318) - **Fixed wrong class name used in amphp `SocketServer` class** - [@stloyd](https://github.com/stloyd)
 - [#318](https://github.com/flow-php/flow/pull/318) - **Don't use do real http calls in tests** - [@stloyd](https://github.com/stloyd)
