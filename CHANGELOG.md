@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-02-15
+## [Unreleased] - 2023-02-17
 
 ### Added
 - [#305](https://github.com/flow-php/flow/pull/305) - **config option that can be later used by extractor to decide if input options should be added to extracted rows** - [@norberttech](https://github.com/norberttech)
