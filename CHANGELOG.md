@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-02-18
+## [Unreleased] - 2023-02-20
 
 ### Added
 - [#305](https://github.com/flow-php/flow/pull/305) - **config option that can be later used by extractor to decide if input options should be added to extracted rows** - [@norberttech](https://github.com/norberttech)
@@ -564,6 +564,7 @@
 - [e48062](https://github.com/flow-php/flow/commit/e48062890cd84e655e1162305086f67148347b83) - **Intial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [82f681](https://github.com/flow-php/flow/commit/82f681598920980c268347f43595c379f9618137) - **monorepo builder config** - [@norberttech](https://github.com/norberttech)
 - [#320](https://github.com/flow-php/flow/pull/320) - **Sort entries when using select** - [@norberttech](https://github.com/norberttech)
 - [#318](https://github.com/flow-php/flow/pull/318) - **Fixed dependency for `amphp/socket` & `amphp/process`** - [@stloyd](https://github.com/stloyd)
 - [#318](https://github.com/flow-php/flow/pull/318) - **Fixed wrong class name used in amphp `SocketServer` class** - [@stloyd](https://github.com/stloyd)
