@@ -37,6 +37,8 @@ jobs:
             split_repository: 'etl-adapter-doctrine'
           - local_path: 'src/adapter/etl-adapter-elasticsearch'
             split_repository: 'etl-adapter-elasticsearch'
+          - local_path: 'src/adapter/etl-adapter-google-sheet'
+            split_repository: 'etl-adapter-google-sheet'
           - local_path: 'src/adapter/etl-adapter-http'
             split_repository: 'etl-adapter-http'
           - local_path: 'src/adapter/etl-adapter-json'
@@ -58,7 +60,7 @@ jobs:
       # no tag
       -
         if: "!startsWith(github.ref, 'refs/tags/')"
-        uses: "symplify/monorepo-split-github-action@2.3"
+        uses: "danharrin/monorepo-split-github-action@v2.3.0"
         with:
           package_directory: '${{ matrix.package.local_path }}'
 
@@ -72,7 +74,7 @@ jobs:
       # with tag
       -
         if: "startsWith(github.ref, 'refs/tags/')"
-        uses: "symplify/monorepo-split-github-action@2.3"
+        uses: "danharrin/monorepo-split-github-action@v2.3.0"
         with:
           tag: ${GITHUB_REF#refs/tags/}
 
