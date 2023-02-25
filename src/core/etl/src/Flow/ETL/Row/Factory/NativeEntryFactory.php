@@ -226,7 +226,6 @@ final class NativeEntryFactory implements EntryFactory
                             return new Entry\ListEntry(
                                 $definition->entry(),
                                 $listType,
-                                /** @phpstan-ignore-next-line */
                                 \array_map(static fn (string $datetime) : \DateTimeImmutable => new \DateTimeImmutable($datetime), $value)
                             );
                         }
