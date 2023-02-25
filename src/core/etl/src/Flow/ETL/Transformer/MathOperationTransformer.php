@@ -108,7 +108,6 @@ final class MathOperationTransformer implements Transformer
                 Operation::divide => $left->value() / $right->value(),
                 Operation::modulo => $left->value() % $right->value(),
                 Operation::power => $left->value() ** $right->value(),
-                default => throw new RuntimeException('Unknown operation'),
             };
 
             if (\is_float($value)) {
