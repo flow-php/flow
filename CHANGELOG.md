@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-02-24
+## [Unreleased] - 2023-02-25
 
 ### Added
 - [#305](https://github.com/flow-php/flow/pull/305) - **config option that can be later used by extractor to decide if input options should be added to extracted rows** - [@norberttech](https://github.com/norberttech)
@@ -138,6 +138,7 @@
 - [856870](https://github.com/flow-php/flow/commit/8568701983d3b54e68d042338073891e0fefb537) - **license** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#331](https://github.com/flow-php/flow/pull/331) - **Update PHPStan to `^1.10`** - [@stloyd](https://github.com/stloyd)
 - [#317](https://github.com/flow-php/flow/pull/317) - **Update PHPUnit to `^9.6` & fix deprecated code usage** - [@stloyd](https://github.com/stloyd)
 - [#271](https://github.com/flow-php/flow/pull/271) - **Updated dependencies** - [@norberttech](https://github.com/norberttech)
 - [#263](https://github.com/flow-php/flow/pull/263) - **Rewritten ASCII table formatted** - [@norberttech](https://github.com/norberttech)
@@ -564,6 +565,7 @@
 - [e48062](https://github.com/flow-php/flow/commit/e48062890cd84e655e1162305086f67148347b83) - **Intial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [bf1260](https://github.com/flow-php/flow/commit/bf12601358bff5480e47b8ae3dd04094b3f72d0f) - **monorepo split github action** - [@norberttech](https://github.com/norberttech)
 - [82f681](https://github.com/flow-php/flow/commit/82f681598920980c268347f43595c379f9618137) - **monorepo builder config** - [@norberttech](https://github.com/norberttech)
 - [#320](https://github.com/flow-php/flow/pull/320) - **Sort entries when using select** - [@norberttech](https://github.com/norberttech)
 - [#318](https://github.com/flow-php/flow/pull/318) - **Fixed dependency for `amphp/socket` & `amphp/process`** - [@stloyd](https://github.com/stloyd)
@@ -747,6 +749,7 @@
 - [55faa8](https://github.com/flow-php/flow/commit/55faa8edfed3973f54e31b3af57a4ba171050a85) - **README.md** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#331](https://github.com/flow-php/flow/pull/331) - **Removed not reachable throw in a `match()` in `MathOperationTransformer` & `MathValueOperationTransformer`** - [@stloyd](https://github.com/stloyd)
 - [#177](https://github.com/flow-php/flow/pull/177) - **psalm-immutable annotation from transformers and extractors** - [@norberttech](https://github.com/norberttech)
 - [#103](https://github.com/flow-php/flow/pull/103) - **safe_mode argument from all loaders constructors** - [@norberttech](https://github.com/norberttech)
 - [fd8072](https://github.com/flow-php/flow/commit/fd80722c81205cac9ce7e5e2cad33055c52850ce) - **github actions and tools settings from readonly repositories** - [@norberttech](https://github.com/norberttech)
