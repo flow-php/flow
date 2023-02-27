@@ -2,9 +2,9 @@
 
 Flow is a PHP based, strongly typed ETL (Extract Transform Load), asynchronous data processing library with constant memory consumption.
 
-[![Latest Stable Version](https://poser.pugx.org/flow-php/etl/v)](https://packagist.org/packages/flow-php/etl)
-[![Latest Unstable Version](https://poser.pugx.org/flow-php/etl/v/unstable)](https://packagist.org/packages/flow-php/etl)
-[![License](https://poser.pugx.org/flow-php/etl/license)](https://packagist.org/packages/flow-php/etl)
+[![Latest Stable Version](https://poser.pugx.org/flow-php/flow/v)](https://packagist.org/packages/flow-php/flow)
+[![Latest Unstable Version](https://poser.pugx.org/flow-php/flow/v/unstable)](https://packagist.org/packages/flow-php/flow)
+[![License](https://poser.pugx.org/flow-php/flow/license)](https://packagist.org/packages/flow-php/flow)
 [![Test Suite](https://github.com/flow-php/flow/actions/workflows/test-suite.yml/badge.svg?branch=1.x)](https://github.com/flow-php/flow/actions/workflows/test-suite.yml)
 
 Supported PHP versions
@@ -23,6 +23,7 @@ Please check below packages and select only those that you are going to use:
   - [csv](src/adapter/etl-adapter-csv/README.md)
   - [doctrine](src/adapter/etl-adapter-doctrine/README.md)
   - [elasticsearch](src/adapter/etl-adapter-elasticsearch/README.md)
+  - [google sheet](src/adapter/etl-adapter-google-sheet/README.md)
   - [http](src/adapter/etl-adapter-http/README.md)
   - [json](src/adapter/etl-adapter-json/README.md)
   - [logger](src/adapter/etl-adapter-logger/README.md)
@@ -101,13 +102,13 @@ In order to understand how Flow works, please read [documentation](src/core/etl/
 ## Building blocks
 
 * DataFrame - Lazy data processing frame.
-* Rows - Immutable colllection of `Row` objects.
+* Rows - Immutable collection of `Row` objects.
 * Row - Immutable, strongly typed collection of `Entry` objects.
 * Entry - Immutable, strongly typed object representing cell in a row.
 * **E**xtractor (Reader) - Memory safe, Data Source returning \Generator, yielding `Rows` to the `Pipeline`
 * **T**ransformer - Data transformer receiving and returning `Rows` (in most cases transformer), one instance of `Rows` at once.
 * **L**oader (Writer) - Memory safe representation of Data Sink, responsibility of Loader is to write `Rows` into destination storage, one at time.
-* Pipeline - Interface representing ETL process, each received `Rows` instanced is pased through all `Pipes`, also responsible for error handling.
+* Pipeline - Interface representing ETL process, each received `Rows` instanced is passed through all `Pipes`, also responsible for error handling.
 * Pipe - Loader of Transformer instance existing in `Pipes` collection.
 
 ### Supported PHP versions
