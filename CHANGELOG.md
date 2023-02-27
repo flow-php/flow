@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-02-25
+## [Unreleased] - 2023-02-27
 
 ### Added
 - [#305](https://github.com/flow-php/flow/pull/305) - **config option that can be later used by extractor to decide if input options should be added to extracted rows** - [@norberttech](https://github.com/norberttech)
@@ -565,6 +565,7 @@
 - [e48062](https://github.com/flow-php/flow/commit/e48062890cd84e655e1162305086f67148347b83) - **Intial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#332](https://github.com/flow-php/flow/pull/332) - **Adjust README.md file, missing adapter, fixed typos** - [@stloyd](https://github.com/stloyd)
 - [bf1260](https://github.com/flow-php/flow/commit/bf12601358bff5480e47b8ae3dd04094b3f72d0f) - **monorepo split github action** - [@norberttech](https://github.com/norberttech)
 - [82f681](https://github.com/flow-php/flow/commit/82f681598920980c268347f43595c379f9618137) - **monorepo builder config** - [@norberttech](https://github.com/norberttech)
 - [#320](https://github.com/flow-php/flow/pull/320) - **Sort entries when using select** - [@norberttech](https://github.com/norberttech)
