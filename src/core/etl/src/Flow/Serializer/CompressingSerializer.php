@@ -8,14 +8,13 @@ use Flow\ETL\Exception\RuntimeException;
 
 final class CompressingSerializer implements Serializer
 {
-    private readonly int $compressionLevel;
+    private int $compressionLevel = 9;
 
     private readonly Serializer $serializer;
 
     public function __construct()
     {
         $this->serializer = new NativePHPSerializer();
-        $this->compressionLevel = 9;
     }
 
     public function serialize(Serializable $serializable) : string
@@ -26,10 +25,15 @@ final class CompressingSerializer implements Serializer
             // @codeCoverageIgnoreEnd
         }
 
-        /**
-         * @phpstan-ignore-next-line
-         */
-        return \base64_encode(\gzcompress($this->serializer->serialize($serializable), $this->compressionLevel));
+        $content = \gzcompress($this->serializer->serialize($serializable), $this->compressionLevel);
+
+        if (false === $content) {
+            // @codeCoverageIgnoreStart
+            throw new \RuntimeException('Unable to compress serialized data.');
+            // @codeCoverageIgnoreEnd
+        }
+
+        return \base64_encode($content);
     }
 
     public function unserialize(string $serialized) : Serializable
@@ -40,9 +44,22 @@ final class CompressingSerializer implements Serializer
             // @codeCoverageIgnoreEnd
         }
 
-        /**
-         * @phpstan-ignore-next-line
-         */
-        return $this->serializer->unserialize(\gzuncompress(\base64_decode($serialized, true)));
+        $content = \base64_decode($serialized, true);
+
+        if (false === $content) {
+            // @codeCoverageIgnoreStart
+            throw new \RuntimeException('Unable to decode serialized data.');
+            // @codeCoverageIgnoreEnd
+        }
+
+        $content = \gzuncompress($content);
+
+        if (false === $content) {
+            // @codeCoverageIgnoreStart
+            throw new \RuntimeException('Unable to decompress unserialized data.');
+            // @codeCoverageIgnoreEnd
+        }
+
+        return $this->serializer->unserialize($content);
     }
 }

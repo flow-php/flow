@@ -19,7 +19,7 @@ final class NativePHPSerializer implements Serializer
 
     public function unserialize(string $serialized) : Serializable
     {
-        $value = \unserialize($serialized);
+        $value = \unserialize($serialized, ['allowed_classes' => true]);
 
         if (!$value instanceof Serializable) {
             throw new RuntimeException('NativePHPSerializer::unserialize must return instance of Serializable');
