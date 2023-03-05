@@ -3,7 +3,6 @@
 namespace Flow\Doctrine\Bulk\Tests\Unit;
 
 use Doctrine\DBAL\Platforms\MySQL80Platform;
-use Doctrine\DBAL\Platforms\PostgreSQL94Platform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Platforms\SqlitePlatform;
 use Flow\Doctrine\Bulk\DbalPlatform;
@@ -21,7 +20,7 @@ final class DbalPlatformTest extends TestCase
         $this->assertInstanceOf(MySQLDialect::class, $platform->dialect());
     }
 
-    public function test_is_no_postgres_sql() : void
+    public function test_is_no_sqlite_sql() : void
     {
         $platform = new DbalPlatform(new SqlitePlatform());
 
@@ -31,22 +30,9 @@ final class DbalPlatformTest extends TestCase
         $platform->dialect();
     }
 
-    public function test_is_postgres_sql_for_dbal_3_2() : void
+    public function test_is_postgres_sql() : void
     {
-        $this->markTestSkipped('For some reason this test is failing at Github Actions - composer u --prefer-lowest');
-
         $platform = new DbalPlatform(new PostgreSQLPlatform());
-
-        $this->assertInstanceOf(PostgreSQLDialect::class, $platform->dialect());
-    }
-
-    public function test_is_postgres_sql_for_dbal_less_than_3_2() : void
-    {
-        if (\class_exists(PostgreSQLPlatform::class)) {
-            $this->markTestSkipped('DBAL version >= 3.2');
-        }
-
-        $platform = new DbalPlatform(new PostgreSQL94Platform());
 
         $this->assertInstanceOf(PostgreSQLDialect::class, $platform->dialect());
     }
