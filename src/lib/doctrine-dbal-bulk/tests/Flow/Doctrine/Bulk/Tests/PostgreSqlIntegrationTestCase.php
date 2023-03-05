@@ -8,14 +8,13 @@ use Doctrine\DBAL\DriverManager;
 use Flow\Doctrine\Bulk\Tests\Context\DatabaseContext;
 use PHPUnit\Framework\TestCase;
 
-abstract class MysqlIntegrationTestCase extends TestCase
+abstract class PostgreSqlIntegrationTestCase extends TestCase
 {
     protected DatabaseContext $databaseContext;
 
     protected function setUp() : void
     {
-        $this->databaseContext = new DatabaseContext(DriverManager::getConnection(['url' => \getenv('MYSQL_DATABASE_URL')]));
-        $this->databaseContext->connection()->getDatabasePlatform()->registerDoctrineTypeMapping('enum', 'string');
+        $this->databaseContext = new DatabaseContext(DriverManager::getConnection(['url' => \getenv('PGSQL_DATABASE_URL')]));
     }
 
     protected function tearDown() : void
