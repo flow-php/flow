@@ -14,47 +14,6 @@ use Flow\Doctrine\Bulk\Tests\IntegrationTestCase;
 
 final class PostgreSqlBulkInsertTest extends IntegrationTestCase
 {
-    public function test_inserts_deprecated_json_array_row() : void
-    {
-        if (!\defined('Doctrine\DBAL\Types\Types::JSON_ARRAY')) {
-            $this->markTestSkipped('DBAL version >= 3.0');
-        }
-
-        $this->pgsqlDatabaseContext->createTable(
-            (new Table(
-                $table = 'flow_doctrine_bulk_test',
-                [
-                    new Column('id', Type::getType(Types::STRING), ['notnull' => true]),
-                    new Column('age', Type::getType(Types::INTEGER), ['notnull' => true]),
-                    new Column('tags', Type::getType(Types::JSON), ['notnull' => true, 'platformOptions' => ['jsonb' => true]]),
-                ],
-            ))
-                ->setPrimaryKey(['id'])
-        );
-
-        Bulk::create()->insert(
-            $this->pgsqlDatabaseContext->connection(),
-            $table,
-            new BulkData([
-                ['id' => $id1 = \uniqid(), 'age' => 20, 'tags' => \json_encode(['a', 'b', 'c'])],
-                ['id' => $id2 = \uniqid(), 'age' => 30, 'tags' => \json_encode(['a', 'b', 'c'])],
-                ['id' => $id3 = \uniqid(), 'age' => 40, 'tags' => \json_encode(['a', 'b', 'c'])],
-            ])
-        );
-
-        $this->assertEquals(3, $this->pgsqlDatabaseContext->tableCount($table));
-        $this->assertEquals(1, $this->pgsqlDatabaseContext->numberOfExecutedInsertQueries());
-
-        $this->assertSame(
-            [
-                ['id' => $id1, 'age' => 20, 'tags' => '["a", "b", "c"]'],
-                ['id' => $id2, 'age' => 30, 'tags' => '["a", "b", "c"]'],
-                ['id' => $id3, 'age' => 40, 'tags' => '["a", "b", "c"]'],
-            ],
-            $this->pgsqlDatabaseContext->connection()->executeQuery("SELECT * FROM {$table} ORDER BY age ASC")->fetchAllAssociative()
-        );
-    }
-
     public function test_inserts_multiple_rows_at_once() : void
     {
         $this->pgsqlDatabaseContext->createTable(
