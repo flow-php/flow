@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-02-27
+## [Unreleased] - 2023-03-06
 
 ### Added
 - [#305](https://github.com/flow-php/flow/pull/305) - **config option that can be later used by extractor to decide if input options should be added to extracted rows** - [@norberttech](https://github.com/norberttech)
@@ -565,6 +565,7 @@
 - [e48062](https://github.com/flow-php/flow/commit/e48062890cd84e655e1162305086f67148347b83) - **Intial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#333](https://github.com/flow-php/flow/pull/333) - **Make internal serializer more error reliable** - [@stloyd](https://github.com/stloyd)
 - [#332](https://github.com/flow-php/flow/pull/332) - **Adjust README.md file, missing adapter, fixed typos** - [@stloyd](https://github.com/stloyd)
 - [bf1260](https://github.com/flow-php/flow/commit/bf12601358bff5480e47b8ae3dd04094b3f72d0f) - **monorepo split github action** - [@norberttech](https://github.com/norberttech)
 - [82f681](https://github.com/flow-php/flow/commit/82f681598920980c268347f43595c379f9618137) - **monorepo builder config** - [@norberttech](https://github.com/norberttech)
@@ -750,6 +751,7 @@
 - [55faa8](https://github.com/flow-php/flow/commit/55faa8edfed3973f54e31b3af57a4ba171050a85) - **README.md** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#342](https://github.com/flow-php/flow/pull/342) - **Remove support for not maintained Doctrine DBAL versions** - [@stloyd](https://github.com/stloyd)
 - [#331](https://github.com/flow-php/flow/pull/331) - **Removed not reachable throw in a `match()` in `MathOperationTransformer` & `MathValueOperationTransformer`** - [@stloyd](https://github.com/stloyd)
 - [#177](https://github.com/flow-php/flow/pull/177) - **psalm-immutable annotation from transformers and extractors** - [@norberttech](https://github.com/norberttech)
 - [#103](https://github.com/flow-php/flow/pull/103) - **safe_mode argument from all loaders constructors** - [@norberttech](https://github.com/norberttech)
