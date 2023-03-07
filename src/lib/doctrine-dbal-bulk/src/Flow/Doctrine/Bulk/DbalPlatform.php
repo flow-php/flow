@@ -5,18 +5,17 @@ namespace Flow\Doctrine\Bulk;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Platforms\MySQLPlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
+use Doctrine\DBAL\Platforms\SqlitePlatform;
 use Flow\Doctrine\Bulk\Dialect\Dialect;
 use Flow\Doctrine\Bulk\Dialect\MySQLDialect;
 use Flow\Doctrine\Bulk\Dialect\PostgreSQLDialect;
+use Flow\Doctrine\Bulk\Dialect\SqliteDialect;
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
 
 final class DbalPlatform
 {
-    private AbstractPlatform $platform;
-
-    public function __construct(AbstractPlatform $platform)
+    public function __construct(private readonly AbstractPlatform $platform)
     {
-        $this->platform = $platform;
     }
 
     public function dialect() : Dialect
@@ -25,8 +24,12 @@ final class DbalPlatform
             return new PostgreSQLDialect($this->platform);
         }
 
-        if ($this->isMysql()) {
+        if ($this->isMySQL()) {
             return new MySQLDialect();
+        }
+
+        if ($this->isSqlite()) {
+            return new SqliteDialect();
         }
 
         throw new RuntimeException(\sprintf(
@@ -35,7 +38,7 @@ final class DbalPlatform
         ));
     }
 
-    private function isMysql() : bool
+    private function isMySQL() : bool
     {
         return $this->platform instanceof MySQLPlatform;
     }
@@ -43,5 +46,10 @@ final class DbalPlatform
     private function isPostgreSQL() : bool
     {
         return $this->platform instanceof PostgreSQLPlatform;
+    }
+
+    private function isSqlite() : bool
+    {
+        return $this->platform instanceof SqlitePlatform;
     }
 }

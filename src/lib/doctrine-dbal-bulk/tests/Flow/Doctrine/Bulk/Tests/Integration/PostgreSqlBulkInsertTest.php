@@ -10,13 +10,13 @@ use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
 use Flow\Doctrine\Bulk\Bulk;
 use Flow\Doctrine\Bulk\BulkData;
-use Flow\Doctrine\Bulk\Tests\IntegrationTestCase;
+use Flow\Doctrine\Bulk\Tests\PostgreSqlIntegrationTestCase;
 
-final class PostgreSqlBulkInsertTest extends IntegrationTestCase
+final class PostgreSqlBulkInsertTest extends PostgreSqlIntegrationTestCase
 {
     public function test_inserts_multiple_rows_at_once() : void
     {
-        $this->pgsqlDatabaseContext->createTable(
+        $this->databaseContext->createTable(
             (new Table(
                 $table = 'flow_doctrine_bulk_test',
                 [
@@ -33,17 +33,17 @@ final class PostgreSqlBulkInsertTest extends IntegrationTestCase
         );
 
         Bulk::create()->insert(
-            $this->pgsqlDatabaseContext->connection(),
+            $this->databaseContext->connection(),
             $table,
             new BulkData([
-                ['id' => $id1 = \uniqid(), 'age' => 20, 'name' => 'Name One', 'description' => 'Description One', 'active' => false, 'updated_at' => $date1 = new \DateTimeImmutable(), 'tags' => \json_encode(['a', 'b', 'c'])],
-                ['id' => $id2 = \uniqid(), 'age' => 30, 'name' => 'Name Two', 'description' => null, 'active' => true, 'updated_at' => $date2 = new \DateTimeImmutable(), 'tags' => \json_encode(['a', 'b', 'c'])],
-                ['id' => $id3 = \uniqid(), 'age' => 40, 'name' => 'Name Three', 'description' => 'Description Three', 'active' => false, 'updated_at' => $date3 = new \DateTimeImmutable(), 'tags' => \json_encode(['a', 'b', 'c'])],
+                ['id' => $id1 = \bin2hex(\random_bytes(5)), 'age' => 20, 'name' => 'Name One', 'description' => 'Description One', 'active' => false, 'updated_at' => $date1 = new \DateTimeImmutable(), 'tags' => \json_encode(['a', 'b', 'c'])],
+                ['id' => $id2 = \bin2hex(\random_bytes(5)), 'age' => 30, 'name' => 'Name Two', 'description' => null, 'active' => true, 'updated_at' => $date2 = new \DateTimeImmutable(), 'tags' => \json_encode(['a', 'b', 'c'])],
+                ['id' => $id3 = \bin2hex(\random_bytes(5)), 'age' => 40, 'name' => 'Name Three', 'description' => 'Description Three', 'active' => false, 'updated_at' => $date3 = new \DateTimeImmutable(), 'tags' => \json_encode(['a', 'b', 'c'])],
             ])
         );
 
-        $this->assertEquals(3, $this->pgsqlDatabaseContext->tableCount($table));
-        $this->assertEquals(1, $this->pgsqlDatabaseContext->numberOfExecutedInsertQueries());
+        $this->assertEquals(3, $this->databaseContext->tableCount($table));
+        $this->assertEquals(1, $this->databaseContext->numberOfExecutedInsertQueries());
 
         $this->assertSame(
             [
@@ -51,13 +51,13 @@ final class PostgreSqlBulkInsertTest extends IntegrationTestCase
                 ['id' => $id2, 'age' => 30, 'name' => 'Name Two', 'description' => null, 'active' => true, 'updated_at' => $date2->format('Y-m-d H:i:s'), 'tags' => '["a", "b", "c"]'],
                 ['id' => $id3, 'age' => 40, 'name' => 'Name Three', 'description' => 'Description Three', 'active' => false, 'updated_at' => $date3->format('Y-m-d H:i:s'), 'tags' => '["a", "b", "c"]'],
             ],
-            $this->pgsqlDatabaseContext->connection()->executeQuery("SELECT * FROM {$table} ORDER BY age ASC")->fetchAllAssociative()
+            $this->databaseContext->connection()->executeQuery("SELECT * FROM {$table} ORDER BY age ASC")->fetchAllAssociative()
         );
     }
 
     public function test_inserts_new_rows_and_skip_already_existed() : void
     {
-        $this->pgsqlDatabaseContext->createTable(
+        $this->databaseContext->createTable(
             (new Table(
                 $table = 'flow_doctrine_bulk_test',
                 [
@@ -71,7 +71,7 @@ final class PostgreSqlBulkInsertTest extends IntegrationTestCase
         );
 
         Bulk::create()->insert(
-            $this->pgsqlDatabaseContext->connection(),
+            $this->databaseContext->connection(),
             $table,
             new BulkData([
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One', 'active' => true],
@@ -81,7 +81,7 @@ final class PostgreSqlBulkInsertTest extends IntegrationTestCase
         );
 
         Bulk::create()->insert(
-            $this->pgsqlDatabaseContext->connection(),
+            $this->databaseContext->connection(),
             $table,
             new BulkData([
                 ['id' => 2, 'name' => 'New Name Two', 'description' => 'New Description Two', 'active' => false],
@@ -93,8 +93,8 @@ final class PostgreSqlBulkInsertTest extends IntegrationTestCase
             ]
         );
 
-        $this->assertEquals(4, $this->pgsqlDatabaseContext->tableCount($table));
-        $this->assertEquals(2, $this->pgsqlDatabaseContext->numberOfExecutedInsertQueries());
+        $this->assertEquals(4, $this->databaseContext->tableCount($table));
+        $this->assertEquals(2, $this->databaseContext->numberOfExecutedInsertQueries());
         $this->assertEquals(
             [
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One', 'active' => true],
@@ -102,13 +102,13 @@ final class PostgreSqlBulkInsertTest extends IntegrationTestCase
                 ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three', 'active' => true],
                 ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Four', 'active' => false],
             ],
-            $this->pgsqlDatabaseContext->selectAll($table)
+            $this->databaseContext->selectAll($table)
         );
     }
 
     public function test_inserts_new_rows_or_updates_already_existed_based_on_columns() : void
     {
-        $this->pgsqlDatabaseContext->createTable(
+        $this->databaseContext->createTable(
             (new Table(
                 $table = 'flow_doctrine_bulk_test',
                 [
@@ -121,7 +121,7 @@ final class PostgreSqlBulkInsertTest extends IntegrationTestCase
             ->setPrimaryKey(['id'])
         );
         Bulk::create()->insert(
-            $this->pgsqlDatabaseContext->connection(),
+            $this->databaseContext->connection(),
             $table,
             new BulkData([
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One', 'active' => true],
@@ -131,7 +131,7 @@ final class PostgreSqlBulkInsertTest extends IntegrationTestCase
         );
 
         Bulk::create()->insert(
-            $this->pgsqlDatabaseContext->connection(),
+            $this->databaseContext->connection(),
             $table,
             new BulkData([
                 ['id' => 2, 'name' => 'New Name Two', 'description' => 'New Description Two', 'active' => true],
@@ -143,8 +143,8 @@ final class PostgreSqlBulkInsertTest extends IntegrationTestCase
             ]
         );
 
-        $this->assertEquals(4, $this->pgsqlDatabaseContext->tableCount($table));
-        $this->assertEquals(2, $this->pgsqlDatabaseContext->numberOfExecutedInsertQueries());
+        $this->assertEquals(4, $this->databaseContext->tableCount($table));
+        $this->assertEquals(2, $this->databaseContext->numberOfExecutedInsertQueries());
         $this->assertEquals(
             [
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One', 'active' => true],
@@ -152,13 +152,13 @@ final class PostgreSqlBulkInsertTest extends IntegrationTestCase
                 ['id' => 3, 'name' => 'New Name Three', 'description' => 'New Description Three', 'active' => false],
                 ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Three', 'active' => true],
             ],
-            $this->pgsqlDatabaseContext->selectAll($table)
+            $this->databaseContext->selectAll($table)
         );
     }
 
     public function test_inserts_new_rows_or_updates_already_existed_based_on_columns_with_update_only_specific_columns() : void
     {
-        $this->pgsqlDatabaseContext->createTable(
+        $this->databaseContext->createTable(
             (new Table(
                 $table = 'flow_doctrine_bulk_test',
                 [
@@ -171,7 +171,7 @@ final class PostgreSqlBulkInsertTest extends IntegrationTestCase
             ->setPrimaryKey(['id'])
         );
         Bulk::create()->insert(
-            $this->pgsqlDatabaseContext->connection(),
+            $this->databaseContext->connection(),
             $table,
             new BulkData([
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One', 'active' => true],
@@ -181,7 +181,7 @@ final class PostgreSqlBulkInsertTest extends IntegrationTestCase
         );
 
         Bulk::create()->insert(
-            $this->pgsqlDatabaseContext->connection(),
+            $this->databaseContext->connection(),
             $table,
             new BulkData([
                 ['id' => 2, 'name' => 'New Name Two', 'description' => 'DESCRIPTION', 'active' => true],
@@ -192,21 +192,21 @@ final class PostgreSqlBulkInsertTest extends IntegrationTestCase
             ]
         );
 
-        $this->assertEquals(3, $this->pgsqlDatabaseContext->tableCount($table));
-        $this->assertEquals(2, $this->pgsqlDatabaseContext->numberOfExecutedInsertQueries());
+        $this->assertEquals(3, $this->databaseContext->tableCount($table));
+        $this->assertEquals(2, $this->databaseContext->numberOfExecutedInsertQueries());
         $this->assertEquals(
             [
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One', 'active' => true],
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'DESCRIPTION', 'active' => false],
                 ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three', 'active' => true],
             ],
-            $this->pgsqlDatabaseContext->selectAll($table)
+            $this->databaseContext->selectAll($table)
         );
     }
 
     public function test_inserts_new_rows_or_updates_already_existed_based_on_primary_key() : void
     {
-        $this->pgsqlDatabaseContext->createTable(
+        $this->databaseContext->createTable(
             (new Table(
                 $table = 'flow_doctrine_bulk_test',
                 [
@@ -219,7 +219,7 @@ final class PostgreSqlBulkInsertTest extends IntegrationTestCase
             ->setPrimaryKey(['id'])
         );
         Bulk::create()->insert(
-            $this->pgsqlDatabaseContext->connection(),
+            $this->databaseContext->connection(),
             $table,
             new BulkData([
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One', 'active' => true],
@@ -229,7 +229,7 @@ final class PostgreSqlBulkInsertTest extends IntegrationTestCase
         );
 
         Bulk::create()->insert(
-            $this->pgsqlDatabaseContext->connection(),
+            $this->databaseContext->connection(),
             $table,
             new BulkData([
                 ['id' => 2, 'name' => 'New Name Two', 'description' => 'New Description Two', 'active' => true],
@@ -241,8 +241,8 @@ final class PostgreSqlBulkInsertTest extends IntegrationTestCase
             ]
         );
 
-        $this->assertEquals(4, $this->pgsqlDatabaseContext->tableCount($table));
-        $this->assertEquals(2, $this->pgsqlDatabaseContext->numberOfExecutedInsertQueries());
+        $this->assertEquals(4, $this->databaseContext->tableCount($table));
+        $this->assertEquals(2, $this->databaseContext->numberOfExecutedInsertQueries());
         $this->assertEquals(
             [
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One', 'active' => true],
@@ -250,7 +250,7 @@ final class PostgreSqlBulkInsertTest extends IntegrationTestCase
                 ['id' => 3, 'name' => 'New Name Three', 'description' => 'New Description Three', 'active' => false],
                 ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Three', 'active' => true],
             ],
-            $this->pgsqlDatabaseContext->selectAll($table)
+            $this->databaseContext->selectAll($table)
         );
     }
 }

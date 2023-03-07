@@ -10,9 +10,9 @@ use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
 use Flow\Doctrine\Bulk\Bulk;
 use Flow\Doctrine\Bulk\BulkData;
-use Flow\Doctrine\Bulk\Tests\MysqlIntegrationTestCase;
+use Flow\Doctrine\Bulk\Tests\SqliteIntegrationTestCase;
 
-final class MySqlBulkInsertTest extends MysqlIntegrationTestCase
+final class SqliteBulkInsertTest extends SqliteIntegrationTestCase
 {
     public function test_inserts_multiple_rows_at_once() : void
     {
@@ -47,9 +47,9 @@ final class MySqlBulkInsertTest extends MysqlIntegrationTestCase
 
         $this->assertEquals(
             [
-                ['id' => $id1, 'age' => 20, 'name' => 'Name One', 'description' => 'Description One', 'active' => false, 'updated_at' => $date1->format('Y-m-d H:i:s'), 'tags' => '["a", "b", "c"]'],
-                ['id' => $id2, 'age' => 30, 'name' => 'Name Two', 'description' => null, 'active' => true, 'updated_at' => $date2->format('Y-m-d H:i:s'), 'tags' => '["a", "b", "c"]'],
-                ['id' => $id3, 'age' => 40, 'name' => 'Name Three', 'description' => 'Description Three', 'active' => false, 'updated_at' => $date3->format('Y-m-d H:i:s'), 'tags' => '["a", "b", "c"]'],
+                ['id' => $id1, 'age' => 20, 'name' => 'Name One', 'description' => 'Description One', 'active' => 0, 'updated_at' => $date1->format('Y-m-d H:i:s'), 'tags' => '["a","b","c"]'],
+                ['id' => $id2, 'age' => 30, 'name' => 'Name Two', 'description' => null, 'active' => 1, 'updated_at' => $date2->format('Y-m-d H:i:s'), 'tags' => '["a","b","c"]'],
+                ['id' => $id3, 'age' => 40, 'name' => 'Name Three', 'description' => 'Description Three', 'active' => 0, 'updated_at' => $date3->format('Y-m-d H:i:s'), 'tags' => '["a","b","c"]'],
             ],
             $this->databaseContext->connection()->executeQuery("SELECT * FROM {$table} ORDER BY age ASC")->fetchAllAssociative()
         );
@@ -67,7 +67,7 @@ final class MySqlBulkInsertTest extends MysqlIntegrationTestCase
                     new Column('active', Type::getType(Types::BOOLEAN), ['notnull' => true]),
                 ],
             ))
-            ->setPrimaryKey(['id'])
+                ->setPrimaryKey(['id'])
         );
 
         Bulk::create()->insert(
@@ -106,7 +106,7 @@ final class MySqlBulkInsertTest extends MysqlIntegrationTestCase
         );
     }
 
-    public function test_inserts_new_rows_and_update_already_existed() : void
+    public function test_inserts_new_rows_or_updates_already_existed_based_on_columns() : void
     {
         $this->databaseContext->createTable(
             (new Table(
@@ -120,13 +120,12 @@ final class MySqlBulkInsertTest extends MysqlIntegrationTestCase
             ))
                 ->setPrimaryKey(['id'])
         );
-
         Bulk::create()->insert(
             $this->databaseContext->connection(),
             $table,
             new BulkData([
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One', 'active' => true],
-                ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two', 'active' => true],
+                ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two', 'active' => false],
                 ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three', 'active' => true],
             ])
         );
@@ -135,12 +134,12 @@ final class MySqlBulkInsertTest extends MysqlIntegrationTestCase
             $this->databaseContext->connection(),
             $table,
             new BulkData([
-                ['id' => 2, 'name' => 'New Name Two', 'description' => 'New Description Two', 'active' => false],
+                ['id' => 2, 'name' => 'New Name Two', 'description' => 'New Description Two', 'active' => true],
                 ['id' => 3, 'name' => 'New Name Three', 'description' => 'New Description Three', 'active' => false],
-                ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Four', 'active' => false],
+                ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Three', 'active' => true],
             ]),
             [
-                'upsert' => true,
+                'conflict_columns' => ['id'],
             ]
         );
 
@@ -149,15 +148,15 @@ final class MySqlBulkInsertTest extends MysqlIntegrationTestCase
         $this->assertEquals(
             [
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One', 'active' => true],
-                ['id' => 2, 'name' => 'New Name Two', 'description' => 'New Description Two', 'active' => false],
+                ['id' => 2, 'name' => 'New Name Two', 'description' => 'New Description Two', 'active' => true],
                 ['id' => 3, 'name' => 'New Name Three', 'description' => 'New Description Three', 'active' => false],
-                ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Four', 'active' => false],
+                ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Three', 'active' => true],
             ],
             $this->databaseContext->selectAll($table)
         );
     }
 
-    public function test_inserts_new_rows_and_update_selected_columns_only_of_already_existed() : void
+    public function test_inserts_new_rows_or_updates_already_existed_based_on_columns_with_update_only_specific_columns() : void
     {
         $this->databaseContext->createTable(
             (new Table(
@@ -171,13 +170,12 @@ final class MySqlBulkInsertTest extends MysqlIntegrationTestCase
             ))
                 ->setPrimaryKey(['id'])
         );
-
         Bulk::create()->insert(
             $this->databaseContext->connection(),
             $table,
             new BulkData([
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One', 'active' => true],
-                ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two', 'active' => true],
+                ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two', 'active' => false],
                 ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three', 'active' => true],
             ])
         );
@@ -186,24 +184,21 @@ final class MySqlBulkInsertTest extends MysqlIntegrationTestCase
             $this->databaseContext->connection(),
             $table,
             new BulkData([
-                ['id' => 2, 'name' => 'New Name Two', 'description' => 'New Description Two', 'active' => false],
-                ['id' => 3, 'name' => 'New Name Three', 'description' => 'New Description Three', 'active' => false],
-                ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Four', 'active' => false],
+                ['id' => 2, 'name' => 'New Name Two', 'description' => 'DESCRIPTION', 'active' => true],
             ]),
             [
-                'upsert' => true,
+                'conflict_columns' => ['id'],
                 'update_columns' => ['description'],
             ]
         );
 
-        $this->assertEquals(4, $this->databaseContext->tableCount($table));
+        $this->assertEquals(3, $this->databaseContext->tableCount($table));
         $this->assertEquals(2, $this->databaseContext->numberOfExecutedInsertQueries());
         $this->assertEquals(
             [
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One', 'active' => true],
-                ['id' => 2, 'name' => 'Name Two', 'description' => 'New Description Two', 'active' => true],
-                ['id' => 3, 'name' => 'Name Three', 'description' => 'New Description Three', 'active' => true],
-                ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Four', 'active' => false],
+                ['id' => 2, 'name' => 'Name Two', 'description' => 'DESCRIPTION', 'active' => false],
+                ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three', 'active' => true],
             ],
             $this->databaseContext->selectAll($table)
         );

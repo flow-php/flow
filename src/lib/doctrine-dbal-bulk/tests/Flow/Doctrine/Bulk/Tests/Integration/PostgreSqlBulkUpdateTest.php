@@ -11,13 +11,13 @@ use Doctrine\DBAL\Types\Types;
 use Flow\Doctrine\Bulk\Bulk;
 use Flow\Doctrine\Bulk\BulkData;
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
-use Flow\Doctrine\Bulk\Tests\IntegrationTestCase;
+use Flow\Doctrine\Bulk\Tests\PostgreSqlIntegrationTestCase;
 
-final class PostgreSqlBulkUpdateTest extends IntegrationTestCase
+final class PostgreSqlBulkUpdateTest extends PostgreSqlIntegrationTestCase
 {
     public function test_update_multiple_rows_with_all_columns_and_multiple_primary_keys_at_once() : void
     {
-        $this->pgsqlDatabaseContext->createTable(
+        $this->databaseContext->createTable(
             (new Table(
                 $table = 'flow_doctrine_bulk_test',
                 [
@@ -33,7 +33,7 @@ final class PostgreSqlBulkUpdateTest extends IntegrationTestCase
         );
 
         Bulk::create()->insert(
-            $this->pgsqlDatabaseContext->connection(),
+            $this->databaseContext->connection(),
             $table,
             new BulkData([
                 ['id' => 1, 'account' => 'Bob', 'name' => 'Name One', 'description' => 'Description One', 'active' => false, 'created_at' => new \DateTimeImmutable('2021-01-01 10:00:00')],
@@ -43,7 +43,7 @@ final class PostgreSqlBulkUpdateTest extends IntegrationTestCase
         );
 
         Bulk::create()->update(
-            $this->pgsqlDatabaseContext->connection(),
+            $this->databaseContext->connection(),
             $table,
             new BulkData([
                 ['id' => 2, 'account' => 'Bob', 'name' => 'Changed name Two', 'description' => 'Changed description Two', 'active' => false, 'created_at' => new \DateTimeImmutable('2021-01-02 10:00:00')],
@@ -63,13 +63,13 @@ final class PostgreSqlBulkUpdateTest extends IntegrationTestCase
                 ['id' => 2, 'name' => 'Changed name Two', 'description' => 'Changed description Two', 'active' => false, 'account' => 'Bob', 'created_at' => (new \DateTimeImmutable('2021-01-02 10:00:00'))->format('Y-m-d H:i:s')],
                 ['id' => 3, 'name' => 'Changed name Three', 'description' => 'Changed description Three', 'active' => true, 'account' => 'Joe', 'created_at' => (new \DateTimeImmutable('2021-01-02 20:00:00'))->format('Y-m-d H:i:s')],
             ],
-            $this->pgsqlDatabaseContext->selectAll($table)
+            $this->databaseContext->selectAll($table)
         );
     }
 
     public function test_update_multiple_rows_with_all_columns_at_once() : void
     {
-        $this->pgsqlDatabaseContext->createTable(
+        $this->databaseContext->createTable(
             (new Table(
                 $table = 'flow_doctrine_bulk_test',
                 [
@@ -83,7 +83,7 @@ final class PostgreSqlBulkUpdateTest extends IntegrationTestCase
         );
 
         Bulk::create()->insert(
-            $this->pgsqlDatabaseContext->connection(),
+            $this->databaseContext->connection(),
             $table,
             new BulkData([
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One', 'active' => false],
@@ -93,7 +93,7 @@ final class PostgreSqlBulkUpdateTest extends IntegrationTestCase
         );
 
         Bulk::create()->update(
-            $this->pgsqlDatabaseContext->connection(),
+            $this->databaseContext->connection(),
             $table,
             new BulkData([
                 ['id' => 2, 'name' => 'Changed name Two', 'description' => 'Changed description Two', 'active' => false],
@@ -112,13 +112,13 @@ final class PostgreSqlBulkUpdateTest extends IntegrationTestCase
                 ['id' => 2, 'name' => 'Changed name Two', 'description' => 'Changed description Two', 'active' => false],
                 ['id' => 3, 'name' => 'Changed name Three', 'description' => 'Changed description Three', 'active' => true],
             ],
-            $this->pgsqlDatabaseContext->selectAll($table)
+            $this->databaseContext->selectAll($table)
         );
     }
 
     public function test_update_multiple_rows_with_selected_columns_at_once() : void
     {
-        $this->pgsqlDatabaseContext->createTable(
+        $this->databaseContext->createTable(
             (new Table(
                 $table = 'flow_doctrine_bulk_test',
                 [
@@ -132,7 +132,7 @@ final class PostgreSqlBulkUpdateTest extends IntegrationTestCase
         );
 
         Bulk::create()->insert(
-            $this->pgsqlDatabaseContext->connection(),
+            $this->databaseContext->connection(),
             $table,
             new BulkData([
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One', 'active' => false],
@@ -142,7 +142,7 @@ final class PostgreSqlBulkUpdateTest extends IntegrationTestCase
         );
 
         Bulk::create()->update(
-            $this->pgsqlDatabaseContext->connection(),
+            $this->databaseContext->connection(),
             $table,
             new BulkData([
                 ['id' => 2, 'name' => 'Changed name Two', 'description' => 'Changed description Two', 'active' => true],
@@ -164,13 +164,13 @@ final class PostgreSqlBulkUpdateTest extends IntegrationTestCase
                 ['id' => 2, 'name' => 'Changed name Two', 'description' => 'Description Two', 'active' => true],
                 ['id' => 3, 'name' => 'Changed name Three', 'description' => 'Description Three', 'active' => false],
             ],
-            $this->pgsqlDatabaseContext->selectAll($table)
+            $this->databaseContext->selectAll($table)
         );
     }
 
     public function test_update_when_bulk_data_has_not_all_columns_from_primary_key_columns() : void
     {
-        $this->pgsqlDatabaseContext->createTable(
+        $this->databaseContext->createTable(
             (new Table(
                 $table = 'flow_doctrine_bulk_test',
                 [
@@ -184,7 +184,7 @@ final class PostgreSqlBulkUpdateTest extends IntegrationTestCase
         );
 
         Bulk::create()->insert(
-            $this->pgsqlDatabaseContext->connection(),
+            $this->databaseContext->connection(),
             $table,
             new BulkData([
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One', 'active' => false],
@@ -197,7 +197,7 @@ final class PostgreSqlBulkUpdateTest extends IntegrationTestCase
         $this->expectExceptionMessage('All columns from primary_key_columns must be in bulk data columns.');
 
         Bulk::create()->update(
-            $this->pgsqlDatabaseContext->connection(),
+            $this->databaseContext->connection(),
             $table,
             new BulkData([
                 ['id' => 2, 'name' => 'Changed name Two', 'description' => 'Changed description Two', 'active' => true],
@@ -211,7 +211,7 @@ final class PostgreSqlBulkUpdateTest extends IntegrationTestCase
 
     public function test_update_with_empty_primary_key_columns() : void
     {
-        $this->pgsqlDatabaseContext->createTable(
+        $this->databaseContext->createTable(
             (new Table(
                 $table = 'flow_doctrine_bulk_test',
                 [
@@ -225,7 +225,7 @@ final class PostgreSqlBulkUpdateTest extends IntegrationTestCase
         );
 
         Bulk::create()->insert(
-            $this->pgsqlDatabaseContext->connection(),
+            $this->databaseContext->connection(),
             $table,
             new BulkData([
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One', 'active' => false],
@@ -238,13 +238,12 @@ final class PostgreSqlBulkUpdateTest extends IntegrationTestCase
         $this->expectExceptionMessage('primary_key_columns option is required for update');
 
         Bulk::create()->update(
-            $this->pgsqlDatabaseContext->connection(),
+            $this->databaseContext->connection(),
             $table,
             new BulkData([
                 ['id' => 2, 'name' => 'Changed name Two', 'description' => 'Changed description Two', 'active' => true],
                 ['id' => 3, 'name' => 'Changed name Three', 'description' => 'Changed description Three', 'active' => false],
-            ]),
-            []
+            ])
         );
     }
 }

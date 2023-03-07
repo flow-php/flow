@@ -10,9 +10,9 @@ use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
 use Flow\Doctrine\Bulk\Bulk;
 use Flow\Doctrine\Bulk\BulkData;
-use Flow\Doctrine\Bulk\Tests\MysqlIntegrationTestCase;
+use Flow\Doctrine\Bulk\Tests\SqliteIntegrationTestCase;
 
-final class MySqlBulkUpdateTest extends MysqlIntegrationTestCase
+final class SqliteBulkUpdateTest extends SqliteIntegrationTestCase
 {
     public function test_update_multiple_rows_with_all_columns_at_once() : void
     {
@@ -26,7 +26,7 @@ final class MySqlBulkUpdateTest extends MysqlIntegrationTestCase
                     new Column('active', Type::getType(Types::BOOLEAN), ['notnull' => true]),
                 ],
             ))
-            ->setPrimaryKey(['id'])
+                ->setPrimaryKey(['id'])
         );
 
         Bulk::create()->insert(
