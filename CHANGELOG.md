@@ -1,6 +1,7 @@
-## [Unreleased] - 2023-03-06
+## [Unreleased] - 2023-03-07
 
 ### Added
+- [#343](https://github.com/flow-php/flow/pull/343) - **Add support for Sqlite database** - [@stloyd](https://github.com/stloyd)
 - [#305](https://github.com/flow-php/flow/pull/305) - **config option that can be later used by extractor to decide if input options should be added to extracted rows** - [@norberttech](https://github.com/norberttech)
 - [#304](https://github.com/flow-php/flow/pull/304) - **Added Google Sheet ETL adapter** - [@jwojtyra-aterian](https://github.com/jwojtyra-aterian)
 - [#292](https://github.com/flow-php/flow/pull/292) - **PHP 8.2 support** - [@norberttech](https://github.com/norberttech)
