@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-03-13
 
 ### Added
+- [#354](https://github.com/flow-php/flow/pull/354) - **sequence extractor with date period and number sequence generators** - [@norberttech](https://github.com/norberttech)
 - [#353](https://github.com/flow-php/flow/pull/353) - **DataFrame::crossJoin** - [@norberttech](https://github.com/norberttech)
 - [#343](https://github.com/flow-php/flow/pull/343) - **Add support for Sqlite database** - [@stloyd](https://github.com/stloyd)
 - [#305](https://github.com/flow-php/flow/pull/305) - **config option that can be later used by extractor to decide if input options should be added to extracted rows** - [@norberttech](https://github.com/norberttech)
