@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-03-13
 
 ### Updated
+- [1e72f4](https://github.com/flow-php/flow/commit/1e72f44af4a7dbdbd5d0ecea253d56e36d9a32e7) - **CHANGELOG.md** - [@norberttech](https://github.com/norberttech)
 - [cf0ff4](https://github.com/flow-php/flow/commit/cf0ff47c946239069ae2d5376c0e98d2725a6588) - **README.md** - [@norberttech](https://github.com/norberttech)
 - [7ae116](https://github.com/flow-php/flow/commit/7ae116a6a9224dc624580aae1d8c16dbc59c2d36) - **README.md** - [@norberttech](https://github.com/norberttech)
 
@@ -264,12 +265,12 @@
 - [dbeec5](https://github.com/flow-php/flow/commit/dbeec5e992a94f1fba14b365769cedd75ff9e042) - **Revert unintended BC break (#170)** - [@norberttech](https://github.com/norberttech)
 - [5246ef](https://github.com/flow-php/flow/commit/5246ef9ad01a2fc30b85962e270612d4b3e8be43) - **Improved code coverage in tests (#168)** - [@norberttech](https://github.com/norberttech)
 - [4a8f84](https://github.com/flow-php/flow/commit/4a8f847c7fcc4d374737f89f270d61724e6802ba) - **Domain Specific Language (#167)** - [@norberttech](https://github.com/norberttech)
-- [bbb37a](https://github.com/flow-php/flow/commit/bbb37a3c488ce969eafa8e080efceebbcd2c3d98) - **In Memory SortBy  (#164)** - [@norberttech](https://github.com/norberttech)
+- [bbb37a](https://github.com/flow-php/flow/commit/bbb37a3c488ce969eafa8e080efceebbcd2c3d98) - **In Memory SortBy (#164)** - [@norberttech](https://github.com/norberttech)
 - [a6f009](https://github.com/flow-php/flow/commit/a6f009da3b3e1b87058d0651d97c9c40ff1a9530) - **Merge pull request #161 from DawidSajdak/feature/add-callback-antry-value-transformer** - [@DawidSajdak](https://github.com/DawidSajdak)
 - [ce57c1](https://github.com/flow-php/flow/commit/ce57c1c738a4c8cf557b92fe32cbed96aafb3925) - **Fixes** - [@DawidSajdak](https://github.com/DawidSajdak)
 - [758225](https://github.com/flow-php/flow/commit/75822521f65814e9fe7867510863d322cdf746d8) - **Fixes** - [@DawidSajdak](https://github.com/DawidSajdak)
 - [ba4680](https://github.com/flow-php/flow/commit/ba4680be6171f54b01491dec3eb6bd53cc9d6907) - **Pipeline clousre (#163)** - [@norberttech](https://github.com/norberttech)
-- [b223c5](https://github.com/flow-php/flow/commit/b223c5c857d3a00d692a12695f837136cd44fe90) - **ETL::sortBy  (#162)** - [@norberttech](https://github.com/norberttech)
+- [b223c5](https://github.com/flow-php/flow/commit/b223c5c857d3a00d692a12695f837136cd44fe90) - **ETL::sortBy (#162)** - [@norberttech](https://github.com/norberttech)
 - [9bc5f2](https://github.com/flow-php/flow/commit/9bc5f23195bcb8f9a4c5cad0a7e43f740d818cd8) - **Detect JSON type values and automatically cast them from string to array in order to satisfy dbal (#87)** - [@norberttech](https://github.com/norberttech)
 - [31f9e0](https://github.com/flow-php/flow/commit/31f9e055f03352accf330378bb43cf9af391e5d4) - **to EntryValueTransformer** - [@DawidSajdak](https://github.com/DawidSajdak)
 - [7b1476](https://github.com/flow-php/flow/commit/7b14762f4cc6b3aa7e0239535511fb32bfc1f7ad) - **to EntryValueTransformer** - [@DawidSajdak](https://github.com/DawidSajdak)
@@ -576,7 +577,7 @@
 - [3ea958](https://github.com/flow-php/flow/commit/3ea95818ff969bdb9151e8590fa1952a3878a60d) - **Initial commit** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [917267](https://github.com/flow-php/flow/commit/9172678a38f9a8249c1b61fb74aed75cf04271d3) - **Pull Requests template (#14)** - [@DawidSajdak](https://github.com/DawidSajdak)
 - [cdbc76](https://github.com/flow-php/flow/commit/cdbc76af8c863f40d6181aa81a60e4f1d33d6519) - **Initial commit** - [@norberttech](https://github.com/norberttech)
-- [032ef2](https://github.com/flow-php/flow/commit/032ef2f051f8b77d2906ad134cf44410fd8c95ee) - **Remove Webmozart/Assert dependency  (#3)** - [@Wiktor6](https://github.com/Wiktor6)
+- [032ef2](https://github.com/flow-php/flow/commit/032ef2f051f8b77d2906ad134cf44410fd8c95ee) - **Remove Webmozart/Assert dependency (#3)** - [@Wiktor6](https://github.com/Wiktor6)
 - [e48062](https://github.com/flow-php/flow/commit/e48062890cd84e655e1162305086f67148347b83) - **Intial commit** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
