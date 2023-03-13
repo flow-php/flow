@@ -35,6 +35,12 @@ Please check below packages and select only those that you are going to use:
   - [array-dot](src/lib/array-dot/README.md) - auto included                  
   - [doctrine-dbal-bulk](src/lib/doctrine-dbal-bulk/README.md)
 
+For example if you want to work with json/csv files here are dependencies you will need to install: 
+
+```
+composer require flow-php/etl:1.x@dev flow-php/etl-adapter-csv:1.x@dev flow-php/etl-adapter-json:1.x@dev
+```
+
 ## Contributing 
 
 In order to run tests locally please make sure you have [docker](https://www.docker.com/) up and running.
