@@ -38,7 +38,7 @@ Please check below packages and select only those that you are going to use:
 For example if you want to work with json/csv files here are dependencies you will need to install: 
 
 ```
-composer require flow-php/etl:1.x@dev flow-php/etl-adapter-csv:1.x@dev flow-php/etl-adapter-json:1.x@dev
+composer require flow-php/etl:^0.1 flow-php/etl-adapter-csv:^0.1 flow-php/etl-adapter-json:^0.1
 ```
 
 ## Contributing 
