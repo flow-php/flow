@@ -7,13 +7,11 @@ namespace Flow\ETL\Transformer;
 use Flow\ETL\DataFrame;
 use Flow\ETL\Flow;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Join\Expression;
-use Flow\ETL\Join\Join;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 /**
- * @implements Transformer<array{data_frame: ?DataFrame, condition: Expression, type: Join, rows: ?Rows}>
+ * @implements Transformer<array{data_frame: ?DataFrame, prefix: string, rows: ?Rows}>
  */
 final class CrossJoinRowsTransformer implements Transformer
 {
