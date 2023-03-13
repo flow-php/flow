@@ -277,6 +277,34 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
         return new \ArrayIterator($this->rows);
     }
 
+    public function joinCross(self $right, string $joinPrefix = '') : self
+    {
+        /**
+         * @var array<Row> $joined
+         */
+        $joined = [];
+
+        if ($right->count() === 0) {
+            return $this;
+        }
+
+        if ($this->count() === 0) {
+            return $right;
+        }
+
+        foreach ($this->rows as $leftRow) {
+            foreach ($right->rows as $rightRow) {
+                try {
+                    $joined[] = $leftRow->merge($rightRow, $joinPrefix);
+                } catch (InvalidArgumentException $e) {
+                    throw new InvalidArgumentException($e->getMessage() . '. Please consider using join prefix option');
+                }
+            }
+        }
+
+        return new self(...$joined);
+    }
+
     /**
      * @throws InvalidArgumentException
      */

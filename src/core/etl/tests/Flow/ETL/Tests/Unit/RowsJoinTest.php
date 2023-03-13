@@ -13,6 +13,130 @@ use PHPUnit\Framework\TestCase;
 
 final class RowsJoinTest extends TestCase
 {
+    public function test_cross_join() : void
+    {
+        $left = new Rows(
+            Row::create(Entry::integer('id', 1), Entry::string('country', 'PL')),
+            Row::create(Entry::integer('id', 2), Entry::string('country', 'PL')),
+            Row::create(Entry::integer('id', 3), Entry::string('country', 'US')),
+            Row::create(Entry::integer('id', 4), Entry::string('country', 'FR')),
+        );
+
+        $joined = $left->joinCross(
+            new Rows(
+                Row::create(Entry::integer('num', 1), Entry::boolean('active', true)),
+                Row::create(Entry::integer('num', 2), Entry::boolean('active', false)),
+            ),
+        );
+
+        $this->assertEquals(
+            new Rows(
+                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('num', 1), Entry::boolean('active', true)),
+                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('num', 2), Entry::boolean('active', false)),
+                Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('num', 1), Entry::boolean('active', true)),
+                Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('num', 2), Entry::boolean('active', false)),
+                Row::create(Entry::integer('id', 3), Entry::string('country', 'US'), Entry::integer('num', 1), Entry::boolean('active', true)),
+                Row::create(Entry::integer('id', 3), Entry::string('country', 'US'), Entry::integer('num', 2), Entry::boolean('active', false)),
+                Row::create(Entry::integer('id', 4), Entry::string('country', 'FR'), Entry::integer('num', 1), Entry::boolean('active', true)),
+                Row::create(Entry::integer('id', 4), Entry::string('country', 'FR'), Entry::integer('num', 2), Entry::boolean('active', false)),
+            ),
+            $joined,
+        );
+    }
+
+    public function test_cross_join_empty() : void
+    {
+        $left = new Rows(
+            Row::create(Entry::integer('id', 1), Entry::string('country', 'PL')),
+            Row::create(Entry::integer('id', 2), Entry::string('country', 'PL')),
+            Row::create(Entry::integer('id', 3), Entry::string('country', 'US')),
+            Row::create(Entry::integer('id', 4), Entry::string('country', 'FR')),
+        );
+
+        $joined = $left->joinCross(
+            new Rows(),
+        );
+
+        $this->assertEquals(
+            new Rows(
+                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL')),
+                Row::create(Entry::integer('id', 2), Entry::string('country', 'PL')),
+                Row::create(Entry::integer('id', 3), Entry::string('country', 'US')),
+                Row::create(Entry::integer('id', 4), Entry::string('country', 'FR')),
+            ),
+            $joined
+        );
+    }
+
+    public function test_cross_join_left_empty() : void
+    {
+        $left = new Rows();
+
+        $joined = $left->joinCross(
+            new Rows(
+                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL')),
+                Row::create(Entry::integer('id', 2), Entry::string('country', 'PL')),
+                Row::create(Entry::integer('id', 3), Entry::string('country', 'US')),
+                Row::create(Entry::integer('id', 4), Entry::string('country', 'FR')),
+            ),
+        );
+
+        $this->assertEquals(
+            new Rows(
+                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL')),
+                Row::create(Entry::integer('id', 2), Entry::string('country', 'PL')),
+                Row::create(Entry::integer('id', 3), Entry::string('country', 'US')),
+                Row::create(Entry::integer('id', 4), Entry::string('country', 'FR')),
+            ),
+            $joined
+        );
+    }
+
+    public function test_cross_join_left_with_name_conflict() : void
+    {
+        $this->expectExceptionMessage('Merged entries names must be unique, given: [id, country, active] + [active]. Please consider using join prefix option');
+
+        $left = new Rows(
+            Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::boolean('active', false)),
+            Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::boolean('active', false)),
+            Row::create(Entry::integer('id', 3), Entry::string('country', 'US'), Entry::boolean('active', false)),
+            Row::create(Entry::integer('id', 4), Entry::string('country', 'FR'), Entry::boolean('active', false)),
+        );
+
+        $joined = $left->joinCross(
+            new Rows(
+                Row::create(Entry::boolean('active', true))
+            ),
+        );
+    }
+
+    public function test_cross_join_left_with_name_conflict_with_prefix() : void
+    {
+        $left = new Rows(
+            Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::boolean('active', false)),
+            Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::boolean('active', false)),
+            Row::create(Entry::integer('id', 3), Entry::string('country', 'US'), Entry::boolean('active', false)),
+            Row::create(Entry::integer('id', 4), Entry::string('country', 'FR'), Entry::boolean('active', false)),
+        );
+
+        $joined = $left->joinCross(
+            new Rows(
+                Row::create(Entry::boolean('active', true))
+            ),
+            '_'
+        );
+
+        $this->assertEquals(
+            new Rows(
+                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::boolean('active', false), Entry::boolean('_active', true)),
+                Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::boolean('active', false), Entry::boolean('_active', true)),
+                Row::create(Entry::integer('id', 3), Entry::string('country', 'US'), Entry::boolean('active', false), Entry::boolean('_active', true)),
+                Row::create(Entry::integer('id', 4), Entry::string('country', 'FR'), Entry::boolean('active', false), Entry::boolean('_active', true)),
+            ),
+            $joined
+        );
+    }
+
     public function test_inner_empty() : void
     {
         $left = new Rows(

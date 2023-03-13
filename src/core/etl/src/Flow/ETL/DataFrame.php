@@ -23,6 +23,7 @@ use Flow\ETL\Pipeline\VoidPipeline;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Row\Sort;
 use Flow\ETL\Transformer\CallbackRowTransformer;
+use Flow\ETL\Transformer\CrossJoinRowsTransformer;
 use Flow\ETL\Transformer\Filter\Filter\Callback;
 use Flow\ETL\Transformer\FilterRowsTransformer;
 use Flow\ETL\Transformer\JoinEachRowsTransformer;
@@ -89,6 +90,13 @@ final class DataFrame
     public function collect() : self
     {
         $this->pipeline = new CollectingPipeline($this->pipeline);
+
+        return $this;
+    }
+
+    public function crossJoin(self $dataFrame, string $prefix = '') : self
+    {
+        $this->pipeline->add(new CrossJoinRowsTransformer($dataFrame, $prefix));
 
         return $this;
     }

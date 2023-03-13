@@ -634,8 +634,9 @@ Join two data frames, left and right using one of following types of join:
 * right
 * inner
 
-Three are two available join methods: 
+Three are following available join methods: 
 
+* `DataFrame::crossJoin` - join each row from the left side with each row on the right side creating `count(left) * count(right)` rows in total. 
 * `DataFrame::join` - right side is static for each left Rows set. 
 * `DataFrame::joinEach` - right side dynamically generated for each left Rows set.
 
