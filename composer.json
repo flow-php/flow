@@ -2,7 +2,12 @@
     "name": "flow-php/flow",
     "type": "library",
     "description": "PHP ETL - Extract Transform Load - Data processing framework",
-    "keywords": ["etl", "extract", "transform", "load"],
+    "keywords": [
+        "etl",
+        "extract",
+        "transform",
+        "load"
+    ],
     "license": "MIT",
     "require": {
         "php": "~8.1 || ~8.2",
@@ -44,8 +49,8 @@
     },
     "autoload": {
         "files": [
-            "src/lib/array-dot/src/Flow/ArrayDot/array_dot.php",
-            "src/core/etl/src/Flow/ETL/DSL/functions.php"
+            "src/core/etl/src/Flow/ETL/DSL/functions.php",
+            "src/lib/array-dot/src/Flow/ArrayDot/array_dot.php"
         ],
         "psr-4": {
             "Flow\\": [

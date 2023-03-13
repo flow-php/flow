@@ -7,7 +7,7 @@
         "php": "~8.1 || ~8.2",
         "ext-json": "*",
         "codename/parquet": "~0.6.2 || ~0.7.0",
-        "flow-php/etl": "^1.0@dev"
+        "flow-php/etl": "^0.1"
     },
     "config": {
         "optimize-autoloader": true,

@@ -6,8 +6,8 @@
     "keywords": ["doctrine", "dbal", "bulk", "insert", "upsert", "etl", "loader"],
     "require": {
         "php": "~8.1 || ~8.2",
-        "flow-php/doctrine-dbal-bulk": "^1.0@dev",
-        "flow-php/etl": "^1.0@dev"
+        "flow-php/doctrine-dbal-bulk": "^0.1",
+        "flow-php/etl": "^0.1"
     },
     "autoload": {
         "psr-4": {

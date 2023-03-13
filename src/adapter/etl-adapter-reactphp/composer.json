@@ -5,7 +5,7 @@
     "keywords": ["etl", "extract", "transform", "load", "async", "reactphp"],
     "require": {
         "php": "~8.1 || ~8.2",
-        "flow-php/etl": "^1.0@dev",
+        "flow-php/etl": "^0.1",
         "monolog/monolog": "^2.0 || ^3.0",
         "react/child-process": "^0.6.4",
         "react/socket": "^1.11"
