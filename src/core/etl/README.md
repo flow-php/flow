@@ -163,6 +163,7 @@ Please read [tests](tests/Flow/ETL/Tests/Unit/Extractor) to find examples of usa
 * [memory](src/Flow/ETL/Extractor/MemoryExtractor.php) - [tests](tests/Flow/ETL/Tests/Unit/Extractor/MemoryExtractorTest.php)
 * [pipeline](src/Flow/ETL/Extractor/PipelineExtractor.php) - [tests](tests/Flow/ETL/Tests/Unit/Extractor/PipelineExtractorTest.php)  
 * [process](src/Flow/ETL/Extractor/ProcessExtractor.php) - [tests](tests/Flow/ETL/Tests/Unit/Extractor/ProcessExtractorTest.php)
+* [sequence](src/Flow/ETL/Extractor/SequenceExtractor.php) - [tests](tests/Flow/ETL/Tests/Unit/Extractor/SequenceExtractorTest.php)
 
 ## Transformers
 
