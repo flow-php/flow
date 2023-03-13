@@ -39,7 +39,7 @@ class FilesystemStreamsTest extends TestCase
         ]))->partitionBy('group')[0];
 
         $stream = (new FilesystemStreams(new FlysystemFS()))
-            ->open(Path::realpath($dir = \sys_get_temp_dir()), 'csv', Mode::APPEND, false, $rows->partitions)
+            ->open(Path::realpath($dir = \rtrim(\sys_get_temp_dir(), '/')), 'csv', Mode::APPEND, false, $rows->partitions)
             ->path();
         $this->assertStringStartsWith(
             $dir . '/group=a/',
@@ -66,7 +66,7 @@ class FilesystemStreamsTest extends TestCase
         ]));
 
         $stream = (new FilesystemStreams(new FlysystemFS()))
-            ->open(Path::realpath($dir = \sys_get_temp_dir() . '/file.csv'), 'csv', Mode::APPEND, false)
+            ->open(Path::realpath($dir = \rtrim(\sys_get_temp_dir(), '/') . '/file.csv'), 'csv', Mode::APPEND, false)
             ->path();
         $this->assertStringStartsWith(
             $dir,

@@ -39,6 +39,47 @@ use PHPUnit\Framework\TestCase;
 
 final class DataFrameTest extends TestCase
 {
+    public function test_cross_join() : void
+    {
+        $loader = $this->createMock(Loader::class);
+        $loader->expects($this->exactly(2))
+            ->method('load');
+
+        $rows = (new Flow())->process(
+            new Rows(
+                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL')),
+                Row::create(Entry::integer('id', 2), Entry::string('country', 'PL')),
+                Row::create(Entry::integer('id', 3), Entry::string('country', 'PL')),
+                Row::create(Entry::integer('id', 4), Entry::string('country', 'PL')),
+            )
+        )
+            ->parallelize(2)
+            ->crossJoin(
+                (new Flow())->process(
+                    new Rows(
+                        Row::create(Entry::integer('num', 1), Entry::boolean('active', true)),
+                        Row::create(Entry::integer('num', 2), Entry::boolean('active', false)),
+                    )
+                ),
+            )
+            ->write($loader)
+            ->fetch();
+
+        $this->assertEquals(
+            new Rows(
+                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('num', 1), Entry::boolean('active', true)),
+                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('num', 2), Entry::boolean('active', false)),
+                Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('num', 1), Entry::boolean('active', true)),
+                Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('num', 2), Entry::boolean('active', false)),
+                Row::create(Entry::integer('id', 3), Entry::string('country', 'PL'), Entry::integer('num', 1), Entry::boolean('active', true)),
+                Row::create(Entry::integer('id', 3), Entry::string('country', 'PL'), Entry::integer('num', 2), Entry::boolean('active', false)),
+                Row::create(Entry::integer('id', 4), Entry::string('country', 'PL'), Entry::integer('num', 1), Entry::boolean('active', true)),
+                Row::create(Entry::integer('id', 4), Entry::string('country', 'PL'), Entry::integer('num', 2), Entry::boolean('active', false)),
+            ),
+            $rows
+        );
+    }
+
     public function test_drop() : void
     {
         $rows = (new Flow())->process(

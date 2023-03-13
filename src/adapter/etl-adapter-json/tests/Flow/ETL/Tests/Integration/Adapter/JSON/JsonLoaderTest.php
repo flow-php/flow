@@ -86,7 +86,7 @@ JSON,
 
     public function test_json_loader_with_a_thread_safe_and_append_mode() : void
     {
-        $stream = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_json_loader', true) . '.json';
+        $stream = \rtrim(\sys_get_temp_dir(), '/') . '/' . \uniqid('flow_php_etl_json_loader', true) . '.json';
 
         \file_put_contents($stream, '[]');
 

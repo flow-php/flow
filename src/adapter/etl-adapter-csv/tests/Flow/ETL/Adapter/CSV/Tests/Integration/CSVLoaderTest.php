@@ -18,7 +18,7 @@ final class CSVLoaderTest extends TestCase
 {
     public function test_appending_to_csv_in_non_thread_safe() : void
     {
-        $path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.csv';
+        $path = \rtrim(\sys_get_temp_dir(), '/') . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.csv';
         $this->expectExceptionMessage("Appending to destination \"file:/{$path}\" in non thread safe mode is not supported.");
 
         (new Flow())
