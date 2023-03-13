@@ -1,5 +1,52 @@
 # FLow PHP - ETL
 
+* [Contributing](#contributing)
+  * [Description](#description)
+  * [Installation](#installation)
+  * [Typical Use Cases](#typical-use-cases)
+  * [Usage](#usage)
+    * [More Examples](#more-examples)
+  * [DSL - Domain Specific Language](#dsl---domain-specific-language)
+  * [Configuration](#configuration)
+  * [Features](#features)
+  * [Row Entries](#row-entries)
+  * [Extractors aka Readers](#extractors-aka-readers)
+  * [Transformers](#transformers)
+    * [Serialization](#serialization)
+    * [Custom Transformers](#custom-transformers)
+    * [Transformations Grouping](#transformations-grouping)
+  * [Loaders aka Writers](#loaders-aka-writers)
+  * [Pipeline Closure](#pipeline-closure)
+  * [Adapters](#adapters)
+    * [Asynchronous Processing](#asynchronous-processing)
+  * [Process](#process)
+  * [Filter](#filter)
+  * [Group By](#group-by)
+    * [Aggregations](#aggregations)
+  * [Select](#select)
+  * [Drop](#drop)
+  * [Rename](#rename)
+  * [Map](#map)
+  * [Delayed Execution](#delayed-execution)
+  * [Limit](#limit)
+  * [Join](#join)
+  * [Fetch](#fetch)
+  * [Display](#display)
+  * [Void](#void)
+  * [Schema](#schema)
+    * [Schema Constraints](#schema-constraints)
+    * [Schema Validator](#schema-validator)
+  * [Error Handling](#error-handling)
+  * [Sort By](#sort-by)
+  * [Cache](#cache)
+  * [Collect/Parallelize](#collectparallelize)
+  * [Performance](#performance)
+    * [DataFrame::collect()](#dataframe---collect--)
+    * [DataFrame::sortBy()](#dataframe---sortby--)
+  * [Development](#development)
+  * [Run Tests](#run-tests)
+<!-- TOC -->
+
 # Contributing
 
 This repo is **READ ONLY**, in order to contribute to Flow PHP project, please
@@ -163,6 +210,7 @@ Please read [tests](tests/Flow/ETL/Tests/Unit/Extractor) to find examples of usa
 * [memory](src/Flow/ETL/Extractor/MemoryExtractor.php) - [tests](tests/Flow/ETL/Tests/Unit/Extractor/MemoryExtractorTest.php)
 * [pipeline](src/Flow/ETL/Extractor/PipelineExtractor.php) - [tests](tests/Flow/ETL/Tests/Unit/Extractor/PipelineExtractorTest.php)  
 * [process](src/Flow/ETL/Extractor/ProcessExtractor.php) - [tests](tests/Flow/ETL/Tests/Unit/Extractor/ProcessExtractorTest.php)
+* [sequence](src/Flow/ETL/Extractor/SequenceExtractor.php) - [tests](tests/Flow/ETL/Tests/Unit/Extractor/SequenceExtractorTest.php)
 
 ## Transformers
 

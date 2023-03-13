@@ -69,4 +69,46 @@ class From
     {
         return new ProcessExtractor(...$rows);
     }
+
+    /**
+     * @param string $entry_name
+     * @param \DateTimeInterface $start
+     * @param \DateInterval $interval
+     * @param \DateTimeInterface $end
+     * @param 0|1 $options
+     *
+     * @return Extractor
+     */
+    final public static function sequence_date_period(string $entry_name, \DateTimeInterface $start, \DateInterval $interval, \DateTimeInterface $end, int $options = 0) : Extractor
+    {
+        return new Extractor\SequenceExtractor(
+            new Extractor\SequenceGenerator\DatePeriodSequenceGenerator(new \DatePeriod($start, $interval, $end, $options)),
+            $entry_name
+        );
+    }
+
+    /**
+     * @param string $entry_name
+     * @param \DateTimeInterface $start
+     * @param \DateInterval $interval
+     * @param int<1, max> $recurrences
+     * @param 0|1 $options
+     *
+     * @return Extractor
+     */
+    final public static function sequence_date_period_recurrences(string $entry_name, \DateTimeInterface $start, \DateInterval $interval, int $recurrences, int $options = 0) : Extractor
+    {
+        return new Extractor\SequenceExtractor(
+            new Extractor\SequenceGenerator\DatePeriodSequenceGenerator(new \DatePeriod($start, $interval, $recurrences, $options)),
+            $entry_name
+        );
+    }
+
+    final public static function sequence_number(string $entry_name, string|int|float $start, string|int|float $end, int|float $step = 1) : Extractor
+    {
+        return new Extractor\SequenceExtractor(
+            new Extractor\SequenceGenerator\NumberSequenceGenerator($start, $end, $step),
+            $entry_name
+        );
+    }
 }
