@@ -120,6 +120,7 @@ In order to understand how Flow works, please read [documentation](src/core/etl/
 ### Supported PHP versions
 
 * 8.1 - ✅
+* 8.2 - ✅
 
 ## Sponsors
 
