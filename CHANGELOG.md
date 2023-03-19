@@ -1,9 +1,16 @@
-## [Unreleased] - 2023-03-13
+## [Unreleased] - 2023-03-19
+
+### Changed
+- [#358](https://github.com/flow-php/flow/pull/358) - **Replaced string column names with ref/col/struct functions** - [@norberttech](https://github.com/norberttech)
 
 ### Updated
 - [1e72f4](https://github.com/flow-php/flow/commit/1e72f44af4a7dbdbd5d0ecea253d56e36d9a32e7) - **CHANGELOG.md** - [@norberttech](https://github.com/norberttech)
 - [cf0ff4](https://github.com/flow-php/flow/commit/cf0ff47c946239069ae2d5376c0e98d2725a6588) - **README.md** - [@norberttech](https://github.com/norberttech)
 - [7ae116](https://github.com/flow-php/flow/commit/7ae116a6a9224dc624580aae1d8c16dbc59c2d36) - **README.md** - [@norberttech](https://github.com/norberttech)
+
+### Removed
+- [#358](https://github.com/flow-php/flow/pull/358) - **@psalm-immutable** - [@norberttech](https://github.com/norberttech)
+- [#358](https://github.com/flow-php/flow/pull/358) - **@psalm-pure** - [@norberttech](https://github.com/norberttech)
 
 ## [0.1.1] - 2023-03-13
 
