@@ -43,13 +43,13 @@ Examples:
 ```php
 <?php
 
+use function Flow\ETL\DSL\ref;
 use Flow\ETL\DSL\From;
 use Flow\ETL\DSL\Transform;
 use Flow\ETL\DSL\To;
 use Flow\ETL\ETL;
 use Flow\ETL\Flow;
 use Flow\ETL\Memory\ArrayMemory;
-use Flow\ETL\Row\Sort;
 use Flow\ETL\Rows;
 
 $array = new ArrayMemory();
@@ -57,7 +57,7 @@ $array = new ArrayMemory();
 (new Flow())
     ->read(From::rows(new Rows()))
     ->rows(Transform::keep(['id', 'name', 'status']))
-    ->sortBy(Sort::desc('status'))
+    ->sortBy(ref('status')->desc())
     ->write(To::memory($array))
     ->run();
 ```
@@ -886,12 +886,14 @@ in just few megabytes of RAM.
 ```php
 <?php 
 
+use function Flow\ETL\DSL\ref;
+
 $flow = new Flow();
 
 $rows = $flow->read($extractor)
     ->transform($transformer1)
     ->transform($transformer2)
-    ->sortBy(Sort::desc('price'))
+    ->sortBy(ref('price')->desc())
     ->fetch();
 ```
 
@@ -913,7 +915,7 @@ $rows = $flow->read($extractor)
     ->transform($transformer2)
     ->fetch();
     
-$flow->process($rows->sortBy(Sort::desc('price')))
+$flow->process($rows->sortBy(ref('price')->desc()))
     ->write($loader);
     
 ```
