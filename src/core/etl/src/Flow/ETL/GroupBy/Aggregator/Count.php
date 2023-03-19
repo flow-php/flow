@@ -14,18 +14,18 @@ final class Count implements Aggregator
 {
     private int $count;
 
-    private readonly EntryReference $entry;
+    private readonly EntryReference $ref;
 
     public function __construct(string|EntryReference $entry)
     {
-        $this->entry = \is_string($entry) ? new EntryReference($entry) : $entry;
+        $this->ref = EntryReference::init($entry);
         $this->count = 0;
     }
 
     public function aggregate(Row $row) : void
     {
         try {
-            $row->valueOf($this->entry->to());
+            $row->valueOf($this->ref);
             $this->count += 1;
         } catch (InvalidArgumentException) {
             // do nothing?
@@ -34,10 +34,10 @@ final class Count implements Aggregator
 
     public function result() : Entry
     {
-        if (!$this->entry->hasAlias()) {
-            $this->entry->as($this->entry->to() . '_count');
+        if (!$this->ref->hasAlias()) {
+            $this->ref->as($this->ref->to() . '_count');
         }
 
-        return \Flow\ETL\DSL\Entry::integer($this->entry->name(), $this->count);
+        return \Flow\ETL\DSL\Entry::integer($this->ref->name(), $this->count);
     }
 }

@@ -4,16 +4,27 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row;
 
-interface Reference
+use Flow\Serializer\Serializable;
+
+/**
+ * @template T
+ *
+ * @extends Serializable<T>
+ */
+interface Reference extends Serializable
 {
+    public function __toString() : string;
+
     public function as(string $alias) : self;
 
     public function hasAlias() : bool;
 
+    public function is(self $ref) : bool;
+
     public function name() : string;
 
     /**
-     * @return array<string>|string
+     * @return array<EntryReference>|string
      */
     public function to() : string|array;
 }

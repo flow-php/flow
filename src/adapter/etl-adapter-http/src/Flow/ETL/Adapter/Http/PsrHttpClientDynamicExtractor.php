@@ -17,22 +17,22 @@ use Psr\Http\Message\ResponseInterface;
 final class PsrHttpClientDynamicExtractor implements Extractor
 {
     /**
-     * @psalm-var pure-callable(RequestInterface, ResponseInterface) : void|null
+     * @psalm-var callable(RequestInterface, ResponseInterface) : void|null
      *
      * @var null|callable(RequestInterface, ResponseInterface) : void
      */
     private $postRequest;
 
     /**
-     * @psalm-var pure-callable(RequestInterface) : void|null
+     * @psalm-var callable(RequestInterface) : void|null
      *
      * @var null|callable(RequestInterface) : void
      */
     private $preRequest;
 
     /**
-     * @psalm-param pure-callable(RequestInterface) : void|null $preRequest
-     * @psalm-param pure-callable(RequestInterface, ResponseInterface) : void|null $postRequest
+     * @psalm-param callable(RequestInterface) : void|null $preRequest
+     * @psalm-param callable(RequestInterface, ResponseInterface) : void|null $postRequest
      */
     public function __construct(private readonly ClientInterface $client, private readonly NextRequestFactory $requestFactory, ?callable $preRequest = null, ?callable $postRequest = null)
     {

@@ -6,16 +6,23 @@ namespace Flow\ETL\Join\Comparison;
 
 use Flow\ETL\Join\Comparison;
 use Flow\ETL\Row;
+use Flow\ETL\Row\EntryReference;
 
 /**
- * @implements Comparison<array{entry_left: string, entry_right: string}>
- *
- * @psalm-immutable
+ * @implements Comparison<array{entry_left: EntryReference, entry_right: EntryReference}>
  */
 final class LessThanEqual implements Comparison
 {
-    public function __construct(private readonly string $entryLeft, private readonly string $entryRight)
-    {
+    private readonly EntryReference $entryLeft;
+
+    private readonly EntryReference $entryRight;
+
+    public function __construct(
+        string|EntryReference $entryLeft,
+        string|EntryReference $entryRight
+    ) {
+        $this->entryLeft = EntryReference::init($entryLeft);
+        $this->entryRight = EntryReference::init($entryRight);
     }
 
     public function __serialize() : array
@@ -38,7 +45,7 @@ final class LessThanEqual implements Comparison
     }
 
     /**
-     * @return array<string>
+     * @return array<EntryReference>
      */
     public function left() : array
     {
@@ -46,7 +53,7 @@ final class LessThanEqual implements Comparison
     }
 
     /**
-     * @return array<string>
+     * @return array<EntryReference>
      */
     public function right() : array
     {

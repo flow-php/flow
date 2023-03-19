@@ -142,52 +142,52 @@ final class NativeEntryFactory implements EntryFactory
     private function fromDefinition(Schema\Definition $definition, mixed $value) : Entry
     {
         if ($definition->isNullable() && null === $value) {
-            return EntryDSL::null($definition->entry());
+            return EntryDSL::null($definition->entry()->name());
         }
 
         foreach ($definition->types() as $type) {
             if ($type === Entry\StringEntry::class && \is_string($value)) {
-                return EntryDSL::string($definition->entry(), $value);
+                return EntryDSL::string($definition->entry()->name(), $value);
             }
 
             if ($type === Entry\IntegerEntry::class && \is_int($value)) {
-                return EntryDSL::integer($definition->entry(), $value);
+                return EntryDSL::integer($definition->entry()->name(), $value);
             }
 
             if ($type === Entry\FloatEntry::class && \is_float($value)) {
-                return EntryDSL::float($definition->entry(), $value);
+                return EntryDSL::float($definition->entry()->name(), $value);
             }
 
             if ($type === Entry\BooleanEntry::class && \is_bool($value)) {
-                return EntryDSL::boolean($definition->entry(), $value);
+                return EntryDSL::boolean($definition->entry()->name(), $value);
             }
 
             if ($type === Entry\JsonEntry::class && \is_string($value)) {
-                return EntryDSL::json_string($definition->entry(), $value);
+                return EntryDSL::json_string($definition->entry()->name(), $value);
             }
 
             if ($type === Entry\JsonEntry::class && \is_array($value)) {
                 try {
-                    return EntryDSL::json_object($definition->entry(), $value);
+                    return EntryDSL::json_object($definition->entry()->name(), $value);
                 } catch (InvalidArgumentException $e) {
-                    return EntryDSL::json($definition->entry(), $value);
+                    return EntryDSL::json($definition->entry()->name(), $value);
                 }
             }
 
             if ($type === Entry\ObjectEntry::class && \is_object($value)) {
-                return EntryDSL::object($definition->entry(), $value);
+                return EntryDSL::object($definition->entry()->name(), $value);
             }
 
             if ($type === Entry\DateTimeEntry::class && $value instanceof \DateTimeInterface) {
-                return EntryDSL::datetime($definition->entry(), $value);
+                return EntryDSL::datetime($definition->entry()->name(), $value);
             }
 
             if ($type === Entry\DateTimeEntry::class && \is_string($value)) {
-                return EntryDSL::datetime($definition->entry(), new \DateTimeImmutable($value));
+                return EntryDSL::datetime($definition->entry()->name(), new \DateTimeImmutable($value));
             }
 
             if ($type === Entry\ArrayEntry::class && \is_array($value)) {
-                return EntryDSL::array($definition->entry(), $value);
+                return EntryDSL::array($definition->entry()->name(), $value);
             }
 
             if ($type === Entry\EnumEntry::class && \is_string($value)) {
@@ -198,7 +198,7 @@ final class NativeEntryFactory implements EntryFactory
 
                 foreach ($cases as $case) {
                     if ($case->name === $value) {
-                        return EntryDSL::enum($definition->entry(), $case);
+                        return EntryDSL::enum($definition->entry()->name(), $case);
                     }
                 }
 
@@ -212,7 +212,7 @@ final class NativeEntryFactory implements EntryFactory
 
                     if (!\count($value)) {
                         return new Entry\ListEntry(
-                            $definition->entry(),
+                            $definition->entry()->name(),
                             $listType,
                             []
                         );
@@ -224,7 +224,7 @@ final class NativeEntryFactory implements EntryFactory
 
                         if (\is_a($listType->class, \DateTimeInterface::class, true) && \is_string($firstValue)) {
                             return new Entry\ListEntry(
-                                $definition->entry(),
+                                $definition->entry()->name(),
                                 $listType,
                                 \array_map(static fn (string $datetime) : \DateTimeImmutable => new \DateTimeImmutable($datetime), $value)
                             );
@@ -232,7 +232,7 @@ final class NativeEntryFactory implements EntryFactory
                     }
 
                     return new Entry\ListEntry(
-                        $definition->entry(),
+                        $definition->entry()->name(),
                         $listType,
                         $value
                     );

@@ -45,7 +45,6 @@ final class CollectTest extends TestCase
                 ['a' => 'y', 'b' => 5],
                 ['a' => 'u', 'b' => 10],
                 ['a' => 'z', 'b' => 12],
-
             ],
             $aggregator->result()->value()
         );

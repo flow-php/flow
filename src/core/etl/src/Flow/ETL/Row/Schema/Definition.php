@@ -20,15 +20,14 @@ use Flow\ETL\Row\Entry\ObjectEntry;
 use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Row\Entry\StructureEntry;
 use Flow\ETL\Row\Entry\TypedCollection\Type;
+use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Schema\Constraint\Any;
 use Flow\ETL\Row\Schema\Constraint\VoidConstraint;
 use Flow\Serializer\Serializable;
 
 /**
- * @psalm-immutable
- *
  * @implements Serializable<array{
- *     entry: string,
+ *     ref: EntryReference,
  *     classes:array<class-string<Entry>>,
  *     constraint: Constraint,
  *     metadata: Metadata
@@ -40,11 +39,13 @@ final class Definition implements Serializable
 
     private Metadata $metadata;
 
+    private readonly EntryReference $ref;
+
     /**
      * @param array<class-string<Entry>> $classes
      */
     public function __construct(
-        private readonly string $entry,
+        string|EntryReference $ref,
         private readonly array $classes,
         ?Constraint $constraint = null,
         ?Metadata $metadata = null
@@ -55,55 +56,39 @@ final class Definition implements Serializable
 
         $this->metadata = $metadata ?? Metadata::empty();
         $this->constraint = $constraint ?? new VoidConstraint();
+        $this->ref = EntryReference::init($ref);
     }
 
-    /**
-     * @psalm-pure
-     */
-    public static function array(string $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function array(string|EntryReference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
         return new self($entry, ($nullable) ? [ArrayEntry::class, NullEntry::class] : [ArrayEntry::class], $constraint, $metadata);
     }
 
-    /**
-     * @psalm-pure
-     */
-    public static function boolean(string $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function boolean(string|EntryReference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
         return new self($entry, ($nullable) ? [BooleanEntry::class, NullEntry::class] : [BooleanEntry::class], $constraint, $metadata);
     }
 
-    /**
-     * @psalm-pure
-     */
-    public static function collection(string $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function collection(string|EntryReference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
         return new self($entry, ($nullable) ? [CollectionEntry::class, NullEntry::class] : [CollectionEntry::class], $constraint, $metadata);
     }
 
-    /**
-     * @psalm-pure
-     */
-    public static function dateTime(string $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function dateTime(string|EntryReference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
         return new self($entry, ($nullable) ? [DateTimeEntry::class, NullEntry::class] : [DateTimeEntry::class], $constraint, $metadata);
     }
 
     /**
      * @param class-string<\UnitEnum> $type
-     *
-     * @psalm-pure
      */
-    public static function enum(string $entry, string $type, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function enum(string|EntryReference $entry, string $type, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
         /** @psalm-suppress ImpureFunctionCall */
         if (!\enum_exists($type)) {
             throw new InvalidArgumentException("Enum of type \"{$type}\" not found");
         }
 
-        /**
-         * @psalm-suppress ImpureMethodCall
-         */
         return new self(
             $entry,
             ($nullable) ? [EnumEntry::class, NullEntry::class] : [EnumEntry::class],
@@ -115,36 +100,22 @@ final class Definition implements Serializable
         );
     }
 
-    /**
-     * @psalm-pure
-     */
-    public static function float(string $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function float(string|EntryReference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
         return new self($entry, ($nullable) ? [FloatEntry::class, NullEntry::class] : [FloatEntry::class], $constraint, $metadata);
     }
 
-    /**
-     * @psalm-pure
-     */
-    public static function integer(string $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function integer(string|EntryReference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
         return new self($entry, ($nullable) ? [IntegerEntry::class, NullEntry::class] : [IntegerEntry::class], $constraint, $metadata);
     }
 
-    /**
-     * @psalm-pure
-     */
-    public static function json(string $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function json(string|EntryReference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
         return new self($entry, ($nullable) ? [JsonEntry::class, NullEntry::class] : [JsonEntry::class], $constraint, $metadata);
     }
 
-    /**
-     * @psalm-pure
-     *
-     * @psalm-suppress ImpureMethodCall
-     */
-    public static function list(string $entry, Type $type, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function list(string|EntryReference $entry, Type $type, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
         return new self(
             $entry,
@@ -156,46 +127,32 @@ final class Definition implements Serializable
         );
     }
 
-    /**
-     * @psalm-pure
-     */
-    public static function null(string $entry, ?Metadata $metadata = null) : self
+    public static function null(string|EntryReference $entry, ?Metadata $metadata = null) : self
     {
         return new self($entry, [NullEntry::class], null, $metadata);
     }
 
-    /**
-     * @psalm-pure
-     */
-    public static function object(string $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function object(string|EntryReference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
         return new self($entry, ($nullable) ? [ObjectEntry::class, NullEntry::class] : [ObjectEntry::class], $constraint, $metadata);
     }
 
-    /**
-     * @psalm-pure
-     */
-    public static function string(string $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function string(string|EntryReference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
         return new self($entry, ($nullable) ? [StringEntry::class, NullEntry::class] : [StringEntry::class], $constraint, $metadata);
     }
 
-    /**
-     * @psalm-pure
-     */
-    public static function structure(string $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function structure(string|EntryReference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
         return new self($entry, ($nullable) ? [StructureEntry::class, NullEntry::class] : [StructureEntry::class], $constraint, $metadata);
     }
 
     /**
-     * @psalm-pure
-     *
      * @param array<class-string<Entry>> $entryClasses
      *
      * @return Definition
      */
-    public static function union(string $entry, array $entryClasses, ?Constraint $constraint = null, ?Metadata $metadata = null)
+    public static function union(string|EntryReference $entry, array $entryClasses, ?Constraint $constraint = null, ?Metadata $metadata = null)
     {
         $types = \array_values(\array_unique($entryClasses));
 
@@ -210,7 +167,7 @@ final class Definition implements Serializable
     public function __serialize() : array
     {
         return [
-            'entry' => $this->entry,
+            'ref' => $this->ref,
             'classes' => $this->classes,
             'constraint' => $this->constraint,
             'metadata' => $this->metadata,
@@ -219,7 +176,7 @@ final class Definition implements Serializable
 
     public function __unserialize(array $data) : void
     {
-        $this->entry = $data['entry'];
+        $this->ref = $data['ref'];
         $this->classes = $data['classes'];
         $this->constraint = $data['constraint'];
         $this->metadata = $data['metadata'];
@@ -231,9 +188,9 @@ final class Definition implements Serializable
     }
     // @codeCoverageIgnoreEnd
 
-    public function entry() : string
+    public function entry() : EntryReference
     {
-        return $this->entry;
+        return $this->ref;
     }
 
     public function isEqual(self $definition) : bool
@@ -252,7 +209,6 @@ final class Definition implements Serializable
             return false;
         }
 
-        /** @psalm-suppress ImpureMethodCall */
         return $this->metadata->isEqual($definition->metadata);
     }
 
@@ -276,11 +232,11 @@ final class Definition implements Serializable
 
     public function matches(Entry $entry) : bool
     {
-        if ($this->isNullable() && $entry instanceof Entry\NullEntry && $entry->is($this->entry)) {
+        if ($this->isNullable() && $entry instanceof Entry\NullEntry && $entry->is($this->ref)) {
             return true;
         }
 
-        if (!$entry->is($this->entry)) {
+        if (!$entry->is($this->ref)) {
             return false;
         }
 
@@ -298,7 +254,6 @@ final class Definition implements Serializable
             return false;
         }
 
-        /** @psalm-suppress ImpureMethodCall */
         return $this->constraint->isSatisfiedBy($entry);
     }
 
@@ -314,9 +269,8 @@ final class Definition implements Serializable
             $constraint = $this->constraint;
         }
 
-        /** @psalm-suppress ImpureMethodCall */
         return new self(
-            $this->entry,
+            $this->ref,
             \array_values(\array_unique(\array_merge($this->types(), $definition->types()))),
             $constraint,
             $this->metadata->merge($definition->metadata)
@@ -331,7 +285,7 @@ final class Definition implements Serializable
     public function nullable() : self
     {
         if (!\in_array(NullEntry::class, $this->classes, true)) {
-            return new self($this->entry, \array_merge($this->classes, [NullEntry::class]), $this->constraint, $this->metadata);
+            return new self($this->ref, \array_merge($this->classes, [NullEntry::class]), $this->constraint, $this->metadata);
         }
 
         return $this;

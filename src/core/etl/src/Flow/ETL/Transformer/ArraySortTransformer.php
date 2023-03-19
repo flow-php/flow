@@ -37,9 +37,6 @@ final class ArraySortTransformer implements Transformer
 
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
-        /**
-         * @psalm-var pure-callable(Row $row) : Row $transformer
-         */
         $transformer = function (Row $row) : Row {
             if (!$row->entries()->has($this->arrayEntryName)) {
                 throw new RuntimeException("\"{$this->arrayEntryName}\" not found");

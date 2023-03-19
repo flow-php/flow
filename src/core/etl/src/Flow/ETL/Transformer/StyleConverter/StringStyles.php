@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer\StyleConverter;
 
-/**
- * @psalm-immutable
- */
 final class StringStyles
 {
     public const ADA = 'ada';

@@ -15,7 +15,7 @@ final class ASCIISchemaFormatter implements SchemaFormatter
         $entries = [];
 
         foreach ($schema->definitions() as $definition) {
-            $entry = $definition->entry();
+            $entry = $definition->entry()->name();
 
             $type = match (\count($definition->types())) {
                 1 => $definition->types()[0],

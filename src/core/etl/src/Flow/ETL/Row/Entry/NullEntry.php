@@ -6,12 +6,12 @@ namespace Flow\ETL\Row\Entry;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
  * @implements Entry<null, array{name: string}>
- *
- * @psalm-immutable
  */
 final class NullEntry implements \Stringable, Entry
 {
@@ -45,8 +45,12 @@ final class NullEntry implements \Stringable, Entry
         return Definition::null($this->name);
     }
 
-    public function is(string $name) : bool
+    public function is(string|Reference $name) : bool
     {
+        if ($name instanceof Reference) {
+            return $this->name === $name->name();
+        }
+
         return $this->name === $name;
     }
 
@@ -63,6 +67,11 @@ final class NullEntry implements \Stringable, Entry
     public function name() : string
     {
         return $this->name;
+    }
+
+    public function ref() : EntryReference
+    {
+        return new EntryReference($this->name);
     }
 
     /**

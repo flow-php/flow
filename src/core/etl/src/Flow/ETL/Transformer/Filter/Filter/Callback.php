@@ -8,22 +8,16 @@ use Flow\ETL\Row;
 use Flow\ETL\Transformer\Filter\Filter;
 
 /**
- * @implements Filter<array{callback: pure-callable(Row $row) : bool}>
- *
- * @psalm-immutable
+ * @implements Filter<array{callback: callable(Row $row) : bool}>
  */
 final class Callback implements Filter
 {
     /**
-     * @psalm-var pure-callable(Row) : bool
-     *
      * @var callable(Row) : bool
      */
     private $callback;
 
     /**
-     * @psalm-param pure-callable(Row $row) : bool $callback
-     *
      * @param callable(Row $row) : bool $callback
      */
     public function __construct(callable $callback)

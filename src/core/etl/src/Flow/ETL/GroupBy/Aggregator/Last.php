@@ -12,20 +12,20 @@ use Flow\ETL\Row\EntryReference;
 
 final class Last  implements Aggregator
 {
-    private readonly EntryReference $entry;
-
     private ?Entry $last;
+
+    private readonly EntryReference $ref;
 
     public function __construct(string|EntryReference $entry)
     {
-        $this->entry = \is_string($entry) ? new EntryReference($entry) : $entry;
+        $this->ref = EntryReference::init($entry);
         $this->last = null;
     }
 
     public function aggregate(Row $row) : void
     {
         try {
-            $this->last = $row->get($this->entry->to());
+            $this->last = $row->get($this->ref);
         } catch (InvalidArgumentException $e) {
             // entry not found
         }
@@ -33,6 +33,6 @@ final class Last  implements Aggregator
 
     public function result() : Entry
     {
-        return $this->last ?? new Entry\NullEntry($this->entry->name());
+        return $this->last ?? new Entry\NullEntry($this->ref->name());
     }
 }

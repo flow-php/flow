@@ -33,9 +33,6 @@ final class StaticEntryTransformer implements Transformer
 
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
-        /**
-         * @psalm-var pure-callable(Row $row) : Row $transformer
-         */
         $transformer = fn (Row $row) : Row => $row->set($this->entry);
 
         return $rows->map($transformer);

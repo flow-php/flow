@@ -7,12 +7,12 @@ namespace Flow\ETL\Row\Entry;
 use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
  * @implements Entry<string, array{name: string, value: array<mixed>, object: boolean}>
- *
- * @psalm-immutable
  */
 final class JsonEntry implements \Stringable, Entry
 {
@@ -35,8 +35,6 @@ final class JsonEntry implements \Stringable, Entry
     }
 
     /**
-     * @psalm-pure
-     *
      * @throws InvalidArgumentException
      * @throws \JsonException
      */
@@ -50,8 +48,6 @@ final class JsonEntry implements \Stringable, Entry
     }
 
     /**
-     * @psalm-pure
-     *
      * @param array<mixed> $value
      *
      * @throws InvalidArgumentException
@@ -96,8 +92,12 @@ final class JsonEntry implements \Stringable, Entry
         return Definition::json($this->name, false);
     }
 
-    public function is(string $name) : bool
+    public function is(string|Reference $name) : bool
     {
+        if ($name instanceof Reference) {
+            return $this->name === $name->name();
+        }
+
         return $this->name === $name;
     }
 
@@ -114,6 +114,11 @@ final class JsonEntry implements \Stringable, Entry
     public function name() : string
     {
         return $this->name;
+    }
+
+    public function ref() : EntryReference
+    {
+        return new EntryReference($this->name);
     }
 
     public function rename(string $name) : Entry

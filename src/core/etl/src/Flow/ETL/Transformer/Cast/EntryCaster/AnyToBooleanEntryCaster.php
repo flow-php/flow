@@ -11,8 +11,6 @@ use Flow\ETL\Transformer\Cast\ValueCaster\AnyToBooleanCaster;
 
 /**
  * @implements EntryConverter<array{value_caster: AnyToBooleanCaster}>
- *
- * @psalm-immutable
  */
 final class AnyToBooleanEntryCaster implements EntryConverter
 {

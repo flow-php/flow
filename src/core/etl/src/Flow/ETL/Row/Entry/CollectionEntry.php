@@ -8,12 +8,12 @@ use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
  * @implements Entry<array<Entries>, array{name: string, entries: array<Entries>}>
- *
- * @psalm-immutable
  */
 final class CollectionEntry implements \Stringable, Entry
 {
@@ -58,9 +58,13 @@ final class CollectionEntry implements \Stringable, Entry
         return Definition::collection($this->name, false);
     }
 
-    public function is(string $name) : bool
+    public function is(string|Reference $name) : bool
     {
-        return $name === $this->name;
+        if ($name instanceof Reference) {
+            return $this->name === $name->name();
+        }
+
+        return $this->name === $name;
     }
 
     public function isEqual(Entry $entry) : bool
@@ -76,6 +80,11 @@ final class CollectionEntry implements \Stringable, Entry
     public function name() : string
     {
         return $this->name;
+    }
+
+    public function ref() : EntryReference
+    {
+        return new EntryReference($this->name);
     }
 
     /**

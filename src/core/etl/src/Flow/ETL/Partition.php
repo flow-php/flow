@@ -39,8 +39,6 @@ final class Partition implements Serializable
     }
 
     /**
-     * @psalm-pure
-     *
      * @param array<string, mixed> $data
      *
      * @return array<Partition>

@@ -6,11 +6,13 @@ namespace Flow\ETL\Transformer;
 
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
+use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 /**
- * @implements Transformer<array{case: string, entry_names: array<string>}>
+ * @implements Transformer<array{case: string, refs: array<EntryReference>}>
  */
 final class StringEntryValueCaseConverterTransformer implements Transformer
 {
@@ -19,23 +21,23 @@ final class StringEntryValueCaseConverterTransformer implements Transformer
     private const CASE_UPPER = 'upper';
 
     /**
-     * @var string[]
+     * @var array<EntryReference>
      */
-    private readonly array $entryNames;
+    private readonly array $refs;
 
     private function __construct(
         private readonly string $case,
-        string ...$entryNames
+        string|Reference ...$refs
     ) {
-        $this->entryNames = $entryNames;
+        $this->refs = EntryReference::initAll(...$refs);
     }
 
-    public static function lower(string ...$entryNames) : self
+    public static function lower(string|Reference ...$entryNames) : self
     {
         return new self(self::CASE_LOWER, ...$entryNames);
     }
 
-    public static function upper(string ...$entryNames) : self
+    public static function upper(string|Reference ...$entryNames) : self
     {
         return new self(self::CASE_UPPER, ...$entryNames);
     }
@@ -44,24 +46,21 @@ final class StringEntryValueCaseConverterTransformer implements Transformer
     {
         return [
             'case' => $this->case,
-            'entry_names' => $this->entryNames,
+            'refs' => $this->refs,
         ];
     }
 
     public function __unserialize(array $data) : void
     {
         $this->case = $data['case'];
-        $this->entryNames = $data['entry_names'];
+        $this->refs = $data['refs'];
     }
 
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
-        /**
-         * @psalm-var pure-callable(Row $row) : Row $transformer
-         */
         $transformer = function (Row $row) : Row {
-            foreach ($this->entryNames as $entryName) {
-                $entry = $row->get($entryName);
+            foreach ($this->refs as $ref) {
+                $entry = $row->get($ref);
 
                 if ($entry instanceof Row\Entry\StringEntry) {
                     $row = $row->set(

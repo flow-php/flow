@@ -9,8 +9,5 @@ use Psr\Http\Message\ResponseInterface;
 
 interface NextRequestFactory
 {
-    /**
-     * @psalm-pure
-     */
     public function create(?ResponseInterface $previousResponse = null) : ?RequestInterface;
 }

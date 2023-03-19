@@ -39,7 +39,6 @@ final class FilterRowsTransformer implements Transformer
 
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
-        /** @psalm-var pure-callable(Row) : bool $filter */
         $filter = function (Row $row) : bool {
             foreach ($this->filters as $filter) {
                 if (false === $filter->keep($row)) {

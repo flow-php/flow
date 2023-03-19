@@ -9,8 +9,6 @@ use Flow\ETL\Row\Schema\Definition;
 use Flow\Serializer\Serializable;
 
 /**
- * @psalm-immutable
- *
  * @implements Serializable<array{definitions: array<string, Definition>}>
  */
 final class Schema implements \Countable, Serializable
@@ -25,11 +23,11 @@ final class Schema implements \Countable, Serializable
         $uniqueDefinitions = [];
 
         foreach ($definitions as $definition) {
-            $uniqueDefinitions[$definition->entry()] = $definition;
+            $uniqueDefinitions[$definition->entry()->name()] = $definition;
         }
 
         if (\count($uniqueDefinitions) !== \count($definitions)) {
-            throw new InvalidArgumentException(\sprintf('Entry definitions must be unique, given: [%s]', \implode(', ', \array_map(fn (Definition $d) => $d->entry(), $definitions))));
+            throw new InvalidArgumentException(\sprintf('Entry definitions must be unique, given: [%s]', \implode(', ', \array_map(fn (Definition $d) => $d->entry()->name(), $definitions))));
         }
 
         $this->definitions = $uniqueDefinitions;
@@ -61,29 +59,39 @@ final class Schema implements \Countable, Serializable
     }
 
     /**
-     * @return array<string>
+     * @return array<EntryReference>
      */
     public function entries() : array
     {
-        return \array_keys($this->definitions);
+        $refs = [];
+
+        foreach ($this->definitions as $definition) {
+            $refs[] = $definition->entry();
+        }
+
+        return $refs;
     }
 
-    public function findDefinition(string $entry) : ?Definition
+    public function findDefinition(string|EntryReference $entry) : ?Definition
     {
-        if (!\array_key_exists($entry, $this->definitions)) {
+        $ref = EntryReference::init($entry);
+
+        if (!\array_key_exists($ref->name(), $this->definitions)) {
             return null;
         }
 
-        return $this->definitions[$entry];
+        return $this->definitions[$ref->name()];
     }
 
-    public function getDefinition(string $entry) : ?Definition
+    public function getDefinition(string|EntryReference $entry) : ?Definition
     {
-        if (!\array_key_exists($entry, $this->definitions)) {
-            throw new InvalidArgumentException("There is no definition for \"{$entry}\" in the schema.");
+        $ref = EntryReference::init($entry);
+
+        if (!\array_key_exists($ref->name(), $this->definitions)) {
+            throw new InvalidArgumentException("There is no definition for \"{$ref->name()}\" in the schema.");
         }
 
-        return $this->definitions[$entry];
+        return $this->definitions[$ref->name()];
     }
 
     public function merge(self $schema) : self
@@ -99,7 +107,7 @@ final class Schema implements \Countable, Serializable
         }
 
         foreach ($schema->definitions as $entry => $definition) {
-            if (!\array_key_exists($definition->entry(), $newDefinitions)) {
+            if (!\array_key_exists($definition->entry()->name(), $newDefinitions)) {
                 $newDefinitions[$entry] = $definition->nullable();
             } elseif (!$newDefinitions[$entry]->isEqual($definition)) {
                 $newDefinitions[$entry] = $newDefinitions[$entry]->merge($definition);
@@ -124,12 +132,14 @@ final class Schema implements \Countable, Serializable
         return new self(...$definitions);
     }
 
-    public function without(string ...$entries) : self
+    public function without(string|Reference ...$entries) : self
     {
+        $refs = References::init(...$entries);
+
         $definitions = [];
 
         foreach ($this->definitions as $definition) {
-            if (!\in_array($definition->entry(), $entries, true)) {
+            if (!$refs->has($definition->entry())) {
                 $definitions[] = $definition;
             }
         }

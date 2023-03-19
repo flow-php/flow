@@ -10,12 +10,6 @@ final class Closure
 {
     private static ?bool $isSerializable = null;
 
-    /**
-     * @psalm-suppress ImpureStaticProperty
-     * @psalm-suppress ImpureFunctionCall
-     *
-     * @psalm-pure
-     */
     public static function isSerializable() : bool
     {
         if (self::$isSerializable === null) {

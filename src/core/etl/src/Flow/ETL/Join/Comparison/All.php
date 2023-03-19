@@ -6,11 +6,10 @@ namespace Flow\ETL\Join\Comparison;
 
 use Flow\ETL\Join\Comparison;
 use Flow\ETL\Row;
+use Flow\ETL\Row\EntryReference;
 
 /**
  * @implements Comparison<array{comparisons: array<Comparison>}>
- *
- * @psalm-immutable
  */
 final class All implements Comparison
 {
@@ -48,7 +47,7 @@ final class All implements Comparison
     }
 
     /**
-     * @return array<string>
+     * @return array<EntryReference>
      */
     public function left() : array
     {
@@ -62,7 +61,7 @@ final class All implements Comparison
     }
 
     /**
-     * @return array<string>
+     * @return array<EntryReference>
      */
     public function right() : array
     {

@@ -11,8 +11,6 @@ use Flow\ETL\Transformer\Cast\ValueCaster\AnyToFloatCaster;
 
 /**
  * @implements EntryConverter<array{value_caster: AnyToFloatCaster}>
- *
- * @psalm-immutable
  */
 final class AnyToFloatEntryCaster implements EntryConverter
 {

@@ -15,8 +15,6 @@ use Flow\ETL\Row\Entry\TypedCollection\ScalarType;
 class Entry
 {
     /**
-     * @psalm-pure
-     *
      * @param array<mixed> $data
      *
      * @return RowEntry\ArrayEntry
@@ -27,8 +25,6 @@ class Entry
     }
 
     /**
-     * @psalm-pure
-     *
      * @throws InvalidArgumentException
      *
      * @return RowEntry\BooleanEntry
@@ -39,8 +35,6 @@ class Entry
     }
 
     /**
-     * @psalm-pure
-     *
      * @throws InvalidArgumentException
      *
      * @return RowEntry\CollectionEntry
@@ -51,8 +45,6 @@ class Entry
     }
 
     /**
-     * @psalm-pure
-     *
      * @throws InvalidArgumentException
      *
      * @return RowEntry\DateTimeEntry
@@ -63,8 +55,6 @@ class Entry
     }
 
     /**
-     * @psalm-pure
-     *
      * @throws InvalidArgumentException
      *
      * @return RowEntry\DateTimeEntry
@@ -76,8 +66,6 @@ class Entry
     }
 
     /**
-     * @psalm-pure
-     *
      * @throws InvalidArgumentException
      */
     final public static function entries(RowEntry ...$entries) : Entries
@@ -86,8 +74,6 @@ class Entry
     }
 
     /**
-     * @psalm-pure
-     *
      * @throws InvalidArgumentException
      *
      * @return RowEntry\EnumEntry
@@ -98,8 +84,6 @@ class Entry
     }
 
     /**
-     * @psalm-pure
-     *
      * @throws InvalidArgumentException
      *
      * @return RowEntry\FloatEntry
@@ -110,8 +94,6 @@ class Entry
     }
 
     /**
-     * @psalm-pure
-     *
      * @throws InvalidArgumentException
      *
      * @return RowEntry\IntegerEntry
@@ -122,8 +104,6 @@ class Entry
     }
 
     /**
-     * @psalm-pure
-     *
      * @param array<mixed> $data
      *
      * @return RowEntry\JsonEntry
@@ -134,8 +114,6 @@ class Entry
     }
 
     /**
-     * @psalm-pure
-     *
      * @param array<mixed> $data
      *
      * @throws InvalidArgumentException
@@ -148,8 +126,6 @@ class Entry
     }
 
     /**
-     * @psalm-pure
-     *
      * @param string $data
      *
      * @return RowEntry\JsonEntry
@@ -160,8 +136,6 @@ class Entry
     }
 
     /**
-     * @psalm-pure
-     *
      * @param array<bool> $value
      *
      * @throws InvalidArgumentException
@@ -174,8 +148,6 @@ class Entry
     }
 
     /**
-     * @psalm-pure
-     *
      * @param array<\DateTimeInterface> $value
      *
      * @throws InvalidArgumentException
@@ -188,8 +160,6 @@ class Entry
     }
 
     /**
-     * @psalm-pure
-     *
      * @param array<float> $value
      *
      * @throws InvalidArgumentException
@@ -202,8 +172,6 @@ class Entry
     }
 
     /**
-     * @psalm-pure
-     *
      * @param array<int> $value
      *
      * @throws InvalidArgumentException
@@ -216,8 +184,6 @@ class Entry
     }
 
     /**
-     * @psalm-pure
-     *
      * @param array<\DateTimeInterface> $value
      * @param class-string $class
      *
@@ -231,8 +197,6 @@ class Entry
     }
 
     /**
-     * @psalm-pure
-     *
      * @param array<string> $value
      *
      * @throws InvalidArgumentException
@@ -245,8 +209,6 @@ class Entry
     }
 
     /**
-     * @psalm-pure
-     *
      * @throws InvalidArgumentException
      *
      * @return RowEntry\NullEntry
@@ -257,8 +219,6 @@ class Entry
     }
 
     /**
-     * @psalm-pure
-     *
      * @throws InvalidArgumentException
      *
      * @return RowEntry\ObjectEntry
@@ -269,8 +229,6 @@ class Entry
     }
 
     /**
-     * @psalm-pure
-     *
      * @throws InvalidArgumentException
      *
      * @return RowEntry\StringEntry
@@ -281,8 +239,6 @@ class Entry
     }
 
     /**
-     * @psalm-pure
-     *
      * @throws InvalidArgumentException
      *
      * @return RowEntry\StringEntry
@@ -293,8 +249,6 @@ class Entry
     }
 
     /**
-     * @psalm-pure
-     *
      * @throws InvalidArgumentException
      *
      * @return RowEntry\StringEntry
@@ -305,8 +259,6 @@ class Entry
     }
 
     /**
-     * @psalm-pure
-     *
      * @throws InvalidArgumentException
      *
      * @return RowEntry\StructureEntry

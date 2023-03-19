@@ -8,30 +8,34 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Row\EntryFactory;
+use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 /**
- * @implements Transformer<array{array_entry_name: string, skip_entry_names: array<string>, entry_factory: EntryFactory, entry_prefix: null|string}>
+ * @implements Transformer<array{ref: EntryReference, skip_entry_names: array<string>, entry_factory: EntryFactory, entry_prefix: null|string}>
  */
 final class ArrayUnpackTransformer implements Transformer
 {
+    private readonly EntryReference $ref;
+
     /**
      * @param string[] $skipEntryNames
      */
     public function __construct(
-        private readonly string $arrayEntryName,
+        string|EntryReference $ref,
         private readonly array $skipEntryNames = [],
         private readonly ?string $entryPrefix = null,
         private readonly EntryFactory $entryFactory = new NativeEntryFactory()
     ) {
+        $this->ref = EntryReference::init($ref);
     }
 
     public function __serialize() : array
     {
         return [
-            'array_entry_name' => $this->arrayEntryName,
+            'ref' => $this->ref,
             'skip_entry_names' => $this->skipEntryNames,
             'entry_factory' => $this->entryFactory,
             'entry_prefix' => $this->entryPrefix,
@@ -40,7 +44,7 @@ final class ArrayUnpackTransformer implements Transformer
 
     public function __unserialize(array $data) : void
     {
-        $this->arrayEntryName = $data['array_entry_name'];
+        $this->ref = $data['ref'];
         $this->skipEntryNames = $data['skip_entry_names'];
         $this->entryFactory = $data['entry_factory'];
         $this->entryPrefix = $data['entry_prefix'];
@@ -48,14 +52,11 @@ final class ArrayUnpackTransformer implements Transformer
 
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
-        /**
-         * @psalm-var pure-callable(Row) : Row $rowsMap
-         */
         $rowsMap = function (Row $row) : Row {
-            $arrayEntry = $row->entries()->get($this->arrayEntryName);
+            $arrayEntry = $row->entries()->get($this->ref);
 
             if (!$arrayEntry instanceof Row\Entry\ArrayEntry) {
-                throw new RuntimeException("\"{$this->arrayEntryName}\" is not ArrayEntry");
+                throw new RuntimeException("\"{$this->ref->name()}\" is not ArrayEntry");
             }
 
             $entries = [];

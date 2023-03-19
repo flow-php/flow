@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Row;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Schema;
 use PHPUnit\Framework\TestCase;
 
@@ -27,7 +28,7 @@ final class SchemaTest extends TestCase
             Schema\Definition::integer('Id')
         );
 
-        $this->assertSame(['id', 'Id'], $schema->entries());
+        $this->assertEquals([EntryReference::init('id'), EntryReference::init('Id')], $schema->entries());
     }
 
     public function test_making_whole_schema_nullable() : void

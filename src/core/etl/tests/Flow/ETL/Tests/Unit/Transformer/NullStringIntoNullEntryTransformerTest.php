@@ -11,9 +11,6 @@ use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @psalm-immutable
- */
 final class NullStringIntoNullEntryTransformerTest extends TestCase
 {
     public function test_transforms_null_string_entries_into_null_entries() : void

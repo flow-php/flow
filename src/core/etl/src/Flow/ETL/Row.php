@@ -7,13 +7,13 @@ namespace Flow\ETL;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema;
 use Flow\Serializer\Serializable;
 
 /**
  * @implements Serializable<array{entries: Entries}>
- *
- * @psalm-immutable
  */
 final class Row implements Serializable
 {
@@ -22,8 +22,6 @@ final class Row implements Serializable
     }
 
     /**
-     * @psalm-pure
-     *
      * @throws InvalidArgumentException
      */
     public static function create(Entry ...$entries) : self
@@ -57,8 +55,6 @@ final class Row implements Serializable
     }
 
     /**
-     * @psalm-param pure-callable(Entry) : bool $callable
-     *
      * @param callable(Entry) : bool $callable
      */
     public function filter(callable $callable) : self
@@ -69,12 +65,12 @@ final class Row implements Serializable
     /**
      * @throws InvalidArgumentException
      */
-    public function get(string $name) : Entry
+    public function get(string|EntryReference $name) : Entry
     {
         return $this->entries->get($name);
     }
 
-    public function has(string $name) : bool
+    public function has(string|EntryReference $name) : bool
     {
         return $this->entries->has($name);
     }
@@ -85,8 +81,6 @@ final class Row implements Serializable
     }
 
     /**
-     * @psalm-param pure-callable(Entry) : Entry $mapper
-     *
      * @param callable(Entry) : Entry $mapper
      */
     public function map(callable $mapper) : self
@@ -106,13 +100,14 @@ final class Row implements Serializable
         );
     }
 
-    public function remove(string ...$names) : self
+    public function remove(string|Reference ...$names) : self
     {
+        $refs = EntryReference::initAll(...$names);
         $namesToRemove = [];
 
-        foreach ($names as $name) {
-            if ($this->entries->has($name)) {
-                $namesToRemove[] = $name;
+        foreach ($refs as $ref) {
+            if ($this->entries->has($ref)) {
+                $namesToRemove[] = $ref;
             }
         }
 
@@ -158,7 +153,7 @@ final class Row implements Serializable
      *
      * @return mixed
      */
-    public function valueOf(string $name)
+    public function valueOf(string|EntryReference $name)
     {
         return $this->get($name)->value();
     }

@@ -54,9 +54,6 @@ final class ArrayKeysStyleConverterTransformer implements Transformer
 
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
-        /**
-         * @psalm-var pure-callable(Row $row) : Row $transformer
-         */
         $transformer = function (Row $row) : Row {
             $arrayEntry = $row->get($this->arrayEntryName);
 
@@ -68,8 +65,6 @@ final class ArrayKeysStyleConverterTransformer implements Transformer
 
             /**
              * @phpstan-ignore-next-line
-             *
-             * @psalm-var pure-callable(string) : string $converter
              */
             $converter = fn (string $key) : string => (string) \call_user_func([new Convert($key), 'to' . \ucfirst($this->style)]);
 

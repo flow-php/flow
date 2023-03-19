@@ -74,9 +74,6 @@ final class MathOperationTransformer implements Transformer
 
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
-        /**
-         * @psalm-var pure-callable(Row $row) : Row $transformer
-         */
         $transformer = function (Row $row) : Row {
             if (!$row->entries()->has($this->leftEntry)) {
                 throw new RuntimeException("\"{$this->leftEntry}\" not found");

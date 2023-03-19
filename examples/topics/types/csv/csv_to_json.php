@@ -1,5 +1,6 @@
 <?php declare(strict_types=1);
 
+use function Flow\ETL\DSL\col;
 use Aeon\Calendar\Stopwatch;
 use Flow\ETL\DSL\CSV;
 use Flow\ETL\DSL\Json;
@@ -27,8 +28,8 @@ $memory->current();
 (new Flow())
     ->read(CSV::from(__FLOW_OUTPUT__ . '/dataset.csv'))
     ->rows(Transform::array_unpack('row'))
-    ->drop('row')
-    ->write(To::callback(function (Rows $rows) use (&$total, $memory) : void {
+    ->drop(col('row'))
+    ->write(To::callback(static function (Rows $rows) use (&$total, $memory) : void {
         $total += $rows->count();
 
         $memory->current();

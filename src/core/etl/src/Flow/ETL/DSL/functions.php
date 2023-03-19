@@ -23,6 +23,14 @@ function entry(string $entry) : EntryReference
     return new EntryReference($entry);
 }
 
+/**
+ * Alias for entry function.
+ */
+function ref(string $entry) : EntryReference
+{
+    return entry($entry);
+}
+
 function struct(string ...$entries) : StructureReference
 {
     if (!\count($entries)) {

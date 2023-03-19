@@ -6,9 +6,6 @@ namespace Flow\ETL\Transformer\Cast;
 
 use Flow\ETL\Transformer\Cast\EntryCaster\StringToDateTimeEntryCaster;
 
-/**
- * @psalm-immutable
- */
 final class CastToDateTime extends CastEntries
 {
     /**

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use function Flow\ETL\DSL\col;
 use Aeon\Calendar\Stopwatch;
 use Flow\ETL\DSL\Avro;
 use Flow\ETL\DSL\CSV;
@@ -19,8 +20,8 @@ $total = 0;
 
 (new Flow())
     ->read(CSV::from(__FLOW_OUTPUT__ . '/dataset.csv', 10_000))
-    ->rows(Transform::array_unpack('row'))
-    ->drop('row')
+    ->rows(Transform::array_unpack(col('row')))
+    ->drop(col('row'))
     ->rename('last name', 'last_name')
     ->write(Avro::to(__FLOW_OUTPUT__ . '/dataset.avro'))
     ->run();

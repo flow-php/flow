@@ -6,9 +6,6 @@ namespace Flow\ETL\Transformer\Cast;
 
 use Flow\ETL\Transformer\Cast\EntryCaster\AnyToJsonEntryCaster;
 
-/**
- * @psalm-immutable
- */
 final class CastToJson extends CastEntries
 {
     /**

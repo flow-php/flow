@@ -18,11 +18,11 @@ final class CollectUnique implements Aggregator
      */
     private array $collection;
 
-    private readonly Reference $entry;
+    private readonly Reference $ref;
 
     public function __construct(string|Reference $entry)
     {
-        $this->entry = \is_string($entry) ? new EntryReference($entry) : $entry;
+        $this->ref = \is_string($entry) ? new EntryReference($entry) : $entry;
         $this->collection = [];
     }
 
@@ -32,12 +32,22 @@ final class CollectUnique implements Aggregator
             /** @var array<string, mixed> $values */
             $values = [];
 
-            foreach ((array) $this->entry->to() as $entry) {
-                /** @psalm-suppress MixedAssignment */
-                $values[$entry] = $row->valueOf($entry);
+            if ($this->ref instanceof Row\StructureReference) {
+                foreach ($this->ref->to() as $ref) {
+                    /** @psalm-suppress MixedAssignment */
+                    $values[$ref->name()] = $row->valueOf($ref);
+                }
+            } else {
+                /**
+                 * @psalm-suppress MixedAssignment
+                 * @psalm-suppress InvalidArgument
+                 *
+                 * @phpstan-ignore-next-line
+                 */
+                $values[$this->ref->name()] = $row->valueOf($this->ref);
             }
 
-            if ($this->entry instanceof EntryReference) {
+            if ($this->ref instanceof EntryReference) {
                 /** @var mixed $value */
                 $value = \current($values);
 
@@ -56,10 +66,10 @@ final class CollectUnique implements Aggregator
 
     public function result() : Entry
     {
-        if (!$this->entry->hasAlias()) {
-            $this->entry->as($this->entry->name() . '_collection_unique');
+        if (!$this->ref->hasAlias()) {
+            $this->ref->as($this->ref->name() . '_collection_unique');
         }
 
-        return \Flow\ETL\DSL\Entry::array($this->entry->name(), $this->collection);
+        return \Flow\ETL\DSL\Entry::array($this->ref->name(), $this->collection);
     }
 }

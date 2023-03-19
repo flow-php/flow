@@ -8,48 +8,52 @@ use Flow\ETL\DSL\Entry as EntryDSL;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 /**
- * @implements Transformer<array{names: array<string>}>
+ * @implements Transformer<array{refs: array<EntryReference>}>
  */
 final class KeepEntriesTransformer implements Transformer
 {
     /**
-     * @var string[]
+     * @var array<EntryReference>
      */
-    private readonly array $names;
+    private readonly array $refs;
 
-    public function __construct(string ...$names)
+    public function __construct(string|Reference ...$refs)
     {
-        $this->names = $names;
+        $this->refs = EntryReference::initAll(...$refs);
     }
 
     public function __serialize() : array
     {
         return [
-            'names' => $this->names,
+            'refs' => $this->refs,
         ];
     }
 
     public function __unserialize(array $data) : void
     {
-        $this->names = $data['names'];
+        $this->refs = $data['refs'];
     }
 
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
-        /** @psalm-var pure-callable(Row) : Row $transformer */
         $transformer = function (Row $row) : Row {
             $allEntries = $row->entries()->map(fn (Entry $entry) : string => $entry->name());
-            $removeEntries = \array_diff($allEntries, $this->names);
+            $removeEntries = \array_diff(
+                $allEntries,
+                \array_map(static fn (EntryReference $r) : string => $r->name(), $this->refs)
+            );
 
             $newEntries = $row->remove(...$removeEntries);
 
-            foreach ($this->names as $keepEntryName) {
+            foreach ($this->refs as $keepEntryName) {
                 if (!$newEntries->entries()->has($keepEntryName)) {
-                    $newEntries = $newEntries->add(EntryDSL::null($keepEntryName));
+                    $newEntries = $newEntries->add(EntryDSL::null($keepEntryName->name()));
                 }
             }
 

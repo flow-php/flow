@@ -20,6 +20,8 @@ use Flow\ETL\Pipeline\GroupByPipeline;
 use Flow\ETL\Pipeline\NestedPipeline;
 use Flow\ETL\Pipeline\ParallelizingPipeline;
 use Flow\ETL\Pipeline\VoidPipeline;
+use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Row\Sort;
 use Flow\ETL\Transformer\CallbackRowTransformer;
@@ -116,7 +118,7 @@ final class DataFrame
     /**
      * Drop given entries.
      */
-    public function drop(string ...$entries) : self
+    public function drop(string|Reference ...$entries) : self
     {
         $this->pipeline->add(new RemoveEntriesTransformer(...$entries));
 
@@ -155,8 +157,6 @@ final class DataFrame
 
     /**
      * @param callable(Row $row) : bool $callback
-     *
-     * @psalm-param pure-callable(Row $row) : bool $callback
      */
     public function filter(callable $callback) : self
     {
@@ -180,7 +180,7 @@ final class DataFrame
         $this->run($callback);
     }
 
-    public function groupBy(string ...$entries) : self
+    public function groupBy(string|Reference ...$entries) : self
     {
         $this->groupBy = new GroupBy(...$entries);
         $this->pipeline = new GroupByPipeline($this->groupBy, $this->pipeline);
@@ -258,8 +258,6 @@ final class DataFrame
 
     /**
      * @param callable(Row $row) : Row $callback
-     *
-     * @psalm-param pure-callable(Row $row) : Row $callback
      */
     public function map(callable $callback) : self
     {
@@ -303,11 +301,11 @@ final class DataFrame
         return $this;
     }
 
-    public function partitionBy(string $entry, string ...$entries) : self
+    public function partitionBy(string|Reference $entry, string|Reference ...$entries) : self
     {
         \array_unshift($entries, $entry);
 
-        $this->context->partitionBy(...$entries);
+        $this->context->partitionBy(...EntryReference::initAll(...$entries));
 
         return $this;
     }
@@ -374,7 +372,7 @@ final class DataFrame
     /**
      * Keep only given entries.
      */
-    public function select(string ...$entries) : self
+    public function select(string|Reference ...$entries) : self
     {
         $this->pipeline->add(new KeepEntriesTransformer(...$entries));
 
@@ -391,7 +389,7 @@ final class DataFrame
     }
 
     /**
-     * When set to true, files are never written under the origin name but instead initial path is turend
+     * When set to true, files are never written under the origin name but instead initial path is turned
      * into a folder in which each process writes to a new file.
      * Otherwise parallel processing would not be possible due to a single file bottleneck.
      * In a single process pipelines there is not much added value from this setting unless

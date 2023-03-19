@@ -9,6 +9,8 @@ use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Partition\NoopFilter;
 use Flow\ETL\Partition\PartitionFilter;
+use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
 use Flow\Serializer\Serializer;
 
 /**
@@ -24,7 +26,7 @@ final class FlowContext
     private PartitionFilter $partitionFilter;
 
     /**
-     * @var array<string>
+     * @var array<EntryReference>
      */
     private array $partitions;
 
@@ -59,15 +61,15 @@ final class FlowContext
         return $this->mode;
     }
 
-    public function partitionBy(string ...$entry) : self
+    public function partitionBy(string|Reference ...$entry) : self
     {
-        $this->partitions = $entry;
+        $this->partitions = EntryReference::initAll(...$entry);
 
         return $this;
     }
 
     /**
-     * @return array<string>
+     * @return array<EntryReference>
      */
     public function partitionEntries() : array
     {

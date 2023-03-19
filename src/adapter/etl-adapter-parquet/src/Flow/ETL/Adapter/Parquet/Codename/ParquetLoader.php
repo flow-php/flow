@@ -147,10 +147,10 @@ final class ParquetLoader implements Closure, Loader, Loader\FileLoader
      */
     private function prepareDataBuffer() : void
     {
-        foreach ($this->schema()->entries() as $entry) {
-            if (!\array_key_exists($entry, $this->dataBuffer)) {
-                $this->dataBuffer[$entry] = [];
-                $this->dataRepetitionsBuffer[$entry] = [];
+        foreach ($this->schema()->entries() as $ref) {
+            if (!\array_key_exists($ref->name(), $this->dataBuffer)) {
+                $this->dataBuffer[$ref->name()] = [];
+                $this->dataRepetitionsBuffer[$ref->name()] = [];
             }
         }
     }

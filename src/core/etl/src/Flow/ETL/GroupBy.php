@@ -9,7 +9,9 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\GroupBy\Aggregation;
 use Flow\ETL\GroupBy\Aggregator;
 use Flow\ETL\Row\Entries;
+use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
+use Flow\ETL\Row\Reference;
 
 final class GroupBy
 {
@@ -19,18 +21,18 @@ final class GroupBy
     private array $aggregations;
 
     /**
-     * @var array<string>
-     */
-    private readonly array $entries;
-
-    /**
      * @var array<string, array{values?: array<string, mixed>, aggregators: array<Aggregator>}>
      */
     private array $groups;
 
-    public function __construct(string ...$entries)
+    /**
+     * @var array<EntryReference>
+     */
+    private readonly array $refs;
+
+    public function __construct(string|Reference ...$entries)
     {
-        $this->entries = \array_unique($entries);
+        $this->refs = EntryReference::initAll(...\array_unique($entries));
         $this->aggregations = [];
         $this->groups = [];
     }
@@ -50,18 +52,18 @@ final class GroupBy
             /** @var array<string, null|mixed> $values */
             $values = [];
 
-            foreach ($this->entries as $entryName) {
+            foreach ($this->refs as $ref) {
                 try {
-                    $value = $row->valueOf($entryName);
+                    $value = $row->valueOf($ref);
 
                     if (!\is_scalar($value) && null !== $value) {
                         throw new RuntimeException('Grouping by non scalar values is not supported, given: ' . \gettype($value));
                     }
 
                     /** @psalm-suppress MixedAssignment */
-                    $values[$entryName] = $value;
+                    $values[$ref->name()] = $value;
                 } catch (InvalidArgumentException) {
-                    $values[$entryName] = null;
+                    $values[$ref->name()] = null;
                 }
             }
 

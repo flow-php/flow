@@ -8,8 +8,6 @@ use Flow\Serializer\Serializable;
  * @template T
  *
  * @extends Serializable<T>
- *
- * @psalm-immutable
  */
 interface EntryConverter extends Serializable
 {

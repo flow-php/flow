@@ -7,9 +7,6 @@ namespace Flow\ETL\Transformer\Cast\ArrayEntryEach;
 use Flow\ETL\Transformer\Cast\CastArrayEntryEach;
 use Flow\ETL\Transformer\Cast\ValueCaster\AnyToIntegerCaster;
 
-/**
- * @psalm-immutable
- */
 final class CastArrayEntryEachToInteger extends CastArrayEntryEach
 {
     public function __construct(string $arrayEntryName)

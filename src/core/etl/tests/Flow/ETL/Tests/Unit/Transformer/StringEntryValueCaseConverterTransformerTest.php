@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use function Flow\ETL\DSL\col;
 use Flow\ETL\Config;
 use Flow\ETL\DSL\Transform;
 use Flow\ETL\FlowContext;
@@ -15,7 +16,7 @@ final class StringEntryValueCaseConverterTransformerTest extends TestCase
 {
     public function test_convert_entry_value_to_lower_case() : void
     {
-        $transformer = Transform::string_lower('OtherEntryName', 'OtherEntryNameTest');
+        $transformer = Transform::string_lower(col('OtherEntryName', 'OtherEntryNameTest'));
 
         $rows = $transformer->transform(new Rows(
             Row::create(
@@ -39,7 +40,7 @@ final class StringEntryValueCaseConverterTransformerTest extends TestCase
 
     public function test_convert_entry_value_to_upper_case() : void
     {
-        $transformer = Transform::string_upper('OtherEntryName', 'OtherEntryNameTest');
+        $transformer = Transform::string_upper(col('OtherEntryName', 'OtherEntryNameTest'));
 
         $rows = $transformer->transform(new Rows(
             Row::create(

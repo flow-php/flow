@@ -148,7 +148,7 @@
         ],
         "static:analyze": [
             "tools/psalm/vendor/bin/psalm.phar",
-            "tools/phpstan/vendor/bin/phpstan analyze -c phpstan.neon",
+            "tools/phpstan/vendor/bin/phpstan analyze -c phpstan.neon --memory-limit=-1",
             "tools/cs-fixer/vendor/bin/php-cs-fixer fix --dry-run"
         ],
         "cs:php:fix": [

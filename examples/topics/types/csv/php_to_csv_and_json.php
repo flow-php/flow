@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use function Flow\ETL\DSL\col;
 use Aeon\Calendar\Stopwatch;
 use Flow\ETL\DSL\CSV;
 use Flow\ETL\DSL\Json;
@@ -22,7 +23,7 @@ $memory->current();
 (new Flow())
     ->read($extractor)
     ->rows(Transform::array_unpack('row'))
-    ->drop('row')
+    ->drop(col('row'))
     ->write(CSV::to(__FLOW_OUTPUT__ . '/dataset.csv'))
     ->write(Json::to(__FLOW_OUTPUT__ . '/dataset.json'))
     ->run();

@@ -39,7 +39,7 @@ final class PsrLoggerLoader implements Loader
     public function load(Rows $rows, FlowContext $context) : void
     {
         /**
-         * @psalm-var pure-callable(Row) : void $loader
+         * @psalm-var callable(Row) : void $loader
          */
         $loader = function (Row $row) : void {
             $this->logger->log($this->logLevel, $this->message, $row->toArray());

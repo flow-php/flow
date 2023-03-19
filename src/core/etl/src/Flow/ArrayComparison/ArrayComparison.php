@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ArrayComparison;
 
-/**
- * @psalm-immutable
- */
 final class ArrayComparison
 {
     /**

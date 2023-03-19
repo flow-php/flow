@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row;
 
-/**
- * @psalm-immutable
- */
 final class Sort
 {
     private function __construct(

@@ -10,7 +10,9 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
+use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Row\ValueConverter;
 use Flow\ETL\Transformer;
@@ -241,10 +243,10 @@ class Transform
      *                        It is allowed to provide definitions only for selected elements, like for example
      *                        when converting enum string value into specific Enum.
      */
-    final public static function array_unpack(string $array_column, string $entry_prefix = '', array $skip_keys = [], Schema $schema = null) : Transformer
+    final public static function array_unpack(string|EntryReference $ref, string $entry_prefix = '', array $skip_keys = [], Schema $schema = null) : Transformer
     {
         return new Transformer\ArrayUnpackTransformer(
-            $array_column,
+            $ref,
             $skip_keys,
             $entry_prefix,
             new NativeEntryFactory($schema)
@@ -252,7 +254,7 @@ class Transform
     }
 
     /**
-     * @psalm-param pure-callable(Entry $entry) : Entry ...$callables
+     * @psalm-param callable(Entry $entry) : Entry ...$callables
      *
      * @param callable(Entry $entry) : Entry ...$callables
      */
@@ -262,8 +264,6 @@ class Transform
     }
 
     /**
-     * @psalm-param pure-callable(Row) : Row $callable
-     *
      * @param callable(Row) : Row $callable
      */
     final public static function callback_row(callable $callable) : Transformer
@@ -307,8 +307,6 @@ class Transform
 
     /**
      * @param callable(Row $row) : Entries $generator
-     *
-     * @psalm-param pure-callable(Row $row) : Entries $generator
      */
     final public static function dynamic(callable $generator) : Transformer
     {
@@ -457,7 +455,7 @@ class Transform
         return MathValueOperationTransformer::power($left_entry, $value, $new_entry_name ?? $left_entry);
     }
 
-    final public static function prefix(string $entry, string $prefix) : Transformer
+    final public static function prefix(string|Reference $entry, string $prefix) : Transformer
     {
         return new Transformer\StringFormatTransformer($entry, \str_replace('%', '%%', $prefix) . '%s');
     }
@@ -475,7 +473,7 @@ class Transform
         return self::user_function([$entry], 'preg_replace', ['pattern' => $pattern, 'replacement' => $replacement, 'limit' => $limit], 'subject');
     }
 
-    final public static function remove(string ...$entry) : Transformer
+    final public static function remove(string|Reference ...$entry) : Transformer
     {
         return new Transformer\RemoveEntriesTransformer(...$entry);
     }
@@ -527,24 +525,24 @@ class Transform
     }
 
     /**
-     * @param string[] $string_columns
+     * @param array<Reference|string> $refs
      */
-    final public static function string_concat(array $string_columns, string $glue = '', string $entry_name = 'element') : Transformer
+    final public static function string_concat(array $refs, string $glue = '', string $entry_name = 'element') : Transformer
     {
-        return new Transformer\StringConcatTransformer($string_columns, $glue, $entry_name);
+        return new Transformer\StringConcatTransformer($refs, $glue, $entry_name);
     }
 
-    final public static function string_format(string $entry_name, string $format) : Transformer
+    final public static function string_format(string|Reference $entry_name, string $format) : Transformer
     {
         return new Transformer\StringFormatTransformer($entry_name, $format);
     }
 
-    final public static function string_lower(string ...$entry_names) : Transformer
+    final public static function string_lower(string|Reference ...$entry_names) : Transformer
     {
         return StringEntryValueCaseConverterTransformer::lower(...$entry_names);
     }
 
-    final public static function string_upper(string ...$entry_names) : Transformer
+    final public static function string_upper(string|Reference ...$entry_names) : Transformer
     {
         return StringEntryValueCaseConverterTransformer::upper(...$entry_names);
     }
@@ -559,7 +557,7 @@ class Transform
         return MathValueOperationTransformer::subtract($left_entry, $value, $new_entry_name ?? $left_entry);
     }
 
-    final public static function suffix(string $entry, string $suffix) : Transformer
+    final public static function suffix(string|Reference $entry, string $suffix) : Transformer
     {
         return new Transformer\StringFormatTransformer($entry, '%s' . \str_replace('%', '%%', $suffix));
     }
@@ -574,7 +572,7 @@ class Transform
         return new CastTransformer(CastJsonToArray::nullable($entry));
     }
 
-    final public static function to_array_from_object(string $entry) : Transformer
+    final public static function to_array_from_object(string|Row\EntryReference $entry) : Transformer
     {
         if (!\class_exists("\Laminas\Hydrator\ReflectionHydrator")) {
             throw new RuntimeException("Laminas\Hydrator\ReflectionHydrator class not found, please install it using 'composer require laminas/laminas-hydrator'");

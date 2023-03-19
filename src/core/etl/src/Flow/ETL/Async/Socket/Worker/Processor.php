@@ -12,6 +12,7 @@ use Flow\ETL\Monitoring\Memory\Consumption;
 use Flow\ETL\Partition\NoopFilter;
 use Flow\ETL\Partition\PartitionFilter;
 use Flow\ETL\Pipeline\Pipes;
+use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 use Psr\Log\LoggerInterface;
@@ -21,7 +22,7 @@ final class Processor
     private ?Config $config;
 
     /**
-     * @var array<string>
+     * @var array<EntryReference>
      */
     private array $partitionEntries;
 
@@ -82,7 +83,7 @@ final class Processor
     }
 
     /**
-     * @param array<string> $partitionEntries
+     * @param array<EntryReference> $partitionEntries
      */
     public function setPartitionEntries(array $partitionEntries) : void
     {

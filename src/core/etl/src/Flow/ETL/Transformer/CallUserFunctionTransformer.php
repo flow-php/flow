@@ -82,11 +82,8 @@ final class CallUserFunctionTransformer implements Transformer
     {
         /**
          * @var callable(Row) : Row $transform
-         *
-         * @psalm-var pure-callable(Row) : Row $transform
          */
         $transform = function (Row $row) : Row {
-            /** @psalm-var pure-callable(Row\Entry) : Row\Entry $entryMap */
             $entryMap = function (Row\Entry $entry) : Row\Entry {
                 if (\in_array($entry->name(), $this->entries, true)) {
                     $entry = $this->entryFactory->create(

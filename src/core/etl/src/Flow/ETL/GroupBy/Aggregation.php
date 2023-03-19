@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\GroupBy;
 
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\GroupBy\Aggregator\Average;
 use Flow\ETL\GroupBy\Aggregator\Collect;
@@ -25,17 +24,11 @@ final class Aggregation
     /**
      * @param string $type
      * @param Reference|string $entry
-     *
-     * @throws InvalidArgumentException
      */
-    public function __construct(
+    private function __construct(
         private readonly string $type,
         string|Reference $entry
     ) {
-        if (!\in_array($type, ['avg', 'count', 'max', 'min', 'sum', 'first', 'last', 'collect', 'collect_unique'], true)) {
-            throw new InvalidArgumentException("Unknown aggregation \"{$type}\", expected one of: 'avg', 'count', 'max', 'min', 'sum', 'first', 'last'");
-        }
-
         $this->entry = $entry instanceof Reference ? $entry : new EntryReference($entry);
     }
 
@@ -86,6 +79,7 @@ final class Aggregation
 
     /**
      * @psalm-suppress ArgumentTypeCoercion
+     * @psalm-suppress InvalidArgument
      */
     public function create() : Aggregator
     {
@@ -106,7 +100,7 @@ final class Aggregation
             'last' => new Last($this->entry),
             'collect' => new Collect($this->entry),
             'collect_unique' => new CollectUnique($this->entry),
-            default => throw new RuntimeException("Unknown aggregation \"{$this->type}\", expected one of: 'avg', 'count', 'max', 'min', 'sum'"),
+            default => throw new RuntimeException("Unknown aggregation \"{$this->type}\""),
         };
     }
 }
