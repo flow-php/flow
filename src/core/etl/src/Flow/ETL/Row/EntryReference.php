@@ -11,6 +11,8 @@ final class EntryReference implements Reference
 {
     private ?string $alias = null;
 
+    private SortOrder $sort = SortOrder::ASC;
+
     public function __construct(private readonly string $entry)
     {
     }
@@ -75,6 +77,20 @@ final class EntryReference implements Reference
         return $this;
     }
 
+    public function asc() : self
+    {
+        $this->sort = SortOrder::ASC;
+
+        return $this;
+    }
+
+    public function desc() : self
+    {
+        $this->sort = SortOrder::DESC;
+
+        return $this;
+    }
+
     public function hasAlias() : bool
     {
         return $this->alias !== null;
@@ -88,6 +104,11 @@ final class EntryReference implements Reference
     public function name() : string
     {
         return $this->alias ?? $this->entry;
+    }
+
+    public function sort() : SortOrder
+    {
+        return $this->sort;
     }
 
     public function to() : string

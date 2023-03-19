@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\ExternalSort;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Row\Sort;
+use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\References;
+use Flow\ETL\Row\SortOrder;
 
 /**
  * @template HeapElement
@@ -14,14 +16,11 @@ use Flow\ETL\Row\Sort;
  */
 final class RowsMinHeap extends \SplMinHeap
 {
-    /**
-     * @var Sort[]
-     */
-    private readonly array $entries;
+    private readonly References $ref;
 
-    public function __construct(Sort ...$entries)
+    public function __construct(EntryReference ...$refs)
     {
-        $this->entries = $entries;
+        $this->ref = References::init(...$refs);
     }
 
     /**
@@ -51,12 +50,12 @@ final class RowsMinHeap extends \SplMinHeap
         $values1 = [];
         $values2 = [];
 
-        foreach ($this->entries as $entry) {
+        foreach ($this->ref as $entry) {
             $row1Value = $value1->row()->valueOf($entry->name());
             $row2Value = $value2->row()->valueOf($entry->name());
 
-            $values1[] = $entry->isAsc() === 'asc' ? $row1Value : -$row1Value;
-            $values2[] = $entry->isAsc() === 'asc' ? $row2Value : -$row2Value;
+            $values1[] = $entry->sort() === SortOrder::ASC ? $row1Value : -$row1Value;
+            $values2[] = $entry->sort() === SortOrder::ASC ? $row2Value : -$row2Value;
         }
 
         return $values1 <=> $values2;

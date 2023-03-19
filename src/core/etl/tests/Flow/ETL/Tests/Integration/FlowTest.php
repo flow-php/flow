@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration;
 
+use function Flow\ETL\DSL\col;
+use function Flow\ETL\DSL\ref;
 use Flow\ETL\Cache\PSRSimpleCache;
 use Flow\ETL\Config;
 use Flow\ETL\DSL\From;
 use Flow\ETL\ExternalSort\MemorySort;
 use Flow\ETL\Flow;
 use Flow\ETL\Monitoring\Memory\Unit;
-use Flow\ETL\Row\Sort;
 use Flow\ETL\Tests\Double\AllRowTypesFakeExtractor;
 use Flow\ETL\Tests\Double\CacheSpy;
 use Flow\Serializer\NativePHPSerializer;
@@ -63,7 +64,7 @@ final class FlowTest extends IntegrationTestCase
                 ->cache($cacheSpy = new CacheSpy(Config::default()->cache()))
                 ->externalSort(new MemorySort($id, $cacheSpy, Unit::fromMb(10)))
         )->extract(new AllRowTypesFakeExtractor($rowsets = 50, $rows = 50))
-            ->sortBy(Sort::asc('id'))
+            ->sortBy(ref('id'))
             ->run();
 
         $cache = \array_diff(\scandir($this->cacheDir), ['..', '.']);
@@ -89,7 +90,7 @@ final class FlowTest extends IntegrationTestCase
                 ->id($id = 'test_etl_sort_by_in_memory')
                 ->cache($cacheSpy = new CacheSpy(Config::default()->cache()))
         )->extract(new AllRowTypesFakeExtractor($rowsets = 20, $rows = 2))
-            ->sortBy(Sort::asc('id'))
+            ->sortBy(col('id'))
             ->fetch();
 
         $cache = \array_diff(\scandir($this->cacheDir), ['..', '.']);

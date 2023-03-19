@@ -10,7 +10,7 @@ use Flow\ETL\Extractor;
 use Flow\ETL\Monitoring\Memory\Configuration;
 use Flow\ETL\Monitoring\Memory\Consumption;
 use Flow\ETL\Monitoring\Memory\Unit;
-use Flow\ETL\Row\Sort;
+use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Rows;
 
 /**
@@ -43,7 +43,7 @@ final class MemorySort implements ExternalSort
         }
     }
 
-    public function sortBy(Sort ...$entries) : Extractor
+    public function sortBy(EntryReference ...$refs) : Extractor
     {
         $memoryConsumption = new Consumption();
 
@@ -58,12 +58,12 @@ final class MemorySort implements ExternalSort
                 // Reset already merged rows and fallback to Cache based External Sort
                 unset($mergedRows);
 
-                return (new CacheExternalSort($this->cacheId, $this->cache))->sortBy(...$entries);
+                return (new CacheExternalSort($this->cacheId, $this->cache))->sortBy(...$refs);
             }
         }
 
         $this->cache->clear($this->cacheId);
 
-        return new Extractor\ProcessExtractor(...$mergedRows->sortBy(...$entries)->chunks($maxSize));
+        return new Extractor\ProcessExtractor(...$mergedRows->sortBy(...$refs)->chunks($maxSize));
     }
 }

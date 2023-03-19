@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use function Flow\ETL\DSL\ref;
 use Flow\ETL\DSL\To;
 use Flow\ETL\DSL\Transform;
 use Flow\ETL\Exception\InvalidArgumentException;
@@ -379,11 +380,24 @@ final class DataFrame
         return $this;
     }
 
-    public function sortBy(Sort ...$entries) : self
+    /**
+     * @psalm-suppress DeprecatedClass
+     */
+    public function sortBy(Sort|EntryReference ...$entries) : self
     {
         $this->cache($this->context->config->id());
 
-        $this->pipeline->source($this->context->config->externalSort()->sortBy(...$entries));
+        $sortBy = [];
+
+        foreach ($entries as $entry) {
+            if ($entry instanceof Sort) {
+                $sortBy[] = $entry->isAsc() ? ref($entry->name())->asc() : ref($entry->name())->desc();
+            } else {
+                $sortBy[] = $entry;
+            }
+        }
+
+        $this->pipeline->source($this->context->config->externalSort()->sortBy(...$sortBy));
 
         return $this;
     }

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row;
 
+/**
+ * @deprecated Please use ref("col")->desc() or ref("col")->asc() instead
+ */
 final class Sort
 {
     private function __construct(

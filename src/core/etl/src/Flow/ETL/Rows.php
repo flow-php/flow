@@ -14,8 +14,9 @@ use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry\NullEntry;
 use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\References;
 use Flow\ETL\Row\Schema;
-use Flow\ETL\Row\Sort;
+use Flow\ETL\Row\SortOrder;
 use Flow\Serializer\Serializable;
 
 /**
@@ -711,14 +712,14 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
      *
      * @return $this
      */
-    public function sortBy(Sort ...$entries) : self
+    public function sortBy(EntryReference ...$refs) : self
     {
-        $sortBy = \array_reverse($entries);
+        $sortBy = References::init(...$refs)->reverse();
 
         $rows = $this;
 
-        foreach ($sortBy as $entry) {
-            $rows = $entry->isAsc() ? $rows->sortAscending($entry->name()) : $rows->sortDescending($entry->name());
+        foreach ($sortBy->all() as $ref) {
+            $rows = $ref->sort() === SortOrder::ASC ? $rows->sortAscending($ref) : $rows->sortDescending($ref);
         }
 
         return $rows;
