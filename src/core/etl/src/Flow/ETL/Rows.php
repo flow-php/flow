@@ -364,7 +364,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
                     ...\array_map(
                         static fn (string $e) : NullEntry => Entry::null($e),
                         \array_map(
-                            static fn (EntryReference $r) : String => $r->name(),
+                            static fn (EntryReference $r) : string => $r->name(),
                             $rightSchema->entries()
                         )
                     )

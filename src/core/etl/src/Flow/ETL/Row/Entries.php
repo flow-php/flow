@@ -265,7 +265,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
             throw InvalidArgumentException::because(
                 \sprintf(
                     'In order to sort entries in a given order you need to provide all entry names, given: "%s", expected: "%s"',
-                    \implode('", "', \array_map(static fn (EntryReference $ref) : String => $ref->name(), $refs)),
+                    \implode('", "', \array_map(static fn (EntryReference $ref) : string => $ref->name(), $refs)),
                     \implode('", "', \array_map(static fn (Entry $entry) => $entry->name(), $this->entries)),
                 )
             );
