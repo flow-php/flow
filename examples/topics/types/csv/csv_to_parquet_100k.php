@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
+use function Flow\ETL\DSL\col;
 use Aeon\Calendar\Stopwatch;
 use Flow\ETL\DSL\CSV;
 use Flow\ETL\DSL\Parquet;
 use Flow\ETL\DSL\Transform;
 use Flow\ETL\Flow;
-use function Flow\ETL\DSL\col;
 
 require __DIR__ . '/../../../bootstrap.php';
 

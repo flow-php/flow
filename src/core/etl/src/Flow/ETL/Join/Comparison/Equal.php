@@ -14,6 +14,7 @@ use Flow\ETL\Row\EntryReference;
 final class Equal implements Comparison
 {
     private readonly EntryReference $entryLeft;
+
     private readonly EntryReference $entryRight;
 
     public function __construct(

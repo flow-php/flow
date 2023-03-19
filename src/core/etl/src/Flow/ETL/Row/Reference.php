@@ -19,12 +19,12 @@ interface Reference extends Serializable
 
     public function hasAlias() : bool;
 
+    public function is(self $ref) : bool;
+
     public function name() : string;
 
     /**
      * @return array<EntryReference>|string
      */
     public function to() : string|array;
-
-    public function is(self $ref) : bool;
 }

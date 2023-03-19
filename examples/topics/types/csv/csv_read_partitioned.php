@@ -20,8 +20,8 @@ $total = 0;
 
 (new Flow())
     ->read(CSV::from(__FLOW_DATA__ . '/partitioned'))
-    ->rows(Transform::array_unpack(col('row')))
-    ->drop(col('row'))
+    ->rows(Transform::array_unpack(\col('row')))
+    ->drop(\col('row'))
     ->collect()
     ->sortBy(Sort::asc('id'))
     ->write(To::output())

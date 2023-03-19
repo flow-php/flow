@@ -6,7 +6,6 @@ namespace Flow\ETL\Row;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\Serializer\Serializable;
-use Traversable;
 
 /**
  * @implements \ArrayAccess<string, EntryReference>
@@ -23,6 +22,7 @@ final class References  implements \ArrayAccess, \Countable, \IteratorAggregate,
     public function __construct(string|Reference ...$reference)
     {
         $refs = [];
+
         foreach (EntryReference::initAll(...$reference) as $ref) {
             $refs[$ref->name()] = $ref;
         }
@@ -35,10 +35,35 @@ final class References  implements \ArrayAccess, \Countable, \IteratorAggregate,
         return new self(...$reference);
     }
 
-    public function has(string|Reference $reference) : bool
+    public function __serialize() : array
+    {
+        return [
+            'refs' => $this->refs,
+        ];
+    }
+
+    public function __unserialize(array $data) : void
+    {
+        $this->refs = $data['refs'];
+    }
+
+    public function count() : int
+    {
+        return \count($this->refs);
+    }
+
+    /**
+     * @return \Traversable<string, EntryReference>
+     */
+    public function getIterator() : \Traversable
+    {
+        return new \ArrayIterator($this->refs);
+    }
+
+    public function has(string|EntryReference $reference) : bool
     {
         foreach ($this->refs as $ref) {
-            if ($ref->is($reference)) {
+            if ($ref->is(EntryReference::init($reference))) {
                 return true;
             }
         }
@@ -46,52 +71,39 @@ final class References  implements \ArrayAccess, \Countable, \IteratorAggregate,
         return false;
     }
 
-    public function getIterator(): Traversable
+    /**
+     * @param string $offset
+     *
+     * @return bool
+     */
+    public function offsetExists($offset) : bool
     {
-        return new \ArrayIterator($this->refs);
+        return \array_key_exists($offset, $this->refs);
     }
 
-    public function offsetExists($offset): bool
-    {
-        if (!$offset instanceof Reference) {
-            return false;
-        }
-
-        return \array_key_exists($offset->name(), $this->refs);
-    }
-
-    public function offsetGet($offset): EntryReference
+    /**
+     * @param string $offset
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return EntryReference
+     */
+    public function offsetGet($offset) : EntryReference
     {
         if ($this->offsetExists($offset)) {
-            return $this->refs[$offset->name()];
+            return $this->refs[$offset];
         }
 
-        throw new InvalidArgumentException("Row {$offset} does not exists.");
+        throw new InvalidArgumentException("Reference {$offset} does not exists.");
     }
 
-    public function offsetSet(mixed $offset, mixed $value): void
+    public function offsetSet(mixed $offset, mixed $value) : void
     {
-
+        throw new InvalidArgumentException('Method not implemented.');
     }
 
-    public function offsetUnset(mixed $offset): void
+    public function offsetUnset(mixed $offset) : void
     {
-    }
-
-    public function count(): int
-    {
-        return \count($this->refs);
-    }
-
-    public function __serialize(): array
-    {
-        return [
-            'refs' => $this->refs
-        ];
-    }
-
-    public function __unserialize(array $data): void
-    {
-        $this->refs = $data['refs'];
+        throw new InvalidArgumentException('Method not implemented.');
     }
 }

@@ -80,6 +80,11 @@ final class EntryReference implements Reference
         return $this->alias !== null;
     }
 
+    public function is(Reference $ref) : bool
+    {
+        return $this->name() === $ref->name();
+    }
+
     public function name() : string
     {
         return $this->alias ?? $this->entry;
@@ -88,10 +93,5 @@ final class EntryReference implements Reference
     public function to() : string
     {
         return $this->entry;
-    }
-
-    public function is(Reference $ref): bool
-    {
-        return $this->name() === $ref->name();
     }
 }

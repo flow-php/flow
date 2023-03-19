@@ -13,8 +13,9 @@ use Flow\ETL\Row\EntryReference;
  */
 final class LessThan implements Comparison
 {
-    private readonly string|EntryReference $entryLeft;
-    private readonly string|EntryReference $entryRight;
+    private readonly EntryReference $entryLeft;
+
+    private readonly EntryReference $entryRight;
 
     public function __construct(
         string|EntryReference $entryLeft,

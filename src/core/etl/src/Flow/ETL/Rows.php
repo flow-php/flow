@@ -312,7 +312,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
                     try {
                         $joinedRow = $leftRow
                             ->merge($rightRow, $expression->prefix())
-                            ->remove(...\array_map(fn (string $e) : string => $expression->prefix() . $e, $expression->right()));
+                            ->remove(...\array_map(static fn (EntryReference $e) : string => $expression->prefix() . $e->name(), $expression->right()));
                     } catch (InvalidArgumentException $e) {
                         throw new InvalidArgumentException($e->getMessage() . '. Please consider using Condition, join prefix option');
                     }
@@ -350,7 +350,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
                     try {
                         $joinedRow = $leftRow
                             ->merge($rightRow, $expression->prefix())
-                            ->remove(...\array_map(fn (string $e) : string => $expression->prefix() . $e, $expression->right()));
+                            ->remove(...\array_map(static fn (EntryReference $e) : string => $expression->prefix() . $e->name(), $expression->right()));
                     } catch (InvalidArgumentException $e) {
                         throw new InvalidArgumentException($e->getMessage() . '. Please consider using Condition, join prefix option');
                     }
@@ -426,7 +426,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
                         $joinedRow = $rightRow
                             ->merge($leftRow, $expression->prefix())
                             ->remove(
-                                ...\array_map(fn (string $e) : string => $expression->prefix() . $e, $expression->left())
+                                ...\array_map(static fn (EntryReference $e) : string => $expression->prefix() . $e->name(), $expression->left())
                             );
                     } catch (InvalidArgumentException $e) {
                         throw new InvalidArgumentException($e->getMessage() . '. Please consider using Condition, join prefix option');

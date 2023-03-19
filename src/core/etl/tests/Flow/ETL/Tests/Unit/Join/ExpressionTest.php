@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Join;
 
+use function Flow\ETL\DSL\col;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\Join\Comparison\Equal;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;
-use function Flow\ETL\DSL\col;
 
 final class ExpressionTest extends TestCase
 {

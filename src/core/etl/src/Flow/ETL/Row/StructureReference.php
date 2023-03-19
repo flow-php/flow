@@ -50,6 +50,11 @@ final class StructureReference implements Reference
         return $this->alias !== null;
     }
 
+    public function is(Reference $ref) : bool
+    {
+        return $this->name() === $ref->name();
+    }
+
     public function name() : string
     {
         return $this->alias ?? (string) \current($this->entries);
@@ -67,10 +72,5 @@ final class StructureReference implements Reference
         }
 
         return $refs;
-    }
-
-    public function is(Reference $ref): bool
-    {
-        return $this->name() === $ref->name();
     }
 }
