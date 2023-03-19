@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-03-19
 
 ### Changed
+- [#359](https://github.com/flow-php/flow/pull/359) - **Moved sortBy into entry ref** - [@norberttech](https://github.com/norberttech)
 - [#358](https://github.com/flow-php/flow/pull/358) - **Replaced string column names with ref/col/struct functions** - [@norberttech](https://github.com/norberttech)
 
 ### Updated
