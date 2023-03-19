@@ -10,8 +10,6 @@ use Flow\ETL\Row\Entry;
 
 /**
  * @implements IdFactory<array{entry_names: array<string>}>
- *
- * @psalm-immutable
  */
 final class Sha1IdFactory implements IdFactory
 {

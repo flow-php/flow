@@ -10,8 +10,6 @@ use Flow\ETL\Transformer\Filter\Filter\ValidValue\Validator;
 
 /**
  * @implements Filter<array{entry_name: string, validator: Validator}>
- *
- * @psalm-immutable
  */
 final class ValidValue implements Filter
 {

@@ -6,12 +6,12 @@ namespace Flow\ETL\Row\Entry;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
  * @implements Entry<string, array{name: string, value: string}>
- *
- * @psalm-immutable
  */
 final class StringEntry implements \Stringable, Entry
 {
@@ -34,8 +34,6 @@ final class StringEntry implements \Stringable, Entry
     }
 
     /**
-     * @psalm-pure
-     *
      * @throws InvalidArgumentException
      */
     public static function lowercase(string $name, string $value) : self
@@ -44,8 +42,6 @@ final class StringEntry implements \Stringable, Entry
     }
 
     /**
-     * @psalm-pure
-     *
      * @throws InvalidArgumentException
      */
     public static function uppercase(string $name, string $value) : self
@@ -74,8 +70,12 @@ final class StringEntry implements \Stringable, Entry
         return Definition::string($this->name, false);
     }
 
-    public function is(string $name) : bool
+    public function is(string|Reference $name) : bool
     {
+        if ($name instanceof Reference) {
+            return $this->name === $name->name();
+        }
+
         return $this->name === $name;
     }
 
@@ -92,6 +92,11 @@ final class StringEntry implements \Stringable, Entry
     public function name() : string
     {
         return $this->name;
+    }
+
+    public function ref() : EntryReference
+    {
+        return new EntryReference($this->name);
     }
 
     /**

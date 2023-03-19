@@ -12,8 +12,6 @@ use Flow\Serializer\Serializable;
  * @template TValue
  *
  * @extends Serializable<TValue>
- *
- * @psalm-immutable
  */
 interface IdFactory extends Serializable
 {

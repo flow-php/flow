@@ -7,6 +7,7 @@ use Flow\ETL\DSL\CSV;
 use Flow\ETL\DSL\Transform;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Flow;
+use function Flow\ETL\DSL\col;
 
 require __DIR__ . '/../../../bootstrap.php';
 
@@ -19,7 +20,7 @@ $total = 0;
 (new Flow())
     ->read($extractor)
     ->rows(Transform::array_unpack('row'))
-    ->drop('row')
+    ->drop(col('row'))
     ->mode(SaveMode::Overwrite)
     ->partitionBy('country_code', 't_shirt_color')
     ->write(CSV::to(__FLOW_OUTPUT__ . '/partitioned'))

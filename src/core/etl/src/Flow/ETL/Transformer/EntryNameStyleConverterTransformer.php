@@ -45,9 +45,7 @@ final class EntryNameStyleConverterTransformer implements Transformer
 
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
-        /** @psalm-var pure-callable(Row $row) : Row $rowTransformer */
         $rowTransformer = function (Row $row) : Row {
-            /** @psalm-var pure-callable(Entry) : Entry $valueMap */
             $valueMap = fn (Entry $entry) : Entry => $entry->rename(
                 /** @phpstan-ignore-next-line */
                 (string) \call_user_func([new Convert($entry->name()), 'to' . \ucfirst($this->style)])

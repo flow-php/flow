@@ -12,8 +12,6 @@ use Flow\Serializer\Serializable;
  * @template TSerialized
  *
  * @extends Serializable<TSerialized>
- *
- * @psalm-immutable
  */
 interface Entry extends Serializable
 {
@@ -21,16 +19,18 @@ interface Entry extends Serializable
 
     public function definition() : Definition;
 
-    public function is(string $name) : bool;
+    public function is(string|Reference $name) : bool;
 
     public function isEqual(self $entry) : bool;
 
     /**
-     * @psalm-param pure-callable(TValue) : TValue $mapper
+     * @psalm-param callable(TValue) : TValue $mapper
      */
     public function map(callable $mapper) : self;
 
     public function name() : string;
+
+    public function ref() : EntryReference;
 
     public function rename(string $name) : self;
 

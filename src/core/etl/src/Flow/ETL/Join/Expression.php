@@ -8,12 +8,11 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Join\Comparison\All;
 use Flow\ETL\Join\Comparison\Identical;
 use Flow\ETL\Row;
+use Flow\ETL\Row\EntryReference;
 use Flow\Serializer\Serializable;
 
 /**
  * @implements Serializable<array{comparison: Comparison, prefix: string}>
- *
- * @psalm-immutable
  */
 final class Expression implements Serializable
 {
@@ -67,7 +66,7 @@ final class Expression implements Serializable
     }
 
     /**
-     * @return array<string>
+     * @return array<EntryReference>
      */
     public function left() : array
     {
@@ -85,7 +84,7 @@ final class Expression implements Serializable
     }
 
     /**
-     * @return array<string>
+     * @return array<EntryReference>
      */
     public function right() : array
     {

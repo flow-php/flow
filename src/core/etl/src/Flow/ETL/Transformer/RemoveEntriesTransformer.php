@@ -6,42 +6,41 @@ namespace Flow\ETL\Transformer;
 
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
+use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 /**
- * @implements Transformer<array{names: array<string>}>
+ * @implements Transformer<array{refs: array<EntryReference>}>
  */
 final class RemoveEntriesTransformer implements Transformer
 {
     /**
-     * @var string[]
+     * @var array<EntryReference>
      */
-    private readonly array $names;
+    private readonly array $refs;
 
-    public function __construct(string ...$names)
+    public function __construct(string|Reference ...$names)
     {
-        $this->names = $names;
+        $this->refs = EntryReference::initAll(...$names);
     }
 
     public function __serialize() : array
     {
         return [
-            'names' => $this->names,
+            'refs' => $this->refs,
         ];
     }
 
     public function __unserialize(array $data) : void
     {
-        $this->names = $data['names'];
+        $this->refs = $data['refs'];
     }
 
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
-        /**
-         * @psalm-var pure-callable(Row $row) : Row $transformer
-         */
-        $transformer = fn (Row $row) : Row => $row->remove(...$this->names);
+        $transformer = fn (Row $row) : Row => $row->remove(...$this->refs);
 
         return $rows->map($transformer);
     }

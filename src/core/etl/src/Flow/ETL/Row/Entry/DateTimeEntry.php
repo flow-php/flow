@@ -6,12 +6,12 @@ namespace Flow\ETL\Row\Entry;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
  * @implements Entry<\DateTimeInterface, array{name: string, value: \DateTimeInterface}>
- *
- * @psalm-immutable
  */
 final class DateTimeEntry implements \Stringable, Entry
 {
@@ -20,7 +20,7 @@ final class DateTimeEntry implements \Stringable, Entry
      */
     public function __construct(private readonly string $name, private readonly \DateTimeInterface $value)
     {
-        if (!\strlen($name)) {
+        if ($name === '') {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
     }
@@ -46,8 +46,12 @@ final class DateTimeEntry implements \Stringable, Entry
         return Definition::dateTime($this->name, false);
     }
 
-    public function is(string $name) : bool
+    public function is(string|Reference $name) : bool
     {
+        if ($name instanceof Reference) {
+            return $this->name === $name->name();
+        }
+
         return $this->name === $name;
     }
 
@@ -66,6 +70,11 @@ final class DateTimeEntry implements \Stringable, Entry
         return $this->name;
     }
 
+    public function ref() : EntryReference
+    {
+        return new EntryReference($this->name);
+    }
+
     public function rename(string $name) : Entry
     {
         return new self($name, $this->value);
@@ -73,7 +82,6 @@ final class DateTimeEntry implements \Stringable, Entry
 
     public function toString() : string
     {
-        /** @psalm-suppress ImpureMethodCall */
         return $this->value()->format(\DateTimeInterface::ATOM);
     }
 

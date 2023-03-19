@@ -12,13 +12,13 @@ use Flow\ETL\Row\EntryReference;
 
 final class Sum implements Aggregator
 {
-    private readonly EntryReference $entry;
+    private readonly EntryReference $ref;
 
     private float $sum;
 
     public function __construct(string|EntryReference $entry)
     {
-        $this->entry = \is_string($entry) ? new EntryReference($entry) : $entry;
+        $this->ref = EntryReference::init($entry);
         $this->sum = 0;
     }
 
@@ -26,7 +26,7 @@ final class Sum implements Aggregator
     {
         try {
             /** @var mixed $value */
-            $value = $row->valueOf($this->entry->to());
+            $value = $row->valueOf($this->ref);
 
             if (\is_numeric($value)) {
                 $this->sum += $value;
@@ -38,16 +38,16 @@ final class Sum implements Aggregator
 
     public function result() : Entry
     {
-        if (!$this->entry->hasAlias()) {
-            $this->entry->as($this->entry->to() . '_sum');
+        if (!$this->ref->hasAlias()) {
+            $this->ref->as($this->ref->to() . '_sum');
         }
 
         $resultInt = (int) $this->sum;
 
         if ($this->sum - $resultInt === 0.0) {
-            return \Flow\ETL\DSL\Entry::integer($this->entry->name(), (int) $this->sum);
+            return \Flow\ETL\DSL\Entry::integer($this->ref->name(), (int) $this->sum);
         }
 
-        return \Flow\ETL\DSL\Entry::float($this->entry->name(), $this->sum);
+        return \Flow\ETL\DSL\Entry::float($this->ref->name(), $this->sum);
     }
 }

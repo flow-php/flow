@@ -9,6 +9,7 @@ use Flow\ETL\Join\Comparison\Equal;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;
+use function Flow\ETL\DSL\col;
 
 final class ExpressionTest extends TestCase
 {
@@ -17,8 +18,8 @@ final class ExpressionTest extends TestCase
         $expression = Expression::on(new Equal('id', 'id'), '_');
 
         $this->assertSame('_', $expression->prefix());
-        $this->assertSame(['id'], $expression->left());
-        $this->assertSame(['id'], $expression->right());
+        $this->assertEquals([col('id')], $expression->left());
+        $this->assertEquals([col('id')], $expression->right());
     }
 
     public function test_expression_comparison() : void

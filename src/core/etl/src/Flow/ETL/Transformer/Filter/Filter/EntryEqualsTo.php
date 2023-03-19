@@ -9,8 +9,6 @@ use Flow\ETL\Transformer\Filter\Filter;
 
 /**
  * @implements Filter<array{entry_name: string, entry_value: mixed}>
- *
- * @psalm-immutable
  */
 final class EntryEqualsTo implements Filter
 {
@@ -51,6 +49,7 @@ final class EntryEqualsTo implements Filter
                 return false;
             }
 
+            /** @psalm-suppress ArgumentTypeCoercion */
             return \bccomp((string) $entry->value(), (string) $this->entryValue, 8) === 0;
         }
 

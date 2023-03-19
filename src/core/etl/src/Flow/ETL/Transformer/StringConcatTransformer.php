@@ -6,28 +6,36 @@ namespace Flow\ETL\Transformer;
 
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
+use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 /**
- * @implements Transformer<array{string_entry_names: array<string>, glue: string, new_entry_name: string}>
+ * @implements Transformer<array{refs: array<EntryReference>, glue: string, new_entry_name: string}>
  */
 final class StringConcatTransformer implements Transformer
 {
     /**
-     * @param array<string> $stringEntryNames
+     * @var array<EntryReference>
+     */
+    private readonly array $refs;
+
+    /**
+     * @param array<Reference|string> $refs
      */
     public function __construct(
-        private readonly array $stringEntryNames,
+        array $refs,
         private readonly string $glue = ' ',
         private readonly string $newEntryName = 'element'
     ) {
+        $this->refs = EntryReference::initAll(...$refs);
     }
 
     public function __serialize() : array
     {
         return [
-            'string_entry_names' => $this->stringEntryNames,
+            'refs' => $this->refs,
             'glue' => $this->glue,
             'new_entry_name' => $this->newEntryName,
         ];
@@ -35,19 +43,20 @@ final class StringConcatTransformer implements Transformer
 
     public function __unserialize(array $data) : void
     {
-        $this->stringEntryNames = $data['string_entry_names'];
+        $this->refs = $data['refs'];
         $this->glue = $data['glue'];
         $this->newEntryName = $data['new_entry_name'];
     }
 
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
-        /**
-         * @psalm-var pure-callable(Row $row) : Row $transformer
-         */
         $transformer = function (Row $row) : Row {
-            /** @psalm-var pure-callable(Row\Entry) : bool $filter */
-            $filter = fn (Row\Entry $entry) : bool => \in_array($entry->name(), $this->stringEntryNames, true) && $entry instanceof Row\Entry\StringEntry;
+            $filter = fn (Row\Entry $entry) : bool => \in_array(
+                $entry->name(),
+                \array_map(static fn (EntryReference $r) : string => $r->name(), $this->refs),
+                true
+            ) && $entry instanceof Row\Entry\StringEntry;
+
             $entries = $row->filter($filter)->entries();
             /** @var array<string> $values */
             $values = [];

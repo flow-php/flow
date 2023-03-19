@@ -27,13 +27,13 @@ final class SelectiveValidator implements SchemaValidator
 
     public function isValid(Rows $rows, Schema $schema) : bool
     {
-        foreach ($schema->entries() as $entryName) {
+        foreach ($schema->entries() as $ref) {
             /** @var Definition $definition */
-            $definition = $schema->getDefinition($entryName);
+            $definition = $schema->getDefinition($ref);
 
             foreach ($rows as $row) {
                 try {
-                    $entry = $row->entries()->get($entryName);
+                    $entry = $row->entries()->get($ref);
 
                     if (!$definition->matches($entry)) {
                         return false;

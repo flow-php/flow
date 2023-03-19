@@ -7,9 +7,6 @@ namespace Flow\ETL\Transformer\Cast\ArrayEntryEach;
 use Flow\ETL\Transformer\Cast\CastArrayEntryEach;
 use Flow\ETL\Transformer\Cast\ValueCaster\StringToDateTimeCaster;
 
-/**
- * @psalm-immutable
- */
 final class CastArrayEntryEachToDateTime extends CastArrayEntryEach
 {
     public function __construct(string $arrayEntryName, ?string $timeZone = null, ?string $toTimeZone = null)

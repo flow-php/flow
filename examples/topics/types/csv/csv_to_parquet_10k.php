@@ -7,6 +7,7 @@ use Flow\ETL\DSL\CSV;
 use Flow\ETL\DSL\Parquet;
 use Flow\ETL\DSL\Transform;
 use Flow\ETL\Flow;
+use function Flow\ETL\DSL\col;
 
 require __DIR__ . '/../../../bootstrap.php';
 
@@ -20,7 +21,7 @@ $total = 0;
 (new Flow())
     ->read(CSV::from(__FLOW_OUTPUT__ . '/dataset.csv', 10_000))
     ->rows(Transform::array_unpack('row'))
-    ->drop('row')
+    ->drop(col('row'))
     ->write(Parquet::to(__FLOW_OUTPUT__ . '/dataset_10k.parquet', 10_000))
     ->run();
 

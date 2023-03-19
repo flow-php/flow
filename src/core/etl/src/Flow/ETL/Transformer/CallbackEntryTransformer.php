@@ -19,15 +19,11 @@ use Laravel\SerializableClosure\SerializableClosure;
 final class CallbackEntryTransformer implements Transformer
 {
     /**
-     * @psalm-var array<pure-callable(Entry) : Entry>
-     *
      * @phpstan-var array<callable(Entry) : Entry>
      */
     private readonly array $callables;
 
     /**
-     * @psalm-param pure-callable(Entry) : Entry ...$callables
-     *
      * @param callable(Entry) : Entry ...$callables
      */
     public function __construct(callable ...$callables)
@@ -61,13 +57,13 @@ final class CallbackEntryTransformer implements Transformer
         $callables = [];
 
         foreach ($data['callables'] as $closure) {
-            /**
-             * @psalm-suppress ImpureMethodCall
-             */
             $callables[] = $closure->getClosure();
         }
 
-        /** @psalm-suppress PropertyTypeCoercion */
+        /**
+         * @psalm-suppress PropertyTypeCoercion
+         * @psalm-suppress MixedPropertyTypeCoercion
+         */
         $this->callables = $callables;
     }
 
@@ -75,11 +71,8 @@ final class CallbackEntryTransformer implements Transformer
     {
         /**
          * @var callable(Row) : Row $transform
-         *
-         * @psalm-var pure-callable(Row) : Row $transform
          */
         $transform = function (Row $row) : Row {
-            /** @psalm-var pure-callable(Row\Entry) : Row\Entry $callable */
             $callable = function (Row\Entry $entry) : Row\Entry {
                 foreach ($this->callables as $callable) {
                     $entry = $callable($entry);

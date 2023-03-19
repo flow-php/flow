@@ -10,8 +10,6 @@ use Flow\ETL\Row\ValueConverter;
 
 /**
  * @implements RowConverter<array{caster: ValueConverter, array_entry_name: string}>
- *
- * @psalm-immutable
  */
 class CastArrayEntryEach implements RowConverter
 {

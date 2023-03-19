@@ -36,7 +36,6 @@ final class CloneEntryTransformer implements Transformer
 
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
-        /** @psalm-var pure-callable(\Flow\ETL\Row) : \Flow\ETL\Row $clone */
         $clone = fn (Row $row) : Row => $row->add($row->get($this->from)->rename($this->to));
 
         return $rows->map($clone);

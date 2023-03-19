@@ -8,15 +8,18 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Row\EntryFactory;
+use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 /**
- * @implements Transformer<array{object_entry_name: string, method: string, new_entry_name: string, parameters: array<mixed>, entry_factory: EntryFactory}>
+ * @implements Transformer<array{ref: EntryReference, method: string, new_entry_name: string, parameters: array<mixed>, entry_factory: EntryFactory}>
  */
 final class ObjectMethodTransformer implements Transformer
 {
+    private readonly EntryReference $ref;
+
     /**
      * ObjectMethodTransformer constructor.
      *
@@ -24,18 +27,19 @@ final class ObjectMethodTransformer implements Transformer
      * @param EntryFactory $entryFactory
      */
     public function __construct(
-        private readonly string $objectEntryName,
+        string|EntryReference $ref,
         private readonly string $method,
         private readonly string $newEntryName = 'method_entry',
         private readonly array $parameters = [],
         private readonly EntryFactory $entryFactory = new NativeEntryFactory()
     ) {
+        $this->ref = EntryReference::init($ref);
     }
 
     public function __serialize() : array
     {
         return [
-            'object_entry_name' => $this->objectEntryName,
+            'ref' => $this->ref,
             'method' => $this->method,
             'new_entry_name' => $this->newEntryName,
             'parameters' => $this->parameters,
@@ -45,7 +49,7 @@ final class ObjectMethodTransformer implements Transformer
 
     public function __unserialize(array $data) : void
     {
-        $this->objectEntryName = $data['object_entry_name'];
+        $this->ref = $data['ref'];
         $this->method = $data['method'];
         $this->newEntryName = $data['new_entry_name'];
         $this->parameters = $data['parameters'];
@@ -56,25 +60,23 @@ final class ObjectMethodTransformer implements Transformer
     {
         /**
          * @var callable(Row) : Row $transformer
-         *
-         * @psalm-var pure-callable(Row) : Row $transformer
          */
         $transformer = function (Row $row) : Row {
-            if (!$row->entries()->has($this->objectEntryName)) {
-                throw new RuntimeException("\"{$this->objectEntryName}\" entry not found");
+            if (!$row->entries()->has($this->ref)) {
+                throw new RuntimeException("\"{$this->ref->name()}\" entry not found");
             }
 
-            if (!$row->entries()->get($this->objectEntryName) instanceof Row\Entry\ObjectEntry) {
-                throw new RuntimeException("\"{$this->objectEntryName}\" entry is not ObjectEntry");
+            if (!$row->entries()->get($this->ref) instanceof Row\Entry\ObjectEntry) {
+                throw new RuntimeException("\"{$this->ref->name()}\" entry is not ObjectEntry");
             }
 
             /**
              * @var object $object
              */
-            $object = $row->get($this->objectEntryName)->value();
+            $object = $row->get($this->ref)->value();
 
             if (!\method_exists($object, $this->method)) {
-                throw new RuntimeException("\"{$this->objectEntryName}\" is object does not have \"{$this->method}\" method.");
+                throw new RuntimeException("\"{$this->ref->name()}\" is object does not have \"{$this->method}\" method.");
             }
 
             return $row->set($this->entryFactory->create(

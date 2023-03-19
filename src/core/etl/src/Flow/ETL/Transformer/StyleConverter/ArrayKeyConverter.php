@@ -4,21 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer\StyleConverter;
 
-/**
- * @psalm-immutable
- */
 final class ArrayKeyConverter
 {
     /**
-     * @psalm-var pure-callable(string) : string
-     *
      * @var callable(string) : string
      */
     private $transformer;
 
     /**
-     * @psalm-param pure-callable(string) : string $transformer
-     *
      * @param callable(string) : string $transformer
      */
     public function __construct(callable $transformer)

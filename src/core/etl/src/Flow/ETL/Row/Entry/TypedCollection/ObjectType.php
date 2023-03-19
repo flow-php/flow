@@ -6,9 +6,6 @@ namespace Flow\ETL\Row\Entry\TypedCollection;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 
-/**
- * @psalm-immutable
- */
 final class ObjectType implements Type
 {
     /**

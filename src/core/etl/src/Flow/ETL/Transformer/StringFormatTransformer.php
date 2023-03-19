@@ -6,47 +6,57 @@ namespace Flow\ETL\Transformer;
 
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
+use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 /**
- * @implements Transformer<array{entry_name:string,format:string}>
+ * @implements Transformer<array{ref:array<EntryReference>, format:string}>
  */
 final class StringFormatTransformer implements Transformer
 {
+    /**
+     * @var array<EntryReference>
+     */
+    private readonly array $refs;
+
     public function __construct(
-        private readonly string $entryName,
+        string|Reference $entry,
         private readonly string $format
     ) {
+        $this->refs = EntryReference::initAll($entry);
     }
 
     public function __serialize() : array
     {
         return [
-            'entry_name' => $this->entryName,
+            'ref' => $this->refs,
             'format' => $this->format,
         ];
     }
 
     public function __unserialize(array $data) : void
     {
-        $this->entryName = $data['entry_name'];
+        $this->refs = $data['ref'];
         $this->format = $data['format'];
     }
 
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
-        /**
-         * @psalm-var pure-callable(Row $row) : Row $transformer
-         */
-        $transformer = function (Row $row) : Row {
-            $entry = $row->get($this->entryName);
+        /** @var EntryReference $ref */
+        foreach ($this->refs as $ref) {
+            $transformer = function (Row $row) use ($ref) : Row {
+                $entry = $row->get($ref);
 
-            return $row->set(
-                new Row\Entry\StringEntry($entry->name(), \sprintf($this->format, $entry->toString()))
-            );
-        };
+                return $row->set(
+                    new Row\Entry\StringEntry($entry->name(), \sprintf($this->format, $entry->toString()))
+                );
+            };
 
-        return $rows->map($transformer);
+            $rows = $rows->map($transformer);
+        }
+
+        return $rows;
     }
 }

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row;
 
+/**
+ * @implements Reference<array{entries: array<string>, alias: ?string}>
+ */
 final class StructureReference implements Reference
 {
     private ?string $alias = null;
@@ -14,6 +17,25 @@ final class StructureReference implements Reference
     public function __construct(string $entry, string ...$entries)
     {
         $this->entries = \array_merge([$entry], $entries);
+    }
+
+    public function __serialize() : array
+    {
+        return [
+            'entries' => $this->entries,
+            'alias' => $this->alias,
+        ];
+    }
+
+    public function __toString() : string
+    {
+        return $this->name();
+    }
+
+    public function __unserialize(array $data) : void
+    {
+        $this->entries = $data['entries'];
+        $this->alias = $data['alias'];
     }
 
     public function as(string $alias) : Reference
@@ -30,15 +52,25 @@ final class StructureReference implements Reference
 
     public function name() : string
     {
-        if ($this->alias !== null) {
-            return $this->alias;
-        }
-
-        return (string) \current($this->entries);
+        return $this->alias ?? (string) \current($this->entries);
     }
 
+    /**
+     * @return array<EntryReference>
+     */
     public function to() : array
     {
-        return $this->entries;
+        $refs = [];
+
+        foreach ($this->entries as $entry) {
+            $refs[] = EntryReference::init($entry);
+        }
+
+        return $refs;
+    }
+
+    public function is(Reference $ref): bool
+    {
+        return $this->name() === $ref->name();
     }
 }

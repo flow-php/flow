@@ -36,9 +36,6 @@ final class ConditionalTransformer implements Transformer
 
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
-        /**
-         * @psalm-var pure-callable(Row $row) : array<Row> $transformer
-         */
         $transformer = function (Row $row) use ($context) : array {
             if ($this->condition->isMetFor($row)) {
                 return (array) $this->transformer->transform(new Rows($row), $context)->getIterator();
@@ -47,6 +44,7 @@ final class ConditionalTransformer implements Transformer
             return [$row];
         };
 
+        /** @psalm-suppress MixedArgumentTypeCoercion */
         return $rows->flatMap($transformer);
     }
 }

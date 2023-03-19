@@ -49,7 +49,7 @@ final class SchemaConverter
             }
 
             if ((\count($definition->types()) === 2 && !$definition->isNullable()) || \count($definition->types()) > 2) {
-                throw new RuntimeException('Union types are not supported yet. Invalid type: ' . $definition->entry());
+                throw new RuntimeException('Union types are not supported yet. Invalid type: ' . $definition->entry()->name());
             }
         }
 
@@ -71,16 +71,16 @@ final class SchemaConverter
 
             if ($listType instanceof ScalarType) {
                 return match ($listType) {
-                    ScalarType::string => new DataField($definition->entry(), DataType::String, true, true),
-                    ScalarType::integer => new DataField($definition->entry(), DataType::Int32, true, true),
-                    ScalarType::float => new DataField($definition->entry(), DataType::Float, true, true),
-                    ScalarType::boolean => new DataField($definition->entry(), DataType::Boolean, true, true),
+                    ScalarType::string => new DataField($definition->entry()->name(), DataType::String, true, true),
+                    ScalarType::integer => new DataField($definition->entry()->name(), DataType::Int32, true, true),
+                    ScalarType::float => new DataField($definition->entry()->name(), DataType::Float, true, true),
+                    ScalarType::boolean => new DataField($definition->entry()->name(), DataType::Boolean, true, true),
                 };
             }
 
             if ($listType instanceof ObjectType) {
                 if (\is_a($listType->class, \DateTimeInterface::class, true)) {
-                    return new DateTimeDataField($definition->entry(), DataType::DateTimeOffset, true, true);
+                    return new DateTimeDataField($definition->entry()->name(), DataType::DateTimeOffset, true, true);
                 }
 
                 throw new RuntimeException("List of {$listType->class} is not supported yet supported.");
@@ -89,12 +89,12 @@ final class SchemaConverter
 
         return match ($type) {
             ArrayEntry::class => throw new RuntimeException("ArrayEntry entry can't be saved in Parquet file, try convert it to ListEntry"),
-            StringEntry::class => new DataField($definition->entry(), DataType::String, true),
-            JsonEntry::class => new DataField($definition->entry(), DataType::String, true),
-            IntegerEntry::class => new DataField($definition->entry(), DataType::Int32, true),
-            FloatEntry::class => new DataField($definition->entry(), DataType::Float, true),
-            BooleanEntry::class => new DataField($definition->entry(), DataType::Boolean, true),
-            DateTimeEntry::class => new DateTimeDataField($definition->entry(), DataType::DateTimeOffset, true),
+            StringEntry::class => new DataField($definition->entry()->name(), DataType::String, true),
+            JsonEntry::class => new DataField($definition->entry()->name(), DataType::String, true),
+            IntegerEntry::class => new DataField($definition->entry()->name(), DataType::Int32, true),
+            FloatEntry::class => new DataField($definition->entry()->name(), DataType::Float, true),
+            BooleanEntry::class => new DataField($definition->entry()->name(), DataType::Boolean, true),
+            DateTimeEntry::class => new DateTimeDataField($definition->entry()->name(), DataType::DateTimeOffset, true),
             default => throw new RuntimeException($type . ' is not yet supported.')
         };
     }

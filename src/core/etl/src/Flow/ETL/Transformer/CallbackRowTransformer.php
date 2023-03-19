@@ -18,15 +18,11 @@ use Laravel\SerializableClosure\SerializableClosure;
 final class CallbackRowTransformer implements Transformer
 {
     /**
-     * @psalm-var pure-callable(Row) : Row
-     *
      * @phpstan-var callable(Row) : Row
      */
     private $callable;
 
     /**
-     * @psalm-param pure-callable(Row) : Row $callable
-     *
      * @param callable(Row) : Row $callable
      */
     public function __construct(callable $callable)

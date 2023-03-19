@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\Row\Entry;
 
 use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
  * @implements Entry<\UnitEnum, array{name: string, value: \UnitEnum}>
- *
- * @psalm-immutable
  */
 final class EnumEntry implements Entry
 {
@@ -41,15 +41,18 @@ final class EnumEntry implements Entry
 
     public function definition() : Definition
     {
-        /** @psalm-suppress ImpureMethodCall */
         return Definition::enum(
             $this->name,
             \get_class($this->value)
         );
     }
 
-    public function is(string $name) : bool
+    public function is(string|Reference $name) : bool
     {
+        if ($name instanceof Reference) {
+            return $this->name === $name->name();
+        }
+
         return $this->name === $name;
     }
 
@@ -66,6 +69,11 @@ final class EnumEntry implements Entry
     public function name() : string
     {
         return $this->name;
+    }
+
+    public function ref() : EntryReference
+    {
+        return new EntryReference($this->name);
     }
 
     public function rename(string $name) : self

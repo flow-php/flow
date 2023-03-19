@@ -38,8 +38,6 @@ final class ArrayCollectionMergeTransformer implements Transformer
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
         /**
-         * @psalm-var pure-callable(Row $row) : Row $transformer
-         *
          * @throws \Flow\ArrayDot\Exception\InvalidPathException
          */
         $transformer = function (Row $row) : Row {

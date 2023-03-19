@@ -6,9 +6,6 @@ namespace Flow\ETL\Transformer\Cast;
 
 use Flow\ETL\Transformer\Cast\EntryCaster\AnyToArrayEntryCaster;
 
-/**
- * @psalm-immutable
- */
 final class CastToArray extends CastEntries
 {
     /**

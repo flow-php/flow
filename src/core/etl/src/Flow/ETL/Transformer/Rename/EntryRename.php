@@ -8,8 +8,6 @@ use Flow\Serializer\Serializable;
 
 /**
  * @implements Serializable<array{from: string, to: string}>
- *
- * @psalm-immutable
  */
 final class EntryRename implements Serializable
 {

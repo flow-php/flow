@@ -8,6 +8,7 @@ use Flow\ETL\DSL\Transform;
 use Flow\ETL\Flow;
 use Flow\ETL\Monitoring\Memory\Consumption;
 use Flow\ETL\Rows;
+use function Flow\ETL\DSL\col;
 
 require __DIR__ . '/../../../bootstrap.php';
 
@@ -27,8 +28,8 @@ $memory->current();
 (new Flow())
     ->read(CSV::from(__FLOW_OUTPUT__ . '/dataset.csv'))
     ->rows(Transform::array_unpack('row'))
-    ->drop('row')
-    ->write(To::callback(function (Rows $rows) use (&$total, $memory) : void {
+    ->drop(col('row'))
+    ->write(To::callback(static function (Rows $rows) use (&$total, $memory) : void {
         $total += $rows->count();
 
         $memory->current();

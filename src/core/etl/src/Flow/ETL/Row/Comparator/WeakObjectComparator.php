@@ -8,9 +8,6 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Comparator;
 
-/**
- * @psalm-immutable
- */
 final class WeakObjectComparator implements Comparator
 {
     public function equals(Row $row, Row $nextRow) : bool

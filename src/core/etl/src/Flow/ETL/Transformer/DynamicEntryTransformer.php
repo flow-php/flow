@@ -56,9 +56,6 @@ final class DynamicEntryTransformer implements Transformer
 
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
-        /**
-         * @psalm-var pure-callable(Row) : Row $transformer
-         */
         $transformer = fn (Row $row) : Row => new Row($row->entries()->merge(($this->generator)($row)));
 
         return $rows->map($transformer);

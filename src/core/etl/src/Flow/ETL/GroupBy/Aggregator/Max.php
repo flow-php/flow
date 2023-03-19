@@ -12,13 +12,13 @@ use Flow\ETL\Row\EntryReference;
 
 final class Max implements Aggregator
 {
-    private readonly EntryReference $entry;
-
     private ?float $max;
+
+    private readonly EntryReference $ref;
 
     public function __construct(string|EntryReference $entry)
     {
-        $this->entry = \is_string($entry) ? new EntryReference($entry) : $entry;
+        $this->ref = EntryReference::init($entry);
         $this->max = null;
     }
 
@@ -26,7 +26,7 @@ final class Max implements Aggregator
     {
         try {
             /** @var mixed $value */
-            $value = $row->valueOf($this->entry->to());
+            $value = $row->valueOf($this->ref);
 
             if ($this->max === null) {
                 if (\is_numeric($value)) {
@@ -44,20 +44,20 @@ final class Max implements Aggregator
 
     public function result() : Entry
     {
-        if (!$this->entry->hasAlias()) {
-            $this->entry->as($this->entry->to() . '_max');
+        if (!$this->ref->hasAlias()) {
+            $this->ref->as($this->ref->to() . '_max');
         }
 
         if ($this->max === null) {
-            return \Flow\ETL\DSL\Entry::null($this->entry->name());
+            return \Flow\ETL\DSL\Entry::null($this->ref->name());
         }
 
         $resultInt = (int) $this->max;
 
         if ($this->max - $resultInt === 0.0) {
-            return \Flow\ETL\DSL\Entry::integer($this->entry->name(), (int) $this->max);
+            return \Flow\ETL\DSL\Entry::integer($this->ref->name(), (int) $this->max);
         }
 
-        return \Flow\ETL\DSL\Entry::float($this->entry->name(), $this->max);
+        return \Flow\ETL\DSL\Entry::float($this->ref->name(), $this->max);
     }
 }

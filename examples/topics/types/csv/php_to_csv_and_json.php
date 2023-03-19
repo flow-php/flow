@@ -8,6 +8,7 @@ use Flow\ETL\DSL\Json;
 use Flow\ETL\DSL\Transform;
 use Flow\ETL\Flow;
 use Flow\ETL\Monitoring\Memory\Consumption;
+use function Flow\ETL\DSL\col;
 
 require __DIR__ . '/../../../bootstrap.php';
 
@@ -22,7 +23,7 @@ $memory->current();
 (new Flow())
     ->read($extractor)
     ->rows(Transform::array_unpack('row'))
-    ->drop('row')
+    ->drop(col('row'))
     ->write(CSV::to(__FLOW_OUTPUT__ . '/dataset.csv'))
     ->write(Json::to(__FLOW_OUTPUT__ . '/dataset.json'))
     ->run();

@@ -12,6 +12,8 @@ use Flow\ETL\Row\Comparator;
 use Flow\ETL\Row\Comparator\NativeComparator;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry\NullEntry;
+use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Row\Sort;
 use Flow\Serializer\Serializable;
@@ -20,8 +22,6 @@ use Flow\Serializer\Serializable;
  * @implements \ArrayAccess<int, Row>
  * @implements \IteratorAggregate<int, Row>
  * @implements Serializable<array{rows: array<int, Row>}>
- *
- * @psalm-immutable
  */
 final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serializable
 {
@@ -148,8 +148,6 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
     /**
      * @psalm-suppress UnusedFunctionCall
      *
-     * @psalm-param pure-callable(Row) : void $callable
-     *
      * @param callable(Row) : void $callable
      */
     public function each(callable $callable) : void
@@ -179,8 +177,6 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
     }
 
     /**
-     * @psalm-param pure-callable(Row) : bool $callable
-     *
      * @param callable(Row) : bool $callable
      */
     public function filter(callable $callable) : self
@@ -196,9 +192,6 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
         return new self(...$results);
     }
 
-    /**
-     * @psalm-param pure-callable(Row) : bool $callable
-     */
     public function find(callable $callable) : self
     {
         $rows = $this->rows;
@@ -218,9 +211,6 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
         return new self(...$rows);
     }
 
-    /**
-     * @psalm-param pure-callable(Row) : bool $callable
-     */
     public function findOne(callable $callable) : ?Row
     {
         $rows = $this->rows;
@@ -254,8 +244,6 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
     }
 
     /**
-     * @psalm-param pure-callable(Row) : Row[] $callable
-     *
      * @param callable(Row) : Row[] $callable
      */
     public function flatMap(callable $callable) : self
@@ -374,8 +362,11 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
             $joined[] = $joinedRow ?: $leftRow->merge(
                 Row::create(
                     ...\array_map(
-                        fn (string $e) : NullEntry => Entry::null($e),
-                        $rightSchema->entries()
+                        static fn (string $e) : NullEntry => Entry::null($e),
+                        \array_map(
+                            static fn (EntryReference $r) : String => $r->name(),
+                            $rightSchema->entries()
+                        )
                     )
                 ),
                 $expression->prefix()
@@ -448,7 +439,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
             if ($joinedRow === null) {
                 $joined[] = $rightRow->merge(
                     Row::create(
-                        ...\array_map(fn (string $e) : NullEntry => Entry::null($e), $leftSchema->entries())
+                        ...\array_map(static fn (EntryReference $e) : NullEntry => Entry::null($e->name()), $leftSchema->entries())
                     ),
                     $expression->prefix()
                 );
@@ -459,8 +450,6 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
     }
 
     /**
-     * @psalm-param pure-callable(Row) : Row $callable
-     *
      * @param callable(Row) : Row $callable
      */
     public function map(callable $callable) : self
@@ -534,29 +523,31 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
     }
 
     /**
-     * @param string $entry
-     * @param string ...$entries
+     * @param Reference|string $entry
+     * @param Reference|string ...$entries
      *
      * @throws InvalidArgumentException
      *
      * @return array<PartitionedRows>
      */
-    public function partitionBy(string $entry, string ...$entries) : array
+    public function partitionBy(string|Reference $entry, string|Reference ...$entries) : array
     {
         \array_unshift($entries, $entry);
+
+        $refs = EntryReference::initAll(...$entries);
 
         /** @var array<string, array<mixed>> $partitions */
         $partitions = [];
 
-        foreach ($entries as $nextEntry) {
+        foreach ($refs as $ref) {
             $partitionEntryValues = [];
 
             foreach ($this->rows as $row) {
                 /** @psalm-suppress MixedAssignment */
-                $partitionEntryValues[] = $row->get($nextEntry)->value();
+                $partitionEntryValues[] = $row->get($ref)->value();
             }
 
-            $partitions[$nextEntry] = \array_unique($partitionEntryValues);
+            $partitions[$ref->name()] = \array_unique($partitionEntryValues);
         }
 
         /**
@@ -567,8 +558,6 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
          * @return array<string, array<mixed>>
          *
          * @psalm-suppress MixedAssignment
-         *
-         * @psalm-pure
          */
         $cartesianProduct = static function (array $input) : array {
             $result = [[]];
@@ -603,7 +592,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
                  * @var mixed $value
                  */
                 foreach ($partitionsData as $entry => $value) {
-                    if ($row->valueOf($entry) !== $value) {
+                    if ($row->valueOf(EntryReference::init($entry)) !== $value) {
                         return false;
                     }
                 }
@@ -620,14 +609,12 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
     }
 
     /**
-     * @psalm-param pure-callable(mixed, Row) : mixed $callable
-     *
      * @param callable(mixed, Row) : mixed $callable
      * @param null|mixed $input
      *
      * @return null|mixed
      */
-    public function reduce(callable $callable, $input = null)
+    public function reduce(callable $callable, mixed $input = null)
     {
         return \array_reduce($this->rows, $callable, $input);
     }
@@ -640,13 +627,15 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
      *
      * @return mixed[]
      */
-    public function reduceToArray(string $entryName) : array
+    public function reduceToArray(string|EntryReference $entryName) : array
     {
+        $ref = EntryReference::init($entryName);
+
         /** @phpstan-ignore-next-line */
         return $this->reduce(
             /** @phpstan-ignore-next-line */
-            function (array $ids, Row $row) use ($entryName) : array {
-                $ids[] = $row->get($entryName)->value();
+            function (array $ids, Row $row) use ($ref) : array {
+                $ids[] = $row->get($ref)->value();
 
                 return $ids;
             },
@@ -692,9 +681,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
     }
 
     /**
-     * @psalm-param pure-callable(Row, Row) : int $callback
-     *
-     * @return $this
+     * @param callable(mixed, mixed) : int $callback
      */
     public function sort(callable $callback) : self
     {
@@ -709,10 +696,12 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
      *
      * @return $this
      */
-    public function sortAscending(string $name) : self
+    public function sortAscending(string|EntryReference $name) : self
     {
+        $ref = EntryReference::init($name);
+
         $rows = $this->rows;
-        \usort($rows, fn (Row $a, Row $b) : int => $a->valueOf($name) <=> $b->valueOf($name));
+        \usort($rows, fn (Row $a, Row $b) : int => $a->valueOf($ref) <=> $b->valueOf($ref));
 
         return new self(...$rows);
     }
@@ -740,10 +729,11 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
      *
      * @return $this
      */
-    public function sortDescending(string $name) : self
+    public function sortDescending(string|EntryReference $name) : self
     {
+        $ref = EntryReference::init($name);
         $rows = $this->rows;
-        \usort($rows, fn (Row $a, Row $b) : int => -($a->valueOf($name) <=> $b->valueOf($name)));
+        \usort($rows, fn (Row $a, Row $b) : int => -($a->valueOf($ref) <=> $b->valueOf($ref)));
 
         return new self(...$rows);
     }

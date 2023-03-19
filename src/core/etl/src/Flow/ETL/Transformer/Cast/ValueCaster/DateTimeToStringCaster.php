@@ -9,8 +9,6 @@ use Flow\ETL\Row\ValueConverter;
 
 /**
  * @implements ValueConverter<array{format: string}>
- *
- * @psalm-immutable
  */
 final class DateTimeToStringCaster implements ValueConverter
 {

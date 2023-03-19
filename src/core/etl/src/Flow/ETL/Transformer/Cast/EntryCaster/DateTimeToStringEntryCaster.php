@@ -11,8 +11,6 @@ use Flow\ETL\Transformer\Cast\ValueCaster\DateTimeToStringCaster;
 
 /**
  * @implements EntryConverter<array{value_caster: DateTimeToStringCaster}>
- *
- * @psalm-immutable
  */
 final class DateTimeToStringEntryCaster implements EntryConverter
 {

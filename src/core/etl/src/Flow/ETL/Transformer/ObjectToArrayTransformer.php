@@ -7,49 +7,52 @@ namespace Flow\ETL\Transformer;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
+use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 use Laminas\Hydrator\HydratorInterface;
 
 /**
- * @implements Transformer<array{object_entry_name: string, hydrator: HydratorInterface}>
+ * @implements Transformer<array{ref: EntryReference, hydrator: HydratorInterface}>
  */
 final class ObjectToArrayTransformer implements Transformer
 {
+    private readonly EntryReference $ref;
+
     public function __construct(
         private readonly HydratorInterface $hydrator,
-        private readonly string $objectEntryName
+        string|EntryReference $ref
     ) {
+        $this->ref = EntryReference::init($ref);
     }
 
     public function __serialize() : array
     {
         return [
-            'object_entry_name' => $this->objectEntryName,
+            'ref' => $this->ref,
             'hydrator' => $this->hydrator,
         ];
     }
 
     public function __unserialize(array $data) : void
     {
-        $this->objectEntryName = $data['object_entry_name'];
+        $this->ref = $data['ref'];
         $this->hydrator = $data['hydrator'];
     }
 
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
-        /** @psalm-var pure-callable(Row) : Row $transformer */
         $transformer = function (Row $row) : Row {
-            $entry = $row->entries()->get($this->objectEntryName);
+            $entry = $row->entries()->get($this->ref);
 
             if (!$entry instanceof Row\Entry\ObjectEntry) {
-                throw new RuntimeException("\"{$this->objectEntryName}\" is not ObjectEntry");
+                throw new RuntimeException("\"{$this->ref->name()}\" is not ObjectEntry");
             }
 
             $entries = $row->entries()
                 ->set(
                     new Row\Entry\ArrayEntry(
-                        $this->objectEntryName,
+                        $this->ref->name(),
                         $this->hydrator->extract(
                             $entry->value()
                         )

@@ -19,8 +19,6 @@ use Flow\ETL\Transformer\Cast\ValueCaster\StringToDateTimeCaster;
 
 /**
  * @implements EntryConverter<array{type: Type}>
- *
- * @psalm-immutable
  */
 final class AnyToListCaster implements EntryConverter
 {

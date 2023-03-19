@@ -9,8 +9,6 @@ use Flow\ETL\Row;
 
 /**
  * @implements Comparison<array{comparison: Comparison}>
- *
- * @psalm-immutable
  */
 final class Not implements Comparison
 {

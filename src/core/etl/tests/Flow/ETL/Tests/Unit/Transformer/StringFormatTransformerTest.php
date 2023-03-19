@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use function Flow\ETL\DSL\struct;
 use Flow\ETL\Config;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\DSL\Transform;
@@ -16,19 +17,19 @@ final class StringFormatTransformerTest extends TestCase
 {
     public function test_prefix() : void
     {
-        $transformer = Transform::prefix('string', 'prefix-');
+        $transformer = Transform::prefix(struct('string', 'next-string'), 'prefix-');
 
         $rows = $transformer->transform(new Rows(
-            Row::create(Entry::string('string', '1')),
-            Row::create(Entry::string('string', '2')),
-            Row::create(Entry::string('string', '3')),
+            Row::create(Entry::string('string', '1'), Entry::string('next-string', '1')),
+            Row::create(Entry::string('string', '2'), Entry::string('next-string', '1')),
+            Row::create(Entry::string('string', '3'), Entry::string('next-string', '1')),
         ), new FlowContext(Config::default()));
 
         $this->assertSame(
             [
-                ['string' => 'prefix-1'],
-                ['string' => 'prefix-2'],
-                ['string' => 'prefix-3'],
+                ['string' => 'prefix-1', 'next-string' => 'prefix-1'],
+                ['string' => 'prefix-2', 'next-string' => 'prefix-1'],
+                ['string' => 'prefix-3', 'next-string' => 'prefix-1'],
             ],
             $rows->toArray()
         );
