@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Integration\Codename;
 
+use function Flow\ETL\DSL\ref;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\DSL\From;
 use Flow\ETL\DSL\Parquet;
@@ -144,7 +145,7 @@ final class ParquetTest extends TestCase
                 ->read(Parquet::from($paths))
                 ->transform(Transform::array_unpack('row'))
                 ->drop('row')
-                ->sortBy(Row\Sort::asc('integer'))
+                ->sortBy(ref('integer'))
                 ->fetch()
         );
 

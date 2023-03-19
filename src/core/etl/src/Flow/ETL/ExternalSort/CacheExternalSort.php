@@ -8,7 +8,7 @@ use Flow\ETL\Cache;
 use Flow\ETL\ExternalSort;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\CacheExtractor;
-use Flow\ETL\Row\Sort;
+use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Rows;
 
 /**
@@ -30,7 +30,7 @@ final class CacheExternalSort implements ExternalSort
     ) {
     }
 
-    public function sortBy(Sort ...$entries) : Extractor
+    public function sortBy(EntryReference ...$refs) : Extractor
     {
         /** @var array<string, \Generator<Rows>> $cachedPartsArray */
         $cachedPartsArray = [];
@@ -42,7 +42,7 @@ final class CacheExternalSort implements ExternalSort
             /** @var Rows $singleRowRows */
             $partId = $this->id . '_tmp_' . $i;
 
-            foreach ($rows->sortBy(...$entries)->chunks(1) as $singleRowRows) {
+            foreach ($rows->sortBy(...$refs)->chunks(1) as $singleRowRows) {
                 $this->cache->add($partId, $singleRowRows);
             }
 
@@ -53,7 +53,7 @@ final class CacheExternalSort implements ExternalSort
 
         $cachedParts = new CachedParts($cachedPartsArray);
 
-        $minHeap = $cachedParts->createHeap(...$entries);
+        $minHeap = $cachedParts->createHeap(...$refs);
 
         $bufferCache = new ExternalSort\BufferCache($this->cache, $maxRowsSize);
 

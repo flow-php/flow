@@ -2,12 +2,12 @@
 
 namespace Flow\ETL;
 
-use Flow\ETL\Row\Sort;
+use Flow\ETL\Row\EntryReference;
 
 /**
  * @internal
  */
 interface ExternalSort
 {
-    public function sortBy(Sort ...$entries) : Extractor;
+    public function sortBy(EntryReference ...$refs) : Extractor;
 }

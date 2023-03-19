@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV\Tests\Integration;
 
+use function Flow\ETL\DSL\col;
 use Flow\ETL\Config;
 use Flow\ETL\DSL\CSV;
 use Flow\ETL\DSL\Transform;
@@ -256,7 +257,7 @@ final class CSVExtractorTest extends TestCase
                 ->rows(Transform::array_unpack('row'))
                 ->rows(Transform::to_integer('id'))
                 ->drop('row')
-                ->sortBy(Row\Sort::asc('id'))
+                ->sortBy(col('id'))
                 ->fetch()
                 ->toArray()
         );

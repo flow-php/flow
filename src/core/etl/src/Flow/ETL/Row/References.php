@@ -47,6 +47,14 @@ final class References  implements \ArrayAccess, \Countable, \IteratorAggregate,
         $this->refs = $data['refs'];
     }
 
+    /**
+     * @return array<EntryReference>
+     */
+    public function all() : array
+    {
+        return $this->refs;
+    }
+
     public function count() : int
     {
         return \count($this->refs);
@@ -105,5 +113,10 @@ final class References  implements \ArrayAccess, \Countable, \IteratorAggregate,
     public function offsetUnset(mixed $offset) : void
     {
         throw new InvalidArgumentException('Method not implemented.');
+    }
+
+    public function reverse() : self
+    {
+        return new self(...\array_reverse($this->refs));
     }
 }

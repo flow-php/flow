@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\ExternalSort;
 
-use Flow\ETL\Row\Sort;
+use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Rows;
 
 final class CachedParts
@@ -27,9 +27,9 @@ final class CachedParts
     /**
      * @throws \Flow\ETL\Exception\InvalidArgumentException
      */
-    public function createHeap(Sort ...$entries) : RowsMinHeap
+    public function createHeap(EntryReference ...$refs) : RowsMinHeap
     {
-        $heap = new RowsMinHeap(...$entries);
+        $heap = new RowsMinHeap(...$refs);
 
         foreach ($this->generators as $cacheId => $generator) {
             if ($generator->valid()) {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
+use function Flow\ETL\DSL\ref;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
@@ -750,7 +751,7 @@ final class RowsTest extends TestCase
             Row::create(new IntegerEntry('a', 2), new IntegerEntry('b', 4)),
         );
 
-        $rows->sortBy(Row\Sort::asc('c'), Row\Sort::desc('b'));
+        $rows->sortBy(ref('c'), ref('b')->desc());
     }
 
     public function test_sort_rows_by_two_columns() : void
@@ -764,8 +765,8 @@ final class RowsTest extends TestCase
             Row::create(new IntegerEntry('a', 2), new IntegerEntry('b', 4)),
         );
 
-        $ascending = $rows->sortBy(Row\Sort::asc('a'), Row\Sort::desc('b'));
-        $descending = $rows->sortBy(Row\Sort::desc('a'), Row\Sort::asc('b'));
+        $ascending = $rows->sortBy(ref('a'), ref('b')->desc());
+        $descending = $rows->sortBy(ref('a')->desc(), ref('b'));
 
         $this->assertSame(
             [
@@ -791,8 +792,8 @@ final class RowsTest extends TestCase
             $four  = Row::create(new IntegerEntry('number', 4), new StringEntry('name', 'four')),
         );
 
-        $ascending = $rows->sortAscending('number');
-        $descending = $rows->sortDescending('number');
+        $ascending = $rows->sortAscending(ref('number'));
+        $descending = $rows->sortDescending(ref('number'));
 
         $this->assertEquals(new Rows($one, $two, $three, $four, $five), $ascending);
         $this->assertEquals(new Rows($five, $four, $three, $two, $one), $descending);
