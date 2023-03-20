@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-03-19
+## [Unreleased] - 2023-03-20
 
 ### Changed
 - [#359](https://github.com/flow-php/flow/pull/359) - **Moved sortBy into entry ref** - [@norberttech](https://github.com/norberttech)
