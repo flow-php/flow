@@ -24,3 +24,14 @@ require __DIR__ . '/../../bootstrap.php';
     ->withEntry('new_b', ref('b')->multiply(lit(2))->multiply(lit(5)))
     ->write(To::output(false))
     ->run();
+
+(new Flow())
+    ->read(
+        From::rows(new Rows(
+            Row::with(Entry::int('a', 4), Entry::int('b', 5)),
+            Row::with(Entry::int('a', 3), Entry::int('b', 6))
+        ))
+    )
+    ->filter(ref('b')->mod(lit(2))->equals(lit(0)))
+    ->write(To::output(false))
+    ->run();

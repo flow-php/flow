@@ -11,12 +11,16 @@ use Flow\ETL\Row\Reference\ValueExtractor;
 
 final class Value implements Expression
 {
-    public function __construct(private readonly string $entry)
+    public function __construct(private readonly string|Literal $entry)
     {
     }
 
     public function eval(Row $row) : mixed
     {
+        if ($this->entry instanceof Literal) {
+            return $this->entry->value();
+        }
+
         return (new ValueExtractor())->value($row, ref($this->entry));
     }
 }

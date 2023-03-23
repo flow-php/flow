@@ -14,6 +14,10 @@ final class Expressions implements Expression
      */
     private array $expressions;
 
+    /**
+     * @param string $entry
+     * @param array<Expression> $expressions
+     */
     public function __construct(
         private readonly string $entry,
         array $expressions
@@ -26,6 +30,9 @@ final class Expressions implements Expression
         return new self($this->entry, \array_merge($this->expressions, [$expression]));
     }
 
+    /**
+     * @psalm-suppress MixedAssignment
+     */
     public function eval(Row $row) : mixed
     {
         $lastValue = null;

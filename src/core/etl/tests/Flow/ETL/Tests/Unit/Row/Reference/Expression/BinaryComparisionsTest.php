@@ -15,6 +15,7 @@ use Flow\ETL\Row\Reference\Expression\EndsWith;
 use Flow\ETL\Row\Reference\Expression\Equals;
 use Flow\ETL\Row\Reference\Expression\GreaterThan;
 use Flow\ETL\Row\Reference\Expression\GreaterThanEqual;
+use Flow\ETL\Row\Reference\Expression\IsIn;
 use Flow\ETL\Row\Reference\Expression\IsNotNull;
 use Flow\ETL\Row\Reference\Expression\IsNull;
 use Flow\ETL\Row\Reference\Expression\IsType;
@@ -60,6 +61,22 @@ final class BinaryComparisionsTest extends TestCase
         $this->assertTrue((new GreaterThanEqual(ref('e'), ref('d')))->eval($row));
         $this->assertTrue((new GreaterThanEqual(ref('e'), lit(new \DateTimeImmutable('2022-01-01 00:00:00 UTC'))))->eval($row));
         $this->assertFalse((new GreaterThanEqual(ref('e'), lit(new \DateTimeImmutable('2024-01-01 00:00:00 UTC'))))->eval($row));
+    }
+
+    public function test_is_in() : void
+    {
+        $row = Row::with(
+            Entry::array('a', [1, 2, 3, 4, 5]),
+            Entry::array('b', ['a', 'b', 'c']),
+            Entry::str('c', 'another'),
+            Entry::int('d', 4),
+            Entry::str('e', 'b'),
+        );
+
+        $this->assertTrue((new IsIn(ref('a'), lit(1)))->eval($row));
+        $this->assertFalse((new IsIn(ref('a'), lit(10)))->eval($row));
+        $this->assertTrue((new IsIn(ref('a'), ref('d')))->eval($row));
+        $this->assertTrue((new IsIn(ref('b'), ref('e')))->eval($row));
     }
 
     public function test_is_type() : void

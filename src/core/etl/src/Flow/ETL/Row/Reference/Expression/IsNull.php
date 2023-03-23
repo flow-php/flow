@@ -11,8 +11,9 @@ use Flow\ETL\Row\Reference\ValueExtractor;
 
 final class IsNull implements Expression
 {
-    public function __construct(private readonly EntryReference $ref)
-    {
+    public function __construct(
+        private readonly EntryReference|Literal $ref
+    ) {
     }
 
     public function eval(Row $row) : bool

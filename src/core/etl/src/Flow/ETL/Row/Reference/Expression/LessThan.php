@@ -11,10 +11,15 @@ use Flow\ETL\Row\Reference\ValueExtractor;
 
 final class LessThan implements Expression
 {
-    public function __construct(private readonly EntryReference $base, private readonly EntryReference $next)
-    {
+    public function __construct(
+        private readonly EntryReference|Literal $base,
+        private readonly EntryReference|Literal $next
+    ) {
     }
 
+    /**
+     * @psalm-suppress MixedAssignment
+     */
     public function eval(Row $row) : bool
     {
         $extractor = new ValueExtractor();

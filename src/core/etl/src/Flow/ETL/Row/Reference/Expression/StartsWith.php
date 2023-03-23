@@ -11,7 +11,7 @@ use Flow\ETL\Row\Reference\ValueExtractor;
 
 final class StartsWith implements Expression
 {
-    public function __construct(private readonly EntryReference $haystack, private readonly EntryReference $needle)
+    public function __construct(private readonly EntryReference $haystack, private readonly EntryReference|Literal $needle)
     {
     }
 

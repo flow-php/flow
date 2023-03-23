@@ -11,8 +11,10 @@ use Flow\ETL\Row\Reference\ValueExtractor;
 
 final class EndsWith implements Expression
 {
-    public function __construct(private readonly EntryReference $haystack, private readonly EntryReference $needle)
-    {
+    public function __construct(
+        private readonly EntryReference|Literal $haystack,
+        private readonly EntryReference|Literal $needle
+    ) {
     }
 
     public function eval(Row $row) : bool

@@ -6,22 +6,29 @@ namespace Flow\ETL\Row\Reference\Expression;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
+use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference\Expression;
 
 final class IsType implements Expression
 {
     /**
-     * @var array<string>
+     * @var array<class-string<Entry>>
      */
     private array $typeClasses;
 
+    /**
+     * @param EntryReference $ref
+     * @param class-string<Entry> ...$typeClasses
+     *
+     * @throws InvalidArgumentException
+     */
     public function __construct(
         private readonly EntryReference $ref,
         string ...$typeClasses
     ) {
         foreach ($typeClasses as $typeClass) {
-            if (!\class_exists($typeClass) || !\in_array(Row\Entry::class, \class_implements($typeClass), true)) {
+            if (!\class_exists($typeClass) || !\in_array(Entry::class, \class_implements($typeClass), true)) {
                 throw new InvalidArgumentException('"' . $typeClass . '" is not valid Entry Type class');
             }
         }

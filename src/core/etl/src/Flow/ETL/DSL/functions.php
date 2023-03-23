@@ -7,6 +7,7 @@ namespace Flow\ETL\DSL;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\Reference\Expression\Literal;
 use Flow\ETL\Row\StructureReference;
 
 function col(string $entry, string ...$entries) : Reference
@@ -42,7 +43,7 @@ function struct(string ...$entries) : StructureReference
     return new StructureReference($entry, ...$entries);
 }
 
-function lit(mixed $value) : EntryReference
+function lit(mixed $value) : Literal
 {
-    return ref(\sha1(\uniqid('lit', true)))->literal($value);
+    return new Literal($value);
 }

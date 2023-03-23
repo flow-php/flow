@@ -12,8 +12,8 @@ use Flow\ETL\Row\Reference\ValueExtractor;
 final class Power implements Expression
 {
     public function __construct(
-        private readonly EntryReference $leftRef,
-        private readonly EntryReference $rightRef
+        private readonly EntryReference|Literal $leftRef,
+        private readonly EntryReference|Literal $rightRef
     ) {
     }
 

@@ -8,7 +8,7 @@ use Flow\ETL\Cache;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Partition\PartitionFilter;
 use Flow\ETL\Pipeline\Pipes;
-use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\References;
 use Flow\ETL\Rows;
 use Flow\Serializer\Serializable;
 use Flow\Serializer\Serializer;
@@ -22,7 +22,7 @@ use Flow\Serializer\Serializer;
  *      cache?: Cache,
  *      cache_id?: string,
  *      rows?: Rows,
- *      partition_entries?: array<EntryReference>,
+ *      partition_entries?: References,
  *      partition_filter?: PartitionFilter
  *     }
  * }>
@@ -37,7 +37,7 @@ final class Message implements Serializable
      *     cache?: Cache,
      *     cache_id?: string,
      *     rows?: Rows,
-     *     partition_entries?: array<EntryReference>,
+     *     partition_entries?: References,
      *     partition_filter?: PartitionFilter
      * } $payload
      */
@@ -110,7 +110,7 @@ final class Message implements Serializable
      *     cache?: Cache,
      *     cache_id?: string,
      *     rows?: Rows,
-     *     partition_entries?: array<EntryReference>,
+     *     partition_entries?: References,
      *     partition_filter?: PartitionFilter
      * }
      */
