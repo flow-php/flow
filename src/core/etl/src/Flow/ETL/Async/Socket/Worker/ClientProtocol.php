@@ -26,19 +26,22 @@ final class ClientProtocol
 
     public function handle(string $id, Message $message, Server $server) : void
     {
+        $payload = $message->payload();
+
         switch ($message->type()) {
             case Protocol::SERVER_SETUP:
-                $this->processor->setPipes($message->payload()['pipes'] ?? new Pipes([]));
-                $this->processor->setPartitionEntries($message->payload()['partition_entries'] ?? []);
-                $this->processor->setPartitionFilter($message->payload()['partition_filter'] ?? new NoopFilter());
-                $this->cache = $message->payload()['cache'] ?? $this->cache;
-                $this->cacheId = $message->payload()['cache_id'] ?? $this->cacheId;
+                $refs = \array_key_exists('partition_entries', $payload) ? $payload['partition_entries']->all() : [];
+                $this->processor->setPipes($payload['pipes'] ?? new Pipes([]));
+                $this->processor->setPartitionEntries($refs);
+                $this->processor->setPartitionFilter($payload['partition_filter'] ?? new NoopFilter());
+                $this->cache = $payload['cache'] ?? $this->cache;
+                $this->cacheId = $payload['cache_id'] ?? $this->cacheId;
 
                 $server->send(Message::fetch($id));
 
                 break;
             case Protocol::SERVER_PROCESS:
-                $rows = $this->processor->process($message->payload()['rows'] ?? new Rows());
+                $rows = $this->processor->process($payload['rows'] ?? new Rows());
 
                 $server->send(Message::fetch($id));
                 $this->cache->add($this->cacheId, $rows);

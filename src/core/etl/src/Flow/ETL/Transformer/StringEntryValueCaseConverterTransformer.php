@@ -6,13 +6,13 @@ namespace Flow\ETL\Transformer;
 
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
-use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\References;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 /**
- * @implements Transformer<array{case: string, refs: array<EntryReference>}>
+ * @implements Transformer<array{case: string, refs: References}>
  */
 final class StringEntryValueCaseConverterTransformer implements Transformer
 {
@@ -20,16 +20,13 @@ final class StringEntryValueCaseConverterTransformer implements Transformer
 
     private const CASE_UPPER = 'upper';
 
-    /**
-     * @var array<EntryReference>
-     */
-    private readonly array $refs;
+    private readonly References $refs;
 
     private function __construct(
         private readonly string $case,
         string|Reference ...$refs
     ) {
-        $this->refs = EntryReference::initAll(...$refs);
+        $this->refs = References::init(...$refs);
     }
 
     public static function lower(string|Reference ...$entryNames) : self

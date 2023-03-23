@@ -23,10 +23,14 @@ use Flow\ETL\Pipeline\ParallelizingPipeline;
 use Flow\ETL\Pipeline\VoidPipeline;
 use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\Reference\Expression\Literal;
+use Flow\ETL\Row\References;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Row\Sort;
 use Flow\ETL\Transformer\CallbackRowTransformer;
 use Flow\ETL\Transformer\CrossJoinRowsTransformer;
+use Flow\ETL\Transformer\EntryExpressionEvalTransformer;
+use Flow\ETL\Transformer\EntryExpressionFilterTransformer;
 use Flow\ETL\Transformer\Filter\Filter\Callback;
 use Flow\ETL\Transformer\FilterRowsTransformer;
 use Flow\ETL\Transformer\JoinEachRowsTransformer;
@@ -135,14 +139,14 @@ final class DataFrame
             $this->context->config->setLimit($limit);
         }
 
-        if (\count($this->context->partitionEntries())) {
+        if ($this->context->partitionEntries()->count()) {
             $rows = (new Rows())->merge(
                 ...\iterator_to_array($this->pipeline->process($this->context))
             );
 
             $fetchedRows = (new Rows());
 
-            foreach ($rows->partitionBy(...$this->context->partitionEntries()) as $partitionedRows) {
+            foreach ($rows->partitionBy(...$this->context->partitionEntries()->all()) as $partitionedRows) {
                 if ($this->context->partitionFilter()->keep(...$partitionedRows->partitions)) {
                     $fetchedRows = $fetchedRows->merge($partitionedRows->rows);
                 }
@@ -157,11 +161,17 @@ final class DataFrame
     }
 
     /**
-     * @param callable(Row $row) : bool $callback
+     * @param callable(Row $row) : bool|EntryReference $callback
      */
-    public function filter(callable $callback) : self
+    public function filter(callable|EntryReference $callback) : self
     {
-        $this->pipeline->add(new FilterRowsTransformer(new Callback($callback)));
+        if ($callback instanceof EntryReference) {
+            $this->pipeline->add(new EntryExpressionFilterTransformer($callback));
+        }
+
+        if (\is_callable($callback)) {
+            $this->pipeline->add(new FilterRowsTransformer(new Callback($callback)));
+        }
 
         return $this;
     }
@@ -306,7 +316,7 @@ final class DataFrame
     {
         \array_unshift($entries, $entry);
 
-        $this->context->partitionBy(...EntryReference::initAll(...$entries));
+        $this->context->partitionBy(...References::init(...$entries)->all());
 
         return $this;
     }
@@ -446,6 +456,13 @@ final class DataFrame
     public function void() : self
     {
         $this->pipeline = new VoidPipeline($this->pipeline);
+
+        return $this;
+    }
+
+    public function withEntry(string $entryName, EntryReference|Literal $ref) : self
+    {
+        $this->transform(new EntryExpressionEvalTransformer($entryName, $ref));
 
         return $this;
     }

@@ -10,22 +10,20 @@ use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\References;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 /**
- * @implements Transformer<array{refs: array<EntryReference>}>
+ * @implements Transformer<array{refs: References}>
  */
 final class KeepEntriesTransformer implements Transformer
 {
-    /**
-     * @var array<EntryReference>
-     */
-    private readonly array $refs;
+    private readonly References $refs;
 
     public function __construct(string|Reference ...$refs)
     {
-        $this->refs = EntryReference::initAll(...$refs);
+        $this->refs = References::init(...$refs);
     }
 
     public function __serialize() : array
@@ -46,7 +44,7 @@ final class KeepEntriesTransformer implements Transformer
             $allEntries = $row->entries()->map(fn (Entry $entry) : string => $entry->name());
             $removeEntries = \array_diff(
                 $allEntries,
-                \array_map(static fn (EntryReference $r) : string => $r->name(), $this->refs)
+                \array_map(static fn (EntryReference $r) : string => $r->name(), $this->refs->all())
             );
 
             $newEntries = $row->remove(...$removeEntries);

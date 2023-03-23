@@ -8,24 +8,22 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\References;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 /**
- * @implements Transformer<array{ref:array<EntryReference>, format:string}>
+ * @implements Transformer<array{ref: References, format:string}>
  */
 final class StringFormatTransformer implements Transformer
 {
-    /**
-     * @var array<EntryReference>
-     */
-    private readonly array $refs;
+    private readonly References $refs;
 
     public function __construct(
         string|Reference $entry,
         private readonly string $format
     ) {
-        $this->refs = EntryReference::initAll($entry);
+        $this->refs = References::init($entry);
     }
 
     public function __serialize() : array

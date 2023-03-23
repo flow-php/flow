@@ -7,6 +7,7 @@ namespace Flow\ETL\DSL;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\Reference\Expression\Literal;
 use Flow\ETL\Row\StructureReference;
 
 function col(string $entry, string ...$entries) : Reference
@@ -40,4 +41,9 @@ function struct(string ...$entries) : StructureReference
     $entry = \array_shift($entries);
 
     return new StructureReference($entry, ...$entries);
+}
+
+function lit(mixed $value) : Literal
+{
+    return new Literal($value);
 }

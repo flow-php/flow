@@ -9,9 +9,9 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\GroupBy\Aggregation;
 use Flow\ETL\GroupBy\Aggregator;
 use Flow\ETL\Row\Entries;
-use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\References;
 
 final class GroupBy
 {
@@ -25,14 +25,11 @@ final class GroupBy
      */
     private array $groups;
 
-    /**
-     * @var array<EntryReference>
-     */
-    private readonly array $refs;
+    private readonly References $refs;
 
     public function __construct(string|Reference ...$entries)
     {
-        $this->refs = EntryReference::initAll(...\array_unique($entries));
+        $this->refs = References::init(...\array_unique($entries));
         $this->aggregations = [];
         $this->groups = [];
     }

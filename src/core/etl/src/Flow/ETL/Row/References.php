@@ -23,11 +23,26 @@ final class References  implements \ArrayAccess, \Countable, \IteratorAggregate,
     {
         $refs = [];
 
-        foreach (EntryReference::initAll(...$reference) as $ref) {
-            $refs[$ref->name()] = $ref;
+        foreach ($reference as $ref) {
+            if ($ref instanceof StructureReference) {
+                $refs = \array_merge($refs, $ref->to());
+            } else {
+                /**
+                 * @psalm-suppress PossiblyInvalidArgument
+                 *
+                 * @phpstan-ignore-next-line
+                 */
+                $refs[] = EntryReference::init($ref);
+            }
         }
 
-        $this->refs = $refs;
+        $indexedRefs = [];
+
+        foreach ($refs as $ref) {
+            $indexedRefs[$ref->name()] = $ref;
+        }
+
+        $this->refs = $indexedRefs;
     }
 
     public static function init(string|Reference ...$reference) : self
@@ -52,7 +67,7 @@ final class References  implements \ArrayAccess, \Countable, \IteratorAggregate,
      */
     public function all() : array
     {
-        return $this->refs;
+        return \array_values($this->refs);
     }
 
     public function count() : int

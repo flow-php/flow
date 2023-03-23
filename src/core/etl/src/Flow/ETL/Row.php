@@ -9,6 +9,7 @@ use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\References;
 use Flow\ETL\Row\Schema;
 use Flow\Serializer\Serializable;
 
@@ -27,6 +28,11 @@ final class Row implements Serializable
     public static function create(Entry ...$entries) : self
     {
         return new self(new Entries(...$entries));
+    }
+
+    public static function with(Entry ...$entries) : self
+    {
+        return self::create(...$entries);
     }
 
     public function __serialize() : array
@@ -102,10 +108,9 @@ final class Row implements Serializable
 
     public function remove(string|Reference ...$names) : self
     {
-        $refs = EntryReference::initAll(...$names);
         $namesToRemove = [];
 
-        foreach ($refs as $ref) {
+        foreach (References::init(...$names) as $ref) {
             if ($this->entries->has($ref)) {
                 $namesToRemove[] = $ref;
             }

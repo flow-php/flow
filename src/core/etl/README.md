@@ -447,9 +447,15 @@ $flow->process(new Rows(...))
     ->run();
 ```
 
-## Filter
+## Filtering
 
-In order to quickly filter Rows `DataFrame::filter` shortcut function can be used. 
+There are two ways to filter datasets in Flow. 
+
+### Callback Filtering 
+
+This is the most flexible but also the least developer friendly apporach. 
+All you need to do is use callback `fn (Row $row) : bool` that will be executed against each row
+and that will tell filter to keep or skip the row. 
 
 ```php 
 <?php 
@@ -461,6 +467,32 @@ $flow->process(new Rows(...))
     ->write($loader)
     ->run();
 ```
+
+### DSL Filtering 
+
+This approach is way more developer friendly as IDE can autocomplete all filtering functions for you. 
+
+```php
+<?php
+
+(new Flow())
+    ->read(
+        From::rows(new Rows(
+            Row::with(Entry::int('a', 100), Entry::int('b', 100)),
+            Row::with(Entry::int('a', 100), Entry::int('b', 200))
+        ))
+    )
+    ->filter(ref('b')->divide(lit(2))->equals('a'))
+    ->withEntry('new_b', ref('b')->multiply(lit(2))->multiply(lit(5)))
+    ->write(To::output(false))
+    ->run();
+```
+
+So in general all filtering functions are available as [Reference Expression](/src/core/etl/src/Flow/ETL/Row/Reference/Expression.php).
+This means you can chain them creating readable conditions that will significantly improve maintainability of your 
+data processing pipelines. 
+
+All possible expressions are available through [EntryReference.php](/src/core/etl/src/Flow/ETL/Row/EntryReference.php).
 
 ## Group By
 

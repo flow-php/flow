@@ -124,7 +124,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
     {
         $entries = [];
 
-        foreach (EntryReference::initAll(...$names) as $ref) {
+        foreach (References::init(...$names) as $ref) {
             $entries[] = $this->get($ref);
         }
 
@@ -141,7 +141,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
 
     public function has(string|Reference ...$names) : bool
     {
-        foreach (EntryReference::initAll(...$names) as $ref) {
+        foreach (References::init(...$names) as $ref) {
             if (!\array_key_exists($ref->name(), $this->entries)) {
                 return false;
             }
@@ -257,15 +257,15 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
 
     public function order(string|Reference ...$entries) : self
     {
-        $refs = EntryReference::initAll(...$entries);
+        $refs = References::init(...$entries);
 
         $sortedEntries = [];
 
-        if (\count($refs) !== \count($this->entries)) {
+        if ($refs->count() !== \count($this->entries)) {
             throw InvalidArgumentException::because(
                 \sprintf(
                     'In order to sort entries in a given order you need to provide all entry names, given: "%s", expected: "%s"',
-                    \implode('", "', \array_map(static fn (EntryReference $ref) : string => $ref->name(), $refs)),
+                    \implode('", "', \array_map(static fn (EntryReference $ref) : string => $ref->name(), $refs->all())),
                     \implode('", "', \array_map(static fn (Entry $entry) => $entry->name(), $this->entries)),
                 )
             );
@@ -290,11 +290,9 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
 
     public function remove(string|Reference ...$names) : self
     {
-        $refs = EntryReference::initAll(...$names);
-
         $entries = $this->entries;
 
-        foreach ($refs as $ref) {
+        foreach (References::init(...$names) as $ref) {
             if ($this->has($ref) === false) {
                 throw InvalidLogicException::because(\sprintf('Entry "%s" does not exist', $ref->name()));
             }

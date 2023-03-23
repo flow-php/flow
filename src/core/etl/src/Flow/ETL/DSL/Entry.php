@@ -93,6 +93,11 @@ class Entry
         return new RowEntry\FloatEntry($name, $value);
     }
 
+    final public static function int(string $name, int $value) : RowEntry
+    {
+        return self::integer($name, $value);
+    }
+
     /**
      * @throws InvalidArgumentException
      *
@@ -228,6 +233,11 @@ class Entry
         return new RowEntry\ObjectEntry($name, $object);
     }
 
+    final public static function str(string $name, string $value) : RowEntry
+    {
+        return self::string($name, $value);
+    }
+
     /**
      * @throws InvalidArgumentException
      *
@@ -256,6 +266,11 @@ class Entry
     final public static function string_upper(string $name, string $value) : RowEntry
     {
         return RowEntry\StringEntry::uppercase($name, $value);
+    }
+
+    final public static function struct(string $name, RowEntry ...$entries) : RowEntry
+    {
+        return self::structure($name, ...$entries);
     }
 
     /**

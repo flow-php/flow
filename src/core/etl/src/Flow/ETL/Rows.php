@@ -535,7 +535,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
     {
         \array_unshift($entries, $entry);
 
-        $refs = EntryReference::initAll(...$entries);
+        $refs = References::init(...$entries);
 
         /** @var array<string, array<mixed>> $partitions */
         $partitions = [];

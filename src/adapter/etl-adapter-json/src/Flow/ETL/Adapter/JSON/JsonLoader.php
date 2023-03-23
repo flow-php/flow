@@ -59,8 +59,8 @@ final class JsonLoader implements Closure, Loader, Loader\FileLoader
 
     public function load(Rows $rows, FlowContext $context) : void
     {
-        if (\count($context->partitionEntries())) {
-            foreach ($rows->partitionBy(...$context->partitionEntries()) as $partitionedRows) {
+        if ($context->partitionEntries()->count()) {
+            foreach ($rows->partitionBy(...$context->partitionEntries()->all()) as $partitionedRows) {
                 $this->write($partitionedRows->rows, $partitionedRows->partitions, $context);
             }
         } else {
