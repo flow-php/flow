@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
-use Flow\ETL\Row\Reference\Expression\Literal;
 use function Flow\ETL\DSL\ref;
 use Flow\ETL\DSL\To;
 use Flow\ETL\DSL\Transform;
@@ -24,6 +23,7 @@ use Flow\ETL\Pipeline\ParallelizingPipeline;
 use Flow\ETL\Pipeline\VoidPipeline;
 use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\Reference\Expression\Literal;
 use Flow\ETL\Row\References;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Row\Sort;
