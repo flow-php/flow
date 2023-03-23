@@ -13,7 +13,7 @@ use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 /**
- * @implements Transformer<array{ref: References format:string}>
+ * @implements Transformer<array{ref: References, format:string}>
  */
 final class StringFormatTransformer implements Transformer
 {

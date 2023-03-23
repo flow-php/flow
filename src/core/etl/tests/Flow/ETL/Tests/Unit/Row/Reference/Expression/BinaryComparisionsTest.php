@@ -10,6 +10,8 @@ use Flow\ETL\DSL\Entry;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Row\Entry\StringEntry;
+use Flow\ETL\Row\Reference\Expression\Contains;
+use Flow\ETL\Row\Reference\Expression\EndsWith;
 use Flow\ETL\Row\Reference\Expression\Equals;
 use Flow\ETL\Row\Reference\Expression\GreaterThan;
 use Flow\ETL\Row\Reference\Expression\GreaterThanEqual;
@@ -21,6 +23,7 @@ use Flow\ETL\Row\Reference\Expression\LessThanEqual;
 use Flow\ETL\Row\Reference\Expression\NotEquals;
 use Flow\ETL\Row\Reference\Expression\NotSame;
 use Flow\ETL\Row\Reference\Expression\Same;
+use Flow\ETL\Row\Reference\Expression\StartsWith;
 use PHPUnit\Framework\TestCase;
 
 final class BinaryComparisionsTest extends TestCase
@@ -152,5 +155,22 @@ final class BinaryComparisionsTest extends TestCase
         $this->assertFalse(
             (new Same(ref('a'), ref('c')))->eval($row)
         );
+    }
+
+    public function test_starts_ends_with() : void
+    {
+        $row = Row::with(
+            Entry::str('a', 'some not too long string'),
+            Entry::str('b', 'another not too long text'),
+            Entry::str('c', 'another'),
+            Entry::str('d', 'text')
+        );
+
+        $this->assertTrue((new StartsWith(ref('a'), lit('some not')))->eval($row));
+        $this->assertTrue((new EndsWith(ref('a'), lit('long string')))->eval($row));
+        $this->assertTrue((new StartsWith(ref('b'), ref('c')))->eval($row));
+        $this->assertTrue((new EndsWith(ref('b'), ref('d')))->eval($row));
+        $this->assertTrue((new Contains(ref('a'), lit('too long')))->eval($row));
+        $this->assertFalse((new Contains(ref('a'), lit('blablabla')))->eval($row));
     }
 }

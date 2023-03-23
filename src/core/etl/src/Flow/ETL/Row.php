@@ -30,6 +30,11 @@ final class Row implements Serializable
         return new self(new Entries(...$entries));
     }
 
+    public static function with(Entry ...$entries) : self
+    {
+        return self::create(...$entries);
+    }
+
     public function __serialize() : array
     {
         return ['entries' => $this->entries];

@@ -7,8 +7,11 @@ namespace Flow\ETL\Row;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference\Expression;
+use Flow\ETL\Row\Reference\Expression\Contains;
 use Flow\ETL\Row\Reference\Expression\Divide;
+use Flow\ETL\Row\Reference\Expression\EndsWith;
 use Flow\ETL\Row\Reference\Expression\Equals;
+use Flow\ETL\Row\Reference\Expression\Expressions;
 use Flow\ETL\Row\Reference\Expression\GreaterThan;
 use Flow\ETL\Row\Reference\Expression\GreaterThanEqual;
 use Flow\ETL\Row\Reference\Expression\IsNotNull;
@@ -20,27 +23,28 @@ use Flow\ETL\Row\Reference\Expression\Literal;
 use Flow\ETL\Row\Reference\Expression\Minus;
 use Flow\ETL\Row\Reference\Expression\Mod;
 use Flow\ETL\Row\Reference\Expression\Multiply;
-use Flow\ETL\Row\Reference\Expression\Nop;
 use Flow\ETL\Row\Reference\Expression\NotEquals;
 use Flow\ETL\Row\Reference\Expression\NotSame;
 use Flow\ETL\Row\Reference\Expression\Plus;
 use Flow\ETL\Row\Reference\Expression\Power;
 use Flow\ETL\Row\Reference\Expression\Same;
+use Flow\ETL\Row\Reference\Expression\StartsWith;
+use Flow\ETL\Row\Reference\Expression\Value;
 
 /**
- * @implements Reference<array{entry: string, alias: ?string, expression: ?Expression}>
+ * @implements Reference<array{entry: string, alias: ?string, expression: ?Expressions}>
  */
 final class EntryReference implements Reference
 {
     private ?string $alias = null;
 
-    private Expression $expression;
+    private Expressions $expression;
 
     private SortOrder $sort = SortOrder::ASC;
 
     public function __construct(private readonly string $entry)
     {
-        $this->expression = new Nop();
+        $this->expression = new Expressions($entry, [new Value($entry)]);
     }
 
     public static function init(string|self $ref) : self
@@ -87,6 +91,13 @@ final class EntryReference implements Reference
         return $this;
     }
 
+    public function contains(self|string $needle) : self
+    {
+        $this->expression->add(new Contains($this, self::init($needle)));
+
+        return $this;
+    }
+
     public function desc() : self
     {
         $this->sort = SortOrder::DESC;
@@ -96,14 +107,21 @@ final class EntryReference implements Reference
 
     public function divide(self|string $ref) : self
     {
-        $this->expression = new Divide($this, self::init($ref));
+        $this->expression = $this->expression->add(new Divide($this, self::init($ref)));
+
+        return $this;
+    }
+
+    public function endsWith(self|string $needle) : self
+    {
+        $this->expression->add(new EndsWith($this, self::init($needle)));
 
         return $this;
     }
 
     public function equals(self|string $ref) : self
     {
-        $this->expression = new Equals($this, self::init($ref));
+        $this->expression = $this->expression->add(new Equals($this, self::init($ref)));
 
         return $this;
     }
@@ -113,21 +131,21 @@ final class EntryReference implements Reference
         return $this->expression->eval($row);
     }
 
-    public function expression() : Expression
+    public function expressions() : Expressions
     {
         return $this->expression;
     }
 
     public function greaterThan(self|string $ref) : self
     {
-        $this->expression = new GreaterThan($this, self::init($ref));
+        $this->expression = $this->expression->add(new GreaterThan($this, self::init($ref)));
 
         return $this;
     }
 
     public function greaterThanEqual(self|string $ref) : self
     {
-        $this->expression = new GreaterThanEqual($this, self::init($ref));
+        $this->expression = $this->expression->add(new GreaterThanEqual($this, self::init($ref)));
 
         return $this;
     }
@@ -144,14 +162,14 @@ final class EntryReference implements Reference
 
     public function isNotNull() : self
     {
-        $this->expression = new IsNotNull($this);
+        $this->expression = $this->expression->add(new IsNotNull($this));
 
         return $this;
     }
 
     public function isNull() : self
     {
-        $this->expression = new IsNull($this);
+        $this->expression = $this->expression->add(new IsNull($this));
 
         return $this;
     }
@@ -162,49 +180,49 @@ final class EntryReference implements Reference
             throw new InvalidArgumentException('isType expression requires at least one entryClass');
         }
 
-        $this->expression = new IsType($this, ...$entryClass);
+        $this->expression = $this->expression->add(new IsType($this, ...$entryClass));
 
         return $this;
     }
 
     public function lessThan(self|string $ref) : self
     {
-        $this->expression = new LessThan($this, self::init($ref));
+        $this->expression = $this->expression->add(new LessThan($this, self::init($ref)));
 
         return $this;
     }
 
     public function lessThanEqual(self|string $ref) : self
     {
-        $this->expression = new LessThanEqual($this, self::init($ref));
+        $this->expression = $this->expression->add(new LessThanEqual($this, self::init($ref)));
 
         return $this;
     }
 
     public function literal(mixed $value) : self
     {
-        $this->expression = new Literal($value);
+        $this->expression = $this->expression->add(new Literal($value));
 
         return $this;
     }
 
     public function minus(self|string $ref) : self
     {
-        $this->expression = new Minus($this, self::init($ref));
+        $this->expression = $this->expression->add(new Minus($this, self::init($ref)));
 
         return $this;
     }
 
     public function mod(self|string $ref) : self
     {
-        $this->expression = new Mod($this, self::init($ref));
+        $this->expression = $this->expression->add(new Mod($this, self::init($ref)));
 
         return $this;
     }
 
     public function multiply(self|string $ref) : self
     {
-        $this->expression = new Multiply($this, self::init($ref));
+        $this->expression = $this->expression->add(new Multiply($this, self::init($ref)));
 
         return $this;
     }
@@ -216,35 +234,35 @@ final class EntryReference implements Reference
 
     public function notEquals(self|string $ref) : self
     {
-        $this->expression = new NotEquals($this, self::init($ref));
+        $this->expression = $this->expression->add(new NotEquals($this, self::init($ref)));
 
         return $this;
     }
 
     public function notSame(self|string $ref) : self
     {
-        $this->expression = new NotSame($this, self::init($ref));
+        $this->expression = $this->expression->add(new NotSame($this, self::init($ref)));
 
         return $this;
     }
 
     public function plus(self|string $ref) : self
     {
-        $this->expression = new Plus($this, self::init($ref));
+        $this->expression = $this->expression->add(new Plus($this, self::init($ref)));
 
         return $this;
     }
 
     public function power(self|string $ref) : self
     {
-        $this->expression = new Power($this, self::init($ref));
+        $this->expression = $this->expression->add(new Power($this, self::init($ref)));
 
         return $this;
     }
 
     public function same(self|string $ref) : self
     {
-        $this->expression = new Same($this, self::init($ref));
+        $this->expression = $this->expression->add(new Same($this, self::init($ref)));
 
         return $this;
     }
@@ -252,6 +270,13 @@ final class EntryReference implements Reference
     public function sort() : SortOrder
     {
         return $this->sort;
+    }
+
+    public function startsWith(self|string $needle) : self
+    {
+        $this->expression->add(new StartsWith($this, self::init($needle)));
+
+        return $this;
     }
 
     public function to() : string
