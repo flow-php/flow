@@ -29,7 +29,7 @@ final class ClientProtocol
         switch ($message->type()) {
             case Protocol::SERVER_SETUP:
                 $this->processor->setPipes($message->payload()['pipes'] ?? new Pipes([]));
-                $this->processor->setPartitionEntries($message->payload()['partition_entries'] ?? []);
+                $this->processor->setPartitionEntries($message->payload()['partition_entries']->all() ?? []);
                 $this->processor->setPartitionFilter($message->payload()['partition_filter'] ?? new NoopFilter());
                 $this->cache = $message->payload()['cache'] ?? $this->cache;
                 $this->cacheId = $message->payload()['cache_id'] ?? $this->cacheId;

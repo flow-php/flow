@@ -58,8 +58,8 @@ final class TextLoader implements Closure, Loader, Loader\FileLoader
 
     public function load(Rows $rows, FlowContext $context) : void
     {
-        if (\count($context->partitionEntries())) {
-            foreach ($rows->partitionBy(...$context->partitionEntries()) as $partition) {
+        if ($context->partitionEntries()->count()) {
+            foreach ($rows->partitionBy(...$context->partitionEntries()->all()) as $partition) {
                 foreach ($partition->rows as $row) {
                     if ($row->entries()->count() > 1) {
                         throw new RuntimeException(\sprintf('Text data loader supports only a single entry rows, and you have %d rows.', $row->entries()->count()));

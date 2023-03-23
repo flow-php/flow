@@ -9,8 +9,8 @@ use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Partition\NoopFilter;
 use Flow\ETL\Partition\PartitionFilter;
-use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\References;
 use Flow\Serializer\Serializer;
 
 /**
@@ -25,10 +25,7 @@ final class FlowContext
 
     private PartitionFilter $partitionFilter;
 
-    /**
-     * @var array<EntryReference>
-     */
-    private array $partitions;
+    private References $partitions;
 
     private bool $threadSafe = false;
 
@@ -36,7 +33,7 @@ final class FlowContext
     {
         $this->partitionFilter = new NoopFilter();
         $this->errorHandler = new ThrowError();
-        $this->partitions = [];
+        $this->partitions = new References();
     }
 
     public function cache() : Cache
@@ -63,15 +60,12 @@ final class FlowContext
 
     public function partitionBy(string|Reference ...$entry) : self
     {
-        $this->partitions = EntryReference::initAll(...$entry);
+        $this->partitions = References::init(...$entry);
 
         return $this;
     }
 
-    /**
-     * @return array<EntryReference>
-     */
-    public function partitionEntries() : array
+    public function partitionEntries() : References
     {
         return $this->partitions;
     }

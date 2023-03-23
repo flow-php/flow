@@ -8,18 +8,16 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\References;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 /**
- * @implements Transformer<array{refs: array<EntryReference>, glue: string, new_entry_name: string}>
+ * @implements Transformer<array{refs: References, glue: string, new_entry_name: string}>
  */
 final class StringConcatTransformer implements Transformer
 {
-    /**
-     * @var array<EntryReference>
-     */
-    private readonly array $refs;
+    private readonly References $refs;
 
     /**
      * @param array<Reference|string> $refs
@@ -29,7 +27,7 @@ final class StringConcatTransformer implements Transformer
         private readonly string $glue = ' ',
         private readonly string $newEntryName = 'element'
     ) {
-        $this->refs = EntryReference::initAll(...$refs);
+        $this->refs = References::init(...$refs);
     }
 
     public function __serialize() : array
@@ -53,7 +51,7 @@ final class StringConcatTransformer implements Transformer
         $transformer = function (Row $row) : Row {
             $filter = fn (Row\Entry $entry) : bool => \in_array(
                 $entry->name(),
-                \array_map(static fn (EntryReference $r) : string => $r->name(), $this->refs),
+                \array_map(static fn (EntryReference $r) : string => $r->name(), $this->refs->all()),
                 true
             ) && $entry instanceof Row\Entry\StringEntry;
 

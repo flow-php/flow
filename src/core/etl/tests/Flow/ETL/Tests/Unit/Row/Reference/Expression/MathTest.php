@@ -1,0 +1,57 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\Tests\Unit\Row\Reference\Expression;
+
+use function Flow\ETL\DSL\ref;
+use Flow\ETL\DSL\Entry;
+use Flow\ETL\Row;
+use Flow\ETL\Row\Reference\Expression\Minus;
+use Flow\ETL\Row\Reference\Expression\Multiply;
+use Flow\ETL\Row\Reference\Expression\Plus;
+use Flow\ETL\Row\Reference\Expression\Power;
+use PHPUnit\Framework\TestCase;
+
+final class MathTest extends TestCase
+{
+    public function test_minus() : void
+    {
+        $row = Row::create(Entry::integer('a', 100), Entry::integer('b', 100));
+
+        $this->assertSame(
+            0,
+            (new Minus(ref('a'), ref('b')))->eval($row)
+        );
+    }
+
+    public function test_multiply() : void
+    {
+        $row = Row::create(Entry::integer('a', 100), Entry::integer('b', 100));
+
+        $this->assertSame(
+            10_000,
+            (new Multiply(ref('a'), ref('b')))->eval($row)
+        );
+    }
+
+    public function test_plus() : void
+    {
+        $row = Row::create(Entry::integer('a', 100), Entry::integer('b', 100));
+
+        $this->assertSame(
+            200,
+            (new Plus(ref('a'), ref('b')))->eval($row)
+        );
+    }
+
+    public function test_power() : void
+    {
+        $row = Row::create(Entry::integer('a', 1), Entry::integer('b', 2));
+
+        $this->assertSame(
+            1,
+            (new Power(ref('a'), ref('b')))->eval($row)
+        );
+    }
+}

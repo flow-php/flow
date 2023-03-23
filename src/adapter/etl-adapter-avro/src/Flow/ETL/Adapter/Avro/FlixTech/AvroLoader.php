@@ -65,7 +65,7 @@ final class AvroLoader implements Closure, Loader, Loader\FileLoader
 
     public function load(Rows $rows, FlowContext $context) : void
     {
-        if (\count($context->partitionEntries())) {
+        if ($context->partitionEntries()->count()) {
             throw new RuntimeException('Partitioning is not supported yet');
         }
 

@@ -41,3 +41,8 @@ function struct(string ...$entries) : StructureReference
 
     return new StructureReference($entry, ...$entries);
 }
+
+function lit(mixed $value) : EntryReference
+{
+    return ref(\sha1(\uniqid('lit', true)))->literal($value);
+}
