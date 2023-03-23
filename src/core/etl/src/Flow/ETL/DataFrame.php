@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use Flow\ETL\Row\Reference\Expression\Literal;
 use function Flow\ETL\DSL\ref;
 use Flow\ETL\DSL\To;
 use Flow\ETL\DSL\Transform;
@@ -459,7 +460,7 @@ final class DataFrame
         return $this;
     }
 
-    public function withEntry(string $entryName, EntryReference $ref) : self
+    public function withEntry(string $entryName, EntryReference|Literal $ref) : self
     {
         $this->transform(new EntryExpressionEvalTransformer($entryName, $ref));
 
