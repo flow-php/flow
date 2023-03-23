@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-03-23
+## [0.2.0] - 2023-03-23
 
 ### Added
 - [#362](https://github.com/flow-php/flow/pull/362) - **Entry Reference Expression** - [@norberttech](https://github.com/norberttech)
