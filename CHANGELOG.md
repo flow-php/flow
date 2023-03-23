@@ -1,6 +1,12 @@
-## [Unreleased] - 2023-03-20
+## [Unreleased] - 2023-03-23
+
+### Added
+- [#362](https://github.com/flow-php/flow/pull/362) - **Entry Reference Expression** - [@norberttech](https://github.com/norberttech)
+- [#362](https://github.com/flow-php/flow/pull/362) - **DataFrame::withEntry method** - [@norberttech](https://github.com/norberttech)
+- [#362](https://github.com/flow-php/flow/pull/362) - **Basic Expression for filtering and creating entries** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#362](https://github.com/flow-php/flow/pull/362) - **DataFrame::filter can now use entry references** - [@norberttech](https://github.com/norberttech)
 - [#359](https://github.com/flow-php/flow/pull/359) - **Moved sortBy into entry ref** - [@norberttech](https://github.com/norberttech)
 - [#358](https://github.com/flow-php/flow/pull/358) - **Replaced string column names with ref/col/struct functions** - [@norberttech](https://github.com/norberttech)
 
