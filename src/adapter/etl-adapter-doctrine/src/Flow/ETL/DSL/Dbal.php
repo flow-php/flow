@@ -7,18 +7,38 @@ namespace Flow\ETL\DSL;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Types\Type;
+use Flow\ETL\Adapter\Doctrine\DbalDataFrameFactory;
 use Flow\ETL\Adapter\Doctrine\DbalLimitOffsetExtractor;
 use Flow\ETL\Adapter\Doctrine\DbalLoader;
 use Flow\ETL\Adapter\Doctrine\DbalQueryExtractor;
 use Flow\ETL\Adapter\Doctrine\OrderBy;
+use Flow\ETL\Adapter\Doctrine\Parameter;
 use Flow\ETL\Adapter\Doctrine\ParametersSet;
 use Flow\ETL\Adapter\Doctrine\Table;
+use Flow\ETL\DataFrameFactory;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Loader;
 
 class Dbal
 {
+    /**
+     * @param array<string, mixed>|Connection $connection
+     * @param string $query
+     * @param Parameter ...$parameters
+     *
+     * @return DataFrameFactory
+     */
+    final public static function dataframe_factory(
+        array|Connection $connection,
+        string $query,
+        Parameter ...$parameters
+    ) : DataFrameFactory {
+        return \is_array($connection)
+            ? new DbalDataFrameFactory($connection, $query, ...$parameters)
+            : DbalDataFrameFactory::fromConnection($connection, $query, ...$parameters);
+    }
+
     /**
      * @param Connection $connection
      * @param string|Table $table
