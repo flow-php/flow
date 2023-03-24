@@ -1,3 +1,8 @@
+## [Unreleased] - 2023-03-24
+
+### Added
+- [#363](https://github.com/flow-php/flow/pull/363) - **Dbal DataFrameFactory** - [@norberttech](https://github.com/norberttech)
+
 ## [0.2.0] - 2023-03-23
 
 ### Added
