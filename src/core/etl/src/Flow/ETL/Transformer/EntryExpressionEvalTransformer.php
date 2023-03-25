@@ -7,20 +7,20 @@ namespace Flow\ETL\Transformer;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Row\EntryFactory;
-use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
+use Flow\ETL\Row\Reference\Expression;
 use Flow\ETL\Row\Reference\Expression\Literal;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 /**
- * @implements Transformer<array{entry_name: string, ref: EntryReference|Literal, entry_factory: EntryFactory}>
+ * @implements Transformer<array{entry_name: string, ref: Expression, entry_factory: EntryFactory}>
  */
 final class EntryExpressionEvalTransformer implements Transformer
 {
     public function __construct(
         private readonly string $entryName,
-        private readonly EntryReference|Literal $ref,
+        private readonly Expression $ref,
         private readonly EntryFactory $entryFactory = new NativeEntryFactory()
     ) {
     }
@@ -45,7 +45,12 @@ final class EntryExpressionEvalTransformer implements Transformer
     {
         return $rows->map(
             fn (Row $r) : Row => $r->set(
-                $this->entryFactory->create($this->entryName, $this->ref instanceof Literal ? $this->ref->value() : $this->ref->eval($r))
+                $this->entryFactory->create(
+                    $this->entryName,
+                    $this->ref instanceof Literal
+                        ? $this->ref->value()
+                        : $this->ref->eval($r)
+                )
             )
         );
     }

@@ -7,6 +7,7 @@ namespace Flow\ETL\DSL;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\Reference\Expression;
 use Flow\ETL\Row\Reference\Expression\Literal;
 use Flow\ETL\Row\StructureReference;
 
@@ -46,4 +47,9 @@ function struct(string ...$entries) : StructureReference
 function lit(mixed $value) : Literal
 {
     return new Literal($value);
+}
+
+function when(Expression $ref, Expression $then, Expression $else = null) : Expression
+{
+    return new Expression\When($ref, $then, $else);
 }

@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row;
 
+use function Flow\ETL\DSL\lit;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
+use Flow\ETL\Row\Reference\Expression;
 use Flow\ETL\Row\Reference\Expression\Contains;
 use Flow\ETL\Row\Reference\Expression\Divide;
 use Flow\ETL\Row\Reference\Expression\EndsWith;
@@ -34,7 +36,7 @@ use Flow\ETL\Row\Reference\Expression\Value;
 /**
  * @implements Reference<array{entry: string, alias: ?string, expressions: Expressions}>
  */
-final class EntryReference implements Reference
+final class EntryReference implements Expression, Reference
 {
     private ?string $alias = null;
 
@@ -160,6 +162,15 @@ final class EntryReference implements Reference
         return $this->name() === $ref->name();
     }
 
+    public function isEven() : self
+    {
+        $this->expressions = $this->expressions
+            ->add(new Mod($this, lit(2)))
+            ->add(new Equals($this, lit(0)));
+
+        return $this;
+    }
+
     public function isIn(self|string|Literal $haystack) : self
     {
         $this->expressions->add(new IsIn($haystack instanceof Literal ? $haystack : self::init($haystack), $this));
@@ -177,6 +188,15 @@ final class EntryReference implements Reference
     public function isNull() : self
     {
         $this->expressions = $this->expressions->add(new IsNull($this));
+
+        return $this;
+    }
+
+    public function isOdd() : self
+    {
+        $this->expressions = $this->expressions
+            ->add(new Mod($this, lit(2)))
+            ->add(new NotEquals($this, lit(0)));
 
         return $this;
     }

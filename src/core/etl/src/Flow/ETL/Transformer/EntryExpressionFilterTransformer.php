@@ -6,18 +6,18 @@ namespace Flow\ETL\Transformer;
 
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
-use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference\Expression;
 use Flow\ETL\Row\Reference\Expression\Literal;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 /**
- * @implements Transformer<array{ref: EntryReference|Literal}>
+ * @implements Transformer<array{ref: Expression}>
  */
 final class EntryExpressionFilterTransformer implements Transformer
 {
     public function __construct(
-        private readonly EntryReference|Literal $ref
+        private readonly Expression $ref
     ) {
     }
 
