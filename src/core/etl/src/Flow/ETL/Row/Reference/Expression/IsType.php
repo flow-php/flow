@@ -24,7 +24,7 @@ final class IsType implements Expression
      * @throws InvalidArgumentException
      */
     public function __construct(
-        private readonly EntryReference $ref,
+        private readonly Expression $ref,
         string ...$typeClasses
     ) {
         foreach ($typeClasses as $typeClass) {

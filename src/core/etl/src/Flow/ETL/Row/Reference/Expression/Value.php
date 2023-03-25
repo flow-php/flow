@@ -11,7 +11,7 @@ use Flow\ETL\Row\Reference\ValueExtractor;
 
 final class Value implements Expression
 {
-    public function __construct(private readonly string|Literal $entry)
+    public function __construct(private readonly string|Expression $entry)
     {
     }
 
@@ -21,6 +21,10 @@ final class Value implements Expression
             return $this->entry->value();
         }
 
-        return (new ValueExtractor())->value($row, ref($this->entry));
+        if (\is_string($this->entry)) {
+            return (new ValueExtractor())->value($row, ref($this->entry));
+        }
+
+        return (new ValueExtractor())->value($row, $this->entry);
     }
 }

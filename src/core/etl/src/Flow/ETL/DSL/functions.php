@@ -44,7 +44,7 @@ function struct(string ...$entries) : StructureReference
     return new StructureReference($entry, ...$entries);
 }
 
-function lit(mixed $value) : Literal
+function lit(mixed $value) : Expression
 {
     return new Literal($value);
 }

@@ -93,9 +93,9 @@ final class EntryReference implements Expression, Reference
         return $this;
     }
 
-    public function contains(self|string|Literal $needle) : self
+    public function contains(string|Expression $needle) : self
     {
-        $this->expressions->add(new Contains($this, $needle instanceof Literal ? $needle : self::init($needle)));
+        $this->expressions->add(new Contains($this, \is_string($needle) ? self::init($needle) : $needle));
 
         return $this;
     }
@@ -107,23 +107,23 @@ final class EntryReference implements Expression, Reference
         return $this;
     }
 
-    public function divide(self|string|Literal $ref) : self
+    public function divide(string|Expression $ref) : self
     {
-        $this->expressions = $this->expressions->add(new Divide($this, $ref instanceof Literal ? $ref : self::init($ref)));
+        $this->expressions = $this->expressions->add(new Divide($this, \is_string($ref)? self::init($ref) : $ref));
 
         return $this;
     }
 
-    public function endsWith(self|string|Literal $needle) : self
+    public function endsWith(string|Expression $needle) : self
     {
-        $this->expressions->add(new EndsWith($this, $needle instanceof Literal ? $needle : self::init($needle)));
+        $this->expressions->add(new EndsWith($this, \is_string($needle) ? self::init($needle) : $needle));
 
         return $this;
     }
 
-    public function equals(self|string|Literal $ref) : self
+    public function equals(string|Expression $ref) : self
     {
-        $this->expressions = $this->expressions->add(new Equals($this, $ref instanceof Literal ? $ref : self::init($ref)));
+        $this->expressions = $this->expressions->add(new Equals($this, \is_string($ref) ? self::init($ref) : $ref));
 
         return $this;
     }
@@ -138,16 +138,16 @@ final class EntryReference implements Expression, Reference
         return $this->expressions;
     }
 
-    public function greaterThan(self|string|Literal $ref) : self
+    public function greaterThan(string|Expression $ref) : self
     {
-        $this->expressions = $this->expressions->add(new GreaterThan($this, $ref instanceof Literal ? $ref : self::init($ref)));
+        $this->expressions = $this->expressions->add(new GreaterThan($this, \is_string($ref) ? self::init($ref) : $ref));
 
         return $this;
     }
 
-    public function greaterThanEqual(self|string|Literal $ref) : self
+    public function greaterThanEqual(string|Expression $ref) : self
     {
-        $this->expressions = $this->expressions->add(new GreaterThanEqual($this, $ref instanceof Literal ? $ref : self::init($ref)));
+        $this->expressions = $this->expressions->add(new GreaterThanEqual($this, \is_string($ref) ? self::init($ref) : $ref));
 
         return $this;
     }
@@ -171,9 +171,9 @@ final class EntryReference implements Expression, Reference
         return $this;
     }
 
-    public function isIn(self|string|Literal $haystack) : self
+    public function isIn(string|Expression $haystack) : self
     {
-        $this->expressions->add(new IsIn($haystack instanceof Literal ? $haystack : self::init($haystack), $this));
+        $this->expressions->add(new IsIn(\is_string($haystack) ? self::init($haystack) : $haystack, $this));
 
         return $this;
     }
@@ -215,16 +215,16 @@ final class EntryReference implements Expression, Reference
         return $this;
     }
 
-    public function lessThan(self|string|Literal $ref) : self
+    public function lessThan(string|Expression $ref) : self
     {
-        $this->expressions = $this->expressions->add(new LessThan($this, $ref instanceof Literal ? $ref : self::init($ref)));
+        $this->expressions = $this->expressions->add(new LessThan($this, \is_string($ref) ? self::init($ref) : $ref));
 
         return $this;
     }
 
-    public function lessThanEqual(self|string|Literal $ref) : self
+    public function lessThanEqual(string|Expression $ref) : self
     {
-        $this->expressions = $this->expressions->add(new LessThanEqual($this, $ref instanceof Literal ? $ref : self::init($ref)));
+        $this->expressions = $this->expressions->add(new LessThanEqual($this, \is_string($ref) ? self::init($ref) : $ref));
 
         return $this;
     }
@@ -236,23 +236,23 @@ final class EntryReference implements Expression, Reference
         return $this;
     }
 
-    public function minus(self|string|Literal $ref) : self
+    public function minus(string|Expression $ref) : self
     {
-        $this->expressions = $this->expressions->add(new Minus($this, $ref instanceof Literal ? $ref : self::init($ref)));
+        $this->expressions = $this->expressions->add(new Minus($this, \is_string($ref) ? self::init($ref) : $ref));
 
         return $this;
     }
 
-    public function mod(self|string|Literal $ref) : self
+    public function mod(string|Expression $ref) : self
     {
-        $this->expressions = $this->expressions->add(new Mod($this, $ref instanceof Literal ? $ref : self::init($ref)));
+        $this->expressions = $this->expressions->add(new Mod($this, \is_string($ref) ? self::init($ref) : $ref));
 
         return $this;
     }
 
-    public function multiply(self|string|Literal $ref) : self
+    public function multiply(string|Expression $ref) : self
     {
-        $this->expressions = $this->expressions->add(new Multiply($this, $ref instanceof Literal ? $ref : self::init($ref)));
+        $this->expressions = $this->expressions->add(new Multiply($this, \is_string($ref) ? self::init($ref) : $ref));
 
         return $this;
     }
@@ -262,37 +262,37 @@ final class EntryReference implements Expression, Reference
         return $this->alias ?? $this->entry;
     }
 
-    public function notEquals(self|string|Literal $ref) : self
+    public function notEquals(string|Expression $ref) : self
     {
-        $this->expressions = $this->expressions->add(new NotEquals($this, $ref instanceof Literal ? $ref : self::init($ref)));
+        $this->expressions = $this->expressions->add(new NotEquals($this, \is_string($ref) ? self::init($ref) : $ref));
 
         return $this;
     }
 
-    public function notSame(self|string|Literal $ref) : self
+    public function notSame(string|Expression $ref) : self
     {
-        $this->expressions = $this->expressions->add(new NotSame($this, $ref instanceof Literal ? $ref : self::init($ref)));
+        $this->expressions = $this->expressions->add(new NotSame($this, \is_string($ref) ? self::init($ref) : $ref));
 
         return $this;
     }
 
-    public function plus(self|string|Literal $ref) : self
+    public function plus(string|Expression $ref) : self
     {
-        $this->expressions = $this->expressions->add(new Plus($this, $ref instanceof Literal ? $ref : self::init($ref)));
+        $this->expressions = $this->expressions->add(new Plus($this, \is_string($ref) ? self::init($ref) : $ref));
 
         return $this;
     }
 
-    public function power(self|string|Literal $ref) : self
+    public function power(string|Expression $ref) : self
     {
-        $this->expressions = $this->expressions->add(new Power($this, $ref instanceof Literal ? $ref : self::init($ref)));
+        $this->expressions = $this->expressions->add(new Power($this, \is_string($ref) ? self::init($ref) : $ref));
 
         return $this;
     }
 
-    public function same(self|string|Literal $ref) : self
+    public function same(string|Expression $ref) : self
     {
-        $this->expressions = $this->expressions->add(new Same($this, $ref instanceof Literal ? $ref : self::init($ref)));
+        $this->expressions = $this->expressions->add(new Same($this, \is_string($ref) ? self::init($ref) : $ref));
 
         return $this;
     }
@@ -302,9 +302,9 @@ final class EntryReference implements Expression, Reference
         return $this->sort;
     }
 
-    public function startsWith(self|string|Literal $needle) : self
+    public function startsWith(string|Expression $needle) : self
     {
-        $this->expressions->add(new StartsWith($this, $needle instanceof Literal ? $needle : self::init($needle)));
+        $this->expressions->add(new StartsWith($this, \is_string($needle) ? self::init($needle) : $needle));
 
         return $this;
     }
