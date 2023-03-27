@@ -23,7 +23,6 @@ use Flow\ETL\Pipeline\ParallelizingPipeline;
 use Flow\ETL\Pipeline\VoidPipeline;
 use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
-use Flow\ETL\Row\Reference\Expression\Literal;
 use Flow\ETL\Row\References;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Row\Sort;
@@ -163,9 +162,9 @@ final class DataFrame
     /**
      * @param callable(Row $row) : bool|EntryReference $callback
      */
-    public function filter(callable|EntryReference $callback) : self
+    public function filter(callable|Reference\Expression $callback) : self
     {
-        if ($callback instanceof EntryReference) {
+        if ($callback instanceof Reference\Expression) {
             $this->pipeline->add(new EntryExpressionFilterTransformer($callback));
         }
 
@@ -460,7 +459,7 @@ final class DataFrame
         return $this;
     }
 
-    public function withEntry(string $entryName, EntryReference|Literal $ref) : self
+    public function withEntry(string $entryName, Reference\Expression $ref) : self
     {
         $this->transform(new EntryExpressionEvalTransformer($entryName, $ref));
 

@@ -5,15 +5,14 @@ declare(strict_types=1);
 namespace Flow\ETL\Row\Reference\Expression;
 
 use Flow\ETL\Row;
-use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference\Expression;
 use Flow\ETL\Row\Reference\ValueExtractor;
 
 final class Equals implements Expression
 {
     public function __construct(
-        private readonly EntryReference|Literal $base,
-        private readonly EntryReference|Literal $next
+        private readonly Expression $base,
+        private readonly Expression $next
     ) {
     }
 
