@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-03-27
+## [0.2.1] - 2023-03-27
 
 ### Added
 - [#364](https://github.com/flow-php/flow/pull/364) - **When expression** - [@norberttech](https://github.com/norberttech)
