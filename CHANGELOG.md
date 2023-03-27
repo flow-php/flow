@@ -1,6 +1,7 @@
-## [Unreleased] - 2023-03-24
+## [Unreleased] - 2023-03-27
 
 ### Added
+- [#364](https://github.com/flow-php/flow/pull/364) - **When expression** - [@norberttech](https://github.com/norberttech)
 - [#363](https://github.com/flow-php/flow/pull/363) - **Dbal DataFrameFactory** - [@norberttech](https://github.com/norberttech)
 
 ## [0.2.0] - 2023-03-23
