@@ -3,7 +3,7 @@
 namespace Flow\Doctrine\Bulk\Tests\Unit;
 
 use Doctrine\DBAL\Platforms\MySQL80Platform;
-use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
+use Doctrine\DBAL\Platforms\PostgreSqlPlatform;
 use Doctrine\DBAL\Platforms\SqlitePlatform;
 use Flow\Doctrine\Bulk\DbalPlatform;
 use Flow\Doctrine\Bulk\Dialect\MySQLDialect;
@@ -22,7 +22,7 @@ final class DbalPlatformTest extends TestCase
 
     public function test_is_postgres_sql() : void
     {
-        $platform = new DbalPlatform(new PostgreSQLPlatform());
+        $platform = new DbalPlatform(new PostgreSqlPlatform());
 
         $this->assertInstanceOf(PostgreSQLDialect::class, $platform->dialect());
     }
