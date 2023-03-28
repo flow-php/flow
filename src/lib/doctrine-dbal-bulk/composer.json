@@ -3,7 +3,13 @@
     "type": "library",
     "license": "MIT",
     "description": "Bulk inserts and updates for Doctrine DBAL",
-    "keywords": ["doctrine", "dbal", "bulk", "insert", "upsert"],
+    "keywords": [
+        "doctrine",
+        "dbal",
+        "bulk",
+        "insert",
+        "upsert"
+    ],
     "require": {
         "php": "~8.1 || ~8.2",
         "doctrine/dbal": "^3.6"

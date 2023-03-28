@@ -2,12 +2,19 @@
     "name": "flow-php/etl-adapter-xml",
     "type": "library",
     "description": "PHP ETL - Adapter - XML",
-    "keywords": ["etl", "extract", "transform", "load", "xml", "adapter"],
+    "keywords": [
+        "etl",
+        "extract",
+        "transform",
+        "load",
+        "xml",
+        "adapter"
+    ],
     "require": {
         "php": "~8.1 || ~8.2",
         "ext-dom": "*",
         "ext-xmlreader": "*",
-        "flow-php/etl": "^0.1"
+        "flow-php/etl": "^0.2"
     },
     "config": {
         "optimize-autoloader": true,

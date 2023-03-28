@@ -2,11 +2,18 @@
     "name": "flow-php/etl-adapter-json",
     "type": "library",
     "description": "PHP ETL - Adapter - JSON",
-    "keywords": ["etl", "extract", "transform", "load", "json", "adapter"],
+    "keywords": [
+        "etl",
+        "extract",
+        "transform",
+        "load",
+        "json",
+        "adapter"
+    ],
     "require": {
         "php": "~8.1 || ~8.2",
         "ext-json": "*",
-        "flow-php/etl": "^0.1",
+        "flow-php/etl": "^0.2",
         "halaxa/json-machine": "^0.8.0 || ^1.0.0"
     },
     "config": {

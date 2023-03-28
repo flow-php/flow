@@ -2,12 +2,19 @@
     "name": "flow-php/etl-adapter-elasticsearch",
     "type": "library",
     "description": "PHP ETL - Adapter - Elasticsearch",
-    "keywords": ["etl", "extract", "transform", "load", "elasticsearch", "adapter"],
+    "keywords": [
+        "etl",
+        "extract",
+        "transform",
+        "load",
+        "elasticsearch",
+        "adapter"
+    ],
     "require": {
         "php": "~8.1 || ~8.2",
         "ext-json": "*",
         "elasticsearch/elasticsearch": "^7.6|^8.0",
-        "flow-php/etl": "^0.1"
+        "flow-php/etl": "^0.2"
     },
     "config": {
         "optimize-autoloader": true,
