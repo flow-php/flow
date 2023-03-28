@@ -397,6 +397,29 @@ final class ArrayDotGetTest extends TestCase
         );
     }
 
+    public function test_accessing_not_nested_nullsafe() : void
+    {
+        $this->assertNull(
+            array_dot_get(
+                [
+                    '@name' => 'Test',
+                ],
+                '?@id'
+            )
+        );
+    }
+
+    public function test_accessing_not_nested_nullsafe_on_empty_array() : void
+    {
+        $this->assertNull(
+            array_dot_get(
+                [
+                ],
+                '?@id'
+            )
+        );
+    }
+
     public function test_all_multi_key_get() : void
     {
         $this->assertSame(
