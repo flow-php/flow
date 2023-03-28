@@ -15,6 +15,9 @@ use Flow\Serializer\Serializable;
  */
 final class Parameter implements Serializable
 {
+    /**
+     * @psalm-suppress DeprecatedConstant
+     */
     public function __construct(
         public readonly string $queryParamName,
         public readonly EntryReference $ref,
@@ -33,11 +36,13 @@ final class Parameter implements Serializable
 
     public static function ints(string $queryParamName, EntryReference $ref) : self
     {
+        /** @psalm-suppress DeprecatedConstant */
         return new self($queryParamName, $ref, Connection::PARAM_INT_ARRAY);
     }
 
     public static function strings(string $queryParamName, EntryReference $ref) : self
     {
+        /** @psalm-suppress DeprecatedConstant */
         return new self($queryParamName, $ref, Connection::PARAM_STR_ARRAY);
     }
 

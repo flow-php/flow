@@ -3,8 +3,8 @@
 namespace Flow\Doctrine\Bulk;
 
 use Doctrine\DBAL\Platforms\AbstractPlatform;
-use Doctrine\DBAL\Platforms\MySqlPlatform;
-use Doctrine\DBAL\Platforms\PostgreSqlPlatform;
+use Doctrine\DBAL\Platforms\MySQLPlatform;
+use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Platforms\SqlitePlatform;
 use Flow\Doctrine\Bulk\Dialect\Dialect;
 use Flow\Doctrine\Bulk\Dialect\MySQLDialect;
@@ -40,8 +40,8 @@ final class DbalPlatform
 
     private function isMySQL() : bool
     {
-        if (\class_exists(MySqlPlatform::class)) {
-            return $this->platform instanceof MySqlPlatform;
+        if (\class_exists(MySQLPlatform::class)) {
+            return $this->platform instanceof MySQLPlatform;
         }
 
         /**
@@ -52,8 +52,8 @@ final class DbalPlatform
 
     private function isPostgreSQL() : bool
     {
-        if (\class_exists(PostgreSqlPlatform::class)) {
-            return $this->platform instanceof PostgreSqlPlatform;
+        if (\class_exists(PostgreSQLPlatform::class)) {
+            return $this->platform instanceof PostgreSQLPlatform;
         }
 
         /**
