@@ -120,6 +120,10 @@ function array_dot_set(array $array, string $path, $value) : array
 function array_dot_get(array $array, string $path) : mixed
 {
     if (\count($array) === 0) {
+        if (\str_starts_with($path, '?')) {
+            return null;
+        }
+
         throw new InvalidPathException(
             \sprintf(
                 'Path "%s" does not exists in array "%s".',
