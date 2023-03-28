@@ -35,6 +35,9 @@
     },
     "license": "MIT",
     "autoload": {
+        "files": [
+            "src/Flow/ETL/DSL/functions.php"
+        ],
         "psr-4": {
             "Flow\\": [
                 "src/Flow"
