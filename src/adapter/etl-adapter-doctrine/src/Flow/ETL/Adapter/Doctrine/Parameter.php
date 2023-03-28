@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Doctrine;
 
 use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\Connection;
 use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Rows;
 use Flow\Serializer\Serializable;
@@ -17,23 +18,27 @@ final class Parameter implements Serializable
     public function __construct(
         public readonly string $queryParamName,
         public readonly EntryReference $ref,
-        public readonly int $type = ArrayParameterType::STRING
+        public readonly int $type = Connection::PARAM_STR_ARRAY,
     ) {
     }
 
     public static function asciis(string $queryParamName, EntryReference $ref) : self
     {
+        if (!\class_exists('Doctrine\DBAL\ArrayParameterType')) {
+            throw new \RuntimeException('Doctrine\DBAL\ArrayParameterType is not available, please upgrade doctrine/dbal to latest version');
+        }
+
         return new self($queryParamName, $ref, ArrayParameterType::ASCII);
     }
 
     public static function ints(string $queryParamName, EntryReference $ref) : self
     {
-        return new self($queryParamName, $ref, ArrayParameterType::INTEGER);
+        return new self($queryParamName, $ref, Connection::PARAM_INT_ARRAY);
     }
 
     public static function strings(string $queryParamName, EntryReference $ref) : self
     {
-        return new self($queryParamName, $ref, ArrayParameterType::STRING);
+        return new self($queryParamName, $ref, Connection::PARAM_STR_ARRAY);
     }
 
     public function __serialize() : array
