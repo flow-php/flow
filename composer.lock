@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b7cc6ce5c4d6834f3060ff17ae846ec2",
+    "content-hash": "79d2d88f318f5aea613034a51a550ab9",
     "packages": [
         {
             "name": "amphp/amp",
@@ -4150,23 +4150,24 @@
     "packages-dev": [
         {
             "name": "aeon-php/calendar",
-            "version": "1.0.7",
+            "version": "1.0.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aeon-php/calendar.git",
-                "reference": "49e3167815ca6af1f4215eed0719c3d83d749571"
+                "reference": "7951c3e5c49d713cd27e3345b4a137fd2fa3e68a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aeon-php/calendar/zipball/49e3167815ca6af1f4215eed0719c3d83d749571",
-                "reference": "49e3167815ca6af1f4215eed0719c3d83d749571",
+                "url": "https://api.github.com/repos/aeon-php/calendar/zipball/7951c3e5c49d713cd27e3345b4a137fd2fa3e68a",
+                "reference": "7951c3e5c49d713cd27e3345b4a137fd2fa3e68a",
                 "shasum": ""
             },
             "require": {
-                "php": "^7.4.2 || ~8.0 || ~8.1.10"
+                "php": "~8.1.10 || ~8.2"
             },
             "require-dev": {
-                "ext-bcmath": "*"
+                "ext-bcmath": "*",
+                "ext-pcov": "*"
             },
             "suggest": {
                 "ext-bcmath": "Compare time units with high precision"
@@ -4193,9 +4194,9 @@
             ],
             "support": {
                 "issues": "https://github.com/aeon-php/calendar/issues",
-                "source": "https://github.com/aeon-php/calendar/tree/1.0.7"
+                "source": "https://github.com/aeon-php/calendar/tree/1.0.8"
             },
-            "time": "2022-09-10T13:11:14+00:00"
+            "time": "2023-03-28T11:08:43+00:00"
         },
         {
             "name": "aws/aws-crt-php",

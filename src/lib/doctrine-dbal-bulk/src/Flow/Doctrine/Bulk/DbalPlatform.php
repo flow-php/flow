@@ -40,12 +40,26 @@ final class DbalPlatform
 
     private function isMySQL() : bool
     {
-        return $this->platform instanceof MySQLPlatform;
+        if (\class_exists(MySQLPlatform::class)) {
+            return $this->platform instanceof MySQLPlatform;
+        }
+
+        /**
+         * @psalm-suppress DeprecatedMethod
+         */
+        return $this->platform->getName() === 'mysql';
     }
 
     private function isPostgreSQL() : bool
     {
-        return $this->platform instanceof PostgreSQLPlatform;
+        if (\class_exists(PostgreSQLPlatform::class)) {
+            return $this->platform instanceof PostgreSQLPlatform;
+        }
+
+        /**
+         * @psalm-suppress DeprecatedMethod
+         */
+        return $this->platform->getName() === 'postgresql';
     }
 
     private function isSqlite() : bool
