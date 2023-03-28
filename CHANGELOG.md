@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-03-28
+## [0.2.4] - 2023-03-28
 
 ### Fixed
 - [437b0d](https://github.com/flow-php/flow/commit/437b0d6f0d7b45ac71412619b853c6519aa5f938) - **missing files autoload in ETL** - [@norberttech](https://github.com/norberttech)
