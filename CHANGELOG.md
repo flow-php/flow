@@ -1,3 +1,8 @@
+## [Unreleased] - 2023-03-28
+
+### Fixed
+- [#368](https://github.com/flow-php/flow/pull/368) - **accessing empty arrays using array_get with nullsafe operator** - [@norberttech](https://github.com/norberttech)
+
 ## [0.2.2] - 2023-03-28
 
 ### Updated
