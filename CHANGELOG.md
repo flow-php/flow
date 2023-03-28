@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-03-28
+## [0.2.2] - 2023-03-28
 
 ### Updated
 - [f5136f](https://github.com/flow-php/flow/commit/f5136f4420f2d007191ccfeb65ab8d202a93ddff) - **inter dependencies** - [@norberttech](https://github.com/norberttech)
