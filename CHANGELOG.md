@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-03-28
 
 ### Fixed
+- [437b0d](https://github.com/flow-php/flow/commit/437b0d6f0d7b45ac71412619b853c6519aa5f938) - **missing files autoload in ETL** - [@norberttech](https://github.com/norberttech)
 - [#368](https://github.com/flow-php/flow/pull/368) - **accessing empty arrays using array_get with nullsafe operator** - [@norberttech](https://github.com/norberttech)
 
 ## [0.2.2] - 2023-03-28
