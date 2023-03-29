@@ -296,7 +296,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
         return self::recreate($sortedEntries);
     }
 
-    public function remove(string|Reference ...$names) : self
+    public function remove(string|EntryReference ...$names) : self
     {
         $entries = $this->entries;
 
