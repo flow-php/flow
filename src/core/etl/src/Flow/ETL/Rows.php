@@ -593,7 +593,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
                  * @var mixed $value
                  */
                 foreach ($partitionsData as $entry => $value) {
-                    if ($row->valueOf(EntryReference::init($entry)) !== $value) {
+                    if ($row->valueOf($entry) !== $value) {
                         return false;
                     }
                 }
@@ -628,10 +628,8 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
      *
      * @return mixed[]
      */
-    public function reduceToArray(string|EntryReference $entryName) : array
+    public function reduceToArray(string|EntryReference $ref) : array
     {
-        $ref = EntryReference::init($entryName);
-
         /** @phpstan-ignore-next-line */
         return $this->reduce(
             /** @phpstan-ignore-next-line */
@@ -697,10 +695,8 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
      *
      * @return $this
      */
-    public function sortAscending(string|EntryReference $name) : self
+    public function sortAscending(string|EntryReference $ref) : self
     {
-        $ref = EntryReference::init($name);
-
         $rows = $this->rows;
         \usort($rows, fn (Row $a, Row $b) : int => $a->valueOf($ref) <=> $b->valueOf($ref));
 
@@ -730,9 +726,8 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
      *
      * @return $this
      */
-    public function sortDescending(string|EntryReference $name) : self
+    public function sortDescending(string|EntryReference $ref) : self
     {
-        $ref = EntryReference::init($name);
         $rows = $this->rows;
         \usort($rows, fn (Row $a, Row $b) : int => -($a->valueOf($ref) <=> $b->valueOf($ref)));
 

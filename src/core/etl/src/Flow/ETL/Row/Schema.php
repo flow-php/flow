@@ -72,26 +72,38 @@ final class Schema implements \Countable, Serializable
         return $refs;
     }
 
-    public function findDefinition(string|EntryReference $entry) : ?Definition
+    public function findDefinition(string|EntryReference $ref) : ?Definition
     {
-        $ref = EntryReference::init($entry);
+        if ($ref instanceof EntryReference) {
+            if (!\array_key_exists($ref->name(), $this->definitions)) {
+                return null;
+            }
 
-        if (!\array_key_exists($ref->name(), $this->definitions)) {
+            return $this->definitions[$ref->name()];
+        }
+
+        if (!\array_key_exists($ref, $this->definitions)) {
             return null;
         }
 
-        return $this->definitions[$ref->name()];
+        return $this->definitions[$ref];
     }
 
-    public function getDefinition(string|EntryReference $entry) : ?Definition
+    public function getDefinition(string|EntryReference $ref) : ?Definition
     {
-        $ref = EntryReference::init($entry);
+        if ($ref instanceof EntryReference) {
+            if (!\array_key_exists($ref->name(), $this->definitions)) {
+                throw new InvalidArgumentException("There is no definition for \"{$ref->name()}\" in the schema.");
+            }
 
-        if (!\array_key_exists($ref->name(), $this->definitions)) {
-            throw new InvalidArgumentException("There is no definition for \"{$ref->name()}\" in the schema.");
+            return $this->definitions[$ref->name()];
         }
 
-        return $this->definitions[$ref->name()];
+        if (!\array_key_exists($ref, $this->definitions)) {
+            throw new InvalidArgumentException("There is no definition for \"{$ref}\" in the schema.");
+        }
+
+        return $this->definitions[$ref];
     }
 
     public function merge(self $schema) : self

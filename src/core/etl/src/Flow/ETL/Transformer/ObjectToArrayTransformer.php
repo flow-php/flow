@@ -13,17 +13,14 @@ use Flow\ETL\Transformer;
 use Laminas\Hydrator\HydratorInterface;
 
 /**
- * @implements Transformer<array{ref: EntryReference, hydrator: HydratorInterface}>
+ * @implements Transformer<array{ref: string|EntryReference, hydrator: HydratorInterface}>
  */
 final class ObjectToArrayTransformer implements Transformer
 {
-    private readonly EntryReference $ref;
-
     public function __construct(
         private readonly HydratorInterface $hydrator,
-        string|EntryReference $ref
+        private readonly string|EntryReference $ref
     ) {
-        $this->ref = EntryReference::init($ref);
     }
 
     public function __serialize() : array
@@ -46,13 +43,17 @@ final class ObjectToArrayTransformer implements Transformer
             $entry = $row->entries()->get($this->ref);
 
             if (!$entry instanceof Row\Entry\ObjectEntry) {
-                throw new RuntimeException("\"{$this->ref->name()}\" is not ObjectEntry");
+                if ($this->ref instanceof EntryReference) {
+                    throw new RuntimeException("\"{$this->ref->name()}\" is not ObjectEntry");
+                }
+
+                throw new RuntimeException("\"{$this->ref}\" is not ObjectEntry");
             }
 
             $entries = $row->entries()
                 ->set(
                     new Row\Entry\ArrayEntry(
-                        $this->ref->name(),
+                        $this->ref instanceof EntryReference ? $this->ref->name() : $this->ref,
                         $this->hydrator->extract(
                             $entry->value()
                         )
