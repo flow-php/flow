@@ -13,7 +13,7 @@ use Flow\Serializer\Serializable;
 /**
  * @implements Serializable<array{query_param_name: string, ref: EntryReference, type: int}>
  */
-final class Parameter implements Serializable
+final class Parameter implements QueryParameter, Serializable
 {
     /**
      * @psalm-suppress DeprecatedConstant
@@ -62,8 +62,18 @@ final class Parameter implements Serializable
         $this->type = $data['type'];
     }
 
-    public function toQueryParam(Rows $rows) : array
+    public function queryParamName() : string
+    {
+        return $this->queryParamName;
+    }
+
+    public function toQueryParam(Rows $rows) : mixed
     {
         return $rows->reduceToArray($this->ref);
+    }
+
+    public function type() : ?int
+    {
+        return $this->type;
     }
 }

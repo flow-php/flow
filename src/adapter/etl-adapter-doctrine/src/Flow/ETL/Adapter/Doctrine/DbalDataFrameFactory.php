@@ -17,7 +17,7 @@ use Flow\ETL\Rows;
  * @implements DataFrameFactory<array{
  *  connection_params: array<string, mixed>,
  *  query: string,
- *  parameters: array<Parameter>
+ *  parameters: array<QueryParameter>
  * }>
  */
 final class DbalDataFrameFactory implements DataFrameFactory
@@ -25,19 +25,19 @@ final class DbalDataFrameFactory implements DataFrameFactory
     private ?Connection $connection = null;
 
     /**
-     * @var array<Parameter>
+     * @var array<QueryParameter>
      */
     private array $parameters;
 
     /**
      * @param array<string, mixed> $connectionParams
      * @param string $query
-     * @param Parameter ...$parameters
+     * @param QueryParameter ...$parameters
      */
     public function __construct(
         private readonly array $connectionParams,
         private readonly string $query,
-        Parameter ...$parameters
+        QueryParameter ...$parameters
     ) {
         $this->parameters = $parameters;
     }
@@ -73,8 +73,12 @@ final class DbalDataFrameFactory implements DataFrameFactory
         $types = [];
 
         foreach ($this->parameters as $parameter) {
-            $parameters[$parameter->queryParamName] = $parameter->toQueryParam($rows);
-            $types[$parameter->queryParamName] = $parameter->type;
+            /** @psalm-suppress MixedAssignment */
+            $parameters[$parameter->queryParamName()] = $parameter->toQueryParam($rows);
+
+            if ($parameter->type()) {
+                $types[$parameter->queryParamName()] = $parameter->type();
+            }
         }
 
         return (new Flow())
