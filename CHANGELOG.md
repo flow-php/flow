@@ -1,3 +1,8 @@
+## [Unreleased] - 2023-03-29
+
+### Fixed
+- [#370](https://github.com/flow-php/flow/pull/370) - **Memorize entry reference to speedup Rows comparison** - [@norberttech](https://github.com/norberttech)
+
 ## [0.2.5] - 2023-03-29
 
 ### Fixed
