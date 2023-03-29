@@ -6,7 +6,6 @@ namespace Flow\ETL\Row\Entry;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
@@ -15,6 +14,8 @@ use Flow\ETL\Row\Schema\Definition;
  */
 final class FloatEntry implements \Stringable, Entry
 {
+    use EntryRef;
+
     /**
      * @throws InvalidArgumentException
      */
@@ -80,11 +81,6 @@ final class FloatEntry implements \Stringable, Entry
     public function name() : string
     {
         return $this->name;
-    }
-
-    public function ref() : EntryReference
-    {
-        return new EntryReference($this->name);
     }
 
     /**
