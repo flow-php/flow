@@ -1,3 +1,8 @@
+## [Unreleased] - 2023-03-29
+
+### Added
+- [#371](https://github.com/flow-php/flow/pull/371) - **allow to pass literal parameter to DbalDataFrameFactory** - [@norberttech](https://github.com/norberttech)
+
 ## [0.2.6] - 2023-03-29
 
 ### Fixed
