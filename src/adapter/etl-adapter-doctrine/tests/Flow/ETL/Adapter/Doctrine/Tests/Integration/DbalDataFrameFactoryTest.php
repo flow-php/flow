@@ -10,6 +10,7 @@ use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
 use Flow\ETL\Adapter\Doctrine\DbalDataFrameFactory;
+use Flow\ETL\Adapter\Doctrine\LiteralParameter;
 use Flow\ETL\Adapter\Doctrine\Parameter;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
 use Flow\ETL\DSL\Entry;
@@ -39,8 +40,9 @@ final class DbalDataFrameFactoryTest extends IntegrationTestCase
         $rows = (
             new DbalDataFrameFactory(
                 $this->connectionParams(),
-                'SELECT * FROM flow_doctrine_data_factory_test WHERE id IN (:ids)',
-                Parameter::ints('ids', ref('id'))
+                'SELECT * FROM flow_doctrine_data_factory_test WHERE id IN (:ids) AND name = :name',
+                Parameter::ints('ids', ref('id')),
+                new LiteralParameter('name', 'Name 1')
             )
         )
         ->from(new Rows(
@@ -55,8 +57,6 @@ final class DbalDataFrameFactoryTest extends IntegrationTestCase
         $this->assertSame(
             [
                 ['id' => 1],
-                ['id' => 2],
-                ['id' => 3],
             ],
             $rows->toArray()
         );
