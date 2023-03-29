@@ -14,12 +14,10 @@ use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 /**
- * @implements Transformer<array{ref: EntryReference, method: string, new_entry_name: string, parameters: array<mixed>, entry_factory: EntryFactory}>
+ * @implements Transformer<array{ref: string|EntryReference, method: string, new_entry_name: string, parameters: array<mixed>, entry_factory: EntryFactory}>
  */
 final class ObjectMethodTransformer implements Transformer
 {
-    private readonly EntryReference $ref;
-
     /**
      * ObjectMethodTransformer constructor.
      *
@@ -27,13 +25,12 @@ final class ObjectMethodTransformer implements Transformer
      * @param EntryFactory $entryFactory
      */
     public function __construct(
-        string|EntryReference $ref,
+        private readonly string|EntryReference $ref,
         private readonly string $method,
         private readonly string $newEntryName = 'method_entry',
         private readonly array $parameters = [],
         private readonly EntryFactory $entryFactory = new NativeEntryFactory()
     ) {
-        $this->ref = EntryReference::init($ref);
     }
 
     public function __serialize() : array
@@ -63,11 +60,19 @@ final class ObjectMethodTransformer implements Transformer
          */
         $transformer = function (Row $row) : Row {
             if (!$row->entries()->has($this->ref)) {
-                throw new RuntimeException("\"{$this->ref->name()}\" entry not found");
+                if ($this->ref instanceof EntryReference) {
+                    throw new RuntimeException("\"{$this->ref->name()}\" entry not found");
+                }
+
+                throw new RuntimeException("\"{$this->ref}\" entry not found");
             }
 
             if (!$row->entries()->get($this->ref) instanceof Row\Entry\ObjectEntry) {
-                throw new RuntimeException("\"{$this->ref->name()}\" entry is not ObjectEntry");
+                if ($this->ref instanceof EntryReference) {
+                    throw new RuntimeException("\"{$this->ref->name()}\" entry is not ObjectEntry");
+                }
+
+                throw new RuntimeException("\"{$this->ref}\" entry is not ObjectEntry");
             }
 
             /**
@@ -76,7 +81,11 @@ final class ObjectMethodTransformer implements Transformer
             $object = $row->get($this->ref)->value();
 
             if (!\method_exists($object, $this->method)) {
-                throw new RuntimeException("\"{$this->ref->name()}\" is object does not have \"{$this->method}\" method.");
+                if ($this->ref instanceof EntryReference) {
+                    throw new RuntimeException("\"{$this->ref->name()}\" is object does not have \"{$this->method}\" method.");
+                }
+
+                throw new RuntimeException("\"{$this->ref}\" is object does not have \"{$this->method}\" method.");
             }
 
             return $row->set($this->entryFactory->create(

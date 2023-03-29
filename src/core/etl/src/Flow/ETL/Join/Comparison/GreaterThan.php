@@ -9,20 +9,14 @@ use Flow\ETL\Row;
 use Flow\ETL\Row\EntryReference;
 
 /**
- * @implements Comparison<array{entry_left: EntryReference, entry_right: EntryReference}>
+ * @implements Comparison<array{entry_left: string|EntryReference, entry_right: string|EntryReference}>
  */
 final class GreaterThan implements Comparison
 {
-    private readonly EntryReference $entryLeft;
-
-    private readonly EntryReference $entryRight;
-
     public function __construct(
-        string|EntryReference $entryLeft,
-        string|EntryReference $entryRight
+        private readonly string|EntryReference $entryLeft,
+        private readonly string|EntryReference $entryRight
     ) {
-        $this->entryLeft = EntryReference::init($entryLeft);
-        $this->entryRight = EntryReference::init($entryRight);
     }
 
     public function __serialize() : array
@@ -49,7 +43,7 @@ final class GreaterThan implements Comparison
      */
     public function left() : array
     {
-        return [$this->entryLeft];
+        return [\is_string($this->entryLeft) ? EntryReference::init($this->entryLeft) : $this->entryLeft];
     }
 
     /**
@@ -57,6 +51,6 @@ final class GreaterThan implements Comparison
      */
     public function right() : array
     {
-        return [$this->entryRight];
+        return [\is_string($this->entryRight) ? EntryReference::init($this->entryRight) : $this->entryRight];
     }
 }

@@ -14,22 +14,19 @@ use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 /**
- * @implements Transformer<array{ref: EntryReference, skip_entry_names: array<string>, entry_factory: EntryFactory, entry_prefix: null|string}>
+ * @implements Transformer<array{ref: string|EntryReference, skip_entry_names: array<string>, entry_factory: EntryFactory, entry_prefix: null|string}>
  */
 final class ArrayUnpackTransformer implements Transformer
 {
-    private readonly EntryReference $ref;
-
     /**
      * @param string[] $skipEntryNames
      */
     public function __construct(
-        string|EntryReference $ref,
+        private readonly string|EntryReference $ref,
         private readonly array $skipEntryNames = [],
         private readonly ?string $entryPrefix = null,
         private readonly EntryFactory $entryFactory = new NativeEntryFactory()
     ) {
-        $this->ref = EntryReference::init($ref);
     }
 
     public function __serialize() : array
@@ -56,7 +53,11 @@ final class ArrayUnpackTransformer implements Transformer
             $arrayEntry = $row->entries()->get($this->ref);
 
             if (!$arrayEntry instanceof Row\Entry\ArrayEntry) {
-                throw new RuntimeException("\"{$this->ref->name()}\" is not ArrayEntry");
+                if ($this->ref instanceof EntryReference) {
+                    throw new RuntimeException("\"{$this->ref->name()}\" is not ArrayEntry");
+                }
+
+                throw new RuntimeException("\"{$this->ref}\" is not ArrayEntry");
             }
 
             $entries = [];
