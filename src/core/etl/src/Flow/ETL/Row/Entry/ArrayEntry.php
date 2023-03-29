@@ -7,7 +7,6 @@ namespace Flow\ETL\Row\Entry;
 use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
@@ -16,6 +15,8 @@ use Flow\ETL\Row\Schema\Definition;
  */
 final class ArrayEntry implements \Stringable, Entry
 {
+    use EntryRef;
+
     /**
      * @param array<mixed> $value
      *
@@ -73,11 +74,6 @@ final class ArrayEntry implements \Stringable, Entry
     public function name() : string
     {
         return $this->name;
-    }
-
-    public function ref() : EntryReference
-    {
-        return new EntryReference($this->name);
     }
 
     public function rename(string $name) : Entry

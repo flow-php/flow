@@ -651,7 +651,7 @@ final class RowsTest extends TestCase
      */
     public function test_rows_diff_left(Rows $expected, Rows $left, Rows $right) : void
     {
-        $this->assertEquals($expected, $left->diffLeft($right));
+        $this->assertEquals($expected->toArray(), $left->diffLeft($right)->toArray());
     }
 
     /**
@@ -659,7 +659,7 @@ final class RowsTest extends TestCase
      */
     public function test_rows_diff_right(Rows $expected, Rows $left, Rows $right) : void
     {
-        $this->assertEquals($expected, $left->diffRight($right));
+        $this->assertEquals($expected->toArray(), $left->diffRight($right)->toArray());
     }
 
     public function test_rows_schema() : void

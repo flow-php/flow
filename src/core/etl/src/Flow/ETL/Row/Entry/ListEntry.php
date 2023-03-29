@@ -8,7 +8,6 @@ use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\TypedCollection\Type;
-use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\Schema\FlowMetadata;
@@ -21,6 +20,8 @@ use Flow\ETL\Row\Schema\Metadata;
  */
 final class ListEntry implements Entry, TypedCollection
 {
+    use EntryRef;
+
     /**
      * @param string $name
      * @param Type $type
@@ -96,11 +97,6 @@ final class ListEntry implements Entry, TypedCollection
     public function name() : string
     {
         return $this->name;
-    }
-
-    public function ref() : EntryReference
-    {
-        return new EntryReference($this->name);
     }
 
     public function rename(string $name) : Entry

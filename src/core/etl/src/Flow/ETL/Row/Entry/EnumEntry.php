@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Row\Entry;
 
 use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
@@ -14,6 +13,8 @@ use Flow\ETL\Row\Schema\Definition;
  */
 final class EnumEntry implements Entry
 {
+    use EntryRef;
+
     public function __construct(
         private readonly string $name,
         private readonly \UnitEnum $value
@@ -69,11 +70,6 @@ final class EnumEntry implements Entry
     public function name() : string
     {
         return $this->name;
-    }
-
-    public function ref() : EntryReference
-    {
-        return new EntryReference($this->name);
     }
 
     public function rename(string $name) : self
