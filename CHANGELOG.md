@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-03-29
+## [0.2.5] - 2023-03-29
 
 ### Fixed
 - [#369](https://github.com/flow-php/flow/pull/369) - **Reduce number of References initializations that affects processing performance** - [@norberttech](https://github.com/norberttech)
