@@ -330,9 +330,9 @@ function array_dot_rename(array $array, string $path, string $newName) : array
 function array_dot_exists(array $array, string $path) : bool
 {
     try {
-        array_dot_get($array, $path);
+        $res = array_dot_get($array, $path);
 
-        return true;
+        return $res !== null;
     } catch (InvalidPathException) {
         return false;
     }
