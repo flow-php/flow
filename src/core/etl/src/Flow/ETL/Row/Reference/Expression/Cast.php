@@ -22,11 +22,15 @@ final class Cast implements Expression
      */
     public function eval(Row $row) : mixed
     {
-        $value = $row->valueOf($this->ref);
+        /** @psalm-suppress MixedAssignment */
+        $value = (new Row\Reference\ValueExtractor())->value($row, $this->ref);
 
         return match (\mb_strtolower($this->type)) {
+            /** @phpstan-ignore-next-line */
             'int', 'integer' => (int) $value,
+            /** @phpstan-ignore-next-line */
             'float', 'double', 'real' => (float) $value,
+            /** @phpstan-ignore-next-line */
             'string' => (string) $value,
             'bool', 'boolean' => (bool) $value,
             'array' => (array) $value,

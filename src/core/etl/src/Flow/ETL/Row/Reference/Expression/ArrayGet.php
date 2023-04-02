@@ -20,13 +20,14 @@ final class ArrayGet implements Expression
     public function eval(Row $row) : mixed
     {
         try {
-            $ref = $row->get($this->reference);
+            /** @var mixed $value */
+            $value = (new Row\Reference\ValueExtractor())->value($row, $this->reference);
 
-            if (!\is_array($ref->value())) {
+            if (!\is_array($value)) {
                 return null;
             }
 
-            return array_dot_get($ref->value(), $this->path);
+            return array_dot_get($value, $this->path);
         } catch (InvalidArgumentException $e) {
             return null;
         }

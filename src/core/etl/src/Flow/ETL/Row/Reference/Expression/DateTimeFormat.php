@@ -17,12 +17,12 @@ final class DateTimeFormat implements Expression
 
     public function eval(Row $row) : mixed
     {
-        $entry = $row->get($this->ref);
+        $value = (new Row\Reference\ValueExtractor())->value($row, $this->ref);
 
-        if (!$entry instanceof Row\Entry\DateTimeEntry) {
-            throw new \InvalidArgumentException("Entry {$this->ref} is not a DateTimeEntry");
+        if (!$value instanceof \DateTimeInterface) {
+            throw new \InvalidArgumentException('Entry ' . \gettype($value) . ' is not a DateTimeEntry');
         }
 
-        return $entry->value()->format($this->format);
+        return $value->format($this->format);
     }
 }

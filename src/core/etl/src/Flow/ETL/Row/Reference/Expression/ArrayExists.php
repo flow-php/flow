@@ -12,7 +12,7 @@ use Flow\ETL\Row\Reference\Expression;
 final class ArrayExists implements Expression
 {
     public function __construct(
-        private readonly Expression $reference,
+        private readonly Expression $ref,
         private readonly string $path
     ) {
     }
@@ -20,13 +20,14 @@ final class ArrayExists implements Expression
     public function eval(Row $row) : bool
     {
         try {
-            $ref = $row->get($this->reference);
+            /** @var mixed $value */
+            $value = (new Row\Reference\ValueExtractor())->value($row, $this->ref);
 
-            if (!\is_array($ref->value())) {
+            if (!\is_array($value)) {
                 return false;
             }
 
-            return array_dot_exists($ref->value(), $this->path);
+            return array_dot_exists($value, $this->path);
         } catch (InvalidArgumentException $e) {
             return false;
         }
