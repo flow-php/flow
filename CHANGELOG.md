@@ -1,6 +1,7 @@
-## [Unreleased] - 2023-03-29
+## [Unreleased] - 2023-04-02
 
 ### Added
+- [#374](https://github.com/flow-php/flow/pull/374) - **Allow to change source from which ES extractor is extracting rows** - [@norberttech](https://github.com/norberttech)
 - [#371](https://github.com/flow-php/flow/pull/371) - **allow to pass literal parameter to DbalDataFrameFactory** - [@norberttech](https://github.com/norberttech)
 
 ## [0.2.6] - 2023-03-29
