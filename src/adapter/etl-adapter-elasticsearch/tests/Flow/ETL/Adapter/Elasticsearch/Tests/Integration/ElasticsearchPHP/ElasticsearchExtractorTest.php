@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Elasticsearch\Tests\Integration\ElasticsearchPHP;
 
+use Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\DocumentDataSource;
 use Flow\ETL\Adapter\Elasticsearch\EntryIdFactory\EntryIdFactory;
 use Flow\ETL\Adapter\Elasticsearch\Tests\Integration\TestCase;
 use Flow\ETL\Config;
@@ -95,14 +96,24 @@ final class ElasticsearchExtractorTest extends TestCase
                 'query' => [
                     'match_all' => ['boost' => 1.0],
                 ],
+                'fields' => [
+                    'id',
+                    'position',
+                ],
+                '_source' => false,
             ],
         ];
 
         $results = (new Flow())
             ->extract(Elasticsearch::search($this->elasticsearchContext->clientConfig(), $params))
+            ->transform(Elasticsearch::hits_to_rows(DocumentDataSource::fields))
             ->fetch();
 
-        $this->assertCount(10, $results);
+        $this->assertCount(10_000, $results);
+        $this->assertArrayHasKey('id', $results->first()->toArray());
+        $this->assertArrayHasKey('position', $results->first()->toArray());
+        $this->assertArrayNotHasKey('active', $results->first()->toArray());
+        $this->assertArrayNotHasKey('name', $results->first()->toArray());
     }
 
     public function test_extraction_index_with_search_after() : void

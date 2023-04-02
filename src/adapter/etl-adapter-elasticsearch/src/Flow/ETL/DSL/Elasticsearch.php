@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\DSL;
 
+use Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\DocumentDataSource;
 use Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\ElasticsearchExtractor;
 use Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\ElasticsearchLoader;
 use Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\HitsIntoRowsTransformer;
@@ -85,9 +86,9 @@ class Elasticsearch
      *
      * @return Transformer
      */
-    final public static function hits_to_rows(EntryFactory $entry_factory = new NativeEntryFactory()) : Transformer
+    final public static function hits_to_rows(DocumentDataSource $source = DocumentDataSource::source, EntryFactory $entry_factory = new NativeEntryFactory()) : Transformer
     {
-        return new HitsIntoRowsTransformer($entry_factory);
+        return new HitsIntoRowsTransformer($source, $entry_factory);
     }
 
     /**
@@ -117,7 +118,7 @@ class Elasticsearch
         return new ElasticsearchExtractor(
             $config,
             $params,
-            $pit_params
+            $pit_params,
         );
     }
 }
