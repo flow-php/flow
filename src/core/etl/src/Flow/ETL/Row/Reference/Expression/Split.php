@@ -9,6 +9,9 @@ use Flow\ETL\Row\Reference\Expression;
 
 final class Split implements Expression
 {
+    /**
+     * @param non-empty-string $separator
+     */
     public function __construct(
         private readonly Expression $ref,
         private readonly string $separator,
