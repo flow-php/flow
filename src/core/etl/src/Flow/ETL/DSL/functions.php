@@ -78,3 +78,8 @@ function date_time_format(Expression $ref, string $format) : Expression
 {
     return new Expression\DateTimeFormat($ref, $format);
 }
+
+function split(Expression $ref, string $separator, int $limit = PHP_INT_MAX) : Expression
+{
+    return new Expression\Split($ref, $separator, $limit);
+}
