@@ -139,9 +139,9 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
         return new \ArrayIterator($this->all());
     }
 
-    public function has(string|EntryReference ...$names) : bool
+    public function has(string|EntryReference ...$refs) : bool
     {
-        foreach ($names as $ref) {
+        foreach ($refs as $ref) {
             if ($ref instanceof EntryReference) {
                 if (!\array_key_exists($ref->name(), $this->entries)) {
                     return false;

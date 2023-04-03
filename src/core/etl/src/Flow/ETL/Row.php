@@ -71,14 +71,14 @@ final class Row implements Serializable
     /**
      * @throws InvalidArgumentException
      */
-    public function get(string|EntryReference $name) : Entry
+    public function get(string|EntryReference $ref) : Entry
     {
-        return $this->entries->get($name);
+        return $this->entries->get($ref);
     }
 
-    public function has(string|EntryReference $name) : bool
+    public function has(string|EntryReference $ref) : bool
     {
-        return $this->entries->has($name);
+        return $this->entries->has($ref);
     }
 
     public function isEqual(self $row) : bool

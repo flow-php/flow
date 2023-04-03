@@ -8,6 +8,7 @@ use function Flow\ETL\DSL\lit;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference\Expression;
+use Flow\ETL\Row\Reference\Expression\Cast;
 use Flow\ETL\Row\Reference\Expression\Contains;
 use Flow\ETL\Row\Reference\Expression\Divide;
 use Flow\ETL\Row\Reference\Expression\EndsWith;
@@ -89,6 +90,13 @@ final class EntryReference implements Expression, Reference
     public function asc() : self
     {
         $this->sort = SortOrder::ASC;
+
+        return $this;
+    }
+
+    public function cast(string $type) : self
+    {
+        $this->expressions = $this->expressions->add(new Cast($this, $type));
 
         return $this;
     }

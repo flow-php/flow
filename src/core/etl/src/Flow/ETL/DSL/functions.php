@@ -53,3 +53,28 @@ function when(Expression $ref, Expression $then, Expression $else = null) : Expr
 {
     return new Expression\When($ref, $then, $else);
 }
+
+function array_get(Expression $ref, string $path) : Expression
+{
+    return new Expression\ArrayGet($ref, $path);
+}
+
+function array_exists(Expression $ref, string $path) : Expression
+{
+    return new Expression\ArrayExists($ref, $path);
+}
+
+function now(\DateTimeZone $time_zone = new \DateTimeZone('UTC')) : Expression
+{
+    return new Expression\Now($time_zone);
+}
+
+function to_date_time(Expression $ref, string $format = 'Y-m-d H:i:s', \DateTimeZone $timeZone = new \DateTimeZone('UTC')) : Expression
+{
+    return new Expression\ToDateTime($ref, $format, $timeZone);
+}
+
+function date_time_format(Expression $ref, string $format) : Expression
+{
+    return new Expression\DateTimeFormat($ref, $format);
+}
