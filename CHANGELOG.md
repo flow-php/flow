@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-04-03
 
 ### Added
+- [#378](https://github.com/flow-php/flow/pull/378) - **split expression** - [@norberttech](https://github.com/norberttech)
 - [#375](https://github.com/flow-php/flow/pull/375) - **array_get - expression** - [@norberttech](https://github.com/norberttech)
 - [#375](https://github.com/flow-php/flow/pull/375) - **array_exists - expression** - [@norberttech](https://github.com/norberttech)
 - [#375](https://github.com/flow-php/flow/pull/375) - **now - expression** - [@norberttech](https://github.com/norberttech)
