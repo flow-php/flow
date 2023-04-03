@@ -9,6 +9,9 @@
 - [#374](https://github.com/flow-php/flow/pull/374) - **Allow to change source from which ES extractor is extracting rows** - [@norberttech](https://github.com/norberttech)
 - [#371](https://github.com/flow-php/flow/pull/371) - **allow to pass literal parameter to DbalDataFrameFactory** - [@norberttech](https://github.com/norberttech)
 
+### Updated
+- [c2386d](https://github.com/flow-php/flow/commit/c2386df20ee46bf8edfdce6769426f7b9ef07a4a) - **internal flow-php dependencies** - [@norberttech](https://github.com/norberttech)
+
 ## [0.2.6] - 2023-03-29
 
 ### Fixed
