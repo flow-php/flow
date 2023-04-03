@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Reference\Expression;
 
+use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\split;
 use Flow\ETL\Row;
-use Flow\ETL\Row\Reference\Expression\Literal;
-use Flow\ETL\Row\Reference\Expression\Split;
 use PHPUnit\Framework\TestCase;
 
 final class SplitTest extends TestCase
@@ -15,7 +15,7 @@ final class SplitTest extends TestCase
     {
         $this->assertSame(
             123,
-            (new Split(new Literal(123), ','))->eval(Row::create())
+            split(lit(123), ',')->eval(Row::create())
         );
     }
 
@@ -23,7 +23,7 @@ final class SplitTest extends TestCase
     {
         $this->assertSame(
             ['foo', 'bar', 'baz'],
-            (new Split(new Literal('foo,bar,baz'), ','))->eval(Row::create())
+            split(lit('foo,bar,baz'), ',')->eval(Row::create())
         );
     }
 
@@ -31,7 +31,7 @@ final class SplitTest extends TestCase
     {
         $this->assertSame(
             ['foo', 'bar,baz'],
-            (new Split(new Literal('foo,bar,baz'), ',', 2))->eval(Row::create())
+            split(lit('foo,bar,baz'), ',', 2)->eval(Row::create())
         );
     }
 }
