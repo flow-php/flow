@@ -1,6 +1,11 @@
-## [Unreleased] - 2023-04-02
+## [Unreleased] - 2023-04-03
 
 ### Added
+- [#375](https://github.com/flow-php/flow/pull/375) - **array_get - expression** - [@norberttech](https://github.com/norberttech)
+- [#375](https://github.com/flow-php/flow/pull/375) - **array_exists - expression** - [@norberttech](https://github.com/norberttech)
+- [#375](https://github.com/flow-php/flow/pull/375) - **now - expression** - [@norberttech](https://github.com/norberttech)
+- [#375](https://github.com/flow-php/flow/pull/375) - **to_date_time - expression** - [@norberttech](https://github.com/norberttech)
+- [#375](https://github.com/flow-php/flow/pull/375) - **date_time_format - expression** - [@norberttech](https://github.com/norberttech)
 - [#374](https://github.com/flow-php/flow/pull/374) - **Allow to change source from which ES extractor is extracting rows** - [@norberttech](https://github.com/norberttech)
 - [#371](https://github.com/flow-php/flow/pull/371) - **allow to pass literal parameter to DbalDataFrameFactory** - [@norberttech](https://github.com/norberttech)
 
