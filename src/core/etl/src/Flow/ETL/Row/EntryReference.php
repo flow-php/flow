@@ -165,6 +165,13 @@ final class EntryReference implements Expression, Reference
         return $this->alias !== null;
     }
 
+    public function hash(string $algorithm = 'sha256', bool $binary = false, array $options = []) : Expression
+    {
+        $this->expressions = $this->expressions->add(new Expression\Hash($this, $algorithm, $binary, $options));
+
+        return $this;
+    }
+
     public function is(Reference $ref) : bool
     {
         return $this->name() === $ref->name();
@@ -312,7 +319,7 @@ final class EntryReference implements Expression, Reference
 
     public function startsWith(string|Expression $needle) : self
     {
-        $this->expressions->add(new StartsWith($this, \is_string($needle) ? self::init($needle) : $needle));
+        $this->expressions = $this->expressions->add(new StartsWith($this, \is_string($needle) ? self::init($needle) : $needle));
 
         return $this;
     }

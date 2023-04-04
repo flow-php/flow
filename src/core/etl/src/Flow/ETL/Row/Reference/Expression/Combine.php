@@ -26,6 +26,10 @@ final class Combine implements Expression
             return null;
         }
 
+        if (!\count($keys)) {
+            return [];
+        }
+
         if (\count($keys) !== \count($values)) {
             return null;
         }
