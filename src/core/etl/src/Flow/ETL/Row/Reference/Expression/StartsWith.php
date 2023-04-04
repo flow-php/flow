@@ -6,7 +6,6 @@ namespace Flow\ETL\Row\Reference\Expression;
 
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference\Expression;
-use Flow\ETL\Row\Reference\ValueExtractor;
 
 final class StartsWith implements Expression
 {
@@ -18,9 +17,8 @@ final class StartsWith implements Expression
 
     public function eval(Row $row) : bool
     {
-        $extractor = new ValueExtractor();
-        $haystack = $extractor->value($row, $this->haystack);
-        $needle = $extractor->value($row, $this->needle);
+        $haystack = $this->haystack->eval($row);
+        $needle = $this->needle->eval($row);
 
         if (!\is_string($needle) || !\is_string($haystack)) {
             return false;

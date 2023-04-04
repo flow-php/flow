@@ -13,7 +13,7 @@ final class EntryReferenceTest extends TestCase
 {
     public function test_executing_equals_expression() : void
     {
-        $ref = ref('a')->equals('b');
+        $ref = ref('a')->equals(ref('b'));
 
         $this->assertTrue(
             $ref->eval(Row::create(Entry::integer('a', 1), Entry::integer('b', 1)))
@@ -22,7 +22,7 @@ final class EntryReferenceTest extends TestCase
 
     public function test_executing_expression() : void
     {
-        $ref = ref('b')->literal(100)->as('z');
+        $ref = ref('b')->literal(100);
 
         $this->assertSame(
             100,

@@ -6,7 +6,6 @@ namespace Flow\ETL\Row\Reference\Expression;
 
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference\Expression;
-use Flow\ETL\Row\Reference\ValueExtractor;
 
 final class NotSame implements Expression
 {
@@ -21,9 +20,8 @@ final class NotSame implements Expression
      */
     public function eval(Row $row) : bool
     {
-        $extractor = new ValueExtractor();
-        $base = $extractor->value($row, $this->base);
-        $next = $extractor->value($row, $this->next);
+        $base = $this->base->eval($row);
+        $next = $this->next->eval($row);
 
         return $base !== $next;
     }

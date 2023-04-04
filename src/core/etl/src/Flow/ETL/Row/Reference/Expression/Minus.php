@@ -6,7 +6,6 @@ namespace Flow\ETL\Row\Reference\Expression;
 
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference\Expression;
-use Flow\ETL\Row\Reference\ValueExtractor;
 
 final class Minus implements Expression
 {
@@ -18,9 +17,8 @@ final class Minus implements Expression
 
     public function eval(Row $row) : mixed
     {
-        $extractor = new ValueExtractor();
-        $left = $extractor->value($row, $this->leftRef, 0);
-        $right = $extractor->value($row, $this->rightRef, 0);
+        $left = $this->leftRef->eval($row);
+        $right = $this->rightRef->eval($row);
 
         if (!\is_numeric($left) || !\is_numeric($right)) {
             return null;

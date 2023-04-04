@@ -91,3 +91,8 @@ function combine(Expression $keys, Expression $values) : Expression
 {
     return new Expression\Combine($keys, $values);
 }
+
+function concat(Expression ...$expressions) : Expression
+{
+    return new Expression\Concat(...$expressions);
+}

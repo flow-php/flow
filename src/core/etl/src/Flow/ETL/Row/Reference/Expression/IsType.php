@@ -18,7 +18,6 @@ final class IsType implements Expression
     private array $typeClasses;
 
     /**
-     * @param EntryReference $ref
      * @param class-string<Entry> ...$typeClasses
      *
      * @throws InvalidArgumentException
@@ -38,6 +37,10 @@ final class IsType implements Expression
 
     public function eval(Row $row) : bool
     {
+        if (!$this->ref instanceof EntryReference) {
+            return false;
+        }
+
         if (!$row->has($this->ref)) {
             return false;
         }

@@ -6,7 +6,6 @@ namespace Flow\ETL\Row\Reference\Expression;
 
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference\Expression;
-use Flow\ETL\Row\Reference\ValueExtractor;
 
 final class IsIn implements Expression
 {
@@ -21,9 +20,8 @@ final class IsIn implements Expression
      */
     public function eval(Row $row) : bool
     {
-        $extractor = new ValueExtractor();
-        $haystack = $extractor->value($row, $this->haystack);
-        $needle = $extractor->value($row, $this->needle);
+        $haystack = $this->haystack->eval($row);
+        $needle = $this->needle->eval($row);
 
         if (!\is_array($haystack)) {
             return false;

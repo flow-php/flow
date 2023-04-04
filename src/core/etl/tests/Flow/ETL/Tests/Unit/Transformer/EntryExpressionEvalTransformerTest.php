@@ -47,7 +47,7 @@ final class EntryExpressionEvalTransformerTest extends TestCase
         $this->assertEquals(
             [
             ],
-            (new EntryExpressionEvalTransformer('number', ref('num')->plus('num1')))
+            (new EntryExpressionEvalTransformer('number', ref('num')->plus(ref('num1'))))
                 ->transform(new Rows(), new FlowContext(Config::default()))
                 ->toArray()
         );
@@ -59,7 +59,7 @@ final class EntryExpressionEvalTransformerTest extends TestCase
             [
                 ['a' => 1, 'b' => 2, 'c' => 3],
             ],
-            (new EntryExpressionEvalTransformer('c', ref('a')->plus('b')))
+            (new EntryExpressionEvalTransformer('c', ref('a')->plus(ref('b'))))
                 ->transform(new Rows(
                     Row::create(Entry::integer('a', 1), Entry::integer('b', 2))
                 ), new FlowContext(Config::default()))
@@ -73,7 +73,7 @@ final class EntryExpressionEvalTransformerTest extends TestCase
             [
                 ['a' => 1, 'number' => 0],
             ],
-            (new EntryExpressionEvalTransformer('number', ref('num')->plus('num1')))
+            (new EntryExpressionEvalTransformer('number', ref('num')->plus(ref('num1'))))
                 ->transform(
                     new Rows(Row::create(Entry::integer('a', 1))),
                     new FlowContext(Config::default())

@@ -26,7 +26,7 @@ final class Hash implements Expression
     public function eval(Row $row) : ?string
     {
         /** @var mixed $value */
-        $value = (new Row\Reference\ValueExtractor())->value($row, $this->ref);
+        $value = $this->ref->eval($row);
 
         return match ($value) {
             null => null,

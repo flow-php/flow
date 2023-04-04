@@ -9,25 +9,16 @@ use Flow\ETL\Row\Reference\Expression;
 
 final class Expressions implements Expression
 {
+    use Row\Reference\EntryExpression;
+
     /**
      * @var array<Expression>
      */
     private array $expressions;
 
-    /**
-     * @param string $entry
-     * @param array<Expression> $expressions
-     */
-    public function __construct(
-        private readonly string $entry,
-        array $expressions
-    ) {
-        $this->expressions = $expressions;
-    }
-
-    public function add(Expression $expression) : self
+    public function __construct(Expression ...$expressions)
     {
-        return new self($this->entry, \array_merge($this->expressions, [$expression]));
+        $this->expressions = $expressions;
     }
 
     /**
@@ -39,16 +30,12 @@ final class Expressions implements Expression
 
         foreach ($this->expressions as $expression) {
             $lastValue = $expression->eval($row);
-            $row = $row->set((new Row\Factory\NativeEntryFactory())->create($this->entry, $lastValue));
+
+            if ($expression instanceof Row\EntryReference) {
+                $row = $row->set((new Row\Factory\NativeEntryFactory())->create($expression->to(), $lastValue));
+            }
         }
 
         return $lastValue;
-    }
-
-    public function literal() : ?Literal
-    {
-        $expression = \end($this->expressions);
-
-        return $expression instanceof Literal ? $expression : null;
     }
 }

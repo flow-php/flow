@@ -12,7 +12,7 @@ use Flow\ETL\Row\Reference\Expression;
 final class ArrayGet implements Expression
 {
     public function __construct(
-        private readonly Expression $reference,
+        private readonly Expression $ref,
         private readonly string $path
     ) {
     }
@@ -21,7 +21,7 @@ final class ArrayGet implements Expression
     {
         try {
             /** @var mixed $value */
-            $value = (new Row\Reference\ValueExtractor())->value($row, $this->reference);
+            $value = $this->ref->eval($row);
 
             if (!\is_array($value)) {
                 return null;
