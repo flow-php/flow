@@ -19,6 +19,14 @@ final class CombineTest extends TestCase
         );
     }
 
+    public function test_array_combine_when_arrays_are_empty() : void
+    {
+        $this->assertSame(
+            [],
+            combine(lit([]), lit([]), )->eval(Row::create()),
+        );
+    }
+
     public function test_array_combine_when_keys_are_not_array() : void
     {
         $this->assertSame(
