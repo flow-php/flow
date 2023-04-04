@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-04-04
 
 ### Added
+- [#382](https://github.com/flow-php/flow/pull/382) - **hash function to DSL** - [@norberttech](https://github.com/norberttech)
 - [#381](https://github.com/flow-php/flow/pull/381) - **concat expression** - [@norberttech](https://github.com/norberttech)
 - [#380](https://github.com/flow-php/flow/pull/380) - **hash expression** - [@norberttech](https://github.com/norberttech)
 - [#379](https://github.com/flow-php/flow/pull/379) - **combine expression** - [@norberttech](https://github.com/norberttech)
