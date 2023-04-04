@@ -23,7 +23,7 @@ final class CombineTest extends TestCase
     {
         $this->assertSame(
             null,
-            combine(\lit('a'), \lit([1, 2, 3]), )->eval(Row::create()),
+            combine(lit('a'), lit([1, 2, 3]), )->eval(Row::create()),
         );
     }
 
@@ -31,7 +31,7 @@ final class CombineTest extends TestCase
     {
         $this->assertSame(
             ['a' => 4, 'b' => 2, 'c' => 3],
-            combine(\lit(['a', 'b', 'c', 'a']), \lit([1, 2, 3, 4]), )->eval(Row::create()),
+            combine(lit(['a', 'b', 'c', 'a']), lit([1, 2, 3, 4]), )->eval(Row::create()),
         );
     }
 
@@ -39,7 +39,7 @@ final class CombineTest extends TestCase
     {
         $this->assertSame(
             null,
-            combine(\lit(['a', 'b', 'c']), \lit([]), )->eval(Row::create()),
+            combine(lit(['a', 'b', 'c']), lit([]), )->eval(Row::create()),
         );
     }
 }
