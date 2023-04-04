@@ -330,10 +330,9 @@ function array_dot_rename(array $array, string $path, string $newName) : array
 function array_dot_exists(array $array, string $path) : bool
 {
     try {
-        /** @psalm-suppress MixedAssignment */
-        $res = array_dot_get($array, $path);
+        array_dot_get($array, $path);
 
-        return $res !== null;
+        return true;
     } catch (InvalidPathException) {
         return false;
     }
