@@ -20,7 +20,8 @@ final class WhenTest extends TestCase
             1,
             (new When(
                 ref('id')->equals(lit(2)),
-                new Literal('then')
+                new Literal('then'),
+                ref('id')
             ))->eval(Row::with(Entry::int('id', 1)))
         );
     }

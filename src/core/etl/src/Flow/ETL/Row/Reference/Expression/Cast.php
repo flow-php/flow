@@ -23,15 +23,18 @@ final class Cast implements Expression
     public function eval(Row $row) : mixed
     {
         /** @psalm-suppress MixedAssignment */
-        $value = (new Row\Reference\ValueExtractor())->value($row, $this->ref);
+        $value = $this->ref->eval($row);
 
         return match (\mb_strtolower($this->type)) {
             /** @phpstan-ignore-next-line */
             'int', 'integer' => (int) $value,
             /** @phpstan-ignore-next-line */
             'float', 'double', 'real' => (float) $value,
-            /** @phpstan-ignore-next-line */
-            'string' => (string) $value,
+            'string' => match (\gettype($value)) {
+                'object', 'array' => \json_encode($value, JSON_THROW_ON_ERROR),
+                /** @phpstan-ignore-next-line */
+                default => (string) $value
+            },
             'bool', 'boolean' => (bool) $value,
             'array' => (array) $value,
             'object' => (object) $value,

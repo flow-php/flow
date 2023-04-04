@@ -21,7 +21,7 @@ final class Split implements Expression
 
     public function eval(Row $row) : mixed
     {
-        $val = (new Row\Reference\ValueExtractor())->value($row, $this->ref);
+        $val = $this->ref->eval($row);
 
         if (!\is_string($val)) {
             return $val;

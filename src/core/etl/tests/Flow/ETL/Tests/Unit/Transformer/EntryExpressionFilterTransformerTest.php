@@ -27,7 +27,9 @@ final class EntryExpressionFilterTransformerTest extends TestCase
             [
                 ['a' => 1, 'b' => 1],
             ],
-            (new EntryExpressionFilterTransformer(ref('a')->equals('b')))->transform($rows, new FlowContext(Config::default()))->toArray()
+            (new EntryExpressionFilterTransformer(
+                ref('a')->equals(ref('b'))
+            ))->transform($rows, new FlowContext(Config::default()))->toArray()
         );
     }
 
@@ -56,7 +58,7 @@ final class EntryExpressionFilterTransformerTest extends TestCase
             [
                 ['a' => 1, 'b' => 2],
             ],
-            (new EntryExpressionFilterTransformer(ref('b')->greaterThan('a')))->transform($rows, new FlowContext(Config::default()))->toArray()
+            (new EntryExpressionFilterTransformer(ref('b')->greaterThan(ref('a'))))->transform($rows, new FlowContext(Config::default()))->toArray()
         );
     }
 
@@ -72,7 +74,7 @@ final class EntryExpressionFilterTransformerTest extends TestCase
                 ['a' => 1, 'b' => 1],
                 ['a' => 1, 'b' => 2],
             ],
-            (new EntryExpressionFilterTransformer(ref('b')->greaterThanEqual('a')))->transform($rows, new FlowContext(Config::default()))->toArray()
+            (new EntryExpressionFilterTransformer(ref('b')->greaterThanEqual(ref('a'))))->transform($rows, new FlowContext(Config::default()))->toArray()
         );
     }
 
@@ -87,7 +89,7 @@ final class EntryExpressionFilterTransformerTest extends TestCase
             [
                 ['a' => 1, 'b' => 2],
             ],
-            (new EntryExpressionFilterTransformer(ref('a')->lessThan('b')))->transform($rows, new FlowContext(Config::default()))->toArray()
+            (new EntryExpressionFilterTransformer(ref('a')->lessThan(ref('b'))))->transform($rows, new FlowContext(Config::default()))->toArray()
         );
     }
 
@@ -103,7 +105,7 @@ final class EntryExpressionFilterTransformerTest extends TestCase
                 ['a' => 1, 'b' => 1],
                 ['a' => 1, 'b' => 2],
             ],
-            (new EntryExpressionFilterTransformer(ref('a')->lessThanEqual('b')))->transform($rows, new FlowContext(Config::default()))->toArray()
+            (new EntryExpressionFilterTransformer(ref('a')->lessThanEqual(ref('b'))))->transform($rows, new FlowContext(Config::default()))->toArray()
         );
     }
 
@@ -118,7 +120,7 @@ final class EntryExpressionFilterTransformerTest extends TestCase
             [
                 ['a' => 1, 'b' => 2],
             ],
-            (new EntryExpressionFilterTransformer(ref('a')->notEquals('b')))->transform($rows, new FlowContext(Config::default()))->toArray()
+            (new EntryExpressionFilterTransformer(ref('a')->notEquals(ref('b'))))->transform($rows, new FlowContext(Config::default()))->toArray()
         );
     }
 
@@ -133,7 +135,7 @@ final class EntryExpressionFilterTransformerTest extends TestCase
             [
                 ['a' => 1, 'b' => 2],
             ],
-            (new EntryExpressionFilterTransformer(ref('a')->notSame('b')))->transform($rows, new FlowContext(Config::default()))->toArray()
+            (new EntryExpressionFilterTransformer(ref('a')->notSame(ref('b'))))->transform($rows, new FlowContext(Config::default()))->toArray()
         );
     }
 
@@ -148,7 +150,7 @@ final class EntryExpressionFilterTransformerTest extends TestCase
             [
                 ['a' => 1, 'b' => 1],
             ],
-            (new EntryExpressionFilterTransformer(ref('a')->same('b')))->transform($rows, new FlowContext(Config::default()))->toArray()
+            (new EntryExpressionFilterTransformer(ref('a')->same(ref('b'))))->transform($rows, new FlowContext(Config::default()))->toArray()
         );
     }
 }

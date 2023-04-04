@@ -6,7 +6,6 @@ namespace Flow\ETL\Row\Reference\Expression;
 
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference\Expression;
-use Flow\ETL\Row\Reference\ValueExtractor;
 
 final class When implements Expression
 {
@@ -27,6 +26,6 @@ final class When implements Expression
             return $this->else->eval($row);
         }
 
-        return (new ValueExtractor())->value($row, $this->ref);
+        return $this->ref->eval($row);
     }
 }

@@ -21,7 +21,7 @@ final class ArrayExists implements Expression
     {
         try {
             /** @var mixed $value */
-            $value = (new Row\Reference\ValueExtractor())->value($row, $this->ref);
+            $value = $this->ref->eval($row);
 
             if (!\is_array($value)) {
                 return false;

@@ -6,7 +6,6 @@ namespace Flow\ETL\Row\Reference\Expression;
 
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference\Expression;
-use Flow\ETL\Row\Reference\ValueExtractor;
 
 final class IsNotNull implements Expression
 {
@@ -17,6 +16,6 @@ final class IsNotNull implements Expression
 
     public function eval(Row $row) : bool
     {
-        return (new ValueExtractor())->value($row, $this->ref) !== null;
+        return $this->ref->eval($row) !== null;
     }
 }

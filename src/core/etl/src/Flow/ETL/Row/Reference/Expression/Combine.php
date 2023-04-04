@@ -17,10 +17,8 @@ final class Combine implements Expression
 
     public function eval(Row $row) : mixed
     {
-        $extractor = new Row\Reference\ValueExtractor();
-
-        $keys = $extractor->value($row, $this->keys);
-        $values = $extractor->value($row, $this->values);
+        $keys = $this->keys->eval($row);
+        $values = $this->values->eval($row);
 
         if (!\is_array($keys) || !\is_array($values)) {
             return null;

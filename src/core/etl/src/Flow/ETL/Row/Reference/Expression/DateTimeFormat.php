@@ -17,7 +17,7 @@ final class DateTimeFormat implements Expression
 
     public function eval(Row $row) : mixed
     {
-        $value = (new Row\Reference\ValueExtractor())->value($row, $this->ref);
+        $value = $this->ref->eval($row);
 
         if (!$value instanceof \DateTimeInterface) {
             throw new \InvalidArgumentException('Entry ' . \gettype($value) . ' is not a DateTimeEntry');

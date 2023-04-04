@@ -22,7 +22,7 @@ final class ToDateTime implements Expression
     public function eval(Row $row) : mixed
     {
         /** @var mixed $value */
-        $value = (new Row\Reference\ValueExtractor())->value($row, $this->ref);
+        $value = $this->ref->eval($row);
 
         if (\is_object($value)) {
             return match (\get_class($value)) {
