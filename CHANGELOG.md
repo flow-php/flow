@@ -14,6 +14,9 @@
 - [#374](https://github.com/flow-php/flow/pull/374) - **Allow to change source from which ES extractor is extracting rows** - [@norberttech](https://github.com/norberttech)
 - [#371](https://github.com/flow-php/flow/pull/371) - **allow to pass literal parameter to DbalDataFrameFactory** - [@norberttech](https://github.com/norberttech)
 
+### Fixed
+- [#383](https://github.com/flow-php/flow/pull/383) - **edge case in array_dot_exists** - [@norberttech](https://github.com/norberttech)
+
 ### Updated
 - [e45157](https://github.com/flow-php/flow/commit/e451570f013f6e881e5f6e43e157136700aee714) - **flow-php/doctrine-dbal-bulk dependency** - [@norberttech](https://github.com/norberttech)
 - [c2386d](https://github.com/flow-php/flow/commit/c2386df20ee46bf8edfdce6769426f7b9ef07a4a) - **internal flow-php dependencies** - [@norberttech](https://github.com/norberttech)
