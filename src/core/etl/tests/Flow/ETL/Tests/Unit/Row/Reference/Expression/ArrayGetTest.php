@@ -46,7 +46,8 @@ final class ArrayGetTest extends TestCase
             ]),
         );
         $this->assertNull(array_get(ref('array_entry'), '?invalid_path')->eval($row));
-        $this->assertFalse(array_exists(ref('array_entry'), '?invalid_path')->eval($row));
+        $this->assertTrue(array_exists(ref('array_entry'), '?invalid_path')->eval($row));
+        $this->assertFalse(array_exists(ref('array_entry'), 'invalid_path')->eval($row));
     }
 
     public function test_array_accessor_transformer_with_invalid_but_strict_path() : void

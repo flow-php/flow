@@ -420,6 +420,40 @@ final class ArrayDotGetTest extends TestCase
         );
     }
 
+    public function test_accessing_null_value_under_existing_path() : void
+    {
+        $this->assertTrue(
+            array_dot_exists(
+                [
+                    'user' => [
+                        'id' => null,
+                    ],
+                ],
+                'user.id'
+            )
+        );
+        $this->assertFalse(
+            array_dot_exists(
+                [
+                    'user' => [
+                        'id' => null,
+                    ],
+                ],
+                'user.ids'
+            )
+        );
+        $this->assertTrue(
+            array_dot_exists(
+                [
+                    'user' => [
+                        'id' => null,
+                    ],
+                ],
+                '?user?.ids'
+            )
+        );
+    }
+
     public function test_all_multi_key_get() : void
     {
         $this->assertSame(
