@@ -2,8 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Tests\Unit\Row\Reference\Expression;
+namespace Flow\ETL\Tests\Unit\Rowreference\Expression;
 
+use function Flow\ETL\DSL\concat;
+use function Flow\ETL\DSL\hash;
+use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\Row;
@@ -16,6 +19,14 @@ final class HashTest extends TestCase
         $this->assertSame(
             '18f4cf4cf6ad53618cd47d604ef6a6f9c0cbc6755d6caa31f333e851b3671328',
             ref('value')->hash()->eval(Row::create(Entry::array('value', ['test']))),
+        );
+    }
+
+    public function test_hashing_concat() : void
+    {
+        $this->assertSame(
+            \hash('sha256', 'test_test'),
+            hash(concat(ref('value'), lit('_'), ref('value')))->eval(Row::create(Entry::str('value', 'test')))
         );
     }
 

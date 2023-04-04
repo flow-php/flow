@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Reference\Expression;
 
+use function Flow\ETL\DSL\cast;
 use function Flow\ETL\DSL\ref;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
@@ -38,6 +39,10 @@ final class CastTest extends TestCase
         $this->assertEquals(
             $expected,
             ref('value')->cast($to)->eval(Row::create((new NativeEntryFactory())->create('value', $from)))
+        );
+        $this->assertEquals(
+            $expected,
+            cast(ref('value'), $to)->eval(Row::create((new NativeEntryFactory())->create('value', $from)))
         );
     }
 }
