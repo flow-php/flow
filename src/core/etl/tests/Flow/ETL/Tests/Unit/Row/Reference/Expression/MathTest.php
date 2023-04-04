@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Reference\Expression;
 
+use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\Row;
@@ -22,6 +23,14 @@ final class MathTest extends TestCase
         $this->assertSame(
             0,
             (new Minus(ref('a'), ref('b')))->eval($row)
+        );
+    }
+
+    public function test_multiple_operations() : void
+    {
+        $this->assertSame(
+            200,
+            ref('a')->plus(lit(100))->plus(lit(100))->minus(ref('b'))->eval(Row::create(Entry::int('a', 100), Entry::int('b', 100)))
         );
     }
 

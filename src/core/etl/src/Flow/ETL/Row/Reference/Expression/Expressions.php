@@ -9,6 +9,8 @@ use Flow\ETL\Row\Reference\Expression;
 
 final class Expressions implements Expression
 {
+    use Row\Reference\EntryExpression;
+
     /**
      * @var array<Expression>
      */
