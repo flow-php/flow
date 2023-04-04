@@ -86,3 +86,8 @@ function split(Expression $ref, string $separator, int $limit = PHP_INT_MAX) : E
 {
     return new Expression\Split($ref, $separator, $limit);
 }
+
+function combine(Expression $keys, Expression $values) : Expression
+{
+    return new Expression\Combine($keys, $values);
+}
