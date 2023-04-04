@@ -101,3 +101,8 @@ function hash(Expression $expression, string $algorithm = 'sha256', bool $binary
 {
     return new Expression\Hash($expression, $algorithm, $binary, $options);
 }
+
+function cast(Expression $expression, string $type) : Expression
+{
+    return new Expression\Cast($expression, $type);
+}
