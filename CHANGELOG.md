@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-04-04
 
 ### Added
+- [#380](https://github.com/flow-php/flow/pull/380) - **hash expression** - [@norberttech](https://github.com/norberttech)
 - [#379](https://github.com/flow-php/flow/pull/379) - **combine expression** - [@norberttech](https://github.com/norberttech)
 - [#378](https://github.com/flow-php/flow/pull/378) - **split expression** - [@norberttech](https://github.com/norberttech)
 - [#375](https://github.com/flow-php/flow/pull/375) - **array_get - expression** - [@norberttech](https://github.com/norberttech)
