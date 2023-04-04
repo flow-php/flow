@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-04-04
 
 ### Added
+- [#381](https://github.com/flow-php/flow/pull/381) - **concat expression** - [@norberttech](https://github.com/norberttech)
 - [#380](https://github.com/flow-php/flow/pull/380) - **hash expression** - [@norberttech](https://github.com/norberttech)
 - [#379](https://github.com/flow-php/flow/pull/379) - **combine expression** - [@norberttech](https://github.com/norberttech)
 - [#378](https://github.com/flow-php/flow/pull/378) - **split expression** - [@norberttech](https://github.com/norberttech)
@@ -15,6 +16,9 @@
 ### Updated
 - [e45157](https://github.com/flow-php/flow/commit/e451570f013f6e881e5f6e43e157136700aee714) - **flow-php/doctrine-dbal-bulk dependency** - [@norberttech](https://github.com/norberttech)
 - [c2386d](https://github.com/flow-php/flow/commit/c2386df20ee46bf8edfdce6769426f7b9ef07a4a) - **internal flow-php dependencies** - [@norberttech](https://github.com/norberttech)
+
+### Removed
+- [#381](https://github.com/flow-php/flow/pull/381) - **ValueExtractor was removed and replaced by Expression::eval** - [@norberttech](https://github.com/norberttech)
 
 ## [0.2.6] - 2023-03-29
 
