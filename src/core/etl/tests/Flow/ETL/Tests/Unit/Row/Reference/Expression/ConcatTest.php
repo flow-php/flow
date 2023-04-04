@@ -21,6 +21,14 @@ final class ConcatTest extends TestCase
         );
     }
 
+    public function test_concat_different_types_of_values() : void
+    {
+        $this->assertSame(
+            '1abc["a","b"]',
+            concat(lit(1), lit('a'), lit('b'), lit('c'), lit(['a', 'b']))->eval(Row::create()),
+        );
+    }
+
     public function test_concat_string_values() : void
     {
         $this->assertSame(

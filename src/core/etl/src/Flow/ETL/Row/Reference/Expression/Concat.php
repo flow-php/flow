@@ -23,9 +23,7 @@ final class Concat implements Expression
     public function eval(Row $row) : mixed
     {
         $values = \array_map(function (Expression $ref) use ($row) : mixed {
-            if ($ref instanceof Row\EntryReference) {
-                $ref = $ref->cast('string');
-            }
+            $ref = new Expressions(new Cast($ref, 'string'));
 
             return $ref->eval($row);
         }, $this->refs);
