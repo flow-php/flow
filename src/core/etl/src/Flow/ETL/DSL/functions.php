@@ -106,3 +106,8 @@ function cast(Expression $expression, string $type) : Expression
 {
     return new Expression\Cast($expression, $type);
 }
+
+function count(Expression $expression) : Expression
+{
+    return new Expression\Count($expression);
+}
