@@ -26,6 +26,14 @@ class Entry
 
     /**
      * @throws InvalidArgumentException
+     */
+    final public static function bool(string $name, bool $value) : RowEntry
+    {
+        return self::boolean($name, $value);
+    }
+
+    /**
+     * @throws InvalidArgumentException
      *
      * @return RowEntry\BooleanEntry
      */

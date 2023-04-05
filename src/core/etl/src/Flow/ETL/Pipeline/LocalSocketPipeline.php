@@ -51,6 +51,16 @@ final class LocalSocketPipeline implements Pipeline
         return new Pipeline\SynchronousPipeline();
     }
 
+    public function has(string $transformerClass) : bool
+    {
+        return $this->pipes->has($transformerClass);
+    }
+
+    public function isAsync() : bool
+    {
+        return true;
+    }
+
     public function process(FlowContext $context) : \Generator
     {
         $threadSafeContext = $context->setThreadSafe();

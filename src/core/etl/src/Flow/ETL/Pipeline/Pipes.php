@@ -50,6 +50,25 @@ final class Pipes implements Serializable
         return $this->pipes;
     }
 
+    public function has(string $transformerClass) : bool
+    {
+        if (!\class_exists($transformerClass)) {
+            return false;
+        }
+
+        if (!\is_subclass_of($transformerClass, Transformer::class)) {
+            return false;
+        }
+
+        foreach ($this->pipes as $pipe) {
+            if ($pipe instanceof $transformerClass) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /**
      * @return array<Loader>
      */

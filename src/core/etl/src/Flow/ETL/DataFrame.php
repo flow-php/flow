@@ -28,6 +28,7 @@ use Flow\ETL\Row\Schema;
 use Flow\ETL\Row\Sort;
 use Flow\ETL\Transformer\CallbackRowTransformer;
 use Flow\ETL\Transformer\CrossJoinRowsTransformer;
+use Flow\ETL\Transformer\DropDuplicatesTransformer;
 use Flow\ETL\Transformer\EntryExpressionEvalTransformer;
 use Flow\ETL\Transformer\EntryExpressionFilterTransformer;
 use Flow\ETL\Transformer\Filter\Filter\Callback;
@@ -125,6 +126,22 @@ final class DataFrame
     public function drop(string|Reference ...$entries) : self
     {
         $this->pipeline->add(new RemoveEntriesTransformer(...$entries));
+
+        return $this;
+    }
+
+    /**
+     * @param EntryReference|string ...$entries
+     *
+     * @return $this
+     */
+    public function dropDuplicates(string|EntryReference ...$entries) : self
+    {
+        if ($this->pipeline->isAsync()) {
+            throw new InvalidArgumentException('dropDuplicates() is not supported in asynchronous pipelines yet');
+        }
+
+        $this->pipeline->add(new DropDuplicatesTransformer(...$entries));
 
         return $this;
     }
@@ -322,6 +339,12 @@ final class DataFrame
 
     public function pipeline(Pipeline $pipeline) : self
     {
+        if ($pipeline->isAsync()) {
+            if ($this->pipeline->has(DropDuplicatesTransformer::class)) {
+                throw new InvalidArgumentException('dropDuplicates() is not supported in asynchronous pipelines yet');
+            }
+        }
+
         $this->pipeline = new NestedPipeline($this->pipeline, $pipeline);
 
         return $this;

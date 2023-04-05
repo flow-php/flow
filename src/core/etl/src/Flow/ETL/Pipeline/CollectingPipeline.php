@@ -36,6 +36,16 @@ final class CollectingPipeline implements Pipeline
         return $this->pipeline->cleanCopy();
     }
 
+    public function has(string $transformerClass) : bool
+    {
+        return $this->pipeline->has($transformerClass);
+    }
+
+    public function isAsync() : bool
+    {
+        return $this->pipeline->isAsync();
+    }
+
     public function process(FlowContext $context) : \Generator
     {
         $this->nextPipeline->source(From::rows(

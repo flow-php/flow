@@ -34,6 +34,17 @@ final class LocalSocketPipelineTest extends TestCase
         );
     }
 
+    public function test_has() : void
+    {
+        $pipeline = new LocalSocketPipeline(
+            $this->createMock(Server::class),
+            $this->createMock(WorkerLauncher::class),
+            5
+        );
+
+        $this->assertFalse($pipeline->has('not-existing-class'));
+    }
+
     public function test_pipeline() : void
     {
         $pipeline = new LocalSocketPipeline(

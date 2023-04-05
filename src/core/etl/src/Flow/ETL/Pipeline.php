@@ -16,6 +16,10 @@ interface Pipeline
      */
     public function cleanCopy() : self;
 
+    public function has(string $transformerClass) : bool;
+
+    public function isAsync() : bool;
+
     /**
      * @return \Generator<Rows>
      */

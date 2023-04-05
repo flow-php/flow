@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
+use function Flow\ETL\DSL\ref;
+use Flow\ETL\Async\Socket\Server\Server;
+use Flow\ETL\Async\Socket\Worker\WorkerLauncher;
 use Flow\ETL\DataFrame;
 use Flow\ETL\DataFrameFactory;
 use Flow\ETL\DSL\Entry;
+use Flow\ETL\DSL\From;
 use Flow\ETL\DSL\Partitions;
 use Flow\ETL\DSL\To;
 use Flow\ETL\DSL\Transform;
@@ -19,6 +23,7 @@ use Flow\ETL\GroupBy\Aggregation;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Loader;
 use Flow\ETL\Pipeline\Closure;
+use Flow\ETL\Pipeline\LocalSocketPipeline;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\ArrayEntry;
 use Flow\ETL\Row\Entry\BooleanEntry;
@@ -97,6 +102,27 @@ final class DataFrameTest extends TestCase
                 Row::create(Entry::string('name', 'foo'), Entry::boolean('active', true)),
                 Row::create(Entry::null('name'), Entry::boolean('active', false)),
                 Row::create(Entry::string('name', 'bar'), Entry::boolean('active', false)),
+            ),
+            $rows
+        );
+    }
+
+    public function test_drop_duplicates() : void
+    {
+        $rows = (new Flow())->process(
+            new Rows(
+                Row::create(Entry::int('id', 1), Entry::str('name', 'foo'), Entry::bool('active', true)),
+                Row::create(Entry::int('id', 2), Entry::str('name', 'bar'), Entry::bool('active', false)),
+                Row::create(Entry::int('id', 2), Entry::str('name', 'bar'), Entry::bool('active', false)),
+            )
+        )
+            ->dropDuplicates(ref('id'))
+            ->fetch();
+
+        $this->assertEquals(
+            new Rows(
+                Row::create(Entry::int('id', 1), Entry::str('name', 'foo'), Entry::bool('active', true)),
+                Row::create(Entry::int('id', 2), Entry::str('name', 'bar'), Entry::bool('active', false)),
             ),
             $rows
         );
@@ -1530,6 +1556,56 @@ ASCII,
             ),
             $rows
         );
+    }
+
+    public function test_using_drop_duplicates_with_and_then_turning_pipeline_into_async() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('dropDuplicates() is not supported in asynchronous pipelines yet');
+
+        (new Flow())
+            ->extract(From::rows(
+                new Rows(
+                    Row::create(Entry::integer('id', 1), Entry::string('name', 'foo')),
+                    Row::create(Entry::integer('id', 2), Entry::string('name', 'bar')),
+                    Row::create(Entry::integer('id', 3), Entry::string('name', 'baz')),
+                    Row::create(Entry::integer('id', 4), Entry::string('name', 'foo')),
+                    Row::create(Entry::integer('id', 5), Entry::string('name', 'bar')),
+                    Row::create(Entry::integer('id', 6), Entry::string('name', 'baz')),
+                )
+            ))
+            ->dropDuplicates('id')
+            ->pipeline(new LocalSocketPipeline(
+                $this->createMock(Server::class),
+                $this->createMock(WorkerLauncher::class),
+                5
+            ))
+            ->run();
+    }
+
+    public function test_using_drop_duplicates_with_local_socket_pipeline() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('dropDuplicates() is not supported in asynchronous pipelines yet');
+
+        (new Flow())
+            ->extract(From::rows(
+                new Rows(
+                    Row::create(Entry::integer('id', 1), Entry::string('name', 'foo')),
+                    Row::create(Entry::integer('id', 2), Entry::string('name', 'bar')),
+                    Row::create(Entry::integer('id', 3), Entry::string('name', 'baz')),
+                    Row::create(Entry::integer('id', 4), Entry::string('name', 'foo')),
+                    Row::create(Entry::integer('id', 5), Entry::string('name', 'bar')),
+                    Row::create(Entry::integer('id', 6), Entry::string('name', 'baz')),
+                )
+            ))
+            ->pipeline(new LocalSocketPipeline(
+                $this->createMock(Server::class),
+                $this->createMock(WorkerLauncher::class),
+                5
+            ))
+            ->dropDuplicates('id')
+            ->run();
     }
 
     public function test_void() : void

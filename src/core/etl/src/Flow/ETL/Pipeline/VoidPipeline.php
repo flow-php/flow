@@ -27,6 +27,16 @@ final class VoidPipeline implements Pipeline
         return new self($this->pipeline->cleanCopy());
     }
 
+    public function has(string $transformerClass) : bool
+    {
+        return $this->pipeline->has($transformerClass);
+    }
+
+    public function isAsync() : bool
+    {
+        return false;
+    }
+
     /**
      * @psalm-suppress UnusedForeachValue
      */
