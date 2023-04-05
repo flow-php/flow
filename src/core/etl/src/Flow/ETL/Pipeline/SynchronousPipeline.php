@@ -36,6 +36,16 @@ final class SynchronousPipeline implements Pipeline
         return new self();
     }
 
+    public function has(string $transformerClass) : bool
+    {
+        return $this->pipes->has($transformerClass);
+    }
+
+    public function isAsync() : bool
+    {
+        return false;
+    }
+
     /**
      * @psalm-suppress PossiblyNullOperand
      */

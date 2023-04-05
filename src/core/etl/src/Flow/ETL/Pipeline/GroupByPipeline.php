@@ -38,6 +38,16 @@ final class GroupByPipeline implements Pipeline
         return $this->pipeline->cleanCopy();
     }
 
+    public function has(string $transformerClass) : bool
+    {
+        return $this->pipeline->has($transformerClass);
+    }
+
+    public function isAsync() : bool
+    {
+        return $this->pipeline->isAsync();
+    }
+
     public function process(FlowContext $context) : \Generator
     {
         foreach ($this->pipeline->process($context) as $nextRows) {

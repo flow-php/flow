@@ -33,6 +33,16 @@ final class NestedPipeline implements Pipeline
         );
     }
 
+    public function has(string $transformerClass) : bool
+    {
+        return $this->currentPipeline->has($transformerClass);
+    }
+
+    public function isAsync() : bool
+    {
+        return $this->currentPipeline->isAsync() || $this->nextPipeline->isAsync();
+    }
+
     public function process(FlowContext $context) : \Generator
     {
         foreach ($this->nextPipeline->source(new Extractor\PipelineExtractor($this->currentPipeline))->process($context) as $rows) {

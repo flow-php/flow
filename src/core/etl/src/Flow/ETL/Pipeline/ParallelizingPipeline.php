@@ -42,6 +42,16 @@ final class ParallelizingPipeline implements Pipeline
         return new self($this->pipeline, $this->parallel);
     }
 
+    public function has(string $transformerClass) : bool
+    {
+        return $this->pipeline->has($transformerClass);
+    }
+
+    public function isAsync() : bool
+    {
+        return $this->pipeline->isAsync();
+    }
+
     public function process(FlowContext $context) : \Generator
     {
         $this->nextPipeline->source(
