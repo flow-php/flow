@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-04-04
+## [Unreleased] - 2023-04-05
 
 ### Added
 - [#382](https://github.com/flow-php/flow/pull/382) - **hash function to DSL** - [@norberttech](https://github.com/norberttech)
@@ -18,6 +18,7 @@
 - [#383](https://github.com/flow-php/flow/pull/383) - **edge case in array_dot_exists** - [@norberttech](https://github.com/norberttech)
 
 ### Updated
+- [b8b852](https://github.com/flow-php/flow/commit/b8b852f27ceba1e1ad94aad69fb719ed0c566a30) - **DbalLoader options annotations** - [@norberttech](https://github.com/norberttech)
 - [e45157](https://github.com/flow-php/flow/commit/e451570f013f6e881e5f6e43e157136700aee714) - **flow-php/doctrine-dbal-bulk dependency** - [@norberttech](https://github.com/norberttech)
 - [c2386d](https://github.com/flow-php/flow/commit/c2386df20ee46bf8edfdce6769426f7b9ef07a4a) - **internal flow-php dependencies** - [@norberttech](https://github.com/norberttech)
 
