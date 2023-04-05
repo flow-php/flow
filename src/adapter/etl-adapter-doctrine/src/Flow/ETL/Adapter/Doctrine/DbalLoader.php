@@ -20,7 +20,7 @@ use Flow\ETL\Rows;
  *  connection_params: array<string, mixed>,
  *  operation: string,
  *  operation_options: array{
- *    do_nothing?: boolean,
+ *    skip_conflicts?: boolean,
  *    constraint?: string,
  *    conflict_columns?: array<string>,
  *    update_columns?: array<string>,
@@ -39,7 +39,7 @@ final class DbalLoader implements Loader
      * @param int $chunkSize
      * @param array<string, mixed> $connectionParams
      * @param array{
-     *  do_nothing?: boolean,
+     *  skip_conflicts?: boolean,
      *  constraint?: string,
      *  conflict_columns?: array<string>,
      *  update_columns?: array<string>,
@@ -70,7 +70,7 @@ final class DbalLoader implements Loader
      * @param string $tableName
      * @param int $chunkSize
      * @param array{
-     *  do_nothing?: boolean,
+     *  skip_conflicts?: boolean,
      *  constraint?: string,
      *  conflict_columns?: array<string>,
      *  update_columns?: array<string>,

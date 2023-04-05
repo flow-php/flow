@@ -150,7 +150,7 @@ class Dbal
      * @param string $table
      * @param int $chunk_size
      * @param array{
-     *  do_nothing?: boolean,
+     *  skip_conflicts?: boolean,
      *  constraint?: string,
      *  conflict_columns?: array<string>,
      *  update_columns?: array<string>,
@@ -177,7 +177,7 @@ class Dbal
      * @param string $table
      * @param int $chunk_size
      * @param array{
-     *  do_nothing?: boolean,
+     *  skip_conflicts?: boolean,
      *  constraint?: string,
      *  conflict_columns?: array<string>,
      *  update_columns?: array<string>,
