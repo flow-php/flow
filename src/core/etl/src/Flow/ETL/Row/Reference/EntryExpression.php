@@ -44,6 +44,11 @@ trait EntryExpression
         return new Expressions(new Contains($this, $needle));
     }
 
+    public function count() : Expression
+    {
+        return new Expressions(new Expression\Count($this));
+    }
+
     public function divide(Expression $ref) : Expression
     {
         return new Expressions(new Divide($this, $ref));
