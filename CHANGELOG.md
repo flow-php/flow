@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-04-05
 
 ### Added
+- [#386](https://github.com/flow-php/flow/pull/386) - **count expression** - [@norberttech](https://github.com/norberttech)
 - [#385](https://github.com/flow-php/flow/pull/385) - **DataFrame::dropDuplicates** - [@norberttech](https://github.com/norberttech)
 - [#382](https://github.com/flow-php/flow/pull/382) - **hash function to DSL** - [@norberttech](https://github.com/norberttech)
 - [#381](https://github.com/flow-php/flow/pull/381) - **concat expression** - [@norberttech](https://github.com/norberttech)
