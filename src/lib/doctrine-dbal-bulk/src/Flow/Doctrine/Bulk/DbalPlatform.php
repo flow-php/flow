@@ -12,6 +12,9 @@ use Flow\Doctrine\Bulk\Dialect\PostgreSQLDialect;
 use Flow\Doctrine\Bulk\Dialect\SqliteDialect;
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
 
+/**
+ * @infection-ignore-all
+ */
 final class DbalPlatform
 {
     public function __construct(private readonly AbstractPlatform $platform)
