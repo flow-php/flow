@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-04-05
+## [0.2.7] - 2023-04-06
 
 ### Added
 - [#386](https://github.com/flow-php/flow/pull/386) - **count expression** - [@norberttech](https://github.com/norberttech)
