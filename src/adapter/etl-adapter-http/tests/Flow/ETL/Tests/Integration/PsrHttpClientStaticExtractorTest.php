@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Tests\Functional;
+namespace Flow\ETL\Tests\Integration;
 
 use Flow\ETL\Adapter\Http\PsrHttpClientStaticExtractor;
 use Flow\ETL\Config;
@@ -13,7 +13,8 @@ use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\Response;
 use PHPUnit\Framework\TestCase;
 
-final class PsrHttpClientStaticExtractorTest extends TestCase
+final class
+PsrHttpClientStaticExtractorTest extends TestCase
 {
     public function test_http_extractor() : void
     {

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Tests\Functional;
+namespace Flow\ETL\Tests\Integration;
 
 use Flow\ETL\Adapter\Http\DynamicExtractor\NextRequestFactory;
 use Flow\ETL\Adapter\Http\PsrHttpClientDynamicExtractor;
