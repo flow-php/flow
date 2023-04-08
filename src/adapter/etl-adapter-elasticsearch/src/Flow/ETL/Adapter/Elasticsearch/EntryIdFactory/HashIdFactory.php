@@ -10,10 +10,8 @@ use Flow\ETL\Row\Entry;
 
 /**
  * @implements IdFactory<array{entry_names: array<string>}>
- *
- * @deprecated Use HashIdFactory instead {@see HashIdFactory}
  */
-final class Sha1IdFactory implements IdFactory
+final class HashIdFactory implements IdFactory
 {
     /**
      * @var string[]
@@ -41,7 +39,8 @@ final class Sha1IdFactory implements IdFactory
     {
         return new Row\Entry\StringEntry(
             'id',
-            \sha1(
+            \hash(
+                'xxh128',
                 /** @phpstan-ignore-next-line */
                 \implode(':', \array_map(fn (string $name) : string => (string) $row->valueOf($name), $this->entryNames))
             )
