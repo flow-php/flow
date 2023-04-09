@@ -583,8 +583,6 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
         $partitionedRows = [];
 
         /**
-         * @psalm-suppress ImpureFunctionCall
-         *
          * @var array<string, mixed> $partitionsData
          */
         foreach ($cartesianProduct($partitions) as $partitionsData) {
@@ -648,7 +646,6 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
             throw new InvalidArgumentException("Rows does not have {$offset} offset");
         }
 
-        /** @psalm-suppress ImpureFunctionCall */
         $rows = \iterator_to_array($this->getIterator());
         unset($rows[$offset]);
 

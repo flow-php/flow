@@ -105,7 +105,6 @@ final class XMLReaderExtractor implements Extractor
     {
         $xmlArray = [];
 
-        /** @psalm-suppress ImpureMethodCall */
         if ($document->hasChildNodes()) {
             $children = $document->childNodes;
 
@@ -122,7 +121,6 @@ final class XMLReaderExtractor implements Extractor
      * @psalm-suppress ArgumentTypeCoercion
      * @psalm-suppress PossiblyNullArgument
      * @psalm-suppress UnnecessaryVarAnnotation
-     * @psalm-suppress ImpureMethodCall
      * @psalm-suppress PossiblyNullIterator
      *
      * @return array<mixed>
@@ -163,9 +161,6 @@ final class XMLReaderExtractor implements Extractor
         return $xmlArray;
     }
 
-    /**
-     * @psalm-suppress ImpureMethodCall
-     */
     private function isElementCollection(\DOMElement|\DOMNode $element) : bool
     {
         if ($element->childNodes->count() <= 1) {

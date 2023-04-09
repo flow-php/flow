@@ -52,7 +52,6 @@ final class PsrHttpClientDynamicExtractor implements Extractor
                 ($this->preRequest)($nextRequest);
             }
 
-            /** @psalm-suppress ImpureMethodCall */
             $response = $this->client->sendRequest($nextRequest);
 
             if ($this->postRequest) {

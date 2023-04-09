@@ -29,10 +29,6 @@ final class CSVExtractor implements Extractor
     ) {
     }
 
-    /**
-     * @psalm-suppress ImpureFunctionCall
-     * @psalm-suppress ImpureMethodCall
-     */
     public function extract(FlowContext $context) : \Generator
     {
         foreach ($context->streams()->fs()->scan($this->uri, $context->partitionFilter()) as $path) {

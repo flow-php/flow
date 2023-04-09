@@ -26,7 +26,6 @@ final class ArrayKeysStyleConverterTransformer implements Transformer
         private readonly string $style,
         private readonly EntryFactory $entryFactory = new NativeEntryFactory()
     ) {
-        /** @psalm-suppress ImpureFunctionCall */
         if (!\class_exists(\Jawira\CaseConverter\Convert::class)) {
             throw new RuntimeException("Jawira\CaseConverter\Convert class not found, please add jawira/case-converter dependency to the project first.");
         }

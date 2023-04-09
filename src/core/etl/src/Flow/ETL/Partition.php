@@ -43,7 +43,6 @@ final class Partition implements Serializable
      *
      * @return array<Partition>
      *
-     * @psalm-suppress ImpureMethodCall
      * @psalm-suppress MixedAssignment
      */
     public static function fromArray(array $data) : array

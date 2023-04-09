@@ -21,10 +21,6 @@ final class TextExtractor implements Extractor
     ) {
     }
 
-    /**
-     * @psalm-suppress ImpureFunctionCall
-     * @psalm-suppress ImpureMethodCall
-     */
     public function extract(FlowContext $context) : \Generator
     {
         /** @var array<Row> $rows */

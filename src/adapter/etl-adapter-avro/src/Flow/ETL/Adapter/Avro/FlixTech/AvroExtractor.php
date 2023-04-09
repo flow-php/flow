@@ -26,7 +26,6 @@ final class AvroExtractor implements Extractor
 
     /**
      * @psalm-suppress MixedArgument
-     * @psalm-suppress ImpureMethodCall
      * @psalm-suppress MixedAssignment
      */
     public function extract(FlowContext $context) : \Generator

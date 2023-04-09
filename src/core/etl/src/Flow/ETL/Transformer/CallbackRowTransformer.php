@@ -48,7 +48,6 @@ final class CallbackRowTransformer implements Transformer
         }
 
         /**
-         * @psalm-suppress ImpureMethodCall
          * @psalm-suppress MixedPropertyTypeCoercion
          * @psalm-suppress PropertyTypeCoercion
          */

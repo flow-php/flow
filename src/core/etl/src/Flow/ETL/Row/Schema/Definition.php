@@ -84,7 +84,6 @@ final class Definition implements Serializable
      */
     public static function enum(string|EntryReference $entry, string $type, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
-        /** @psalm-suppress ImpureFunctionCall */
         if (!\enum_exists($type)) {
             throw new InvalidArgumentException("Enum of type \"{$type}\" not found");
         }
