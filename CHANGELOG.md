@@ -1,7 +1,15 @@
-## [Unreleased] - 2023-04-06
+## [Unreleased] - 2023-04-09
+
+### Added
+- [#388](https://github.com/flow-php/flow/pull/388) - **Added `HashIdFactory` into Elastic adapter** - [@stloyd](https://github.com/stloyd)
+- [#388](https://github.com/flow-php/flow/pull/388) - **Added `ext-hash` PHP extension as required for Flow** - [@stloyd](https://github.com/stloyd)
 
 ### Changed
+- [#388](https://github.com/flow-php/flow/pull/388) - **Replaced usage of `md5()` with `xxh128` hash algorithm** - [@stloyd](https://github.com/stloyd)
 - [#387](https://github.com/flow-php/flow/pull/387) - **Reorganized testsuite** - [@norberttech](https://github.com/norberttech)
+
+### Deprecated
+- [#388](https://github.com/flow-php/flow/pull/388) - **Deprecated `Sha1IdFactory` in favor of `HashIdFactory`** - [@stloyd](https://github.com/stloyd)
 
 ## [0.2.7] - 2023-04-06
 
