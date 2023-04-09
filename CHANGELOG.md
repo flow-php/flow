@@ -8,6 +8,9 @@
 - [#388](https://github.com/flow-php/flow/pull/388) - **Replaced usage of `md5()` with `xxh128` hash algorithm** - [@stloyd](https://github.com/stloyd)
 - [#387](https://github.com/flow-php/flow/pull/387) - **Reorganized testsuite** - [@norberttech](https://github.com/norberttech)
 
+### Removed
+- [#390](https://github.com/flow-php/flow/pull/390) - **Remove impure psalm suppress leftovers** - [@stloyd](https://github.com/stloyd)
+
 ### Deprecated
 - [#388](https://github.com/flow-php/flow/pull/388) - **Deprecated `Sha1IdFactory` in favor of `HashIdFactory`** - [@stloyd](https://github.com/stloyd)
 
