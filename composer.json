@@ -12,6 +12,7 @@
     "require": {
         "php": "~8.1 || ~8.2",
         "ext-dom": "*",
+        "ext-hash": "*",
         "ext-json": "*",
         "ext-mbstring": "*",
         "ext-xmlreader": "*",

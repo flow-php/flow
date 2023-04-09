@@ -43,8 +43,6 @@ final class DropDuplicatesTransformer implements Transformer
     }
 
     /**
-     * @param array $data
-     *
      * @throws RuntimeException
      */
     public function __unserialize(array $data) : void
@@ -69,7 +67,7 @@ final class DropDuplicatesTransformer implements Transformer
                 }
             }
 
-            $hash = \md5(\serialize($values));
+            $hash = \hash('xxh128', \serialize($values));
 
             if (!$this->deduplication->exists($hash)) {
                 $newRows[] = $row;
