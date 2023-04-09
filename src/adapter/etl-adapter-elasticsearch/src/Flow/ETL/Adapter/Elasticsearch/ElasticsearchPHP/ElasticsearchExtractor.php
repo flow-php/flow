@@ -164,8 +164,6 @@ final class ElasticsearchExtractor implements Extractor
     }
 
     /**
-     * @psalm-suppress ImpureMethodCall
-     *
      * @throws \Elastic\Elasticsearch\Exception\ClientResponseException
      * @throws \Elastic\Elasticsearch\Exception\ServerResponseException
      */

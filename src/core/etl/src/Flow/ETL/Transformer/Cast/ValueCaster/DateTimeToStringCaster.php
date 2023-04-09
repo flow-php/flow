@@ -34,7 +34,6 @@ final class DateTimeToStringCaster implements ValueConverter
             throw new InvalidArgumentException('Only \DateTimeInterface can be casted to string, got ' . \gettype($value));
         }
 
-        /** @psalm-suppress ImpureMethodCall */
         return $value->format($this->format);
     }
 }

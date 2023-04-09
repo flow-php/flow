@@ -17,8 +17,6 @@ use Flow\ETL\Transformer;
 final class HashTransformer implements Transformer
 {
     /**
-     * @psalm-suppress ImpureFunctionCall
-     *
      * @param array<string> $entries
      *
      * @throws InvalidArgumentException

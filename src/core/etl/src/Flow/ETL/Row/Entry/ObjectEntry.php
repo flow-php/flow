@@ -58,7 +58,6 @@ final class ObjectEntry implements \Stringable, Entry
 
     public function isEqual(Entry $entry) : bool
     {
-        /** @psalm-suppress ImpureFunctionCall */
         return $this->is($entry->name())
             && $entry instanceof self
             && \serialize($this->__serialize()['value']) === \serialize($entry->__serialize()['value']);

@@ -38,9 +38,6 @@ final class AnyToListCaster implements EntryConverter
 
     public function convert(Entry $entry) : Entry
     {
-        /**
-         * @psalm-suppress ImpureFunctionCall
-         */
         return new Entry\ListEntry(
             $entry->name(),
             $this->type,

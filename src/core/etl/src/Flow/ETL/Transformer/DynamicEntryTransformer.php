@@ -48,7 +48,6 @@ final class DynamicEntryTransformer implements Transformer
         }
 
         /**
-         * @psalm-suppress ImpureMethodCall
          * @psalm-suppress MixedPropertyTypeCoercion
          */
         $this->generator = $data['generator']->getClosure();

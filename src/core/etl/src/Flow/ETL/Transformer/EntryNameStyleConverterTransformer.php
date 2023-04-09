@@ -21,7 +21,6 @@ final class EntryNameStyleConverterTransformer implements Transformer
 {
     public function __construct(private readonly string $style)
     {
-        /** @psalm-suppress ImpureFunctionCall */
         if (!\class_exists(Convert::class)) {
             throw new RuntimeException("Jawira\CaseConverter\Convert class not found, please add jawira/case-converter dependency to the project first.");
         }

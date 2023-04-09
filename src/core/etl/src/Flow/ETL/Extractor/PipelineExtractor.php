@@ -23,7 +23,6 @@ final class PipelineExtractor implements Extractor
      */
     public function extract(FlowContext $context) : \Generator
     {
-        /** @psalm-suppress ImpureMethodCall */
         return $this->pipeline->process($context);
     }
 }

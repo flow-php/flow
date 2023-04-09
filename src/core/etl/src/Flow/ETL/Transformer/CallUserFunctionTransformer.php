@@ -71,7 +71,6 @@ final class CallUserFunctionTransformer implements Transformer
         }
 
         $this->entries = $data['entries'];
-        /** @psalm-suppress ImpureMethodCall */
         $this->callback = $data['callback'] instanceof SerializableClosure ? $data['callback']->getClosure() : $data['callback'];
         $this->extraArguments = $data['extra_arguments'];
         $this->entryFactory = $data['entry_factory'];
