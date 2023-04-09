@@ -48,7 +48,7 @@ final class DbalQueryExtractor implements Extractor
             $rows = [];
 
             /** @psalm-suppress ImpureMethodCall */
-            foreach ($this->connection->fetchAllAssociative($this->query, $parameters, $this->types) as $row) {
+            foreach ($this->connection->iterateAssociative($this->query, $parameters, $this->types) as $row) {
                 $rows[] = Row::create(Entry::array($this->rowEntryName, $row));
             }
 

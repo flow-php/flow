@@ -86,7 +86,7 @@ final class DbalLimitOffsetExtractor implements Extractor
                 $pageQuery->getSQL(),
                 $pageQuery->getParameters(),
                 $pageQuery->getParameterTypes()
-            )->fetchAllAssociative();
+            )->iterateAssociative();
 
             foreach ($pageResults as $row) {
                 $rows[] = Row::create(new Row\Entry\ArrayEntry($this->rowEntryName, $row));
