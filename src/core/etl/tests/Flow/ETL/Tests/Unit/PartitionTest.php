@@ -13,7 +13,7 @@ final class PartitionTest extends TestCase
     /**
      * @return array<array<string>>
      */
-    public function provider_forbidden_characters_values() : array
+    public static function provider_forbidden_characters_values() : array
     {
         return [
             ['nam|e'],

@@ -9,12 +9,30 @@ use PHPUnit\Framework\TestCase;
 
 final class BooleanEntryTest extends TestCase
 {
-    public function is_equal_data_provider() : \Generator
+    public static function is_equal_data_provider() : \Generator
     {
         yield 'equal names and values' => [true, new BooleanEntry('name', true), new BooleanEntry('name', true)];
         yield 'different names and values' => [false, new BooleanEntry('name', true), new BooleanEntry('different_name', true)];
         yield 'equal names and different values' => [false, new BooleanEntry('name', true), new BooleanEntry('name', false)];
         yield 'different names characters and equal values' => [false, new BooleanEntry('NAME', true), new BooleanEntry('name', true)];
+    }
+
+    public static function valid_false_entries() : \Generator
+    {
+        yield [false];
+        yield [0];
+        yield ['0'];
+        yield ['false'];
+        yield ['no'];
+    }
+
+    public static function valid_true_entries() : \Generator
+    {
+        yield [true];
+        yield [1];
+        yield ['1'];
+        yield ['true'];
+        yield ['yes'];
     }
 
     /**
@@ -81,23 +99,5 @@ final class BooleanEntryTest extends TestCase
 
         $this->assertEquals('new-entry-name', $newEntry->name());
         $this->assertTrue($newEntry->value());
-    }
-
-    public function valid_false_entries() : \Generator
-    {
-        yield [false];
-        yield [0];
-        yield ['0'];
-        yield ['false'];
-        yield ['no'];
-    }
-
-    public function valid_true_entries() : \Generator
-    {
-        yield [true];
-        yield [1];
-        yield ['1'];
-        yield ['true'];
-        yield ['yes'];
     }
 }

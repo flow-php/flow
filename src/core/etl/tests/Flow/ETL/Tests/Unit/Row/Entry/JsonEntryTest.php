@@ -11,7 +11,7 @@ use PHPUnit\Framework\TestCase;
 
 final class JsonEntryTest extends TestCase
 {
-    public function is_equal_data_provider() : \Generator
+    public static function is_equal_data_provider() : \Generator
     {
         yield 'equal names and equal simple integer arrays with the same order' => [
             true,

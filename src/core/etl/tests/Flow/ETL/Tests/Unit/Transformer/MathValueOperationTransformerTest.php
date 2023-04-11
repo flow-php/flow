@@ -15,7 +15,7 @@ use PHPUnit\Framework\TestCase;
 
 final class MathValueOperationTransformerTest extends TestCase
 {
-    public function math_operations_provider() : \Generator
+    public static function math_operations_provider() : \Generator
     {
         yield [new Entry\IntegerEntry('left', 10), 10, Operation::add, 20, Entry\IntegerEntry::class];
         yield [new Entry\IntegerEntry('left', 10), 10, Operation::subtract, 0, Entry\IntegerEntry::class];

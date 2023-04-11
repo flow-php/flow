@@ -9,19 +9,27 @@ use PHPUnit\Framework\TestCase;
 
 final class IntegerEntryTest extends TestCase
 {
-    public function invalid_entries() : \Generator
+    public static function invalid_entries() : \Generator
     {
         yield ['random_value'];
         yield [100.50];
         yield ['100.5'];
     }
 
-    public function is_equal_data_provider() : \Generator
+    public static function is_equal_data_provider() : \Generator
     {
         yield 'equal names and values' => [true, new IntegerEntry('name', 1), new IntegerEntry('name', 1)];
         yield 'different names and values' => [false, new IntegerEntry('name', 1), new IntegerEntry('different_name', 1)];
         yield 'equal names and different values' => [false, new IntegerEntry('name', 1), new IntegerEntry('name', 2)];
         yield 'different names characters and equal values' => [false, new IntegerEntry('NAME', 1), new IntegerEntry('name', 1)];
+    }
+
+    public static function valid_integer_entries() : \Generator
+    {
+        yield [100];
+        yield [100.00];
+        yield ['100'];
+        yield ['100.00'];
     }
 
     /**
@@ -92,13 +100,5 @@ final class IntegerEntryTest extends TestCase
         $unserialized = \unserialize($serialized);
 
         $this->assertTrue($string->isEqual($unserialized));
-    }
-
-    public function valid_integer_entries() : \Generator
-    {
-        yield [100];
-        yield [100.00];
-        yield ['100'];
-        yield ['100.00'];
     }
 }

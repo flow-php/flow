@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 final class NullEntryTest extends TestCase
 {
-    public function is_equal_data_provider() : \Generator
+    public static function is_equal_data_provider() : \Generator
     {
         yield 'equal names and values' => [true, new NullEntry('name'), new NullEntry('name')];
         yield 'different names characters and equal values' => [false, new NullEntry('NAME'), new NullEntry('name')];

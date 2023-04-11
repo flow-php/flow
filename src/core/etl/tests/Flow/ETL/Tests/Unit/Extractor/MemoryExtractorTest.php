@@ -16,7 +16,7 @@ use PHPUnit\Framework\TestCase;
 
 final class MemoryExtractorTest extends TestCase
 {
-    public function chunk_sizes() : \Generator
+    public static function chunk_sizes() : \Generator
     {
         yield [1];
         yield [2];

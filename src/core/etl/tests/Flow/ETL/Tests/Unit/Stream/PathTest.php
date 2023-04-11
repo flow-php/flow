@@ -11,6 +11,55 @@ use PHPUnit\Framework\TestCase;
 
 final class PathTest extends TestCase
 {
+    public static function directories() : \Generator
+    {
+        yield '/some_file.txt' => ['/some_file.txt', '/'];
+        yield '/some/nested/file.csv' => ['/some/nested/file.csv', '/some/nested'];
+        yield 'flow-file://nested/file/path/file.txt' => ['flow-file://nested/file/path/file.txt', '/nested/file/path'];
+    }
+
+    /**
+     * @return \Generator<int, array<string>> - string $uri, string $schema, string $parsedUri
+     */
+    public static function paths() : \Generator
+    {
+        yield '/file.csv' => ['/file.csv', 'file', 'file://file.csv'];
+        yield 'file://file.csv' => ['file://file.csv', 'file', 'file://file.csv'];
+        yield 'file:///' => ['file:///', 'file', 'file://'];
+        yield '/' => ['/', 'file', 'file://'];
+        yield 'flow-file://file.csv' => ['flow-file://folder/file.csv', 'flow-file', 'flow-file://folder/file.csv'];
+    }
+
+    public static function paths_pattern_matching() : \Generator
+    {
+        yield ['/file.csv', '/file.csv', true];
+        yield ['/nested/folder/any/file.csv', '/nested/folder/*/file.csv', false];
+        yield ['/nested/folder/*/file.csv', '/nested/folder/any/file.csv', true];
+        yield ['/nested/folder/[a]*/file.csv', '/nested/folder/ab/file.csv', true];
+        yield ['/nested/folder/**/file.csv', '/nested/folder/any/nested/file.csv', true];
+        yield ['/nested/folder/**/fil?.csv', '/nested/folder/any/nested/file.csv', true];
+    }
+
+    public static function paths_with_partitions() : \Generator
+    {
+        yield '/' => ['/', []];
+        yield 'file://path/without/partitions/file.csv' => ['file://path/without/partitions/file.csv', []];
+        yield 'file://path/country=US/file.csv' => ['file://path/country=US/file.csv', [new Partition('country', 'US')]];
+        yield 'file://path/country=US/region=america/file.csv' => ['file://path/country=US/region=america/file.csv', [new Partition('country', 'US'), new Partition('region', 'america')]];
+        yield 'file://path/country=*/file.csv' => ['file://path/country=*/file.csv', []];
+    }
+
+    public static function paths_with_static_parts() : \Generator
+    {
+        yield '/file.csv' => ['/file.csv', '/file.csv'];
+        yield '/nested/folder/*/file.csv' => ['/nested/folder', '/nested/folder/*/file.csv'];
+        yield '/nested/folder/path/{one|two}/file.csv' => ['/nested/folder/path', '/nested/folder/path/{one|two}/file.csv'];
+        yield '/file*.csv' => ['/file*.csv', '/file*.csv'];
+        yield 'flow-file://nested/partition={one,two}/*.csv' => ['flow-file://nested', 'flow-file://nested/partition={one,two}/*.csv'];
+        yield 'flow-file://nested/partition=[one]/*.csv' => ['flow-file://nested', 'flow-file://nested/partition=[one]/*.csv'];
+        yield '/nested/partition=[one]/*.csv' => ['file://nested', '/nested/partition=[one]/*.csv'];
+    }
+
     protected function setUp() : void
     {
         if (!\in_array('flow-file', \stream_get_wrappers(), true)) {
@@ -23,55 +72,6 @@ final class PathTest extends TestCase
         if (\in_array('flow-file', \stream_get_wrappers(), true)) {
             \stream_wrapper_unregister('flow-file');
         }
-    }
-
-    public function directories() : \Generator
-    {
-        yield '/some_file.txt' => ['/some_file.txt', '/'];
-        yield '/some/nested/file.csv' => ['/some/nested/file.csv', '/some/nested'];
-        yield 'flow-file://nested/file/path/file.txt' => ['flow-file://nested/file/path/file.txt', '/nested/file/path'];
-    }
-
-    /**
-     * @return \Generator<int, array<string>> - string $uri, string $schema, string $parsedUri
-     */
-    public function paths() : \Generator
-    {
-        yield '/file.csv' => ['/file.csv', 'file', 'file://file.csv'];
-        yield 'file://file.csv' => ['file://file.csv', 'file', 'file://file.csv'];
-        yield 'file:///' => ['file:///', 'file', 'file://'];
-        yield '/' => ['/', 'file', 'file://'];
-        yield 'flow-file://file.csv' => ['flow-file://folder/file.csv', 'flow-file', 'flow-file://folder/file.csv'];
-    }
-
-    public function paths_pattern_matching() : \Generator
-    {
-        yield ['/file.csv', '/file.csv', true];
-        yield ['/nested/folder/any/file.csv', '/nested/folder/*/file.csv', false];
-        yield ['/nested/folder/*/file.csv', '/nested/folder/any/file.csv', true];
-        yield ['/nested/folder/[a]*/file.csv', '/nested/folder/ab/file.csv', true];
-        yield ['/nested/folder/**/file.csv', '/nested/folder/any/nested/file.csv', true];
-        yield ['/nested/folder/**/fil?.csv', '/nested/folder/any/nested/file.csv', true];
-    }
-
-    public function paths_with_partitions() : \Generator
-    {
-        yield '/' => ['/', []];
-        yield 'file://path/without/partitions/file.csv' => ['file://path/without/partitions/file.csv', []];
-        yield 'file://path/country=US/file.csv' => ['file://path/country=US/file.csv', [new Partition('country', 'US')]];
-        yield 'file://path/country=US/region=america/file.csv' => ['file://path/country=US/region=america/file.csv', [new Partition('country', 'US'), new Partition('region', 'america')]];
-        yield 'file://path/country=*/file.csv' => ['file://path/country=*/file.csv', []];
-    }
-
-    public function paths_with_static_parts() : \Generator
-    {
-        yield '/file.csv' => ['/file.csv', '/file.csv'];
-        yield '/nested/folder/*/file.csv' => ['/nested/folder', '/nested/folder/*/file.csv'];
-        yield '/nested/folder/path/{one|two}/file.csv' => ['/nested/folder/path', '/nested/folder/path/{one|two}/file.csv'];
-        yield '/file*.csv' => ['/file*.csv', '/file*.csv'];
-        yield 'flow-file://nested/partition={one,two}/*.csv' => ['flow-file://nested', 'flow-file://nested/partition={one,two}/*.csv'];
-        yield 'flow-file://nested/partition=[one]/*.csv' => ['flow-file://nested', 'flow-file://nested/partition=[one]/*.csv'];
-        yield '/nested/partition=[one]/*.csv' => ['file://nested', '/nested/partition=[one]/*.csv'];
     }
 
     public function test_add_partitions() : void

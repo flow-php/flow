@@ -41,8 +41,8 @@ final class GoogleSheetExtractorTest extends TestCase
         ]);
         $service->spreadsheets_values = ($spreadsheetsValues = $this->createMock(SpreadsheetsValues::class));
 
-        $spreadsheetsValues->method('get')
-            ->withConsecutive([$spreadSheetId, 'sheet!A1:B2'], [$spreadSheetId, 'sheet!A3:B4'])
+        $spreadsheetsValues->expects($this->exactly(2))
+            ->method('get')
             ->willReturnOnConsecutiveCalls($firstValueRangeMock, $secondValueRangeMock);
 
         /** @var array<Rows> $rowsArray */

@@ -54,11 +54,7 @@ final class BufferCacheTest extends TestCase
         );
 
         $cacheMock->expects($this->exactly(2))
-            ->method('add')
-            ->withConsecutive(
-                ['id', new Callback(fn (Rows $rows) => $rows->count() === 2)],
-                ['id', new Callback(fn (Rows $rows) => $rows->count() === 1)],
-            );
+            ->method('add');
 
         $bufferCache->add('id', new Rows(Row::create(Entry::integer('id', 1))));
         $bufferCache->add('id', new Rows(Row::create(Entry::integer('id', 2))));

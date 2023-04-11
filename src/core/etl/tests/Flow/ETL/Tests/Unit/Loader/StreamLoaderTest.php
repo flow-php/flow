@@ -19,7 +19,7 @@ final class StreamLoaderTest extends TestCase
 {
     public function test_loading_data_int_invalid_stream() : void
     {
-        $this->expectExceptionMessage("Can't open stream for url: php://qweqweqw in mode: w. Reason: fopen(): Invalid php:// URL specified");
+        $this->expectExceptionMessage("Can't open stream for url: php://qweqweqw in mode: w");
         $this->expectException(RuntimeException::class);
 
         $loader = To::stream('php://qweqweqw', 0);

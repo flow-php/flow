@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
 
 final class JsonObjectEntryTest extends TestCase
 {
-    public function is_equal_data_provider() : \Generator
+    public static function is_equal_data_provider() : \Generator
     {
         yield 'equal names and equal multi dimensional array with the same order' => [
             true,
