@@ -975,6 +975,97 @@ ASCIITABLE,
             });
     }
 
+    public function test_get() : void
+    {
+        $rows = (new Flow())
+            ->extract(From::rows(
+                $extractedRows = new Rows(
+                    Row::create(Entry::integer('id', 1), Entry::string('name', 'foo')),
+                    Row::create(Entry::integer('id', 2), Entry::string('name', 'bar')),
+                    Row::create(Entry::integer('id', 3), Entry::string('name', 'baz')),
+                    Row::create(Entry::integer('id', 4), Entry::string('name', 'foo')),
+                    Row::create(Entry::integer('id', 5), Entry::string('name', 'bar')),
+                    Row::create(Entry::integer('id', 6), Entry::string('name', 'baz')),
+                )
+            ))
+            ->get();
+
+        $this->assertEquals([$extractedRows], \iterator_to_array($rows));
+    }
+
+    public function test_get_as_array() : void
+    {
+        $rows = (new Flow())
+            ->extract(From::rows(
+                $extractedRows = new Rows(
+                    Row::create(Entry::integer('id', 1), Entry::string('name', 'foo')),
+                    Row::create(Entry::integer('id', 2), Entry::string('name', 'bar')),
+                    Row::create(Entry::integer('id', 3), Entry::string('name', 'baz')),
+                    Row::create(Entry::integer('id', 4), Entry::string('name', 'foo')),
+                    Row::create(Entry::integer('id', 5), Entry::string('name', 'bar')),
+                    Row::create(Entry::integer('id', 6), Entry::string('name', 'baz')),
+                )
+            ))
+            ->getAsArray();
+
+        $this->assertEquals([
+            $extractedRows->toArray(),
+        ], \iterator_to_array($rows));
+    }
+
+    public function test_get_each() : void
+    {
+        $rows = (new Flow())
+            ->extract(From::rows(
+                $extractedRows = new Rows(
+                    Row::create(Entry::integer('id', 1), Entry::string('name', 'foo')),
+                    Row::create(Entry::integer('id', 2), Entry::string('name', 'bar')),
+                    Row::create(Entry::integer('id', 3), Entry::string('name', 'baz')),
+                    Row::create(Entry::integer('id', 4), Entry::string('name', 'foo')),
+                    Row::create(Entry::integer('id', 5), Entry::string('name', 'bar')),
+                    Row::create(Entry::integer('id', 6), Entry::string('name', 'baz')),
+                )
+            ))
+            ->getEach();
+
+        $this->assertEquals([
+            Row::create(Entry::integer('id', 1), Entry::string('name', 'foo')),
+            Row::create(Entry::integer('id', 2), Entry::string('name', 'bar')),
+            Row::create(Entry::integer('id', 3), Entry::string('name', 'baz')),
+            Row::create(Entry::integer('id', 4), Entry::string('name', 'foo')),
+            Row::create(Entry::integer('id', 5), Entry::string('name', 'bar')),
+            Row::create(Entry::integer('id', 6), Entry::string('name', 'baz')),
+        ], \iterator_to_array($rows));
+    }
+
+    public function test_get_each_as_array() : void
+    {
+        $rows = (new Flow())
+            ->extract(From::rows(
+                $extractedRows = new Rows(
+                    Row::create(Entry::integer('id', 1), Entry::string('name', 'foo')),
+                    Row::create(Entry::integer('id', 2), Entry::string('name', 'bar')),
+                    Row::create(Entry::integer('id', 3), Entry::string('name', 'baz')),
+                    Row::create(Entry::integer('id', 4), Entry::string('name', 'foo')),
+                    Row::create(Entry::integer('id', 5), Entry::string('name', 'bar')),
+                    Row::create(Entry::integer('id', 6), Entry::string('name', 'baz')),
+                )
+            ))
+            ->getEachAsArray();
+
+        $this->assertEquals(
+            [
+                ['id' => 1, 'name' => 'foo'],
+                ['id' => 2, 'name' => 'bar'],
+                ['id' => 3, 'name' => 'baz'],
+                ['id' => 4, 'name' => 'foo'],
+                ['id' => 5, 'name' => 'bar'],
+                ['id' => 6, 'name' => 'baz'],
+            ],
+            \iterator_to_array($rows)
+        );
+    }
+
     public function test_group_by_multiple_columns_and_parallelize() : void
     {
         $loader = $this->createMock(Loader::class);
