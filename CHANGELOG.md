@@ -1,6 +1,10 @@
-## [Unreleased] - 2023-04-09
+## [Unreleased] - 2023-04-13
 
 ### Added
+- [#393](https://github.com/flow-php/flow/pull/393) - **DataFrame::get() : \Generator** - [@norberttech](https://github.com/norberttech)
+- [#393](https://github.com/flow-php/flow/pull/393) - **DataFrame::getEach() : \Generator** - [@norberttech](https://github.com/norberttech)
+- [#393](https://github.com/flow-php/flow/pull/393) - **DataFrame::getAsArray() : \Generator** - [@norberttech](https://github.com/norberttech)
+- [#393](https://github.com/flow-php/flow/pull/393) - **DataFrame::getEachAsArray() : \Generato** - [@norberttech](https://github.com/norberttech)
 - [#388](https://github.com/flow-php/flow/pull/388) - **Added `HashIdFactory` into Elastic adapter** - [@stloyd](https://github.com/stloyd)
 - [#388](https://github.com/flow-php/flow/pull/388) - **Added `ext-hash` PHP extension as required for Flow** - [@stloyd](https://github.com/stloyd)
 
