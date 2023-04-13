@@ -147,6 +147,14 @@ final class DataFrame
     }
 
     /**
+     * Be aware that fetch is not memory safe and will load all rows into memory.
+     * If you want to safely iterate over Rows use oe of the following methods:.
+     *
+     * DataFrame::get() : \Generator
+     * DataFrame::getAsArray() : \Generator
+     * DataFrame::getEach() : \Generator
+     * DataFrame::getEachAsArray() : \Generator
+     *
      * @throws InvalidArgumentException
      */
     public function fetch(?int $limit = null) : Rows
@@ -205,6 +213,56 @@ final class DataFrame
     public function forEach(callable $callback = null) : void
     {
         $this->run($callback);
+    }
+
+    /**
+     * Yields each row as an instance of Rows.
+     *
+     * @return \Generator<Rows>
+     */
+    public function get() : \Generator
+    {
+        return $this->pipeline->process($this->context);
+    }
+
+    /**
+     * Yields each row as an array.
+     *
+     * @return \Generator<array<array>>
+     */
+    public function getAsArray() : \Generator
+    {
+        foreach ($this->pipeline->process($this->context) as $rows) {
+            yield $rows->toArray();
+        }
+    }
+
+    /**
+     * Yield each row as an instance of Row.
+     *
+     * @return \Generator<Row>
+     */
+    public function getEach() : \Generator
+    {
+        foreach ($this->pipeline->process($this->context) as $rows) {
+            foreach ($rows as $row) {
+                yield $row;
+            }
+        }
+    }
+
+    /**
+     * Yield each row as an array.
+     *
+     * @return \Generator<array>
+     */
+    public function getEachAsArray() : \Generator
+    {
+        foreach ($this->pipeline->process($this->context) as $rows) {
+            foreach ($rows as $row) {
+                yield $row->toArray();
+            }
+        }
     }
 
     public function groupBy(string|Reference ...$entries) : self
