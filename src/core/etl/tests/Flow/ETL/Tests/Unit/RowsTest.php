@@ -26,7 +26,7 @@ use PHPUnit\Framework\TestCase;
 
 final class RowsTest extends TestCase
 {
-    public function rows_diff_left_provider() : \Generator
+    public static function rows_diff_left_provider() : \Generator
     {
         yield 'one entry identical row' => [
             $expected = new Rows(),
@@ -59,7 +59,7 @@ final class RowsTest extends TestCase
         ];
     }
 
-    public function rows_diff_right_provider() : \Generator
+    public static function rows_diff_right_provider() : \Generator
     {
         yield 'one entry identical row' => [
             $expected = new Rows(),
@@ -89,6 +89,27 @@ final class RowsTest extends TestCase
             $expected = new Rows(Row::create(new IntegerEntry('number', 1))),
             $left = new Rows(Row::create(new IntegerEntry('number', 2))),
             $right = new Rows(Row::create(new IntegerEntry('number', 1))),
+        ];
+    }
+
+    public static function unique_rows_provider() : \Generator
+    {
+        yield 'simple identical rows' => [
+            $expected = new Rows(Row::create(new IntegerEntry('number', 1))),
+            $notUnique = new Rows(
+                Row::create(new IntegerEntry('number', 1)),
+                Row::create(new IntegerEntry('number', 1))
+            ),
+            $comparator = new NativeComparator(),
+        ];
+
+        yield 'simple identical rows with objects' => [
+            $expected = new Rows(Row::create(new ObjectEntry('object', new \stdClass()))),
+            $notUnique = new Rows(
+                Row::create(new ObjectEntry('object', $object = new \stdClass())),
+                Row::create(new ObjectEntry('object', $object = new \stdClass()))
+            ),
+            $comparator = new Row\Comparator\WeakObjectComparator(),
         ];
     }
 
@@ -726,7 +747,7 @@ final class RowsTest extends TestCase
         $rows = new Rows(
             $three = Row::create(new IntegerEntry('number', 3), new StringEntry('name', 'three')),
             $one   = Row::create(new IntegerEntry('number', 1), new StringEntry('name', 'one')),
-            $five   = Row::create(new IntegerEntry('number', 5), new StringEntry('name', 'five')),
+            $five  = Row::create(new IntegerEntry('number', 5), new StringEntry('name', 'five')),
             $two   = Row::create(new IntegerEntry('number', 2), new StringEntry('name', 'two')),
             $four  = Row::create(new IntegerEntry('number', 4), new StringEntry('name', 'four')),
         );
@@ -953,26 +974,5 @@ final class RowsTest extends TestCase
             ],
             $rows->toArray()
         );
-    }
-
-    public function unique_rows_provider() : \Generator
-    {
-        yield 'simple identical rows' => [
-            $expected = new Rows(Row::create(new IntegerEntry('number', 1))),
-            $notUnique = new Rows(
-                Row::create(new IntegerEntry('number', 1)),
-                Row::create(new IntegerEntry('number', 1))
-            ),
-            $comparator = new NativeComparator(),
-        ];
-
-        yield 'simple identical rows with objects' => [
-            $expected = new Rows(Row::create(new ObjectEntry('object', new \stdClass()))),
-            $notUnique = new Rows(
-                Row::create(new ObjectEntry('object', $object = new \stdClass())),
-                Row::create(new ObjectEntry('object', $object = new \stdClass()))
-            ),
-            $comparator = new Row\Comparator\WeakObjectComparator(),
-        ];
     }
 }

@@ -9,12 +9,12 @@ use PHPUnit\Framework\TestCase;
 
 final class FloatEntryTest extends TestCase
 {
-    public function invalid_entries() : \Generator
+    public static function invalid_entries() : \Generator
     {
         yield ['random_value'];
     }
 
-    public function is_equal_data_provider() : \Generator
+    public static function is_equal_data_provider() : \Generator
     {
         yield 'equal names and values' => [true, new FloatEntry('name', 1.0), new FloatEntry('name', 1.0)];
         yield 'different names and values' => [false, new FloatEntry('name', 1.0), new FloatEntry('different_name', 1.0)];
@@ -22,6 +22,14 @@ final class FloatEntryTest extends TestCase
         yield 'different names characters and equal values' => [false, new FloatEntry('NAME', 1.1), new FloatEntry('name', 1.1)];
         yield 'different names characters and equal values with high precision' => [false, new FloatEntry('NAME', 1.00001), new FloatEntry('name', 1.00001)];
         yield 'different names characters and different values with high precision' => [false, new FloatEntry('NAME', 1.205502), new FloatEntry('name', 1.205501)];
+    }
+
+    public static function valid_float_entries() : \Generator
+    {
+        yield [100];
+        yield [100.00];
+        yield ['100'];
+        yield ['100.00'];
     }
 
     /**
@@ -92,13 +100,5 @@ final class FloatEntryTest extends TestCase
         $unserialized = \unserialize($serialized);
 
         $this->assertTrue($string->isEqual($unserialized));
-    }
-
-    public function valid_float_entries() : \Generator
-    {
-        yield [100];
-        yield [100.00];
-        yield ['100'];
-        yield ['100.00'];
     }
 }

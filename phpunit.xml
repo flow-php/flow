@@ -1,13 +1,12 @@
 <?xml version="1.0"?>
 <phpunit
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:noNamespaceSchemaLocation="tools/phpunit/vendor/phpunit/phpunit/phpunit.xsd"
-        bootstrap="vendor/autoload.php"
-        colors="true"
-        verbose="true"
-        cacheResultFile="var/phpunit/.result.cache"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="tools/phpunit/vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+         cacheDirectory="var/phpunit/"
 >
-    <coverage processUncoveredFiles="true">
+    <coverage cacheDirectory="var/phpunit/">
         <include>
             <directory suffix=".php">src/adapter/**/src</directory>
             <directory suffix=".php">src/core/**/src</directory>

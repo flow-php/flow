@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 
 final class CastTest extends TestCase
 {
-    public function cast_provider() : array
+    public static function cast_provider() : array
     {
         return [
             'int' => ['1', 'int', 1],

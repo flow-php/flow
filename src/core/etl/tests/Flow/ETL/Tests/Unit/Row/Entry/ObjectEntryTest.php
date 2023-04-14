@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 final class ObjectEntryTest extends TestCase
 {
-    public function is_equal_data_provider() : \Generator
+    public static function is_equal_data_provider() : \Generator
     {
         yield 'equal names and values' => [true, new ObjectEntry('name', $object = new \stdClass()), new ObjectEntry('name', $object)];
         yield 'different names and values' => [false, new ObjectEntry('name', $object = new \stdClass()), new ObjectEntry('different_name', $object)];

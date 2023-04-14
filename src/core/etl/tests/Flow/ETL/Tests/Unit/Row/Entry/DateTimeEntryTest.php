@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 final class DateTimeEntryTest extends TestCase
 {
-    public function is_equal_data_provider() : \Generator
+    public static function is_equal_data_provider() : \Generator
     {
         yield 'equal names and values' => [true, new DateTimeEntry('name', new \DateTimeImmutable('2020-01-01 00:00:00+00')), new DateTimeEntry('name', new \DateTimeImmutable('2020-01-01 00:00:00+00'))];
         yield 'different names and values' => [false, new DateTimeEntry('name', new \DateTimeImmutable('2020-01-01 00:00:00+00')), new DateTimeEntry('different_name', new \DateTimeImmutable('2020-01-01 00:00:00+00'))];

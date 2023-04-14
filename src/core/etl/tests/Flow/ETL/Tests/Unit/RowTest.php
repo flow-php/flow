@@ -18,7 +18,7 @@ use PHPUnit\Framework\TestCase;
 
 final class RowTest extends TestCase
 {
-    public function is_equal_data_provider() : \Generator
+    public static function is_equal_data_provider() : \Generator
     {
         yield 'equal simple same integer entries' => [
             true,

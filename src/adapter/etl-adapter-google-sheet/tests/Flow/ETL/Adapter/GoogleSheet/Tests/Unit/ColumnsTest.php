@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 final class ColumnsTest extends TestCase
 {
-    public function invalid_cases() : \Generator
+    public static function invalid_cases() : \Generator
     {
         yield 'empty sheet name' => [
             '', 'ABC', 'CBA',

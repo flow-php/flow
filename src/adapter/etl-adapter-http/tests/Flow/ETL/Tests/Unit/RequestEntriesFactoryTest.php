@@ -14,7 +14,7 @@ use Psr\Http\Message\RequestInterface;
 
 final class RequestEntriesFactoryTest extends TestCase
 {
-    public function requests() : \Generator
+    public static function requests() : \Generator
     {
         $messageFactory = new Psr17Factory();
         $request = $messageFactory

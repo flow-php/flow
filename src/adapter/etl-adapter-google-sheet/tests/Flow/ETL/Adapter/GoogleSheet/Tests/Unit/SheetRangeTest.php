@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 
 final class SheetRangeTest extends TestCase
 {
-    public function example_string_ranges() : \Generator
+    public static function example_string_ranges() : \Generator
     {
         yield 'one cell' => [
             new SheetRange(new Columns('Sheet2', 'B', 'B'), 2, 2),
@@ -28,7 +28,7 @@ final class SheetRangeTest extends TestCase
         ];
     }
 
-    public function invalid_cases() : \Generator
+    public static function invalid_cases() : \Generator
     {
         yield 'start row under 0' => [
             0, 1,

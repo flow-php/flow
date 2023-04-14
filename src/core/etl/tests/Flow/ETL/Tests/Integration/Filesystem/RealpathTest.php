@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 final class RealpathTest extends TestCase
 {
-    public function double_dots_paths() : \Generator
+    public static function double_dots_paths() : \Generator
     {
         yield ['/path/../file.txt', '/file.txt'];
         yield ['/path/./file.txt', '/path/file.txt'];

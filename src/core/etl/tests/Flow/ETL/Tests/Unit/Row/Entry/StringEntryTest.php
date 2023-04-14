@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 final class StringEntryTest extends TestCase
 {
-    public function is_equal_data_provider() : \Generator
+    public static function is_equal_data_provider() : \Generator
     {
         yield 'equal names and values' => [true, new StringEntry('name', 'value'), new StringEntry('name', 'value')];
         yield 'different names and values' => [false, new StringEntry('name', 'value'), new StringEntry('different_name', 'value')];
