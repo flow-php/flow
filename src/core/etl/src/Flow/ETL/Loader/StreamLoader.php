@@ -75,7 +75,7 @@ final class StreamLoader implements Loader
     public function load(Rows $rows, FlowContext $context) : void
     {
         try {
-            $stream = \fopen($this->url, $this->mode->value);
+            $stream = @\fopen($this->url, $this->mode->value);
         } catch (\Throwable $e) {
             throw new RuntimeException("Can't open stream for url: {$this->url} in mode: {$this->mode->value}. Reason: " . $e->getMessage(), (int) $e->getCode(), $e);
         }
