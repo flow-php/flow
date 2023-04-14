@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-04-13
+## [Unreleased] - 2023-04-14
 
 ### Added
 - [#393](https://github.com/flow-php/flow/pull/393) - **DataFrame::get() : \Generator** - [@norberttech](https://github.com/norberttech)
@@ -9,6 +9,8 @@
 - [#388](https://github.com/flow-php/flow/pull/388) - **Added `ext-hash` PHP extension as required for Flow** - [@stloyd](https://github.com/stloyd)
 
 ### Changed
+- [#391](https://github.com/flow-php/flow/pull/391) - **Update PHPUnit to version ^10** - [@stloyd](https://github.com/stloyd)
+- [#391](https://github.com/flow-php/flow/pull/391) - **Replace deprecated PHPUnit code** - [@stloyd](https://github.com/stloyd)
 - [#388](https://github.com/flow-php/flow/pull/388) - **Replaced usage of `md5()` with `xxh128` hash algorithm** - [@stloyd](https://github.com/stloyd)
 - [#387](https://github.com/flow-php/flow/pull/387) - **Reorganized testsuite** - [@norberttech](https://github.com/norberttech)
 
