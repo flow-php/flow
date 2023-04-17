@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-04-17
 
 ### Added
+- [#397](https://github.com/flow-php/flow/pull/397) - **DataFram extractor** - [@norberttech](https://github.com/norberttech)
 - [#396](https://github.com/flow-php/flow/pull/396) - **lower/upper expressions** - [@norberttech](https://github.com/norberttech)
 - [#395](https://github.com/flow-php/flow/pull/395) - **size expression** - [@norberttech](https://github.com/norberttech)
 - [#394](https://github.com/flow-php/flow/pull/394) - **array_unpack expression** - [@norberttech](https://github.com/norberttech)
@@ -13,6 +14,7 @@
 - [#388](https://github.com/flow-php/flow/pull/388) - **Added `ext-hash` PHP extension as required for Flow** - [@stloyd](https://github.com/stloyd)
 
 ### Changed
+- [#397](https://github.com/flow-php/flow/pull/397) - **sha256 to xxh128 default hashing algorithm** - [@norberttech](https://github.com/norberttech)
 - [#391](https://github.com/flow-php/flow/pull/391) - **Update PHPUnit to version ^10** - [@stloyd](https://github.com/stloyd)
 - [#391](https://github.com/flow-php/flow/pull/391) - **Replace deprecated PHPUnit code** - [@stloyd](https://github.com/stloyd)
 - [#388](https://github.com/flow-php/flow/pull/388) - **Replaced usage of `md5()` with `xxh128` hash algorithm** - [@stloyd](https://github.com/stloyd)
