@@ -1,6 +1,8 @@
-## [Unreleased] - 2023-04-14
+## [Unreleased] - 2023-04-17
 
 ### Added
+- [#394](https://github.com/flow-php/flow/pull/394) - **array_unpack expression** - [@norberttech](https://github.com/norberttech)
+- [#394](https://github.com/flow-php/flow/pull/394) - **array_expand_expression** - [@norberttech](https://github.com/norberttech)
 - [#393](https://github.com/flow-php/flow/pull/393) - **DataFrame::get() : \Generator** - [@norberttech](https://github.com/norberttech)
 - [#393](https://github.com/flow-php/flow/pull/393) - **DataFrame::getEach() : \Generator** - [@norberttech](https://github.com/norberttech)
 - [#393](https://github.com/flow-php/flow/pull/393) - **DataFrame::getAsArray() : \Generator** - [@norberttech](https://github.com/norberttech)
