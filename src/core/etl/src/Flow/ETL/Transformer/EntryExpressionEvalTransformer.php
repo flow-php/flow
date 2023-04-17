@@ -6,6 +6,7 @@ namespace Flow\ETL\Transformer;
 
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
+use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Row\Reference\Expression;
@@ -42,8 +43,41 @@ final class EntryExpressionEvalTransformer implements Transformer
 
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
+        if ($this->expression instanceof Row\Reference\ExpandResults && $this->expression->expand()) {
+            return $rows->flatMap(
+                function (Row $r) : array {
+                    return \array_map(
+                        fn ($val) : Row => new Row(
+                            $r->entries()
+                                ->merge(new Entries($this->entryFactory->create($this->entryName, $val)))
+                        ),
+                        (array) $this->expression->eval($r)
+                    );
+                }
+            );
+        }
+
         return $rows->map(
-            fn (Row $r) : Row => $r->set($this->entryFactory->create($this->entryName, $this->expression->eval($r)))
+            function (Row $r) : Row {
+                /** @var mixed $value */
+                $value = $this->expression->eval($r);
+
+                if (\is_array($value)) {
+                    if ($this->expression instanceof Row\Reference\ExplodeResults && $this->expression->explode()) {
+                        /**
+                         * @var array-key $key
+                         * @var mixed $val
+                         */
+                        foreach ($value as $key => $val) {
+                            $r = $r->set($this->entryFactory->create($this->entryName . '.' . $key, $val));
+                        }
+
+                        return $r;
+                    }
+                }
+
+                return $r->set($this->entryFactory->create($this->entryName, $this->expression->eval($r)));
+            }
         );
     }
 }
