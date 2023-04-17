@@ -165,3 +165,13 @@ function size(Expression $expression) : Expression
 {
     return new Expression\Size($expression);
 }
+
+function lower(Expression $expression) : Expression
+{
+    return new Expression\ToLower($expression);
+}
+
+function upper(Expression $expression) : Expression
+{
+    return new Expression\ToUpper($expression);
+}
