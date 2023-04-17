@@ -7,7 +7,6 @@ namespace Flow\ETL\Tests\Unit\Extractor;
 use Flow\ETL\Config;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\DSL\From;
-use Flow\ETL\Extractor\DataFrameExtractor;
 use Flow\ETL\Flow;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
@@ -30,7 +29,7 @@ final class DataFrameExtractorTest extends TestCase
                 ),
             ],
             \iterator_to_array(
-                (new DataFrameExtractor(
+                From::data_frame(
                     (new Flow())
                         ->extract(From::rows(
                             new Rows(
@@ -42,7 +41,7 @@ final class DataFrameExtractorTest extends TestCase
                                 Row::create(Entry::str('value', 'test')),
                             )
                         )),
-                ))->extract(new FlowContext(Config::default()))
+                )->extract(new FlowContext(Config::default()))
             ),
         );
     }
