@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-04-17
 
 ### Added
+- [#396](https://github.com/flow-php/flow/pull/396) - **lower/upper expressions** - [@norberttech](https://github.com/norberttech)
 - [#395](https://github.com/flow-php/flow/pull/395) - **size expression** - [@norberttech](https://github.com/norberttech)
 - [#394](https://github.com/flow-php/flow/pull/394) - **array_unpack expression** - [@norberttech](https://github.com/norberttech)
 - [#394](https://github.com/flow-php/flow/pull/394) - **array_expand_expression** - [@norberttech](https://github.com/norberttech)
