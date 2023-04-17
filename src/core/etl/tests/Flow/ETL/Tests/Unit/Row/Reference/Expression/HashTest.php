@@ -25,7 +25,7 @@ final class HashTest extends TestCase
     public function test_hashing_concat() : void
     {
         $this->assertSame(
-            \hash('sha256', 'test_test'),
+            \hash('xxh128', 'test_test'),
             hash(concat(ref('value'), lit('_'), ref('value')))->eval(Row::create(Entry::str('value', 'test')))
         );
     }

@@ -11,7 +11,7 @@ final class Hash implements Expression
 {
     public function __construct(
         private readonly Expression $ref,
-        private readonly string $algorithm = 'sha256',
+        private readonly string $algorithm = 'xxh128',
         private readonly bool $binary = false,
         private readonly array $options = []
     ) {
