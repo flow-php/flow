@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-04-17
 
 ### Added
+- [#398](https://github.com/flow-php/flow/pull/398) - **exists expression** - [@norberttech](https://github.com/norberttech)
 - [#397](https://github.com/flow-php/flow/pull/397) - **DataFram extractor** - [@norberttech](https://github.com/norberttech)
 - [#396](https://github.com/flow-php/flow/pull/396) - **lower/upper expressions** - [@norberttech](https://github.com/norberttech)
 - [#395](https://github.com/flow-php/flow/pull/395) - **size expression** - [@norberttech](https://github.com/norberttech)
