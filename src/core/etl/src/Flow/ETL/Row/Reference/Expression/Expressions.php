@@ -6,10 +6,10 @@ namespace Flow\ETL\Row\Reference\Expression;
 
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference\ExpandResults;
-use Flow\ETL\Row\Reference\UnpackResults;
 use Flow\ETL\Row\Reference\Expression;
+use Flow\ETL\Row\Reference\UnpackResults;
 
-final class Expressions implements ExpandResults, UnpackResults, Expression
+final class Expressions implements ExpandResults, Expression, UnpackResults
 {
     use Row\Reference\EntryExpression;
 
