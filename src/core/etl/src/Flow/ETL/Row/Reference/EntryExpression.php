@@ -64,6 +64,11 @@ trait EntryExpression
         return new Expressions(new Equals($this, $ref));
     }
 
+    public function exists() : Expression
+    {
+        return new Expressions(new Expression\Exists($this));
+    }
+
     /**
      * Expands each value into entry, if there are more than one value, multiple rows will be created.
      * Array keys are ignored, only values are used to create new rows.
