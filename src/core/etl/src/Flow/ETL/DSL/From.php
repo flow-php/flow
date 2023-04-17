@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\DSL;
 
 use Flow\ETL\Cache;
+use Flow\ETL\DataFrame;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\MemoryExtractor;
 use Flow\ETL\Extractor\ProcessExtractor;
@@ -46,6 +47,11 @@ class From
     final public static function chunks_from(Extractor $extractor, int $chunkSize) : Extractor
     {
         return new Extractor\ChunkExtractor($extractor, $chunkSize);
+    }
+
+    final public static function data_frame(DataFrame $data_frame) : Extractor
+    {
+        return new Extractor\DataFrameExtractor($data_frame);
     }
 
     /**
