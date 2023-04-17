@@ -111,3 +111,52 @@ function count(Expression $expression) : Expression
 {
     return new Expression\Count($expression);
 }
+
+/**
+ * Unpacks each element of an array into a new entry, using the array key as the entry name.
+ *
+ * Before:
+ * +--+-------------------+
+ * |id|              array|
+ * +--+-------------------+
+ * | 1|{"a":1,"b":2,"c":3}|
+ * | 2|{"d":4,"e":5,"f":6}|
+ * +--+-------------------+
+ *
+ * After:
+ * +--+-----+-----+-----+-----+-----+
+ * |id|arr.b|arr.c|arr.d|arr.e|arr.f|
+ * +--+-----+-----+-----+-----+-----+
+ * | 1|    2|    3|     |     |     |
+ * | 2|     |     |    4|    5|    6|
+ * +--+-----+-----+-----+-----+-----+
+ */
+function array_unpack(Expression $expression, array $skip_keys = [], ?string $entry_prefix = null) : Expression
+{
+    return new Expression\ArrayUnpack($expression, $skip_keys, $entry_prefix);
+}
+
+/**
+ * Expands each value into entry, if there are more than one value, multiple rows will be created.
+ * Array keys are ignored, only values are used to create new rows.
+ *
+ * Before:
+ *   +--+-------------------+
+ *   |id|              array|
+ *   +--+-------------------+
+ *   | 1|{"a":1,"b":2,"c":3}|
+ *   +--+-------------------+
+ *
+ * After:
+ *   +--+--------+
+ *   |id|expanded|
+ *   +--+--------+
+ *   | 1|       1|
+ *   | 1|       2|
+ *   | 1|       3|
+ *   +--+--------+
+ */
+function array_expand(Expression $expression) : Expression
+{
+    return new Expression\ArrayExpand($expression);
+}

@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Row\Reference\Expression;
 
 use Flow\ETL\Row;
+use Flow\ETL\Row\Reference\ExpandResults;
 use Flow\ETL\Row\Reference\Expression;
+use Flow\ETL\Row\Reference\UnpackResults;
 
-final class Expressions implements Expression
+final class Expressions implements ExpandResults, Expression, UnpackResults
 {
     use Row\Reference\EntryExpression;
 
@@ -37,5 +39,27 @@ final class Expressions implements Expression
         }
 
         return $lastValue;
+    }
+
+    public function expand() : bool
+    {
+        foreach ($this->expressions as $expression) {
+            if ($expression instanceof ExpandResults) {
+                return $expression->expand();
+            }
+        }
+
+        return false;
+    }
+
+    public function unpack() : bool
+    {
+        foreach ($this->expressions as $expression) {
+            if ($expression instanceof UnpackResults) {
+                return $expression->unpack();
+            }
+        }
+
+        return false;
     }
 }
