@@ -4,9 +4,9 @@
          xsi:noNamespaceSchemaLocation="tools/phpunit/vendor/phpunit/phpunit/phpunit.xsd"
          bootstrap="vendor/autoload.php"
          colors="true"
-         cacheDirectory="var/phpunit/"
+         cacheResultFile="./var/phpunit/phpunit.cache"
 >
-    <coverage cacheDirectory="var/phpunit/">
+    <coverage cacheDirectory="./var/phpunit/">
         <include>
             <directory suffix=".php">src/adapter/**/src</directory>
             <directory suffix=".php">src/core/**/src</directory>
