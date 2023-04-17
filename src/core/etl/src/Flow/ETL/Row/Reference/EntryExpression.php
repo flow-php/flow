@@ -156,6 +156,11 @@ trait EntryExpression
         return new Expressions(new Literal($value));
     }
 
+    public function lower() : Expression
+    {
+        return new Expressions(new Expression\ToLower($this));
+    }
+
     public function minus(Expression $ref) : Expression
     {
         return new Expressions(new Minus($this, $ref));
@@ -228,5 +233,10 @@ trait EntryExpression
     public function unpack(array $skipKeys = [], ?string $entryPrefix = null) : Expression
     {
         return new Expressions(new Expression\ArrayUnpack($this, $skipKeys, $entryPrefix));
+    }
+
+    public function upper() : Expression
+    {
+        return new Expressions(new Expression\ToUpper($this));
     }
 }
