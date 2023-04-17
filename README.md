@@ -10,6 +10,7 @@ Flow is a PHP based, strongly typed ETL (Extract Transform Load), asynchronous d
 Supported PHP versions
 
 * [![Supported PHP Version](https://img.shields.io/badge/php-~8.1-8892BF.svg)](https://php.net/)
+* [![Supported PHP Version](https://img.shields.io/badge/php-~8.2-8892BF.svg)](https://php.net/)
 
 ## Installation 
 
@@ -121,6 +122,10 @@ In order to understand how Flow works, please read [documentation](src/core/etl/
 
 * 8.1 - ✅
 * 8.2 - ✅
+
+### Github Stars
+
+[![Star History Chart](https://api.star-history.com/svg?repos=flow-php/flow&type=Date)](https://star-history.com/#flow-php/flow&Date)
 
 ## Sponsors
 
