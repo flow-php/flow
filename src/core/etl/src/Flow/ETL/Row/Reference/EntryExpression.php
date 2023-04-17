@@ -196,6 +196,11 @@ trait EntryExpression
         return new Expressions(new Same($this, $ref));
     }
 
+    public function size() : Expression
+    {
+        return new Expressions(new Expression\Size($this));
+    }
+
     public function startsWith(Expression $needle) : Expression
     {
         return new Expressions(new StartsWith($this, $needle));

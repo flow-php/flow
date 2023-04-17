@@ -160,3 +160,8 @@ function array_expand(Expression $expression) : Expression
 {
     return new Expression\ArrayExpand($expression);
 }
+
+function size(Expression $expression) : Expression
+{
+    return new Expression\Size($expression);
+}
