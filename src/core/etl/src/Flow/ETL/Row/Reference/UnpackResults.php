@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Reference;
 
-interface ExplodeResults
+interface UnpackResults
 {
-    public function explode() : bool;
+    public function unpack() : bool;
 }

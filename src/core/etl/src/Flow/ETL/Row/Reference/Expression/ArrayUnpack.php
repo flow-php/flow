@@ -8,7 +8,7 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference\Expression;
 
-final class ArrayUnpack implements Expression, Row\Reference\ExplodeResults
+final class ArrayUnpack implements Expression, Row\Reference\UnpackResults
 {
     public function __construct(
         private readonly Expression $ref,
@@ -49,7 +49,7 @@ final class ArrayUnpack implements Expression, Row\Reference\ExplodeResults
         return $values;
     }
 
-    public function explode() : bool
+    public function unpack() : bool
     {
         return true;
     }

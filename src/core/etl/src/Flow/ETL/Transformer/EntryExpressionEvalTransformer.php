@@ -63,7 +63,7 @@ final class EntryExpressionEvalTransformer implements Transformer
                 $value = $this->expression->eval($r);
 
                 if (\is_array($value)) {
-                    if ($this->expression instanceof Row\Reference\ExplodeResults && $this->expression->explode()) {
+                    if ($this->expression instanceof Row\Reference\UnpackResults && $this->expression->unpack()) {
                         /**
                          * @var array-key $key
                          * @var mixed $val

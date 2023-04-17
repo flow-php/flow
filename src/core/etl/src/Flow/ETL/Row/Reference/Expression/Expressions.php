@@ -6,10 +6,10 @@ namespace Flow\ETL\Row\Reference\Expression;
 
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference\ExpandResults;
-use Flow\ETL\Row\Reference\ExplodeResults;
+use Flow\ETL\Row\Reference\UnpackResults;
 use Flow\ETL\Row\Reference\Expression;
 
-final class Expressions implements ExpandResults, ExplodeResults, Expression
+final class Expressions implements ExpandResults, UnpackResults, Expression
 {
     use Row\Reference\EntryExpression;
 
@@ -52,11 +52,11 @@ final class Expressions implements ExpandResults, ExplodeResults, Expression
         return false;
     }
 
-    public function explode() : bool
+    public function unpack() : bool
     {
         foreach ($this->expressions as $expression) {
-            if ($expression instanceof ExplodeResults) {
-                return $expression->explode();
+            if ($expression instanceof UnpackResults) {
+                return $expression->unpack();
             }
         }
 
