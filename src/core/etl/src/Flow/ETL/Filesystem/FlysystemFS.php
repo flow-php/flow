@@ -208,7 +208,11 @@ final class FlysystemFS implements Filesystem
             return;
         }
 
-        /** @var FileAttributes $file */
+        /**
+         * @psalm-suppress ArgumentTypeCoercion
+         *
+         * @phpstan-ignore-next-line
+         */
         foreach ($fs->listContents($path->staticPart()->path(), Flysystem::LIST_DEEP)->filter($filter) as $file) {
             yield new Path($path->scheme() . '://' . $file->path(), $path->options());
         }

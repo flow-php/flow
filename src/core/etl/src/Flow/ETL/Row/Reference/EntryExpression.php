@@ -146,6 +146,16 @@ trait EntryExpression
         return new Expressions(new IsType($this, ...$entryClass));
     }
 
+    public function jsonDecode(int $flags = JSON_THROW_ON_ERROR) : Expression
+    {
+        return new Expressions(new Expression\JsonDecode($this));
+    }
+
+    public function jsonEncode(int $flags = JSON_THROW_ON_ERROR) : Expression
+    {
+        return new Expressions(new Expression\JsonEncode($this, $flags));
+    }
+
     public function lessThan(Expression $ref) : Expression
     {
         return new Expressions(new LessThan($this, $ref));

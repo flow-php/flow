@@ -22,7 +22,7 @@ final class ArrayUnpack implements Expression, Row\Reference\UnpackResults
         $array = $this->ref->eval($row);
 
         if (!\is_array($array)) {
-            throw new RuntimeException(\get_class($this->ref) . ' is not an array entry');
+            throw new RuntimeException(\get_class($this->ref) . ' is not an array, got: ' . \gettype($array));
         }
 
         $values = [];
