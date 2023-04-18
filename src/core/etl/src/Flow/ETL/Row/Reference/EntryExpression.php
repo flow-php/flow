@@ -226,6 +226,11 @@ trait EntryExpression
         return new Expressions(new StartsWith($this, $needle));
     }
 
+    public function strReplace(string $search, string $replace) : Expression
+    {
+        return new Expressions(new Expression\StrReplace($this, $search, $replace));
+    }
+
     /**
      * Unpacks each element of an array into a new entry, using the array key as the entry name.
      *
