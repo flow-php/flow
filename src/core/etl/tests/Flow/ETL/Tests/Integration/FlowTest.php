@@ -31,19 +31,14 @@ final class FlowTest extends IntegrationTestCase
 
     public function test_etl_psr_cache() : void
     {
-        (new Flow(
-            Config::builder()->cache(
-                $cache = new PSRSimpleCache(
-                    new Psr16Cache(
-                        new ArrayAdapter()
-                    ),
-                )
-            )->build()
-        ))->extract(new AllRowTypesFakeExtractor($rowsets = 20, $rows = 2))
-            ->cache('test_etl_cache');
+        Flow::setUp(
+            Config::builder()->cache($cache = new PSRSimpleCache(new Psr16Cache(new ArrayAdapter()), ))->build()
+        )->extract(new AllRowTypesFakeExtractor($rowsets = 20, $rows = 2))
+            ->cache('test_etl_cache')
+            ->run();
 
-        $cachedRows = (new Flow())
-            ->read(From::cache('test_etl_cache', $cache))
+        $cachedRows = Flow::setUp(Config::builder()->cache($cache)->build())
+            ->read(From::cache('test_etl_cache'))
             ->fetch();
 
         $this->assertCount($rowsets * $rows, $cachedRows);
