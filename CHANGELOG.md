@@ -20,6 +20,7 @@
 - [#388](https://github.com/flow-php/flow/pull/388) - **Added `ext-hash` PHP extension as required for Flow** - [@stloyd](https://github.com/stloyd)
 
 ### Changed
+- [#404](https://github.com/flow-php/flow/pull/404) - **Simplify cache usage** - [@norberttech](https://github.com/norberttech)
 - [#397](https://github.com/flow-php/flow/pull/397) - **sha256 to xxh128 default hashing algorithm** - [@norberttech](https://github.com/norberttech)
 - [#391](https://github.com/flow-php/flow/pull/391) - **Update PHPUnit to version ^10** - [@stloyd](https://github.com/stloyd)
 - [#391](https://github.com/flow-php/flow/pull/391) - **Replace deprecated PHPUnit code** - [@stloyd](https://github.com/stloyd)
