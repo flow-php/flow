@@ -31,6 +31,7 @@ use Flow\ETL\Row\Reference\Expression\Plus;
 use Flow\ETL\Row\Reference\Expression\Power;
 use Flow\ETL\Row\Reference\Expression\Same;
 use Flow\ETL\Row\Reference\Expression\StartsWith;
+use Flow\ETL\Row\Reference\Expression\Trim;
 
 trait EntryExpression
 {
@@ -229,6 +230,14 @@ trait EntryExpression
     public function strReplace(string $search, string $replace) : Expression
     {
         return new Expressions(new Expression\StrReplace($this, $search, $replace));
+    }
+
+    /**
+     * @param int<0, 2> $type
+     */
+    public function trim(int $type = Trim::BOTH, string $characters = " \t\n\r\0\x0B") : Expression
+    {
+        return new Expressions(new Expression\Trim($this, $type, $characters));
     }
 
     /**
