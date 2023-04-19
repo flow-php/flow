@@ -34,9 +34,9 @@ class From
         return new Extractor\BufferExtractor($extractor, $maxRowsSize);
     }
 
-    final public static function cache(string $id, Cache $cache, bool $clear = false) : Extractor
+    final public static function cache(string $id, Cache $cache, Extractor $fallback_extractor = null, bool $clear = false) : Extractor
     {
-        return new Extractor\CacheExtractor($id, $cache, $clear);
+        return new Extractor\CacheExtractor($id, $cache, $fallback_extractor, $clear);
     }
 
     final public static function chain(Extractor ...$extractors) : Extractor

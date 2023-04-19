@@ -42,6 +42,11 @@ final class InMemoryCache implements Cache
         }
     }
 
+    public function has(string $id) : bool
+    {
+        return \array_key_exists($id, $this->cache);
+    }
+
     public function read(string $id) : \Generator
     {
         if (\array_key_exists($id, $this->cache)) {

@@ -16,6 +16,9 @@ final class IneMemoryCacheTest extends TestCase
     {
         $cache = new InMemoryCache();
 
+        $this->assertFalse($cache->has('id-1'));
+        $this->assertFalse($cache->has('id-2'));
+
         $cache->add('id-1', $rows1 = new Rows(Row::create(Entry::integer('id', 1))));
         $cache->add('id-2', $rows2 = new Rows(Row::create(Entry::integer('id', 1))));
 
@@ -27,5 +30,7 @@ final class IneMemoryCacheTest extends TestCase
 
         $this->assertEquals([], \iterator_to_array($cache->read('id-1')));
         $this->assertEquals([], \iterator_to_array($cache->read('id-2')));
+        $this->assertTrue($cache->has('id-1'));
+        $this->assertTrue($cache->has('id-2'));
     }
 }

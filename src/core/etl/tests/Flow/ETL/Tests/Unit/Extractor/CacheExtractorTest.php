@@ -30,6 +30,11 @@ final class CacheExtractorTest extends TestCase
             ->with('id')
             ->willReturn($generator());
 
+        $cache->expects($this->any())
+            ->method('has')
+            ->with('id')
+            ->willReturn(true);
+
         $cache->expects($this->never())
             ->method('clear')
             ->with('id');
@@ -61,10 +66,52 @@ final class CacheExtractorTest extends TestCase
             ->with('id')
             ->willReturn($generator());
 
+        $cache->expects($this->any())
+            ->method('has')
+            ->with('id')
+            ->willReturn(true);
+
         $cache->expects($this->once())
             ->method('clear')
             ->with('id');
 
-        \iterator_to_array((From::cache('id', $cache, $clear = true))->extract(new FlowContext(Config::default())));
+        \iterator_to_array((From::cache('id', $cache, clear: true))->extract(new FlowContext(Config::default())));
+    }
+
+    public function test_extracting_from_fallback_extractor_when_cache_is_empty() : void
+    {
+        $cache = $this->createMock(Cache::class);
+
+        $cache->expects($this->any())
+            ->method('has')
+            ->with('id')
+            ->willReturn(false);
+
+        $cache->expects($this->never())
+            ->method('read')
+            ->with('id');
+
+        $cache->expects($this->never())
+            ->method('clear')
+            ->with('id');
+
+        $extractor = From::cache('id', $cache, fallback_extractor: From::rows(
+            new Rows(
+                Row::create(Entry::integer('id', 1)),
+                Row::create(Entry::integer('id', 2)),
+                Row::create(Entry::integer('id', 3)),
+            )
+        ));
+
+        $this->assertEquals(
+            [
+                new Rows(
+                    Row::create(Entry::integer('id', 1)),
+                    Row::create(Entry::integer('id', 2)),
+                    Row::create(Entry::integer('id', 3))
+                ),
+            ],
+            \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
+        );
     }
 }

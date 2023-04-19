@@ -14,7 +14,6 @@ use Flow\ETL\Flow;
 use Flow\ETL\Monitoring\Memory\Unit;
 use Flow\ETL\Tests\Double\AllRowTypesFakeExtractor;
 use Flow\ETL\Tests\Double\CacheSpy;
-use Flow\Serializer\NativePHPSerializer;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Symfony\Component\Cache\Psr16Cache;
 
@@ -38,7 +37,6 @@ final class FlowTest extends IntegrationTestCase
                     new Psr16Cache(
                         new ArrayAdapter()
                     ),
-                    new NativePHPSerializer()
                 )
             )->build()
         ))->extract(new AllRowTypesFakeExtractor($rowsets = 20, $rows = 2))

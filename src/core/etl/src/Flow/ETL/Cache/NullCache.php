@@ -29,6 +29,11 @@ final class NullCache implements Cache
     {
     }
 
+    public function has(string $id) : bool
+    {
+        return false;
+    }
+
     /**
      * @psalm-suppress InvalidReturnType
      */
