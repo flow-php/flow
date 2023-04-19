@@ -36,10 +36,10 @@ final class CacheExtractor implements Extractor
             foreach ($this->cache->read($this->id) as $rows) {
                 yield $rows;
             }
+        }
 
-            if ($this->clear) {
-                $this->cache->clear($this->id);
-            }
+        if ($this->clear) {
+            $this->cache->clear($this->id);
         }
     }
 }

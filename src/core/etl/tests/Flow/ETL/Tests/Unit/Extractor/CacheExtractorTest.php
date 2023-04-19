@@ -95,7 +95,7 @@ final class CacheExtractorTest extends TestCase
             ->method('clear')
             ->with('id');
 
-        $extractor = From::cache('id', $cache, fallbackExtractor: From::rows(
+        $extractor = From::cache('id', $cache, fallback_extractor: From::rows(
             new Rows(
                 Row::create(Entry::integer('id', 1)),
                 Row::create(Entry::integer('id', 2)),

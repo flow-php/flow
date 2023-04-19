@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Cache;
 
 use Flow\ETL\Cache\PSRSimpleCache;
-use Flow\ETL\Config;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -21,7 +20,6 @@ final class PSRSimpleCacheTest extends IntegrationTestCase
             new Psr16Cache(
                 new FilesystemAdapter(directory: \sys_get_temp_dir() . '/' . \uniqid('flow-etl-cache-', true))
             ),
-            Config::default()->serializer()
         );
 
         $this->assertFalse($cache->has('test'));
