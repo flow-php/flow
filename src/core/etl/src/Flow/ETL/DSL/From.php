@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\DSL;
 
-use Flow\ETL\Cache;
 use Flow\ETL\DataFrame;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\MemoryExtractor;
@@ -34,9 +33,9 @@ class From
         return new Extractor\BufferExtractor($extractor, $maxRowsSize);
     }
 
-    final public static function cache(string $id, Cache $cache, Extractor $fallback_extractor = null, bool $clear = false) : Extractor
+    final public static function cache(string $id, Extractor $fallback_extractor = null, bool $clear = false) : Extractor
     {
-        return new Extractor\CacheExtractor($id, $cache, $fallback_extractor, $clear);
+        return new Extractor\CacheExtractor($id, $fallback_extractor, $clear);
     }
 
     final public static function chain(Extractor ...$extractors) : Extractor

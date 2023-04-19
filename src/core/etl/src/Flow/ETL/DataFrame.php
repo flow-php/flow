@@ -85,7 +85,7 @@ final class DataFrame
 
         $this->pipeline = $this->pipeline->cleanCopy();
         $this->context->config->clearLimit();
-        $this->pipeline->source(new CacheExtractor($id, $this->context->config->cache()));
+        $this->pipeline->source(new CacheExtractor($id));
 
         return $this;
     }
