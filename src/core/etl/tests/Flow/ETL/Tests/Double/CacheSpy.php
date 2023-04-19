@@ -73,6 +73,15 @@ final class CacheSpy implements Cache
         return $total;
     }
 
+    public function has(string $id) : bool
+    {
+        if (!\array_key_exists($id, $this->reads)) {
+            return $this->reads[$id] > 0;
+        }
+
+        return false;
+    }
+
     public function read(string $id) : \Generator
     {
         if (!\array_key_exists($id, $this->reads)) {

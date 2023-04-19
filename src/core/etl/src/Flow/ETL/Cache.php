@@ -15,6 +15,8 @@ interface Cache extends Serializable
 
     public function clear(string $id) : void;
 
+    public function has(string $id) : bool;
+
     /**
      * @return \Generator<Rows>
      */

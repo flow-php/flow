@@ -60,6 +60,11 @@ final class LocalFilesystemCache implements Cache
         \unlink($cachePath);
     }
 
+    public function has(string $id) : bool
+    {
+        return \file_exists($this->cachePath($id));
+    }
+
     /**
      * @throws \Flow\ETL\Exception\RuntimeException
      *

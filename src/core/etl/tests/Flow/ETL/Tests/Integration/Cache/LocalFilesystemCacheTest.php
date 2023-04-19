@@ -17,8 +17,12 @@ final class LocalFilesystemCacheTest extends IntegrationTestCase
     {
         $cache = new LocalFilesystemCache($this->cacheDir, Config::default()->serializer());
 
+        $this->assertFalse($cache->has('test'));
+
         $cache->add('test', new Rows(Row::create(new IntegerEntry('id', 1))));
         $cache->add('test', new Rows(Row::create(new IntegerEntry('id', 2))));
+
+        $this->assertTrue($cache->has('test'));
 
         $cache->clear('test');
 
@@ -26,6 +30,7 @@ final class LocalFilesystemCacheTest extends IntegrationTestCase
             0,
             \iterator_to_array($cache->read('test'))
         );
+        $this->assertFalse($cache->has('test'));
     }
 
     public function test_cleaning_different_cache_id() : void

@@ -17,6 +17,7 @@ final class PSRSimpleCache implements Cache
 {
     public function __construct(
         private readonly CacheInterface $cache,
+        private readonly null|int|\DateInterval $ttl = null,
         private readonly Serializer $serializer = new NativePHPSerializer()
     ) {
     }
@@ -40,7 +41,7 @@ final class PSRSimpleCache implements Cache
         $rowsId = \uniqid($id, true);
 
         $this->addToIndex($id, $rowsId);
-        $this->cache->set($rowsId, $this->serializer->serialize($rows));
+        $this->cache->set($rowsId, $this->serializer->serialize($rows), $this->ttl);
     }
 
     public function clear(string $id) : void
@@ -48,6 +49,11 @@ final class PSRSimpleCache implements Cache
         foreach ($this->index($id) as $entry) {
             $this->cache->delete($entry);
         }
+    }
+
+    public function has(string $id) : bool
+    {
+        return \count($this->index($id)) > 0;
     }
 
     public function read(string $id) : \Generator
@@ -69,14 +75,14 @@ final class PSRSimpleCache implements Cache
     private function addToIndex(string $indexId, string $id) : void
     {
         if (!$this->cache->has($indexId)) {
-            $this->cache->set($indexId, [$id]);
+            $this->cache->set($indexId, [$id], $this->ttl);
 
             return;
         }
 
         /** @var array<string> $index */
         $index = $this->cache->get($indexId);
-        $this->cache->set($indexId, \array_merge($index, [$id]));
+        $this->cache->set($indexId, \array_merge($index, [$id]), $this->ttl);
     }
 
     /**
