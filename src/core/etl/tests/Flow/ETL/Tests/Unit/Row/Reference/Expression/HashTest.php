@@ -17,7 +17,7 @@ final class HashTest extends TestCase
     public function test_hashing_array_value() : void
     {
         $this->assertSame(
-            '18f4cf4cf6ad53618cd47d604ef6a6f9c0cbc6755d6caa31f333e851b3671328',
+            '4450cf82dc53848e2bbe9798b70b0a6a',
             ref('value')->hash()->eval(Row::create(Entry::array('value', ['test']))),
         );
     }
@@ -33,7 +33,7 @@ final class HashTest extends TestCase
     public function test_hashing_datetime() : void
     {
         $this->assertSame(
-            'c7db551aff37ffed2f35e6a5b8449499bef83a5036f84847f03f9c9eedadb05e',
+            '5347d10de38eb5570c044eb710a5120a',
             ref('value')->hash()->eval(Row::create(Entry::datetime('value', new \DateTimeImmutable('2021-01-01')))),
         );
     }
@@ -49,7 +49,7 @@ final class HashTest extends TestCase
     public function test_hashing_string_value() : void
     {
         $this->assertSame(
-            '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08',
+            '6c78e0e3bd51d358d01e758642b85fb8',
             ref('value')->hash()->eval(Row::create(Entry::str('value', 'test'))),
         );
     }

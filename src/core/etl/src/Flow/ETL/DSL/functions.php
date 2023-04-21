@@ -175,3 +175,8 @@ function upper(Expression $expression) : Expression
 {
     return new Expression\ToUpper($expression);
 }
+
+function array_sort(Expression $expression, \Closure $function = null) : Expression
+{
+    return new Expression\ArraySort($expression, $function ?? \Closure::fromCallable('ksort'));
+}
