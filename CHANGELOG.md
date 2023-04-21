@@ -1,6 +1,7 @@
-## [Unreleased] - 2023-04-19
+## [Unreleased] - 2023-04-21
 
 ### Added
+- [#406](https://github.com/flow-php/flow/pull/406) - **array sort expression** - [@norberttech](https://github.com/norberttech)
 - [#403](https://github.com/flow-php/flow/pull/403) - **fallback extractor to cache extractor** - [@norberttech](https://github.com/norberttech)
 - [#403](https://github.com/flow-php/flow/pull/403) - **TTL parameter to PSRSimpleCache implementation of cache** - [@norberttech](https://github.com/norberttech)
 - [#402](https://github.com/flow-php/flow/pull/402) - **trim expression** - [@norberttech](https://github.com/norberttech)
