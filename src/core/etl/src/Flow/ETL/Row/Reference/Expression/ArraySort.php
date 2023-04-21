@@ -17,6 +17,7 @@ final class ArraySort implements Expression
 
     public function eval(Row $row) : mixed
     {
+        /** @var mixed $val */
         $val = $this->ref->eval($row);
 
         if (!\is_array($val)) {
@@ -30,6 +31,7 @@ final class ArraySort implements Expression
 
     private function recursiveSort(array &$array, \Closure $function) : void
     {
+        /** @var mixed $value */
         foreach ($array as &$value) {
             if (\is_array($value)) {
                 $this->recursiveSort($value, $function);
