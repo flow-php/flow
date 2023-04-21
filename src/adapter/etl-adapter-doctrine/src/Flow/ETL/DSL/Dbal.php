@@ -12,8 +12,8 @@ use Flow\ETL\Adapter\Doctrine\DbalLimitOffsetExtractor;
 use Flow\ETL\Adapter\Doctrine\DbalLoader;
 use Flow\ETL\Adapter\Doctrine\DbalQueryExtractor;
 use Flow\ETL\Adapter\Doctrine\OrderBy;
-use Flow\ETL\Adapter\Doctrine\Parameter;
 use Flow\ETL\Adapter\Doctrine\ParametersSet;
+use Flow\ETL\Adapter\Doctrine\QueryParameter;
 use Flow\ETL\Adapter\Doctrine\Table;
 use Flow\ETL\DataFrameFactory;
 use Flow\ETL\Exception\InvalidArgumentException;
@@ -25,14 +25,14 @@ class Dbal
     /**
      * @param array<string, mixed>|Connection $connection
      * @param string $query
-     * @param Parameter ...$parameters
+     * @param QueryParameter ...$parameters
      *
      * @return DataFrameFactory
      */
     final public static function dataframe_factory(
         array|Connection $connection,
         string $query,
-        Parameter ...$parameters
+        QueryParameter ...$parameters
     ) : DataFrameFactory {
         return \is_array($connection)
             ? new DbalDataFrameFactory($connection, $query, ...$parameters)

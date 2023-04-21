@@ -42,7 +42,7 @@ final class DbalDataFrameFactory implements DataFrameFactory
         $this->parameters = $parameters;
     }
 
-    public static function fromConnection(Connection $connection, string $query, Parameter ...$parameters) : self
+    public static function fromConnection(Connection $connection, string $query, QueryParameter ...$parameters) : self
     {
         /** @psalm-suppress InternalMethod */
         $factory = new self($connection->getParams(), $query, ...$parameters);
