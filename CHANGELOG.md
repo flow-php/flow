@@ -30,6 +30,9 @@
 - [#388](https://github.com/flow-php/flow/pull/388) - **Replaced usage of `md5()` with `xxh128` hash algorithm** - [@stloyd](https://github.com/stloyd)
 - [#387](https://github.com/flow-php/flow/pull/387) - **Reorganized testsuite** - [@norberttech](https://github.com/norberttech)
 
+### Fixed
+- [b33143](https://github.com/flow-php/flow/commit/b33143c05aea73c1eb96ef8cd41fdcf6f80d42c3) - **parameter types in Dbal DSL** - [@norberttech](https://github.com/norberttech)
+
 ### Updated
 - [8eb674](https://github.com/flow-php/flow/commit/8eb6744e7ca69ecd75d09a2263e586c0fbd0472f) - **README.md** - [@norberttech](https://github.com/norberttech)
 
