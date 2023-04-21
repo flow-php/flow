@@ -178,5 +178,5 @@ function upper(Expression $expression) : Expression
 
 function array_sort(Expression $expression, \Closure $function = null) : Expression
 {
-    return new Expression\ArraySort($expression, $function ?? \Closure::fromCallable('asort'));
+    return new Expression\ArraySort($expression, $function ?? \Closure::fromCallable('sort'));
 }
