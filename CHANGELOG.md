@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-04-21
 
 ### Added
+- [686b5e](https://github.com/flow-php/flow/commit/686b5ecfef8502f19ae44b820f12a44f1dd7d62e) - **more tests and changed default sorting algorithm to sort** - [@norberttech](https://github.com/norberttech)
 - [#406](https://github.com/flow-php/flow/pull/406) - **array sort expression** - [@norberttech](https://github.com/norberttech)
 - [#403](https://github.com/flow-php/flow/pull/403) - **fallback extractor to cache extractor** - [@norberttech](https://github.com/norberttech)
 - [#403](https://github.com/flow-php/flow/pull/403) - **TTL parameter to PSRSimpleCache implementation of cache** - [@norberttech](https://github.com/norberttech)
