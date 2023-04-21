@@ -37,7 +37,7 @@ trait EntryExpression
 {
     public function arraySort(\Closure $function = null) : Expression
     {
-        return new Expressions(new Expression\ArraySort($this, $function ?? \Closure::fromCallable('ksort')));
+        return new Expressions(new Expression\ArraySort($this, $function ?? \Closure::fromCallable('asort')));
     }
 
     public function cast(string $type) : Expression

@@ -52,7 +52,7 @@ final class ArraySortTest extends TestCase
                     'g' => 'h',
                 ],
             ],
-            ref('array')->arraySort()->eval(Row::create(
+            ref('array')->arraySort(\Closure::fromCallable('ksort'))->eval(Row::create(
                 Entry::array(
                     'array',
                     [
