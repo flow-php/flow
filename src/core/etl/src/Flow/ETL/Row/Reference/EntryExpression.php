@@ -35,6 +35,11 @@ use Flow\ETL\Row\Reference\Expression\Trim;
 
 trait EntryExpression
 {
+    public function arraySort(\Closure $function = null) : Expression
+    {
+        return new Expressions(new Expression\ArraySort($this, $function ?? \Closure::fromCallable('ksort')));
+    }
+
     public function cast(string $type) : Expression
     {
         return new Expressions(new Cast($this, $type));
@@ -105,7 +110,7 @@ trait EntryExpression
         return new Expressions(new GreaterThanEqual($this, $ref));
     }
 
-    public function hash(string $algorithm = 'sha256', bool $binary = false, array $options = []) : Expression
+    public function hash(string $algorithm = 'xxh128', bool $binary = false, array $options = []) : Expression
     {
         return new Expressions(new Expression\Hash($this, $algorithm, $binary, $options));
     }
