@@ -21,6 +21,7 @@
 - [#388](https://github.com/flow-php/flow/pull/388) - **Added `ext-hash` PHP extension as required for Flow** - [@stloyd](https://github.com/stloyd)
 
 ### Changed
+- [7a676d](https://github.com/flow-php/flow/commit/7a676da2cbd9bfdbb7e33479afd81e42a8d2389c) - **default array sort to asort from ksort** - [@norberttech](https://github.com/norberttech)
 - [#404](https://github.com/flow-php/flow/pull/404) - **Simplify cache usage** - [@norberttech](https://github.com/norberttech)
 - [#397](https://github.com/flow-php/flow/pull/397) - **sha256 to xxh128 default hashing algorithm** - [@norberttech](https://github.com/norberttech)
 - [#391](https://github.com/flow-php/flow/pull/391) - **Update PHPUnit to version ^10** - [@stloyd](https://github.com/stloyd)
