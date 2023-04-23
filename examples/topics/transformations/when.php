@@ -15,7 +15,7 @@ use Flow\ETL\Rows;
 require __DIR__ . '/../../bootstrap.php';
 
 (new Flow())
-    ->read(From::sequence_number('number', 0, 100))
+    ->read(From::sequence_number('number', 1, 100))
     ->collect()
     ->withEntry(
         'type',

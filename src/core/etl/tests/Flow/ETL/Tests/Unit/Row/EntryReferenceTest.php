@@ -29,4 +29,30 @@ final class EntryReferenceTest extends TestCase
             $ref->eval(Row::create(Entry::integer('a', 1)))
         );
     }
+
+    public function test_is_even() : void
+    {
+        $ref = ref('a')->isEven();
+
+        $this->assertFalse(
+            $ref->eval(Row::create(Entry::integer('a', 1)))
+        );
+
+        $this->assertTrue(
+            $ref->eval(Row::create(Entry::integer('a', 2)))
+        );
+    }
+
+    public function test_is_odd() : void
+    {
+        $ref = ref('a')->isOdd();
+
+        $this->assertTrue(
+            $ref->eval(Row::create(Entry::integer('a', 1)))
+        );
+
+        $this->assertFalse(
+            $ref->eval(Row::create(Entry::integer('a', 2)))
+        );
+    }
 }
