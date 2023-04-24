@@ -117,7 +117,7 @@ trait EntryExpression
 
     public function isEven() : Expression
     {
-        return new Expressions(new Mod($this, lit(2)), new Equals($this, lit(0)));
+        return new Equals(new Mod($this, lit(2)), lit(0));
     }
 
     public function isIn(Expression $haystack) : Expression
@@ -137,7 +137,7 @@ trait EntryExpression
 
     public function isOdd() : Expression
     {
-        return new Expressions(new Mod($this, lit(2)), new NotEquals($this, lit(0)));
+        return new NotEquals(new Mod($this, lit(2)), lit(0));
     }
 
     /**

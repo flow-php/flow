@@ -20,7 +20,7 @@ require __DIR__ . '/../../bootstrap.php';
             Row::with(Entry::int('a', 100), Entry::int('b', 200))
         ))
     )
-    ->filter(ref('b')->divide(lit(2))->equals('a'))
+    ->filter(ref('b')->divide(lit(2))->equals(lit('a')))
     ->withEntry('new_b', ref('b')->multiply(lit(2))->multiply(lit(5)))
     ->write(To::output(false))
     ->run();

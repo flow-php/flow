@@ -18,9 +18,4 @@ final class Literal implements Expression
     {
         return $this->value;
     }
-
-    public function value() : mixed
-    {
-        return $this->value;
-    }
 }

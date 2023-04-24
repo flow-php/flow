@@ -1,7 +1,9 @@
 <?php declare(strict_types=1);
 
+use function Flow\ETL\DSL\concat;
+use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\ref;
 use Flow\ETL\DSL\Json;
-use Flow\ETL\DSL\Transform;
 use Flow\ETL\Filesystem\AwsS3Stream;
 use Flow\ETL\Filesystem\AzureBlobStream;
 use Flow\ETL\Filesystem\Path;
@@ -38,10 +40,9 @@ AzureBlobStream::register();
 
 (new Flow())
     ->read(Json::from(new Path('flow-aws-s3://dataset.json', $s3_client_option), 10))
-    ->rows(Transform::array_unpack('row'))
-    ->drop('row')
-    ->rows(Transform::to_integer('id'))
-    ->rows(Transform::string_concat(['name', 'last name'], ' ', 'name'))
-    ->drop('last name')
+    ->withEntry('row', ref('row')->unpack())
+    ->withEntry('row.id', ref('row.id')->cast('integer'))
+    ->withEntry('name', concat(ref('row.name'), lit(' '), ref('row.last name')))
+    ->drop('row.last name')
     ->write(Json::to(new Path('flow-azure-blob://dataset_test.json', $azure_blob_connection_string)))
     ->run();
