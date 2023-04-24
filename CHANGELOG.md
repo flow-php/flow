@@ -1,6 +1,7 @@
-## [Unreleased] - 2023-04-21
+## [Unreleased] - 2023-04-24
 
 ### Added
+- [#407](https://github.com/flow-php/flow/pull/407) - **more examples** - [@norberttech](https://github.com/norberttech)
 - [686b5e](https://github.com/flow-php/flow/commit/686b5ecfef8502f19ae44b820f12a44f1dd7d62e) - **more tests and changed default sorting algorithm to sort** - [@norberttech](https://github.com/norberttech)
 - [#406](https://github.com/flow-php/flow/pull/406) - **array sort expression** - [@norberttech](https://github.com/norberttech)
 - [#403](https://github.com/flow-php/flow/pull/403) - **fallback extractor to cache extractor** - [@norberttech](https://github.com/norberttech)
@@ -31,6 +32,8 @@
 - [#387](https://github.com/flow-php/flow/pull/387) - **Reorganized testsuite** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#407](https://github.com/flow-php/flow/pull/407) - **isOdd expression** - [@norberttech](https://github.com/norberttech)
+- [#407](https://github.com/flow-php/flow/pull/407) - **isEven expression** - [@norberttech](https://github.com/norberttech)
 - [b33143](https://github.com/flow-php/flow/commit/b33143c05aea73c1eb96ef8cd41fdcf6f80d42c3) - **parameter types in Dbal DSL** - [@norberttech](https://github.com/norberttech)
 
 ### Updated
