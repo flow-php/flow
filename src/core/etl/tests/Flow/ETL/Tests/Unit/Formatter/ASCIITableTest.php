@@ -26,17 +26,17 @@ final class ASCIITableTest extends TestCase
 
         $this->assertStringContainsString(
             <<<'TABLE'
-+-----------------------------------------------------------------------------------+
-|                                                                                row|
-+-----------------------------------------------------------------------------------+
-|                              [498][534]/Wiele z tego,|/co niegdyś było, przepadło.|
-|                 [540][572]/A nie żyje już nikt z tych,|/którzy by o tym pamiętali.|
-|                                                        [572][647]WŁADCA PIERŚCIENI|
-|                     [701][741]/Wszystko zaczęło się|/od wykucia Pierścieni Władzy.|
-|                                              [742][762]/Trzy zostały dane elfom...|
-|[763][805]/nieśmiertelnym, najmędrszym|/i najbliższym magii spośród wszystkich ras.|
-|                      [816][853]/Siedem - władcom krasnoludów,|/wspaniałym górnikom|
-+-----------------------------------------------------------------------------------+
++-------------------------------------------------------------------------------------+
+|                                                                                 row |
++-------------------------------------------------------------------------------------+
+|                               [498][534]/Wiele z tego,|/co niegdyś było, przepadło. |
+|                  [540][572]/A nie żyje już nikt z tych,|/którzy by o tym pamiętali. |
+|                                                         [572][647]WŁADCA PIERŚCIENI |
+|                      [701][741]/Wszystko zaczęło się|/od wykucia Pierścieni Władzy. |
+|                                               [742][762]/Trzy zostały dane elfom... |
+| [763][805]/nieśmiertelnym, najmędrszym|/i najbliższym magii spośród wszystkich ras. |
+|                       [816][853]/Siedem - władcom krasnoludów,|/wspaniałym górnikom |
++-------------------------------------------------------------------------------------+
 TABLE,
             (new ASCIITable($rows))->print(false)
         );
@@ -56,17 +56,17 @@ TABLE,
 
         $this->assertStringContainsString(
             <<<'TABLE'
-+--------------------+
-|                 row|
-+--------------------+
-|[498][534]/Wiele z t|
-| [540][572]/A nie ży|
-| [572][647]WŁADCA PI|
-|[701][741]/Wszystko |
-|[742][762]/Trzy zost|
-| [763][805]/nieśmier|
-|[816][853]/Siedem - |
-+--------------------+
++----------------------+
+|                  row |
++----------------------+
+| [498][534]/Wiele z t |
+|  [540][572]/A nie ży |
+|  [572][647]WŁADCA PI |
+| [701][741]/Wszystko  |
+| [742][762]/Trzy zost |
+|  [763][805]/nieśmier |
+| [816][853]/Siedem -  |
++----------------------+
 TABLE,
             (new ASCIITable($rows))->print(true)
         );
@@ -86,17 +86,17 @@ TABLE,
 
         $this->assertStringContainsString(
             <<<'TABLE'
-+-----------------------------------------------------------------------------------+-------------------------------------------------------------+
-|                                                                                row|                                                         test|
-+-----------------------------------------------------------------------------------+-------------------------------------------------------------+
-|                              [498][534]/Wiele z tego,|/co niegdyś było, przepadło.|                                                             |
-|                 [540][572]/A nie żyje już nikt z tych,|/którzy by o tym pamiętali.|                                                             |
-|                                                        [572][647]WŁADCA PIERŚCIENI|                                                             |
-|                     [701][741]/Wszystko zaczęło się|/od wykucia Pierścieni Władzy.|                                                             |
-|                                              [742][762]/Trzy zostały dane elfom...|                                                             |
-|[763][805]/nieśmiertelnym, najmędrszym|/i najbliższym magii spośród wszystkich ras.|                                                             |
-|                                                                                   |[816][853]/Siedem - władcom krasnoludów,|/wspaniałym górnikom|
-+-----------------------------------------------------------------------------------+-------------------------------------------------------------+
++-------------------------------------------------------------------------------------+---------------------------------------------------------------+
+|                                                                                 row |                                                          test |
++-------------------------------------------------------------------------------------+---------------------------------------------------------------+
+|                               [498][534]/Wiele z tego,|/co niegdyś było, przepadło. |                                                               |
+|                  [540][572]/A nie żyje już nikt z tych,|/którzy by o tym pamiętali. |                                                               |
+|                                                         [572][647]WŁADCA PIERŚCIENI |                                                               |
+|                      [701][741]/Wszystko zaczęło się|/od wykucia Pierścieni Władzy. |                                                               |
+|                                               [742][762]/Trzy zostały dane elfom... |                                                               |
+| [763][805]/nieśmiertelnym, najmędrszym|/i najbliższym magii spośród wszystkich ras. |                                                               |
+|                                                                                     | [816][853]/Siedem - władcom krasnoludów,|/wspaniałym górnikom |
++-------------------------------------------------------------------------------------+---------------------------------------------------------------+
 TABLE,
             (new ASCIITable($rows))->print(false)
         );
@@ -110,12 +110,12 @@ TABLE,
 
         $this->assertStringContainsString(
             <<<'TABLE'
-+--+----+
-|id|name|
-+--+----+
-| 1|  EN|
-| 2|  PL|
-+--+----+
++----+------+
+| id | name |
++----+------+
+|  1 |   EN |
+|  2 |   PL |
++----+------+
 TABLE,
             (new ASCIITable(new Rows(
                 Row::create(Entry::integer('id', 1), Entry::string('name', 'EN')),

@@ -28,9 +28,9 @@ final class ASCIIHeadersTest extends TestCase
 
         $this->assertStringContainsString(
             <<<'TABLE'
-+--+-----+
-|id|value|
-+--+-----+
++----+-------+
+| id | value |
++----+-------+
 TABLE,
             $headers->print(false)
         );

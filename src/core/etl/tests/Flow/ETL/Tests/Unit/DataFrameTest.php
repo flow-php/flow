@@ -333,15 +333,15 @@ final class DataFrameTest extends TestCase
 
         $this->assertSame(
             <<<'ASCIITABLE'
-+----+------+---+-------+--------------------+-----+--------------------+--------------------+--------------------+--------------------+-----+
-|  id| price|100|deleted|          created-at|phase|               array|               items|                tags|              object| enum|
-+----+------+---+-------+--------------------+-----+--------------------+--------------------+--------------------+--------------------+-----+
-|1234|123.45|100|  false|2020-07-13T15:00:00+| null|[{"id":1,"status":"N|{"item-id":"1","name|[{"item-id":"1","nam|ArrayIterator Object|three|
-|1234|123.45|100|  false|2020-07-13T15:00:00+| null|[{"id":1,"status":"N|{"item-id":"1","name|[{"item-id":"1","nam|ArrayIterator Object|three|
-|1234|123.45|100|  false|2020-07-13T15:00:00+| null|[{"id":1,"status":"N|{"item-id":"1","name|[{"item-id":"1","nam|ArrayIterator Object|three|
-|1234|123.45|100|  false|2020-07-13T15:00:00+| null|[{"id":1,"status":"N|{"item-id":"1","name|[{"item-id":"1","nam|ArrayIterator Object|three|
-|1234|123.45|100|  false|2020-07-13T15:00:00+| null|[{"id":1,"status":"N|{"item-id":"1","name|[{"item-id":"1","nam|ArrayIterator Object|three|
-+----+------+---+-------+--------------------+-----+--------------------+--------------------+--------------------+--------------------+-----+
++------+--------+-----+---------+----------------------+-------+----------------------+----------------------+----------------------+----------------------+-------+
+|   id |  price | 100 | deleted |           created-at | phase |                array |                items |                 tags |               object |  enum |
++------+--------+-----+---------+----------------------+-------+----------------------+----------------------+----------------------+----------------------+-------+
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | {"item-id":"1","name | [{"item-id":"1","nam | ArrayIterator Object | three |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | {"item-id":"1","name | [{"item-id":"1","nam | ArrayIterator Object | three |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | {"item-id":"1","name | [{"item-id":"1","nam | ArrayIterator Object | three |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | {"item-id":"1","name | [{"item-id":"1","nam | ArrayIterator Object | three |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | {"item-id":"1","name | [{"item-id":"1","nam | ArrayIterator Object | three |
++------+--------+-----+---------+----------------------+-------+----------------------+----------------------+----------------------+----------------------+-------+
 5 rows
 
 ASCIITABLE,
@@ -350,16 +350,16 @@ ASCIITABLE,
 
         $this->assertSame(
             <<<'ASCIITABLE'
-+----+------+---+-------+-------------------------+-----+-----------------------------------------------------+----------------------------+------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------+-----+
-|  id| price|100|deleted|               created-at|phase|                                                array|                       items|                                                                                      tags|                                                                                        object| enum|
-+----+------+---+-------+-------------------------+-----+-----------------------------------------------------+----------------------------+------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------+-----+
-|1234|123.45|100|  false|2020-07-13T15:00:00+00:00| null|[{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}]|{"item-id":"1","name":"one"}|[{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}]|ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 ))|three|
-|1234|123.45|100|  false|2020-07-13T15:00:00+00:00| null|[{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}]|{"item-id":"1","name":"one"}|[{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}]|ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 ))|three|
-|1234|123.45|100|  false|2020-07-13T15:00:00+00:00| null|[{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}]|{"item-id":"1","name":"one"}|[{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}]|ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 ))|three|
-|1234|123.45|100|  false|2020-07-13T15:00:00+00:00| null|[{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}]|{"item-id":"1","name":"one"}|[{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}]|ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 ))|three|
-|1234|123.45|100|  false|2020-07-13T15:00:00+00:00| null|[{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}]|{"item-id":"1","name":"one"}|[{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}]|ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 ))|three|
-|1234|123.45|100|  false|2020-07-13T15:00:00+00:00| null|[{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}]|{"item-id":"1","name":"one"}|[{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}]|ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 ))|three|
-+----+------+---+-------+-------------------------+-----+-----------------------------------------------------+----------------------------+------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------+-----+
++------+--------+-----+---------+---------------------------+-------+-------------------------------------------------------+------------------------------+--------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------+-------+
+|   id |  price | 100 | deleted |                created-at | phase |                                                 array |                        items |                                                                                       tags |                                                                                         object |  enum |
++------+--------+-----+---------+---------------------------+-------+-------------------------------------------------------+------------------------------+--------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------+-------+
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three |
++------+--------+-----+---------+---------------------------+-------+-------------------------------------------------------+------------------------------+--------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------+-------+
 6 rows
 
 ASCIITABLE,
@@ -397,15 +397,15 @@ ASCIITABLE,
 
         $this->assertStringContainsString(
             <<<'ASCIITABLE'
-+--------------------+
-|this is very long en|
-+--------------------+
-|[{"id":1,"status":"N|
-|[{"id":1,"status":"N|
-|[{"id":1,"status":"N|
-|[{"id":1,"status":"N|
-|[{"id":1,"status":"N|
-+--------------------+
++----------------------+
+| this is very long en |
++----------------------+
+| [{"id":1,"status":"N |
+| [{"id":1,"status":"N |
+| [{"id":1,"status":"N |
+| [{"id":1,"status":"N |
+| [{"id":1,"status":"N |
++----------------------+
 5 rows
 ASCIITABLE,
             $etl->display(5)
@@ -413,15 +413,15 @@ ASCIITABLE,
 
         $this->assertStringContainsString(
             <<<'ASCIITABLE'
-+-------------------------------------------------------------+
-|this is very long entry name that should be longer than items|
-+-------------------------------------------------------------+
-|        [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}]|
-|        [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}]|
-|        [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}]|
-|        [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}]|
-|        [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}]|
-+-------------------------------------------------------------+
++---------------------------------------------------------------+
+| this is very long entry name that should be longer than items |
++---------------------------------------------------------------+
+|         [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] |
+|         [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] |
+|         [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] |
+|         [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] |
+|         [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] |
++---------------------------------------------------------------+
 5 rows
 ASCIITABLE,
             $etl->display(5, 0)
@@ -1450,20 +1450,20 @@ ASCIITABLE,
 
         $this->assertStringContainsString(
             <<<'ASCII'
-+--+-------+---+
-|id|country|age|
-+--+-------+---+
-| 1|     PL| 20|
-| 2|     PL| 20|
-| 3|     PL| 25|
-+--+-------+---+
++----+---------+-----+
+| id | country | age |
++----+---------+-----+
+|  1 |      PL |  20 |
+|  2 |      PL |  20 |
+|  3 |      PL |  25 |
++----+---------+-----+
 3 rows
-+--+-------+---+------+
-|id|country|age|salary|
-+--+-------+---+------+
-| 1|     PL| 20|  5000|
-| 1|     PL| 20|  null|
-+--+-------+---+------+
++----+---------+-----+--------+
+| id | country | age | salary |
++----+---------+-----+--------+
+|  1 |      PL |  20 |   5000 |
+|  1 |      PL |  20 |   null |
++----+---------+-----+--------+
 2 rows
 ASCII,
             $output

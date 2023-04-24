@@ -19,7 +19,7 @@ final class ASCIIHeaders
 
             $length = \max($headerName->length($truncate), $this->body->maximumLength($name, $truncate));
 
-            $buffer .= \str_repeat('-', $length) . '+';
+            $buffer .= '-' . \str_repeat('-', $length) . '-+';
         }
 
         $topLine = $buffer;
@@ -32,7 +32,7 @@ final class ASCIIHeaders
 
             $length = \max($headerName->length($truncate), $this->body->maximumLength($name, $truncate));
 
-            $buffer .= ASCIIValue::mb_str_pad($headerName->print($truncate), $length, ' ', STR_PAD_LEFT) . '|';
+            $buffer .= ' ' . ASCIIValue::mb_str_pad($headerName->print($truncate), $length, ' ', STR_PAD_LEFT) . ' |';
         }
 
         $buffer .= PHP_EOL;

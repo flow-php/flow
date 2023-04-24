@@ -28,9 +28,9 @@ final class ASCIIBodyTest extends TestCase
 
         $this->assertStringContainsString(
             <<<'TABLE'
-| 1|  1.4|
-| 2|  3.4|
-+--+-----+
+|  1 |   1.4 |
+|  2 |   3.4 |
++----+-------+
 TABLE,
             $headers->print(false)
         );
