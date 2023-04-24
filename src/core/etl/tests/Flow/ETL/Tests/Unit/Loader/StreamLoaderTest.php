@@ -53,13 +53,13 @@ final class StreamLoaderTest extends TestCase
 
         $this->assertSame(
             <<<'ASCII'
-+--+----+
-|id|name|
-+--+----+
-| 1|id_1|
-| 2|id_2|
-| 3|id_3|
-+--+----+
++----+------+
+| id | name |
++----+------+
+|  1 | id_1 |
+|  2 | id_2 |
+|  3 | id_3 |
++----+------+
 3 rows
 
 schema
@@ -90,13 +90,13 @@ ASCII,
 
         $this->assertStringContainsString(
             <<<'TABLE'
-+--+----+
-|id|name|
-+--+----+
-| 1|id_1|
-| 2|id_2|
-| 3|id_3|
-+--+----+
++----+------+
+| id | name |
++----+------+
+|  1 | id_1 |
+|  2 | id_2 |
+|  3 | id_3 |
++----+------+
 3 rows
 TABLE,
             $output
