@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-04-24
+## [Unreleased] - 2023-04-25
 
 ### Added
 - [#408](https://github.com/flow-php/flow/pull/408) - **extra padding to ascii table headers/body** - [@norberttech](https://github.com/norberttech)
@@ -33,6 +33,7 @@
 - [#387](https://github.com/flow-php/flow/pull/387) - **Reorganized testsuite** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [bd3088](https://github.com/flow-php/flow/commit/bd308821594223c2297896ef58f5edb58bfec12b) - **DataFrame::filter method docblocks** - [@norberttech](https://github.com/norberttech)
 - [#407](https://github.com/flow-php/flow/pull/407) - **isOdd expression** - [@norberttech](https://github.com/norberttech)
 - [#407](https://github.com/flow-php/flow/pull/407) - **isEven expression** - [@norberttech](https://github.com/norberttech)
 - [b33143](https://github.com/flow-php/flow/commit/b33143c05aea73c1eb96ef8cd41fdcf6f80d42c3) - **parameter types in Dbal DSL** - [@norberttech](https://github.com/norberttech)
