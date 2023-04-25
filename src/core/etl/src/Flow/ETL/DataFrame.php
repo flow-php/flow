@@ -185,7 +185,7 @@ final class DataFrame
     }
 
     /**
-     * @param callable(Row $row) : bool|EntryReference $callback
+     * @param Reference\Expression|callable(Row $row) : bool $callback
      */
     public function filter(callable|Reference\Expression $callback) : self
     {
