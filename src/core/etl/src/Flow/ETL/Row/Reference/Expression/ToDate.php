@@ -7,7 +7,7 @@ namespace Flow\ETL\Row\Reference\Expression;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference\Expression;
 
-final class ToDateTime implements Expression
+final class ToDate implements Expression
 {
     public function __construct(
         private readonly Expression $ref,
@@ -30,17 +30,23 @@ final class ToDateTime implements Expression
                 /**
                  * @phpstan-ignore-next-line
                  */
-                \DateTimeImmutable::class, \DateTime::class => $value->setTimezone($this->timeZone),
+                \DateTimeImmutable::class, \DateTime::class => $value->setTimezone($this->timeZone)->setTime(0, 0, 0, 0),
                 default => throw new \InvalidArgumentException('Entry ' . \get_class($value) . ' is not a DateTimeImmutable|DateTime')
             };
         }
 
         if (\is_int($value)) {
-            return \DateTimeImmutable::createFromFormat('U', (string) $value, $this->timeZone);
+            /**
+             * @phpstan-ignore-next-line
+             */
+            return \DateTimeImmutable::createFromFormat('U', (string) $value, $this->timeZone)->setTime(0, 0, 0, 0);
         }
 
         if (\is_string($value)) {
-            return \DateTimeImmutable::createFromFormat($this->format, $value, $this->timeZone);
+            /**
+             * @phpstan-ignore-next-line
+             */
+            return \DateTimeImmutable::createFromFormat($this->format, $value, $this->timeZone)->setTime(0, 0, 0, 0);
         }
 
         throw new \InvalidArgumentException('Value ' . \gettype($value) . ' is not a DateTimeImmutable|DateTime|string|int');
