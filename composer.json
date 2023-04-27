@@ -40,6 +40,7 @@
         "laravel/serializable-closure": "^1.1",
         "league/flysystem-aws-s3-v3": "^3.0",
         "league/flysystem-azure-blob-storage": "^3.0",
+        "moneyphp/money": "^4",
         "nyholm/psr7": "^1.4",
         "php-http/curl-client": "^2.2",
         "php-http/mock-client": "^1.5",

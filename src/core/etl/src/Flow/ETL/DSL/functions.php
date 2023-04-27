@@ -195,3 +195,12 @@ function to_timezone(Expression $expression, Expression $timeZone) : Expression
 {
     return new Expression\ToTimeZone($expression, $timeZone);
 }
+
+function to_money(Expression $amount, Expression $currency, ?\Money\MoneyParser $moneyParser = null) : Expression
+{
+    if (null !== $moneyParser) {
+        return new Expression\ToMoney($amount, $currency, $moneyParser);
+    }
+
+    return new Expression\ToMoney($amount, $currency);
+}
