@@ -17,8 +17,7 @@ final class RenameStrReplaceAllEntriesTransformer implements Transformer
     public function __construct(
         private readonly string $search,
         private readonly string $replace
-    )
-    {
+    ) {
     }
 
     public function __serialize() : array
