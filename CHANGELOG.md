@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-04-27
 
 ### Added
+- [#413](https://github.com/flow-php/flow/pull/413) - **to_date expression** - [@norberttech](https://github.com/norberttech)
 - [#410](https://github.com/flow-php/flow/pull/410) - **to timezone expression** - [@norberttech](https://github.com/norberttech)
 - [#409](https://github.com/flow-php/flow/pull/409) - **Not expression** - [@norberttech](https://github.com/norberttech)
 - [#409](https://github.com/flow-php/flow/pull/409) - **DataFrame::renameAll** - [@norberttech](https://github.com/norberttech)
