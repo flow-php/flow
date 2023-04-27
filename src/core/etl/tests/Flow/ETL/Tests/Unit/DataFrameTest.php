@@ -1524,6 +1524,29 @@ ASCII,
         );
     }
 
+    public function test_rename_all() : void
+    {
+        $rows = new Rows(
+            Row::create(Entry::array('array', ['id' => 1, 'name' => 'name', 'active' => true])),
+            Row::create(Entry::array('array', ['id' => 2, 'name' => 'name', 'active' => false]))
+        );
+
+        $ds = (new Flow())
+            ->read(From::rows($rows))
+            ->withEntry('row', ref('array')->unpack())
+            ->renameAll('row.', '')
+            ->drop('array')
+            ->getEachAsArray();
+
+        $this->assertEquals(
+            [
+                ['id' => 1, 'name' => 'name', 'active' => true],
+                ['id' => 2, 'name' => 'name', 'active' => false],
+            ],
+            \iterator_to_array($ds)
+        );
+    }
+
     public function test_select() : void
     {
         $rows = (new Flow())->process(
@@ -1722,29 +1745,6 @@ ASCII,
         $this->assertEquals(
             new Rows(),
             $rows
-        );
-    }
-
-    public function test_rename_all() : void
-    {
-        $rows = new Rows(
-            Row::create(Entry::array('array', ['id' => 1, 'name' => 'name', 'active' => true])),
-            Row::create(Entry::array('array', ['id' => 2, 'name' => 'name', 'active' => false]))
-        );
-
-        $ds = (new Flow())
-            ->read(From::rows($rows))
-            ->withEntry('row', ref('array')->unpack())
-            ->renameAll('row.', '')
-            ->drop('array')
-            ->getEachAsArray();
-
-        $this->assertEquals(
-            [
-                ['id' => 1, 'name' => 'name', 'active' => true],
-                ['id' => 2, 'name' => 'name', 'active' => false],
-            ],
-            \iterator_to_array($ds)
         );
     }
 }

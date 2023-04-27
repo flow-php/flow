@@ -483,6 +483,17 @@ class Transform
         return new RenameEntriesTransformer(new EntryRename($from, $to));
     }
 
+    /**
+     * @param string $search
+     * @param string $replace
+     *
+     * @return Transformer
+     */
+    public static function rename_str_replace_all(string $search, string $replace) : Transformer
+    {
+        return new Transformer\RenameStrReplaceAllEntriesTransformer($search, $replace);
+    }
+
     final public static function round(string $entry, int $precision = 0, int $mode = \PHP_ROUND_HALF_UP) : Transformer
     {
         return self::user_function($entry, 'round', [$precision, $mode]);
@@ -719,15 +730,5 @@ class Transform
     final public static function user_function(array|string $entry, callable $callback, array $extra_arguments = [], string $value_argument_name = null) : Transformer
     {
         return new Transformer\CallUserFunctionTransformer(\is_string($entry) ? [$entry] : $entry, $callback, $extra_arguments, $value_argument_name);
-    }
-
-    /**
-     * @param string $search
-     * @param string $replace
-     * @return Transformer
-     */
-    public static function rename_str_replace_all(string $search, string $replace) : Transformer
-    {
-        return new Transformer\RenameStrReplaceAllEntriesTransformer($search, $replace);
     }
 }
