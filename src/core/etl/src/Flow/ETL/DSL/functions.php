@@ -185,3 +185,8 @@ function not(Expression $expression) : Expression
 {
     return new Expression\Not($expression);
 }
+
+function to_timezone(Expression $expression, Expression $timeZone) : Expression
+{
+    return new Expression\ToTimeZone($expression, $timeZone);
+}
