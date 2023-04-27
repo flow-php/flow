@@ -441,6 +441,55 @@ final class DataFrame
     }
 
     /**
+     * Iterate over all entry names and replace given search string with replace string.
+     */
+    public function renameAll(string $search, string $replace) : self
+    {
+        $this->pipeline->add(Transform::rename_str_replace_all($search, $replace));
+
+        return $this;
+    }
+
+    public function renameAllLowerCase() : self
+    {
+        $this->pipeline->add(Transform::rename_all_case(lower: true));
+
+        return $this;
+    }
+
+    /**
+     * Rename all entries to given style.
+     * Please look into \Flow\ETL\Transformer\StyleConverter\StringStyles class for all available styles.
+     */
+    public function renameAllStyle(string $style) : self
+    {
+        $this->pipeline->add(Transform::convert_name($style));
+
+        return $this;
+    }
+
+    public function renameAllUpperCase() : self
+    {
+        $this->pipeline->add(Transform::rename_all_case(upper: true));
+
+        return $this;
+    }
+
+    public function renameAllUpperCaseFirst() : self
+    {
+        $this->pipeline->add(Transform::rename_all_case(ucfirst: true));
+
+        return $this;
+    }
+
+    public function renameAllUpperCaseWord() : self
+    {
+        $this->pipeline->add(Transform::rename_all_case(ucwords: true));
+
+        return $this;
+    }
+
+    /**
      * Alias for ETL::transform method.
      */
     public function rows(Transformer|Transformation $transformer) : self

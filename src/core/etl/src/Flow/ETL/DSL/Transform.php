@@ -41,6 +41,7 @@ use Flow\ETL\Transformer\Rename\ArrayKeyRename;
 use Flow\ETL\Transformer\Rename\EntryRename;
 use Flow\ETL\Transformer\RenameEntriesTransformer;
 use Flow\ETL\Transformer\StringEntryValueCaseConverterTransformer;
+use Flow\ETL\Transformer\StyleConverter\StringStyles;
 use Laminas\Hydrator\ReflectionHydrator;
 use Symfony\Component\Validator\Constraint;
 
@@ -286,7 +287,7 @@ class Transform
         return new Transformer\CloneEntryTransformer($from, $to);
     }
 
-    final public static function convert_name(string $style) : Transformer
+    final public static function convert_name(string $style = StringStyles::SNAKE) : Transformer
     {
         if (!\class_exists('\Jawira\CaseConverter\Convert')) {
             throw new RuntimeException("Jawira\CaseConverter\Convert class not found, please require using 'composer require jawira/case-converter'");
@@ -481,6 +482,22 @@ class Transform
     final public static function rename(string $from, string $to) : Transformer
     {
         return new RenameEntriesTransformer(new EntryRename($from, $to));
+    }
+
+    public static function rename_all_case(bool $upper = false, bool $lower = false, bool $ucfirst = false, bool $ucwords = false) : Transformer
+    {
+        return new Transformer\RenameAllCaseTransformer($upper, $lower, $ucfirst, $ucwords);
+    }
+
+    /**
+     * @param string $search
+     * @param string $replace
+     *
+     * @return Transformer
+     */
+    public static function rename_str_replace_all(string $search, string $replace) : Transformer
+    {
+        return new Transformer\RenameStrReplaceAllEntriesTransformer($search, $replace);
     }
 
     final public static function round(string $entry, int $precision = 0, int $mode = \PHP_ROUND_HALF_UP) : Transformer
