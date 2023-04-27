@@ -441,6 +441,16 @@ final class DataFrame
     }
 
     /**
+     * Iterate over all entry names and replace given search string with replace string.
+     */
+    public function renameAll(string $search, string $replace) : self
+    {
+        $this->pipeline->add(Transform::rename_str_replace_all($search, $replace));
+
+        return $this;
+    }
+
+    /**
      * Alias for ETL::transform method.
      */
     public function rows(Transformer|Transformation $transformer) : self

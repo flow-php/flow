@@ -180,3 +180,8 @@ function array_sort(Expression $expression, \Closure $function = null) : Express
 {
     return new Expression\ArraySort($expression, $function ?? \Closure::fromCallable('sort'));
 }
+
+function not(Expression $expression) : Expression
+{
+    return new Expression\Not($expression);
+}

@@ -720,4 +720,14 @@ class Transform
     {
         return new Transformer\CallUserFunctionTransformer(\is_string($entry) ? [$entry] : $entry, $callback, $extra_arguments, $value_argument_name);
     }
+
+    /**
+     * @param string $search
+     * @param string $replace
+     * @return Transformer
+     */
+    public static function rename_str_replace_all(string $search, string $replace) : Transformer
+    {
+        return new Transformer\RenameStrReplaceAllEntriesTransformer($search, $replace);
+    }
 }
