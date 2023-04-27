@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Rowreference\Expression;
 
-use Flow\ETL\Row;
-use PHPUnit\Framework\TestCase;
-use Ramsey\Uuid\Uuid;
 use function Flow\ETL\DSL\uuid_v4;
 use function Flow\ETL\DSL\uuid_v7;
 use function Flow\ETL\DSL\uuid_v8;
+use Flow\ETL\Row;
+use PHPUnit\Framework\TestCase;
+use Ramsey\Uuid\Uuid;
 
 final class UuidTest extends TestCase
 {
@@ -21,6 +21,7 @@ final class UuidTest extends TestCase
             )
         );
     }
+
     public function test_uuid7() : void
     {
         $this->assertTrue(
@@ -29,6 +30,7 @@ final class UuidTest extends TestCase
             )
         );
     }
+
     public function test_uuid8() : void
     {
         $this->assertTrue(

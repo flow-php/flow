@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\DSL;
 
-use DateTimeInterface;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
@@ -177,14 +176,14 @@ function uuid_v4() : Expression
     return  Expression\Uuid::uuid4();
 }
 
-function uuid_v7(?DateTimeInterface $dateTime = null) : Expression
+function uuid_v7(?\DateTimeInterface $dateTime = null) : Expression
 {
     return  Expression\Uuid::uuid7($dateTime);
 }
 
 function uuid_v8(string $bytes) : Expression
 {
-    return  Expression\Uuid::uuid8( $bytes);
+    return  Expression\Uuid::uuid8($bytes);
 }
 
 function lower(Expression $expression) : Expression
