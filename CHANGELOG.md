@@ -1,6 +1,13 @@
-## [Unreleased] - 2023-04-25
+## [Unreleased] - 2023-04-27
 
 ### Added
+- [#409](https://github.com/flow-php/flow/pull/409) - **Not expression** - [@norberttech](https://github.com/norberttech)
+- [#409](https://github.com/flow-php/flow/pull/409) - **DataFrame::renameAll** - [@norberttech](https://github.com/norberttech)
+- [#409](https://github.com/flow-php/flow/pull/409) - **DataFrame::renameAllStyle** - [@norberttech](https://github.com/norberttech)
+- [#409](https://github.com/flow-php/flow/pull/409) - **DataFrame::renameAllUpperCase** - [@norberttech](https://github.com/norberttech)
+- [#409](https://github.com/flow-php/flow/pull/409) - **DataFrame::renameAllUpperCaseFirst** - [@norberttech](https://github.com/norberttech)
+- [#409](https://github.com/flow-php/flow/pull/409) - **DataFrame::renameAllUpperCaseWord** - [@norberttech](https://github.com/norberttech)
+- [#409](https://github.com/flow-php/flow/pull/409) - **DataFrame::renameAllLowerCase** - [@norberttech](https://github.com/norberttech)
 - [#408](https://github.com/flow-php/flow/pull/408) - **extra padding to ascii table headers/body** - [@norberttech](https://github.com/norberttech)
 - [#407](https://github.com/flow-php/flow/pull/407) - **more examples** - [@norberttech](https://github.com/norberttech)
 - [686b5e](https://github.com/flow-php/flow/commit/686b5ecfef8502f19ae44b820f12a44f1dd7d62e) - **more tests and changed default sorting algorithm to sort** - [@norberttech](https://github.com/norberttech)
