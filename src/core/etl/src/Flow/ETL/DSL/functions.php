@@ -74,6 +74,11 @@ function to_date_time(Expression $ref, string $format = 'Y-m-d H:i:s', \DateTime
     return new Expression\ToDateTime($ref, $format, $timeZone);
 }
 
+function to_date(Expression $ref, string $format = 'Y-m-d', \DateTimeZone $timeZone = new \DateTimeZone('UTC')) : Expression
+{
+    return new Expression\ToDate($ref, $format, $timeZone);
+}
+
 function date_time_format(Expression $ref, string $format) : Expression
 {
     return new Expression\DateTimeFormat($ref, $format);
