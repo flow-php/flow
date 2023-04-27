@@ -176,14 +176,14 @@ function uuid_v4() : Expression
     return  Expression\Uuid::uuid4();
 }
 
-function uuid_v7(?\DateTimeInterface $dateTime = null) : Expression
+function uuid_v7(?Expression $expression=null) : Expression
 {
-    return  Expression\Uuid::uuid7($dateTime);
+    return  Expression\Uuid::uuid7($expression);
 }
 
-function uuid_v8(string $bytes) : Expression
+function uuid_v8(Expression $expression) : Expression
 {
-    return  Expression\Uuid::uuid8($bytes);
+    return  Expression\Uuid::uuid8($expression);
 }
 
 function lower(Expression $expression) : Expression
