@@ -181,11 +181,6 @@ function uuid_v7(?Expression $expression=null) : Expression
     return  Expression\Uuid::uuid7($expression);
 }
 
-function uuid_v8(Expression $expression) : Expression
-{
-    return  Expression\Uuid::uuid8($expression);
-}
-
 function lower(Expression $expression) : Expression
 {
     return new Expression\ToLower($expression);

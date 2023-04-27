@@ -23,28 +23,15 @@ final class Uuid implements Expression
         return new self('uuid7', $ref);
     }
 
-    public static function uuid8(?Expression $ref = null) : self
-    {
-        return new self('uuid8', $ref);
-    }
-
     public function eval(Row $row) : mixed
     {
-        if ($this->uuidVersion==='uuid4') {
-            return \Ramsey\Uuid\Uuid::uuid4();
-        }
+        /** @var mixed $param */
+        $param = $this->ref?->eval($row);
 
-        /** @var mixed $value */
-        $param = $this->ref->eval($row);
-
-        if ($this->uuidVersion==='uuid7') {
-            return \Ramsey\Uuid\Uuid::uuid7($param);
-        }
-
-        if (null === $param) {
-            return null;
-        }
-
-        return \Ramsey\Uuid\Uuid::uuid8($param);
+        return match ($this->uuidVersion) {
+            'uuid4' => \Ramsey\Uuid\Uuid::uuid4(),
+            'uuid7' => $param instanceof \DateTimeInterface?\Ramsey\Uuid\Uuid::uuid7($param):null,
+            default=> null
+        };
     }
 }
