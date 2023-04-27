@@ -39,6 +39,7 @@ use Flow\ETL\Tests\Double\AddStampToStringEntryTransformer;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Transformation;
 use Flow\ETL\Transformer;
+use Flow\ETL\Transformer\StyleConverter\StringStyles;
 use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\TestCase;
 
@@ -1542,6 +1543,112 @@ ASCII,
             [
                 ['id' => 1, 'name' => 'name', 'active' => true],
                 ['id' => 2, 'name' => 'name', 'active' => false],
+            ],
+            \iterator_to_array($ds)
+        );
+    }
+
+    public function test_rename_all_lower_case() : void
+    {
+        $rows = new Rows(
+            Row::create(Entry::int('ID', 1), Entry::str('NAME', 'name'), Entry::bool('ACTIVE', true)),
+            Row::create(Entry::int('ID', 2), Entry::str('NAME', 'name'), Entry::bool('ACTIVE', false)),
+        );
+
+        $ds = (new Flow())
+            ->read(From::rows($rows))
+            ->renameAllLowerCase()
+            ->getEachAsArray();
+
+        $this->assertEquals(
+            [
+                ['id' => 1, 'name' => 'name', 'active' => true],
+                ['id' => 2, 'name' => 'name', 'active' => false],
+            ],
+            \iterator_to_array($ds)
+        );
+    }
+
+    public function test_rename_all_to_snake_case() : void
+    {
+        $rows = new Rows(
+            Row::create(Entry::int('id', 1), Entry::str('UserName', 'name'), Entry::bool('isActive', true)),
+            Row::create(Entry::int('id', 2), Entry::str('UserName', 'name'), Entry::bool('isActive', false)),
+        );
+
+        $ds = (new Flow())
+            ->read(From::rows($rows))
+            ->renameAllStyle(StringStyles::SNAKE)
+            ->renameAllLowerCase()
+            ->getEachAsArray();
+
+        $this->assertEquals(
+            [
+                ['id' => 1, 'user_name' => 'name', 'is_active' => true],
+                ['id' => 2, 'user_name' => 'name', 'is_active' => false],
+            ],
+            \iterator_to_array($ds)
+        );
+    }
+
+    public function test_rename_all_upper_case() : void
+    {
+        $rows = new Rows(
+            Row::create(Entry::int('id', 1), Entry::str('name', 'name'), Entry::bool('active', true)),
+            Row::create(Entry::int('id', 2), Entry::str('name', 'name'), Entry::bool('active', false)),
+        );
+
+        $ds = (new Flow())
+            ->read(From::rows($rows))
+            ->renameAllUpperCase()
+            ->getEachAsArray();
+
+        $this->assertEquals(
+            [
+                ['ID' => 1, 'NAME' => 'name', 'ACTIVE' => true],
+                ['ID' => 2, 'NAME' => 'name', 'ACTIVE' => false],
+            ],
+            \iterator_to_array($ds)
+        );
+    }
+
+    public function test_rename_all_upper_case_first() : void
+    {
+        $rows = new Rows(
+            Row::create(Entry::int('id', 1), Entry::str('name', 'name'), Entry::bool('active', true)),
+            Row::create(Entry::int('id', 2), Entry::str('name', 'name'), Entry::bool('active', false)),
+        );
+
+        $ds = (new Flow())
+            ->read(From::rows($rows))
+            ->renameAllUpperCaseFirst()
+            ->getEachAsArray();
+
+        $this->assertEquals(
+            [
+                ['Id' => 1, 'Name' => 'name', 'Active' => true],
+                ['Id' => 2, 'Name' => 'name', 'Active' => false],
+            ],
+            \iterator_to_array($ds)
+        );
+    }
+
+    public function test_rename_all_upper_case_word() : void
+    {
+        $rows = new Rows(
+            Row::create(Entry::int('id', 1), Entry::str('name', 'name'), Entry::bool('active', true)),
+            Row::create(Entry::int('id', 2), Entry::str('name', 'name'), Entry::bool('active', false)),
+        );
+
+        $ds = (new Flow())
+            ->read(From::rows($rows))
+            ->renameAllUpperCaseWord()
+            ->getEachAsArray();
+
+        $this->assertEquals(
+            [
+                ['Id' => 1, 'Name' => 'name', 'Active' => true],
+                ['Id' => 2, 'Name' => 'name', 'Active' => false],
             ],
             \iterator_to_array($ds)
         );
