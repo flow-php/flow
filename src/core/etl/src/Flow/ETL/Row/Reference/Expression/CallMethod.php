@@ -7,12 +7,12 @@ namespace Flow\ETL\Row\Reference\Expression;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference\Expression;
 
-final class CallObjectMethod implements Expression
+final class CallMethod implements Expression
 {
     /**
      * @var Expression[]
      */
-    private array $params;
+    private readonly array $params;
 
     public function __construct(private readonly Expression $object, private readonly Expression $method, Expression ...$params)
     {

@@ -182,6 +182,11 @@ trait EntryExpression
         return new Expressions(new Expression\ToLower($this));
     }
 
+    public function method(Expression $method, Expression ...$params) : Expression
+    {
+        return new Expressions(new Expression\CallMethod($this, $method, ...$params));
+    }
+
     public function minus(Expression $ref) : Expression
     {
         return new Expressions(new Minus($this, $ref));

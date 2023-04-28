@@ -2,13 +2,13 @@
 
 namespace Flow\ETL\Tests\Unit\Row\Reference\Expression;
 
-use function Flow\ETL\DSL\call_object_method;
+use function Flow\ETL\DSL\call_method;
 use function Flow\ETL\DSL\ref;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;
 
-final class CallObjectMethodTest extends TestCase
+final class CallMethodTest extends TestCase
 {
     public function test_call_method() : void
     {
@@ -20,7 +20,7 @@ final class CallObjectMethodTest extends TestCase
 
         $this->assertEquals(
             '00:00:00 2023-01-01',
-            call_object_method(
+            call_method(
                 ref('object'),
                 ref('method'),
                 ref('method_param'),
@@ -36,7 +36,7 @@ final class CallObjectMethodTest extends TestCase
         );
 
         $this->assertNull(
-            call_object_method(
+            call_method(
                 ref('object'),
                 ref('method')
             )->eval($row)
@@ -51,7 +51,7 @@ final class CallObjectMethodTest extends TestCase
         );
 
         $this->assertNull(
-            call_object_method(
+            call_method(
                 ref('object'),
                 ref('method')
             )->eval($row)
@@ -66,7 +66,7 @@ final class CallObjectMethodTest extends TestCase
         );
 
         $this->assertNull(
-            call_object_method(
+            call_method(
                 ref('object'),
                 ref('method')
             )->eval($row)

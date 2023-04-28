@@ -181,9 +181,9 @@ function upper(Expression $expression) : Expression
     return new Expression\ToUpper($expression);
 }
 
-function call_object_method(Expression $object, Expression $method, Expression ...$params) : Expression
+function call_method(Expression $object, Expression $method, Expression ...$params) : Expression
 {
-    return new Expression\CallObjectMethod($object, $method, ...$params);
+    return new Expression\CallMethod($object, $method, ...$params);
 }
 
 function array_sort(Expression $expression, \Closure $function = null) : Expression
