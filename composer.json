@@ -44,7 +44,7 @@
         "nyholm/psr7": "^1.4",
         "php-http/curl-client": "^2.2",
         "php-http/mock-client": "^1.5",
-        "ramsey/uuid": "^4.1",
+        "ramsey/uuid": "^4.5",
         "rector/rector": "^0.13.8 || ^0.14.0 || ^0.15.0",
         "symfony/cache": "^6.1",
         "symfony/dotenv": "^6.1",

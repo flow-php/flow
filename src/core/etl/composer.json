@@ -23,7 +23,7 @@
         "league/flysystem-aws-s3-v3": "^3.0",
         "league/flysystem-azure-blob-storage": "^3.0",
         "moneyphp/money": "^4",
-        "ramsey/uuid": "^4.1",
+        "ramsey/uuid": "^4.5",
         "symfony/validator": "^5.3 || ^6.0"
     },
     "config": {
