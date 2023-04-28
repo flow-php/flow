@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-04-28
 
 ### Added
+- [#414](https://github.com/flow-php/flow/pull/414) - **Added CallMethod expression** - [@jwojtyra-aterian](https://github.com/jwojtyra-aterian)
 - [#412](https://github.com/flow-php/flow/pull/412) - **Added uuid expression** - [@jwojtyra-aterian](https://github.com/jwojtyra-aterian)
 - [#411](https://github.com/flow-php/flow/pull/411) - **Add MoneyPHP expression** - [@stloyd](https://github.com/stloyd)
 - [#413](https://github.com/flow-php/flow/pull/413) - **to_date expression** - [@norberttech](https://github.com/norberttech)
