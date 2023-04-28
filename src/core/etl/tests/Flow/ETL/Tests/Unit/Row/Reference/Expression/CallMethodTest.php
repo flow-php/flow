@@ -28,6 +28,21 @@ final class CallMethodTest extends TestCase
         );
     }
 
+    public function test_method_not_string() : void
+    {
+        $row = Row::create(
+            Entry::datetime_string('object', '2023-01-01 00:00:00 UTC'),
+            Entry::datetime_string('method', '2023-01-01 00:00:00 UTC'),
+        );
+
+        $this->assertNull(
+            call_method(
+                ref('object'),
+                ref('method')
+            )->eval($row)
+        );
+    }
+
     public function test_not_existing_method() : void
     {
         $row = Row::create(

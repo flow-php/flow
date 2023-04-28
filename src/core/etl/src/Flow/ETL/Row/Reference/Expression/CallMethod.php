@@ -26,11 +26,11 @@ final class CallMethod implements Expression
         /** @var ?string $method */
         $method = $this->method->eval($row);
 
-        if (null === $object || null === $method || !\method_exists($object, $method)) {
+        if (null === $object || !\is_string($method) || !\method_exists($object, $method)) {
             return null;
         }
 
-        return $object->{$method}(...\array_map(
+        return \call_user_func([$object, $method], ...\array_map(
             static fn (Expression $param) : mixed => $param->eval($row),
             $this->params
         ));
