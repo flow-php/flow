@@ -23,6 +23,7 @@
         "league/flysystem-aws-s3-v3": "^3.0",
         "league/flysystem-azure-blob-storage": "^3.0",
         "moneyphp/money": "^4",
+        "ramsey/uuid": "^4.5",
         "symfony/validator": "^5.3 || ^6.0"
     },
     "config": {
@@ -33,7 +34,9 @@
         "laminas/laminas-hydrator": "Help converting ObjectEntry into ArrayEntry that can be later unpack into standalone Entries",
         "ocramius/generated-hydrator": "Provieds generated hydrator that implemenets Laminas\\Hydrator\\HydratorInterface",
         "jawira/case-converter": "Provides CaseConverter that is required by the EntryNameCaseConverterTransformer",
-        "moneyphp/money": "Provides MoneyParser that is required by ToMoney expression"
+        "moneyphp/money": "Provides MoneyParser that is required by ToMoney expression",
+        "ramsey/uuid": "Provides expressions `uuid_v4` and `uuid_v7` that allow generate uuid entry"
+
     },
     "license": "MIT",
     "autoload": {

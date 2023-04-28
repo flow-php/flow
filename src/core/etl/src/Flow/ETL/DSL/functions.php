@@ -171,6 +171,16 @@ function size(Expression $expression) : Expression
     return new Expression\Size($expression);
 }
 
+function uuid_v4() : Expression
+{
+    return  Expression\Uuid::uuid4();
+}
+
+function uuid_v7(?Expression $expression=null) : Expression
+{
+    return  Expression\Uuid::uuid7($expression);
+}
+
 function lower(Expression $expression) : Expression
 {
     return new Expression\ToLower($expression);
