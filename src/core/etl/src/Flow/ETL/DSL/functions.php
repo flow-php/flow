@@ -181,6 +181,11 @@ function upper(Expression $expression) : Expression
     return new Expression\ToUpper($expression);
 }
 
+function call_object_method(Expression $object, Expression $method, Expression ...$params) : Expression
+{
+    return new Expression\CallObjectMethod($object, $method, ...$params);
+}
+
 function array_sort(Expression $expression, \Closure $function = null) : Expression
 {
     return new Expression\ArraySort($expression, $function ?? \Closure::fromCallable('sort'));
