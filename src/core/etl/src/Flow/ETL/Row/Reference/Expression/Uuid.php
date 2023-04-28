@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Reference\Expression;
 
+use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference\Expression;
 
+if (!\class_exists(\Ramsey\Uuid\Uuid::class)) {
+    throw new RuntimeException("\Ramsey\Uuid\Uuid class not found, please add ramsey/uuid dependency to the project first.");
+}
 final class Uuid implements Expression
 {
     private function __construct(private readonly string $uuidVersion, private readonly ?Expression $ref = null)
