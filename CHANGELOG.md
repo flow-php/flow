@@ -1,6 +1,10 @@
-## [Unreleased] - 2023-04-28
+## [Unreleased] - 2023-04-30
 
 ### Added
+- [#415](https://github.com/flow-php/flow/pull/415) - **Added regex_match expression** - [@norberttech](https://github.com/norberttech)
+- [#415](https://github.com/flow-php/flow/pull/415) - **Added regex_match_all expression** - [@norberttech](https://github.com/norberttech)
+- [#415](https://github.com/flow-php/flow/pull/415) - **Added regex_replace expression** - [@norberttech](https://github.com/norberttech)
+- [#415](https://github.com/flow-php/flow/pull/415) - **Added sprintf expression** - [@norberttech](https://github.com/norberttech)
 - [#414](https://github.com/flow-php/flow/pull/414) - **Added CallMethod expression** - [@jwojtyra-aterian](https://github.com/jwojtyra-aterian)
 - [#412](https://github.com/flow-php/flow/pull/412) - **Added uuid expression** - [@jwojtyra-aterian](https://github.com/jwojtyra-aterian)
 - [#411](https://github.com/flow-php/flow/pull/411) - **Add MoneyPHP expression** - [@stloyd](https://github.com/stloyd)
