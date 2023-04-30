@@ -219,3 +219,23 @@ function to_money(Expression $amount, Expression $currency, ?\Money\MoneyParser 
 
     return new Expression\ToMoney($amount, $currency);
 }
+
+function regex_replace(Expression $pattern, Expression $replacement, Expression $subject) : Expression
+{
+    return new Expression\PregReplace($pattern, $replacement, $subject);
+}
+
+function regex_match_all(Expression $pattern, Expression $subject, Expression $flags = null) : Expression
+{
+    return new Expression\PregMatchAll($pattern, $subject, $flags);
+}
+
+function regex_match(Expression $pattern, Expression $subject) : Expression
+{
+    return new Expression\PregMatch($pattern, $subject);
+}
+
+function sprintf(Expression $format, Expression ...$args) : Expression
+{
+    return new Expression\Sprintf($format, ...$args);
+}

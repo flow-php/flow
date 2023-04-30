@@ -222,6 +222,21 @@ trait EntryExpression
         return new Expressions(new Power($this, $ref));
     }
 
+    public function regexMatch(Expression $pattern) : Expression
+    {
+        return new Expressions(new Expression\PregMatch($pattern, $this));
+    }
+
+    public function regexMatchAll(Expression $pattern, Expression $flags = null) : Expression
+    {
+        return new Expressions(new Expression\PregMatchAll($pattern, $this, $flags));
+    }
+
+    public function regexReplace(Expression $pattern, Expression $replacement) : Expression
+    {
+        return new Expressions(new Expression\PregReplace($pattern, $replacement, $this));
+    }
+
     public function same(Expression $ref) : Expression
     {
         return new Expressions(new Same($this, $ref));
@@ -230,6 +245,11 @@ trait EntryExpression
     public function size() : Expression
     {
         return new Expressions(new Expression\Size($this));
+    }
+
+    public function sprintf(Expression ...$params) : Expression
+    {
+        return new Expressions(new Expression\Sprintf($this, ...$params));
     }
 
     public function startsWith(Expression $needle) : Expression
