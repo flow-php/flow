@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-04-30
+## [Unreleased] - 2023-05-03
 
 ### Added
 - [#415](https://github.com/flow-php/flow/pull/415) - **Added regex_match expression** - [@norberttech](https://github.com/norberttech)
@@ -40,6 +40,7 @@
 - [#388](https://github.com/flow-php/flow/pull/388) - **Added `ext-hash` PHP extension as required for Flow** - [@stloyd](https://github.com/stloyd)
 
 ### Changed
+- [#418](https://github.com/flow-php/flow/pull/418) - **Adjust string value extraction in ASCIIValue to match PHP docs** - [@stloyd](https://github.com/stloyd)
 - [7a676d](https://github.com/flow-php/flow/commit/7a676da2cbd9bfdbb7e33479afd81e42a8d2389c) - **default array sort to asort from ksort** - [@norberttech](https://github.com/norberttech)
 - [#404](https://github.com/flow-php/flow/pull/404) - **Simplify cache usage** - [@norberttech](https://github.com/norberttech)
 - [#397](https://github.com/flow-php/flow/pull/397) - **sha256 to xxh128 default hashing algorithm** - [@norberttech](https://github.com/norberttech)
