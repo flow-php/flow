@@ -239,3 +239,8 @@ function sprintf(Expression $format, Expression ...$args) : Expression
 {
     return new Expression\Sprintf($format, ...$args);
 }
+
+function sanitize(Expression $expression, string $placeholder = '*', int $charactersLeft = 0) : Expression
+{
+    return new Expression\Sanitize($expression, $placeholder, $charactersLeft);
+}

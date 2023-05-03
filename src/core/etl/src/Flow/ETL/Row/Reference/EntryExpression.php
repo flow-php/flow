@@ -242,6 +242,11 @@ trait EntryExpression
         return new Expressions(new Same($this, $ref));
     }
 
+    public function sanitize(string $placeholder = '*', int $charactersLeft = 0) : Expression
+    {
+        return new Expressions(new Expression\Sanitize($this, $placeholder, $charactersLeft));
+    }
+
     public function size() : Expression
     {
         return new Expressions(new Expression\Size($this));
