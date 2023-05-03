@@ -25,20 +25,13 @@ final class Sanitize implements Expression
             return null;
         }
 
-        /** @var mixed $placeholder */
-        $placeholder = $this->placeholder->eval($row);
-
-        /** @var mixed $skipCharacters */
-        $skipCharacters = $this->skipCharacters->eval($row);
+        $placeholder = (string) $this->placeholder->eval($row);
+        $skipCharacters = (int) $this->skipCharacters->eval($row);
 
         $size = \mb_strlen($val);
 
-        if (0 !== $skipCharacters) {
-            if ($size > $skipCharacters) {
-                $cut = \mb_substr($val, 0, $skipCharacters);
-
-                return $cut . \str_repeat($placeholder, $size - $skipCharacters);
-            }
+        if (0 !== $skipCharacters && $size > $skipCharacters) {
+            return \mb_substr($val, 0, $skipCharacters) . \str_repeat($placeholder, $size - $skipCharacters);
         }
 
         return \str_repeat($placeholder, $size);
