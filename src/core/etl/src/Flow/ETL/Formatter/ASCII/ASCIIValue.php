@@ -108,7 +108,7 @@ final class ASCIIValue
                     'string' => $val,
                     'boolean' => ($val) ? 'true' : 'false',
                     /** @phpstan-ignore-next-line */
-                    'float', 'double', 'integer' => (string) $val,
+                    'double', 'integer' => (string) $val,
                     'array' => \json_encode($val, JSON_THROW_ON_ERROR),
                     default => '',
                 };
