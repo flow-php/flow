@@ -240,7 +240,7 @@ function sprintf(Expression $format, Expression ...$args) : Expression
     return new Expression\Sprintf($format, ...$args);
 }
 
-function sanitize(Expression $expression, string $placeholder = '*', int $charactersLeft = 0) : Expression
+function sanitize(Expression $expression, Expression $placeholder = null, Expression $skipCharacters = null) : Expression
 {
-    return new Expression\Sanitize($expression, $placeholder, $charactersLeft);
+    return new Expression\Sanitize($expression, $placeholder ?: new Expression\Literal('*'), $skipCharacters ?: new Expression\Literal(0));
 }

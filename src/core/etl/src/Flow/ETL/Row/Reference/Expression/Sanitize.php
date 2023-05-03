@@ -11,8 +11,8 @@ final class Sanitize implements Expression
 {
     public function __construct(
         private readonly Expression $ref,
-        private readonly string $placeholder,
-        private readonly int $charactersLeft
+        private readonly Expression $placeholder,
+        private readonly Expression $skipCharacters
     ) {
     }
 
@@ -25,16 +25,22 @@ final class Sanitize implements Expression
             return null;
         }
 
-        $size = \strlen($val);
+        /** @var mixed $placeholder */
+        $placeholder = $this->placeholder->eval($row);
 
-        if (0 !== $this->charactersLeft) {
-            if ($size > $this->charactersLeft) {
-                $cut = \substr($val, 0, $this->charactersLeft);
+        /** @var mixed $skipCharacters */
+        $skipCharacters = $this->skipCharacters->eval($row);
 
-                return $cut . \str_repeat($this->placeholder, $size - $this->charactersLeft);
+        $size = \mb_strlen($val);
+
+        if (0 !== $skipCharacters) {
+            if ($size > $skipCharacters) {
+                $cut = \mb_substr($val, 0, $skipCharacters);
+
+                return $cut . \str_repeat($placeholder, $size - $skipCharacters);
             }
         }
 
-        return \str_repeat($this->placeholder, $size);
+        return \str_repeat($placeholder, $size);
     }
 }

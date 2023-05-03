@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Reference\Expression;
 
+use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\Row;
@@ -30,7 +31,7 @@ final class SanitizeTest extends TestCase
     {
         $this->assertSame(
             'te**',
-            ref('value')->sanitize(charactersLeft: 2)->eval(Row::create(Entry::str('value', 'test'))),
+            ref('value')->sanitize(skipCharacters: lit(2))->eval(Row::create(Entry::str('value', 'test'))),
         );
     }
 
@@ -38,7 +39,7 @@ final class SanitizeTest extends TestCase
     {
         $this->assertSame(
             '****',
-            ref('value')->sanitize(charactersLeft: 5)->eval(Row::create(Entry::str('value', 'test'))),
+            ref('value')->sanitize(skipCharacters: lit(5))->eval(Row::create(Entry::str('value', 'test'))),
         );
     }
 
@@ -46,7 +47,7 @@ final class SanitizeTest extends TestCase
     {
         $this->assertSame(
             '----',
-            ref('value')->sanitize('-')->eval(Row::create(Entry::str('value', 'test'))),
+            ref('value')->sanitize(lit('-'))->eval(Row::create(Entry::str('value', 'test'))),
         );
     }
 }
