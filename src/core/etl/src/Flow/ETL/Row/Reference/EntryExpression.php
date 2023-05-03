@@ -257,7 +257,11 @@ trait EntryExpression
         return new Expressions(new StartsWith($this, $needle));
     }
 
-    public function strReplace(string $search, string $replace) : Expression
+    /**
+     * @param string|string[] $search
+     * @param string|string[] $replace
+     */
+    public function strReplace(string|array $search, string|array $replace) : Expression
     {
         return new Expressions(new Expression\StrReplace($this, $search, $replace));
     }
