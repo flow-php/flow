@@ -9,10 +9,14 @@ use Flow\ETL\Row\Reference\Expression;
 
 final class StrReplace implements Expression
 {
+    /**
+     * @param string|string[] $search
+     * @param string|string[] $replace
+     */
     public function __construct(
         private readonly Expression $ref,
-        private readonly string $search,
-        private readonly string $replace
+        private readonly string|array $search,
+        private readonly string|array $replace
     ) {
     }
 

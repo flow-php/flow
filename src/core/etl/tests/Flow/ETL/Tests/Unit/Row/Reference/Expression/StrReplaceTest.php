@@ -25,4 +25,12 @@ final class StrReplaceTest extends TestCase
             ref('value')->strReplace('test', '1')->eval(Row::create(Entry::str('value', 'test'))),
         );
     }
+
+    public function test_str_replace_on_valid_string_with_array_of_replacements() : void
+    {
+        $this->assertSame(
+            'test was successful',
+            ref('value')->strReplace(['is', 'broken'], ['was', 'successful'])->eval(Row::create(Entry::str('value', 'test is broken'))),
+        );
+    }
 }
