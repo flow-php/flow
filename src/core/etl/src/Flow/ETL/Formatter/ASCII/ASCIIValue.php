@@ -107,7 +107,6 @@ final class ASCIIValue
                 $this->stringValue = match (\gettype($val)) {
                     'string' => $val,
                     'boolean' => ($val) ? 'true' : 'false',
-                    /** @phpstan-ignore-next-line */
                     'double', 'integer' => (string) $val,
                     'array' => \json_encode($val, JSON_THROW_ON_ERROR),
                     default => '',
