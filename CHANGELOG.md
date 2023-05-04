@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-05-03
+## [Unreleased] - 2023-05-04
 
 ### Added
 - [#417](https://github.com/flow-php/flow/pull/417) - **Add new sanitize expression** - [@stloyd](https://github.com/stloyd)
@@ -41,6 +41,7 @@
 - [#388](https://github.com/flow-php/flow/pull/388) - **Added `ext-hash` PHP extension as required for Flow** - [@stloyd](https://github.com/stloyd)
 
 ### Changed
+- [#420](https://github.com/flow-php/flow/pull/420) - **Skip phpstan analyse in `Sanitize` extension** - [@stloyd](https://github.com/stloyd)
 - [#419](https://github.com/flow-php/flow/pull/419) - **Modify `StrReplace` expression to work with arrays** - [@stloyd](https://github.com/stloyd)
 - [#418](https://github.com/flow-php/flow/pull/418) - **Adjust string value extraction in ASCIIValue to match PHP docs** - [@stloyd](https://github.com/stloyd)
 - [7a676d](https://github.com/flow-php/flow/commit/7a676da2cbd9bfdbb7e33479afd81e42a8d2389c) - **default array sort to asort from ksort** - [@norberttech](https://github.com/norberttech)
