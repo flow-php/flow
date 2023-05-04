@@ -25,7 +25,9 @@ final class Sanitize implements Expression
             return null;
         }
 
+        /** @phpstan-ignore-next-line */
         $placeholder = (string) $this->placeholder->eval($row);
+        /** @phpstan-ignore-next-line */
         $skipCharacters = (int) $this->skipCharacters->eval($row);
 
         $size = \mb_strlen($val);
