@@ -10,7 +10,6 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema;
@@ -26,7 +25,6 @@ use Flow\ETL\Transformer\Cast\EntryCaster\AnyToListCaster;
 use Flow\ETL\Transformer\Cast\EntryCaster\DateTimeToStringEntryCaster;
 use Flow\ETL\Transformer\Cast\EntryCaster\StringToDateTimeEntryCaster;
 use Flow\ETL\Transformer\CastTransformer;
-use Flow\ETL\Transformer\Condition\RowCondition;
 use Flow\ETL\Transformer\Filter\Filter\EntryEqualsTo;
 use Flow\ETL\Transformer\Filter\Filter\EntryExists;
 use Flow\ETL\Transformer\Filter\Filter\EntryNotNull;
@@ -35,8 +33,6 @@ use Flow\ETL\Transformer\Filter\Filter\Opposite;
 use Flow\ETL\Transformer\Filter\Filter\ValidValue;
 use Flow\ETL\Transformer\FilterRowsTransformer;
 use Flow\ETL\Transformer\KeepEntriesTransformer;
-use Flow\ETL\Transformer\MathOperationTransformer;
-use Flow\ETL\Transformer\MathValueOperationTransformer;
 use Flow\ETL\Transformer\Rename\ArrayKeyRename;
 use Flow\ETL\Transformer\Rename\EntryRename;
 use Flow\ETL\Transformer\RenameEntriesTransformer;
@@ -50,11 +46,6 @@ use Symfony\Component\Validator\Constraint;
  */
 class Transform
 {
-    final public static function add(string $left_entry, string $right_entry, string $new_entry_name  = null) : Transformer
-    {
-        return MathOperationTransformer::add($left_entry, $right_entry, $new_entry_name ?? $left_entry);
-    }
-
     /**
      * @param array<mixed> $data
      */
@@ -124,11 +115,6 @@ class Transform
         return new Transformer\StaticEntryTransformer(DSLEntry::string($name, $value));
     }
 
-    final public static function add_value(string $left_entry, int|float $value, string $new_entry_name = null) : Transformer
-    {
-        return MathValueOperationTransformer::add($left_entry, $value, $new_entry_name ?? $left_entry);
-    }
-
     /**
      * @param array<string> $keys
      */
@@ -173,43 +159,6 @@ class Transform
     }
 
     /**
-     * @param ?Schema $schema Desired schema of unpacked elements. Elements not found in schema will be auto detected.
-     *                        It is allowed to provide definitions only for selected elements, like for example
-     *                        when converting enum string value into specific Enum.
-     */
-    final public static function array_expand(string $array_column, string $expanded_name = 'element', ?Schema $schema = null) : Transformer
-    {
-        return new Transformer\ArrayExpandTransformer(
-            $array_column,
-            $expanded_name,
-            new NativeEntryFactory($schema)
-        );
-    }
-
-    /**
-     * @param ?Schema $schema Desired schema of unpacked elements. Elements not found in schema will be auto detected.
-     *                        It is allowed to provide definitions only for selected elements, like for example
-     *                        when converting enum string value into specific Enum.
-     */
-    final public static function array_get(string $array_name, string $path, string $entry_name = 'element', ?Schema $schema = null) : Transformer
-    {
-        return new Transformer\ArrayDotGetTransformer(
-            $array_name,
-            $path,
-            $entry_name,
-            new NativeEntryFactory($schema)
-        );
-    }
-
-    /**
-     * @param string[] $array_names
-     */
-    final public static function array_merge(array $array_names, string $entry_name = 'merged') : Transformer
-    {
-        return new Transformer\ArrayMergeTransformer($array_names, $entry_name);
-    }
-
-    /**
      * Pushes static values into existing array entry, if array entry does not exist, this transformer
      * will create one.
      *
@@ -236,22 +185,6 @@ class Transform
     final public static function array_sort(string $array_name, int $sort_flag = \SORT_REGULAR) : Transformer
     {
         return new Transformer\ArraySortTransformer($array_name, $sort_flag);
-    }
-
-    /**
-     * @param string[] $skip_keys
-     * @param ?Schema $schema Desired schema of unpacked elements. Elements not found in schema will be auto detected.
-     *                        It is allowed to provide definitions only for selected elements, like for example
-     *                        when converting enum string value into specific Enum.
-     */
-    final public static function array_unpack(string|EntryReference $ref, string $entry_prefix = '', array $skip_keys = [], Schema $schema = null) : Transformer
-    {
-        return new Transformer\ArrayUnpackTransformer(
-            $ref,
-            $skip_keys,
-            $entry_prefix,
-            new NativeEntryFactory($schema)
-        );
     }
 
     /**
@@ -294,16 +227,6 @@ class Transform
         }
 
         return new Transformer\EntryNameStyleConverterTransformer($style);
-    }
-
-    final public static function divide(string $left_entry, string $right_entry, string $new_entry_name = null) : Transformer
-    {
-        return MathOperationTransformer::divide($left_entry, $right_entry, $new_entry_name ?? $left_entry);
-    }
-
-    final public static function divide_by(string $left_entry, int|float $value, string $new_entry_name = null) : Transformer
-    {
-        return MathValueOperationTransformer::divide($left_entry, $value, $new_entry_name ?? $left_entry);
     }
 
     /**
@@ -404,26 +327,6 @@ class Transform
         return self::user_function([$entry], 'ltrim', [$characters]);
     }
 
-    final public static function modulo(string $left_entry, string $right_entry, string $new_entry_name = null) : Transformer
-    {
-        return MathOperationTransformer::modulo($left_entry, $right_entry, $new_entry_name ?? $left_entry);
-    }
-
-    final public static function modulo_by(string $left_entry, int|float $value, string $new_entry_name = null) : Transformer
-    {
-        return MathValueOperationTransformer::modulo($left_entry, $value, $new_entry_name ?? $left_entry);
-    }
-
-    final public static function multiply(string $left_entry, string $right_entry, string $new_entry_name = null) : Transformer
-    {
-        return MathOperationTransformer::multiply($left_entry, $right_entry, $new_entry_name ?? $left_entry);
-    }
-
-    final public static function multiply_by(string $left_entry, int|float $value, string $new_entry_name = null) : Transformer
-    {
-        return MathValueOperationTransformer::multiply($left_entry, $value, $new_entry_name ?? $left_entry);
-    }
-
     /**
      * @param array<string>|string $entry
      *
@@ -444,16 +347,6 @@ class Transform
     final public static function object_method(string $object_name, string $method, string $entry_name = 'method_entry', array $parameters = []) : Transformer
     {
         return new Transformer\ObjectMethodTransformer($object_name, $method, $entry_name, $parameters);
-    }
-
-    final public static function power(string $left_entry, string $right_entry, string $new_entry_name = null) : Transformer
-    {
-        return MathOperationTransformer::power($left_entry, $right_entry, $new_entry_name ?? $left_entry);
-    }
-
-    final public static function power_of(string $left_entry, int|float $value, string $new_entry_name = null) : Transformer
-    {
-        return MathValueOperationTransformer::power($left_entry, $value, $new_entry_name ?? $left_entry);
     }
 
     final public static function prefix(string|Reference $entry, string $prefix) : Transformer
@@ -562,16 +455,6 @@ class Transform
     final public static function string_upper(string|Reference ...$entry_names) : Transformer
     {
         return StringEntryValueCaseConverterTransformer::upper(...$entry_names);
-    }
-
-    final public static function subtract(string $left_entry, string $right_entry, string $new_entry_name = null) : Transformer
-    {
-        return MathOperationTransformer::subtract($left_entry, $right_entry, $new_entry_name ?? $left_entry);
-    }
-
-    final public static function subtract_value(string $left_entry, int|float $value, string $new_entry_name = null) : Transformer
-    {
-        return MathValueOperationTransformer::subtract($left_entry, $value, $new_entry_name ?? $left_entry);
     }
 
     final public static function suffix(string|Reference $entry, string $suffix) : Transformer
@@ -713,11 +596,6 @@ class Transform
     final public static function to_string_from_datetime(array $entries, string $format) : Transformer
     {
         return new CastTransformer(new Transformer\Cast\CastEntries($entries, new DateTimeToStringEntryCaster($format), true));
-    }
-
-    final public static function transform_if(RowCondition $condition, Transformer $transformer) : Transformer
-    {
-        return new Transformer\ConditionalTransformer($condition, $transformer);
     }
 
     final public static function trim(string $entry, string $characters = " \n\r\t\v\x00") : Transformer

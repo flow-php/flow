@@ -1,5 +1,6 @@
 <?php declare(strict_types=1);
 
+use function Flow\ETL\DSL\ref;
 use Aeon\Calendar\Stopwatch;
 use Flow\ETL\Adapter\Doctrine\Order;
 use Flow\ETL\Adapter\Doctrine\OrderBy;
@@ -29,7 +30,8 @@ print "Loading {$rows} rows into postgresql...\n";
             new OrderBy('id', Order::DESC)
         )
     )
-    ->rows(Transform::array_unpack('row'))
+    ->withEntry('unpacked', ref('row')->unpack())
+    ->renameAll('unpacked.', '')
     ->drop('row')
     ->rows(Transform::to_integer('id'))
     ->rows(Transform::string_concat(['name', 'last_name'], ' ', 'name'))

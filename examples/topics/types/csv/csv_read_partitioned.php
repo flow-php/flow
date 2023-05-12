@@ -8,7 +8,6 @@ use Aeon\Calendar\Stopwatch;
 use Flow\ETL\DSL\CSV;
 use Flow\ETL\DSL\Partitions;
 use Flow\ETL\DSL\To;
-use Flow\ETL\DSL\Transform;
 use Flow\ETL\Flow;
 
 require __DIR__ . '/../../../bootstrap.php';
@@ -21,7 +20,8 @@ $total = 0;
 
 (new Flow())
     ->read(CSV::from(__FLOW_DATA__ . '/partitioned'))
-    ->rows(Transform::array_unpack(\col('row')))
+    ->withEntry('unpacked', ref('row')->unpack())
+    ->renameAll('unpacked.', '')
     ->drop(col('row'))
     ->collect()
     ->sortBy(ref('id'))
@@ -36,7 +36,8 @@ print "Reading partitioned CSV dataset with partition filtering...\n";
 
 (new Flow())
     ->read(CSV::from(__FLOW_DATA__ . '/partitioned'))
-    ->rows(Transform::array_unpack('row'))
+    ->withEntry('unpacked', ref('row')->unpack())
+    ->renameAll('unpacked.', '')
     ->drop('row')
     ->collect()
     ->filterPartitions(Partitions::only('t_shirt_color', 'green'))

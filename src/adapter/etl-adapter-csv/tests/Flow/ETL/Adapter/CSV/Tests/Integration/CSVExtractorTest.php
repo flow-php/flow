@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\CSV\Tests\Integration;
 
 use function Flow\ETL\DSL\col;
+use function Flow\ETL\DSL\ref;
 use Flow\ETL\Config;
 use Flow\ETL\DSL\CSV;
 use Flow\ETL\DSL\Transform;
@@ -160,7 +161,8 @@ final class CSVExtractorTest extends TestCase
     {
         $rows = (new Flow())
             ->extract(CSV::from(__DIR__ . '/../Fixtures/corrupted_row.csv'))
-            ->transform(Transform::array_unpack('row'))
+            ->withEntry('unpacked', ref('row')->unpack())
+            ->renameAll('unpacked.', '')
             ->drop('row')
             ->fetch();
 
@@ -217,7 +219,8 @@ final class CSVExtractorTest extends TestCase
             2,
             (new Flow())
                 ->read(CSV::from(__DIR__ . '/../Fixtures/more_than_1000_characters_per_line.csv'))
-                ->rows(Transform::array_unpack('row'))
+                ->withEntry('unpacked', ref('row')->unpack())
+                ->renameAll('unpacked.', '')
                 ->drop('row')
                 ->fetch()
                 ->toArray(),
@@ -231,7 +234,8 @@ final class CSVExtractorTest extends TestCase
             1,
             (new Flow())
                 ->read(CSV::from(__DIR__ . '/../Fixtures/more_than_1000_characters_per_line.csv', characters_read_in_line: 2000))
-                ->rows(Transform::array_unpack('row'))
+                ->withEntry('unpacked', ref('row')->unpack())
+                ->renameAll('unpacked.', '')
                 ->drop('row')
                 ->fetch()
                 ->toArray(),
@@ -254,7 +258,8 @@ final class CSVExtractorTest extends TestCase
             ],
             (new Flow())
                 ->read(CSV::from(__DIR__ . '/../Fixtures/partitioned/group=*'))
-                ->rows(Transform::array_unpack('row'))
+                ->withEntry('unpacked', ref('row')->unpack())
+                ->renameAll('unpacked.', '')
                 ->rows(Transform::to_integer('id'))
                 ->drop('row')
                 ->sortBy(col('id'))

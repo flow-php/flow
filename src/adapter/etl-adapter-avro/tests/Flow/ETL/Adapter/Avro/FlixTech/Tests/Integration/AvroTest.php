@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Avro\FlixTech\Tests\Integration;
 
+use function Flow\ETL\DSL\ref;
 use Flow\ETL\Config;
 use Flow\ETL\DSL\Avro;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\DSL\From;
-use Flow\ETL\DSL\Transform;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Flow;
@@ -84,7 +84,8 @@ final class AvroTest extends TestCase
             $rows,
             (new Flow())
                 ->read(Avro::from($paths))
-                ->transform(Transform::array_unpack('row'))
+                ->withEntry('unpacked', ref('row')->unpack())
+                ->renameAll('unpacked.', '')
                 ->drop('row')
                 ->fetch()
         );
@@ -131,7 +132,8 @@ final class AvroTest extends TestCase
             $rows,
             Flow::setUp(Config::builder()->putInputIntoRows()->build())
                 ->read(Avro::from($path))
-                ->transform(Transform::array_unpack('row'))
+                ->withEntry('unpacked', ref('row')->unpack())
+                ->renameAll('unpacked.', '')
                 ->drop('row')
                 ->drop('input_file_uri')
                 ->fetch()
@@ -194,7 +196,8 @@ final class AvroTest extends TestCase
             $rows,
             (new Flow())
                 ->read(Avro::from($path))
-                ->transform(Transform::array_unpack('row'))
+                ->withEntry('unpacked', ref('row')->unpack())
+                ->renameAll('unpacked.', '')
                 ->drop('row')
                 ->fetch()
         );
@@ -255,7 +258,8 @@ final class AvroTest extends TestCase
             $rows,
             (new Flow())
                 ->read(Avro::from($path))
-                ->transform(Transform::array_unpack('row'))
+                ->withEntry('unpacked', ref('row')->unpack())
+                ->renameAll('unpacked.', '')
                 ->drop('row')
                 ->fetch()
         );
@@ -316,7 +320,8 @@ final class AvroTest extends TestCase
             $rows,
             (new Flow())
                 ->read(Avro::from($path))
-                ->transform(Transform::array_unpack('row'))
+                ->withEntry('unpacked', ref('row')->unpack())
+                ->renameAll('unpacked.', '')
                 ->drop('row')
                 ->fetch()
         );
