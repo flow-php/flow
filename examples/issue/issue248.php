@@ -1,5 +1,6 @@
 <?php declare(strict_types=1);
 
+use function Flow\ETL\DSL\ref;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\DSL\From;
 use Flow\ETL\DSL\To;
@@ -19,7 +20,8 @@ require __DIR__ . '/../../vendor/autoload.php';
             ['entry_a' => 'value', 'entry_b' => 'value'],
         ]
     ))
-    ->rows(Transform::array_unpack('row'))
+    ->withEntry('unpacked', ref('row')->unpack())
+    ->renameAll('unpacked.', '')
     ->drop('row')
     ->write(To::stdout())
     ->rows(Transform::add_integer('extra_value', \random_int(1, 5)))
@@ -33,7 +35,8 @@ require __DIR__ . '/../../vendor/autoload.php';
             ['entry_a' => 'value', 'entry_b' => 'value'],
         ]
     ))
-    ->rows(Transform::array_unpack('row'))
+    ->withEntry('unpacked', ref('row')->unpack())
+    ->renameAll('unpacked.', '')
     ->drop('row')
     ->write(To::stdout())
     ->map(static fn (Row $row) : Row => $row->add(Entry::integer('extra_value', \random_int(1, 5))))
@@ -47,7 +50,8 @@ require __DIR__ . '/../../vendor/autoload.php';
             ['entry_a' => 'value', 'entry_b' => 'value'],
         ]
     ))
-    ->rows(Transform::array_unpack('row'))
+    ->withEntry('unpacked', ref('row')->unpack())
+    ->renameAll('unpacked.', '')
     ->drop('row')
     ->write(To::stdout())
     ->transform(

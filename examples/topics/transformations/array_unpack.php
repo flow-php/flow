@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\array_unpack;
 use function Flow\ETL\DSL\ref;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\DSL\From;
@@ -21,6 +20,6 @@ require __DIR__ . '/../../bootstrap.php';
         ))
     )
     ->write(To::output(false))
-    ->withEntry('unpacked', array_unpack(ref('array')))
+    ->withEntry('unpacked', ref('row')->unpack())
     ->write(To::output(false))
     ->run();

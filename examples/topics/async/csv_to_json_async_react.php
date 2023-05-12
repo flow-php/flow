@@ -1,6 +1,7 @@
 #!/usr/bin/env php
 <?php
 
+use function Flow\ETL\DSL\ref;
 use Aeon\Calendar\Stopwatch;
 use Flow\ETL\Async\ReactPHP\Server\SocketServer;
 use Flow\ETL\Async\ReactPHP\Worker\ChildProcessLauncher;
@@ -40,7 +41,8 @@ print "Loading CSV {$csvFileSize}Mb file into json file...\n";
             $workers = 8
         )
     )
-    ->rows(Transform::array_unpack('row'))
+    ->withEntry('unpacked', ref('row')->unpack())
+    ->renameAll('unpacked.', '')
     ->drop('row')
     ->rows(Transform::to_integer('id'))
     ->rows(Transform::string_concat(['name', 'last name'], ' ', 'name'))

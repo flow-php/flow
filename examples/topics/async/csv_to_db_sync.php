@@ -1,6 +1,7 @@
 
 <?php
 
+use function Flow\ETL\DSL\ref;
 use Aeon\Calendar\Stopwatch;
 use Flow\ETL\Adapter\Doctrine\DbalLoader;
 use Flow\ETL\DSL\CSV;
@@ -25,7 +26,8 @@ print "Loading CSV {$csvFileSize}Mb file into postgresql...\n";
 
 (new Flow())
     ->read(CSV::from($path = __FLOW_OUTPUT__ . '/dataset.csv', 10_000))
-    ->rows(Transform::array_unpack('row'))
+    ->withEntry('unpacked', ref('row')->unpack())
+    ->renameAll('unpacked.', '')
     ->drop('row')
     ->rows(Transform::to_integer('id'))
     ->rows(Transform::string_concat(['name', 'last name'], ' ', 'name'))

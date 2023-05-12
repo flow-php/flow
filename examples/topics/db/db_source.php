@@ -1,6 +1,7 @@
 #!/usr/bin/env php
 <?php
 
+use function Flow\ETL\DSL\ref;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Table;
@@ -8,7 +9,6 @@ use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
 use Flow\ETL\Adapter\Doctrine\DbalLoader;
 use Flow\ETL\DSL\CSV;
-use Flow\ETL\DSL\Transform;
 use Flow\ETL\Flow;
 
 $dbConnectionString = 'postgresql://postgres:postgres@127.0.0.1:5432/postgres?serverVersion=11%26charset=utf8';
@@ -32,7 +32,8 @@ $dbConnection->createSchemaManager()->createTable(
 
 (new Flow())
     ->read(CSV::from($path = __FLOW_OUTPUT__ . '/dataset.csv', 10_000))
-    ->rows(Transform::array_unpack('row'))
+    ->withEntry('unpacked', ref('row')->unpack())
+    ->renameAll('unpacked.', '')
     ->drop('row')
     ->rename('last name', 'last_name')
     ->limit(1_000_000)

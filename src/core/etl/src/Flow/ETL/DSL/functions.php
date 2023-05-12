@@ -64,6 +64,11 @@ function array_exists(Expression $ref, string $path) : Expression
     return new Expression\ArrayExists($ref, $path);
 }
 
+function array_merge(Expression $left, Expression $right) : Expression
+{
+    return new Expression\ArrayMerge($left, $right);
+}
+
 function now(\DateTimeZone $time_zone = new \DateTimeZone('UTC')) : Expression
 {
     return new Expression\Now($time_zone);

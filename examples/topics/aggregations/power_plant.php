@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use function Flow\ETL\DSL\col;
+use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\struct;
 use Flow\ETL\DSL\CSV;
 use Flow\ETL\DSL\To;
@@ -14,7 +15,8 @@ require __DIR__ . '/../../bootstrap.php';
 
 (new Flow())
     ->read(CSV::from(__FLOW_DATA__ . '/power-plant-daily.csv', 10, delimiter: ';'))
-    ->rows(Transform::array_unpack(col('row')))
+    ->withEntry('unpacked', ref('row')->unpack())
+    ->renameAll('unpacked.', '')
     ->rows(Transform::rename('Produkcja(kWh)', 'production_kwh'))
     ->rows(Transform::rename('Zużycie(kWh)', 'consumption_kwh'))
     ->rows(Transform::rename('Zaktualizowany czas', 'date'))

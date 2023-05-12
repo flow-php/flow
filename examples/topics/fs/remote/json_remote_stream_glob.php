@@ -1,5 +1,6 @@
 <?php declare(strict_types=1);
 
+use function Flow\ETL\DSL\ref;
 use Flow\ETL\DSL\CSV;
 use Flow\ETL\DSL\Transform;
 use Flow\ETL\Filesystem\AwsS3Stream;
@@ -38,7 +39,8 @@ AzureBlobStream::register();
 
 (new Flow())
     ->read(CSV::from(new Path('flow-aws-s3://nested/**/*.csv', $s3_client_option), 10))
-    ->rows(Transform::array_unpack('row'))
+    ->withEntry('unpacked', ref('row')->unpack())
+    ->renameAll('unpacked.', '')
     ->drop('row')
     ->rows(Transform::to_integer('id'))
     ->rows(Transform::string_concat(['name', 'last name'], ' ', 'name'))

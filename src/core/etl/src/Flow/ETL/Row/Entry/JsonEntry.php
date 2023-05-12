@@ -119,7 +119,10 @@ final class JsonEntry implements \Stringable, Entry
 
     public function rename(string $name) : Entry
     {
-        return new self($name, $this->value);
+        $entry = new self($name, $this->value);
+        $entry->object = $this->object;
+
+        return $entry;
     }
 
     public function toString() : string
