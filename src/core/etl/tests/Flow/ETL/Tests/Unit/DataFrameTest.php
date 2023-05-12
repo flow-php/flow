@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
+use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use Flow\ETL\Async\Socket\Server\Server;
 use Flow\ETL\Async\Socket\Worker\WorkerLauncher;
@@ -147,7 +148,7 @@ final class DataFrameTest extends TestCase
                 public function transform(DataFrame $dataFrame) : DataFrame
                 {
                     return $dataFrame->transform(Transform::string_lower('country'))
-                        ->transform(Transform::divide_by('age', 10));
+                        ->withEntry('age', ref('age')->divide(lit(10)));
                 }
             })
             ->rows(
@@ -1351,10 +1352,11 @@ ASCIITABLE,
                 }
             }
         )
-            ->rows(Transform::array_expand('ids'))
-            ->rows(Transform::array_unpack('element'))
-            ->drop('element')
-            ->rows(Transform::array_expand('more_ids'))
+            ->withEntry('expanded', ref('ids')->expand())
+            ->withEntry('element', ref('expanded')->unpack())
+            ->withEntry('more_ids', ref('element.more_ids')->expand())
+            ->rename('element.id', 'id')
+            ->drop('expanded', 'ids', 'element', 'element.more_ids')
             ->load(To::callback(function (Rows $rows) : void {
                 $this->assertSame(3, $rows->count());
             }))

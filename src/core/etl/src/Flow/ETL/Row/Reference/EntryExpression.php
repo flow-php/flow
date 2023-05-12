@@ -35,6 +35,11 @@ use Flow\ETL\Row\Reference\Expression\Trim;
 
 trait EntryExpression
 {
+    public function arrayMerge(Expression $ref) : Expression
+    {
+        return new Expressions(new Expression\ArrayMerge($this, $ref));
+    }
+
     public function arraySort(\Closure $function = null) : Expression
     {
         return new Expressions(new Expression\ArraySort($this, $function ?? \Closure::fromCallable('sort')));

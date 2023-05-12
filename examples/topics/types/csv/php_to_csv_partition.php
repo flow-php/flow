@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 use function Flow\ETL\DSL\col;
+use function Flow\ETL\DSL\ref;
 use Aeon\Calendar\Stopwatch;
 use Flow\ETL\DSL\CSV;
-use Flow\ETL\DSL\Transform;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Flow;
 
@@ -19,7 +19,8 @@ $total = 0;
 
 (new Flow())
     ->read($extractor)
-    ->rows(Transform::array_unpack('row'))
+    ->withEntry('unpacked', ref('row')->unpack())
+    ->renameAll('unpacked.', '')
     ->drop(col('row'))
     ->mode(SaveMode::Overwrite)
     ->partitionBy('country_code', 't_shirt_color')

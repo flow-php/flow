@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine;
 
+use function Flow\ETL\DSL\ref;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Flow\ETL\DataFrame;
 use Flow\ETL\DataFrameFactory;
 use Flow\ETL\DSL\Dbal;
-use Flow\ETL\DSL\Transform;
 use Flow\ETL\Flow;
 use Flow\ETL\Rows;
 
@@ -91,7 +91,8 @@ final class DbalDataFrameFactory implements DataFrameFactory
                     $rowEntryName = 'row'
                 )
             )
-            ->transform(Transform::array_unpack($rowEntryName))
+            ->withEntry('unpacked', ref($rowEntryName)->unpack())
+            ->renameAll('unpacked.', '')
             ->drop($rowEntryName);
     }
 

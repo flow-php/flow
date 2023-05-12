@@ -3,10 +3,10 @@
 declare(strict_types=1);
 
 use function Flow\ETL\DSL\col;
+use function Flow\ETL\DSL\ref;
 use Aeon\Calendar\Stopwatch;
 use Flow\ETL\DSL\CSV;
 use Flow\ETL\DSL\Json;
-use Flow\ETL\DSL\Transform;
 use Flow\ETL\Flow;
 use Flow\ETL\Monitoring\Memory\Consumption;
 
@@ -22,7 +22,8 @@ $memory->current();
 
 (new Flow())
     ->read($extractor)
-    ->rows(Transform::array_unpack('row'))
+    ->withEntry('unpacked', ref('row')->unpack())
+    ->renameAll('unpacked.', '')
     ->drop(col('row'))
     ->write(CSV::to(__FLOW_OUTPUT__ . '/dataset.csv'))
     ->write(Json::to(__FLOW_OUTPUT__ . '/dataset.json'))

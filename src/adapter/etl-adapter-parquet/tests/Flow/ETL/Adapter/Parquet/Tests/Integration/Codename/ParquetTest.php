@@ -8,7 +8,6 @@ use function Flow\ETL\DSL\ref;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\DSL\From;
 use Flow\ETL\DSL\Parquet;
-use Flow\ETL\DSL\Transform;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Flow;
 use Flow\ETL\Row;
@@ -59,7 +58,8 @@ final class ParquetTest extends TestCase
             ),
             (new Flow())
                 ->read(Parquet::from($path, 'row', ['integer']))
-                ->transform(Transform::array_unpack('row'))
+                ->withEntry('unpacked', ref('row')->unpack())
+                ->renameAll('unpacked.', '')
                 ->drop('row')
                 ->fetch()
         );
@@ -98,7 +98,8 @@ final class ParquetTest extends TestCase
             $rows,
             (new Flow())
                 ->read(Parquet::from($path))
-                ->transform(Transform::array_unpack('row'))
+                ->withEntry('unpacked', ref('row')->unpack())
+                ->renameAll('unpacked.', '')
                 ->drop('row')
                 ->fetch()
         );
@@ -143,7 +144,8 @@ final class ParquetTest extends TestCase
             $rows,
             (new Flow())
                 ->read(Parquet::from($paths))
-                ->transform(Transform::array_unpack('row'))
+                ->withEntry('unpacked', ref('row')->unpack())
+                ->renameAll('unpacked.', '')
                 ->drop('row')
                 ->sortBy(ref('integer'))
                 ->fetch()
