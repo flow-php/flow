@@ -1,6 +1,7 @@
-## [Unreleased] - 2023-05-04
+## [Unreleased] - 2023-05-12
 
 ### Added
+- [#423](https://github.com/flow-php/flow/pull/423) - **ArrayMerge expression** - [@norberttech](https://github.com/norberttech)
 - [#417](https://github.com/flow-php/flow/pull/417) - **Add new sanitize expression** - [@stloyd](https://github.com/stloyd)
 - [#415](https://github.com/flow-php/flow/pull/415) - **Added regex_match expression** - [@norberttech](https://github.com/norberttech)
 - [#415](https://github.com/flow-php/flow/pull/415) - **Added regex_match_all expression** - [@norberttech](https://github.com/norberttech)
@@ -62,6 +63,7 @@
 - [8eb674](https://github.com/flow-php/flow/commit/8eb6744e7ca69ecd75d09a2263e586c0fbd0472f) - **README.md** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#423](https://github.com/flow-php/flow/pull/423) - **deprecated transformers that are replaced by Entry Expressions** - [@norberttech](https://github.com/norberttech)
 - [#390](https://github.com/flow-php/flow/pull/390) - **Remove impure psalm suppress leftovers** - [@stloyd](https://github.com/stloyd)
 
 ### Deprecated
