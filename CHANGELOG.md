@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-05-12
+## [Unreleased] - 2023-05-14
 
 ### Added
 - [#423](https://github.com/flow-php/flow/pull/423) - **ArrayMerge expression** - [@norberttech](https://github.com/norberttech)
@@ -63,6 +63,8 @@
 - [8eb674](https://github.com/flow-php/flow/commit/8eb6744e7ca69ecd75d09a2263e586c0fbd0472f) - **README.md** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#424](https://github.com/flow-php/flow/pull/424) - **Remove support for not maintained Symfony & Doctrine dependencies** - [@stloyd](https://github.com/stloyd)
+- [#424](https://github.com/flow-php/flow/pull/424) - **Remove BC code from Doctrine adapter** - [@stloyd](https://github.com/stloyd)
 - [#423](https://github.com/flow-php/flow/pull/423) - **deprecated transformers that are replaced by Entry Expressions** - [@norberttech](https://github.com/norberttech)
 - [#390](https://github.com/flow-php/flow/pull/390) - **Remove impure psalm suppress leftovers** - [@stloyd](https://github.com/stloyd)
 
