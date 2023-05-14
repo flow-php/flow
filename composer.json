@@ -19,7 +19,7 @@
         "amphp/process": "^2",
         "amphp/socket": "^2",
         "codename/parquet": "~0.6.2 || ~0.7.0",
-        "doctrine/dbal": "~2.12||~3.6",
+        "doctrine/dbal": "^3.6",
         "elasticsearch/elasticsearch": "^7.6|^8.0",
         "flix-tech/avro-php": "~4.2.0 || ~4.3.0",
         "google/apiclient": "^2.13",
@@ -46,9 +46,9 @@
         "php-http/mock-client": "^1.5",
         "ramsey/uuid": "^4.5",
         "rector/rector": "^0.13.8 || ^0.14.0 || ^0.15.0",
-        "symfony/cache": "^6.1",
-        "symfony/dotenv": "^6.1",
-        "symfony/validator": "^5.3 || ^6.0"
+        "symfony/cache": "^6.2",
+        "symfony/dotenv": "^6.2",
+        "symfony/validator": "^5.4 || ^6.2"
     },
     "autoload": {
         "files": [

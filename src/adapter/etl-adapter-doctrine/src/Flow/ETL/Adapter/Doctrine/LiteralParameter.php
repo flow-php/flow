@@ -12,9 +12,6 @@ use Flow\Serializer\Serializable;
  */
 final class LiteralParameter implements QueryParameter, Serializable
 {
-    /**
-     * @psalm-suppress DeprecatedConstant
-     */
     public function __construct(
         public readonly string $queryParamName,
         public readonly mixed $value,
