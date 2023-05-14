@@ -1,6 +1,7 @@
-## [Unreleased] - 2023-05-04
+## [Unreleased] - 2023-05-14
 
 ### Added
+- [#423](https://github.com/flow-php/flow/pull/423) - **ArrayMerge expression** - [@norberttech](https://github.com/norberttech)
 - [#417](https://github.com/flow-php/flow/pull/417) - **Add new sanitize expression** - [@stloyd](https://github.com/stloyd)
 - [#415](https://github.com/flow-php/flow/pull/415) - **Added regex_match expression** - [@norberttech](https://github.com/norberttech)
 - [#415](https://github.com/flow-php/flow/pull/415) - **Added regex_match_all expression** - [@norberttech](https://github.com/norberttech)
@@ -41,6 +42,7 @@
 - [#388](https://github.com/flow-php/flow/pull/388) - **Added `ext-hash` PHP extension as required for Flow** - [@stloyd](https://github.com/stloyd)
 
 ### Changed
+- [#425](https://github.com/flow-php/flow/pull/425) - **Simplify setting limit in monitoring configuration** - [@stloyd](https://github.com/stloyd)
 - [#420](https://github.com/flow-php/flow/pull/420) - **Skip phpstan analyse in `Sanitize` extension** - [@stloyd](https://github.com/stloyd)
 - [#419](https://github.com/flow-php/flow/pull/419) - **Modify `StrReplace` expression to work with arrays** - [@stloyd](https://github.com/stloyd)
 - [#418](https://github.com/flow-php/flow/pull/418) - **Adjust string value extraction in ASCIIValue to match PHP docs** - [@stloyd](https://github.com/stloyd)
@@ -62,6 +64,9 @@
 - [8eb674](https://github.com/flow-php/flow/commit/8eb6744e7ca69ecd75d09a2263e586c0fbd0472f) - **README.md** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#424](https://github.com/flow-php/flow/pull/424) - **Remove support for not maintained Symfony & Doctrine dependencies** - [@stloyd](https://github.com/stloyd)
+- [#424](https://github.com/flow-php/flow/pull/424) - **Remove BC code from Doctrine adapter** - [@stloyd](https://github.com/stloyd)
+- [#423](https://github.com/flow-php/flow/pull/423) - **deprecated transformers that are replaced by Entry Expressions** - [@norberttech](https://github.com/norberttech)
 - [#390](https://github.com/flow-php/flow/pull/390) - **Remove impure psalm suppress leftovers** - [@stloyd](https://github.com/stloyd)
 
 ### Deprecated
