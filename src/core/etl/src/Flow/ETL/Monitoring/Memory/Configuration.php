@@ -8,7 +8,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 
 final class Configuration
 {
-    private ?Unit $limit;
+    private ?Unit $limit = null;
 
     public function __construct(int $safetyBufferPercentage)
     {
@@ -18,9 +18,7 @@ final class Configuration
 
         $limitConfig = \ini_get('memory_limit');
 
-        if ($limitConfig === false || \str_starts_with($limitConfig, '-')) {
-            $this->limit = null;
-        } else {
+        if ($limitConfig !== false && !\str_starts_with($limitConfig, '-')) {
             $this->limit = Unit::fromString($limitConfig)->percentage(100 - $safetyBufferPercentage);
         }
     }
