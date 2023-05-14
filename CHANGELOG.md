@@ -42,6 +42,7 @@
 - [#388](https://github.com/flow-php/flow/pull/388) - **Added `ext-hash` PHP extension as required for Flow** - [@stloyd](https://github.com/stloyd)
 
 ### Changed
+- [#425](https://github.com/flow-php/flow/pull/425) - **Simplify setting limit in monitoring configuration** - [@stloyd](https://github.com/stloyd)
 - [#420](https://github.com/flow-php/flow/pull/420) - **Skip phpstan analyse in `Sanitize` extension** - [@stloyd](https://github.com/stloyd)
 - [#419](https://github.com/flow-php/flow/pull/419) - **Modify `StrReplace` expression to work with arrays** - [@stloyd](https://github.com/stloyd)
 - [#418](https://github.com/flow-php/flow/pull/418) - **Adjust string value extraction in ASCIIValue to match PHP docs** - [@stloyd](https://github.com/stloyd)
