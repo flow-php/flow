@@ -30,6 +30,7 @@
             <directory>src/lib/doctrine-dbal-bulk/tests/Flow/Doctrine/Bulk/Tests/Unit</directory>
             <directory>src/adapter/etl-adapter-amphp/tests/Flow/ETL/Async/Tests/Unit</directory>
             <directory>src/adapter/etl-adapter-avro/tests/Flow/ETL/Adapter/Avro/FlixTech/Tests/Unit</directory>
+            <directory>src/adapter/etl-adapter-chartjs/tests/Flow/ETL/Adapter/ChartJS/Tests/Unit</directory>
             <directory>src/adapter/etl-adapter-http/tests/Flow/ETL/Tests/Unit</directory>
             <directory>src/adapter/etl-adapter-logger/tests/Flow/ETL/Tests/Unit</directory>
             <directory>src/adapter/etl-adapter-doctrine/tests/Flow/ETL/Adapter/Doctrine/Tests/Unit</directory>
@@ -42,6 +43,7 @@
             <directory>src/core/etl/tests/Flow/ETL/Tests/Integration</directory>
             <directory>src/adapter/etl-adapter-amphp/tests/Flow/ETL/Async/Tests/Integration</directory>
             <directory>src/adapter/etl-adapter-avro/tests/Flow/ETL/Adapter/Avro/FlixTech/Tests/Integration</directory>
+            <directory>src/adapter/etl-adapter-chartjs/tests/Flow/ETL/Adapter/ChartJS/Tests/Integration</directory>
             <directory>src/adapter/etl-adapter-csv/tests/Flow/ETL/Adapter/CSV/Tests/Integration</directory>
             <directory>src/adapter/etl-adapter-json/tests/Flow/ETL/Tests/Integration</directory>
             <directory>src/adapter/etl-adapter-parquet/tests/Flow/ETL/Adapter/Parquet/Tests/Integration</directory>

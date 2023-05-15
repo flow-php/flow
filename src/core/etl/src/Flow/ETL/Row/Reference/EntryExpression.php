@@ -7,6 +7,7 @@ namespace Flow\ETL\Row\Reference;
 use function Flow\ETL\DSL\lit;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference\Expression\Cast;
 use Flow\ETL\Row\Reference\Expression\Contains;
 use Flow\ETL\Row\Reference\Expression\Divide;
@@ -35,47 +36,57 @@ use Flow\ETL\Row\Reference\Expression\Trim;
 
 trait EntryExpression
 {
-    public function arrayMerge(Expression $ref) : Expression
+    public function arrayMerge(Expression $ref) : Expression|EntryReference
     {
         return new Expressions(new Expression\ArrayMerge($this, $ref));
     }
 
-    public function arraySort(\Closure $function = null) : Expression
+    public function arraySort(\Closure $function = null) : Expression|EntryReference
     {
         return new Expressions(new Expression\ArraySort($this, $function ?? \Closure::fromCallable('sort')));
     }
 
-    public function cast(string $type) : Expression
+    public function cast(string $type) : Expression|EntryReference
     {
         return new Expressions(new Cast($this, $type));
     }
 
-    public function contains(Expression $needle) : Expression
+    public function contains(Expression $needle) : Expression|EntryReference
     {
         return new Expressions(new Contains($this, $needle));
     }
 
-    public function count() : Expression
+    public function count() : Expression|EntryReference
     {
         return new Expressions(new Expression\Count($this));
     }
 
-    public function divide(Expression $ref) : Expression
+    public function dateFormat(string $format = 'Y-m-d') : Expression|EntryReference
+    {
+        return new Expressions(new Expression\DateTimeFormat($this, $format));
+    }
+
+    public function dateTimeFormat(string $format = 'Y-m-d H:i:s') : Expression|EntryReference
+    {
+        return new Expressions(new Expression\DateTimeFormat($this, $format));
+    }
+
+    public function divide(Expression $ref) : Expression|EntryReference
     {
         return new Expressions(new Divide($this, $ref));
     }
 
-    public function endsWith(Expression $needle) : Expression
+    public function endsWith(Expression $needle) : Expression|EntryReference
     {
         return new Expressions(new EndsWith($this, $needle));
     }
 
-    public function equals(Expression $ref) : Expression
+    public function equals(Expression $ref) : Expression|EntryReference
     {
         return new Expressions(new Equals($this, $ref));
     }
 
-    public function exists() : Expression
+    public function exists() : Expression|EntryReference
     {
         return new Expressions(new Expression\Exists($this));
     }
@@ -100,47 +111,47 @@ trait EntryExpression
      *   | 1|       3|
      *   +--+--------+
      */
-    public function expand(string $expandEntryName = 'element') : Expression
+    public function expand(string $expandEntryName = 'element') : Expression|EntryReference
     {
         return new Expressions(new Expression\ArrayExpand($this));
     }
 
-    public function greaterThan(Expression $ref) : Expression
+    public function greaterThan(Expression $ref) : Expression|EntryReference
     {
         return new Expressions(new GreaterThan($this, $ref));
     }
 
-    public function greaterThanEqual(Expression $ref) : Expression
+    public function greaterThanEqual(Expression $ref) : Expression|EntryReference
     {
         return new Expressions(new GreaterThanEqual($this, $ref));
     }
 
-    public function hash(string $algorithm = 'xxh128', bool $binary = false, array $options = []) : Expression
+    public function hash(string $algorithm = 'xxh128', bool $binary = false, array $options = []) : Expression|EntryReference
     {
         return new Expressions(new Expression\Hash($this, $algorithm, $binary, $options));
     }
 
-    public function isEven() : Expression
+    public function isEven() : Expression|EntryReference
     {
         return new Equals(new Mod($this, lit(2)), lit(0));
     }
 
-    public function isIn(Expression $haystack) : Expression
+    public function isIn(Expression $haystack) : Expression|EntryReference
     {
         return new Expressions(new IsIn($haystack, $this));
     }
 
-    public function isNotNull() : Expression
+    public function isNotNull() : Expression|EntryReference
     {
         return new Expressions(new IsNotNull($this));
     }
 
-    public function isNull() : Expression
+    public function isNull() : Expression|EntryReference
     {
         return new Expressions(new IsNull($this));
     }
 
-    public function isOdd() : Expression
+    public function isOdd() : Expression|EntryReference
     {
         return new NotEquals(new Mod($this, lit(2)), lit(0));
     }
@@ -148,7 +159,7 @@ trait EntryExpression
     /**
      * @param class-string<Entry> ...$entryClass
      */
-    public function isType(string ...$entryClass) : Expression
+    public function isType(string ...$entryClass) : Expression|EntryReference
     {
         if (!\count($entryClass)) {
             throw new InvalidArgumentException('isType expression requires at least one entryClass');
@@ -157,112 +168,123 @@ trait EntryExpression
         return new Expressions(new IsType($this, ...$entryClass));
     }
 
-    public function jsonDecode(int $flags = JSON_THROW_ON_ERROR) : Expression
+    public function jsonDecode(int $flags = JSON_THROW_ON_ERROR) : Expression|EntryReference
     {
         return new Expressions(new Expression\JsonDecode($this));
     }
 
-    public function jsonEncode(int $flags = JSON_THROW_ON_ERROR) : Expression
+    public function jsonEncode(int $flags = JSON_THROW_ON_ERROR) : Expression|EntryReference
     {
         return new Expressions(new Expression\JsonEncode($this, $flags));
     }
 
-    public function lessThan(Expression $ref) : Expression
+    public function lessThan(Expression $ref) : Expression|EntryReference
     {
         return new Expressions(new LessThan($this, $ref));
     }
 
-    public function lessThanEqual(Expression $ref) : Expression
+    public function lessThanEqual(Expression $ref) : Expression|EntryReference
     {
         return new Expressions(new LessThanEqual($this, $ref));
     }
 
-    public function literal(mixed $value) : Expression
+    public function literal(mixed $value) : Expression|EntryReference
     {
         return new Expressions(new Literal($value));
     }
 
-    public function lower() : Expression
+    public function lower() : Expression|EntryReference
     {
         return new Expressions(new Expression\ToLower($this));
     }
 
-    public function method(Expression $method, Expression ...$params) : Expression
+    public function method(Expression $method, Expression ...$params) : Expression|EntryReference
     {
         return new Expressions(new Expression\CallMethod($this, $method, ...$params));
     }
 
-    public function minus(Expression $ref) : Expression
+    public function minus(Expression $ref) : Expression|EntryReference
     {
         return new Expressions(new Minus($this, $ref));
     }
 
-    public function mod(Expression $ref) : Expression
+    public function mod(Expression $ref) : Expression|EntryReference
     {
         return new Expressions(new Mod($this, $ref));
     }
 
-    public function multiply(Expression $ref) : Expression
+    public function multiply(Expression $ref) : Expression|EntryReference
     {
         return new Expressions(new Multiply($this, $ref));
     }
 
-    public function notEquals(Expression $ref) : Expression
+    public function notEquals(Expression $ref) : Expression|EntryReference
     {
         return new Expressions(new NotEquals($this, $ref));
     }
 
-    public function notSame(Expression $ref) : Expression
+    public function notSame(Expression $ref) : Expression|EntryReference
     {
         return new Expressions(new NotSame($this, $ref));
     }
 
-    public function plus(Expression $ref) : Expression
+    public function plus(Expression $ref) : Expression|EntryReference
     {
         return new Expressions(new Plus($this, $ref));
     }
 
-    public function power(Expression $ref) : Expression
+    public function power(Expression $ref) : Expression|EntryReference
     {
         return new Expressions(new Power($this, $ref));
     }
 
-    public function regexMatch(Expression $pattern) : Expression
+    public function regexMatch(Expression $pattern) : Expression|EntryReference
     {
         return new Expressions(new Expression\PregMatch($pattern, $this));
     }
 
-    public function regexMatchAll(Expression $pattern, Expression $flags = null) : Expression
+    public function regexMatchAll(Expression $pattern, Expression $flags = null) : Expression|EntryReference
     {
         return new Expressions(new Expression\PregMatchAll($pattern, $this, $flags));
     }
 
-    public function regexReplace(Expression $pattern, Expression $replacement) : Expression
+    public function regexReplace(Expression $pattern, Expression $replacement) : Expression|EntryReference
     {
         return new Expressions(new Expression\PregReplace($pattern, $replacement, $this));
     }
 
-    public function same(Expression $ref) : Expression
+    /**
+     * @param Expression $precision
+     * @param int<0, max> $mode
+     *
+     * @return Expression
+     */
+    public function round(Expression $precision, int $mode = PHP_ROUND_HALF_UP) : Expression|EntryReference
+    {
+        return new Expressions(new Expression\Round($this, $precision, $mode));
+    }
+
+    public function same(Expression $ref) : Expression|EntryReference
     {
         return new Expressions(new Same($this, $ref));
     }
 
-    public function sanitize(Expression $placeholder = null, Expression $skipCharacters = null) : Expression
+    public function sanitize(Expression $placeholder = null, Expression $skipCharacters = null) : Expression|EntryReference
     {
         return new Expressions(new Expression\Sanitize($this, $placeholder ?: new Expression\Literal('*'), $skipCharacters ?: new Expression\Literal(0)));
     }
 
-    public function size() : Expression
+    public function size() : Expression|EntryReference
     {
         return new Expressions(new Expression\Size($this));
     }
 
-    public function sprintf(Expression ...$params) : Expression
+    public function sprintf(Expression ...$params) : Expression|EntryReference
     {
         return new Expressions(new Expression\Sprintf($this, ...$params));
     }
 
-    public function startsWith(Expression $needle) : Expression
+    public function startsWith(Expression $needle) : Expression|EntryReference
     {
         return new Expressions(new StartsWith($this, $needle));
     }
@@ -271,15 +293,37 @@ trait EntryExpression
      * @param string|string[] $search
      * @param string|string[] $replace
      */
-    public function strReplace(string|array $search, string|array $replace) : Expression
+    public function strReplace(string|array $search, string|array $replace) : Expression|EntryReference
     {
         return new Expressions(new Expression\StrReplace($this, $search, $replace));
     }
 
     /**
+     * @param string $format - current format of the date that will be used to create DateTimeImmutable instance
+     * @param \DateTimeZone $timeZone
+     *
+     * @return Expression
+     */
+    public function toDate(string $format = 'Y-m-d', \DateTimeZone $timeZone = new \DateTimeZone('UTC')) : Expression|EntryReference
+    {
+        return new Expressions(new Expression\ToDate($this, $format, $timeZone));
+    }
+
+    /**
+     * @param string $format - current format of the date that will be used to create DateTimeImmutable instance
+     * @param \DateTimeZone $timeZone
+     *
+     * @return Expression
+     */
+    public function toDateTime(string $format = 'Y-m-d H:i:s', \DateTimeZone $timeZone = new \DateTimeZone('UTC')) : Expression|EntryReference
+    {
+        return new Expressions(new Expression\ToDateTime($this, $format, $timeZone));
+    }
+
+    /**
      * @param int<0, 2> $type
      */
-    public function trim(int $type = Trim::BOTH, string $characters = " \t\n\r\0\x0B") : Expression
+    public function trim(int $type = Trim::BOTH, string $characters = " \t\n\r\0\x0B") : Expression|EntryReference
     {
         return new Expressions(new Expression\Trim($this, $type, $characters));
     }
@@ -303,12 +347,12 @@ trait EntryExpression
      *   | 2|     |     |    4|    5|    6|
      *   +--+-----+-----+-----+-----+-----+
      */
-    public function unpack(array $skipKeys = [], ?string $entryPrefix = null) : Expression
+    public function unpack(array $skipKeys = [], ?string $entryPrefix = null) : Expression|EntryReference
     {
         return new Expressions(new Expression\ArrayUnpack($this, $skipKeys, $entryPrefix));
     }
 
-    public function upper() : Expression
+    public function upper() : Expression|EntryReference
     {
         return new Expressions(new Expression\ToUpper($this));
     }

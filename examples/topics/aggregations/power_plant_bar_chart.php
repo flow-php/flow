@@ -6,14 +6,14 @@ use function Flow\ETL\DSL\concat;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\struct;
+use Flow\ETL\DSL\ChartJS;
 use Flow\ETL\DSL\CSV;
-use Flow\ETL\DSL\To;
 use Flow\ETL\Flow;
 use Flow\ETL\GroupBy\Aggregation;
 
 require __DIR__ . '/../../bootstrap.php';
 
-(new Flow())
+(new Flow)
     ->read(CSV::from(__FLOW_DATA__ . '/power-plant-daily.csv', 10, delimiter: ';'))
     ->withEntry('unpacked', ref('row')->unpack())
     ->renameAll('unpacked.', '')
@@ -44,5 +44,10 @@ require __DIR__ . '/../../bootstrap.php';
     ->withEntry('consumption', ref('consumption_kwh_sum')->divide(ref('production_kwh_sum')))
     ->withEntry('consumption', ref('consumption')->multiply(lit(100))->round(lit(2)))
     ->withEntry('consumption', concat(ref('consumption'), lit('%')))
-    ->write(To::output(truncate: false))
+    ->write(
+        ChartJS::chart(
+            ChartJS::bar(label: ref('date'), datasets: [ref('production_kwh_avg'), ref('consumption_kwh_avg')]),
+            output: __FLOW_OUTPUT__ . '/power_plant_bar_chart.html'
+        )
+    )
     ->run();

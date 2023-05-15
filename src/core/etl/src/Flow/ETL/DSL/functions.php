@@ -249,3 +249,15 @@ function sanitize(Expression $expression, Expression $placeholder = null, Expres
 {
     return new Expression\Sanitize($expression, $placeholder ?: new Expression\Literal('*'), $skipCharacters ?: new Expression\Literal(0));
 }
+
+/**
+ * @param Expression $expression
+ * @param null|Expression $precision
+ * @param int<0, max> $mode
+ *
+ * @return Expression
+ */
+function round(Expression $expression, Expression $precision = null, int $mode = PHP_ROUND_HALF_UP) : Expression
+{
+    return new Expression\Round($expression, $precision ?? lit(2), $mode);
+}

@@ -4,6 +4,7 @@
         "src/core/etl/src",
         "src/adapter/etl-adapter-avro/src",
         "src/adapter/etl-adapter-csv/src",
+        "src/adapter/etl-adapter-chartjs/src",
         "src/adapter/etl-adapter-doctrine/src",
         "src/adapter/etl-adapter-elasticsearch/src",
         "src/adapter/etl-adapter-http/src",

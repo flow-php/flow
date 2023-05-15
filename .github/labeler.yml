@@ -18,6 +18,8 @@ adapter-amphp:
   - any: ["src/adapter/etl-adapter-amphp/**/*"]
 adapter-ampavrohp:
   - any: ["src/adapter/etl-adapter-avro/**/*"]
+adapter-chartjs:
+  - any: ["src/adapter/etl-adapter-chartjs/**/*"]
 adapter-csv:
   - any: ["src/adapter/etl-adapter-csv/**/*"]
 adapter-doctrine:

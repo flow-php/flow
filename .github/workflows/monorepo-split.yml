@@ -31,6 +31,8 @@ jobs:
             split_repository: 'etl-adapter-amphp'
           - local_path: 'src/adapter/etl-adapter-avro'
             split_repository: 'etl-adapter-avro'
+          - local_path: 'src/adapter/etl-adapter-chartjs'
+            split_repository: 'etl-adapter-chartjs'
           - local_path: 'src/adapter/etl-adapter-csv'
             split_repository: 'etl-adapter-csv'
           - local_path: 'src/adapter/etl-adapter-doctrine'
