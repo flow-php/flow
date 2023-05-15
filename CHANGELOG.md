@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-05-14
+## [Unreleased] - 2023-05-15
 
 ### Added
 - [#423](https://github.com/flow-php/flow/pull/423) - **ArrayMerge expression** - [@norberttech](https://github.com/norberttech)
