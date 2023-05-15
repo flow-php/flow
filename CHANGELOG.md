@@ -1,6 +1,11 @@
 ## [Unreleased] - 2023-05-15
 
 ### Added
+- [#426](https://github.com/flow-php/flow/pull/426) - **ChartJS Loader** - [@norberttech](https://github.com/norberttech)
+- [#426](https://github.com/flow-php/flow/pull/426) - **Round expression** - [@norberttech](https://github.com/norberttech)
+- [#426](https://github.com/flow-php/flow/pull/426) - **Cast to datetime and date** - [@norberttech](https://github.com/norberttech)
+- [#426](https://github.com/flow-php/flow/pull/426) - **dateFormat to EntryExpression trait** - [@norberttech](https://github.com/norberttech)
+- [#426](https://github.com/flow-php/flow/pull/426) - **dateTimeFormat to EntryExpression trait** - [@norberttech](https://github.com/norberttech)
 - [#423](https://github.com/flow-php/flow/pull/423) - **ArrayMerge expression** - [@norberttech](https://github.com/norberttech)
 - [#417](https://github.com/flow-php/flow/pull/417) - **Add new sanitize expression** - [@stloyd](https://github.com/stloyd)
 - [#415](https://github.com/flow-php/flow/pull/415) - **Added regex_match expression** - [@norberttech](https://github.com/norberttech)
@@ -55,6 +60,7 @@
 - [#387](https://github.com/flow-php/flow/pull/387) - **Reorganized testsuite** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#426](https://github.com/flow-php/flow/pull/426) - **EntryExpression return types in order to fix IDEs autocompletion** - [@norberttech](https://github.com/norberttech)
 - [bd3088](https://github.com/flow-php/flow/commit/bd308821594223c2297896ef58f5edb58bfec12b) - **DataFrame::filter method docblocks** - [@norberttech](https://github.com/norberttech)
 - [#407](https://github.com/flow-php/flow/pull/407) - **isOdd expression** - [@norberttech](https://github.com/norberttech)
 - [#407](https://github.com/flow-php/flow/pull/407) - **isEven expression** - [@norberttech](https://github.com/norberttech)
