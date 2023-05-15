@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Flow PHP - ChartJS</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
+    <script>
+        window.onload = function () {
+            new Chart(document.getElementById('chart'),{"type":"line","data":{"labels":["2023-01-01","2023-01-02","2023-01-03","2023-01-04","2023-01-05","2023-02-06"],"datasets":[{"label":"Revenue","data":[10000.53,10234.56,11000.98,10890.34,13750.12,14000.23]},{"label":"CM","data":[5000.12,5102.23,5200.32,5300.98,5950.78,6000.89]},{"label":"Ads Spends","data":[2000.78,2050.12,2100.67,2150.56,2750.78,2800.89]},{"label":"Storage Costs","data":[1000.34,1050.78,1100.87,1150.67,1750.78,1800.89]},{"label":"Shipping Costs","data":[1500.45,1550.99,1600.34,1650.87,2250.12,2300.23]},{"label":"Profit","data":[498.84,480.44,998.78,637.26,1047.66,1097.33]}]}});
+        };
+    </script>
+</head>
+<body>
+<div style="width: 100%;">
+    <canvas id="chart"></canvas>
+</div>
+</body>
+</html>

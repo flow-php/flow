@@ -59,6 +59,7 @@
             "Flow\\": [
                 "src/adapter/etl-adapter-amphp/src/Flow",
                 "src/adapter/etl-adapter-avro/src/Flow",
+                "src/adapter/etl-adapter-chartjs/src/Flow",
                 "src/adapter/etl-adapter-csv/src/Flow",
                 "src/adapter/etl-adapter-doctrine/src/Flow",
                 "src/adapter/etl-adapter-elasticsearch/src/Flow",
@@ -88,6 +89,7 @@
                 "src/adapter/etl-adapter-amphp/tests/Flow",
                 "src/adapter/etl-adapter-avro/tests/Flow",
                 "src/adapter/etl-adapter-csv/tests/Flow",
+                "src/adapter/etl-adapter-chartjs/tests/Flow",
                 "src/adapter/etl-adapter-doctrine/tests/Flow",
                 "src/adapter/etl-adapter-elasticsearch/tests/Flow",
                 "src/adapter/etl-adapter-google-sheet/tests/Flow",

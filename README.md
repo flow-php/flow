@@ -21,6 +21,7 @@ Please check below packages and select only those that you are going to use:
 - Adapters
   - [amphp](src/adapter/etl-adapter-amphp/README.md)
   - [avro](src/adapter/etl-adapter-avro/README.md)
+  - [chartjs](src/adapter/etl-adapter-chartjs/README.md)
   - [csv](src/adapter/etl-adapter-csv/README.md)
   - [doctrine](src/adapter/etl-adapter-doctrine/README.md)
   - [elasticsearch](src/adapter/etl-adapter-elasticsearch/README.md)

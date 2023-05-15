@@ -26,6 +26,16 @@ final class Cast implements Expression
         $value = $this->ref->eval($row);
 
         return match (\mb_strtolower($this->type)) {
+            'datetime' => match (\gettype($value)) {
+                'string' => new \DateTimeImmutable($value),
+                'integer' => \DateTimeImmutable::createFromFormat('U', (string) $value),
+                default => null,
+            },
+            'date' => match (\gettype($value)) {
+                'string' => (new \DateTimeImmutable($value))->setTime(0, 0, 0, 0),
+                'integer' => \DateTimeImmutable::createFromFormat('U', (string) $value),
+                default => null,
+            },
             /** @phpstan-ignore-next-line */
             'int', 'integer' => (int) $value,
             /** @phpstan-ignore-next-line */
