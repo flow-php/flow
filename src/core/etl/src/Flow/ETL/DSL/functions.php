@@ -59,6 +59,16 @@ function array_get(Expression $ref, string $path) : Expression
     return new Expression\ArrayGet($ref, $path);
 }
 
+function array_get_collection(Expression $ref, string ...$keys) : Expression
+{
+    return new Expression\ArrayGetCollection($ref, $keys);
+}
+
+function array_get_collection_first(Expression $ref, string ...$keys) : Expression
+{
+    return Expression\ArrayGetCollection::fromFirst($ref, $keys);
+}
+
 function array_exists(Expression $ref, string $path) : Expression
 {
     return new Expression\ArrayExists($ref, $path);
@@ -67,6 +77,16 @@ function array_exists(Expression $ref, string $path) : Expression
 function array_merge(Expression $left, Expression $right) : Expression
 {
     return new Expression\ArrayMerge($left, $right);
+}
+
+function array_merge_collection(Expression $ref) : Expression
+{
+    return new Expression\ArrayMergeCollection($ref);
+}
+
+function array_key_rename(Expression $ref, string $path, string $newName) : Expression
+{
+    return new Expression\ArrayKeyRename($ref, $path, $newName);
 }
 
 function now(\DateTimeZone $time_zone = new \DateTimeZone('UTC')) : Expression
