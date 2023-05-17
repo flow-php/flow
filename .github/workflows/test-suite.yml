@@ -215,6 +215,17 @@ jobs:
           restore-keys: |
             php-${{ matrix.php-version }}-locked-composer-
 
+      - name: "Create cache directory"
+        run: "mkdir -p var/infection/cache"
+
+      - name: "Cache infection results"
+        uses: "actions/cache@v3"
+        with:
+          path: "var/infection/cache"
+          key: "php-${{ matrix.php-version }}-cache-infection-${{ github.run_id }}"
+          restore-keys: |
+            php-${{ matrix.php-version }}-cache-infection-
+
       - name: "Install locked dependencies"
         run: "composer install --no-interaction --no-progress --no-suggest"
 
