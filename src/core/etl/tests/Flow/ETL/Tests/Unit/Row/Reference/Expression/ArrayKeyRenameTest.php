@@ -13,6 +13,15 @@ use PHPUnit\Framework\TestCase;
 
 final class ArrayKeyRenameTest extends TestCase
 {
+    public function test_for_not_array_entry() : void
+    {
+        $row = Row::create(
+            Entry::integer('integer_entry', 1),
+        );
+
+        $this->assertNull(array_key_rename(ref('integer_entry'), 'invalid_path', 'new_name')->eval($row));
+    }
+
     public function test_renames_array_entry_keys_in_multiple_array_entry() : void
     {
         $row = Row::create(
@@ -87,14 +96,5 @@ final class ArrayKeyRenameTest extends TestCase
         $this->expectExceptionMessage('Path "invalid_path" does not exists in array ');
 
         array_key_rename(ref('array_entry'), 'invalid_path', 'new_name')->eval($row);
-    }
-
-    public function test_for_not_array_entry() : void
-    {
-        $row = Row::create(
-            Entry::integer('integer_entry', 1),
-        );
-
-        $this->assertNull(array_key_rename(ref('integer_entry'), 'invalid_path', 'new_name')->eval($row));
     }
 }
