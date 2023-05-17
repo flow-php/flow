@@ -78,6 +78,7 @@
   "phpUnit": {
     "customPath": "tools/phpunit/vendor/bin/phpunit"
   },
+  "tmpDir": "var/infection/cache",
   "testFrameworkOptions": "--testsuite=unit",
   "minMsi": 50,
   "minCoveredMsi": 50

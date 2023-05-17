@@ -34,22 +34,51 @@ jobs:
           php-version: "${{ matrix.php-version }}"
           ini-values: memory_limit=-1
 
+      - name: "Create cache directories"
+        run: |
+          mkdir -p var/cs-fixer
+          mkdir -p var/phpstan/cache
+          mkdir -p var/psalm/cache
+
       - name: "Get Composer Cache Directory"
         id: composer-cache
         run: |
           echo "::set-output name=dir::$(composer config cache-files-dir)"
 
       - name: "Cache Composer dependencies"
-        uses: "actions/cache@v2"
+        uses: "actions/cache@v3"
         with:
-          path: |
-            ${{ steps.composer-cache.outputs.dir }}
+          path: "${{ steps.composer-cache.outputs.dir }}"
           key: "php-${{ matrix.php-version }}-locked-composer-${{ hashFiles('**/composer.lock') }}"
           restore-keys: |
             php-${{ matrix.php-version }}-locked-composer-
 
       - name: "Install locked dependencies"
         run: "composer install --no-interaction --no-progress"
+
+      - name: "Cache cs-fixer results"
+        uses: "actions/cache@v3"
+        with:
+          path: "var/cs-fixer"
+          key: "php-${{ matrix.php-version }}-cache-cs-fixer-${{ github.run_id }}"
+          restore-keys: |
+            php-${{ matrix.php-version }}-cache-cs-fixer-
+
+      - name: "Cache phpstan results"
+        uses: "actions/cache@v3"
+        with:
+          path: "var/phpstan/cache"
+          key: "php-${{ matrix.php-version }}-cache-phpstan-${{ github.run_id }}"
+          restore-keys: |
+            php-${{ matrix.php-version }}-cache-phpstan-
+
+      - name: "Cache psalm results"
+        uses: "actions/cache@v3"
+        with:
+          path: "var/psalm/cache"
+          key: "php-${{ matrix.php-version }}-cache-psalm-${{ github.run_id }}"
+          restore-keys: |
+            php-${{ matrix.php-version }}-cache-psalm-
 
       - name: "Static Analyze"
         run: "composer static:analyze"
@@ -121,10 +150,9 @@ jobs:
           echo "::set-output name=dir::$(composer config cache-files-dir)"
 
       - name: "Cache Composer dependencies"
-        uses: "actions/cache@v2"
+        uses: "actions/cache@v3"
         with:
-          path: |
-            ${{ steps.composer-cache.outputs.dir }}
+          path: "${{ steps.composer-cache.outputs.dir }}"
           key: "php-${{ matrix.php-version }}-${{ matrix.dependencies }}-composer-${{ hashFiles('**/composer.lock') }}"
           restore-keys: |
             php-${{ matrix.php-version }}-${{ matrix.dependencies }}-composer-
@@ -180,13 +208,23 @@ jobs:
           echo "::set-output name=dir::$(composer config cache-files-dir)"
 
       - name: "Cache Composer dependencies"
-        uses: "actions/cache@v2"
+        uses: "actions/cache@v3"
         with:
-          path: |
-            ${{ steps.composer-cache.outputs.dir }}
+          path: "${{ steps.composer-cache.outputs.dir }}"
           key: "php-${{ matrix.php-version }}-locked-composer-${{ hashFiles('**/composer.lock') }}"
           restore-keys: |
             php-${{ matrix.php-version }}-locked-composer-
+
+      - name: "Create cache directory"
+        run: "mkdir -p var/infection/cache"
+
+      - name: "Cache infection results"
+        uses: "actions/cache@v3"
+        with:
+          path: "var/infection/cache"
+          key: "php-${{ matrix.php-version }}-cache-infection-${{ github.run_id }}"
+          restore-keys: |
+            php-${{ matrix.php-version }}-cache-infection-
 
       - name: "Install locked dependencies"
         run: "composer install --no-interaction --no-progress --no-suggest"
