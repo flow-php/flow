@@ -1,6 +1,8 @@
-## [Unreleased] - 2023-05-15
+## [Unreleased] - 2023-05-17
 
 ### Added
+- [#427](https://github.com/flow-php/flow/pull/427) - **Add more cache for static analysis on GH actions** - [@stloyd](https://github.com/stloyd)
+- [#427](https://github.com/flow-php/flow/pull/427) - **Add more cache for inflection on GH actions** - [@stloyd](https://github.com/stloyd)
 - [#426](https://github.com/flow-php/flow/pull/426) - **ChartJS Loader** - [@norberttech](https://github.com/norberttech)
 - [#426](https://github.com/flow-php/flow/pull/426) - **Round expression** - [@norberttech](https://github.com/norberttech)
 - [#426](https://github.com/flow-php/flow/pull/426) - **Cast to datetime and date** - [@norberttech](https://github.com/norberttech)
