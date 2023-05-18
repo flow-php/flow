@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-05-17
+## [Unreleased] - 2023-05-18
 
 ### Added
 - [#427](https://github.com/flow-php/flow/pull/427) - **Add more cache for static analysis on GH actions** - [@stloyd](https://github.com/stloyd)
@@ -62,6 +62,9 @@
 - [#387](https://github.com/flow-php/flow/pull/387) - **Reorganized testsuite** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#429](https://github.com/flow-php/flow/pull/429) - **Add missing adapters into static analyse** - [@stloyd](https://github.com/stloyd)
+- [#429](https://github.com/flow-php/flow/pull/429) - **Fixed static analyse for GoogleSheet adapter** - [@stloyd](https://github.com/stloyd)
+- [#429](https://github.com/flow-php/flow/pull/429) - **Fixed static analyse for ChartJS adapter** - [@stloyd](https://github.com/stloyd)
 - [#426](https://github.com/flow-php/flow/pull/426) - **EntryExpression return types in order to fix IDEs autocompletion** - [@norberttech](https://github.com/norberttech)
 - [bd3088](https://github.com/flow-php/flow/commit/bd308821594223c2297896ef58f5edb58bfec12b) - **DataFrame::filter method docblocks** - [@norberttech](https://github.com/norberttech)
 - [#407](https://github.com/flow-php/flow/pull/407) - **isOdd expression** - [@norberttech](https://github.com/norberttech)
