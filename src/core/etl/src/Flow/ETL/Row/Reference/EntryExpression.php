@@ -36,9 +36,29 @@ use Flow\ETL\Row\Reference\Expression\Trim;
 
 trait EntryExpression
 {
+    public function arrayGet(string $path) : Expression|EntryReference
+    {
+        return new Expressions(new Expression\ArrayGet($this, $path));
+    }
+
+    public function arrayGetCollection(string ...$keys) : Expression|EntryReference
+    {
+        return new Expressions(new Expression\ArrayGetCollection($this, $keys));
+    }
+
+    public function arrayGetCollectionFirst(string ...$keys) : Expression|EntryReference
+    {
+        return new Expressions(Expression\ArrayGetCollection::fromFirst($this, $keys));
+    }
+
     public function arrayMerge(Expression $ref) : Expression|EntryReference
     {
         return new Expressions(new Expression\ArrayMerge($this, $ref));
+    }
+
+    public function arrayMergeCollection() : Expression|EntryReference
+    {
+        return new Expressions(new Expression\ArrayMergeCollection($this));
     }
 
     public function arraySort(\Closure $function = null) : Expression|EntryReference
