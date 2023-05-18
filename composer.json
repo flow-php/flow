@@ -125,6 +125,7 @@
         "flow-php/etl-adapter-amphp": "self.version",
         "flow-php/etl-adapter-avro": "self.version",
         "flow-php/etl-adapter-csv": "self.version",
+        "flow-php/etl-adapter-chartjs": "self.version",
         "flow-php/etl-adapter-dbal-tools": "self.version",
         "flow-php/etl-adapter-doctrine": "self.version",
         "flow-php/etl-adapter-elasticsearch": "self.version",
