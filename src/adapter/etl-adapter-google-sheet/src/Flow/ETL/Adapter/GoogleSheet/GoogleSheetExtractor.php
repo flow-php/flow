@@ -11,6 +11,7 @@ use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Rows;
 use Google\Service\Sheets;
+use Google\Service\Sheets\ValueRange;
 use Webmozart\Assert\Assert;
 
 final class GoogleSheetExtractor implements Extractor
@@ -26,26 +27,32 @@ final class GoogleSheetExtractor implements Extractor
         Assert::greaterThan($rowsInBatch, 0);
     }
 
+    /**
+     * @psalm-suppress MixedArgument
+     * @psalm-suppress MixedMethodCall
+     */
     public function extract(FlowContext $context) : \Generator
     {
         $cellsRange = new SheetRange($this->columnRange, 1, $this->rowsInBatch);
         $headers = [];
 
         $totalRows = 0;
-
+        /** @var ValueRange $response */
         $response = $this->service->spreadsheets_values->get($this->spreadsheetId, $cellsRange->toString());
+        /** @var array[] $values */
         $values = $response->getValues();
 
-        if ($this->withHeader && \count($values) > 0) {
+        if ($this->withHeader && [] !== $values) {
+            /** @var string[] $headers */
             $headers = $values[0];
             unset($values[0]);
-            $totalRows=1;
+            $totalRows = 1;
         }
 
-        while (\is_array($values) && \count($values) > 0) {
+        while ([] !== $values) {
             yield new Rows(
                 ...\array_map(
-                    function ($rowData) use ($headers, $context, &$totalRows) {
+                    function (array $rowData) use ($headers, $context, &$totalRows) {
                         if (\count($headers) > \count($rowData)) {
                             \array_push(
                                 $rowData,
@@ -61,6 +68,8 @@ final class GoogleSheetExtractor implements Extractor
                             /** @phpstan-ignore-next-line */
                             $rowData = \array_chunk($rowData, \count($headers));
                         }
+
+                        /** @var int $totalRows */
                         $totalRows++;
 
                         if ($context->config->shouldPutInputIntoRows()) {
@@ -81,7 +90,9 @@ final class GoogleSheetExtractor implements Extractor
                 return;
             }
             $cellsRange = $cellsRange->nextRows($this->rowsInBatch);
+            /** @var ValueRange $response */
             $response = $this->service->spreadsheets_values->get($this->spreadsheetId, $cellsRange->toString());
+            /** @var array[] $values */
             $values = $response->getValues();
         }
     }

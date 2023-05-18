@@ -53,6 +53,7 @@ final class ChartJSLoader implements Closure, Loader
 
         $templateStream = $context->streams()->fs()->open($this->template, Mode::READ);
 
+        /** @var string $template */
         $template = \stream_get_contents($context->streams()->fs()->open($this->template, Mode::READ)->resource());
         $templateStream->close();
 

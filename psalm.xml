@@ -16,6 +16,7 @@
         <directory name="src/adapter/etl-adapter-chartjs/src" />
         <directory name="src/adapter/etl-adapter-doctrine/src" />
         <directory name="src/adapter/etl-adapter-elasticsearch/src" />
+        <directory name="src/adapter/etl-adapter-google-sheet/src" />
         <directory name="src/adapter/etl-adapter-http/src" />
         <directory name="src/adapter/etl-adapter-json/src" />
         <directory name="src/adapter/etl-adapter-logger/src" />
