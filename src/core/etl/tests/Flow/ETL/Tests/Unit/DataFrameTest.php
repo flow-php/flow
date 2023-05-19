@@ -23,6 +23,7 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\GroupBy\Aggregation;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Loader;
+use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Pipeline\Closure;
 use Flow\ETL\Pipeline\LocalSocketPipeline;
 use Flow\ETL\Row;
@@ -41,6 +42,7 @@ use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Transformation;
 use Flow\ETL\Transformer;
 use Flow\ETL\Transformer\StyleConverter\StringStyles;
+use Flow\ETL\Window;
 use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\TestCase;
 
@@ -1854,6 +1856,94 @@ ASCII,
         $this->assertEquals(
             new Rows(),
             $rows
+        );
+    }
+
+    public function test_window_avg_function() : void
+    {
+        $memoryPage1 = new ArrayMemory([
+            ['employee_name' => 'James', 'department' => 'Sales', 'salary' => 3000],
+            ['employee_name' => 'Michael', 'department' => 'Sales', 'salary' => 4600],
+            ['employee_name' => 'Jeff', 'department' => 'Marketing', 'salary' => 3000],
+            ['employee_name' => 'Saif', 'department' => 'Sales', 'salary' => 4100],
+            ['employee_name' => 'John', 'department' => 'Marketing', 'salary' => 3200],
+        ]);
+        $memoryPage2 = new ArrayMemory([
+            ['employee_name' => 'Emma', 'department' => 'Sales', 'salary' => 4800],
+            ['employee_name' => 'Oliver', 'department' => 'Sales', 'salary' => 2900],
+            ['employee_name' => 'Mia', 'department' => 'Finance', 'salary' => 3300],
+            ['employee_name' => 'Noah', 'department' => 'Marketing', 'salary' => 3400],
+            ['employee_name' => 'Ava', 'department' => 'Finance', 'salary' => 3800],
+            ['employee_name' => 'Isabella', 'department' => 'Marketing', 'salary' => 2100],
+            ['employee_name' => 'Ethan', 'department' => 'Sales', 'salary' => 4100],
+            ['employee_name' => 'Charlotte', 'department' => 'Marketing', 'salary' => 3000],
+        ]);
+
+        $this->assertSame(
+            [
+                ['department' => 'Sales', 'avg_salary' => 3917.0],
+                ['department' => 'Marketing', 'avg_salary' => 2940.0],
+                ['department' => 'Finance', 'avg_salary' => 3550.0],
+            ],
+            (new Flow)
+                ->read(From::chain(From::memory($memoryPage1), From::memory($memoryPage2)))
+                ->withEntry('row', ref('row')->unpack())
+                ->drop('row')
+                ->renameAll('row.', '')
+                ->withEntry('avg_salary', Window::partitionBy(ref('department'))->orderBy(ref('salary')->desc())->avg(ref('salary')))
+                ->select('department', 'avg_salary')
+                ->dropDuplicates(ref('department'), ref('avg_salary'))
+                ->withEntry('avg_salary', ref('avg_salary')->round(lit(0)))
+                ->fetch()
+                ->toArray()
+        );
+    }
+
+    public function test_window_rank_function() : void
+    {
+        $memoryPage1 = new ArrayMemory([
+            ['employee_name' => 'James', 'department' => 'Sales', 'salary' => 3000],
+            ['employee_name' => 'James', 'department' => 'Sales', 'salary' => 3000],
+            ['employee_name' => 'James', 'department' => 'Sales', 'salary' => 3000],
+            ['employee_name' => 'Michael', 'department' => 'Sales', 'salary' => 4600],
+            ['employee_name' => 'Robert', 'department' => 'Sales', 'salary' => 4100],
+            ['employee_name' => 'Maria', 'department' => 'Finance', 'salary' => 3000],
+            ['employee_name' => 'Scott', 'department' => 'Finance', 'salary' => 3300],
+            ['employee_name' => 'Jen', 'department' => 'Finance', 'salary' => 3900],
+            ['employee_name' => 'Jeff', 'department' => 'Marketing', 'salary' => 3000],
+            ['employee_name' => 'Kumar', 'department' => 'Marketing', 'salary' => 2000],
+            ['employee_name' => 'Saif', 'department' => 'Sales', 'salary' => 4100],
+            ['employee_name' => 'John', 'department' => 'Marketing', 'salary' => 3200],
+        ]);
+        $memoryPage2 = new ArrayMemory([
+            ['employee_name' => 'Emma', 'department' => 'Sales', 'salary' => 4800],
+            ['employee_name' => 'Sophia', 'department' => 'Finance', 'salary' => 4200],
+            ['employee_name' => 'Oliver', 'department' => 'Sales', 'salary' => 2900],
+            ['employee_name' => 'Mia', 'department' => 'Finance', 'salary' => 3300],
+            ['employee_name' => 'Noah', 'department' => 'Marketing', 'salary' => 3400],
+            ['employee_name' => 'Ava', 'department' => 'Finance', 'salary' => 3800],
+            ['employee_name' => 'Liam', 'department' => 'Sales', 'salary' => 3100],
+            ['employee_name' => 'Isabella', 'department' => 'Marketing', 'salary' => 2100],
+            ['employee_name' => 'Ethan', 'department' => 'Sales', 'salary' => 4100],
+            ['employee_name' => 'Charlotte', 'department' => 'Marketing', 'salary' => 3000],
+        ]);
+
+        $this->assertSame(
+            [
+                ['employee_name' => 'Emma', 'department' => 'Sales', 'salary' => 4800, 'rank' => 1],
+                ['employee_name' => 'Sophia', 'department' => 'Finance', 'salary' => 4200, 'rank' => 1],
+                ['employee_name' => 'Noah', 'department' => 'Marketing', 'salary' => 3400, 'rank' => 1],
+            ],
+            (new Flow)
+                ->read(From::all(From::memory($memoryPage1), From::memory($memoryPage2)))
+                ->withEntry('row', ref('row')->unpack())
+                ->drop('row')
+                ->renameAll('row.', '')
+                ->dropDuplicates(ref('employee_name'), ref('department'))
+                ->withEntry('rank', Window::partitionBy(ref('department'))->orderBy(ref('salary')->desc())->rank())
+                ->filter(ref('rank')->equals(lit(1)))
+                ->fetch()
+                ->toArray()
         );
     }
 }

@@ -8,7 +8,6 @@ use function Flow\ETL\DSL\ref;
 use Flow\ETL\DSL\To;
 use Flow\ETL\DSL\Transform;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Extractor\CacheExtractor;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Formatter\AsciiTableFormatter;
 use Flow\ETL\GroupBy\Aggregation;
@@ -16,11 +15,13 @@ use Flow\ETL\Join\Expression;
 use Flow\ETL\Join\Join;
 use Flow\ETL\Loader\SchemaValidationLoader;
 use Flow\ETL\Loader\StreamLoader\Output;
+use Flow\ETL\Pipeline\CachingPipeline;
 use Flow\ETL\Pipeline\CollectingPipeline;
 use Flow\ETL\Pipeline\GroupByPipeline;
 use Flow\ETL\Pipeline\NestedPipeline;
 use Flow\ETL\Pipeline\ParallelizingPipeline;
 use Flow\ETL\Pipeline\VoidPipeline;
+use Flow\ETL\Pipeline\WindowPartitioningPipeline;
 use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
@@ -77,15 +78,7 @@ final class DataFrame
      */
     public function cache(string $id = null) : self
     {
-        $this->context->config->cache()->clear($id ??= $this->context->config->id());
-
-        foreach ($this->pipeline->process($this->context) as $rows) {
-            $this->context->config->cache()->add($id, $rows);
-        }
-
-        $this->pipeline = $this->pipeline->cleanCopy();
-        $this->context->config->clearLimit();
-        $this->pipeline->source(new CacheExtractor($id));
+        $this->pipeline = new CachingPipeline($this->pipeline, $id);
 
         return $this;
     }
@@ -524,7 +517,12 @@ final class DataFrame
      */
     public function sortBy(Sort|EntryReference ...$entries) : self
     {
-        $this->cache($this->context->config->id());
+        $this
+            ->cache($this->context->config->id())
+            ->run();
+
+        $this->context->config->clearLimit();
+        $this->pipeline = $this->pipeline->cleanCopy();
 
         $sortBy = [];
 
@@ -589,9 +587,13 @@ final class DataFrame
         return $this;
     }
 
-    public function withEntry(string $entryName, Reference\Expression $ref) : self
+    public function withEntry(string $entryName, Reference\Expression|Window $ref) : self
     {
-        $this->transform(new EntryExpressionEvalTransformer($entryName, $ref));
+        if ($ref instanceof Window) {
+            $this->pipeline = new WindowPartitioningPipeline($this->pipeline, $ref, $entryName);
+        } else {
+            $this->transform(new EntryExpressionEvalTransformer($entryName, $ref));
+        }
 
         return $this;
     }

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use Flow\ETL\Row\EntryReference;
+
 final class PartitionedRows
 {
     /**
@@ -16,5 +18,10 @@ final class PartitionedRows
         \array_unshift($partitions, $partition);
 
         $this->partitions = $partitions;
+    }
+
+    public function orderBy(EntryReference ...$refs) : Rows
+    {
+        return $this->rows->sortBy(...$refs);
     }
 }

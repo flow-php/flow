@@ -19,6 +19,14 @@ use Flow\ETL\Rows;
 class From
 {
     /**
+     * Alias for `chain()` method.
+     */
+    final public static function all(Extractor ...$extractors) : Extractor
+    {
+        return self::chain(...$extractors);
+    }
+
+    /**
      * @param array<array<string, mixed>> $array
      * @param int<1, max> $batch_size
      * @param string $entry_row_name

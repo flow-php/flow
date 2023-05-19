@@ -22,7 +22,8 @@ final class FlowTest extends IntegrationTestCase
     public function test_etl_cache() : void
     {
         (new Flow())->extract(new AllRowTypesFakeExtractor($rowsets = 20, $rows = 2))
-            ->cache('test_etl_cache');
+            ->cache('test_etl_cache')
+            ->run();
 
         $cacheContent = \array_values(\array_diff(\scandir($this->cacheDir), ['..', '.']));
 
