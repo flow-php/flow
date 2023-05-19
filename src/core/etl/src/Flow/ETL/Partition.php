@@ -88,4 +88,9 @@ final class Partition implements Serializable
         $this->name = $data['name'];
         $this->value = $data['value'];
     }
+
+    public function id() : string
+    {
+        return $this->name . '|' . $this->value;
+    }
 }

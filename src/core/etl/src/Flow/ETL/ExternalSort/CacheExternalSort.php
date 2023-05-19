@@ -67,6 +67,6 @@ final class CacheExternalSort implements ExternalSort
             $this->cache->clear($cacheId);
         }
 
-        return new CacheExtractor($this->id, null, $clear = true);
+        return new CacheExtractor($this->id, fallbackExtractor: null, clear: true);
     }
 }

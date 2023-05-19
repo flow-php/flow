@@ -538,6 +538,60 @@ $this->assertEquals(
 );
 ```
 
+## Window Functions
+
+Window functions in Flow are a type of function that performs a calculation across a set of rows that are somehow related to the current row.
+
+Available window functions are:
+
+- `rank` - returns the rank of each row within the partition of a result set
+- `row_number` - returns the sequential number of a row within a partition of a result set, starting at 1 for the first row in each partition
+- `avg` - returns the average of the values in the window
+- `sum` - returns the sum of the values in the window
+
+In order to find people with highest salary in given department we can do something like this:
+
+```php
+<?php
+
+$memoryPage1 = new ArrayMemory([
+    ['employee_name' => 'James', 'department' => 'Sales', 'salary' => 3000],
+    ['employee_name' => 'Michael', 'department' => 'Sales', 'salary' => 4600],
+    ['employee_name' => 'Robert', 'department' => 'Sales', 'salary' => 4100],
+    ['employee_name' => 'Maria', 'department' => 'Finance', 'salary' => 3000],
+    ['employee_name' => 'Scott', 'department' => 'Finance', 'salary' => 3300],
+    ['employee_name' => 'Jen', 'department' => 'Finance', 'salary' => 3900],
+    ['employee_name' => 'Jeff', 'department' => 'Marketing', 'salary' => 3000],
+    ['employee_name' => 'Kumar', 'department' => 'Marketing', 'salary' => 2000],
+    ['employee_name' => 'Saif', 'department' => 'Sales', 'salary' => 4100],
+    ['employee_name' => 'John', 'department' => 'Marketing', 'salary' => 3200],
+]);
+$memoryPage2 = new ArrayMemory([
+    ['employee_name' => 'Emma', 'department' => 'Sales', 'salary' => 4800],
+    ['employee_name' => 'Sophia', 'department' => 'Finance', 'salary' => 4200],
+    ['employee_name' => 'Oliver', 'department' => 'Sales', 'salary' => 2900],
+    ['employee_name' => 'Mia', 'department' => 'Finance', 'salary' => 3300],
+    ['employee_name' => 'Noah', 'department' => 'Marketing', 'salary' => 3400],
+    ['employee_name' => 'Ava', 'department' => 'Finance', 'salary' => 3800],
+    ['employee_name' => 'Liam', 'department' => 'Sales', 'salary' => 3100],
+    ['employee_name' => 'Isabella', 'department' => 'Marketing', 'salary' => 2100],
+    ['employee_name' => 'Ethan', 'department' => 'Sales', 'salary' => 4100],
+    ['employee_name' => 'Charlotte', 'department' => 'Marketing', 'salary' => 3000],
+]);
+        
+(new Flow)
+  ->read(From::all(From::memory($memoryPage1), From::memory($memoryPage2)))
+  ->withEntry('row', ref('row')->unpack())
+  ->drop('row')
+  ->renameAll('row.', '')
+  ->dropDuplicates(ref('employee_name'), ref('department'))
+  ->withEntry('rank', Window::partitionBy(ref('department'))->orderBy(ref('salary')->desc())->rank())
+  ->filter(ref('rank')->equals(lit(1)))
+  ->write(To::output(false))
+  ->run();
+  
+```
+
 ## Select
 
 In order to quickly select only relevant entries use Rows `DataFrame::select`

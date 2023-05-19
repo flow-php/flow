@@ -100,6 +100,7 @@ In order to understand how Flow works, please read [documentation](src/core/etl/
 * sorting
 * displaying datasets as ASCII table
 * validation against schema
+* window functions
 * caching
 
 ## Asynchronous Processing
