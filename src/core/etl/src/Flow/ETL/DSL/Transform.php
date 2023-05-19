@@ -33,7 +33,6 @@ use Flow\ETL\Transformer\Filter\Filter\Opposite;
 use Flow\ETL\Transformer\Filter\Filter\ValidValue;
 use Flow\ETL\Transformer\FilterRowsTransformer;
 use Flow\ETL\Transformer\KeepEntriesTransformer;
-use Flow\ETL\Transformer\Rename\ArrayKeyRename;
 use Flow\ETL\Transformer\Rename\EntryRename;
 use Flow\ETL\Transformer\RenameEntriesTransformer;
 use Flow\ETL\Transformer\StringEntryValueCaseConverterTransformer;
@@ -116,27 +115,6 @@ class Transform
     }
 
     /**
-     * @param array<string> $keys
-     */
-    final public static function array_collection_get(array $keys, string $arrayEntryName, string $new_entry_name = 'element') : Transformer
-    {
-        return new Transformer\ArrayCollectionGetTransformer($keys, $arrayEntryName, $new_entry_name);
-    }
-
-    /**
-     * @param array<string> $keys
-     */
-    final public static function array_collection_get_first(array $keys, string $arrayEntryName, string $new_entry_name = 'element') : Transformer
-    {
-        return Transformer\ArrayCollectionGetTransformer::fromFirst($keys, $arrayEntryName, $new_entry_name);
-    }
-
-    final public static function array_collection_merge(string $arrayEntryName, string $new_entry_name = 'element') : Transformer
-    {
-        return new Transformer\ArrayCollectionMergeTransformer($arrayEntryName, $new_entry_name);
-    }
-
-    /**
      * @param string $array_column
      * @param string $style
      * @param ?Schema $schema Desired schema of unpacked elements. Elements not found in schema will be auto detected.
@@ -170,11 +148,6 @@ class Transform
     final public static function array_push(string $array_entry, array $values = []) : Transformer
     {
         return new Transformer\ArrayPushTransformer($array_entry, $values);
-    }
-
-    final public static function array_rename_keys(string $array_column, string $path, string $new_name) : Transformer
-    {
-        return new Transformer\ArrayDotRenameTransformer(new ArrayKeyRename($array_column, $path, $new_name));
     }
 
     final public static function array_reverse(string $array_name) : Transformer

@@ -1,6 +1,9 @@
-## [Unreleased] - 2023-05-15
+## [Unreleased] - 2023-05-18
 
 ### Added
+- [#428](https://github.com/flow-php/flow/pull/428) - **Added new expressions to entry expression trait** - [@owsiakl](https://github.com/owsiakl)
+- [#427](https://github.com/flow-php/flow/pull/427) - **Add more cache for static analysis on GH actions** - [@stloyd](https://github.com/stloyd)
+- [#427](https://github.com/flow-php/flow/pull/427) - **Add more cache for inflection on GH actions** - [@stloyd](https://github.com/stloyd)
 - [#426](https://github.com/flow-php/flow/pull/426) - **ChartJS Loader** - [@norberttech](https://github.com/norberttech)
 - [#426](https://github.com/flow-php/flow/pull/426) - **Round expression** - [@norberttech](https://github.com/norberttech)
 - [#426](https://github.com/flow-php/flow/pull/426) - **Cast to datetime and date** - [@norberttech](https://github.com/norberttech)
@@ -47,6 +50,9 @@
 - [#388](https://github.com/flow-php/flow/pull/388) - **Added `ext-hash` PHP extension as required for Flow** - [@stloyd](https://github.com/stloyd)
 
 ### Changed
+- [#428](https://github.com/flow-php/flow/pull/428) - **ArrayCollectionGetTransformer into ArrayGetCollection expression** - [@owsiakl](https://github.com/owsiakl)
+- [#428](https://github.com/flow-php/flow/pull/428) - **ArrayCollectionMergeTransformer into ArrayMergeCollection expression** - [@owsiakl](https://github.com/owsiakl)
+- [#428](https://github.com/flow-php/flow/pull/428) - **ArrayDotRenameTransformer into ArrayKeyRename expression** - [@owsiakl](https://github.com/owsiakl)
 - [#425](https://github.com/flow-php/flow/pull/425) - **Simplify setting limit in monitoring configuration** - [@stloyd](https://github.com/stloyd)
 - [#420](https://github.com/flow-php/flow/pull/420) - **Skip phpstan analyse in `Sanitize` extension** - [@stloyd](https://github.com/stloyd)
 - [#419](https://github.com/flow-php/flow/pull/419) - **Modify `StrReplace` expression to work with arrays** - [@stloyd](https://github.com/stloyd)
@@ -60,6 +66,9 @@
 - [#387](https://github.com/flow-php/flow/pull/387) - **Reorganized testsuite** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#429](https://github.com/flow-php/flow/pull/429) - **Add missing adapters into static analyse** - [@stloyd](https://github.com/stloyd)
+- [#429](https://github.com/flow-php/flow/pull/429) - **Fixed static analyse for GoogleSheet adapter** - [@stloyd](https://github.com/stloyd)
+- [#429](https://github.com/flow-php/flow/pull/429) - **Fixed static analyse for ChartJS adapter** - [@stloyd](https://github.com/stloyd)
 - [#426](https://github.com/flow-php/flow/pull/426) - **EntryExpression return types in order to fix IDEs autocompletion** - [@norberttech](https://github.com/norberttech)
 - [bd3088](https://github.com/flow-php/flow/commit/bd308821594223c2297896ef58f5edb58bfec12b) - **DataFrame::filter method docblocks** - [@norberttech](https://github.com/norberttech)
 - [#407](https://github.com/flow-php/flow/pull/407) - **isOdd expression** - [@norberttech](https://github.com/norberttech)

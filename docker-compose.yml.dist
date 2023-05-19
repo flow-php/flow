@@ -10,6 +10,7 @@ services:
             - POSTGRES_DB=postgres
     mysql:
         image: mysql:8.0.31
+        container_name: flow-php-mysql
         ports:
             - 3306:3306
         environment:

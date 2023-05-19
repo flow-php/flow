@@ -7,6 +7,7 @@
         "src/adapter/etl-adapter-chartjs/src",
         "src/adapter/etl-adapter-doctrine/src",
         "src/adapter/etl-adapter-elasticsearch/src",
+        "src/adapter/etl-adapter-google-sheet/src",
         "src/adapter/etl-adapter-http/src",
         "src/adapter/etl-adapter-json/src",
         "src/adapter/etl-adapter-logger/src",
@@ -78,6 +79,7 @@
   "phpUnit": {
     "customPath": "tools/phpunit/vendor/bin/phpunit"
   },
+  "tmpDir": "var/infection/cache",
   "testFrameworkOptions": "--testsuite=unit",
   "minMsi": 50,
   "minCoveredMsi": 50
