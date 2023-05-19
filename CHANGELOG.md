@@ -1,6 +1,8 @@
-## [Unreleased] - 2023-05-18
+## [Unreleased] - 2023-05-19
 
 ### Added
+- [#430](https://github.com/flow-php/flow/pull/430) - **WindowFunctions - Avg, Sum, Rank, RowNumber** - [@norberttech](https://github.com/norberttech)
+- [#430](https://github.com/flow-php/flow/pull/430) - **From::all as a alias for From::chain Extractor** - [@norberttech](https://github.com/norberttech)
 - [#428](https://github.com/flow-php/flow/pull/428) - **Added new expressions to entry expression trait** - [@owsiakl](https://github.com/owsiakl)
 - [#427](https://github.com/flow-php/flow/pull/427) - **Add more cache for static analysis on GH actions** - [@stloyd](https://github.com/stloyd)
 - [#427](https://github.com/flow-php/flow/pull/427) - **Add more cache for inflection on GH actions** - [@stloyd](https://github.com/stloyd)
@@ -50,6 +52,7 @@
 - [#388](https://github.com/flow-php/flow/pull/388) - **Added `ext-hash` PHP extension as required for Flow** - [@stloyd](https://github.com/stloyd)
 
 ### Changed
+- [#430](https://github.com/flow-php/flow/pull/430) - **Caching mechanism was moved to dedicated CachingPipeline** - [@norberttech](https://github.com/norberttech)
 - [#428](https://github.com/flow-php/flow/pull/428) - **ArrayCollectionGetTransformer into ArrayGetCollection expression** - [@owsiakl](https://github.com/owsiakl)
 - [#428](https://github.com/flow-php/flow/pull/428) - **ArrayCollectionMergeTransformer into ArrayMergeCollection expression** - [@owsiakl](https://github.com/owsiakl)
 - [#428](https://github.com/flow-php/flow/pull/428) - **ArrayDotRenameTransformer into ArrayKeyRename expression** - [@owsiakl](https://github.com/owsiakl)
