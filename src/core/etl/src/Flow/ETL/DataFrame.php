@@ -587,6 +587,18 @@ final class DataFrame
         return $this;
     }
 
+    /**
+     * @param array<string, Reference\Expression|Window> $refs
+     */
+    public function withEntries(array $refs) : self
+    {
+        foreach ($refs as $entryName => $ref) {
+            $this->withEntry($entryName, $ref);
+        }
+
+        return $this;
+    }
+
     public function withEntry(string $entryName, Reference\Expression|Window $ref) : self
     {
         if ($ref instanceof Window) {
