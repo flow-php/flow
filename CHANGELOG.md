@@ -1,6 +1,7 @@
-## [Unreleased] - 2023-05-19
+## [Unreleased] - 2023-05-20
 
 ### Added
+- [#431](https://github.com/flow-php/flow/pull/431) - **withEntries method to DataFrame API** - [@norberttech](https://github.com/norberttech)
 - [#430](https://github.com/flow-php/flow/pull/430) - **WindowFunctions - Avg, Sum, Rank, RowNumber** - [@norberttech](https://github.com/norberttech)
 - [#430](https://github.com/flow-php/flow/pull/430) - **From::all as a alias for From::chain Extractor** - [@norberttech](https://github.com/norberttech)
 - [#428](https://github.com/flow-php/flow/pull/428) - **Added new expressions to entry expression trait** - [@owsiakl](https://github.com/owsiakl)
