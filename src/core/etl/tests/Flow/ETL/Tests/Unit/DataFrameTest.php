@@ -1354,9 +1354,11 @@ ASCIITABLE,
                 }
             }
         )
-            ->withEntry('expanded', ref('ids')->expand())
-            ->withEntry('element', ref('expanded')->unpack())
-            ->withEntry('more_ids', ref('element.more_ids')->expand())
+            ->withEntries([
+                'expanded' => ref('ids')->expand(),
+                'element' => ref('expanded')->unpack(),
+                'more_ids' => ref('element.more_ids')->expand(),
+            ])
             ->rename('element.id', 'id')
             ->drop('expanded', 'ids', 'element', 'element.more_ids')
             ->load(To::callback(function (Rows $rows) : void {
