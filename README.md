@@ -26,6 +26,7 @@ Please check below packages and select only those that you are going to use:
   - [doctrine](src/adapter/etl-adapter-doctrine/README.md)
   - [elasticsearch](src/adapter/etl-adapter-elasticsearch/README.md)
   - [google sheet](src/adapter/etl-adapter-google-sheet/README.md)
+  - [meilisearch](src/adapter/etl-adapter-meilisearch/README.md)
   - [http](src/adapter/etl-adapter-http/README.md)
   - [json](src/adapter/etl-adapter-json/README.md)
   - [logger](src/adapter/etl-adapter-logger/README.md)
