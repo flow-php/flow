@@ -25,9 +25,9 @@ class GoogleSheet
         string $sheet_name,
         bool $with_header = true,
         int $rows_in_batch = 1000,
-				string $row_entry_name = 'row',
-				string $from = 'A',
-				string $to = 'Z'
+	string $row_entry_name = 'row',
+	string $from = 'A',
+	string $to = 'Z'
     ) : Extractor {
         $client = new Client();
         $client->setScopes(Sheets::SPREADSHEETS_READONLY);
