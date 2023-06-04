@@ -51,8 +51,7 @@ final class SheetRange
     public function toString() : string
     {
         return  \sprintf(
-            '%s!%s%d:%s%d',
-            $this->columnRange->sheetName,
+            '%s%d:%s%d',
             $this->columnRange->startColumn,
             $this->startRow,
             $this->columnRange->endColumn,

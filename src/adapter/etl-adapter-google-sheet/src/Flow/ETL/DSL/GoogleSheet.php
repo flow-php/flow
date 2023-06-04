@@ -25,13 +25,15 @@ class GoogleSheet
         string $sheet_name,
         bool $with_header = true,
         int $rows_in_batch = 1000,
-        string $row_entry_name = 'row'
+				string $row_entry_name = 'row',
+				string $from = 'A',
+				string $to = 'Z'
     ) : Extractor {
         $client = new Client();
         $client->setScopes(Sheets::SPREADSHEETS_READONLY);
         $client->setAuthConfig($auth_config);
 
-        return new GoogleSheetExtractor(new Sheets($client), $spreadsheet_id, new Columns($sheet_name, 'A', 'Z'), $with_header, $rows_in_batch, $row_entry_name);
+        return new GoogleSheetExtractor(new Sheets($client), $spreadsheet_id, new Columns($sheet_name, $from, $to), $with_header, $rows_in_batch, $row_entry_name);
     }
 
     /**
