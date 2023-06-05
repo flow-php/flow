@@ -21,6 +21,8 @@
         <env name="MYSQL_DATABASE_URL" value="mysql://mysql:mysql@127.0.0.1:3306/mysql" />
         <env name="SQLITE_DATABASE_URL" value="sqlite:///:memory:" />
         <env name="ELASTICSEARCH_URL" value="localhost:9200" />
+        <env name="MEILISEARCH_URL" value="http://localhost:7700" />
+        <env name="MEILISEARCH_API_KEY" value="masterKey" />
         <env name="FLOW_LOCAL_FILESYSTEM_CACHE_DIR" value="./var/cache" />
     </php>
     <testsuites>
@@ -58,6 +60,7 @@
             <directory>src/lib/doctrine-dbal-bulk/tests/Flow/Doctrine/Bulk/Tests/Integration</directory>
             <directory>src/adapter/etl-adapter-doctrine/tests/Flow/ETL/Adapter/Doctrine/Tests/Integration</directory>
             <directory>src/adapter/etl-adapter-elasticsearch/tests/Flow/ETL/Adapter/Elasticsearch/Tests/Integration</directory>
+            <directory>src/adapter/etl-adapter-meilisearch/tests/Flow/ETL/Adapter/Meilisearch/Tests/Integration</directory>
         </testsuite>
     </testsuites>
 </phpunit>

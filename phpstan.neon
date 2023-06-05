@@ -14,6 +14,7 @@ parameters:
         - src/adapter/etl-adapter-http/src
         - src/adapter/etl-adapter-json/src
         - src/adapter/etl-adapter-logger/src
+        - src/adapter/etl-adapter-meilisearch/src
         - src/adapter/etl-adapter-parquet/src
         - src/adapter/etl-adapter-reactphp/src
         - src/adapter/etl-adapter-text/src
