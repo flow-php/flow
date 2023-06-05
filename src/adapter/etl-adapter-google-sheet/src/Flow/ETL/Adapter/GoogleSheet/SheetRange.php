@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\GoogleSheet;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Webmozart\Assert\Assert;
 
 final class SheetRange
 {
@@ -39,7 +38,12 @@ final class SheetRange
 
     public function nextRows(int $count) : self
     {
-        Assert::greaterThan($count, 0);
+        if ($count <= 0) {
+            throw new InvalidArgumentException(\sprintf(
+                'Count `%d` must be greater than 0',
+                $count
+            ));
+        }
 
         return new self(
             $this->columnRange,

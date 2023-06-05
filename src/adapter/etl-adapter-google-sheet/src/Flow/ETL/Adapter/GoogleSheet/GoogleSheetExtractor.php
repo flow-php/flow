@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\GoogleSheet;
 
 use Flow\ETL\DSL\Entry;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
@@ -12,7 +13,6 @@ use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Rows;
 use Google\Service\Sheets;
 use Google\Service\Sheets\ValueRange;
-use Webmozart\Assert\Assert;
 
 final class GoogleSheetExtractor implements Extractor
 {
@@ -24,7 +24,9 @@ final class GoogleSheetExtractor implements Extractor
         private readonly int $rowsInBatch,
         private readonly string $rowEntryName='row',
     ) {
-        Assert::greaterThan($rowsInBatch, 0);
+        if ($this->rowsInBatch <= 0) {
+            throw new InvalidArgumentException('Rows in batch must be greater than 0');
+        }
     }
 
     /**
