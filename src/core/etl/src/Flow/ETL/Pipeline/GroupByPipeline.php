@@ -9,6 +9,7 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\GroupBy;
 use Flow\ETL\Loader;
 use Flow\ETL\Pipeline;
+use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 final class GroupByPipeline implements Pipeline
@@ -36,6 +37,11 @@ final class GroupByPipeline implements Pipeline
     public function cleanCopy() : Pipeline
     {
         return $this->pipeline->cleanCopy();
+    }
+
+    public function closure(Rows $rows, FlowContext $context) : void
+    {
+        $this->pipeline->closure($rows, $context);
     }
 
     public function has(string $transformerClass) : bool
