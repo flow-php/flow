@@ -36,6 +36,15 @@ final class SynchronousPipeline implements Pipeline
         return new self();
     }
 
+    public function closure(Rows $rows, FlowContext $context) : void
+    {
+        foreach ($this->pipes->all() as $pipe) {
+            if ($pipe instanceof Pipeline\Closure) {
+                $pipe->closure($rows, $context);
+            }
+        }
+    }
+
     public function has(string $transformerClass) : bool
     {
         return $this->pipes->has($transformerClass);
@@ -57,34 +66,19 @@ final class SynchronousPipeline implements Pipeline
             ->process(new Pipeline\Execution\LogicalPlan($this->extractor, $this->pipes), $context);
 
         $generator = $plan->extractor->extract($context);
-        $limiter = new Limiter($context->config->limit());
+
+        $rows = new Rows();
 
         while ($generator->valid()) {
-            $rows = $limiter->limit($generator->current());
+            $rows = $generator->current();
             $generator->next();
-
-            if ($rows === null) {
-                foreach ($plan->pipes->all() as $pipe) {
-                    if ($pipe instanceof Pipeline\Closure) {
-                        $pipe->closure($limiter->latest(), $context);
-                    }
-                }
-
-                break;
-            }
 
             foreach ($plan->pipes->all() as $pipe) {
                 try {
                     if ($pipe instanceof Transformer) {
-                        $rows = $limiter->limitTransformed($pipe->transform($rows, $context));
+                        $rows = $pipe->transform($rows, $context);
                     } elseif ($pipe instanceof Loader) {
                         $pipe->load($rows, $context);
-                    }
-
-                    if ($pipe instanceof Pipeline\Closure) {
-                        if ($generator->valid() === false) {
-                            $pipe->closure($rows, $context);
-                        }
                     }
                 } catch (\Throwable $exception) {
                     if ($context->errorHandler()->throw($exception, $rows)) {
@@ -99,6 +93,8 @@ final class SynchronousPipeline implements Pipeline
 
             yield $rows;
         }
+
+        $this->closure($rows, $context);
     }
 
     public function source(Extractor $extractor) : self

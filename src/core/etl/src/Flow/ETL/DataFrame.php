@@ -18,6 +18,7 @@ use Flow\ETL\Loader\StreamLoader\Output;
 use Flow\ETL\Pipeline\CachingPipeline;
 use Flow\ETL\Pipeline\CollectingPipeline;
 use Flow\ETL\Pipeline\GroupByPipeline;
+use Flow\ETL\Pipeline\LimitingPipeline;
 use Flow\ETL\Pipeline\NestedPipeline;
 use Flow\ETL\Pipeline\ParallelizingPipeline;
 use Flow\ETL\Pipeline\VoidPipeline;
@@ -153,7 +154,7 @@ final class DataFrame
     public function fetch(?int $limit = null) : Rows
     {
         if ($limit !== null) {
-            $this->context->config->setLimit($limit);
+            $this->limit($limit);
         }
 
         if ($this->context->partitionEntries()->count()) {
@@ -316,13 +317,9 @@ final class DataFrame
     /**
      * @throws InvalidArgumentException
      */
-    public function limit(?int $limit) : self
+    public function limit(int $limit) : self
     {
-        if ($limit === null) {
-            $this->context->config->clearLimit();
-        } else {
-            $this->context->config->setLimit($limit);
-        }
+        $this->pipeline = new LimitingPipeline($this->pipeline, $limit);
 
         return $this;
     }
@@ -403,10 +400,8 @@ final class DataFrame
 
     public function printRows(int|null $limit = 20, int|bool $truncate = 20, Formatter $formatter = new AsciiTableFormatter()) : void
     {
-        if ($limit === null) {
-            $this->context->config->clearLimit();
-        } else {
-            $this->context->config->setLimit($limit);
+        if ($limit !== null) {
+            $this->limit($limit);
         }
 
         $this->load(To::output($truncate, Output::rows, $formatter));
@@ -416,10 +411,8 @@ final class DataFrame
 
     public function printSchema(int|null $limit = 20, Schema\SchemaFormatter $formatter = new Schema\Formatter\ASCIISchemaFormatter()) : void
     {
-        if ($limit === null) {
-            $this->context->config->clearLimit();
-        } else {
-            $this->context->config->setLimit($limit);
+        if ($limit !== null) {
+            $this->limit($limit);
         }
         $this->load(To::output(false, Output::schema, schemaFormatter: $formatter));
 
@@ -521,7 +514,6 @@ final class DataFrame
             ->cache($this->context->config->id())
             ->run();
 
-        $this->context->config->clearLimit();
         $this->pipeline = $this->pipeline->cleanCopy();
 
         $sortBy = [];

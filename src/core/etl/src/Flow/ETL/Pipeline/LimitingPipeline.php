@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Pipeline;
 
-use Flow\ETL\DSL\From;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
@@ -13,34 +12,27 @@ use Flow\ETL\Pipeline;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
-/**
- * @internal
- */
-final class ParallelizingPipeline implements Pipeline
+final class LimitingPipeline implements Pipeline
 {
-    private readonly Pipeline $nextPipeline;
-
     public function __construct(
         private readonly Pipeline $pipeline,
-        private readonly int $parallel
+        private readonly int $limit
     ) {
-        if ($parallel < 1) {
-            throw new InvalidArgumentException("Parallel value can't be lower than 1.");
+        if ($this->limit <= 0) {
+            throw new InvalidArgumentException("Limit can't be lower or equal zero, given: -1");
         }
-
-        $this->nextPipeline = $pipeline->cleanCopy();
     }
 
     public function add(Loader|Transformer $pipe) : self
     {
-        $this->nextPipeline->add($pipe);
+        $this->pipeline->add($pipe);
 
         return $this;
     }
 
     public function cleanCopy() : Pipeline
     {
-        return new self($this->pipeline, $this->parallel);
+        return $this->pipeline->cleanCopy();
     }
 
     public function closure(Rows $rows, FlowContext $context) : void
@@ -60,14 +52,32 @@ final class ParallelizingPipeline implements Pipeline
 
     public function process(FlowContext $context) : \Generator
     {
-        $this->nextPipeline->source(
-            From::chunks_from(
-                From::pipeline($this->pipeline),
-                $this->parallel
-            )
-        );
+        $total = 0;
 
-        return $this->nextPipeline->process($context);
+        foreach ($this->pipeline->process($context) as $rows) {
+            $total += $rows->count();
+
+            if ($total === $this->limit) {
+                yield $rows;
+                $this->closure($rows, $context);
+
+                return;
+            }
+
+            if ($total > $this->limit) {
+                $diff = $total - $this->limit;
+
+                if ($diff > 0) {
+                    yield $rows->dropRight($diff);
+                }
+
+                $this->closure($rows->dropRight($diff), $context);
+
+                return;
+            }
+
+            yield $rows;
+        }
     }
 
     public function source(Extractor $extractor) : self

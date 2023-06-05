@@ -13,7 +13,6 @@ use Flow\ETL\DataFrameFactory;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\DSL\From;
 use Flow\ETL\DSL\Partitions;
-use Flow\ETL\DSL\To;
 use Flow\ETL\DSL\Transform;
 use Flow\ETL\ErrorHandler\IgnoreError;
 use Flow\ETL\Exception\InvalidArgumentException;
@@ -349,7 +348,7 @@ final class DataFrameTest extends TestCase
 5 rows
 
 ASCIITABLE,
-            $etl->display(5)
+            (clone $etl)->display(5)
         );
 
         $this->assertSame(
@@ -367,7 +366,7 @@ ASCIITABLE,
 6 rows
 
 ASCIITABLE,
-            $etl->display(6, 0)
+            (clone $etl)->display(6, 0)
         );
     }
 
@@ -1361,51 +1360,6 @@ ASCIITABLE,
             ])
             ->rename('element.id', 'id')
             ->drop('expanded', 'ids', 'element', 'element.more_ids')
-            ->load(To::callback(function (Rows $rows) : void {
-                $this->assertSame(3, $rows->count());
-            }))
-            ->load(
-                new class(
-                    function (Rows $rows) : void {
-                        $this->assertSame(3, $rows->count());
-                    },
-                    function (Rows $rows) : void {
-                        $this->assertSame(3, $rows->count());
-                    }
-                ) implements
-                    Closure,
-                Loader
-                {
-                    private $load;
-
-                    private $closure;
-
-                    public function __construct(callable $load, callable $closure)
-                    {
-                        $this->load = $load;
-                        $this->closure = $closure;
-                    }
-
-                    public function closure(Rows $rows, FlowContext $context) : void
-                    {
-                        ($this->closure)($rows);
-                    }
-
-                    public function load(Rows $rows, FlowContext $context) : void
-                    {
-                        ($this->load)($rows);
-                    }
-
-                    public function __serialize() : array
-                    {
-                        return [];
-                    }
-
-                    public function __unserialize(array $data) : void
-                    {
-                    }
-                }
-            )
             ->limit(3)
             ->fetch();
 
