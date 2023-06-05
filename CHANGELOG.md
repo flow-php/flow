@@ -1,6 +1,7 @@
-## [Unreleased] - 2023-05-20
+## [Unreleased] - 2023-06-05
 
 ### Added
+- [#434](https://github.com/flow-php/flow/pull/434) - **Add new adapter for Meilisearch** - [@stloyd](https://github.com/stloyd)
 - [#431](https://github.com/flow-php/flow/pull/431) - **withEntries method to DataFrame API** - [@norberttech](https://github.com/norberttech)
 - [#430](https://github.com/flow-php/flow/pull/430) - **WindowFunctions - Avg, Sum, Rank, RowNumber** - [@norberttech](https://github.com/norberttech)
 - [#430](https://github.com/flow-php/flow/pull/430) - **From::all as a alias for From::chain Extractor** - [@norberttech](https://github.com/norberttech)
@@ -80,6 +81,7 @@
 - [b33143](https://github.com/flow-php/flow/commit/b33143c05aea73c1eb96ef8cd41fdcf6f80d42c3) - **parameter types in Dbal DSL** - [@norberttech](https://github.com/norberttech)
 
 ### Updated
+- [5ee4d6](https://github.com/flow-php/flow/commit/5ee4d609badd8546c3e8d180ea804e89230fb50d) - **monorepo-split.yml** - [@norberttech](https://github.com/norberttech)
 - [8eb674](https://github.com/flow-php/flow/commit/8eb6744e7ca69ecd75d09a2263e586c0fbd0472f) - **README.md** - [@norberttech](https://github.com/norberttech)
 
 ### Removed

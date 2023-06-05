@@ -100,6 +100,13 @@ jobs:
           --health-retries 10
         ports:
           - 9200:9200
+      meilisearch:
+        image: getmeili/meilisearch:latest
+        env:
+          MEILI_MASTER_KEY: masterKey
+          MEILI_NO_ANALYTICS: true
+        ports:
+          - 7700:7700
       postgres:
         image: postgres:13.6-alpine
         env:

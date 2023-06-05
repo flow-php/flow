@@ -1,0 +1,4 @@
+vendor
+*.cache
+var
+docker-compose.yaml
