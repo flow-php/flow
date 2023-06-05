@@ -82,6 +82,38 @@ classes with own methods.
 By design all methods in DSL are marked as final (they are not an extension points) but
 classes itself can be extended in case you would like to add your own custom elements.
 
+## Architecture
+
+Main building block of Flow is [DataFrame](src/Flow/ETL/DataFrame.php) which represents operations executed at subset of the dataset. 
+Each subset is represented as strongly typed [Rows](src/Flow/ETL/Rows.php) object which is a collection of [Row](src/Flow/ETL/Row.php) objects.
+Each row is a collection of [Entry](src/Flow/ETL/Row/Entry.php) objects, each entry is strongly typed and can be accessed through DSL.
+
+When creating new DataFrame you need to specify from where to read data, how to transform it and where to write it.
+
+Those operations are executed in memory safe way, which means that you can process millions of records without worrying about memory consumption.
+
+When building DataFrame you will use an DataFrame API (public methods) from which some methods are deferred (lazy) and will be executed only when you call one of the triggers. 
+
+Triggers are:
+  - `display(...)`
+  - `fetch(...)`
+  - `forEach(...)`
+  - `get()`
+  - `getAsArray()`
+  - `getEach()`
+  - `getEachAsArray()`
+  - `printRows(...)`
+  - `printSchema(...)`
+  - `run()`
+
+All triggers are marked with `@trigger` docblock and once used they will start execution of the pipeline. 
+Other methods are marked with `@lazy`, meaning that their execution is deferred and without using `@trigger` they will not be executed.
+
+Another important behavior of triggers is that they never run any code of given instance of DataFrame. 
+Triggers are always first creating a clone of DataFrame and they are executing on that clone.
+
+Thanks to this DataFrames are immutable and can be reused multiple times.
+
 ## Configuration
 
 Some configuration options can be passed through environment variables, list below: 
