@@ -53,6 +53,8 @@ final class DataFrame
     }
 
     /**
+     * @lazy
+     *
      * @throws InvalidArgumentException
      */
     public function aggregate(Aggregation ...$aggregations) : self
@@ -75,6 +77,8 @@ final class DataFrame
      * Cache type can be set through ConfigBuilder.
      * By default everything is cached in system tmp dir.
      *
+     * @lazy
+     *
      * @param null|string $id
      */
     public function cache(string $id = null) : self
@@ -87,6 +91,8 @@ final class DataFrame
     /**
      * Keep extracting rows and passing them through all transformers up to this point.
      * From here all transformed Rows are collected and merged together before pushing them forward.
+     *
+     * @lazy
      */
     public function collect() : self
     {
@@ -95,6 +101,9 @@ final class DataFrame
         return $this;
     }
 
+    /**
+     * @lazy
+     */
     public function crossJoin(self $dataFrame, string $prefix = '') : self
     {
         $this->pipeline->add(new CrossJoinRowsTransformer($dataFrame, $prefix));
@@ -107,6 +116,8 @@ final class DataFrame
      * @param bool|int $truncate false or if set to 0 columns are not truncated, otherwise default truncate to 20 characters
      * @param Formatter $formatter
      *
+     * @trigger
+     *
      * @throws InvalidArgumentException
      */
     public function display(int $limit = 20, int|bool $truncate = 20, Formatter $formatter = new AsciiTableFormatter()) : string
@@ -116,6 +127,8 @@ final class DataFrame
 
     /**
      * Drop given entries.
+     *
+     * @lazy
      */
     public function drop(string|Reference ...$entries) : self
     {
@@ -126,6 +139,8 @@ final class DataFrame
 
     /**
      * @param EntryReference|string ...$entries
+     *
+     * @lazy
      *
      * @return $this
      */
@@ -149,23 +164,27 @@ final class DataFrame
      * DataFrame::getEach() : \Generator
      * DataFrame::getEachAsArray() : \Generator
      *
+     * @trigger
+     *
      * @throws InvalidArgumentException
      */
     public function fetch(?int $limit = null) : Rows
     {
+        $clone = clone $this;
+
         if ($limit !== null) {
-            $this->limit($limit);
+            $clone->limit($limit);
         }
 
-        if ($this->context->partitionEntries()->count()) {
+        if ($clone->context->partitionEntries()->count()) {
             $rows = (new Rows())->merge(
-                ...\iterator_to_array($this->pipeline->process($this->context))
+                ...\iterator_to_array($clone->pipeline->process($clone->context))
             );
 
             $fetchedRows = (new Rows());
 
-            foreach ($rows->partitionBy(...$this->context->partitionEntries()->all()) as $partitionedRows) {
-                if ($this->context->partitionFilter()->keep(...$partitionedRows->partitions)) {
+            foreach ($rows->partitionBy(...$clone->context->partitionEntries()->all()) as $partitionedRows) {
+                if ($clone->context->partitionFilter()->keep(...$partitionedRows->partitions)) {
                     $fetchedRows = $fetchedRows->merge($partitionedRows->rows);
                 }
             }
@@ -174,11 +193,13 @@ final class DataFrame
         }
 
         return (new Rows())->merge(
-            ...\iterator_to_array($this->pipeline->process($this->context))
+            ...\iterator_to_array($clone->pipeline->process($clone->context))
         );
     }
 
     /**
+     * @lazy
+     *
      * @param Reference\Expression|callable(Row $row) : bool $callback
      */
     public function filter(callable|Reference\Expression $callback) : self
@@ -194,6 +215,9 @@ final class DataFrame
         return $this;
     }
 
+    /**
+     * @lazy
+     */
     public function filterPartitions(Partition\PartitionFilter $filter) : self
     {
         $this->context->filterPartitions($filter);
@@ -202,31 +226,42 @@ final class DataFrame
     }
 
     /**
+     * @trigger
+     *
      * @param null|callable(Rows $rows) : void $callback
      */
     public function forEach(callable $callback = null) : void
     {
-        $this->run($callback);
+        $clone = clone $this;
+        $clone->run($callback);
     }
 
     /**
      * Yields each row as an instance of Rows.
      *
+     * @trigger
+     *
      * @return \Generator<Rows>
      */
     public function get() : \Generator
     {
-        return $this->pipeline->process($this->context);
+        $clone = clone $this;
+
+        return $clone->pipeline->process($clone->context);
     }
 
     /**
      * Yields each row as an array.
      *
+     * @trigger
+     *
      * @return \Generator<array<array>>
      */
     public function getAsArray() : \Generator
     {
-        foreach ($this->pipeline->process($this->context) as $rows) {
+        $clone = clone $this;
+
+        foreach ($clone->pipeline->process($clone->context) as $rows) {
             yield $rows->toArray();
         }
     }
@@ -234,11 +269,15 @@ final class DataFrame
     /**
      * Yield each row as an instance of Row.
      *
+     * @trigger
+     *
      * @return \Generator<Row>
      */
     public function getEach() : \Generator
     {
-        foreach ($this->pipeline->process($this->context) as $rows) {
+        $clone = clone $this;
+
+        foreach ($clone->pipeline->process($clone->context) as $rows) {
             foreach ($rows as $row) {
                 yield $row;
             }
@@ -248,17 +287,24 @@ final class DataFrame
     /**
      * Yield each row as an array.
      *
+     * @trigger
+     *
      * @return \Generator<array>
      */
     public function getEachAsArray() : \Generator
     {
-        foreach ($this->pipeline->process($this->context) as $rows) {
+        $clone = clone $this;
+
+        foreach ($clone->pipeline->process($clone->context) as $rows) {
             foreach ($rows as $row) {
                 yield $row->toArray();
             }
         }
     }
 
+    /**
+     * @lazy
+     */
     public function groupBy(string|Reference ...$entries) : self
     {
         $this->groupBy = new GroupBy(...$entries);
@@ -268,6 +314,8 @@ final class DataFrame
     }
 
     /**
+     * @lazy
+     *
      * @psalm-param "left"|"left_anti"|"right"|"inner"|Join $type
      */
     public function join(self $dataFrame, Expression $on, string|Join $type = Join::left) : self
@@ -292,6 +340,8 @@ final class DataFrame
     }
 
     /**
+     * @lazy
+     *
      * @psalm-param "left"|"left_anti"|"right"|"inner"|Join $type
      */
     public function joinEach(DataFrameFactory $factory, Expression $on, string|Join $type = Join::left) : self
@@ -315,6 +365,8 @@ final class DataFrame
     }
 
     /**
+     * @lazy
+     *
      * @throws InvalidArgumentException
      */
     public function limit(int $limit) : self
@@ -324,6 +376,9 @@ final class DataFrame
         return $this;
     }
 
+    /**
+     * @lazy
+     */
     public function load(Loader $loader) : self
     {
         $this->pipeline->add($loader);
@@ -332,6 +387,8 @@ final class DataFrame
     }
 
     /**
+     * @lazy
+     *
      * @param callable(Row $row) : Row $callback
      */
     public function map(callable $callback) : self
@@ -347,6 +404,8 @@ final class DataFrame
      *
      * @param SaveMode $mode
      *
+     * @lazy
+     *
      * @return $this
      */
     public function mode(SaveMode $mode) : self
@@ -356,6 +415,9 @@ final class DataFrame
         return $this;
     }
 
+    /**
+     * @lazy
+     */
     public function onError(ErrorHandler $handler) : self
     {
         $this->context->setErrorHandler($handler);
@@ -367,6 +429,8 @@ final class DataFrame
      * Keep extracting rows and passing them through all transformers up to this point.
      * From here each transformed Row is divided and pushed forward to following pipeline elements.
      *
+     * @lazy
+     *
      * @throws InvalidArgumentException
      */
     public function parallelize(int $chunks) : self
@@ -376,6 +440,9 @@ final class DataFrame
         return $this;
     }
 
+    /**
+     * @lazy
+     */
     public function partitionBy(string|Reference $entry, string|Reference ...$entries) : self
     {
         \array_unshift($entries, $entry);
@@ -385,6 +452,9 @@ final class DataFrame
         return $this;
     }
 
+    /**
+     * @lazy
+     */
     public function pipeline(Pipeline $pipeline) : self
     {
         if ($pipeline->isAsync()) {
@@ -398,27 +468,40 @@ final class DataFrame
         return $this;
     }
 
+    /**
+     * @trigger
+     */
     public function printRows(int|null $limit = 20, int|bool $truncate = 20, Formatter $formatter = new AsciiTableFormatter()) : void
     {
+        $clone = clone $this;
+
         if ($limit !== null) {
-            $this->limit($limit);
+            $clone->limit($limit);
         }
 
-        $this->load(To::output($truncate, Output::rows, $formatter));
+        $clone->load(To::output($truncate, Output::rows, $formatter));
 
-        $this->run();
+        $clone->run();
     }
 
+    /**
+     * @trigger
+     */
     public function printSchema(int|null $limit = 20, Schema\SchemaFormatter $formatter = new Schema\Formatter\ASCIISchemaFormatter()) : void
     {
-        if ($limit !== null) {
-            $this->limit($limit);
-        }
-        $this->load(To::output(false, Output::schema, schemaFormatter: $formatter));
+        $clone = clone $this;
 
-        $this->run();
+        if ($limit !== null) {
+            $clone->limit($limit);
+        }
+        $clone->load(To::output(false, Output::schema, schemaFormatter: $formatter));
+
+        $clone->run();
     }
 
+    /**
+     * @lazy
+     */
     public function rename(string $from, string $to) : self
     {
         $this->pipeline->add(Transform::rename($from, $to));
@@ -427,6 +510,7 @@ final class DataFrame
     }
 
     /**
+     * @lazy
      * Iterate over all entry names and replace given search string with replace string.
      */
     public function renameAll(string $search, string $replace) : self
@@ -436,6 +520,9 @@ final class DataFrame
         return $this;
     }
 
+    /**
+     * @lazy
+     */
     public function renameAllLowerCase() : self
     {
         $this->pipeline->add(Transform::rename_all_case(lower: true));
@@ -444,6 +531,7 @@ final class DataFrame
     }
 
     /**
+     * @lazy
      * Rename all entries to given style.
      * Please look into \Flow\ETL\Transformer\StyleConverter\StringStyles class for all available styles.
      */
@@ -454,6 +542,9 @@ final class DataFrame
         return $this;
     }
 
+    /**
+     * @lazy
+     */
     public function renameAllUpperCase() : self
     {
         $this->pipeline->add(Transform::rename_all_case(upper: true));
@@ -461,6 +552,9 @@ final class DataFrame
         return $this;
     }
 
+    /**
+     * @lazy
+     */
     public function renameAllUpperCaseFirst() : self
     {
         $this->pipeline->add(Transform::rename_all_case(ucfirst: true));
@@ -468,6 +562,9 @@ final class DataFrame
         return $this;
     }
 
+    /**
+     * @lazy
+     */
     public function renameAllUpperCaseWord() : self
     {
         $this->pipeline->add(Transform::rename_all_case(ucwords: true));
@@ -476,6 +573,7 @@ final class DataFrame
     }
 
     /**
+     * @lazy
      * Alias for ETL::transform method.
      */
     public function rows(Transformer|Transformation $transformer) : self
@@ -484,11 +582,15 @@ final class DataFrame
     }
 
     /**
+     * @trigger
+     *
      * @param callable(Rows $rows): void|null $callback
      */
     public function run(callable $callback = null) : void
     {
-        foreach ($this->pipeline->process($this->context) as $rows) {
+        $clone = clone $this;
+
+        foreach ($clone->pipeline->process($clone->context) as $rows) {
             if ($callback !== null) {
                 $callback($rows);
             }
@@ -496,6 +598,7 @@ final class DataFrame
     }
 
     /**
+     * @lazy
      * Keep only given entries.
      */
     public function select(string|Reference ...$entries) : self
@@ -506,6 +609,8 @@ final class DataFrame
     }
 
     /**
+     * @lazy
+     *
      * @psalm-suppress DeprecatedClass
      */
     public function sortBy(Sort|EntryReference ...$entries) : self
@@ -532,6 +637,7 @@ final class DataFrame
     }
 
     /**
+     * @lazy
      * When set to true, files are never written under the origin name but instead initial path is turned
      * into a folder in which each process writes to a new file.
      * Otherwise parallel processing would not be possible due to a single file bottleneck.
@@ -545,6 +651,9 @@ final class DataFrame
         return $this;
     }
 
+    /**
+     * @lazy
+     */
     public function transform(Transformer|Transformation $transformer) : self
     {
         if ($transformer instanceof Transformer) {
@@ -557,6 +666,8 @@ final class DataFrame
     }
 
     /**
+     * @lazy
+     *
      * @param null|SchemaValidator $validator - when null, StrictValidator gets initialized
      */
     public function validate(Schema $schema, SchemaValidator $validator = null) : self
@@ -567,6 +678,7 @@ final class DataFrame
     }
 
     /**
+     * @lazy
      * This method is useful mostly in development when
      * you want to pause processing at certain moment without
      * removing code. All operations will get processed up to this point,
@@ -580,6 +692,8 @@ final class DataFrame
     }
 
     /**
+     * @lazy
+     *
      * @param array<string, Reference\Expression|Window> $refs
      */
     public function withEntries(array $refs) : self
@@ -591,6 +705,9 @@ final class DataFrame
         return $this;
     }
 
+    /**
+     * @lazy
+     */
     public function withEntry(string $entryName, Reference\Expression|Window $ref) : self
     {
         if ($ref instanceof Window) {
@@ -603,6 +720,7 @@ final class DataFrame
     }
 
     /**
+     * @lazy
      * Alias for ETL::load function.
      */
     public function write(Loader $loader) : self
