@@ -72,6 +72,7 @@
 - [#387](https://github.com/flow-php/flow/pull/387) - **Reorganized testsuite** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#437](https://github.com/flow-php/flow/pull/437) - **Removed assertion library references from google sheet adapter** - [@norberttech](https://github.com/norberttech)
 - [#429](https://github.com/flow-php/flow/pull/429) - **Add missing adapters into static analyse** - [@stloyd](https://github.com/stloyd)
 - [#429](https://github.com/flow-php/flow/pull/429) - **Fixed static analyse for GoogleSheet adapter** - [@stloyd](https://github.com/stloyd)
 - [#429](https://github.com/flow-php/flow/pull/429) - **Fixed static analyse for ChartJS adapter** - [@stloyd](https://github.com/stloyd)
