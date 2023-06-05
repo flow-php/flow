@@ -36,6 +36,11 @@ final class CollectingPipeline implements Pipeline
         return $this->pipeline->cleanCopy();
     }
 
+    public function closure(Rows $rows, FlowContext $context) : void
+    {
+        $this->pipeline->closure($rows, $context);
+    }
+
     public function has(string $transformerClass) : bool
     {
         return $this->pipeline->has($transformerClass);

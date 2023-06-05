@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Pipeline\Execution\Processors;
 use Flow\Serializer\Serializer;
@@ -18,8 +17,6 @@ final class Config
     public const CACHE_DIR_ENV = 'FLOW_LOCAL_FILESYSTEM_CACHE_DIR';
 
     public const EXTERNAL_SORT_MAX_MEMORY_ENV = 'FLOW_EXTERNAL_SORT_MAX_MEMORY';
-
-    private ?int $limit = null;
 
     public function __construct(
         private readonly string $id,
@@ -47,13 +44,6 @@ final class Config
         return $this->cache;
     }
 
-    public function clearLimit() : self
-    {
-        $this->limit = null;
-
-        return $this;
-    }
-
     public function externalSort() : ExternalSort
     {
         return $this->externalSort;
@@ -64,19 +54,9 @@ final class Config
         return $this->filesystemStreams;
     }
 
-    public function hasLimit() : bool
-    {
-        return $this->limit !== null;
-    }
-
     public function id() : string
     {
         return $this->id;
-    }
-
-    public function limit() : ?int
-    {
-        return $this->limit;
     }
 
     public function processors() : Processors
@@ -87,17 +67,6 @@ final class Config
     public function serializer() : Serializer
     {
         return $this->serializer;
-    }
-
-    public function setLimit(int $limit) : self
-    {
-        if ($limit <= 0) {
-            throw new InvalidArgumentException("Limit can't be lower or equal zero, given: {$limit}");
-        }
-
-        $this->limit = $limit;
-
-        return $this;
     }
 
     public function shouldPutInputIntoRows() : bool

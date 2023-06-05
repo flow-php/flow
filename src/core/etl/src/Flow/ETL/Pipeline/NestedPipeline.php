@@ -8,6 +8,7 @@ use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Pipeline;
+use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 final class NestedPipeline implements Pipeline
@@ -31,6 +32,11 @@ final class NestedPipeline implements Pipeline
             $this->currentPipeline->cleanCopy(),
             $this->nextPipeline->cleanCopy(),
         );
+    }
+
+    public function closure(Rows $rows, FlowContext $context) : void
+    {
+        $this->currentPipeline->closure($rows, $context);
     }
 
     public function has(string $transformerClass) : bool
