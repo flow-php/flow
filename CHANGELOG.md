@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-06-05
 
 ### Added
+- [#438](https://github.com/flow-php/flow/pull/438) - **triggers always execute on clone instead of using original instance** - [@norberttech](https://github.com/norberttech)
 - [#434](https://github.com/flow-php/flow/pull/434) - **Add new adapter for Meilisearch** - [@stloyd](https://github.com/stloyd)
 - [#431](https://github.com/flow-php/flow/pull/431) - **withEntries method to DataFrame API** - [@norberttech](https://github.com/norberttech)
 - [#430](https://github.com/flow-php/flow/pull/430) - **WindowFunctions - Avg, Sum, Rank, RowNumber** - [@norberttech](https://github.com/norberttech)
@@ -54,6 +55,7 @@
 - [#388](https://github.com/flow-php/flow/pull/388) - **Added `ext-hash` PHP extension as required for Flow** - [@stloyd](https://github.com/stloyd)
 
 ### Changed
+- [#438](https://github.com/flow-php/flow/pull/438) - **Mark methods on DataFrame api as @lazy or @trigger** - [@norberttech](https://github.com/norberttech)
 - [#436](https://github.com/flow-php/flow/pull/436) - **Moved limit functionality into LimitingPipeline** - [@norberttech](https://github.com/norberttech)
 - [#430](https://github.com/flow-php/flow/pull/430) - **Caching mechanism was moved to dedicated CachingPipeline** - [@norberttech](https://github.com/norberttech)
 - [#428](https://github.com/flow-php/flow/pull/428) - **ArrayCollectionGetTransformer into ArrayGetCollection expression** - [@owsiakl](https://github.com/owsiakl)
