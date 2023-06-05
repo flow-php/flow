@@ -54,6 +54,7 @@
 - [#388](https://github.com/flow-php/flow/pull/388) - **Added `ext-hash` PHP extension as required for Flow** - [@stloyd](https://github.com/stloyd)
 
 ### Changed
+- [#436](https://github.com/flow-php/flow/pull/436) - **Moved limit functionality into LimitingPipeline** - [@norberttech](https://github.com/norberttech)
 - [#430](https://github.com/flow-php/flow/pull/430) - **Caching mechanism was moved to dedicated CachingPipeline** - [@norberttech](https://github.com/norberttech)
 - [#428](https://github.com/flow-php/flow/pull/428) - **ArrayCollectionGetTransformer into ArrayGetCollection expression** - [@owsiakl](https://github.com/owsiakl)
 - [#428](https://github.com/flow-php/flow/pull/428) - **ArrayCollectionMergeTransformer into ArrayMergeCollection expression** - [@owsiakl](https://github.com/owsiakl)
