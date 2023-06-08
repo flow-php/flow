@@ -3,6 +3,7 @@
 namespace Flow\Doctrine\Bulk;
 
 use Doctrine\DBAL\Platforms\AbstractPlatform;
+use Doctrine\DBAL\Platforms\MariaDBPlatform;
 use Doctrine\DBAL\Platforms\MySQLPlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Platforms\SqlitePlatform;
@@ -29,7 +30,7 @@ final class DbalPlatform
             return new PostgreSQLDialect($this->platform);
         }
 
-        if ($this->isMySQL()) {
+        if ($this->isMySQL() || $this->isMariaDB()) {
             return new MySQLDialect();
         }
 
@@ -41,6 +42,11 @@ final class DbalPlatform
             'Database platform "%s" is not yet supported',
             \get_class($this->platform)
         ));
+    }
+
+    private function isMariaDB() : bool
+    {
+        return $this->platform instanceof MariaDBPlatform;
     }
 
     private function isMySQL() : bool
