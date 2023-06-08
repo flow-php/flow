@@ -1,6 +1,7 @@
-## [Unreleased] - 2023-06-05
+## [Unreleased] - 2023-06-08
 
 ### Added
+- [#440](https://github.com/flow-php/flow/pull/440) - **Add MariaDB to supported platforms for Doctrine adapter** - [@stloyd](https://github.com/stloyd)
 - [#438](https://github.com/flow-php/flow/pull/438) - **triggers always execute on clone instead of using original instance** - [@norberttech](https://github.com/norberttech)
 - [#434](https://github.com/flow-php/flow/pull/434) - **Add new adapter for Meilisearch** - [@stloyd](https://github.com/stloyd)
 - [#431](https://github.com/flow-php/flow/pull/431) - **withEntries method to DataFrame API** - [@norberttech](https://github.com/norberttech)
