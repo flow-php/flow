@@ -22,7 +22,8 @@ final class GoogleSheetExtractor implements Extractor
         private readonly Columns $columnRange,
         private readonly bool $withHeader,
         private readonly int $rowsInBatch,
-        private readonly string $rowEntryName='row',
+        private readonly string $rowEntryName = 'row',
+        private readonly array $options = [],
     ) {
         if ($this->rowsInBatch <= 0) {
             throw new InvalidArgumentException('Rows in batch must be greater than 0');
@@ -40,7 +41,7 @@ final class GoogleSheetExtractor implements Extractor
 
         $totalRows = 0;
         /** @var ValueRange $response */
-        $response = $this->service->spreadsheets_values->get($this->spreadsheetId, $cellsRange->toString());
+        $response = $this->service->spreadsheets_values->get($this->spreadsheetId, $cellsRange->toString(), $this->options);
         /** @var array[] $values */
         $values = $response->getValues();
 
