@@ -23,7 +23,7 @@ class CSV
      * @param string $escape
      * @param int<0, max> $characters_read_in_line
      *
-     *@throws \Flow\ETL\Exception\InvalidArgumentException
+     * @throws \Flow\ETL\Exception\InvalidArgumentException
      *
      * @return Extractor
      */

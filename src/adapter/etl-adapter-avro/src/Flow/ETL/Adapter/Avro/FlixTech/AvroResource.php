@@ -154,7 +154,7 @@ final class AvroResource extends \AvroIO
     /**
      * @param string $arg
      *
-     *@throws \AvroIOException if write failed
+     * @throws \AvroIOException if write failed
      *
      * @return int count of bytes written
      */
