@@ -23,7 +23,7 @@
         "elasticsearch/elasticsearch": "^7.6|^8.0",
         "flix-tech/avro-php": "~4.2.0 || ~4.3.0",
         "google/apiclient": "^2.13",
-        "halaxa/json-machine": "^0.8.0 || ^1.0.0",
+        "halaxa/json-machine": "^1.0",
         "league/flysystem": "^3.0",
         "monolog/monolog": "^3.0",
         "psr/http-client": "^1.0",
