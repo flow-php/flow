@@ -95,6 +95,7 @@
 - [8eb674](https://github.com/flow-php/flow/commit/8eb6744e7ca69ecd75d09a2263e586c0fbd0472f) - **README.md** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#446](https://github.com/flow-php/flow/pull/446) - **Drop non-stable version of `halaxa/json-machine`** - [@stloyd](https://github.com/stloyd)
 - [#445](https://github.com/flow-php/flow/pull/445) - **Remove Monolog v2 from allowed dependencies** - [@stloyd](https://github.com/stloyd)
 - [#424](https://github.com/flow-php/flow/pull/424) - **Remove support for not maintained Symfony & Doctrine dependencies** - [@stloyd](https://github.com/stloyd)
 - [#424](https://github.com/flow-php/flow/pull/424) - **Remove BC code from Doctrine adapter** - [@stloyd](https://github.com/stloyd)
