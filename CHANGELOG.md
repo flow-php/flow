@@ -77,6 +77,8 @@
 - [#387](https://github.com/flow-php/flow/pull/387) - **Reorganized testsuite** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#447](https://github.com/flow-php/flow/pull/447) - **Fixed wrong namespace in expression unit tests** - [@stloyd](https://github.com/stloyd)
+- [#448](https://github.com/flow-php/flow/pull/448) - **Fix coding standards for PHP-CS-fixer ^3.18** - [@stloyd](https://github.com/stloyd)
 - [#437](https://github.com/flow-php/flow/pull/437) - **Removed assertion library references from google sheet adapter** - [@norberttech](https://github.com/norberttech)
 - [#429](https://github.com/flow-php/flow/pull/429) - **Add missing adapters into static analyse** - [@stloyd](https://github.com/stloyd)
 - [#429](https://github.com/flow-php/flow/pull/429) - **Fixed static analyse for GoogleSheet adapter** - [@stloyd](https://github.com/stloyd)
