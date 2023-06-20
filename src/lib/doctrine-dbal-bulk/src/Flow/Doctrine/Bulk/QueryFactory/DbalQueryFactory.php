@@ -24,7 +24,7 @@ class DbalQueryFactory implements QueryFactory
      *  update_columns?: array<string>
      * } $insertOptions $insertOptions
      *
-     *@throws RuntimeException
+     * @throws RuntimeException
      *
      * @return string
      */

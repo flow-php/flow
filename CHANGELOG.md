@@ -1,6 +1,7 @@
-## [Unreleased] - 2023-06-08
+## [Unreleased] - 2023-06-20
 
 ### Added
+- [#445](https://github.com/flow-php/flow/pull/445) - **Add `fig/log-test` package for mock logger** - [@stloyd](https://github.com/stloyd)
 - [#440](https://github.com/flow-php/flow/pull/440) - **Add MariaDB to supported platforms for Doctrine adapter** - [@stloyd](https://github.com/stloyd)
 - [#438](https://github.com/flow-php/flow/pull/438) - **triggers always execute on clone instead of using original instance** - [@norberttech](https://github.com/norberttech)
 - [#434](https://github.com/flow-php/flow/pull/434) - **Add new adapter for Meilisearch** - [@stloyd](https://github.com/stloyd)
@@ -56,6 +57,7 @@
 - [#388](https://github.com/flow-php/flow/pull/388) - **Added `ext-hash` PHP extension as required for Flow** - [@stloyd](https://github.com/stloyd)
 
 ### Changed
+- [#445](https://github.com/flow-php/flow/pull/445) - **Allow usage of `psr/log` v2 & v3`** - [@stloyd](https://github.com/stloyd)
 - [#438](https://github.com/flow-php/flow/pull/438) - **Mark methods on DataFrame api as @lazy or @trigger** - [@norberttech](https://github.com/norberttech)
 - [#436](https://github.com/flow-php/flow/pull/436) - **Moved limit functionality into LimitingPipeline** - [@norberttech](https://github.com/norberttech)
 - [#430](https://github.com/flow-php/flow/pull/430) - **Caching mechanism was moved to dedicated CachingPipeline** - [@norberttech](https://github.com/norberttech)
@@ -75,6 +77,8 @@
 - [#387](https://github.com/flow-php/flow/pull/387) - **Reorganized testsuite** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#447](https://github.com/flow-php/flow/pull/447) - **Fixed wrong namespace in expression unit tests** - [@stloyd](https://github.com/stloyd)
+- [#448](https://github.com/flow-php/flow/pull/448) - **Fix coding standards for PHP-CS-fixer ^3.18** - [@stloyd](https://github.com/stloyd)
 - [#437](https://github.com/flow-php/flow/pull/437) - **Removed assertion library references from google sheet adapter** - [@norberttech](https://github.com/norberttech)
 - [#429](https://github.com/flow-php/flow/pull/429) - **Add missing adapters into static analyse** - [@stloyd](https://github.com/stloyd)
 - [#429](https://github.com/flow-php/flow/pull/429) - **Fixed static analyse for GoogleSheet adapter** - [@stloyd](https://github.com/stloyd)
@@ -91,6 +95,7 @@
 - [8eb674](https://github.com/flow-php/flow/commit/8eb6744e7ca69ecd75d09a2263e586c0fbd0472f) - **README.md** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#445](https://github.com/flow-php/flow/pull/445) - **Remove Monolog v2 from allowed dependencies** - [@stloyd](https://github.com/stloyd)
 - [#424](https://github.com/flow-php/flow/pull/424) - **Remove support for not maintained Symfony & Doctrine dependencies** - [@stloyd](https://github.com/stloyd)
 - [#424](https://github.com/flow-php/flow/pull/424) - **Remove BC code from Doctrine adapter** - [@stloyd](https://github.com/stloyd)
 - [#423](https://github.com/flow-php/flow/pull/423) - **deprecated transformers that are replaced by Entry Expressions** - [@norberttech](https://github.com/norberttech)

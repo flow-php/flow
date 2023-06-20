@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Row\Schema;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Row;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Rows;
 use Flow\ETL\SchemaValidator;

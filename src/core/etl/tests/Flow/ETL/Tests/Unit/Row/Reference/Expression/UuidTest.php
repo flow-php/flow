@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Tests\Unit\Rowreference\Expression;
+namespace Flow\ETL\Tests\Unit\Row\Reference\Expression;
 
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\uuid_v4;

@@ -55,7 +55,7 @@ class Parquet
      * @param int $rows_in_group
      * @param null|Schema $schema
      *
-     *@throws MissingDependencyException
+     * @throws MissingDependencyException
      *
      * @return Loader
      */
