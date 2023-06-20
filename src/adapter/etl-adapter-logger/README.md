@@ -19,7 +19,11 @@ composer require flow-php/etl-adapter-logger:1.x@dev
 
 ## Loader - PsrLogger
 
-Load each row into PsrLoggerInterface implementation.
+Load each row into PsrLoggerInterface implementation. To get `TestLogger` mock class first run:
+
+```
+composer require fig/log-test
+```
 
 ```php
 <?php

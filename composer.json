@@ -35,6 +35,7 @@
     },
     "require-dev": {
         "aeon-php/calendar": "^1.0",
+        "fig/log-test": "^1.1",
         "jawira/case-converter": "^3.4",
         "laminas/laminas-hydrator": "^4.0",
         "laravel/serializable-closure": "^1.1",

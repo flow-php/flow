@@ -13,7 +13,10 @@
     "require": {
         "php": "~8.1 || ~8.2",
         "flow-php/etl": "^0.2 || 1.x-dev",
-        "psr/log": "^1.1"
+        "psr/log": "^2.0 || ^3.0"
+    },
+    "require-dev": {
+        "fig/log-test": "^1.1"
     },
     "config": {
         "optimize-autoloader": true,
