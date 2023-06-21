@@ -198,12 +198,17 @@ function size(Expression $expression) : Expression
 
 function uuid_v4() : Expression
 {
-    return  Expression\Uuid::uuid4();
+    return Expression\Uuid::uuid4();
 }
 
-function uuid_v7(?Expression $expression=null) : Expression
+function uuid_v7(?Expression $expression = null) : Expression
 {
-    return  Expression\Uuid::uuid7($expression);
+    return Expression\Uuid::uuid7($expression);
+}
+
+function ulid(?Expression $expression = null) : Expression
+{
+    return new Expression\Ulid($expression);
 }
 
 function lower(Expression $expression) : Expression

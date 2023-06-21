@@ -50,6 +50,7 @@
         "rector/rector": "^0.13.8 || ^0.14.0 || ^0.15.0",
         "symfony/cache": "^6.2",
         "symfony/dotenv": "^6.2",
+        "symfony/uid": "^6.3",
         "symfony/validator": "^5.4 || ^6.2"
     },
     "autoload": {
