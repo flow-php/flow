@@ -4,21 +4,21 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "26e1b73cb12b1a908340389bacac5623",
+    "content-hash": "5d46c36b28c7bc2cb187edd23cdb0f81",
     "packages": [],
     "packages-dev": [
         {
             "name": "symplify/monorepo-builder",
-            "version": "11.2.13",
+            "version": "11.2.14",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symplify/monorepo-builder.git",
-                "reference": "f6881103d28a5dd57432773bb1f7c1f0203aafe3"
+                "reference": "bde0c97054fc90b53bf5759c7b1f5e1c4a959c4b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symplify/monorepo-builder/zipball/f6881103d28a5dd57432773bb1f7c1f0203aafe3",
-                "reference": "f6881103d28a5dd57432773bb1f7c1f0203aafe3",
+                "url": "https://api.github.com/repos/symplify/monorepo-builder/zipball/bde0c97054fc90b53bf5759c7b1f5e1c4a959c4b",
+                "reference": "bde0c97054fc90b53bf5759c7b1f5e1c4a959c4b",
                 "shasum": ""
             },
             "require": {
@@ -45,7 +45,7 @@
             "description": "Prefixed version of Not only Composer tools to build a Monorepo.",
             "support": {
                 "issues": "https://github.com/symplify/monorepo-builder/issues",
-                "source": "https://github.com/symplify/monorepo-builder/tree/11.2.13"
+                "source": "https://github.com/symplify/monorepo-builder/tree/11.2.14"
             },
             "funding": [
                 {
@@ -57,7 +57,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2023-08-15T04:28:15+00:00"
+            "time": "2023-08-16T08:35:39+00:00"
         }
     ],
     "aliases": [],
