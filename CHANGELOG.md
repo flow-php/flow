@@ -1,6 +1,7 @@
-## [Unreleased] - 2023-06-20
+## [Unreleased] - 2023-08-26
 
 ### Added
+- [#450](https://github.com/flow-php/flow/pull/450) - **Add new `ulid()` expression based on Symfony Uid** - [@stloyd](https://github.com/stloyd)
 - [#445](https://github.com/flow-php/flow/pull/445) - **Add `fig/log-test` package for mock logger** - [@stloyd](https://github.com/stloyd)
 - [#440](https://github.com/flow-php/flow/pull/440) - **Add MariaDB to supported platforms for Doctrine adapter** - [@stloyd](https://github.com/stloyd)
 - [#438](https://github.com/flow-php/flow/pull/438) - **triggers always execute on clone instead of using original instance** - [@norberttech](https://github.com/norberttech)
