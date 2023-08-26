@@ -24,6 +24,7 @@
         "league/flysystem-azure-blob-storage": "^3.0",
         "moneyphp/money": "^4",
         "ramsey/uuid": "^4.5",
+        "symfony/uid": "^6.3",
         "symfony/validator": "^5.4 || ^6.2"
     },
     "config": {
