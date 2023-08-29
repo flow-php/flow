@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-08-26
+## [Unreleased] - 2023-08-29
 
 ### Added
 - [#450](https://github.com/flow-php/flow/pull/450) - **Add new `ulid()` expression based on Symfony Uid** - [@stloyd](https://github.com/stloyd)
@@ -91,6 +91,7 @@
 - [b33143](https://github.com/flow-php/flow/commit/b33143c05aea73c1eb96ef8cd41fdcf6f80d42c3) - **parameter types in Dbal DSL** - [@norberttech](https://github.com/norberttech)
 
 ### Updated
+- [939cf0](https://github.com/flow-php/flow/commit/939cf0a618fefc31b45379eef9bb89fe24448ab3) - **dependencies** - [@norberttech](https://github.com/norberttech)
 - [10550b](https://github.com/flow-php/flow/commit/10550b193e1283bc04e8b86d3352085acd8d71e8) - **dependencies** - [@norberttech](https://github.com/norberttech)
 - [5ee4d6](https://github.com/flow-php/flow/commit/5ee4d609badd8546c3e8d180ea804e89230fb50d) - **monorepo-split.yml** - [@norberttech](https://github.com/norberttech)
 - [8eb674](https://github.com/flow-php/flow/commit/8eb6744e7ca69ecd75d09a2263e586c0fbd0472f) - **README.md** - [@norberttech](https://github.com/norberttech)
