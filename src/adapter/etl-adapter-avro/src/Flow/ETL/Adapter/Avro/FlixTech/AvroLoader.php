@@ -86,11 +86,8 @@ final class AvroLoader implements Closure, Loader, Loader\FileLoader
                  * @psalm-suppress MixedAssignment
                  */
                 $rowData[$entry->name()] = match (\get_class($entry)) {
-                    /** @phpstan-ignore-next-line */
                     Row\Entry\ListEntry::class => $this->listEntryToValues($entry),
-                    /** @phpstan-ignore-next-line */
                     DateTimeEntry::class => (int) $entry->value()->format('Uu'),
-                    /** @phpstan-ignore-next-line */
                     Row\Entry\EnumEntry::class => $entry->value()->name,
                     default => $entry->value(),
                 };

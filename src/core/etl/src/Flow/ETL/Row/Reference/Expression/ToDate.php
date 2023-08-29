@@ -27,9 +27,6 @@ final class ToDate implements Expression
 
         if (\is_object($value)) {
             return match (\get_class($value)) {
-                /**
-                 * @phpstan-ignore-next-line
-                 */
                 \DateTimeImmutable::class, \DateTime::class => $value->setTimezone($this->timeZone)->setTime(0, 0, 0, 0),
                 default => throw new \InvalidArgumentException('Entry ' . \get_class($value) . ' is not a DateTimeImmutable|DateTime')
             };

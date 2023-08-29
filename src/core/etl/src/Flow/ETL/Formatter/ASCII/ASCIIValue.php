@@ -109,7 +109,6 @@ final class ASCIIValue
                     'boolean' => ($val) ? 'true' : 'false',
                     'double', 'integer' => (string) $val,
                     'array' => \json_encode($val, JSON_THROW_ON_ERROR),
-                    default => '',
                 };
             } catch (\JsonException $e) {
                 $this->stringValue = '{...}';

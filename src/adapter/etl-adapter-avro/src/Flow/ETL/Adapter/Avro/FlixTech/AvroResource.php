@@ -163,7 +163,7 @@ final class AvroResource extends \AvroIO
         $len = \fwrite($this->file_handle, $arg);
 
         if (false === $len) {
-            throw new \AvroIOException(\sprintf('Could not write to file'));
+            throw new \AvroIOException('Could not write to file');
         }
 
         return $len;

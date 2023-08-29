@@ -1,66 +1,60 @@
 <?xml version="1.0"?>
-<phpunit
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:noNamespaceSchemaLocation="tools/phpunit/vendor/phpunit/phpunit/phpunit.xsd"
-         bootstrap="vendor/autoload.php"
-         colors="true"
-         cacheResultFile="./var/phpunit/phpunit.cache"
->
-    <coverage cacheDirectory="./var/phpunit/">
-        <include>
-            <directory suffix=".php">src/adapter/**/src</directory>
-            <directory suffix=".php">src/core/**/src</directory>
-            <directory suffix=".php">src/lib/**/src</directory>
-        </include>
-        <report>
-            <html outputDirectory="var/phpunit/coverage/html" lowUpperBound="95" highLowerBound="100"/>
-        </report>
-    </coverage>
-    <php>
-        <env name="PGSQL_DATABASE_URL" value="postgresql://postgres:postgres@127.0.0.1:5432/postgres?serverVersion=11%26charset=utf8" />
-        <env name="MYSQL_DATABASE_URL" value="mysql://mysql:mysql@127.0.0.1:3306/mysql" />
-        <env name="SQLITE_DATABASE_URL" value="sqlite:///:memory:" />
-        <env name="ELASTICSEARCH_URL" value="localhost:9200" />
-        <env name="MEILISEARCH_URL" value="http://localhost:7700" />
-        <env name="MEILISEARCH_API_KEY" value="masterKey" />
-        <env name="FLOW_LOCAL_FILESYSTEM_CACHE_DIR" value="./var/cache" />
-    </php>
-    <testsuites>
-        <testsuite name="unit">
-            <directory>src/core/etl/tests/Flow/ETL/Tests/Unit</directory>
-            <directory>src/lib/array-dot/tests/Flow/ArrayDot/Tests/Unit</directory>
-            <directory>src/lib/doctrine-dbal-bulk/tests/Flow/Doctrine/Bulk/Tests/Unit</directory>
-            <directory>src/adapter/etl-adapter-amphp/tests/Flow/ETL/Async/Tests/Unit</directory>
-            <directory>src/adapter/etl-adapter-avro/tests/Flow/ETL/Adapter/Avro/FlixTech/Tests/Unit</directory>
-            <directory>src/adapter/etl-adapter-chartjs/tests/Flow/ETL/Adapter/ChartJS/Tests/Unit</directory>
-            <directory>src/adapter/etl-adapter-doctrine/tests/Flow/ETL/Adapter/Doctrine/Tests/Unit</directory>
-            <directory>src/adapter/etl-adapter-google-sheet/tests/Flow/ETL/Adapter/GoogleSheet/Tests/Unit</directory>
-            <directory>src/adapter/etl-adapter-http/tests/Flow/ETL/Tests/Unit</directory>
-            <directory>src/adapter/etl-adapter-logger/tests/Flow/ETL/Tests/Unit</directory>
-            <directory>src/adapter/etl-adapter-parquet/tests/Flow/ETL/Adapter/Parquet/Tests/Unit</directory>
-            <directory>src/adapter/etl-adapter-reactphp/tests/Flow/ETL/Async/Tests/Unit</directory>
-        </testsuite>
-
-        <testsuite name="integration-io">
-            <directory>src/core/etl/tests/Flow/ETL/Tests/Integration</directory>
-            <directory>src/adapter/etl-adapter-amphp/tests/Flow/ETL/Async/Tests/Integration</directory>
-            <directory>src/adapter/etl-adapter-avro/tests/Flow/ETL/Adapter/Avro/FlixTech/Tests/Integration</directory>
-            <directory>src/adapter/etl-adapter-chartjs/tests/Flow/ETL/Adapter/ChartJS/Tests/Integration</directory>
-            <directory>src/adapter/etl-adapter-csv/tests/Flow/ETL/Adapter/CSV/Tests/Integration</directory>
-            <directory>src/adapter/etl-adapter-json/tests/Flow/ETL/Tests/Integration</directory>
-            <directory>src/adapter/etl-adapter-parquet/tests/Flow/ETL/Adapter/Parquet/Tests/Integration</directory>
-            <directory>src/adapter/etl-adapter-reactphp/tests/Flow/ETL/Async/Tests/Integration</directory>
-            <directory>src/adapter/etl-adapter-text/tests/Flow/ETL/Adapter/Text/Tests/Integration</directory>
-            <directory>src/adapter/etl-adapter-xml/tests/Flow/ETL/Tests/Integration</directory>
-            <directory>src/adapter/etl-adapter-http/tests/Flow/ETL/Tests/Integration</directory>
-        </testsuite>
-
-        <testsuite name="integration-services">
-            <directory>src/core/etl/tests/Flow/ETL/Tests/Integration</directory>
-            <directory>src/lib/doctrine-dbal-bulk/tests/Flow/Doctrine/Bulk/Tests/Integration</directory>
-            <directory>src/adapter/etl-adapter-doctrine/tests/Flow/ETL/Adapter/Doctrine/Tests/Integration</directory>
-            <directory>src/adapter/etl-adapter-elasticsearch/tests/Flow/ETL/Adapter/Elasticsearch/Tests/Integration</directory>
-            <directory>src/adapter/etl-adapter-meilisearch/tests/Flow/ETL/Adapter/Meilisearch/Tests/Integration</directory>
-        </testsuite>
-    </testsuites>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.3/phpunit.xsd" bootstrap="vendor/autoload.php" colors="true" cacheResultFile="./var/phpunit/phpunit.cache">
+  <coverage cacheDirectory="./var/phpunit/">
+    <report>
+      <html outputDirectory="var/phpunit/coverage/html" lowUpperBound="95" highLowerBound="100"/>
+    </report>
+  </coverage>
+  <php>
+    <env name="PGSQL_DATABASE_URL" value="postgresql://postgres:postgres@127.0.0.1:5432/postgres?serverVersion=11%26charset=utf8"/>
+    <env name="MYSQL_DATABASE_URL" value="mysql://mysql:mysql@127.0.0.1:3306/mysql"/>
+    <env name="SQLITE_DATABASE_URL" value="sqlite:///:memory:"/>
+    <env name="ELASTICSEARCH_URL" value="localhost:9200"/>
+    <env name="MEILISEARCH_URL" value="http://localhost:7700"/>
+    <env name="MEILISEARCH_API_KEY" value="masterKey"/>
+    <env name="FLOW_LOCAL_FILESYSTEM_CACHE_DIR" value="./var/cache"/>
+  </php>
+  <testsuites>
+    <testsuite name="unit">
+      <directory>src/core/etl/tests/Flow/ETL/Tests/Unit</directory>
+      <directory>src/lib/array-dot/tests/Flow/ArrayDot/Tests/Unit</directory>
+      <directory>src/lib/doctrine-dbal-bulk/tests/Flow/Doctrine/Bulk/Tests/Unit</directory>
+      <directory>src/adapter/etl-adapter-amphp/tests/Flow/ETL/Async/Tests/Unit</directory>
+      <directory>src/adapter/etl-adapter-avro/tests/Flow/ETL/Adapter/Avro/FlixTech/Tests/Unit</directory>
+      <directory>src/adapter/etl-adapter-chartjs/tests/Flow/ETL/Adapter/ChartJS/Tests/Unit</directory>
+      <directory>src/adapter/etl-adapter-doctrine/tests/Flow/ETL/Adapter/Doctrine/Tests/Unit</directory>
+      <directory>src/adapter/etl-adapter-google-sheet/tests/Flow/ETL/Adapter/GoogleSheet/Tests/Unit</directory>
+      <directory>src/adapter/etl-adapter-http/tests/Flow/ETL/Tests/Unit</directory>
+      <directory>src/adapter/etl-adapter-logger/tests/Flow/ETL/Tests/Unit</directory>
+      <directory>src/adapter/etl-adapter-parquet/tests/Flow/ETL/Adapter/Parquet/Tests/Unit</directory>
+      <directory>src/adapter/etl-adapter-reactphp/tests/Flow/ETL/Async/Tests/Unit</directory>
+    </testsuite>
+    <testsuite name="integration-io">
+      <directory>src/core/etl/tests/Flow/ETL/Tests/Integration</directory>
+      <directory>src/adapter/etl-adapter-amphp/tests/Flow/ETL/Async/Tests/Integration</directory>
+      <directory>src/adapter/etl-adapter-avro/tests/Flow/ETL/Adapter/Avro/FlixTech/Tests/Integration</directory>
+      <directory>src/adapter/etl-adapter-chartjs/tests/Flow/ETL/Adapter/ChartJS/Tests/Integration</directory>
+      <directory>src/adapter/etl-adapter-csv/tests/Flow/ETL/Adapter/CSV/Tests/Integration</directory>
+      <directory>src/adapter/etl-adapter-json/tests/Flow/ETL/Tests/Integration</directory>
+      <directory>src/adapter/etl-adapter-parquet/tests/Flow/ETL/Adapter/Parquet/Tests/Integration</directory>
+      <directory>src/adapter/etl-adapter-reactphp/tests/Flow/ETL/Async/Tests/Integration</directory>
+      <directory>src/adapter/etl-adapter-text/tests/Flow/ETL/Adapter/Text/Tests/Integration</directory>
+      <directory>src/adapter/etl-adapter-xml/tests/Flow/ETL/Tests/Integration</directory>
+      <directory>src/adapter/etl-adapter-http/tests/Flow/ETL/Tests/Integration</directory>
+    </testsuite>
+    <testsuite name="integration-services">
+      <directory>src/core/etl/tests/Flow/ETL/Tests/Integration</directory>
+      <directory>src/lib/doctrine-dbal-bulk/tests/Flow/Doctrine/Bulk/Tests/Integration</directory>
+      <directory>src/adapter/etl-adapter-doctrine/tests/Flow/ETL/Adapter/Doctrine/Tests/Integration</directory>
+      <directory>src/adapter/etl-adapter-elasticsearch/tests/Flow/ETL/Adapter/Elasticsearch/Tests/Integration</directory>
+      <directory>src/adapter/etl-adapter-meilisearch/tests/Flow/ETL/Adapter/Meilisearch/Tests/Integration</directory>
+    </testsuite>
+  </testsuites>
+  <source>
+    <include>
+      <directory suffix=".php">src/adapter/**/src</directory>
+      <directory suffix=".php">src/core/**/src</directory>
+      <directory suffix=".php">src/lib/**/src</directory>
+    </include>
+  </source>
 </phpunit>

@@ -20,7 +20,6 @@ final class JsonEncode implements Expression
 
         try {
             return \json_encode($value, $this->flags);
-            /** @phpstan-ignore-next-line  */
         } catch (\JsonException $e) {
             return null;
         }

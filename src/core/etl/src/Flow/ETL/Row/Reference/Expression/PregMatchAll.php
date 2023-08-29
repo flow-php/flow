@@ -18,6 +18,7 @@ final class PregMatchAll implements Expression
 
     public function eval(Row $row) : array
     {
+        /** @var array<array-key, non-empty-string>|non-empty-string $pattern */
         $pattern = $this->pattern->eval($row);
         $subject = $this->subject->eval($row);
         $flags = $this->flags ? $this->flags->eval($row) : 0;

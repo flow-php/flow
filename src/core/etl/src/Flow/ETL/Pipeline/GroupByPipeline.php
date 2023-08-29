@@ -20,7 +20,6 @@ final class GroupByPipeline implements Pipeline
 
     public function __construct(private readonly GroupBy $groupBy, Pipeline $pipeline)
     {
-        /** @phpstan-ignore-next-line */
         $existingPipeline = $pipeline instanceof self ? $pipeline->pipeline : $pipeline;
 
         $this->pipeline = $existingPipeline;

@@ -51,6 +51,7 @@ final class ElasticsearchExtractor implements Extractor
         /**
          * @psalm-suppress UndefinedClass
          * @psalm-suppress PossiblyInvalidArgument
+         * @psalm-suppress MixedArgumentTypeCoercion
          */
         $pit = \is_array($this->pointInTimeParams)
             /**
@@ -66,6 +67,7 @@ final class ElasticsearchExtractor implements Extractor
         /**
          * @psalm-suppress UndefinedClass
          * @psalm-suppress PossiblyInvalidArgument
+         * @psalm-suppress MixedArgumentTypeCoercion
          *
          * @phpstan-ignore-next-line
          */
@@ -89,6 +91,7 @@ final class ElasticsearchExtractor implements Extractor
                 /**
                  * @psalm-suppress UndefinedClass
                  * @psalm-suppress PossiblyInvalidArgument
+                 * @psalm-suppress MixedArgumentTypeCoercion
                  *
                  * @phpstan-ignore-next-line
                  */
@@ -128,6 +131,7 @@ final class ElasticsearchExtractor implements Extractor
                 /**
                  * @psalm-suppress UndefinedClass
                  * @psalm-suppress PossiblyInvalidArgument
+                 * @psalm-suppress MixedArgumentTypeCoercion
                  *
                  * @phpstan-ignore-next-line
                  */
@@ -172,6 +176,8 @@ final class ElasticsearchExtractor implements Extractor
         if ($pit) {
             /**
              * @psalm-suppress UndefinedClass
+             * @psalm-suppress MixedArgumentTypeCoercion
+             * @psalm-suppress InvalidArgument
              *
              * @phpstan-ignore-next-line
              */

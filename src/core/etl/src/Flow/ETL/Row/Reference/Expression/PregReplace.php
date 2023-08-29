@@ -18,7 +18,7 @@ final class PregReplace implements Expression
 
     public function eval(Row $row) : ?string
     {
-        /** @var mixed $pattern */
+        /** @var array<array-key, non-empty-string>|non-empty-string $pattern */
         $pattern = $this->pattern->eval($row);
         /** @var mixed $replacement */
         $replacement = $this->replacement->eval($row);
