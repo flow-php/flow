@@ -32,7 +32,6 @@ final class NotEmpty implements Constraint
             Entry\ArrayEntry::class,
             Entry\CollectionEntry::class,
             Entry\StructureEntry::class,
-            /** @phpstan-ignore-next-line  */
             Entry\ListEntry::class => (bool) \count($entry->value()),
             Entry\StringEntry::class => $entry->value() !== '',
             Entry\JsonEntry::class => !\in_array($entry->value(), ['', '[]', '{}'], true),

@@ -316,7 +316,7 @@ final class DataFrame
     /**
      * @lazy
      *
-     * @psalm-param "left"|"left_anti"|"right"|"inner"|Join $type
+     * @psalm-param string|Join $type
      */
     public function join(self $dataFrame, Expression $on, string|Join $type = Join::left) : self
     {
@@ -325,13 +325,12 @@ final class DataFrame
         }
 
         /** @psalm-suppress ParadoxicalCondition */
-        $transformer = match (\strtolower($type)) {
+        $transformer = match ($type) {
             Join::left->value => JoinRowsTransformer::left($dataFrame, $on),
             Join::left_anti->value => JoinRowsTransformer::leftAnti($dataFrame, $on),
             Join::right->value => JoinRowsTransformer::right($dataFrame, $on),
             Join::inner->value => JoinRowsTransformer::inner($dataFrame, $on),
-            /** @phpstan-ignore-next-line  */
-            default => throw new InvalidArgumentException("Unsupported join type: {$type}")
+            default => throw new InvalidArgumentException('Unsupported join type')
         };
 
         $this->pipeline->add($transformer);
@@ -342,7 +341,7 @@ final class DataFrame
     /**
      * @lazy
      *
-     * @psalm-param "left"|"left_anti"|"right"|"inner"|Join $type
+     * @psalm-param string|Join $type
      */
     public function joinEach(DataFrameFactory $factory, Expression $on, string|Join $type = Join::left) : self
     {
@@ -350,14 +349,15 @@ final class DataFrame
             $type = $type->name;
         }
 
-        /** @psalm-suppress ParadoxicalCondition */
-        $transformer = match (\strtolower($type)) {
+        /**
+         * @psalm-suppress ParadoxicalCondition
+         */
+        $transformer = match ($type) {
             Join::left->value => JoinEachRowsTransformer::left($factory, $on),
             Join::left_anti->value => JoinEachRowsTransformer::leftAnti($factory, $on),
             Join::right->value => JoinEachRowsTransformer::right($factory, $on),
             Join::inner->value => JoinEachRowsTransformer::inner($factory, $on),
-            /** @phpstan-ignore-next-line  */
-            default => throw new InvalidArgumentException("Unsupported join type: {$type}")
+            default => throw new InvalidArgumentException('Unsupported join type')
         };
         $this->pipeline->add($transformer);
 

@@ -1,6 +1,7 @@
-## [Unreleased] - 2023-06-20
+## [Unreleased] - 2023-08-29
 
 ### Added
+- [#450](https://github.com/flow-php/flow/pull/450) - **Add new `ulid()` expression based on Symfony Uid** - [@stloyd](https://github.com/stloyd)
 - [#445](https://github.com/flow-php/flow/pull/445) - **Add `fig/log-test` package for mock logger** - [@stloyd](https://github.com/stloyd)
 - [#440](https://github.com/flow-php/flow/pull/440) - **Add MariaDB to supported platforms for Doctrine adapter** - [@stloyd](https://github.com/stloyd)
 - [#438](https://github.com/flow-php/flow/pull/438) - **triggers always execute on clone instead of using original instance** - [@norberttech](https://github.com/norberttech)
@@ -90,11 +91,13 @@
 - [b33143](https://github.com/flow-php/flow/commit/b33143c05aea73c1eb96ef8cd41fdcf6f80d42c3) - **parameter types in Dbal DSL** - [@norberttech](https://github.com/norberttech)
 
 ### Updated
+- [939cf0](https://github.com/flow-php/flow/commit/939cf0a618fefc31b45379eef9bb89fe24448ab3) - **dependencies** - [@norberttech](https://github.com/norberttech)
 - [10550b](https://github.com/flow-php/flow/commit/10550b193e1283bc04e8b86d3352085acd8d71e8) - **dependencies** - [@norberttech](https://github.com/norberttech)
 - [5ee4d6](https://github.com/flow-php/flow/commit/5ee4d609badd8546c3e8d180ea804e89230fb50d) - **monorepo-split.yml** - [@norberttech](https://github.com/norberttech)
 - [8eb674](https://github.com/flow-php/flow/commit/8eb6744e7ca69ecd75d09a2263e586c0fbd0472f) - **README.md** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#446](https://github.com/flow-php/flow/pull/446) - **Drop non-stable version of `halaxa/json-machine`** - [@stloyd](https://github.com/stloyd)
 - [#445](https://github.com/flow-php/flow/pull/445) - **Remove Monolog v2 from allowed dependencies** - [@stloyd](https://github.com/stloyd)
 - [#424](https://github.com/flow-php/flow/pull/424) - **Remove support for not maintained Symfony & Doctrine dependencies** - [@stloyd](https://github.com/stloyd)
 - [#424](https://github.com/flow-php/flow/pull/424) - **Remove BC code from Doctrine adapter** - [@stloyd](https://github.com/stloyd)

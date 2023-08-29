@@ -24,7 +24,6 @@ final class JsonDecode implements Expression
 
         try {
             return \json_decode($value, true, 512, $this->flags);
-            /** @phpstan-ignore-next-line */
         } catch (\JsonException $e) {
             return null;
         }

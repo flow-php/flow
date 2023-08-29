@@ -4,7 +4,7 @@
   "minimum-stability": "dev",
   "prefer-stable": true,
   "require-dev": {
-    "symplify/monorepo-builder": "11.2.3.72"
+    "symplify/monorepo-builder": "11.2.17"
   },
   "config": {
     "allow-plugins": false
