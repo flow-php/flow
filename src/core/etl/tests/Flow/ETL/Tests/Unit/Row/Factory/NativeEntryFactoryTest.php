@@ -269,6 +269,34 @@ final class NativeEntryFactoryTest extends TestCase
         );
     }
 
+    public function test_uuid_from_ramsey_uuid_library() : void
+    {
+        if (!\class_exists(\Ramsey\Uuid\Uuid::class)) {
+            $this->markTestSkipped("Package 'ramsey/uuid' is required for this test.");
+        }
+
+        $this->assertEquals(
+            Entry::uuid('e', $uuid = \Ramsey\Uuid\Uuid::uuid4()->toString()),
+            (new NativeEntryFactory())->create('e', $uuid)
+        );
+    }
+
+    public function test_uuid_from_string() : void
+    {
+        $this->assertEquals(
+            Entry::uuid('e', $uuid = '00000000-0000-0000-0000-000000000000'),
+            (new NativeEntryFactory())->create('e', $uuid)
+        );
+    }
+
+    public function test_uuid_string_with_uuid_definition_provided() : void
+    {
+        $this->assertEquals(
+            Entry::uuid('e', $uuid = '00000000-0000-0000-0000-000000000000'),
+            (new NativeEntryFactory(new Schema(Schema\Definition::uuid('e'))))->create('e', $uuid)
+        );
+    }
+
     public function test_xml_from_dom_document() : void
     {
         $doc = new \DOMDocument();
