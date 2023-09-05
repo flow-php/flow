@@ -46,12 +46,42 @@ final class Cast implements Expression
                 default => (string) $value
             },
             'bool', 'boolean' => (bool) $value,
-            'array' => (array) $value,
+            'array' => $this->toArray($value),
             'object' => (object) $value,
             'null' => null,
             'json' => \json_encode($value, JSON_THROW_ON_ERROR),
             'json_pretty' => \json_encode($value, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT),
+            'xml' => $this->toXML($value),
             default => throw new InvalidArgumentException("Unknown cast type '{$this->type}'")
         };
+    }
+
+    private function toArray(mixed $data) : array
+    {
+        if ($data instanceof \DOMDocument) {
+            return (new Cast\XMLConverter())->toArray($data);
+        }
+
+        return (array) $data;
+    }
+
+    private function toXML(mixed $value) : \DOMDocument
+    {
+        if (\is_string($value)) {
+            $doc = new \DOMDocument();
+            $loaded = @$doc->load($value);
+
+            if (!$loaded) {
+                throw new InvalidArgumentException('Invalid XML string given: ' . $value);
+            }
+
+            return $doc;
+        }
+
+        if ($value instanceof \DOMDocument) {
+            return $value;
+        }
+
+        throw new InvalidArgumentException(\sprintf('Cannot cast %s to XML', \gettype($value)));
     }
 }

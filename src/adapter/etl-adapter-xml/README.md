@@ -40,22 +40,36 @@ Memory safe XML extractor
 <?php
 
 (new Flow())
-    ->read(XML::from_file(__DIR__ . '/xml/simple_items.xml', 'root/items/item'))
-    ->fetch()
+    ->read(XML::from(__FLOW_DATA__ . '/simple_items.xml', 'root/items/item'))
+    ->write(To::output(false))
+    ->run()
+;
 ```
 
 Above code will generate Rows with 5 entries like the one below:
 
-```php
-<?php
-
-Row::create(
-    Entry::array('row', [
-        'item' => [
-            'id' => [
-                '@value' => 1
-            ]
-        ]
-    ])
-)
+```shell
++----------------------------------------------+
+|                                          row |
++----------------------------------------------+
+| <?xml version="1.0"?><item><id>1</id></item> |
+| <?xml version="1.0"?><item><id>2</id></item> |
+| <?xml version="1.0"?><item><id>3</id></item> |
+| <?xml version="1.0"?><item><id>4</id></item> |
+| <?xml version="1.0"?><item><id>5</id></item> |
+| <?xml version="1.0"?><item><id>6</id></item> |
++----------------------------------------------+
 ```
+
+Each entry will be an XMLEntry type. 
+From there you can use built in expressions to extract data from XML.
+
+- `ref('row')->xpath('...');`
+- `ref('row')->domNodeAttribute('...');`
+- `ref('row')->domNodeValue('...');`
+
+When working with collections XPath will return an ListEntry with XMLEntries inside. 
+From there you can for example unpack or expand them. 
+
+For more examples please look into `/examples/topics/xml` directory in [flow monorepo](https://github.com/flow-php/flow)
+
