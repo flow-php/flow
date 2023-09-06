@@ -13,70 +13,15 @@ use PHPUnit\Framework\TestCase;
 
 final class XMLReaderExtractorTest extends TestCase
 {
-    public function test_reading_xml_collection() : void
+    public function test_reading_xml() : void
     {
+        $xml = new \DOMDocument();
+        $xml->load(__DIR__ . '/xml/simple_items.xml');
+
         $this->assertEquals(
-            new Rows(
-                Row::create(
-                    Entry::array('row', [
-                        'items' => [
-                            'item' => [
-                                [
-                                    'id' => [
-                                        '@value' => 1,
-                                        '@attributes' => [
-                                            'id_attribute_01' => '1',
-                                        ],
-                                    ],
-                                    '@attributes' => ['item_attribute_01' => '1'],
-                                ],
-                                [
-                                    'id' => [
-                                        '@value' => 2,
-                                        '@attributes' => [
-                                            'id_attribute_01' => '2',
-                                        ],
-                                    ],
-                                    '@attributes' => ['item_attribute_01' => '2'],
-                                ],
-                                [
-                                    'id' => [
-                                        '@value' => 3,
-                                        '@attributes' => [
-                                            'id_attribute_01' => '3',
-                                        ],
-                                    ],
-                                    '@attributes' => ['item_attribute_01' => '3'],
-                                ],
-                                [
-                                    'id' => [
-                                        '@value' => 4,
-                                        '@attributes' => [
-                                            'id_attribute_01' => '4',
-                                        ],
-                                    ],
-                                    '@attributes' => ['item_attribute_01' => '4'],
-                                ],
-                                [
-                                    'id' => [
-                                        '@value' => 5,
-                                        '@attributes' => [
-                                            'id_attribute_01' => '5',
-                                        ],
-                                    ],
-                                    '@attributes' => ['item_attribute_01' => '5'],
-                                ],
-                            ],
-                            '@attributes' => [
-                                'items_attribute_01' => '1',
-                                'items_attribute_02' => '2',
-                            ],
-                        ],
-                    ])
-                )
-            ),
+            (new Rows(Row::create(Entry::xml('row', $xml)))),
             (new Flow())
-                ->read(XML::from(__DIR__ . '/xml/simple_items.xml', 'root/items'))
+                ->read(XML::from(__DIR__ . '/xml/simple_items.xml'))
                 ->fetch()
         );
     }
@@ -85,198 +30,46 @@ final class XMLReaderExtractorTest extends TestCase
     {
         $this->assertEquals(
             new Rows(
-                Row::create(
-                    Entry::array('row', [
-                        'item' => [
-                            'id' => [
-                                '@value' => 1,
-                                '@attributes' => [
-                                    'id_attribute_01' => '1',
-                                ],
-                            ],
-                            '@attributes' => ['item_attribute_01' => '1'],
-                        ],
-                    ])
-                ),
-                Row::create(
-                    Entry::array('row', [
-                        'item' => [
-                            'id' => [
-                                '@value' => 2,
-                                '@attributes' => [
-                                    'id_attribute_01' => '2',
-                                ],
-                            ],
-                            '@attributes' => ['item_attribute_01' => '2'],
-                        ],
-                    ])
-                ),
-                Row::create(
-                    Entry::array('row', [
-                        'item' => [
-                            'id' => [
-                                '@value' => 3,
-                                '@attributes' => [
-                                    'id_attribute_01' => '3',
-                                ],
-                            ],
-                            '@attributes' => ['item_attribute_01' => '3'],
-                        ],
-                    ])
-                ),
-                Row::create(
-                    Entry::array('row', [
-                        'item' => [
-                            'id' => [
-                                '@value' => 4,
-                                '@attributes' => [
-                                    'id_attribute_01' => '4',
-                                ],
-                            ],
-                            '@attributes' => ['item_attribute_01' => '4'],
-                        ],
-                    ])
-                ),
-                Row::create(
-                    Entry::array('row', [
-                        'item' => [
-                            'id' => [
-                                '@value' => 5,
-                                '@attributes' => [
-                                    'id_attribute_01' => '5',
-                                ],
-                            ],
-                            '@attributes' => ['item_attribute_01' => '5'],
-                        ],
-                    ])
-                )
+                Row::create(Entry::xml('row', '<item item_attribute_01="1"><id id_attribute_01="1">1</id></item>')),
+                Row::create(Entry::xml('row', '<item item_attribute_01="2"><id id_attribute_01="2">2</id></item>')),
+                Row::create(Entry::xml('row', '<item item_attribute_01="3"><id id_attribute_01="3">3</id></item>')),
+                Row::create(Entry::xml('row', '<item item_attribute_01="4"><id id_attribute_01="4">4</id></item>')),
+                Row::create(Entry::xml('row', '<item item_attribute_01="5"><id id_attribute_01="5">5</id></item>')),
             ),
             (new Flow())
-                ->read(XML::from(__DIR__ . '/xml/simple_items.xml', 'root/items/item'))
+                ->read(XML::from(__DIR__ . '/xml/simple_items_flat.xml', 'root/items/item'))
                 ->fetch()
         );
     }
 
-    public function test_reading_xml_each_collection_item_id() : void
+    public function test_reading_xml_from_path() : void
     {
-        $this->assertEquals(
-            new Rows(
-                Row::create(
-                    Entry::array('row', [
-                        'id' => [
-                            '@value' => '1',
-                            '@attributes' => ['id_attribute_01' => '1'],
-                        ],
-                    ])
-                ),
-                Row::create(
-                    Entry::array('row', [
-                        'id' => [
-                            '@value' => '2',
-                            '@attributes' => ['id_attribute_01' => '2'],
-                        ],
-                    ])
-                ),
-                Row::create(
-                    Entry::array('row', [
-                        'id' => [
-                            '@value' => '3',
-                            '@attributes' => ['id_attribute_01' => '3'],
-                        ],
-                    ])
-                ),
-                Row::create(
-                    Entry::array('row', [
-                        'id' => [
-                            '@value' => '4',
-                            '@attributes' => ['id_attribute_01' => '4'],
-                        ],
-                    ])
-                ),
-                Row::create(
-                    Entry::array('row', [
-                        'id' => [
-                            '@value' => '5',
-                            '@attributes' => ['id_attribute_01' => '5'],
-                        ],
-                    ])
-                )
-            ),
-            (new Flow())
-                ->read(XML::from(__DIR__ . '/xml/simple_items.xml', 'root/items/item/id'))
-                ->fetch()
-        );
-    }
+        $xml = new \DOMDocument();
+        $xml->loadXML(<<<'XML'
+<?xml version="1.0"?>
+<items items_attribute_01="1" items_attribute_02="2">
+        <item item_attribute_01="1">
+            <id id_attribute_01="1">1</id>
+        </item>
+        <item item_attribute_01="2">
+            <id id_attribute_01="2">2</id>
+        </item>
+        <item item_attribute_01="3">
+            <id id_attribute_01="3">3</id>
+        </item>
+        <item item_attribute_01="4">
+            <id id_attribute_01="4">4</id>
+        </item>
+        <item item_attribute_01="5">
+            <id id_attribute_01="5">5</id>
+        </item>
+    </items>
 
-    public function test_reading_xml_root() : void
-    {
+XML);
         $this->assertEquals(
-            new Rows(
-                Row::create(
-                    Entry::array('row', [
-                        'root' => [
-                            'items' => [
-                                'item' => [
-                                    [
-                                        'id' => [
-                                            '@value' => 1,
-                                            '@attributes' => [
-                                                'id_attribute_01' => '1',
-                                            ],
-                                        ],
-                                        '@attributes' => ['item_attribute_01' => '1'],
-                                    ],
-                                    [
-                                        'id' => [
-                                            '@value' => 2,
-                                            '@attributes' => [
-                                                'id_attribute_01' => '2',
-                                            ],
-                                        ],
-                                        '@attributes' => ['item_attribute_01' => '2'],
-                                    ],
-                                    [
-                                        'id' => [
-                                            '@value' => 3,
-                                            '@attributes' => [
-                                                'id_attribute_01' => '3',
-                                            ],
-                                        ],
-                                        '@attributes' => ['item_attribute_01' => '3'],
-                                    ],
-                                    [
-                                        'id' => [
-                                            '@value' => 4,
-                                            '@attributes' => [
-                                                'id_attribute_01' => '4',
-                                            ],
-                                        ],
-                                        '@attributes' => ['item_attribute_01' => '4'],
-                                    ],
-                                    [
-                                        'id' => [
-                                            '@value' => 5,
-                                            '@attributes' => [
-                                                'id_attribute_01' => '5',
-                                            ],
-                                        ],
-                                        '@attributes' => ['item_attribute_01' => '5'],
-                                    ],
-                                ],
-                                '@attributes' => [
-                                    'items_attribute_01' => '1',
-                                    'items_attribute_02' => '2',
-                                ],
-                            ],
-                            '@attributes' => [
-                                'root_attribute_01' => '1',
-                            ],
-                        ],
-                    ])
-                )
-            ),
+            new Rows(Row::create(Entry::xml('row', $xml))),
             (new Flow())
-                ->read(XML::from(__DIR__ . '/xml/simple_items.xml'))
+                ->read(XML::from(__DIR__ . '/xml/simple_items.xml', 'root/items'))
                 ->fetch()
         );
     }

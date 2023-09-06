@@ -289,4 +289,17 @@ class Entry
     {
         return new RowEntry\StructureEntry($name, ...$entries);
     }
+
+    /**
+     * @return RowEntry\XMLEntry
+     */
+    final public static function xml(string $name, \DOMDocument|string $data) : RowEntry
+    {
+        return new RowEntry\XMLEntry($name, $data);
+    }
+
+    final public static function xml_node(string $name, \DOMNode $data) : RowEntry
+    {
+        return new RowEntry\XMLNodeEntry($name, $data);
+    }
 }

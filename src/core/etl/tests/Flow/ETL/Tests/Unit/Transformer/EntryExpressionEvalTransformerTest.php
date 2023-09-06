@@ -81,4 +81,26 @@ final class EntryExpressionEvalTransformerTest extends TestCase
                 ->toArray()
         );
     }
+
+    public function test_xml_xpath_expression_when_there_is_more_than_one_node_under_given_path() : void
+    {
+        $xml = '<root><foo baz="buz">bar</foo><foo>baz</foo></root>';
+        $document = new \DOMDocument();
+        $document->loadXML($xml);
+        $xpath = new \DOMXPath($document);
+
+        $this->assertEquals(
+            Entry::list_of_objects('xpath', \DOMNode::class, [
+                $xpath->query('/root/foo')->item(0),
+                $xpath->query('/root/foo')->item(1),
+            ]),
+            (new EntryExpressionEvalTransformer('xpath', ref('xml')->xpath('/root/foo')))
+                ->transform(
+                    new Rows(Row::create(Entry::xml('xml', $xml))),
+                    new FlowContext(Config::default())
+                )
+                ->first()
+                ->get(ref('xpath'))
+        );
+    }
 }

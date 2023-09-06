@@ -57,6 +57,10 @@ final class NativeEntryFactory implements EntryFactory
                 return Row\Entry\JsonEntry::fromJsonString($entryName, $value);
             }
 
+            if ($this->isXML($value)) {
+                return new Entry\XMLEntry($entryName, $value);
+            }
+
             return new Row\Entry\StringEntry($entryName, $value);
         }
 
@@ -73,6 +77,14 @@ final class NativeEntryFactory implements EntryFactory
         }
 
         if (\is_object($value)) {
+            if ($value instanceof \DOMDocument) {
+                return new Row\Entry\XMLEntry($entryName, $value);
+            }
+
+            if ($value instanceof \DOMNode) {
+                return new Row\Entry\XMLNodeEntry($entryName, $value);
+            }
+
             if ($value instanceof \DateTimeImmutable) {
                 return new Row\Entry\DateTimeEntry($entryName, $value);
             }
@@ -121,6 +133,11 @@ final class NativeEntryFactory implements EntryFactory
                 if ($class === \DateTimeImmutable::class || $class === \DateTime::class) {
                     $class = \DateTimeInterface::class;
                 }
+
+                if ($class === \DOMElement::class) {
+                    $class = \DOMNode::class;
+                }
+
                 /**
                  * @psalm-suppress PossiblyNullArgument
                  */
@@ -172,6 +189,10 @@ final class NativeEntryFactory implements EntryFactory
                 } catch (InvalidArgumentException $e) {
                     return EntryDSL::json($definition->entry()->name(), $value);
                 }
+            }
+
+            if ($type === Entry\XMLEntry::class && (\is_string($value) || $value instanceof \DOMDocument)) {
+                return EntryDSL::xml($definition->entry()->name(), $value);
             }
 
             if ($type === Entry\ObjectEntry::class && \is_object($value)) {
@@ -264,6 +285,26 @@ final class NativeEntryFactory implements EntryFactory
         try {
             return \is_array(\json_decode($string, true, self::JSON_DEPTH, JSON_THROW_ON_ERROR));
         } catch (\Exception) {
+            return false;
+        }
+    }
+
+    private function isXML(string $string) : bool
+    {
+        try {
+            \libxml_use_internal_errors(true);
+
+            $doc = new \DOMDocument();
+            $result = $doc->loadXML($string);
+            \libxml_clear_errors(); // Clear any errors if needed
+            \libxml_use_internal_errors(false); // Restore standard error handling
+
+            /** @psalm-suppress RedundantCastGivenDocblockType */
+            return (bool) $result;
+        } catch (\Exception) {
+            \libxml_clear_errors(); // Clear any errors if needed
+            \libxml_use_internal_errors(false); // Restore standard error handling
+
             return false;
         }
     }

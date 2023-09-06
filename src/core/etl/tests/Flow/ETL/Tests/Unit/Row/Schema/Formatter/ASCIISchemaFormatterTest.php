@@ -18,7 +18,8 @@ final class ASCIISchemaFormatterTest extends TestCase
             Schema\Definition::union('number', [IntegerEntry::class, FloatEntry::class]),
             Schema\Definition::string('name', nullable: true),
             Schema\Definition::array('tags', nullable: false),
-            Schema\Definition::boolean('active', false)
+            Schema\Definition::boolean('active', false),
+            Schema\Definition::xml('xml', false)
         );
 
         $this->assertSame(
@@ -28,6 +29,7 @@ schema
 |-- name: [Flow\ETL\Row\Entry\StringEntry, Flow\ETL\Row\Entry\NullEntry] (nullable = true)
 |-- number: [Flow\ETL\Row\Entry\IntegerEntry, Flow\ETL\Row\Entry\FloatEntry] (nullable = false)
 |-- tags: Flow\ETL\Row\Entry\ArrayEntry (nullable = false)
+|-- xml: Flow\ETL\Row\Entry\XMLEntry (nullable = false)
 
 SCHEMA,
             (new ASCIISchemaFormatter())->format($schema)

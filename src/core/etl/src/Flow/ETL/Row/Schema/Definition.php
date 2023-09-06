@@ -20,6 +20,7 @@ use Flow\ETL\Row\Entry\ObjectEntry;
 use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Row\Entry\StructureEntry;
 use Flow\ETL\Row\Entry\TypedCollection\Type;
+use Flow\ETL\Row\Entry\XMLEntry;
 use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Schema\Constraint\Any;
 use Flow\ETL\Row\Schema\Constraint\VoidConstraint;
@@ -160,6 +161,16 @@ final class Definition implements Serializable
         }
 
         return new self($entry, $types, $constraint, $metadata);
+    }
+
+    public static function xml(string|EntryReference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    {
+        return new self($entry, ($nullable) ? [XMLEntry::class, NullEntry::class] : [XMLEntry::class], $constraint, $metadata);
+    }
+
+    public static function xml_node(string|EntryReference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    {
+        return new self($entry, ($nullable) ? [Entry\XMLNodeEntry::class, NullEntry::class] : [Entry\XMLNodeEntry::class], $constraint, $metadata);
     }
 
     // @codeCoverageIgnoreStart
