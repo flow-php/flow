@@ -268,4 +268,30 @@ final class NativeEntryFactoryTest extends TestCase
             (new NativeEntryFactory(new Schema(Schema\Definition::string('e'))))->create('e', 'string')
         );
     }
+
+    public function test_xml_from_dom_document() : void
+    {
+        $doc = new \DOMDocument();
+        $doc->loadXML($xml = '<root><foo>1</foo><bar>2</bar><baz>3</baz></root>');
+        $this->assertEquals(
+            Entry::xml('e', $xml),
+            (new NativeEntryFactory())->create('e', $doc)
+        );
+    }
+
+    public function test_xml_from_string() : void
+    {
+        $this->assertEquals(
+            Entry::xml('e', $xml = '<root><foo>1</foo><bar>2</bar><baz>3</baz></root>'),
+            (new NativeEntryFactory())->create('e', $xml)
+        );
+    }
+
+    public function test_xml_string_with_xml_definition_provided() : void
+    {
+        $this->assertEquals(
+            Entry::xml('e', $xml = '<root><foo>1</foo><bar>2</bar><baz>3</baz></root>'),
+            (new NativeEntryFactory(new Schema(Schema\Definition::xml('e'))))->create('e', $xml)
+        );
+    }
 }

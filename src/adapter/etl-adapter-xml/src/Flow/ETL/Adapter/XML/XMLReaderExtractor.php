@@ -51,11 +51,11 @@ final class XMLReaderExtractor implements Extractor
                 if ($xmlReader->nodeType === \XMLReader::ELEMENT) {
                     if ($previousDepth === $xmlReader->depth) {
                         \array_pop($currentPathBreadCrumbs);
-                        \array_push($currentPathBreadCrumbs, $xmlReader->name);
+                        $currentPathBreadCrumbs[] = $xmlReader->name;
                     }
 
                     if ($xmlReader->depth > $previousDepth) {
-                        \array_push($currentPathBreadCrumbs, $xmlReader->name);
+                        $currentPathBreadCrumbs[] = $xmlReader->name;
                     }
 
                     if ($xmlReader->depth < $previousDepth) {
@@ -71,11 +71,11 @@ final class XMLReaderExtractor implements Extractor
 
                         if ($context->config->shouldPutInputIntoRows()) {
                             $rows[] = Row::create(
-                                Entry::array($this->rowEntryName, $this->convertDOMDocument($node)),
+                                Entry::xml($this->rowEntryName, $node),
                                 Entry::string('input_file_uri', $filePath->uri())
                             );
                         } else {
-                            $rows[] = Row::create(Entry::array($this->rowEntryName, $this->convertDOMDocument($node)));
+                            $rows[] = Row::create(Entry::xml($this->rowEntryName, $node));
                         }
 
                         if (\count($rows) >= $this->rowsInBatch) {
@@ -94,91 +94,5 @@ final class XMLReaderExtractor implements Extractor
                 yield new Rows(...$rows);
             }
         }
-    }
-
-    /**
-     * @param \DOMDocument $document
-     *
-     * @return array<mixed>
-     */
-    private function convertDOMDocument(\DOMDocument $document) : array
-    {
-        $xmlArray = [];
-
-        if ($document->hasChildNodes()) {
-            $children = $document->childNodes;
-
-            foreach ($children as $child) {
-                /** @psalm-suppress ArgumentTypeCoercion */
-                $xmlArray[$child->nodeName] = $this->convertDOMElement($child);
-            }
-        }
-
-        return $xmlArray;
-    }
-
-    /**
-     * @psalm-suppress ArgumentTypeCoercion
-     * @psalm-suppress PossiblyNullArgument
-     * @psalm-suppress UnnecessaryVarAnnotation
-     * @psalm-suppress PossiblyNullIterator
-     *
-     * @return array<mixed>
-     */
-    private function convertDOMElement(\DOMElement|\DOMNode $element) : array
-    {
-        $xmlArray = [];
-
-        if ($element->hasAttributes()) {
-            /**
-             * @var \DOMAttr $attribute
-             *
-             * @phpstan-ignore-next-line
-             */
-            foreach ($element->attributes as $attribute) {
-                $xmlArray['@attributes'][$attribute->name] = $attribute->value;
-            }
-        }
-
-        foreach ($element->childNodes as $childNode) {
-            if ($childNode->nodeType === XML_TEXT_NODE) {
-                /** @phpstan-ignore-next-line  */
-                if (\trim($childNode->nodeValue)) {
-                    $xmlArray['@value'] = $childNode->nodeValue;
-                }
-            }
-
-            if ($childNode->nodeType === XML_ELEMENT_NODE) {
-                if ($this->isElementCollection($element)) {
-                    /** @phpstan-ignore-next-line */
-                    $xmlArray[$childNode->nodeName][] = $this->convertDOMElement($childNode);
-                } else {
-                    $xmlArray[$childNode->nodeName] = $this->convertDOMElement($childNode);
-                }
-            }
-        }
-
-        return $xmlArray;
-    }
-
-    private function isElementCollection(\DOMElement|\DOMNode $element) : bool
-    {
-        if ($element->childNodes->count() <= 1) {
-            return false;
-        }
-
-        $nodeNames = [];
-        /** @var \DOMElement $childNode */
-        foreach ($element->childNodes as $childNode) {
-            if ($childNode->nodeType === XML_ELEMENT_NODE) {
-                $nodeNames[] = $childNode->nodeName;
-            }
-        }
-
-        if (!\count($nodeNames) || \count($nodeNames) === 1) {
-            return false;
-        }
-
-        return \count(\array_unique($nodeNames)) === 1;
     }
 }

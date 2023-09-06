@@ -96,6 +96,16 @@ trait EntryExpression
         return new Expressions(new Divide($this, $ref));
     }
 
+    public function domNodeAttribute(string $attribute) : Expression|EntryReference
+    {
+        return new Expressions(new Expression\DOMNodeAttribute($this, $attribute));
+    }
+
+    public function domNodeValue() : Expression|EntryReference
+    {
+        return new Expressions(new Expression\DOMNodeValue($this));
+    }
+
     public function endsWith(Expression $needle) : Expression|EntryReference
     {
         return new Expressions(new EndsWith($this, $needle));
@@ -375,5 +385,10 @@ trait EntryExpression
     public function upper() : Expression|EntryReference
     {
         return new Expressions(new Expression\ToUpper($this));
+    }
+
+    public function xpath(string $string) : Expression|EntryReference
+    {
+        return new Expressions(new Expression\XPath($this, $string));
     }
 }

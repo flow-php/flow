@@ -326,7 +326,8 @@ final class DataFrameTest extends TestCase
                                     new Row\Entries(new IntegerEntry('item-id', 3), new StringEntry('name', 'three'))
                                 ),
                                 new Row\Entry\ObjectEntry('object', new \ArrayIterator([1, 2, 3])),
-                                new Row\Entry\EnumEntry('enum', BackedStringEnum::three)
+                                new Row\Entry\EnumEntry('enum', BackedStringEnum::three),
+                                new Row\Entry\XMLEntry('xml', '<xml><node id="123">test<foo>bar</foo></node></xml>'),
                             ),
                         );
                     }
@@ -336,15 +337,15 @@ final class DataFrameTest extends TestCase
 
         $this->assertSame(
             <<<'ASCIITABLE'
-+------+--------+-----+---------+----------------------+-------+----------------------+----------------------+----------------------+----------------------+-------+
-|   id |  price | 100 | deleted |           created-at | phase |                array |                items |                 tags |               object |  enum |
-+------+--------+-----+---------+----------------------+-------+----------------------+----------------------+----------------------+----------------------+-------+
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | {"item-id":"1","name | [{"item-id":"1","nam | ArrayIterator Object | three |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | {"item-id":"1","name | [{"item-id":"1","nam | ArrayIterator Object | three |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | {"item-id":"1","name | [{"item-id":"1","nam | ArrayIterator Object | three |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | {"item-id":"1","name | [{"item-id":"1","nam | ArrayIterator Object | three |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | {"item-id":"1","name | [{"item-id":"1","nam | ArrayIterator Object | three |
-+------+--------+-----+---------+----------------------+-------+----------------------+----------------------+----------------------+----------------------+-------+
++------+--------+-----+---------+----------------------+-------+----------------------+----------------------+----------------------+----------------------+-------+----------------------+
+|   id |  price | 100 | deleted |           created-at | phase |                array |                items |                 tags |               object |  enum |                  xml |
++------+--------+-----+---------+----------------------+-------+----------------------+----------------------+----------------------+----------------------+-------+----------------------+
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | {"item-id":"1","name | [{"item-id":"1","nam | ArrayIterator Object | three | <?xml version="1.0"? |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | {"item-id":"1","name | [{"item-id":"1","nam | ArrayIterator Object | three | <?xml version="1.0"? |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | {"item-id":"1","name | [{"item-id":"1","nam | ArrayIterator Object | three | <?xml version="1.0"? |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | {"item-id":"1","name | [{"item-id":"1","nam | ArrayIterator Object | three | <?xml version="1.0"? |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | {"item-id":"1","name | [{"item-id":"1","nam | ArrayIterator Object | three | <?xml version="1.0"? |
++------+--------+-----+---------+----------------------+-------+----------------------+----------------------+----------------------+----------------------+-------+----------------------+
 5 rows
 
 ASCIITABLE,
@@ -353,16 +354,16 @@ ASCIITABLE,
 
         $this->assertSame(
             <<<'ASCIITABLE'
-+------+--------+-----+---------+---------------------------+-------+-------------------------------------------------------+------------------------------+--------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------+-------+
-|   id |  price | 100 | deleted |                created-at | phase |                                                 array |                        items |                                                                                       tags |                                                                                         object |  enum |
-+------+--------+-----+---------+---------------------------+-------+-------------------------------------------------------+------------------------------+--------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------+-------+
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three |
-+------+--------+-----+---------+---------------------------+-------+-------------------------------------------------------+------------------------------+--------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------+-------+
++------+--------+-----+---------+---------------------------+-------+-------------------------------------------------------+------------------------------+--------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------+-------+--------------------------------------------------------------------------+
+|   id |  price | 100 | deleted |                created-at | phase |                                                 array |                        items |                                                                                       tags |                                                                                         object |  enum |                                                                      xml |
++------+--------+-----+---------+---------------------------+-------+-------------------------------------------------------+------------------------------+--------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------+-------+--------------------------------------------------------------------------+
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three | <?xml version="1.0"?><xml><node id="123">test<foo>bar</foo></node></xml> |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three | <?xml version="1.0"?><xml><node id="123">test<foo>bar</foo></node></xml> |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three | <?xml version="1.0"?><xml><node id="123">test<foo>bar</foo></node></xml> |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three | <?xml version="1.0"?><xml><node id="123">test<foo>bar</foo></node></xml> |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three | <?xml version="1.0"?><xml><node id="123">test<foo>bar</foo></node></xml> |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three | <?xml version="1.0"?><xml><node id="123">test<foo>bar</foo></node></xml> |
++------+--------+-----+---------+---------------------------+-------+-------------------------------------------------------+------------------------------+--------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------+-------+--------------------------------------------------------------------------+
 6 rows
 
 ASCIITABLE,
