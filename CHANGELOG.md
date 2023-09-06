@@ -1,6 +1,11 @@
-## [Unreleased] - 2023-08-29
+## [Unreleased] - 2023-09-06
 
 ### Added
+- [#474](https://github.com/flow-php/flow/pull/474) - **XMLEntry** - [@norberttech](https://github.com/norberttech)
+- [#474](https://github.com/flow-php/flow/pull/474) - **XMLNodeEntry** - [@norberttech](https://github.com/norberttech)
+- [#474](https://github.com/flow-php/flow/pull/474) - **ref('...')->xpath('...') - for extracting specific nodes from XMLEntry** - [@norberttech](https://github.com/norberttech)
+- [#474](https://github.com/flow-php/flow/pull/474) - **ref('...')->domNodeAttribute('...') - for extracting value of attribute** - [@norberttech](https://github.com/norberttech)
+- [#474](https://github.com/flow-php/flow/pull/474) - **ref('...')->domNodeValue('...') - for extracting value of node** - [@norberttech](https://github.com/norberttech)
 - [#450](https://github.com/flow-php/flow/pull/450) - **Add new `ulid()` expression based on Symfony Uid** - [@stloyd](https://github.com/stloyd)
 - [#445](https://github.com/flow-php/flow/pull/445) - **Add `fig/log-test` package for mock logger** - [@stloyd](https://github.com/stloyd)
 - [#440](https://github.com/flow-php/flow/pull/440) - **Add MariaDB to supported platforms for Doctrine adapter** - [@stloyd](https://github.com/stloyd)
@@ -58,6 +63,7 @@
 - [#388](https://github.com/flow-php/flow/pull/388) - **Added `ext-hash` PHP extension as required for Flow** - [@stloyd](https://github.com/stloyd)
 
 ### Changed
+- [#474](https://github.com/flow-php/flow/pull/474) - **XMLReaderExtractor is now returning XMLEntry type instead of casting XML's to array** - [@norberttech](https://github.com/norberttech)
 - [#445](https://github.com/flow-php/flow/pull/445) - **Allow usage of `psr/log` v2 & v3`** - [@stloyd](https://github.com/stloyd)
 - [#438](https://github.com/flow-php/flow/pull/438) - **Mark methods on DataFrame api as @lazy or @trigger** - [@norberttech](https://github.com/norberttech)
 - [#436](https://github.com/flow-php/flow/pull/436) - **Moved limit functionality into LimitingPipeline** - [@norberttech](https://github.com/norberttech)
