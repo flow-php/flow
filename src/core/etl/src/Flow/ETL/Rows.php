@@ -177,31 +177,6 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
         return $entries;
     }
 
-    public function equals(self $rows, Comparator $comparator = new NativeComparator()) : bool
-    {
-        if ($this->count() !== $rows->count()) {
-            return false;
-        }
-
-        foreach ($this->rows as $row) {
-            $found = false;
-
-            foreach ($rows->rows as $otherRow) {
-                if ($comparator->equals($row, $otherRow)) {
-                    $found = true;
-
-                    break;
-                }
-            }
-
-            if (!$found) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
     /**
      * @param callable(Row) : bool $callable
      */

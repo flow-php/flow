@@ -69,9 +69,8 @@ final class Cast implements Expression
     {
         if (\is_string($value)) {
             $doc = new \DOMDocument();
-            $loaded = @$doc->load($value);
 
-            if (!$loaded) {
+            if (!@$doc->load($value)) {
                 throw new InvalidArgumentException('Invalid XML string given: ' . $value);
             }
 

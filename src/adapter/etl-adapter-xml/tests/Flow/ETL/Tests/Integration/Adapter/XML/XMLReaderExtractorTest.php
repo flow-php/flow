@@ -18,12 +18,11 @@ final class XMLReaderExtractorTest extends TestCase
         $xml = new \DOMDocument();
         $xml->load(__DIR__ . '/xml/simple_items.xml');
 
-        $this->assertTrue(
-            (new Rows(Row::create(Entry::xml('row', $xml))))->equals(
-                (new Flow())
-                    ->read(XML::from(__DIR__ . '/xml/simple_items.xml'))
-                    ->fetch()
-            )
+        $this->assertEquals(
+            (new Rows(Row::create(Entry::xml('row', $xml)))),
+            (new Flow())
+                ->read(XML::from(__DIR__ . '/xml/simple_items.xml'))
+                ->fetch()
         );
     }
 
@@ -67,13 +66,11 @@ final class XMLReaderExtractorTest extends TestCase
     </items>
 
 XML);
-        $this->assertTrue(
-            (new Rows(Row::create(Entry::xml('row', $xml))))
-                ->equals(
-                    (new Flow())
-                        ->read(XML::from(__DIR__ . '/xml/simple_items.xml', 'root/items'))
-                        ->fetch()
-                )
+        $this->assertEquals(
+            new Rows(Row::create(Entry::xml('row', $xml))),
+            (new Flow())
+                ->read(XML::from(__DIR__ . '/xml/simple_items.xml', 'root/items'))
+                ->fetch()
         );
     }
 }

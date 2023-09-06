@@ -14,9 +14,7 @@ final class XMLConverter
         $xmlArray = [];
 
         if ($document->hasChildNodes()) {
-            $children = $document->childNodes;
-
-            foreach ($children as $child) {
+            foreach ($document->childNodes as $child) {
                 /** @psalm-suppress ArgumentTypeCoercion */
                 $xmlArray[$child->nodeName] = $this->convertDOMElement($child);
             }
@@ -30,8 +28,6 @@ final class XMLConverter
      * @psalm-suppress PossiblyNullArgument
      * @psalm-suppress UnnecessaryVarAnnotation
      * @psalm-suppress PossiblyNullIterator
-     *
-     * @return array<mixed>
      */
     private function convertDOMElement(\DOMElement|\DOMNode $element) : array
     {
@@ -83,7 +79,7 @@ final class XMLConverter
             }
         }
 
-        if (!\count($nodeNames) || \count($nodeNames) === 1) {
+        if (\count($nodeNames) <= 1) {
             return false;
         }
 
