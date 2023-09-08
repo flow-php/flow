@@ -121,6 +121,7 @@ final class AvroResource extends \AvroIO
     public function seek($offset, $whence = SEEK_SET)
     {
         $res = \fseek($this->file_handle, $offset, $whence);
+
         // Note: does not catch seeking beyond end of file
         if (-1 === $res) {
             throw new \AvroIOException(

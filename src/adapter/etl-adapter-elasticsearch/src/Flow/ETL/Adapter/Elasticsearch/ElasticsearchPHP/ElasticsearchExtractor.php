@@ -106,6 +106,7 @@ final class ElasticsearchExtractor implements Extractor
             }
         } else {
             $fetched = $results->size();
+
             // go with from/size pagination which is not recommended but will work for most of the small indexes.
             for ($page = 1; $page <= $results->pages(); $page++) {
                 $nextPageParams = $params

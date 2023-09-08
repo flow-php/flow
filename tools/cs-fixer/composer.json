@@ -2,7 +2,7 @@
   "name": "flow-php/etl-tools",
   "description": "Flow PHP ETL - Tools",
   "require-dev": {
-    "friendsofphp/php-cs-fixer": "^3.1"
+    "friendsofphp/php-cs-fixer": "^3.26"
   },
   "config": {
     "allow-plugins": false
