@@ -14,43 +14,32 @@ use Flow\ETL\Row\EntryReference;
 class ChartJS
 {
     /**
-     * @param EntryReference $label
      * @param array<EntryReference> $datasets
      *
      * @throws InvalidArgumentException
-     *
-     * @return Chart
      */
     final public static function bar(EntryReference $label, array $datasets) : Chart
     {
         return new Chart\BarChart($label, $datasets);
     }
 
-    /**
-     * @param Chart $type
-     *
-     * @return Loader
-     */
-    final public static function chart(Chart $type, Path|string $output = null, Path|string $template = __DIR__ . '/../Adapter/ChartJS/Resources/template/full_page.html') : Loader
+    final public static function chart(Chart $type, Path|string $output = null, Path|string $template = null) : Loader
     {
         if (\is_string($output)) {
             $output = Path::realpath($output);
         }
 
-        if (\is_string($template)) {
-            $template = Path::realpath($template);
+        if (null === $template || \is_string($template)) {
+            $template = Path::realpath($template ?: __DIR__ . '/../Adapter/ChartJS/Resources/template/full_page.html');
         }
 
         return new ChartJSLoader($type, $output, $template);
     }
 
     /**
-     * @param EntryReference $label
      * @param array<EntryReference> $datasets
      *
      * @throws InvalidArgumentException
-     *
-     * @return Chart
      */
     final public static function line(EntryReference $label, array $datasets) : Chart
     {
@@ -61,8 +50,6 @@ class ChartJS
      * @param array<EntryReference> $datasets
      *
      * @throws InvalidArgumentException
-     *
-     * @return Chart
      */
     final public static function pie(array $datasets) : Chart
     {
