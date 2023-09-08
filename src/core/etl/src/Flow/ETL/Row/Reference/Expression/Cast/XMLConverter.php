@@ -72,6 +72,7 @@ final class XMLConverter
         }
 
         $nodeNames = [];
+
         /** @var \DOMElement $childNode */
         foreach ($element->childNodes as $childNode) {
             if ($childNode->nodeType === XML_ELEMENT_NODE) {

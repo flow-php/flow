@@ -43,6 +43,7 @@ final class ParquetExtractor implements Extractor
 
                     $column = $groupReader->ReadColumn($field);
                     $arrayRow = -1;
+
                     /**
                      * @psalm-suppress MixedAssignment
                      * @psalm-suppress PossiblyNullArrayAccess

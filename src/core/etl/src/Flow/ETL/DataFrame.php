@@ -200,7 +200,7 @@ final class DataFrame
     /**
      * @lazy
      *
-     * @param Reference\Expression|callable(Row $row) : bool $callback
+     * @param callable(Row $row) : bool|Reference\Expression $callback
      */
     public function filter(callable|Reference\Expression $callback) : self
     {
@@ -584,7 +584,7 @@ final class DataFrame
     /**
      * @trigger
      *
-     * @param callable(Rows $rows): void|null $callback
+     * @param null|callable(Rows $rows): void $callback
      */
     public function run(callable $callback = null) : void
     {

@@ -85,6 +85,7 @@ final class TableDefinition
                  */
                 function (int $index, array $row) use ($abstractPlatform) : string {
                     $keys = [];
+
                     /**
                      * @var mixed $value
                      */
