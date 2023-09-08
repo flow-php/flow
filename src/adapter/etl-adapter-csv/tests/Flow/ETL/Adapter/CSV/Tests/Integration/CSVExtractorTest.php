@@ -87,6 +87,7 @@ final class CSVExtractorTest extends TestCase
         );
 
         $total = 0;
+
         /** @var Rows $rows */
         foreach ($extractor->extract(new FlowContext(Config::default())) as $rows) {
             $rows->each(function (Row $row) : void {
@@ -142,6 +143,7 @@ final class CSVExtractorTest extends TestCase
         );
 
         $total = 0;
+
         /** @var Rows $rows */
         foreach ($extractor->extract(new FlowContext(Config::default())) as $rows) {
             $rows->each(function (Row $row) : void {
@@ -176,6 +178,7 @@ final class CSVExtractorTest extends TestCase
         );
 
         $total = 0;
+
         /** @var Rows $rows */
         foreach ($extractor->extract(new FlowContext(Config::default())) as $rows) {
             $rows->each(function (Row $row) : void {
@@ -198,6 +201,7 @@ final class CSVExtractorTest extends TestCase
         );
 
         $total = 0;
+
         /** @var Rows $rows */
         foreach ($extractor->extract(new FlowContext(Config::default())) as $rows) {
             $rows->each(function (Row $row) : void {

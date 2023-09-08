@@ -69,6 +69,7 @@ final class JsonExtractorTest extends TestCase
         $extractor = new JsonExtractor(Path::realpath(__DIR__ . '/../Fixtures/timezones.json'), 5);
 
         $total = 0;
+
         /** @var Rows $rows */
         foreach ($extractor->extract(new FlowContext(Config::default())) as $rows) {
             $rows->each(function (Row $row) : void {
