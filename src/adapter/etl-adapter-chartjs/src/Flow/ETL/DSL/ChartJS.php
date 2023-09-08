@@ -29,8 +29,12 @@ class ChartJS
             $output = Path::realpath($output);
         }
 
-        if (null === $template || \is_string($template)) {
-            $template = Path::realpath($template ?: __DIR__ . '/../Adapter/ChartJS/Resources/template/full_page.html');
+        if (null === $template) {
+            return new ChartJSLoader($type, $output);
+        }
+
+        if (\is_string($template)) {
+            $template = Path::realpath($template);
         }
 
         return new ChartJSLoader($type, $output, $template);
