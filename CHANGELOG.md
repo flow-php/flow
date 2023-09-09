@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-09-08
+## [Unreleased] - 2023-09-09
 
 ### Added
 - [#474](https://github.com/flow-php/flow/pull/474) - **XMLEntry** - [@norberttech](https://github.com/norberttech)
@@ -63,6 +63,7 @@
 - [#388](https://github.com/flow-php/flow/pull/388) - **Added `ext-hash` PHP extension as required for Flow** - [@stloyd](https://github.com/stloyd)
 
 ### Changed
+- [#478](https://github.com/flow-php/flow/pull/478) - **Remove unnecessary template overwrite in ChartJS adapter** - [@stloyd](https://github.com/stloyd)
 - [#479](https://github.com/flow-php/flow/pull/479) - **Updated cs-fixer to latest and bump min version** - [@stloyd](https://github.com/stloyd)
 - [#479](https://github.com/flow-php/flow/pull/479) - **Run the latest cs-fixer against codebase** - [@stloyd](https://github.com/stloyd)
 - [#474](https://github.com/flow-php/flow/pull/474) - **XMLReaderExtractor is now returning XMLEntry type instead of casting XML's to array** - [@norberttech](https://github.com/norberttech)
