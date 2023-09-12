@@ -47,7 +47,6 @@
         "php-http/curl-client": "^2.2",
         "php-http/mock-client": "^1.5",
         "ramsey/uuid": "^4.5",
-        "rector/rector": "^0.13.8 || ^0.14.0 || ^0.15.0",
         "symfony/cache": "^6.2",
         "symfony/dotenv": "^6.2",
         "symfony/uid": "^6.3",
@@ -178,7 +177,8 @@
             "composer install --working-dir=./tools/monorepo",
             "composer install --working-dir=./tools/phpstan",
             "composer install --working-dir=./tools/psalm",
-            "composer install --working-dir=./tools/phpunit"
+            "composer install --working-dir=./tools/phpunit",
+            "composer install --working-dir=./tools/rector"
         ]
     },
     "minimum-stability": "dev",
