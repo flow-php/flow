@@ -1,0 +1,10 @@
+{
+  "name": "flow-php/etl-tools",
+  "description": "Flow PHP ETL - Tools",
+  "require-dev": {
+    "rector/rector": "^0.18"
+  },
+  "config": {
+    "allow-plugins": false
+  }
+}
