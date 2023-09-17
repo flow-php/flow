@@ -1,0 +1,39 @@
+{
+    "name": "flow-php/parquet",
+    "type": "library",
+    "description": "PHP ETL - library for reading and writing Parquet files",
+    "keywords": [
+        "etl",
+        "extract",
+        "transform",
+        "load",
+        "filter",
+        "parquet"
+    ],
+    "require": {
+        "php": "~8.1 || ~8.2",
+        "ext-bcmath": "*"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Flow\\": [
+                "src/Flow"
+            ]
+        },
+        "files": [
+            "src/Flow/Parquet/functions.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Flow\\": "tests/Flow"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

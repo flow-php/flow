@@ -12,6 +12,9 @@ use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 
+/**
+ * @deprecated Use \Flow\ETL\Adapter\Parquet\ParquetExtractor instead
+ */
 final class ParquetExtractor implements Extractor
 {
     /**

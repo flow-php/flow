@@ -13,12 +13,15 @@
     <env name="MEILISEARCH_URL" value="http://localhost:7700"/>
     <env name="MEILISEARCH_API_KEY" value="masterKey"/>
     <env name="FLOW_LOCAL_FILESYSTEM_CACHE_DIR" value="./var/cache"/>
+    <env name="FLOW_PARQUET_TESTS_DEBUG" value="0"/> <!-- change to 1 in order to display logs in parquet integration tests -->
   </php>
   <testsuites>
     <testsuite name="unit">
       <directory>src/core/etl/tests/Flow/ETL/Tests/Unit</directory>
       <directory>src/lib/array-dot/tests/Flow/ArrayDot/Tests/Unit</directory>
       <directory>src/lib/doctrine-dbal-bulk/tests/Flow/Doctrine/Bulk/Tests/Unit</directory>
+      <directory>src/lib/dremel/tests/Flow/Dremel/Tests/Unit</directory>
+      <directory>src/lib/parquet/tests/Flow/Parquet/Tests/Unit</directory>
       <directory>src/adapter/etl-adapter-amphp/tests/Flow/ETL/Async/Tests/Unit</directory>
       <directory>src/adapter/etl-adapter-avro/tests/Flow/ETL/Adapter/Avro/FlixTech/Tests/Unit</directory>
       <directory>src/adapter/etl-adapter-chartjs/tests/Flow/ETL/Adapter/ChartJS/Tests/Unit</directory>
@@ -41,6 +44,7 @@
       <directory>src/adapter/etl-adapter-text/tests/Flow/ETL/Adapter/Text/Tests/Integration</directory>
       <directory>src/adapter/etl-adapter-xml/tests/Flow/ETL/Tests/Integration</directory>
       <directory>src/adapter/etl-adapter-http/tests/Flow/ETL/Tests/Integration</directory>
+      <directory>src/lib/parquet/tests/Flow/Parquet/Tests/Integration</directory>
     </testsuite>
     <testsuite name="integration-services">
       <directory>src/lib/doctrine-dbal-bulk/tests/Flow/Doctrine/Bulk/Tests/Integration</directory>

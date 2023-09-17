@@ -13,6 +13,10 @@ lib-array-dot:
   - any: ["src/lib/array-dot/**/*"]
 lib-doctrine-dbal-bulk:
   - any: ["src/lib/doctrine-dbal-bulk/**/*"]
+lib-parquet:
+  - any: ["src/lib/parquet/**/*"]
+lib-dremel:
+  - any: ["src/lib/dremel/**/*"]
 
 adapter-amphp:
   - any: ["src/adapter/etl-adapter-amphp/**/*"]
@@ -26,6 +30,8 @@ adapter-doctrine:
   - any: ["src/adapter/etl-adapter-doctrine/**/*"]
 adapter-elasticsearch:
   - any: ["src/adapter/etl-adapter-elasticsearch/**/*"]
+adapter-meilisearch:
+  - any: ["src/adapter/etl-adapter-meilisearch/**/*"]
 adapter-google-sheet:
   - any: ["src/adapter/etl-adapter-google-sheet/**/*"]
 adapter-http:

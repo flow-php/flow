@@ -12,7 +12,9 @@ use Flow\ETL\Row\Comparator;
 use Flow\ETL\Row\Comparator\NativeComparator;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry\NullEntry;
+use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Row\Schema;
@@ -34,6 +36,32 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
     public function __construct(Row ...$rows)
     {
         $this->rows = \array_values($rows);
+    }
+
+    public static function fromArray(array $data, EntryFactory $entryFactory = new NativeEntryFactory()) : self
+    {
+        /** @var array<Row> $rows */
+        $rows = [];
+
+        foreach ($data as $entries) {
+            if (!\is_array($entries)) {
+                throw new InvalidArgumentException('Rows expects nested array data structure: array<array<mixed>>');
+            }
+
+            $row = [];
+
+            /**
+             * @var string $entryName
+             * @var mixed $entryValue
+             */
+            foreach ($entries as $entryName => $entryValue) {
+                $row[] = $entryFactory->create($entryName, $entryValue);
+            }
+
+            $rows[] = Row::create(...$row);
+        }
+
+        return new self(...$rows);
     }
 
     public function __serialize() : array
