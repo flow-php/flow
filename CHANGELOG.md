@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-09-15
+## [Unreleased] - 2023-09-19
 
 ### Added
 - [#474](https://github.com/flow-php/flow/pull/474) - **XMLEntry** - [@norberttech](https://github.com/norberttech)
