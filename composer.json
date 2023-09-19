@@ -170,6 +170,7 @@
         "build:phar": [
             "tools/box/vendor/bin/box compile"
         ],
+        "pre-autoload-dump": "Google\\Task\\Composer::cleanup",
         "post-install-cmd": [
             "@tools:install"
         ],
@@ -185,6 +186,11 @@
             "composer install --working-dir=./tools/psalm",
             "composer install --working-dir=./tools/phpunit",
             "composer install --working-dir=./tools/rector"
+        ]
+    },
+    "extra": {
+        "google/apiclient-services": [
+            "Sheets"
         ]
     },
     "minimum-stability": "dev",
