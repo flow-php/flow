@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-09-19
+## [Unreleased] - 2023-09-25
 
 ### Added
 - [#474](https://github.com/flow-php/flow/pull/474) - **XMLEntry** - [@norberttech](https://github.com/norberttech)
@@ -28,8 +28,8 @@
 - [#415](https://github.com/flow-php/flow/pull/415) - **Added regex_match_all expression** - [@norberttech](https://github.com/norberttech)
 - [#415](https://github.com/flow-php/flow/pull/415) - **Added regex_replace expression** - [@norberttech](https://github.com/norberttech)
 - [#415](https://github.com/flow-php/flow/pull/415) - **Added sprintf expression** - [@norberttech](https://github.com/norberttech)
-- [#414](https://github.com/flow-php/flow/pull/414) - **Added CallMethod expression** - [@jwojtyra-aterian](https://github.com/jwojtyra-aterian)
-- [#412](https://github.com/flow-php/flow/pull/412) - **Added uuid expression** - [@jwojtyra-aterian](https://github.com/jwojtyra-aterian)
+- [#414](https://github.com/flow-php/flow/pull/414) - **Added CallMethod expression** - [@ghost](https://github.com/ghost)
+- [#412](https://github.com/flow-php/flow/pull/412) - **Added uuid expression** - [@ghost](https://github.com/ghost)
 - [#411](https://github.com/flow-php/flow/pull/411) - **Add MoneyPHP expression** - [@stloyd](https://github.com/stloyd)
 - [#413](https://github.com/flow-php/flow/pull/413) - **to_date expression** - [@norberttech](https://github.com/norberttech)
 - [#410](https://github.com/flow-php/flow/pull/410) - **to timezone expression** - [@norberttech](https://github.com/norberttech)
