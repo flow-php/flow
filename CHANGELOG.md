@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-09-27
+## [Unreleased] - 2023-10-01
 
 ### Added
 - [#474](https://github.com/flow-php/flow/pull/474) - **XMLEntry** - [@norberttech](https://github.com/norberttech)
@@ -63,6 +63,7 @@
 - [#388](https://github.com/flow-php/flow/pull/388) - **Added `ext-hash` PHP extension as required for Flow** - [@stloyd](https://github.com/stloyd)
 
 ### Changed
+- [#472](https://github.com/flow-php/flow/pull/472) - **Allow to use Symfony UID for UUID generation** - [@stloyd](https://github.com/stloyd)
 - [#482](https://github.com/flow-php/flow/pull/482) - **Move rector to the tools** - [@stloyd](https://github.com/stloyd)
 - [#481](https://github.com/flow-php/flow/pull/481) - **Update GH actions to the latest** - [@stloyd](https://github.com/stloyd)
 - [#478](https://github.com/flow-php/flow/pull/478) - **Remove unnecessary template overwrite in ChartJS adapter** - [@stloyd](https://github.com/stloyd)
