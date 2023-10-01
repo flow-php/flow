@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
-use function Flow\ETL\DSL\ref;
 use Flow\ETL\DSL\To;
 use Flow\ETL\DSL\Transform;
 use Flow\ETL\Exception\InvalidArgumentException;
@@ -27,7 +26,6 @@ use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Row\Schema;
-use Flow\ETL\Row\Sort;
 use Flow\ETL\Transformer\CallbackRowTransformer;
 use Flow\ETL\Transformer\CrossJoinRowsTransformer;
 use Flow\ETL\Transformer\DropDuplicatesTransformer;
@@ -610,28 +608,15 @@ final class DataFrame
 
     /**
      * @lazy
-     *
-     * @psalm-suppress DeprecatedClass
      */
-    public function sortBy(Sort|EntryReference ...$entries) : self
+    public function sortBy(EntryReference ...$entries) : self
     {
         $this
             ->cache($this->context->config->id())
             ->run();
 
         $this->pipeline = $this->pipeline->cleanCopy();
-
-        $sortBy = [];
-
-        foreach ($entries as $entry) {
-            if ($entry instanceof Sort) {
-                $sortBy[] = $entry->isAsc() ? ref($entry->name())->asc() : ref($entry->name())->desc();
-            } else {
-                $sortBy[] = $entry;
-            }
-        }
-
-        $this->pipeline->source($this->context->config->externalSort()->sortBy(...$sortBy));
+        $this->pipeline->source($this->context->config->externalSort()->sortBy(...$entries));
 
         return $this;
     }
