@@ -7,6 +7,7 @@ namespace Flow\ETL\DSL;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry as RowEntry;
+use Flow\ETL\Row\Entry\Type\Uuid;
 use Flow\ETL\Row\Entry\TypedCollection\ScalarType;
 
 /**
@@ -291,6 +292,14 @@ class Entry
     }
 
     /**
+     * @return RowEntry\UuidEntry
+     */
+    final public static function uuid(string $name, string $value) : RowEntry
+    {
+        return new RowEntry\UuidEntry($name, Uuid::fromString($value));
+    }
+
+    /**
      * @return RowEntry\XMLEntry
      */
     final public static function xml(string $name, \DOMDocument|string $data) : RowEntry
@@ -298,6 +307,9 @@ class Entry
         return new RowEntry\XMLEntry($name, $data);
     }
 
+    /**
+     * @return RowEntry\XMLNodeEntry
+     */
     final public static function xml_node(string $name, \DOMNode $data) : RowEntry
     {
         return new RowEntry\XMLNodeEntry($name, $data);

@@ -57,6 +57,10 @@ final class NativeEntryFactory implements EntryFactory
                 return Row\Entry\JsonEntry::fromJsonString($entryName, $value);
             }
 
+            if ($this->isUuid($value)) {
+                return new Row\Entry\UuidEntry($entryName, Entry\Type\Uuid::fromString($value));
+            }
+
             if ($this->isXML($value)) {
                 return new Entry\XMLEntry($entryName, $value);
             }
@@ -87,6 +91,14 @@ final class NativeEntryFactory implements EntryFactory
 
             if ($value instanceof \DateTimeImmutable) {
                 return new Row\Entry\DateTimeEntry($entryName, $value);
+            }
+
+            if ($value instanceof Entry\Type\Uuid || $value instanceof \Ramsey\Uuid\UuidInterface || $value instanceof \Symfony\Component\Uid\Uuid) {
+                if ($value instanceof \Ramsey\Uuid\UuidInterface || $value instanceof \Symfony\Component\Uid\Uuid) {
+                    return new Row\Entry\UuidEntry($entryName, new Entry\Type\Uuid($value));
+                }
+
+                return new Row\Entry\UuidEntry($entryName, $value);
             }
 
             return new Row\Entry\ObjectEntry($entryName, $value);
@@ -195,6 +207,10 @@ final class NativeEntryFactory implements EntryFactory
                 return EntryDSL::xml($definition->entry()->name(), $value);
             }
 
+            if ($type === Entry\UuidEntry::class && (\is_string($value) || $value instanceof Entry\Type\Uuid)) {
+                return EntryDSL::uuid($definition->entry()->name(), \is_string($value) ? $value : $value->toString());
+            }
+
             if ($type === Entry\ObjectEntry::class && \is_object($value)) {
                 return EntryDSL::object($definition->entry()->name(), $value);
             }
@@ -287,6 +303,11 @@ final class NativeEntryFactory implements EntryFactory
         } catch (\Exception) {
             return false;
         }
+    }
+
+    private function isUuid(string $string) : bool
+    {
+        return 0 !== \preg_match(Entry\Type\Uuid::UUID_REGEXP, $string);
     }
 
     private function isXML(string $string) : bool

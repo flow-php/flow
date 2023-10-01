@@ -9,15 +9,25 @@ use function Flow\ETL\DSL\uuid_v4;
 use function Flow\ETL\DSL\uuid_v7;
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;
-use Ramsey\Uuid\Uuid;
 
 final class UuidTest extends TestCase
 {
+    protected function setUp() : void
+    {
+        if (!\class_exists(\Ramsey\Uuid\Uuid::class) && !\class_exists(\Symfony\Component\Uid\Uuid::class)) {
+            $this->markTestSkipped("Package 'ramsey/uuid' or 'symfony/uid' is required for this test.");
+        }
+    }
+
     public function test_uuid4() : void
     {
+        if (!\class_exists(\Ramsey\Uuid\Uuid::class)) {
+            $this->markTestSkipped("Package 'ramsey/uuid' is required for this test.");
+        }
+
         $expression = uuid_v4();
         $this->assertTrue(
-            Uuid::isValid(
+            \Ramsey\Uuid\Uuid::isValid(
                 $expression->eval(Row::create())->toString()
             )
         );
@@ -39,8 +49,12 @@ final class UuidTest extends TestCase
 
     public function test_uuid7() : void
     {
+        if (!\class_exists(\Ramsey\Uuid\Uuid::class)) {
+            $this->markTestSkipped("Package 'ramsey/uuid' is required for this test.");
+        }
+
         $this->assertTrue(
-            Uuid::isValid(
+            \Ramsey\Uuid\Uuid::isValid(
                 uuid_v7(lit(new \DateTimeImmutable('2020-01-01 00:00:00', new \DateTimeZone('UTC'))))->eval(Row::create())->toString()
             )
         );
