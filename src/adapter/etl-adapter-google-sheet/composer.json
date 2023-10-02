@@ -48,11 +48,17 @@
         ],
         "cs:php:fix": "tools/vendor/bin/php-cs-fixer fix",
         "tools:install": "composer install --working-dir=./tools",
+        "pre-autoload-dump": "Google\\Task\\Composer::cleanup",
         "post-install-cmd": [
             "@tools:install"
         ],
         "post-update-cmd": [
             "@tools:install"
+        ]
+    },
+    "extra": {
+        "google/apiclient-services": [
+            "Sheets"
         ]
     },
     "minimum-stability": "dev",
