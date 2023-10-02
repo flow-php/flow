@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-10-02
 
 ### Changed
+- [#497](https://github.com/flow-php/flow/pull/497) - **Rework most of the examples to be runnable via PHAR** - [@stloyd](https://github.com/stloyd)
 - [#495](https://github.com/flow-php/flow/pull/495) - **Use git tag for version name in PHAR** - [@stloyd](https://github.com/stloyd)
 - [#496](https://github.com/flow-php/flow/pull/496) - **Allow to run `runtime.php` outside of phar** - [@stloyd](https://github.com/stloyd)
 
