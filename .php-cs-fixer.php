@@ -3,6 +3,7 @@
 $finder = PhpCsFixer\Finder::create()
     ->files()
     ->in([
+        __DIR__ . '/build',
         __DIR__ . '/src/core/**/src',
         __DIR__ . '/src/core/**/tests',
         __DIR__ . '/src/adapter/**/src',

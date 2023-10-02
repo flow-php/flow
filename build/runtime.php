@@ -16,7 +16,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
     ->setName('Flow-PHP - Extract Transform Load - Data processing framework')
     ->setVersion(FlowVersion::getVersion())
     ->addArgument('input-file', InputArgument::REQUIRED, '')
-    ->setCode(function (InputInterface $input, OutputInterface $output): int {
+    ->setCode(function (InputInterface $input, OutputInterface $output) : int {
         try {
             /** @phpstan-ignore-next-line */
             $loader = new PipelineFactory((string) $input->getArgument('input-file'));
