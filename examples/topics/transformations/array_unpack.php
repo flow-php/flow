@@ -20,5 +20,5 @@ return (new Flow())
         ))
     )
     ->write(To::output(false))
-    ->withEntry('unpacked', ref('row')->unpack())
+    ->withEntry('unpacked', ref('array')->unpack())
     ->write(To::output(false));
