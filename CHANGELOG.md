@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-10-02
 
 ### Added
+- [#477](https://github.com/flow-php/flow/pull/477) - **Added new Phar module that generates Flow-PHP phar file** - [@stloyd](https://github.com/stloyd)
 - [#488](https://github.com/flow-php/flow/pull/488) - **Allow to pass options when using `GoogleSheetExtractor`** - [@stloyd](https://github.com/stloyd)
 - [#474](https://github.com/flow-php/flow/pull/474) - **XMLEntry** - [@norberttech](https://github.com/norberttech)
 - [#474](https://github.com/flow-php/flow/pull/474) - **XMLNodeEntry** - [@norberttech](https://github.com/norberttech)
