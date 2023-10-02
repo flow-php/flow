@@ -1,3 +1,8 @@
+## [Unreleased] - 2023-10-02
+
+### Fixed
+- [#494](https://github.com/flow-php/flow/pull/494) - **Use more accurate version for PHAR** - [@stloyd](https://github.com/stloyd)
+
 ## [0.3.1] - 2023-10-02
 
 ### Added
