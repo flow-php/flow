@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-10-02
+## [0.3.0] - 2023-10-02
 
 ### Added
 - [#477](https://github.com/flow-php/flow/pull/477) - **Added new Phar module that generates Flow-PHP phar file** - [@stloyd](https://github.com/stloyd)
