@@ -2,7 +2,11 @@
 
 declare(strict_types=1);
 
-require 'phar://flow-php.phar/vendor/autoload.php';
+if ('' !== \Phar::running(false)) {
+    require 'phar://flow-php.phar/vendor/autoload.php';
+} else {
+    require __DIR__ . '/../vendor/autoload.php';
+}
 
 use Flow\ETL\PipelineFactory;
 use Symfony\Component\Console\Command\Command;
