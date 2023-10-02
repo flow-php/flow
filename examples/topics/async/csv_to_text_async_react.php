@@ -13,7 +13,7 @@ use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use Psr\Log\LogLevel;
 
-require __DIR__ . '/../../bootstrap.php';
+require __DIR__ . '/bootstrap.php';
 
 $dbConnection = require __DIR__ . '/../db/db_clean.php';
 

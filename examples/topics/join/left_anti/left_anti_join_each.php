@@ -69,15 +69,14 @@ $dbDataFrameFactory = new class implements DataFrameFactory {
  * right size is much bigger then a left side. In that case it's better to reduce the ride side
  * by fetching from the storage only what is relevant for the left side.
  */
-(new Flow())
+return (new Flow())
     ->extract($apiExtractor)
     ->joinEach(
         $dbDataFrameFactory,
         Expression::on(new Equal('id', 'id')), // by using All or Any comparisons, more than one entry can be used to prepare the condition
         Join::left_anti
     )
-    ->write(To::output())
-    ->run();
+    ->write(To::output());
 
 // Output:
 //

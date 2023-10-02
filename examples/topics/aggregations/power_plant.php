@@ -13,7 +13,7 @@ use Flow\ETL\GroupBy\Aggregation;
 
 require __DIR__ . '/../../bootstrap.php';
 
-(new Flow())
+return (new Flow())
     ->read(CSV::from(__FLOW_DATA__ . '/power-plant-daily.csv', 10, delimiter: ';'))
     ->withEntry('unpacked', ref('row')->unpack())
     ->renameAll('unpacked.', '')
@@ -44,5 +44,4 @@ require __DIR__ . '/../../bootstrap.php';
     ->withEntry('consumption', ref('consumption_kwh_sum')->divide(ref('production_kwh_sum')))
     ->withEntry('consumption', ref('consumption')->multiply(lit(100))->round(lit(2)))
     ->withEntry('consumption', concat(ref('consumption'), lit('%')))
-    ->write(To::output(truncate: false))
-    ->run();
+    ->write(To::output(truncate: false));

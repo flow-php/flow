@@ -30,15 +30,14 @@ $internalProducts = new Rows(
  * then it might become performance bottleneck.
  * In that case please look at DataFrame::joinEach.
  */
-(new Flow())
+return (new Flow())
     ->process($externalProducts)
     ->join(
         (new Flow())->process($internalProducts),
         Expression::on(new Equal('id', 'id')), // by using All or Any comparisons, more than one entry can be used to prepare the condition
         Join::left_anti
     )
-    ->write(To::output())
-    ->run();
+    ->write(To::output());
 
 // Output
 //

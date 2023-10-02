@@ -5,10 +5,6 @@ const __FLOW_OUTPUT__ = __DIR__ . '/output';
 const __FLOW_VAR__ = __DIR__ . '/var';
 const __FLOW_VAR_RUN__ = __DIR__ . '/var/run';
 const __FLOW_SRC__ = __DIR__ . '/../src';
-const __FLOW_AUTOLOAD__ =  __DIR__ . '/../vendor/autoload.php';
-
-// library autoload for all dependencies
-require __FLOW_AUTOLOAD__;
 
 if (!\is_dir(__FLOW_VAR__)) {
     \mkdir(__FLOW_VAR__);

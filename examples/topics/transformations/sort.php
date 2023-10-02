@@ -9,8 +9,7 @@ use Flow\ETL\Flow;
 
 require __DIR__ . '/../../bootstrap.php';
 
-(new Flow())
+return (new Flow())
     ->read(From::sequence_number('id', 0, 10))
     ->sortBy(ref('id')->desc())
-    ->write(To::output(false))
-    ->run();
+    ->write(To::output(false));

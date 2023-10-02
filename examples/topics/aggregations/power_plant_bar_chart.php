@@ -13,7 +13,7 @@ use Flow\ETL\GroupBy\Aggregation;
 
 require __DIR__ . '/../../bootstrap.php';
 
-(new Flow)
+return (new Flow)
     ->read(CSV::from(__FLOW_DATA__ . '/power-plant-daily.csv', 10, delimiter: ';'))
     ->withEntry('unpacked', ref('row')->unpack())
     ->renameAll('unpacked.', '')
@@ -49,5 +49,4 @@ require __DIR__ . '/../../bootstrap.php';
             ChartJS::bar(label: ref('date'), datasets: [ref('production_kwh_avg'), ref('consumption_kwh_avg')]),
             output: __FLOW_OUTPUT__ . '/power_plant_bar_chart.html'
         )
-    )
-    ->run();
+    );

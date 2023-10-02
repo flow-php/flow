@@ -12,14 +12,13 @@ use Flow\ETL\Rows;
 
 require __DIR__ . '/../../bootstrap.php';
 
-(new Flow())
+return (new Flow())
     ->read(
         From::rows(new Rows(
             Row::create(Entry::integer('a', 100), Entry::integer('b', 200))
         ))
     )
     ->write(To::output(false))
-    ->withEntry('c', ref('a')->plus('b'))
-    ->withEntry('d', ref('b')->minus('a'))
-    ->write(To::output(false))
-    ->run();
+    ->withEntry('c', ref('a')->plus(ref('b')))
+    ->withEntry('d', ref('b')->minus(ref('a')))
+    ->write(To::output(false));
