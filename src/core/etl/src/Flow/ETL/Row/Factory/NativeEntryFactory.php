@@ -312,6 +312,10 @@ final class NativeEntryFactory implements EntryFactory
 
     private function isXML(string $string) : bool
     {
+        if ('' === $string) {
+            return false;
+        }
+
         try {
             \libxml_use_internal_errors(true);
 
