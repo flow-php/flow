@@ -40,7 +40,7 @@ Please check below packages and select only those that you are going to use:
 
 For example if you want to work with json/csv files here are dependencies you will need to install: 
 
-```
+```shell
 composer require flow-php/etl:^0.1 flow-php/etl-adapter-csv:^0.1 flow-php/etl-adapter-json:^0.1
 ```
 
@@ -53,7 +53,7 @@ For the code coverage, please install [pcov](https://pecl.php.net/package/pcov).
 
 ### Prepare Project:
 
-```
+```shell
 cp docker-compose.yml.dist docker-compose.yml
 composer install 
 docker compose up -d
@@ -61,13 +61,13 @@ docker compose up -d
 
 ### Run Test Suite 
 
-```
+```shell
 composer test
 ```
 
 ### Run Static Analyze 
 
-```
+```shell
 composer static:analyze
 ```
 
@@ -76,8 +76,15 @@ composer static:analyze
 This command will execute exactly the same tests as we run at Github Actions before PR can get merged.
 If it passes locally, you are good to open pull request. 
 
-```
+```shell
 composer build 
+```
+
+## Building PHAR
+
+```shell
+composer build:phar
+./flow-php.phar --version
 ```
 
 ## Usage

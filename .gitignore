@@ -1,3 +1,4 @@
 vendor
 var
 docker-compose.yml
+build/flow-php.phar

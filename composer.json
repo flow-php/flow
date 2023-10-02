@@ -31,7 +31,8 @@
         "psr/simple-cache": "^1.0 || ^2.0 || ^3.0",
         "react/child-process": "^0.6.4",
         "react/promise": "^2.9.0",
-        "react/socket": "^1.11"
+        "react/socket": "^1.11",
+        "symfony/console": "^6.3"
     },
     "require-dev": {
         "aeon-php/calendar": "^1.0",
@@ -54,6 +55,7 @@
     },
     "autoload": {
         "files": [
+            "build/version.php",
             "src/core/etl/src/Flow/ETL/DSL/functions.php",
             "src/lib/array-dot/src/Flow/ArrayDot/array_dot.php"
         ],
@@ -165,6 +167,9 @@
         "cs:php:fix": [
             "tools/cs-fixer/vendor/bin/php-cs-fixer fix"
         ],
+        "build:phar": [
+            "tools/box/vendor/bin/box compile"
+        ],
         "pre-autoload-dump": "Google\\Task\\Composer::cleanup",
         "post-install-cmd": [
             "@tools:install"
@@ -173,6 +178,7 @@
             "@tools:install"
         ],
         "tools:install": [
+            "composer install --working-dir=./tools/box",
             "composer install --working-dir=./tools/cs-fixer",
             "composer install --working-dir=./tools/infection",
             "composer install --working-dir=./tools/monorepo",

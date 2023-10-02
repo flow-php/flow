@@ -1,0 +1,24 @@
+{
+  "alias": "flow-php.phar",
+  "banner": false,
+  "blacklist": [
+    ".github",
+    "examples",
+    "docs",
+    "tests",
+    "tools",
+    "var",
+    "vendor/fig",
+    "vendor/php-http/mock-client"
+  ],
+  "compression": "GZ",
+  "directories": [
+    "build",
+    "src",
+    "vendor"
+  ],
+  "git-commit-short": "git_commit_short",
+  "main": "build/runtime.php",
+  "metadata": "FlowVersion::getVersion",
+  "output": "build/flow-php.phar"
+}
