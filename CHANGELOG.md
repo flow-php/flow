@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-10-02
+## [0.3.1] - 2023-10-02
 
 ### Added
 - [#493](https://github.com/flow-php/flow/pull/493) - **Add PHAR files to release** - [@stloyd](https://github.com/stloyd)
