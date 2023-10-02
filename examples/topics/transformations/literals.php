@@ -12,12 +12,11 @@ use Flow\ETL\Rows;
 
 require __DIR__ . '/../../bootstrap.php';
 
-(new Flow())
+return (new Flow())
     ->read(
         From::rows(new Rows(
             Row::create(Entry::string('name', 'Norbert'))
         ))
     )
     ->withEntry('number', lit(1))
-    ->write(To::output(false))
-    ->run();
+    ->write(To::output(false));

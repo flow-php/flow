@@ -14,21 +14,7 @@ use Flow\ETL\Rows;
 
 require __DIR__ . '/../../bootstrap.php';
 
-(new Flow())
-    ->read(From::sequence_number('number', 1, 100))
-    ->collect()
-    ->withEntry(
-        'type',
-        when(
-            ref('number')->isOdd(),
-            then: lit('odd'),
-            else: lit('even')
-        )
-    )
-    ->write(To::output(false))
-    ->run();
-
-(new Flow())
+return (new Flow())
     ->read(From::rows(new Rows(
         Row::with(Entry::int('id', 1), Entry::int('value', 1)),
         Row::with(Entry::int('id', 2), Entry::int('value', 1)),
@@ -40,5 +26,4 @@ require __DIR__ . '/../../bootstrap.php';
         'value',
         when(ref('value')->isNull(), then: lit(0))
     )
-    ->write(To::output(false))
-    ->run();
+    ->write(To::output(false));

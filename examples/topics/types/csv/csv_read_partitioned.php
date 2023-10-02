@@ -41,7 +41,7 @@ print "Reading partitioned CSV dataset with partition filtering...\n";
     ->drop('row')
     ->collect()
     ->filterPartitions(Partitions::only('t_shirt_color', 'green'))
-    ->sortBy(col('id'))
+    ->sortBy(ref('id'))
     ->write(To::output())
     ->run();
 

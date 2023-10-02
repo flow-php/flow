@@ -12,7 +12,7 @@ require __DIR__ . '/../../../bootstrap.php';
 
 print "Reading XML dataset...\n";
 
-(new Flow())
+return (new Flow())
     ->read(XML::from(__FLOW_DATA__ . '/salaries.xml'))
     ->withEntry('months', ref('row')->xpath('/Salaries/Month'))
     ->withEntry('month', ref('months')->expand())
@@ -25,5 +25,4 @@ print "Reading XML dataset...\n";
     ->groupBy(ref('month_name'))
     ->aggregate(Aggregation::sum(ref('department_salary')))
     ->rename('department_salary_sum', 'total_monthly_salaries')
-    ->write(To::output(false))
-    ->run();
+    ->write(To::output(false));

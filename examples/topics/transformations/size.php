@@ -12,12 +12,11 @@ use Flow\ETL\Rows;
 
 require __DIR__ . '/../../bootstrap.php';
 
-(new Flow())
+return (new Flow())
     ->read(
         From::rows(new Rows(
             Row::with(Entry::int('id', 1), Entry::array('array', ['a' => 1, 'b' => 2, 'c' => 3])),
         ))
     )
     ->withEntry('array_size', ref('array')->size())
-    ->write(To::output(false))
-    ->run();
+    ->write(To::output(false));

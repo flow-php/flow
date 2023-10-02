@@ -10,7 +10,6 @@ require __DIR__ . '/../../../bootstrap.php';
 
 print "Reading XML dataset...\n";
 
-(new Flow())
+return (new Flow())
     ->read(XML::from(__FLOW_DATA__ . '/simple_items.xml', 'root/items/item'))
-    ->write(To::output(false))
-    ->run();
+    ->write(To::output(false));
