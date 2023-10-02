@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-10-01
+## [Unreleased] - 2023-10-02
 
 ### Added
 - [#474](https://github.com/flow-php/flow/pull/474) - **XMLEntry** - [@norberttech](https://github.com/norberttech)
@@ -63,6 +63,7 @@
 - [#388](https://github.com/flow-php/flow/pull/388) - **Added `ext-hash` PHP extension as required for Flow** - [@stloyd](https://github.com/stloyd)
 
 ### Changed
+- [#492](https://github.com/flow-php/flow/pull/492) - **Add Google services cleanup tasks to composer** - [@stloyd](https://github.com/stloyd)
 - [#472](https://github.com/flow-php/flow/pull/472) - **Allow to use Symfony UID for UUID generation** - [@stloyd](https://github.com/stloyd)
 - [#482](https://github.com/flow-php/flow/pull/482) - **Move rector to the tools** - [@stloyd](https://github.com/stloyd)
 - [#481](https://github.com/flow-php/flow/pull/481) - **Update GH actions to the latest** - [@stloyd](https://github.com/stloyd)
@@ -109,6 +110,7 @@
 - [8eb674](https://github.com/flow-php/flow/commit/8eb6744e7ca69ecd75d09a2263e586c0fbd0472f) - **README.md** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#489](https://github.com/flow-php/flow/pull/489) - **Remove deprecated `Sort` class** - [@stloyd](https://github.com/stloyd)
 - [#446](https://github.com/flow-php/flow/pull/446) - **Drop non-stable version of `halaxa/json-machine`** - [@stloyd](https://github.com/stloyd)
 - [#445](https://github.com/flow-php/flow/pull/445) - **Remove Monolog v2 from allowed dependencies** - [@stloyd](https://github.com/stloyd)
 - [#424](https://github.com/flow-php/flow/pull/424) - **Remove support for not maintained Symfony & Doctrine dependencies** - [@stloyd](https://github.com/stloyd)

@@ -12,17 +12,22 @@ use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Rows;
 use Google\Service\Sheets;
-use Google\Service\Sheets\ValueRange;
 
 final class GoogleSheetExtractor implements Extractor
 {
+    /**
+     * @param array{dateTimeRenderOption?: string, majorDimension?: string, valueRenderOption?: string} $options
+     *
+     * @throws InvalidArgumentException
+     */
     public function __construct(
         private readonly Sheets $service,
         private readonly string $spreadsheetId,
         private readonly Columns $columnRange,
         private readonly bool $withHeader,
         private readonly int $rowsInBatch,
-        private readonly string $rowEntryName='row',
+        private readonly string $rowEntryName = 'row',
+        private readonly array $options = []
     ) {
         if ($this->rowsInBatch <= 0) {
             throw new InvalidArgumentException('Rows in batch must be greater than 0');
@@ -39,8 +44,8 @@ final class GoogleSheetExtractor implements Extractor
         $headers = [];
 
         $totalRows = 0;
-        /** @var ValueRange $response */
-        $response = $this->service->spreadsheets_values->get($this->spreadsheetId, $cellsRange->toString());
+        /** @var Sheets\ValueRange $response */
+        $response = $this->service->spreadsheets_values->get($this->spreadsheetId, $cellsRange->toString(), $this->options);
         /** @var array[] $values */
         $values = $response->getValues();
 
@@ -91,9 +96,10 @@ final class GoogleSheetExtractor implements Extractor
             if ($totalRows < $cellsRange->endRow) {
                 return;
             }
+
             $cellsRange = $cellsRange->nextRows($this->rowsInBatch);
-            /** @var ValueRange $response */
-            $response = $this->service->spreadsheets_values->get($this->spreadsheetId, $cellsRange->toString());
+            /** @var Sheets\ValueRange $response */
+            $response = $this->service->spreadsheets_values->get($this->spreadsheetId, $cellsRange->toString(), $this->options);
             /** @var array[] $values */
             $values = $response->getValues();
         }
