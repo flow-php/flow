@@ -16,6 +16,12 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\SingleCommandApplication;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+if (false === \in_array(PHP_SAPI, ['cli', 'phpdbg', 'embed'], true)) {
+    print PHP_EOL . 'This app may only be invoked from a command line, got "' . PHP_SAPI . '"' . PHP_EOL;
+
+    exit(1);
+}
+
 (new SingleCommandApplication())
     ->setName('Flow-PHP - Extract Transform Load - Data processing framework')
     ->setVersion(FlowVersion::getVersion())
