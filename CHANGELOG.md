@@ -9,6 +9,7 @@
 - [#496](https://github.com/flow-php/flow/pull/496) - **Allow to run `runtime.php` outside of phar** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
+- [#502](https://github.com/flow-php/flow/pull/502) - **Add dev files to PHAR to allow usage of adapters** - [@stloyd](https://github.com/stloyd)
 - [#499](https://github.com/flow-php/flow/pull/499) - **Prevent calling runtime outside of CLI** - [@stloyd](https://github.com/stloyd)
 - [#500](https://github.com/flow-php/flow/pull/500) - **Prevent fatal error when passing empty string to `\DOMDocument`** - [@stloyd](https://github.com/stloyd)
 - [#494](https://github.com/flow-php/flow/pull/494) - **Use more accurate version for PHAR** - [@stloyd](https://github.com/stloyd)
