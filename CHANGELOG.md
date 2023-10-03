@@ -1,3 +1,8 @@
+## [Unreleased] - 2023-10-03
+
+### Changed
+- [#503](https://github.com/flow-php/flow/pull/503) - **Remove unused AWS services from vendor** - [@stloyd](https://github.com/stloyd)
+
 ## [0.3.2] - 2023-10-03
 
 ### Added
