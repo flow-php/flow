@@ -117,6 +117,14 @@ final class NativeEntryFactoryTest extends TestCase
         );
     }
 
+    public function test_from_empty_string() : void
+    {
+        $this->assertEquals(
+            Entry::string('e', ''),
+            (new NativeEntryFactory())->create('e', '')
+        );
+    }
+
     public function test_int() : void
     {
         $this->assertEquals(
