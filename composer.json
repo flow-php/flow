@@ -170,7 +170,10 @@
         "build:phar": [
             "tools/box/vendor/bin/box compile"
         ],
-        "pre-autoload-dump": "Google\\Task\\Composer::cleanup",
+        "pre-autoload-dump": [
+            "Aws\\Script\\Composer\\Composer::removeUnusedServices",
+            "Google\\Task\\Composer::cleanup"
+        ],
         "post-install-cmd": [
             "@tools:install"
         ],
@@ -189,6 +192,9 @@
         ]
     },
     "extra": {
+        "aws/aws-sdk-php": [
+            "S3"
+        ],
         "google/apiclient-services": [
             "Sheets"
         ]

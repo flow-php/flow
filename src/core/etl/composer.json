@@ -74,11 +74,17 @@
         ],
         "cs:php:fix": "tools/vendor/bin/php-cs-fixer fix",
         "tools:install": "composer install --working-dir=./tools",
+        "pre-autoload-dump": "Aws\\Script\\Composer\\Composer::removeUnusedServices",
         "post-install-cmd": [
             "@tools:install"
         ],
         "post-update-cmd": [
             "@tools:install"
+        ]
+    },
+    "extra": {
+        "aws/aws-sdk-php": [
+            "S3"
         ]
     },
     "prefer-stable": true
