@@ -298,6 +298,10 @@ final class NativeEntryFactory implements EntryFactory
 
     private function isJson(string $string) : bool
     {
+        if ('' === $string) {
+            return false;
+        }
+
         try {
             return \is_array(\json_decode($string, true, self::JSON_DEPTH, JSON_THROW_ON_ERROR));
         } catch (\Exception) {
@@ -307,6 +311,10 @@ final class NativeEntryFactory implements EntryFactory
 
     private function isUuid(string $string) : bool
     {
+        if ('' === $string) {
+            return false;
+        }
+
         return 0 !== \preg_match(Entry\Type\Uuid::UUID_REGEXP, $string);
     }
 
