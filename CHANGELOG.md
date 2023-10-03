@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-10-03
+## [0.3.2] - 2023-10-03
 
 ### Added
 - [#498](https://github.com/flow-php/flow/pull/498) - **Add simple HTTP example** - [@stloyd](https://github.com/stloyd)
