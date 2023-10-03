@@ -1,5 +1,8 @@
 ## [Unreleased] - 2023-10-03
 
+### Added
+- [#498](https://github.com/flow-php/flow/pull/498) - **Add simple HTTP example** - [@stloyd](https://github.com/stloyd)
+
 ### Changed
 - [#497](https://github.com/flow-php/flow/pull/497) - **Rework most of the examples to be runnable via PHAR** - [@stloyd](https://github.com/stloyd)
 - [#495](https://github.com/flow-php/flow/pull/495) - **Use git tag for version name in PHAR** - [@stloyd](https://github.com/stloyd)
