@@ -1,3 +1,8 @@
+## [Unreleased] - 2023-10-04
+
+### Removed
+- [#509](https://github.com/flow-php/flow/pull/509) - **Remove `HashTransformer`, `StringConcatTransformer` & `StringFormatTransformer`** - [@stloyd](https://github.com/stloyd)
+
 ## [0.3.3] - 2023-10-03
 
 ### Changed
