@@ -25,10 +25,6 @@ use Flow\ETL\Transformer\Cast\EntryCaster\AnyToListCaster;
 use Flow\ETL\Transformer\Cast\EntryCaster\DateTimeToStringEntryCaster;
 use Flow\ETL\Transformer\Cast\EntryCaster\StringToDateTimeEntryCaster;
 use Flow\ETL\Transformer\CastTransformer;
-use Flow\ETL\Transformer\Filter\Filter\EntryEqualsTo;
-use Flow\ETL\Transformer\Filter\Filter\EntryExists;
-use Flow\ETL\Transformer\Filter\Filter\EntryNotNull;
-use Flow\ETL\Transformer\Filter\Filter\EntryNumber;
 use Flow\ETL\Transformer\Filter\Filter\Opposite;
 use Flow\ETL\Transformer\FilterRowsTransformer;
 use Flow\ETL\Transformer\KeepEntriesTransformer;
@@ -152,46 +148,6 @@ class Transform
     final public static function dynamic(callable $generator) : Transformer
     {
         return new Transformer\DynamicEntryTransformer($generator);
-    }
-
-    final public static function filter_equals(string $entry, mixed $value) : Transformer
-    {
-        return new FilterRowsTransformer(new EntryEqualsTo($entry, $value));
-    }
-
-    final public static function filter_exists(string $entry) : Transformer
-    {
-        return new FilterRowsTransformer(new EntryExists($entry));
-    }
-
-    final public static function filter_not_equals(string $entry, mixed $value) : Transformer
-    {
-        return new FilterRowsTransformer(new Opposite(new EntryEqualsTo($entry, $value)));
-    }
-
-    final public static function filter_not_exists(string $entry) : Transformer
-    {
-        return new FilterRowsTransformer(new Opposite(new EntryExists($entry)));
-    }
-
-    final public static function filter_not_null(string $entry) : Transformer
-    {
-        return new FilterRowsTransformer(new EntryNotNull($entry));
-    }
-
-    final public static function filter_not_number(string $entry) : Transformer
-    {
-        return new FilterRowsTransformer(new Opposite(new EntryNumber($entry)));
-    }
-
-    final public static function filter_null(string $entry) : Transformer
-    {
-        return new FilterRowsTransformer(new Opposite(new EntryNotNull($entry)));
-    }
-
-    final public static function filter_number(string $entry) : Transformer
-    {
-        return new FilterRowsTransformer(new EntryNumber($entry));
     }
 
     final public static function group_to_array(string $group_by_entry, string $new_entry_name) : Transformer

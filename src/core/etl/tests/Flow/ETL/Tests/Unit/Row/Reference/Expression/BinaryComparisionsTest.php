@@ -17,7 +17,9 @@ use Flow\ETL\Row\Reference\Expression\GreaterThan;
 use Flow\ETL\Row\Reference\Expression\GreaterThanEqual;
 use Flow\ETL\Row\Reference\Expression\IsIn;
 use Flow\ETL\Row\Reference\Expression\IsNotNull;
+use Flow\ETL\Row\Reference\Expression\IsNotNumeric;
 use Flow\ETL\Row\Reference\Expression\IsNull;
+use Flow\ETL\Row\Reference\Expression\IsNumeric;
 use Flow\ETL\Row\Reference\Expression\IsType;
 use Flow\ETL\Row\Reference\Expression\LessThan;
 use Flow\ETL\Row\Reference\Expression\LessThanEqual;
@@ -77,6 +79,20 @@ final class BinaryComparisionsTest extends TestCase
         $this->assertFalse((new IsIn(ref('a'), lit(10)))->eval($row));
         $this->assertTrue((new IsIn(ref('a'), ref('d')))->eval($row));
         $this->assertTrue((new IsIn(ref('b'), ref('e')))->eval($row));
+    }
+
+    public function test_is_numeric() : void
+    {
+        $row = Row::create(
+            Entry::integer('a', 100),
+            Entry::null('b'),
+        );
+        $this->assertTrue((new IsNumeric(ref('a')))->eval($row));
+        $this->assertFalse((new IsNumeric(ref('b')))->eval($row));
+        $this->assertFalse((new IsNotNumeric(ref('a')))->eval($row));
+        $this->assertTrue((new IsNotNumeric(ref('b')))->eval($row));
+        $this->assertTrue((new IsNotNumeric(lit(null)))->eval($row));
+        $this->assertTrue((new IsNumeric(lit(1000)))->eval($row));
     }
 
     public function test_is_type() : void
