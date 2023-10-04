@@ -1,6 +1,11 @@
 ## [Unreleased] - 2023-10-04
 
+### Added
+- [#514](https://github.com/flow-php/flow/pull/514) - **Add new StrPad expression** - [@stloyd](https://github.com/stloyd)
+
 ### Removed
+- [#514](https://github.com/flow-php/flow/pull/514) - **Remove ObjectMethodTransformer & `StringEntryValueCaseConverterTransformer`** - [@stloyd](https://github.com/stloyd)
+- [#514](https://github.com/flow-php/flow/pull/514) - **Cleanup `Transform` class from transform methods covered by expressions** - [@stloyd](https://github.com/stloyd)
 - [#509](https://github.com/flow-php/flow/pull/509) - **Remove `HashTransformer`, `StringConcatTransformer` & `StringFormatTransformer`** - [@stloyd](https://github.com/stloyd)
 
 ## [0.3.3] - 2023-10-03
