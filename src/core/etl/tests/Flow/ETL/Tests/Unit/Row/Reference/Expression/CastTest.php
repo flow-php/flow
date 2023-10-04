@@ -19,6 +19,7 @@ final class CastTest extends TestCase
         $xml->loadXML($xmlString = '<root><foo baz="buz">bar</foo></root>');
 
         return [
+            'invalid' => [null, 'int', null],
             'int' => ['1', 'int', 1],
             'integer' => ['1', 'integer', 1],
             'float' => ['1', 'float', 1.0],
@@ -42,14 +43,16 @@ final class CastTest extends TestCase
      */
     public function test_cast(mixed $from, string $to, mixed $expected) : void
     {
-        $this->assertEquals(
-            $expected,
-            ref('value')->cast($to)->eval(Row::create((new NativeEntryFactory())->create('value', $from)))
-        );
-        $this->assertEquals(
-            $expected,
-            cast(ref('value'), $to)->eval(Row::create((new NativeEntryFactory())->create('value', $from)))
-        );
+        $resultRefCast = ref('value')->cast($to)->eval(Row::create((new NativeEntryFactory())->create('value', $from)));
+        $resultCastRef = cast(ref('value'), $to)->eval(Row::create((new NativeEntryFactory())->create('value', $from)));
+
+        if (\is_object($expected)) {
+            $this->assertEquals($expected, $resultRefCast);
+            $this->assertEquals($expected, $resultCastRef);
+        } else {
+            $this->assertSame($expected, $resultRefCast);
+            $this->assertSame($expected, $resultCastRef);
+        }
     }
 
     public function test_casting_integer_to_xml() : void

@@ -25,6 +25,10 @@ final class Cast implements Expression
         /** @psalm-suppress MixedAssignment */
         $value = $this->ref->eval($row);
 
+        if (null === $value) {
+            return null;
+        }
+
         return match (\mb_strtolower($this->type)) {
             'datetime' => match (\gettype($value)) {
                 'string' => new \DateTimeImmutable($value),
