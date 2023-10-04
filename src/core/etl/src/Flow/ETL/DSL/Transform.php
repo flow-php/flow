@@ -30,14 +30,12 @@ use Flow\ETL\Transformer\Filter\Filter\EntryExists;
 use Flow\ETL\Transformer\Filter\Filter\EntryNotNull;
 use Flow\ETL\Transformer\Filter\Filter\EntryNumber;
 use Flow\ETL\Transformer\Filter\Filter\Opposite;
-use Flow\ETL\Transformer\Filter\Filter\ValidValue;
 use Flow\ETL\Transformer\FilterRowsTransformer;
 use Flow\ETL\Transformer\KeepEntriesTransformer;
 use Flow\ETL\Transformer\Rename\EntryRename;
 use Flow\ETL\Transformer\RenameEntriesTransformer;
 use Flow\ETL\Transformer\StyleConverter\StringStyles;
 use Laminas\Hydrator\ReflectionHydrator;
-use Symfony\Component\Validator\Constraint;
 
 /**
  * @infection-ignore-all
@@ -166,11 +164,6 @@ class Transform
         return new FilterRowsTransformer(new EntryExists($entry));
     }
 
-    final public static function filter_invalid(string $entry, Constraint ...$constraints) : Transformer
-    {
-        return new FilterRowsTransformer(new ValidValue($entry, new ValidValue\SymfonyValidator($constraints)));
-    }
-
     final public static function filter_not_equals(string $entry, mixed $value) : Transformer
     {
         return new FilterRowsTransformer(new Opposite(new EntryEqualsTo($entry, $value)));
@@ -199,11 +192,6 @@ class Transform
     final public static function filter_number(string $entry) : Transformer
     {
         return new FilterRowsTransformer(new EntryNumber($entry));
-    }
-
-    final public static function filter_valid(string $entry, Constraint ...$constraints) : Transformer
-    {
-        return new FilterRowsTransformer(new Opposite(new ValidValue($entry, new ValidValue\SymfonyValidator($constraints))));
     }
 
     final public static function group_to_array(string $group_by_entry, string $new_entry_name) : Transformer
