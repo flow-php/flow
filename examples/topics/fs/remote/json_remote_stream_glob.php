@@ -1,5 +1,7 @@
 <?php declare(strict_types=1);
 
+use function Flow\ETL\DSL\concat;
+use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use Flow\ETL\DSL\CSV;
 use Flow\ETL\DSL\Transform;
@@ -43,7 +45,7 @@ AzureBlobStream::register();
     ->renameAll('unpacked.', '')
     ->drop('row')
     ->rows(Transform::to_integer('id'))
-    ->rows(Transform::string_concat(['name', 'last name'], ' ', 'name'))
+    ->withEntry('name', concat(ref('name'), lit(' '), ref('last name')))
     ->drop('last name')
     ->write(CSV::to(new Path('flow-azure-blob://output.csv', $azure_blob_connection_string)))
     ->run();

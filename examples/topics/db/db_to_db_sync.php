@@ -1,5 +1,7 @@
 <?php declare(strict_types=1);
 
+use function Flow\ETL\DSL\concat;
+use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use Aeon\Calendar\Stopwatch;
 use Flow\ETL\Adapter\Doctrine\Order;
@@ -34,7 +36,7 @@ print "Loading {$rows} rows into postgresql...\n";
     ->renameAll('unpacked.', '')
     ->drop('row')
     ->rows(Transform::to_integer('id'))
-    ->rows(Transform::string_concat(['name', 'last_name'], ' ', 'name'))
+    ->withEntry('name', concat(ref('name'), lit(' '), ref('last name')))
     ->drop('last_name')
     ->write(Dbal::to_table_insert($dbConnection, 'flow_dataset_table'))
     ->run();

@@ -275,21 +275,6 @@ class Transform
         return new Transformer\GroupToArrayTransformer($group_by_entry, $new_entry_name);
     }
 
-    /**
-     * @param array<string>|string $entry
-     * @param null|string $algorithm
-     *
-     * @throws \Flow\ETL\Exception\InvalidArgumentException
-     */
-    final public static function hash(string|array $entry, string $algorithm = null, string $new_entry_name = 'hash') : Transformer
-    {
-        return new Transformer\HashTransformer(
-            \is_string($entry) ? [$entry] : $entry,
-            $algorithm ?? (PHP_VERSION_ID >= 80100 ? 'murmur3f' : 'sha256'),
-            $new_entry_name
-        );
-    }
-
     final public static function keep(string ...$entry) : Transformer
     {
         return new KeepEntriesTransformer(...$entry);
@@ -301,30 +286,11 @@ class Transform
     }
 
     /**
-     * @param array<string>|string $entry
-     *
-     * @throws \Flow\ETL\Exception\InvalidArgumentException
-     */
-    final public static function murmur3(string|array $entry, string $new_entry_name = 'hash') : Transformer
-    {
-        return new Transformer\HashTransformer(
-            \is_string($entry) ? [$entry] : $entry,
-            'murmur3f',
-            $new_entry_name
-        );
-    }
-
-    /**
      * @param array<mixed> $parameters
      */
     final public static function object_method(string $object_name, string $method, string $entry_name = 'method_entry', array $parameters = []) : Transformer
     {
         return new Transformer\ObjectMethodTransformer($object_name, $method, $entry_name, $parameters);
-    }
-
-    final public static function prefix(string|Reference $entry, string $prefix) : Transformer
-    {
-        return new Transformer\StringFormatTransformer($entry, \str_replace('%', '%%', $prefix) . '%s');
     }
 
     /**
@@ -376,20 +342,6 @@ class Transform
         return self::user_function($entry, 'rtrim', [$characters]);
     }
 
-    /**
-     * @param array<string>|string $entry
-     *
-     * @throws \Flow\ETL\Exception\InvalidArgumentException
-     */
-    final public static function sha256(string|array $entry, string $new_entry_name = 'hash') : Transformer
-    {
-        return new Transformer\HashTransformer(
-            \is_string($entry) ? [$entry] : $entry,
-            'sha256',
-            $new_entry_name
-        );
-    }
-
     final public static function str_pad(string $entry, int $length, string $pad_string = ' ', int $type = STR_PAD_RIGHT) : Transformer
     {
         return self::user_function($entry, 'str_pad', [$length, $pad_string, $type]);
@@ -407,19 +359,6 @@ class Transform
         return self::user_function($entry, 'str_replace', ['search' => $search, 'replace' => $replace], 'subject');
     }
 
-    /**
-     * @param array<Reference|string> $refs
-     */
-    final public static function string_concat(array $refs, string $glue = '', string $entry_name = 'element') : Transformer
-    {
-        return new Transformer\StringConcatTransformer($refs, $glue, $entry_name);
-    }
-
-    final public static function string_format(string|Reference $entry_name, string $format) : Transformer
-    {
-        return new Transformer\StringFormatTransformer($entry_name, $format);
-    }
-
     final public static function string_lower(string|Reference ...$entry_names) : Transformer
     {
         return StringEntryValueCaseConverterTransformer::lower(...$entry_names);
@@ -428,11 +367,6 @@ class Transform
     final public static function string_upper(string|Reference ...$entry_names) : Transformer
     {
         return StringEntryValueCaseConverterTransformer::upper(...$entry_names);
-    }
-
-    final public static function suffix(string|Reference $entry, string $suffix) : Transformer
-    {
-        return new Transformer\StringFormatTransformer($entry, '%s' . \str_replace('%', '%%', $suffix));
     }
 
     final public static function to_array(string ...$entry) : Transformer

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Async\Socket\Worker;
 
+use function Flow\ETL\DSL\concat;
+use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\ref;
 use Flow\ETL\Async\Socket\Worker\Processor;
 use Flow\ETL\Pipeline\Pipes;
 use Flow\ETL\Row;
@@ -19,7 +22,10 @@ final class ProcessorTest extends TestCase
         $processor = new Processor('id', new NullLogger());
 
         $processor->setPipes(new Pipes([
-            new Transformer\StringConcatTransformer(['name', 'last_name'], ' ', 'full_name'),
+            new Transformer\EntryExpressionEvalTransformer(
+                'full_name',
+                concat(ref('name'), lit(' '), ref('last_name'))
+            ),
             new Transformer\RemoveEntriesTransformer('name', 'last_name'),
         ]));
 

@@ -25,6 +25,9 @@ Working example:
 ```php
 <?php
 
+use function Flow\ETL\DSL\concat;
+use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\ref;
 use Aeon\Calendar\Stopwatch;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Schema\Column;
@@ -72,7 +75,7 @@ $memory = new Consumption();
     ->rows(Transform::array_unpack('row'))
     ->drop('row')
     ->rows(Transform::to_integer("id"))
-    ->rows(Transform::string_concat(['name', 'last_name'], ' ', 'name'))
+    ->withEntry('name', concat(ref('name'), lit(' '), ref('last name')))
     ->drop('last_name')
     ->load(new DbalLoader($tableName, $chunkSize = 1000, $dbConnectionParams))
     ->run();

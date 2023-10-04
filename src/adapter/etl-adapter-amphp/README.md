@@ -25,6 +25,9 @@ Example usage:
 ```php
 <?php
 
+use function Flow\ETL\DSL\concat;
+use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\ref;
 use Flow\ETL\Adapter\CSV\League\CSVExtractor;
 use Flow\ETL\Adapter\Doctrine\DbalLoader;
 use Flow\ETL\Monitoring\Memory\Consumption;
@@ -59,7 +62,7 @@ $logger->pushHandler(new StreamHandler("php://stderr", LogLevel::ERROR, false));
     ->rows(Transform::array_unpack('row'))
     ->drop('row')
     ->rows(Transform::to_integer("id"))
-    ->rows(Transform::string_concat(['name', 'last_name'], ' ', 'name'))
+    ->withEntry('name', concat(ref('name'), lit(' '), ref('last name')))
     ->drop('last_name')
     ->load(new DbalLoader($tableName, $chunkSize = 1000, $dbConnectionParams))
     ->run();
