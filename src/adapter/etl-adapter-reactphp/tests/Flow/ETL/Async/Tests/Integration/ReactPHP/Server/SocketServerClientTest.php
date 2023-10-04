@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Async\Tests\Integration\ReactPHP\Server;
 
+use function Flow\ETL\DSL\lit;
 use Flow\ETL\Async\ReactPHP\Server\SocketServer;
 use Flow\ETL\Async\ReactPHP\Worker\SocketClient;
 use Flow\ETL\Async\Socket\Server\ServerProtocol;
@@ -13,12 +14,12 @@ use Flow\ETL\Async\Socket\Worker\Processor;
 use Flow\ETL\Cache\LocalFilesystemCache;
 use Flow\ETL\Config;
 use Flow\ETL\DSL\Entry;
-use Flow\ETL\DSL\Transform;
 use Flow\ETL\Extractor\ProcessExtractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Pipeline\Pipes;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
+use Flow\ETL\Transformer\EntryExpressionEvalTransformer;
 use Flow\Serializer\NativePHPSerializer;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
@@ -39,7 +40,7 @@ final class SocketServerClientTest extends TestCase
             new ProcessExtractor(
                 $rows = new Rows(Row::create(Entry::integer('id', 1)))
             ),
-            new Pipes([Transform::add_boolean('active', true)])
+            new Pipes([new EntryExpressionEvalTransformer('active', lit(true))])
         ));
 
         Loop::get()->futureTick(
@@ -78,7 +79,7 @@ final class SocketServerClientTest extends TestCase
             new ProcessExtractor(
                 $rows = new Rows(Row::create(Entry::integer('id', 1)))
             ),
-            new Pipes([Transform::add_boolean('active', true)])
+            new Pipes([new EntryExpressionEvalTransformer('active', lit(true))])
         ));
 
         Loop::get()->futureTick(function () use ($logger, $pool, $server) : void {

@@ -1,10 +1,10 @@
 <?php declare(strict_types=1);
 
+use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\DSL\From;
 use Flow\ETL\DSL\To;
-use Flow\ETL\DSL\Transform;
 use Flow\ETL\Flow;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
@@ -24,7 +24,7 @@ require __DIR__ . '/../../vendor/autoload.php';
     ->renameAll('unpacked.', '')
     ->drop('row')
     ->write(To::stdout())
-    ->rows(Transform::add_integer('extra_value', \random_int(1, 5)))
+    ->withEntry('extra_value', lit(\random_int(1, 5)))
     ->write(To::stdout())
     ->run();
 

@@ -148,7 +148,7 @@ final class DataFrameTest extends TestCase
             ->rows(new class implements Transformation {
                 public function transform(DataFrame $dataFrame) : DataFrame
                 {
-                    return $dataFrame->transform(Transform::string_lower('country'))
+                    return $dataFrame->withEntry('country', ref('country')->lower())
                         ->withEntry('age', ref('age')->divide(lit(10)));
                 }
             })
