@@ -22,7 +22,6 @@ Available Filters
 - [entry number](../src/Flow/ETL/Transformer/Filter/Filter/EntryNumber.php)
 - [entry exists](../src/Flow/ETL/Transformer/Filter/Filter/EntryExists.php)
 - [opposite](../src/Flow/ETL/Transformer/Filter/Filter/Opposite.php)
-- [valid value](../src/Flow/ETL/Transformer/Filter/Filter/ValidValue.php) - optionally integrates with [symfony validator](https://github.com/symfony/validator)
 
 #### Transformer - Conditional
 
@@ -48,7 +47,6 @@ Available Conditions
 - [entry value less than](../src/Flow/ETL/Transformer/Condition/EntryValueLessThan.php)
 - [none](../src/Flow/ETL/Transformer/Condition/None.php)
 - [opposite](../src/Flow/ETL/Transformer/Condition/Opposite.php)
-- [valid value](../src/Flow/ETL/Transformer/Condition/ValidValue) - optionally integrates with [Symfony Validator](https://github.com/symfony/validator)
 
 
 #### Transformer - Cast
