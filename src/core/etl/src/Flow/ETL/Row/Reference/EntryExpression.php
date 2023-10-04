@@ -18,7 +18,9 @@ use Flow\ETL\Row\Reference\Expression\GreaterThan;
 use Flow\ETL\Row\Reference\Expression\GreaterThanEqual;
 use Flow\ETL\Row\Reference\Expression\IsIn;
 use Flow\ETL\Row\Reference\Expression\IsNotNull;
+use Flow\ETL\Row\Reference\Expression\IsNotNumeric;
 use Flow\ETL\Row\Reference\Expression\IsNull;
+use Flow\ETL\Row\Reference\Expression\IsNumeric;
 use Flow\ETL\Row\Reference\Expression\IsType;
 use Flow\ETL\Row\Reference\Expression\LessThan;
 use Flow\ETL\Row\Reference\Expression\LessThanEqual;
@@ -176,9 +178,19 @@ trait EntryExpression
         return new Expressions(new IsNotNull($this));
     }
 
+    public function isNotNumeric() : Expression|EntryReference
+    {
+        return new Expressions(new IsNotNumeric($this));
+    }
+
     public function isNull() : Expression|EntryReference
     {
         return new Expressions(new IsNull($this));
+    }
+
+    public function isNumeric() : Expression|EntryReference
+    {
+        return new Expressions(new IsNumeric($this));
     }
 
     public function isOdd() : Expression|EntryReference

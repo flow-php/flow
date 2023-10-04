@@ -15,12 +15,6 @@ Available Filters
 - [all](../src/Flow/ETL/Transformer/Filter/Filter/All.php)
 - [any](../src/Flow/ETL/Transformer/Filter/Filter/Any.php)
 - [callback](../src/Flow/ETL/Transformer/Filter/Filter/Callback.php)
-- [entry equals to](../src/Flow/ETL/Transformer/Filter/Filter/EntryEqualsTo.php)
-- [entry not equals to](../src/Flow/ETL/Transformer/Filter/Filter/EntryNotEqualsTo.php)
-- [entry not null](../src/Flow/ETL/Transformer/Filter/Filter/EntryNotNull.php)
-- [entry not number](../src/Flow/ETL/Transformer/Filter/Filter/EntryNotNumber.php)
-- [entry number](../src/Flow/ETL/Transformer/Filter/Filter/EntryNumber.php)
-- [entry exists](../src/Flow/ETL/Transformer/Filter/Filter/EntryExists.php)
 - [opposite](../src/Flow/ETL/Transformer/Filter/Filter/Opposite.php)
 
 #### Transformer - Conditional
