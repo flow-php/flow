@@ -1,6 +1,8 @@
 #!/usr/bin/env php
 <?php
 
+use function Flow\ETL\DSL\concat;
+use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use Aeon\Calendar\Stopwatch;
 use Flow\ETL\Async\ReactPHP\Server\SocketServer;
@@ -45,7 +47,7 @@ print "Loading CSV {$csvFileSize}Mb file into json file...\n";
     ->renameAll('unpacked.', '')
     ->drop('row')
     ->rows(Transform::to_integer('id'))
-    ->rows(Transform::string_concat(['name', 'last name'], ' ', 'name'))
+    ->withEntry('name', concat(ref('name'), lit(' '), ref('last name')))
     ->drop('last name')
     ->mode(SaveMode::Overwrite)
     ->partitionBy('country_code')
