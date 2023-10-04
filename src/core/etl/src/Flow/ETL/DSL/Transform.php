@@ -35,7 +35,6 @@ use Flow\ETL\Transformer\FilterRowsTransformer;
 use Flow\ETL\Transformer\KeepEntriesTransformer;
 use Flow\ETL\Transformer\Rename\EntryRename;
 use Flow\ETL\Transformer\RenameEntriesTransformer;
-use Flow\ETL\Transformer\StringEntryValueCaseConverterTransformer;
 use Flow\ETL\Transformer\StyleConverter\StringStyles;
 use Laminas\Hydrator\ReflectionHydrator;
 use Symfony\Component\Validator\Constraint;
@@ -45,39 +44,6 @@ use Symfony\Component\Validator\Constraint;
  */
 class Transform
 {
-    /**
-     * @param array<mixed> $data
-     */
-    final public static function add_array(string $name, array $data) : Transformer
-    {
-        return new Transformer\StaticEntryTransformer(DSLEntry::array($name, $data));
-    }
-
-    final public static function add_boolean(string $name, bool $value) : Transformer
-    {
-        return new Transformer\StaticEntryTransformer(DSLEntry::boolean($name, $value));
-    }
-
-    final public static function add_datetime(string $name, \DateTimeInterface $value) : Transformer
-    {
-        return new Transformer\StaticEntryTransformer(DSLEntry::datetime($name, $value));
-    }
-
-    final public static function add_datetime_from_string(string $name, string $value) : Transformer
-    {
-        return new Transformer\StaticEntryTransformer(DSLEntry::datetime($name, new \DateTimeImmutable($value)));
-    }
-
-    final public static function add_float(string $name, float $value) : Transformer
-    {
-        return new Transformer\StaticEntryTransformer(DSLEntry::float($name, $value));
-    }
-
-    final public static function add_integer(string $name, int $value) : Transformer
-    {
-        return new Transformer\StaticEntryTransformer(DSLEntry::integer($name, $value));
-    }
-
     /**
      * @param array<mixed> $data
      */
@@ -97,21 +63,6 @@ class Transform
     final public static function add_json_object(string $name, array $data) : Transformer
     {
         return new Transformer\StaticEntryTransformer(DSLEntry::json_object($name, $data));
-    }
-
-    final public static function add_null(string $name) : Transformer
-    {
-        return new Transformer\StaticEntryTransformer(DSLEntry::null($name));
-    }
-
-    final public static function add_object(string $name, object $data) : Transformer
-    {
-        return new Transformer\StaticEntryTransformer(DSLEntry::object($name, $data));
-    }
-
-    final public static function add_string(string $name, string $value) : Transformer
-    {
-        return new Transformer\StaticEntryTransformer(DSLEntry::string($name, $value));
     }
 
     /**
@@ -178,11 +129,6 @@ class Transform
         return new Transformer\CallbackRowTransformer($callable);
     }
 
-    final public static function ceil(string $entry) : Transformer
-    {
-        return self::user_function([$entry], 'ceil');
-    }
-
     final public static function chain(Transformer ...$transformers) : Transformer
     {
         return new Transformer\ChainTransformer(...$transformers);
@@ -208,11 +154,6 @@ class Transform
     final public static function dynamic(callable $generator) : Transformer
     {
         return new Transformer\DynamicEntryTransformer($generator);
-    }
-
-    final public static function explode(string $entry, string $separator) : Transformer
-    {
-        return self::user_function($entry, 'explode', ['separator' => $separator], 'string');
     }
 
     final public static function filter_equals(string $entry, mixed $value) : Transformer
@@ -265,11 +206,6 @@ class Transform
         return new FilterRowsTransformer(new Opposite(new ValidValue($entry, new ValidValue\SymfonyValidator($constraints))));
     }
 
-    final public static function floor(string $entry) : Transformer
-    {
-        return self::user_function([$entry], 'floor');
-    }
-
     final public static function group_to_array(string $group_by_entry, string $new_entry_name) : Transformer
     {
         return new Transformer\GroupToArrayTransformer($group_by_entry, $new_entry_name);
@@ -278,32 +214,6 @@ class Transform
     final public static function keep(string ...$entry) : Transformer
     {
         return new KeepEntriesTransformer(...$entry);
-    }
-
-    final public static function ltrim(string $entry, string $characters = " \n\r\t\v\x00") : Transformer
-    {
-        return self::user_function([$entry], 'ltrim', [$characters]);
-    }
-
-    /**
-     * @param array<mixed> $parameters
-     */
-    final public static function object_method(string $object_name, string $method, string $entry_name = 'method_entry', array $parameters = []) : Transformer
-    {
-        return new Transformer\ObjectMethodTransformer($object_name, $method, $entry_name, $parameters);
-    }
-
-    /**
-     * @param string $entry
-     * @param array<string>|string $pattern
-     * @param array<string>|string $replacement
-     * @param int $limit
-     *
-     * @return Transformer
-     */
-    final public static function preg_replace(string $entry, string|array $pattern, string|array $replacement, int $limit = -1) : Transformer
-    {
-        return self::user_function([$entry], 'preg_replace', ['pattern' => $pattern, 'replacement' => $replacement, 'limit' => $limit], 'subject');
     }
 
     final public static function remove(string|Reference ...$entry) : Transformer
@@ -330,43 +240,6 @@ class Transform
     public static function rename_str_replace_all(string $search, string $replace) : Transformer
     {
         return new Transformer\RenameStrReplaceAllEntriesTransformer($search, $replace);
-    }
-
-    final public static function round(string $entry, int $precision = 0, int $mode = \PHP_ROUND_HALF_UP) : Transformer
-    {
-        return self::user_function($entry, 'round', [$precision, $mode]);
-    }
-
-    final public static function rtrim(string $entry, string $characters = " \n\r\t\v\x00") : Transformer
-    {
-        return self::user_function($entry, 'rtrim', [$characters]);
-    }
-
-    final public static function str_pad(string $entry, int $length, string $pad_string = ' ', int $type = STR_PAD_RIGHT) : Transformer
-    {
-        return self::user_function($entry, 'str_pad', [$length, $pad_string, $type]);
-    }
-
-    /**
-     * @param string $entry
-     * @param array<string>|string $search
-     * @param array<string>|string $replace
-     *
-     * @return Transformer
-     */
-    final public static function str_replace(string $entry, string|array $search, string|array $replace) : Transformer
-    {
-        return self::user_function($entry, 'str_replace', ['search' => $search, 'replace' => $replace], 'subject');
-    }
-
-    final public static function string_lower(string|Reference ...$entry_names) : Transformer
-    {
-        return StringEntryValueCaseConverterTransformer::lower(...$entry_names);
-    }
-
-    final public static function string_upper(string|Reference ...$entry_names) : Transformer
-    {
-        return StringEntryValueCaseConverterTransformer::upper(...$entry_names);
     }
 
     final public static function to_array(string ...$entry) : Transformer
@@ -503,11 +376,6 @@ class Transform
     final public static function to_string_from_datetime(array $entries, string $format) : Transformer
     {
         return new CastTransformer(new Transformer\Cast\CastEntries($entries, new DateTimeToStringEntryCaster($format), true));
-    }
-
-    final public static function trim(string $entry, string $characters = " \n\r\t\v\x00") : Transformer
-    {
-        return self::user_function($entry, 'trim', [$characters]);
     }
 
     /**

@@ -6,6 +6,7 @@ namespace Flow\ETL\Async\Tests\Integration\Server;
 
 use const Amp\Process\IS_WINDOWS;
 use function Amp\async;
+use function Flow\ETL\DSL\lit;
 use Flow\ETL\Async\Amp\Server\SocketServer;
 use Flow\ETL\Async\Amp\Worker\SocketClient;
 use Flow\ETL\Async\Socket\Server\ServerProtocol;
@@ -15,12 +16,12 @@ use Flow\ETL\Async\Socket\Worker\Processor;
 use Flow\ETL\Cache\LocalFilesystemCache;
 use Flow\ETL\Config;
 use Flow\ETL\DSL\Entry;
-use Flow\ETL\DSL\Transform;
 use Flow\ETL\Extractor\ProcessExtractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Pipeline\Pipes;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
+use Flow\ETL\Transformer\EntryExpressionEvalTransformer;
 use Flow\Serializer\NativePHPSerializer;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
@@ -40,7 +41,7 @@ final class SocketServerClientTest extends TestCase
             new ProcessExtractor(
                 $rows = new Rows(Row::create(Entry::integer('id', 1)))
             ),
-            new Pipes([Transform::add_boolean('active', true)])
+            new Pipes([new EntryExpressionEvalTransformer('active', lit(true))])
         ));
 
         async(function () use ($logger, $pool) : void {
@@ -77,7 +78,7 @@ final class SocketServerClientTest extends TestCase
             new ProcessExtractor(
                 $rows = new Rows(Row::create(Entry::integer('id', 1)))
             ),
-            new Pipes([Transform::add_boolean('active', true)])
+            new Pipes([new EntryExpressionEvalTransformer('active', lit(true))])
         ));
 
         async(function () use ($logger, $pool, $server) : void {

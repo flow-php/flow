@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Pipeline;
 
+use function Flow\ETL\DSL\lit;
 use Flow\ETL\Config;
 use Flow\ETL\DSL\Entry;
-use Flow\ETL\DSL\Transform;
 use Flow\ETL\Extractor\ProcessExtractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Pipeline\NestedPipeline;
@@ -14,6 +14,7 @@ use Flow\ETL\Pipeline\ParallelizingPipeline;
 use Flow\ETL\Pipeline\SynchronousPipeline;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
+use Flow\ETL\Transformer\EntryExpressionEvalTransformer;
 use PHPUnit\Framework\TestCase;
 
 final class NestedPipelineTest extends TestCase
@@ -21,7 +22,7 @@ final class NestedPipelineTest extends TestCase
     public function test_nested_pipelines() : void
     {
         $pipeline = new NestedPipeline(
-            (new SynchronousPipeline())->add(Transform::add_boolean('active', true)),
+            (new SynchronousPipeline())->add(new EntryExpressionEvalTransformer('active', lit(true))),
             new ParallelizingPipeline(new SynchronousPipeline(), 1)
         );
 
