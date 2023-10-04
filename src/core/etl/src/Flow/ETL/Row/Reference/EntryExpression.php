@@ -319,6 +319,11 @@ trait EntryExpression
         return new Expressions(new StartsWith($this, $needle));
     }
 
+    public function strPad(int $length, string $pad_string = ' ', int $type = STR_PAD_RIGHT) : Expression|EntryReference
+    {
+        return new Expressions((new Expression\StrPad($this, $length, $pad_string, $type)));
+    }
+
     /**
      * @param string|string[] $search
      * @param string|string[] $replace
