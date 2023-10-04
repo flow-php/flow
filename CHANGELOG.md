@@ -1,12 +1,14 @@
 ## [Unreleased] - 2023-10-04
 
 ### Added
+- [#516](https://github.com/flow-php/flow/pull/516) - **Add new IsNumeric & IsNotNumeric expressions** - [@stloyd](https://github.com/stloyd)
 - [#514](https://github.com/flow-php/flow/pull/514) - **Add new StrPad expression** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
 - [#515](https://github.com/flow-php/flow/pull/515) - **Fixed `Cast` expression to handle `null` as first** - [@stloyd](https://github.com/stloyd)
 
 ### Removed
+- [#516](https://github.com/flow-php/flow/pull/516) - **Remove covered filters from `FilterRowsTransformer`** - [@stloyd](https://github.com/stloyd)
 - [#517](https://github.com/flow-php/flow/pull/517) - **Remove SF Validator based filters & conditions** - [@stloyd](https://github.com/stloyd)
 - [#514](https://github.com/flow-php/flow/pull/514) - **Remove ObjectMethodTransformer & `StringEntryValueCaseConverterTransformer`** - [@stloyd](https://github.com/stloyd)
 - [#514](https://github.com/flow-php/flow/pull/514) - **Cleanup `Transform` class from transform methods covered by expressions** - [@stloyd](https://github.com/stloyd)
