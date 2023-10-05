@@ -63,6 +63,11 @@ trait EntryExpression
         return new Expressions(new Expression\ArrayMergeCollection($this));
     }
 
+    public function arrayReverse(bool $preserveKeys = false) : Expression|EntryReference
+    {
+        return new Expressions(new Expression\ArrayReverse($this, $preserveKeys));
+    }
+
     public function arraySort(\Closure $function = null) : Expression|EntryReference
     {
         return new Expressions(new Expression\ArraySort($this, $function ?? \Closure::fromCallable('sort')));
