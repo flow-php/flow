@@ -82,11 +82,6 @@ class Transform
         return new Transformer\ArrayPushTransformer($array_entry, $values);
     }
 
-    final public static function array_reverse(string $array_name) : Transformer
-    {
-        return new Transformer\ArrayReverseTransformer($array_name);
-    }
-
     final public static function array_sort(string $array_name, int $sort_flag = \SORT_REGULAR) : Transformer
     {
         return new Transformer\ArraySortTransformer($array_name, $sort_flag);
