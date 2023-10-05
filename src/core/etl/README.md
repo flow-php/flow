@@ -672,9 +672,6 @@ $flow->process(new Rows(...))
     ->run();
 ```
 
-This function is internally using [filter transformer](src/Flow/ETL/Transformer/FilterRowsTransformer.php).
-
-
 ## Delayed Execution
 
 Reading from the source, transforming data, even loading to sink is executed only by one of the following

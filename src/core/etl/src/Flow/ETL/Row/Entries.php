@@ -91,22 +91,6 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
     }
 
     /**
-     * @param callable(Entry) : bool $callable
-     */
-    public function filter(callable $callable) : self
-    {
-        $entries = [];
-
-        foreach ($this->entries as $entry) {
-            if ($callable($entry)) {
-                $entries[$entry->name()] = $entry;
-            }
-        }
-
-        return self::recreate($entries);
-    }
-
-    /**
      * @throws InvalidArgumentException
      */
     public function get(string|EntryReference $name) : Entry
