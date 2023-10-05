@@ -61,14 +61,6 @@ final class Row implements Serializable
     }
 
     /**
-     * @param callable(Entry) : bool $callable
-     */
-    public function filter(callable $callable) : self
-    {
-        return new self($this->entries->filter($callable));
-    }
-
-    /**
      * @throws InvalidArgumentException
      */
     public function get(string|EntryReference $ref) : Entry

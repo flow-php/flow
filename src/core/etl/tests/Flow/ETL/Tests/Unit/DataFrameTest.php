@@ -577,7 +577,7 @@ ASCIITABLE,
                 }
             }
         )
-            ->filter(fn (Row $row) => $row->valueOf('id') % 2 === 0)
+            ->filter(ref('id')->mod(lit(2))->same(lit(0)))
             ->fetch();
 
         $this->assertCount(5, $rows);

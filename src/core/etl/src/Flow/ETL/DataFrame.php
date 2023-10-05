@@ -31,8 +31,6 @@ use Flow\ETL\Transformer\CrossJoinRowsTransformer;
 use Flow\ETL\Transformer\DropDuplicatesTransformer;
 use Flow\ETL\Transformer\EntryExpressionEvalTransformer;
 use Flow\ETL\Transformer\EntryExpressionFilterTransformer;
-use Flow\ETL\Transformer\Filter\Filter\Callback;
-use Flow\ETL\Transformer\FilterRowsTransformer;
 use Flow\ETL\Transformer\JoinEachRowsTransformer;
 use Flow\ETL\Transformer\JoinRowsTransformer;
 use Flow\ETL\Transformer\KeepEntriesTransformer;
@@ -197,18 +195,10 @@ final class DataFrame
 
     /**
      * @lazy
-     *
-     * @param callable(Row $row) : bool|Reference\Expression $callback
      */
-    public function filter(callable|Reference\Expression $callback) : self
+    public function filter(Reference\Expression $callback) : self
     {
-        if ($callback instanceof Reference\Expression) {
-            $this->pipeline->add(new EntryExpressionFilterTransformer($callback));
-        }
-
-        if (\is_callable($callback)) {
-            $this->pipeline->add(new FilterRowsTransformer(new Callback($callback)));
-        }
+        $this->pipeline->add(new EntryExpressionFilterTransformer($callback));
 
         return $this;
     }
