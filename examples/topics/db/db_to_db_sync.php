@@ -7,7 +7,6 @@ use Aeon\Calendar\Stopwatch;
 use Flow\ETL\Adapter\Doctrine\Order;
 use Flow\ETL\Adapter\Doctrine\OrderBy;
 use Flow\ETL\DSL\Dbal;
-use Flow\ETL\DSL\Transform;
 use Flow\ETL\Flow;
 
 require __DIR__ . '/../../bootstrap.php';
@@ -35,7 +34,7 @@ print "Loading {$rows} rows into postgresql...\n";
     ->withEntry('unpacked', ref('row')->unpack())
     ->renameAll('unpacked.', '')
     ->drop('row')
-    ->rows(Transform::to_integer('id'))
+    ->withEntry('id', ref('id')->cast('int'))
     ->withEntry('name', concat(ref('name'), lit(' '), ref('last name')))
     ->drop('last_name')
     ->write(Dbal::to_table_insert($dbConnection, 'flow_dataset_table'))

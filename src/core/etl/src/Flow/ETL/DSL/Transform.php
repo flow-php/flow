@@ -13,23 +13,12 @@ use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema;
-use Flow\ETL\Row\ValueConverter;
 use Flow\ETL\Transformer;
 use Flow\ETL\Transformer\ArrayKeysStyleConverterTransformer;
-use Flow\ETL\Transformer\Cast\CastJsonToArray;
-use Flow\ETL\Transformer\Cast\CastToDateTime;
-use Flow\ETL\Transformer\Cast\CastToInteger;
-use Flow\ETL\Transformer\Cast\CastToJson;
-use Flow\ETL\Transformer\Cast\CastToString;
-use Flow\ETL\Transformer\Cast\EntryCaster\AnyToListCaster;
-use Flow\ETL\Transformer\Cast\EntryCaster\DateTimeToStringEntryCaster;
-use Flow\ETL\Transformer\Cast\EntryCaster\StringToDateTimeEntryCaster;
-use Flow\ETL\Transformer\CastTransformer;
 use Flow\ETL\Transformer\KeepEntriesTransformer;
 use Flow\ETL\Transformer\Rename\EntryRename;
 use Flow\ETL\Transformer\RenameEntriesTransformer;
 use Flow\ETL\Transformer\StyleConverter\StringStyles;
-use Laminas\Hydrator\ReflectionHydrator;
 
 /**
  * @infection-ignore-all
@@ -182,154 +171,5 @@ class Transform
     public static function rename_str_replace_all(string $search, string $replace) : Transformer
     {
         return new Transformer\RenameStrReplaceAllEntriesTransformer($search, $replace);
-    }
-
-    final public static function to_array(string ...$entry) : Transformer
-    {
-        return new CastTransformer(Transformer\Cast\CastToArray::nullable($entry));
-    }
-
-    final public static function to_array_from_json(string ...$entry) : Transformer
-    {
-        return new CastTransformer(CastJsonToArray::nullable($entry));
-    }
-
-    final public static function to_array_from_object(string|Row\EntryReference $entry) : Transformer
-    {
-        if (!\class_exists("\Laminas\Hydrator\ReflectionHydrator")) {
-            throw new RuntimeException("Laminas\Hydrator\ReflectionHydrator class not found, please install it using 'composer require laminas/laminas-hydrator'");
-        }
-
-        return new Transformer\ObjectToArrayTransformer(new ReflectionHydrator(), $entry);
-    }
-
-    /**
-     * @param array<string>|string $entry
-     */
-    final public static function to_datetime(string|array $entry, ?string $timezone = null, ?string $to_timezone = null) : Transformer
-    {
-        return new CastTransformer(CastToDateTime::nullable(\is_string($entry) ? [$entry] : $entry, $timezone, $to_timezone));
-    }
-
-    /**
-     * @param array<string>|string $entry
-     */
-    final public static function to_datetime_from_string(string|array $entry, ?string $tz = null, ?string $to_tz = null) : Transformer
-    {
-        return new CastTransformer(new Transformer\Cast\CastEntries(\is_string($entry) ? [$entry] : $entry, new StringToDateTimeEntryCaster($tz, $to_tz), true));
-    }
-
-    final public static function to_integer(string ...$entries) : Transformer
-    {
-        return new CastTransformer(CastToInteger::nullable($entries));
-    }
-
-    final public static function to_json(string ...$entries) : Transformer
-    {
-        return new CastTransformer(CastToJson::nullable($entries));
-    }
-
-    public static function to_list_of_boolean(string $entry) : Transformer
-    {
-        return new CastTransformer(
-            new Transformer\Cast\CastEntries(
-                [$entry],
-                new AnyToListCaster(Entry\TypedCollection\ScalarType::boolean),
-                true
-            )
-        );
-    }
-
-    public static function to_list_of_datetime(string $entry) : Transformer
-    {
-        return new CastTransformer(
-            new Transformer\Cast\CastEntries(
-                [$entry],
-                new AnyToListCaster(Entry\TypedCollection\ObjectType::of(\DateTimeInterface::class)),
-                true
-            )
-        );
-    }
-
-    public static function to_list_of_float(string $entry) : Transformer
-    {
-        return new CastTransformer(
-            new Transformer\Cast\CastEntries(
-                [$entry],
-                new AnyToListCaster(Entry\TypedCollection\ScalarType::float),
-                true
-            )
-        );
-    }
-
-    public static function to_list_of_integer(string $entry) : Transformer
-    {
-        return new CastTransformer(
-            new Transformer\Cast\CastEntries(
-                [$entry],
-                new AnyToListCaster(Entry\TypedCollection\ScalarType::integer),
-                true
-            )
-        );
-    }
-
-    /**
-     * @param string $entry
-     * @param class-string $class
-     * @param null|ValueConverter $value_converter
-     *
-     * @return Transformer
-     */
-    public static function to_list_of_object(string $entry, string $class, ValueConverter $value_converter = null) : Transformer
-    {
-        return new CastTransformer(
-            new Transformer\Cast\CastEntries(
-                [$entry],
-                new AnyToListCaster(Entry\TypedCollection\ObjectType::of($class), $value_converter),
-                true
-            )
-        );
-    }
-
-    public static function to_list_of_string(string $entry) : Transformer
-    {
-        return new CastTransformer(
-            new Transformer\Cast\CastEntries(
-                [$entry],
-                new AnyToListCaster(Entry\TypedCollection\ScalarType::string),
-                true
-            )
-        );
-    }
-
-    final public static function to_null_from_null_string(string ...$entries) : Transformer
-    {
-        return new Transformer\NullStringIntoNullEntryTransformer(...$entries);
-    }
-
-    final public static function to_string(string ...$entries) : Transformer
-    {
-        return new CastTransformer(CastToString::nullable($entries));
-    }
-
-    /**
-     * @param array<string> $entries
-     */
-    final public static function to_string_from_datetime(array $entries, string $format) : Transformer
-    {
-        return new CastTransformer(new Transformer\Cast\CastEntries($entries, new DateTimeToStringEntryCaster($format), true));
-    }
-
-    /**
-     * @param array<string>|string $entry
-     * @param callable $callback
-     * @param array<mixed> $extra_arguments
-     * @param null|string $value_argument_name - when used, row value is passed to callback function under argument with given name
-     *
-     * @return Transformer
-     */
-    final public static function user_function(array|string $entry, callable $callback, array $extra_arguments = [], string $value_argument_name = null) : Transformer
-    {
-        return new Transformer\CallUserFunctionTransformer(\is_string($entry) ? [$entry] : $entry, $callback, $extra_arguments, $value_argument_name);
     }
 }

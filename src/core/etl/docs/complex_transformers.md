@@ -42,22 +42,6 @@ Available Conditions
 - [none](../src/Flow/ETL/Transformer/Condition/None.php)
 - [opposite](../src/Flow/ETL/Transformer/Condition/Opposite.php)
 
-
-#### Transformer - Cast
-
-
-Casting Types:
-
-* [cast entries](../src/Flow/ETL/Transformer/Cast/CastEntries.php)
-* [cast array entry each](../src/Flow/ETL/Transformer/Cast/CastArrayEntryEach.php)
-* [cast to datetime](../src/Flow/ETL/Transformer/Cast/CastToDateTime.php)
-* [cast to string](../src/Flow/ETL/Transformer/Cast/CastToString.php)
-* [cast to integer](../src/Flow/ETL/Transformer/Cast/CastToInteger.php)
-* [cast to float](../src/Flow/ETL/Transformer/Cast/CastToFloat.php)
-* [cast to json](../src/Flow/ETL/Transformer/Cast/CastToJson.php)
-* [cast to array](../src/Flow/ETL/Transformer/Cast/CastToArray.php)
-* [cast json to array](../src/Flow/ETL/Transformer/Cast/CastJsonToArray.php)
-
 #### Transformer - EntryNameStyleConverter
 
 Available styles: 

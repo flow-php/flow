@@ -4,7 +4,6 @@ use function Flow\ETL\DSL\concat;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use Flow\ETL\DSL\CSV;
-use Flow\ETL\DSL\Transform;
 use Flow\ETL\Filesystem\AwsS3Stream;
 use Flow\ETL\Filesystem\AzureBlobStream;
 use Flow\ETL\Filesystem\Path;
@@ -44,7 +43,7 @@ AzureBlobStream::register();
     ->withEntry('unpacked', ref('row')->unpack())
     ->renameAll('unpacked.', '')
     ->drop('row')
-    ->rows(Transform::to_integer('id'))
+    ->withEntry('id', ref('id')->cast('int'))
     ->withEntry('name', concat(ref('name'), lit(' '), ref('last name')))
     ->drop('last name')
     ->write(CSV::to(new Path('flow-azure-blob://output.csv', $azure_blob_connection_string)))

@@ -7,7 +7,6 @@ use function Flow\ETL\DSL\ref;
 use Aeon\Calendar\Stopwatch;
 use Flow\ETL\Adapter\Doctrine\DbalLoader;
 use Flow\ETL\DSL\CSV;
-use Flow\ETL\DSL\Transform;
 use Flow\ETL\Flow;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
@@ -31,7 +30,7 @@ print "Loading CSV {$csvFileSize}Mb file into postgresql...\n";
     ->withEntry('unpacked', ref('row')->unpack())
     ->renameAll('unpacked.', '')
     ->drop('row')
-    ->rows(Transform::to_integer('id'))
+    ->withEntry('id', ref('id')->cast('int'))
     ->withEntry('name', concat(ref('name'), lit(' '), ref('last name')))
     ->drop('last name')
     ->load(DbalLoader::fromConnection($dbConnection, 'flow_dataset_table', 1000))

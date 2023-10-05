@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV\Tests\Integration;
 
-use function Flow\ETL\DSL\col;
 use function Flow\ETL\DSL\ref;
 use Flow\ETL\Config;
 use Flow\ETL\DSL\CSV;
-use Flow\ETL\DSL\Transform;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Flow;
 use Flow\ETL\FlowContext;
@@ -264,9 +262,9 @@ final class CSVExtractorTest extends TestCase
                 ->read(CSV::from(__DIR__ . '/../Fixtures/partitioned/group=*'))
                 ->withEntry('unpacked', ref('row')->unpack())
                 ->renameAll('unpacked.', '')
-                ->rows(Transform::to_integer('id'))
+                ->withEntry('id', ref('id')->cast('int'))
                 ->drop('row')
-                ->sortBy(col('id'))
+                ->sortBy(ref('id'))
                 ->fetch()
                 ->toArray()
         );
