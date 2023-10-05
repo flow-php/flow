@@ -61,7 +61,7 @@ $logger->pushHandler(new StreamHandler("php://stderr", LogLevel::ERROR, false));
     )
     ->rows(Transform::array_unpack('row'))
     ->drop('row')
-    ->rows(Transform::to_integer("id"))
+    ->withEntry('id', ref('id')->cast('int'))
     ->withEntry('name', concat(ref('name'), lit(' '), ref('last name')))
     ->drop('last_name')
     ->load(new DbalLoader($tableName, $chunkSize = 1000, $dbConnectionParams))

@@ -9,7 +9,6 @@ use Flow\ETL\Adapter\Doctrine\DbalLoader;
 use Flow\ETL\Async\Amp\Server\SocketServer;
 use Flow\ETL\Async\Amp\Worker\ChildProcessLauncher;
 use Flow\ETL\DSL\CSV;
-use Flow\ETL\DSL\Transform;
 use Flow\ETL\Flow;
 use Flow\ETL\Pipeline\LocalSocketPipeline;
 use Monolog\Handler\StreamHandler;
@@ -45,7 +44,7 @@ $stopwatch->start();
     ->withEntry('unpacked', ref('row')->unpack())
     ->renameAll('unpacked.', '')
     ->drop('row')
-    ->rows(Transform::to_integer('id'))
+    ->withEntry('id', ref('id')->cast('int'))
     ->withEntry('name', concat(ref('name'), lit(' '), ref('last name')))
     ->drop('last name')
     ->load(DbalLoader::fromConnection($dbConnection, 'flow_dataset_table', 1000))

@@ -9,7 +9,6 @@ use Flow\ETL\Async\ReactPHP\Server\SocketServer;
 use Flow\ETL\Async\ReactPHP\Worker\ChildProcessLauncher;
 use Flow\ETL\DSL\CSV;
 use Flow\ETL\DSL\Json;
-use Flow\ETL\DSL\Transform;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Flow;
 use Flow\ETL\Pipeline\LocalSocketPipeline;
@@ -46,7 +45,7 @@ print "Loading CSV {$csvFileSize}Mb file into json file...\n";
     ->withEntry('unpacked', ref('row')->unpack())
     ->renameAll('unpacked.', '')
     ->drop('row')
-    ->rows(Transform::to_integer('id'))
+    ->withEntry('id', ref('id')->cast('int'))
     ->withEntry('name', concat(ref('name'), lit(' '), ref('last name')))
     ->drop('last name')
     ->mode(SaveMode::Overwrite)
