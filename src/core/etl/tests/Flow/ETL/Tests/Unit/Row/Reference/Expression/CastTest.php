@@ -46,7 +46,7 @@ final class CastTest extends TestCase
         $resultRefCast = ref('value')->cast($to)->eval(Row::create((new NativeEntryFactory())->create('value', $from)));
         $resultCastRef = cast(ref('value'), $to)->eval(Row::create((new NativeEntryFactory())->create('value', $from)));
 
-        if (\is_object($expected)) {
+        if (\is_object($expected) || \is_object($from)) {
             $this->assertEquals($expected, $resultRefCast);
             $this->assertEquals($expected, $resultCastRef);
         } else {
