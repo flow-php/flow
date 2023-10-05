@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-10-05
 
 ### Added
+- [#521](https://github.com/flow-php/flow/pull/521) - **Add new `Any` & `All` expressions** - [@stloyd](https://github.com/stloyd)
 - [#516](https://github.com/flow-php/flow/pull/516) - **Add new IsNumeric & IsNotNumeric expressions** - [@stloyd](https://github.com/stloyd)
 - [#514](https://github.com/flow-php/flow/pull/514) - **Add new StrPad expression** - [@stloyd](https://github.com/stloyd)
 
@@ -8,6 +9,7 @@
 - [#515](https://github.com/flow-php/flow/pull/515) - **Fixed `Cast` expression to handle `null` as first** - [@stloyd](https://github.com/stloyd)
 
 ### Removed
+- [#520](https://github.com/flow-php/flow/pull/520) - **Remove `ConditionalTransformer` & related code** - [@stloyd](https://github.com/stloyd)
 - [#519](https://github.com/flow-php/flow/pull/519) - **Remove `ObjectToArrayTransformer` & related code** - [@stloyd](https://github.com/stloyd)
 - [#518](https://github.com/flow-php/flow/pull/518) - **Remove `CastTransformer`** - [@stloyd](https://github.com/stloyd)
 - [#518](https://github.com/flow-php/flow/pull/518) - **Remove `NullStringIntoNullEntryTransformer`** - [@stloyd](https://github.com/stloyd)
