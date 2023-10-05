@@ -1,14 +1,19 @@
 ## [Unreleased] - 2023-10-05
 
 ### Added
+- [#527](https://github.com/flow-php/flow/pull/527) - **Add new `ref()->arrayReverse()` entry expression** - [@stloyd](https://github.com/stloyd)
 - [#521](https://github.com/flow-php/flow/pull/521) - **Add new `Any` & `All` expressions** - [@stloyd](https://github.com/stloyd)
 - [#516](https://github.com/flow-php/flow/pull/516) - **Add new IsNumeric & IsNotNumeric expressions** - [@stloyd](https://github.com/stloyd)
 - [#514](https://github.com/flow-php/flow/pull/514) - **Add new StrPad expression** - [@stloyd](https://github.com/stloyd)
+
+### Changed
+- [#526](https://github.com/flow-php/flow/pull/526) - **Simplify `RenameEntriesTransformer` to work only on one entry** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
 - [#515](https://github.com/flow-php/flow/pull/515) - **Fixed `Cast` expression to handle `null` as first** - [@stloyd](https://github.com/stloyd)
 
 ### Removed
+- [#527](https://github.com/flow-php/flow/pull/527) - **Remove `ArrayReverseTransformer`** - [@stloyd](https://github.com/stloyd)
 - [#524](https://github.com/flow-php/flow/pull/524) - **Remove `FilterRowsTransformer` & related code** - [@stloyd](https://github.com/stloyd)
 - [#523](https://github.com/flow-php/flow/pull/523) - **Remove `CallUserFunctionTransformer` & `CloneEntryTransformer`** - [@stloyd](https://github.com/stloyd)
 - [#522](https://github.com/flow-php/flow/pull/522) - **Remove `CastTransformer` & related code** - [@stloyd](https://github.com/stloyd)
