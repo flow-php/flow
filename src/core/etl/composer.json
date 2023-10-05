@@ -18,7 +18,6 @@
     },
     "require-dev": {
         "jawira/case-converter": "^3.4",
-        "laminas/laminas-hydrator": "^4.0",
         "laravel/serializable-closure": "^1.1",
         "league/flysystem-aws-s3-v3": "^3.0",
         "league/flysystem-azure-blob-storage": "^3.0",
@@ -32,12 +31,9 @@
         "sort-packages": true
     },
     "suggest": {
-        "laminas/laminas-hydrator": "Help converting ObjectEntry into ArrayEntry that can be later unpack into standalone Entries",
-        "ocramius/generated-hydrator": "Provieds generated hydrator that implemenets Laminas\\Hydrator\\HydratorInterface",
         "jawira/case-converter": "Provides CaseConverter that is required by the EntryNameCaseConverterTransformer",
         "moneyphp/money": "Provides MoneyParser that is required by ToMoney expression",
         "ramsey/uuid": "Provides expressions `uuid_v4` and `uuid_v7` that allow generate uuid entry"
-
     },
     "license": "MIT",
     "autoload": {
