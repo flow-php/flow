@@ -17,31 +17,6 @@ Available Filters
 - [callback](../src/Flow/ETL/Transformer/Filter/Filter/Callback.php)
 - [opposite](../src/Flow/ETL/Transformer/Filter/Filter/Opposite.php)
 
-#### Transformer - Conditional
-
-Transforms only those Rows that met given condition.
-
-Available Conditions
-
-- [all](../src/Flow/ETL/Transformer/Condition/All.php)
-- [any](../src/Flow/ETL/Transformer/Condition/Any.php)
-- [array dot exists](../src/Flow/ETL/Transformer/Condition/ArrayDotExists.php)
-- [array dot value equals to](../src/Flow/ETL/Transformer/Condition/ArrayDotValueEqualsTo.php)
-- [array dot value greater or equal than](../src/Flow/ETL/Transformer/Condition/ArrayDotValueGreaterOrEqualThan.php)
-- [array dot value greater than](../src/Flow/ETL/Transformer/Condition/ArrayDotValueGreaterThan.php)
-- [array dot value less or equal than](../src/Flow/ETL/Transformer/Condition/ArrayDotValueLessOrEqualThan.php)
-- [array dot value less than](../src/Flow/ETL/Transformer/Condition/ArrayDotValueLessThan.php)
-- [entry exists](../src/Flow/ETL/Transformer/Condition/EntryExists.php)
-- [entry instance of](../src/Flow/ETL/Transformer/Condition/EntryInstanceOf.php)
-- [entry not null](../src/Flow/ETL/Transformer/Condition/EntryNotNull.php)
-- [entry value equals to](../src/Flow/ETL/Transformer/Condition/EntryValueEqualsTo.php)
-- [entry value greater or equal than](../src/Flow/ETL/Transformer/Condition/EntryValueGreaterOrEqualThan.php)
-- [entry value greater than](../src/Flow/ETL/Transformer/Condition/EntryValueGreaterThan.php)
-- [entry value less or equal than](../src/Flow/ETL/Transformer/Condition/EntryValueLessOrEqualThan.php)
-- [entry value less than](../src/Flow/ETL/Transformer/Condition/EntryValueLessThan.php)
-- [none](../src/Flow/ETL/Transformer/Condition/None.php)
-- [opposite](../src/Flow/ETL/Transformer/Condition/Opposite.php)
-
 #### Transformer - EntryNameStyleConverter
 
 Available styles: 

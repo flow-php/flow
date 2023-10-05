@@ -73,7 +73,6 @@ due to language limitations DSL is available through static methods on following
 * [Handler](src/Flow/ETL/DSL/Handler.php)
 * [From](src/Flow/ETL/DSL/From.php) - Readers (Extractors)
 * [Transform](src/Flow/ETL/DSL/Transform.php)  - Transformers
-  * [Condition](src/Flow/ETL/DSL/Condition.php) 
 * [To](src/Flow/ETL/DSL/To.php) - Writers (Loaders)
 
 Adapters should deliver their own DSL, so for example Json Adapter should create custom `ToJson` and `FromJson` 
