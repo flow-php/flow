@@ -115,11 +115,6 @@ class Transform
         return new Transformer\ChainTransformer(...$transformers);
     }
 
-    final public static function clone_entry(string $from, string $to) : Transformer
-    {
-        return new Transformer\CloneEntryTransformer($from, $to);
-    }
-
     final public static function convert_name(string $style = StringStyles::SNAKE) : Transformer
     {
         if (!\class_exists('\Jawira\CaseConverter\Convert')) {
