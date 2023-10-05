@@ -215,7 +215,7 @@ Adapters might also define some custom transformers.
     * [group to array](src/Flow/ETL/Transformer/GroupToArrayTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/GroupToArrayTransformerTest.php)
     * [keep entries](src/Flow/ETL/Transformer/KeepEntriesTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/KeepEntriesTransformerTest.php)
     * [remove entries](src/Flow/ETL/Transformer/RemoveEntriesTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/RemoveEntriesTransformerTest.php)
-    * [rename entries](src/Flow/ETL/Transformer/RenameEntriesTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/RenameEntriesTransformerTest.php)
+    * [rename entries](src/Flow/ETL/Transformer/RenameEntryTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/RenameEntryTransformerTest.php)
     * [static entry](src/Flow/ETL/Transformer/StaticEntryTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/StaticEntryTransformerTest.php)
 * **Array**
     * [array keys style converter](src/Flow/ETL/Transformer/ArrayKeysStyleConverterTransformer.php) - [tests](tests/Flow/ETL/Tests/Unit/Transformer/ArrayKeysStyleConverterTransformerTest.php)
@@ -655,7 +655,7 @@ $flow->process(new Rows(...))
     ->run();
 ```
 
-This function is internally using [rename entries](src/Flow/ETL/Transformer/RenameEntriesTransformer.php) transformers.
+This function is internally using [rename entries](src/Flow/ETL/Transformer/RenameEntryTransformer.php) transformers.
 
 ## Map
 

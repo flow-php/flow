@@ -16,8 +16,7 @@ use Flow\ETL\Row\Schema;
 use Flow\ETL\Transformer;
 use Flow\ETL\Transformer\ArrayKeysStyleConverterTransformer;
 use Flow\ETL\Transformer\KeepEntriesTransformer;
-use Flow\ETL\Transformer\Rename\EntryRename;
-use Flow\ETL\Transformer\RenameEntriesTransformer;
+use Flow\ETL\Transformer\RenameEntryTransformer;
 use Flow\ETL\Transformer\StyleConverter\StringStyles;
 
 /**
@@ -149,7 +148,7 @@ class Transform
 
     final public static function rename(string $from, string $to) : Transformer
     {
-        return new RenameEntriesTransformer(new EntryRename($from, $to));
+        return new RenameEntryTransformer($from, $to);
     }
 
     public static function rename_all_case(bool $upper = false, bool $lower = false, bool $ucfirst = false, bool $ucwords = false) : Transformer

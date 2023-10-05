@@ -11,7 +11,7 @@ use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use PHPUnit\Framework\TestCase;
 
-final class RenameEntriesTransformerTest extends TestCase
+final class RenameEntryTransformerTest extends TestCase
 {
     public function test_renaming_entries() : void
     {
