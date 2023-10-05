@@ -9,7 +9,6 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entries;
-use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema;
@@ -46,8 +45,6 @@ class Transform
     }
 
     /**
-     * @param string $array_column
-     * @param string $style
      * @param ?Schema $schema Desired schema of unpacked elements. Elements not found in schema will be auto detected.
      *                        It is allowed to provide definitions only for selected elements, like for example
      *                        when converting enum string value into specific Enum.
@@ -67,33 +64,9 @@ class Transform
         );
     }
 
-    /**
-     * Pushes static values into existing array entry, if array entry does not exist, this transformer
-     * will create one.
-     *
-     * @param string $array_entry
-     * @param array<mixed> $values
-     *
-     * @return Transformer
-     */
-    final public static function array_push(string $array_entry, array $values = []) : Transformer
-    {
-        return new Transformer\ArrayPushTransformer($array_entry, $values);
-    }
-
     final public static function array_sort(string $array_name, int $sort_flag = \SORT_REGULAR) : Transformer
     {
         return new Transformer\ArraySortTransformer($array_name, $sort_flag);
-    }
-
-    /**
-     * @psalm-param callable(Entry $entry) : Entry ...$callables
-     *
-     * @param callable(Entry $entry) : Entry ...$callables
-     */
-    final public static function callback_entry(callable ...$callables) : Transformer
-    {
-        return new Transformer\CallbackEntryTransformer(...$callables);
     }
 
     /**
@@ -151,12 +124,6 @@ class Transform
         return new Transformer\RenameAllCaseTransformer($upper, $lower, $ucfirst, $ucwords);
     }
 
-    /**
-     * @param string $search
-     * @param string $replace
-     *
-     * @return Transformer
-     */
     public static function rename_str_replace_all(string $search, string $replace) : Transformer
     {
         return new Transformer\RenameStrReplaceAllEntriesTransformer($search, $replace);
