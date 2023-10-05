@@ -9,6 +9,7 @@
 - [#515](https://github.com/flow-php/flow/pull/515) - **Fixed `Cast` expression to handle `null` as first** - [@stloyd](https://github.com/stloyd)
 
 ### Removed
+- [#523](https://github.com/flow-php/flow/pull/523) - **Remove `CallUserFunctionTransformer` & `CloneEntryTransformer`** - [@stloyd](https://github.com/stloyd)
 - [#522](https://github.com/flow-php/flow/pull/522) - **Remove `CastTransformer` & related code** - [@stloyd](https://github.com/stloyd)
 - [#520](https://github.com/flow-php/flow/pull/520) - **Remove `ConditionalTransformer` & related code** - [@stloyd](https://github.com/stloyd)
 - [#519](https://github.com/flow-php/flow/pull/519) - **Remove `ObjectToArrayTransformer` & related code** - [@stloyd](https://github.com/stloyd)
