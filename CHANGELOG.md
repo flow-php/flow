@@ -7,6 +7,7 @@
 - [#514](https://github.com/flow-php/flow/pull/514) - **Add new StrPad expression** - [@stloyd](https://github.com/stloyd)
 
 ### Changed
+- [#528](https://github.com/flow-php/flow/pull/528) - **Use default value for `json_decode()` in `NativeEntryFactory`** - [@stloyd](https://github.com/stloyd)
 - [#526](https://github.com/flow-php/flow/pull/526) - **Simplify `RenameEntriesTransformer` to work only on one entry** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
