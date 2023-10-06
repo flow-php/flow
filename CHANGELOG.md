@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-10-05
+## [Unreleased] - 2023-10-06
 
 ### Added
 - [#527](https://github.com/flow-php/flow/pull/527) - **Add new `ref()->arrayReverse()` entry expression** - [@stloyd](https://github.com/stloyd)
@@ -13,6 +13,7 @@
 - [#515](https://github.com/flow-php/flow/pull/515) - **Fixed `Cast` expression to handle `null` as first** - [@stloyd](https://github.com/stloyd)
 
 ### Removed
+- [#525](https://github.com/flow-php/flow/pull/525) - **Remove `ArrayPushTransformer` & `CallbackEntryTransformer`** - [@stloyd](https://github.com/stloyd)
 - [#527](https://github.com/flow-php/flow/pull/527) - **Remove `ArrayReverseTransformer`** - [@stloyd](https://github.com/stloyd)
 - [#524](https://github.com/flow-php/flow/pull/524) - **Remove `FilterRowsTransformer` & related code** - [@stloyd](https://github.com/stloyd)
 - [#523](https://github.com/flow-php/flow/pull/523) - **Remove `CallUserFunctionTransformer` & `CloneEntryTransformer`** - [@stloyd](https://github.com/stloyd)
