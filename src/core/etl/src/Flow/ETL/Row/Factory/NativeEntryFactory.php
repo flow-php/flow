@@ -17,8 +17,6 @@ use Flow\ETL\Row\Schema;
  */
 final class NativeEntryFactory implements EntryFactory
 {
-    private const JSON_DEPTH = 512;
-
     public function __construct(private readonly ?Schema $schema = null)
     {
     }
@@ -303,7 +301,7 @@ final class NativeEntryFactory implements EntryFactory
         }
 
         try {
-            return \is_array(\json_decode($string, true, self::JSON_DEPTH, JSON_THROW_ON_ERROR));
+            return \is_array(\json_decode($string, true, flags: \JSON_THROW_ON_ERROR));
         } catch (\Exception) {
             return false;
         }
