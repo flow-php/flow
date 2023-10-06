@@ -15,12 +15,10 @@ final class RenameEntryTransformerTest extends TestCase
 {
     public function test_renaming_entries() : void
     {
-        $renameTransformer = Transform::chain(
-            Transform::rename('old_int', 'new_int'),
-            Transform::rename('null', 'nothing')
-        );
+        $renameTransformerOne = Transform::rename('old_int', 'new_int');
+        $renameTransformerTwo = Transform::rename('null', 'nothing');
 
-        $rows = $renameTransformer->transform(
+        $rows = $renameTransformerOne->transform(
             new Rows(
                 Row::create(
                     new Row\Entry\IntegerEntry('old_int', 1000),
@@ -34,8 +32,10 @@ final class RenameEntryTransformerTest extends TestCase
                     new Row\Entry\NullEntry('null')
                 ),
             ),
-            new FlowContext(Config::default())
+            $context = new FlowContext(Config::default())
         );
+
+        $rows = $renameTransformerTwo->transform($rows, $context);
 
         $this->assertEquals(
             new Rows(
