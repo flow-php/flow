@@ -11,7 +11,9 @@ final class ArraySort implements Expression
 {
     public function __construct(
         private readonly Expression $ref,
-        private readonly \Closure $function
+        private readonly Expression\ArraySort\Sort $function,
+        private readonly ?int $flags,
+        private readonly bool $recursive
     ) {
     }
 
@@ -24,20 +26,24 @@ final class ArraySort implements Expression
             return null;
         }
 
-        $this->recursiveSort($val, $this->function);
+        $this->recursiveSort($val, $this->function->value, $this->flags, $this->recursive);
 
         return $val;
     }
 
-    private function recursiveSort(array &$array, \Closure $function) : void
+    private function recursiveSort(array &$array, callable $function, ?int $flags, bool $recursive) : void
     {
         /** @var mixed $value */
         foreach ($array as &$value) {
-            if (\is_array($value)) {
-                $this->recursiveSort($value, $function);
+            if ($recursive && \is_array($value)) {
+                $this->recursiveSort($value, $function, $flags, true);
             }
         }
 
-        $function($array);
+        if (null !== $flags) {
+            $function($array, $flags);
+        } else {
+            $function($array);
+        }
     }
 }
