@@ -8,6 +8,7 @@ use function Flow\ETL\DSL\lit;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference\Expression\ArraySort\Sort;
 use Flow\ETL\Row\Reference\Expression\Cast;
 use Flow\ETL\Row\Reference\Expression\Contains;
 use Flow\ETL\Row\Reference\Expression\Divide;
@@ -68,9 +69,9 @@ trait EntryExpression
         return new Expressions(new Expression\ArrayReverse($this, $preserveKeys));
     }
 
-    public function arraySort(\Closure $function = null) : Expression|EntryReference
+    public function arraySort(string $function = null, int $flags = null, bool $recursive = true) : Expression|EntryReference
     {
-        return new Expressions(new Expression\ArraySort($this, $function ?? \Closure::fromCallable('sort')));
+        return new Expressions(new Expression\ArraySort($this, $function ? Sort::fromString($function) : Sort::sort, $flags, $recursive));
     }
 
     public function cast(string $type) : Expression|EntryReference

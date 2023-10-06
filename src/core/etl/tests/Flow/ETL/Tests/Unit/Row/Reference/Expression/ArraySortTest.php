@@ -14,8 +14,8 @@ final class ArraySortTest extends TestCase
     public function test_sorting_big_arrays() : void
     {
         $this->assertSame(
-            ref('array')->arraySort(\Closure::fromCallable('sort'))->eval(Row::create(Entry::array('array', \json_decode($this->jsonDifferentOrder(), true, 512, JSON_THROW_ON_ERROR)))),
-            ref('array')->arraySort(\Closure::fromCallable('sort'))->eval(Row::create(Entry::array('array', \json_decode($this->json(), true, 512, JSON_THROW_ON_ERROR))))
+            ref('array')->arraySort('sort')->eval(Row::create(Entry::array('array', \json_decode($this->jsonDifferentOrder(), true, 512, JSON_THROW_ON_ERROR)))),
+            ref('array')->arraySort('sort')->eval(Row::create(Entry::array('array', \json_decode($this->json(), true, 512, JSON_THROW_ON_ERROR))))
         );
     }
 
@@ -31,7 +31,7 @@ final class ArraySortTest extends TestCase
                     ],
                 ],
             ],
-            ref('array')->arraySort(\Closure::fromCallable('asort'))->eval(Row::create(
+            ref('array')->arraySort('asort')->eval(Row::create(
                 Entry::array(
                     'array',
                     [
@@ -60,7 +60,7 @@ final class ArraySortTest extends TestCase
                     'g' => 'h',
                 ],
             ],
-            ref('array')->arraySort(\Closure::fromCallable('ksort'))->eval(Row::create(
+            ref('array')->arraySort('ksort')->eval(Row::create(
                 Entry::array(
                     'array',
                     [
