@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\DSL;
 
-use Flow\ETL\DSL\Entry as DSLEntry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
@@ -23,27 +22,6 @@ use Flow\ETL\Transformer\StyleConverter\StringStyles;
  */
 class Transform
 {
-    /**
-     * @param array<mixed> $data
-     */
-    final public static function add_json(string $name, array $data) : Transformer
-    {
-        return new Transformer\StaticEntryTransformer(DSLEntry::json($name, $data));
-    }
-
-    final public static function add_json_from_string(string $name, string $json) : Transformer
-    {
-        return new Transformer\StaticEntryTransformer(DSLEntry::json($name, (array) \json_decode($json, true, 512, JSON_THROW_ON_ERROR)));
-    }
-
-    /**
-     * @param array<mixed> $data
-     */
-    final public static function add_json_object(string $name, array $data) : Transformer
-    {
-        return new Transformer\StaticEntryTransformer(DSLEntry::json_object($name, $data));
-    }
-
     /**
      * @param ?Schema $schema Desired schema of unpacked elements. Elements not found in schema will be auto detected.
      *                        It is allowed to provide definitions only for selected elements, like for example
