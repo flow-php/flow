@@ -7,7 +7,7 @@ namespace Flow\ETL\Tests\Unit\Row\Reference\Expression;
 use function Flow\ETL\DSL\ref;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\Row;
-use Flow\ETL\Row\Reference\Expression\Trim;
+use Flow\ETL\Row\Reference\Expression\Trim\Type;
 use PHPUnit\Framework\TestCase;
 
 final class TrimTest extends TestCase
@@ -31,7 +31,7 @@ final class TrimTest extends TestCase
     {
         $this->assertSame(
             'value   ',
-            ref('string')->trim(Trim::LEFT)->eval(Row::create(Entry::str('string', '   value   ')))
+            ref('string')->trim(Type::LEFT)->eval(Row::create(Entry::str('string', '   value   ')))
         );
     }
 
@@ -39,7 +39,7 @@ final class TrimTest extends TestCase
     {
         $this->assertSame(
             '   value',
-            ref('string')->trim(Trim::RIGHT)->eval(Row::create(Entry::str('string', '   value   ')))
+            ref('string')->trim(Type::RIGHT)->eval(Row::create(Entry::str('string', '   value   ')))
         );
     }
 }
