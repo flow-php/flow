@@ -7,7 +7,6 @@ namespace Flow\ETL\DSL;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
-use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema;
@@ -62,14 +61,6 @@ class Transform
         }
 
         return new Transformer\EntryNameStyleConverterTransformer($style);
-    }
-
-    /**
-     * @param callable(Row $row) : Entries $generator
-     */
-    final public static function dynamic(callable $generator) : Transformer
-    {
-        return new Transformer\DynamicEntryTransformer($generator);
     }
 
     final public static function group_to_array(string $group_by_entry, string $new_entry_name) : Transformer
