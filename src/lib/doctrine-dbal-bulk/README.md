@@ -9,13 +9,6 @@ reliability even in demanding data-intensive environments. This aligns perfectly
 processing, making the Doctrine DBAL Bulk library an invaluable addition to your data transformation and processing
 toolkit.
 
-# Contributing
-
-This repo is **READ ONLY**, in order to contribute to Flow PHP project, please
-open PR against [flow](https://github.com/flow-php/flow) monorepo.
-
-Changes merged to monorepo are automatically propagated into sub repositories.
-
 ## Installation
 
 ```

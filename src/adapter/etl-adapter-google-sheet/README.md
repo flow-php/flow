@@ -43,10 +43,3 @@ $rows = (new Flow())
 
 - `$spreadsheet_document_id` Id need to be readed from the document we want to use, example for url `https://docs.google.com/spreadsheets/d/xyzID-for-documentxyz/edit` id is `xyzID-for-documentxyz`
 - `$sheet_name` - Name of sheet from document you want to read.
-
-## Contributing
-
-This repo is **READ ONLY**, in order to contribute to Flow PHP project, please
-open PR against [flow](https://github.com/flow-php/flow) monorepo.
-
-Changes merged to monorepo are automatically propagated into sub repositories.

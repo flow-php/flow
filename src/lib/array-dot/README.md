@@ -10,13 +10,6 @@ it a valuable asset for developers aiming to streamline their array handling tas
 configuration data, nested JSON objects, or any other complex array structures, the Array Dot library is a reliable
 companion for achieving cleaner and more efficient array operations.
 
-# Contributing
-
-This repo is **READ ONLY**, in order to contribute to Flow PHP project, please
-open PR against [flow](https://github.com/flow-php/flow) monorepo.
-
-Changes merged to monorepo are automatically propagated into sub repositories.
-
 ## Installation
 
 ```
@@ -195,24 +188,3 @@ $array = [
 
 $value = array_dot_get('foo.*.{id,?role}'); // [[1, null], [2, 'ADMIN']]
 ```
-
-
-## Development
-
-In order to install dependencies please, launch following commands:
-
-```bash
-composer install
-composer install --working-dir ./tools
-```
-
-## Run Tests
-
-In order to execute full test suite, please launch following command:
-
-```bash
-composer build
-```
-
-It's recommended to use [pcov](https://pecl.php.net/package/pcov) for code coverage however you can also use
-xdebug by setting `XDEBUG_MODE=coverage` env variable.

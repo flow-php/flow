@@ -12,11 +12,6 @@ Supported PHP versions
 * [![Supported PHP Version](https://img.shields.io/badge/php-~8.1-8892BF.svg)](https://php.net/)
 * [![Supported PHP Version](https://img.shields.io/badge/php-~8.2-8892BF.svg)](https://php.net/)
 
-## Supported PHP versions
-
-* 8.1 - ✅
-* 8.2 - ✅
-
 ## Installation 
 
 This package is a [monorepo](https://tomasvotruba.com/blog/2019/10/28/all-you-always-wanted-to-know-about-monorepo-but-were-afraid-to-ask/).
@@ -90,49 +85,6 @@ In order to understand how Flow works, please read [documentation](src/core/etl/
 * **L**oader (Writer) - Memory safe representation of Data Sink, responsibility of Loader is to write `Rows` into destination storage, one at time.
 * Pipeline - Interface representing ETL process, each received `Rows` instanced is passed through all `Pipes`, also responsible for error handling.
 * Pipe - Loader of Transformer instance existing in `Pipes` collection.
-
-## Contributing
-
-In order to run tests locally please make sure you have [docker](https://www.docker.com/) up and running.
-You also need [PHP 8.1](https://www.php.net/) and [composer](https://getcomposer.org/) to be available from your CLI.
-
-For the code coverage, please install [pcov](https://pecl.php.net/package/pcov).
-
-### Prepare Project:
-
-```shell
-cp docker-compose.yml.dist docker-compose.yml
-composer install 
-docker compose up -d
-```
-
-### Run Test Suite
-
-```shell
-composer test
-```
-
-### Run Static Analyze
-
-```shell
-composer static:analyze
-```
-
-### Test everything
-
-This command will execute exactly the same tests as we run at GitHub Actions before PR can get merged.
-If it passes locally, you are good to open pull request.
-
-```shell
-composer build 
-```
-
-## Building PHAR
-
-```shell
-composer build:phar
-./flow-php.phar --version
-```
 
 ### GitHub Stars
 

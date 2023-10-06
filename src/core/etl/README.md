@@ -12,13 +12,6 @@ for managing large-scale data processing tasks and building scalable web systems
 Whether you are dealing with data transformation or orchestrating complex data flows, Flow PHP is tailored to meet the
 demands of modern web infrastructures.
 
-# Contributing
-
-This repo is **READ ONLY**, in order to contribute to Flow PHP project, please
-open PR against [flow](https://github.com/flow-php/flow) monorepo.
-
-Changes merged to monorepo are automatically propagated into sub repositories.
-
 ## Installation
 
 ```bash
@@ -1134,22 +1127,3 @@ loading time into datasink. It might be cheaper to do one big insert than multip
 Even that sortBy is memory efficient due to External Sort algorithm, it still might become a time bottleneck. 
 In many cases sorting is redundant, since data sinks like databases can deal with this way more efficient. 
 If sorting can't be avoided the best practice is to reduce the dataset by filtering as much as possible.
-
-## Development
-
-In order to install dependencies please, launch following commands:
-
-```bash
-composer install
-```
-
-## Run Tests
-
-In order to execute full test suite, please launch following command:
-
-```bash
-composer build
-```
-
-It's recommended to use [pcov](https://pecl.php.net/package/pcov) for code coverage however you can also use
-xdebug by setting `XDEBUG_MODE=coverage` env variable.
