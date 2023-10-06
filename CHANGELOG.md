@@ -18,6 +18,7 @@
 - [#515](https://github.com/flow-php/flow/pull/515) - **Fixed `Cast` expression to handle `null` as first** - [@stloyd](https://github.com/stloyd)
 
 ### Removed
+- [#533](https://github.com/flow-php/flow/pull/533) - **Remove `StaticEntryTransformer`** - [@stloyd](https://github.com/stloyd)
 - [#531](https://github.com/flow-php/flow/pull/531) - **Remove `ArraySortTransformer`** - [@stloyd](https://github.com/stloyd)
 - [#525](https://github.com/flow-php/flow/pull/525) - **Remove `ArrayPushTransformer` & `CallbackEntryTransformer`** - [@stloyd](https://github.com/stloyd)
 - [#527](https://github.com/flow-php/flow/pull/527) - **Remove `ArrayReverseTransformer`** - [@stloyd](https://github.com/stloyd)
