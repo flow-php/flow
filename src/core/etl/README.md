@@ -1,17 +1,23 @@
 # FLow PHP - ETL
 
+Flow PHP is a premier ETL (Extract, Transform, Load) framework engineered for agile and precise data processing and
+transformation.
+By adhering to strong typing principles, it ensures data consistency and accuracy throughout your workflows.
+One of Flow PHP's standout features is its minimal memory footprint achieved through the utilization of PHP's
+generators, which enable efficient iterative data handling.
+Additionally, Flow PHP is well-equipped with a plethora of adapters, offering a wide range of extractors and loaders
+that facilitate seamless
+interaction with diverse data sources and destinations. This makes Flow PHP a highly adaptable and resourceful framework
+for managing large-scale data processing tasks and building scalable web systems.
+Whether you are dealing with data transformation or orchestrating complex data flows, Flow PHP is tailored to meet the
+demands of modern web infrastructures.
+
 # Contributing
 
 This repo is **READ ONLY**, in order to contribute to Flow PHP project, please
 open PR against [flow](https://github.com/flow-php/flow) monorepo.
 
 Changes merged to monorepo are automatically propagated into sub repositories.
-
-## Description
-
-Flow is a most advanced and flexible PHP, data processing library.
-
-Except typical ETL use cases (Extract, Transform, Load), Flow can be also used for memory-safe data analysis.
 
 ## Installation
 

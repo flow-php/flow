@@ -1,14 +1,5 @@
 # ETL Adapter: Logger
 
-# Contributing
-
-This repo is **READ ONLY**, in order to contribute to Flow PHP project, please
-open PR against [flow](https://github.com/flow-php/flow) monorepo.
-
-Changes merged to monorepo are automatically propagated into sub repositories.
-
-## Description
-
 ETL Adapter that provides PSR Logger support for ETL.
 
 ## Installation
@@ -43,21 +34,10 @@ $this->assertTrue($logger->hasErrorRecords());
 $this->assertTrue($logger->hasError('row log'));
 ```
 
-## Development
+## Contributing
 
-In order to install dependencies please, launch following commands:
+This repo is **READ ONLY**, in order to contribute to Flow PHP project, please
+open PR against [flow](https://github.com/flow-php/flow) monorepo.
 
-```bash
-composer install
-```
+Changes merged to monorepo are automatically propagated into sub repositories.
 
-## Run Tests
-
-In order to execute full test suite, please launch following command:
-
-```bash
-composer build
-```
-
-It's recommended to use [pcov](https://pecl.php.net/package/pcov) for code coverage however you can also use
-xdebug by setting `XDEBUG_MODE=coverage` env variable.

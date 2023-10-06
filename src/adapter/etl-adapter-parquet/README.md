@@ -1,18 +1,16 @@
 # ETL Adapter: Parquet
 
-# Contributing
-
-This repo is **READ ONLY**, in order to contribute to Flow PHP project, please
-open PR against [flow](https://github.com/flow-php/flow) monorepo.
-
-Changes merged to monorepo are automatically propagated into sub repositories.
-
-## Description
-
-ETL Adapter that provides Loaders and Extractors that works with Parquet files.
-
-Following implementation are available: 
-- [Codename Parquet](https://github.com/codename-hub/php-parquet) 
+Flow PHP's Adapter Parquet is a sophisticated library meticulously engineered to enable seamless interaction with
+Parquet data formats within your ETL (Extract, Transform, Load) workflows. This adapter is crucial for developers
+looking to efficiently extract from or load data into Parquet formats, ensuring a streamlined and reliable data
+transformation process. By employing the Adapter Parquet library, developers can access a robust set of features
+designed for precise Parquet data handling, making complex data transformations both manageable and efficient. The
+Adapter Parquet library encapsulates a comprehensive set of functionalities, providing a streamlined API for engaging
+with Parquet data, which is indispensable in modern data processing and transformation environments. This library
+embodies Flow PHP's commitment to providing versatile and effective data processing solutions, making it a prime choice
+for developers dealing with Parquet data in large-scale and data-intensive scenarios. With Flow PHP's Adapter Parquet,
+managing Parquet data within your ETL workflows becomes a more simplified and efficient task, perfectly aligning with
+the robust and adaptable nature of the Flow PHP ecosystem.
 
 ## Installation
 
@@ -91,21 +89,10 @@ $rows = (new Flow())
     ->run();
 ```
 
-## Development
+## Contributing
 
-In order to install dependencies please, launch following commands:
+This repo is **READ ONLY**, in order to contribute to Flow PHP project, please
+open PR against [flow](https://github.com/flow-php/flow) monorepo.
 
-```bash
-composer install
-```
+Changes merged to monorepo are automatically propagated into sub repositories.
 
-## Run Tests
-
-In order to execute full test suite, please launch following command:
-
-```bash
-composer build
-```
-
-It's recommended to use [pcov](https://pecl.php.net/package/pcov) for code coverage however you can also use
-xdebug by setting `XDEBUG_MODE=coverage` env variable.
