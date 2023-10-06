@@ -64,11 +64,6 @@ class Transform
         );
     }
 
-    final public static function array_sort(string $array_name, int $sort_flag = \SORT_REGULAR) : Transformer
-    {
-        return new Transformer\ArraySortTransformer($array_name, $sort_flag);
-    }
-
     /**
      * @param callable(Row) : Row $callable
      */
