@@ -14,8 +14,9 @@ Supported PHP versions
 
 ## Installation 
 
-This package is a [monorepo](https://tomasvotruba.com/blog/2019/10/28/all-you-always-wanted-to-know-about-monorepo-but-were-afraid-to-ask/) that should not be directly installed in your project.
-Please check below packages and select only those that you are going to use: 
+This package is a [monorepo](https://tomasvotruba.com/blog/2019/10/28/all-you-always-wanted-to-know-about-monorepo-but-were-afraid-to-ask/).
+Please check below packages and select only those that you are going to use, 
+this will reduce the number of unnecessary dependencies in your project (less maintenance).
 
 - [ETL](src/core/etl/README.md) 
 - Adapters
@@ -42,49 +43,6 @@ For example if you want to work with json/csv files here are dependencies you wi
 
 ```shell
 composer require flow-php/etl:^0.1 flow-php/etl-adapter-csv:^0.1 flow-php/etl-adapter-json:^0.1
-```
-
-## Contributing 
-
-In order to run tests locally please make sure you have [docker](https://www.docker.com/) up and running.
-You also need [PHP 8.1](https://www.php.net/) and [composer](https://getcomposer.org/) to be available from your CLI.
-
-For the code coverage, please install [pcov](https://pecl.php.net/package/pcov).
-
-### Prepare Project:
-
-```shell
-cp docker-compose.yml.dist docker-compose.yml
-composer install 
-docker compose up -d
-```
-
-### Run Test Suite 
-
-```shell
-composer test
-```
-
-### Run Static Analyze 
-
-```shell
-composer static:analyze
-```
-
-### Test everything
-
-This command will execute exactly the same tests as we run at Github Actions before PR can get merged.
-If it passes locally, you are good to open pull request. 
-
-```shell
-composer build 
-```
-
-## Building PHAR
-
-```shell
-composer build:phar
-./flow-php.phar --version
 ```
 
 ## Usage
@@ -128,12 +86,7 @@ In order to understand how Flow works, please read [documentation](src/core/etl/
 * Pipeline - Interface representing ETL process, each received `Rows` instanced is passed through all `Pipes`, also responsible for error handling.
 * Pipe - Loader of Transformer instance existing in `Pipes` collection.
 
-### Supported PHP versions
-
-* 8.1 - ✅
-* 8.2 - ✅
-
-### Github Stars
+### GitHub Stars
 
 [![Star History Chart](https://api.star-history.com/svg?repos=flow-php/flow&type=Date)](https://star-history.com/#flow-php/flow&Date)
 

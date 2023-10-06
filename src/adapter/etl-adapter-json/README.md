@@ -1,18 +1,15 @@
 # ETL Adapter: JSON
 
-# Contributing
-
-This repo is **READ ONLY**, in order to contribute to Flow PHP project, please
-open PR against [flow](https://github.com/flow-php/flow) monorepo.
-
-Changes merged to monorepo are automatically propagated into sub repositories.
-
-## Description
-
-ETL Adapter that provides memory safe JSON support for ETL.
-
-Following implementation are available: 
-- [JSON Machine](https://github.com/halaxa/json-machine) 
+Flow PHP's Adapter JSON is a meticulously engineered library aimed at facilitating seamless interactions with JSON data
+within your ETL (Extract, Transform, Load) workflows. This adapter is paramount for developers seeking to effortlessly
+extract from or load data into JSON formats, ensuring a fluid and reliable data transformation experience. By utilizing
+the Adapter JSON library, developers can harness a robust set of features tailored for precise JSON data handling,
+making complex data transformations both manageable and efficient. The Adapter JSON library encapsulates a comprehensive
+set of functionalities, providing a streamlined API for engaging with JSON data, which is indispensable in modern data
+processing and transformation scenarios. This library embodies Flow PHP's commitment to offering versatile and efficient
+data processing solutions, making it a prime choice for developers dealing with JSON data in large-scale and
+data-intensive environments. With Flow PHP's Adapter JSON, managing JSON data within your ETL workflows becomes a more
+simplified and efficient task, perfectly aligning with the robust and adaptable nature of the Flow PHP ecosystem.
 
 ## Installation
 
@@ -63,22 +60,3 @@ use Flow\ETL\Stream\LocalFile;
     ->write(Json::to(new LocalFile(\sys_get_temp_dir() . '/file.json')))
     ->run();
 ```
-
-## Development
-
-In order to install dependencies please, launch following commands:
-
-```bash
-composer install
-```
-
-## Run Tests
-
-In order to execute full test suite, please launch following command:
-
-```bash
-composer build
-```
-
-It's recommended to use [pcov](https://pecl.php.net/package/pcov) for code coverage however you can also use
-xdebug by setting `XDEBUG_MODE=coverage` env variable.

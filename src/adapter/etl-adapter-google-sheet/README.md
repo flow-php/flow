@@ -1,16 +1,16 @@
 # ETL Adapter: Google Sheet
 
-## Description
-
-ETL Adapter that provides Extractor that works with Google sheets.
-
-# Contributing
-
-This repo is **READ ONLY**, in order to contribute to Flow PHP project, please
-open PR against [flow](https://github.com/flow-php/flow) monorepo.
-
-Changes merged to monorepo are automatically propagated into sub repositories.
-
+Flow PHP's Adapter Google Sheet is a comprehensive library engineered to enable smooth interactions with Google Sheets
+within your ETL (Extract, Transform, Load) workflows. This adapter is indispensable for developers looking to seamlessly
+extract from or load data into Google Sheets, ensuring a coherent and reliable data transformation journey. By
+leveraging the Adapter Google Sheet library, developers can utilize a robust set of features designed for precise
+interaction with Google Sheets, simplifying complex data transformations and enhancing data processing efficiency. The
+Adapter Google Sheet library encapsulates a wide range of functionalities, providing a streamlined API for managing
+Google Sheets tasks, which is essential in modern data processing and transformation scenarios. This library reflects
+Flow PHP's dedication to offering versatile and effective data processing solutions, making it an optimal choice for
+developers dealing with Google Sheets in large-scale and data-intensive projects. With Flow PHP's Adapter Google Sheet,
+managing Google Sheets data within your ETL workflows becomes a more simplified and efficient task, perfectly aligning
+with the robust and adaptable nature of the Flow PHP ecosystem.
 
 ## Installation 
 
@@ -32,25 +32,6 @@ $rows = (new Flow())
     ->read(GoogleSheet::from($auth_config, $spreadsheet_document_id, $sheet_name)))
     ->fetch();
 ```
-
-## Development
-
-In order to install dependencies please, launch following commands:
-
-```bash
-composer install
-```
-
-## Run Tests
-
-In order to execute full test suite, please launch following command:
-
-```bash
-composer build
-```
-
-It's recommended to use [pcov](https://pecl.php.net/package/pcov) for code coverage however you can also use
-xdebug by setting `XDEBUG_MODE=coverage` env variable.
 
 ## Needed parameters:
 - `$auth_config` 

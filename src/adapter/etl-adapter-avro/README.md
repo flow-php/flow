@@ -1,19 +1,16 @@
 # ETL Adapter: Avro
 
-## Description
-
-ETL Adapter that provides Loaders and Extractors that works with [Apache Avro](https://avro.apache.org/) files.
-
-Following implementation are available: 
-- [Flix Tech Avro PHP](https://github.com/flix-tech/avro-php) 
-
-# Contributing
-
-This repo is **READ ONLY**, in order to contribute to Flow PHP project, please
-open PR against [flow](https://github.com/flow-php/flow) monorepo.
-
-Changes merged to monorepo are automatically propagated into sub repositories.
-
+Flow PHP's Adapter Avro is a finely engineered library designed to facilitate seamless interaction with Avro data
+formats within your ETL (Extract, Transform, Load) workflows. This adapter is crucial for developers looking to
+effortlessly extract from or load data into Avro formats, ensuring a streamlined and reliable data transformation
+process. By harnessing the Adapter Avro library, developers can access a robust set of features tailored for precise
+Avro data handling, simplifying complex data transformations and enhancing data processing efficiency. The Adapter Avro
+library encapsulates a wide range of functionalities, providing a streamlined API for engaging with Avro data, which is
+essential in modern data processing and transformation scenarios. This library exemplifies Flow PHP's dedication to
+offering versatile and efficient data processing solutions, making it an optimal choice for developers dealing with Avro
+data in large-scale and data-intensive projects. With Flow PHP's Adapter Avro, managing Avro data within your ETL
+workflows becomes a more simplified and efficient task, perfectly aligning with the robust and adaptable nature of the
+Flow PHP ecosystem.
 
 ## Installation 
 
@@ -60,22 +57,3 @@ composer require flow-php/etl-adapter-avro:1.x@dev
     ->write(Avro::to($path))
     ->run();
 ```
-
-## Development
-
-In order to install dependencies please, launch following commands:
-
-```bash
-composer install
-```
-
-## Run Tests
-
-In order to execute full test suite, please launch following command:
-
-```bash
-composer build
-```
-
-It's recommended to use [pcov](https://pecl.php.net/package/pcov) for code coverage however you can also use
-xdebug by setting `XDEBUG_MODE=coverage` env variable.

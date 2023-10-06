@@ -1,18 +1,22 @@
 # ETL Adapter: [ReactPHP](https://reactphp.org/)
 
-This adapter providers async local pipeline server/worker elements implemented on [reactphp](https://reactphp.org/).
+Flow PHP's Adapter ReactPHP is a distinguished library, meticulously designed to integrate the asynchronous capabilities
+of ReactPHP with Flow PHP’s ETL (Extract, Transform, Load) processes. This adapter is instrumental for developers
+striving to conduct non-blocking data operations, thus ensuring optimal performance and responsiveness in data
+transformation workflows. By utilizing the Adapter ReactPHP library, developers can leverage a robust suite of features
+tailored for handling asynchronous data operations with precision, thereby simplifying complex data transformations
+while boosting operational efficiency. The Adapter ReactPHP library encapsulates a rich set of functionalities,
+providing a streamlined API for managing asynchronous tasks, which is vital in modern data processing and transformation
+landscapes. This library signifies Flow PHP’s dedication to offering versatile and efficient data processing solutions,
+making it an ideal choice for developers dealing with asynchronous operations in large-scale and data-intensive
+environments. With Flow PHP's Adapter ReactPHP, embracing asynchronous data processing within your ETL workflows becomes
+a seamless and efficient endeavor, harmoniously aligning with the adaptable and robust framework of the Flow PHP
+ecosystem.
 
 Following communication protocols are supported: 
 
 - TCP/IP (only local) - `127.0.0.1:6651`
 - Unix Domain Socket - `uinx:///var/run/etl.sock`
-
-# Contributing
-
-This repo is **READ ONLY**, in order to contribute to Flow PHP project, please
-open PR against [flow](https://github.com/flow-php/flow) monorepo.
-
-Changes merged to monorepo are automatically propagated into sub repositories.
 
 ## Installation
 

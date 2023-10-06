@@ -1,18 +1,21 @@
 # Flow Adapter: [AMP](https://amphp.org/) 
 
-This adapter providers async local pipeline server/worker elements implemented on [amphp](https://amphp.org/).
+Flow PHP's Adapter AmpHP is a meticulously crafted library aimed at integrating the asynchronous capabilities of AmpHP
+within your ETL (Extract, Transform, Load) workflows. This adapter is instrumental for developers aspiring to execute
+non-blocking data operations, thereby optimizing performance and responsiveness in their data transformation workflows.
+By leveraging the Adapter AmpHP library, developers can access a robust suite of features engineered for precise
+asynchronous data operations, simplifying complex data transformations while enhancing operational efficiency. The
+Adapter AmpHP library encapsulates a rich set of functionalities, offering a streamlined API for managing asynchronous
+tasks, which is indispensable in modern data processing and transformation landscapes. This library mirrors Flow PHP's
+commitment to delivering versatile and efficient data processing solutions, making it a superior choice for developers
+dealing with asynchronous operations in large-scale and data-intensive environments. With Flow PHP's Adapter AmpHP,
+embracing asynchronous data processing within your ETL workflows becomes a seamless and efficient endeavor, aligning
+harmoniously with the robust and adaptable framework of the Flow PHP ecosystem.
 
 Following communication protocols are supported:
 
 - TCP/IP (only local) - `127.0.0.1:6651`
 - Unix Domain Socket - `uinx:///var/run/etl.sock`
-
-# Contributing
-
-This repo is **READ ONLY**, in order to contribute to Flow PHP project, please 
-open PR against [flow](https://github.com/flow-php/flow) monorepo. 
-
-Changes merged to monorepo are automatically propagated into sub repositories.
 
 # Installation
 
