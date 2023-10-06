@@ -50,11 +50,6 @@ class Transform
         return new Transformer\CallbackRowTransformer($callable);
     }
 
-    final public static function chain(Transformer ...$transformers) : Transformer
-    {
-        return new Transformer\ChainTransformer(...$transformers);
-    }
-
     final public static function convert_name(string $style = StringStyles::SNAKE) : Transformer
     {
         if (!\class_exists('\Jawira\CaseConverter\Convert')) {
