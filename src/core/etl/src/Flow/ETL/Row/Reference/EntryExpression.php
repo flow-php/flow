@@ -373,10 +373,7 @@ trait EntryExpression
         return new Expressions(new Expression\ToDateTime($this, $format, $timeZone));
     }
 
-    /**
-     * @param int<0, 2> $type
-     */
-    public function trim(int $type = Trim::BOTH, string $characters = " \t\n\r\0\x0B") : Expression|EntryReference
+    public function trim(Trim\Type $type = Trim\Type::BOTH, string $characters = " \t\n\r\0\x0B") : Expression|EntryReference
     {
         return new Expressions(new Expression\Trim($this, $type, $characters));
     }
