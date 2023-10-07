@@ -101,7 +101,7 @@ final class CSVExtractor implements Extractor
                 $rowData = \fgetcsv($stream->resource(), $this->charactersReadInLine, $this->separator, $this->enclosure, $this->escape);
             }
 
-            if (\count($rows)) {
+            if ([] !== $rows) {
                 yield new Rows(...$rows);
             }
 

@@ -16,7 +16,7 @@ use Flow\ETL\Row\StructureReference;
 
 function col(string $entry, string ...$entries) : Reference
 {
-    if (\count($entries)) {
+    if ([] !== $entries) {
         return new StructureReference($entry, ...$entries);
     }
 

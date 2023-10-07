@@ -13,7 +13,7 @@ final class Columns
         public readonly string $startColumn,
         public readonly string $endColumn,
     ) {
-        if (\strlen($sheetName) === 0) {
+        if ('' === $sheetName) {
             throw new InvalidArgumentException('Sheet name can\'t be empty');
         }
 

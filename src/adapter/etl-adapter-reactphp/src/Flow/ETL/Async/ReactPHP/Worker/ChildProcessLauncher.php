@@ -33,7 +33,7 @@ final class ChildProcessLauncher implements WorkerLauncher
 
             $process->stderr->on('data', function ($chunk) : void {
                 foreach (\explode("\n", $chunk) as $chunkLine) {
-                    if (\strlen($chunkLine)) {
+                    if ('' !== $chunkLine) {
                         $this->logger->error($chunkLine);
                     }
                 }
@@ -41,7 +41,7 @@ final class ChildProcessLauncher implements WorkerLauncher
 
             $process->stdout->on('data', function ($chunk) : void {
                 foreach (\explode("\n", $chunk) as $chunkLine) {
-                    if (\strlen($chunkLine)) {
+                    if ('' !== $chunkLine) {
                         $this->logger->debug($chunkLine);
                     }
                 }

@@ -21,7 +21,7 @@ final class BooleanEntry implements \Stringable, Entry
      */
     public function __construct(private readonly string $name, private readonly bool $value)
     {
-        if (!\strlen($name)) {
+        if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
     }

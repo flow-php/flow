@@ -36,7 +36,7 @@ final class ChildProcessLauncher implements WorkerLauncher
 
         while (null !== $chunk = $stdout->read()) {
             foreach (\explode("\n", $chunk) as $chunkLine) {
-                if (\strlen($chunkLine)) {
+                if ('' !== $chunkLine) {
                     $this->logger->debug($chunkLine);
                 }
             }
@@ -44,7 +44,7 @@ final class ChildProcessLauncher implements WorkerLauncher
 
         while (null !== $chunk = $stderr->read()) {
             foreach (\explode("\n", $chunk) as $chunkLine) {
-                if (\strlen($chunkLine)) {
+                if ('' !== $chunkLine) {
                     $this->logger->error($chunkLine);
                 }
             }

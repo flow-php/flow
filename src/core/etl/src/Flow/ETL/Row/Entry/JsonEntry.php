@@ -28,7 +28,7 @@ final class JsonEntry implements \Stringable, Entry
      */
     public function __construct(private readonly string $name, private readonly array $value)
     {
-        if (!\strlen($name)) {
+        if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 

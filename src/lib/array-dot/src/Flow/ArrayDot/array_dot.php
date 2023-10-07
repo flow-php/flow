@@ -16,7 +16,7 @@ use Flow\ArrayDot\Exception\InvalidPathException;
  */
 function array_dot_steps(string $path) : array
 {
-    if (!\strlen($path)) {
+    if ('' === $path) {
         throw new InvalidPathException("Path can't be empty.");
     }
 
@@ -119,7 +119,7 @@ function array_dot_set(array $array, string $path, $value) : array
  */
 function array_dot_get(array $array, string $path) : mixed
 {
-    if (\count($array) === 0) {
+    if ([] === $array) {
         if (\str_starts_with($path, '?')) {
             return null;
         }

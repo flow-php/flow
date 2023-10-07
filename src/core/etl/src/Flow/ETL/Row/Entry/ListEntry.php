@@ -34,11 +34,11 @@ final class ListEntry implements Entry, TypedCollection
         private readonly Type $type,
         private readonly array $value
     ) {
-        if (!\strlen($name)) {
+        if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        if (\count($value) && !\array_is_list($value)) {
+        if ([] !== $value && !\array_is_list($value)) {
             throw new InvalidArgumentException('Expected list of ' . $type->toString() . ' got array with not sequential integer indexes');
         }
 

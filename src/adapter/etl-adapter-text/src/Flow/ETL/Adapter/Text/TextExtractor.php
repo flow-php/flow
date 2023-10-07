@@ -55,7 +55,7 @@ final class TextExtractor implements Extractor
                 $rowData = \fgets($fileStream->resource());
             }
 
-            if (\count($rows)) {
+            if ([] !== $rows) {
                 yield new Rows(...$rows);
             }
         }

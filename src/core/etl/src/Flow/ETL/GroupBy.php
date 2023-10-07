@@ -101,7 +101,7 @@ final class GroupBy
                 $entries = $entries->add($aggregator->result());
             }
 
-            if (\count($entries)) {
+            if ($entries->count()) {
                 $rows = $rows->add(new Row($entries));
             }
         }
