@@ -9,6 +9,7 @@
 - [#514](https://github.com/flow-php/flow/pull/514) - **Add new StrPad expression** - [@stloyd](https://github.com/stloyd)
 
 ### Changed
+- [#544](https://github.com/flow-php/flow/pull/544) - **Optimize `DropDuplicatesTransformer` hashing** - [@stloyd](https://github.com/stloyd)
 - [#542](https://github.com/flow-php/flow/pull/542) - **Allow enum as style param in `ArrayKeysStyleConvert` expression** - [@stloyd](https://github.com/stloyd)
 - [#535](https://github.com/flow-php/flow/pull/535) - **README files structure of all repositories** - [@norberttech](https://github.com/norberttech)
 - [#530](https://github.com/flow-php/flow/pull/530) - **Rework `Trim` expression to use enum instead of constants** - [@stloyd](https://github.com/stloyd)
