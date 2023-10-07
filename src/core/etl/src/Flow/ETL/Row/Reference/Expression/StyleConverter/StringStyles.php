@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Transformer\StyleConverter;
+namespace Flow\ETL\Row\Reference\Expression\StyleConverter;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 

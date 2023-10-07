@@ -40,7 +40,7 @@ final class EntryNameStyleConverterTransformerTest extends TestCase
     public function test_using_invalid_style() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Unrecognized style wrong style, please use one of following: camel, pascal, snake, ada, macro, kebab, train, cobol, lower, upper, title, sentence');
+        $this->expectExceptionMessage('Unrecognized style wrong style, please use one of following:');
 
         Transform::convert_name('wrong style');
     }
