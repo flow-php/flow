@@ -6,6 +6,9 @@ namespace Flow\ETL\Transformer\DropDuplicates;
 
 final class Hashes
 {
+    /**
+     * @var array<string, bool>
+     */
     private array $hashes = [];
 
     public function __construct()
@@ -14,11 +17,11 @@ final class Hashes
 
     public function add(string $hash) : void
     {
-        $this->hashes[] = $hash;
+        $this->hashes[$hash] = true;
     }
 
     public function exists(string $hash) : bool
     {
-        return \in_array($hash, $this->hashes, true);
+        return isset($this->hashes[$hash]);
     }
 }
