@@ -58,7 +58,7 @@ final class Processor
             ->mode(SaveMode::Append)
             ->threadSafe();
 
-        if (\count($this->partitionEntries)) {
+        if ([] !== $this->partitionEntries) {
             $dataFrame = $dataFrame->partitionBy(...$this->partitionEntries);
         }
 

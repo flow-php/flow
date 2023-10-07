@@ -15,7 +15,7 @@ final class Columns
 
     public function __construct(string ...$columns)
     {
-        if (\count($columns) === 0) {
+        if ([] === $columns) {
             throw new RuntimeException('Columns cannot be empty');
         }
 

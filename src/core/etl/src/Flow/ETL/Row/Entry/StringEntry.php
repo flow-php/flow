@@ -21,7 +21,7 @@ final class StringEntry implements \Stringable, Entry
      */
     public function __construct(private readonly string $name, private string $value)
     {
-        if (!\strlen($name)) {
+        if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
     }

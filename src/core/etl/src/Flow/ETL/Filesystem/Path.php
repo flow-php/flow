@@ -73,7 +73,7 @@ final class Path implements Serializable
     public static function realpath(string $path, array $options = []) : self
     {
         // ""  - empty path is current, local directory
-        if (!\strlen($path)) {
+        if ('' === $path) {
             /** @phpstan-ignore-next-line */
             return new self(\getcwd(), $options);
         }
@@ -124,7 +124,7 @@ final class Path implements Serializable
             }
 
             if ($part === '..') {
-                if (\count($absoluteParts)) {
+                if ([] !== $absoluteParts) {
                     \array_pop($absoluteParts);
                 }
 

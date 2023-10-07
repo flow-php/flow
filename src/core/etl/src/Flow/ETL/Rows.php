@@ -228,7 +228,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
             }
         }
 
-        if (\count($rows)) {
+        if ([] !== $rows) {
             return \current($rows);
         }
 

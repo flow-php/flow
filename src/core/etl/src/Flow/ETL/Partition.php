@@ -19,11 +19,11 @@ final class Partition implements Serializable
 
     public function __construct(public readonly string $name, public readonly string $value)
     {
-        if (!\strlen($this->name)) {
+        if ('' === $this->name) {
             throw new InvalidArgumentException("Partition name can't be empty");
         }
 
-        if (!\strlen($this->value)) {
+        if ('' === $this->value) {
             throw new InvalidArgumentException("Partition value can't be empty");
         }
 

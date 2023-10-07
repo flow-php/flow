@@ -27,7 +27,7 @@ final class StructureEntry implements \Stringable, Entry
      */
     public function __construct(private readonly string $name, Entry ...$entries)
     {
-        if (!\strlen($name)) {
+        if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 

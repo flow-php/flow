@@ -21,7 +21,7 @@ final class NullEntry implements \Stringable, Entry
      */
     public function __construct(private readonly string $name)
     {
-        if (!\strlen($name)) {
+        if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
     }

@@ -21,7 +21,7 @@ final class FloatEntry implements \Stringable, Entry
      */
     public function __construct(private readonly string $name, private readonly float $value, private readonly int $precision = 6)
     {
-        if (!\strlen($name)) {
+        if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
     }

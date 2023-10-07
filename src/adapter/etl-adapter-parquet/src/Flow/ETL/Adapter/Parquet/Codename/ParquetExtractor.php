@@ -37,7 +37,7 @@ final class ParquetExtractor implements Extractor
                 $data = [];
 
                 foreach ($dataFields as $field) {
-                    if (\count($this->fields) && !\in_array($field->name, $this->fields, true)) {
+                    if ([] !== $this->fields && !\in_array($field->name, $this->fields, true)) {
                         continue;
                     }
 

@@ -28,7 +28,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
     {
         $this->entries = [];
 
-        if (\count($entries)) {
+        if ([] !== $entries) {
             foreach ($entries as $entry) {
                 $this->entries[$entry->name()] = $entry;
             }

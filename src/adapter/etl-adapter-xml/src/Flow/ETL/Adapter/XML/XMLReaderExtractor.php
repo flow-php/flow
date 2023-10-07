@@ -90,7 +90,7 @@ final class XMLReaderExtractor implements Extractor
 
             $xmlReader->close();
 
-            if (\count($rows)) {
+            if ([] !== $rows) {
                 yield new Rows(...$rows);
             }
         }
