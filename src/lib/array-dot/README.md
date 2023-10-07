@@ -129,7 +129,7 @@ $array = [
     ]
 ];
 
-$value = array_dot_get('foo.*.id'); // [1, 2]
+$value = array_dot_get('users.*.id'); // [1, 2]
 ```
 
 #### Nullsafe Wildcard Operator - ?*
@@ -156,7 +156,7 @@ $array = [
     ]
 ];
 
-$value = array_dot_get('foo.*.name'); // ['John']
+$value = array_dot_get('users.*.name'); // ['John']
 ```
 
 #### Multipath Syntax - {}
@@ -186,5 +186,5 @@ $array = [
     ]
 ];
 
-$value = array_dot_get('foo.*.{id,?role}'); // [[1, null], [2, 'ADMIN']]
+$value = array_dot_get('users.*.{id,?role}'); // [[1, null], [2, 'ADMIN']]
 ```
