@@ -1,6 +1,7 @@
-## [Unreleased] - 2023-10-06
+## [Unreleased] - 2023-10-07
 
 ### Added
+- [#541](https://github.com/flow-php/flow/pull/541) - **Add `ArrayKeysStyleConvert` expression** - [@stloyd](https://github.com/stloyd)
 - [#527](https://github.com/flow-php/flow/pull/527) - **Add new `ref()->arrayReverse()` entry expression** - [@stloyd](https://github.com/stloyd)
 - [#521](https://github.com/flow-php/flow/pull/521) - **Add new `Any` & `All` expressions** - [@stloyd](https://github.com/stloyd)
 - [#516](https://github.com/flow-php/flow/pull/516) - **Add new IsNumeric & IsNotNumeric expressions** - [@stloyd](https://github.com/stloyd)
@@ -19,6 +20,7 @@
 - [#515](https://github.com/flow-php/flow/pull/515) - **Fixed `Cast` expression to handle `null` as first** - [@stloyd](https://github.com/stloyd)
 
 ### Removed
+- [#541](https://github.com/flow-php/flow/pull/541) - **Remove `ArrayKeysStyleConverterTransformer`** - [@stloyd](https://github.com/stloyd)
 - [#537](https://github.com/flow-php/flow/pull/537) - **Remove `ChainTransformer`** - [@stloyd](https://github.com/stloyd)
 - [#536](https://github.com/flow-php/flow/pull/536) - **Remove `DynamicEntryTransformer`** - [@stloyd](https://github.com/stloyd)
 - [#533](https://github.com/flow-php/flow/pull/533) - **Remove `StaticEntryTransformer`** - [@stloyd](https://github.com/stloyd)
