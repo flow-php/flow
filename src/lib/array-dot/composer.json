@@ -1,7 +1,7 @@
 {
     "name": "flow-php/array-dot",
     "type": "library",
-    "description": "PHP ETL - Array Dot fuctions",
+    "description": "PHP ETL - Array Dot functions",
     "keywords": [
         "etl",
         "extract",

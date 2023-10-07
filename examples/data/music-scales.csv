@@ -226,7 +226,7 @@ scale_name,root,column_c,column_d,column_e,column_f
 "AdonaiMalakh1",0,1,2,3,5,7,9,10,
 "AdonaiMalakh2",0,1,2,3,5,7,9,10,
 "Algerian",0,2,3,5,6,7,8,11,
-"AuxillaryDiminished",0,2,3,5,6,8,9,11,
+"AuxiliaryDiminished",0,2,3,5,6,8,9,11,
 "BluesDiminished",0,1,3,4,6,7,9,10,
 "BluesOctatonic",0,2,3,5,6,7,9,10,
 "ChromaticOctaMirror",0,1,2,3,4,5,6,7,

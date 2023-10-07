@@ -19,9 +19,9 @@ final class GroupByTest extends TestCase
         $this->expectExceptionMessage('Grouping by non scalar values is not supported, given: array');
         $this->expectException(RuntimeException::class);
 
-        $grupBy = new GroupBy('array');
+        $groupBy = new GroupBy('array');
 
-        $grupBy->group(new Rows(
+        $groupBy->group(new Rows(
             Row::create(Entry::array('array', [1, 2, 3])),
             Row::create(Entry::array('array', [1, 2, 3])),
             Row::create(Entry::array('array', [4, 5, 6]))
@@ -30,9 +30,9 @@ final class GroupByTest extends TestCase
 
     public function test_group_by_missing_entry() : void
     {
-        $grupBy = new GroupBy('type');
+        $groupBy = new GroupBy('type');
 
-        $grupBy->group(new Rows(
+        $groupBy->group(new Rows(
             Row::create(Entry::string('type', 'a')),
             Row::create(Entry::string('not-type', 'b')),
             Row::create(Entry::string('type', 'c'))
@@ -44,7 +44,7 @@ final class GroupByTest extends TestCase
                 Row::create(Entry::null('type')),
                 Row::create(Entry::string('type', 'c'))
             ),
-            $grupBy->result()
+            $groupBy->result()
         );
     }
 
@@ -52,7 +52,7 @@ final class GroupByTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("Aggregations can't be empty");
-        $grupBy = new GroupBy();
-        $grupBy->aggregate();
+        $groupBy = new GroupBy();
+        $groupBy->aggregate();
     }
 }

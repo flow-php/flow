@@ -29,7 +29,7 @@ use Flow\ETL\Row\Reference\Expression\Same;
 use Flow\ETL\Row\Reference\Expression\StartsWith;
 use PHPUnit\Framework\TestCase;
 
-final class BinaryComparisionsTest extends TestCase
+final class BinaryComparisonsTest extends TestCase
 {
     public function test_equals() : void
     {
@@ -106,7 +106,7 @@ final class BinaryComparisionsTest extends TestCase
         $this->assertFalse((new IsType(ref('a'), StringEntry::class))->eval($row));
     }
 
-    public function test_is_type_with_non_existing_type_clas() : void
+    public function test_is_type_with_non_existing_type_class() : void
     {
         $this->expectExceptionMessage('"aaa" is not valid Entry Type class');
 

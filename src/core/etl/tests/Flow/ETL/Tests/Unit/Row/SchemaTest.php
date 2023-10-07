@@ -11,7 +11,7 @@ use PHPUnit\Framework\TestCase;
 
 final class SchemaTest extends TestCase
 {
-    public function test_allowing_only_unique_defintions() : void
+    public function test_allowing_only_unique_definitions() : void
     {
         $this->expectException(InvalidArgumentException::class);
 
@@ -21,7 +21,7 @@ final class SchemaTest extends TestCase
         );
     }
 
-    public function test_allowing_only_unique_defintions_case_insensitive() : void
+    public function test_allowing_only_unique_definitions_case_insensitive() : void
     {
         $schema = new Schema(
             Schema\Definition::integer('id'),

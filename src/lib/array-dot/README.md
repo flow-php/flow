@@ -46,7 +46,7 @@ $value = array_dot_get('foo.bar.baz'); // 1000
 $array = array_dot_set([], 'foo.bar.baz', 1000); // ['foo' => ['bar' => ['baz' => 1000]]];
 ```
 
-In above example `foo.bar.baz` is path which also supports integer keys. For exmaple
+In above example `foo.bar.baz` is path which also supports integer keys. For example
 `foo.0.baz`.
 
 `foo`, `bar`, `baz` represents single steps (keys) of path. 
@@ -138,7 +138,7 @@ Supported in functions:
 
 - `array_dot_get`
 
-Nullsafe Wildcard operator allows to access all paths in nested arrays for non symetric
+Nullsafe Wildcard operator allows to access all paths in nested arrays for non symmetric
 collections.
 
 ```php

@@ -11,7 +11,7 @@ use Flow\ETL\Rows;
 use Flow\ETL\Window;
 use PHPUnit\Framework\TestCase;
 
-final class RowNumbeTest extends TestCase
+final class RowNumberTest extends TestCase
 {
     public function test_row_number_function_on_collection_of_rows_sorted_by_id_descending() : void
     {

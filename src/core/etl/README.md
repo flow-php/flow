@@ -449,16 +449,16 @@ $flow->process(new Rows(...))
 
 ## Filtering
 
-There are two ways to filter datasets in Flow. 
+There are two ways to filter datasets in Flow.
 
 ### Callback Filtering 
 
-This is the most flexible but also the least developer friendly apporach. 
+This is the most flexible but also the least developer friendly approach.
 All you need to do is use callback `fn (Row $row) : bool` that will be executed against each row
-and that will tell filter to keep or skip the row. 
+and that will tell filter to keep or skip the row.
 
-```php 
-<?php 
+```php
+<?php
 
 $flow = new Flow();
 
@@ -470,7 +470,7 @@ $flow->process(new Rows(...))
 
 ### DSL Filtering 
 
-This approach is way more developer friendly as IDE can autocomplete all filtering functions for you. 
+This approach is way more developer friendly as IDE can autocomplete all filtering functions for you.
 
 ```php
 <?php
@@ -490,7 +490,7 @@ This approach is way more developer friendly as IDE can autocomplete all filteri
 
 So in general all filtering functions are available as [Reference Expression](/src/core/etl/src/Flow/ETL/Row/Reference/Expression.php).
 This means you can chain them creating readable conditions that will significantly improve maintainability of your 
-data processing pipelines. 
+data processing pipelines.
 
 All possible expressions are available through [EntryReference.php](/src/core/etl/src/Flow/ETL/Row/EntryReference.php).
 
@@ -516,7 +516,7 @@ is missing it will be skipped or grouped into `null` entry.
 > If you need to collect multiple columns into array of structures please 
 > use `\Flow\ETL\DSL\struct(...$entries)` function. 
 
-```php 
+```php
 <?php
 
 $flow = new Flow();
@@ -1078,7 +1078,7 @@ $flow->read($extractor)
 Flow PHP ETL is designed to keep memory consumption constant. This can be achieved by processing
 only one chunk of data at time.
 
-It's `Extrator` responsibility to define how big those chunks are, for example when processing CSV file with 10k
+It's `Extractor` responsibility to define how big those chunks are, for example when processing CSV file with 10k
 lines, extractor might want to read only 1k lines at once.
 
 Those 1k lines will be represented as an instance of `Rows`. This means that through ETL pipeline we are
