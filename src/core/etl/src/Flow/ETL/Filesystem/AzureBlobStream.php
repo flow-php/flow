@@ -34,7 +34,7 @@ final class AzureBlobStream extends FlysystemWrapper
     protected function filesystem() : Filesystem
     {
         if (!\is_resource($this->context)) {
-            throw new RuntimeException(__CLASS__ . ' requires context in order to initialze filesystem');
+            throw new RuntimeException(__CLASS__ . ' requires context in order to initialize filesystem');
         }
 
         if ($this->filesystem === null) {

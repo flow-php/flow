@@ -14,7 +14,7 @@ with the robust and adaptable nature of the Flow PHP ecosystem.
 
 ## Installation 
 
-``` 
+```
 composer require flow-php/etl-adapter-google-sheet:1.x@dev
 ```
 
@@ -27,19 +27,19 @@ use Flow\ETL\Adapter\GoogleSheet\GoogleSheetRange;
 use Flow\ETL\DSL\GoogleSheet;
 use Flow\ETL\Flow;
 
-        
 $rows = (new Flow())
     ->read(GoogleSheet::from($auth_config, $spreadsheet_document_id, $sheet_name)))
     ->fetch();
 ```
 
-## Needed parameters:
-- `$auth_config` 
+## Needed parameters
+
+- `$auth_config`
 
   - Create project: [console.cloud.google.com](https://console.cloud.google.com/projectcreate) choosing the right organization.
   - Enable google sheet API for created project on [api sheets.googleapis.com](https://console.cloud.google.com/apis/library/sheets.googleapis.com)
   - To work with google sheet enable it on [serviceaccounts](https://console.cloud.google.com/iam-admin/serviceaccounts/create) this will generate email for example `serviceaccounts@project.iam.gserviceaccount.com`
   - Generate json (auth config)  for created serviceaccounts on `Keys` tab.
 
-- `$spreadsheet_document_id` Id need to be readed from the document we want to use, example for url `https://docs.google.com/spreadsheets/d/xyzID-for-documentxyz/edit` id is `xyzID-for-documentxyz`
+- `$spreadsheet_document_id` ID needs to be readded from the document we want to use, example URL `https://docs.google.com/spreadsheets/d/xyzID-for-documentxyz/edit` ID is `xyzID-for-documentxyz`
 - `$sheet_name` - Name of sheet from document you want to read.

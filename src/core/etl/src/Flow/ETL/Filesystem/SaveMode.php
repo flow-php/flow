@@ -20,7 +20,7 @@ enum SaveMode : string
     case Ignore = 'ignore';
 
     /**
-     * If data sink already exists, it will be removed and writen again.
+     * If data sink already exists, it will be removed and written again.
      */
     case Overwrite = 'overwrite';
 }

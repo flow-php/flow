@@ -42,7 +42,7 @@ final class SocketServerTest extends TestCase
         ));
     }
 
-    public function test_start_server_without_initialiation() : void
+    public function test_start_server_without_initialization() : void
     {
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Server not initialized');
@@ -52,10 +52,10 @@ final class SocketServerTest extends TestCase
         $server->start();
     }
 
-    public function test_unix_socket_using_non_exising_folder_path() : void
+    public function test_unix_socket_using_non_existing_folder_path() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Given path does not exists or is not valid folder: non_exisitng_folder');
-        SocketServer::unixDomain('non_exisitng_folder', new NullLogger());
+        $this->expectExceptionMessage('Given path does not exists or is not valid folder: non_existing_folder');
+        SocketServer::unixDomain('non_existing_folder', new NullLogger());
     }
 }

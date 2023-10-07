@@ -154,7 +154,7 @@ final class DbalLimitOffsetExtractorTest extends IntegrationTestCase
         );
     }
 
-    public function test_extracting_selcted_columns() : void
+    public function test_extracting_selected_columns() : void
     {
         $this->pgsqlDatabaseContext->createTable((new Table(
             $table = 'flow_doctrine_bulk_test',
