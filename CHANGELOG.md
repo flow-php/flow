@@ -16,6 +16,7 @@
 - [#526](https://github.com/flow-php/flow/pull/526) - **Simplify `RenameEntriesTransformer` to work only on one entry** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
+- [#540](https://github.com/flow-php/flow/pull/540) - **just some typos** - [@voku](https://github.com/voku)
 - [#532](https://github.com/flow-php/flow/pull/532) - **Prevent double run of main integration tests** - [@stloyd](https://github.com/stloyd)
 - [#515](https://github.com/flow-php/flow/pull/515) - **Fixed `Cast` expression to handle `null` as first** - [@stloyd](https://github.com/stloyd)
 
@@ -1068,6 +1069,7 @@
 - @stloyd
 - @szepeviktor
 - @tomaszhanc
+- @voku
 - @Wiktor6
 - @Wirone
 
