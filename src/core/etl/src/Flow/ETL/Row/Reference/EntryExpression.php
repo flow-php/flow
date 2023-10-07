@@ -8,6 +8,7 @@ use function Flow\ETL\DSL\lit;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference\Expression\ArrayExpand\ArrayExpand;
 use Flow\ETL\Row\Reference\Expression\ArraySort\Sort;
 use Flow\ETL\Row\Reference\Expression\Cast;
 use Flow\ETL\Row\Reference\Expression\Contains;
@@ -149,9 +150,9 @@ trait EntryExpression
      *   | 1|       3|
      *   +--+--------+
      */
-    public function expand(string $expandEntryName = 'element') : Expression|EntryReference
+    public function expand(string $expandEntryName = 'element', ArrayExpand $expand = ArrayExpand::VALUES) : Expression|EntryReference
     {
-        return new Expressions(new Expression\ArrayExpand($this));
+        return new Expressions(new Expression\ArrayExpand($this, $expand));
     }
 
     public function greaterThan(Expression $ref) : Expression|EntryReference
