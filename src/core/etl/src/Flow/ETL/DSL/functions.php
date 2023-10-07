@@ -102,6 +102,11 @@ function array_sort(Expression $expression, string $function = null, int $flags 
     return new Expression\ArraySort($expression, $function ? Sort::fromString($function) : Sort::sort, $flags, $recursive);
 }
 
+function array_reverse(Expression $expression, bool $preserveKeys = false) : Expression
+{
+    return new Expression\ArrayReverse($expression, $preserveKeys);
+}
+
 function now(\DateTimeZone $time_zone = new \DateTimeZone('UTC')) : Expression
 {
     return new Expression\Now($time_zone);
