@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer;
 
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
@@ -19,35 +18,30 @@ use Jawira\CaseConverter\Convert;
  */
 final class EntryNameStyleConverterTransformer implements Transformer
 {
-    public function __construct(private readonly string $style)
+    public function __construct(private readonly StringStyles $style)
     {
         if (!\class_exists(Convert::class)) {
             throw new RuntimeException("Jawira\CaseConverter\Convert class not found, please add jawira/case-converter dependency to the project first.");
-        }
-
-        if (!\in_array($style, StringStyles::ALL, true)) {
-            throw new InvalidArgumentException("Unrecognized style {$style}, please use one of following: " . \implode(', ', StringStyles::ALL));
         }
     }
 
     public function __serialize() : array
     {
         return [
-            'style' => $this->style,
+            'style' => $this->style->value,
         ];
     }
 
     public function __unserialize(array $data) : void
     {
-        $this->style = $data['style'];
+        $this->style = StringStyles::fromString($data['style']);
     }
 
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
         $rowTransformer = function (Row $row) : Row {
             $valueMap = fn (Entry $entry) : Entry => $entry->rename(
-                /** @phpstan-ignore-next-line */
-                (string) \call_user_func([new Convert($entry->name()), 'to' . \ucfirst($this->style)])
+                (string) \call_user_func([new Convert($entry->name()), 'to' . \ucfirst($this->style->value)])
             );
 
             return $row->map($valueMap);

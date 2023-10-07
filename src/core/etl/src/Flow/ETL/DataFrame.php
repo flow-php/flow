@@ -35,6 +35,7 @@ use Flow\ETL\Transformer\JoinEachRowsTransformer;
 use Flow\ETL\Transformer\JoinRowsTransformer;
 use Flow\ETL\Transformer\KeepEntriesTransformer;
 use Flow\ETL\Transformer\RemoveEntriesTransformer;
+use Flow\ETL\Transformer\StyleConverter\StringStyles;
 
 final class DataFrame
 {
@@ -523,7 +524,7 @@ final class DataFrame
      * Rename all entries to given style.
      * Please look into \Flow\ETL\Transformer\StyleConverter\StringStyles class for all available styles.
      */
-    public function renameAllStyle(string $style) : self
+    public function renameAllStyle(StringStyles|string $style) : self
     {
         $this->pipeline->add(Transform::convert_name($style));
 

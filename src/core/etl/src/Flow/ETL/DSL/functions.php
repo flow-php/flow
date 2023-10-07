@@ -10,6 +10,7 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Reference\Expression;
 use Flow\ETL\Row\Reference\Expression\ArraySort\Sort;
 use Flow\ETL\Row\Reference\Expression\Literal;
+use Flow\ETL\Row\Reference\Expression\StyleConverter\StringStyles;
 use Flow\ETL\Row\StructureReference;
 
 function col(string $entry, string ...$entries) : Reference
@@ -88,6 +89,16 @@ function array_merge_collection(Expression $ref) : Expression
 function array_key_rename(Expression $ref, string $path, string $newName) : Expression
 {
     return new Expression\ArrayKeyRename($ref, $path, $newName);
+}
+
+function array_keys_style_convert(Expression $ref, string $style) : Expression
+{
+    return new Expression\ArrayKeysStyleConvert($ref, StringStyles::fromString($style));
+}
+
+function array_sort(Expression $expression, string $function = null, int $flags = null, bool $recursive = true) : Expression
+{
+    return new Expression\ArraySort($expression, $function ? Sort::fromString($function) : Sort::sort, $flags, $recursive);
 }
 
 function now(\DateTimeZone $time_zone = new \DateTimeZone('UTC')) : Expression
@@ -225,11 +236,6 @@ function upper(Expression $expression) : Expression
 function call_method(Expression $object, Expression $method, Expression ...$params) : Expression
 {
     return new Expression\CallMethod($object, $method, ...$params);
-}
-
-function array_sort(Expression $expression, string $function = null, int $flags = null, bool $recursive = true) : Expression
-{
-    return new Expression\ArraySort($expression, $function ? Sort::fromString($function) : Sort::sort, $flags, $recursive);
 }
 
 function all(Expression ...$expressions) : Expression
