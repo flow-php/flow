@@ -26,7 +26,7 @@ final class DropDuplicatesTransformer implements Transformer
 
     public function __construct(string|EntryReference ...$entries)
     {
-        if (!\count($entries)) {
+        if ([] === $entries) {
             throw new InvalidArgumentException('DropDuplicatesTransformer requires at least one entry');
         }
 
@@ -55,14 +55,13 @@ final class DropDuplicatesTransformer implements Transformer
         $newRows = [];
 
         foreach ($rows as $row) {
-            /** @var array<mixed> $values */
             $values = [];
 
             foreach ($this->entries as $entry) {
                 try {
                     /** @psalm-suppress MixedAssignment */
                     $values[] = $row->valueOf($entry);
-                } catch (InvalidArgumentException $e) {
+                } catch (InvalidArgumentException) {
                     $values[] = null;
                 }
             }
