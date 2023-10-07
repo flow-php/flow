@@ -11,7 +11,7 @@ use Flow\ETL\Row\Reference\Expression;
 
 final class ArrayExpand implements ExpandResults, Expression
 {
-    public function __construct(private readonly Expression $ref)
+    public function __construct(private readonly Expression $ref, private readonly ArrayExpand\ArrayExpand $expand)
     {
     }
 
@@ -21,6 +21,14 @@ final class ArrayExpand implements ExpandResults, Expression
 
         if (!\is_array($array)) {
             throw new RuntimeException(\get_class($this->ref) . ' is not an array, got: ' . \gettype($array));
+        }
+
+        if ($this->expand === ArrayExpand\ArrayExpand::KEYS) {
+            return \array_keys($array);
+        }
+
+        if ($this->expand === ArrayExpand\ArrayExpand::BOTH) {
+            return \array_map(fn ($key, $value) => [$key => $value], \array_keys($array), $array);
         }
 
         return $array;

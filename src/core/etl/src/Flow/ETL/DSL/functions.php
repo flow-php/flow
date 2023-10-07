@@ -8,6 +8,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Reference\Expression;
+use Flow\ETL\Row\Reference\Expression\ArrayExpand\ArrayExpand;
 use Flow\ETL\Row\Reference\Expression\ArraySort\Sort;
 use Flow\ETL\Row\Reference\Expression\Literal;
 use Flow\ETL\Row\Reference\Expression\StyleConverter\StringStyles;
@@ -198,9 +199,9 @@ function array_unpack(Expression $expression, array $skip_keys = [], ?string $en
  *   | 1|       3|
  *   +--+--------+
  */
-function array_expand(Expression $expression) : Expression
+function array_expand(Expression $expression, ArrayExpand $expand = ArrayExpand::VALUES) : Expression
 {
-    return new Expression\ArrayExpand($expression);
+    return new Expression\ArrayExpand($expression, $expand);
 }
 
 function size(Expression $expression) : Expression
