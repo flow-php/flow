@@ -91,9 +91,9 @@ function array_key_rename(Expression $ref, string $path, string $newName) : Expr
     return new Expression\ArrayKeyRename($ref, $path, $newName);
 }
 
-function array_keys_style_convert(Expression $ref, string $style) : Expression
+function array_keys_style_convert(Expression $ref, StringStyles|string $style = StringStyles::SNAKE) : Expression
 {
-    return new Expression\ArrayKeysStyleConvert($ref, StringStyles::fromString($style));
+    return new Expression\ArrayKeysStyleConvert($ref, $style instanceof StringStyles ? $style : StringStyles::fromString($style));
 }
 
 function array_sort(Expression $expression, string $function = null, int $flags = null, bool $recursive = true) : Expression
