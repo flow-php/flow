@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-10-07
 
 ### Added
+- [#543](https://github.com/flow-php/flow/pull/543) - **Add options to `array_expand` expression** - [@stloyd](https://github.com/stloyd)
 - [#541](https://github.com/flow-php/flow/pull/541) - **Add `ArrayKeysStyleConvert` expression** - [@stloyd](https://github.com/stloyd)
 - [#527](https://github.com/flow-php/flow/pull/527) - **Add new `ref()->arrayReverse()` entry expression** - [@stloyd](https://github.com/stloyd)
 - [#521](https://github.com/flow-php/flow/pull/521) - **Add new `Any` & `All` expressions** - [@stloyd](https://github.com/stloyd)
