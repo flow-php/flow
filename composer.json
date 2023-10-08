@@ -155,7 +155,7 @@
             "tools/phpunit/vendor/bin/phpunit"
         ],
         "test:mutation": [
-            "tools/infection/vendor/bin/infection -jmax"
+            "tools/infection/vendor/bin/infection -j4"
         ],
         "static:analyze": [
             "tools/psalm/vendor/bin/psalm.phar",
