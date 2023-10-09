@@ -8,7 +8,6 @@ use function Flow\ETL\DSL\array_get_collection;
 use function Flow\ETL\DSL\array_get_collection_first;
 use function Flow\ETL\DSL\ref;
 use Flow\ETL\DSL\Entry;
-use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;
 
@@ -37,10 +36,7 @@ final class ArrayGetCollectionTest extends TestCase
             ),
         );
 
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Flow\ETL\Row\EntryReference must be an array of array (collection of arrays) but it seems to be a regular array.');
-
-        array_get_collection(ref('array_entry'), 'id', 'status')->eval($row);
+        $this->assertNull(array_get_collection(ref('array_entry'), 'id', 'status')->eval($row));
     }
 
     public function test_getting_specific_keys_from_collection_of_array() : void

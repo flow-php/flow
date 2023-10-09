@@ -8,7 +8,6 @@ use function Flow\ETL\DSL\array_keys_style_convert;
 use function Flow\ETL\DSL\ref;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;
 
@@ -28,14 +27,11 @@ final class ArrayKeysStyleConverterTest extends TestCase
 
     public function test_for_not_array_entry() : void
     {
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Flow\ETL\Row\EntryReference is not an array, got: integer');
-
         $row = Row::create(
             Entry::integer('invalid_entry', 1),
         );
 
-        array_keys_style_convert(ref('invalid_entry'), 'snake')->eval($row);
+        $this->assertNull(array_keys_style_convert(ref('invalid_entry'), 'snake')->eval($row));
     }
 
     public function test_transforms_case_style_for_all_keys_in_array_entry() : void

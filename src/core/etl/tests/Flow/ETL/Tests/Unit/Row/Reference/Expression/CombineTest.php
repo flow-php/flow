@@ -15,7 +15,7 @@ final class CombineTest extends TestCase
     {
         $this->assertSame(
             ['a' => 1, 'b' => 2, 'c' => 3],
-            combine(lit(['a', 'b', 'c']), lit([1, 2, 3]), )->eval(Row::create()),
+            combine(lit(['a', 'b', 'c']), lit([1, 2, 3]))->eval(Row::create()),
         );
     }
 
@@ -23,15 +23,14 @@ final class CombineTest extends TestCase
     {
         $this->assertSame(
             [],
-            combine(lit([]), lit([]), )->eval(Row::create()),
+            combine(lit([]), lit([]))->eval(Row::create()),
         );
     }
 
     public function test_array_combine_when_keys_are_not_array() : void
     {
-        $this->assertSame(
-            null,
-            combine(lit('a'), lit([1, 2, 3]), )->eval(Row::create()),
+        $this->assertNull(
+            combine(lit('a'), lit([1, 2, 3]))->eval(Row::create()),
         );
     }
 
@@ -39,15 +38,14 @@ final class CombineTest extends TestCase
     {
         $this->assertSame(
             ['a' => 4, 'b' => 2, 'c' => 3],
-            combine(lit(['a', 'b', 'c', 'a']), lit([1, 2, 3, 4]), )->eval(Row::create()),
+            combine(lit(['a', 'b', 'c', 'a']), lit([1, 2, 3, 4]))->eval(Row::create()),
         );
     }
 
     public function test_array_combine_when_one_of_arrays_is_empty() : void
     {
-        $this->assertSame(
-            null,
-            combine(lit(['a', 'b', 'c']), lit([]), )->eval(Row::create()),
+        $this->assertNull(
+            combine(lit(['a', 'b', 'c']), lit([]))->eval(Row::create()),
         );
     }
 }

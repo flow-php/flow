@@ -26,10 +26,11 @@ final class ToDateTime implements Expression
         $value = $this->ref->eval($row);
 
         if (\is_object($value)) {
-            return match (\get_class($value)) {
-                \DateTimeImmutable::class, \DateTime::class => $value->setTimezone($this->timeZone),
-                default => throw new \InvalidArgumentException('Entry ' . \get_class($value) . ' is not a DateTimeImmutable|DateTime')
-            };
+            if (\is_a($value, \DateTimeImmutable::class) || \is_a($value, \DateTime::class)) {
+                return $value->setTimezone($this->timeZone)->setTime(0, 0, 0, 0);
+            }
+
+            return null;
         }
 
         if (\is_int($value)) {
@@ -40,6 +41,6 @@ final class ToDateTime implements Expression
             return \DateTimeImmutable::createFromFormat($this->format, $value, $this->timeZone);
         }
 
-        throw new \InvalidArgumentException('Value ' . \gettype($value) . ' is not a DateTimeImmutable|DateTime|string|int');
+        return null;
     }
 }

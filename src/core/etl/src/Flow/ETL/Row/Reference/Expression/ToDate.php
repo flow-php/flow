@@ -26,26 +26,23 @@ final class ToDate implements Expression
         $value = $this->ref->eval($row);
 
         if (\is_object($value)) {
-            return match (\get_class($value)) {
-                \DateTimeImmutable::class, \DateTime::class => $value->setTimezone($this->timeZone)->setTime(0, 0, 0, 0),
-                default => throw new \InvalidArgumentException('Entry ' . \get_class($value) . ' is not a DateTimeImmutable|DateTime')
-            };
+            if (\is_a($value, \DateTimeImmutable::class) || \is_a($value, \DateTime::class)) {
+                return $value->setTimezone($this->timeZone)->setTime(0, 0, 0, 0);
+            }
+
+            return null;
         }
 
         if (\is_int($value)) {
-            /**
-             * @phpstan-ignore-next-line
-             */
+            /** @phpstan-ignore-next-line */
             return \DateTimeImmutable::createFromFormat('U', (string) $value, $this->timeZone)->setTime(0, 0, 0, 0);
         }
 
         if (\is_string($value)) {
-            /**
-             * @phpstan-ignore-next-line
-             */
+            /** @phpstan-ignore-next-line */
             return \DateTimeImmutable::createFromFormat($this->format, $value, $this->timeZone)->setTime(0, 0, 0, 0);
         }
 
-        throw new \InvalidArgumentException('Value ' . \gettype($value) . ' is not a DateTimeImmutable|DateTime|string|int');
+        return null;
     }
 }

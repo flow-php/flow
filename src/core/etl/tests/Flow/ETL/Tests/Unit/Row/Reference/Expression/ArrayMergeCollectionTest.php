@@ -7,7 +7,6 @@ namespace Flow\ETL\Tests\Unit\Row\Reference\Expression;
 use function Flow\ETL\DSL\array_merge_collection;
 use function Flow\ETL\DSL\ref;
 use Flow\ETL\DSL\Entry;
-use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;
 
@@ -25,10 +24,7 @@ final class ArrayMergeCollectionTest extends TestCase
             ),
         );
 
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Flow\ETL\Row\EntryReference must be an array of arrays, instead element at position "1" is integer');
-
-        array_merge_collection(ref('array_entry'))->eval($row);
+        $this->assertNull(array_merge_collection(ref('array_entry'))->eval($row));
     }
 
     public function test_for_not_array_entry() : void

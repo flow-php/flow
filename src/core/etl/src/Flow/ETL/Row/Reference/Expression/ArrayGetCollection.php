@@ -7,7 +7,6 @@ namespace Flow\ETL\Row\Reference\Expression;
 use function Flow\ArrayDot\array_dot_get;
 use Flow\ArrayDot\Exception\InvalidPathException;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference\Expression;
 
@@ -45,11 +44,11 @@ final class ArrayGetCollection implements Expression
 
                 $extractedValues = array_dot_get($array, $path);
             } catch (InvalidPathException) {
-                throw new RuntimeException(\get_class($this->ref) . ' must be an array of array (collection of arrays) but it seems to be a regular array.');
+                return null;
             }
 
             if (!\is_array($extractedValues)) {
-                throw new RuntimeException("Extracted value from path \"{$path}\" is not array but " . \gettype($extractedValues));
+                return null;
             }
 
             return $extractedValues;

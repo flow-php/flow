@@ -7,7 +7,6 @@ namespace Flow\ETL\Tests\Unit\Row\Reference\Expression;
 use function Flow\ETL\DSL\array_expand;
 use function Flow\ETL\DSL\ref;
 use Flow\ETL\DSL\Entry;
-use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference\Expression\ArrayExpand\ArrayExpand;
 use PHPUnit\Framework\TestCase;
@@ -56,9 +55,8 @@ final class ArrayExpandTest extends TestCase
 
     public function test_for_not_array_entry() : void
     {
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Flow\ETL\Row\EntryReference is not an array, got: integer');
-
-        array_expand(ref('integer_entry'))->eval(Row::create(Entry::int('integer_entry', 1)));
+        $this->assertNull(
+            array_expand(ref('integer_entry'))->eval(Row::create(Entry::int('integer_entry', 1)))
+        );
     }
 }

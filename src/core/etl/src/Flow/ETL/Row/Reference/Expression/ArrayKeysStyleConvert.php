@@ -26,7 +26,7 @@ final class ArrayKeysStyleConvert implements Expression
         $array = $this->ref->eval($row);
 
         if (!\is_array($array)) {
-            throw new RuntimeException(\get_class($this->ref) . ' is not an array, got: ' . \gettype($array));
+            return null;
         }
 
         $converter = (new StyleConverter\ArrayKeyConverter(

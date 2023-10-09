@@ -6,7 +6,6 @@ namespace Flow\ETL\Tests\Unit\Row\Reference\Expression;
 
 use function Flow\ETL\DSL\cast;
 use function Flow\ETL\DSL\ref;
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
 use PHPUnit\Framework\TestCase;
@@ -57,17 +56,15 @@ final class CastTest extends TestCase
 
     public function test_casting_integer_to_xml() : void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Cannot cast integer to XML');
-
-        ref('value')->cast('xml')->eval(Row::create((new NativeEntryFactory())->create('value', 1)));
+        $this->assertNull(
+            ref('value')->cast('xml')->eval(Row::create((new NativeEntryFactory())->create('value', 1)))
+        );
     }
 
     public function test_casting_non_xml_string_to_xml() : void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Invalid XML string given: foo');
-
-        ref('value')->cast('xml')->eval(Row::create((new NativeEntryFactory())->create('value', 'foo')));
+        $this->assertNull(
+            ref('value')->cast('xml')->eval(Row::create((new NativeEntryFactory())->create('value', 'foo')))
+        );
     }
 }
