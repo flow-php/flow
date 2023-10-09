@@ -15,6 +15,7 @@
 - [#514](https://github.com/flow-php/flow/pull/514) - **Add new StrPad expression** - [@stloyd](https://github.com/stloyd)
 
 ### Changed
+- [#556](https://github.com/flow-php/flow/pull/556) - **Rework expressions to return `null` instead of throwing exception on failure** - [@stloyd](https://github.com/stloyd)
 - [#554](https://github.com/flow-php/flow/pull/554) - **Adjust the `size` expression to behave similarly to the `count` one** - [@stloyd](https://github.com/stloyd)
 - [#545](https://github.com/flow-php/flow/pull/545) - **Prevent using `strlen` & `count` on empty input** - [@stloyd](https://github.com/stloyd)
 - [#544](https://github.com/flow-php/flow/pull/544) - **Optimize `DropDuplicatesTransformer` hashing** - [@stloyd](https://github.com/stloyd)
