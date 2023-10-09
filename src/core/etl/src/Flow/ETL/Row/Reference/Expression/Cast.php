@@ -52,11 +52,10 @@ final class Cast implements Expression
             'bool', 'boolean' => (bool) $value,
             'array' => $this->toArray($value),
             'object' => (object) $value,
-            'null' => null,
             'json' => \json_encode($value, JSON_THROW_ON_ERROR),
             'json_pretty' => \json_encode($value, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT),
             'xml' => $this->toXML($value),
-            default => throw new InvalidArgumentException("Unknown cast type '{$this->type}'")
+            default => null
         };
     }
 
@@ -69,13 +68,13 @@ final class Cast implements Expression
         return (array) $data;
     }
 
-    private function toXML(mixed $value) : \DOMDocument
+    private function toXML(mixed $value) : null|\DOMDocument
     {
         if (\is_string($value)) {
             $doc = new \DOMDocument();
 
             if (!@$doc->load($value)) {
-                throw new InvalidArgumentException('Invalid XML string given: ' . $value);
+                return null;
             }
 
             return $doc;
@@ -85,6 +84,6 @@ final class Cast implements Expression
             return $value;
         }
 
-        throw new InvalidArgumentException(\sprintf('Cannot cast %s to XML', \gettype($value)));
+        return null;
     }
 }

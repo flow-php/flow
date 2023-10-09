@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Reference\Expression;
 
-use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference\Expression;
 
@@ -23,11 +22,9 @@ final class ArrayMergeCollection implements Expression
             return null;
         }
 
-        foreach ($value as $index => $element) {
+        foreach ($value as $element) {
             if (!\is_array($element)) {
-                $type = \gettype($element);
-
-                throw new RuntimeException(\get_class($this->ref) . " must be an array of arrays, instead element at position \"{$index}\" is {$type}");
+                return null;
             }
         }
 

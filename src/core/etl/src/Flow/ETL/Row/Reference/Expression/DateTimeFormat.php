@@ -20,7 +20,7 @@ final class DateTimeFormat implements Expression
         $value = $this->ref->eval($row);
 
         if (!$value instanceof \DateTimeInterface) {
-            throw new \InvalidArgumentException('Entry ' . \gettype($value) . ' is not a DateTimeEntry');
+            return null;
         }
 
         return $value->format($this->format);

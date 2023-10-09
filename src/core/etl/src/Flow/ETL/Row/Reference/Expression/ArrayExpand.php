@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Reference\Expression;
 
-use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference\ExpandResults;
 use Flow\ETL\Row\Reference\Expression;
@@ -20,7 +19,7 @@ final class ArrayExpand implements ExpandResults, Expression
         $array = $this->ref->eval($row);
 
         if (!\is_array($array)) {
-            throw new RuntimeException(\get_class($this->ref) . ' is not an array, got: ' . \gettype($array));
+            return null;
         }
 
         if ($this->expand === ArrayExpand\ArrayExpand::KEYS) {
