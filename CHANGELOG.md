@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-10-09
 
 ### Added
+- [#552](https://github.com/flow-php/flow/pull/552) - **Add integration tests for string related expressions - part 2** - [@stloyd](https://github.com/stloyd)
 - [#551](https://github.com/flow-php/flow/pull/551) - **Add integration tests for string related expressions - part 1** - [@stloyd](https://github.com/stloyd)
 - [#550](https://github.com/flow-php/flow/pull/550) - **Add integration tests for `jsonDecode` & `jsonEncode` expressions** - [@stloyd](https://github.com/stloyd)
 - [#546](https://github.com/flow-php/flow/pull/546) - **Add integration tests for array related expression** - [@stloyd](https://github.com/stloyd)
