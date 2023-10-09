@@ -7,7 +7,6 @@ namespace Flow\ETL\Tests\Integration\Row\Reference\Expression;
 use function Flow\ETL\DSL\ref;
 use Flow\ETL\DSL\From;
 use Flow\ETL\DSL\To;
-use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Flow;
 use Flow\ETL\Memory\ArrayMemory;
 use PHPUnit\Framework\TestCase;
@@ -41,8 +40,6 @@ final class SizeTest extends TestCase
 
     public function test_size_on_non_string_key() : void
     {
-        $this->expectException(RuntimeException::class);
-
         (new Flow())
             ->read(
                 From::array(
@@ -55,7 +52,15 @@ final class SizeTest extends TestCase
             ->renameAll('row.', '')
             ->drop('row')
             ->withEntry('size', ref('id')->size())
+            ->write(To::memory($memory = new ArrayMemory()))
             ->run();
+
+        $this->assertSame(
+            [
+                ['id' => 1, 'size' => null],
+            ],
+            $memory->data
+        );
     }
 
     public function test_size_on_string() : void

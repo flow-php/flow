@@ -21,9 +21,9 @@ final class SizeTest extends TestCase
 
     public function test_size_expression_on_integer_value() : void
     {
-        $this->expectExceptionMessage('Cannot get size of value integer');
-
-        size(lit(1))->eval(Row::create());
+        $this->assertNull(
+            size(lit(1))->eval(Row::create())
+        );
     }
 
     public function test_size_expression_on_string_value() : void
