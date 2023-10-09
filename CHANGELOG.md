@@ -15,6 +15,7 @@
 - [#514](https://github.com/flow-php/flow/pull/514) - **Add new StrPad expression** - [@stloyd](https://github.com/stloyd)
 
 ### Changed
+- [#554](https://github.com/flow-php/flow/pull/554) - **Adjust the `size` expression to behave similarly to the `count` one** - [@stloyd](https://github.com/stloyd)
 - [#545](https://github.com/flow-php/flow/pull/545) - **Prevent using `strlen` & `count` on empty input** - [@stloyd](https://github.com/stloyd)
 - [#544](https://github.com/flow-php/flow/pull/544) - **Optimize `DropDuplicatesTransformer` hashing** - [@stloyd](https://github.com/stloyd)
 - [#542](https://github.com/flow-php/flow/pull/542) - **Allow enum as style param in `ArrayKeysStyleConvert` expression** - [@stloyd](https://github.com/stloyd)
