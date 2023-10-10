@@ -24,20 +24,19 @@ final class Combine implements Expression
             return null;
         }
 
-        if (!\count($keys)) {
+        if ([] === $keys) {
             return [];
-        }
-
-        if (\count($keys) !== \count($values)) {
-            return null;
         }
 
         if (!\array_is_list($keys)) {
             return null;
         }
 
-        /** @psalm-suppress PossiblyUndefinedArrayOffset */
-        if (!\is_string($keys[0]) && !\is_int($keys[0])) {
+        if (\count($keys) !== \count($values)) {
+            return null;
+        }
+
+        if (!\is_string($keys[0] ?? null) && !\is_int($keys[0] ?? null)) {
             return null;
         }
 
