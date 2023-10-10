@@ -1,6 +1,7 @@
-## [Unreleased] - 2023-10-09
+## [Unreleased] - 2023-10-10
 
 ### Added
+- [#557](https://github.com/flow-php/flow/pull/557) - **Add integration tests for `combine` & missing unit test for math expressions** - [@stloyd](https://github.com/stloyd)
 - [#553](https://github.com/flow-php/flow/pull/553) - **Add integration tests for `count`, `hash` & `not` expressions** - [@stloyd](https://github.com/stloyd)
 - [#552](https://github.com/flow-php/flow/pull/552) - **Add integration tests for string related expressions - part 2** - [@stloyd](https://github.com/stloyd)
 - [#551](https://github.com/flow-php/flow/pull/551) - **Add integration tests for string related expressions - part 1** - [@stloyd](https://github.com/stloyd)
