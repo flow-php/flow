@@ -313,6 +313,10 @@ final class NativeEntryFactory implements EntryFactory
             return false;
         }
 
+        if (\strlen($string) !== 36) {
+            return false;
+        }
+
         return 0 !== \preg_match(Entry\Type\Uuid::UUID_REGEXP, $string);
     }
 
@@ -322,21 +326,25 @@ final class NativeEntryFactory implements EntryFactory
             return false;
         }
 
-        try {
-            \libxml_use_internal_errors(true);
+        if (\preg_match('/<[^<>]+>[^<>]*<\/[^<>]+>/', $string) === 1) {
+            try {
+                \libxml_use_internal_errors(true);
 
-            $doc = new \DOMDocument();
-            $result = $doc->loadXML($string);
-            \libxml_clear_errors(); // Clear any errors if needed
-            \libxml_use_internal_errors(false); // Restore standard error handling
+                $doc = new \DOMDocument();
+                $result = $doc->loadXML($string);
+                \libxml_clear_errors(); // Clear any errors if needed
+                \libxml_use_internal_errors(false); // Restore standard error handling
 
-            /** @psalm-suppress RedundantCastGivenDocblockType */
-            return (bool) $result;
-        } catch (\Exception) {
-            \libxml_clear_errors(); // Clear any errors if needed
-            \libxml_use_internal_errors(false); // Restore standard error handling
+                /** @psalm-suppress RedundantCastGivenDocblockType */
+                return (bool) $result;
+            } catch (\Exception) {
+                \libxml_clear_errors(); // Clear any errors if needed
+                \libxml_use_internal_errors(false); // Restore standard error handling
 
-            return false;
+                return false;
+            }
         }
+
+        return false;
     }
 }
