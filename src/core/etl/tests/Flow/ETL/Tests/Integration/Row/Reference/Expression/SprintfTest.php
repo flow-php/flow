@@ -24,9 +24,6 @@ final class SprintfTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('sprintf', ref('key')->sprintf(lit('value')))
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();
@@ -49,9 +46,6 @@ final class SprintfTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('sprintf', ref('id')->sprintf(lit('1')))
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();
@@ -74,9 +68,6 @@ final class SprintfTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('sprintf', ref('id')->sprintf(lit(null)))
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();

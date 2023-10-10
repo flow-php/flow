@@ -11,6 +11,8 @@ use Flow\ETL\Extractor\ProcessExtractor;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Memory\Memory;
 use Flow\ETL\Pipeline;
+use Flow\ETL\Row\EntryFactory;
+use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Rows;
 
 /**
@@ -29,16 +31,15 @@ class From
     /**
      * @param array<array<string, mixed>> $array
      * @param int<1, max> $batch_size
-     * @param string $entry_row_name
      */
-    final public static function array(array $array, int $batch_size = 100, string $entry_row_name = 'row') : Extractor
+    final public static function array(array $array, int $batch_size = 100, EntryFactory $entry_factory = new NativeEntryFactory()) : Extractor
     {
-        return new MemoryExtractor(new ArrayMemory($array), $batch_size, $entry_row_name);
+        return new MemoryExtractor(new ArrayMemory($array), $batch_size, $entry_factory);
     }
 
-    final public static function buffer(Extractor $extractor, int $maxRowsSize) : Extractor
+    final public static function buffer(Extractor $extractor, int $max_row_size) : Extractor
     {
-        return new Extractor\BufferExtractor($extractor, $maxRowsSize);
+        return new Extractor\BufferExtractor($extractor, $max_row_size);
     }
 
     final public static function cache(string $id, Extractor $fallback_extractor = null, bool $clear = false) : Extractor
@@ -51,9 +52,9 @@ class From
         return new Extractor\ChainExtractor(...$extractors);
     }
 
-    final public static function chunks_from(Extractor $extractor, int $chunkSize) : Extractor
+    final public static function chunks_from(Extractor $extractor, int $chunk_size) : Extractor
     {
-        return new Extractor\ChunkExtractor($extractor, $chunkSize);
+        return new Extractor\ChunkExtractor($extractor, $chunk_size);
     }
 
     final public static function data_frame(DataFrame $data_frame) : Extractor
@@ -63,14 +64,13 @@ class From
 
     /**
      * @param Memory $memory
-     * @param int<1, max> $chunkSize
-     * @param string $rowEntryName
+     * @param int<1, max> $chunk_size
      *
      * @return Extractor
      */
-    final public static function memory(Memory $memory, int $chunkSize = 100, string $rowEntryName = 'row') : Extractor
+    final public static function memory(Memory $memory, int $chunk_size = 100, EntryFactory $entry_factory = new NativeEntryFactory()) : Extractor
     {
-        return new MemoryExtractor($memory, $chunkSize, $rowEntryName);
+        return new MemoryExtractor($memory, $chunk_size, $entry_factory);
     }
 
     final public static function pipeline(Pipeline $pipeline) : Extractor

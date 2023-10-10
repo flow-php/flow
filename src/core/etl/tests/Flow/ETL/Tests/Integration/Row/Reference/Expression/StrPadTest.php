@@ -23,9 +23,6 @@ final class StrPadTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('strpad', ref('key')->strPad(10, '*'))
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();
@@ -48,9 +45,6 @@ final class StrPadTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('strpad', ref('id')->strPad(10))
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();

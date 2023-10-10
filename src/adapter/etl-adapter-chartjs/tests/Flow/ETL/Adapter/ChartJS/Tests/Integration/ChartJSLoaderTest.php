@@ -28,10 +28,7 @@ final class ChartJSLoaderTest extends TestCase
 
         (new Flow())
             ->read(From::memory(new ArrayMemory($data)))
-            ->withEntry('data', ref('row')->unpack())
-            ->renameAll('data.', '')
             ->withEntry('Profit', ref('Revenue')->minus(ref('CM'))->minus(ref('Ads Spends'))->minus(ref('Storage Costs'))->minus(ref('Shipping Costs'))->round(lit(2)))
-            ->drop('row')
             ->write(
                 ChartJS::chart(
                     $chart = ChartJS::bar(
@@ -101,10 +98,7 @@ final class ChartJSLoaderTest extends TestCase
 
         (new Flow())
             ->read(From::memory(new ArrayMemory($data)))
-            ->withEntry('data', ref('row')->unpack())
-            ->renameAll('data.', '')
             ->withEntry('Profit', ref('Revenue')->minus(ref('CM'))->minus(ref('Ads Spends'))->minus(ref('Storage Costs'))->minus(ref('Shipping Costs'))->round(lit(2)))
-            ->drop('row')
             ->write(
                 ChartJS::chart(
                     $chart = ChartJS::line(
@@ -186,8 +180,6 @@ final class ChartJSLoaderTest extends TestCase
 
         (new Flow())
             ->read(From::memory(new ArrayMemory($data)))
-            ->withEntry('data', ref('row')->unpack())
-            ->renameAll('data.', '')
             ->withEntry('Profit', ref('Revenue')->minus(ref('CM'))->minus(ref('Ads Spends'))->minus(ref('Storage Costs'))->minus(ref('Shipping Costs'))->round(lit(2)))
             ->aggregate(
                 Aggregation::sum(ref('Revenue')->as('Revenue')),
@@ -197,7 +189,6 @@ final class ChartJSLoaderTest extends TestCase
                 Aggregation::sum(ref('Shipping Costs')->as('Shipping Costs')),
                 Aggregation::sum(ref('Profit')->as('Profit')),
             )
-            ->drop('row')
             ->write(
                 ChartJS::chart(
                     $chart,

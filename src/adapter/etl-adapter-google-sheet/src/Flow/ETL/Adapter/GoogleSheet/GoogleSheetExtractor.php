@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\GoogleSheet;
 
-use Flow\ETL\DSL\Entry;
+use function Flow\ETL\DSL\array_to_rows;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
-use Flow\ETL\Row\Entry\StringEntry;
-use Flow\ETL\Rows;
+use Flow\ETL\Row\EntryFactory;
+use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Google\Service\Sheets;
 
 final class GoogleSheetExtractor implements Extractor
@@ -26,8 +25,8 @@ final class GoogleSheetExtractor implements Extractor
         private readonly Columns $columnRange,
         private readonly bool $withHeader,
         private readonly int $rowsInBatch,
-        private readonly string $rowEntryName = 'row',
-        private readonly array $options = []
+        private readonly array $options = [],
+        private readonly EntryFactory $entryFactory = new NativeEntryFactory()
     ) {
         if ($this->rowsInBatch <= 0) {
             throw new InvalidArgumentException('Rows in batch must be greater than 0');
@@ -57,40 +56,40 @@ final class GoogleSheetExtractor implements Extractor
         }
 
         while ([] !== $values) {
-            yield new Rows(
-                ...\array_map(
-                    function (array $rowData) use ($headers, $context, &$totalRows) {
-                        if (\count($headers) > \count($rowData)) {
-                            \array_push(
-                                $rowData,
-                                ...\array_map(
-                                    /** @psalm-suppress UnusedClosureParam */
-                                    static fn (int $i) => null,
-                                    \range(1, \count($headers) - \count($rowData))
-                                )
-                            );
-                        }
+            yield array_to_rows(
+                \array_map(
+                function (array $rowData) use ($headers, $context, &$totalRows) {
+                    if (\count($headers) > \count($rowData)) {
+                        \array_push(
+                            $rowData,
+                            ...\array_map(
+                                /** @psalm-suppress UnusedClosureParam */
+                                static fn (int $i) => null,
+                                \range(1, \count($headers) - \count($rowData))
+                            )
+                        );
+                    }
 
-                        if (\count($rowData) > \count($headers)) {
-                            /** @phpstan-ignore-next-line */
-                            $rowData = \array_chunk($rowData, \count($headers));
-                        }
+                    if (\count($rowData) > \count($headers)) {
+                        /** @phpstan-ignore-next-line */
+                        $rowData = \array_chunk($rowData, \count($headers));
+                    }
 
-                        /** @var int $totalRows */
-                        $totalRows++;
+                    /** @var int $totalRows */
+                    $totalRows++;
 
-                        if ($context->config->shouldPutInputIntoRows()) {
-                            return Row::create(
-                                Entry::array($this->rowEntryName, \array_combine($headers, $rowData)),
-                                new StringEntry('spread_sheet_id', $this->spreadsheetId),
-                                new StringEntry('sheet_name', $this->columnRange->sheetName),
-                            );
-                        }
+                    if ($context->config->shouldPutInputIntoRows()) {
+                        return \array_merge(
+                            \array_combine($headers, $rowData),
+                            ['spread_sheet_id' =>  $this->spreadsheetId, 'sheet_name' => $this->columnRange->sheetName]
+                        );
+                    }
 
-                        return Row::create(Entry::array($this->rowEntryName, \array_combine($headers, $rowData)));
-                    },
-                    $values
-                )
+                    return \array_combine($headers, $rowData);
+                },
+                $values
+            ),
+                $this->entryFactory
             );
 
             if ($totalRows < $cellsRange->endRow) {

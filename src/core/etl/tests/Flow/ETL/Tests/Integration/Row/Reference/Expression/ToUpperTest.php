@@ -23,9 +23,6 @@ final class ToUpperTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('to_upper', ref('key')->upper())
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();
@@ -48,9 +45,6 @@ final class ToUpperTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('to_upper', ref('id')->upper())
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();

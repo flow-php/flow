@@ -51,11 +51,11 @@ final class MemoryExtractorTest extends TestCase
 
         $this->assertSame(
             [
-                ['row' => ['number' => 1, 'name' => 'one']],
-                ['row' => ['number' => 2, 'name' => 'two']],
-                ['row' => ['number' => 3, 'name' => 'tree']],
-                ['row' => ['number' => 4, 'name' => 'four']],
-                ['row' => ['number' => 5, 'name' => 'five']],
+                ['number' => 1, 'name' => 'one'],
+                ['number' => 2, 'name' => 'two'],
+                ['number' => 3, 'name' => 'tree'],
+                ['number' => 4, 'name' => 'four'],
+                ['number' => 5, 'name' => 'five'],
             ],
             $data
         );

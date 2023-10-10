@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\col;
 use function Flow\ETL\DSL\ref;
 use Aeon\Calendar\Stopwatch;
 use Flow\ETL\DSL\CSV;
@@ -13,9 +12,6 @@ require __DIR__ . '/../../../bootstrap.php';
 
 $flow = (new Flow())
     ->read(CSV::from(__FLOW_DATA__ . '/partitioned'))
-    ->withEntry('unpacked', ref('row')->unpack())
-    ->renameAll('unpacked.', '')
-    ->drop(col('row'))
     ->collect()
     ->sortBy(ref('id'))
     ->write(To::output());

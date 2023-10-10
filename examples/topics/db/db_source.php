@@ -7,7 +7,6 @@ if ($_ENV['FLOW_PHAR_APP'] ?? false) {
     exit(1);
 }
 
-use function Flow\ETL\DSL\ref;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Table;
@@ -38,9 +37,6 @@ $dbConnection->createSchemaManager()->createTable(
 
 (new Flow())
     ->read(CSV::from($path = __FLOW_OUTPUT__ . '/dataset.csv', 10_000))
-    ->withEntry('unpacked', ref('row')->unpack())
-    ->renameAll('unpacked.', '')
-    ->drop('row')
     ->rename('last name', 'last_name')
     ->limit(1_000_000)
     ->load(DbalLoader::fromConnection($dbConnection, 'source_dataset_table', 1000))

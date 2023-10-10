@@ -9,13 +9,14 @@ use Flow\ETL\Adapter\JSON\JSONMachine\JsonExtractor;
 use Flow\ETL\Extractor;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Loader;
+use Flow\ETL\Row\EntryFactory;
+use Flow\ETL\Row\Factory\NativeEntryFactory;
 
 class Json
 {
     /**
      * @param array<Path|string>|Path|string $path - string is internally turned into LocalFile stream
      * @param int $rows_in_batch
-     * @param string $row_entry_name
      * @param ?string $pointer - if you want to iterate only results of a subtree, use a pointer, read more at https://github.com/halaxa/json-machine#parsing-a-subtree
      *
      * @return Extractor
@@ -23,8 +24,8 @@ class Json
     public static function from(
         string|Path|array $path,
         int $rows_in_batch = 1000,
-        string $row_entry_name = 'row',
-        string $pointer = null
+        string $pointer = null,
+        EntryFactory $entry_factory = new NativeEntryFactory()
     ) : Extractor {
         if (\is_array($path)) {
             $extractors = [];
@@ -33,7 +34,8 @@ class Json
                 $extractors[] = new JsonExtractor(
                     \is_string($file) ? Path::realpath($file) : $file,
                     $rows_in_batch,
-                    $row_entry_name
+                    $pointer,
+                    $entry_factory
                 );
             }
 
@@ -43,8 +45,8 @@ class Json
         return new JsonExtractor(
             \is_string($path) ? Path::realpath($path) : $path,
             $rows_in_batch,
-            $row_entry_name,
-            $pointer
+            $pointer,
+            $entry_factory
         );
     }
 

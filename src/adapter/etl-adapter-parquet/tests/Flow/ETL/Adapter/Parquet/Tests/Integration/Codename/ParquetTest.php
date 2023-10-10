@@ -57,10 +57,7 @@ final class ParquetTest extends TestCase
                 }, \range(1, 100))
             ),
             (new Flow())
-                ->read(Parquet::from($path, 'row', ['integer']))
-                ->withEntry('unpacked', ref('row')->unpack())
-                ->renameAll('unpacked.', '')
-                ->drop('row')
+                ->read(Parquet::from($path, ['integer']))
                 ->fetch()
         );
 
@@ -98,9 +95,6 @@ final class ParquetTest extends TestCase
             $rows,
             (new Flow())
                 ->read(Parquet::from($path))
-                ->withEntry('unpacked', ref('row')->unpack())
-                ->renameAll('unpacked.', '')
-                ->drop('row')
                 ->fetch()
         );
 
@@ -144,9 +138,6 @@ final class ParquetTest extends TestCase
             $rows,
             (new Flow())
                 ->read(Parquet::from($paths))
-                ->withEntry('unpacked', ref('row')->unpack())
-                ->renameAll('unpacked.', '')
-                ->drop('row')
                 ->sortBy(ref('integer'))
                 ->fetch()
         );

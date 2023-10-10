@@ -27,9 +27,6 @@ print "Loading CSV {$csvFileSize}Mb file into postgresql...\n";
 
 (new Flow())
     ->read(CSV::from($path = __FLOW_OUTPUT__ . '/dataset.csv', 10_000))
-    ->withEntry('unpacked', ref('row')->unpack())
-    ->renameAll('unpacked.', '')
-    ->drop('row')
     ->withEntry('id', ref('id')->cast('int'))
     ->withEntry('name', concat(ref('name'), lit(' '), ref('last name')))
     ->drop('last name')

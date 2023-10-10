@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine;
 
+use function Flow\ETL\DSL\array_to_rows;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Types\Type;
-use Flow\ETL\DSL\Entry;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
-use Flow\ETL\Rows;
 
 final class DbalQueryExtractor implements Extractor
 {
@@ -28,7 +27,7 @@ final class DbalQueryExtractor implements Extractor
         private readonly string $query,
         ParametersSet $parametersSet = null,
         private readonly array $types = [],
-        private readonly string $rowEntryName = 'row'
+        private readonly Row\EntryFactory $entryFactory = new Row\Factory\NativeEntryFactory()
     ) {
         $this->parametersSet = $parametersSet ?: new ParametersSet([]);
     }
@@ -37,9 +36,9 @@ final class DbalQueryExtractor implements Extractor
      * @param array<string, mixed>|list<mixed> $parameters
      * @param array<int, null|int|string|Type>|array<string, null|int|string|Type> $types
      */
-    public static function single(Connection $connection, string $query, array $parameters = [], array $types = [], string $rowEntryName = 'row') : self
+    public static function single(Connection $connection, string $query, array $parameters = [], array $types = [], Row\EntryFactory $entryFactory = new Row\Factory\NativeEntryFactory()) : self
     {
-        return new self($connection, $query, new ParametersSet($parameters), $types, $rowEntryName);
+        return new self($connection, $query, new ParametersSet($parameters), $types, $entryFactory);
     }
 
     public function extract(FlowContext $context) : \Generator
@@ -48,10 +47,10 @@ final class DbalQueryExtractor implements Extractor
             $rows = [];
 
             foreach ($this->connection->fetchAllAssociative($this->query, $parameters, $this->types) as $row) {
-                $rows[] = Row::create(Entry::array($this->rowEntryName, $row));
+                $rows[] = $row;
             }
 
-            yield new Rows(...$rows);
+            yield array_to_rows($rows, $this->entryFactory);
         }
     }
 }

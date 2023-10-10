@@ -22,9 +22,6 @@ final class JsonDecodeTest extends TestCase
                     [['id' => 1, 'array' => ['a' => 1, 'b' => 2, 'c' => 3]]],
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('json', lit('{"d": 4}'))
             ->withEntry('array', ref('array')->arrayMerge(ref('json')->jsonDecode()))
             ->drop('json')

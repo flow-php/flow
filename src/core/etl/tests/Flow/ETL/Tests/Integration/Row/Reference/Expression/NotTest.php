@@ -29,8 +29,6 @@ final class NotTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
             ->withEntry(
                 'result',
                 when(
@@ -39,7 +37,7 @@ final class NotTest extends TestCase
                     lit('found')
                 )
             )
-            ->drop('row', 'array')
+            ->drop('array')
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();
 

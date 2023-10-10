@@ -13,9 +13,6 @@ require __DIR__ . '/../../../bootstrap.php';
 
 $flow = (new Flow())
     ->read(CSV::from(__FLOW_DATA__ . '/partitioned'))
-    ->withEntry('unpacked', ref('row')->unpack())
-    ->renameAll('unpacked.', '')
-    ->drop('row')
     ->collect()
     ->filterPartitions(Partitions::only('t_shirt_color', 'green'))
     ->sortBy(ref('id'))

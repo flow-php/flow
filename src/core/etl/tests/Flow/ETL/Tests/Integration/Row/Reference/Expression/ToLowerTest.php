@@ -23,9 +23,6 @@ final class ToLowerTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('to_lower', ref('key')->lower())
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();
@@ -48,9 +45,6 @@ final class ToLowerTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('to_lower', ref('id')->lower())
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();

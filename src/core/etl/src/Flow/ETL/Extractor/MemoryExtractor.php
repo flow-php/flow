@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Extractor;
 
+use function Flow\ETL\DSL\array_to_rows;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Memory\Memory;
 use Flow\ETL\Row;
-use Flow\ETL\Rows;
 
 final class MemoryExtractor implements Extractor
 {
@@ -17,12 +17,11 @@ final class MemoryExtractor implements Extractor
     /**
      * @param Memory $memory
      * @param int<1, max> $chunkSize
-     * @param string $rowEntryName
      */
     public function __construct(
         private readonly Memory $memory,
         private readonly int $chunkSize = self::CHUNK_SIZE,
-        private readonly string $rowEntryName = 'row'
+        private readonly Row\EntryFactory $entryFactory = new Row\Factory\NativeEntryFactory()
     ) {
     }
 
@@ -35,10 +34,10 @@ final class MemoryExtractor implements Extractor
              * @var array<mixed> $chunkEntry
              */
             foreach ($chunk as $chunkEntry) {
-                $rows[] = Row::create(new Row\Entry\ArrayEntry($this->rowEntryName, $chunkEntry));
+                $rows[] = $chunkEntry;
             }
 
-            yield new Rows(...$rows);
+            yield array_to_rows($rows, $this->entryFactory);
         }
     }
 }

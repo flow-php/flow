@@ -4,23 +4,22 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Avro\FlixTech;
 
+use function Flow\ETL\DSL\array_to_rows;
 use Flow\ETL\Extractor;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
-use Flow\ETL\Rows;
 
 final class AvroExtractor implements Extractor
 {
     /**
      * @param Path $path
-     * @param string $rowEntryName
      */
     public function __construct(
         private readonly Path $path,
         private readonly int $rowsInBach = 1000,
-        private readonly string $rowEntryName = 'row'
+        private readonly Row\EntryFactory $entryFactory = new Row\Factory\NativeEntryFactory()
     ) {
     }
 
@@ -49,16 +48,13 @@ final class AvroExtractor implements Extractor
 
             foreach ($reader->data() as $rowData) {
                 if ($context->config->shouldPutInputIntoRows()) {
-                    $rows[] = Row::create(
-                        new Row\Entry\ArrayEntry($this->rowEntryName, $valueConverter->convert($rowData)),
-                        new Row\Entry\StringEntry('input_file_uri', $filePath->uri())
-                    );
+                    $rows[] = \array_merge($valueConverter->convert($rowData), ['_input_file_uri' => $filePath->uri()]);
                 } else {
-                    $rows[] = Row::create(new Row\Entry\ArrayEntry($this->rowEntryName, $valueConverter->convert($rowData)));
+                    $rows[] = $valueConverter->convert($rowData);
                 }
 
                 if (\count($rows) >= $this->rowsInBach) {
-                    yield new Rows(...$rows);
+                    yield array_to_rows($rows, $this->entryFactory);
                     /** @var array<Row> $rows */
                     $rows = [];
                 }
@@ -66,7 +62,7 @@ final class AvroExtractor implements Extractor
         }
 
         if ([] !== $rows) {
-            yield new Rows(...$rows);
+            yield array_to_rows($rows, $this->entryFactory);
         }
     }
 }

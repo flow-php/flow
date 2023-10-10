@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine;
 
+use function Flow\ETL\DSL\array_to_rows;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
-use Flow\ETL\Rows;
 
 final class DbalLimitOffsetExtractor implements Extractor
 {
@@ -19,7 +19,7 @@ final class DbalLimitOffsetExtractor implements Extractor
         private readonly QueryBuilder $queryBuilder,
         private readonly int $pageSize = 1000,
         private readonly ?int $maximum = null,
-        private readonly string $rowEntryName = 'row'
+        private readonly Row\EntryFactory $entryFactory = new Row\Factory\NativeEntryFactory()
     ) {
     }
 
@@ -32,7 +32,7 @@ final class DbalLimitOffsetExtractor implements Extractor
         array $orderBy,
         int $pageSize = 1000,
         ?int $maximum = null,
-        string $rowEntryName = 'row'
+        Row\EntryFactory $entryFactory = new Row\Factory\NativeEntryFactory()
     ) : self {
         if (!\count($orderBy)) {
             throw new InvalidArgumentException('There must be at least one column to order by, zero given');
@@ -51,7 +51,7 @@ final class DbalLimitOffsetExtractor implements Extractor
             $queryBuilder,
             $pageSize,
             $maximum,
-            $rowEntryName
+            $entryFactory
         );
     }
 
@@ -89,7 +89,7 @@ final class DbalLimitOffsetExtractor implements Extractor
             )->fetchAllAssociative();
 
             foreach ($pageResults as $row) {
-                $rows[] = Row::create(new Row\Entry\ArrayEntry($this->rowEntryName, $row));
+                $rows[] = $row;
 
                 $totalFetched++;
 
@@ -98,7 +98,7 @@ final class DbalLimitOffsetExtractor implements Extractor
                 }
             }
 
-            yield new Rows(...$rows);
+            yield array_to_rows($rows, $this->entryFactory);
         }
     }
 }

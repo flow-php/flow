@@ -24,9 +24,6 @@ final class SplitTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('split', split(ref('key'), '-'))
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();
@@ -49,9 +46,6 @@ final class SplitTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('split', split(ref('key'), '-'))
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();
@@ -74,9 +68,6 @@ final class SplitTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('split', split(ref('key'), '-'))
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();

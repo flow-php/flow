@@ -24,9 +24,6 @@ final class ContainsTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('contains', ref('key')->contains(lit('a')))
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();
@@ -49,9 +46,6 @@ final class ContainsTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('contains', ref('id')->contains(lit('1')))
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();
@@ -74,9 +68,6 @@ final class ContainsTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('contains', ref('id')->contains(lit(1)))
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();

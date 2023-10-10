@@ -26,20 +26,16 @@ final class CSVExtractorTest extends TestCase
         $this->assertSame(
             [
                 [
-                    'row' => [
-                        'id' => '',
-                        'name' => '',
-                        'active' => 'false',
-                    ],
-                    'input_file_uri' => $path->uri(),
+                    'id' => '',
+                    'name' => '',
+                    'active' => 'false',
+                    '_input_file_uri' => $path->uri(),
                 ],
                 [
-                    'row' => [
-                        'id' => '1',
-                        'name' => 'Norbert',
-                        'active' => '',
-                    ],
-                    'input_file_uri' => $path->uri(),
+                    'id' => '1',
+                    'name' => 'Norbert',
+                    'active' => '',
+                    '_input_file_uri' => $path->uri(),
                 ],
             ],
             \iterator_to_array($extractor->extract(new FlowContext(Config::builder()->putInputIntoRows()->build())))[0]->toArray()
@@ -55,18 +51,14 @@ final class CSVExtractorTest extends TestCase
         $this->assertSame(
             [
                 [
-                    'row' => [
-                        'id' => null,
-                        'name' => null,
-                        'active' => 'false',
-                    ],
+                    'id' => null,
+                    'name' => null,
+                    'active' => 'false',
                 ],
                 [
-                    'row' => [
-                        'id' => '1',
-                        'name' => 'Norbert',
-                        'active' => null,
-                    ],
+                    'id' => '1',
+                    'name' => 'Norbert',
+                    'active' => null,
                 ],
             ],
             \iterator_to_array($extractor->extract(new FlowContext(Config::default())))[0]->toArray()
@@ -89,10 +81,9 @@ final class CSVExtractorTest extends TestCase
         /** @var Rows $rows */
         foreach ($extractor->extract(new FlowContext(Config::default())) as $rows) {
             $rows->each(function (Row $row) : void {
-                $this->assertInstanceOf(Row\Entry\ArrayEntry::class, $row->get('row'));
                 $this->assertSame(
                     ['e00', 'e01', 'e02', 'e03', 'e04', 'e05', 'e06', 'e07', 'e08', 'e09'],
-                    \array_keys($row->valueOf('row'))
+                    \array_keys($row->toArray())
                 );
             });
             $total += $rows->count();
@@ -110,7 +101,6 @@ final class CSVExtractorTest extends TestCase
             ->fetch();
 
         foreach ($rows as $row) {
-            $this->assertInstanceOf(Row\Entry\ArrayEntry::class, $row->get('row'));
             $this->assertSame(
                 [
                     'Year',
@@ -125,7 +115,7 @@ final class CSVExtractorTest extends TestCase
                     'Industry_code_ANZSIC06',
 
                 ],
-                \array_keys($row->valueOf('row'))
+                \array_keys($row->toArray())
             );
         }
 
@@ -145,10 +135,9 @@ final class CSVExtractorTest extends TestCase
         /** @var Rows $rows */
         foreach ($extractor->extract(new FlowContext(Config::default())) as $rows) {
             $rows->each(function (Row $row) : void {
-                $this->assertInstanceOf(Row\Entry\ArrayEntry::class, $row->get('row'));
                 $this->assertSame(
                     ['e00', 'e01', 'e02', 'e03', 'e04', 'e05', 'e06', 'e07', 'e08', 'e09'],
-                    \array_keys($row->valueOf('row'))
+                    \array_keys($row->toArray())
                 );
             });
             $total += $rows->count();
@@ -161,9 +150,6 @@ final class CSVExtractorTest extends TestCase
     {
         $rows = (new Flow())
             ->extract(CSV::from(__DIR__ . '/../Fixtures/corrupted_row.csv'))
-            ->withEntry('unpacked', ref('row')->unpack())
-            ->renameAll('unpacked.', '')
-            ->drop('row')
             ->fetch();
 
         $this->assertSame(2, $rows->count());
@@ -180,10 +166,9 @@ final class CSVExtractorTest extends TestCase
         /** @var Rows $rows */
         foreach ($extractor->extract(new FlowContext(Config::default())) as $rows) {
             $rows->each(function (Row $row) : void {
-                $this->assertInstanceOf(Row\Entry\ArrayEntry::class, $row->get('row'));
                 $this->assertSame(
                     ['id', 'name'],
-                    \array_keys($row->valueOf('row'))
+                    \array_keys($row->toArray())
                 );
             });
             $total += $rows->count();
@@ -203,10 +188,9 @@ final class CSVExtractorTest extends TestCase
         /** @var Rows $rows */
         foreach ($extractor->extract(new FlowContext(Config::default())) as $rows) {
             $rows->each(function (Row $row) : void {
-                $this->assertInstanceOf(Row\Entry\ArrayEntry::class, $row->get('row'));
                 $this->assertSame(
                     ['id', 'name', 'active'],
-                    \array_keys($row->valueOf('row'))
+                    \array_keys($row->toArray())
                 );
             });
             $total += $rows->count();
@@ -221,9 +205,6 @@ final class CSVExtractorTest extends TestCase
             2,
             (new Flow())
                 ->read(CSV::from(__DIR__ . '/../Fixtures/more_than_1000_characters_per_line.csv'))
-                ->withEntry('unpacked', ref('row')->unpack())
-                ->renameAll('unpacked.', '')
-                ->drop('row')
                 ->fetch()
                 ->toArray(),
             'Long line was broken down into two rows.'
@@ -236,9 +217,6 @@ final class CSVExtractorTest extends TestCase
             1,
             (new Flow())
                 ->read(CSV::from(__DIR__ . '/../Fixtures/more_than_1000_characters_per_line.csv', characters_read_in_line: 2000))
-                ->withEntry('unpacked', ref('row')->unpack())
-                ->renameAll('unpacked.', '')
-                ->drop('row')
                 ->fetch()
                 ->toArray(),
             'Long line was read as one row.'
@@ -260,10 +238,7 @@ final class CSVExtractorTest extends TestCase
             ],
             (new Flow())
                 ->read(CSV::from(__DIR__ . '/../Fixtures/partitioned/group=*'))
-                ->withEntry('unpacked', ref('row')->unpack())
-                ->renameAll('unpacked.', '')
                 ->withEntry('id', ref('id')->cast('int'))
-                ->drop('row')
                 ->sortBy(ref('id'))
                 ->fetch()
                 ->toArray()

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Avro\FlixTech\Tests\Integration;
 
-use function Flow\ETL\DSL\ref;
 use Flow\ETL\Config;
 use Flow\ETL\DSL\Avro;
 use Flow\ETL\DSL\Entry;
@@ -84,9 +83,6 @@ final class AvroTest extends TestCase
             $rows,
             (new Flow())
                 ->read(Avro::from($paths))
-                ->withEntry('unpacked', ref('row')->unpack())
-                ->renameAll('unpacked.', '')
-                ->drop('row')
                 ->fetch()
         );
 
@@ -132,10 +128,7 @@ final class AvroTest extends TestCase
             $rows,
             Flow::setUp(Config::builder()->putInputIntoRows()->build())
                 ->read(Avro::from($path))
-                ->withEntry('unpacked', ref('row')->unpack())
-                ->renameAll('unpacked.', '')
-                ->drop('row')
-                ->drop('input_file_uri')
+                ->drop('_input_file_uri')
                 ->fetch()
         );
 
@@ -196,9 +189,6 @@ final class AvroTest extends TestCase
             $rows,
             (new Flow())
                 ->read(Avro::from($path))
-                ->withEntry('unpacked', ref('row')->unpack())
-                ->renameAll('unpacked.', '')
-                ->drop('row')
                 ->fetch()
         );
 
@@ -258,9 +248,6 @@ final class AvroTest extends TestCase
             $rows,
             (new Flow())
                 ->read(Avro::from($path))
-                ->withEntry('unpacked', ref('row')->unpack())
-                ->renameAll('unpacked.', '')
-                ->drop('row')
                 ->fetch()
         );
 
@@ -320,9 +307,6 @@ final class AvroTest extends TestCase
             $rows,
             (new Flow())
                 ->read(Avro::from($path))
-                ->withEntry('unpacked', ref('row')->unpack())
-                ->renameAll('unpacked.', '')
-                ->drop('row')
                 ->fetch()
         );
 

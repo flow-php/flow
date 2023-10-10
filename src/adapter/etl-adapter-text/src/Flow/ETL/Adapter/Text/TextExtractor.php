@@ -4,20 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Text;
 
-use Flow\ETL\DSL\Entry;
+use function Flow\ETL\DSL\array_to_rows;
 use Flow\ETL\Extractor;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
-use Flow\ETL\Rows;
 
 final class TextExtractor implements Extractor
 {
     public function __construct(
         private readonly Path $path,
         private readonly int $rowsInBatch = 1000,
-        private readonly string $rowEntryName = 'row'
+        private readonly Row\EntryFactory $entryFactory = new Row\Factory\NativeEntryFactory()
     ) {
     }
 
@@ -37,16 +36,13 @@ final class TextExtractor implements Extractor
 
             while ($rowData !== false) {
                 if ($context->config->shouldPutInputIntoRows()) {
-                    $rows[] = Row::create(
-                        Entry::string($this->rowEntryName, \rtrim($rowData)),
-                        Entry::string('input_file_uri', $filePath->uri())
-                    );
+                    $rows[] = ['text' => \rtrim($rowData), '_input_file_uri' => $filePath->uri()];
                 } else {
-                    $rows[] = Row::create(Entry::string($this->rowEntryName, \rtrim($rowData)));
+                    $rows[] = ['text' => \rtrim($rowData)];
                 }
 
                 if (\count($rows) >= $this->rowsInBatch) {
-                    yield new Rows(...$rows);
+                    yield array_to_rows($rows, $this->entryFactory);
 
                     /** @var array<Row> $rows */
                     $rows = [];
@@ -56,7 +52,7 @@ final class TextExtractor implements Extractor
             }
 
             if ([] !== $rows) {
-                yield new Rows(...$rows);
+                yield array_to_rows($rows, $this->entryFactory);
             }
         }
     }

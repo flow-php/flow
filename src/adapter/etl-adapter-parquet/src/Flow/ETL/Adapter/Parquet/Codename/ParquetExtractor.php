@@ -4,25 +4,24 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\Codename;
 
+use function Flow\ETL\DSL\array_to_rows;
 use codename\parquet\ParquetReader;
 use Flow\ETL\Extractor;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
-use Flow\ETL\Rows;
 
 final class ParquetExtractor implements Extractor
 {
     /**
      * @param Path $path
-     * @param string $rowEntryName
      * @param array<string> $fields
      */
     public function __construct(
         private readonly Path $path,
-        private readonly string $rowEntryName = 'row',
-        private readonly array $fields = []
+        private readonly array $fields = [],
+        private readonly Row\EntryFactory $entryFactory = new Row\Factory\NativeEntryFactory()
     ) {
     }
 
@@ -67,16 +66,13 @@ final class ParquetExtractor implements Extractor
 
                 foreach ($data as $rowData) {
                     if ($context->config->shouldPutInputIntoRows()) {
-                        $rows[] = Row::create(
-                            new Row\Entry\ArrayEntry($this->rowEntryName, $rowData),
-                            new Row\Entry\StringEntry('input_file_uri', $readerData['uri'])
-                        );
+                        $rows[] = \array_merge($rowData, ['_input_file_uri' => $readerData['uri']]);
                     } else {
-                        $rows[] = Row::create(new Row\Entry\ArrayEntry($this->rowEntryName, $rowData));
+                        $rows[] = $rowData;
                     }
                 }
 
-                yield new Rows(...$rows);
+                yield array_to_rows($rows, $this->entryFactory);
             }
         }
     }

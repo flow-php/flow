@@ -25,10 +25,8 @@ final class ArrayExistsTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
             ->withEntry('has_array', array_exists(ref('array'), 'a'))
-            ->drop('row', 'array')
+            ->drop('array')
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();
 

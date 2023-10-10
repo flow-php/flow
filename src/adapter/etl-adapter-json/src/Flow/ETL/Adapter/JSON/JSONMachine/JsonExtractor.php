@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON\JSONMachine;
 
+use function Flow\ETL\DSL\array_to_rows;
 use Flow\ETL\Extractor;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
-use Flow\ETL\Rows;
 use JsonMachine\Items;
 
 final class JsonExtractor implements Extractor
@@ -17,14 +17,14 @@ final class JsonExtractor implements Extractor
     public function __construct(
         private readonly Path $path,
         private readonly int $rowsInBatch = 1000,
-        private readonly string $rowEntryName = 'row',
-        private readonly ?string $pointer = null
+        private readonly ?string $pointer = null,
+        private readonly Row\EntryFactory $entryFactory = new Row\Factory\NativeEntryFactory()
     ) {
     }
 
     public function extract(FlowContext $context) : \Generator
     {
-        $rows = new Rows();
+        $rows = [];
 
         foreach ($context->streams()->fs()->scan($this->path, $context->partitionFilter()) as $filePath) {
             /**
@@ -32,23 +32,20 @@ final class JsonExtractor implements Extractor
              */
             foreach (Items::fromStream($context->streams()->fs()->open($filePath, Mode::READ)->resource(), $this->readerOptions())->getIterator() as $row) {
                 if ($context->config->shouldPutInputIntoRows()) {
-                    $rows = $rows->add(Row::create(
-                        new Row\Entry\ArrayEntry($this->rowEntryName, (array) $row),
-                        new Row\Entry\StringEntry('input_file_uri', $filePath->uri())
-                    ));
+                    $rows[] = \array_merge((array) $row, ['_input_file_uri' => $filePath->uri()]);
                 } else {
-                    $rows = $rows->add(Row::create(new Row\Entry\ArrayEntry($this->rowEntryName, (array) $row)));
+                    $rows[] = (array) $row;
                 }
 
-                if ($rows->count() >= $this->rowsInBatch) {
-                    yield $rows;
+                if (\count($rows) >= $this->rowsInBatch) {
+                    yield array_to_rows($rows, $this->entryFactory);
 
-                    $rows = new Rows();
+                    $rows = [];
                 }
             }
 
-            if ($rows->count()) {
-                yield $rows;
+            if (\count($rows)) {
+                yield array_to_rows($rows, $this->entryFactory);
             }
         }
     }

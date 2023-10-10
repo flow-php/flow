@@ -1844,9 +1844,6 @@ ASCII,
             ],
             (new Flow)
                 ->read(From::chain(From::memory($memoryPage1), From::memory($memoryPage2)))
-                ->withEntry('row', ref('row')->unpack())
-                ->drop('row')
-                ->renameAll('row.', '')
                 ->withEntry('avg_salary', Window::partitionBy(ref('department'))->orderBy(ref('salary')->desc())->avg(ref('salary')))
                 ->select('department', 'avg_salary')
                 ->dropDuplicates(ref('department'), ref('avg_salary'))
@@ -1893,9 +1890,6 @@ ASCII,
             ],
             (new Flow)
                 ->read(From::all(From::memory($memoryPage1), From::memory($memoryPage2)))
-                ->withEntry('row', ref('row')->unpack())
-                ->drop('row')
-                ->renameAll('row.', '')
                 ->dropDuplicates(ref('employee_name'), ref('department'))
                 ->withEntry('rank', Window::partitionBy(ref('department'))->orderBy(ref('salary')->desc())->rank())
                 ->filter(ref('rank')->equals(lit(1)))

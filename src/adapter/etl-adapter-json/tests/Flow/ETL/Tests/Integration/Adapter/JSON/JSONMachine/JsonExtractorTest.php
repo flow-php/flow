@@ -18,12 +18,11 @@ final class JsonExtractorTest extends TestCase
 {
     public function test_extracting_json_from_local_file_stream() : void
     {
-        $rows = (new Flow())
+        $rows = (new Flow(Config::builder()->putInputIntoRows()))
             ->read(Json::from(__DIR__ . '/../Fixtures/timezones.json', 5))
             ->fetch();
 
         foreach ($rows as $row) {
-            $this->assertInstanceOf(Row\Entry\ArrayEntry::class, $row->get('row'));
             $this->assertSame(
                 [
                     'timezones',
@@ -31,9 +30,9 @@ final class JsonExtractorTest extends TestCase
                     'name',
                     'country_code',
                     'capital',
-
+                    '_input_file_uri',
                 ],
-                \array_keys($row->valueOf('row'))
+                \array_keys($row->toArray())
             );
         }
 
@@ -47,7 +46,6 @@ final class JsonExtractorTest extends TestCase
             ->fetch();
 
         foreach ($rows as $row) {
-            $this->assertInstanceOf(Row\Entry\ArrayEntry::class, $row->get('row'));
             $this->assertSame(
                 [
                     'timezones',
@@ -57,7 +55,7 @@ final class JsonExtractorTest extends TestCase
                     'capital',
 
                 ],
-                \array_keys($row->valueOf('row'))
+                \array_keys($row->toArray())
             );
         }
 
@@ -73,7 +71,6 @@ final class JsonExtractorTest extends TestCase
         /** @var Rows $rows */
         foreach ($extractor->extract(new FlowContext(Config::default())) as $rows) {
             $rows->each(function (Row $row) : void {
-                $this->assertInstanceOf(Row\Entry\ArrayEntry::class, $row->get('row'));
                 $this->assertSame(
                     [
                         'timezones',
@@ -83,7 +80,7 @@ final class JsonExtractorTest extends TestCase
                         'capital',
 
                     ],
-                    \array_keys($row->valueOf('row'))
+                    \array_keys($row->toArray())
                 );
             });
             $total += $rows->count();

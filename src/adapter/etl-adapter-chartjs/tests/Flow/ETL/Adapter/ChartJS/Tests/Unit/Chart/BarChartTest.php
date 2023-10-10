@@ -27,9 +27,6 @@ final class BarChartTest extends TestCase
 
         $rows = (new Flow())
             ->read(From::memory(new ArrayMemory($data)))
-            ->withEntry('data', ref('row')->unpack())
-            ->renameAll('data.', '')
-            ->drop('row')
             ->fetch();
 
         $chart = new BarChart(ref('Date'), [ref('Revenue'), ref('CM'), ref('Ads Spends'), ref('Storage Costs'), ref('Shipping Costs')]);

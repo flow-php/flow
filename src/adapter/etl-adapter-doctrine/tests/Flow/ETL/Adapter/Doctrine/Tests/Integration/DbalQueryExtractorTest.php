@@ -51,9 +51,9 @@ final class DbalQueryExtractorTest extends IntegrationTestCase
 
         $this->assertSame(
             [
-                ['row' => ['id' => 1, 'name' => 'Name One', 'description' => 'Description One']],
-                ['row' => ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two']],
-                ['row' => ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three']],
+                ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
+                ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
+                ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
             ],
             $rows->toArray()
         );
@@ -107,16 +107,16 @@ final class DbalQueryExtractorTest extends IntegrationTestCase
         $this->assertSame(10, $rows->count());
         $this->assertSame(
             [
-                ['row' => ['id' => 1, 'name' => 'Name', 'description' => 'Description']],
-                ['row' => ['id' => 2, 'name' => 'Name', 'description' => 'Description']],
-                ['row' => ['id' => 3, 'name' => 'Name', 'description' => 'Description']],
-                ['row' => ['id' => 4, 'name' => 'Name', 'description' => 'Description']],
-                ['row' => ['id' => 5, 'name' => 'Name', 'description' => 'Description']],
-                ['row' => ['id' => 6, 'name' => 'Name', 'description' => 'Description']],
-                ['row' => ['id' => 7, 'name' => 'Name', 'description' => 'Description']],
-                ['row' => ['id' => 8, 'name' => 'Name', 'description' => 'Description']],
-                ['row' => ['id' => 9, 'name' => 'Name', 'description' => 'Description']],
-                ['row' => ['id' => 10, 'name' => 'Name', 'description' => 'Description']],
+                ['id' => 1, 'name' => 'Name', 'description' => 'Description'],
+                ['id' => 2, 'name' => 'Name', 'description' => 'Description'],
+                ['id' => 3, 'name' => 'Name', 'description' => 'Description'],
+                ['id' => 4, 'name' => 'Name', 'description' => 'Description'],
+                ['id' => 5, 'name' => 'Name', 'description' => 'Description'],
+                ['id' => 6, 'name' => 'Name', 'description' => 'Description'],
+                ['id' => 7, 'name' => 'Name', 'description' => 'Description'],
+                ['id' => 8, 'name' => 'Name', 'description' => 'Description'],
+                ['id' => 9, 'name' => 'Name', 'description' => 'Description'],
+                ['id' => 10, 'name' => 'Name', 'description' => 'Description'],
             ],
             $rows->toArray()
         );

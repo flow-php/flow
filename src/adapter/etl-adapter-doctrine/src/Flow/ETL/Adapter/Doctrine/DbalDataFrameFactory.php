@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine;
 
-use function Flow\ETL\DSL\ref;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Flow\ETL\DataFrame;
@@ -88,12 +87,8 @@ final class DbalDataFrameFactory implements DataFrameFactory
                     $this->query,
                     $parameters,
                     $types,
-                    $rowEntryName = 'row'
                 )
-            )
-            ->withEntry('unpacked', ref($rowEntryName)->unpack())
-            ->renameAll('unpacked.', '')
-            ->drop($rowEntryName);
+            );
     }
 
     private function connection() : Connection

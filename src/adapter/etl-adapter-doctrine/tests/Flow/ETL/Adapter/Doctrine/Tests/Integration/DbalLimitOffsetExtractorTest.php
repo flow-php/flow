@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine\Tests\Integration;
 
-use function Flow\ETL\DSL\ref;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;
@@ -42,9 +41,6 @@ final class DbalLimitOffsetExtractorTest extends IntegrationTestCase
                     5
                 )
             )
-            ->withEntry('unpacked', ref('row')->unpack())
-            ->renameAll('unpacked.', '')
-            ->drop('row')
             ->fetch();
 
         $this->assertSame(
@@ -89,9 +85,6 @@ final class DbalLimitOffsetExtractorTest extends IntegrationTestCase
                     5
                 )
             )
-            ->withEntry('unpacked', ref('row')->unpack())
-            ->renameAll('unpacked.', '')
-            ->drop('row')
             ->fetch();
 
         $this->assertSame(
@@ -135,9 +128,6 @@ final class DbalLimitOffsetExtractorTest extends IntegrationTestCase
                     7
                 )
             )
-            ->withEntry('unpacked', ref('row')->unpack())
-            ->renameAll('unpacked.', '')
-            ->drop('row')
             ->fetch();
 
         $this->assertSame(
@@ -180,9 +170,6 @@ final class DbalLimitOffsetExtractorTest extends IntegrationTestCase
                     7
                 )
             )
-            ->withEntry('unpacked', ref('row')->unpack())
-            ->renameAll('unpacked.', '')
-            ->drop('row')
             ->fetch();
 
         $this->assertSame(
