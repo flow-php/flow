@@ -141,6 +141,30 @@ final class NativeEntryFactoryTest extends TestCase
         );
     }
 
+    public function test_invalid_json() : void
+    {
+        $this->assertEquals(
+            Entry::string('e', $invalid = '{"id":1'),
+            (new NativeEntryFactory())->create('e', $invalid)
+        );
+    }
+
+    public function test_invalid_uuid() : void
+    {
+        $this->assertEquals(
+            Entry::string('e', $invalid = '00000000-0000-0000-0000-00000'),
+            (new NativeEntryFactory())->create('e', $invalid)
+        );
+    }
+
+    public function test_invalid_xml() : void
+    {
+        $this->assertEquals(
+            Entry::string('e', $invalid = '<root'),
+            (new NativeEntryFactory())->create('e', $invalid)
+        );
+    }
+
     public function test_json() : void
     {
         $this->assertEquals(
