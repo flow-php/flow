@@ -8,6 +8,10 @@ use Flow\ETL\Flow;
 
 require __DIR__ . '/../../../bootstrap.php';
 
+if (!\file_exists(__FLOW_OUTPUT__ . '/dataset.csv')) {
+    include __DIR__ . '/../../../setup/php_to_csv.php';
+}
+
 $flow = (new Flow())
     ->read(CSV::from(__FLOW_OUTPUT__ . '/dataset.csv', 1000));
 

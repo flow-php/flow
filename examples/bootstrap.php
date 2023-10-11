@@ -6,11 +6,13 @@ if (!($_ENV['FLOW_PHAR_APP'] ?? false)) {
 
 \ini_set('memory_limit', -1);
 
-const __FLOW_DATA__ = __DIR__ . '/data';
-const __FLOW_OUTPUT__ = __DIR__ . '/output';
-const __FLOW_VAR__ = __DIR__ . '/var';
-const __FLOW_VAR_RUN__ = __DIR__ . '/var/run';
-const __FLOW_SRC__ = __DIR__ . '/../src';
+if (!\defined('__FLOW_DATA__')) {
+    \define('__FLOW_DATA__', __DIR__ . '/data');
+    \define('__FLOW_OUTPUT__', __DIR__ . '/output');
+    \define('__FLOW_VAR__', __DIR__ . '/var');
+    \define('__FLOW_VAR_RUN__', __DIR__ . '/var/run');
+    \define('__FLOW_SRC__', __DIR__ . '/../src');
+}
 
 if (!\is_dir(__FLOW_VAR__)) {
     \mkdir(__FLOW_VAR__);
