@@ -16,6 +16,7 @@
 - [#514](https://github.com/flow-php/flow/pull/514) - **Add new StrPad expression** - [@stloyd](https://github.com/stloyd)
 
 ### Changed
+- [#564](https://github.com/flow-php/flow/pull/564) - **Block running incompatible examples via PHAR** - [@stloyd](https://github.com/stloyd)
 - [#561](https://github.com/flow-php/flow/pull/561) - **Rework string checks to skip json, xml or uuid as much as possible** - [@stloyd](https://github.com/stloyd)
 - [#562](https://github.com/flow-php/flow/pull/562) - **Rework examples to allow running them outside the phar** - [@stloyd](https://github.com/stloyd)
 - [#558](https://github.com/flow-php/flow/pull/558) - **Optimized NativeEntryFactory** - [@norberttech](https://github.com/norberttech)
@@ -32,6 +33,7 @@
 - [#526](https://github.com/flow-php/flow/pull/526) - **Simplify `RenameEntriesTransformer` to work only on one entry** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
+- [#564](https://github.com/flow-php/flow/pull/564) - **Fix broken path to autoloader in async examples** - [@stloyd](https://github.com/stloyd)
 - [#539](https://github.com/flow-php/flow/pull/539) - **Corrected misspellings** - [@szepeviktor](https://github.com/szepeviktor)
 - [#540](https://github.com/flow-php/flow/pull/540) - **just some typos** - [@voku](https://github.com/voku)
 - [#532](https://github.com/flow-php/flow/pull/532) - **Prevent double run of main integration tests** - [@stloyd](https://github.com/stloyd)
