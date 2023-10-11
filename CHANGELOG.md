@@ -16,6 +16,7 @@
 - [#514](https://github.com/flow-php/flow/pull/514) - **Add new StrPad expression** - [@stloyd](https://github.com/stloyd)
 
 ### Changed
+- [#565](https://github.com/flow-php/flow/pull/565) - **Change detection of PHAR in examples** - [@stloyd](https://github.com/stloyd)
 - [#564](https://github.com/flow-php/flow/pull/564) - **Block running incompatible examples via PHAR** - [@stloyd](https://github.com/stloyd)
 - [#561](https://github.com/flow-php/flow/pull/561) - **Rework string checks to skip json, xml or uuid as much as possible** - [@stloyd](https://github.com/stloyd)
 - [#562](https://github.com/flow-php/flow/pull/562) - **Rework examples to allow running them outside the phar** - [@stloyd](https://github.com/stloyd)
