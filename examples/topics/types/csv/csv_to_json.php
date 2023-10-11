@@ -19,7 +19,7 @@ $flow = (new Flow())
     ->drop(col('row'))
     ->write(Json::to(__FLOW_OUTPUT__ . '/dataset.json'));
 
-if ('' !== \Phar::running(false)) {
+if ($_ENV['FLOW_PHAR_APP'] ?? false) {
     return $flow;
 }
 

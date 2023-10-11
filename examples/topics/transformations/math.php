@@ -23,7 +23,7 @@ $flow = (new Flow())
     ->withEntry('d', ref('b')->minus(ref('a')))
     ->write(To::output(false));
 
-if ('' !== \Phar::running(false)) {
+if ($_ENV['FLOW_PHAR_APP'] ?? false) {
     return $flow;
 }
 

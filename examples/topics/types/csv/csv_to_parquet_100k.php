@@ -18,7 +18,7 @@ $flow = (new Flow())
     ->drop(col('row'))
     ->write(Parquet::to(__FLOW_OUTPUT__ . '/dataset_100k.parquet', 100_000));
 
-if ('' !== \Phar::running(false)) {
+if ($_ENV['FLOW_PHAR_APP'] ?? false) {
     return $flow;
 }
 

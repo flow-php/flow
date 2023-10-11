@@ -46,7 +46,7 @@ $flow = (new Flow())
     ->withEntry('consumption', concat(ref('consumption'), lit('%')))
     ->write(To::output(truncate: false));
 
-if ('' !== \Phar::running(false)) {
+if ($_ENV['FLOW_PHAR_APP'] ?? false) {
     return $flow;
 }
 

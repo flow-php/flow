@@ -23,7 +23,7 @@ $flow = (new Flow())
     ->withEntry('expanded', array_expand(ref('array')))
     ->write(To::output(false));
 
-if ('' !== \Phar::running(false)) {
+if ($_ENV['FLOW_PHAR_APP'] ?? false) {
     return $flow;
 }
 

@@ -21,7 +21,7 @@ $flow = (new Flow())
     ->sortBy(ref('id'))
     ->write(To::output());
 
-if ('' !== \Phar::running(false)) {
+if ($_ENV['FLOW_PHAR_APP'] ?? false) {
     return $flow;
 }
 

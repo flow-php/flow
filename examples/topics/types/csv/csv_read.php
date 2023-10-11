@@ -17,7 +17,7 @@ $flow = (new Flow())
     ->drop(col('row'))
     ->limit(10_000);
 
-if ('' !== \Phar::running(false)) {
+if ($_ENV['FLOW_PHAR_APP'] ?? false) {
     return $flow;
 }
 

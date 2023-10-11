@@ -25,7 +25,7 @@ $flow = (new Flow())
     ->groupBy(ref('a'))
     ->write(To::output(false));
 
-if ('' !== \Phar::running(false)) {
+if ($_ENV['FLOW_PHAR_APP'] ?? false) {
     return $flow;
 }
 

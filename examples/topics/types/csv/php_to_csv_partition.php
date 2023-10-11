@@ -22,7 +22,7 @@ $flow = (new Flow())
     ->partitionBy('country_code', 't_shirt_color')
     ->write(CSV::to(__FLOW_OUTPUT__ . '/partitioned'));
 
-if ('' !== \Phar::running(false)) {
+if ($_ENV['FLOW_PHAR_APP'] ?? false) {
     return $flow;
 }
 

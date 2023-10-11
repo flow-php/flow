@@ -23,7 +23,7 @@ $flow = (new Flow())
     ->filter(ref('b')->mod(lit(2))->equals(lit(0)))
     ->write(To::output(false));
 
-if ('' !== \Phar::running(false)) {
+if ($_ENV['FLOW_PHAR_APP'] ?? false) {
     return $flow;
 }
 
