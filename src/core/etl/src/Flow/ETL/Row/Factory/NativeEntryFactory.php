@@ -51,16 +51,18 @@ final class NativeEntryFactory implements EntryFactory
         }
 
         if (\is_string($value)) {
-            if ($this->isJson($value)) {
-                return Row\Entry\JsonEntry::fromJsonString($entryName, $value);
-            }
+            if ('' !== $value) {
+                if ($this->isJson($value)) {
+                    return Row\Entry\JsonEntry::fromJsonString($entryName, $value);
+                }
 
-            if ($this->isUuid($value)) {
-                return new Row\Entry\UuidEntry($entryName, Entry\Type\Uuid::fromString($value));
-            }
+                if ($this->isUuid($value)) {
+                    return new Row\Entry\UuidEntry($entryName, Entry\Type\Uuid::fromString($value));
+                }
 
-            if ($this->isXML($value)) {
-                return new Entry\XMLEntry($entryName, $value);
+                if ($this->isXML($value)) {
+                    return new Entry\XMLEntry($entryName, $value);
+                }
             }
 
             return new Row\Entry\StringEntry($entryName, $value);
@@ -103,7 +105,7 @@ final class NativeEntryFactory implements EntryFactory
         }
 
         if (\is_array($value)) {
-            if (!\count($value)) {
+            if ([] === $value) {
                 return new Row\Entry\ArrayEntry($entryName, $value);
             }
 
@@ -288,7 +290,7 @@ final class NativeEntryFactory implements EntryFactory
         $class = \get_class($object);
 
         if ($class === \DateTimeImmutable::class || $class === \DateTime::class) {
-            $class = \DateTimeInterface::class;
+            return \DateTimeInterface::class;
         }
 
         return $class;
@@ -296,7 +298,11 @@ final class NativeEntryFactory implements EntryFactory
 
     private function isJson(string $string) : bool
     {
-        if ('' === $string) {
+        if (
+            (!\str_starts_with($string, '{') || !\str_ends_with($string, '}'))
+            &&
+            (!\str_starts_with($string, '[') || !\str_ends_with($string, ']'))
+        ) {
             return false;
         }
 
@@ -309,10 +315,6 @@ final class NativeEntryFactory implements EntryFactory
 
     private function isUuid(string $string) : bool
     {
-        if ('' === $string) {
-            return false;
-        }
-
         if (\strlen($string) !== 36) {
             return false;
         }
@@ -322,11 +324,7 @@ final class NativeEntryFactory implements EntryFactory
 
     private function isXML(string $string) : bool
     {
-        if ('' === $string) {
-            return false;
-        }
-
-        if (\preg_match('/<[^<>]+>[^<>]*<\/[^<>]+>/', $string) === 1) {
+        if (\preg_match('/<(.+?)>(.+?)<\/(.+?)>/', $string) === 1) {
             try {
                 \libxml_use_internal_errors(true);
 
