@@ -16,6 +16,7 @@
 - [#514](https://github.com/flow-php/flow/pull/514) - **Add new StrPad expression** - [@stloyd](https://github.com/stloyd)
 
 ### Changed
+- [#561](https://github.com/flow-php/flow/pull/561) - **Rework string checks to skip json, xml or uuid as much as possible** - [@stloyd](https://github.com/stloyd)
 - [#562](https://github.com/flow-php/flow/pull/562) - **Rework examples to allow running them outside the phar** - [@stloyd](https://github.com/stloyd)
 - [#558](https://github.com/flow-php/flow/pull/558) - **Optimized NativeEntryFactory** - [@norberttech](https://github.com/norberttech)
 - [#556](https://github.com/flow-php/flow/pull/556) - **Rework expressions to return `null` instead of throwing exception on failure** - [@stloyd](https://github.com/stloyd)
@@ -37,6 +38,7 @@
 - [#515](https://github.com/flow-php/flow/pull/515) - **Fixed `Cast` expression to handle `null` as first** - [@stloyd](https://github.com/stloyd)
 
 ### Removed
+- [#563](https://github.com/flow-php/flow/pull/563) - **Remove "issue" examples as outdated & covered by tests** - [@stloyd](https://github.com/stloyd)
 - [#541](https://github.com/flow-php/flow/pull/541) - **Remove `ArrayKeysStyleConverterTransformer`** - [@stloyd](https://github.com/stloyd)
 - [#537](https://github.com/flow-php/flow/pull/537) - **Remove `ChainTransformer`** - [@stloyd](https://github.com/stloyd)
 - [#536](https://github.com/flow-php/flow/pull/536) - **Remove `DynamicEntryTransformer`** - [@stloyd](https://github.com/stloyd)
