@@ -30,7 +30,7 @@ $internalProducts = new Rows(
  * then it might become performance bottleneck.
  * In that case please look at DataFrame::joinEach.
  */
-return (new Flow())
+$flow = (new Flow())
     ->process($externalProducts)
     ->join(
         (new Flow())->process($internalProducts),
@@ -38,6 +38,12 @@ return (new Flow())
         Join::left_anti
     )
     ->write(To::output());
+
+if ('' !== \Phar::running(false)) {
+    return $flow;
+}
+
+$flow->run();
 
 // Output
 //

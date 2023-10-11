@@ -13,19 +13,23 @@ require __DIR__ . '/../../../bootstrap.php';
 
 $extractor = require __FLOW_DATA__ . '/extractor.php';
 
-$stopwatch = new Stopwatch();
-$stopwatch->start();
-$total = 0;
-$memory = new Consumption();
-$memory->current();
-
-(new Flow())
+$flow = (new Flow())
     ->read($extractor)
     ->withEntry('unpacked', ref('row')->unpack())
     ->renameAll('unpacked.', '')
     ->drop(col('row'))
-    ->write(CSV::to(__FLOW_OUTPUT__ . '/dataset.csv'))
-    ->run();
+    ->write(CSV::to(__FLOW_OUTPUT__ . '/dataset.csv'));
+
+if ('' !== \Phar::running(false)) {
+    return $flow;
+}
+
+$stopwatch = new Stopwatch();
+$stopwatch->start();
+$memory = new Consumption();
+$memory->current();
+
+$flow->run();
 
 $memory->current();
 $stopwatch->stop();

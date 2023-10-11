@@ -13,7 +13,7 @@ use Flow\ETL\GroupBy\Aggregation;
 
 require __DIR__ . '/../../bootstrap.php';
 
-return (new Flow)
+$flow = (new Flow)
     ->read(CSV::from(__FLOW_DATA__ . '/power-plant-daily.csv', 10, delimiter: ';'))
     ->withEntry('unpacked', ref('row')->unpack())
     ->renameAll('unpacked.', '')
@@ -50,3 +50,9 @@ return (new Flow)
             output: __FLOW_OUTPUT__ . '/power_plant_bar_chart.html'
         )
     );
+
+if ('' !== \Phar::running(false)) {
+    return $flow;
+}
+
+$flow->run();

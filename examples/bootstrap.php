@@ -1,5 +1,11 @@
 <?php declare(strict_types=1);
 
+if ('' === \Phar::running(false)) {
+    require __DIR__ . '/../vendor/autoload.php';
+}
+
+\ini_set('memory_limit', -1);
+
 const __FLOW_DATA__ = __DIR__ . '/data';
 const __FLOW_OUTPUT__ = __DIR__ . '/output';
 const __FLOW_VAR__ = __DIR__ . '/var';

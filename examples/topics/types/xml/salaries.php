@@ -10,9 +10,7 @@ use Flow\ETL\GroupBy\Aggregation;
 
 require __DIR__ . '/../../../bootstrap.php';
 
-print "Reading XML dataset...\n";
-
-return (new Flow())
+$flow = (new Flow())
     ->read(XML::from(__FLOW_DATA__ . '/salaries.xml'))
     ->withEntry('months', ref('row')->xpath('/Salaries/Month'))
     ->withEntry('month', ref('months')->expand())
@@ -26,3 +24,11 @@ return (new Flow())
     ->aggregate(Aggregation::sum(ref('department_salary')))
     ->rename('department_salary_sum', 'total_monthly_salaries')
     ->write(To::output(false));
+
+if ('' !== \Phar::running(false)) {
+    return $flow;
+}
+
+print "Reading XML dataset...\n";
+
+$flow->run();

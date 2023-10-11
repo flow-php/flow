@@ -14,7 +14,7 @@ use Flow\ETL\Rows;
 
 require __DIR__ . '/../../bootstrap.php';
 
-return (new Flow())
+$flow = (new Flow())
     ->read(From::rows(new Rows(
         Row::with(Entry::int('id', 1), Entry::int('value', 1)),
         Row::with(Entry::int('id', 2), Entry::int('value', 1)),
@@ -27,3 +27,9 @@ return (new Flow())
         when(ref('value')->isNull(), then: lit(0))
     )
     ->write(To::output(false));
+
+if ('' !== \Phar::running(false)) {
+    return $flow;
+}
+
+$flow->run();

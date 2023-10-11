@@ -12,9 +12,15 @@ if (\file_exists(__FLOW_OUTPUT__ . '/dataset.json')) {
     \unlink(__FLOW_OUTPUT__ . '/dataset.json');
 }
 
-return (new Flow())
+$flow = (new Flow())
     ->read(CSV::from(__FLOW_OUTPUT__ . '/dataset.csv'))
     ->withEntry('unpacked', ref('row')->unpack())
     ->renameAll('unpacked.', '')
     ->drop(col('row'))
     ->write(Json::to(__FLOW_OUTPUT__ . '/dataset.json'));
+
+if ('' !== \Phar::running(false)) {
+    return $flow;
+}
+
+$flow->run();

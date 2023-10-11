@@ -13,19 +13,23 @@ require __DIR__ . '/../../../bootstrap.php';
 
 $extractor = require __FLOW_DATA__ . '/extractor.php';
 
-$stopwatch = new Stopwatch();
-$stopwatch->start();
-$total = 0;
-
-(new Flow())
+$flow = (new Flow())
     ->read($extractor)
     ->withEntry('unpacked', ref('row')->unpack())
     ->renameAll('unpacked.', '')
     ->drop(col('row'))
     ->mode(SaveMode::Overwrite)
     ->partitionBy('country_code', 't_shirt_color')
-    ->write(CSV::to(__FLOW_OUTPUT__ . '/partitioned'))
-    ->run();
+    ->write(CSV::to(__FLOW_OUTPUT__ . '/partitioned'));
+
+if ('' !== \Phar::running(false)) {
+    return $flow;
+}
+
+$stopwatch = new Stopwatch();
+$stopwatch->start();
+
+$flow->run();
 
 $stopwatch->stop();
 
