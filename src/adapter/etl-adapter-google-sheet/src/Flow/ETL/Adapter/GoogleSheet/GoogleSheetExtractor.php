@@ -58,37 +58,37 @@ final class GoogleSheetExtractor implements Extractor
         while ([] !== $values) {
             yield array_to_rows(
                 \array_map(
-                function (array $rowData) use ($headers, $context, &$totalRows) {
-                    if (\count($headers) > \count($rowData)) {
-                        \array_push(
-                            $rowData,
-                            ...\array_map(
-                                /** @psalm-suppress UnusedClosureParam */
-                                static fn (int $i) => null,
-                                \range(1, \count($headers) - \count($rowData))
-                            )
-                        );
-                    }
+                    function (array $rowData) use ($headers, $context, &$totalRows) {
+                        if (\count($headers) > \count($rowData)) {
+                            \array_push(
+                                $rowData,
+                                ...\array_map(
+                                    /** @psalm-suppress UnusedClosureParam */
+                                    static fn (int $i) => null,
+                                    \range(1, \count($headers) - \count($rowData))
+                                )
+                            );
+                        }
 
-                    if (\count($rowData) > \count($headers)) {
-                        /** @phpstan-ignore-next-line */
-                        $rowData = \array_chunk($rowData, \count($headers));
-                    }
+                        if (\count($rowData) > \count($headers)) {
+                            /** @phpstan-ignore-next-line */
+                            $rowData = \array_chunk($rowData, \count($headers));
+                        }
 
-                    /** @var int $totalRows */
-                    $totalRows++;
+                        /** @var int $totalRows */
+                        $totalRows++;
 
-                    if ($context->config->shouldPutInputIntoRows()) {
-                        return \array_merge(
-                            \array_combine($headers, $rowData),
-                            ['spread_sheet_id' =>  $this->spreadsheetId, 'sheet_name' => $this->columnRange->sheetName]
-                        );
-                    }
+                        if ($context->config->shouldPutInputIntoRows()) {
+                            return \array_merge(
+                                \array_combine($headers, $rowData),
+                                ['spread_sheet_id' =>  $this->spreadsheetId, 'sheet_name' => $this->columnRange->sheetName]
+                            );
+                        }
 
-                    return \array_combine($headers, $rowData);
-                },
-                $values
-            ),
+                        return \array_combine($headers, $rowData);
+                    },
+                    $values
+                ),
                 $this->entryFactory
             );
 
