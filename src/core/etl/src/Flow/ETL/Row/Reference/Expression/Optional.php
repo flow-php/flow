@@ -7,6 +7,8 @@ use Flow\ETL\Row\Reference\Expression;
 
 final class Optional implements Expression
 {
+    use Row\Reference\EntryExpression;
+
     public function __construct(private readonly Expression $expression)
     {
     }

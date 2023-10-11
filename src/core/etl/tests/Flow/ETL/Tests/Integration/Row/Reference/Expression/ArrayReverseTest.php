@@ -25,7 +25,7 @@ final class ArrayReverseTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('array', optional(ref('array')->arrayReverse()))
+            ->withEntry('array', optional(ref('array'))->arrayReverse())
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();
 
