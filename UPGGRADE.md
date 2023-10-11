@@ -74,3 +74,46 @@ After:
     ->write(To::memory($memory = new ArrayMemory()))
     ->run();
 ```
+
+### 3) ConfigBuilder::putInputIntoRows() output is now prefixed with _ (underscore)
+
+In order to avoid collisions with datasets columns, additional columns created after using putInputIntoRows()
+would now be prefixed with `_` (underscore) symbol. 
+
+Before:
+```php
+<?php
+
+$rows = (new Flow(Config::builder()->putInputIntoRows()))
+            ->read(Json::from(__DIR__ . '/../Fixtures/timezones.json', 5))
+            ->fetch();
+
+foreach ($rows as $row) {
+    $this->assertSame(
+        [
+            ...
+            '_input_file_uri',
+        ],
+        \array_keys($row->toArray())
+    );
+}
+```
+
+After: 
+```php
+<?php
+
+$rows = (new Flow(Config::builder()->putInputIntoRows()))
+            ->read(Json::from(__DIR__ . '/../Fixtures/timezones.json', 5))
+            ->fetch();
+
+foreach ($rows as $row) {
+    $this->assertSame(
+        [
+            ...
+            '_input_file_uri',
+        ],
+        \array_keys($row->toArray())
+    );
+}
+```

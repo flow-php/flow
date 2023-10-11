@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\col;
-use function Flow\ETL\DSL\ref;
 use Aeon\Calendar\Stopwatch;
 use Flow\ETL\DSL\CSV;
 use Flow\ETL\DSL\Json;
