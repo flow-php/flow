@@ -8,7 +8,7 @@ if ('' !== \Phar::running(false)) {
 
 require __DIR__ . '/../../bootstrap.php';
 
-const __FLOW_AUTOLOAD__ =  __DIR__ . '/../vendor/autoload.php';
+const __FLOW_AUTOLOAD__ =  __DIR__ . '/../../../vendor/autoload.php';
 
 // library autoload for all dependencies
 require __FLOW_AUTOLOAD__;
