@@ -11,7 +11,7 @@ use Flow\ETL\Flow;
 
 require __DIR__ . '/../../bootstrap.php';
 
-return (new Flow())
+$flow = (new Flow())
     ->read(From::sequence_number('number', 1, 100))
     ->collect()
     ->withEntry(
@@ -23,3 +23,9 @@ return (new Flow())
         )
     )
     ->write(To::output(false));
+
+if ('' !== \Phar::running(false)) {
+    return $flow;
+}
+
+$flow->run();

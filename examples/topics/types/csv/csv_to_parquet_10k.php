@@ -11,20 +11,24 @@ use Flow\ETL\Flow;
 
 require __DIR__ . '/../../../bootstrap.php';
 
+$flow = (new Flow())
+    ->read(CSV::from(__FLOW_OUTPUT__ . '/dataset.csv', 10_000))
+    ->withEntry('unpacked', ref('row')->unpack())
+    ->renameAll('unpacked.', '')
+    ->drop(col('row'))
+    ->write(Parquet::to(__FLOW_OUTPUT__ . '/dataset_10k.parquet', 10_000));
+
+if ('' !== \Phar::running(false)) {
+    return $flow;
+}
+
 $csvFileSize = \round(\filesize(__FLOW_OUTPUT__ . '/dataset.csv') / 1024 / 1024);
 print "Converting CSV {$csvFileSize}Mb file into parquet...\n";
 
 $stopwatch = new Stopwatch();
 $stopwatch->start();
-$total = 0;
 
-(new Flow())
-    ->read(CSV::from(__FLOW_OUTPUT__ . '/dataset.csv', 10_000))
-    ->withEntry('unpacked', ref('row')->unpack())
-    ->renameAll('unpacked.', '')
-    ->drop(col('row'))
-    ->write(Parquet::to(__FLOW_OUTPUT__ . '/dataset_10k.parquet', 10_000))
-    ->run();
+$flow->run();
 
 $stopwatch->stop();
 

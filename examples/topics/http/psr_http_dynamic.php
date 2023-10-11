@@ -30,7 +30,7 @@ $extractor = new PsrHttpClientDynamicExtractor($client, new class implements Nex
     }
 });
 
-return (new Flow())
+$flow = (new Flow())
     ->read($extractor)
     ->withEntry('unpacked', ref('response_body')->jsonDecode())
     ->select('unpacked')
@@ -38,3 +38,9 @@ return (new Flow())
     ->renameAll('unpacked.', '')
     ->select('name', 'html_url', 'blog')
     ->write(To::output(false));
+
+if ('' !== \Phar::running(false)) {
+    return $flow;
+}
+
+$flow->run();

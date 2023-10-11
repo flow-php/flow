@@ -12,7 +12,7 @@ use Flow\ETL\Rows;
 
 require __DIR__ . '/../../bootstrap.php';
 
-return (new Flow())
+$flow = (new Flow())
     ->read(
         From::rows(new Rows(
             Row::with(Entry::int('a', 100)),
@@ -24,3 +24,9 @@ return (new Flow())
     )
     ->groupBy(ref('a'))
     ->write(To::output(false));
+
+if ('' !== \Phar::running(false)) {
+    return $flow;
+}
+
+$flow->run();

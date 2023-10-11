@@ -8,8 +8,14 @@ use Flow\ETL\Flow;
 
 require __DIR__ . '/../../../bootstrap.php';
 
-print "Reading XML dataset...\n";
-
-return (new Flow())
+$flow = (new Flow())
     ->read(XML::from(__FLOW_DATA__ . '/simple_items.xml', 'root/items/item'))
     ->write(To::output(false));
+
+if ('' !== \Phar::running(false)) {
+    return $flow;
+}
+
+print "Reading XML dataset...\n";
+
+$flow->run();

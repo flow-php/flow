@@ -12,7 +12,7 @@ use Flow\ETL\Rows;
 
 require __DIR__ . '/../../bootstrap.php';
 
-return (new Flow())
+$flow = (new Flow())
     ->read(
         From::rows(new Rows(
             Row::create(Entry::integer('a', 100), Entry::integer('b', 200))
@@ -22,3 +22,9 @@ return (new Flow())
     ->withEntry('c', ref('a')->plus(ref('b')))
     ->withEntry('d', ref('b')->minus(ref('a')))
     ->write(To::output(false));
+
+if ('' !== \Phar::running(false)) {
+    return $flow;
+}
+
+$flow->run();

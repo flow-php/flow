@@ -69,7 +69,7 @@ $dbDataFrameFactory = new class implements DataFrameFactory {
  * right size is much bigger then a left side. In that case it's better to reduce the ride side
  * by fetching from the storage only what is relevant for the left side.
  */
-return (new Flow())
+$flow = (new Flow())
     ->extract($apiExtractor)
     ->joinEach(
         $dbDataFrameFactory,
@@ -77,6 +77,12 @@ return (new Flow())
         Join::left_anti
     )
     ->write(To::output());
+
+if ('' !== \Phar::running(false)) {
+    return $flow;
+}
+
+$flow->run();
 
 // Output:
 //

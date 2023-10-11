@@ -13,7 +13,7 @@ use Flow\ETL\Rows;
 
 require __DIR__ . '/../../bootstrap.php';
 
-return (new Flow())
+$flow = (new Flow())
     ->read(
         From::rows(new Rows(
             Row::with(Entry::int('a', 100), Entry::int('b', 100)),
@@ -23,3 +23,9 @@ return (new Flow())
     ->filter(ref('b')->divide(lit(2))->equals(lit('a')))
     ->withEntry('new_b', ref('b')->multiply(lit(2))->multiply(lit(5)))
     ->write(To::output(false));
+
+if ('' !== \Phar::running(false)) {
+    return $flow;
+}
+
+$flow->run();
