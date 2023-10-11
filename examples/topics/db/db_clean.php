@@ -1,6 +1,12 @@
 #!/usr/bin/env php
 <?php
 
+if ('' !== \Phar::running(false)) {
+    print 'This example cannot be run in PHAR, please use CLI approach.';
+
+    exit(1);
+}
+
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Table;

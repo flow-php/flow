@@ -1,5 +1,11 @@
 <?php declare(strict_types=1);
 
+if ('' !== \Phar::running(false)) {
+    print 'This example cannot be run in PHAR, please use CLI approach.';
+
+    exit(1);
+}
+
 use function Flow\ETL\DSL\concat;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
