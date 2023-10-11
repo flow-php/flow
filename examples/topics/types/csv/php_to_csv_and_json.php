@@ -16,9 +16,6 @@ $extractor = require __FLOW_DATA__ . '/extractor.php';
 
 $flow = (new Flow())
     ->read($extractor)
-    ->withEntry('unpacked', ref('row')->unpack())
-    ->renameAll('unpacked.', '')
-    ->drop(col('row'))
     ->write(CSV::to(__FLOW_OUTPUT__ . '/dataset.csv'))
     ->write(Json::to(__FLOW_OUTPUT__ . '/dataset.json'));
 

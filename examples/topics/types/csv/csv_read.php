@@ -12,9 +12,6 @@ require __DIR__ . '/../../../bootstrap.php';
 
 $flow = (new Flow())
     ->read(CSV::from(__FLOW_OUTPUT__ . '/dataset.csv', 1000))
-    ->withEntry('unpacked', ref('row')->unpack())
-    ->renameAll('unpacked.', '')
-    ->drop(col('row'))
     ->limit(10_000);
 
 if ($_ENV['FLOW_PHAR_APP'] ?? false) {
