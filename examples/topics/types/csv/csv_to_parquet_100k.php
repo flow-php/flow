@@ -11,9 +11,6 @@ require __DIR__ . '/../../../bootstrap.php';
 
 $flow = (new Flow())
     ->read(CSV::from(__FLOW_OUTPUT__ . '/dataset.csv', 10_000))
-    ->withEntry('unpacked', \ref('row')->unpack())
-    ->renameAll('unpacked.', '')
-    ->drop(\col('row'))
     ->write(Parquet::to(__FLOW_OUTPUT__ . '/dataset_100k.parquet', 100_000));
 
 if ($_ENV['FLOW_PHAR_APP'] ?? false) {
