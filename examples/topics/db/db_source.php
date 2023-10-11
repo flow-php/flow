@@ -1,8 +1,8 @@
 #!/usr/bin/env php
 <?php
 
-if ('' !== \Phar::running(false)) {
-    print 'This example cannot be run in PHAR, please use CLI approach.';
+if ($_ENV['FLOW_PHAR_APP'] ?? false) {
+    print "This example cannot be run in PHAR, please use CLI approach.\n";
 
     exit(1);
 }

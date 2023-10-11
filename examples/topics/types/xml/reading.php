@@ -12,7 +12,7 @@ $flow = (new Flow())
     ->read(XML::from(__FLOW_DATA__ . '/simple_items.xml', 'root/items/item'))
     ->write(To::output(false));
 
-if ('' !== \Phar::running(false)) {
+if ($_ENV['FLOW_PHAR_APP'] ?? false) {
     return $flow;
 }
 

@@ -26,7 +26,7 @@ $flow = (new Flow())
     ->aggregate(Aggregation::sum(ref('a')))
     ->write(To::output(false));
 
-if ('' !== \Phar::running(false)) {
+if ($_ENV['FLOW_PHAR_APP'] ?? false) {
     return $flow;
 }
 

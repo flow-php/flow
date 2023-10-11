@@ -22,6 +22,8 @@ if (false === \in_array(PHP_SAPI, ['cli', 'phpdbg', 'embed'], true)) {
     exit(1);
 }
 
+$_ENV['FLOW_PHAR_APP'] = 1;
+
 \ini_set('memory_limit', -1);
 
 (new SingleCommandApplication())

@@ -24,7 +24,7 @@ $flow = (new Flow())
     ->withEntry('new_b', ref('b')->multiply(lit(2))->multiply(lit(5)))
     ->write(To::output(false));
 
-if ('' !== \Phar::running(false)) {
+if ($_ENV['FLOW_PHAR_APP'] ?? false) {
     return $flow;
 }
 

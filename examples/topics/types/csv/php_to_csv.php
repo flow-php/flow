@@ -20,7 +20,7 @@ $flow = (new Flow())
     ->drop(col('row'))
     ->write(CSV::to(__FLOW_OUTPUT__ . '/dataset.csv'));
 
-if ('' !== \Phar::running(false)) {
+if ($_ENV['FLOW_PHAR_APP'] ?? false) {
     return $flow;
 }
 

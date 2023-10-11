@@ -25,7 +25,7 @@ $flow = (new Flow())
     ->rename('department_salary_sum', 'total_monthly_salaries')
     ->write(To::output(false));
 
-if ('' !== \Phar::running(false)) {
+if ($_ENV['FLOW_PHAR_APP'] ?? false) {
     return $flow;
 }
 

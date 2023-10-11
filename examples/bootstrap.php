@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-if ('' === \Phar::running(false)) {
+if (!($_ENV['FLOW_PHAR_APP'] ?? false)) {
     require __DIR__ . '/../vendor/autoload.php';
 }
 

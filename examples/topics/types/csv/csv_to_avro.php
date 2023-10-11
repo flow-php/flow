@@ -19,7 +19,7 @@ $flow = (new Flow())
     ->rename('last name', 'last_name')
     ->write(Avro::to(__FLOW_OUTPUT__ . '/dataset.avro'));
 
-if ('' !== \Phar::running(false)) {
+if ($_ENV['FLOW_PHAR_APP'] ?? false) {
     return $flow;
 }
 

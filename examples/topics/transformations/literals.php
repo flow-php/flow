@@ -21,7 +21,7 @@ $flow = (new Flow())
     ->withEntry('number', lit(1))
     ->write(To::output(false));
 
-if ('' !== \Phar::running(false)) {
+if ($_ENV['FLOW_PHAR_APP'] ?? false) {
     return $flow;
 }
 

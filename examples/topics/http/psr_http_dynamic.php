@@ -39,7 +39,7 @@ $flow = (new Flow())
     ->select('name', 'html_url', 'blog')
     ->write(To::output(false));
 
-if ('' !== \Phar::running(false)) {
+if ($_ENV['FLOW_PHAR_APP'] ?? false) {
     return $flow;
 }
 
