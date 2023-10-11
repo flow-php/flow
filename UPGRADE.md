@@ -10,7 +10,7 @@ Please follow the instructions for your specific version to ensure a smooth upgr
 ### 1) `ref` expression nullability 
 
 `ref("entry_name")` is no longer returning null when the entry is not found. Instead, it throws an exception.
-The same behavior can be achieved through using newly introduced `optional` expression: 
+The same behavior can be achieved through using a newly introduced `optional` expression: 
 
 Before:
 ```php
@@ -47,7 +47,7 @@ Affected extractors:
 * Text
 * XML
 
-Extractors are no longer returning data under array entry called `row`, thanks to this unpacking row become redundant. 
+Extractors are no longer returning data under an array entry called `row`, thanks to this unpacking row become redundant. 
 
 Before:
 ```php

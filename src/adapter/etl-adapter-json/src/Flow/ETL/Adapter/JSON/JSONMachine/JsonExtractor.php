@@ -44,7 +44,7 @@ final class JsonExtractor implements Extractor
                 }
             }
 
-            if (\count($rows)) {
+            if ([] !== $rows) {
                 yield array_to_rows($rows, $this->entryFactory);
             }
         }
