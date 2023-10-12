@@ -39,7 +39,7 @@ return new class implements Extractor {
             }
         }
 
-        if (\count($rows) >= 0) {
+        if ([] !== $rows) {
             yield new Rows(...$rows);
         }
     }
