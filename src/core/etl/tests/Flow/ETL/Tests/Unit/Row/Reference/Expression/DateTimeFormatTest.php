@@ -28,4 +28,11 @@ final class DateTimeFormatTest extends TestCase
             now()->eval(Row::create(Entry::datetime('date_time', new \DateTimeImmutable('2020-01-01 00:00:00', new \DateTimeZone('UTC')))))
         );
     }
+
+    public function test_invalid_date_time_format() : void
+    {
+        $this->assertNull(
+            date_time_format(ref('date_time'), 'Y-m-d H:i:s')->eval(Row::create(Entry::string('date_time', '2020-01-01 00:00:00')))
+        );
+    }
 }
