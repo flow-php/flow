@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-10-12
 
 ### Added
+- [#568](https://github.com/flow-php/flow/pull/568) - **Add way to run all examples** - [@stloyd](https://github.com/stloyd)
 - [#569](https://github.com/flow-php/flow/pull/569) - **Add binary comparisons integration test** - [@stloyd](https://github.com/stloyd)
 - [#566](https://github.com/flow-php/flow/pull/566) - **array_to_map() DSL function** - [@norberttech](https://github.com/norberttech)
 - [#566](https://github.com/flow-php/flow/pull/566) - **optional expression to work with optional entries** - [@norberttech](https://github.com/norberttech)
