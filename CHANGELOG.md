@@ -41,6 +41,7 @@
 - [#526](https://github.com/flow-php/flow/pull/526) - **Simplify `RenameEntriesTransformer` to work only on one entry** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
+- [#570](https://github.com/flow-php/flow/pull/570) - **Prevent fatal error with aggregate avg on empty group** - [@stloyd](https://github.com/stloyd)
 - [#569](https://github.com/flow-php/flow/pull/569) - **Fixed issue in `jsonDecode()` entry expression** - [@stloyd](https://github.com/stloyd)
 - [#564](https://github.com/flow-php/flow/pull/564) - **Fix broken path to autoloader in async examples** - [@stloyd](https://github.com/stloyd)
 - [#539](https://github.com/flow-php/flow/pull/539) - **Corrected misspellings** - [@szepeviktor](https://github.com/szepeviktor)
