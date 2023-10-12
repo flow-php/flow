@@ -1,6 +1,9 @@
-## [Unreleased] - 2023-10-11
+## [Unreleased] - 2023-10-12
 
 ### Added
+- [#566](https://github.com/flow-php/flow/pull/566) - **array_to_map() DSL function** - [@norberttech](https://github.com/norberttech)
+- [#566](https://github.com/flow-php/flow/pull/566) - **optional expression to work with optional entries** - [@norberttech](https://github.com/norberttech)
+- [#566](https://github.com/flow-php/flow/pull/566) - **UPGRADE.md to help with migrations between flow versions** - [@norberttech](https://github.com/norberttech)
 - [#557](https://github.com/flow-php/flow/pull/557) - **Add integration tests for `combine` & missing unit test for math expressions** - [@stloyd](https://github.com/stloyd)
 - [#553](https://github.com/flow-php/flow/pull/553) - **Add integration tests for `count`, `hash` & `not` expressions** - [@stloyd](https://github.com/stloyd)
 - [#552](https://github.com/flow-php/flow/pull/552) - **Add integration tests for string related expressions - part 2** - [@stloyd](https://github.com/stloyd)
@@ -16,6 +19,8 @@
 - [#514](https://github.com/flow-php/flow/pull/514) - **Add new StrPad expression** - [@stloyd](https://github.com/stloyd)
 
 ### Changed
+- [#566](https://github.com/flow-php/flow/pull/566) - **ref is no longer null safe** - [@norberttech](https://github.com/norberttech)
+- [#566](https://github.com/flow-php/flow/pull/566) - **Extractors are no longer returning rows under "row" ArrayEntry, instead all values are unpacked to dedicated rows** - [@norberttech](https://github.com/norberttech)
 - [#565](https://github.com/flow-php/flow/pull/565) - **Change detection of PHAR in examples** - [@stloyd](https://github.com/stloyd)
 - [#564](https://github.com/flow-php/flow/pull/564) - **Block running incompatible examples via PHAR** - [@stloyd](https://github.com/stloyd)
 - [#561](https://github.com/flow-php/flow/pull/561) - **Rework string checks to skip json, xml or uuid as much as possible** - [@stloyd](https://github.com/stloyd)
