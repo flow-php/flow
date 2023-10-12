@@ -23,9 +23,6 @@ final class StrReplaceTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('str_replace', ref('key')->strReplace('e', 'es'))
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();
@@ -48,9 +45,6 @@ final class StrReplaceTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('str_replace', ref('id')->strReplace('', ''))
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();

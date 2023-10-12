@@ -25,10 +25,8 @@ final class ArrayExpandTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
             ->withEntry('expanded', array_expand(ref('array'), ArrayExpand::BOTH))
-            ->drop('row', 'array')
+            ->drop('array')
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();
 
@@ -52,10 +50,8 @@ final class ArrayExpandTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
             ->withEntry('expanded', array_expand(ref('array'), ArrayExpand::KEYS))
-            ->drop('row', 'array')
+            ->drop('array')
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();
 
@@ -79,10 +75,8 @@ final class ArrayExpandTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
             ->withEntry('expanded', array_expand(ref('array')))
-            ->drop('row', 'array')
+            ->drop('array')
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();
 

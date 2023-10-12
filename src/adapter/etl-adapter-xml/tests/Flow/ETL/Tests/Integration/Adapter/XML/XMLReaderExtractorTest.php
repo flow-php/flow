@@ -19,7 +19,7 @@ final class XMLReaderExtractorTest extends TestCase
         $xml->load(__DIR__ . '/xml/simple_items.xml');
 
         $this->assertEquals(
-            (new Rows(Row::create(Entry::xml('row', $xml)))),
+            (new Rows(Row::create(Entry::xml('node', $xml)))),
             (new Flow())
                 ->read(XML::from(__DIR__ . '/xml/simple_items.xml'))
                 ->fetch()
@@ -30,11 +30,11 @@ final class XMLReaderExtractorTest extends TestCase
     {
         $this->assertEquals(
             new Rows(
-                Row::create(Entry::xml('row', '<item item_attribute_01="1"><id id_attribute_01="1">1</id></item>')),
-                Row::create(Entry::xml('row', '<item item_attribute_01="2"><id id_attribute_01="2">2</id></item>')),
-                Row::create(Entry::xml('row', '<item item_attribute_01="3"><id id_attribute_01="3">3</id></item>')),
-                Row::create(Entry::xml('row', '<item item_attribute_01="4"><id id_attribute_01="4">4</id></item>')),
-                Row::create(Entry::xml('row', '<item item_attribute_01="5"><id id_attribute_01="5">5</id></item>')),
+                Row::create(Entry::xml('node', '<item item_attribute_01="1"><id id_attribute_01="1">1</id></item>')),
+                Row::create(Entry::xml('node', '<item item_attribute_01="2"><id id_attribute_01="2">2</id></item>')),
+                Row::create(Entry::xml('node', '<item item_attribute_01="3"><id id_attribute_01="3">3</id></item>')),
+                Row::create(Entry::xml('node', '<item item_attribute_01="4"><id id_attribute_01="4">4</id></item>')),
+                Row::create(Entry::xml('node', '<item item_attribute_01="5"><id id_attribute_01="5">5</id></item>')),
             ),
             (new Flow())
                 ->read(XML::from(__DIR__ . '/xml/simple_items_flat.xml', 'root/items/item'))
@@ -67,7 +67,7 @@ final class XMLReaderExtractorTest extends TestCase
 
 XML);
         $this->assertEquals(
-            new Rows(Row::create(Entry::xml('row', $xml))),
+            new Rows(Row::create(Entry::xml('node', $xml))),
             (new Flow())
                 ->read(XML::from(__DIR__ . '/xml/simple_items.xml', 'root/items'))
                 ->fetch()

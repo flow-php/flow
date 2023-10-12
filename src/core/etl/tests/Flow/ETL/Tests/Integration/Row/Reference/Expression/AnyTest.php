@@ -29,8 +29,6 @@ final class AnyTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
             ->withEntry(
                 'result',
                 when(
@@ -39,7 +37,7 @@ final class AnyTest extends TestCase
                     lit('not found')
                 )
             )
-            ->drop('row', 'array')
+            ->drop('array')
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();
 

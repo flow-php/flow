@@ -27,9 +27,6 @@ final class ConcatTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('concat', concat(ref('id'), lit(null)))
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();
@@ -54,9 +51,6 @@ final class ConcatTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('concat', concat(ref('id'), lit('-'), array_get(ref('array'), 'field')))
             ->drop('array')
             ->write(To::memory($memory = new ArrayMemory()))

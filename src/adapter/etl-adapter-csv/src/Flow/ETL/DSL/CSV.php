@@ -9,6 +9,8 @@ use Flow\ETL\Adapter\CSV\CSVLoader;
 use Flow\ETL\Extractor;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Loader;
+use Flow\ETL\Row\EntryFactory;
+use Flow\ETL\Row\Factory\NativeEntryFactory;
 
 class CSV
 {
@@ -17,11 +19,11 @@ class CSV
      * @param int $rows_in_batch
      * @param bool $with_header
      * @param bool $empty_to_null
-     * @param string $row_entry_name
      * @param string $delimiter
      * @param string $enclosure
      * @param string $escape
      * @param int<0, max> $characters_read_in_line
+     * @param EntryFactory $entry_factory
      *
      * @throws \Flow\ETL\Exception\InvalidArgumentException
      *
@@ -32,11 +34,11 @@ class CSV
         int $rows_in_batch = 1000,
         bool $with_header = true,
         bool $empty_to_null = true,
-        string $row_entry_name = 'row',
         string $delimiter = ',',
         string $enclosure = '"',
         string $escape = '\\',
-        int $characters_read_in_line = 1000
+        int $characters_read_in_line = 1000,
+        EntryFactory $entry_factory = new NativeEntryFactory()
     ) : Extractor {
         if (\is_array($uri)) {
             $extractors = [];
@@ -47,11 +49,11 @@ class CSV
                     $rows_in_batch,
                     $with_header,
                     $empty_to_null,
-                    $row_entry_name,
                     $delimiter,
                     $enclosure,
                     $escape,
-                    $characters_read_in_line
+                    $characters_read_in_line,
+                    $entry_factory
                 );
             }
 
@@ -63,11 +65,11 @@ class CSV
             $rows_in_batch,
             $with_header,
             $empty_to_null,
-            $row_entry_name,
             $delimiter,
             $enclosure,
             $escape,
-            $characters_read_in_line
+            $characters_read_in_line,
+            $entry_factory
         );
     }
 

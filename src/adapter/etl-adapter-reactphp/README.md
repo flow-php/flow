@@ -76,8 +76,6 @@ $memory = new Consumption();
             $workers = 8
         )
     )
-    ->rows(Transform::array_unpack('row'))
-    ->drop('row')
     ->withEntry('id', ref('id')->cast('int'))
     ->withEntry('name', concat(ref('name'), lit(' '), ref('last name')))
     ->drop('last_name')

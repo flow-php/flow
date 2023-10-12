@@ -83,8 +83,6 @@ $path = __DIR__ . '/file.parquet'
 
 $rows = (new Flow())
     ->read(Parquet::from_file($path))
-    ->transform(Transform::array_unpack('row'))
-    ->drop('row')
     ->fetch()
     ->run();
 ```

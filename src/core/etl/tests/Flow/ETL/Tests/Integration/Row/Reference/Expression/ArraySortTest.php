@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Row\Reference\Expression;
 
+use function Flow\ETL\DSL\array_sort;
+use function Flow\ETL\DSL\optional;
 use function Flow\ETL\DSL\ref;
 use Flow\ETL\DSL\From;
 use Flow\ETL\DSL\To;
@@ -24,10 +26,8 @@ final class ArraySortTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
-            ->withEntry('array', ref('array')->arraySort('ksort'))
+
+            ->withEntry('array', optional(array_sort(ref('array'), 'ksort')))
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();
 

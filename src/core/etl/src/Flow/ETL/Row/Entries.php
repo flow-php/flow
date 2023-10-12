@@ -98,7 +98,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
         $entry = $this->find($name);
 
         if ($entry === null) {
-            throw new InvalidArgumentException("Entry \"{$name}\" does not exist");
+            throw new InvalidArgumentException("Entry \"{$name}\" does not exist. Did you mean one of the following? [\"" . \implode('", "', \array_map(static fn (Entry $entry) => $entry->name(), $this->entries)) . '"]');
         }
 
         return $entry;

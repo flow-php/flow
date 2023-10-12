@@ -415,8 +415,6 @@ Code example:
             $workers = 8
         )
     )
-    ->rows(Transform::array_unpack('row'))
-    ->drop('row')
     ->rows(Transform::to_integer("id"))
     ->rows(Transform::string_concat(['name', 'last_name'], ' ', 'name'))
     ->drop('last_name')
@@ -589,8 +587,6 @@ $memoryPage2 = new ArrayMemory([
         
 (new Flow)
   ->read(From::all(From::memory($memoryPage1), From::memory($memoryPage2)))
-  ->withEntry('row', ref('row')->unpack())
-  ->drop('row')
   ->renameAll('row.', '')
   ->dropDuplicates(ref('employee_name'), ref('department'))
   ->withEntry('rank', Window::partitionBy(ref('department'))->orderBy(ref('salary')->desc())->rank())

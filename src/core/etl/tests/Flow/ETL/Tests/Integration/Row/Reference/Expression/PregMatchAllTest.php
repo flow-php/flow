@@ -24,9 +24,6 @@ final class PregMatchAllTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('preg_match', ref('key')->regexMatchAll(lit('/a/')))
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();
@@ -49,10 +46,7 @@ final class PregMatchAllTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
-            ->withEntry('preg_match', ref('id')->regexMatchAll(lit('1'), lit('1')))
+            ->withEntry('preg_match', ref('key')->regexMatchAll(lit('1'), lit('1')))
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();
 
@@ -74,9 +68,6 @@ final class PregMatchAllTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('preg_match', ref('id')->regexMatchAll(lit('1')))
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();
@@ -99,9 +90,6 @@ final class PregMatchAllTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('preg_match', ref('id')->regexMatchAll(lit(1)))
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();

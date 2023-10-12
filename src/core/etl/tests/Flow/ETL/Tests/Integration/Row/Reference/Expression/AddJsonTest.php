@@ -22,9 +22,6 @@ final class AddJsonTest extends TestCase
                     [['id' => 1, 'array' => ['a' => 1, 'b' => 2, 'c' => 3]]],
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('array', ref('array')->arrayMerge(lit(['d' => 4])))
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();
@@ -45,9 +42,6 @@ final class AddJsonTest extends TestCase
                     [['id' => 1, 'array' => ['a' => 1, 'b' => 2, 'c' => 3]]],
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('json', lit('{"d": 4}'))
             ->withEntry('array', ref('array')->arrayMerge(ref('json')->jsonDecode()))
             ->drop('json')
@@ -68,9 +62,6 @@ final class AddJsonTest extends TestCase
             ->read(
                 From::array([['id' => 1]])
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('json', lit(['id' => 1, 'name' => 'test']))
             ->withEntry('json', ref('json')->jsonEncode(\JSON_FORCE_OBJECT))
             ->write(To::memory($memory = new ArrayMemory()))
@@ -93,9 +84,6 @@ final class AddJsonTest extends TestCase
             ->read(
                 From::array([['id' => 1]])
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('json', lit('[{"id":1},{"id":2}]'))
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();

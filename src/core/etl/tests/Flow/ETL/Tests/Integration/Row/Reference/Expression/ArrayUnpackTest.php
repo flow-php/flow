@@ -24,9 +24,6 @@ final class ArrayUnpackTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('array', ref('array')->unpack())
             ->renameAll('array.', '')
             ->drop('array')

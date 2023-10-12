@@ -10,6 +10,8 @@ use Flow\ETL\Exception\MissingDependencyException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Loader;
+use Flow\ETL\Row\EntryFactory;
+use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Row\Schema;
 
 /**
@@ -19,15 +21,15 @@ class Parquet
 {
     /**
      * @param array<Path>|Path|string $uri
-     * @param string $row_entry_name
      * @param array<string> $fields
+     * @param EntryFactory $entry_factory
      *
      * @return Extractor
      */
     final public static function from(
         string|Path|array $uri,
-        string $row_entry_name = 'row',
-        array $fields = []
+        array $fields = [],
+        EntryFactory $entry_factory = new NativeEntryFactory()
     ) : Extractor {
         if (\is_array($uri)) {
             $extractors = [];
@@ -35,8 +37,8 @@ class Parquet
             foreach ($uri as $filePath) {
                 $extractors[] = new ParquetExtractor(
                     $filePath,
-                    $row_entry_name,
-                    $fields
+                    $fields,
+                    $entry_factory
                 );
             }
 
@@ -45,8 +47,8 @@ class Parquet
 
         return new ParquetExtractor(
             \is_string($uri) ? Path::realpath($uri) : $uri,
-            $row_entry_name,
-            $fields
+            $fields,
+            $entry_factory
         );
     }
 

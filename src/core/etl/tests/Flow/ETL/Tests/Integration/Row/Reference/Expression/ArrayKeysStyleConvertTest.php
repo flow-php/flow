@@ -24,10 +24,7 @@ final class ArrayKeysStyleConvertTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
             ->withEntry('array', array_keys_style_convert(ref('array'), 'kebab'))
-            ->drop('row')
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();
 

@@ -24,9 +24,6 @@ final class PregReplaceTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('preg_replace', ref('key')->regexReplace(lit('/e/'), lit('es')))
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();
@@ -49,9 +46,6 @@ final class PregReplaceTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('preg_replace', ref('id')->regexReplace(lit('1'), lit(1)))
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();
@@ -74,9 +68,6 @@ final class PregReplaceTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('preg_replace', ref('id')->regexReplace(lit(1), lit('1')))
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();

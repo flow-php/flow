@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\DSL;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Row;
+use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Reference\Expression;
 use Flow\ETL\Row\Reference\Expression\ArrayExpand\ArrayExpand;
@@ -13,6 +16,7 @@ use Flow\ETL\Row\Reference\Expression\ArraySort\Sort;
 use Flow\ETL\Row\Reference\Expression\Literal;
 use Flow\ETL\Row\Reference\Expression\StyleConverter\StringStyles;
 use Flow\ETL\Row\StructureReference;
+use Flow\ETL\Rows;
 
 function col(string $entry, string ...$entries) : Reference
 {
@@ -36,6 +40,11 @@ function ref(string $entry) : EntryReference
     return entry($entry);
 }
 
+function optional(Expression $expression) : Expression
+{
+    return new Expression\Optional($expression);
+}
+
 function struct(string ...$entries) : StructureReference
 {
     if (!\count($entries)) {
@@ -50,6 +59,11 @@ function struct(string ...$entries) : StructureReference
 function lit(mixed $value) : Expression
 {
     return new Literal($value);
+}
+
+function exists(Expression $ref) : Expression
+{
+    return new Expression\Exists($ref);
 }
 
 function when(Expression $ref, Expression $then, Expression $else = null) : Expression
@@ -308,4 +322,48 @@ function sanitize(Expression $expression, Expression $placeholder = null, Expres
 function round(Expression $expression, Expression $precision = null, int $mode = PHP_ROUND_HALF_UP) : Expression
 {
     return new Expression\Round($expression, $precision ?? lit(2), $mode);
+}
+
+/**
+ * @psalm-suppress MixedArgument
+ * @psalm-suppress MixedAssignment
+ * @psalm-suppress PossiblyInvalidIterator
+ *
+ * @param array<array<mixed>>|array<mixed|string> $data
+ */
+function array_to_rows(array $data, EntryFactory $entryFactory = new NativeEntryFactory()) : Rows
+{
+    $isRows = true;
+
+    foreach ($data as $v) {
+        if (!\is_array($v)) {
+            $isRows = false;
+
+            break;
+        }
+    }
+
+    if (!$isRows) {
+        $entries = [];
+
+        foreach ($data as $key => $value) {
+            $entries[] = $entryFactory->create(\is_int($key) ? 'e' . \str_pad((string) $key, 2, '0', STR_PAD_LEFT) : $key, $value);
+        }
+
+        return new Rows(Row::create(...$entries));
+    }
+    $rows = [];
+
+    foreach ($data as $row) {
+        $entries = [];
+
+        /** @phpstan-ignore-next-line */
+        foreach ($row as $column => $value) {
+            /** @phpstan-ignore-next-line */
+            $entries[] = $entryFactory->create(\is_int($column) ? 'e' . \str_pad((string) $column, 2, '0', STR_PAD_LEFT) : $column, $value);
+        }
+        $rows[] = Row::create(...$entries);
+    }
+
+    return new Rows(...$rows);
 }

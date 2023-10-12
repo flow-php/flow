@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\col;
-use function Flow\ETL\DSL\ref;
 use Aeon\Calendar\Stopwatch;
 use Flow\ETL\DSL\CSV;
 use Flow\ETL\Filesystem\SaveMode;
@@ -15,9 +13,6 @@ $extractor = require __FLOW_DATA__ . '/extractor.php';
 
 $flow = (new Flow())
     ->read($extractor)
-    ->withEntry('unpacked', ref('row')->unpack())
-    ->renameAll('unpacked.', '')
-    ->drop(col('row'))
     ->mode(SaveMode::Overwrite)
     ->partitionBy('country_code', 't_shirt_color')
     ->write(CSV::to(__FLOW_OUTPUT__ . '/partitioned'));

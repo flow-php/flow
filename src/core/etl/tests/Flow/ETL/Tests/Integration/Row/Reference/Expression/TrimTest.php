@@ -24,9 +24,6 @@ final class TrimTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('trim', ref('key')->trim())
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();
@@ -49,9 +46,6 @@ final class TrimTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('trim', ref('key')->trim(characters: '-'))
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();
@@ -74,9 +68,6 @@ final class TrimTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('trim', ref('key')->trim(Type::LEFT))
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();
@@ -99,9 +90,6 @@ final class TrimTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('trim', ref('id')->trim())
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();
@@ -124,9 +112,6 @@ final class TrimTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('trim', ref('key')->trim(Type::RIGHT))
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();

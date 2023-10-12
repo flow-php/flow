@@ -23,9 +23,6 @@ final class SizeTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('size', ref('array')->size())
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();
@@ -48,9 +45,6 @@ final class SizeTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('size', ref('id')->size())
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();
@@ -73,9 +67,6 @@ final class SizeTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('size', ref('key')->size())
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();

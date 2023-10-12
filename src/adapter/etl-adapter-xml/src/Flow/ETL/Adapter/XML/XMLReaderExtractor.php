@@ -32,7 +32,6 @@ final class XMLReaderExtractor implements Extractor
         private readonly Path $path,
         private readonly string $xmlNodePath = '',
         private readonly int $rowsInBatch = 1000,
-        private readonly string $rowEntryName = 'row'
     ) {
     }
 
@@ -71,11 +70,11 @@ final class XMLReaderExtractor implements Extractor
 
                         if ($context->config->shouldPutInputIntoRows()) {
                             $rows[] = Row::create(
-                                Entry::xml($this->rowEntryName, $node),
-                                Entry::string('input_file_uri', $filePath->uri())
+                                Entry::xml('node', $node),
+                                Entry::string('_input_file_uri', $filePath->uri())
                             );
                         } else {
-                            $rows[] = Row::create(Entry::xml($this->rowEntryName, $node));
+                            $rows[] = Row::create(Entry::xml('node', $node));
                         }
 
                         if (\count($rows) >= $this->rowsInBatch) {

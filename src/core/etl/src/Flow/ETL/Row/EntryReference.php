@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row;
 
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference\Expression;
 
@@ -74,11 +73,7 @@ final class EntryReference implements Expression, Reference
 
     public function eval(Row $row) : mixed
     {
-        try {
-            return $row->valueOf($this->entry);
-        } catch (InvalidArgumentException $e) {
-            return null;
-        }
+        return $row->valueOf($this->entry);
     }
 
     public function hasAlias() : bool

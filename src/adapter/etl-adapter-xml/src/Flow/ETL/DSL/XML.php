@@ -14,7 +14,6 @@ class XML
      * @param array<Path|string>|Path|string $path
      * @param string $xml_node_path
      * @param int $rows_in_batch
-     * @param string $row_entry_name
      *
      * @return Extractor
      */
@@ -22,7 +21,6 @@ class XML
         string|Path|array $path,
         string $xml_node_path = '',
         int $rows_in_batch = 1000,
-        string $row_entry_name = 'row'
     ) : Extractor {
         if (\is_array($path)) {
             /** @var array<Extractor> $extractors */
@@ -33,7 +31,6 @@ class XML
                     \is_string($next_path) ? Path::realpath($next_path) : $next_path,
                     $xml_node_path,
                     $rows_in_batch,
-                    $row_entry_name
                 );
             }
 
@@ -44,7 +41,6 @@ class XML
             \is_string($path) ? Path::realpath($path) : $path,
             $xml_node_path,
             $rows_in_batch,
-            $row_entry_name
         );
     }
 }

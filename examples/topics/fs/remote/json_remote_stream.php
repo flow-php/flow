@@ -46,9 +46,8 @@ AzureBlobStream::register();
 
 (new Flow())
     ->read(Json::from(new Path('flow-aws-s3://dataset.json', $s3_client_option), 10))
-    ->withEntry('row', ref('row')->unpack())
-    ->withEntry('row.id', ref('row.id')->cast('integer'))
-    ->withEntry('name', concat(ref('row.name'), lit(' '), ref('row.last name')))
-    ->drop('row.last name')
+    ->withEntry('id', ref('id')->cast('integer'))
+    ->withEntry('name', concat(ref('name'), lit(' '), ref('last name')))
+    ->drop('last name')
     ->write(Json::to(new Path('flow-azure-blob://dataset_test.json', $azure_blob_connection_string)))
     ->run();

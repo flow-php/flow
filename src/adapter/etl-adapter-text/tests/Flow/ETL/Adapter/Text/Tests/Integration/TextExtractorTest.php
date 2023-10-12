@@ -23,7 +23,7 @@ final class TextExtractorTest extends TestCase
             ->fetch();
 
         foreach ($rows as $row) {
-            $this->assertInstanceOf(Row\Entry\StringEntry::class, $row->get('row'));
+            $this->assertInstanceOf(Row\Entry\StringEntry::class, $row->get('text'));
         }
 
         $this->assertSame(32446, $rows->count());
@@ -43,7 +43,7 @@ final class TextExtractorTest extends TestCase
         /** @var Rows $rows */
         foreach ($extractor->extract(new FlowContext(Config::default())) as $rows) {
             $rows->each(function (Row $row) : void {
-                $this->assertInstanceOf(Row\Entry\StringEntry::class, $row->get('row'));
+                $this->assertInstanceOf(Row\Entry\StringEntry::class, $row->get('text'));
             });
             $total += $rows->count();
         }

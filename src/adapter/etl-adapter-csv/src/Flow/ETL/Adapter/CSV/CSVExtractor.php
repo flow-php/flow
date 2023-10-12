@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV;
 
+use function Flow\ETL\DSL\array_to_rows;
 use Flow\ETL\Extractor;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use Flow\ETL\Row\EntryFactory;
+
+use Flow\ETL\Row\Factory\NativeEntryFactory;
 
 final class CSVExtractor implements Extractor
 {
@@ -21,11 +24,11 @@ final class CSVExtractor implements Extractor
         private readonly int $rowsInBatch = 1000,
         private readonly bool $withHeader = true,
         private readonly bool $emptyToNull = true,
-        private readonly string $rowEntryName = 'row',
         private readonly string $separator = ',',
         private readonly string $enclosure = '"',
         private readonly string $escape = '\\',
-        private readonly int $charactersReadInLine = 1000
+        private readonly int $charactersReadInLine = 1000,
+        private readonly EntryFactory $entryFactory = new NativeEntryFactory()
     ) {
     }
 
@@ -83,16 +86,13 @@ final class CSVExtractor implements Extractor
                 }
 
                 if ($context->config->shouldPutInputIntoRows()) {
-                    $rows[] = Row::create(
-                        new Row\Entry\ArrayEntry($this->rowEntryName, \array_combine($headers, $rowData)),
-                        new Row\Entry\StringEntry('input_file_uri', $stream->path()->uri())
-                    );
+                    $rows[] = \array_merge(\array_combine($headers, $rowData), ['_input_file_uri' => $stream->path()->uri()]);
                 } else {
-                    $rows[] = Row::create(new Row\Entry\ArrayEntry($this->rowEntryName, \array_combine($headers, $rowData)));
+                    $rows[] = \array_combine($headers, $rowData);
                 }
 
                 if (\count($rows) >= $this->rowsInBatch) {
-                    yield new Rows(...$rows);
+                    yield array_to_rows($rows, $this->entryFactory);
 
                     /** @var array<Row> $rows */
                     $rows = [];
@@ -102,7 +102,7 @@ final class CSVExtractor implements Extractor
             }
 
             if ([] !== $rows) {
-                yield new Rows(...$rows);
+                yield array_to_rows($rows, $this->entryFactory);
             }
 
             if ($stream->isOpen()) {

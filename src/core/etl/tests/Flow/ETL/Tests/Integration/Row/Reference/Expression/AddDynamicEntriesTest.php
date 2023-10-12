@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Row\Reference\Expression;
 
 use function Flow\ETL\DSL\lit;
-use function Flow\ETL\DSL\ref;
 use Flow\ETL\DSL\From;
 use Flow\ETL\DSL\To;
 use Flow\ETL\Flow;
@@ -25,9 +24,6 @@ final class AddDynamicEntriesTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('updated_at', lit(new \DateTimeImmutable('2020-01-01 00:00:00 UTC')))
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();

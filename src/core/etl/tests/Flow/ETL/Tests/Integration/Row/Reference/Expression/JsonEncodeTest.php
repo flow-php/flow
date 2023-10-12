@@ -20,9 +20,6 @@ final class JsonEncodeTest extends TestCase
             ->read(
                 From::array([['id' => 1]])
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('json', lit(['id' => 1, 'name' => 'test']))
             ->withEntry('json', ref('json')->jsonEncode(\JSON_FORCE_OBJECT))
             ->write(To::memory($memory = new ArrayMemory()))
@@ -45,9 +42,6 @@ final class JsonEncodeTest extends TestCase
             ->read(
                 From::array([['id' => 1]])
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('json', lit([1, 2, 3]))
             ->withEntry('json', ref('json')->jsonEncode())
             ->write(To::memory($memory = new ArrayMemory()))

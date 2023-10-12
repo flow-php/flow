@@ -29,10 +29,8 @@ final class ArrayGetCollectionTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
             ->withEntry('result', array_get_collection(ref('array'), 'a', 'c'))
-            ->drop('row', 'array')
+            ->drop('array')
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();
 

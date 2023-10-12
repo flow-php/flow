@@ -23,9 +23,6 @@ final class CountTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('count', ref('array')->count())
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();
@@ -48,9 +45,6 @@ final class CountTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('count', ref('key')->count())
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();
@@ -75,9 +69,6 @@ final class CountTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('row', ref('row')->unpack())
-            ->renameAll('row.', '')
-            ->drop('row')
             ->withEntry('count', ref('key')->count())
             ->write(To::memory($memory = new ArrayMemory()))
             ->run();

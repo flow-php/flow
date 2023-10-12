@@ -46,9 +46,6 @@ AzureBlobStream::register();
 
 (new Flow())
     ->read(CSV::from(new Path('flow-aws-s3://nested/**/*.csv', $s3_client_option), 10))
-    ->withEntry('unpacked', ref('row')->unpack())
-    ->renameAll('unpacked.', '')
-    ->drop('row')
     ->withEntry('id', ref('id')->cast('int'))
     ->withEntry('name', concat(ref('name'), lit(' '), ref('last name')))
     ->drop('last name')

@@ -9,20 +9,21 @@ use Flow\ETL\Adapter\Text\TextLoader;
 use Flow\ETL\Extractor;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Loader;
+use Flow\ETL\Row\EntryFactory;
+use Flow\ETL\Row\Factory\NativeEntryFactory;
 
 class Text
 {
     /**
      * @param array<Path|string>|Path|string $path
      * @param int $rows_in_batch
-     * @param string $row_entry_name
      *
      * @return Extractor
      */
     final public static function from(
         string|Path|array $path,
         int $rows_in_batch = 1000,
-        string $row_entry_name = 'row'
+        EntryFactory $entry_factory = new NativeEntryFactory()
     ) : Extractor {
         if (\is_array($path)) {
             $extractors = [];
@@ -31,7 +32,7 @@ class Text
                 $extractors[] = new TextExtractor(
                     \is_string($file_path) ? Path::realpath($file_path) : $file_path,
                     $rows_in_batch,
-                    $row_entry_name,
+                    $entry_factory
                 );
             }
 
@@ -41,7 +42,7 @@ class Text
         return new TextExtractor(
             \is_string($path) ? Path::realpath($path) : $path,
             $rows_in_batch,
-            $row_entry_name,
+            $entry_factory
         );
     }
 

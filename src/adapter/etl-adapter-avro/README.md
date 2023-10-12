@@ -25,8 +25,6 @@ composer require flow-php/etl-adapter-avro:1.x@dev
 
 (new Flow())
     ->read(Avro::from($path))
-    ->transform(Transform::array_unpack('row'))
-    ->drop('row')
     ->fetch()
 
 ```
