@@ -210,7 +210,7 @@ trait EntryExpression
      */
     public function isType(string ...$entryClass) : Expression|EntryReference
     {
-        if (!\count($entryClass)) {
+        if ([] === $entryClass) {
             throw new InvalidArgumentException('isType expression requires at least one entryClass');
         }
 
@@ -219,7 +219,7 @@ trait EntryExpression
 
     public function jsonDecode(int $flags = JSON_THROW_ON_ERROR) : Expression|EntryReference
     {
-        return new Expressions(new Expression\JsonDecode($this));
+        return new Expressions(new Expression\JsonDecode($this, $flags));
     }
 
     public function jsonEncode(int $flags = JSON_THROW_ON_ERROR) : Expression|EntryReference
