@@ -46,8 +46,13 @@ final class Average implements Aggregator
             $this->ref->as($this->ref->to() . '_avg');
         }
 
-        $result = $this->sum / $this->count;
-        $resultInt = (int) $result;
+        if (0 !== $this->count) {
+            $result = $this->sum / $this->count;
+            $resultInt = (int) $result;
+        } else {
+            $result = 0.0;
+            $resultInt = 0;
+        }
 
         if ($result - $resultInt === 0.0) {
             return \Flow\ETL\DSL\Entry::integer($this->ref->name(), (int) $result);

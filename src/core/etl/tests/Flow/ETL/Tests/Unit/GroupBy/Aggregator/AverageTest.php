@@ -72,4 +72,14 @@ final class AverageTest extends TestCase
             $aggregator->result()->value()
         );
     }
+
+    public function test_average_with_zero_result() : void
+    {
+        $aggregator = new Average('int');
+
+        $this->assertSame(
+            0,
+            $aggregator->result()->value()
+        );
+    }
 }
