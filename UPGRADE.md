@@ -49,6 +49,9 @@ Affected extractors:
 
 Extractors are no longer returning data under an array entry called `row`, thanks to this unpacking row become redundant. 
 
+Because of that all DSL functions are no longer expecting `$entry_row_name` parameter, if it was used anywhere,
+please remove it. 
+
 Before:
 ```php
 <?php 
