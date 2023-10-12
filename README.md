@@ -12,6 +12,8 @@ Supported PHP versions
 * [![Supported PHP Version](https://img.shields.io/badge/php-~8.1-8892BF.svg)](https://php.net/)
 * [![Supported PHP Version](https://img.shields.io/badge/php-~8.2-8892BF.svg)](https://php.net/)
 
+📈[Project Roadmap](https://github.com/orgs/flow-php/projects/1)
+
 ## Installation 
 
 This package is a [monorepo](https://tomasvotruba.com/blog/2019/10/28/all-you-always-wanted-to-know-about-monorepo-but-were-afraid-to-ask/).
