@@ -45,6 +45,9 @@
 - [#532](https://github.com/flow-php/flow/pull/532) - **Prevent double run of main integration tests** - [@stloyd](https://github.com/stloyd)
 - [#515](https://github.com/flow-php/flow/pull/515) - **Fixed `Cast` expression to handle `null` as first** - [@stloyd](https://github.com/stloyd)
 
+### Updated
+- [5042fe](https://github.com/flow-php/flow/commit/5042fe4dc3580b294fc638c1269c56bd93dfd19a) - **README.md** - [@norberttech](https://github.com/norberttech)
+
 ### Removed
 - [#563](https://github.com/flow-php/flow/pull/563) - **Remove "issue" examples as outdated & covered by tests** - [@stloyd](https://github.com/stloyd)
 - [#541](https://github.com/flow-php/flow/pull/541) - **Remove `ArrayKeysStyleConverterTransformer`** - [@stloyd](https://github.com/stloyd)
