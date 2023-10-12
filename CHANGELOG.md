@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-10-12
 
 ### Added
+- [#569](https://github.com/flow-php/flow/pull/569) - **Add binary comparisons integration test** - [@stloyd](https://github.com/stloyd)
 - [#566](https://github.com/flow-php/flow/pull/566) - **array_to_map() DSL function** - [@norberttech](https://github.com/norberttech)
 - [#566](https://github.com/flow-php/flow/pull/566) - **optional expression to work with optional entries** - [@norberttech](https://github.com/norberttech)
 - [#566](https://github.com/flow-php/flow/pull/566) - **UPGRADE.md to help with migrations between flow versions** - [@norberttech](https://github.com/norberttech)
@@ -39,6 +40,7 @@
 - [#526](https://github.com/flow-php/flow/pull/526) - **Simplify `RenameEntriesTransformer` to work only on one entry** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
+- [#569](https://github.com/flow-php/flow/pull/569) - **Fixed issue in `jsonDecode()` entry expression** - [@stloyd](https://github.com/stloyd)
 - [#564](https://github.com/flow-php/flow/pull/564) - **Fix broken path to autoloader in async examples** - [@stloyd](https://github.com/stloyd)
 - [#539](https://github.com/flow-php/flow/pull/539) - **Corrected misspellings** - [@szepeviktor](https://github.com/szepeviktor)
 - [#540](https://github.com/flow-php/flow/pull/540) - **just some typos** - [@voku](https://github.com/voku)
