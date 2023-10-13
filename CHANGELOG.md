@@ -21,6 +21,7 @@
 - [#514](https://github.com/flow-php/flow/pull/514) - **Add new StrPad expression** - [@stloyd](https://github.com/stloyd)
 
 ### Changed
+- [#574](https://github.com/flow-php/flow/pull/574) - **Update Box package to the latest** - [@stloyd](https://github.com/stloyd)
 - [#566](https://github.com/flow-php/flow/pull/566) - **ref is no longer null safe** - [@norberttech](https://github.com/norberttech)
 - [#566](https://github.com/flow-php/flow/pull/566) - **Extractors are no longer returning rows under "row" ArrayEntry, instead all values are unpacked to dedicated rows** - [@norberttech](https://github.com/norberttech)
 - [#565](https://github.com/flow-php/flow/pull/565) - **Change detection of PHAR in examples** - [@stloyd](https://github.com/stloyd)
