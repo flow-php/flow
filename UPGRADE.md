@@ -7,7 +7,44 @@ Please follow the instructions for your specific version to ensure a smooth upgr
 
 ## Upgrading from 0.3.x to 0.4.x
 
-### 1) `ref` expression nullability 
+### 1) Transformers replaced with expressions
+
+Transformers are a really powerful tool that was used in Flow since the beginning, but that tool was too powerful for the simple cases that were needed, and introduced additional complexity and maintenance issues when they were handwritten.
+
+We reworked most of the internal transformers to new expressions and entry expressions (based on the built-in expressions), and we still internally use that powerful tool, but we don't expose it to end users, instead, we provide easy-to-use, covering all user needs expressions.
+
+All available expressions can be found in [`ETL\Row\Reference\Expression` folder](src/core/etl/src/Flow/ETL/Row/Reference/Expression) or in [`ETL\DSL\functions` file](src/core/etl/src/Flow/ETL/DSL/functions.php), and entry expression are defined in [`EntryExpression` trait](src/core/etl/src/Flow/ETL/Row/Reference/EntryExpression.php).
+
+To see what transformers are available see [`ETL\DSL\Transform` class](src/core/etl/src/Flow/ETL/DSL/Transform.php).
+
+Before:
+```php
+<?php
+
+use Flow\ETL\Extractor\MemoryExtractor;
+use Flow\ETL\Flow;
+use Flow\ETL\DSL\Transform;
+
+(new Flow())
+    ->read(new MemoryExtractor())
+    ->rows(Transform::string_concat(['name', 'last name'], ' ', 'name'))
+```
+
+After:
+```php
+<?php
+
+use function Flow\ETL\DSL\concat;
+use function Flow\ETL\DSL\lit;
+use Flow\ETL\Extractor\MemoryExtractor;
+use Flow\ETL\Flow;
+
+(new Flow())
+    ->read(new MemoryExtractor())
+    ->withEntry('name', concat(ref('name'), lit(' '), ref('last name')))
+```
+
+### 2) `ref` expression nullability 
 
 `ref("entry_name")` is no longer returning null when the entry is not found. Instead, it throws an exception.
 The same behavior can be achieved through using a newly introduced `optional` expression: 
@@ -34,7 +71,7 @@ optional(ref('non_existing_column'))->cast('string');
 optional(ref('non_existing_column')->cast('string'));
 ```
 
-### 2) Extractors output
+### 3) Extractors output
 
 Affected extractors: 
 
@@ -78,7 +115,7 @@ After:
     ->run();
 ```
 
-### 3) ConfigBuilder::putInputIntoRows() output is now prefixed with _ (underscore)
+### 4) ConfigBuilder::putInputIntoRows() output is now prefixed with _ (underscore)
 
 In order to avoid collisions with datasets columns, additional columns created after using putInputIntoRows()
 would now be prefixed with `_` (underscore) symbol. 
