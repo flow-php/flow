@@ -26,7 +26,7 @@ final class TextExtractorTest extends TestCase
             $this->assertInstanceOf(Row\Entry\StringEntry::class, $row->get('text'));
         }
 
-        $this->assertSame(32446, $rows->count());
+        $this->assertSame(1024, $rows->count());
     }
 
     public function test_extracting_text_files_from_directory() : void
@@ -48,6 +48,6 @@ final class TextExtractorTest extends TestCase
             $total += $rows->count();
         }
 
-        $this->assertSame(64892, $total);
+        $this->assertSame(2048, $total);
     }
 }
