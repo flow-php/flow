@@ -1,6 +1,8 @@
 ## [Unreleased] - 2023-10-13
 
 ### Added
+- [#576](https://github.com/flow-php/flow/pull/576) - **Parquet library - reading only for now** - [@norberttech](https://github.com/norberttech)
+- [#576](https://github.com/flow-php/flow/pull/576) - **Implementation of algorithms from Google Dremel paper** - [@norberttech](https://github.com/norberttech)
 - [#568](https://github.com/flow-php/flow/pull/568) - **Add way to run all examples** - [@stloyd](https://github.com/stloyd)
 - [#569](https://github.com/flow-php/flow/pull/569) - **Add binary comparisons integration test** - [@stloyd](https://github.com/stloyd)
 - [#566](https://github.com/flow-php/flow/pull/566) - **array_to_map() DSL function** - [@norberttech](https://github.com/norberttech)
@@ -21,6 +23,7 @@
 - [#514](https://github.com/flow-php/flow/pull/514) - **Add new StrPad expression** - [@stloyd](https://github.com/stloyd)
 
 ### Changed
+- [#576](https://github.com/flow-php/flow/pull/576) - **Simplified composer.json files across all sub repositories** - [@norberttech](https://github.com/norberttech)
 - [#574](https://github.com/flow-php/flow/pull/574) - **Update Box package to the latest** - [@stloyd](https://github.com/stloyd)
 - [#566](https://github.com/flow-php/flow/pull/566) - **ref is no longer null safe** - [@norberttech](https://github.com/norberttech)
 - [#566](https://github.com/flow-php/flow/pull/566) - **Extractors are no longer returning rows under "row" ArrayEntry, instead all values are unpacked to dedicated rows** - [@norberttech](https://github.com/norberttech)
@@ -77,6 +80,9 @@
 - [#514](https://github.com/flow-php/flow/pull/514) - **Remove ObjectMethodTransformer & `StringEntryValueCaseConverterTransformer`** - [@stloyd](https://github.com/stloyd)
 - [#514](https://github.com/flow-php/flow/pull/514) - **Cleanup `Transform` class from transform methods covered by expressions** - [@stloyd](https://github.com/stloyd)
 - [#509](https://github.com/flow-php/flow/pull/509) - **Remove `HashTransformer`, `StringConcatTransformer` & `StringFormatTransformer`** - [@stloyd](https://github.com/stloyd)
+
+### Deprecated
+- [#576](https://github.com/flow-php/flow/pull/576) - **Codename ParquetExtractor** - [@norberttech](https://github.com/norberttech)
 
 ## [0.3.3] - 2023-10-03
 
