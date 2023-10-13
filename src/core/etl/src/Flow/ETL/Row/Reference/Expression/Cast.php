@@ -44,11 +44,7 @@ final class Cast implements Expression
             'int', 'integer' => (int) $value,
             /** @phpstan-ignore-next-line */
             'float', 'double', 'real' => (float) $value,
-            'string' => match (\gettype($value)) {
-                'object', 'array' => \json_encode($value, JSON_THROW_ON_ERROR),
-                /** @phpstan-ignore-next-line */
-                default => (string) $value
-            },
+            'string' => $this->toString($value),
             'bool', 'boolean' => (bool) $value,
             'array' => $this->toArray($value),
             'object' => (object) $value,
@@ -66,6 +62,40 @@ final class Cast implements Expression
         }
 
         return (array) $data;
+    }
+
+    private function toString(mixed $value) : ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        if (\is_string($value)) {
+            return $value;
+        }
+
+        if (\is_bool($value)) {
+            return $value ? 'true' : 'false';
+        }
+
+        if (\is_array($value)) {
+            return \json_encode($value, JSON_THROW_ON_ERROR);
+        }
+
+        if ($value instanceof \DateTimeInterface) {
+            return $value->format(\DateTimeInterface::RFC3339);
+        }
+
+        if ($value instanceof \Stringable) {
+            return (string) $value;
+        }
+
+        if ($value instanceof \DOMDocument) {
+            return $value->saveXML() ?: null;
+        }
+
+        /** @phpstan-ignore-next-line */
+        return (string) $value;
     }
 
     private function toXML(mixed $value) : null|\DOMDocument

@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\Row\Reference\Expression;
 use function Flow\ETL\DSL\cast;
 use function Flow\ETL\DSL\ref;
 use Flow\ETL\Row;
+use Flow\ETL\Row\Entry\Type\Uuid;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
 use PHPUnit\Framework\TestCase;
 
@@ -16,6 +17,12 @@ final class CastTest extends TestCase
     {
         $xml = new \DOMDocument();
         $xml->loadXML($xmlString = '<root><foo baz="buz">bar</foo></root>');
+
+        $fullXMLString = <<<'XML'
+<?xml version="1.0"?>
+<root><foo baz="buz">bar</foo></root>
+
+XML;
 
         return [
             'invalid' => [null, 'int', null],
@@ -34,6 +41,10 @@ final class CastTest extends TestCase
             'json_pretty' => [[1], 'json_pretty', "[\n    1\n]"],
             'xml_to_array' => [$xml, 'array', ['root' => ['foo' => ['@attributes' => ['baz' => 'buz'], '@value' => 'bar']]]],
             'string_to_xml' => [$xmlString, 'xml', $xml],
+            'xml_to_string' => [$xml, 'string', $fullXMLString],
+            'datetime' => [new \DateTimeImmutable('2023-01-01 00:00:00 UTC'), 'string', '2023-01-01T00:00:00+00:00'],
+            'uuid' => [Uuid::fromString('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'), 'string', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'],
+            'bool_to_string' => [true, 'string', 'true'],
         ];
     }
 
