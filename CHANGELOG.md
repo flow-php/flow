@@ -55,6 +55,7 @@
 - [5042fe](https://github.com/flow-php/flow/commit/5042fe4dc3580b294fc638c1269c56bd93dfd19a) - **README.md** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#577](https://github.com/flow-php/flow/pull/577) - **Remove "scripts" from `composer.json` in subpackages** - [@stloyd](https://github.com/stloyd)
 - [#563](https://github.com/flow-php/flow/pull/563) - **Remove "issue" examples as outdated & covered by tests** - [@stloyd](https://github.com/stloyd)
 - [#541](https://github.com/flow-php/flow/pull/541) - **Remove `ArrayKeysStyleConverterTransformer`** - [@stloyd](https://github.com/stloyd)
 - [#537](https://github.com/flow-php/flow/pull/537) - **Remove `ChainTransformer`** - [@stloyd](https://github.com/stloyd)
