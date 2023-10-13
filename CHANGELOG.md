@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-10-13
 
 ### Changed
+- [#585](https://github.com/flow-php/flow/pull/585) - **Rework text adapter test fixtures to reduce memory load** - [@stloyd](https://github.com/stloyd)
 - [#584](https://github.com/flow-php/flow/pull/584) - **Adjust `phpunit.xml` to be more efficient** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
