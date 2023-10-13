@@ -2,7 +2,7 @@
   "name": "flow-php/etl-tools",
   "description": "Flow PHP ETL - Tools",
   "require-dev": {
-    "humbug/box": "^4.3"
+    "humbug/box": "^4.4"
   },
   "config": {
     "allow-plugins": false
