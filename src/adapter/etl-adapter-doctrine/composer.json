@@ -33,32 +33,6 @@
         "optimize-autoloader": true,
         "sort-packages": true
     },
-    "scripts": {
-        "tools:install": "composer install --working-dir=./tools",
-        "cs:php:fix": "tools/vendor/bin/php-cs-fixer fix",
-        "build": [
-            "@static:analyze",
-            "@test",
-            "@test:mutation"
-        ],
-        "static:analyze": [
-            "tools/vendor/bin/psalm",
-            "tools/vendor/bin/phpstan analyze -c phpstan.neon",
-            "tools/vendor/bin/php-cs-fixer fix --dry-run"
-        ],
-        "test": [
-            "tools/vendor/bin/phpunit"
-        ],
-        "test:mutation": [
-            "tools/vendor/bin/infection -j2"
-        ],
-        "post-install-cmd": [
-            "@tools:install"
-        ],
-        "post-update-cmd": [
-            "@tools:install"
-        ]
-    },
     "minimum-stability": "dev",
     "prefer-stable": true
 }
