@@ -24,6 +24,7 @@
 - [#514](https://github.com/flow-php/flow/pull/514) - **Add new StrPad expression** - [@stloyd](https://github.com/stloyd)
 
 ### Changed
+- [#582](https://github.com/flow-php/flow/pull/582) - **Simplified casting entries to strings** - [@norberttech](https://github.com/norberttech)
 - [#580](https://github.com/flow-php/flow/pull/580) - **Polish content of README.md file** - [@stloyd](https://github.com/stloyd)
 - [#576](https://github.com/flow-php/flow/pull/576) - **Simplified composer.json files across all sub repositories** - [@norberttech](https://github.com/norberttech)
 - [#574](https://github.com/flow-php/flow/pull/574) - **Update Box package to the latest** - [@stloyd](https://github.com/stloyd)
