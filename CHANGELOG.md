@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-10-13
+## [0.4.0] - 2023-10-13
 
 ### Added
 - [#579](https://github.com/flow-php/flow/pull/579) - **Add note about rework of transformers into `UPGRADE.md` file** - [@stloyd](https://github.com/stloyd)
