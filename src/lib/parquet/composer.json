@@ -12,7 +12,8 @@
     ],
     "require": {
         "php": "~8.1 || ~8.2",
-        "ext-bcmath": "*"
+        "ext-bcmath": "*",
+        "flow-php/dremel": "1.x-dev"
     },
     "config": {
         "optimize-autoloader": true,
