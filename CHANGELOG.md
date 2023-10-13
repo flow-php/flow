@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-10-13
 
 ### Added
+- [#579](https://github.com/flow-php/flow/pull/579) - **Add note about rework of transformers into `UPGRADE.md` file** - [@stloyd](https://github.com/stloyd)
 - [#576](https://github.com/flow-php/flow/pull/576) - **Parquet library - reading only for now** - [@norberttech](https://github.com/norberttech)
 - [#576](https://github.com/flow-php/flow/pull/576) - **Implementation of algorithms from Google Dremel paper** - [@norberttech](https://github.com/norberttech)
 - [#568](https://github.com/flow-php/flow/pull/568) - **Add way to run all examples** - [@stloyd](https://github.com/stloyd)
