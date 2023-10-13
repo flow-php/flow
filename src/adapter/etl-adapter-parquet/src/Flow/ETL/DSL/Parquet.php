@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\DSL;
 
-use Flow\ETL\Adapter\Parquet\Codename\ParquetExtractor;
 use Flow\ETL\Adapter\Parquet\Codename\ParquetLoader;
+use Flow\ETL\Adapter\Parquet\ParquetExtractor;
 use Flow\ETL\Exception\MissingDependencyException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Filesystem\Path;
@@ -13,6 +13,8 @@ use Flow\ETL\Loader;
 use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Row\Schema;
+use Flow\Parquet\ByteOrder;
+use Flow\Parquet\Options;
 
 /**
  * @infection-ignore-all
@@ -29,6 +31,9 @@ class Parquet
     final public static function from(
         string|Path|array $uri,
         array $fields = [],
+        Options $options = new Options(),
+        ByteOrder $byte_order = ByteOrder::LITTLE_ENDIAN,
+        int $rows_in_batch = 1000,
         EntryFactory $entry_factory = new NativeEntryFactory()
     ) : Extractor {
         if (\is_array($uri)) {
@@ -37,7 +42,10 @@ class Parquet
             foreach ($uri as $filePath) {
                 $extractors[] = new ParquetExtractor(
                     $filePath,
+                    $options,
+                    $byte_order,
                     $fields,
+                    $rows_in_batch,
                     $entry_factory
                 );
             }
@@ -47,7 +55,10 @@ class Parquet
 
         return new ParquetExtractor(
             \is_string($uri) ? Path::realpath($uri) : $uri,
+            $options,
+            $byte_order,
             $fields,
+            $rows_in_batch,
             $entry_factory
         );
     }

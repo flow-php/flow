@@ -27,6 +27,8 @@
         <directory name="src/core/etl/src" />
         <directory name="src/lib/array-dot/src" />
         <directory name="src/lib/doctrine-dbal-bulk/src" />
+        <directory name="src/lib/parquet/src" />
+        <directory name="src/lib/dremel/src" />
         <ignoreFiles>
             <directory name="vendor"/>
 
@@ -42,6 +44,10 @@
 
             <file name="src/core/etl/src/Flow/ETL/Filesystem/AwsS3Stream.php" />
             <file name="src/core/etl/src/Flow/ETL/Filesystem/AzureBlobStream.php" />
+
+            <directory name="src/lib/parquet/src/Flow/Parquet/ThriftStream/" />
+            <directory name="src/lib/parquet/src/Flow/Parquet/Thrift/" />
+            <directory name="src/lib/parquet/src/Flow/Parquet/BinaryReader/" />
         </ignoreFiles>
     </projectFiles>
 </psalm>
