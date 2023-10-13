@@ -5,7 +5,7 @@ namespace Flow\ETL\Row\Entry\Type;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 
-final class Uuid
+final class Uuid implements \Stringable
 {
     /**
      * This regexp is a port of the Uuid library,
@@ -42,6 +42,11 @@ final class Uuid
     public static function fromString(string $value) : self
     {
         return new self($value);
+    }
+
+    public function __toString() : string
+    {
+        return $this->toString();
     }
 
     public function isEqual(self $type) : bool
