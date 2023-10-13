@@ -45,6 +45,7 @@
 - [#526](https://github.com/flow-php/flow/pull/526) - **Simplify `RenameEntriesTransformer` to work only on one entry** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
+- [#578](https://github.com/flow-php/flow/pull/578) - **added missing dremel dependency to parquet library** - [@norberttech](https://github.com/norberttech)
 - [#572](https://github.com/flow-php/flow/pull/572) - **php extractor output in examples** - [@norberttech](https://github.com/norberttech)
 - [#570](https://github.com/flow-php/flow/pull/570) - **Prevent fatal error with aggregate avg on empty group** - [@stloyd](https://github.com/stloyd)
 - [#569](https://github.com/flow-php/flow/pull/569) - **Fixed issue in `jsonDecode()` entry expression** - [@stloyd](https://github.com/stloyd)
