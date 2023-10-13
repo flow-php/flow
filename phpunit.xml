@@ -1,5 +1,13 @@
 <?xml version="1.0"?>
-<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.3/phpunit.xsd" bootstrap="vendor/autoload.php" colors="true" cacheResultFile="./var/phpunit/phpunit.cache">
+<phpunit
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="tools/phpunit/vendor/phpunit/phpunit/phpunit.xsd"
+        bootstrap="vendor/autoload.php"
+        colors="true"
+        cacheResultFile="./var/phpunit/phpunit.cache"
+        displayDetailsOnTestsThatTriggerWarnings="true"
+        displayDetailsOnTestsThatTriggerErrors="true"
+>
   <coverage cacheDirectory="./var/phpunit/">
     <report>
       <html outputDirectory="var/phpunit/coverage/html" lowUpperBound="95" highLowerBound="100"/>
