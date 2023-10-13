@@ -91,9 +91,7 @@ final class Cast implements Expression
         }
 
         if ($value instanceof \DOMDocument) {
-            $xml = $value->saveXML();
-
-            return false === $xml ? null : $xml;
+            return $value->saveXML() ?: null;
         }
 
         /** @phpstan-ignore-next-line */
