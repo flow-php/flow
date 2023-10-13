@@ -163,6 +163,9 @@
         "test": [
             "tools/phpunit/vendor/bin/phpunit"
         ],
+        "test:benchmark": [
+            "tools/phpbench/vendor/bin/phpbench run --report=aggregate --retry-threshold=5"
+        ],
         "test:mutation": [
             "tools/infection/vendor/bin/infection -j2"
         ],
@@ -192,6 +195,7 @@
             "composer install --working-dir=./tools/cs-fixer",
             "composer install --working-dir=./tools/infection",
             "composer install --working-dir=./tools/monorepo",
+            "composer install --working-dir=./tools/phpbench",
             "composer install --working-dir=./tools/phpstan",
             "composer install --working-dir=./tools/psalm",
             "composer install --working-dir=./tools/phpunit",
