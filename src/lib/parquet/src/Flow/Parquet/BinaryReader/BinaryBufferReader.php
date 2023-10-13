@@ -58,7 +58,7 @@ final class BinaryBufferReader implements BinaryReader
         $currentBytes = \substr($this->buffer, $bytePosition, $bytesNeeded);
 
         for ($i = 0; $i < $bytesNeeded; $i++) {
-            $byte = \ord($currentBytes[$i]);
+            $byte = \ord($currentBytes[$i] ?? '');
 
             for ($j = $bitOffset; $j < 8; $j++) {
                 $bits[] = ($byte >> $j) & 1;
@@ -240,9 +240,9 @@ final class BinaryBufferReader implements BinaryReader
     /**
      * @return array<int>
      */
-    public function readInts32(int $count) : array
+    public function readInts32(int $total) : array
     {
-        $intBytes = \array_chunk($this->readBytes(4 * $count)->toArray(), 4);
+        $intBytes = \array_chunk($this->readBytes(4 * $total)->toArray(), 4);
         $ints = [];
 
         foreach ($intBytes as $bytes) {
@@ -256,9 +256,9 @@ final class BinaryBufferReader implements BinaryReader
         return $ints;
     }
 
-    public function readInts64(int $count) : array
+    public function readInts64(int $total) : array
     {
-        $intBytes = \array_chunk($this->readBytes(8 * $count)->toArray(), 8);
+        $intBytes = \array_chunk($this->readBytes(8 * $total)->toArray(), 8);
 
         $ints = [];
 

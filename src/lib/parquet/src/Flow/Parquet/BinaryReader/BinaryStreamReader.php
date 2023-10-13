@@ -17,6 +17,9 @@ final class BinaryStreamReader implements BinaryReader
 
     private int $fileLength;
 
+    /**
+     * @param resource $handle
+     */
     public function __construct(private $handle, private readonly ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN)
     {
         if (!\is_resource($handle)) {
@@ -30,7 +33,7 @@ final class BinaryStreamReader implements BinaryReader
         }
 
         \fseek($this->handle, 0, SEEK_END);
-        $this->fileLength = \ftell($this->handle);
+        $this->fileLength = \ftell($this->handle) ?: 0;
         \fseek($this->handle, 0, SEEK_SET);
 
         $this->bitPosition = 0;
@@ -53,7 +56,7 @@ final class BinaryStreamReader implements BinaryReader
         }
 
         \fseek($this->handle, \intdiv($this->bitPosition, 8));
-        $byte = \ord(\fread($this->handle, 1));
+        $byte = \ord(\fread($this->handle, 1) ?: '');
         $bit = ($byte >> ($this->bitPosition % 8)) & 1;
 
         $this->bitPosition++;
@@ -72,7 +75,7 @@ final class BinaryStreamReader implements BinaryReader
         \fseek($this->handle, $bytePosition);
 
         while ($total > 0) {
-            $byte = \ord(\fread($this->handle, 1));
+            $byte = \ord(\fread($this->handle, 1) ?: '');
 
             for ($bitOffset = $this->bitPosition % 8; $bitOffset < 8; $bitOffset++) {
                 $bits[] = ($byte >> $bitOffset) & 1;
@@ -105,7 +108,7 @@ final class BinaryStreamReader implements BinaryReader
         }
 
         \fseek($this->handle, $this->bitPosition / 8);
-        $byte = \ord(\fread($this->handle, 1));
+        $byte = \ord(\fread($this->handle, 1) ?: '');
         $this->bitPosition += 8;
 
         return $byte;
@@ -127,10 +130,10 @@ final class BinaryStreamReader implements BinaryReader
         }
 
         \fseek($this->handle, $this->bitPosition / 8);
-        $bytes = \fread($this->handle, $total);
+        $bytes = \fread($this->handle, $total) ?: '';
         $this->bitPosition += 8 * \strlen($bytes);
 
-        return new Bytes(\array_values(\unpack('C*', $bytes)));
+        return new Bytes(\array_values(\unpack('C*', $bytes) ?: []));
     }
 
     public function readDouble() : float
@@ -193,7 +196,7 @@ final class BinaryStreamReader implements BinaryReader
         }
 
         \fseek($this->handle, $this->bitPosition / 8);
-        $bytes = \array_values(\unpack('C*', \fread($this->handle, 8)));
+        $bytes = \array_values(\unpack('C*', \fread($this->handle, 8) ?: '') ?: []);
         $this->bitPosition += 64;
 
         return $this->byteOrder === ByteOrder::LITTLE_ENDIAN
@@ -203,7 +206,7 @@ final class BinaryStreamReader implements BinaryReader
             | ($bytes[4] << 24) | ($bytes[5] << 16) | ($bytes[6] << 8) | $bytes[7];
     }
 
-    public function readInt96() : string
+    public function readInt96() : array
     {
         throw new RuntimeException('Not implemented yet.');
     }
@@ -214,6 +217,11 @@ final class BinaryStreamReader implements BinaryReader
     }
 
     public function readInts64(int $total) : array
+    {
+        throw new RuntimeException('Not implemented yet.');
+    }
+
+    public function readInts96(int $total) : array
     {
         throw new RuntimeException('Not implemented yet.');
     }
@@ -236,7 +244,7 @@ final class BinaryStreamReader implements BinaryReader
         }
 
         \fseek($this->handle, $this->bitPosition / 8);
-        $bytes = \array_values(\unpack('C*', \fread($this->handle, 4)));
+        $bytes = \array_values(\unpack('C*', \fread($this->handle, 4) ?: '') ?: []);
         $this->bitPosition += 32;
 
         return $this->byteOrder === ByteOrder::LITTLE_ENDIAN
@@ -270,7 +278,7 @@ final class BinaryStreamReader implements BinaryReader
             }
 
             \fseek($this->handle, $this->bitPosition / 8);
-            $byte = \ord(\fread($this->handle, 1));
+            $byte = \ord(\fread($this->handle, 1) ?: '');
             $this->bitPosition += 8;
 
             $result |= ($byte & 0x7F) << $shift;
