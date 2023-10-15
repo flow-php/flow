@@ -113,7 +113,19 @@ final class AvroTest extends TestCase
                             Entry::json_object('json_object', ['id' => 1, 'name' => 'test']),
                             Entry::json('json', [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']]),
                             Entry::list_of_string('list_of_strings', ['a', 'b', 'c']),
-                            Entry::list_of_datetime('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()])
+                            Entry::list_of_datetime('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()]),
+                            Entry::structure(
+                                'address',
+                                Entry::string('street', 'street_' . $i),
+                                Entry::string('city', 'city_' . $i),
+                                Entry::string('zip', 'zip_' . $i),
+                                Entry::string('country', 'country_' . $i),
+                                Entry::structure(
+                                    'location',
+                                    Entry::float('lat', 1.5),
+                                    Entry::float('lon', 1.5)
+                                )
+                            ),
                         );
                     }, \range(1, 100))
                 )

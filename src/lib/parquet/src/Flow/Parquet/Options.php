@@ -12,7 +12,7 @@ final class Options
     public function __construct()
     {
         $this->options = [
-            Option::BYTE_ARRAY_TO_STRING->name => false,
+            Option::BYTE_ARRAY_TO_STRING->name => true,
             Option::ROUND_NANOSECONDS->name => false,
             Option::INT_96_AS_DATETIME->name => true,
         ];

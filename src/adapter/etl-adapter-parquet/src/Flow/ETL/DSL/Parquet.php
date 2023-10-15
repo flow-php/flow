@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\DSL;
 
+use codename\parquet\ParquetOptions;
 use Flow\ETL\Adapter\Parquet\Codename\ParquetLoader;
 use Flow\ETL\Adapter\Parquet\ParquetExtractor;
 use Flow\ETL\Exception\MissingDependencyException;
@@ -74,13 +75,20 @@ class Parquet
      */
     final public static function to(
         string|Path $path,
-        int $rows_in_group = 1000,
-        Schema $schema = null
+        int $rows_in_group = 10000,
+        Schema $schema = null,
+        ParquetOptions $options = null
     ) : Loader {
+        if ($options === null) {
+            $options = new ParquetOptions();
+            $options->TreatByteArrayAsString = true;
+        }
+
         return new ParquetLoader(
             \is_string($path) ? Path::realpath($path) : $path,
             $rows_in_group,
-            $schema
+            $schema,
+            $options
         );
     }
 }

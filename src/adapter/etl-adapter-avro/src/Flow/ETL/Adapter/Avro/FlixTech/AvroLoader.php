@@ -56,6 +56,7 @@ final class AvroLoader implements Closure, Loader, Loader\FileLoader
         }
 
         $context->streams()->close($this->path);
+        $this->writer = null;
     }
 
     public function destination() : Path
@@ -88,6 +89,7 @@ final class AvroLoader implements Closure, Loader, Loader\FileLoader
                 $rowData[$entry->name()] = match (\get_class($entry)) {
                     Row\Entry\ListEntry::class => $this->listEntryToValues($entry),
                     DateTimeEntry::class => (int) $entry->value()->format('Uu'),
+                    Row\Entry\UuidEntry::class => $entry->value()->toString(),
                     Row\Entry\EnumEntry::class => $entry->value()->name,
                     default => $entry->value(),
                 };
@@ -102,6 +104,22 @@ final class AvroLoader implements Closure, Loader, Loader\FileLoader
         $listType = $entry->definition()->metadata()->get(Schema\FlowMetadata::METADATA_LIST_ENTRY_TYPE);
 
         if ($listType instanceof ObjectType) {
+            if (\is_a($listType->class, Row\Entry\Type\Uuid::class, true)) {
+                /** @var array<string> $data */
+                $data = [];
+
+                /**
+                 * @psalm-suppress MixedAssignment
+                 * @psalm-suppress MixedMethodCall
+                 */
+                foreach ($entry->value() as $value) {
+                    /** @phpstan-ignore-next-line */
+                    $data[] = $value->toString();
+                }
+
+                return $data;
+            }
+
             if (\is_a($listType->class, \DateTimeInterface::class, true)) {
                 /** @var array<int> $data */
                 $data = [];

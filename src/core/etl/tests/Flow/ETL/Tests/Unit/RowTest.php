@@ -89,7 +89,7 @@ final class RowTest extends TestCase
                 Row\Schema\Definition::dateTime('created-at'),
                 Row\Schema\Definition::null('phase'),
                 Row\Schema\Definition::array('array'),
-                Row\Schema\Definition::structure('items'),
+                Row\Schema\Definition::structure('items', ['item-id' => Entry::integer('item-id', 1)->definition(), 'name' => Entry::string('name', 'one')->definition()]),
                 Row\Schema\Definition::collection('tags'),
                 Row\Schema\Definition::object('object'),
             ),
@@ -133,10 +133,6 @@ final class RowTest extends TestCase
                 'items',
                 new IntegerEntry('item-id', 1),
                 new StringEntry('name', 'one'),
-                new IntegerEntry('item-id', 2),
-                new StringEntry('name', 'two'),
-                new IntegerEntry('item-id', 3),
-                new StringEntry('name', 'three')
             )
         );
 
@@ -147,12 +143,8 @@ final class RowTest extends TestCase
                 'created-at' => $createdAt,
                 'phase' => null,
                 'items' => [
-                    new IntegerEntry('item-id', 1),
-                    new StringEntry('name', 'one'),
-                    new IntegerEntry('item-id', 2),
-                    new StringEntry('name', 'two'),
-                    new IntegerEntry('item-id', 3),
-                    new StringEntry('name', 'three'),
+                    'item-id' => 1,
+                    'name' => 'one',
                 ],
             ],
             $row->toArray(),

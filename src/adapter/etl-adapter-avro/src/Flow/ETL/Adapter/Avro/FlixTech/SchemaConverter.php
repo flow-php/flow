@@ -16,10 +16,13 @@ use Flow\ETL\Row\Entry\JsonEntry;
 use Flow\ETL\Row\Entry\ListEntry;
 use Flow\ETL\Row\Entry\NullEntry;
 use Flow\ETL\Row\Entry\StringEntry;
+use Flow\ETL\Row\Entry\StructureEntry;
 use Flow\ETL\Row\Entry\TypedCollection\ObjectType;
 use Flow\ETL\Row\Entry\TypedCollection\ScalarType;
+use Flow\ETL\Row\Entry\UuidEntry;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Row\Schema\Definition;
+use Flow\ETL\Row\Schema\FlowMetadata;
 
 final class SchemaConverter
 {
@@ -34,20 +37,7 @@ final class SchemaConverter
                 );
             }
 
-            if (\count($definition->types()) === 2 && $definition->isNullable()) {
-                /** @var class-string<Entry> $type */
-                $type = \current(\array_diff($definition->types(), [NullEntry::class]));
-                $fields[] = $this->convertType($type, $definition);
-            }
-
-            if (\count($definition->types()) === 1) {
-                $type = \current($definition->types());
-                $fields[] = $this->convertType($type, $definition);
-            }
-
-            if ((\count($definition->types()) === 2 && !$definition->isNullable()) || \count($definition->types()) > 2) {
-                throw new RuntimeException('Union types are not supported yet. Invalid type: ' . $definition->entry()->name());
-            }
+            $fields[] = $this->convert($definition);
         }
 
         return \json_encode([
@@ -63,8 +53,10 @@ final class SchemaConverter
      *
      * @return array{name: string, type: string}
      */
-    private function convertType(string $type, Definition $definition) : array
+    private function convert(Definition $definition) : array
     {
+        $type = $this->typeFromDefinition($definition);
+
         if ($type === ListEntry::class) {
             $listType = $definition->metadata()->get(Schema\FlowMetadata::METADATA_LIST_ENTRY_TYPE);
 
@@ -86,8 +78,30 @@ final class SchemaConverter
             }
         }
 
+        if ($type === StructureEntry::class) {
+            /** @var array<string, Definition> $structureDefinitions */
+            $structureDefinitions = $definition->metadata()->get(FlowMetadata::METADATA_STRUCTURE_DEFINITIONS);
+
+            $structConverter = function (array $definitions) use (&$structConverter) : array {
+                $structureFields = [];
+
+                /** @var Definition $definition */
+                foreach ($definitions as $name => $definition) {
+                    if (!\is_array($definition)) {
+                        $structureFields[] = $this->convert($definition);
+                    } else {
+                        $structureFields[] = ['name' => $name, 'type' => ['name' => \ucfirst($name), 'type' => \AvroSchema::RECORD_SCHEMA, 'fields' => $structConverter($definition)]];
+                    }
+                }
+
+                return $structureFields;
+            };
+
+            return ['name' => $definition->entry()->name(), 'type' => ['name' => \ucfirst($definition->entry()->name()), 'type' => \AvroSchema::RECORD_SCHEMA, 'fields' => $structConverter($structureDefinitions)]];
+        }
+
         return match ($type) {
-            StringEntry::class, JsonEntry::class => ['name' => $definition->entry()->name(), 'type' => \AvroSchema::STRING_TYPE],
+            StringEntry::class, JsonEntry::class, UuidEntry::class => ['name' => $definition->entry()->name(), 'type' => \AvroSchema::STRING_TYPE],
             EnumEntry::class => [
                 'name' => $definition->entry()->name(),
                 'type' => [
@@ -106,5 +120,19 @@ final class SchemaConverter
             DateTimeEntry::class => ['name' => $definition->entry()->name(), 'type' => 'long', \AvroSchema::LOGICAL_TYPE_ATTR => 'timestamp-micros'],
             default => throw new RuntimeException($type . ' is not yet supported.')
         };
+    }
+
+    private function typeFromDefinition(Definition $definition) : string
+    {
+        if ($definition->isNullable() && \count($definition->types()) === 2) {
+            /** @var class-string<Entry> $type */
+            $type = \current(\array_diff($definition->types(), [NullEntry::class]));
+        } elseif (\count($definition->types()) === 1) {
+            $type = \current($definition->types());
+        } else {
+            throw new RuntimeException('Union types are not supported by Avro file format. Invalid type: ' . $definition->entry()->name());
+        }
+
+        return $type;
     }
 }

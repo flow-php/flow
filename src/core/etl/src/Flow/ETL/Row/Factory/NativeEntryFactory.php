@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Factory;
 
+use function Flow\ETL\DSL\array_is_structure;
+use function Flow\ETL\DSL\array_to_structure;
 use Flow\ETL\DSL\Entry as EntryDSL;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
@@ -107,6 +109,10 @@ final class NativeEntryFactory implements EntryFactory
         if (\is_array($value)) {
             if ([] === $value) {
                 return new Row\Entry\ArrayEntry($entryName, $value);
+            }
+
+            if (array_is_structure($value)) {
+                return array_to_structure($entryName, $value);
             }
 
             if (!\array_is_list($value)) {

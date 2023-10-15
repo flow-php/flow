@@ -11,7 +11,7 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @implements Entry<array<Entry>, array{name: string, entries: array<Entry>}>
+ * @implements Entry<array<array-key, Entry>, array{name: string, entries: array<Entry>}>
  */
 final class StructureEntry implements \Stringable, Entry
 {
@@ -29,6 +29,16 @@ final class StructureEntry implements \Stringable, Entry
     {
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
+        }
+
+        if (!\count($entries)) {
+            throw InvalidArgumentException::because('Structure must have at least one entry, ' . $name . ' got none.');
+        }
+
+        $entryNames = \array_map(static fn (Entry $entry) => $entry->name(), $entries);
+
+        if (\count(\array_unique($entryNames)) !== \count($entryNames)) {
+            throw InvalidArgumentException::because('Each entry name in structure must be unique, given: ' . \implode(', ', $entryNames));
         }
 
         $this->entries = $entries;
@@ -53,9 +63,42 @@ final class StructureEntry implements \Stringable, Entry
         $this->entries = $data['entries'];
     }
 
+    /**
+     * @psalm-suppress MixedFunctionCall
+     * @psalm-suppress MixedArgumentTypeCoercion
+     * @psalm-suppress MixedAssignment
+     */
     public function definition() : Definition
     {
-        return Definition::structure($this->name, false);
+        /**
+         * @param array<string, Entry|mixed> $entries
+         *
+         * @return array<string, array<Entry|string>|Entry>
+         */
+        $buildDefinitions = static function (array $entries) use (&$buildDefinitions) : array {
+            $definitions = [];
+
+            /** @var Entry $entry */
+            foreach ($entries as $entry) {
+                if ($entry instanceof self) {
+                    $definitions[$entry->name()] = $buildDefinitions($entry->entries());
+                } else {
+                    $definitions[$entry->name()] = $entry->definition();
+                }
+            }
+
+            return $definitions;
+        };
+
+        return Definition::structure($this->name, $buildDefinitions($this->entries), false);
+    }
+
+    /**
+     * @return array<Entry>
+     */
+    public function entries() : array
+    {
+        return $this->entries;
     }
 
     public function is(string|Reference $name) : bool
@@ -98,8 +141,22 @@ final class StructureEntry implements \Stringable, Entry
         return \json_encode($array, JSON_THROW_ON_ERROR);
     }
 
+    /**
+     * @psalm-suppress LessSpecificImplementedReturnType
+     * @psalm-suppress MixedAssignment
+     *
+     * @return array<string, mixed>
+     */
     public function value() : array
     {
-        return \array_values($this->entries);
+        /** @var array<string, mixed> $structure */
+        $structure = [];
+
+        /** @var Entry $entry */
+        foreach ($this->entries as $entry) {
+            $structure[$entry->name()] = $entry->value();
+        }
+
+        return $structure;
     }
 }
