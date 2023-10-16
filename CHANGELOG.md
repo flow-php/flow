@@ -6,6 +6,8 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#598](https://github.com/flow-php/flow/pull/598) - **Rework GH testing actions to run only after code changes** - [@stloyd](https://github.com/stloyd)
+- [#597](https://github.com/flow-php/flow/pull/597) - **Reduce the amount of test data in ElasticSearch tests** - [@stloyd](https://github.com/stloyd)
 - [#596](https://github.com/flow-php/flow/pull/596) - **Simplify `CacheSpy` test double class** - [@stloyd](https://github.com/stloyd)
 - [#595](https://github.com/flow-php/flow/pull/595) - **Cleanup tests before starting tests** - [@norberttech](https://github.com/norberttech)
 - [#594](https://github.com/flow-php/flow/pull/594) - **Replace hashing algorithm from `sha256` to `xxh128`** - [@stloyd](https://github.com/stloyd)
