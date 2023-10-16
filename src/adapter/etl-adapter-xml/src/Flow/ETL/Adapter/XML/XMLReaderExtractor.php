@@ -59,7 +59,7 @@ final class XMLReaderExtractor implements Extractor
 
                     while ($xmlReader->depth < $previousDepth) {
                         \array_pop($currentPathBreadCrumbs);
-                        --$previousDepth;
+                        $previousDepth--;
                     }
 
                     $currentPath = \implode('/', $currentPathBreadCrumbs);
