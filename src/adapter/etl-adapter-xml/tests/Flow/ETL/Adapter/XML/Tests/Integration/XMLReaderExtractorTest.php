@@ -39,7 +39,7 @@ final class XMLReaderExtractorTest extends TestCase
                 )),
             ),
             (new Flow())
-                ->read(XML::from(__DIR__ . '/../../../Fixtures/deepest_items_flat.xml', 'root/items/item/deep'))
+                ->read(XML::from(__DIR__ . '/../Fixtures/deepest_items_flat.xml', 'root/items/item/deep'))
                 ->fetch()
         );
     }
