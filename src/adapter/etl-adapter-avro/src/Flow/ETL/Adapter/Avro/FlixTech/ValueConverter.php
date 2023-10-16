@@ -35,7 +35,7 @@ final class ValueConverter
             $avroType = $this->type($entry);
 
             if ($avroType !== null && \is_array($avroType[\AvroSchema::TYPE_ATTR])) {
-                if ($avroType[\AvroSchema::TYPE_ATTR][\AvroSchema::TYPE_ATTR] === \AvroSchema::LONG_TYPE
+                if (($avroType[\AvroSchema::TYPE_ATTR][\AvroSchema::TYPE_ATTR] ?? null) === \AvroSchema::LONG_TYPE
                     && \array_key_exists(\AvroSchema::LOGICAL_TYPE_ATTR, $avroType)
                     && $avroType[\AvroSchema::LOGICAL_TYPE_ATTR] === 'timestamp-micros'
                 ) {
@@ -43,7 +43,7 @@ final class ValueConverter
                         'U.u',
                         \implode('.', \str_split((string) $value, 10))
                     );
-                } elseif ($avroType[\AvroSchema::TYPE_ATTR][\AvroSchema::TYPE_ATTR] === \AvroSchema::ARRAY_SCHEMA
+                } elseif (($avroType[\AvroSchema::TYPE_ATTR][\AvroSchema::TYPE_ATTR] ?? null) === \AvroSchema::ARRAY_SCHEMA
                     && \array_key_exists(\AvroSchema::LOGICAL_TYPE_ATTR, $avroType[\AvroSchema::TYPE_ATTR])
                     && $avroType[\AvroSchema::TYPE_ATTR][\AvroSchema::LOGICAL_TYPE_ATTR] === 'timestamp-micros'
                 ) {
@@ -74,14 +74,12 @@ final class ValueConverter
 
     private function type(string $entry) : ?array
     {
-        $type = null;
-
         foreach ($this->avroSchema[\AvroSchema::FIELDS_ATTR] as $avroType) {
             if ($avroType[\AvroSchema::NAME_ATTR] === $entry) {
                 return $avroType;
             }
         }
 
-        return $type;
+        return null;
     }
 }

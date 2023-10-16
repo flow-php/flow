@@ -107,7 +107,7 @@ final class AvroTest extends TestCase
                         return Row::create(
                             Entry::integer('integer', $i),
                             Entry::float('float', 1.5),
-                            Entry::string('string', 'name_' . $i),
+                            $i % 10 === 0 ? Entry::null('string') : Entry::string('string', 'name_' . $i),
                             Entry::boolean('boolean', true),
                             Entry::datetime('datetime', new \DateTimeImmutable()),
                             Entry::json_object('json_object', ['id' => 1, 'name' => 'test']),

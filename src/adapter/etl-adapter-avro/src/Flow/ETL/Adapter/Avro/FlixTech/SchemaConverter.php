@@ -48,10 +48,7 @@ final class SchemaConverter
     }
 
     /**
-     * @param class-string<Entry> $type
-     * @param Definition $definition
-     *
-     * @return array{name: string, type: string}
+     * @return array{name: string, type: string|string[]}
      */
     private function convert(Definition $definition) : array
     {
@@ -100,7 +97,7 @@ final class SchemaConverter
             return ['name' => $definition->entry()->name(), 'type' => ['name' => \ucfirst($definition->entry()->name()), 'type' => \AvroSchema::RECORD_SCHEMA, 'fields' => $structConverter($structureDefinitions)]];
         }
 
-        return match ($type) {
+        $avroType = match ($type) {
             StringEntry::class, JsonEntry::class, UuidEntry::class => ['name' => $definition->entry()->name(), 'type' => \AvroSchema::STRING_TYPE],
             EnumEntry::class => [
                 'name' => $definition->entry()->name(),
@@ -118,8 +115,15 @@ final class SchemaConverter
             BooleanEntry::class => ['name' => $definition->entry()->name(), 'type' => \AvroSchema::BOOLEAN_TYPE],
             ArrayEntry::class => throw new RuntimeException("ArrayEntry entry can't be saved in Avro file, try convert it to ListEntry"),
             DateTimeEntry::class => ['name' => $definition->entry()->name(), 'type' => 'long', \AvroSchema::LOGICAL_TYPE_ATTR => 'timestamp-micros'],
+            NullEntry::class => ['name' => $definition->entry()->name(), 'type' => \AvroSchema::NULL_TYPE],
             default => throw new RuntimeException($type . ' is not yet supported.')
         };
+
+        if ($definition->isNullable()) {
+            $avroType['type'] = [$avroType['type'], \AvroSchema::NULL_TYPE];
+        }
+
+        return $avroType;
     }
 
     private function typeFromDefinition(Definition $definition) : string
