@@ -54,15 +54,17 @@ final class NativeEntryFactory implements EntryFactory
 
         if (\is_string($value)) {
             if ('' !== $value) {
-                if ($this->isJson($value)) {
+                $trimmedValue = \trim($value);
+
+                if ($this->isJson($trimmedValue)) {
                     return Row\Entry\JsonEntry::fromJsonString($entryName, $value);
                 }
 
-                if ($this->isUuid($value)) {
+                if ($this->isUuid($trimmedValue)) {
                     return new Row\Entry\UuidEntry($entryName, Entry\Type\Uuid::fromString($value));
                 }
 
-                if ($this->isXML($value)) {
+                if ($this->isXML($trimmedValue)) {
                     return new Entry\XMLEntry($entryName, $value);
                 }
             }
@@ -304,6 +306,10 @@ final class NativeEntryFactory implements EntryFactory
 
     private function isJson(string $string) : bool
     {
+        if ('{' !== $string[0] && '[' !== $string[0]) {
+            return false;
+        }
+
         if (
             (!\str_starts_with($string, '{') || !\str_ends_with($string, '}'))
             &&
@@ -330,6 +336,10 @@ final class NativeEntryFactory implements EntryFactory
 
     private function isXML(string $string) : bool
     {
+        if ('<' !== $string[0]) {
+            return false;
+        }
+
         if (\preg_match('/<(.+?)>(.+?)<\/(.+?)>/', $string) === 1) {
             try {
                 \libxml_use_internal_errors(true);
