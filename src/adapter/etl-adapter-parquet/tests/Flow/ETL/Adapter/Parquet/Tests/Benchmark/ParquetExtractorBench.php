@@ -12,6 +12,6 @@ final class ParquetExtractorBench
     #[Revs(1000)]
     public function bench_extract() : void
     {
-        Parquet::from(__DIR__ . '/../Fixtures/data.parquet');
+        Parquet::from(__DIR__ . '/../Fixtures/orders_flow.parquet');
     }
 }
