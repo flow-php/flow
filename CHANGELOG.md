@@ -23,6 +23,7 @@
 - [#584](https://github.com/flow-php/flow/pull/584) - **Adjust `phpunit.xml` to be more efficient** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
+- [61e035](https://github.com/flow-php/flow/commit/61e0350ab589235504ea503065e8d6511a9262ae) - **github markdown syntax in benchmark tag workflow** - [@norberttech](https://github.com/norberttech)
 - [4f820f](https://github.com/flow-php/flow/commit/4f820fe19d24e1bcfe181d6665d0689a94f8351f) - **default PHPBENCH_TAG value for push events** - [@norberttech](https://github.com/norberttech)
 - [14c092](https://github.com/flow-php/flow/commit/14c092c5b9e5fbb29de722c2d44e6c11087ea8a9) - **benchmark-tag workflow** - [@norberttech](https://github.com/norberttech)
 - [#603](https://github.com/flow-php/flow/pull/603) - **Fix Avro adapter handling nullable values** - [@stloyd](https://github.com/stloyd)
