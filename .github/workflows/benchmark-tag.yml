@@ -1,18 +1,21 @@
-name: Benchmark History Tag
+name: Benchmark History
 
 on:
   workflow_dispatch:
     inputs:
       tag_name:
         description: 'Git Tag Name'
+        required: false
+      branch_name:
+        description: 'Git Branch Name'
         required: true
         default: '1.x'
   push:
     branches: [ 1.x ]
 
 jobs:
-  benchmark-tag:
-    name: "Benchmark History Tag"
+  benchmark:
+    name: "Benchmark History"
 
     runs-on: ${{ matrix.operating-system }}
 
@@ -27,23 +30,38 @@ jobs:
           - "ubuntu-latest"
 
     steps:
-      - name: "Checkout"
-        uses: "actions/checkout@v2"  # Using v2 because it's generally better supported
-        with:
-          fetch-depth: 0
-
-      - name: "Set Ref"
+      - name: "Set Git Ref"
         run: |
-          if git tag --list | grep -q "${{ github.event.inputs.tag_name }}"; then
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            echo "GIT_REF=${{ github.ref }}" >> $GITHUB_ENV
+          elif [[ "${{ github.event.inputs.tag_name }}" != "" ]]; then
             echo "GIT_REF=refs/tags/${{ github.event.inputs.tag_name }}" >> $GITHUB_ENV
           else
-            echo "GIT_REF=${{ github.event.inputs.tag_name }}" >> $GITHUB_ENV
+            echo "GIT_REF=${{ github.event.inputs.branch_name }}" >> $GITHUB_ENV
+          fi
+
+      - name: "Set Benchmark Tag"
+        run: |
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            echo "PHPBENCH_TAG=${{ github.ref }}" >> $GITHUB_ENV
+          elif [[ "${{ github.event.inputs.tag_name }}" != "" ]]; then
+            echo "PHPBENCH_TAG=${{ github.event.inputs.tag_name }}" >> $GITHUB_ENV
+          else
+            echo "PHPBENCH_TAG=${{ github.event.inputs.branch_name }}" >> $GITHUB_ENV
           fi
 
       - name: "Checkout to specific ref"
         uses: "actions/checkout@v2"
         with:
           ref: ${{ env.GIT_REF }}
+
+      - name: "Install PHP"
+        uses: "shivammathur/setup-php@v2"
+        with:
+          coverage: none
+          tools: composer:v2
+          php-version: "${{ matrix.php-version }}"
+          ini-values: memory_limit=-1
 
       - name: "Install PHP"
         uses: "shivammathur/setup-php@v2"
@@ -73,12 +91,12 @@ jobs:
         uses: "actions/cache@v3"
         with:
           path: "var/phpbench"
-          key: "php-${{ matrix.php-version }}-${{ github.event.inputs.tag_name }}-phpbench"
+          key: "php-${{ matrix.php-version }}-${{ env.PHPBENCH_TAG }}-phpbench"
           restore-keys: |
-            php-${{ matrix.php-version }}-${{ github.event.inputs.tag_name }}-phpbench-
+            php-${{ matrix.php-version }}-${{ env.PHPBENCH_TAG }}-phpbench-
 
       - name: Adding main headline
-        run: echo '# Flow PHP - Benchmark - ${{ github.event.inputs.tag_name }}' >> $GITHUB_STEP_SUMMARY
+        run: echo '# Flow PHP - Benchmark - ${{ env.PHPBENCH_TAG }}' >> $GITHUB_STEP_SUMMARY
 
       - name: "Benchmark"
-        run: "composer test:benchmark -- --tag=${{ github.event.inputs.tag_name }} --progress=none >> $GITHUB_STEP_SUMMARY"
+        run: "composer test:benchmark -- --tag=${{ env.PHPBENCH_TAG }} --progress=none >> $GITHUB_STEP_SUMMARY"
