@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-10-16
 
 ### Added
+- [#602](https://github.com/flow-php/flow/pull/602) - **allow to manually trigger benchmark tag workflow** - [@norberttech](https://github.com/norberttech)
 - [#581](https://github.com/flow-php/flow/pull/581) - **Add PHPBench tool and first benchmark example** - [@stloyd](https://github.com/stloyd)
 - [#587](https://github.com/flow-php/flow/pull/587) - **NativeEntryFactory structures detection** - [@norberttech](https://github.com/norberttech)
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
