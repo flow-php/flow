@@ -1,6 +1,12 @@
 name: Benchmark History Tag
 
 on:
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Git Tag Name'
+        required: true
+        default: '1.x'
   push:
     branches: [ 1.x ]
 
@@ -23,6 +29,8 @@ jobs:
     steps:
       - name: "Checkout"
         uses: "actions/checkout@v4"
+        with:
+          ref: refs/tags/${{ github.event.inputs.tag_name }}
 
       - name: "Install PHP"
         uses: "shivammathur/setup-php@v2"
@@ -52,9 +60,12 @@ jobs:
         uses: "actions/cache@v3"
         with:
           path: "var/phpbench"
-          key: "php-${{ matrix.php-version }}-phpbench"
+          key: "php-${{ matrix.php-version }}-${{ github.event.inputs.tag_name }}-phpbench"
           restore-keys: |
-            php-${{ matrix.php-version }}-phpbench-
+            php-${{ matrix.php-version }}-${{ github.event.inputs.tag_name }}-phpbench-
 
-      - name: "Benchmark Tag"
-        run: "composer test:benchmark -- --tag=original --progress=plain"
+      - name: Adding main headline
+        run: echo '# Flow PHP - Benchmark - ${{ github.event.inputs.tag_name }}' >> $GITHUB_STEP_SUMMARY
+
+      - name: "Benchmark"
+        run: "composer test:benchmark -- --tag=${{ github.event.inputs.tag_name }} --progress=none >> $GITHUB_STEP_SUMMARY"
