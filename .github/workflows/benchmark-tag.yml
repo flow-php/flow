@@ -98,6 +98,7 @@ jobs:
       - name: Adding main headline
         run: |
             echo '# Flow PHP - Benchmark - ${{ env.PHPBENCH_TAG }}' >> $GITHUB_STEP_SUMMARY
+            echo ' ' >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: "Benchmark"

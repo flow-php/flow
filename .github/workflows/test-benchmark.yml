@@ -68,6 +68,7 @@ jobs:
       - name: Adding extractors headline
         run: |
           echo '## Extractors' >> $GITHUB_STEP_SUMMARY
+          echo ' ' >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: "Benchmark"
@@ -76,7 +77,9 @@ jobs:
       - name: Adding transformers headline
         run: |
           echo '```' >> $GITHUB_STEP_SUMMARY
+          echo ' ' >> $GITHUB_STEP_SUMMARY
           echo '## Transformers' >> $GITHUB_STEP_SUMMARY
+          echo ' ' >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: "Benchmark"
@@ -85,7 +88,9 @@ jobs:
       - name: Adding entry factory headline
         run: |
           echo '```' >> $GITHUB_STEP_SUMMARY
+          echo ' ' >> $GITHUB_STEP_SUMMARY
           echo '## Entry Factory' >> $GITHUB_STEP_SUMMARY
+          echo ' ' >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: "Benchmark"
