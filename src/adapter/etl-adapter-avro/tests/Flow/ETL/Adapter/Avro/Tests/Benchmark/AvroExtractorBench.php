@@ -1,17 +1,17 @@
 <?php declare(strict_types=1);
 
-namespace Flow\ETL\Adapter\Parquet\Tests\Benchmark;
+namespace Flow\ETL\Adapter\Avro\Tests\Benchmark;
 
-use Flow\ETL\DSL\Parquet;
+use Flow\ETL\DSL\Avro;
 use PhpBench\Attributes\Iterations;
 use PhpBench\Attributes\Revs;
 
 #[Iterations(5)]
-final class ParquetExtractorBench
+final class AvroExtractorBench
 {
     #[Revs(1000)]
     public function bench_extract() : void
     {
-        Parquet::from(__DIR__ . '/../Fixtures/data.parquet');
+        Avro::from(__DIR__ . '/../Fixtures/data.avro');
     }
 }

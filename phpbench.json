@@ -2,12 +2,12 @@
   "$schema": "./tools/phpbench/vendor/phpbench/phpbench/phpbench.schema.json",
   "runner.bootstrap": "vendor/autoload.php",
   "runner.path": [
-    "src/adapter/etl-adapter-avro/tests/Flow/ETL/Adapter/Avro/FlixTech/Tests/Benchmark/",
+    "src/adapter/etl-adapter-avro/tests/Flow/ETL/Adapter/Avro/Tests/Benchmark/",
     "src/adapter/etl-adapter-csv/tests/Flow/ETL/Adapter/CSV/Tests/Benchmark/",
-    "src/adapter/etl-adapter-json/tests/Flow/ETL/Tests/Benchmark/",
+    "src/adapter/etl-adapter-json/tests/Flow/ETL/Adapter/JSON/Tests/Benchmark/",
     "src/adapter/etl-adapter-parquet/tests/Flow/ETL/Adapter/Parquet/Tests/Benchmark/",
     "src/adapter/etl-adapter-text/tests/Flow/ETL/Adapter/Text/Tests/Benchmark/",
-    "src/adapter/etl-adapter-xml/tests/Flow/ETL/Tests/Benchmark/",
+    "src/adapter/etl-adapter-xml/tests/Flow/ETL/Adapter/XML/Tests/Benchmark/",
     "src/core/etl/tests/Flow/ETL/Tests/Benchmark/"
   ],
   "runner.progress": "dots",
