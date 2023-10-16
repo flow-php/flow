@@ -1,17 +1,20 @@
-name: Benchmark Suite
+name: Test Mutations
 
 on:
   pull_request:
     paths:
+      - '.github/workflows/**'
       - 'src/adapter/**'
       - 'src/core/**'
       - 'src/lib/**'
       - 'tools/**'
       - 'composer.lock'
+  push:
+    branches: [ 1.x ]
 
 jobs:
-  benchmark:
-    name: "Benchmark"
+  mutation-tests:
+    name: "Mutation Tests"
 
     runs-on: ${{ matrix.operating-system }}
 
@@ -32,7 +35,7 @@ jobs:
       - name: "Install PHP"
         uses: "shivammathur/setup-php@v2"
         with:
-          coverage: none
+          coverage: pcov
           tools: composer:v2
           php-version: "${{ matrix.php-version }}"
           ini-values: memory_limit=-1
@@ -50,16 +53,19 @@ jobs:
           restore-keys: |
             php-${{ matrix.php-version }}-locked-composer-
 
-      - name: "Install locked dependencies"
-        run: "composer install --no-interaction --no-progress"
+      - name: "Create cache directory"
+        run: "mkdir -p var/infection/cache"
 
-      - name: "Cache PHPBench reports"
+      - name: "Cache infection results"
         uses: "actions/cache@v3"
         with:
-          path: "var/phpbench"
-          key: "php-${{ matrix.php-version }}-phpbench"
+          path: "var/infection/cache"
+          key: "php-${{ matrix.php-version }}-cache-infection-${{ github.run_id }}"
           restore-keys: |
-            php-${{ matrix.php-version }}-phpbench-
+            php-${{ matrix.php-version }}-cache-infection-
 
-      - name: "Benchmark"
-        run: "composer test:benchmark -- --ref=original --progress=plain"
+      - name: "Install locked dependencies"
+        run: "composer install --no-interaction --no-progress --no-suggest"
+
+      - name: "Mutation Tests"
+        run: "composer test:mutation"
