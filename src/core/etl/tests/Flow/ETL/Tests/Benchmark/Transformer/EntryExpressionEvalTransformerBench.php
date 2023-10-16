@@ -9,10 +9,12 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer\EntryExpressionEvalTransformer;
+use PhpBench\Attributes\Groups;
 use PhpBench\Attributes\Iterations;
 use PhpBench\Attributes\Revs;
 
 #[Iterations(5)]
+#[Groups(['transformer'])]
 final class EntryExpressionEvalTransformerBench
 {
     #[Revs(1000)]

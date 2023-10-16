@@ -2,16 +2,21 @@
 
 namespace Flow\ETL\Adapter\Text\Tests\Benchmark;
 
+use Flow\ETL\Config;
 use Flow\ETL\DSL\Text;
+use Flow\ETL\FlowContext;
+use PhpBench\Attributes\Groups;
 use PhpBench\Attributes\Iterations;
 use PhpBench\Attributes\Revs;
 
-#[Iterations(5)]
+#[Iterations(3)]
+#[Groups(['extractor'])]
 final class TextExtractorBench
 {
-    #[Revs(1000)]
+    #[Revs(5)]
     public function bench_extract() : void
     {
-        Text::from(__DIR__ . '/../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv');
+        foreach (Text::from(__DIR__ . '/../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv')->extract(new FlowContext(Config::default())) as $rows) {
+        }
     }
 }

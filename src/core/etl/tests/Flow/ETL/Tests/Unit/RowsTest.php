@@ -189,19 +189,6 @@ final class RowsTest extends TestCase
         );
     }
 
-    public function test_building_rows_from_array_with_incorrect_structure() : void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Rows expects nested array data structure: array<array<mixed>>');
-
-        Rows::fromArray(
-            [
-                ['id' => 1234, 'deleted' => false, 'phase' => null],
-                'string',
-            ]
-        );
-    }
-
     public function test_chunks_smaller_than_1() : void
     {
         $this->expectException(InvalidArgumentException::class);

@@ -2,16 +2,21 @@
 
 namespace Flow\ETL\Adapter\XML\Tests\Benchmark;
 
+use Flow\ETL\Config;
 use Flow\ETL\DSL\XML;
+use Flow\ETL\FlowContext;
+use PhpBench\Attributes\Groups;
 use PhpBench\Attributes\Iterations;
 use PhpBench\Attributes\Revs;
 
-#[Iterations(5)]
+#[Iterations(3)]
+#[Groups(['extractor'])]
 final class XmlExtractorBench
 {
-    #[Revs(1000)]
+    #[Revs(5)]
     public function bench_extract() : void
     {
-        XML::from(__DIR__ . '/../Fixtures/simple_items.xml');
+        foreach (XML::from(__DIR__ . '/../Fixtures/simple_items.xml')->extract(new FlowContext(Config::default())) as $rows) {
+        }
     }
 }

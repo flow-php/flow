@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use function Flow\ETL\DSL\array_to_rows;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
@@ -40,28 +41,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
 
     public static function fromArray(array $data, EntryFactory $entryFactory = new NativeEntryFactory()) : self
     {
-        /** @var array<Row> $rows */
-        $rows = [];
-
-        foreach ($data as $entries) {
-            if (!\is_array($entries)) {
-                throw new InvalidArgumentException('Rows expects nested array data structure: array<array<mixed>>');
-            }
-
-            $row = [];
-
-            /**
-             * @var string $entryName
-             * @var mixed $entryValue
-             */
-            foreach ($entries as $entryName => $entryValue) {
-                $row[] = $entryFactory->create($entryName, $entryValue);
-            }
-
-            $rows[] = Row::create(...$row);
-        }
-
-        return new self(...$rows);
+        return array_to_rows($data, $entryFactory);
     }
 
     public function __serialize() : array
