@@ -55,7 +55,7 @@ final class FlowTest extends IntegrationTestCase
             Config::builder()
                 ->id($id = 'test_etl_sort_by_in_memory')
                 ->cache($cacheSpy = new CacheSpy(Config::default()->cache()))
-                ->externalSort(new MemorySort($id, $cacheSpy, Unit::fromMb(10)))
+                ->externalSort(new MemorySort($id, $cacheSpy, Unit::fromKb(10)))
         )->extract(new AllRowTypesFakeExtractor($rowsets = 50, $rows = 50))
             ->sortBy(ref('id'))
             ->run();
