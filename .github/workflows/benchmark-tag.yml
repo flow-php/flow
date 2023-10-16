@@ -43,7 +43,7 @@ jobs:
       - name: "Set Benchmark Tag"
         run: |
           if [[ "${{ github.event_name }}" == "push" ]]; then
-            echo "PHPBENCH_TAG=${{ github.ref }}" >> $GITHUB_ENV
+            echo "PHPBENCH_TAG=1.x" >> $GITHUB_ENV
           elif [[ "${{ github.event.inputs.tag_name }}" != "" ]]; then
             echo "PHPBENCH_TAG=${{ github.event.inputs.tag_name }}" >> $GITHUB_ENV
           else
