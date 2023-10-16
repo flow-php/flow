@@ -16,6 +16,7 @@ final class AvroExtractorBench
     #[Revs(5)]
     public function bench_extract_10k() : void
     {
-        \iterator_to_array(Avro::from(__DIR__ . '/../Fixtures/orders_flow.avro')->extract(new FlowContext(Config::default())));
+        foreach (Avro::from(__DIR__ . '/../Fixtures/orders_flow.avro')->extract(new FlowContext(Config::default())) as $rows) {
+        }
     }
 }

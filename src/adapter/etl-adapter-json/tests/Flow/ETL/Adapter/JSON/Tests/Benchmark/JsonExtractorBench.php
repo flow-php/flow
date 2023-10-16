@@ -16,6 +16,7 @@ final class JsonExtractorBench
     #[Revs(5)]
     public function bench_extract_10k() : void
     {
-        \iterator_to_array(Json::from(__DIR__ . '/../Fixtures/orders_flow.json')->extract(new FlowContext(Config::default())));
+        foreach (Json::from(__DIR__ . '/../Fixtures/orders_flow.json')->extract(new FlowContext(Config::default())) as $rows) {
+        }
     }
 }

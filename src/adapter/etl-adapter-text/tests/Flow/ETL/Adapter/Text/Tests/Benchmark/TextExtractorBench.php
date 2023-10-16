@@ -16,6 +16,7 @@ final class TextExtractorBench
     #[Revs(5)]
     public function bench_extract() : void
     {
-        \iterator_to_array(Text::from(__DIR__ . '/../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv')->extract(new FlowContext(Config::default())));
+        foreach (Text::from(__DIR__ . '/../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv')->extract(new FlowContext(Config::default())) as $rows) {
+        }
     }
 }

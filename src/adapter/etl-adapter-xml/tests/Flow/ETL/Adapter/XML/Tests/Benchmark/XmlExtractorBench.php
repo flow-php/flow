@@ -16,6 +16,7 @@ final class XmlExtractorBench
     #[Revs(5)]
     public function bench_extract() : void
     {
-        \iterator_to_array(XML::from(__DIR__ . '/../Fixtures/simple_items.xml')->extract(new FlowContext(Config::default())));
+        foreach (XML::from(__DIR__ . '/../Fixtures/simple_items.xml')->extract(new FlowContext(Config::default())) as $rows) {
+        }
     }
 }

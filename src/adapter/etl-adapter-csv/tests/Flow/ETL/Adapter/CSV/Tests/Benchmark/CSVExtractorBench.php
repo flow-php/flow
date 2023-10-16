@@ -16,6 +16,7 @@ final class CSVExtractorBench
     #[Revs(5)]
     public function bench_extract_10k() : void
     {
-        \iterator_to_array(CSV::from(__DIR__ . '/../Fixtures/orders_flow.csv')->extract(new FlowContext(Config::default())));
+        foreach (CSV::from(__DIR__ . '/../Fixtures/orders_flow.csv')->extract(new FlowContext(Config::default())) as $rows) {
+        }
     }
 }
