@@ -26,6 +26,27 @@ final class XMLReaderExtractorTest extends TestCase
         );
     }
 
+    public function test_reading_deep_xml(): void
+    {
+        $this->assertEquals(
+            new Rows(
+                Row::create(Entry::xml('node',
+                    '<deep id_attribute="1"><leaf id_attribute="1">1</leaf></deep>')),
+                Row::create(Entry::xml('node',
+                    '<deep id_attribute="2"><leaf id_attribute="2">2</leaf></deep>')),
+                Row::create(Entry::xml('node',
+                    '<deep id_attribute="3"><leaf id_attribute="3">3</leaf></deep>')),
+                Row::create(Entry::xml('node',
+                    '<deep id_attribute="4"><leaf id_attribute="4">4</leaf></deep>')),
+                Row::create(Entry::xml('node',
+                    '<deep id_attribute="5"><leaf id_attribute="5">5</leaf></deep>')),
+            ),
+            (new Flow())
+                ->read(XML::from(__DIR__.'/../../../Fixtures/deepest_items_flat.xml', 'root/items/item/deep'))
+                ->fetch()
+        );
+    }
+
     public function test_reading_xml_each_collection_item() : void
     {
         $this->assertEquals(
