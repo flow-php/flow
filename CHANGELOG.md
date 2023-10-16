@@ -6,6 +6,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#595](https://github.com/flow-php/flow/pull/595) - **Cleanup tests before starting tests** - [@norberttech](https://github.com/norberttech)
 - [#594](https://github.com/flow-php/flow/pull/594) - **Replace hashing algorithm from `sha256` to `xxh128`** - [@stloyd](https://github.com/stloyd)
 - [#591](https://github.com/flow-php/flow/pull/591) - **Skip JSON & XML checks for a string that doesn't look like this type of data** - [@stloyd](https://github.com/stloyd)
 - [#588](https://github.com/flow-php/flow/pull/588) - **Update minimum required version of Flow in all packages** - [@stloyd](https://github.com/stloyd)
