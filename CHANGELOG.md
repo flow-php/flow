@@ -1,10 +1,19 @@
-## [Unreleased] - 2023-10-13
+## [Unreleased] - 2023-10-16
+
+### Added
+- [#587](https://github.com/flow-php/flow/pull/587) - **NativeEntryFactory structures detection** - [@norberttech](https://github.com/norberttech)
+- [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#587](https://github.com/flow-php/flow/pull/587) - **Schema Formatter - support for structures** - [@norberttech](https://github.com/norberttech)
+- [#587](https://github.com/flow-php/flow/pull/587) - **Parquet Loader - simplified with support for Structure Entry** - [@norberttech](https://github.com/norberttech)
+- [#587](https://github.com/flow-php/flow/pull/587) - **Avro Loader - simplified with support for Structure Entry** - [@norberttech](https://github.com/norberttech)
+- [#587](https://github.com/flow-php/flow/pull/587) - **Parquet Extractor - default options** - [@norberttech](https://github.com/norberttech)
 - [#585](https://github.com/flow-php/flow/pull/585) - **Rework text adapter test fixtures to reduce memory load** - [@stloyd](https://github.com/stloyd)
 - [#584](https://github.com/flow-php/flow/pull/584) - **Adjust `phpunit.xml` to be more efficient** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
+- [#587](https://github.com/flow-php/flow/pull/587) - **JsonLoader closing not only json streams** - [@norberttech](https://github.com/norberttech)
 - [#583](https://github.com/flow-php/flow/pull/583) - **Fix warning when bytes are missing in Parquet `BinaryBufferReader`** - [@stloyd](https://github.com/stloyd)
 
 ## [0.4.0] - 2023-10-13
