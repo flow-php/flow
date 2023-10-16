@@ -7,6 +7,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#600](https://github.com/flow-php/flow/pull/600) - **Unify adapter benchmark datasets** - [@stloyd](https://github.com/stloyd)
 - [#598](https://github.com/flow-php/flow/pull/598) - **Rework GH testing actions to run only after code changes** - [@stloyd](https://github.com/stloyd)
 - [#597](https://github.com/flow-php/flow/pull/597) - **Reduce the amount of test data in ElasticSearch tests** - [@stloyd](https://github.com/stloyd)
 - [#596](https://github.com/flow-php/flow/pull/596) - **Simplify `CacheSpy` test double class** - [@stloyd](https://github.com/stloyd)
