@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration;
 
-use function Flow\ETL\DSL\col;
 use function Flow\ETL\DSL\ref;
 use Flow\ETL\Cache\PSRSimpleCache;
 use Flow\ETL\Config;
@@ -27,7 +26,7 @@ final class FlowTest extends IntegrationTestCase
 
         $cacheContent = \array_values(\array_diff(\scandir($this->cacheDir), ['..', '.']));
 
-        $this->assertContains(\hash('sha256', 'test_etl_cache'), $cacheContent);
+        $this->assertContains(\hash('xxh128', 'test_etl_cache'), $cacheContent);
     }
 
     public function test_etl_psr_cache() : void
@@ -84,7 +83,7 @@ final class FlowTest extends IntegrationTestCase
                 ->id($id = 'test_etl_sort_by_in_memory')
                 ->cache($cacheSpy = new CacheSpy(Config::default()->cache()))
         )->extract(new AllRowTypesFakeExtractor($rowsets = 20, $rows = 2))
-            ->sortBy(col('id'))
+            ->sortBy(ref('id'))
             ->fetch();
 
         $cache = \array_diff(\scandir($this->cacheDir), ['..', '.']);

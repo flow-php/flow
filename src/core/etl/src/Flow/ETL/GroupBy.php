@@ -120,12 +120,12 @@ final class GroupBy
         /** @var mixed $value */
         foreach ($values as $value) {
             if ($value === null) {
-                $stringValues[] =\hash('sha256', 'null');
+                $stringValues[] =\hash('xxh128', 'null');
             } elseif (\is_scalar($value)) {
                 $stringValues[] = (string) $value;
             }
         }
 
-        return \hash('sha256', \implode('', $stringValues));
+        return \hash('xxh128', \implode('', $stringValues));
     }
 }
