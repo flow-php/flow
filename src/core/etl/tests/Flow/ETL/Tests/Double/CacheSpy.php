@@ -12,20 +12,16 @@ use Flow\ETL\Rows;
  */
 final class CacheSpy implements Cache
 {
-    /**
-     * @var array<string, int>
-     */
-    private array $clears = [];
+    private int $clearsCount = 0;
 
     /**
      * @var array<string, int>
      */
     private array $reads = [];
 
-    /**
-     * @var array<string, int>
-     */
-    private array $writes = [];
+    private int $readsCount = 0;
+
+    private int $writesCount = 0;
 
     public function __construct(private readonly Cache $cache)
     {
@@ -42,35 +38,21 @@ final class CacheSpy implements Cache
 
     public function add(string $id, Rows $rows) : void
     {
-        if (!\array_key_exists($id, $this->writes)) {
-            $this->writes[$id] = 1;
-        } else {
-            $this->writes[$id] += 1;
-        }
+        $this->writesCount++;
 
         $this->cache->add($id, $rows);
     }
 
     public function clear(string $id) : void
     {
-        if (!\array_key_exists($id, $this->clears)) {
-            $this->clears[$id] = 1;
-        } else {
-            $this->clears[$id] += 1;
-        }
+        $this->clearsCount++;
 
         $this->cache->clear($id);
     }
 
     public function clears() : int
     {
-        $total = 0;
-
-        foreach ($this->clears as $clears) {
-            $total += $clears;
-        }
-
-        return $total;
+        return $this->clearsCount;
     }
 
     public function has(string $id) : bool
@@ -90,28 +72,18 @@ final class CacheSpy implements Cache
             $this->reads[$id] += 1;
         }
 
+        $this->readsCount++;
+
         return $this->cache->read($id);
     }
 
     public function reads() : int
     {
-        $total = 0;
-
-        foreach ($this->reads as $reads) {
-            $total += $reads;
-        }
-
-        return $total;
+        return $this->readsCount;
     }
 
     public function writes() : int
     {
-        $total = 0;
-
-        foreach ($this->writes as $writes) {
-            $total += $writes;
-        }
-
-        return $total;
+        return $this->writesCount;
     }
 }
