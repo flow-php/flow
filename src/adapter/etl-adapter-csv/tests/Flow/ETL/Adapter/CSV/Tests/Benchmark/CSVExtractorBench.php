@@ -12,6 +12,6 @@ final class CSVExtractorBench
     #[Revs(1000)]
     public function bench_extract() : void
     {
-        CSV::from(__DIR__ . '/../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv');
+        CSV::from(__DIR__ . '/../Fixtures/orders_flow.csv');
     }
 }

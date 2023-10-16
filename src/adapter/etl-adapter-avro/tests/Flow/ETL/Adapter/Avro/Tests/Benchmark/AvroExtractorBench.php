@@ -12,6 +12,6 @@ final class AvroExtractorBench
     #[Revs(1000)]
     public function bench_extract() : void
     {
-        Avro::from(__DIR__ . '/../Fixtures/data.avro');
+        Avro::from(__DIR__ . '/../Fixtures/orders_flow.avro');
     }
 }

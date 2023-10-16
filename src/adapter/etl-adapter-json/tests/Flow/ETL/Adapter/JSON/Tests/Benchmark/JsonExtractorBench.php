@@ -12,6 +12,6 @@ final class JsonExtractorBench
     #[Revs(1000)]
     public function bench_extract() : void
     {
-        Json::from(__DIR__ . '/../Fixtures/timezones.json');
+        Json::from(__DIR__ . '/../Fixtures/orders_flow.json');
     }
 }
