@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Flow\ETL\Adapter\Text\Tests\Benchmark;
+namespace Flow\ETL\Adapter\CSV\Tests\Benchmark;
 
 use Flow\ETL\DSL\CSV;
 use PhpBench\Attributes\Iterations;

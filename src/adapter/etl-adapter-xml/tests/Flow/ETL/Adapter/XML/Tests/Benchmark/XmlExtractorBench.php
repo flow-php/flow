@@ -1,17 +1,17 @@
 <?php declare(strict_types=1);
 
-namespace Flow\ETL\Adapter\Parquet\Tests\Benchmark;
+namespace Flow\ETL\Adapter\XML\Tests\Benchmark;
 
-use Flow\ETL\DSL\Parquet;
+use Flow\ETL\DSL\XML;
 use PhpBench\Attributes\Iterations;
 use PhpBench\Attributes\Revs;
 
 #[Iterations(5)]
-final class ParquetExtractorBench
+final class XmlExtractorBench
 {
     #[Revs(1000)]
     public function bench_extract() : void
     {
-        Parquet::from(__DIR__ . '/../Fixtures/data.parquet');
+        XML::from(__DIR__ . '/../Fixtures/simple_items.xml');
     }
 }
