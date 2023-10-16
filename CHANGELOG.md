@@ -6,6 +6,8 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#588](https://github.com/flow-php/flow/pull/588) - **Update minimum required version of Flow in all packages** - [@stloyd](https://github.com/stloyd)
+- [#586](https://github.com/flow-php/flow/pull/586) - **Rework adapter tests namespaces to be consistent** - [@stloyd](https://github.com/stloyd)
 - [#587](https://github.com/flow-php/flow/pull/587) - **Schema Formatter - support for structures** - [@norberttech](https://github.com/norberttech)
 - [#587](https://github.com/flow-php/flow/pull/587) - **Parquet Loader - simplified with support for Structure Entry** - [@norberttech](https://github.com/norberttech)
 - [#587](https://github.com/flow-php/flow/pull/587) - **Avro Loader - simplified with support for Structure Entry** - [@norberttech](https://github.com/norberttech)
