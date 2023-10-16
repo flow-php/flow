@@ -1,6 +1,9 @@
 ## [Unreleased] - 2023-10-16
 
 ### Added
+- [#601](https://github.com/flow-php/flow/pull/601) - **output of benchmark tests into github step summary** - [@norberttech](https://github.com/norberttech)
+- [#601](https://github.com/flow-php/flow/pull/601) - **Benchamrks for NativeEntryFactory** - [@norberttech](https://github.com/norberttech)
+- [#601](https://github.com/flow-php/flow/pull/601) - **Benchamrk groups** - [@norberttech](https://github.com/norberttech)
 - [#602](https://github.com/flow-php/flow/pull/602) - **allow to manually trigger benchmark tag workflow** - [@norberttech](https://github.com/norberttech)
 - [#581](https://github.com/flow-php/flow/pull/581) - **Add PHPBench tool and first benchmark example** - [@stloyd](https://github.com/stloyd)
 - [#587](https://github.com/flow-php/flow/pull/587) - **NativeEntryFactory structures detection** - [@norberttech](https://github.com/norberttech)
@@ -24,6 +27,7 @@
 - [#584](https://github.com/flow-php/flow/pull/584) - **Adjust `phpunit.xml` to be more efficient** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
+- [#601](https://github.com/flow-php/flow/pull/601) - **benchmarks not executing extractors** - [@norberttech](https://github.com/norberttech)
 - [61e035](https://github.com/flow-php/flow/commit/61e0350ab589235504ea503065e8d6511a9262ae) - **github markdown syntax in benchmark tag workflow** - [@norberttech](https://github.com/norberttech)
 - [4f820f](https://github.com/flow-php/flow/commit/4f820fe19d24e1bcfe181d6665d0689a94f8351f) - **default PHPBENCH_TAG value for push events** - [@norberttech](https://github.com/norberttech)
 - [14c092](https://github.com/flow-php/flow/commit/14c092c5b9e5fbb29de722c2d44e6c11087ea8a9) - **benchmark-tag workflow** - [@norberttech](https://github.com/norberttech)
