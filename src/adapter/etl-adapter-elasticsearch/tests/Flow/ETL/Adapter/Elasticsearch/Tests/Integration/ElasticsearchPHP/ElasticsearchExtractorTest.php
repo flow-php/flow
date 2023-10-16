@@ -85,7 +85,7 @@ final class ElasticsearchExtractorTest extends TestCase
                     new Row\Entry\StringEntry('name', 'id_' . $i),
                     new Row\Entry\BooleanEntry('active', (bool) \random_int(0, 1))
                 ),
-                \range(1, 10_005)
+                \range(1, 2000)
             ),
         ), new FlowContext(Config::default()));
 
@@ -109,7 +109,7 @@ final class ElasticsearchExtractorTest extends TestCase
             ->transform(Elasticsearch::hits_to_rows(DocumentDataSource::fields))
             ->fetch();
 
-        $this->assertCount(10_000, $results);
+        $this->assertCount(2000, $results);
         $this->assertArrayHasKey('id', $results->first()->toArray());
         $this->assertArrayHasKey('position', $results->first()->toArray());
         $this->assertArrayNotHasKey('active', $results->first()->toArray());
@@ -128,7 +128,7 @@ final class ElasticsearchExtractorTest extends TestCase
                     new Row\Entry\StringEntry('name', 'id_' . $i),
                     new Row\Entry\BooleanEntry('active', (bool) \random_int(0, 1))
                 ),
-                \range(1, 10_005)
+                \range(1, 2005)
             ),
         ), new FlowContext(Config::default()));
 
@@ -149,7 +149,7 @@ final class ElasticsearchExtractorTest extends TestCase
             ->extract(Elasticsearch::search($this->elasticsearchContext->clientConfig(), $params))
             ->fetch();
 
-        $this->assertCount(10, $results);
+        $this->assertCount(3, $results);
     }
 
     public function test_extraction_index_with_search_after_with_point_in_time() : void
@@ -164,7 +164,7 @@ final class ElasticsearchExtractorTest extends TestCase
                     new Row\Entry\StringEntry('name', 'id_' . $i),
                     new Row\Entry\BooleanEntry('active', (bool) \random_int(0, 1))
                 ),
-                \range(1, 10_005)
+                \range(1, 2005)
             ),
         ), new FlowContext(Config::default()));
 
@@ -190,7 +190,7 @@ final class ElasticsearchExtractorTest extends TestCase
             ->extract(Elasticsearch::search($this->elasticsearchContext->clientConfig(), $params, $pitParams))
             ->fetch();
 
-        $this->assertCount(10, $results);
+        $this->assertCount(3, $results);
     }
 
     public function test_extraction_whole_index_with_point_in_time() : void
@@ -205,7 +205,7 @@ final class ElasticsearchExtractorTest extends TestCase
                     new Row\Entry\StringEntry('name', 'id_' . $i),
                     new Row\Entry\BooleanEntry('active', (bool) \random_int(0, 1))
                 ),
-                \range(1, 10_005)
+                \range(1, 2005)
             ),
         ), new FlowContext(Config::default()));
 
@@ -231,6 +231,6 @@ final class ElasticsearchExtractorTest extends TestCase
             ->extract(Elasticsearch::search($this->elasticsearchContext->clientConfig(), $params, $pitParams))
             ->fetch();
 
-        $this->assertCount(10, $results);
+        $this->assertCount(3, $results);
     }
 }

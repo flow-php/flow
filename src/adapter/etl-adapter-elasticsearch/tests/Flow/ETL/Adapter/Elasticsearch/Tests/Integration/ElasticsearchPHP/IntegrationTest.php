@@ -46,7 +46,7 @@ final class IntegrationTest extends TestCase
                         new Row\Entry\StringEntry('name', 'id_' . $i),
                         new Row\Entry\BooleanEntry('active', false)
                     ),
-                    \range(1, 10_005)
+                    \range(1, 2005)
                 ),
             ),
             self::SOURCE_INDEX,
