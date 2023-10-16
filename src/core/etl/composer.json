@@ -12,7 +12,7 @@
         "php": "~8.1 || ~8.2",
         "ext-json": "*",
         "ext-mbstring": "*",
-        "flow-php/array-dot": "^0.2 || 1.x-dev",
+        "flow-php/array-dot": "^0.4 || 1.x-dev",
         "league/flysystem": "^3.0",
         "psr/simple-cache": "^1.0 || ^2.0 || ^3.0"
     },

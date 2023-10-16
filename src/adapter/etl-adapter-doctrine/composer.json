@@ -14,8 +14,8 @@
     ],
     "require": {
         "php": "~8.1 || ~8.2",
-        "flow-php/doctrine-dbal-bulk": "^0.2 || 1.x-dev",
-        "flow-php/etl": "^0.2 || 1.x-dev"
+        "flow-php/doctrine-dbal-bulk": "^0.4 || 1.x-dev",
+        "flow-php/etl": "^0.4 || 1.x-dev"
     },
     "autoload": {
         "psr-4": {
