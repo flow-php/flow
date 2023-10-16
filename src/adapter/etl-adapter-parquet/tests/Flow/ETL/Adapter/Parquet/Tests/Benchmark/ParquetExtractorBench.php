@@ -3,7 +3,6 @@
 namespace Flow\ETL\Adapter\Parquet\Tests\Benchmark;
 
 use Flow\ETL\Config;
-use Flow\ETL\ConfigBuilder;
 use Flow\ETL\DSL\Parquet;
 use Flow\ETL\FlowContext;
 use PhpBench\Attributes\Groups;
