@@ -58,12 +58,27 @@ jobs:
         uses: "actions/cache@v3"
         with:
           path: "var/phpbench"
-          key: "php-${{ matrix.php-version }}-phpbench"
+          key: "php-${{ matrix.php-version }}-1.x-phpbench"
           restore-keys: |
-            php-${{ matrix.php-version }}-phpbench-
+            php-${{ matrix.php-version }}-1.x-phpbench-
 
-      - name: Adding markdown
+      - name: Adding main headline
         run: echo '# Flow PHP - Benchmark' >> $GITHUB_STEP_SUMMARY
 
+      - name: Adding extractors headline
+        run: echo '## Extractors' >> $GITHUB_STEP_SUMMARY
+
       - name: "Benchmark"
-        run: "composer test:benchmark -- --ref=original --progress=none >> $GITHUB_STEP_SUMMARY"
+        run: "composer test:benchmark -- --ref=1.x --progress=none --group=extractor >> $GITHUB_STEP_SUMMARY"
+
+      - name: Adding transformers headline
+        run: echo '## Transformers' >> $GITHUB_STEP_SUMMARY
+
+      - name: "Benchmark"
+        run: "composer test:benchmark -- --ref=1.x --progress=none --group=transformer >> $GITHUB_STEP_SUMMARY"
+
+      - name: Adding entry factory headline
+        run: echo '## Entry Factory' >> $GITHUB_STEP_SUMMARY
+
+      - name: "Benchmark"
+        run: "composer test:benchmark -- --ref=1.x --progress=none --group=entry_factory >> $GITHUB_STEP_SUMMARY"

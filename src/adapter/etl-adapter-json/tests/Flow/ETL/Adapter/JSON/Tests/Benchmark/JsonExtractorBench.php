@@ -3,10 +3,12 @@
 namespace Flow\ETL\Adapter\JSON\Tests\Benchmark;
 
 use Flow\ETL\DSL\Json;
+use PhpBench\Attributes\Groups;
 use PhpBench\Attributes\Iterations;
 use PhpBench\Attributes\Revs;
 
 #[Iterations(5)]
+#[Groups(['extractor'])]
 final class JsonExtractorBench
 {
     #[Revs(1000)]

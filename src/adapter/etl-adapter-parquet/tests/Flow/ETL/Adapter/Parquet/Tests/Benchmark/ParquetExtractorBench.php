@@ -3,10 +3,12 @@
 namespace Flow\ETL\Adapter\Parquet\Tests\Benchmark;
 
 use Flow\ETL\DSL\Parquet;
+use PhpBench\Attributes\Groups;
 use PhpBench\Attributes\Iterations;
 use PhpBench\Attributes\Revs;
 
 #[Iterations(5)]
+#[Groups(['extractor'])]
 final class ParquetExtractorBench
 {
     #[Revs(1000)]

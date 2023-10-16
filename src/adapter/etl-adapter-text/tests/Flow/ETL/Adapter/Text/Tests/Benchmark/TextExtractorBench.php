@@ -3,10 +3,12 @@
 namespace Flow\ETL\Adapter\Text\Tests\Benchmark;
 
 use Flow\ETL\DSL\Text;
+use PhpBench\Attributes\Groups;
 use PhpBench\Attributes\Iterations;
 use PhpBench\Attributes\Revs;
 
 #[Iterations(5)]
+#[Groups(['extractor'])]
 final class TextExtractorBench
 {
     #[Revs(1000)]

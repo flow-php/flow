@@ -3,10 +3,12 @@
 namespace Flow\ETL\Adapter\CSV\Tests\Benchmark;
 
 use Flow\ETL\DSL\CSV;
+use PhpBench\Attributes\Groups;
 use PhpBench\Attributes\Iterations;
 use PhpBench\Attributes\Revs;
 
 #[Iterations(5)]
+#[Groups(['extractor'])]
 final class CSVExtractorBench
 {
     #[Revs(1000)]

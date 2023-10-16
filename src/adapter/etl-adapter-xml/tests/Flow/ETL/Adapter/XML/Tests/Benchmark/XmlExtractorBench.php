@@ -3,10 +3,12 @@
 namespace Flow\ETL\Adapter\XML\Tests\Benchmark;
 
 use Flow\ETL\DSL\XML;
+use PhpBench\Attributes\Groups;
 use PhpBench\Attributes\Iterations;
 use PhpBench\Attributes\Revs;
 
 #[Iterations(5)]
+#[Groups(['extractor'])]
 final class XmlExtractorBench
 {
     #[Revs(1000)]
