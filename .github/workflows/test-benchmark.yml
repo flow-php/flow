@@ -3,6 +3,7 @@ name: Benchmark Suite
 on:
   pull_request:
     paths:
+      - '.github/workflows/**'
       - 'src/adapter/**'
       - 'src/core/**'
       - 'src/lib/**'
@@ -61,5 +62,8 @@ jobs:
           restore-keys: |
             php-${{ matrix.php-version }}-phpbench-
 
+      - name: Adding markdown
+        run: echo '# Flow PHP - Benchmark' >> $GITHUB_STEP_SUMMARY
+
       - name: "Benchmark"
-        run: "composer test:benchmark -- --ref=original --progress=plain"
+        run: "composer test:benchmark -- --ref=original --progress=none >> $GITHUB_STEP_SUMMARY"
