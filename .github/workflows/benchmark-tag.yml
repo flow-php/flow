@@ -28,9 +28,22 @@ jobs:
 
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@v4"
+        uses: "actions/checkout@v2"  # Using v2 because it's generally better supported
         with:
-          ref: refs/tags/${{ github.event.inputs.tag_name }}
+          fetch-depth: 0
+
+      - name: "Set Ref"
+        run: |
+          if git tag --list | grep -q "${{ github.event.inputs.tag_name }}"; then
+            echo "GIT_REF=refs/tags/${{ github.event.inputs.tag_name }}" >> $GITHUB_ENV
+          else
+            echo "GIT_REF=${{ github.event.inputs.tag_name }}" >> $GITHUB_ENV
+          fi
+
+      - name: "Checkout to specific ref"
+        uses: "actions/checkout@v2"
+        with:
+          ref: ${{ env.GIT_REF }}
 
       - name: "Install PHP"
         uses: "shivammathur/setup-php@v2"
