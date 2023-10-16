@@ -25,7 +25,7 @@ abstract class IntegrationTestCase extends TestCase
 
         $this->fs = new Filesystem(new LocalFilesystemAdapter(DIRECTORY_SEPARATOR));
 
-        $this->fs->directoryExists($this->cacheDir);
+        $this->cleanupCacheDir($this->cacheDir);
 
         if (!$this->fs->directoryExists($this->cacheDir)) {
             $this->fs->createDirectory($this->cacheDir);

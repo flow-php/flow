@@ -181,6 +181,7 @@ jobs:
         env:
           PGSQL_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?serverVersion=11&charset=utf8
           MYSQL_DATABASE_URL: mysql://mysql:mysql@127.0.0.1:${{ job.services.mysql.ports[3306] }}/mysql
+          FLOW_LOCAL_FILESYSTEM_CACHE_DIR: "./var/cache/${{ matrix.php-version }}-${{ matrix.dependencies }}"
 
   mutation-tests:
     name: "Mutation Tests"
