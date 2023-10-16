@@ -2,18 +2,20 @@
 
 namespace Flow\ETL\Adapter\CSV\Tests\Benchmark;
 
+use Flow\ETL\Config;
 use Flow\ETL\DSL\CSV;
+use Flow\ETL\FlowContext;
 use PhpBench\Attributes\Groups;
 use PhpBench\Attributes\Iterations;
 use PhpBench\Attributes\Revs;
 
-#[Iterations(5)]
+#[Iterations(3)]
 #[Groups(['extractor'])]
 final class CSVExtractorBench
 {
-    #[Revs(1000)]
-    public function bench_extract() : void
+    #[Revs(5)]
+    public function bench_extract_10k() : void
     {
-        CSV::from(__DIR__ . '/../Fixtures/orders_flow.csv');
+        \iterator_to_array(CSV::from(__DIR__ . '/../Fixtures/orders_flow.csv')->extract(new FlowContext(Config::default())));
     }
 }

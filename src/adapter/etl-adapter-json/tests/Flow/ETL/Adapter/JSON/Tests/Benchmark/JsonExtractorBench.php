@@ -2,18 +2,20 @@
 
 namespace Flow\ETL\Adapter\JSON\Tests\Benchmark;
 
+use Flow\ETL\Config;
 use Flow\ETL\DSL\Json;
+use Flow\ETL\FlowContext;
 use PhpBench\Attributes\Groups;
 use PhpBench\Attributes\Iterations;
 use PhpBench\Attributes\Revs;
 
-#[Iterations(5)]
+#[Iterations(3)]
 #[Groups(['extractor'])]
 final class JsonExtractorBench
 {
-    #[Revs(1000)]
-    public function bench_extract() : void
+    #[Revs(5)]
+    public function bench_extract_10k() : void
     {
-        Json::from(__DIR__ . '/../Fixtures/orders_flow.json');
+        \iterator_to_array(Json::from(__DIR__ . '/../Fixtures/orders_flow.json')->extract(new FlowContext(Config::default())));
     }
 }
