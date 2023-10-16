@@ -23,6 +23,7 @@
 - [#584](https://github.com/flow-php/flow/pull/584) - **Adjust `phpunit.xml` to be more efficient** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
+- [#603](https://github.com/flow-php/flow/pull/603) - **Fix Avro adapter handling nullable values** - [@stloyd](https://github.com/stloyd)
 - [f512e1](https://github.com/flow-php/flow/commit/f512e19a17bce6dcbf1ee80926316836eb77a0bd) - **benchmark-tag** - [@norberttech](https://github.com/norberttech)
 - [#599](https://github.com/flow-php/flow/pull/599) - **Reduced total available memory to make sure that MemorySort is doing a fallback to cache** - [@norberttech](https://github.com/norberttech)
 - [#593](https://github.com/flow-php/flow/pull/593) - **Change behavior of xml adapter when xml->deep > 1 and previousDeep > xml->deep** - [@norberttech](https://github.com/norberttech)
