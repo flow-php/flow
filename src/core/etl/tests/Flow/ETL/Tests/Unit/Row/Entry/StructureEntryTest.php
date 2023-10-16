@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
+use Flow\ETL\DSL\Entry;
 use Flow\ETL\Row\Entry\ArrayEntry;
 use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Row\Entry\StructureEntry;
+use Flow\ETL\Row\Schema\Definition;
 use PHPUnit\Framework\TestCase;
 
 final class StructureEntryTest extends TestCase
@@ -44,6 +46,32 @@ final class StructureEntryTest extends TestCase
             new StructureEntry('name', new StructureEntry('json', new IntegerEntry('5', 5), new IntegerEntry('2', 2), new IntegerEntry('3', 3))),
             new StructureEntry('name', new StructureEntry('json', new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3))),
         ];
+    }
+
+    public function test_definition() : void
+    {
+        $entry = Entry::structure(
+            'items',
+            Entry::integer('id', 1),
+            Entry::string('name', 'one'),
+            Entry::structure('address', Entry::string('street', 'foo'), Entry::string('city', 'bar'))
+        );
+
+        $this->assertEquals(
+            Definition::structure(
+                'items',
+                [
+                    'id' => Definition::integer('id', false),
+                    'name' => Definition::string('name', false),
+                    'address' => [
+                        'street' => Definition::string('street', false),
+                        'city' => Definition::string('city', false),
+                    ],
+                ],
+                false
+            ),
+            $entry->definition()
+        );
     }
 
     public function test_entry_name_can_be_zero() : void
@@ -95,20 +123,12 @@ final class StructureEntryTest extends TestCase
             'items',
             new IntegerEntry('item-id', 1),
             new StringEntry('name', 'one'),
-            new IntegerEntry('item-id', 2),
-            new StringEntry('name', 'two'),
-            new IntegerEntry('item-id', 3),
-            new StringEntry('name', 'three')
         );
 
         $this->assertEquals(
             [
-                new IntegerEntry('item-id', 1),
-                new StringEntry('name', 'one'),
-                new IntegerEntry('item-id', 2),
-                new StringEntry('name', 'two'),
-                new IntegerEntry('item-id', 3),
-                new StringEntry('name', 'three'),
+                'item-id' => 1,
+                'name' => 'one',
             ],
             $entry->value()
         );

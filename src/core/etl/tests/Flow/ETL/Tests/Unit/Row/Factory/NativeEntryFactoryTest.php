@@ -18,7 +18,7 @@ final class NativeEntryFactoryTest extends TestCase
     public function test_array() : void
     {
         $this->assertEquals(
-            Entry::array('e', ['a' => 1, 'b' => 2]),
+            Entry::structure('e', Entry::int('a', 1), Entry::int('b', 2)),
             (new NativeEntryFactory())->create('e', ['a' => 1, 'b' => 2])
         );
     }
@@ -247,6 +247,32 @@ final class NativeEntryFactoryTest extends TestCase
         );
     }
 
+    public function test_nested_structure() : void
+    {
+        $this->assertEquals(
+            Entry::structure(
+                'address',
+                Entry::string('city', 'Krakow'),
+                Entry::structure(
+                    'geo',
+                    Entry::float('lat', 50.06143),
+                    Entry::float('lon', 19.93658)
+                ),
+                Entry::string('street', 'Floriańska'),
+                Entry::string('zip', '31-021')
+            ),
+            (new NativeEntryFactory())->create('address', [
+                'city' => 'Krakow',
+                'geo' => [
+                    'lat' => 50.06143,
+                    'lon' => 19.93658,
+                ],
+                'street' => 'Floriańska',
+                'zip' => '31-021',
+            ])
+        );
+    }
+
     public function test_null() : void
     {
         $this->assertEquals(
@@ -298,6 +324,19 @@ final class NativeEntryFactoryTest extends TestCase
         $this->assertEquals(
             Entry::string('e', 'string'),
             (new NativeEntryFactory(new Schema(Schema\Definition::string('e'))))->create('e', 'string')
+        );
+    }
+
+    public function test_structure() : void
+    {
+        $this->assertEquals(
+            Entry::structure(
+                'address',
+                Entry::string('city', 'Krakow'),
+                Entry::string('street', 'Floriańska'),
+                Entry::string('zip', '31-021')
+            ),
+            (new NativeEntryFactory())->create('address', ['city' => 'Krakow', 'street' => 'Floriańska', 'zip' => '31-021'])
         );
     }
 

@@ -197,6 +197,32 @@ final class DefinitionTest extends TestCase
         $this->assertFalse(Definition::string('id', true)->isUnion());
     }
 
+    public function test_structure_definition_metadata() : void
+    {
+        $address = Entry::structure(
+            'address',
+            $street = Entry::string('street', 'street'),
+            $city = Entry::string('city', 'city'),
+            Entry::structure(
+                'location',
+                $lat = Entry::float('lat', 1.0),
+                $lng = Entry::float('lng', 1.0),
+            ),
+        );
+
+        $this->assertEquals(
+            [
+                'street' => $street->definition(),
+                'city' => $city->definition(),
+                'location' => [
+                    'lat' => $lat->definition(),
+                    'lng' => $lng->definition(),
+                ],
+            ],
+            $address->definition()->metadata()->get(FlowMetadata::METADATA_STRUCTURE_DEFINITIONS)
+        );
+    }
+
     public function test_union_type_definition() : void
     {
         $def = Definition::union('test', [IntegerEntry::class, StringEntry::class]);

@@ -46,7 +46,9 @@ final class JsonLoader implements Closure, Loader, Loader\FileLoader
     public function closure(Rows $rows, FlowContext $context) : void
     {
         foreach ($context->streams() as $stream) {
-            $this->close($stream);
+            if ($stream->path()->extension() === 'json') {
+                $this->close($stream);
+            }
         }
 
         $context->streams()->close($this->path);

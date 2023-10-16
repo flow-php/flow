@@ -21,7 +21,6 @@ final class NotEmptyTest extends TestCase
         $this->assertFalse($constraint->isSatisfiedBy(Entry::json('e', [])));
         $this->assertFalse($constraint->isSatisfiedBy(Entry::json_object('e', [])));
         $this->assertFalse($constraint->isSatisfiedBy(Entry::list_of_int('e', [])));
-        $this->assertFalse($constraint->isSatisfiedBy(Entry::structure('e')));
     }
 
     public function test_not_empty_is_satisfied() : void

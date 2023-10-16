@@ -9,6 +9,7 @@ use codename\parquet\data\DataType;
 use codename\parquet\data\DateTimeDataField;
 use codename\parquet\data\Field;
 use codename\parquet\data\Schema as ParquetSchema;
+use codename\parquet\data\StructField;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\ArrayEntry;
@@ -37,35 +38,28 @@ final class SchemaConverter
         $parquetSchema = [];
 
         foreach ($schema->definitions() as $definition) {
-            if (\count($definition->types()) === 2 && $definition->isNullable()) {
-                /** @var class-string<Entry> $type */
-                $type = \current(\array_diff($definition->types(), [NullEntry::class]));
-                $parquetSchema[] = $this->convertType($type, $definition);
-            }
-
-            if (\count($definition->types()) === 1) {
-                $type = \current($definition->types());
-                $parquetSchema[] = $this->convertType($type, $definition);
-            }
-
-            if ((\count($definition->types()) === 2 && !$definition->isNullable()) || \count($definition->types()) > 2) {
-                throw new RuntimeException('Union types are not supported yet. Invalid type: ' . $definition->entry()->name());
-            }
+            $parquetSchema[] = $this->convert($definition);
         }
 
         return new ParquetSchema($parquetSchema);
     }
 
     /**
-     * @param class-string<Entry> $type
      * @param Definition $definition
      *
      * @throws RuntimeException
      *
      * @return Field
+     *
+     * @psalm-suppress MixedArgument
+     * @psalm-suppress MixedFunctionCall
+     * @psalm-suppress MixedArgumentTypeCoercion
+     * @psalm-suppress RedundantConditionGivenDocblockType
      */
-    private function convertType(string $type, Definition $definition) : Field
+    private function convert(Definition $definition) : Field
     {
+        $type = $this->typeFromDefinition($definition);
+
         if ($type === ListEntry::class) {
             $listType = $definition->metadata()->get(FlowSchema\FlowMetadata::METADATA_LIST_ENTRY_TYPE);
 
@@ -87,6 +81,28 @@ final class SchemaConverter
             }
         }
 
+        if ($type === Entry\StructureEntry::class) {
+            /** @var array<string, Definition> $structureDefinitions */
+            $structureDefinitions = $definition->metadata()->get(FlowSchema\FlowMetadata::METADATA_STRUCTURE_DEFINITIONS);
+
+            $structConverter = function (array $definitions) use (&$structConverter) : array {
+                $structureFields = [];
+
+                /** @var array<Definition>|Definition $definition */
+                foreach ($definitions as $name => $definition) {
+                    if (!\is_array($definition)) {
+                        $structureFields[$name] = $this->convert($definition);
+                    } else {
+                        $structureFields[$name] = StructField::createWithFieldArray($name, $structConverter($definition), false);
+                    }
+                }
+
+                return $structureFields;
+            };
+
+            return StructField::createWithFieldArray($definition->entry()->name(), $structConverter($structureDefinitions), $definition->isNullable(), false);
+        }
+
         return match ($type) {
             ArrayEntry::class => throw new RuntimeException("ArrayEntry entry can't be saved in Parquet file, try convert it to ListEntry"),
             StringEntry::class => new DataField($definition->entry()->name(), DataType::String, true),
@@ -95,7 +111,22 @@ final class SchemaConverter
             FloatEntry::class => new DataField($definition->entry()->name(), DataType::Float, true),
             BooleanEntry::class => new DataField($definition->entry()->name(), DataType::Boolean, true),
             DateTimeEntry::class => new DateTimeDataField($definition->entry()->name(), DataType::DateTimeOffset, true),
+            Entry\UuidEntry::class => new DataField($definition->entry()->name(), DataType::String, true),
             default => throw new RuntimeException($type . ' is not yet supported.')
         };
+    }
+
+    private function typeFromDefinition(Definition $definition) : string
+    {
+        if ($definition->isNullable() && \count($definition->types()) === 2) {
+            /** @var class-string<Entry> $type */
+            $type = \current(\array_diff($definition->types(), [NullEntry::class]));
+        } elseif (\count($definition->types()) === 1) {
+            $type = \current($definition->types());
+        } else {
+            throw new RuntimeException('Union types are not supported by Parquet file format. Invalid type: ' . $definition->entry()->name());
+        }
+
+        return $type;
     }
 }

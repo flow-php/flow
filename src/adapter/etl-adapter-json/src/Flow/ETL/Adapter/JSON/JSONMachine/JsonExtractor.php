@@ -11,6 +11,7 @@ use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use JsonMachine\Items;
+use JsonMachine\JsonDecoder\ExtJsonDecoder;
 
 final class JsonExtractor implements Extractor
 {
@@ -51,11 +52,13 @@ final class JsonExtractor implements Extractor
     }
 
     /**
-     * @return array{pointer?: string}
+     * @return array{pointer?: string, decoder: ExtJsonDecoder}
      */
     private function readerOptions() : array
     {
-        $options = [];
+        $options = [
+            'decoder' => new ExtJsonDecoder(true),
+        ];
 
         if ($this->pointer !== null) {
             $options['pointer'] = $this->pointer;

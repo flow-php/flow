@@ -143,9 +143,42 @@ final class Definition implements Serializable
         return new self($entry, ($nullable) ? [StringEntry::class, NullEntry::class] : [StringEntry::class], $constraint, $metadata);
     }
 
-    public static function structure(string|EntryReference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    /**
+     * @psalm-suppress MixedAssignment
+     * @psalm-suppress MixedFunctionCall
+     *
+     * @param array<Definition> $structureDefinitions
+     */
+    public static function structure(string|EntryReference $entry, array $structureDefinitions, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
-        return new self($entry, ($nullable) ? [StructureEntry::class, NullEntry::class] : [StructureEntry::class], $constraint, $metadata);
+        /**
+         * @param array<Definition> $structureDefinitions
+         */
+        $entriesToMetadata = static function (array $entries) use (&$entriesToMetadata) : array {
+            $metadata = [];
+
+            /** @var array<Definition>|Definition $definition */
+            foreach ($entries as $name => $definition) {
+                if (\is_array($definition)) {
+                    $metadata[$name] = $entriesToMetadata($definition);
+                } else {
+                    $metadata[$name] = $definition;
+                }
+            }
+
+            return $metadata;
+        };
+
+        return new self(
+            $entry,
+            ($nullable)
+                ? [StructureEntry::class, NullEntry::class]
+                : [StructureEntry::class],
+            $constraint,
+            ($metadata ?? Metadata::empty())->merge(
+                Metadata::empty()->add(FlowMetadata::METADATA_STRUCTURE_DEFINITIONS, $entriesToMetadata($structureDefinitions))
+            )
+        );
     }
 
     /**

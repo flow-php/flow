@@ -371,10 +371,6 @@ final class EntriesTest extends TestCase
                 'items',
                 new IntegerEntry('item-id', 1),
                 new StringEntry('name', 'one'),
-                new IntegerEntry('item-id', 2),
-                new StringEntry('name', 'two'),
-                new IntegerEntry('item-id', 3),
-                new StringEntry('name', 'three')
             )
         );
 
@@ -389,10 +385,6 @@ final class EntriesTest extends TestCase
                     'items',
                     new IntegerEntry('item-id', 1),
                     new StringEntry('name', 'one'),
-                    new IntegerEntry('item-id', 2),
-                    new StringEntry('name', 'two'),
-                    new IntegerEntry('item-id', 3),
-                    new StringEntry('name', 'three')
                 ),
                 $phase = new NullEntry('phase')
             ),
@@ -411,10 +403,6 @@ final class EntriesTest extends TestCase
                 'items',
                 new IntegerEntry('item-id', 1),
                 new StringEntry('name', 'one'),
-                new IntegerEntry('item-id', 2),
-                new StringEntry('name', 'two'),
-                new IntegerEntry('item-id', 3),
-                new StringEntry('name', 'three')
             ),
             new EnumEntry('enum', BasicEnum::three)
         );
@@ -426,12 +414,8 @@ final class EntriesTest extends TestCase
                 'created-at' => $createdAt,
                 'phase' => null,
                 'items' => [
-                    new IntegerEntry('item-id', 1),
-                    new StringEntry('name', 'one'),
-                    new IntegerEntry('item-id', 2),
-                    new StringEntry('name', 'two'),
-                    new IntegerEntry('item-id', 3),
-                    new StringEntry('name', 'three'),
+                    'item-id' => 1,
+                    'name' => 'one',
                 ],
                 'enum' => BasicEnum::three,
             ],
