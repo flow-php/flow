@@ -8,6 +8,7 @@ on:
       - 'src/core/**'
       - 'src/lib/**'
       - 'tools/**'
+      - 'composer.json'
       - 'composer.lock'
 
 jobs:

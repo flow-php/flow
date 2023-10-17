@@ -51,17 +51,9 @@ jobs:
           fi
 
       - name: "Checkout to specific ref"
-        uses: "actions/checkout@v2"
+        uses: "actions/checkout@v4"
         with:
           ref: ${{ env.GIT_REF }}
-
-      - name: "Install PHP"
-        uses: "shivammathur/setup-php@v2"
-        with:
-          coverage: none
-          tools: composer:v2
-          php-version: "${{ matrix.php-version }}"
-          ini-values: memory_limit=-1
 
       - name: "Install PHP"
         uses: "shivammathur/setup-php@v2"
