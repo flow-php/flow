@@ -10,6 +10,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#607](https://github.com/flow-php/flow/pull/607) - **Rework `Entries::toArray()` to improve performance** - [@stloyd](https://github.com/stloyd)
 - [#604](https://github.com/flow-php/flow/pull/604) - **Adjust benchmark report to be more useful** - [@stloyd](https://github.com/stloyd)
 - [#600](https://github.com/flow-php/flow/pull/600) - **Unify adapter benchmark datasets** - [@stloyd](https://github.com/stloyd)
 - [#598](https://github.com/flow-php/flow/pull/598) - **Rework GH testing actions to run only after code changes** - [@stloyd](https://github.com/stloyd)
@@ -28,6 +29,7 @@
 - [#584](https://github.com/flow-php/flow/pull/584) - **Adjust `phpunit.xml` to be more efficient** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
+- [#606](https://github.com/flow-php/flow/pull/606) - **Fix wrong truncate in `ASCIIValue` class** - [@stloyd](https://github.com/stloyd)
 - [#601](https://github.com/flow-php/flow/pull/601) - **benchmarks not executing extractors** - [@norberttech](https://github.com/norberttech)
 - [61e035](https://github.com/flow-php/flow/commit/61e0350ab589235504ea503065e8d6511a9262ae) - **github markdown syntax in benchmark tag workflow** - [@norberttech](https://github.com/norberttech)
 - [4f820f](https://github.com/flow-php/flow/commit/4f820fe19d24e1bcfe181d6665d0689a94f8351f) - **default PHPBENCH_TAG value for push events** - [@norberttech](https://github.com/norberttech)
