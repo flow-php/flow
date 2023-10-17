@@ -55,10 +55,12 @@ final class GoogleSheetExtractor implements Extractor
             $totalRows = 1;
         }
 
+        $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
+
         while ([] !== $values) {
             yield array_to_rows(
                 \array_map(
-                    function (array $rowData) use ($headers, $context, &$totalRows) {
+                    function (array $rowData) use ($headers, $shouldPutInputIntoRows, &$totalRows) {
                         if (\count($headers) > \count($rowData)) {
                             \array_push(
                                 $rowData,
@@ -78,7 +80,7 @@ final class GoogleSheetExtractor implements Extractor
                         /** @var int $totalRows */
                         $totalRows++;
 
-                        if ($context->config->shouldPutInputIntoRows()) {
+                        if ($shouldPutInputIntoRows) {
                             return \array_merge(
                                 \array_combine($headers, $rowData),
                                 ['spread_sheet_id' =>  $this->spreadsheetId, 'sheet_name' => $this->columnRange->sheetName]

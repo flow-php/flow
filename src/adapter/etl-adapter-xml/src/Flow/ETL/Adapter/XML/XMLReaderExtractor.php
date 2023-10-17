@@ -37,6 +37,8 @@ final class XMLReaderExtractor implements Extractor
 
     public function extract(FlowContext $context) : \Generator
     {
+        $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
+
         foreach ($context->streams()->fs()->scan($this->path, $context->partitionFilter()) as $filePath) {
             $xmlReader = new \XMLReader();
             $xmlReader->open($filePath->path());
@@ -69,7 +71,7 @@ final class XMLReaderExtractor implements Extractor
                         /** @psalm-suppress ArgumentTypeCoercion */
                         $node->loadXML($xmlReader->readOuterXml());
 
-                        if ($context->config->shouldPutInputIntoRows()) {
+                        if ($shouldPutInputIntoRows) {
                             $rows[] = Row::create(
                                 Entry::xml('node', $node),
                                 Entry::string('_input_file_uri', $filePath->uri())

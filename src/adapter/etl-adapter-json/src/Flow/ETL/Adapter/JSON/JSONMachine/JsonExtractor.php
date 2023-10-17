@@ -27,12 +27,14 @@ final class JsonExtractor implements Extractor
     {
         $rows = [];
 
+        $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
+
         foreach ($context->streams()->fs()->scan($this->path, $context->partitionFilter()) as $filePath) {
             /**
              * @var array|object $row
              */
             foreach (Items::fromStream($context->streams()->fs()->open($filePath, Mode::READ)->resource(), $this->readerOptions())->getIterator() as $row) {
-                if ($context->config->shouldPutInputIntoRows()) {
+                if ($shouldPutInputIntoRows) {
                     $rows[] = \array_merge((array) $row, ['_input_file_uri' => $filePath->uri()]);
                 } else {
                     $rows[] = (array) $row;

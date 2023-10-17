@@ -30,6 +30,8 @@ final class ParquetExtractor implements Extractor
 
     public function extract(FlowContext $context) : \Generator
     {
+        $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
+
         foreach ($this->readers($context) as $readerData) {
             $dataFields = $readerData['reader']->schema->getDataFields();
 
@@ -68,7 +70,7 @@ final class ParquetExtractor implements Extractor
                 $rows = [];
 
                 foreach ($data as $rowData) {
-                    if ($context->config->shouldPutInputIntoRows()) {
+                    if ($shouldPutInputIntoRows) {
                         $rows[] = \array_merge($rowData, ['_input_file_uri' => $readerData['uri']]);
                     } else {
                         $rows[] = $rowData;

@@ -25,6 +25,8 @@ final class TextExtractor implements Extractor
         /** @var array<Row> $rows */
         $rows = [];
 
+        $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
+
         foreach ($context->streams()->fs()->scan($this->path, $context->partitionFilter()) as $filePath) {
             $fileStream = $context->streams()->fs()->open($filePath, Mode::READ);
 
@@ -35,7 +37,7 @@ final class TextExtractor implements Extractor
             }
 
             while ($rowData !== false) {
-                if ($context->config->shouldPutInputIntoRows()) {
+                if ($shouldPutInputIntoRows) {
                     $rows[] = ['text' => \rtrim($rowData), '_input_file_uri' => $filePath->uri()];
                 } else {
                     $rows[] = ['text' => \rtrim($rowData)];

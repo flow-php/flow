@@ -41,6 +41,8 @@ final class PsrHttpClientStaticExtractor implements Extractor
         $responseFactory = new ResponseEntriesFactory();
         $requestFactory = new RequestEntriesFactory();
 
+        $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
+
         foreach ($this->requests as $request) {
             if ($this->preRequest) {
                 ($this->preRequest)($request);
@@ -52,7 +54,7 @@ final class PsrHttpClientStaticExtractor implements Extractor
                 ($this->postRequest)($request, $response);
             }
 
-            if ($context->config->shouldPutInputIntoRows()) {
+            if ($shouldPutInputIntoRows) {
                 yield new Rows(
                     Row::create(
                         ...\array_merge(

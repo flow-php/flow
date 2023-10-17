@@ -34,6 +34,8 @@ final class CSVExtractor implements Extractor
 
     public function extract(FlowContext $context) : \Generator
     {
+        $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
+
         foreach ($context->streams()->fs()->scan($this->uri, $context->partitionFilter()) as $path) {
             $stream = $context->streams()->fs()->open($path, Mode::READ);
 
@@ -85,7 +87,7 @@ final class CSVExtractor implements Extractor
                     continue;
                 }
 
-                if ($context->config->shouldPutInputIntoRows()) {
+                if ($shouldPutInputIntoRows) {
                     $rows[] = \array_merge(\array_combine($headers, $rowData), ['_input_file_uri' => $stream->path()->uri()]);
                 } else {
                     $rows[] = \array_combine($headers, $rowData);
