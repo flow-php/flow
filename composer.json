@@ -165,7 +165,7 @@
             "tools/phpunit/vendor/bin/phpunit"
         ],
         "test:benchmark": [
-            "tools/phpbench/vendor/bin/phpbench run --report=aggregate --retry-threshold=5"
+            "tools/phpbench/vendor/bin/phpbench run --report=flow-report"
         ],
         "test:mutation": [
             "tools/infection/vendor/bin/infection -j2"

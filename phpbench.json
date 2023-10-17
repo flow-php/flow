@@ -1,6 +1,19 @@
 {
   "$schema": "./tools/phpbench/vendor/phpbench/phpbench/phpbench.schema.json",
   "runner.bootstrap": "vendor/autoload.php",
+  "report.generators": {
+    "flow-report": {
+      "generator": "expression",
+      "cols": {
+        "benchmark": null,
+        "subject": null,
+        "revs": null,
+        "its": null,
+        "mem_peak": null,
+        "mode": null
+      }
+    }
+  },
   "runner.path": [
     "src/adapter/etl-adapter-avro/tests/Flow/ETL/Adapter/Avro/Tests/Benchmark/",
     "src/adapter/etl-adapter-csv/tests/Flow/ETL/Adapter/CSV/Tests/Benchmark/",
@@ -11,5 +24,6 @@
     "src/core/etl/tests/Flow/ETL/Tests/Benchmark/"
   ],
   "runner.progress": "dots",
+  "runner.retry_threshold": 5,
   "storage.xml_storage_path": "var/phpbench"
 }
