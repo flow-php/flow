@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-10-16
+## [Unreleased] - 2023-10-17
 
 ### Added
 - [#601](https://github.com/flow-php/flow/pull/601) - **output of benchmark tests into github step summary** - [@norberttech](https://github.com/norberttech)
@@ -10,6 +10,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#604](https://github.com/flow-php/flow/pull/604) - **Adjust benchmark report to be more useful** - [@stloyd](https://github.com/stloyd)
 - [#600](https://github.com/flow-php/flow/pull/600) - **Unify adapter benchmark datasets** - [@stloyd](https://github.com/stloyd)
 - [#598](https://github.com/flow-php/flow/pull/598) - **Rework GH testing actions to run only after code changes** - [@stloyd](https://github.com/stloyd)
 - [#597](https://github.com/flow-php/flow/pull/597) - **Reduce the amount of test data in ElasticSearch tests** - [@stloyd](https://github.com/stloyd)
