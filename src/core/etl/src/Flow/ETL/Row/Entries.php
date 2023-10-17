@@ -351,16 +351,19 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
     }
 
     /**
-     * @psalm-suppress MissingClosureReturnType
+     * @psalm-suppress MixedAssignment
      *
      * @return array<string, mixed>
      */
     public function toArray() : array
     {
-        return \array_combine(
-            $this->map(fn (Entry $entry) => $entry->name()),
-            $this->map(fn (Entry $entry) => $entry->value())
-        );
+        $data = [];
+
+        foreach ($this->entries as $entry) {
+            $data[$entry->name()] = $entry->value();
+        }
+
+        return $data;
     }
 
     private function find(string|EntryReference $entry) : ?Entry
