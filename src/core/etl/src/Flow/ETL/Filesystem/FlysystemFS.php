@@ -120,12 +120,10 @@ final class FlysystemFS implements Filesystem
                 $fs->createDirectory($path->parentDirectory()->path());
             }
 
-            /** @phpstan-ignore-next-line */
-            return new FileStream($path, \fopen($path->path(), $mode->value, false, $path->context()->resource()));
+            return new FileStream($path, \fopen($path->path(), $mode->value, false, $path->context()->resource()) ?: null);
         }
 
-        /** @phpstan-ignore-next-line */
-        return new FileStream($path, \fopen($path->uri(), $mode->value, false, $path->context()->resource()));
+        return new FileStream($path, \fopen($path->uri(), $mode->value, false, $path->context()->resource()) ?: null);
     }
 
     public function rm(Path $path) : void
@@ -180,6 +178,12 @@ final class FlysystemFS implements Filesystem
             default => throw new InvalidArgumentException('Unexpected scheme: ' . $path->scheme())
         };
 
+        if ($fs->fileExists($path->path())) {
+            yield $path;
+
+            return;
+        }
+
         $filter = function (FileAttributes|DirectoryAttributes $file) use ($path, $partitionFilter) : bool {
             if ($file instanceof DirectoryAttributes) {
                 return false;
@@ -191,22 +195,8 @@ final class FlysystemFS implements Filesystem
                 }
             }
 
-            $filePath = new Path(DIRECTORY_SEPARATOR . $file->path());
-
-            if (\count($filePath->partitions())) {
-                if (!$partitionFilter->keep(...$filePath->partitions())) {
-                    return false;
-                }
-            }
-
-            return true;
+            return $partitionFilter->keep(...(new Path(DIRECTORY_SEPARATOR . $file->path()))->partitions());
         };
-
-        if ($fs->fileExists($path->path())) {
-            yield $path;
-
-            return;
-        }
 
         /**
          * @psalm-suppress ArgumentTypeCoercion
