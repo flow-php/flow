@@ -74,7 +74,7 @@ final class ASCIIValue
             return $this->stringValue();
         }
 
-        return \substr($this->stringValue(), 0, 20);
+        return \mb_substr($this->stringValue(), 0, 20);
     }
 
     /**
@@ -110,9 +110,9 @@ final class ASCIIValue
                 /** @psalm-suppress InvalidPropertyAssignmentValue */
                 $this->stringValue = match (\gettype($val)) {
                     'string' => $val,
-                    'boolean' => ($val) ? 'true' : 'false',
+                    'boolean' => $val ? 'true' : 'false',
                     'double', 'integer' => (string) $val,
-                    'array' => \json_encode($val, JSON_THROW_ON_ERROR),
+                    'array' => \json_encode($val, \JSON_THROW_ON_ERROR),
                 };
             } catch (\JsonException $e) {
                 $this->stringValue = '{...}';
