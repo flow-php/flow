@@ -11,16 +11,17 @@ use Flow\ETL\Partition;
 use Flow\Serializer\Serializable;
 
 /**
- * @implements Serializable<array{path: string, scheme: string, options: array<string, mixed>}>
+ * @implements Serializable<array{path: string, scheme: string, options: array<string, mixed>, extension: string|false}>
  */
 final class Path implements Serializable
 {
+    private string|false $extension;
+
     private string $path;
 
     private string $scheme;
 
     /**
-     * @param string $uri
      * @param array<string, mixed> $options
      *
      * @throws InvalidArgumentException
@@ -38,14 +39,12 @@ final class Path implements Serializable
         }
 
         $path = \array_key_exists('scheme', $urlParts)
-            ?\str_replace($urlParts['scheme'] . '://', '', $uri)
+            ? \str_replace($urlParts['scheme'] . '://', '', $uri)
             : $uri;
 
         if (\array_key_exists('scheme', $urlParts)) {
             $path = !\str_starts_with($path, DIRECTORY_SEPARATOR) ? (DIRECTORY_SEPARATOR . $path) : $path;
-        }
-
-        if (!\array_key_exists('scheme', $urlParts)) {
+        } else {
             if (!\str_starts_with($path, DIRECTORY_SEPARATOR)) {
                 throw new InvalidArgumentException("Relative paths are not supported, consider using instead Path::realpath: {$uri}");
             }
@@ -57,25 +56,22 @@ final class Path implements Serializable
 
         $this->path = $path;
         $this->scheme = \array_key_exists('scheme', $urlParts) ? $urlParts['scheme'] : 'file';
+        $this->extension = \pathinfo($this->path)['extension'] ?? false;
     }
 
     /**
      * Turn relative path into absolute paths even when path does not exists or it's glob pattern.
      *
-     * @param string $path
      * @param array<string, mixed> $options
      *
      * @throws InvalidArgumentException
      * @throws RuntimeException
-     *
-     * @return Path
      */
     public static function realpath(string $path, array $options = []) : self
     {
         // ""  - empty path is current, local directory
         if ('' === $path) {
-            /** @phpstan-ignore-next-line */
-            return new self(\getcwd(), $options);
+            return new self(\getcwd() ?: '', $options);
         }
 
         // "non_local://path/to/file.txt" - non local paths can't be relative
@@ -100,11 +96,11 @@ final class Path implements Serializable
 
                 $userData = (array) \posix_getpwuid(\posix_getuid());
 
-                /** @psalm-suppress TypeDoesNotContainType */
-                if (!\array_key_exists('dir', $userData) || !\is_string($userData['dir'])) {
+                if (!\is_string($userData['dir'] ?? null)) {
                     throw new RuntimeException("Can't resolve homedir for user executing script");
                 }
 
+                /** @psalm-suppress PossiblyUndefinedArrayOffset */
                 $realPath = $userData['dir'] . DIRECTORY_SEPARATOR . \substr($realPath, 1);
             }
         }
@@ -116,9 +112,8 @@ final class Path implements Serializable
 
         /** @var array<string> $absoluteParts */
         $absoluteParts = [];
-        $parts = \explode(DIRECTORY_SEPARATOR, $realPath);
 
-        foreach ($parts as $part) {
+        foreach (\explode(DIRECTORY_SEPARATOR, $realPath) as $part) {
             if ($part === '.' || $part === '') {
                 continue;
             }
@@ -146,6 +141,7 @@ final class Path implements Serializable
             'scheme' => $this->scheme,
             'path' => $this->path,
             'options' => $this->options,
+            'extension' => $this->extension,
         ];
     }
 
@@ -154,6 +150,7 @@ final class Path implements Serializable
         $this->path = $data['path'];
         $this->scheme = $data['scheme'];
         $this->options = $data['options'];
+        $this->extension = $data['extension'];
     }
 
     public function addPartitions(Partition $partition, Partition ...$partitions) : self
@@ -176,20 +173,18 @@ final class Path implements Serializable
 
     public function extension() : string|false
     {
-        $pathInfo = \pathinfo($this->path);
-
-        return \array_key_exists('extension', $pathInfo) ? $pathInfo['extension'] : false;
+        return $this->extension;
     }
 
     public function isEqual(self $path) : bool
     {
         return $this->uri() === $path->uri()
-            && $this->options() === $path->options();
+            && $this->options === $path->options();
     }
 
     public function isLocal() : bool
     {
-        return $this->scheme() === 'file';
+        return $this->scheme === 'file';
     }
 
     public function isPattern() : bool
@@ -225,7 +220,7 @@ final class Path implements Serializable
         }
 
         $path = \pathinfo($this->path);
-        $dirname = (\array_key_exists('dirname', $path)) ? (\ltrim($path['dirname'], DIRECTORY_SEPARATOR)) : '';
+        $dirname = \array_key_exists('dirname', $path) ? \ltrim($path['dirname'], DIRECTORY_SEPARATOR) : '';
 
         $dirname = $dirname === '' ? '/' : $dirname;
 
@@ -254,9 +249,7 @@ final class Path implements Serializable
 
     public function randomize() : self
     {
-        $path = \pathinfo($this->path);
-
-        $extension = (\array_key_exists('extension', $path)) ? ('.' . $path['extension']) : '';
+        $extension = false !== $this->extension ? '.' . $this->extension : '';
 
         return new self(
             (\rtrim($this->uri(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . \str_replace('.', '', \uniqid('', true)) . $extension),
@@ -271,18 +264,18 @@ final class Path implements Serializable
 
     public function setExtension(string $extension) : self
     {
-        if ($this->extension()) {
-            if ($this->extension() === $extension) {
+        if ($this->extension) {
+            if ($this->extension === $extension) {
                 return $this;
             }
 
             $pathinfo = \pathinfo($this->path);
             $path = ($pathinfo['dirname'] ?? '') . DIRECTORY_SEPARATOR . $pathinfo['filename'] . '.' . $extension;
 
-            return new self($this->scheme() . '://' . \ltrim($path, DIRECTORY_SEPARATOR), $this->options());
+            return new self($this->scheme . '://' . \ltrim($path, DIRECTORY_SEPARATOR), $this->options);
         }
 
-        return new self($this->uri() . '.' . $extension, $this->options());
+        return new self($this->uri() . '.' . $extension, $this->options);
     }
 
     public function startsWith(self $path) : bool
@@ -335,7 +328,7 @@ final class Path implements Serializable
         }
 
         if ($flags & 4) {
-            if (($filename[0] == '.') && ($pattern[0] != '.')) {
+            if (($filename[0] === '.') && ($pattern[0] !== '.')) {
                 return false;
             }
         }
@@ -374,18 +367,16 @@ final class Path implements Serializable
 
     private function isPathPattern(string $path) : bool
     {
-        foreach (\array_filter(\explode(DIRECTORY_SEPARATOR, $path)) as $folder) {
-            if (\str_contains($folder, '*') || \str_contains($folder, '?')) {
-                return true;
-            }
+        if (\str_contains($path, '*') || \str_contains($path, '?')) {
+            return true;
+        }
 
-            if (\str_contains($folder, '[') && \str_contains($folder, ']')) {
-                return true;
-            }
+        if (\str_contains($path, '[') && \str_contains($path, ']')) {
+            return true;
+        }
 
-            if (\str_contains($folder, '{') && \str_contains($folder, '}')) {
-                return true;
-            }
+        if (\str_contains($path, '{') && \str_contains($path, '}')) {
+            return true;
         }
 
         return false;
