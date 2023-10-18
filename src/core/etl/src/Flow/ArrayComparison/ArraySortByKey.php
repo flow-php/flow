@@ -19,9 +19,9 @@ final class ArraySortByKey
         );
 
         if (\array_is_list($array)) {
-            \usort($array, fn ($a, $b) : int => $a <=> $b);
+            \sort($array);
         } else {
-            \uksort($array, fn ($a, $b) : int => $a <=> $b);
+            \ksort($array);
         }
 
         return $array;

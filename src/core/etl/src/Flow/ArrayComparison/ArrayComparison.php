@@ -42,12 +42,13 @@ final class ArrayComparison
             return false;
         }
 
-        foreach (\array_keys($b) as $key) {
-            if (!\array_key_exists($key, $a) || !\array_key_exists($key, $b)) {
+        /** @psalm-suppress MixedAssignment */
+        foreach ($b as $key => $value) {
+            if (!\array_key_exists($key, $a)) {
                 return false;
             }
 
-            if (!$this->valueEquals($a[$key], $b[$key])) {
+            if (!$this->valueEquals($a[$key], $value)) {
                 return false;
             }
         }
