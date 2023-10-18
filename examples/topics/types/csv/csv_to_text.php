@@ -9,13 +9,13 @@ use Flow\ETL\Flow;
 require __DIR__ . '/../../../bootstrap.php';
 
 $flow = (new Flow())
-    ->read(Text::from(__FLOW_OUTPUT__ . '/annual-enterprise-survey-2019-financial-year-provisional.csv'));
+    ->read(Text::from(__FLOW_DATA__ . '/annual-enterprise-survey-2019-financial-year-provisional.csv'));
 
 if ($_ENV['FLOW_PHAR_APP'] ?? false) {
     return $flow;
 }
 
-$csvFileSize = \round(\filesize(__FLOW_OUTPUT__ . '/annual-enterprise-survey-2019-financial-year-provisional.csv') / 1024 / 1024);
+$csvFileSize = \round(\filesize(__FLOW_DATA__ . '/annual-enterprise-survey-2019-financial-year-provisional.csv') / 1024 / 1024);
 print "Reading CSV {$csvFileSize}Mb file...\n";
 
 $stopwatch = new Stopwatch();

@@ -47,6 +47,8 @@ final class PsrHttpClientDynamicExtractor implements Extractor
 
         $nextRequest = $this->requestFactory->create();
 
+        $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
+
         while ($nextRequest) {
             if ($this->preRequest) {
                 ($this->preRequest)($nextRequest);
@@ -58,7 +60,7 @@ final class PsrHttpClientDynamicExtractor implements Extractor
                 ($this->postRequest)($nextRequest, $response);
             }
 
-            if ($context->config->shouldPutInputIntoRows()) {
+            if ($shouldPutInputIntoRows) {
                 yield new Rows(
                     Row::create(
                         ...\array_merge(

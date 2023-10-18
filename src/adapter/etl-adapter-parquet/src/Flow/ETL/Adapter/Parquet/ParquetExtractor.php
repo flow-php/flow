@@ -32,11 +32,13 @@ final class ParquetExtractor implements Extractor
 
     public function extract(FlowContext $context) : \Generator
     {
+        $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
+
         foreach ($this->readers($context) as $fileData) {
             $rows = [];
 
             foreach ($fileData['file']->values($this->columns) as $row) {
-                if ($context->config->shouldPutInputIntoRows()) {
+                if ($shouldPutInputIntoRows) {
                     $rows[] = \array_merge(
                         $row,
                         ['_input_file_uri' => $fileData['uri']]

@@ -29,6 +29,8 @@ final class AvroExtractor implements Extractor
      */
     public function extract(FlowContext $context) : \Generator
     {
+        $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
+
         /** @var array<Row> $rows */
         $rows = [];
 
@@ -47,7 +49,7 @@ final class AvroExtractor implements Extractor
             $valueConverter = new ValueConverter(\json_decode($reader->metadata['avro.schema'], true));
 
             foreach ($reader->data() as $rowData) {
-                if ($context->config->shouldPutInputIntoRows()) {
+                if ($shouldPutInputIntoRows) {
                     $rows[] = \array_merge($valueConverter->convert($rowData), ['_input_file_uri' => $filePath->uri()]);
                 } else {
                     $rows[] = $valueConverter->convert($rowData);
