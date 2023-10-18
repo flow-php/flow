@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-10-17
+## [Unreleased] - 2023-10-18
 
 ### Added
 - [#601](https://github.com/flow-php/flow/pull/601) - **output of benchmark tests into github step summary** - [@norberttech](https://github.com/norberttech)
@@ -10,6 +10,8 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#608](https://github.com/flow-php/flow/pull/608) - **Rework `FlysystemFS::scan()` to improve performance** - [@stloyd](https://github.com/stloyd)
+- [#609](https://github.com/flow-php/flow/pull/609) - **Move `Context::shouldPutInputIntoRows()` out of loop** - [@stloyd](https://github.com/stloyd)
 - [#605](https://github.com/flow-php/flow/pull/605) - **Improve performance of Path class** - [@stloyd](https://github.com/stloyd)
 - [#607](https://github.com/flow-php/flow/pull/607) - **Rework `Entries::toArray()` to improve performance** - [@stloyd](https://github.com/stloyd)
 - [#604](https://github.com/flow-php/flow/pull/604) - **Adjust benchmark report to be more useful** - [@stloyd](https://github.com/stloyd)
