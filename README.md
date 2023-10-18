@@ -57,6 +57,7 @@ this will reduce the number of unnecessary dependencies in your project (less ma
   - [doctrine-dbal-bulk](src/lib/doctrine-dbal-bulk/README.md)
   - [Google Dremel algorithm](src/lib/dremel/README.md)
   - [Parquet](src/lib/parquet/README.md)
+  - [Snappy](src/lib/snappy/README.md)
 
 For example, if you want to work with JSON/CSV files here are the dependencies you will need to install: 
 
