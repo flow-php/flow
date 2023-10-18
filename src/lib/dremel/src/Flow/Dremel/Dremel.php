@@ -142,7 +142,7 @@ final class Dremel
     {
         if (\count($repetitions) !== 0) {
             if (\count(\array_unique([\count($repetitions), \count($definitions)])) !== 1) {
-                throw new InvalidArgumentException('repetitions, definitions and values count must be exactly the same');
+                throw new InvalidArgumentException('repetitions, definitions and values count must be exactly the same, repetitions: ' . \count($repetitions) . ', definitions: ' . \count($definitions));
             }
         }
 

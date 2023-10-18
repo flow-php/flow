@@ -10,6 +10,11 @@ final class DataSize
     {
     }
 
+    public static function fromBytes(int $bytes) : self
+    {
+        return new self($bytes * 8);
+    }
+
     public function add(int|self $bits) : void
     {
         if ($bits instanceof self) {
@@ -21,6 +26,11 @@ final class DataSize
 
         $this->bits += $bits;
         $this->bytes = (int) \round($this->bits / 8, 0, PHP_ROUND_HALF_DOWN);
+    }
+
+    public function addBytes(int $bytes) : void
+    {
+        $this->add($bytes * 8);
     }
 
     public function bits() : int
@@ -48,5 +58,10 @@ final class DataSize
 
         $this->bits -= $bits;
         $this->bytes = (int) \round($this->bits / 8, 0, PHP_ROUND_HALF_DOWN);
+    }
+
+    public function subBytes(int $bytes) : void
+    {
+        $this->sub($bytes * 8);
     }
 }

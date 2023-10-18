@@ -3,7 +3,8 @@
 namespace Flow\Parquet\ParquetFile\Data;
 
 use Flow\Parquet\BinaryReader;
-use Flow\Parquet\DataSize;
+use Flow\Parquet\BinaryWriter;
+use Flow\Parquet\Exception\RuntimeException;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
@@ -30,6 +31,7 @@ final class RLEBitPackedHybrid
 
         $count = $numGroups * 8;
         $totalByteCount = (int) (($bitWidth * $count) / 8);
+
         $remainingByteCount = $reader->remainingLength()->bytes();
         $readBytes = $reader->readBytes(\min($remainingByteCount, $totalByteCount));
         $actualByteCount = $readBytes->count();
@@ -62,21 +64,18 @@ final class RLEBitPackedHybrid
         }
     }
 
-    public function decodeHybrid(BinaryReader $reader, int $bitWidth, int $maxItems, DataSize $length = null) : array
+    public function decodeHybrid(BinaryReader $reader, int $bitWidth, int $maxItems) : array
     {
-        $length = ($length) ?: new DataSize($reader->readInt32() * 8);
-
         $output = [];
-        $start = $reader->position();
 
         $iteration = 0;
 
-        while (($reader->position()->bytes() - $start->bytes()) < $length->bytes() && \count($output) < $maxItems) {
+        while (\count($output) < $maxItems) {
             $iteration++;
             $varInt = $reader->readVarInt();
             $isRle = ($varInt & 1) === 0;
 
-            $this->debugLog($iteration, $varInt, $isRle, $bitWidth, $length, $reader, $output);
+            $this->debugLog($iteration, $varInt, $isRle, $bitWidth, $reader, $output);
 
             if ($isRle) {
                 $this->decodeRLE($reader, $bitWidth, $varInt, $maxItems - \count($output), $output);
@@ -85,7 +84,7 @@ final class RLEBitPackedHybrid
             }
         }
 
-        return \array_slice($output, 0, $maxItems);
+        return $output;
     }
 
     public function decodeRLE(BinaryReader $reader, int $bitWidth, int $intVar, int $maxItems, array &$output) : void
@@ -112,7 +111,115 @@ final class RLEBitPackedHybrid
         }
     }
 
-    private function debugLog(int $iteration, int $varInt, bool $isRle, int $bitWidth, DataSize $length, BinaryReader $reader, array $output) : void
+    /**
+     * @param array<int> $values
+     */
+    public function encodeBitPacked(BinaryWriter $writer, int $bitWidth, array $values) : void
+    {
+        $numGroups = (int) \ceil(\count($values) / 8.0);
+        $varInt = ($numGroups << 1) | 1;
+
+        $writer->writeVarInts32([$varInt]);
+
+        $buffer = 0;
+        $bitsInBuffer = 0;
+        $bytes = [];
+
+        foreach ($values as $value) {
+            $buffer |= ($value << $bitsInBuffer);
+            $bitsInBuffer += $bitWidth;
+
+            while ($bitsInBuffer >= 8) {
+                $bytes[] = $buffer & 0xFF;
+                $buffer >>= 8;
+                $bitsInBuffer -= 8;
+            }
+        }
+
+        // Write any remaining bits in the buffer
+        if ($bitsInBuffer > 0) {
+            $bytes[] = $buffer & 0xFF;
+        }
+
+        $writer->writeBytes($bytes);
+    }
+
+    /**
+     * @param array<int> $values
+     */
+    public function encodeHybrid(BinaryWriter $writer, array $values) : void
+    {
+        $bitWidth = BitWidth::fromArray($values);
+
+        $rleBuffer = [];
+        $bitPackedBuffer = [];
+
+        $previousValue = null;
+
+        foreach ($values as $value) {
+            if ($previousValue === null) {
+                $previousValue = $value;
+                $rleBuffer[] = $value;
+
+                continue;
+            }
+
+            // we always bit-pack a multiple of 8 values at a time, so we only store the number of values / 8
+            if (\count($bitPackedBuffer) > 0 && \count($bitPackedBuffer) < 8) {
+                $bitPackedBuffer[] = $value;
+
+                continue;
+            }
+
+            if ($previousValue === $value) {
+                $rleBuffer[] = $value;
+            } else {
+                if (\count($rleBuffer) >= 8) {
+                    $this->encodeRLE($writer, $bitWidth, $rleBuffer);
+                    $rleBuffer = [];
+                }
+
+                $bitPackedBuffer = \array_merge($bitPackedBuffer, $rleBuffer);
+                $bitPackedBuffer[] = $value;
+                $rleBuffer = [];
+            }
+
+            $previousValue = $value;
+        }
+
+        if (\count($rleBuffer) > 8) {
+            $this->encodeRLE($writer, $bitWidth, $rleBuffer);
+            $rleBuffer = [];
+        }
+
+        if (\count($bitPackedBuffer)) {
+            if (\count($rleBuffer)) {
+                $bitPackedBuffer = \array_merge($bitPackedBuffer, $rleBuffer);
+            }
+
+            $this->encodeBitPacked($writer, $bitWidth, $bitPackedBuffer);
+        }
+    }
+
+    /**
+     * @param array<int> $values
+     */
+    public function encodeRLE(BinaryWriter $writer, int $bitWidth, array $values) : void
+    {
+        if (\count(\array_unique($values)) !== 1) {
+            throw new RuntimeException('RLE encoding only supports repeated values');
+        }
+
+        $repeatCount = \count($values);
+        $intVar = ($repeatCount << 1);
+
+        $value = $values[0];
+
+        $writer->writeVarInts32([$intVar]);
+        $writer->writeBytes(BitWidth::toBytes($value, $bitWidth));
+    }
+
+    private function debugLog(int $iteration, int $varInt, bool $isRle, int $bitWidth, BinaryReader $reader, array $output) : void
     {
         if ($this->logger instanceof NullLogger) {
             return;
@@ -123,7 +230,6 @@ final class RLEBitPackedHybrid
             'var_int' => $varInt,
             'is_rle' => $isRle,
             'bit_width' => $bitWidth,
-            'length' => ['bits' => $length->bits(), 'bytes' => $length->bytes()],
             'reader_position' => ['bits' => $reader->position()->bits(), 'bytes' => $reader->position()->bytes()],
             'output_count' => \count($output),
         ]);
