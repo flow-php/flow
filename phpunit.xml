@@ -54,6 +54,7 @@
       <directory>src/adapter/etl-adapter-xml/tests/Flow/ETL/Adapter/XML/Tests/Integration</directory>
       <directory>src/core/etl/tests/Flow/ETL/Tests/Integration</directory>
       <directory>src/lib/parquet/tests/Flow/Parquet/Tests/Integration</directory>
+      <directory>src/lib/snappy/tests/Flow/Snappy/Tests/Integration</directory>
     </testsuite>
     <testsuite name="integration-services">
       <directory>src/adapter/etl-adapter-doctrine/tests/Flow/ETL/Adapter/Doctrine/Tests/Integration</directory>

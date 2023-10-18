@@ -60,7 +60,8 @@
             "build/version.php",
             "src/core/etl/src/Flow/ETL/DSL/functions.php",
             "src/lib/array-dot/src/Flow/ArrayDot/array_dot.php",
-            "src/lib/parquet/src/Flow/Parquet/functions.php"
+            "src/lib/parquet/src/Flow/Parquet/functions.php",
+            "src/lib/snappy/polifil.php"
         ],
         "psr-4": {
             "Flow\\": [
@@ -83,7 +84,8 @@
                 "src/lib/array-dot/src/Flow",
                 "src/lib/doctrine-dbal-bulk/src/Flow",
                 "src/lib/dremel/src/Flow",
-                "src/lib/parquet/src/Flow"
+                "src/lib/parquet/src/Flow",
+                "src/lib/snappy/src/Flow"
             ],
             "Flow\\Doctrine\\Bulk\\": [
                 "src/lib/doctrine-dbal-bulk/src/Flow/Doctrine/Bulk"
@@ -115,7 +117,8 @@
                 "src/lib/array-dot/tests/Flow",
                 "src/lib/doctrine-dbal-bulk/tests/Flow",
                 "src/lib/dremel/tests/Flow",
-                "src/lib/parquet/tests/Flow"
+                "src/lib/parquet/tests/Flow",
+                "src/lib/snappy/tests/Flow"
             ],
             "Flow\\Doctrine\\Bulk\\Tests\\": [
                 "src/lib/doctrine-dbal-bulk/tests/Flow/Doctrine/Bulk/Tests"
@@ -153,7 +156,8 @@
         "flow-php/etl-adapter-reactphp": "self.version",
         "flow-php/etl-adapter-text": "self.version",
         "flow-php/etl-adapter-xml": "self.version",
-        "flow-php/parquet": "self.version"
+        "flow-php/parquet": "self.version",
+        "flow-php/snappy": "self.version"
     },
     "scripts": {
         "build": [

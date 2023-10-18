@@ -1,20 +1,19 @@
 {
-    "name": "flow-php/parquet",
+    "name": "flow-php/snappy",
     "type": "library",
-    "description": "PHP ETL - library for reading and writing Parquet files",
+    "description": "PHP ETL - Google Snappy compression algorithm implementation",
     "keywords": [
         "etl",
         "extract",
         "transform",
         "load",
         "filter",
-        "parquet"
+        "snappy",
+        "algorithm",
+        "compression"
     ],
     "require": {
-        "php": "~8.1 || ~8.2",
-        "ext-bcmath": "*",
-        "flow-php/dremel": "1.x-dev",
-        "flow-php/snappy": "1.x-dev"
+        "php": "~8.1 || ~8.2"
     },
     "config": {
         "optimize-autoloader": true,
@@ -27,9 +26,7 @@
                 "src/Flow"
             ]
         },
-        "files": [
-            "src/Flow/Parquet/functions.php"
-        ]
+        "files": [ "polifil.php" ]
     },
     "autoload-dev": {
         "psr-4": {
