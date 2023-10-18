@@ -63,7 +63,7 @@ final class ArrayEntry implements \Stringable, Entry
 
     public function isEqual(Entry $entry) : bool
     {
-        return $this->is($entry->name()) && $entry instanceof self && (new ArrayComparison())->equals($this->value(), $entry->value());
+        return $this->is($entry->name()) && $entry instanceof self && (new ArrayComparison())->equals($this->value, $entry->value());
     }
 
     public function map(callable $mapper) : Entry
@@ -83,7 +83,7 @@ final class ArrayEntry implements \Stringable, Entry
 
     public function toString() : string
     {
-        return \json_encode($this->value(), JSON_THROW_ON_ERROR);
+        return \json_encode($this->value, \JSON_THROW_ON_ERROR);
     }
 
     public function value() : array
