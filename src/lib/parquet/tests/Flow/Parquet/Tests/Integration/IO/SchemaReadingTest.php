@@ -1,17 +1,17 @@
 <?php declare(strict_types=1);
 
-namespace Flow\Parquet\Tests\Integration;
+namespace Flow\Parquet\Tests\Integration\IO;
 
 use Flow\Parquet\Reader;
 
-final class SchemaReadingTest extends ParquetIntegrationTestCase
+final class SchemaReadingTest extends ParquetFunctionalTestCase
 {
     public function test_reading_lists_schema_ddl() : void
     {
         $reader = new Reader(logger: $this->getLogger());
         $this->assertJsonStringEqualsJsonFile(
-            __DIR__ . '/../Fixtures/lists.json',
-            \json_encode(($reader->read(__DIR__ . '/../Fixtures/lists.parquet'))->metadata()->schema()->toDDL())
+            __DIR__ . '/../../Fixtures/lists.json',
+            \json_encode(($reader->read(__DIR__ . '/../../Fixtures/lists.parquet'))->metadata()->schema()->toDDL())
         );
     }
 
@@ -19,8 +19,8 @@ final class SchemaReadingTest extends ParquetIntegrationTestCase
     {
         $reader = new Reader(logger: $this->getLogger());
         $this->assertJsonStringEqualsJsonFile(
-            __DIR__ . '/../Fixtures/maps.json',
-            \json_encode(($reader->read(__DIR__ . '/../Fixtures/maps.parquet'))->metadata()->schema()->toDDL())
+            __DIR__ . '/../../Fixtures/maps.json',
+            \json_encode(($reader->read(__DIR__ . '/../../Fixtures/maps.parquet'))->metadata()->schema()->toDDL())
         );
     }
 
@@ -28,8 +28,8 @@ final class SchemaReadingTest extends ParquetIntegrationTestCase
     {
         $reader = new Reader(logger: $this->getLogger());
         $this->assertJsonStringEqualsJsonFile(
-            __DIR__ . '/../Fixtures/primitives.json',
-            \json_encode(($reader->read(__DIR__ . '/../Fixtures/primitives.parquet'))->metadata()->schema()->toDDL())
+            __DIR__ . '/../../Fixtures/primitives.json',
+            \json_encode(($reader->read(__DIR__ . '/../../Fixtures/primitives.parquet'))->metadata()->schema()->toDDL())
         );
     }
 
@@ -37,8 +37,8 @@ final class SchemaReadingTest extends ParquetIntegrationTestCase
     {
         $reader = new Reader(logger: $this->getLogger());
         $this->assertJsonStringEqualsJsonFile(
-            __DIR__ . '/../Fixtures/structs.json',
-            \json_encode(($reader->read(__DIR__ . '/../Fixtures/structs.parquet'))->metadata()->schema()->toDDL())
+            __DIR__ . '/../../Fixtures/structs.json',
+            \json_encode(($reader->read(__DIR__ . '/../../Fixtures/structs.parquet'))->metadata()->schema()->toDDL())
         );
     }
 }

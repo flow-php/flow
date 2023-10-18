@@ -1,16 +1,16 @@
 <?php declare(strict_types=1);
 
-namespace Flow\Parquet\Tests\Integration;
+namespace Flow\Parquet\Tests\Integration\IO;
 
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\Reader;
 
-final class ListsReadingTest extends ParquetIntegrationTestCase
+final class ListsReadingTest extends ParquetFunctionalTestCase
 {
     public function test_reading_list_column() : void
     {
         $reader = new Reader(logger: $this->getLogger());
-        $file = $reader->read(__DIR__ . '/../Fixtures/lists.parquet');
+        $file = $reader->read(__DIR__ . '/../../Fixtures/lists.parquet');
 
         $this->assertEquals(PhysicalType::BOOLEAN, $file->metadata()->schema()->get('list')->type());
         $this->assertEquals('LIST', $file->metadata()->schema()->get('list')->logicalType()->name());
@@ -30,7 +30,7 @@ final class ListsReadingTest extends ParquetIntegrationTestCase
     public function test_reading_list_column_with_limit() : void
     {
         $reader = new Reader(logger: $this->getLogger());
-        $file = $reader->read(__DIR__ . '/../Fixtures/lists.parquet');
+        $file = $reader->read(__DIR__ . '/../../Fixtures/lists.parquet');
 
         $this->assertEquals(PhysicalType::BOOLEAN, $file->metadata()->schema()->get('list')->type());
         $this->assertEquals('LIST', $file->metadata()->schema()->get('list')->logicalType()->name());
@@ -49,7 +49,7 @@ final class ListsReadingTest extends ParquetIntegrationTestCase
     public function test_reading_list_nested_column() : void
     {
         $reader = new Reader(logger: $this->getLogger());
-        $file = $reader->read(__DIR__ . '/../Fixtures/lists.parquet');
+        $file = $reader->read(__DIR__ . '/../../Fixtures/lists.parquet');
 
         $this->assertEquals(PhysicalType::BOOLEAN, $file->metadata()->schema()->get('list_nested')->type());
         $this->assertEquals('LIST', $file->metadata()->schema()->get('list_nested')->logicalType()->name());
@@ -72,7 +72,7 @@ final class ListsReadingTest extends ParquetIntegrationTestCase
     public function test_reading_list_nullable_column() : void
     {
         $reader = new Reader(logger: $this->getLogger());
-        $file = $reader->read(__DIR__ . '/../Fixtures/lists.parquet');
+        $file = $reader->read(__DIR__ . '/../../Fixtures/lists.parquet');
 
         $this->assertEquals(PhysicalType::BOOLEAN, $file->metadata()->schema()->get('list_nullable')->type());
         $this->assertEquals('LIST', $file->metadata()->schema()->get('list_nullable')->logicalType()->name());
@@ -96,7 +96,7 @@ final class ListsReadingTest extends ParquetIntegrationTestCase
     public function test_reading_list_of_structures_column() : void
     {
         $reader = new Reader(logger: $this->getLogger());
-        $file = $reader->read(__DIR__ . '/../Fixtures/lists.parquet');
+        $file = $reader->read(__DIR__ . '/../../Fixtures/lists.parquet');
 
         $this->assertEquals(PhysicalType::BOOLEAN, $file->metadata()->schema()->get('list_mixed_types')->type());
         $this->assertEquals('LIST', $file->metadata()->schema()->get('list_mixed_types')->logicalType()->name());

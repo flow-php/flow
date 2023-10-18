@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Flow\Parquet\Tests\Integration;
+namespace Flow\Parquet\Tests\Integration\IO;
 
 use Monolog\Handler\StreamHandler;
 use Monolog\Level;
@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
-abstract class ParquetIntegrationTestCase extends TestCase
+abstract class ParquetFunctionalTestCase extends TestCase
 {
     protected function getLogger() : LoggerInterface
     {

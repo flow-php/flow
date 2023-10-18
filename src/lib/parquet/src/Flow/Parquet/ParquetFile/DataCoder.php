@@ -4,10 +4,10 @@ namespace Flow\Parquet\ParquetFile;
 
 use Flow\Parquet\BinaryReader\BinaryBufferReader;
 use Flow\Parquet\ByteOrder;
-use Flow\Parquet\DataSize;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
+use Flow\Parquet\ParquetFile\Data\BitWidth;
 use Flow\Parquet\ParquetFile\Data\RLEBitPackedHybrid;
 use Flow\Parquet\ParquetFile\Page\ColumnData;
 use Flow\Parquet\ParquetFile\Page\Dictionary;
@@ -46,59 +46,62 @@ final class DataCoder
 
         if ($maxRepetitionsLevel) {
             $this->debugLogRepetitions($maxRepetitionsLevel, $reader);
-            $repetitions = $this->readRLEBitPackedHybrid($reader, $RLEBitPackedHybrid, $this->bitWithFrom($maxRepetitionsLevel), $expectedValuesCount);
+            $reader->readInt32();// read length of encoded data
+            $repetitions = $this->readRLEBitPackedHybrid(
+                $reader,
+                $RLEBitPackedHybrid,
+                BitWidth::calculate($maxRepetitionsLevel),
+                $expectedValuesCount,
+            );
         } else {
             $repetitions = [];
         }
 
         if ($maxDefinitionsLevel) {
             $this->debugLogDefinitions($maxDefinitionsLevel, $reader);
-            $definitions = $this->readRLEBitPackedHybrid($reader, $RLEBitPackedHybrid, $this->bitWithFrom($maxDefinitionsLevel), $expectedValuesCount);
+            $reader->readInt32();// read length of encoded data
+            $definitions = $this->readRLEBitPackedHybrid(
+                $reader,
+                $RLEBitPackedHybrid,
+                BitWidth::calculate($maxDefinitionsLevel),
+                $expectedValuesCount,
+            );
         } else {
             $definitions = [];
         }
 
-        $nullsCount = \count($definitions) ? \count(\array_filter($definitions, fn ($definition) => $definition === 0)) : 0;
+        $nullsCount = \count($definitions) ? \count(\array_filter($definitions, fn ($definition) => $definition !== $maxDefinitionsLevel)) : 0;
 
         if ($encoding === Encodings::PLAIN) {
             $this->debugLogPlainEncoding($expectedValuesCount, $nullsCount);
 
-            $total = $expectedValuesCount - $nullsCount;
-
-            $rawValues = match ($physicalType) {
-                PhysicalType::INT32 => $reader->readInts32($total),
-                PhysicalType::INT64 => $reader->readInts64($total),
-                PhysicalType::INT96 => $reader->readInts96($total),
-                PhysicalType::FLOAT => $reader->readFloats($total),
-                PhysicalType::DOUBLE => $reader->readDoubles($total),
-                PhysicalType::BYTE_ARRAY => match ($logicalType?->name()) {
-                    LogicalType::STRING => $reader->readStrings($total),
-                    default => match ($this->options->get(Option::BYTE_ARRAY_TO_STRING)) {
-                        true => $reader->readStrings($total),
-                        false => $reader->readByteArrays($total)
-                    }
-                },
-                PhysicalType::FIXED_LEN_BYTE_ARRAY => (array) \unpack('H*', $buffer),
-                PhysicalType::BOOLEAN => $reader->readBooleans($total),
-            };
-
-            return new ColumnData($physicalType, $logicalType, $repetitions, $definitions, $rawValues);
+            return new ColumnData(
+                $physicalType,
+                $logicalType,
+                $repetitions,
+                $definitions,
+                $this->readPlainValues(
+                    $physicalType,
+                    $reader,
+                    $expectedValuesCount - $nullsCount,
+                    $logicalType,
+                )
+            );
         }
 
         if ($encoding === Encodings::RLE_DICTIONARY || $encoding === Encodings::PLAIN_DICTIONARY) {
             $this->debugLogDictionaryEncoding($expectedValuesCount, $nullsCount);
 
             if (\count($definitions)) {
+                // while reading indices, there is no length at the beginning since length is simply a remaining length of the buffer
+                // however we need to know bitWidth which is the first value in the buffer after definitions
                 $bitWidth = $reader->readBytes(1)->toInt();
-                $this->logger->debug('Decoding indices', []);
-
                 /** @var array<int> $indices */
                 $indices = $this->readRLEBitPackedHybrid(
                     $reader,
                     $RLEBitPackedHybrid,
                     $bitWidth,
                     $expectedValuesCount - $nullsCount,
-                    $reader->remainingLength()
                 );
 
                 /** @var array<mixed> $values */
@@ -123,29 +126,9 @@ final class DataCoder
         $reader = new BinaryBufferReader($buffer, $this->byteOrder);
         $this->debugLogDictionaryDecode($buffer, $encoding, $physicalType);
 
-        $rawValues = match ($physicalType) {
-            PhysicalType::INT32 => $reader->readInts32($expectedValuesCount),
-            PhysicalType::INT64 => $reader->readInts64($expectedValuesCount),
-            PhysicalType::INT96 => $reader->readInts96($expectedValuesCount),
-            PhysicalType::FLOAT => $reader->readFloats($expectedValuesCount),
-            PhysicalType::DOUBLE => $reader->readDoubles($expectedValuesCount),
-            PhysicalType::BYTE_ARRAY => match ($logicalType?->name()) {
-                LogicalType::STRING => $reader->readStrings($expectedValuesCount),
-                default => match ($this->options->get(Option::BYTE_ARRAY_TO_STRING)) {
-                    true => $reader->readStrings($expectedValuesCount),
-                    false => $reader->readByteArrays($expectedValuesCount)
-                }
-            },
-            PhysicalType::FIXED_LEN_BYTE_ARRAY => (array) \unpack('H*', $buffer),
-            PhysicalType::BOOLEAN => $reader->readBooleans($expectedValuesCount),
-        };
-
-        return new Dictionary($rawValues);
-    }
-
-    private function bitWithFrom(int $value) : int
-    {
-        return (int) \ceil(\log($value + 1, 2));
+        return new Dictionary(
+            $this->readPlainValues($physicalType, $reader, $expectedValuesCount, $logicalType)
+        );
     }
 
     private function debugDecodeData(string $buffer, Encodings $encoding, PhysicalType $physicalType, ?LogicalType $logicalType, int $expectedValuesCount, int $maxRepetitionsLevel, int $maxDefinitionsLevel) : void
@@ -232,10 +215,30 @@ final class DataCoder
         $this->logger->debug('Decoding data with RLE Hybrid', ['bitWidth' => $bitWidth, 'expected_values_count' => $expectedValuesCount, 'reader_position' => ['bits' => $reader->position()->bits(), 'bytes' => $reader->position()->bytes()]]);
     }
 
-    private function readRLEBitPackedHybrid(BinaryBufferReader $reader, RLEBitPackedHybrid $RLEBitPackedHybrid, int $bitWidth, int $expectedValuesCount, DataSize $length = null) : array
+    private function readPlainValues(PhysicalType $physicalType, BinaryBufferReader $reader, int $total, ?LogicalType $logicalType) : array
+    {
+        return match ($physicalType) {
+            PhysicalType::INT32 => $reader->readInts32($total),
+            PhysicalType::INT64 => $reader->readInts64($total),
+            PhysicalType::INT96 => $reader->readInts96($total),
+            PhysicalType::FLOAT => $reader->readFloats($total),
+            PhysicalType::DOUBLE => $reader->readDoubles($total),
+            PhysicalType::BYTE_ARRAY => match ($logicalType?->name()) {
+                LogicalType::STRING => $reader->readStrings($total),
+                default => match ($this->options->get(Option::BYTE_ARRAY_TO_STRING)) {
+                    true => $reader->readStrings($total),
+                    false => $reader->readByteArrays($total)
+                }
+            },
+            PhysicalType::FIXED_LEN_BYTE_ARRAY => throw new RuntimeException('FIXED_LEN_BYTE_ARRAY type is not yet supported'),//(array)\unpack('H*', $buffer),
+            PhysicalType::BOOLEAN => $reader->readBooleans($total),
+        };
+    }
+
+    private function readRLEBitPackedHybrid(BinaryBufferReader $reader, RLEBitPackedHybrid $RLEBitPackedHybrid, int $bitWidth, int $expectedValuesCount) : array
     {
         $this->debugLogRLEBitPackedHybridPre($bitWidth, $expectedValuesCount, $reader);
-        $data = ($RLEBitPackedHybrid)->decodeHybrid($reader, $bitWidth, $expectedValuesCount, $length);
+        $data = ($RLEBitPackedHybrid)->decodeHybrid($reader, $bitWidth, $expectedValuesCount);
         $this->debugLogRLEBitPackedHybridPost($data);
 
         return $data;
