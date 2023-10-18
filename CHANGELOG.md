@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-10-18
 
 ### Added
+- [#613](https://github.com/flow-php/flow/pull/613) - **Pure PHP implementation of Google Snappy library** - [@norberttech](https://github.com/norberttech)
 - [#601](https://github.com/flow-php/flow/pull/601) - **output of benchmark tests into github step summary** - [@norberttech](https://github.com/norberttech)
 - [#601](https://github.com/flow-php/flow/pull/601) - **Benchamrks for NativeEntryFactory** - [@norberttech](https://github.com/norberttech)
 - [#601](https://github.com/flow-php/flow/pull/601) - **Benchamrk groups** - [@norberttech](https://github.com/norberttech)
