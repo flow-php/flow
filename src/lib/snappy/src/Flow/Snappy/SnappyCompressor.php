@@ -13,27 +13,28 @@ final class SnappyCompressor
 
     private const MAX_HASH_TABLE_BITS = 14;
 
-    private array $array;
+    private readonly array $array;
+
+    private readonly int $arrayLength;
 
     private array $globalHashTables = [];
 
     public function __construct(array $uncompressed)
     {
         $this->array = $uncompressed;
+        $this->arrayLength = \count($uncompressed);
     }
 
     public function compressToBuffer(array &$outBuffer) : int
     {
-        $array = $this->array;
-        $length = \count($array);
         $pos = 0;
         $outPos = 0;
 
-        $outPos = $this->putVarInt($length, $outBuffer, $outPos);
+        $outPos = $this->putVarInt($this->arrayLength, $outBuffer, $outPos);
 
-        while ($pos < $length) {
-            $fragmentSize = \min($length - $pos, self::BLOCK_SIZE);
-            $outPos = $this->compressFragment($array, $pos, $fragmentSize, $outBuffer, $outPos);
+        while ($pos < $this->arrayLength) {
+            $fragmentSize = \min($this->arrayLength - $pos, self::BLOCK_SIZE);
+            $outPos = $this->compressFragment($this->array, $pos, $fragmentSize, $outBuffer, $outPos);
             $pos += $fragmentSize;
         }
 
@@ -62,10 +63,10 @@ final class SnappyCompressor
             $this->globalHashTables[$hashTableBits] = \array_fill(0, 1 << $hashTableBits, 0);
         }
 
-        $hashTable = $this->globalHashTables[$hashTableBits];
+        $hashTable = [];
 
-        for ($i = 0; $i < \count($hashTable); $i++) {
-            $hashTable[$i] = 0;
+        foreach ($this->globalHashTables[$hashTableBits] as $key => $value) {
+            $hashTable[$key] = 0;
         }
 
         $ipEnd = $ip + $inputSize;
@@ -73,6 +74,7 @@ final class SnappyCompressor
         $nextEmit = $ip;
 
         $flag = true;
+        $candidate = 0;
 
         $inputMargin = 15;
 
@@ -191,7 +193,7 @@ final class SnappyCompressor
         return $op + 3;
     }
 
-    private function emitLiteral(array &$input, int $ip, int $len, array &$output, int $op)
+    private function emitLiteral(array &$input, int $ip, int $len, array &$output, int $op) : int
     {
         if ($len <= 60) {
             $output[$op] = ($len - 1) << 2;
@@ -211,7 +213,7 @@ final class SnappyCompressor
         return $op + $len;
     }
 
-    private function equals32(array $array, int $pos1, int $pos2)
+    private function equals32(array $array, int $pos1, int $pos2) : bool
     {
         return $array[$pos1] === $array[$pos2] &&
             $array[$pos1 + 1] === $array[$pos2 + 1] &&
@@ -219,7 +221,7 @@ final class SnappyCompressor
             $array[$pos1 + 3] === $array[$pos2 + 3];
     }
 
-    private function hashFunc(int $key, int $hashFuncShift)
+    private function hashFunc(int $key, int $hashFuncShift) : int
     {
         $multiplied = $key * 0x1e35a7bd;
 

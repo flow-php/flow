@@ -14,7 +14,7 @@ final class Snappy
             return $plainText;
         }
 
-        $byteArray = \array_values(\unpack('C*', $plainText));
+        $byteArray = \array_values(\unpack('C*', $plainText) ?: []);
 
         $outputBuffer = [];
         (new SnappyCompressor($byteArray))->compressToBuffer($outputBuffer);
@@ -28,7 +28,7 @@ final class Snappy
             return $compressedText;
         }
 
-        $byteArray = \array_values(\unpack('C*', $compressedText));
+        $byteArray = \array_values(\unpack('C*', $compressedText) ?: []);
 
         $outputBuffer = [];
         (new SnappyDecompressor($byteArray))->uncompressToBuffer($outputBuffer);

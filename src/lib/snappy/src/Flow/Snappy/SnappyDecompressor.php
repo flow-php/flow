@@ -9,14 +9,16 @@ final class SnappyDecompressor
 {
     private const WORD_MASK = [0, 0xff, 0xffff, 0xffffff, 0xffffffff];
 
-    private array $array;
+    private readonly array $array;
 
-    private int $pos;
+    private readonly int $arrayLength;
+
+    private int $pos = 0;
 
     public function __construct(array $compressed)
     {
         $this->array = $compressed;
-        $this->pos = 0;
+        $this->arrayLength = \count($compressed);
     }
 
     public function readUncompressedLength() : int
@@ -24,7 +26,7 @@ final class SnappyDecompressor
         $result = 0;
         $shift = 0;
 
-        while ($shift < 32 && $this->pos < \count($this->array)) {
+        while ($shift < 32 && $this->pos < $this->arrayLength) {
             $c = $this->array[$this->pos];
             $this->pos++;
             $val = $c & 0x7f;
@@ -45,15 +47,13 @@ final class SnappyDecompressor
 
     public function uncompressToBuffer(array &$outBuffer) : bool
     {
-        $array = $this->array;
-        $arrayLength = \count($array);
         $outBuffer = \array_fill(0, $this->readUncompressedLength(), 0);
         $pos = $this->pos;
         $outPos = 0;
         $len = $offset = 0;
 
-        while ($pos < \count($array)) {
-            $c = $array[$pos];
+        while ($pos < \count($this->array)) {
+            $c = $this->array[$pos];
             $pos++;
 
             if (($c & 0x3) === 0) {
@@ -61,44 +61,44 @@ final class SnappyDecompressor
                 $len = ($c >> 2) + 1;
 
                 if ($len > 60) {
-                    if ($pos + 3 >= $arrayLength) {
+                    if ($pos + 3 >= $this->arrayLength) {
                         return false;
                     }
                     $smallLen = $len - 60;
-                    $len = $array[$pos] + ($array[$pos + 1] << 8) + ($array[$pos + 2] << 16) + ($array[$pos + 3] << 24);
+                    $len = $this->array[$pos] + ($this->array[$pos + 1] << 8) + ($this->array[$pos + 2] << 16) + ($this->array[$pos + 3] << 24);
                     $len = ($len & self::WORD_MASK[$smallLen]) + 1;
                     $pos += $smallLen;
                 }
 
-                if ($pos + $len > $arrayLength) {
+                if ($pos + $len > $this->arrayLength) {
                     return false;
                 }
-                $this->copyBytes($array, $pos, $outBuffer, $outPos, $len);
+                $this->copyBytes($this->array, $pos, $outBuffer, $outPos, $len);
                 $pos += $len;
                 $outPos += $len;
             } else {
                 switch ($c & 0x3) {
                     case 1:
                         $len = (($c >> 2) & 0x7) + 4;
-                        $offset = $array[$pos] + (($c >> 5) << 8);
+                        $offset = $this->array[$pos] + (($c >> 5) << 8);
                         $pos += 1;
 
                         break;
                     case 2:
-                        if ($pos + 1 >= $arrayLength) {
+                        if ($pos + 1 >= $this->arrayLength) {
                             return false;
                         }
                         $len = ($c >> 2) + 1;
-                        $offset = $array[$pos] + ($array[$pos + 1] << 8);
+                        $offset = $this->array[$pos] + ($this->array[$pos + 1] << 8);
                         $pos += 2;
 
                         break;
                     case 3:
-                        if ($pos + 3 >= $arrayLength) {
+                        if ($pos + 3 >= $this->arrayLength) {
                             return false;
                         }
                         $len = ($c >> 2) + 1;
-                        $offset = $array[$pos] + ($array[$pos + 1] << 8) + ($array[$pos + 2] << 16) + ($array[$pos + 3] << 24);
+                        $offset = $this->array[$pos] + ($this->array[$pos + 1] << 8) + ($this->array[$pos + 2] << 16) + ($this->array[$pos + 3] << 24);
                         $pos += 4;
 
                         break;
