@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-10-18
+## [Unreleased] - 2023-10-19
 
 ### Added
 - [#611](https://github.com/flow-php/flow/pull/611) - **RLEBigPackingHybrid encode function** - [@norberttech](https://github.com/norberttech)
@@ -12,6 +12,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#615](https://github.com/flow-php/flow/pull/615) - **Improve quality of snappy implementation** - [@stloyd](https://github.com/stloyd)
 - [#612](https://github.com/flow-php/flow/pull/612) - **Improve performance of array comparison & sorting** - [@stloyd](https://github.com/stloyd)
 - [#608](https://github.com/flow-php/flow/pull/608) - **Rework `FlysystemFS::scan()` to improve performance** - [@stloyd](https://github.com/stloyd)
 - [#609](https://github.com/flow-php/flow/pull/609) - **Move `Context::shouldPutInputIntoRows()` out of loop** - [@stloyd](https://github.com/stloyd)
