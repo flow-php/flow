@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Factory;
 
-use function Flow\ETL\DSL\array_is_structure;
-use function Flow\ETL\DSL\array_to_structure;
 use Flow\ETL\DSL\Entry as EntryDSL;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
@@ -108,8 +106,8 @@ final class NativeEntryFactory implements EntryFactory
                 return new Row\Entry\ArrayEntry($entryName, $value);
             }
 
-            if (array_is_structure($value)) {
-                return array_to_structure($entryName, $value);
+            if ($this->isStructure($value)) {
+                return $this->createStructureEntryFromArray($entryName, $value);
             }
 
             if (!\array_is_list($value)) {
@@ -169,6 +167,25 @@ final class NativeEntryFactory implements EntryFactory
         $type = \gettype($value);
 
         throw new InvalidArgumentException("{$type} can't be converted to any known Entry");
+    }
+
+    /**
+     * @psalm-suppress MixedArgumentTypeCoercion
+     * @psalm-suppress MixedAssignment
+     */
+    private function createStructureEntryFromArray(string $entryName, array $array) : Row\Entry\StructureEntry
+    {
+        $structureEntries = [];
+
+        foreach ($array as $key => $value) {
+            if (\is_array($value)) {
+                $structureEntries[] = $this->createStructureEntryFromArray($key, $value);
+            } else {
+                $structureEntries[] = $this->create($key, $value);
+            }
+        }
+
+        return new Row\Entry\StructureEntry($entryName, ...$structureEntries);
     }
 
     private function fromDefinition(Schema\Definition $definition, mixed $value) : Entry
@@ -318,6 +335,32 @@ final class NativeEntryFactory implements EntryFactory
         } catch (\Exception) {
             return false;
         }
+    }
+
+    /**
+     * @psalm-suppress MixedAssignment
+     */
+    private function isStructure(array $array) : bool
+    {
+        if (\array_is_list($array)) {
+            return false;
+        }
+
+        if (!\count($array)) {
+            return false;
+        }
+
+        foreach ($array as $key => $value) {
+            if (!\is_string($key)) {
+                return false;
+            }
+
+            if (\is_array($value) && !$this->isStructure($value)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private function isUuid(string $string) : bool
