@@ -50,6 +50,9 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **JsonLoader closing not only json streams** - [@norberttech](https://github.com/norberttech)
 - [#583](https://github.com/flow-php/flow/pull/583) - **Fix warning when bytes are missing in Parquet `BinaryBufferReader`** - [@stloyd](https://github.com/stloyd)
 
+### Removed
+- [#618](https://github.com/flow-php/flow/pull/618) - **Remove dead `ArrayRowsFactory` class** - [@stloyd](https://github.com/stloyd)
+
 ## [0.4.0] - 2023-10-13
 
 ### Added
