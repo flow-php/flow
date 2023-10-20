@@ -7,8 +7,6 @@ namespace Flow\ETL\DSL;
 use Flow\ETL\Adapter\GoogleSheet\Columns;
 use Flow\ETL\Adapter\GoogleSheet\GoogleSheetExtractor;
 use Flow\ETL\Extractor;
-use Flow\ETL\Row\EntryFactory;
-use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Google\Client;
 use Google\Service\Sheets;
 
@@ -29,7 +27,6 @@ class GoogleSheet
         bool $with_header = true,
         int $rows_in_batch = 1000,
         array $options = [],
-        EntryFactory $entry_factory = new NativeEntryFactory()
     ) : Extractor {
         if ($auth_config instanceof Sheets) {
             $sheets = $auth_config;
@@ -47,7 +44,6 @@ class GoogleSheet
             $with_header,
             $rows_in_batch,
             $options,
-            $entry_factory
         );
     }
 
@@ -68,7 +64,6 @@ class GoogleSheet
         bool $with_header = true,
         int $rows_in_batch = 1000,
         array $options = [],
-        EntryFactory $entry_factory = new NativeEntryFactory()
     ) : Extractor {
         if ($auth_config instanceof Sheets) {
             $sheets = $auth_config;
@@ -86,7 +81,6 @@ class GoogleSheet
             $with_header,
             $rows_in_batch,
             $options,
-            $entry_factory
         );
     }
 }

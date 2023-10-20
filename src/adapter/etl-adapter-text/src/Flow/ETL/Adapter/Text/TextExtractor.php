@@ -16,7 +16,6 @@ final class TextExtractor implements Extractor
     public function __construct(
         private readonly Path $path,
         private readonly int $rowsInBatch = 1000,
-        private readonly Row\EntryFactory $entryFactory = new Row\Factory\NativeEntryFactory()
     ) {
     }
 
@@ -44,7 +43,7 @@ final class TextExtractor implements Extractor
                 }
 
                 if (\count($rows) >= $this->rowsInBatch) {
-                    yield array_to_rows($rows, $this->entryFactory);
+                    yield array_to_rows($rows, $context->entryFactory());
 
                     /** @var array<Row> $rows */
                     $rows = [];
@@ -54,7 +53,7 @@ final class TextExtractor implements Extractor
             }
 
             if ([] !== $rows) {
-                yield array_to_rows($rows, $this->entryFactory);
+                yield array_to_rows($rows, $context->entryFactory());
             }
         }
     }

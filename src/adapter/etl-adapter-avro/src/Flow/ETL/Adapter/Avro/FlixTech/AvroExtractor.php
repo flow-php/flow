@@ -13,13 +13,9 @@ use Flow\ETL\Row;
 
 final class AvroExtractor implements Extractor
 {
-    /**
-     * @param Path $path
-     */
     public function __construct(
         private readonly Path $path,
-        private readonly int $rowsInBach = 1000,
-        private readonly Row\EntryFactory $entryFactory = new Row\Factory\NativeEntryFactory()
+        private readonly int $rowsInBach = 1000
     ) {
     }
 
@@ -56,7 +52,7 @@ final class AvroExtractor implements Extractor
                 }
 
                 if (\count($rows) >= $this->rowsInBach) {
-                    yield array_to_rows($rows, $this->entryFactory);
+                    yield array_to_rows($rows, $context->entryFactory());
                     /** @var array<Row> $rows */
                     $rows = [];
                 }
@@ -64,7 +60,7 @@ final class AvroExtractor implements Extractor
         }
 
         if ([] !== $rows) {
-            yield array_to_rows($rows, $this->entryFactory);
+            yield array_to_rows($rows, $context->entryFactory());
         }
     }
 }

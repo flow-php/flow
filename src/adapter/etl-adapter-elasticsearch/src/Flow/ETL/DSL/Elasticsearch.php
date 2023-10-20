@@ -11,8 +11,6 @@ use Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\HitsIntoRowsTransformer;
 use Flow\ETL\Adapter\Elasticsearch\IdFactory;
 use Flow\ETL\Extractor;
 use Flow\ETL\Loader;
-use Flow\ETL\Row\EntryFactory;
-use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Transformer;
 
 class Elasticsearch
@@ -82,13 +80,11 @@ class Elasticsearch
     /**
      * Transforms elasticsearch results into clear Flow Rows using ['hits']['hits'][x]['_source'].
      *
-     * @param EntryFactory $entry_factory
-     *
      * @return Transformer
      */
-    final public static function hits_to_rows(DocumentDataSource $source = DocumentDataSource::source, EntryFactory $entry_factory = new NativeEntryFactory()) : Transformer
+    final public static function hits_to_rows(DocumentDataSource $source = DocumentDataSource::source) : Transformer
     {
-        return new HitsIntoRowsTransformer($source, $entry_factory);
+        return new HitsIntoRowsTransformer($source);
     }
 
     /**

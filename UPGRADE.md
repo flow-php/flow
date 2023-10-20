@@ -5,6 +5,14 @@ Please follow the instructions for your specific version to ensure a smooth upgr
 
 ---
 
+## Upgrading from 0.4.x to 0.5.x
+
+### 1) Entry factory moved from extractors to `FlowContext`
+
+To improve code quality and reduce code coupling `EntryFactory` was removed from all constructors of extractors, in favor of passing it into `FlowContext` & re-using same entry factory in a whole pipeline.
+
+---
+
 ## Upgrading from 0.3.x to 0.4.x
 
 ### 1) Transformers replaced with expressions

@@ -6,8 +6,6 @@ namespace Flow\ETL\Adapter\Meilisearch\MeilisearchPHP;
 
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
-use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Meilisearch\Client;
 
 final class MeilisearchExtractor implements Extractor
@@ -22,7 +20,6 @@ final class MeilisearchExtractor implements Extractor
         private readonly array $config,
         private readonly array $params,
         private readonly string $index,
-        private readonly Row\EntryFactory $entryFactory = new NativeEntryFactory()
     ) {
     }
 
@@ -36,7 +33,7 @@ final class MeilisearchExtractor implements Extractor
             return;
         }
 
-        yield $results->toRows($this->entryFactory);
+        yield $results->toRows($context->entryFactory());
 
         $fetched = $results->size();
 
@@ -58,7 +55,7 @@ final class MeilisearchExtractor implements Extractor
 
             $fetched += $nextResults->size();
 
-            yield $nextResults->toRows($this->entryFactory);
+            yield $nextResults->toRows($context->entryFactory());
         }
     }
 

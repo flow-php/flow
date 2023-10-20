@@ -9,7 +9,6 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Types\Type;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
 
 final class DbalQueryExtractor implements Extractor
 {
@@ -27,7 +26,6 @@ final class DbalQueryExtractor implements Extractor
         private readonly string $query,
         ParametersSet $parametersSet = null,
         private readonly array $types = [],
-        private readonly Row\EntryFactory $entryFactory = new Row\Factory\NativeEntryFactory()
     ) {
         $this->parametersSet = $parametersSet ?: new ParametersSet([]);
     }
@@ -36,9 +34,9 @@ final class DbalQueryExtractor implements Extractor
      * @param array<string, mixed>|list<mixed> $parameters
      * @param array<int, null|int|string|Type>|array<string, null|int|string|Type> $types
      */
-    public static function single(Connection $connection, string $query, array $parameters = [], array $types = [], Row\EntryFactory $entryFactory = new Row\Factory\NativeEntryFactory()) : self
+    public static function single(Connection $connection, string $query, array $parameters = [], array $types = []) : self
     {
-        return new self($connection, $query, new ParametersSet($parameters), $types, $entryFactory);
+        return new self($connection, $query, new ParametersSet($parameters), $types);
     }
 
     public function extract(FlowContext $context) : \Generator
@@ -50,7 +48,7 @@ final class DbalQueryExtractor implements Extractor
                 $rows[] = $row;
             }
 
-            yield array_to_rows($rows, $this->entryFactory);
+            yield array_to_rows($rows, $context->entryFactory());
         }
     }
 }

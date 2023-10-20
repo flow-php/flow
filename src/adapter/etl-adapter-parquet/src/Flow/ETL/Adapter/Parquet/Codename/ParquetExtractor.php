@@ -10,7 +10,6 @@ use Flow\ETL\Extractor;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
 
 /**
  * @deprecated Use \Flow\ETL\Adapter\Parquet\ParquetExtractor instead
@@ -24,7 +23,6 @@ final class ParquetExtractor implements Extractor
     public function __construct(
         private readonly Path $path,
         private readonly array $fields = [],
-        private readonly Row\EntryFactory $entryFactory = new Row\Factory\NativeEntryFactory()
     ) {
     }
 
@@ -77,7 +75,7 @@ final class ParquetExtractor implements Extractor
                     }
                 }
 
-                yield array_to_rows($rows, $this->entryFactory);
+                yield array_to_rows($rows, $context->entryFactory());
             }
         }
     }

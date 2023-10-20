@@ -11,6 +11,7 @@ use Flow\ETL\Filesystem\FlysystemFS;
 use Flow\ETL\Monitoring\Memory\Unit;
 use Flow\ETL\Pipeline\Execution\Processor\FilesystemProcessor;
 use Flow\ETL\Pipeline\Execution\Processors;
+use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\Serializer\CompressingSerializer;
 use Flow\Serializer\Serializer;
 
@@ -67,7 +68,8 @@ final class ConfigBuilder
             new Processors(
                 new FilesystemProcessor()
             ),
-            $this->putInputIntoRows
+            $this->putInputIntoRows,
+            new NativeEntryFactory()
         );
     }
 

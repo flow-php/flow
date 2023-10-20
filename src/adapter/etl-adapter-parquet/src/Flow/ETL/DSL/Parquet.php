@@ -11,8 +11,6 @@ use Flow\ETL\Exception\MissingDependencyException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Loader;
-use Flow\ETL\Row\EntryFactory;
-use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Row\Schema;
 use Flow\Parquet\ByteOrder;
 use Flow\Parquet\Options;
@@ -25,7 +23,6 @@ class Parquet
     /**
      * @param array<Path>|Path|string $uri
      * @param array<string> $fields
-     * @param EntryFactory $entry_factory
      *
      * @return Extractor
      */
@@ -35,7 +32,6 @@ class Parquet
         Options $options = new Options(),
         ByteOrder $byte_order = ByteOrder::LITTLE_ENDIAN,
         int $rows_in_batch = 1000,
-        EntryFactory $entry_factory = new NativeEntryFactory()
     ) : Extractor {
         if (\is_array($uri)) {
             $extractors = [];
@@ -47,7 +43,6 @@ class Parquet
                     $byte_order,
                     $fields,
                     $rows_in_batch,
-                    $entry_factory
                 );
             }
 
@@ -60,7 +55,6 @@ class Parquet
             $byte_order,
             $fields,
             $rows_in_batch,
-            $entry_factory
         );
     }
 

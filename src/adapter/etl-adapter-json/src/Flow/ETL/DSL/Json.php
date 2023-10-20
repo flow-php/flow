@@ -9,8 +9,6 @@ use Flow\ETL\Adapter\JSON\JSONMachine\JsonExtractor;
 use Flow\ETL\Extractor;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Loader;
-use Flow\ETL\Row\EntryFactory;
-use Flow\ETL\Row\Factory\NativeEntryFactory;
 
 class Json
 {
@@ -25,7 +23,6 @@ class Json
         string|Path|array $path,
         int $rows_in_batch = 1000,
         string $pointer = null,
-        EntryFactory $entry_factory = new NativeEntryFactory()
     ) : Extractor {
         if (\is_array($path)) {
             $extractors = [];
@@ -35,7 +32,6 @@ class Json
                     \is_string($file) ? Path::realpath($file) : $file,
                     $rows_in_batch,
                     $pointer,
-                    $entry_factory
                 );
             }
 
@@ -46,7 +42,6 @@ class Json
             \is_string($path) ? Path::realpath($path) : $path,
             $rows_in_batch,
             $pointer,
-            $entry_factory
         );
     }
 

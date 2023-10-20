@@ -8,8 +8,6 @@ use function Flow\ETL\DSL\array_to_rows;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row\EntryFactory;
-use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Google\Service\Sheets;
 
 final class GoogleSheetExtractor implements Extractor
@@ -26,7 +24,6 @@ final class GoogleSheetExtractor implements Extractor
         private readonly bool $withHeader,
         private readonly int $rowsInBatch,
         private readonly array $options = [],
-        private readonly EntryFactory $entryFactory = new NativeEntryFactory()
     ) {
         if ($this->rowsInBatch <= 0) {
             throw new InvalidArgumentException('Rows in batch must be greater than 0');
@@ -91,7 +88,7 @@ final class GoogleSheetExtractor implements Extractor
                     },
                     $values
                 ),
-                $this->entryFactory
+                $context->entryFactory()
             );
 
             if ($totalRows < $cellsRange->endRow) {
