@@ -2,9 +2,19 @@ name: Documentation Linter
 
 on:
   pull_request:
+    paths:
+      - 'src/**'
+      - 'docs/**'
+      - 'examples/**'
+      - 'README.md'
   push:
     branches:
       - "1.x"
+
+# See https://stackoverflow.com/a/72408109
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   documentation-linter:
