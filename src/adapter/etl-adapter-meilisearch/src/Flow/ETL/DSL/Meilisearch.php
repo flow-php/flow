@@ -9,8 +9,6 @@ use Flow\ETL\Adapter\Meilisearch\MeilisearchPHP\MeilisearchExtractor;
 use Flow\ETL\Adapter\Meilisearch\MeilisearchPHP\MeilisearchLoader;
 use Flow\ETL\Extractor;
 use Flow\ETL\Loader;
-use Flow\ETL\Row\EntryFactory;
-use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Transformer;
 
 class Meilisearch
@@ -38,9 +36,9 @@ class Meilisearch
     /**
      * Transforms Meilisearch results into clear Flow Rows.
      */
-    final public static function hits_to_rows(EntryFactory $entry_factory = new NativeEntryFactory()) : Transformer
+    final public static function hits_to_rows() : Transformer
     {
-        return new HitsIntoRowsTransformer($entry_factory);
+        return new HitsIntoRowsTransformer();
     }
 
     /**

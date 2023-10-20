@@ -6,28 +6,18 @@ namespace Flow\ETL\DSL;
 
 use Flow\ETL\Adapter\CSV\CSVExtractor;
 use Flow\ETL\Adapter\CSV\CSVLoader;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Loader;
-use Flow\ETL\Row\EntryFactory;
-use Flow\ETL\Row\Factory\NativeEntryFactory;
 
 class CSV
 {
     /**
      * @param array<Path|string>|Path|string $uri
-     * @param int $rows_in_batch
-     * @param bool $with_header
-     * @param bool $empty_to_null
-     * @param string $delimiter
-     * @param string $enclosure
-     * @param string $escape
      * @param int<0, max> $characters_read_in_line
-     * @param EntryFactory $entry_factory
      *
-     * @throws \Flow\ETL\Exception\InvalidArgumentException
-     *
-     * @return Extractor
+     * @throws InvalidArgumentException
      */
     final public static function from(
         string|Path|array $uri,
@@ -37,8 +27,7 @@ class CSV
         string $delimiter = ',',
         string $enclosure = '"',
         string $escape = '\\',
-        int $characters_read_in_line = 1000,
-        EntryFactory $entry_factory = new NativeEntryFactory()
+        int $characters_read_in_line = 1000
     ) : Extractor {
         if (\is_array($uri)) {
             $extractors = [];
@@ -53,7 +42,6 @@ class CSV
                     $enclosure,
                     $escape,
                     $characters_read_in_line,
-                    $entry_factory
                 );
             }
 
@@ -69,20 +57,9 @@ class CSV
             $enclosure,
             $escape,
             $characters_read_in_line,
-            $entry_factory
         );
     }
 
-    /**
-     * @param Path|string $uri
-     * @param bool $with_header
-     * @param string $separator
-     * @param string $enclosure
-     * @param string $escape
-     * @param string $new_line_separator
-     *
-     * @return Loader
-     */
     final public static function to(
         string|Path $uri,
         bool $with_header = true,

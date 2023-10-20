@@ -19,8 +19,6 @@ use Flow\ETL\DataFrameFactory;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Loader;
-use Flow\ETL\Row\EntryFactory;
-use Flow\ETL\Row\Factory\NativeEntryFactory;
 
 class Dbal
 {
@@ -47,7 +45,6 @@ class Dbal
      * @param array<OrderBy>|OrderBy $order_by
      * @param int $page_size
      * @param null|int $maximum
-     * @param EntryFactory $entry_factory
      *
      * @throws InvalidArgumentException
      *
@@ -59,7 +56,6 @@ class Dbal
         array|OrderBy $order_by,
         int $page_size = 1000,
         ?int $maximum = null,
-        EntryFactory $entry_factory = new NativeEntryFactory()
     ) : Extractor {
         return DbalLimitOffsetExtractor::table(
             $connection,
@@ -67,7 +63,6 @@ class Dbal
             $order_by instanceof OrderBy ? [$order_by] : $order_by,
             $page_size,
             $maximum,
-            $entry_factory
         );
     }
 
@@ -75,7 +70,6 @@ class Dbal
      * @param Connection $connection
      * @param int $page_size
      * @param null|int $maximum
-     * @param EntryFactory $entry_factory
      *
      * @throws InvalidArgumentException
      *
@@ -86,14 +80,12 @@ class Dbal
         QueryBuilder $queryBuilder,
         int $page_size = 1000,
         ?int $maximum = null,
-        EntryFactory $entry_factory = new NativeEntryFactory()
     ) : Extractor {
         return new DbalLimitOffsetExtractor(
             $connection,
             $queryBuilder,
             $page_size,
             $maximum,
-            $entry_factory
         );
     }
 
@@ -102,7 +94,6 @@ class Dbal
      * @param string $query
      * @param null|ParametersSet $parameters_set - each one parameters array will be evaluated as new query
      * @param array<int, null|int|string|Type>|array<string, null|int|string|Type> $types
-     * @param EntryFactory $entry_factory
      *
      * @return Extractor
      */
@@ -111,14 +102,12 @@ class Dbal
         string $query,
         ParametersSet $parameters_set = null,
         array $types = [],
-        EntryFactory $entry_factory = new NativeEntryFactory()
     ) : Extractor {
         return new DbalQueryExtractor(
             $connection,
             $query,
             $parameters_set,
             $types,
-            $entry_factory
         );
     }
 
@@ -127,7 +116,6 @@ class Dbal
      * @param string $query
      * @param array<string, mixed>|list<mixed> $parameters
      * @param array<int, null|int|string|Type>|array<string, null|int|string|Type> $types
-     * @param EntryFactory $entry_factory
      *
      * @return Extractor
      */
@@ -136,14 +124,12 @@ class Dbal
         string $query,
         array $parameters = [],
         array $types = [],
-        EntryFactory $entry_factory = new NativeEntryFactory()
     ) : Extractor {
         return DbalQueryExtractor::single(
             $connection,
             $query,
             $parameters,
             $types,
-            $entry_factory
         );
     }
 

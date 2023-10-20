@@ -9,6 +9,7 @@ use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Partition\NoopFilter;
 use Flow\ETL\Partition\PartitionFilter;
+use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\Serializer\Serializer;
@@ -39,6 +40,11 @@ final class FlowContext
     public function cache() : Cache
     {
         return $this->config->cache();
+    }
+
+    public function entryFactory() : EntryFactory
+    {
+        return $this->config->entryFactory();
     }
 
     public function errorHandler() : ErrorHandler

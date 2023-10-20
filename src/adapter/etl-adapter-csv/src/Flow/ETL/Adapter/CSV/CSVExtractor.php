@@ -10,9 +10,6 @@ use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
-use Flow\ETL\Row\EntryFactory;
-
-use Flow\ETL\Row\Factory\NativeEntryFactory;
 
 final class CSVExtractor implements Extractor
 {
@@ -27,8 +24,7 @@ final class CSVExtractor implements Extractor
         private readonly string $separator = ',',
         private readonly string $enclosure = '"',
         private readonly string $escape = '\\',
-        private readonly int $charactersReadInLine = 1000,
-        private readonly EntryFactory $entryFactory = new NativeEntryFactory()
+        private readonly int $charactersReadInLine = 1000
     ) {
     }
 
@@ -94,7 +90,7 @@ final class CSVExtractor implements Extractor
                 }
 
                 if (\count($rows) >= $this->rowsInBatch) {
-                    yield array_to_rows($rows, $this->entryFactory);
+                    yield array_to_rows($rows, $context->entryFactory());
 
                     /** @var array<Row> $rows */
                     $rows = [];
@@ -104,7 +100,7 @@ final class CSVExtractor implements Extractor
             }
 
             if ([] !== $rows) {
-                yield array_to_rows($rows, $this->entryFactory);
+                yield array_to_rows($rows, $context->entryFactory());
             }
 
             if ($stream->isOpen()) {

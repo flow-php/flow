@@ -8,7 +8,6 @@ use function Flow\ETL\DSL\array_to_rows;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Memory\Memory;
-use Flow\ETL\Row;
 
 final class MemoryExtractor implements Extractor
 {
@@ -21,7 +20,6 @@ final class MemoryExtractor implements Extractor
     public function __construct(
         private readonly Memory $memory,
         private readonly int $chunkSize = self::CHUNK_SIZE,
-        private readonly Row\EntryFactory $entryFactory = new Row\Factory\NativeEntryFactory()
     ) {
     }
 
@@ -37,7 +35,7 @@ final class MemoryExtractor implements Extractor
                 $rows[] = $chunkEntry;
             }
 
-            yield array_to_rows($rows, $this->entryFactory);
+            yield array_to_rows($rows, $context->entryFactory());
         }
     }
 }

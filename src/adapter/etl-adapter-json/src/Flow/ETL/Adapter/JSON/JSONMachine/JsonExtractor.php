@@ -9,7 +9,6 @@ use Flow\ETL\Extractor;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
 use JsonMachine\Items;
 use JsonMachine\JsonDecoder\ExtJsonDecoder;
 
@@ -19,7 +18,6 @@ final class JsonExtractor implements Extractor
         private readonly Path $path,
         private readonly int $rowsInBatch = 1000,
         private readonly ?string $pointer = null,
-        private readonly Row\EntryFactory $entryFactory = new Row\Factory\NativeEntryFactory()
     ) {
     }
 
@@ -41,14 +39,14 @@ final class JsonExtractor implements Extractor
                 }
 
                 if (\count($rows) >= $this->rowsInBatch) {
-                    yield array_to_rows($rows, $this->entryFactory);
+                    yield array_to_rows($rows, $context->entryFactory());
 
                     $rows = [];
                 }
             }
 
             if ([] !== $rows) {
-                yield array_to_rows($rows, $this->entryFactory);
+                yield array_to_rows($rows, $context->entryFactory());
             }
         }
     }

@@ -11,8 +11,6 @@ use Flow\ETL\Extractor\ProcessExtractor;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Memory\Memory;
 use Flow\ETL\Pipeline;
-use Flow\ETL\Row\EntryFactory;
-use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Rows;
 
 /**
@@ -32,9 +30,9 @@ class From
      * @param array<array<string, mixed>> $array
      * @param int<1, max> $batch_size
      */
-    final public static function array(array $array, int $batch_size = 100, EntryFactory $entry_factory = new NativeEntryFactory()) : Extractor
+    final public static function array(array $array, int $batch_size = 100) : Extractor
     {
-        return new MemoryExtractor(new ArrayMemory($array), $batch_size, $entry_factory);
+        return new MemoryExtractor(new ArrayMemory($array), $batch_size);
     }
 
     final public static function buffer(Extractor $extractor, int $max_row_size) : Extractor
@@ -68,9 +66,9 @@ class From
      *
      * @return Extractor
      */
-    final public static function memory(Memory $memory, int $chunk_size = 100, EntryFactory $entry_factory = new NativeEntryFactory()) : Extractor
+    final public static function memory(Memory $memory, int $chunk_size = 100) : Extractor
     {
-        return new MemoryExtractor($memory, $chunk_size, $entry_factory);
+        return new MemoryExtractor($memory, $chunk_size);
     }
 
     final public static function pipeline(Pipeline $pipeline) : Extractor

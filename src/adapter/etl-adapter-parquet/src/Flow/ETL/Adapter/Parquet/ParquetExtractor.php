@@ -7,8 +7,6 @@ use Flow\ETL\Extractor;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row\EntryFactory;
-use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\Parquet\ByteOrder;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile;
@@ -26,7 +24,6 @@ final class ParquetExtractor implements Extractor
         private readonly ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN,
         private readonly array $columns = [],
         private readonly int $rowsInBatch = 1000,
-        private readonly EntryFactory $entryFactory = new NativeEntryFactory()
     ) {
     }
 
@@ -48,13 +45,13 @@ final class ParquetExtractor implements Extractor
                 }
 
                 if (\count($rows) >= $this->rowsInBatch) {
-                    yield array_to_rows($rows, $this->entryFactory);
+                    yield array_to_rows($rows, $context->entryFactory());
                     $rows = [];
                 }
             }
 
             if (\count($rows)) {
-                yield array_to_rows($rows, $this->entryFactory);
+                yield array_to_rows($rows, $context->entryFactory());
             }
         }
     }

@@ -9,8 +9,6 @@ use Flow\ETL\Adapter\Avro\FlixTech\AvroLoader;
 use Flow\ETL\Extractor;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Loader;
-use Flow\ETL\Row\EntryFactory;
-use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Row\Schema;
 
 /**
@@ -20,14 +18,10 @@ class Avro
 {
     /**
      * @param array<Path|string>|Path|string $path
-     * @param int $rows_in_batch
-     *
-     * @return Extractor
      */
     final public static function from(
         Path|string|array $path,
         int $rows_in_batch = 1000,
-        EntryFactory $entry_factory = new NativeEntryFactory()
     ) : Extractor {
         if (\is_array($path)) {
             /** @var array<Extractor> $extractors */
@@ -36,8 +30,7 @@ class Avro
             foreach ($path as $next_path) {
                 $extractors[] = new AvroExtractor(
                     \is_string($next_path) ? Path::realpath($next_path) : $next_path,
-                    $rows_in_batch,
-                    $entry_factory
+                    $rows_in_batch
                 );
             }
 
@@ -46,8 +39,7 @@ class Avro
 
         return new AvroExtractor(
             \is_string($path) ? Path::realpath($path) : $path,
-            $rows_in_batch,
-            $entry_factory
+            $rows_in_batch
         );
     }
 

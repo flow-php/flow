@@ -10,7 +10,6 @@ use Doctrine\DBAL\Query\QueryBuilder;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
 
 final class DbalLimitOffsetExtractor implements Extractor
 {
@@ -19,7 +18,6 @@ final class DbalLimitOffsetExtractor implements Extractor
         private readonly QueryBuilder $queryBuilder,
         private readonly int $pageSize = 1000,
         private readonly ?int $maximum = null,
-        private readonly Row\EntryFactory $entryFactory = new Row\Factory\NativeEntryFactory()
     ) {
     }
 
@@ -32,7 +30,6 @@ final class DbalLimitOffsetExtractor implements Extractor
         array $orderBy,
         int $pageSize = 1000,
         ?int $maximum = null,
-        Row\EntryFactory $entryFactory = new Row\Factory\NativeEntryFactory()
     ) : self {
         if (!\count($orderBy)) {
             throw new InvalidArgumentException('There must be at least one column to order by, zero given');
@@ -51,7 +48,6 @@ final class DbalLimitOffsetExtractor implements Extractor
             $queryBuilder,
             $pageSize,
             $maximum,
-            $entryFactory
         );
     }
 
@@ -98,7 +94,7 @@ final class DbalLimitOffsetExtractor implements Extractor
                 }
             }
 
-            yield array_to_rows($rows, $this->entryFactory);
+            yield array_to_rows($rows, $context->entryFactory());
         }
     }
 }

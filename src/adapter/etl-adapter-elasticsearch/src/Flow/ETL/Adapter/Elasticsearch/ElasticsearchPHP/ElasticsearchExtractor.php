@@ -6,8 +6,6 @@ namespace Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP;
 
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
-use Flow\ETL\Row\Factory\NativeEntryFactory;
 
 final class ElasticsearchExtractor implements Extractor
 {
@@ -37,7 +35,6 @@ final class ElasticsearchExtractor implements Extractor
         private readonly array $config,
         private readonly array $params,
         private readonly ?array $pointInTimeParams = null,
-        private readonly Row\EntryFactory $entryFactory = new NativeEntryFactory()
     ) {
         $this->client = null;
     }
@@ -79,7 +76,7 @@ final class ElasticsearchExtractor implements Extractor
             return;
         }
 
-        yield $results->toRows($this->entryFactory);
+        yield $results->toRows($context->entryFactory());
 
         // Go with search_after pagination
         if ($params->hasSort()) {
@@ -102,7 +99,7 @@ final class ElasticsearchExtractor implements Extractor
                     break;
                 }
 
-                yield $nextResults->toRows($this->entryFactory);
+                yield $nextResults->toRows($context->entryFactory());
             }
         } else {
             $fetched = $results->size();
@@ -140,7 +137,7 @@ final class ElasticsearchExtractor implements Extractor
 
                 $fetched += $nextResults->size();
 
-                yield $nextResults->toRows($this->entryFactory);
+                yield $nextResults->toRows($context->entryFactory());
             }
         }
 

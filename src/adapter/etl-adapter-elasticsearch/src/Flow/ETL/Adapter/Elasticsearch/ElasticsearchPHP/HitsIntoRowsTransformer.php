@@ -6,33 +6,28 @@ namespace Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP;
 
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
-use Flow\ETL\Row\EntryFactory;
-use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 /**
- * @implements Transformer<array{entry_factory: EntryFactory, source: DocumentDataSource}>
+ * @implements Transformer<array{source: DocumentDataSource}>
  */
 final class HitsIntoRowsTransformer implements Transformer
 {
     public function __construct(
         private readonly DocumentDataSource $source = DocumentDataSource::source,
-        private readonly EntryFactory $entryFactory = new NativeEntryFactory()
     ) {
     }
 
     public function __serialize() : array
     {
         return [
-            'entry_factory' => $this->entryFactory,
             'source' => $this->source,
         ];
     }
 
     public function __unserialize(array $data) : void
     {
-        $this->entryFactory = $data['entry_factory'];
         $this->source = $data['source'];
     }
 
@@ -63,7 +58,7 @@ final class HitsIntoRowsTransformer implements Transformer
                  * @var mixed $value
                  */
                 foreach ($hit[$source] as $key => $value) {
-                    $entries[] = $this->entryFactory->create($key, $value);
+                    $entries[] = $context->entryFactory()->create($key, $value);
                 }
 
                 $newRows[] = Row::create(...$entries);
