@@ -368,6 +368,24 @@ final class NativeEntryFactoryTest extends TestCase
         );
     }
 
+    public function test_with_empty_schema() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('There is no definition for "e" in the schema.');
+
+        (new NativeEntryFactory(new Schema()))
+            ->create('e', '1');
+    }
+
+    public function test_with_schema_for_different_entry() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('There is no definition for "diff" in the schema.');
+
+        (new NativeEntryFactory(new Schema(Schema\Definition::string('e'))))
+            ->create('diff', '1');
+    }
+
     public function test_xml_from_dom_document() : void
     {
         $doc = new \DOMDocument();

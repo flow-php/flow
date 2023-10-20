@@ -11,6 +11,10 @@ Please follow the instructions for your specific version to ensure a smooth upgr
 
 To improve code quality and reduce code coupling `EntryFactory` was removed from all constructors of extractors, in favor of passing it into `FlowContext` & re-using same entry factory in a whole pipeline.
 
+### 2) Invalid schema has no fallback in `NativeEntryFactory`
+
+Before, passing `Schema` into `NativeEntryFactory::create()` had fallback when the given entry was not found in a passed schema, now the schema has higher priority & fallback is no longer available, instead when the definition is missing in a passed schema, `InvalidArgumentException` will be thrown.
+
 ---
 
 ## Upgrading from 0.3.x to 0.4.x

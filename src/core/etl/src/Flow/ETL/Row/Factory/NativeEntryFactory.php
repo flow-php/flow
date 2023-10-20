@@ -43,12 +43,7 @@ final class NativeEntryFactory implements EntryFactory
      */
     public function create(string $entryName, mixed $value) : Entry
     {
-        if ($this->schema !== null && $this->schema->findDefinition($entryName) !== null) {
-            /**
-             * @psalm-suppress PossiblyNullArgument
-             *
-             * @phpstan-ignore-next-line
-             */
+        if ($this->schema !== null) {
             return $this->fromDefinition($this->schema->getDefinition($entryName), $value);
         }
 
