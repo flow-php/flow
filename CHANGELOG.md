@@ -12,6 +12,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#620](https://github.com/flow-php/flow/pull/620) - **Reduce CI load by cancelling previous runs with every new commit in PR** - [@stloyd](https://github.com/stloyd)
 - [#617](https://github.com/flow-php/flow/pull/617) - **Invalid schema has no fallback in `NativeEntryFactory`** - [@stloyd](https://github.com/stloyd)
 - [#616](https://github.com/flow-php/flow/pull/616) - **Entry factory moved from extractors to `FlowContext`** - [@stloyd](https://github.com/stloyd)
 - [#615](https://github.com/flow-php/flow/pull/615) - **Improve quality of snappy implementation** - [@stloyd](https://github.com/stloyd)
