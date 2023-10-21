@@ -103,6 +103,82 @@ final class SimpleTypesReadingTest extends ParquetFunctionalTestCase
         $this->assertSame($file->metadata()->rowsNumber(), $count);
     }
 
+    public function test_reading_decimal_column() : void
+    {
+        $reader = new Reader(logger: $this->getLogger());
+        $file = $reader->read(__DIR__ . '/../../Fixtures/primitives.parquet');
+
+        $this->assertEquals(PhysicalType::FIXED_LEN_BYTE_ARRAY, $file->metadata()->schema()->get('decimal')->type());
+
+        $count = 0;
+
+        foreach ($file->values(['decimal']) as $row) {
+            $this->assertIsFloat($row['decimal']);
+            $count++;
+        }
+        $this->assertSame(100, $count);
+        $this->assertSame($file->metadata()->rowsNumber(), $count);
+    }
+
+    public function test_reading_decimal_nullable_column() : void
+    {
+        $reader = new Reader(logger: $this->getLogger());
+        $file = $reader->read(__DIR__ . '/../../Fixtures/primitives.parquet');
+
+        $this->assertEquals(PhysicalType::FIXED_LEN_BYTE_ARRAY, $file->metadata()->schema()->get('decimal_nullable')->type());
+
+        $count = 0;
+
+        foreach ($file->values(['decimal_nullable']) as $rowIndex => $row) {
+            if ($rowIndex % 2 === 0) {
+                $this->assertIsFloat($row['decimal_nullable']);
+            } else {
+                $this->assertNull($row['decimal_nullable']);
+            }
+            $count++;
+        }
+        $this->assertSame(100, $count);
+        $this->assertSame($file->metadata()->rowsNumber(), $count);
+    }
+
+    public function test_reading_double_column() : void
+    {
+        $reader = new Reader(logger: $this->getLogger());
+        $file = $reader->read(__DIR__ . '/../../Fixtures/primitives.parquet');
+
+        $this->assertEquals(PhysicalType::DOUBLE, $file->metadata()->schema()->get('double')->type());
+
+        $count = 0;
+
+        foreach ($file->values(['double']) as $row) {
+            $this->assertIsFloat($row['double']);
+            $count++;
+        }
+        $this->assertSame(100, $count);
+        $this->assertSame($file->metadata()->rowsNumber(), $count);
+    }
+
+    public function test_reading_double_nullable_column() : void
+    {
+        $reader = new Reader(logger: $this->getLogger());
+        $file = $reader->read(__DIR__ . '/../../Fixtures/primitives.parquet');
+
+        $this->assertEquals(PhysicalType::DOUBLE, $file->metadata()->schema()->get('double_nullable')->type());
+
+        $count = 0;
+
+        foreach ($file->values(['double_nullable']) as $rowIndex => $row) {
+            if ($rowIndex % 2 === 0) {
+                $this->assertIsFloat($row['double_nullable']);
+            } else {
+                $this->assertNull($row['double_nullable']);
+            }
+            $count++;
+        }
+        $this->assertSame(100, $count);
+        $this->assertSame($file->metadata()->rowsNumber(), $count);
+    }
+
     public function test_reading_enum_column() : void
     {
         $reader = new Reader(logger: $this->getLogger());
@@ -115,6 +191,44 @@ final class SimpleTypesReadingTest extends ParquetFunctionalTestCase
 
         foreach ($file->values(['enum']) as $row) {
             $this->assertIsString($row['enum']);
+            $count++;
+        }
+        $this->assertSame(100, $count);
+        $this->assertSame($file->metadata()->rowsNumber(), $count);
+    }
+
+    public function test_reading_float_column() : void
+    {
+        $reader = new Reader(logger: $this->getLogger());
+        $file = $reader->read(__DIR__ . '/../../Fixtures/primitives.parquet');
+
+        $this->assertEquals(PhysicalType::FLOAT, $file->metadata()->schema()->get('float')->type());
+
+        $count = 0;
+
+        foreach ($file->values(['float']) as $row) {
+            $this->assertIsFloat($row['float']);
+            $count++;
+        }
+        $this->assertSame(100, $count);
+        $this->assertSame($file->metadata()->rowsNumber(), $count);
+    }
+
+    public function test_reading_float_nullable_column() : void
+    {
+        $reader = new Reader(logger: $this->getLogger());
+        $file = $reader->read(__DIR__ . '/../../Fixtures/primitives.parquet');
+
+        $this->assertEquals(PhysicalType::FLOAT, $file->metadata()->schema()->get('float_nullable')->type());
+
+        $count = 0;
+
+        foreach ($file->values(['float_nullable']) as $rowIndex => $row) {
+            if ($rowIndex % 2 === 0) {
+                $this->assertIsFloat($row['float_nullable']);
+            } else {
+                $this->assertNull($row['float_nullable']);
+            }
             $count++;
         }
         $this->assertSame(100, $count);

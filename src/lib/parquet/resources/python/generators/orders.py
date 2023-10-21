@@ -81,4 +81,4 @@ schema = pa.schema([
 table = pa.table(df, schema=schema)
 
 # Write out as Parquet file with Snappy compression
-pq.write_table(table, 'output/orders.parquet', compression='gzip')
+pq.write_table(table, 'output/orders.parquet', compression='SNAPPY')

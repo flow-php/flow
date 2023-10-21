@@ -8,6 +8,8 @@ import uuid
 from enum import Enum
 import pyarrow as pa
 import pyarrow.parquet as pq
+from decimal import Decimal
+
 
 # Number of rows to generate
 n_rows = 100
@@ -27,6 +29,9 @@ timestamp_col = pd.Series([pd.Timestamp(datetime.now() + timedelta(seconds=i * 1
 time_col = pd.Series([time(hour=i % 24, minute=(i * 2) % 60, second=(i * 3) % 60) for i in range(n_rows)], dtype='object')
 uuid_col = pd.Series([str(uuid.uuid4()) for _ in range(n_rows)], dtype='string')
 enum_col = pd.Series([random.choice(list(Color)).name for _ in range(n_rows)], dtype='string')
+float_col = pd.Series([random.uniform(0, 100) for _ in range(n_rows)], dtype='float32')
+double_col = pd.Series([random.uniform(0, 100) for _ in range(n_rows)], dtype='float64')
+decimal_col = pd.Series([Decimal(str(round(random.uniform(0, 100), 2))) for i in range(n_rows)])
 
 int32_nullable_col = pd.Series([i if i % 2 == 0 else None for i in range(n_rows)], dtype='Int32')
 int64_nullable_col = pd.Series([i if i % 2 == 0 else None for i in range(n_rows)], dtype='Int64')
@@ -38,6 +43,9 @@ timestamp_nullable_col = pd.Series([pd.Timestamp(datetime.now() + timedelta(seco
 time_nullable_col = pd.Series([time(hour=i % 24, minute=(i * 2) % 60, second=(i * 3) % 60) if i % 2 == 0 else None for i in range(n_rows)], dtype='object')
 uuid_nullable_col = pd.Series([str(uuid.uuid4()) if i % 2 == 0 else None for i in range(n_rows)], dtype='string')
 enum_nullable_col = pd.Series([random.choice(list(Color)).name if i % 2 == 0 else None for i in range(n_rows)], dtype='string')
+float_nullable_col = pd.Series([random.uniform(0, 100) if i % 2 == 0 else None for i in range(n_rows)], dtype='float32')
+double_nullable_col = pd.Series([random.uniform(0, 100) if i % 2 == 0 else None for i in range(n_rows)], dtype='float64')
+decimal_nullable_col = pd.Series([Decimal(str(round(random.uniform(0, 100), 2))) if i % 2 == 0 else None for i in range(n_rows)])
 
 # Creating the DataFrame with only the new column
 df_nested_list = pd.DataFrame({
@@ -61,6 +69,12 @@ df_nested_list = pd.DataFrame({
     'uuid_nullable': uuid_nullable_col,
     'enum': enum_col,
     'enum_nullable': enum_nullable_col,
+    'float': float_col,
+    'float_nullable': float_nullable_col,
+    'double': double_col,
+    'double_nullable': double_nullable_col,
+    'decimal': decimal_col,
+    'decimal_nullable': decimal_nullable_col,
 })
 
 # Define the schema
@@ -85,6 +99,12 @@ schema = pa.schema([
     ('uuid_nullable', pa.string()),
     ('enum', pa.string()),
     ('enum_nullable', pa.string()),
+    ('float', pa.float32()),
+    ('float_nullable', pa.float32()),
+    ('double', pa.float64()),
+    ('double_nullable', pa.float64()),
+    ('decimal', pa.decimal128(10, 2)),
+    ('decimal_nullable', pa.decimal128(10, 2)),
 ])
 
 # Create a PyArrow Table
@@ -98,7 +118,7 @@ if os.path.exists(parquet_file):
     os.remove(parquet_file)
 
 # Write the PyArrow Table to a Parquet file
-with pq.ParquetWriter(parquet_file, schema, compression='GZIP') as writer:
+with pq.ParquetWriter(parquet_file, schema, compression='SNAPPY') as writer:
     writer.write_table(table)
 
 pd.set_option('display.max_columns', None)  # Show all columns

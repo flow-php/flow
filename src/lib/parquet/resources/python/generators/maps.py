@@ -186,7 +186,7 @@ if os.path.exists(parquet_file):
     os.remove(parquet_file)
 
 # Write the PyArrow Table to a Parquet file
-with pq.ParquetWriter(parquet_file, schema, compression='GZIP') as writer:
+with pq.ParquetWriter(parquet_file, schema, compression='SNAPPY') as writer:
     writer.write_table(table)
 
 # Show the first few rows of the DataFrame for verification

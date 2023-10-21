@@ -105,7 +105,7 @@ final class DataBuilder
 
         if ($column->logicalType()?->name() === 'TIMESTAMP') {
             /** @phpstan-ignore-next-line  */
-            if ($column->logicalType()?->timestamp()?->nanos() && $this->options->get(Option::ROUND_NANOSECONDS) === false) {
+            if ($column->logicalType()?->timestampData()?->nanos() && $this->options->get(Option::ROUND_NANOSECONDS) === false) {
                 return $value;
             }
 
@@ -114,9 +114,9 @@ final class DataBuilder
             }
 
             /** @phpstan-ignore-next-line  */
-            $isMillis = (bool) $column->logicalType()?->timestamp()?->millis();
+            $isMillis = (bool) $column->logicalType()?->timestampData()?->millis();
             /** @phpstan-ignore-next-line  */
-            $isMicros = ($column->logicalType()?->timestamp()?->micros() || $column->logicalType()?->timestamp()?->nanos());
+            $isMicros = ($column->logicalType()?->timestampData()?->micros() || $column->logicalType()?->timestampData()?->nanos());
 
             $convertValue = static function (int $val) use ($isMillis, $isMicros) : \DateTimeImmutable|int {
                 if ($isMillis) {

@@ -2,6 +2,7 @@
 
 namespace Flow\Parquet\ParquetFile\Schema;
 
+use Flow\Parquet\ParquetFile\Schema\LogicalType\Timestamp;
 use Flow\Parquet\Thrift\SchemaElement;
 
 /**
@@ -14,38 +15,93 @@ final class FlatColumn implements Column
     public function __construct(
         private readonly string $name,
         private readonly PhysicalType $type,
-        private readonly ?LogicalType $logicalType,
-        private readonly ?Repetition $repetition,
-        private readonly ?int $precision,
-        private readonly ?int $scale,
-        private readonly ?int $typeLength,
-        private readonly int $maxDefinitionsLevel,
-        private readonly int $maxRepetitionsLevel,
-        private readonly ?string $rootPath,
-        private ?Column $parent
+        private readonly ?LogicalType $logicalType = null,
+        private readonly ?Repetition $repetition = Repetition::OPTIONAL,
+        private readonly ?int $precision = null,
+        private readonly ?int $scale = null,
+        private readonly ?int $typeLength = null,
+        private ?string $rootPath = null,
+        private ?Column $parent = null
     ) {
     }
 
+    public static function boolean(string $name) : self
+    {
+        return new self($name, PhysicalType::BOOLEAN, null, Repetition::OPTIONAL);
+    }
+
+    public static function date(string $name) : self
+    {
+        return new self($name, PhysicalType::INT32, new LogicalType(LogicalType::DATE), Repetition::OPTIONAL);
+    }
+
+    public static function dateTime(string $name) : self
+    {
+        return new self($name, PhysicalType::INT64, new LogicalType(LogicalType::TIMESTAMP, new Timestamp(false, false, true, false)), Repetition::OPTIONAL);
+    }
+
+    public static function decimal(string $name, int $scale = 2, int $precision = 10) : self
+    {
+        $bitsNeeded = \ceil(\log(10 ** $precision, 2));
+        $byteLength = (int) \ceil($bitsNeeded / 8);
+
+        return new self(
+            $name,
+            PhysicalType::FIXED_LEN_BYTE_ARRAY,
+            LogicalType::decimal($scale, $precision),
+            Repetition::OPTIONAL,
+            $precision,
+            $scale,
+            $byteLength
+        );
+    }
+
+    public static function double(string $name) : self
+    {
+        return new self($name, PhysicalType::DOUBLE, null, Repetition::OPTIONAL);
+    }
+
+    public static function float(string $name) : self
+    {
+        return new self($name, PhysicalType::FLOAT, null, Repetition::OPTIONAL);
+    }
+
     public static function fromThrift(
-        SchemaElement $schemaElement,
-        int $maxDefinitionsLevel,
-        int $maxRepetitionsLevel,
+        SchemaElement $thrift,
         ?string $rootPath = null,
         ?Column $parent = null
     ) : self {
         return new self(
-            $schemaElement->name,
-            PhysicalType::from((int) $schemaElement->type),
-            $schemaElement->logicalType === null ? null : LogicalType::fromThrift($schemaElement->logicalType),
-            $schemaElement->repetition_type === null ? null : Repetition::from($schemaElement->repetition_type),
-            $schemaElement->precision,
-            $schemaElement->scale,
-            $schemaElement->type_length,
-            $maxDefinitionsLevel,
-            $maxRepetitionsLevel,
+            $thrift->name,
+            PhysicalType::from((int) $thrift->type),
+            $thrift->logicalType === null ? null : LogicalType::fromThrift($thrift->logicalType),
+            $thrift->repetition_type === null ? null : Repetition::from($thrift->repetition_type),
+            $thrift->precision,
+            $thrift->scale,
+            $thrift->type_length,
             $rootPath,
             $parent
         );
+    }
+
+    public static function int32(string $name) : self
+    {
+        return new self($name, PhysicalType::INT32, null, Repetition::OPTIONAL);
+    }
+
+    public static function int64(string $name) : self
+    {
+        return new self($name, PhysicalType::INT64, null, Repetition::OPTIONAL);
+    }
+
+    public static function string(string $name) : self
+    {
+        return new self($name, PhysicalType::BYTE_ARRAY, new LogicalType(LogicalType::STRING), Repetition::OPTIONAL);
+    }
+
+    public static function time(string $name) : self
+    {
+        return new self($name, PhysicalType::INT32, new LogicalType(LogicalType::TIME), Repetition::OPTIONAL);
     }
 
     public function __debugInfo() : ?array
@@ -157,12 +213,16 @@ final class FlatColumn implements Column
 
     public function maxDefinitionsLevel() : int
     {
-        return $this->maxDefinitionsLevel;
+        $level = $this->repetition === Repetition::REQUIRED ? 0 : 1;
+
+        return $this->parent ? $level + $this->parent->maxDefinitionsLevel() : $level;
     }
 
     public function maxRepetitionsLevel() : int
     {
-        return $this->maxRepetitionsLevel;
+        $level = $this->repetition === Repetition::REPEATED ? 1 : 0;
+
+        return $this->parent ? $level + $this->parent->maxRepetitionsLevel() : $level;
     }
 
     public function name() : string
@@ -181,8 +241,8 @@ final class FlatColumn implements Column
             'repetition' => $this->repetition()?->name,
             'precision' => $this->precision(),
             'scale' => $this->scale(),
-            'max_definition_level' => $this->maxDefinitionsLevel,
-            'max_repetition_level' => $this->maxRepetitionsLevel,
+            'max_definition_level' => $this->maxDefinitionsLevel(),
+            'max_repetition_level' => $this->maxRepetitionsLevel(),
             'children' => null,
             'is_map' => $this->isMap(),
             'is_list' => $this->isList(),
@@ -211,6 +271,12 @@ final class FlatColumn implements Column
     public function scale() : ?int
     {
         return $this->scale;
+    }
+
+    public function setParent(NestedColumn $parent) : void
+    {
+        $this->rootPath = $parent->flatPath();
+        $this->parent = $parent;
     }
 
     public function type() : PhysicalType

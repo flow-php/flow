@@ -45,6 +45,7 @@ final class PageReader
                 $pageHeader->dataPageHeader()->valuesCount(),
                 $this->column->maxRepetitionsLevel(),
                 $this->column->maxDefinitionsLevel(),
+                $this->column->typeLength(),
                 $dictionary
             );
     }
@@ -74,6 +75,7 @@ final class PageReader
                 $this->column->logicalType(),
                 $pageHeader->dictionaryPageHeader()->encoding(),
                 $pageHeader->dictionaryPageHeader()->valuesCount(),
+                $this->column->typeLength(),
             );
     }
 }
