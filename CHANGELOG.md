@@ -1,6 +1,8 @@
-## [Unreleased] - 2023-10-20
+## [Unreleased] - 2023-10-21
 
 ### Added
+- [#621](https://github.com/flow-php/flow/pull/621) - **static factories to Flat and Nested columns in parquet schema** - [@norberttech](https://github.com/norberttech)
+- [#621](https://github.com/flow-php/flow/pull/621) - **Decimal column support to parquet** - [@norberttech](https://github.com/norberttech)
 - [#611](https://github.com/flow-php/flow/pull/611) - **RLEBigPackingHybrid encode function** - [@norberttech](https://github.com/norberttech)
 - [#613](https://github.com/flow-php/flow/pull/613) - **Pure PHP implementation of Google Snappy library** - [@norberttech](https://github.com/norberttech)
 - [#601](https://github.com/flow-php/flow/pull/601) - **output of benchmark tests into github step summary** - [@norberttech](https://github.com/norberttech)
@@ -12,6 +14,8 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#621](https://github.com/flow-php/flow/pull/621) - **Calculation of max definitions/repetitions level to column** - [@norberttech](https://github.com/norberttech)
+- [#621](https://github.com/flow-php/flow/pull/621) - **Python parquet file generators compression from gzip to snappy** - [@norberttech](https://github.com/norberttech)
 - [#619](https://github.com/flow-php/flow/pull/619) - **Move implementation of entry structure creation into the `NativeEntryFactory`** - [@stloyd](https://github.com/stloyd)
 - [#620](https://github.com/flow-php/flow/pull/620) - **Reduce CI load by cancelling previous runs with every new commit in PR** - [@stloyd](https://github.com/stloyd)
 - [#617](https://github.com/flow-php/flow/pull/617) - **Invalid schema has no fallback in `NativeEntryFactory`** - [@stloyd](https://github.com/stloyd)
