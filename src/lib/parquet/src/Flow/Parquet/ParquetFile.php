@@ -80,7 +80,7 @@ final class ParquetFile
     /**
      * @psalm-suppress PossiblyInvalidArgument
      */
-    public function readChunks(Column $column, int $limit = null) : \Generator
+    public function readChunks(FlatColumn $column, int $limit = null) : \Generator
     {
         $reader = new WholeChunk(
             new DataBuilder($this->options, $this->logger),

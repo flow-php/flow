@@ -2,7 +2,6 @@
 
 namespace Flow\Parquet\Tests\Integration\IO;
 
-use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\Reader;
 
 final class MapsReadingTest extends ParquetFunctionalTestCase
@@ -12,7 +11,7 @@ final class MapsReadingTest extends ParquetFunctionalTestCase
         $reader = new Reader(logger: $this->getLogger());
         $file = $reader->read(__DIR__ . '/../../Fixtures/maps.parquet');
 
-        $this->assertEquals(PhysicalType::BOOLEAN, $file->metadata()->schema()->get('map')->type());
+        $this->assertNull($file->metadata()->schema()->get('map')->type());
         $this->assertEquals('MAP', $file->metadata()->schema()->get('map')->logicalType()->name());
 
         $count = 0;
@@ -31,7 +30,7 @@ final class MapsReadingTest extends ParquetFunctionalTestCase
         $reader = new Reader(logger: $this->getLogger());
         $file = $reader->read(__DIR__ . '/../../Fixtures/maps.parquet');
 
-        $this->assertEquals(PhysicalType::BOOLEAN, $file->metadata()->schema()->get('map_nullable')->type());
+        $this->assertNull($file->metadata()->schema()->get('map_nullable')->type());
         $this->assertEquals('MAP', $file->metadata()->schema()->get('map_nullable')->logicalType()->name());
 
         $count = 0;
@@ -54,7 +53,7 @@ final class MapsReadingTest extends ParquetFunctionalTestCase
         $reader = new Reader(logger: $this->getLogger());
         $file = $reader->read(__DIR__ . '/../../Fixtures/maps.parquet');
 
-        $this->assertEquals(PhysicalType::BOOLEAN, $file->metadata()->schema()->get('map_of_complex_lists')->type());
+        $this->assertNull($file->metadata()->schema()->get('map_of_complex_lists')->type());
         $this->assertEquals('MAP', $file->metadata()->schema()->get('map_of_complex_lists')->logicalType()->name());
 
         $count = 0;
@@ -76,7 +75,7 @@ final class MapsReadingTest extends ParquetFunctionalTestCase
         $reader = new Reader(logger: $this->getLogger());
         $file = $reader->read(__DIR__ . '/../../Fixtures/maps.parquet');
 
-        $this->assertEquals(PhysicalType::BOOLEAN, $file->metadata()->schema()->get('map_of_list_of_map_of_lists')->type());
+        $this->assertNull($file->metadata()->schema()->get('map_of_list_of_map_of_lists')->type());
         $this->assertEquals('MAP', $file->metadata()->schema()->get('map_of_list_of_map_of_lists')->logicalType()->name());
 
         $count = 0;
@@ -99,7 +98,7 @@ final class MapsReadingTest extends ParquetFunctionalTestCase
         $reader = new Reader(logger: $this->getLogger());
         $file = $reader->read(__DIR__ . '/../../Fixtures/maps.parquet');
 
-        $this->assertEquals(PhysicalType::BOOLEAN, $file->metadata()->schema()->get('map_of_lists')->type());
+        $this->assertNull($file->metadata()->schema()->get('map_of_lists')->type());
         $this->assertEquals('MAP', $file->metadata()->schema()->get('map_of_lists')->logicalType()->name());
 
         $count = 0;
@@ -120,7 +119,7 @@ final class MapsReadingTest extends ParquetFunctionalTestCase
         $reader = new Reader(logger: $this->getLogger());
         $file = $reader->read(__DIR__ . '/../../Fixtures/maps.parquet');
 
-        $this->assertEquals(PhysicalType::BOOLEAN, $file->metadata()->schema()->get('map_of_maps')->type());
+        $this->assertNull($file->metadata()->schema()->get('map_of_maps')->type());
         $this->assertEquals('MAP', $file->metadata()->schema()->get('map_of_maps')->logicalType()->name());
 
         $count = 0;
@@ -140,7 +139,7 @@ final class MapsReadingTest extends ParquetFunctionalTestCase
         $reader = new Reader(logger: $this->getLogger());
         $file = $reader->read(__DIR__ . '/../../Fixtures/maps.parquet');
 
-        $this->assertEquals(PhysicalType::BOOLEAN, $file->metadata()->schema()->get('map_of_struct_of_structs')->type());
+        $this->assertNull($file->metadata()->schema()->get('map_of_struct_of_structs')->type());
         $this->assertEquals('MAP', $file->metadata()->schema()->get('map_of_struct_of_structs')->logicalType()->name());
 
         $count = 0;
@@ -161,7 +160,7 @@ final class MapsReadingTest extends ParquetFunctionalTestCase
         $reader = new Reader(logger: $this->getLogger());
         $file = $reader->read(__DIR__ . '/../../Fixtures/maps.parquet');
 
-        $this->assertEquals(PhysicalType::BOOLEAN, $file->metadata()->schema()->get('map_of_struct_of_structs')->type());
+        $this->assertNull($file->metadata()->schema()->get('map_of_struct_of_structs')->type());
         $this->assertEquals('MAP', $file->metadata()->schema()->get('map_of_struct_of_structs')->logicalType()->name());
 
         $count = 0;
@@ -181,7 +180,7 @@ final class MapsReadingTest extends ParquetFunctionalTestCase
         $reader = new Reader(logger: $this->getLogger());
         $file = $reader->read(__DIR__ . '/../../Fixtures/maps.parquet');
 
-        $this->assertEquals(PhysicalType::BOOLEAN, $file->metadata()->schema()->get('map_of_structs')->type());
+        $this->assertNull($file->metadata()->schema()->get('map_of_structs')->type());
         $this->assertEquals('MAP', $file->metadata()->schema()->get('map_of_structs')->logicalType()->name());
 
         $count = 0;

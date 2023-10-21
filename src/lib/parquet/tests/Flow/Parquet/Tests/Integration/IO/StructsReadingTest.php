@@ -2,7 +2,6 @@
 
 namespace Flow\Parquet\Tests\Integration\IO;
 
-use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\Reader;
 
 final class StructsReadingTest extends ParquetFunctionalTestCase
@@ -12,7 +11,7 @@ final class StructsReadingTest extends ParquetFunctionalTestCase
         $reader = new Reader(logger: $this->getLogger());
         $file = $reader->read(__DIR__ . '/../../Fixtures/structs.parquet');
 
-        $this->assertEquals(PhysicalType::BOOLEAN, $file->metadata()->schema()->get('struct_deeply_nested')->type());
+        $this->assertNull($file->metadata()->schema()->get('struct_deeply_nested')->type());
         $this->assertNull($file->metadata()->schema()->get('struct_deeply_nested')->logicalType());
 
         $count = 0;
@@ -40,7 +39,7 @@ final class StructsReadingTest extends ParquetFunctionalTestCase
         $reader = new Reader(logger: $this->getLogger());
         $file = $reader->read(__DIR__ . '/../../Fixtures/structs.parquet');
 
-        $this->assertEquals(PhysicalType::BOOLEAN, $file->metadata()->schema()->get('struct_deeply_nested')->type());
+        $this->assertNull($file->metadata()->schema()->get('struct_deeply_nested')->type());
         $this->assertNull($file->metadata()->schema()->get('struct_deeply_nested')->logicalType());
 
         $count = 0;
@@ -67,7 +66,7 @@ final class StructsReadingTest extends ParquetFunctionalTestCase
         $reader = new Reader(logger: $this->getLogger());
         $file = $reader->read(__DIR__ . '/../../Fixtures/structs.parquet');
 
-        $this->assertEquals(PhysicalType::BOOLEAN, $file->metadata()->schema()->get('struct_flat')->type());
+        $this->assertNull($file->metadata()->schema()->get('struct_flat')->type());
         $this->assertNull($file->metadata()->schema()->get('struct_flat')->logicalType());
 
         $count = 0;
@@ -88,7 +87,7 @@ final class StructsReadingTest extends ParquetFunctionalTestCase
         $reader = new Reader(logger: $this->getLogger());
         $file = $reader->read(__DIR__ . '/../../Fixtures/structs.parquet');
 
-        $this->assertEquals(PhysicalType::BOOLEAN, $file->metadata()->schema()->get('struct_nested')->type());
+        $this->assertNull($file->metadata()->schema()->get('struct_nested')->type());
         $this->assertNull($file->metadata()->schema()->get('struct_nested')->logicalType());
 
         $count = 0;
@@ -110,7 +109,7 @@ final class StructsReadingTest extends ParquetFunctionalTestCase
         $reader = new Reader(logger: $this->getLogger());
         $file = $reader->read(__DIR__ . '/../../Fixtures/structs.parquet');
 
-        $this->assertEquals(PhysicalType::BOOLEAN, $file->metadata()->schema()->get('struct_nested_with_list_of_lists')->type());
+        $this->assertNull($file->metadata()->schema()->get('struct_nested_with_list_of_lists')->type());
         $this->assertNull($file->metadata()->schema()->get('struct_nested_with_list_of_lists')->logicalType());
 
         $count = 0;
@@ -131,7 +130,7 @@ final class StructsReadingTest extends ParquetFunctionalTestCase
         $reader = new Reader(logger: $this->getLogger());
         $file = $reader->read(__DIR__ . '/../../Fixtures/structs.parquet');
 
-        $this->assertEquals(PhysicalType::BOOLEAN, $file->metadata()->schema()->get('struct_nested_with_list_of_maps')->type());
+        $this->assertNull($file->metadata()->schema()->get('struct_nested_with_list_of_maps')->type());
         $this->assertNull($file->metadata()->schema()->get('struct_nested_with_list_of_maps')->logicalType());
 
         $count = 0;
@@ -152,7 +151,7 @@ final class StructsReadingTest extends ParquetFunctionalTestCase
         $reader = new Reader(logger: $this->getLogger());
         $file = $reader->read(__DIR__ . '/../../Fixtures/structs.parquet');
 
-        $this->assertEquals(PhysicalType::BOOLEAN, $file->metadata()->schema()->get('struct_nested_with_map_of_list_of_ints')->type());
+        $this->assertNull($file->metadata()->schema()->get('struct_nested_with_map_of_list_of_ints')->type());
         $this->assertNull($file->metadata()->schema()->get('struct_nested_with_map_of_list_of_ints')->logicalType());
 
         $count = 0;
@@ -174,7 +173,7 @@ final class StructsReadingTest extends ParquetFunctionalTestCase
         $reader = new Reader(logger: $this->getLogger());
         $file = $reader->read(__DIR__ . '/../../Fixtures/structs.parquet');
 
-        $this->assertEquals(PhysicalType::BOOLEAN, $file->metadata()->schema()->get('struct_nested_with_map_of_string_map_of_string_string')->type());
+        $this->assertNull($file->metadata()->schema()->get('struct_nested_with_map_of_string_map_of_string_string')->type());
         $this->assertNull($file->metadata()->schema()->get('struct_nested_with_map_of_string_map_of_string_string')->logicalType());
 
         $count = 0;
@@ -197,7 +196,7 @@ final class StructsReadingTest extends ParquetFunctionalTestCase
         $reader = new Reader(logger: $this->getLogger());
         $file = $reader->read(__DIR__ . '/../../Fixtures/structs.parquet');
 
-        $this->assertEquals(PhysicalType::BOOLEAN, $file->metadata()->schema()->get('struct_nested_with_map_of_string_map_of_string_string')->type());
+        $this->assertNull($file->metadata()->schema()->get('struct_nested_with_map_of_string_map_of_string_string')->type());
         $this->assertNull($file->metadata()->schema()->get('struct_nested_with_map_of_string_map_of_string_string')->logicalType());
 
         $count = 0;
@@ -219,7 +218,7 @@ final class StructsReadingTest extends ParquetFunctionalTestCase
         $reader = new Reader(logger: $this->getLogger());
         $file = $reader->read(__DIR__ . '/../../Fixtures/structs.parquet');
 
-        $this->assertEquals(PhysicalType::BOOLEAN, $file->metadata()->schema()->get('struct_with_list_and_map_of_structs')->type());
+        $this->assertNull($file->metadata()->schema()->get('struct_with_list_and_map_of_structs')->type());
         $this->assertNull($file->metadata()->schema()->get('struct_with_list_and_map_of_structs')->logicalType());
 
         $count = 0;

@@ -8,14 +8,14 @@ use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Page\ColumnData;
 use Flow\Parquet\ParquetFile\Page\Dictionary;
 use Flow\Parquet\ParquetFile\Page\PageHeader;
-use Flow\Parquet\ParquetFile\Schema\Column;
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
 final class PageReader
 {
     public function __construct(
-        private readonly Column $column,
+        private readonly FlatColumn $column,
         private readonly Options $options,
         private readonly ByteOrder $byteOrder,
         private readonly LoggerInterface $logger = new NullLogger()

@@ -10,6 +10,7 @@ use Flow\Parquet\ParquetFile\Page\PageHeader;
 use Flow\Parquet\ParquetFile\PageReader;
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\ParquetFile\Schema\Column;
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ThriftStream\TPhpFileStream;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -28,7 +29,7 @@ final class WholeChunk implements ColumnChunkReader
     /**
      * @param resource $stream
      */
-    public function read(ColumnChunk $columnChunk, Column $column, $stream, int $limit = null) : \Generator
+    public function read(ColumnChunk $columnChunk, FlatColumn $column, $stream, int $limit = null) : \Generator
     {
         $this->logger->debug('[Parquet File][Read Column][Read Column Chunk]', ['chunk' => $columnChunk->normalize()]);
         $offset = $columnChunk->pageOffset();

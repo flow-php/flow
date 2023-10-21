@@ -12,6 +12,8 @@ use Flow\Parquet\Thrift\SchemaElement;
  */
 final class FlatColumn implements Column
 {
+    private ?NestedColumn $parent = null;
+
     public function __construct(
         private readonly string $name,
         private readonly PhysicalType $type,
@@ -20,8 +22,6 @@ final class FlatColumn implements Column
         private readonly ?int $precision = null,
         private readonly ?int $scale = null,
         private readonly ?int $typeLength = null,
-        private ?string $rootPath = null,
-        private ?Column $parent = null
     ) {
     }
 
@@ -61,26 +61,26 @@ final class FlatColumn implements Column
         return new self($name, PhysicalType::DOUBLE, null, Repetition::OPTIONAL);
     }
 
+    public static function enum(string $string) : self
+    {
+        return new self($string, PhysicalType::BYTE_ARRAY, new LogicalType(LogicalType::STRING), Repetition::OPTIONAL);
+    }
+
     public static function float(string $name) : self
     {
         return new self($name, PhysicalType::FLOAT, null, Repetition::OPTIONAL);
     }
 
-    public static function fromThrift(
-        SchemaElement $thrift,
-        ?string $rootPath = null,
-        ?Column $parent = null
-    ) : self {
+    public static function fromThrift(SchemaElement $thrift) : self
+    {
         return new self(
             $thrift->name,
-            PhysicalType::from((int) $thrift->type),
+            PhysicalType::from($thrift->type),
             $thrift->logicalType === null ? null : LogicalType::fromThrift($thrift->logicalType),
             $thrift->repetition_type === null ? null : Repetition::from($thrift->repetition_type),
             $thrift->precision,
             $thrift->scale,
             $thrift->type_length,
-            $rootPath,
-            $parent
         );
     }
 
@@ -94,6 +94,11 @@ final class FlatColumn implements Column
         return new self($name, PhysicalType::INT64, null, Repetition::OPTIONAL);
     }
 
+    public static function json(string $string) : self
+    {
+        return new self($string, PhysicalType::BYTE_ARRAY, new LogicalType(LogicalType::STRING), Repetition::OPTIONAL);
+    }
+
     public static function string(string $name) : self
     {
         return new self($name, PhysicalType::BYTE_ARRAY, new LogicalType(LogicalType::STRING), Repetition::OPTIONAL);
@@ -101,7 +106,12 @@ final class FlatColumn implements Column
 
     public static function time(string $name) : self
     {
-        return new self($name, PhysicalType::INT32, new LogicalType(LogicalType::TIME), Repetition::OPTIONAL);
+        return new self($name, PhysicalType::INT64, new LogicalType(LogicalType::TIME), Repetition::OPTIONAL);
+    }
+
+    public static function uuid(string $string) : self
+    {
+        return new self($string, PhysicalType::BYTE_ARRAY, new LogicalType(LogicalType::STRING), Repetition::OPTIONAL);
     }
 
     public function __debugInfo() : ?array
@@ -109,7 +119,10 @@ final class FlatColumn implements Column
         return $this->normalize();
     }
 
-    /** @psalm-suppress PossiblyNullOperand */
+    /**
+     * @psalm-suppress PossiblyNullOperand
+     * @psalm-suppress PossiblyNullPropertyFetch
+     */
     public function ddl() : array
     {
         return [
@@ -121,11 +134,18 @@ final class FlatColumn implements Column
 
     public function flatPath() : string
     {
-        if ($this->rootPath !== null) {
-            return $this->rootPath . '.' . $this->name;
+        $path = [$this->name];
+        $parent = $this->parent();
+
+        while ($parent) {
+            $path[] = $parent->name();
+            $parent = $parent->parent();
         }
 
-        return $this->name;
+        $path = \array_reverse($path);
+        \array_shift($path);
+
+        return \implode('.', $path);
     }
 
     public function isList() : bool
@@ -211,6 +231,11 @@ final class FlatColumn implements Column
         return $this->logicalType;
     }
 
+    public function makeRequired() : self
+    {
+        return new self($this->name, $this->type, $this->logicalType, Repetition::REQUIRED, $this->precision, $this->scale, $this->typeLength);
+    }
+
     public function maxDefinitionsLevel() : int
     {
         $level = $this->repetition === Repetition::REQUIRED ? 0 : 1;
@@ -230,6 +255,9 @@ final class FlatColumn implements Column
         return $this->name;
     }
 
+    /**
+     * @psalm-suppress PossiblyNullPropertyFetch
+     */
     public function normalize() : array
     {
         return [
@@ -275,7 +303,6 @@ final class FlatColumn implements Column
 
     public function setParent(NestedColumn $parent) : void
     {
-        $this->rootPath = $parent->flatPath();
         $this->parent = $parent;
     }
 
