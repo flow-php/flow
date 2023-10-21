@@ -381,7 +381,7 @@ if os.path.exists(parquet_file):
     os.remove(parquet_file)
 
 # Write the PyArrow Table to a Parquet file
-with pq.ParquetWriter(parquet_file, schema, compression='GZIP') as writer:
+with pq.ParquetWriter(parquet_file, schema, compression='SNAPPY') as writer:
     writer.write_table(table)
 
 pd.set_option('display.max_columns', None)  # Show all columns

@@ -37,6 +37,7 @@ final class DataCoder
         int $expectedValuesCount,
         int $maxRepetitionsLevel,
         int $maxDefinitionsLevel,
+        ?int $typeLength = null,
         ?Dictionary $dictionary = null
     ) : ColumnData {
         $reader = new BinaryBufferReader($buffer, $this->byteOrder);
@@ -85,6 +86,7 @@ final class DataCoder
                     $reader,
                     $expectedValuesCount - $nullsCount,
                     $logicalType,
+                    $typeLength
                 )
             );
         }
@@ -121,13 +123,19 @@ final class DataCoder
         throw new RuntimeException('Encoding ' . $encoding->name . ' not supported');
     }
 
-    public function decodeDictionary(string $buffer, PhysicalType $physicalType, ?LogicalType $logicalType, Encodings $encoding, int $expectedValuesCount) : Dictionary
-    {
+    public function decodeDictionary(
+        string $buffer,
+        PhysicalType $physicalType,
+        ?LogicalType $logicalType,
+        Encodings $encoding,
+        int $expectedValuesCount,
+        ?int $typeLength = null
+    ) : Dictionary {
         $reader = new BinaryBufferReader($buffer, $this->byteOrder);
         $this->debugLogDictionaryDecode($buffer, $encoding, $physicalType);
 
         return new Dictionary(
-            $this->readPlainValues($physicalType, $reader, $expectedValuesCount, $logicalType)
+            $this->readPlainValues($physicalType, $reader, $expectedValuesCount, $logicalType, $typeLength)
         );
     }
 
@@ -215,8 +223,9 @@ final class DataCoder
         $this->logger->debug('Decoding data with RLE Hybrid', ['bitWidth' => $bitWidth, 'expected_values_count' => $expectedValuesCount, 'reader_position' => ['bits' => $reader->position()->bits(), 'bytes' => $reader->position()->bytes()]]);
     }
 
-    private function readPlainValues(PhysicalType $physicalType, BinaryBufferReader $reader, int $total, ?LogicalType $logicalType) : array
+    private function readPlainValues(PhysicalType $physicalType, BinaryBufferReader $reader, int $total, ?LogicalType $logicalType, ?int $typeLength) : array
     {
+        /** @psalm-suppress PossiblyNullArgument */
         return match ($physicalType) {
             PhysicalType::INT32 => $reader->readInts32($total),
             PhysicalType::INT64 => $reader->readInts64($total),
@@ -230,7 +239,11 @@ final class DataCoder
                     false => $reader->readByteArrays($total)
                 }
             },
-            PhysicalType::FIXED_LEN_BYTE_ARRAY => throw new RuntimeException('FIXED_LEN_BYTE_ARRAY type is not yet supported'),//(array)\unpack('H*', $buffer),
+            PhysicalType::FIXED_LEN_BYTE_ARRAY => match ($logicalType?->name()) {
+                /** @phpstan-ignore-next-line */
+                LogicalType::DECIMAL => $reader->readDecimals($total, $typeLength),
+                default => throw new RuntimeException('Unsupported logical type ' . ($logicalType?->name() ?: 'null') . ' for FIXED_LEN_BYTE_ARRAY'),
+            },
             PhysicalType::BOOLEAN => $reader->readBooleans($total),
         };
     }

@@ -144,6 +144,26 @@ final class BinaryBufferReader implements BinaryReader
         return new Bytes($bytes);
     }
 
+    public function readDecimals(int $total, int $byteLength) : array
+    {
+        $decimalBytes = \array_chunk($this->readBytes($byteLength * $total)->toArray(), $byteLength);
+
+        $decimals = [];
+
+        foreach ($decimalBytes as $bytes) {
+            $intValue = 0;
+
+            foreach ($bytes as $i => $byte) {
+                $shift = ($byteLength - 1 - $i) * 8;
+                $intValue |= ($byte << $shift);
+            }
+
+            $decimals[] = $intValue;
+        }
+
+        return $decimals;
+    }
+
     public function readDouble() : float
     {
         $result = \unpack(

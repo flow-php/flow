@@ -33,6 +33,8 @@ interface BinaryReader
 
     public function readBytes(int $total) : Bytes;
 
+    public function readDecimals(int $total, int $byteLength) : array;
+
     public function readDouble() : float;
 
     /**

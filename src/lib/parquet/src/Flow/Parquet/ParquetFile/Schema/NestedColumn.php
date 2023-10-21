@@ -17,11 +17,57 @@ final class NestedColumn implements Column
     public function __construct(
         private readonly FlatColumn $root,
         array $columns,
-        private readonly int $maxDefinitionsLevel,
-        private readonly int $maxRepetitionsLevel,
         private ?Column $parent = null
     ) {
         $this->children = $columns;
+
+        foreach ($columns as $column) {
+            if ($column->parent() === null) {
+                $column->setParent($this);
+            }
+        }
+    }
+
+    public static function list(string $name, PhysicalType $type, ?LogicalType $logicalType = null) : self
+    {
+        return new self(
+            new FlatColumn($name, PhysicalType::BOOLEAN, new LogicalType(LogicalType::LIST)),
+            [
+                new self(
+                    new FlatColumn('list', PhysicalType::BOOLEAN, repetition: Repetition::REPEATED),
+                    [
+                        new FlatColumn('element', $type, $logicalType),
+                    ]
+                ),
+            ]
+        );
+    }
+
+    public static function map(string $name, PhysicalType $type, ?LogicalType $logicalType = null) : self
+    {
+        return new self(
+            new FlatColumn($name, PhysicalType::BOOLEAN, new LogicalType(LogicalType::MAP)),
+            [
+                new self(
+                    new FlatColumn('key_value', PhysicalType::BOOLEAN, repetition: Repetition::REPEATED),
+                    [
+                        new FlatColumn('key', PhysicalType::BYTE_ARRAY, new LogicalType(LogicalType::STRING), repetition: Repetition::REQUIRED),
+                        new FlatColumn('value', $type, $logicalType),
+                    ]
+                ),
+            ]
+        );
+    }
+
+    /**
+     * @param array<Column> $columns
+     */
+    public static function struct(string $name, array $columns) : self
+    {
+        return new self(
+            new FlatColumn($name, PhysicalType::BOOLEAN, repetition: Repetition::OPTIONAL),
+            $columns
+        );
     }
 
     public function __debugInfo() : ?array
@@ -179,12 +225,16 @@ final class NestedColumn implements Column
 
     public function maxDefinitionsLevel() : int
     {
-        return $this->maxDefinitionsLevel;
+        $level = $this->root->repetition() === Repetition::REQUIRED ? 0 : 1;
+
+        return $this->parent ? $level + $this->parent->maxDefinitionsLevel() : $level;
     }
 
     public function maxRepetitionsLevel() : int
     {
-        return $this->maxRepetitionsLevel;
+        $level = $this->root->repetition() === Repetition::REPEATED ? 1 : 0;
+
+        return $this->parent ? $level + $this->parent->maxRepetitionsLevel() : $level;
     }
 
     public function name() : string
@@ -220,12 +270,14 @@ final class NestedColumn implements Column
         foreach ($this->children as $child) {
             $childData = [
                 'type' => $child->type()->name,
+                'flat_path' => $child->flatPath(),
                 'logical_type' => $child->logicalType()?->name(),
-                'optional' => $child->repetition() === Repetition::OPTIONAL,
-                'repeated' => $child->repetition() === Repetition::REPEATED,
+                'repetition' => $child->repetition()?->name,
                 'is_list_element' => $child->isListElement(),
                 'is_map_element' => $child->isMapElement(),
                 'is_struct_element' => $child->isStructElement(),
+                'max_repetition_level' => $child->maxRepetitionsLevel(),
+                'max_definition_level' => $child->maxDefinitionsLevel(),
             ];
 
             if ($child instanceof self) {
@@ -256,8 +308,23 @@ final class NestedColumn implements Column
         $this->children = $columns;
     }
 
+    public function setParent(self $parent) : void
+    {
+        $this->root->setParent($parent);
+        $this->parent = $parent;
+
+        foreach ($this->children as $child) {
+            $child->setParent($this);
+        }
+    }
+
     public function type() : PhysicalType
     {
         return $this->root->type();
+    }
+
+    public function typeLength() : ?int
+    {
+        return $this->root->typeLength();
     }
 }

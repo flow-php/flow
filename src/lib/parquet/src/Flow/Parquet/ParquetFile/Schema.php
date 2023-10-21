@@ -6,7 +6,6 @@ use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ParquetFile\Schema\Column;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
-use Flow\Parquet\ParquetFile\Schema\Repetition;
 use Flow\Parquet\Thrift\SchemaElement;
 
 final class Schema
@@ -19,10 +18,18 @@ final class Schema
     /**
      * @param array<Column> $columns
      */
-    public function __construct(
+    private function __construct(
         private readonly FlatColumn $schemaRoot,
         private readonly array $columns
     ) {
+    }
+
+    public static function from(Column ...$columns) : self
+    {
+        return new self(
+            FlatColumn::boolean('schema'),
+            $columns
+        );
     }
 
     /**
@@ -35,7 +42,7 @@ final class Schema
         }
 
         return new self(
-            FlatColumn::fromThrift(\array_shift($schemaElements), 0, 0),
+            FlatColumn::fromThrift(\array_shift($schemaElements)),
             self::processSchema($schemaElements)
         );
     }
@@ -136,62 +143,38 @@ final class Schema
         array $schemaElements,
         int &$index = 0,
         ?string $rootPath = null,
-        int $maxDefinitionLevel = 0,
-        int $maxRepetitionLevel = 0,
         int $childrenCount = null,
         Column $parent = null
     ) : array {
         $columns = [];
 
-        $processed_children = 0;
+        $processedChildren = 0;
 
-        while ($index < \count($schemaElements) && ($childrenCount === null || $processed_children < $childrenCount)) {
+        while ($index < \count($schemaElements) && ($childrenCount === null || $processedChildren < $childrenCount)) {
             $elem = $schemaElements[$index];
             $index++;
 
-            $currentMaxDefLevel = $maxDefinitionLevel;
-            $currentMaxRepLevel = $maxRepetitionLevel;
-
-            // Update maxDefinitionLevel and maxRepetitionLevel based on the repetition type of the current element
-            if ($elem->repetition_type !== Repetition::REQUIRED->value) {
-                $currentMaxDefLevel++;
-            }
-
-            if ($elem->repetition_type === Repetition::REPEATED->value) {
-                $currentMaxRepLevel++;
-            }
-
-            $root = FlatColumn::fromThrift($elem, $currentMaxDefLevel, $currentMaxRepLevel, $rootPath, $parent);
+            $root = FlatColumn::fromThrift($elem, $rootPath, $parent);
 
             if ($elem->num_children > 0) {
-                $nestedColumn = new NestedColumn($root, [], $currentMaxDefLevel, $currentMaxRepLevel, $parent);  // create NestedColumn with empty children first
+                $nestedColumn = new NestedColumn($root, [], $parent);
                 $children = self::processSchema(
                     $schemaElements,
                     $index,
                     $root->flatPath(),
-                    $currentMaxDefLevel,
-                    $currentMaxRepLevel,
                     $elem->num_children,
-                    $nestedColumn  // pass the NestedColumn as the parent
+                    $nestedColumn
                 );
 
                 // now update the children of the NestedColumn
                 $nestedColumn->setChildren($children);
-
-                $nestedMaxDefLevel = $currentMaxDefLevel;
-                $nestedMaxRepLevel = $currentMaxRepLevel;
-
-                foreach ($children as $child) {
-                    $nestedMaxDefLevel = \max($nestedMaxDefLevel, $child->maxDefinitionsLevel());
-                    $nestedMaxRepLevel = \max($nestedMaxRepLevel, $child->maxRepetitionsLevel());
-                }
 
                 $columns[] = $nestedColumn;  // use the updated NestedColumn
             } else {
                 $columns[] = $root;
             }
 
-            $processed_children++;
+            $processedChildren++;
         }
 
         return $columns;

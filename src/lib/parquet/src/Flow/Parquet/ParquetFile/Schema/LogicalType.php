@@ -3,6 +3,7 @@
 namespace Flow\Parquet\ParquetFile\Schema;
 
 use Flow\Parquet\Exception\InvalidArgumentException;
+use Flow\Parquet\ParquetFile\Schema\LogicalType\Decimal;
 use Flow\Parquet\ParquetFile\Schema\LogicalType\Timestamp;
 
 final class LogicalType
@@ -33,8 +34,31 @@ final class LogicalType
 
     public const UUID = 'UUID';
 
-    public function __construct(private readonly string $name, private readonly ?Timestamp $timestamp = null)
+    public function __construct(
+        private readonly string $name,
+        private readonly ?Timestamp $timestamp = null,
+        private readonly ?Decimal $decimal = null
+    ) {
+    }
+
+    public static function bson() : self
     {
+        return new self(self::BSON);
+    }
+
+    public static function date() : self
+    {
+        return new self(self::DATE);
+    }
+
+    public static function decimal(int $scale, int $precision) : self
+    {
+        return new self(self::DECIMAL, null, new Decimal($scale, $precision));
+    }
+
+    public static function enum() : self
+    {
+        return new self(self::ENUM);
     }
 
     /**
@@ -103,8 +127,54 @@ final class LogicalType
 
         return new self(
             $name,
-            $logicalType->TIMESTAMP !== null ? Timestamp::fromThrift($logicalType->TIMESTAMP) : null
+            $logicalType->TIMESTAMP !== null ? Timestamp::fromThrift($logicalType->TIMESTAMP) : null,
+            $logicalType->DECIMAL !== null ? Decimal::fromThrift($logicalType->DECIMAL) : null
         );
+    }
+
+    public static function integer() : self
+    {
+        return new self(self::INTEGER);
+    }
+
+    public static function json() : self
+    {
+        return new self(self::JSON);
+    }
+
+    public static function list() : self
+    {
+        return new self(self::LIST);
+    }
+
+    public static function map() : self
+    {
+        return new self(self::MAP);
+    }
+
+    public static function string() : self
+    {
+        return new self(self::STRING);
+    }
+
+    public static function time() : self
+    {
+        return new self(self::TIME);
+    }
+
+    public static function timestamp() : self
+    {
+        return new self(self::TIMESTAMP, new Timestamp(false, false, true, false));
+    }
+
+    public static function unknown() : self
+    {
+        return new self(self::UNKNOWN);
+    }
+
+    public function decimalData() : ?Decimal
+    {
+        return $this->decimal;
     }
 
     public function is(string $logicalType) : bool
@@ -120,7 +190,7 @@ final class LogicalType
         return $this->name;
     }
 
-    public function timestamp() : ?Timestamp
+    public function timestampData() : ?Timestamp
     {
         return $this->timestamp;
     }
