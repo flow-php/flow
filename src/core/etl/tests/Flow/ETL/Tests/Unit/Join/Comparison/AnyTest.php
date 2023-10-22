@@ -6,12 +6,21 @@ namespace Flow\ETL\Tests\Unit\Join\Comparison;
 
 use Flow\ETL\Adapter\Elasticsearch\Tests\Integration\TestCase;
 use Flow\ETL\DSL\Entry;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Join\Comparison;
 use Flow\ETL\Join\Comparison\Any;
 use Flow\ETL\Row;
 
 final class AnyTest extends TestCase
 {
+    public function test_empty_comparisons() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Any comparison requires at least one comparison');
+
+        new Any();
+    }
+
     public function test_failure() : void
     {
         $comparison1 = $this->createStub(Comparison::class);

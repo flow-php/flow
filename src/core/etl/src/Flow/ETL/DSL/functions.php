@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\DSL;
 
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\EntryReference;
@@ -47,13 +46,7 @@ function optional(Expression $expression) : Expression
 
 function struct(string ...$entries) : StructureReference
 {
-    if (!\count($entries)) {
-        throw new InvalidArgumentException('struct (StructureReference) require at least one entry');
-    }
-
-    $entry = \array_shift($entries);
-
-    return new StructureReference($entry, ...$entries);
+    return new StructureReference(...$entries);
 }
 
 function lit(mixed $value) : Expression

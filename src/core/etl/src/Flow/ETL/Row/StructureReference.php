@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row;
 
+use Flow\ETL\Exception\InvalidArgumentException;
+
 /**
  * @implements Reference<array{entries: array<string>, alias: ?string}>
  */
@@ -14,9 +16,13 @@ final class StructureReference implements Reference
     /** @var array<string> */
     private readonly array $entries;
 
-    public function __construct(string $entry, string ...$entries)
+    public function __construct(string ...$entries)
     {
-        $this->entries = \array_merge([$entry], $entries);
+        if (!$entries) {
+            throw new InvalidArgumentException('StructureReference requires at least one entry');
+        }
+
+        $this->entries = $entries;
     }
 
     public function __serialize() : array

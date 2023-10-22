@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Join\Comparison;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Join\Comparison;
 use Flow\ETL\Row;
 use Flow\ETL\Row\EntryReference;
@@ -18,9 +19,13 @@ final class All implements Comparison
      */
     private array $comparisons;
 
-    public function __construct(Comparison $comparison, Comparison ...$comparisons)
+    public function __construct(Comparison ...$comparisons)
     {
-        $this->comparisons = \array_merge([$comparison], $comparisons);
+        if (!$comparisons) {
+            throw new InvalidArgumentException('All comparison requires at least one comparison');
+        }
+
+        $this->comparisons = $comparisons;
     }
 
     public function __serialize() : array
