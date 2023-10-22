@@ -16,6 +16,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#629](https://github.com/flow-php/flow/pull/629) - **Adjust `SheetRange` & `GoogleSheetExtractor` with to low values** - [@stloyd](https://github.com/stloyd)
 - [#624](https://github.com/flow-php/flow/pull/624) - **Remove `array_merge()` when adding input into rows** - [@stloyd](https://github.com/stloyd)
 - [#627](https://github.com/flow-php/flow/pull/627) - **Simplified Schema cache** - [@norberttech](https://github.com/norberttech)
 - [#626](https://github.com/flow-php/flow/pull/626) - **Columns in GoggleSheet Adapter cannot contain unicode characters** - [@stloyd](https://github.com/stloyd)
