@@ -83,11 +83,13 @@ final class CSVExtractor implements Extractor
                     continue;
                 }
 
+                $row = \array_combine($headers, $rowData);
+
                 if ($shouldPutInputIntoRows) {
-                    $rows[] = \array_merge(\array_combine($headers, $rowData), ['_input_file_uri' => $stream->path()->uri()]);
-                } else {
-                    $rows[] = \array_combine($headers, $rowData);
+                    $row['_input_file_uri'] = $stream->path()->uri();
                 }
+
+                $rows[] = $row;
 
                 if (\count($rows) >= $this->rowsInBatch) {
                     yield array_to_rows($rows, $context->entryFactory());

@@ -28,8 +28,8 @@ final class GoogleSheetExtractorTest extends TestCase
             true,
             2,
         );
-        $spreadSheetIdEntry = new StringEntry('spread_sheet_id', $spreadSheetId);
-        $sheetNameEntry = new StringEntry('sheet_name', $sheetName);
+        $spreadSheetIdEntry = new StringEntry('_spread_sheet_id', $spreadSheetId);
+        $sheetNameEntry = new StringEntry('_sheet_name', $sheetName);
         $firstValueRangeMock = $this->createMock(Sheets\ValueRange::class);
         $firstValueRangeMock->method('getValues')->willReturn([
             ['header'],

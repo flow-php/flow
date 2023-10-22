@@ -69,10 +69,10 @@ final class ParquetExtractor implements Extractor
 
                 foreach ($data as $rowData) {
                     if ($shouldPutInputIntoRows) {
-                        $rows[] = \array_merge($rowData, ['_input_file_uri' => $readerData['uri']]);
-                    } else {
-                        $rows[] = $rowData;
+                        $rowData['_input_file_uri'] = $readerData['uri'];
                     }
+
+                    $rows[] = $rowData;
                 }
 
                 yield array_to_rows($rows, $context->entryFactory());
