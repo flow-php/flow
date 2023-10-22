@@ -17,6 +17,7 @@ final class NestedColumn implements Column
         private readonly ?Repetition $repetition,
         private readonly array $children,
         private readonly ?LogicalType $logicalType = null,
+        public readonly bool $schemaRoot = false
     ) {
         foreach ($children as $child) {
             $child->setParent($this);
@@ -85,6 +86,14 @@ final class NestedColumn implements Column
     /**
      * @param array<Column> $children
      */
+    public static function schemaRoot(string $name, array $children) : self
+    {
+        return new self($name, Repetition::REQUIRED, $children, null, true);
+    }
+
+    /**
+     * @param array<Column> $children
+     */
     public static function struct(string $name, array $children) : self
     {
         return new self($name, Repetition::OPTIONAL, $children);
@@ -101,6 +110,24 @@ final class NestedColumn implements Column
     public function children() : array
     {
         return $this->children;
+    }
+
+    /**
+     * @return array<string, Column>
+     */
+    public function childrenFlat() : array
+    {
+        $flat = [];
+
+        foreach ($this->children as $child) {
+            if ($child instanceof self) {
+                $flat = \array_merge($flat, $child->childrenFlat());
+            } else {
+                $flat[$child->flatPath()] = $child;
+            }
+        }
+
+        return $flat;
     }
 
     public function ddl() : array
@@ -120,16 +147,24 @@ final class NestedColumn implements Column
 
     public function flatPath() : string
     {
-        $path = [$this->name];
         $parent = $this->parent();
+
+        if ($parent?->schemaRoot) {
+            return $this->name;
+        }
+
+        $path = [$this->name];
 
         while ($parent) {
             $path[] = $parent->name();
             $parent = $parent->parent();
+
+            if ($parent &&  $parent->schemaRoot) {
+                break;
+            }
         }
 
         $path = \array_reverse($path);
-        \array_shift($path);
 
         return \implode('.', $path);
     }
@@ -321,7 +356,7 @@ final class NestedColumn implements Column
         return $normalized;
     }
 
-    public function parent() : ?Column
+    public function parent() : ?self
     {
         return $this->parent;
     }
