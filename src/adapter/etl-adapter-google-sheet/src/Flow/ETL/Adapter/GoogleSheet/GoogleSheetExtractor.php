@@ -77,14 +77,14 @@ final class GoogleSheetExtractor implements Extractor
                         /** @var int $totalRows */
                         $totalRows++;
 
+                        $row = \array_combine($headers, $rowData);
+
                         if ($shouldPutInputIntoRows) {
-                            return \array_merge(
-                                \array_combine($headers, $rowData),
-                                ['spread_sheet_id' =>  $this->spreadsheetId, 'sheet_name' => $this->columnRange->sheetName]
-                            );
+                            $row['_spread_sheet_id'] = $this->spreadsheetId;
+                            $row['_sheet_name'] = $this->columnRange->sheetName;
                         }
 
-                        return \array_combine($headers, $rowData);
+                        return $row;
                     },
                     $values
                 ),

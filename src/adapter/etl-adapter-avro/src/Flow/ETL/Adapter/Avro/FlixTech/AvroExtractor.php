@@ -45,11 +45,13 @@ final class AvroExtractor implements Extractor
             $valueConverter = new ValueConverter(\json_decode($reader->metadata['avro.schema'], true));
 
             foreach ($reader->data() as $rowData) {
+                $row = $valueConverter->convert($rowData);
+
                 if ($shouldPutInputIntoRows) {
-                    $rows[] = \array_merge($valueConverter->convert($rowData), ['_input_file_uri' => $filePath->uri()]);
-                } else {
-                    $rows[] = $valueConverter->convert($rowData);
+                    $row['_input_file_uri'] = $filePath->uri();
                 }
+
+                $rows[] = $row;
 
                 if (\count($rows) >= $this->rowsInBach) {
                     yield array_to_rows($rows, $context->entryFactory());

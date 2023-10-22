@@ -36,13 +36,10 @@ final class ParquetExtractor implements Extractor
 
             foreach ($fileData['file']->values($this->columns) as $row) {
                 if ($shouldPutInputIntoRows) {
-                    $rows[] = \array_merge(
-                        $row,
-                        ['_input_file_uri' => $fileData['uri']]
-                    );
-                } else {
-                    $rows[] = $row;
+                    $row['_input_file_uri'] = $fileData['uri'];
                 }
+
+                $rows[] = $row;
 
                 if (\count($rows) >= $this->rowsInBatch) {
                     yield array_to_rows($rows, $context->entryFactory());
