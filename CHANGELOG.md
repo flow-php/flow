@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-10-22
 
 ### Added
+- [#627](https://github.com/flow-php/flow/pull/627) - **Added possibility to easily identify schema root in Parquet Schema** - [@norberttech](https://github.com/norberttech)
 - [#622](https://github.com/flow-php/flow/pull/622) - **Possibility to build schema through static factories at Scheam,FlatColumn,NestedColumn** - [@norberttech](https://github.com/norberttech)
 - [#621](https://github.com/flow-php/flow/pull/621) - **static factories to Flat and Nested columns in parquet schema** - [@norberttech](https://github.com/norberttech)
 - [#621](https://github.com/flow-php/flow/pull/621) - **Decimal column support to parquet** - [@norberttech](https://github.com/norberttech)
@@ -15,6 +16,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#627](https://github.com/flow-php/flow/pull/627) - **Simplified Schema cache** - [@norberttech](https://github.com/norberttech)
 - [#626](https://github.com/flow-php/flow/pull/626) - **Columns in GoggleSheet Adapter cannot contain unicode characters** - [@stloyd](https://github.com/stloyd)
 - [#623](https://github.com/flow-php/flow/pull/623) - **Adjust CI setup to ignore changes in a changelog file** - [@stloyd](https://github.com/stloyd)
 - [#621](https://github.com/flow-php/flow/pull/621) - **Calculation of max definitions/repetitions level to column** - [@norberttech](https://github.com/norberttech)
