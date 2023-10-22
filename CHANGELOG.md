@@ -16,6 +16,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#624](https://github.com/flow-php/flow/pull/624) - **Remove `array_merge()` when adding input into rows** - [@stloyd](https://github.com/stloyd)
 - [#627](https://github.com/flow-php/flow/pull/627) - **Simplified Schema cache** - [@norberttech](https://github.com/norberttech)
 - [#626](https://github.com/flow-php/flow/pull/626) - **Columns in GoggleSheet Adapter cannot contain unicode characters** - [@stloyd](https://github.com/stloyd)
 - [#623](https://github.com/flow-php/flow/pull/623) - **Adjust CI setup to ignore changes in a changelog file** - [@stloyd](https://github.com/stloyd)
