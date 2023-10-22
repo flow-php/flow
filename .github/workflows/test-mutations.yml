@@ -11,6 +11,8 @@ on:
       - 'composer.lock'
   push:
     branches: [ 1.x ]
+    paths-ignore:
+      - 'CHANGELOG.md'
 
 # See https://stackoverflow.com/a/72408109
 concurrency:

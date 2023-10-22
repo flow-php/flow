@@ -3,6 +3,8 @@ name: Build Flow-PHP PHAR
 on:
   push:
     branches: [ 1.x ]
+    paths-ignore:
+      - 'CHANGELOG.md'
 
 jobs:
   build-phar-artifact:
