@@ -36,7 +36,7 @@ interface Column
 
     public function setParent(NestedColumn $parent) : void;
 
-    public function type() : PhysicalType;
+    public function type() : ?PhysicalType;
 
     public function typeLength() : ?int;
 }

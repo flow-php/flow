@@ -15,21 +15,9 @@ final class Schema
      */
     private array $cache = [];
 
-    /**
-     * @param array<Column> $columns
-     */
-    private function __construct(
-        private readonly FlatColumn $schemaRoot,
-        private readonly array $columns
+    public function __construct(
+        private readonly NestedColumn $schemaRoot,
     ) {
-    }
-
-    public static function from(Column ...$columns) : self
-    {
-        return new self(
-            FlatColumn::boolean('schema'),
-            $columns
-        );
     }
 
     /**
@@ -38,12 +26,29 @@ final class Schema
     public static function fromThrift(array $schemaElements) : self
     {
         if (!\count($schemaElements)) {
-            throw new \InvalidArgumentException('Schema must have at least one element');
+            throw new InvalidArgumentException('Schema must have at least one element');
         }
 
+        $schema = self::processSchema($schemaElements);
+
+        if (\count($schema) !== 1) {
+            throw new InvalidArgumentException('Schema must have exactly one root element');
+        }
+
+        if (!$schema[0] instanceof NestedColumn) {
+            throw new InvalidArgumentException('Schema must be a NestedColumn');
+        }
+
+        return new self($schema[0]);
+    }
+
+    public static function with(Column ...$columns) : self
+    {
         return new self(
-            FlatColumn::fromThrift(\array_shift($schemaElements)),
-            self::processSchema($schemaElements)
+            NestedColumn::struct(
+                'schema',
+                $columns,
+            )
         );
     }
 
@@ -52,7 +57,7 @@ final class Schema
      */
     public function columns() : array
     {
-        return $this->columns;
+        return $this->schemaRoot->children();
     }
 
     public function get(string $flatPath) : Column
@@ -90,7 +95,7 @@ final class Schema
             return null;
         };
 
-        $column = $getByFlatPath($flatPath, $this->columns);
+        $column = $getByFlatPath($flatPath, $this->schemaRoot->children());
 
         if ($column instanceof Column) {
             $this->cache[$flatPath] = $column;
@@ -116,7 +121,7 @@ final class Schema
     {
         return [$this->schemaRoot->name() => [
             'type' => 'message',
-            'children' => $this->generateDDL($this->columns),
+            'children' => $this->generateDDL($this->schemaRoot->children()),
         ]];
     }
 
@@ -139,44 +144,26 @@ final class Schema
      *
      * @return array<Column>
      */
-    private static function processSchema(
-        array $schemaElements,
-        int &$index = 0,
-        ?string $rootPath = null,
-        int $childrenCount = null,
-        Column $parent = null
-    ) : array {
-        $columns = [];
+    private static function processSchema(array $schemaElements, int &$index = 0) : array
+    {
+        $element = $schemaElements[$index];
+        $index++;
 
-        $processedChildren = 0;
+        if ($element->num_children) {
+            $children = [];
 
-        while ($index < \count($schemaElements) && ($childrenCount === null || $processedChildren < $childrenCount)) {
-            $elem = $schemaElements[$index];
-            $index++;
-
-            $root = FlatColumn::fromThrift($elem, $rootPath, $parent);
-
-            if ($elem->num_children > 0) {
-                $nestedColumn = new NestedColumn($root, [], $parent);
-                $children = self::processSchema(
-                    $schemaElements,
-                    $index,
-                    $root->flatPath(),
-                    $elem->num_children,
-                    $nestedColumn
-                );
-
-                // now update the children of the NestedColumn
-                $nestedColumn->setChildren($children);
-
-                $columns[] = $nestedColumn;  // use the updated NestedColumn
-            } else {
-                $columns[] = $root;
+            for ($i = 0; $i < $element->num_children; $i++) {
+                $children = \array_merge($children, self::processSchema($schemaElements, $index));
             }
 
-            $processedChildren++;
+            return [
+                NestedColumn::fromThrift(
+                    $element,
+                    $children,
+                ),
+            ];
         }
 
-        return $columns;
+        return [FlatColumn::fromThrift($element)];
     }
 }

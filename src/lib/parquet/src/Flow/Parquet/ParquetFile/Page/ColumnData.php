@@ -2,7 +2,7 @@
 
 namespace Flow\Parquet\ParquetFile\Page;
 
-use Flow\Parquet\ParquetFile\Schema\Column;
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\LogicalType;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 
@@ -24,7 +24,7 @@ final class ColumnData
     ) {
     }
 
-    public static function initialize(Column $column) : self
+    public static function initialize(FlatColumn $column) : self
     {
         return new self($column->type(), $column->logicalType(), [], [], []);
     }
