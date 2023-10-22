@@ -2,38 +2,31 @@
 
 namespace Flow\Parquet\Tests\Unit;
 
+use function Flow\Parquet\array_combine_recursive;
 use PHPUnit\Framework\TestCase;
 
 final class FunctionsTest extends TestCase
 {
-    public function test_array_merge_recursive() : void
+    public function test_array_combine_recursive() : void
     {
         $this->assertSame(
             [
-                'members' => [
-                    0 => [
-                        'addresses' => [
-                            0 => ['street' => 'Street_2_0_0'],
-                            1 => ['street' => 'Street_2_0_1'],
-                        ],
-                    ],
-                    1 => [
-                        'addresses' => [
-                            0 => ['street' => 'Street_2_1_0'],
-                        ],
+                [
+                    [
+                        ['street' => 'Street_2_0_1'],
                     ],
                 ],
             ],
-            \Flow\Parquet\array_merge_recursive(
+            array_combine_recursive(
                 [
                     'members' => [
-                        0 => ['addresses' => [0 => ['street' => 'Street_2_0_0']]],
+                        ['addresses' => ['street']],
                     ],
                 ],
                 [
                     'members' => [
-                        0 => ['addresses' => [1 => ['street' => 'Street_2_0_1']]],
-                        1 => ['addresses' => [0 => ['street' => 'Street_2_1_0']]],
+                        ['addresses' => ['Street_2_0_1']],
+                        ['addresses' => ['Street_2_1_0']],
                     ],
                 ]
             )
