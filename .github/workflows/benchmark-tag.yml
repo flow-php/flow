@@ -12,6 +12,8 @@ on:
         default: '1.x'
   push:
     branches: [ 1.x ]
+    paths-ignore:
+      - 'CHANGELOG.md'
 
 jobs:
   benchmark:
