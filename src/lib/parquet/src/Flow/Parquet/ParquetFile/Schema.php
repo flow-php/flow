@@ -45,7 +45,7 @@ final class Schema
     public static function with(Column ...$columns) : self
     {
         return new self(
-            NestedColumn::struct(
+            NestedColumn::schemaRoot(
                 'schema',
                 $columns,
             )
@@ -62,44 +62,13 @@ final class Schema
 
     public function get(string $flatPath) : Column
     {
-        if (\array_key_exists($flatPath, $this->cache)) {
-            return $this->cache[$flatPath];
+        if (!\count($this->cache)) {
+            foreach ($this->columns() as $column) {
+                $this->cache($column);
+            }
         }
 
-        $getByFlatPath = static function (string $flatPath, array $columns) use (&$getByFlatPath) : ?Column {
-            /** @var Column $column */
-            foreach ($columns as $column) {
-                if ($column instanceof FlatColumn) {
-                    if ($column->flatPath() === $flatPath) {
-                        return $column;
-                    }
-                } else {
-                    /** @var NestedColumn $column */
-                    if ($column->flatPath() === $flatPath) {
-                        return $column;
-                    }
-
-                    /**
-                     * @var null|NestedColumn $nestedColumn
-                     *
-                     * @psalm-suppress MixedFunctionCall
-                     */
-                    $nestedColumn = $getByFlatPath($flatPath, $column->children());
-
-                    if ($nestedColumn !== null) {
-                        return $nestedColumn;
-                    }
-                }
-            }
-
-            return null;
-        };
-
-        $column = $getByFlatPath($flatPath, $this->schemaRoot->children());
-
-        if ($column instanceof Column) {
-            $this->cache[$flatPath] = $column;
-
+        if (\array_key_exists($flatPath, $this->cache)) {
             return $this->cache[$flatPath];
         }
 
@@ -125,6 +94,17 @@ final class Schema
         ]];
     }
 
+    private function cache(Column $column) : void
+    {
+        $this->cache[$column->flatPath()] = $column;
+
+        if ($column instanceof NestedColumn) {
+            foreach ($column->children() as $child) {
+                $this->cache($child);
+            }
+        }
+    }
+
     /**
      * @param array<Column> $columns
      */
@@ -147,6 +127,7 @@ final class Schema
     private static function processSchema(array $schemaElements, int &$index = 0) : array
     {
         $element = $schemaElements[$index];
+        $schemaRoot = $index === 0;
         $index++;
 
         if ($element->num_children) {
@@ -157,10 +138,15 @@ final class Schema
             }
 
             return [
-                NestedColumn::fromThrift(
-                    $element,
-                    $children,
-                ),
+                $schemaRoot
+                    ? NestedColumn::schemaRoot(
+                        $element->name,
+                        $children,
+                    )
+                    : NestedColumn::fromThrift(
+                        $element,
+                        $children,
+                    ),
             ];
         }
 

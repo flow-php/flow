@@ -30,7 +30,7 @@ interface Column
 
     public function normalize() : array;
 
-    public function parent() : ?self;
+    public function parent() : ?NestedColumn;
 
     public function repetition() : ?Repetition;
 

@@ -30,13 +30,13 @@ final class SchemaTest extends TestCase
             ),
         );
 
-        $this->assertSame(2, $schema->get('int')->maxDefinitionsLevel());
+        $this->assertSame(1, $schema->get('int')->maxDefinitionsLevel());
         $this->assertSame(0, $schema->get('int')->maxRepetitionsLevel());
-        $this->assertSame(3, $schema->get('nested.int')->maxDefinitionsLevel());
+        $this->assertSame(2, $schema->get('nested.int')->maxDefinitionsLevel());
         $this->assertSame(0, $schema->get('nested.int')->maxRepetitionsLevel());
-        $this->assertSame(4, $schema->get('nested.nested.bool')->maxDefinitionsLevel());
+        $this->assertSame(3, $schema->get('nested.nested.bool')->maxDefinitionsLevel());
         $this->assertSame(0, $schema->get('nested.nested.bool')->maxRepetitionsLevel());
-        $this->assertSame(5, $schema->get('nested.list_of_ints.list.element')->maxDefinitionsLevel());
+        $this->assertSame(4, $schema->get('nested.list_of_ints.list.element')->maxDefinitionsLevel());
         $this->assertSame(1, $schema->get('nested.list_of_ints.list.element')->maxRepetitionsLevel());
     }
 }

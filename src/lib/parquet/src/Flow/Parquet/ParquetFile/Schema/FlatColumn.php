@@ -134,16 +134,24 @@ final class FlatColumn implements Column
 
     public function flatPath() : string
     {
-        $path = [$this->name];
         $parent = $this->parent();
+
+        if ($parent?->schemaRoot) {
+            return $this->name;
+        }
+
+        $path = [$this->name];
 
         while ($parent) {
             $path[] = $parent->name();
             $parent = $parent->parent();
+
+            if ($parent && $parent->schemaRoot) {
+                break;
+            }
         }
 
         $path = \array_reverse($path);
-        \array_shift($path);
 
         return \implode('.', $path);
     }
@@ -281,7 +289,7 @@ final class FlatColumn implements Column
         ];
     }
 
-    public function parent() : ?Column
+    public function parent() : ?NestedColumn
     {
         return $this->parent;
     }
