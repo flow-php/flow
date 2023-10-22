@@ -13,36 +13,23 @@ final class SheetRange
         public readonly int $startRow,
         public readonly int $endRow,
     ) {
-        if ($this->startRow<=0) {
-            throw new InvalidArgumentException(\sprintf(
-                'Start row `%d` must be greater than 0',
-                $this->startRow
-            ));
+        if ($this->startRow < 1) {
+            throw new InvalidArgumentException(\sprintf('Start row "%d" must be greater than 0', $this->startRow));
         }
 
-        if ($this->endRow<=0) {
-            throw new InvalidArgumentException(\sprintf(
-                'End row `%d` must be greater than 0',
-                $this->endRow
-            ));
+        if ($this->endRow < 1) {
+            throw new InvalidArgumentException(\sprintf('End row "%d" must be greater than 0', $this->endRow));
         }
 
-        if ($this->endRow<$this->startRow) {
-            throw new InvalidArgumentException(\sprintf(
-                'End row `%d` must be greater or equal to start row `%d`',
-                $this->endRow,
-                $this->startRow
-            ));
+        if ($this->endRow < $this->startRow) {
+            throw new InvalidArgumentException(\sprintf('End row "%d" must be greater or equal to start row "%d"', $this->endRow, $this->startRow));
         }
     }
 
     public function nextRows(int $count) : self
     {
-        if ($count <= 0) {
-            throw new InvalidArgumentException(\sprintf(
-                'Count `%d` must be greater than 0',
-                $count
-            ));
+        if ($count < 1) {
+            throw new InvalidArgumentException(\sprintf('Count "%d" must be greater than 0', $count));
         }
 
         return new self(
@@ -54,7 +41,7 @@ final class SheetRange
 
     public function toString() : string
     {
-        return  \sprintf(
+        return \sprintf(
             '%s!%s%d:%s%d',
             $this->columnRange->sheetName,
             $this->columnRange->startColumn,

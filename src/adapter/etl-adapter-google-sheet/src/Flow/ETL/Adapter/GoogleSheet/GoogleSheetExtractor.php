@@ -25,7 +25,7 @@ final class GoogleSheetExtractor implements Extractor
         private readonly int $rowsInBatch,
         private readonly array $options = [],
     ) {
-        if ($this->rowsInBatch <= 0) {
+        if ($this->rowsInBatch < 1) {
             throw new InvalidArgumentException('Rows in batch must be greater than 0');
         }
     }
