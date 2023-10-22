@@ -15,6 +15,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#626](https://github.com/flow-php/flow/pull/626) - **Columns in GoggleSheet Adapter cannot contain unicode characters** - [@stloyd](https://github.com/stloyd)
 - [#623](https://github.com/flow-php/flow/pull/623) - **Adjust CI setup to ignore changes in a changelog file** - [@stloyd](https://github.com/stloyd)
 - [#621](https://github.com/flow-php/flow/pull/621) - **Calculation of max definitions/repetitions level to column** - [@norberttech](https://github.com/norberttech)
 - [#621](https://github.com/flow-php/flow/pull/621) - **Python parquet file generators compression from gzip to snappy** - [@norberttech](https://github.com/norberttech)
