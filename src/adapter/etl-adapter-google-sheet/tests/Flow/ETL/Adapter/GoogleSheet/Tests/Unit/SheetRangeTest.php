@@ -4,6 +4,7 @@ namespace Flow\ETL\Adapter\GoogleSheet\Tests\Unit;
 
 use Flow\ETL\Adapter\GoogleSheet\Columns;
 use Flow\ETL\Adapter\GoogleSheet\SheetRange;
+use Flow\ETL\Exception\InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 final class SheetRangeTest extends TestCase
@@ -32,15 +33,15 @@ final class SheetRangeTest extends TestCase
     {
         yield 'start row under 0' => [
             0, 1,
-            'Start row `0` must be greater than 0',
+            'Start row "0" must be greater than 0',
         ];
         yield 'end row under 0' => [
             1, 0,
-            'End row `0` must be greater than 0',
+            'End row "0" must be greater than 0',
         ];
         yield 'end row greater or equal to start row 0' => [
             19, 10,
-            'End row `10` must be greater or equal to start row `19`',
+            'End row "10" must be greater or equal to start row "19"',
         ];
     }
 
@@ -49,9 +50,10 @@ final class SheetRangeTest extends TestCase
      */
     public function test_assertions(int $startRow, int $endRow, string $expectedExceptionMessage) : void
     {
-        $columnRange = new Columns('Sheet2', 'A', 'B');
         $this->expectExceptionMessage($expectedExceptionMessage);
-        new SheetRange($columnRange, $startRow, $endRow);
+        $this->expectException(InvalidArgumentException::class);
+
+        new SheetRange(new Columns('Sheet2', 'A', 'B'), $startRow, $endRow);
     }
 
     public function test_next_rows_range() : void

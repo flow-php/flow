@@ -7,6 +7,7 @@ namespace Flow\ETL\Adapter\GoogleSheet\Tests\Unit;
 use Flow\ETL\ConfigBuilder;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\DSL\GoogleSheet;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\StringEntry;
@@ -52,6 +53,22 @@ final class GoogleSheetExtractorTest extends TestCase
         $this->assertEquals(Row::create($sheetNameEntry, $spreadSheetIdEntry, Entry::string('header', 'row1')), $rowsArray[0]->first());
         $this->assertSame(1, $rowsArray[1]->count());
         $this->assertEquals(Row::create($sheetNameEntry, $spreadSheetIdEntry, Entry::string('header', 'row2')), $rowsArray[1]->first());
+    }
+
+    public function test_rows_in_batch_must_be_positive_integer() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Rows in batch must be greater than 0');
+
+        GoogleSheet::from_columns(
+            $this->createMock(Sheets::class),
+            'spread-id',
+            'sheet',
+            'A',
+            'B',
+            true,
+            0
+        );
     }
 
     public function test_works_for_no_data() : void
