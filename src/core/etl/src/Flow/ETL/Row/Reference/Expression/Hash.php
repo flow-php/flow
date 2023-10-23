@@ -32,7 +32,6 @@ final class Hash implements Expression
             null => null,
             default => match (\gettype($value)) {
                 'array', 'object' => \hash($this->algorithm, \serialize($value), $this->binary, $this->options),
-                /** @phpstan-ignore-next-line */
                 default => \hash($this->algorithm, (string) $value, $this->binary, $this->options),
             }
         };

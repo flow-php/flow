@@ -113,7 +113,6 @@ final class AvroLoader implements Closure, Loader, Loader\FileLoader
                  * @psalm-suppress MixedMethodCall
                  */
                 foreach ($entry->value() as $value) {
-                    /** @phpstan-ignore-next-line */
                     $data[] = $value->toString();
                 }
 
@@ -128,8 +127,6 @@ final class AvroLoader implements Closure, Loader, Loader\FileLoader
                 foreach ($entry->value() as $value) {
                     /**
                      * @psalm-suppress MixedMethodCall
-                     *
-                     * @phpstan-ignore-next-line
                      */
                     $data[] = (int) $value->format('Uu');
                 }

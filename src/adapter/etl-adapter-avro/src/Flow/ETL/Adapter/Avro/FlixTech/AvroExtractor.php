@@ -41,7 +41,6 @@ final class AvroExtractor implements Extractor
                 new \AvroIODatumReader(null, null),
             );
 
-            /** @phpstan-ignore-next-line */
             $valueConverter = new ValueConverter(\json_decode($reader->metadata['avro.schema'], true));
 
             foreach ($reader->data() as $rowData) {

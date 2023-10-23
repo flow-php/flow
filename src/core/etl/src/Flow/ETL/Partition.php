@@ -50,7 +50,6 @@ final class Partition implements Serializable
         $partitions = [];
 
         foreach ($data as $partition => $value) {
-            /** @phpstan-ignore-next-line */
             $partitions[] = new self($partition, (string) $value);
         }
 

@@ -636,9 +636,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
      */
     public function reduceToArray(string|EntryReference $ref) : array
     {
-        /** @phpstan-ignore-next-line */
         return $this->reduce(
-            /** @phpstan-ignore-next-line */
             function (array $ids, Row $row) use ($ref) : array {
                 $ids[] = $row->get($ref)->value();
 

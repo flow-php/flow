@@ -41,7 +41,6 @@ final class HashIdFactory implements IdFactory
             'id',
             \hash(
                 'xxh128',
-                /** @phpstan-ignore-next-line */
                 \implode(':', \array_map(fn (string $name) : string => (string) $row->valueOf($name), $this->entryNames))
             )
         );

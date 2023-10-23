@@ -14,7 +14,6 @@ use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\Column;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Flow\Parquet\ParquetFile\Schema\LogicalType;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\Thrift\FileMetaData;
 use Flow\Parquet\ThriftStream\TPhpFileStream;
@@ -171,14 +170,14 @@ final class ParquetFile
         }
 
         if ($column instanceof NestedColumn) {
-            if ($column->logicalType()?->is(LogicalType::LIST)) {
+            if ($column->isList()) {
                 $this->logger->info('[Parquet File][Read Column] reading list', ['path' => $column->flatPath()]);
 
                 return $this->readList($column, $limit);
             }
 
             // Column is a map
-            if ($column->logicalType()?->is(LogicalType::MAP)) {
+            if ($column->isMap()) {
                 $this->logger->info('[Parquet File][Read Column] reading map', ['path' => $column->flatPath()]);
 
                 return $this->readMap($column, $limit);

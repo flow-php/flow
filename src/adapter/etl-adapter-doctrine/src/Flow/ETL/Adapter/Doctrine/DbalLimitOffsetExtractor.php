@@ -59,7 +59,6 @@ final class DbalLimitOffsetExtractor implements Extractor
             $countQuery = (clone $this->queryBuilder)->select('COUNT(*)');
             $countQuery->resetQueryPart('orderBy');
 
-            /** @phpstan-ignore-next-line */
             $total = (int) $this->connection->fetchOne(
                 $countQuery->getSQL(),
                 $countQuery->getParameters(),

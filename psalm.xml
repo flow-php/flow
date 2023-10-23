@@ -4,7 +4,7 @@
         xmlns="https://getpsalm.org/schema/config"
         xsi:schemaLocation="https://getpsalm.org/schema/config"
         cacheDirectory="var/psalm/cache"
-        errorLevel="1"
+        errorLevel="2"
         autoloader="tools/psalm/vendor/autoload.php"
         findUnusedBaselineEntry="true"
         findUnusedCode="false"

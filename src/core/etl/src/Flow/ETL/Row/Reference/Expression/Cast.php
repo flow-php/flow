@@ -40,9 +40,7 @@ final class Cast implements Expression
                 'integer' => \DateTimeImmutable::createFromFormat('U', (string) $value),
                 default => null,
             },
-            /** @phpstan-ignore-next-line */
             'int', 'integer' => (int) $value,
-            /** @phpstan-ignore-next-line */
             'float', 'double', 'real' => (float) $value,
             'string' => $this->toString($value),
             'bool', 'boolean' => (bool) $value,
@@ -94,7 +92,6 @@ final class Cast implements Expression
             return $value->saveXML() ?: null;
         }
 
-        /** @phpstan-ignore-next-line */
         return (string) $value;
     }
 
