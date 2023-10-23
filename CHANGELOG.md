@@ -17,6 +17,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#636](https://github.com/flow-php/flow/pull/636) - **Reduced analyse strictness** - [@norberttech](https://github.com/norberttech)
 - [#635](https://github.com/flow-php/flow/pull/635) - **Rework `NativeEntryFactory` to be stateless** - [@stloyd](https://github.com/stloyd)
 - [#630](https://github.com/flow-php/flow/pull/630) - **Unify `LICENSE` files** - [@stloyd](https://github.com/stloyd)
 - [#629](https://github.com/flow-php/flow/pull/629) - **Adjust `SheetRange` & `GoogleSheetExtractor` with to low values** - [@stloyd](https://github.com/stloyd)
