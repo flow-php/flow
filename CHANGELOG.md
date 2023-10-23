@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-10-23
 
 ### Added
+- [#638](https://github.com/flow-php/flow/pull/638) - **date and datetime support for parquet writter** - [@norberttech](https://github.com/norberttech)
 - [#637](https://github.com/flow-php/flow/pull/637) - **first draft of parquet writer** - [@norberttech](https://github.com/norberttech)
 - [#632](https://github.com/flow-php/flow/pull/632) - **Add missing tools to the dependabot config** - [@stloyd](https://github.com/stloyd)
 - [#627](https://github.com/flow-php/flow/pull/627) - **Added possibility to easily identify schema root in Parquet Schema** - [@norberttech](https://github.com/norberttech)
