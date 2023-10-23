@@ -18,9 +18,9 @@ final class ListElement
         return new self(FlatColumn::date('element'));
     }
 
-    public static function datetime() : self
+    public static function datetime(TimeUnit $timeUnit = TimeUnit::MICROSECONDS) : self
     {
-        return new self(FlatColumn::dateTime('element'));
+        return new self(FlatColumn::dateTime('element', $timeUnit));
     }
 
     public static function decimal(int $precision, int $scale) : self

@@ -36,9 +36,13 @@ final class FlatColumn implements Column
         return new self($name, PhysicalType::INT32, new LogicalType(LogicalType::DATE), Repetition::OPTIONAL);
     }
 
-    public static function dateTime(string $name) : self
+    public static function dateTime(string $name, TimeUnit $timeUnit = TimeUnit::MICROSECONDS) : self
     {
-        return new self($name, PhysicalType::INT64, new LogicalType(LogicalType::TIMESTAMP, new Timestamp(false, false, true, false)), Repetition::OPTIONAL);
+        $timestamp = match ($timeUnit) {
+            TimeUnit::MICROSECONDS => new Timestamp(false, false, true, false),
+        };
+
+        return new self($name, PhysicalType::INT64, new LogicalType(LogicalType::TIMESTAMP, $timestamp), Repetition::OPTIONAL);
     }
 
     public static function decimal(string $name, int $precision = 10, int $scale = 2) : self

@@ -18,9 +18,9 @@ final class MapValue
         return new self(FlatColumn::date('value'));
     }
 
-    public static function datetime() : self
+    public static function datetime(TimeUnit $timeUnit = TimeUnit::MICROSECONDS) : self
     {
-        return new self(FlatColumn::dateTime('value'));
+        return new self(FlatColumn::dateTime('value', $timeUnit));
     }
 
     public static function decimal(int $precision, int $scale) : self

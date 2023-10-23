@@ -27,6 +27,9 @@ final class WriterTest extends ParquetIntegrationTestCase
             FlatColumn::double('double'),
             FlatColumn::decimal('decimal'),
             FlatColumn::string('string'),
+            FlatColumn::date('date'),
+            FlatColumn::dateTime('datetime'),
+            NestedColumn::list('list_of_datetimes', ListElement::dateTime()),
             NestedColumn::map('map_of_ints', MapKey::string(), MapValue::int32()),
             NestedColumn::list('list_of_strings', ListElement::string())
         );
@@ -40,6 +43,13 @@ final class WriterTest extends ParquetIntegrationTestCase
                 'double' => 2.2,
                 'decimal' => 10.24,
                 'string' => 'string',
+                'date' => (new \DateTimeImmutable())->setTime(0, 0),
+                'datetime' => new \DateTimeImmutable(),
+                'list_of_datetimes' => [
+                    new \DateTimeImmutable('+1 second'),
+                    new \DateTimeImmutable('+2 second'),
+                    new \DateTimeImmutable('+3 second'),
+                ],
                 'map_of_ints' => [
                     'a' => 0,
                     'b' => 1,
@@ -55,6 +65,13 @@ final class WriterTest extends ParquetIntegrationTestCase
                 'double' => 2.2,
                 'decimal' => 10.24,
                 'string' => 'string',
+                'date' => (new \DateTimeImmutable())->setTime(0, 0),
+                'datetime' => new \DateTimeImmutable(),
+                'list_of_datetimes' => [
+                    new \DateTimeImmutable('+1 second'),
+                    new \DateTimeImmutable('+2 second'),
+                    new \DateTimeImmutable('+3 second'),
+                ],
                 'map_of_ints' => [
                     'd' => 3,
                     'e' => 4,
