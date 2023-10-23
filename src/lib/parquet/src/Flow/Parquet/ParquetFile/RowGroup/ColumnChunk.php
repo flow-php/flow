@@ -5,6 +5,7 @@ namespace Flow\Parquet\ParquetFile\RowGroup;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Encodings;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
+use Flow\Parquet\Thrift\ColumnMetaData;
 
 final class ColumnChunk
 {
@@ -53,10 +54,10 @@ final class ColumnChunk
         );
     }
 
-    public function __debugInfo() : ?array
-    {
-        return $this->normalize();
-    }
+//    public function __debugInfo() : ?array
+//    {
+//        return $this->normalize();
+//    }
 
     public function codec() : Compressions
     {
@@ -131,6 +132,30 @@ final class ColumnChunk
     public function totalCompressedSize() : int
     {
         return $this->totalCompressedSize;
+    }
+
+    public function totalUncompressedSize() : int
+    {
+        return $this->totalUncompressedSize;
+    }
+
+    public function toThrift() : \Flow\Parquet\Thrift\ColumnChunk
+    {
+        return new \Flow\Parquet\Thrift\ColumnChunk([
+            'file_offset' => $this->fileOffset,
+            'meta_data' => new ColumnMetaData([
+                'type' => $this->type->value,
+                'encodings' => \array_map(static fn (Encodings $encoding) => $encoding->value, $this->encodings),
+                'path_in_schema' => $this->path,
+                'codec' => $this->codec->value,
+                'num_values' => $this->valuesCount,
+                'total_uncompressed_size' => $this->totalUncompressedSize,
+                'total_compressed_size' => $this->totalCompressedSize,
+                'data_page_offset' => $this->dataPageOffset,
+                'index_page_offset' => $this->indexPageOffset,
+                'dictionary_page_offset' => $this->dictionaryPageOffset,
+            ]),
+        ]);
     }
 
     public function type() : PhysicalType

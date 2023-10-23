@@ -10,21 +10,15 @@ interface BinaryReader
 
     public function position() : DataSize;
 
-    public function readBit() : int;
-
     /**
      * @return array<int>
      */
     public function readBits(int $total) : array;
 
-    public function readBoolean() : bool;
-
     /**
      * @return array<bool>
      */
     public function readBooleans(int $total) : array;
-
-    public function readByte() : int;
 
     /**
      * @return array<array<int>>
@@ -33,30 +27,17 @@ interface BinaryReader
 
     public function readBytes(int $total) : Bytes;
 
-    public function readDecimals(int $total, int $byteLength) : array;
-
-    public function readDouble() : float;
+    public function readDecimals(int $total, int $byteLength, int $precision = 10, int $scale = 2) : array;
 
     /**
      * @return array<float>
      */
     public function readDoubles(int $total) : array;
 
-    public function readFloat() : float;
-
     /**
      * @return array<float>
      */
     public function readFloats(int $total) : array;
-
-    public function readInt32() : int;
-
-    public function readInt64() : int;
-
-    /**
-     * @return array<int>
-     */
-    public function readInt96() : array;
 
     /**
      * @return array<int>
@@ -73,13 +54,7 @@ interface BinaryReader
      */
     public function readInts96(int $total) : array;
 
-    public function readString() : string;
-
     public function readStrings(int $total) : array;
-
-    public function readUInt32() : int;
-
-    public function readUInt64() : int;
 
     /**
      * @return array<int>

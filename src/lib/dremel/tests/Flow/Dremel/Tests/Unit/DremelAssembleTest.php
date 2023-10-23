@@ -6,7 +6,7 @@ use Flow\Dremel\Dremel;
 use Flow\Dremel\Exception\InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
-final class DremelTest extends TestCase
+final class DremelAssembleTest extends TestCase
 {
     public function test_decode_column_of_integer_list() : void
     {

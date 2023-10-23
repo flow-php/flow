@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
-abstract class ParquetFunctionalTestCase extends TestCase
+abstract class ParquetIntegrationTestCase extends TestCase
 {
     protected function getLogger() : LoggerInterface
     {

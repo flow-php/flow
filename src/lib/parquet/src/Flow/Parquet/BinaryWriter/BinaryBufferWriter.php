@@ -16,6 +16,12 @@ final class BinaryBufferWriter implements BinaryWriter
         $this->length = new DataSize(0);
     }
 
+    public function append(string $buffer) : void
+    {
+        $this->buffer .= $buffer;
+        $this->length->addBytes(\strlen($buffer));
+    }
+
     public function length() : DataSize
     {
         return $this->length;
@@ -66,6 +72,54 @@ final class BinaryBufferWriter implements BinaryWriter
         $this->length->addBytes(\count($bytes));
     }
 
+    public function writeDecimals(array $decimals, int $byteLength, int $precision = 10, int $scale = 2) : void
+    {
+        $isBigEndian = $this->byteOrder === ByteOrder::BIG_ENDIAN;
+
+        foreach ($decimals as $decimal) {
+            $decimal = (int) \number_format($decimal, $scale, '', '');
+            $bytes = [];
+
+            for ($i = $byteLength - 1; $i >= 0; $i--) {
+                $shift = $i * 8;
+                $bytes[] = ($decimal >> $shift) & 0xFF;
+            }
+
+            if ($isBigEndian) {
+                $bytes = \array_reverse($bytes);  // Reverse the byte order for big endian
+            }
+
+            $packedBytes = '';
+
+            foreach ($bytes as $byte) {
+                $packedBytes .= \pack('C', $byte);  // Pack each byte individually
+            }
+
+            $this->buffer .= $packedBytes;
+            $this->length->addBytes($byteLength);
+        }
+    }
+
+    public function writeDoubles(array $doubles) : void
+    {
+        $format = $this->byteOrder === ByteOrder::BIG_ENDIAN ? 'E' : 'e';
+
+        foreach ($doubles as $double) {
+            $this->buffer .= \pack($format, $double);
+            $this->length->addBytes(8);
+        }
+    }
+
+    public function writeFloats(array $floats) : void
+    {
+        $format = $this->byteOrder === ByteOrder::BIG_ENDIAN ? 'G' : 'g';
+
+        foreach ($floats as $float) {
+            $this->buffer .= \pack($format, $float);
+            $this->length->addBytes(4);  // A float is 4 bytes
+        }
+    }
+
     public function writeInts32(array $ints) : void
     {
         $format = $this->byteOrder === ByteOrder::BIG_ENDIAN ? 'N' : 'V';
@@ -98,6 +152,7 @@ final class BinaryBufferWriter implements BinaryWriter
             $this->buffer .= \pack($format, $length);
             $this->buffer .= $string;
         }
+
         $this->length->addBytes(\array_sum(\array_map('strlen', $strings)) + (4 * \count($strings)));
     }
 

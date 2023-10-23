@@ -23,7 +23,7 @@ use Thrift\Protocol\TCompactProtocol;
 
 final class ParquetFile
 {
-    private const PARQUET_MAGIC_NUMBER = 'PAR1';
+    public const PARQUET_MAGIC_NUMBER = 'PAR1';
 
     private ?Metadata $metadata = null;
 
@@ -165,7 +165,6 @@ final class ParquetFile
                 return $this->readList($column, $limit);
             }
 
-            // Column is a map
             if ($column->isMap()) {
                 $this->logger->info('[Parquet File][Read Column] reading map', ['path' => $column->flatPath()]);
 
@@ -218,8 +217,8 @@ final class ParquetFile
     {
         $this->logger->debug('[Parquet File][Read Column][Map]', ['column' => $mapColumn->normalize()]);
 
-        $keysColumn = $mapColumn->getMapKeyElement();
-        $valuesColumn = $mapColumn->getMapValueElement();
+        $keysColumn = $mapColumn->getMapKeyColumn();
+        $valuesColumn = $mapColumn->getMapValueColumn();
 
         $keys = $this->readChunks($keysColumn, $limit);
 

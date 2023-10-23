@@ -46,6 +46,17 @@ final class Metadata
         return $this->schema;
     }
 
+    public function toThrift() : FileMetaData
+    {
+        return new FileMetaData([
+            'version' => $this->version,
+            'schema' => $this->schema->toThrift(),
+            'num_rows' => $this->rowGroups->rowsCount(),
+            'row_groups' => $this->rowGroups->toThrift(),
+            'created_by' => $this->createdBy,
+        ]);
+    }
+
     public function version() : int
     {
         return $this->version;

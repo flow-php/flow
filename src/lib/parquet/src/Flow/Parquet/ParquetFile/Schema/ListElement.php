@@ -25,7 +25,7 @@ final class ListElement
 
     public static function decimal(int $precision, int $scale) : self
     {
-        return new self(FlatColumn::decimal('element', $precision, $scale));
+        return new self(FlatColumn::decimal('element', $scale, $precision));
     }
 
     public static function double() : self

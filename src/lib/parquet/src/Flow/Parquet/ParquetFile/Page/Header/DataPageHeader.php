@@ -29,6 +29,16 @@ final class DataPageHeader
         return $this->encoding;
     }
 
+    public function toThrift() : \Flow\Parquet\Thrift\DataPageHeader
+    {
+        return new \Flow\Parquet\Thrift\DataPageHeader([
+            'num_values' => $this->valuesCount,
+            'encoding' => $this->encoding->value,
+            'definition_level_encoding' => Encodings::RLE->value,
+            'repetition_level_encoding' => Encodings::RLE->value,
+        ]);
+    }
+
     public function valuesCount() : int
     {
         return $this->valuesCount;

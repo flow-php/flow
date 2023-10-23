@@ -107,6 +107,20 @@ final class PageHeader
         ];
     }
 
+    public function toThrift() : \Flow\Parquet\Thrift\PageHeader
+    {
+        return new \Flow\Parquet\Thrift\PageHeader([
+            'type' => $this->type->value,
+            'compressed_page_size' => $this->compressedPageSize,
+            'uncompressed_page_size' => $this->compressedPageSize,
+            'crc' => null,
+            'data_page_header' => $this->dataPageHeader?->toThrift(),
+            'data_page_header_v2' => null,
+            'dictionary_page_header' => null,
+            'index_page_header' => null,
+        ]);
+    }
+
     public function type() : Type
     {
         return $this->type;
