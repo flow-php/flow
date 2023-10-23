@@ -58,7 +58,6 @@ final class GoogleSheetExtractor implements Extractor
                             \array_push(
                                 $rowData,
                                 ...\array_map(
-                                    /** @psalm-suppress UnusedClosureParam */
                                     static fn (int $i) => null,
                                     \range(1, \count($headers) - \count($rowData))
                                 )
