@@ -23,9 +23,6 @@ final class Expressions implements ExpandResults, Expression, UnpackResults
         $this->expressions = $expressions;
     }
 
-    /**
-     * @psalm-suppress MixedAssignment
-     */
     public function eval(Row $row) : mixed
     {
         $lastValue = null;

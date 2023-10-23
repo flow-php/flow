@@ -28,9 +28,6 @@ final class AzureBlobStream extends FlysystemWrapper
         }
     }
 
-    /**
-     * @psalm-suppress MixedArrayAccess
-     */
     protected function filesystem() : Filesystem
     {
         if (!\is_resource($this->context)) {
@@ -41,13 +38,10 @@ final class AzureBlobStream extends FlysystemWrapper
             /**
              * @psalm-suppress PossiblyNullArgument
              * @psalm-suppress UndefinedThisPropertyFetch
-             * @psalm-suppress MixedArgument
              */
             $contextOptions = \stream_context_get_options($this->context);
 
             /**
-             * @psalm-suppress MixedArgument
-             *
              * @var array{connection-string: string} $clientOptions
              */
             $clientOptions = \array_merge(

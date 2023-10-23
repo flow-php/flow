@@ -154,9 +154,6 @@ final class ElasticsearchLoader implements Loader
 
     /**
      * @psalm-suppress UndefinedClass
-     * @psalm-suppress MixedAssignment
-     * @psalm-suppress MixedReturnStatement
-     * @psalm-suppress MixedInferredReturnType
      *
      * @phpstan-ignore-next-line
      */

@@ -72,7 +72,6 @@ final class DbalDataFrameFactory implements DataFrameFactory
         $types = [];
 
         foreach ($this->parameters as $parameter) {
-            /** @psalm-suppress MixedAssignment */
             $parameters[$parameter->queryParamName()] = $parameter->toQueryParam($rows);
 
             if ($parameter->type()) {

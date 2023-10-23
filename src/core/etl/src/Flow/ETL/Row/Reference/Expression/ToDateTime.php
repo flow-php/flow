@@ -16,10 +16,6 @@ final class ToDateTime implements Expression
     ) {
     }
 
-    /**
-     * @psalm-suppress MixedMethodCall
-     * @psalm-suppress PossiblyFalseReference
-     */
     public function eval(Row $row) : mixed
     {
         /** @var mixed $value */

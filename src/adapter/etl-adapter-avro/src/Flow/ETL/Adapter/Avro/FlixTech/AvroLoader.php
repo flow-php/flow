@@ -83,9 +83,6 @@ final class AvroLoader implements Closure, Loader, Loader\FileLoader
             $rowData = [];
 
             foreach ($row->entries()->all() as $entry) {
-                /**
-                 * @psalm-suppress MixedAssignment
-                 */
                 $rowData[$entry->name()] = match (\get_class($entry)) {
                     Row\Entry\ListEntry::class => $this->listEntryToValues($entry),
                     DateTimeEntry::class => (int) $entry->value()->format('Uu'),
@@ -108,10 +105,6 @@ final class AvroLoader implements Closure, Loader, Loader\FileLoader
                 /** @var array<string> $data */
                 $data = [];
 
-                /**
-                 * @psalm-suppress MixedAssignment
-                 * @psalm-suppress MixedMethodCall
-                 */
                 foreach ($entry->value() as $value) {
                     $data[] = $value->toString();
                 }
@@ -123,11 +116,7 @@ final class AvroLoader implements Closure, Loader, Loader\FileLoader
                 /** @var array<int> $data */
                 $data = [];
 
-                /** @psalm-suppress MixedAssignment */
                 foreach ($entry->value() as $value) {
-                    /**
-                     * @psalm-suppress MixedMethodCall
-                     */
                     $data[] = (int) $value->format('Uu');
                 }
 

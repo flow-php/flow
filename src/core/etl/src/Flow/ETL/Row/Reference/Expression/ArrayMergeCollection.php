@@ -28,7 +28,6 @@ final class ArrayMergeCollection implements Expression
             }
         }
 
-        /** @psalm-suppress MixedArgument */
         return \array_merge(...\array_values($value));
     }
 }

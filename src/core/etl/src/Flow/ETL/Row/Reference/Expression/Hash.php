@@ -20,9 +20,6 @@ final class Hash implements Expression
         }
     }
 
-    /**
-     * @psalm-suppress MixedArgumentTypeCoercion
-     */
     public function eval(Row $row) : ?string
     {
         /** @var mixed $value */

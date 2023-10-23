@@ -52,9 +52,6 @@ final class FlysystemFS implements Filesystem
         return $fs->directoryExists($path->path());
     }
 
-    /**
-     * @psalm-suppress UnusedForeachValue
-     */
     public function exists(Path $path) : bool
     {
         $fs = match ($path->scheme()) {
@@ -67,7 +64,6 @@ final class FlysystemFS implements Filesystem
         if ($path->isPattern()) {
             $anyFileExistsInPattern = false;
 
-            /** @psalm-suppress UnusedForeachValue */
             foreach ($this->scan($path, new NoopFilter()) as $nextPath) {
                 $anyFileExistsInPattern = true;
 
@@ -80,9 +76,6 @@ final class FlysystemFS implements Filesystem
         return $fs->fileExists($path->path()) || $fs->directoryExists($path->path());
     }
 
-    /**
-     * @psalm-suppress UnusedForeachValue
-     */
     public function fileExists(Path $path) : bool
     {
         $fs = match ($path->scheme()) {

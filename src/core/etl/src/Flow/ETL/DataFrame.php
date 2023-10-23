@@ -313,7 +313,6 @@ final class DataFrame
             $type = $type->name;
         }
 
-        /** @psalm-suppress ParadoxicalCondition */
         $transformer = match ($type) {
             Join::left->value => JoinRowsTransformer::left($dataFrame, $on),
             Join::left_anti->value => JoinRowsTransformer::leftAnti($dataFrame, $on),
@@ -338,9 +337,6 @@ final class DataFrame
             $type = $type->name;
         }
 
-        /**
-         * @psalm-suppress ParadoxicalCondition
-         */
         $transformer = match ($type) {
             Join::left->value => JoinEachRowsTransformer::left($factory, $on),
             Join::left_anti->value => JoinEachRowsTransformer::leftAnti($factory, $on),

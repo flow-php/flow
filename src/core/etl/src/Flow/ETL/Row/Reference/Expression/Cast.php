@@ -22,7 +22,6 @@ final class Cast implements Expression
      */
     public function eval(Row $row) : mixed
     {
-        /** @psalm-suppress MixedAssignment */
         $value = $this->ref->eval($row);
 
         if (null === $value) {

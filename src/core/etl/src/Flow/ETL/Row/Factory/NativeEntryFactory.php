@@ -108,7 +108,6 @@ final class NativeEntryFactory implements EntryFactory
             $type = null;
             $class = null;
 
-            /** @psalm-suppress MixedAssignment */
             foreach ($value as $valueElement) {
                 if ($type === null) {
                     $type = \gettype($valueElement);
@@ -142,9 +141,6 @@ final class NativeEntryFactory implements EntryFactory
                     $class = \DOMNode::class;
                 }
 
-                /**
-                 * @psalm-suppress PossiblyNullArgument
-                 */
                 return new Entry\ListEntry($entryName, Entry\TypedCollection\ObjectType::of($class), $value);
             }
 
@@ -160,10 +156,6 @@ final class NativeEntryFactory implements EntryFactory
         throw new InvalidArgumentException("{$type} can't be converted to any known Entry");
     }
 
-    /**
-     * @psalm-suppress MixedArgumentTypeCoercion
-     * @psalm-suppress MixedAssignment
-     */
     private function createStructureEntryFromArray(string $entryName, array $array) : Row\Entry\StructureEntry
     {
         $structureEntries = [];
@@ -328,9 +320,6 @@ final class NativeEntryFactory implements EntryFactory
         }
     }
 
-    /**
-     * @psalm-suppress MixedAssignment
-     */
     private function isStructure(array $array) : bool
     {
         if (\array_is_list($array)) {

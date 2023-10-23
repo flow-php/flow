@@ -50,11 +50,6 @@ final class SchemaConverter
      * @throws RuntimeException
      *
      * @return Field
-     *
-     * @psalm-suppress MixedArgument
-     * @psalm-suppress MixedFunctionCall
-     * @psalm-suppress MixedArgumentTypeCoercion
-     * @psalm-suppress RedundantConditionGivenDocblockType
      */
     private function convert(Definition $definition) : Field
     {

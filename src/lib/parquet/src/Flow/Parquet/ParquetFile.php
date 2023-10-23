@@ -43,11 +43,6 @@ final class ParquetFile
         \fclose($this->stream);
     }
 
-    /**
-     * @psalm-suppress MixedAssignment
-     * @psalm-suppress MixedOperand
-     * @psalm-suppress MixedArgument
-     */
     public function metadata() : Metadata
     {
         if ($this->metadata !== null) {
@@ -76,9 +71,6 @@ final class ParquetFile
         return $this->metadata;
     }
 
-    /**
-     * @psalm-suppress PossiblyInvalidArgument
-     */
     public function readChunks(FlatColumn $column, int $limit = null) : \Generator
     {
         $reader = new WholeChunk(
@@ -158,9 +150,6 @@ final class ParquetFile
         }
     }
 
-    /**
-     * @psalm-suppress MixedAssignment
-     */
     private function read(Column $column, int $limit = null) : \Generator
     {
         if ($column instanceof FlatColumn) {
@@ -191,17 +180,11 @@ final class ParquetFile
         throw new RuntimeException('Unknown column type');
     }
 
-    /**
-     * @psalm-suppress MixedAssignment
-     */
     private function readFlat(FlatColumn $column, int $limit = null) : \Generator
     {
         return $this->readChunks($column, $limit);
     }
 
-    /**
-     * @psalm-suppress MixedAssignment
-     */
     private function readList(NestedColumn $listColumn, int $limit = null) : \Generator
     {
         $this->logger->debug('[Parquet File][Read Column][List]', ['column' => $listColumn->normalize()]);
@@ -231,9 +214,6 @@ final class ParquetFile
         return $this->readStruct($elementColumn, isCollection: true, limit: $limit);
     }
 
-    /**
-     * @psalm-suppress PossiblyInvalidArgument
-     */
     private function readMap(NestedColumn $mapColumn, int $limit = null) : \Generator
     {
         $this->logger->debug('[Parquet File][Read Column][Map]', ['column' => $mapColumn->normalize()]);
@@ -279,14 +259,8 @@ final class ParquetFile
                 yield null;
             } else {
                 if (\is_array($row['keys'])) {
-                    /**
-                     * @psalm-suppress MixedArgument
-                     */
                     yield \Flow\Parquet\array_combine_recursive($row['keys'], $row['values']);
                 } else {
-                    /**
-                     * @psalm-suppress MixedArrayOffset
-                     */
                     yield [$row['keys'] => $row['values']];
                 }
             }
@@ -295,9 +269,6 @@ final class ParquetFile
 
     /**
      * @param bool $isCollection - when structure is a map or list element, each struct child is a collection for example ['int' => [1, 2, 3]] instead of ['int' => 1]
-     *
-     * @psalm-suppress MixedAssignment
-     * @psalm-suppress MixedArgumentTypeCoercion
      */
     private function readStruct(NestedColumn $structColumn, bool $isCollection = false, int $limit = null) : \Generator
     {

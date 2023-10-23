@@ -237,8 +237,6 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
      * @param array-key $offset
      *
      * @throws InvalidArgumentException
-     *
-     * @psalm-suppress ImplementedReturnTypeMismatch
      */
     public function offsetUnset(mixed $offset) : void
     {
@@ -351,8 +349,6 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
     }
 
     /**
-     * @psalm-suppress MixedAssignment
-     *
      * @return array<string, mixed>
      */
     public function toArray() : array

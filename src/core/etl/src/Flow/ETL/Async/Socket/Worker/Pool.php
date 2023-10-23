@@ -28,7 +28,6 @@ final class Pool implements \Countable
 
     public static function generate(int $size) : self
     {
-        /** @psalm-suppress UnusedClosureParam */
         return new self(
             \array_map(fn (int $i) => new Worker(\uniqid('worker_' . $i, true)), \range(1, $size))
         );

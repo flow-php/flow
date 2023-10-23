@@ -90,8 +90,6 @@ final class BulkData
 
         foreach ($this->rows as $index => $row) {
             /**
-             * @psalm-suppress MixedAssignment
-             *
              * @var mixed $entry
              */
             foreach ($row as $column => $entry) {
@@ -120,8 +118,6 @@ final class BulkData
 
         foreach ($this->rows as $index => $row) {
             /**
-             * @psalm-suppress MixedAssignment
-             *
              * @var mixed $entry
              */
             foreach ($row as $column => $entry) {

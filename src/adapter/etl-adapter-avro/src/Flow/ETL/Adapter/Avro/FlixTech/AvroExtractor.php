@@ -19,10 +19,6 @@ final class AvroExtractor implements Extractor
     ) {
     }
 
-    /**
-     * @psalm-suppress MixedArgument
-     * @psalm-suppress MixedAssignment
-     */
     public function extract(FlowContext $context) : \Generator
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();

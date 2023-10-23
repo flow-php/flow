@@ -18,15 +18,13 @@ final class Dremel
      * @param array<mixed> $values
      *
      * @psalm-suppress UndefinedInterfaceMethod
-     * @psalm-suppress MixedAssignment
-     * @psalm-suppress ArgumentTypeCoercion
      */
     public function assemble(array $repetitions, array $definitions, array $values) : \Generator
     {
         $this->assertInput($repetitions, $definitions);
 
         $output = [];
-        $maxDefinitionLevel = \max($definitions);
+        $maxDefinitionLevel = \count($definitions) ? \max($definitions) : 0;
         $maxRepetitionLevel = \count($repetitions) ? \max($repetitions) : 0;
 
         $valueIndex = 0;
@@ -108,9 +106,6 @@ final class Dremel
         throw new \RuntimeException('Not implemented');
     }
 
-    /**
-     * @psalm-suppress MixedAssignment
-     */
     private function arrayTypeToString(?array $inputArray) : string
     {
         if ($inputArray === null) {
@@ -175,9 +170,6 @@ final class Dremel
         ]);
     }
 
-    /**
-     * @psalm-suppress MixedAssignment
-     */
     private function value(int $definition, int $maxDefinitionLevel, array $values, int &$valueIndex) : mixed
     {
         if ($definition < $maxDefinitionLevel) {

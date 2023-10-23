@@ -19,7 +19,6 @@ final class ResponseEntriesFactory
      * @return Row\Entries
      *
      * @psalm-suppress InvalidLiteralArgument
-     * @psalm-suppress MixedArgument
      */
     public function create(ResponseInterface $response) : Row\Entries
     {

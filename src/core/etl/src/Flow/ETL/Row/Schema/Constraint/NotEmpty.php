@@ -27,7 +27,6 @@ final class NotEmpty implements Constraint
 
     public function isSatisfiedBy(Entry $entry) : bool
     {
-        /** @psalm-suppress MixedArgument */
         return match (\get_class($entry)) {
             Entry\ArrayEntry::class,
             Entry\CollectionEntry::class,

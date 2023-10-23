@@ -325,8 +325,6 @@ function round(Expression $expression, Expression $precision = null, int $mode =
 }
 
 /**
- * @psalm-suppress MixedArgument
- * @psalm-suppress MixedAssignment
  * @psalm-suppress PossiblyInvalidIterator
  *
  * @param array<array<mixed>>|array<mixed|string> $data

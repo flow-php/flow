@@ -19,7 +19,6 @@ final class RequestEntriesFactory
      * @return Row\Entries
      *
      * @psalm-suppress InvalidLiteralArgument
-     * @psalm-suppress MixedArgument
      */
     public function create(RequestInterface $request) : Row\Entries
     {

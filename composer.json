@@ -175,7 +175,7 @@
             "tools/infection/vendor/bin/infection -j2"
         ],
         "static:analyze": [
-            "tools/psalm/vendor/bin/psalm.phar",
+            "tools/psalm/vendor/bin/psalm.phar --find-unused-psalm-suppress",
             "tools/phpstan/vendor/bin/phpstan analyze -c phpstan.neon --memory-limit=-1",
             "tools/cs-fixer/vendor/bin/php-cs-fixer fix --dry-run"
         ],

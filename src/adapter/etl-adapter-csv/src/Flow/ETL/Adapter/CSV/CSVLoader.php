@@ -62,9 +62,6 @@ final class CSVLoader implements Closure, Loader, Loader\FileLoader
         $this->newLineSeparator = $data['new_line_separator'];
     }
 
-    /**
-     * @psalm-suppress InvalidPropertyAssignmentValue
-     */
     public function closure(Rows $rows, FlowContext $context) : void
     {
         $context->streams()->close($this->path);
@@ -105,9 +102,6 @@ final class CSVLoader implements Closure, Loader, Loader\FileLoader
         }
 
         foreach ($nextRows as $row) {
-            /**
-             * @psalm-suppress MixedArgumentTypeCoercion
-             */
             $this->writeCSV(
                 $row->toArray(),
                 $context->streams()->open($this->path, 'csv', Mode::WRITE, $context->threadSafe(), $partitions)
@@ -127,11 +121,6 @@ final class CSVLoader implements Closure, Loader, Loader\FileLoader
             }
         }
 
-        /**
-         * @psalm-suppress TooManyArguments
-         * @psalm-suppress InvalidNamedArgument
-         * @psalm-suppress MixedArgumentTypeCoercion
-         */
         \fputcsv(
             stream: $destination->resource(),
             fields: $row,

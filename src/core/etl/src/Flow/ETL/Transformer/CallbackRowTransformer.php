@@ -47,10 +47,6 @@ final class CallbackRowTransformer implements Transformer
             throw new RuntimeException('CallbackRowTransformer is not serializable without "opis/closure" library in your dependencies.');
         }
 
-        /**
-         * @psalm-suppress MixedPropertyTypeCoercion
-         * @psalm-suppress PropertyTypeCoercion
-         */
         $this->callable = $data['callable']->getClosure();
     }
 

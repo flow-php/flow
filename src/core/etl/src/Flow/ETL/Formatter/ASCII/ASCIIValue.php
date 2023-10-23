@@ -78,11 +78,6 @@ final class ASCIIValue
     }
 
     /**
-     * @psalm-suppress MixedReturnStatement
-     * @psalm-suppress MixedInferredReturnType
-     * @psalm-suppress PossiblyInvalidCast
-     * @psalm-suppress MixedMethodCall
-     * @psalm-suppress MixedAssignment
      * @psalm-suppress TypeDoesNotContainType
      */
     private function stringValue() : string
@@ -107,7 +102,6 @@ final class ASCIIValue
                     return $this->stringValue;
                 }
 
-                /** @psalm-suppress InvalidPropertyAssignmentValue */
                 $this->stringValue = match (\gettype($val)) {
                     'string' => $val,
                     'boolean' => $val ? 'true' : 'false',

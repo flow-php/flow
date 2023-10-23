@@ -43,9 +43,6 @@ final class TextLoader implements Closure, Loader, Loader\FileLoader
         $this->newLineSeparator = $data['new_line_separator'];
     }
 
-    /**
-     * @psalm-suppress InvalidPropertyAssignmentValue
-     */
     public function closure(Rows $rows, FlowContext $context) : void
     {
         $context->streams()->close($this->path);

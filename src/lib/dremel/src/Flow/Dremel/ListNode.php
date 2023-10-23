@@ -57,10 +57,6 @@ final class ListNode implements Node
         return [$this->initializeListWithValue($level - 1, $value)];
     }
 
-    /**
-     * @psalm-suppress MixedArgument
-     * @psalm-suppress MixedAssignment
-     */
     private function pushToLevel(array &$array, mixed $value, int $level, int $nextLevel) : void
     {
         if ($nextLevel === 1) {

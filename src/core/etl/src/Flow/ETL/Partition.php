@@ -42,8 +42,6 @@ final class Partition implements Serializable
      * @param array<string, mixed> $data
      *
      * @return array<Partition>
-     *
-     * @psalm-suppress MixedAssignment
      */
     public static function fromArray(array $data) : array
     {

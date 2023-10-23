@@ -47,9 +47,7 @@ final class ParquetExtractor implements Extractor
                     $arrayRow = -1;
 
                     /**
-                     * @psalm-suppress MixedAssignment
                      * @psalm-suppress PossiblyNullArrayAccess
-                     * @psalm-suppress MixedArrayAssignment
                      */
                     foreach ($column->getData() as $row => $value) {
                         if ($field->isArray) {
@@ -81,8 +79,6 @@ final class ParquetExtractor implements Extractor
     }
 
     /**
-     * @psalm-suppress NullableReturnStatement
-     *
      * @return \Generator<int, array{reader: ParquetReader, uri: string}>
      */
     private function readers(FlowContext $context) : \Generator

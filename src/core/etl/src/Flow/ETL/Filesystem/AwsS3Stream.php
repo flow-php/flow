@@ -35,13 +35,10 @@ final class AwsS3Stream extends FlysystemWrapper
             /**
              * @psalm-suppress PossiblyNullArgument
              * @psalm-suppress UndefinedThisPropertyFetch
-             * @psalm-suppress MixedArgument
              */
             $contextOptions = \stream_context_get_options($this->context);
 
             /**
-             * @psalm-suppress MixedArgument
-             *
              * @var array{credentials: array{key: string, secret: string}, region: string, version: string} $clientOptions
              */
             $clientOptions = \array_merge(

@@ -63,11 +63,6 @@ final class StructureEntry implements \Stringable, Entry
         $this->entries = $data['entries'];
     }
 
-    /**
-     * @psalm-suppress MixedFunctionCall
-     * @psalm-suppress MixedArgumentTypeCoercion
-     * @psalm-suppress MixedAssignment
-     */
     public function definition() : Definition
     {
         /**
@@ -143,7 +138,6 @@ final class StructureEntry implements \Stringable, Entry
 
     /**
      * @psalm-suppress LessSpecificImplementedReturnType
-     * @psalm-suppress MixedAssignment
      *
      * @return array<string, mixed>
      */

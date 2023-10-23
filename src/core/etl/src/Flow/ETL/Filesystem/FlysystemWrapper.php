@@ -84,7 +84,6 @@ abstract class FlysystemWrapper implements StreamWrapper
     {
         $this->path = $path;
         /**
-         * @psalm-suppress PropertyTypeCoercion
          * @psalm-suppress InvalidPropertyAssignmentValue
          *
          * @phpstan-ignore-next-line

@@ -36,9 +36,6 @@ final class PageHeader
         );
     }
 
-    /**
-     * @psalm-suppress RedundantCastGivenDocblockType
-     */
     public function compressedPageSize() : int
     {
         return $this->compressedPageSize;
@@ -54,13 +51,6 @@ final class PageHeader
         return $this->dataPageHeaderV2;
     }
 
-    /**
-     * @psalm-suppress NullPropertyFetch
-     * @psalm-suppress RedundantConditionGivenDocblockType
-     * @psalm-suppress RedundantCastGivenDocblockType
-     * @psalm-suppress RedundantConditionGivenDocblockType
-     * @psalm-suppress MixedInferredReturnType
-     */
     public function dataValuesCount() : ?int
     {
         if ($this->dataPageHeader !== null) {
@@ -79,10 +69,6 @@ final class PageHeader
         return $this->dictionaryPageHeader;
     }
 
-    /**
-     * @psalm-suppress RedundantCastGivenDocblockType
-     * @psalm-suppress RedundantConditionGivenDocblockType
-     */
     public function dictionaryValuesCount() : ?int
     {
         if ($this->dictionaryPageHeader !== null) {

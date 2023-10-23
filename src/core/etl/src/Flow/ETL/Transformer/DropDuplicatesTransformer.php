@@ -59,7 +59,6 @@ final class DropDuplicatesTransformer implements Transformer
 
             foreach ($this->entries as $entry) {
                 try {
-                    /** @psalm-suppress MixedAssignment */
                     $values[] = $row->valueOf($entry);
                 } catch (InvalidArgumentException) {
                     $values[] = null;

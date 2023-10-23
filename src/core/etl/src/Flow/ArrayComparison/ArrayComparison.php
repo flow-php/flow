@@ -42,7 +42,6 @@ final class ArrayComparison
             return false;
         }
 
-        /** @psalm-suppress MixedAssignment */
         foreach ($b as $key => $value) {
             if (!\array_key_exists($key, $a)) {
                 return false;
