@@ -203,8 +203,7 @@
             "composer install --working-dir=./tools/phpbench",
             "composer install --working-dir=./tools/phpstan",
             "composer install --working-dir=./tools/psalm",
-            "composer install --working-dir=./tools/phpunit",
-            "composer install --working-dir=./tools/rector"
+            "composer install --working-dir=./tools/phpunit"
         ]
     },
     "extra": {
