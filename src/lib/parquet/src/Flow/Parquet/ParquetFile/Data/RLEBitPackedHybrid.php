@@ -72,10 +72,6 @@ final class RLEBitPackedHybrid
             $varInt = $reader->readVarInt();
             $isRle = ($varInt & 1) === 0;
 
-            if ($iteration > 10) {
-                die;
-            }
-
             $this->debugLog($iteration, $varInt, $isRle, $bitWidth, $reader, $output);
 
             if ($isRle) {
