@@ -44,8 +44,3 @@ updates:
     directory: "/tools/psalm"
     schedule:
       interval: "daily"
-
-  - package-ecosystem: "composer"
-    directory: "/tools/rector"
-    schedule:
-      interval: "daily"
