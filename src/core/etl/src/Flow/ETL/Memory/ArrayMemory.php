@@ -102,7 +102,6 @@ final class ArrayMemory implements \Countable, Memory
         $data = [];
 
         foreach ($this->data as $entry) {
-            /** @psalm-suppress MixedAssignment */
             $data[] = $callback($entry);
         }
 

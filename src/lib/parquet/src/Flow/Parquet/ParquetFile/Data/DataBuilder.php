@@ -22,11 +22,6 @@ final class DataBuilder
     ) {
     }
 
-    /**
-     * @psalm-suppress MixedArrayOffset
-     * @psalm-suppress MixedAssignment
-     * @psalm-suppress MixedArgumentTypeCoercion
-     */
     public function build(ColumnData $columnData, Column $column) : \Generator
     {
         $dremel = new Dremel($this->logger);
@@ -44,12 +39,6 @@ final class DataBuilder
      * @TODO : This should be optimized by moving it into different class, checking column only once, caching it and using dedicated data transformer for values to improve performance
      *
      * @psalm-suppress PossiblyFalseReference
-     * @psalm-suppress MixedArgument
-     * @psalm-suppress MixedAssignment
-     * @psalm-suppress MixedOperand
-     * @psalm-suppress MixedReturnStatement
-     * @psalm-suppress MixedInferredReturnType
-     * @psalm-suppress PossiblyNullOperand
      */
     private function enrichData(mixed $value, Column $column) : mixed
     {
@@ -64,7 +53,6 @@ final class DataBuilder
 
         if ($column->type() === PhysicalType::INT96 && $this->options->get(Option::INT_96_AS_DATETIME)) {
             if (\is_array($value) && \count($value) && !\is_array($value[0])) {
-                /** @psalm-suppress MixedArgumentTypeCoercion */
                 return $this->nanoToDateTimeImmutable($value);
             }
 

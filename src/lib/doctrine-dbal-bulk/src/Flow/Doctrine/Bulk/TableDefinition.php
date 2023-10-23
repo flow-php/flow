@@ -69,9 +69,6 @@ final class TableDefinition
         return $this->name;
     }
 
-    /**
-     * @psalm-suppress UnusedForeachValue
-     */
     public function toSqlCastedPlaceholders(BulkData $bulkData, AbstractPlatform $abstractPlatform) : string
     {
         return \implode(

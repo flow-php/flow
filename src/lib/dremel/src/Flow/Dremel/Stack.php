@@ -15,9 +15,6 @@ final class Stack
     {
     }
 
-    /**
-     * @psalm-suppress MixedAssignment
-     */
     public function __debugInfo() : array
     {
         $output = [];
@@ -34,9 +31,6 @@ final class Stack
         $this->nodes = [];
     }
 
-    /**
-     * @psalm-suppress MixedAssignment
-     */
     public function dropFlat() : ?array
     {
         $output = [];

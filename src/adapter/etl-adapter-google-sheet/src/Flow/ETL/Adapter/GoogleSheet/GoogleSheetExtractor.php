@@ -30,10 +30,6 @@ final class GoogleSheetExtractor implements Extractor
         }
     }
 
-    /**
-     * @psalm-suppress MixedArgument
-     * @psalm-suppress MixedMethodCall
-     */
     public function extract(FlowContext $context) : \Generator
     {
         $cellsRange = new SheetRange($this->columnRange, 1, $this->rowsInBatch);
@@ -62,7 +58,6 @@ final class GoogleSheetExtractor implements Extractor
                             \array_push(
                                 $rowData,
                                 ...\array_map(
-                                    /** @psalm-suppress UnusedClosureParam */
                                     static fn (int $i) => null,
                                     \range(1, \count($headers) - \count($rowData))
                                 )

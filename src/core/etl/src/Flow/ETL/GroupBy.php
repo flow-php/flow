@@ -57,7 +57,6 @@ final class GroupBy
                         throw new RuntimeException('Grouping by non scalar values is not supported, given: ' . \gettype($value));
                     }
 
-                    /** @psalm-suppress MixedAssignment */
                     $values[$ref->name()] = $value;
                 } catch (InvalidArgumentException) {
                     $values[$ref->name()] = null;

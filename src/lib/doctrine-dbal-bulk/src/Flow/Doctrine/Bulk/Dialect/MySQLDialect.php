@@ -59,8 +59,6 @@ final class MySQLDialect implements Dialect
     }
 
     /**
-     * @psalm-suppress MoreSpecificImplementedParamType
-     *
      * @param TableDefinition $table
      * @param BulkData $bulkData
      * @param array $updateOptions

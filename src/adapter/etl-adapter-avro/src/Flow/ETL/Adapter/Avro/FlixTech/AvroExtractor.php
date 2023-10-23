@@ -19,10 +19,6 @@ final class AvroExtractor implements Extractor
     ) {
     }
 
-    /**
-     * @psalm-suppress MixedArgument
-     * @psalm-suppress MixedAssignment
-     */
     public function extract(FlowContext $context) : \Generator
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
@@ -41,7 +37,6 @@ final class AvroExtractor implements Extractor
                 new \AvroIODatumReader(null, null),
             );
 
-            /** @phpstan-ignore-next-line */
             $valueConverter = new ValueConverter(\json_decode($reader->metadata['avro.schema'], true));
 
             foreach ($reader->data() as $rowData) {

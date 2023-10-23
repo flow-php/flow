@@ -56,7 +56,6 @@ final class CSVExtractor implements Extractor
                     \array_push(
                         $rowData,
                         ...\array_map(
-                            /** @psalm-suppress UnusedClosureParam */
                             fn (int $i) => ($this->emptyToNull ? null : ''),
                             \range(1, \count($headers) - \count($rowData))
                         )
@@ -69,7 +68,6 @@ final class CSVExtractor implements Extractor
                 }
 
                 if ($this->emptyToNull) {
-                    /** @psalm-suppress MixedAssignment */
                     foreach ($rowData as $i => $data) {
                         if ($data === '') {
                             $rowData[$i] = null;

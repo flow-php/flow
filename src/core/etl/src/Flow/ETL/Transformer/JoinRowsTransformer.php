@@ -76,11 +76,6 @@ final class JoinRowsTransformer implements Transformer
         };
     }
 
-    /**
-     * @psalm-suppress InvalidNullableReturnType
-     * @psalm-suppress NullableReturnStatement
-     * @psalm-suppress InaccessibleProperty
-     */
     private function rows() : Rows
     {
         if ($this->rows === null) {

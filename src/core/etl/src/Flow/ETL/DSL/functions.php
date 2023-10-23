@@ -325,8 +325,6 @@ function round(Expression $expression, Expression $precision = null, int $mode =
 }
 
 /**
- * @psalm-suppress MixedArgument
- * @psalm-suppress MixedAssignment
  * @psalm-suppress PossiblyInvalidIterator
  *
  * @param array<array<mixed>>|array<mixed|string> $data
@@ -357,9 +355,7 @@ function array_to_rows(array $data, EntryFactory $entryFactory = new NativeEntry
     foreach ($data as $row) {
         $entries = [];
 
-        /** @phpstan-ignore-next-line */
         foreach ($row as $column => $value) {
-            /** @phpstan-ignore-next-line */
             $entries[] = $entryFactory->create(\is_int($column) ? 'e' . \str_pad((string) $column, 2, '0', STR_PAD_LEFT) : $column, $value);
         }
         $rows[] = Row::create(...$entries);

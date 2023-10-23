@@ -15,9 +15,6 @@ final class RLEBitPackedHybrid
     }
 
     /**
-     * @psalm-suppress MixedOperand
-     * @psalm-suppress MixedAssignment
-     *
      * $output is passed by reference as a performance optimization, otherwise we would need to return the array and merge
      * it, which creates unnecessary performance impact.
      */

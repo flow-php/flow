@@ -46,11 +46,6 @@ final class CrossJoinRowsTransformer implements Transformer
         return $rows->joinCross($this->rows(), $this->prefix);
     }
 
-    /**
-     * @psalm-suppress InvalidNullableReturnType
-     * @psalm-suppress NullableReturnStatement
-     * @psalm-suppress InaccessibleProperty
-     */
     private function rows() : Rows
     {
         if ($this->rows === null) {

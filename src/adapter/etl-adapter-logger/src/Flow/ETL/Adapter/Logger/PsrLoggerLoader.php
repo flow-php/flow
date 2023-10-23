@@ -45,7 +45,6 @@ final class PsrLoggerLoader implements Loader
             $this->logger->log($this->logLevel, $this->message, $row->toArray());
         };
 
-        /** @psalm-suppress UnusedMethodCall */
         $rows->each($loader);
     }
 }

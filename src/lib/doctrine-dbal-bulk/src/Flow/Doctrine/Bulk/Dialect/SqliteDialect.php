@@ -51,9 +51,6 @@ final class SqliteDialect implements Dialect
         );
     }
 
-    /**
-     * @psalm-suppress MoreSpecificImplementedParamType
-     */
     public function prepareUpdate(TableDefinition $table, BulkData $bulkData, array $updateOptions = []) : string
     {
         return \sprintf(

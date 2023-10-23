@@ -121,7 +121,6 @@ final class FlatColumn implements Column
 
     /**
      * @psalm-suppress PossiblyNullOperand
-     * @psalm-suppress PossiblyNullPropertyFetch
      */
     public function ddl() : array
     {
@@ -263,9 +262,6 @@ final class FlatColumn implements Column
         return $this->name;
     }
 
-    /**
-     * @psalm-suppress PossiblyNullPropertyFetch
-     */
     public function normalize() : array
     {
         return [

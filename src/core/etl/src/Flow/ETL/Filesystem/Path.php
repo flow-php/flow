@@ -315,11 +315,6 @@ final class Path implements Serializable
 
     /**
      * Credits: https://github.com/Polycademy/upgradephp/blob/65c5a9be1e039bbc1ac83addaeba5bd875d758ea/upgrade.php#L2802.
-     *
-     * @psalm-suppress MixedAssignment
-     * @psalm-suppress MixedArrayAccess
-     * @psalm-suppress MixedArgument
-     * @psalm-suppress MixedArrayAssignment
      */
     private function fnmatch(string $pattern, string $filename, int $flags = 0) : bool
     {

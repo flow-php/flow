@@ -17,7 +17,6 @@ final class ToDate implements Expression
     }
 
     /**
-     * @psalm-suppress MixedMethodCall
      * @psalm-suppress PossiblyFalseReference
      */
     public function eval(Row $row) : mixed

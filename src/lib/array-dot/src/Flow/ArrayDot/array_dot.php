@@ -100,9 +100,6 @@ function array_dot_set(array $array, string $path, $value) : array
         $currentElement = &$currentElement[$step];
     }
 
-    /**
-     * @psalm-suppress MixedAssignment
-     */
     $currentElement = $value;
 
     /** @var array<array-key, mixed> $newArray */
@@ -160,9 +157,6 @@ function array_dot_get(array $array, string $path) : mixed
                     }
 
                     if (array_dot_exists($arraySlice[$key], \implode('.', $stepsLeft))) {
-                        /**
-                         * @psalm-suppress MixedAssignment
-                         */
                         $results[] = array_dot_get($arraySlice[$key], \implode('.', $stepsLeft));
                     }
                 } else {
@@ -173,9 +167,6 @@ function array_dot_get(array $array, string $path) : mixed
                         throw new InvalidPathException("Expected array under path, \"{$pathTaken}\", but got: {$type}");
                     }
 
-                    /**
-                     * @psalm-suppress MixedAssignment
-                     */
                     $results[] = array_dot_get($arraySlice[$key], \implode('.', $stepsLeft));
                 }
             }
@@ -191,7 +182,6 @@ function array_dot_get(array $array, string $path) : mixed
             foreach ($subSteps as $subStep) {
                 $subSteps = array_dot_steps(\trim($subStep));
 
-                /** @psalm-suppress MixedAssignment */
                 $results[\str_replace('.', '_', \str_replace('?', '', \trim($subStep)))] = array_dot_get($arraySlice, \trim($subStep));
             }
 
@@ -312,9 +302,6 @@ function array_dot_rename(array $array, string $path, string $newName) : array
         $currentElement = &$currentElement[$step];
     }
 
-    /**
-     * @psalm-suppress MixedAssignment
-     */
     $currentElement[$newName] = $currentElement[$lastStep];
     unset($currentElement[$lastStep]);
 

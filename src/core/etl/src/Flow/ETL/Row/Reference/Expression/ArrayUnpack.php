@@ -41,7 +41,6 @@ final class ArrayUnpack implements Expression, Row\Reference\UnpackResults
                 $entryName = $this->entryPrefix . $entryName;
             }
 
-            /** @psalm-suppress MixedAssignment */
             $values[$entryName] = $value;
         }
 

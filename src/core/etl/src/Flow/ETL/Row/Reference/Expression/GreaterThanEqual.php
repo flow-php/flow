@@ -15,9 +15,6 @@ final class GreaterThanEqual implements Expression
     ) {
     }
 
-    /**
-     * @psalm-suppress MixedAssignment
-     */
     public function eval(Row $row) : bool
     {
         $base = $this->base->eval($row);

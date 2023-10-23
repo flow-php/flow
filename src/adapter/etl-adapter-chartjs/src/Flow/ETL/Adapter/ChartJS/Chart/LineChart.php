@@ -47,7 +47,6 @@ final class LineChart implements Chart
     public function collect(Rows $rows) : void
     {
         foreach ($rows as $row) {
-            /** @phpstan-ignore-next-line */
             $this->data['labels'][] = (string) $row->valueOf($this->label);
 
             foreach ($this->datasets as $dataset) {

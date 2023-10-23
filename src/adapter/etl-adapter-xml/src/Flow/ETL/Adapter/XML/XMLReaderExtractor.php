@@ -68,7 +68,6 @@ final class XMLReaderExtractor implements Extractor
 
                     if ($currentPath === $this->xmlNodePath || ($this->xmlNodePath === '' && $xmlReader->depth === 0)) {
                         $node = new \DOMDocument('1.0', '');
-                        /** @psalm-suppress ArgumentTypeCoercion */
                         $node->loadXML($xmlReader->readOuterXml());
 
                         if ($shouldPutInputIntoRows) {

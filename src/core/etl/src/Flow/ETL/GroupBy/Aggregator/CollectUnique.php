@@ -34,12 +34,10 @@ final class CollectUnique implements Aggregator
 
             if ($this->ref instanceof Row\StructureReference) {
                 foreach ($this->ref->to() as $ref) {
-                    /** @psalm-suppress MixedAssignment */
                     $values[$ref->name()] = $row->valueOf($ref);
                 }
             } else {
                 /**
-                 * @psalm-suppress MixedAssignment
                  * @psalm-suppress InvalidArgument
                  *
                  * @phpstan-ignore-next-line

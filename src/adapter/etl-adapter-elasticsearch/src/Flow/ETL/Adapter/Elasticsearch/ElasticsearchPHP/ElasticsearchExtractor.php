@@ -39,16 +39,11 @@ final class ElasticsearchExtractor implements Extractor
         $this->client = null;
     }
 
-    /**
-     * @psalm-suppress PossiblyUndefinedMethod
-     * @psalm-suppress MixedArgument
-     */
     public function extract(FlowContext $context) : \Generator
     {
         /**
          * @psalm-suppress UndefinedClass
          * @psalm-suppress PossiblyInvalidArgument
-         * @psalm-suppress MixedArgumentTypeCoercion
          */
         $pit = \is_array($this->pointInTimeParams)
             /**
@@ -64,7 +59,6 @@ final class ElasticsearchExtractor implements Extractor
         /**
          * @psalm-suppress UndefinedClass
          * @psalm-suppress PossiblyInvalidArgument
-         * @psalm-suppress MixedArgumentTypeCoercion
          *
          * @phpstan-ignore-next-line
          */
@@ -88,7 +82,6 @@ final class ElasticsearchExtractor implements Extractor
                 /**
                  * @psalm-suppress UndefinedClass
                  * @psalm-suppress PossiblyInvalidArgument
-                 * @psalm-suppress MixedArgumentTypeCoercion
                  *
                  * @phpstan-ignore-next-line
                  */
@@ -110,16 +103,11 @@ final class ElasticsearchExtractor implements Extractor
                     ->set('from', $page * $results->size())
                     ->set('size', $results->size());
 
-                /**
-                 * @psalm-suppress MixedOperand
-                 */
                 if ($nextPageParams->asArray()['from'] >= $results->total()) {
                     break;
                 }
 
                 /**
-                 * @psalm-suppress MixedOperand
-                 *
                  * @phpstan-ignore-next-line
                  */
                 if ($nextPageParams->asArray()['from'] + $nextPageParams->asArray()['size'] > $results->total()) {
@@ -129,7 +117,6 @@ final class ElasticsearchExtractor implements Extractor
                 /**
                  * @psalm-suppress UndefinedClass
                  * @psalm-suppress PossiblyInvalidArgument
-                 * @psalm-suppress MixedArgumentTypeCoercion
                  *
                  * @phpstan-ignore-next-line
                  */
@@ -146,9 +133,6 @@ final class ElasticsearchExtractor implements Extractor
 
     /**
      * @psalm-suppress UndefinedClass
-     * @psalm-suppress MixedAssignment
-     * @psalm-suppress MixedReturnStatement
-     * @psalm-suppress MixedInferredReturnType
      *
      * @phpstan-ignore-next-line
      */
@@ -174,7 +158,6 @@ final class ElasticsearchExtractor implements Extractor
         if ($pit) {
             /**
              * @psalm-suppress UndefinedClass
-             * @psalm-suppress MixedArgumentTypeCoercion
              * @psalm-suppress InvalidArgument
              *
              * @phpstan-ignore-next-line

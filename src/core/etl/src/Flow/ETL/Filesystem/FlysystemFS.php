@@ -52,9 +52,6 @@ final class FlysystemFS implements Filesystem
         return $fs->directoryExists($path->path());
     }
 
-    /**
-     * @psalm-suppress UnusedForeachValue
-     */
     public function exists(Path $path) : bool
     {
         $fs = match ($path->scheme()) {
@@ -67,7 +64,6 @@ final class FlysystemFS implements Filesystem
         if ($path->isPattern()) {
             $anyFileExistsInPattern = false;
 
-            /** @psalm-suppress UnusedForeachValue */
             foreach ($this->scan($path, new NoopFilter()) as $nextPath) {
                 $anyFileExistsInPattern = true;
 
@@ -80,9 +76,6 @@ final class FlysystemFS implements Filesystem
         return $fs->fileExists($path->path()) || $fs->directoryExists($path->path());
     }
 
-    /**
-     * @psalm-suppress UnusedForeachValue
-     */
     public function fileExists(Path $path) : bool
     {
         $fs = match ($path->scheme()) {
@@ -228,11 +221,6 @@ final class FlysystemFS implements Filesystem
             throw new InvalidArgumentException("Missing AWS bucket in Path options, expected options: {$expectedOptions}");
         }
 
-        /**
-         * @psalm-suppress MixedArgument
-         *
-         * @phpstan-ignore-next-line
-         */
         return new Flysystem(new AwsS3V3Adapter(new S3Client($options['client']), $options['bucket']));
     }
 
@@ -257,11 +245,6 @@ final class FlysystemFS implements Filesystem
             throw new InvalidArgumentException("Missing Azure Blob container in Path options, expected options: {$expectedOptions}");
         }
 
-        /**
-         * @psalm-suppress MixedArgument
-         *
-         * @phpstan-ignore-next-line
-         */
         return new Flysystem(new AzureBlobStorageAdapter(BlobRestProxy::createBlobService($options['connection-string']), $options['container']));
     }
 

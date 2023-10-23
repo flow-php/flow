@@ -171,8 +171,6 @@ final class NestedColumn implements Column
 
     /**
      * @psalm-suppress UndefinedInterfaceMethod
-     * @psalm-suppress MixedReturnStatement
-     * @psalm-suppress MixedInferredReturnType
      */
     public function getListElement() : Column
     {
@@ -186,8 +184,6 @@ final class NestedColumn implements Column
 
     /**
      * @psalm-suppress UndefinedInterfaceMethod
-     * @psalm-suppress MixedReturnStatement
-     * @psalm-suppress MixedInferredReturnType
      */
     public function getMapKeyElement() : FlatColumn
     {
@@ -201,8 +197,6 @@ final class NestedColumn implements Column
 
     /**
      * @psalm-suppress UndefinedInterfaceMethod
-     * @psalm-suppress MixedReturnStatement
-     * @psalm-suppress MixedInferredReturnType
      */
     public function getMapValueElement() : Column
     {

@@ -78,8 +78,6 @@ final class ColumnData
     }
 
     /**
-     * @psalm-suppress MixedAssignment
-     * @psalm-suppress MixedArgumentTypeCoercion
      * @psalm-suppress ArgumentTypeCoercion
      *
      * @return array{0: self, 1: self}

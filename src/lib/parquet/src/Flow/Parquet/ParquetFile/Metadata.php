@@ -6,11 +6,6 @@ use Flow\Parquet\Thrift\FileMetaData;
 
 final class Metadata
 {
-    /**
-     * @psalm-suppress MixedOperand
-     * @psalm-suppress MixedAssignment
-     * @psalm-suppress MixedArgument
-     */
     public function __construct(
         private readonly Schema $schema,
         private readonly RowGroups $rowGroups,

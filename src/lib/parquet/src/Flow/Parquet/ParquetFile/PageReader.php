@@ -63,11 +63,7 @@ final class PageReader
             ->decodeDictionary(
                 (new Codec())
                     ->decompress(
-                        /**
-                         * @phpstan-ignore-next-line
-                         *
-                         * @psalm-suppress MixedArgument
-                         */
+                        /** @phpstan-ignore-next-line */
                         \fread($stream, $pageHeader->compressedPageSize()),
                         $codec
                     ),

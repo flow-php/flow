@@ -16,7 +16,6 @@ final class FileStream
      */
     public function __construct(private readonly Path $path, private $resource)
     {
-        /** @psalm-suppress DocblockTypeContradiction */
         if (!\is_resource($this->resource)) {
             throw new InvalidArgumentException('FileStream expects resource type, given: ' . \gettype($this->resource));
         }
@@ -24,8 +23,6 @@ final class FileStream
 
     /**
      * @psalm-suppress InvalidPropertyAssignmentValue
-     * @psalm-suppress PossiblyNullPropertyAssignmentValue
-     * @psalm-suppress DocblockTypeContradiction
      */
     public function close() : void
     {
@@ -48,8 +45,6 @@ final class FileStream
     }
 
     /**
-     * @psalm-suppress DocblockTypeContradiction
-     *
      * @return resource
      */
     public function resource()

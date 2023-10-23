@@ -182,9 +182,6 @@ final class LogicalType
         return $this->name() === $logicalType;
     }
 
-    /**
-     * @psalm-suppress RedundantConditionGivenDocblockType
-     */
     public function name() : string
     {
         return $this->name;

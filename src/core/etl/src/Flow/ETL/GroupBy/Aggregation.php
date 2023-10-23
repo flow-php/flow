@@ -78,7 +78,6 @@ final class Aggregation
     }
 
     /**
-     * @psalm-suppress ArgumentTypeCoercion
      * @psalm-suppress InvalidArgument
      */
     public function create() : Aggregator

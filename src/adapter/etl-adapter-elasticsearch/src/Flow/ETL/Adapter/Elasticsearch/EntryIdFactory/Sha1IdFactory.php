@@ -42,7 +42,6 @@ final class Sha1IdFactory implements IdFactory
         return new Row\Entry\StringEntry(
             'id',
             \sha1(
-                /** @phpstan-ignore-next-line */
                 \implode(':', \array_map(fn (string $name) : string => (string) $row->valueOf($name), $this->entryNames))
             )
         );

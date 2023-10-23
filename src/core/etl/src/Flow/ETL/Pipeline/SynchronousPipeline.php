@@ -55,9 +55,6 @@ final class SynchronousPipeline implements Pipeline
         return false;
     }
 
-    /**
-     * @psalm-suppress PossiblyNullOperand
-     */
     public function process(FlowContext $context) : \Generator
     {
         $plan = $context

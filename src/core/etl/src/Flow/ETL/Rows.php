@@ -155,8 +155,6 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
     }
 
     /**
-     * @psalm-suppress UnusedFunctionCall
-     *
      * @param callable(Row) : void $callable
      */
     public function each(callable $callable) : void
@@ -523,8 +521,6 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
      * @param int $offset
      *
      * @throws InvalidArgumentException
-     *
-     * @psalm-suppress ImplementedReturnTypeMismatch
      */
     public function offsetUnset(mixed $offset) : void
     {
@@ -552,7 +548,6 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
             $partitionEntryValues = [];
 
             foreach ($this->rows as $row) {
-                /** @psalm-suppress MixedAssignment */
                 $partitionEntryValues[] = $row->get($ref)->value();
             }
 
@@ -565,8 +560,6 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
          * @param array<string, array<mixed>> $input
          *
          * @return array<string, array<mixed>>
-         *
-         * @psalm-suppress MixedAssignment
          */
         $cartesianProduct = static function (array $input) : array {
             $result = [[]];
@@ -627,18 +620,13 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
     }
 
     /**
-     * @psalm-suppress MixedAssignment
-     * @psalm-suppress MixedReturnStatement
      * @psalm-suppress NullableReturnStatement
-     * @psalm-suppress MixedInferredReturnType
      *
      * @return mixed[]
      */
     public function reduceToArray(string|EntryReference $ref) : array
     {
-        /** @phpstan-ignore-next-line */
         return $this->reduce(
-            /** @phpstan-ignore-next-line */
             function (array $ids, Row $row) use ($ref) : array {
                 $ids[] = $row->get($ref)->value();
 

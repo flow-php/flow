@@ -42,9 +42,6 @@ final class VoidPipeline implements Pipeline
         return false;
     }
 
-    /**
-     * @psalm-suppress UnusedForeachValue
-     */
     public function process(FlowContext $context) : \Generator
     {
         foreach ($this->pipeline->process($context) as $rows) {

@@ -54,8 +54,6 @@ final class ParquetExtractor implements Extractor
     }
 
     /**
-     * @psalm-suppress NullableReturnStatement
-     *
      * @return \Generator<int, array{file: ParquetFile, uri: string}>
      */
     private function readers(FlowContext $context) : \Generator

@@ -72,7 +72,6 @@ final class DbalDataFrameFactory implements DataFrameFactory
         $types = [];
 
         foreach ($this->parameters as $parameter) {
-            /** @psalm-suppress MixedAssignment */
             $parameters[$parameter->queryParamName()] = $parameter->toQueryParam($rows);
 
             if ($parameter->type()) {
@@ -96,8 +95,6 @@ final class DbalDataFrameFactory implements DataFrameFactory
         if ($this->connection === null) {
             /**
              * @psalm-suppress ArgumentTypeCoercion
-             *
-             * @phpstan-ignore-next-line
              */
             $this->connection = DriverManager::getConnection($this->connectionParams);
         }

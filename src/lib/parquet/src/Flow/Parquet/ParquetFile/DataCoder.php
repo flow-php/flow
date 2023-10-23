@@ -25,10 +25,6 @@ final class DataCoder
     ) {
     }
 
-    /**
-     * @psalm-suppress MixedArgumentTypeCoercion
-     * @psalm-suppress MixedArgument
-     */
     public function decodeData(
         string $buffer,
         Encodings $encoding,
@@ -110,7 +106,6 @@ final class DataCoder
                 $values = [];
 
                 foreach ($indices as $index) {
-                    /** @psalm-suppress MixedAssignment */
                     $values[] = $dictionary?->values[$index];
                 }
             } else {

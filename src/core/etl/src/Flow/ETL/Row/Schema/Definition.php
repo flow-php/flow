@@ -144,9 +144,6 @@ final class Definition implements Serializable
     }
 
     /**
-     * @psalm-suppress MixedAssignment
-     * @psalm-suppress MixedFunctionCall
-     *
      * @param array<Definition> $structureDefinitions
      */
     public static function structure(string|EntryReference $entry, array $structureDefinitions, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
