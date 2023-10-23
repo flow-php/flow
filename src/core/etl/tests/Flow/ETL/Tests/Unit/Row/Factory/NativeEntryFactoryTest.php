@@ -27,8 +27,8 @@ final class NativeEntryFactoryTest extends TestCase
     {
         $this->assertEquals(
             Entry::array('e', [1, 2, 3]),
-            (new NativeEntryFactory(new Schema(Schema\Definition::array('e'))))
-                ->create('e', [1, 2, 3])
+            (new NativeEntryFactory())
+                ->create('e', [1, 2, 3], new Schema(Schema\Definition::array('e')))
         );
     }
 
@@ -44,7 +44,7 @@ final class NativeEntryFactoryTest extends TestCase
     {
         $this->assertEquals(
             Entry::boolean('e', false),
-            (new NativeEntryFactory(new Schema(Schema\Definition::boolean('e'))))->create('e', false)
+            (new NativeEntryFactory())->create('e', false, new Schema(Schema\Definition::boolean('e')))
         );
     }
 
@@ -53,8 +53,8 @@ final class NativeEntryFactoryTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("Can't convert value into entry \"e\"");
 
-        (new NativeEntryFactory(new Schema(Schema\Definition::string('e'))))
-            ->create('e', 1);
+        (new NativeEntryFactory())
+            ->create('e', 1, new Schema(Schema\Definition::string('e')));
     }
 
     public function test_datetime() : void
@@ -69,8 +69,8 @@ final class NativeEntryFactoryTest extends TestCase
     {
         $this->assertEquals(
             Entry::datetime_string('e', '2022-01-01 00:00:00 UTC'),
-            (new NativeEntryFactory(new Schema(Schema\Definition::dateTime('e'))))
-                ->create('e', '2022-01-01 00:00:00 UTC')
+            (new NativeEntryFactory())
+                ->create('e', '2022-01-01 00:00:00 UTC', new Schema(Schema\Definition::dateTime('e')))
         );
     }
 
@@ -78,8 +78,8 @@ final class NativeEntryFactoryTest extends TestCase
     {
         $this->assertEquals(
             Entry::datetime('e', $datetime = new \DateTimeImmutable('now')),
-            (new NativeEntryFactory(new Schema(Schema\Definition::dateTime('e'))))
-                ->create('e', $datetime)
+            (new NativeEntryFactory())
+                ->create('e', $datetime, new Schema(Schema\Definition::dateTime('e')))
         );
     }
 
@@ -88,16 +88,16 @@ final class NativeEntryFactoryTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("Value \"not_valid\" can't be converted to " . BackedIntEnum::class . ' enum');
 
-        (new NativeEntryFactory(new Schema(Schema\Definition::enum('e', BackedIntEnum::class))))
-            ->create('e', 'not_valid');
+        (new NativeEntryFactory())
+            ->create('e', 'not_valid', new Schema(Schema\Definition::enum('e', BackedIntEnum::class)));
     }
 
     public function test_enum_with_schema() : void
     {
         $this->assertEquals(
             Entry::enum('e', BackedIntEnum::one),
-            (new NativeEntryFactory(new Schema(Schema\Definition::enum('e', BackedIntEnum::class))))
-                ->create('e', 'one')
+            (new NativeEntryFactory())
+                ->create('e', 'one', new Schema(Schema\Definition::enum('e', BackedIntEnum::class)))
         );
     }
 
@@ -113,7 +113,7 @@ final class NativeEntryFactoryTest extends TestCase
     {
         $this->assertEquals(
             Entry::float('e', 1.1),
-            (new NativeEntryFactory(new Schema(Schema\Definition::float('e'))))->create('e', 1.1)
+            (new NativeEntryFactory())->create('e', 1.1, new Schema(Schema\Definition::float('e')))
         );
     }
 
@@ -137,7 +137,7 @@ final class NativeEntryFactoryTest extends TestCase
     {
         $this->assertEquals(
             Entry::integer('e', 1),
-            (new NativeEntryFactory(new Schema(Schema\Definition::integer('e'))))->create('e', 1)
+            (new NativeEntryFactory())->create('e', 1, new Schema(Schema\Definition::integer('e')))
         );
     }
 
@@ -177,7 +177,7 @@ final class NativeEntryFactoryTest extends TestCase
     {
         $this->assertEquals(
             Entry::json('e', [['id' => 1]]),
-            (new NativeEntryFactory(new Schema(Schema\Definition::json('e'))))->create('e', [['id' => 1]])
+            (new NativeEntryFactory())->create('e', [['id' => 1]], new Schema(Schema\Definition::json('e')))
         );
     }
 
@@ -185,7 +185,7 @@ final class NativeEntryFactoryTest extends TestCase
     {
         $this->assertEquals(
             Entry::json_object('e', ['id' => 1]),
-            (new NativeEntryFactory(new Schema(Schema\Definition::json('e'))))->create('e', ['id' => 1])
+            (new NativeEntryFactory())->create('e', ['id' => 1], new Schema(Schema\Definition::json('e')))
         );
     }
 
@@ -193,7 +193,7 @@ final class NativeEntryFactoryTest extends TestCase
     {
         $this->assertEquals(
             Entry::json_string('e', '{"id": 1}'),
-            (new NativeEntryFactory(new Schema(Schema\Definition::json('e'))))->create('e', '{"id": 1}')
+            (new NativeEntryFactory())->create('e', '{"id": 1}', new Schema(Schema\Definition::json('e')))
         );
     }
 
@@ -201,7 +201,7 @@ final class NativeEntryFactoryTest extends TestCase
     {
         $this->assertEquals(
             Entry::list_of_int('e', [1, 2, 3]),
-            (new NativeEntryFactory(new Schema(Schema\Definition::list('e', ScalarType::integer))))->create('e', [1, 2, 3])
+            (new NativeEntryFactory())->create('e', [1, 2, 3], new Schema(Schema\Definition::list('e', ScalarType::integer)))
         );
     }
 
@@ -210,15 +210,15 @@ final class NativeEntryFactoryTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Field "e" conversion exception. Expected list of integer got different types.');
 
-        (new NativeEntryFactory(new Schema(Schema\Definition::list('e', ScalarType::integer))))->create('e', ['1', '2', '3']);
+        (new NativeEntryFactory())->create('e', ['1', '2', '3'], new Schema(Schema\Definition::list('e', ScalarType::integer)));
     }
 
     public function test_list_of_datetime_with_schema() : void
     {
         $this->assertEquals(
             Entry::list_of_datetime('e', $list = [new \DateTimeImmutable('now'), new \DateTimeImmutable('tomorrow')]),
-            (new NativeEntryFactory(new Schema(Schema\Definition::list('e', ObjectType::of(\DateTimeInterface::class)))))
-                ->create('e', $list)
+            (new NativeEntryFactory())
+                ->create('e', $list, new Schema(Schema\Definition::list('e', ObjectType::of(\DateTimeInterface::class))))
         );
     }
 
@@ -242,8 +242,8 @@ final class NativeEntryFactoryTest extends TestCase
     {
         $this->assertEquals(
             Entry::list_of_datetime('e', [new \DateTimeImmutable('2022-01-01 00:00:00 UTC'), new \DateTimeImmutable('2022-01-01 00:00:00 UTC')]),
-            (new NativeEntryFactory(new Schema(Schema\Definition::list('e', ObjectType::of(\DateTimeInterface::class)))))
-                ->create('e', ['2022-01-01 00:00:00 UTC', '2022-01-01 00:00:00 UTC'])
+            (new NativeEntryFactory())
+                ->create('e', ['2022-01-01 00:00:00 UTC', '2022-01-01 00:00:00 UTC'], new Schema(Schema\Definition::list('e', ObjectType::of(\DateTimeInterface::class))))
         );
     }
 
@@ -285,12 +285,12 @@ final class NativeEntryFactoryTest extends TestCase
     {
         $this->assertEquals(
             Entry::null('e'),
-            (new NativeEntryFactory(new Schema(Schema\Definition::null('e'))))->create('e', null)
+            (new NativeEntryFactory())->create('e', null, new Schema(Schema\Definition::null('e')))
         );
 
         $this->assertEquals(
             Entry::null('e'),
-            (new NativeEntryFactory(new Schema(Schema\Definition::string('e', true))))->create('e', null)
+            (new NativeEntryFactory())->create('e', null, new Schema(Schema\Definition::string('e', true)))
         );
     }
 
@@ -306,8 +306,8 @@ final class NativeEntryFactoryTest extends TestCase
     {
         $this->assertEquals(
             Entry::object('e', $object = new \ArrayObject([1, 2, 3])),
-            (new NativeEntryFactory(new Schema(Schema\Definition::object('e'))))
-                ->create('e', $object)
+            (new NativeEntryFactory())
+                ->create('e', $object, new Schema(Schema\Definition::object('e')))
         );
     }
 
@@ -323,7 +323,7 @@ final class NativeEntryFactoryTest extends TestCase
     {
         $this->assertEquals(
             Entry::string('e', 'string'),
-            (new NativeEntryFactory(new Schema(Schema\Definition::string('e'))))->create('e', 'string')
+            (new NativeEntryFactory())->create('e', 'string', new Schema(Schema\Definition::string('e')))
         );
     }
 
@@ -364,7 +364,7 @@ final class NativeEntryFactoryTest extends TestCase
     {
         $this->assertEquals(
             Entry::uuid('e', $uuid = '00000000-0000-0000-0000-000000000000'),
-            (new NativeEntryFactory(new Schema(Schema\Definition::uuid('e'))))->create('e', $uuid)
+            (new NativeEntryFactory())->create('e', $uuid, new Schema(Schema\Definition::uuid('e')))
         );
     }
 
@@ -373,8 +373,8 @@ final class NativeEntryFactoryTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('There is no definition for "e" in the schema.');
 
-        (new NativeEntryFactory(new Schema()))
-            ->create('e', '1');
+        (new NativeEntryFactory())
+            ->create('e', '1', new Schema());
     }
 
     public function test_with_schema_for_different_entry() : void
@@ -382,8 +382,8 @@ final class NativeEntryFactoryTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('There is no definition for "diff" in the schema.');
 
-        (new NativeEntryFactory(new Schema(Schema\Definition::string('e'))))
-            ->create('diff', '1');
+        (new NativeEntryFactory())
+            ->create('diff', '1', new Schema(Schema\Definition::string('e')));
     }
 
     public function test_xml_from_dom_document() : void
@@ -408,7 +408,7 @@ final class NativeEntryFactoryTest extends TestCase
     {
         $this->assertEquals(
             Entry::xml('e', $xml = '<root><foo>1</foo><bar>2</bar><baz>3</baz></root>'),
-            (new NativeEntryFactory(new Schema(Schema\Definition::xml('e'))))->create('e', $xml)
+            (new NativeEntryFactory())->create('e', $xml, new Schema(Schema\Definition::xml('e')))
         );
     }
 }

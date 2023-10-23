@@ -13,36 +13,27 @@ use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Schema;
 
 /**
- * @implements EntryFactory<array{schema: ?Schema}>
+ * @implements EntryFactory<array>
  */
 final class NativeEntryFactory implements EntryFactory
 {
-    public function __construct(private readonly ?Schema $schema = null)
-    {
-    }
-
     public function __serialize() : array
     {
-        return [
-            'schema' => $this->schema,
-        ];
+        return [];
     }
 
     public function __unserialize(array $data) : void
     {
-        $this->schema = $data['schema'];
     }
 
     /**
-     * @param mixed $value
-     *
      * @throws InvalidArgumentException
      * @throws \JsonException
      */
-    public function create(string $entryName, mixed $value) : Entry
+    public function create(string $entryName, mixed $value, ?Schema $schema = null) : Entry
     {
-        if ($this->schema !== null) {
-            return $this->fromDefinition($this->schema->getDefinition($entryName), $value);
+        if ($schema !== null) {
+            return $this->fromDefinition($schema->getDefinition($entryName), $value);
         }
 
         if (\is_string($value)) {

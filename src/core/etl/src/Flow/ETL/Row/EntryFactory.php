@@ -11,5 +11,5 @@ use Flow\Serializer\Serializable;
  */
 interface EntryFactory extends Serializable
 {
-    public function create(string $entryName, mixed $value) : Entry;
+    public function create(string $entryName, mixed $value, ?Schema $schema = null) : Entry;
 }
