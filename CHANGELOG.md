@@ -1,6 +1,7 @@
-## [Unreleased] - 2023-10-22
+## [Unreleased] - 2023-10-23
 
 ### Added
+- [#632](https://github.com/flow-php/flow/pull/632) - **Add missing tools to the dependabot config** - [@stloyd](https://github.com/stloyd)
 - [#627](https://github.com/flow-php/flow/pull/627) - **Added possibility to easily identify schema root in Parquet Schema** - [@norberttech](https://github.com/norberttech)
 - [#622](https://github.com/flow-php/flow/pull/622) - **Possibility to build schema through static factories at Scheam,FlatColumn,NestedColumn** - [@norberttech](https://github.com/norberttech)
 - [#621](https://github.com/flow-php/flow/pull/621) - **static factories to Flat and Nested columns in parquet schema** - [@norberttech](https://github.com/norberttech)
