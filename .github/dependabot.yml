@@ -6,6 +6,11 @@ updates:
       interval: "daily"
 
   - package-ecosystem: "composer"
+    directory: "/tools/box"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "composer"
     directory: "/tools/cs-fixer"
     schedule:
       interval: "daily"
@@ -21,6 +26,11 @@ updates:
       interval: "daily"
 
   - package-ecosystem: "composer"
+    directory: "/tools/phpbench"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "composer"
     directory: "/tools/phpstan"
     schedule:
       interval: "daily"
@@ -32,5 +42,10 @@ updates:
 
   - package-ecosystem: "composer"
     directory: "/tools/psalm"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "composer"
+    directory: "/tools/rector"
     schedule:
       interval: "daily"
