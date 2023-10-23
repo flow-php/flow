@@ -10,6 +10,22 @@ use PHPUnit\Framework\TestCase;
 
 final class RLEBitPackedHybridTest extends TestCase
 {
+    public function test_bit_packing_reading_with_extra_bytes_in_the_buffer() : void
+    {
+        $values = [3, 3, 3, 3];
+        $buffer = '';
+        (new RLEBitPackedHybrid())->encodeHybrid($writer = new BinaryBufferWriter($buffer), $values);
+        $writer->writeBytes([1, 2, 3]);
+        $this->assertSame(
+            $values,
+            (new RLEBitPackedHybrid())->decodeHybrid(
+                new BinaryBufferReader($buffer),
+                BitWidth::fromArray($values),
+                \count($values)
+            )
+        );
+    }
+
     public function test_bit_packing_with_not_a_full_sequence() : void
     {
         $values = [1, 2, 3, 1234];

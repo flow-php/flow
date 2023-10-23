@@ -4,7 +4,7 @@ namespace Flow\Parquet\Tests\Integration\IO;
 
 use Flow\Parquet\Reader;
 
-final class ListsReadingTest extends ParquetFunctionalTestCase
+final class ListsReadingTest extends ParquetIntegrationTestCase
 {
     public function test_reading_list_column() : void
     {

@@ -2,6 +2,7 @@
 
 namespace Flow\Parquet\ParquetFile\Schema;
 
+use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ParquetFile\Schema\LogicalType\Timestamp;
 use Flow\Parquet\Thrift\SchemaElement;
 
@@ -40,8 +41,16 @@ final class FlatColumn implements Column
         return new self($name, PhysicalType::INT64, new LogicalType(LogicalType::TIMESTAMP, new Timestamp(false, false, true, false)), Repetition::OPTIONAL);
     }
 
-    public static function decimal(string $name, int $scale = 2, int $precision = 10) : self
+    public static function decimal(string $name, int $precision = 10, int $scale = 2) : self
     {
+        if ($scale < 0 || $scale > 38) {
+            throw new InvalidArgumentException('Scale must be between 0 and 38, ' . $scale . ' given.');
+        }
+
+        if ($precision < 1 || $precision > 38) {
+            throw new InvalidArgumentException('Scale must be between 1 and 38, ' . $scale . ' given.');
+        }
+
         $bitsNeeded = \ceil(\log(10 ** $precision, 2));
         $byteLength = (int) \ceil($bitsNeeded / 8);
 
@@ -290,6 +299,11 @@ final class FlatColumn implements Column
         return $this->parent;
     }
 
+    public function path() : array
+    {
+        return \explode('.', $this->flatPath());
+    }
+
     public function precision() : ?int
     {
         return $this->precision;
@@ -308,6 +322,19 @@ final class FlatColumn implements Column
     public function setParent(NestedColumn $parent) : void
     {
         $this->parent = $parent;
+    }
+
+    public function toThrift() : SchemaElement
+    {
+        return new SchemaElement([
+            'name' => $this->name,
+            'type' => $this->type->value,
+            'repetition_type' => $this->repetition?->value,
+            'logicalType' => $this->logicalType?->toThrift(),
+            'precision' => $this->precision,
+            'scale' => $this->scale,
+            'type_length' => $this->typeLength,
+        ]);
     }
 
     public function type() : PhysicalType

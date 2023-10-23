@@ -4,7 +4,7 @@ namespace Flow\Parquet\Tests\Integration\IO;
 
 use Flow\Parquet\Reader;
 
-final class MapsReadingTest extends ParquetFunctionalTestCase
+final class MapsReadingTest extends ParquetIntegrationTestCase
 {
     public function test_reading_map_column() : void
     {

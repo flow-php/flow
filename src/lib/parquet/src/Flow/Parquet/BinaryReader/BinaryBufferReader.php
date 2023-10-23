@@ -32,20 +32,6 @@ final class BinaryBufferReader implements BinaryReader
         return $this->position;
     }
 
-    public function readBit() : int
-    {
-        $bytePosition = $this->position->bytes();
-        $bitOffset = $this->position->bits();
-
-        $byte = \ord($this->buffer[$bytePosition]);
-        $bit = ($byte >> $bitOffset) & 1;
-
-        $this->position->add(1);
-        $this->remainingLength->sub(1);
-
-        return $bit;
-    }
-
     /**
      * @return array<int>
      */
@@ -76,11 +62,6 @@ final class BinaryBufferReader implements BinaryReader
         return $bits;  // This should never be reached
     }
 
-    public function readBoolean() : bool
-    {
-        return (bool) $this->readBit();
-    }
-
     public function readBooleans(int $total) : array
     {
         $bits = $this->readBits($total);
@@ -91,15 +72,6 @@ final class BinaryBufferReader implements BinaryReader
         }
 
         return $booleans;
-    }
-
-    public function readByte() : int
-    {
-        $byte = \ord($this->buffer[$this->position()->bytes()]);
-        $this->position->add(8);
-        $this->remainingLength->sub(8);
-
-        return $byte;
     }
 
     public function readByteArrays(int $total) : array
@@ -144,11 +116,13 @@ final class BinaryBufferReader implements BinaryReader
         return new Bytes($bytes);
     }
 
-    public function readDecimals(int $total, int $byteLength) : array
+    public function readDecimals(int $total, int $byteLength, int $precision = 10, int $scale = 2) : array
     {
         $decimalBytes = \array_chunk($this->readBytes($byteLength * $total)->toArray(), $byteLength);
 
         $decimals = [];
+
+        $divisor = \bcpow('10', (string) $scale);
 
         foreach ($decimalBytes as $bytes) {
             $intValue = 0;
@@ -158,23 +132,10 @@ final class BinaryBufferReader implements BinaryReader
                 $intValue |= ($byte << $shift);
             }
 
-            $decimals[] = $intValue;
+            $decimals[] = (float) \bcdiv((string) $intValue, $divisor, $scale);
         }
 
         return $decimals;
-    }
-
-    public function readDouble() : float
-    {
-        $result = \unpack(
-            $this->byteOrder === ByteOrder::LITTLE_ENDIAN ? 'e' : 'E',
-            \substr($this->buffer, $this->position()->bytes(), 8)
-        )[1];
-
-        $this->position->add(64);
-        $this->remainingLength->sub(64);
-
-        return $result;
     }
 
     public function readDoubles(int $total) : array
@@ -188,19 +149,6 @@ final class BinaryBufferReader implements BinaryReader
         }
 
         return $doubles;
-    }
-
-    public function readFloat() : float
-    {
-        $result = \unpack(
-            $this->byteOrder === ByteOrder::LITTLE_ENDIAN ? 'g' : 'G',
-            \substr($this->buffer, $this->position()->bytes(), 4)
-        )[1];
-
-        $this->position->add(32);
-        $this->remainingLength->sub(32);
-
-        return $result;
     }
 
     public function readFloats(int $total) : array
@@ -225,36 +173,6 @@ final class BinaryBufferReader implements BinaryReader
         }
 
         return ($bytes[0] << 24) | ($bytes[1] << 16) | ($bytes[2] << 8) | $bytes[3];
-    }
-
-    public function readInt64() : int
-    {
-        $bytes = $this->readBytes(8)->toArray();
-
-        if ($this->byteOrder === ByteOrder::LITTLE_ENDIAN) {
-            return $bytes[0] | ($bytes[1] << 8) | ($bytes[2] << 16) | ($bytes[3] << 24) |
-                ($bytes[4] << 32) | ($bytes[5] << 40) | ($bytes[6] << 48) | ($bytes[7] << 56);
-        }
-
-        return ($bytes[0] << 56) | ($bytes[1] << 48) | ($bytes[2] << 40) | ($bytes[3] << 32) |
-            ($bytes[4] << 24) | ($bytes[5] << 16) | ($bytes[6] << 8) | $bytes[7];
-    }
-
-    public function readInt96() : array
-    {
-        $position = $this->position()->bytes();
-        $data = \substr($this->buffer, $position, 12);
-
-        $int96Bytes = [];
-
-        foreach (\str_split($data) as $byte) {
-            $int96Bytes[] = \ord($byte);
-        }
-
-        $this->position->add(12 * 8);
-        $this->remainingLength->sub(12 * 8);
-
-        return $int96Bytes;
     }
 
     /**
@@ -317,16 +235,6 @@ final class BinaryBufferReader implements BinaryReader
         return $ints96;
     }
 
-    public function readString() : string
-    {
-        $length = $this->readInt32();
-        $string = \substr($this->buffer, $this->position()->bytes(), $length);
-        $this->position->add($length * 8);
-        $this->remainingLength->sub($length * 8);
-
-        return $string;
-    }
-
     public function readStrings(int $total) : array
     {
         $position = $this->position()->bytes();
@@ -351,22 +259,6 @@ final class BinaryBufferReader implements BinaryReader
         $this->remainingLength->sub($position * 8);
 
         return $strings;
-    }
-
-    public function readUInt32() : int
-    {
-        $bytes = $this->readBytes(4)->toArray();
-
-        if ($this->byteOrder === ByteOrder::LITTLE_ENDIAN) {
-            return $bytes[0] | ($bytes[1] << 8) | ($bytes[2] << 16) | ($bytes[3] << 24);
-        }
-
-        return ($bytes[0] << 24) | ($bytes[1] << 16) | ($bytes[2] << 8) | $bytes[3];
-    }
-
-    public function readUInt64() : int
-    {
-        return $this->readInt64();
     }
 
     public function readUInts32(int $total) : array
@@ -411,7 +303,7 @@ final class BinaryBufferReader implements BinaryReader
         $shift = 0;
 
         do {
-            $byte = $this->readByte();
+            $byte = $this->readBytes(1)->toArray()[0];
             $result |= ($byte & 0x7F) << $shift;
             $shift += 7;
         } while ($byte >= 0x80);

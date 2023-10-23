@@ -4,7 +4,7 @@ namespace Flow\Parquet\Tests\Integration\IO;
 
 use Flow\Parquet\Reader;
 
-final class StructsReadingTest extends ParquetFunctionalTestCase
+final class StructsReadingTest extends ParquetIntegrationTestCase
 {
     public function test_reading_struct_deeply_nested_column() : void
     {

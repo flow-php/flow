@@ -7,6 +7,7 @@ use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\ListElement;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
+use Flow\Parquet\Thrift\SchemaElement;
 
 final class SchemaTest extends TestCase
 {
@@ -38,5 +39,70 @@ final class SchemaTest extends TestCase
         $this->assertSame(0, $schema->get('nested.nested.bool')->maxRepetitionsLevel());
         $this->assertSame(4, $schema->get('nested.list_of_ints.list.element')->maxDefinitionsLevel());
         $this->assertSame(1, $schema->get('nested.list_of_ints.list.element')->maxRepetitionsLevel());
+    }
+
+    public function test_converting_schema_to_thrift() : void
+    {
+        $schema = Schema::with(
+            FlatColumn::int32('int'),
+            NestedColumn::struct(
+                'nested',
+                [
+                    FlatColumn::int32('int'),
+                    FlatColumn::string('strings'),
+                    NestedColumn::struct(
+                        'nested',
+                        [
+                            FlatColumn::boolean('bool'),
+                        ]
+                    ),
+                    NestedColumn::list('list_of_ints', ListElement::int32()),
+                ]
+            ),
+        );
+        $this->assertCount(10, $schema->toThrift());
+        $this->assertSame(
+            [
+                'schema',
+                'int',
+                'nested',
+                'int',
+                'strings',
+                'nested',
+                'bool',
+                'list_of_ints',
+                'list',
+                'element',
+            ],
+            \array_map(static fn (SchemaElement $e) => $e->name, $schema->toThrift())
+        );
+    }
+
+    public function test_flattening_schema_to_receive_simple_array_of_flat_columns() : void
+    {
+        $schema = Schema::with(
+            NestedColumn::struct('struct_deeply_nested', [
+                NestedColumn::struct('struct_0', [
+                    FlatColumn::int32('int'),
+                    NestedColumn::struct('struct_1', [
+                        FlatColumn::string('string'),
+                        NestedColumn::struct('struct_2', [
+                            FlatColumn::boolean('bool'),
+                            NestedColumn::struct('struct_3', [
+                                FlatColumn::float('float'),
+                                NestedColumn::struct('struct_4', [
+                                    FlatColumn::string('string'),
+                                    FlatColumn::json('json'),
+                                ]),
+                            ]),
+                        ]),
+                    ]),
+                ]),
+            ])
+        );
+
+        foreach ($schema->columnsFlat() as $column) {
+            $this->assertInstanceOf(FlatColumn::class, $column);
+        }
     }
 }

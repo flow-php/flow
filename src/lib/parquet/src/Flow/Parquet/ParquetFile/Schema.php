@@ -60,6 +60,20 @@ final class Schema
         return $this->schemaRoot->children();
     }
 
+    /**
+     * @return array<FlatColumn>
+     */
+    public function columnsFlat() : array
+    {
+        $columns = [];
+
+        foreach ($this->schemaRoot->children() as $column) {
+            $columns = \array_merge($columns, $this->flattener($column));
+        }
+
+        return $columns;
+    }
+
     public function get(string $flatPath) : Column
     {
         if (!\count($this->cache)) {
@@ -94,6 +108,11 @@ final class Schema
         ]];
     }
 
+    public function toThrift() : array
+    {
+        return $this->schemaRoot->toThrift();
+    }
+
     private function cache(Column $column) : void
     {
         $this->cache[$column->flatPath()] = $column;
@@ -103,6 +122,25 @@ final class Schema
                 $this->cache($child);
             }
         }
+    }
+
+    /**
+     * @return array<FlatColumn>
+     */
+    private function flattener(Column $column) : array
+    {
+        if ($column instanceof FlatColumn) {
+            return [$column];
+        }
+
+        /** @var NestedColumn $column */
+        $columns = [];
+
+        foreach ($column->children() as $child) {
+            $columns = \array_merge($columns, $this->flattener($child));
+        }
+
+        return $columns;
     }
 
     /**

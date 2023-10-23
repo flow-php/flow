@@ -60,7 +60,8 @@ final class NestedColumn implements Column
                     Repetition::REPEATED,
                     [$element->element]
                 ),
-            ]
+            ],
+            new LogicalType(LogicalType::LIST)
         );
     }
 
@@ -113,7 +114,7 @@ final class NestedColumn implements Column
     }
 
     /**
-     * @return array<string, Column>
+     * @return array<string, FlatColumn>
      */
     public function childrenFlat() : array
     {
@@ -123,6 +124,7 @@ final class NestedColumn implements Column
             if ($child instanceof self) {
                 $flat = \array_merge($flat, $child->childrenFlat());
             } else {
+                /** @var FlatColumn $child */
                 $flat[$child->flatPath()] = $child;
             }
         }
@@ -185,7 +187,7 @@ final class NestedColumn implements Column
     /**
      * @psalm-suppress UndefinedInterfaceMethod
      */
-    public function getMapKeyElement() : FlatColumn
+    public function getMapKeyColumn() : FlatColumn
     {
         if ($this->isMap()) {
             /** @phpstan-ignore-next-line */
@@ -198,7 +200,7 @@ final class NestedColumn implements Column
     /**
      * @psalm-suppress UndefinedInterfaceMethod
      */
-    public function getMapValueElement() : Column
+    public function getMapValueColumn() : Column
     {
         if ($this->isMap()) {
             /** @phpstan-ignore-next-line */
@@ -355,6 +357,11 @@ final class NestedColumn implements Column
         return $this->parent;
     }
 
+    public function path() : array
+    {
+        return \explode('.', $this->flatPath());
+    }
+
     public function repetition() : ?Repetition
     {
         return $this->repetition;
@@ -367,6 +374,34 @@ final class NestedColumn implements Column
         foreach ($this->children as $child) {
             $child->setParent($this);
         }
+    }
+
+    /**
+     * @return array<SchemaElement>
+     */
+    public function toThrift() : array
+    {
+        $elements = [
+            new SchemaElement([
+                'name' => $this->name(),
+                'num_children' => \count($this->children),
+                'converted_type' => null,
+                'repetition_type' => $this->repetition()?->value,
+                'logicalType' => $this->logicalType()?->toThrift(),
+            ]),
+        ];
+
+        foreach ($this->children as $child) {
+            if ($child instanceof FlatColumn) {
+                $elements[] = $child->toThrift();
+            }
+
+            if ($child instanceof self) {
+                $elements = \array_merge($elements, $child->toThrift());
+            }
+        }
+
+        return $elements;
     }
 
     public function type() : ?PhysicalType

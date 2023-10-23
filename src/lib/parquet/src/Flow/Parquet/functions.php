@@ -35,3 +35,25 @@ function array_combine_recursive(array $keys, array $values) : array
 
     return $result;
 }
+
+/**
+ * @param array<mixed> $array
+ *
+ * @return array<mixed>
+ *
+ * @psalm-suppress MixedAssignment
+ */
+function array_flatten(array $array) : array
+{
+    $result = [];
+
+    foreach ($array as $item) {
+        if (\is_array($item)) {
+            $result = \array_merge($result, array_flatten($item));
+        } else {
+            $result[] = $item;
+        }
+    }
+
+    return $result;
+}

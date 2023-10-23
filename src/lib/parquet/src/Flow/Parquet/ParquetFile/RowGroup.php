@@ -2,6 +2,7 @@
 
 namespace Flow\Parquet\ParquetFile;
 
+use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 
 final class RowGroup
@@ -11,8 +12,8 @@ final class RowGroup
      * @param int $rowsCount
      */
     public function __construct(
-        private readonly array $columnChunks,
-        private readonly int $rowsCount,
+        private array $columnChunks,
+        private int $rowsCount,
     ) {
     }
 
@@ -22,6 +23,11 @@ final class RowGroup
             \array_map(static fn (\Flow\Parquet\Thrift\ColumnChunk $columnChunk) => ColumnChunk::fromThrift($columnChunk), $thrift->columns),
             $thrift->num_rows
         );
+    }
+
+    public function addColumnChunk(ColumnChunk $columnChunk) : void
+    {
+        $this->columnChunks[] = $columnChunk;
     }
 
     /**
@@ -35,5 +41,29 @@ final class RowGroup
     public function rowsCount() : int
     {
         return $this->rowsCount;
+    }
+
+    public function setRowsCount(int $rowsCount) : void
+    {
+        if ($rowsCount < 0) {
+            throw new InvalidArgumentException('Rows count must be greater than 0');
+        }
+
+        $this->rowsCount = $rowsCount;
+    }
+
+    public function toThrift() : \Flow\Parquet\Thrift\RowGroup
+    {
+        $fileOffset = \count($this->columnChunks) ? \current($this->columnChunks)->fileOffset() : 0;
+        $chunksUncompressedSize = \array_map(static fn (ColumnChunk $chunk) => $chunk->totalUncompressedSize(), $this->columnChunks);
+        $chunksCompressedSize = \array_map(static fn (ColumnChunk $chunk) => $chunk->totalCompressedSize(), $this->columnChunks);
+
+        return new \Flow\Parquet\Thrift\RowGroup([
+            'columns' => \array_map(static fn (ColumnChunk $columnChunk) => $columnChunk->toThrift(), $this->columnChunks),
+            'num_rows' => $this->rowsCount,
+            'file_offset' => $fileOffset,
+            'total_byte_size' => \array_sum($chunksUncompressedSize),
+            'total_compressed_size' => \array_sum($chunksCompressedSize),
+        ]);
     }
 }

@@ -25,7 +25,7 @@ final class MapValue
 
     public static function decimal(int $precision, int $scale) : self
     {
-        return new self(FlatColumn::decimal('value', $precision, $scale));
+        return new self(FlatColumn::decimal('value', $scale, $precision));
     }
 
     public static function double() : self

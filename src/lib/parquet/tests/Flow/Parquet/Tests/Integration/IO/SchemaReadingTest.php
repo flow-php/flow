@@ -10,7 +10,7 @@ use Flow\Parquet\ParquetFile\Schema\MapValue;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\Reader;
 
-final class SchemaReadingTest extends ParquetFunctionalTestCase
+final class SchemaReadingTest extends ParquetIntegrationTestCase
 {
     public function test_reading_lists_schema_ddl() : void
     {

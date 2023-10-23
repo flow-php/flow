@@ -5,7 +5,7 @@ namespace Flow\Parquet\Tests\Integration\IO;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 use Flow\Parquet\Reader;
 
-final class SimpleTypesReadingTest extends ParquetFunctionalTestCase
+final class SimpleTypesReadingTest extends ParquetIntegrationTestCase
 {
     public function test_reading_bool_column() : void
     {

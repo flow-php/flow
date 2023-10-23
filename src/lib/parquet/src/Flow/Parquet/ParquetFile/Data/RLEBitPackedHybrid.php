@@ -139,6 +139,12 @@ final class RLEBitPackedHybrid
         }
 
         $writer->writeBytes($bytes);
+        $expectedBytesCount = (int) ((($numGroups * 8) * $bitWidth) / 8);
+
+        while (\count($bytes) < $expectedBytesCount) {
+            $writer->writeBytes([0]);
+            $bytes[] = 0;
+        }
     }
 
     /**
@@ -194,6 +200,11 @@ final class RLEBitPackedHybrid
                 $bitPackedBuffer = \array_merge($bitPackedBuffer, $rleBuffer);
             }
 
+            $this->encodeBitPacked($writer, $bitWidth, $bitPackedBuffer);
+        }
+
+        if (\count($rleBuffer)) {
+            $bitPackedBuffer = $rleBuffer;
             $this->encodeBitPacked($writer, $bitWidth, $bitPackedBuffer);
         }
     }

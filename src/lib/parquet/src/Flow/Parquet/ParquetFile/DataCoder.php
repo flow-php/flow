@@ -20,7 +20,7 @@ final class DataCoder
 {
     public function __construct(
         private readonly Options $options,
-        private readonly ByteOrder $byteOrder,
+        private readonly ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN,
         private readonly LoggerInterface $logger = new NullLogger()
     ) {
     }
@@ -43,7 +43,7 @@ final class DataCoder
 
         if ($maxRepetitionsLevel) {
             $this->debugLogRepetitions($maxRepetitionsLevel, $reader);
-            $reader->readInt32();// read length of encoded data
+            $reader->readInts32(1);// read length of encoded data
             $repetitions = $this->readRLEBitPackedHybrid(
                 $reader,
                 $RLEBitPackedHybrid,
@@ -56,7 +56,7 @@ final class DataCoder
 
         if ($maxDefinitionsLevel) {
             $this->debugLogDefinitions($maxDefinitionsLevel, $reader);
-            $reader->readInt32();// read length of encoded data
+            $reader->readInts32(1);// read length of encoded data
             $definitions = $this->readRLEBitPackedHybrid(
                 $reader,
                 $RLEBitPackedHybrid,
@@ -218,6 +218,9 @@ final class DataCoder
         $this->logger->debug('Decoding data with RLE Hybrid', ['bitWidth' => $bitWidth, 'expected_values_count' => $expectedValuesCount, 'reader_position' => ['bits' => $reader->position()->bits(), 'bytes' => $reader->position()->bytes()]]);
     }
 
+    /**
+     * @psalm-suppress PossiblyNullReference
+     */
     private function readPlainValues(PhysicalType $physicalType, BinaryBufferReader $reader, int $total, ?LogicalType $logicalType, ?int $typeLength) : array
     {
         /** @psalm-suppress PossiblyNullArgument */
@@ -236,7 +239,7 @@ final class DataCoder
             },
             PhysicalType::FIXED_LEN_BYTE_ARRAY => match ($logicalType?->name()) {
                 /** @phpstan-ignore-next-line */
-                LogicalType::DECIMAL => $reader->readDecimals($total, $typeLength),
+                LogicalType::DECIMAL => $reader->readDecimals($total, $typeLength, $logicalType->decimalData()->precision(), $logicalType->decimalData()->scale()),
                 default => throw new RuntimeException('Unsupported logical type ' . ($logicalType?->name() ?: 'null') . ' for FIXED_LEN_BYTE_ARRAY'),
             },
             PhysicalType::BOOLEAN => $reader->readBooleans($total),
