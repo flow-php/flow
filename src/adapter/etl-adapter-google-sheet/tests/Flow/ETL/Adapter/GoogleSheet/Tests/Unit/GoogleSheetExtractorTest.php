@@ -83,7 +83,7 @@ final class GoogleSheetExtractorTest extends TestCase
             20
         );
         $ValueRangeMock = $this->createMock(Sheets\ValueRange::class);
-        $ValueRangeMock->method('getValues')->willReturn([]);
+        $ValueRangeMock->method('getValues')->willReturn(null);
 
         $service->spreadsheets_values = ($spreadsheetsValues = $this->createMock(SpreadsheetsValues::class));
         $spreadsheetsValues->method('get')->willReturn($ValueRangeMock);
