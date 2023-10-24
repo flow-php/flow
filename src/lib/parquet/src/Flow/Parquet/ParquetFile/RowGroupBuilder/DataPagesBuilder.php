@@ -26,6 +26,7 @@ final class DataPagesBuilder
     public function build(FlatColumn $column) : DataPageContainer
     {
         $shredded = (new Dremel())->shred($this->rows, $column->maxDefinitionsLevel());
+
         $rleBitPackedHybrid = new RLEBitPackedHybrid();
 
         $pageBuffer = '';

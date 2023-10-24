@@ -63,10 +63,59 @@ final class RLEBitPackedHybridTest extends TestCase
         );
     }
 
+    public function test_bit_rle_reading_with_extra_bytes_in_the_buffer() : void
+    {
+        $values = [3, 3, 3, 3, 3, 3, 3, 3, 3, 3];
+        $buffer = '';
+        (new RLEBitPackedHybrid())->encodeHybrid($writer = new BinaryBufferWriter($buffer), $values);
+        $writer->writeBytes([1, 2, 3]);
+        $this->assertSame(
+            $values,
+            (new RLEBitPackedHybrid())->decodeHybrid(
+                new BinaryBufferReader($buffer),
+                BitWidth::fromArray($values),
+                \count($values)
+            )
+        );
+    }
+
     public function test_both_rle_and_bit_packed() : void
     {
         $values = [1, 2, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 13, 412, 5];
 
+        $buffer = '';
+        (new RLEBitPackedHybrid())->encodeHybrid(new BinaryBufferWriter($buffer), $values);
+
+        $this->assertSame(
+            $values,
+            (new RLEBitPackedHybrid())->decodeHybrid(
+                new BinaryBufferReader($buffer),
+                BitWidth::fromArray($values),
+                \count($values)
+            )
+        );
+    }
+
+    public function test_encoding_bit_pack_before_encoding_rle() : void
+    {
+        $values = [0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1];
+
+        $buffer = '';
+        (new RLEBitPackedHybrid())->encodeHybrid(new BinaryBufferWriter($buffer), $values);
+
+        $this->assertSame(
+            $values,
+            (new RLEBitPackedHybrid())->decodeHybrid(
+                new BinaryBufferReader($buffer),
+                BitWidth::fromArray($values),
+                \count($values)
+            )
+        );
+    }
+
+    public function test_flushing_buffers_when_they_are_dividable_by_8() : void
+    {
+        $values = [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1];
         $buffer = '';
         (new RLEBitPackedHybrid())->encodeHybrid(new BinaryBufferWriter($buffer), $values);
 

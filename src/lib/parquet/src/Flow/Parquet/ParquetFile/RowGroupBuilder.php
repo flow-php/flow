@@ -48,9 +48,10 @@ final class RowGroupBuilder
         $chunkContainers = [];
 
         foreach ($this->chunkBuilders as $chunkBuilder) {
-            $chunkContainer = $chunkBuilder->flush($fileOffset);
-            $fileOffset += \strlen($chunkContainer->binaryBuffer);
-            $chunkContainers[] = $chunkContainer;
+            foreach ($chunkBuilder->flush($fileOffset) as $chunkContainer) {
+                $fileOffset += \strlen($chunkContainer->binaryBuffer);
+                $chunkContainers[] = $chunkContainer;
+            }
         }
 
         $buffer = '';

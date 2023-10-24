@@ -158,7 +158,7 @@ final class BinaryBufferReader implements BinaryReader
         $floats = [];
 
         foreach ($floatBytes as $bytes) {
-            $floats[] = \unpack($this->byteOrder === ByteOrder::LITTLE_ENDIAN ? 'g' : 'G', \pack('C*', ...$bytes))[1];
+            $floats[] = \round(\unpack($this->byteOrder === ByteOrder::LITTLE_ENDIAN ? 'g' : 'G', \pack('C*', ...$bytes))[1], 7);
         }
 
         return $floats;

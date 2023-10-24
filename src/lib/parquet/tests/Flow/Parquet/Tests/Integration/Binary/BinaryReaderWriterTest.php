@@ -50,6 +50,19 @@ final class BinaryReaderWriterTest extends TestCase
         );
     }
 
+    public function test_writing_and_reading_floats() : void
+    {
+        $buffer = '';
+        $floats = [1.1, 2.2, 3.3, 4.4, 9.1];
+
+        (new BinaryBufferWriter($buffer))->writeFloats($floats);
+        $this->assertEqualsWithDelta(
+            $floats,
+            (new BinaryBufferReader($buffer))->readFloats(\count($floats)),
+            0.000001,
+        );
+    }
+
     public function test_writing_and_reading_strings() : void
     {
         $buffer = '';

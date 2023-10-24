@@ -159,7 +159,7 @@ final class RLEBitPackedHybrid
 
         $previousValue = null;
 
-        foreach ($values as $value) {
+        foreach ($values as $i => $value) {
             if ($previousValue === null) {
                 $previousValue = $value;
                 $rleBuffer[] = $value;
@@ -167,17 +167,27 @@ final class RLEBitPackedHybrid
                 continue;
             }
 
-            // we always bit-pack a multiple of 8 values at a time, so we only store the number of values / 8
+            // we always bit-pack a multiple of 8 values at a time, so we only store the number of "values / 8"
             if (\count($bitPackedBuffer) > 0 && \count($bitPackedBuffer) < 8) {
                 $bitPackedBuffer[] = $value;
 
                 continue;
             }
 
+            if (\count($bitPackedBuffer) % 8 === 0) {
+                $this->encodeBitPacked($writer, $bitWidth, $bitPackedBuffer);
+                $bitPackedBuffer = [];
+            }
+
             if ($previousValue === $value) {
                 $rleBuffer[] = $value;
             } else {
                 if (\count($rleBuffer) >= 8) {
+                    if (\count($bitPackedBuffer)) {
+                        $this->encodeBitPacked($writer, $bitWidth, $bitPackedBuffer);
+                        $bitPackedBuffer = [];
+                    }
+
                     $this->encodeRLE($writer, $bitWidth, $rleBuffer);
                     $rleBuffer = [];
                 }

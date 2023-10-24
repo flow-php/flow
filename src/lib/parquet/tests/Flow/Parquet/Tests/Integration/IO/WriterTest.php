@@ -2,6 +2,8 @@
 
 namespace Flow\Parquet\Tests\Integration\IO;
 
+use Faker\Factory;
+use Flow\Parquet\Consts;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\ListElement;
@@ -34,59 +36,45 @@ final class WriterTest extends ParquetIntegrationTestCase
             NestedColumn::list('list_of_strings', ListElement::string())
         );
 
-        $writer->write($path, $schema, $inputData = [
-            [
-                'boolean' => true,
-                'int32' => 32,
-                'int64' => 64,
-                'float' => 2.2,
-                'double' => 2.2,
-                'decimal' => 10.24,
-                'string' => 'string',
-                'date' => (new \DateTimeImmutable())->setTime(0, 0),
-                'datetime' => new \DateTimeImmutable(),
-                'list_of_datetimes' => [
-                    new \DateTimeImmutable('+1 second'),
-                    new \DateTimeImmutable('+2 second'),
-                    new \DateTimeImmutable('+3 second'),
+        $faker = Factory::create();
+
+        $inputData = \array_map(static function (int $i) use ($faker) : array {
+            return [
+                [
+                    'boolean' => $faker->boolean,
+                    'int32' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
+                    'int64' => $faker->numberBetween(0, PHP_INT_MAX),
+                    'float' => 10.25,
+                    'double' => $faker->randomFloat(),
+                    'decimal' => \round($faker->randomFloat(5), 2),
+                    'string' => $faker->text(50),
+                    'date' => \DateTimeImmutable::createFromMutable($faker->dateTime)->setTime(0, 0, 0, 0),
+                    'datetime' => \DateTimeImmutable::createFromMutable($faker->dateTime),
+                    'list_of_datetimes' => [
+                        \DateTimeImmutable::createFromMutable($faker->dateTime),
+                        \DateTimeImmutable::createFromMutable($faker->dateTime),
+                        \DateTimeImmutable::createFromMutable($faker->dateTime),
+                    ],
+                    'map_of_ints' => [
+                        'a' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
+                        'b' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
+                        'c' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
+                    ],
+                    'list_of_strings' => \array_map(static fn (int $i) => $faker->text(50), \range(0, \random_int(1, 10))),
                 ],
-                'map_of_ints' => [
-                    'a' => 0,
-                    'b' => 1,
-                    'c' => 2,
-                ],
-                'list_of_strings' => ['string_00_00'],
-            ],
-            [
-                'boolean' => false,
-                'int32' => 150,
-                'int64' => 64,
-                'float' => 2.2,
-                'double' => 2.2,
-                'decimal' => 10.24,
-                'string' => 'string',
-                'date' => (new \DateTimeImmutable())->setTime(0, 0),
-                'datetime' => new \DateTimeImmutable(),
-                'list_of_datetimes' => [
-                    new \DateTimeImmutable('+1 second'),
-                    new \DateTimeImmutable('+2 second'),
-                    new \DateTimeImmutable('+3 second'),
-                ],
-                'map_of_ints' => [
-                    'd' => 3,
-                    'e' => 4,
-                    'f' => 5,
-                ],
-                'list_of_strings' => ['string_01_00', 'string_01_01', 'string_01_02'],
-            ],
-        ]);
+            ];
+        }, \range(1, 100));
+
+        $inputData = \array_merge(...$inputData);
+
+        $writer->write($path, $schema, $inputData);
 
         $reader = new Reader();
         $file = $reader->read($path);
 
         $this->assertEquals(
             $inputData,
-            \iterator_to_array($file->values())
+            \iterator_to_array($file->values()),
         );
     }
 }

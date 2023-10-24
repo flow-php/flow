@@ -51,22 +51,6 @@ final class DataBuilder
             return null;
         }
 
-        if ($column->type() === PhysicalType::FLOAT) {
-            if (\is_float($value)) {
-                return \round($value, 7);
-            }
-
-            if (\is_array($value)) {
-                $enriched = [];
-
-                foreach ($value as $val) {
-                    $enriched[] = \round($val, 7);
-                }
-
-                return $enriched;
-            }
-        }
-
         if ($column->type() === PhysicalType::INT96 && $this->options->get(Option::INT_96_AS_DATETIME)) {
             if (\is_array($value) && \count($value) && !\is_array($value[0])) {
                 return $this->nanoToDateTimeImmutable($value);
