@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-10-23
+## [Unreleased] - 2023-10-24
 
 ### Added
 - [#638](https://github.com/flow-php/flow/pull/638) - **date and datetime support for parquet writter** - [@norberttech](https://github.com/norberttech)
@@ -57,6 +57,7 @@
 - [#584](https://github.com/flow-php/flow/pull/584) - **Adjust `phpunit.xml` to be more efficient** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
+- [#640](https://github.com/flow-php/flow/pull/640) - **bug in RLE/bitpacking hybrid algorithm** - [@norberttech](https://github.com/norberttech)
 - [#606](https://github.com/flow-php/flow/pull/606) - **Fix wrong truncate in `ASCIIValue` class** - [@stloyd](https://github.com/stloyd)
 - [#601](https://github.com/flow-php/flow/pull/601) - **benchmarks not executing extractors** - [@norberttech](https://github.com/norberttech)
 - [61e035](https://github.com/flow-php/flow/commit/61e0350ab589235504ea503065e8d6511a9262ae) - **github markdown syntax in benchmark tag workflow** - [@norberttech](https://github.com/norberttech)
