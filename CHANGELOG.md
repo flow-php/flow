@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-10-24
 
 ### Added
+- [#642](https://github.com/flow-php/flow/pull/642) - **Extracted data conversion between parquet/php types to a standalone class** - [@norberttech](https://github.com/norberttech)
 - [#638](https://github.com/flow-php/flow/pull/638) - **date and datetime support for parquet writter** - [@norberttech](https://github.com/norberttech)
 - [#637](https://github.com/flow-php/flow/pull/637) - **first draft of parquet writer** - [@norberttech](https://github.com/norberttech)
 - [#632](https://github.com/flow-php/flow/pull/632) - **Add missing tools to the dependabot config** - [@stloyd](https://github.com/stloyd)
@@ -19,6 +20,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#642](https://github.com/flow-php/flow/pull/642) - **Parquet flat path is now cached inside of the column to reduce number of iterations through schema** - [@norberttech](https://github.com/norberttech)
 - [#643](https://github.com/flow-php/flow/pull/643) - **Infection will no longer format output for GitHub** - [@norberttech](https://github.com/norberttech)
 - [#643](https://github.com/flow-php/flow/pull/643) - **PHPStan and Psalm will now report in GitHub format** - [@norberttech](https://github.com/norberttech)
 - [#636](https://github.com/flow-php/flow/pull/636) - **Reduced analyse strictness** - [@norberttech](https://github.com/norberttech)
