@@ -172,7 +172,7 @@
             "tools/phpbench/vendor/bin/phpbench run --report=flow-report"
         ],
         "test:mutation": [
-            "tools/infection/vendor/bin/infection -j2"
+            "tools/infection/vendor/bin/infection -j2 --logger-github=false"
         ],
         "static:analyze": [
             "tools/psalm/vendor/bin/psalm.phar --find-unused-psalm-suppress",
