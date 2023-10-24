@@ -57,6 +57,7 @@
 - [#584](https://github.com/flow-php/flow/pull/584) - **Adjust `phpunit.xml` to be more efficient** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
+- [#641](https://github.com/flow-php/flow/pull/641) - **Fix extracting data from empty Google Sheet.** - [@scyzoryck](https://github.com/scyzoryck)
 - [#640](https://github.com/flow-php/flow/pull/640) - **bug in RLE/bitpacking hybrid algorithm** - [@norberttech](https://github.com/norberttech)
 - [#606](https://github.com/flow-php/flow/pull/606) - **Fix wrong truncate in `ASCIIValue` class** - [@stloyd](https://github.com/stloyd)
 - [#601](https://github.com/flow-php/flow/pull/601) - **benchmarks not executing extractors** - [@norberttech](https://github.com/norberttech)
