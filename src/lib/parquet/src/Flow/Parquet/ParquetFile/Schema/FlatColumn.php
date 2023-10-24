@@ -13,6 +13,8 @@ use Flow\Parquet\Thrift\SchemaElement;
  */
 final class FlatColumn implements Column
 {
+    private ?string $flatPath = null;
+
     private ?NestedColumn $parent = null;
 
     public function __construct(
@@ -146,10 +148,16 @@ final class FlatColumn implements Column
 
     public function flatPath() : string
     {
+        if ($this->flatPath !== null) {
+            return $this->flatPath;
+        }
+
         $parent = $this->parent();
 
         if ($parent?->schemaRoot) {
-            return $this->name;
+            $this->flatPath = $this->name;
+
+            return $this->flatPath;
         }
 
         $path = [$this->name];
@@ -164,8 +172,9 @@ final class FlatColumn implements Column
         }
 
         $path = \array_reverse($path);
+        $this->flatPath =  \implode('.', $path);
 
-        return \implode('.', $path);
+        return $this->flatPath;
     }
 
     public function isList() : bool
@@ -325,6 +334,7 @@ final class FlatColumn implements Column
 
     public function setParent(NestedColumn $parent) : void
     {
+        $this->flatPath = null;
         $this->parent = $parent;
     }
 

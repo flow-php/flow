@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet;
 
+use Flow\Parquet\Data\DataConverter;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\ParquetFile\ColumnChunkReader\WholeChunk;
@@ -31,9 +32,9 @@ final class ParquetFile
      * @param resource $stream
      */
     public function __construct(
-        private $stream,
-        private readonly Options $options,
+        private                          $stream,
         private readonly ByteOrder $byteOrder,
+        private readonly DataConverter $dataConverter,
         private readonly LoggerInterface $logger = new NullLogger()
     ) {
     }
@@ -74,8 +75,8 @@ final class ParquetFile
     public function readChunks(FlatColumn $column, int $limit = null) : \Generator
     {
         $reader = new WholeChunk(
-            new DataBuilder($this->options, $this->logger),
-            new PageReader($column, $this->options, $this->byteOrder, $this->logger),
+            new DataBuilder($this->dataConverter, $this->logger),
+            new PageReader($column, $this->byteOrder, $this->logger),
             $this->logger
         );
 

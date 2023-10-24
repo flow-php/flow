@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Flow\Parquet\Tests\Unit\Data;
+namespace Flow\Parquet\Tests\Unit\ParquetFile\Data;
 
 use Flow\Parquet\BinaryReader;
 use Flow\Parquet\BinaryReader\Bytes;

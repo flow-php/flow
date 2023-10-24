@@ -2,6 +2,7 @@
 
 namespace Flow\Parquet\ParquetFile;
 
+use Flow\Parquet\Data\DataConverter;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnChunkBuilder;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\Flattener;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\RowGroupContainer;
@@ -20,7 +21,7 @@ final class RowGroupBuilder
 
     private int $rowsCount = 0;
 
-    public function __construct(private readonly Schema $schema)
+    public function __construct(private readonly Schema $schema, private readonly DataConverter $dataConverter)
     {
         $this->flattener = new Flattener();
 
@@ -80,7 +81,7 @@ final class RowGroupBuilder
         $builders = [];
 
         foreach ($schema->columnsFlat() as $column) {
-            $builders[$column->flatPath()] = new ColumnChunkBuilder($column);
+            $builders[$column->flatPath()] = new ColumnChunkBuilder($column, $this->dataConverter);
         }
 
         return $builders;

@@ -96,7 +96,7 @@ final class BinaryBufferReader implements BinaryReader
                 $byteArray[] = \ord($byteStr[$i]);
             }
 
-            $byteArrays[] = $byteArray;
+            $byteArrays[] = new Bytes($byteArray, $this->byteOrder);
             $position += $bytesLength;
         }
 
@@ -226,7 +226,7 @@ final class BinaryBufferReader implements BinaryReader
                 $int96Bytes[] = \ord($byte);
             }
 
-            $ints96[] = $int96Bytes;
+            $ints96[] = new Bytes($int96Bytes, $this->byteOrder);
         }
 
         $this->position->add(12 * $total * 8);
