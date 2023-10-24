@@ -38,8 +38,14 @@ final class GoogleSheetExtractor implements Extractor
         $totalRows = 0;
         /** @var Sheets\ValueRange $response */
         $response = $this->service->spreadsheets_values->get($this->spreadsheetId, $cellsRange->toString(), $this->options);
-        /** @var array[] $values */
-        $values = $response->getValues();
+        /**
+         * @var array[] $values
+         *
+         * @psalm-suppress RedundantConditionGivenDocblockType, DocblockTypeContradiction
+         *
+         * @phpstan-ignore-next-line
+         */
+        $values = $response->getValues() ?? [];
 
         if ($this->withHeader && [] !== $values) {
             /** @var string[] $headers */
