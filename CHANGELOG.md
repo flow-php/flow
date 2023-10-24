@@ -19,6 +19,8 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#643](https://github.com/flow-php/flow/pull/643) - **Infection will no longer format output for GitHub** - [@norberttech](https://github.com/norberttech)
+- [#643](https://github.com/flow-php/flow/pull/643) - **PHPStan and Psalm will now report in GitHub format** - [@norberttech](https://github.com/norberttech)
 - [#636](https://github.com/flow-php/flow/pull/636) - **Reduced analyse strictness** - [@norberttech](https://github.com/norberttech)
 - [#635](https://github.com/flow-php/flow/pull/635) - **Rework `NativeEntryFactory` to be stateless** - [@stloyd](https://github.com/stloyd)
 - [#630](https://github.com/flow-php/flow/pull/630) - **Unify `LICENSE` files** - [@stloyd](https://github.com/stloyd)
