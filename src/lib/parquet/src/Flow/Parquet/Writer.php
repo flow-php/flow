@@ -2,6 +2,7 @@
 
 namespace Flow\Parquet;
 
+use Flow\Parquet\Data\DataConverter;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\ParquetFile\Metadata;
 use Flow\Parquet\ParquetFile\RowGroupBuilder;
@@ -16,7 +17,7 @@ final class Writer
 
     private ?RowGroupBuilder $rowGroupBuilder = null;
 
-    public function __construct()
+    public function __construct(private Options $options = new Options())
     {
     }
 
@@ -64,7 +65,7 @@ final class Writer
     private function rowGroupBuilder(Schema $schema) : RowGroupBuilder
     {
         if ($this->rowGroupBuilder === null) {
-            $this->rowGroupBuilder = new RowGroupBuilder($schema);
+            $this->rowGroupBuilder = new RowGroupBuilder($schema, DataConverter::initialize($this->options));
         }
 
         return $this->rowGroupBuilder;

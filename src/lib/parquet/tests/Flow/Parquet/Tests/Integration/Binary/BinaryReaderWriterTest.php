@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 
 final class BinaryReaderWriterTest extends TestCase
 {
-    public function decimalProvider() : array
+    public static function decimalProvider() : array
     {
         return [
             ['decimals' => [10.24, 10.25], 'precision' => 10, 'scale' => 2],

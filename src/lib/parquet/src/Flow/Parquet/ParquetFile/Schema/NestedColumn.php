@@ -7,6 +7,8 @@ use Flow\Parquet\Thrift\SchemaElement;
 
 final class NestedColumn implements Column
 {
+    private ?string $flatPath = null;
+
     private ?self $parent = null;
 
     /**
@@ -149,10 +151,16 @@ final class NestedColumn implements Column
 
     public function flatPath() : string
     {
+        if ($this->flatPath !== null) {
+            return $this->flatPath;
+        }
+
         $parent = $this->parent();
 
         if ($parent?->schemaRoot) {
-            return $this->name;
+            $this->flatPath = $this->name;
+
+            return $this->flatPath;
         }
 
         $path = [$this->name];
@@ -167,8 +175,9 @@ final class NestedColumn implements Column
         }
 
         $path = \array_reverse($path);
+        $this->flatPath =  \implode('.', $path);
 
-        return \implode('.', $path);
+        return $this->flatPath;
     }
 
     /**
@@ -369,6 +378,7 @@ final class NestedColumn implements Column
 
     public function setParent(self $parent) : void
     {
+        $this->flatPath = null;
         $this->parent = $parent;
 
         foreach ($this->children as $child) {

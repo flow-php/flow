@@ -4,7 +4,6 @@ namespace Flow\Parquet\ParquetFile;
 
 use Flow\Parquet\ByteOrder;
 use Flow\Parquet\Exception\RuntimeException;
-use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Page\ColumnData;
 use Flow\Parquet\ParquetFile\Page\Dictionary;
 use Flow\Parquet\ParquetFile\Page\PageHeader;
@@ -16,7 +15,6 @@ final class PageReader
 {
     public function __construct(
         private readonly FlatColumn $column,
-        private readonly Options $options,
         private readonly ByteOrder $byteOrder,
         private readonly LoggerInterface $logger = new NullLogger()
     ) {
@@ -29,7 +27,7 @@ final class PageReader
      */
     public function readData(PageHeader $pageHeader, Compressions $codec, ?Dictionary $dictionary, $stream) : ColumnData
     {
-        return (new DataCoder($this->options, $this->byteOrder, $this->logger))
+        return (new DataCoder($this->byteOrder, $this->logger))
             ->decodeData(
                 (new Codec())
                     ->decompress(
@@ -59,7 +57,7 @@ final class PageReader
             throw new RuntimeException("Can't read dictionary from non dictionary page header");
         }
 
-        return (new DataCoder($this->options, $this->byteOrder, $this->logger))
+        return (new DataCoder($this->byteOrder, $this->logger))
             ->decodeDictionary(
                 (new Codec())
                     ->decompress(

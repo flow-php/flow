@@ -447,7 +447,7 @@ final class SimpleTypesReadingTest extends ParquetIntegrationTestCase
         $count = 0;
 
         foreach ($file->values(['timestamp']) as $row) {
-            $this->assertIsInt($row['timestamp']);
+            $this->assertInstanceOf(\DateTimeImmutable::class, $row['timestamp']);
             $count++;
         }
         $this->assertSame(100, $count);
@@ -466,7 +466,7 @@ final class SimpleTypesReadingTest extends ParquetIntegrationTestCase
 
         foreach ($file->values(['timestamp_nullable']) as $rowIndex => $row) {
             if ($rowIndex % 2 === 0) {
-                $this->assertIsInt($row['timestamp_nullable']);
+                $this->assertInstanceOf(\DateTimeImmutable::class, $row['timestamp_nullable']);
             } else {
                 $this->assertNull($row['timestamp_nullable']);
             }

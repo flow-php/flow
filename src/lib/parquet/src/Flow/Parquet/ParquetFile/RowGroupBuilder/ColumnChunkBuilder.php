@@ -2,6 +2,7 @@
 
 namespace Flow\Parquet\ParquetFile\RowGroupBuilder;
 
+use Flow\Parquet\Data\DataConverter;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Encodings;
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
@@ -11,7 +12,7 @@ final class ColumnChunkBuilder
 {
     private array $data = [];
 
-    public function __construct(private readonly FlatColumn $column)
+    public function __construct(private readonly FlatColumn $column, private readonly DataConverter $dataConverter)
     {
     }
 
@@ -32,7 +33,7 @@ final class ColumnChunkBuilder
         $previousChunkData = null;
 
         foreach (\array_chunk($this->data, 1000) as $dataChunk) {
-            $pageContainer = (new DataPagesBuilder($dataChunk))->build($this->column);
+            $pageContainer = (new DataPagesBuilder($dataChunk))->build($this->column, $this->dataConverter);
 
             $columnChunkContainers[] = new ColumnChunkContainer(
                 $pageContainer->pageHeaderBuffer . $pageContainer->dataBuffer,

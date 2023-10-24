@@ -21,7 +21,7 @@ interface BinaryReader
     public function readBooleans(int $total) : array;
 
     /**
-     * @return array<array<int>>
+     * @return array<Bytes>
      */
     public function readByteArrays(int $total) : array;
 
@@ -50,7 +50,7 @@ interface BinaryReader
     public function readInts64(int $total) : array;
 
     /**
-     * @return array<array<int>>
+     * @return array<Bytes>
      */
     public function readInts96(int $total) : array;
 

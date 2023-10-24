@@ -5,8 +5,6 @@ namespace Flow\Parquet\ParquetFile;
 use Flow\Parquet\BinaryReader\BinaryBufferReader;
 use Flow\Parquet\ByteOrder;
 use Flow\Parquet\Exception\RuntimeException;
-use Flow\Parquet\Option;
-use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Data\BitWidth;
 use Flow\Parquet\ParquetFile\Data\RLEBitPackedHybrid;
 use Flow\Parquet\ParquetFile\Page\ColumnData;
@@ -19,7 +17,6 @@ use Psr\Log\NullLogger;
 final class DataCoder
 {
     public function __construct(
-        private readonly Options $options,
         private readonly ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN,
         private readonly LoggerInterface $logger = new NullLogger()
     ) {
@@ -232,10 +229,7 @@ final class DataCoder
             PhysicalType::DOUBLE => $reader->readDoubles($total),
             PhysicalType::BYTE_ARRAY => match ($logicalType?->name()) {
                 LogicalType::STRING => $reader->readStrings($total),
-                default => match ($this->options->get(Option::BYTE_ARRAY_TO_STRING)) {
-                    true => $reader->readStrings($total),
-                    false => $reader->readByteArrays($total)
-                }
+                default => $reader->readByteArrays($total)
             },
             PhysicalType::FIXED_LEN_BYTE_ARRAY => match ($logicalType?->name()) {
                 /** @phpstan-ignore-next-line */
