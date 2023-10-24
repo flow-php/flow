@@ -9,10 +9,10 @@ final class BytesConverter
     public static function binToHex(string $binaryData, int $limit = null, string $glue = ' ') : string
     {
         if ($limit === null) {
-            return \implode($glue, \str_split(\bin2hex($binaryData), 2));
+            return \implode($glue, \str_split(\strtoupper(\bin2hex($binaryData)), 2));
         }
 
-        return \implode($glue, \array_slice(\str_split(\bin2hex($binaryData), 2), 0, $limit));
+        return \implode($glue, \array_slice(\str_split(\strtoupper(\bin2hex($binaryData)), 2), 0, $limit));
     }
 
     public static function intToBin(int $number, int $bits = 32, int $bitsPerGroup = 4) : string

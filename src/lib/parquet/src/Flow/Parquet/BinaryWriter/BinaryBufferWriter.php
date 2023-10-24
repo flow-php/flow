@@ -106,8 +106,8 @@ final class BinaryBufferWriter implements BinaryWriter
 
         foreach ($doubles as $double) {
             $this->buffer .= \pack($format, $double);
-            $this->length->addBytes(8);
         }
+        $this->length->addBytes(\count($doubles) * 8);
     }
 
     public function writeFloats(array $floats) : void
@@ -116,8 +116,8 @@ final class BinaryBufferWriter implements BinaryWriter
 
         foreach ($floats as $float) {
             $this->buffer .= \pack($format, $float);
-            $this->length->addBytes(4);  // A float is 4 bytes
         }
+        $this->length->addBytes(\count($floats) * 4);
     }
 
     public function writeInts32(array $ints) : void

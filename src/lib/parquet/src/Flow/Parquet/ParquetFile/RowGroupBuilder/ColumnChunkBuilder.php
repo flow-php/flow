@@ -22,31 +22,43 @@ final class ColumnChunkBuilder
 
     /**
      * @psalm-suppress PossiblyNullArgument
+     *
+     * @return array<ColumnChunkContainer>
      */
-    public function flush(int $fileOffset) : ColumnChunkContainer
+    public function flush(int $fileOffset) : array
     {
-        $pageContainer = (new DataPagesBuilder($this->data))->build($this->column);
+        $offset = $fileOffset;
+        $columnChunkContainers = [];
+        $previousChunkData = null;
+
+        foreach (\array_chunk($this->data, 1000) as $dataChunk) {
+            $pageContainer = (new DataPagesBuilder($dataChunk))->build($this->column);
+
+            $columnChunkContainers[] = new ColumnChunkContainer(
+                $pageContainer->pageHeaderBuffer . $pageContainer->dataBuffer,
+                new ColumnChunk(
+                    $this->column->type(),
+                    Compressions::UNCOMPRESSED,
+                    /** @phpstan-ignore-next-line */
+                    $pageContainer->pageHeader->dataValuesCount(),
+                    $offset,
+                    $this->column->path(),
+                    [
+                        Encodings::PLAIN,
+                    ],
+                    \strlen($pageContainer->dataBuffer) + \strlen($pageContainer->pageHeaderBuffer),
+                    \strlen($pageContainer->dataBuffer) + \strlen($pageContainer->pageHeaderBuffer),
+                    dictionaryPageOffset: null,
+                    dataPageOffset: $offset,
+                    indexPageOffset: null,
+                )
+            );
+
+            $offset += \strlen($pageContainer->pageHeaderBuffer) + \strlen($pageContainer->dataBuffer);
+        }
 
         $this->data = [];
 
-        return new ColumnChunkContainer(
-            $pageContainer->pageHeaderBuffer . $pageContainer->dataBuffer,
-            new ColumnChunk(
-                $this->column->type(),
-                Compressions::UNCOMPRESSED,
-                /** @phpstan-ignore-next-line */
-                $pageContainer->pageHeader->dataValuesCount(),
-                $fileOffset,
-                $this->column->path(),
-                [
-                    Encodings::PLAIN,
-                ],
-                \strlen($pageContainer->dataBuffer) + \strlen($pageContainer->pageHeaderBuffer),
-                \strlen($pageContainer->dataBuffer) + \strlen($pageContainer->pageHeaderBuffer),
-                dictionaryPageOffset: null,
-                dataPageOffset: $fileOffset,
-                indexPageOffset: null,
-            )
-        );
+        return $columnChunkContainers;
     }
 }
