@@ -172,11 +172,20 @@
             "tools/phpbench/vendor/bin/phpbench run --report=flow-report"
         ],
         "test:mutation": [
-            "tools/infection/vendor/bin/infection -j2 --logger-github=false"
+            "tools/infection/vendor/bin/infection -j2"
         ],
         "static:analyze": [
-            "tools/psalm/vendor/bin/psalm.phar --find-unused-psalm-suppress",
-            "tools/phpstan/vendor/bin/phpstan analyze -c phpstan.neon --memory-limit=-1",
+            "@static:analyze:cs-fixer",
+            "@static:analyze:psalm",
+            "@static:analyze:phpstan"
+        ],
+        "static:analyze:psalm": [
+            "tools/psalm/vendor/bin/psalm.phar --find-unused-psalm-suppress"
+        ],
+        "static:analyze:phpstan": [
+            "tools/phpstan/vendor/bin/phpstan analyze -c phpstan.neon --memory-limit=-1"
+        ],
+        "static:analyze:cs-fixer": [
             "tools/cs-fixer/vendor/bin/php-cs-fixer fix --dry-run"
         ],
         "cs:php:fix": [
