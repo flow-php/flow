@@ -43,15 +43,17 @@ final class ColumnChunkBuilder
         $dictionaryPageSize = null;
         $dictionaryPageOffset = null;
         $pageOffset = $offset;
+        $dictionaryPage = null;
 
         foreach ($pageContainers as $pageContainer) {
             if ($pageContainer->pageHeader->type() === Type::DICTIONARY_PAGE) {
-                if ($dictionaryPageSize !== null) {
+                if ($dictionaryPage !== null) {
                     throw new RuntimeException('There can be only one dictionary page in column chunk');
                 }
 
                 $dictionaryPageOffset = $pageOffset;
                 $dictionaryPageSize = $pageContainer->size();
+                $dictionaryPage = $pageContainer;
             }
 
             $buffer .= $pageContainer->pageHeaderBuffer . $pageContainer->pageBuffer;
@@ -60,6 +62,8 @@ final class ColumnChunkBuilder
             $size += $pageContainer->size();
             $pageOffset += $pageContainer->size();
         }
+
+        $valuesCount = $dictionaryPage ? \count($dictionaryPage->values) : $valuesCount;
 
         $encodings = \array_values(\array_unique($encodings));
         $encodings = \array_map(static fn (int $encoding) => Encodings::from($encoding), $encodings);
