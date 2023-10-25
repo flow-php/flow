@@ -29,15 +29,15 @@ final class WriterTest extends ParquetIntegrationTestCase
             FlatColumn::double('double'),
             FlatColumn::decimal('decimal'),
             FlatColumn::string('string'),
-//            FlatColumn::date('date'),
-//            FlatColumn::dateTime('datetime'),
-//            NestedColumn::list('list_of_datetimes', ListElement::dateTime()),
-//            NestedColumn::map('map_of_ints', MapKey::string(), MapValue::int32()),
-//            NestedColumn::list('list_of_strings', ListElement::string()),
-//            NestedColumn::struct('struct_flat', [
-//                FlatColumn::int32('id'),
-//                FlatColumn::string('name')
-//            ]),
+            FlatColumn::date('date'),
+            FlatColumn::dateTime('datetime'),
+            NestedColumn::list('list_of_datetimes', ListElement::dateTime()),
+            NestedColumn::map('map_of_ints', MapKey::string(), MapValue::int32()),
+            NestedColumn::list('list_of_strings', ListElement::string()),
+            NestedColumn::struct('struct_flat', [
+                FlatColumn::int32('id'),
+                FlatColumn::string('name'),
+            ]),
         );
 
         $faker = Factory::create();
@@ -52,26 +52,26 @@ final class WriterTest extends ParquetIntegrationTestCase
                     'double' => $faker->randomFloat(),
                     'decimal' => \round($faker->randomFloat(5), 2),
                     'string' => $faker->text(50),
-                    //                    'date' => \DateTimeImmutable::createFromMutable($faker->dateTime)->setTime(0, 0, 0, 0),
-                    //                    'datetime' => \DateTimeImmutable::createFromMutable($faker->dateTime),
-                    //                    'list_of_datetimes' => [
-                    //                        \DateTimeImmutable::createFromMutable($faker->dateTime),
-                    //                        \DateTimeImmutable::createFromMutable($faker->dateTime),
-                    //                        \DateTimeImmutable::createFromMutable($faker->dateTime),
-                    //                    ],
-                    //                    'map_of_ints' => [
-                    //                        'a' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                    //                        'b' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                    //                        'c' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                    //                    ],
-                    //                    'list_of_strings' => \array_map(static fn (int $i) => $faker->text(50), \range(0, \random_int(1, 10))),
-                    //                    'struct_flat' => [
-                    //                        'id' => $i,
-                    //                        'name' => 'name_' . \str_pad((string) $i, 5, '0', STR_PAD_LEFT)
-                    //                    ]
+                    'date' => \DateTimeImmutable::createFromMutable($faker->dateTime)->setTime(0, 0, 0, 0),
+                    'datetime' => \DateTimeImmutable::createFromMutable($faker->dateTime),
+                    'list_of_datetimes' => [
+                        \DateTimeImmutable::createFromMutable($faker->dateTime),
+                        \DateTimeImmutable::createFromMutable($faker->dateTime),
+                        \DateTimeImmutable::createFromMutable($faker->dateTime),
+                    ],
+                    'map_of_ints' => [
+                        'a' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
+                        'b' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
+                        'c' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
+                    ],
+                    'list_of_strings' => \array_map(static fn (int $i) => $faker->text(50), \range(0, \random_int(1, 10))),
+                    'struct_flat' => [
+                        'id' => $i,
+                        'name' => 'name_' . \str_pad((string) $i, 5, '0', STR_PAD_LEFT),
+                    ],
                 ],
             ];
-        }, \range(1, 5_000));
+        }, \range(1, 100));
 
         $inputData = \array_merge(...$inputData);
 
