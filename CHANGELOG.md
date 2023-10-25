@@ -21,6 +21,8 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#645](https://github.com/flow-php/flow/pull/645) - **Rework `SnappyCompressor::compressFragment()` method** - [@stloyd](https://github.com/stloyd)
+- [#645](https://github.com/flow-php/flow/pull/645) - **Add code of Snappy to static analysis** - [@stloyd](https://github.com/stloyd)
 - [#644](https://github.com/flow-php/flow/pull/644) - **PHPUnit code coverage thresholds** - [@norberttech](https://github.com/norberttech)
 - [#642](https://github.com/flow-php/flow/pull/642) - **Parquet flat path is now cached inside of the column to reduce number of iterations through schema** - [@norberttech](https://github.com/norberttech)
 - [#643](https://github.com/flow-php/flow/pull/643) - **Infection will no longer format output for GitHub** - [@norberttech](https://github.com/norberttech)
