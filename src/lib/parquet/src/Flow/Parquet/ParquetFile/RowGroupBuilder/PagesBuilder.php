@@ -18,7 +18,11 @@ final class PagesBuilder
     {
         $containers = new PageContainers();
 
-        if ($column->logicalType()?->name() === LogicalType::STRING) {
+        $logicalType = $column->logicalType()?->name();
+
+        $dictionaryTypes = [LogicalType::STRING, LogicalType::UUID, LogicalType::ENUM, LogicalType::JSON];
+
+        if ($logicalType !== null && \in_array($logicalType, $dictionaryTypes, true)) {
             $dictionaryPageContainer = (new DictionaryPageBuilder())->build($column, $this->dataConverter, $rows);
 
             $containers->add($dictionaryPageContainer);
