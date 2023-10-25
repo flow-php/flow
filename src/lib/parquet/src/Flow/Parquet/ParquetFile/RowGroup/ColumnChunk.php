@@ -64,6 +64,11 @@ final class ColumnChunk
         return $this->codec;
     }
 
+    public function dataPageOffset() : ?int
+    {
+        return $this->dataPageOffset;
+    }
+
     public function dictionaryPageOffset() : ?int
     {
         return $this->dictionaryPageOffset;
