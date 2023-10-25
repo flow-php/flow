@@ -33,7 +33,11 @@ final class WriterTest extends ParquetIntegrationTestCase
             FlatColumn::dateTime('datetime'),
             NestedColumn::list('list_of_datetimes', ListElement::dateTime()),
             NestedColumn::map('map_of_ints', MapKey::string(), MapValue::int32()),
-            NestedColumn::list('list_of_strings', ListElement::string())
+            NestedColumn::list('list_of_strings', ListElement::string()),
+            NestedColumn::struct('struct_flat', [
+                FlatColumn::int32('id'),
+                FlatColumn::string('name'),
+            ]),
         );
 
         $faker = Factory::create();
@@ -61,6 +65,10 @@ final class WriterTest extends ParquetIntegrationTestCase
                         'c' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
                     ],
                     'list_of_strings' => \array_map(static fn (int $i) => $faker->text(50), \range(0, \random_int(1, 10))),
+                    'struct_flat' => [
+                        'id' => $i,
+                        'name' => 'name_' . \str_pad((string) $i, 5, '0', STR_PAD_LEFT),
+                    ],
                 ],
             ];
         }, \range(1, 100));

@@ -22,44 +22,46 @@ final class ColumnChunkBuilder
     }
 
     /**
-     * @psalm-suppress PossiblyNullArgument
-     *
      * @return array<ColumnChunkContainer>
      */
     public function flush(int $fileOffset) : array
     {
         $offset = $fileOffset;
         $columnChunkContainers = [];
-        $previousChunkData = null;
 
-        foreach (\array_chunk($this->data, 1000) as $dataChunk) {
-            $pageContainer = (new DataPagesBuilder($dataChunk))->build($this->column, $this->dataConverter);
+        $pageContainer = (new DataPagesBuilder($this->data))->build($this->column, $this->dataConverter);
 
-            $columnChunkContainers[] = new ColumnChunkContainer(
-                $pageContainer->pageHeaderBuffer . $pageContainer->dataBuffer,
-                new ColumnChunk(
-                    $this->column->type(),
-                    Compressions::UNCOMPRESSED,
-                    /** @phpstan-ignore-next-line */
-                    $pageContainer->pageHeader->dataValuesCount(),
-                    $offset,
-                    $this->column->path(),
-                    [
-                        Encodings::PLAIN,
-                    ],
-                    \strlen($pageContainer->dataBuffer) + \strlen($pageContainer->pageHeaderBuffer),
-                    \strlen($pageContainer->dataBuffer) + \strlen($pageContainer->pageHeaderBuffer),
-                    dictionaryPageOffset: null,
-                    dataPageOffset: $offset,
-                    indexPageOffset: null,
-                )
-            );
-
-            $offset += \strlen($pageContainer->pageHeaderBuffer) + \strlen($pageContainer->dataBuffer);
-        }
+        $columnChunkContainers[] = $this->createColumnChunkContainer($pageContainer, $offset);
+        $offset += $pageContainer->size();
 
         $this->data = [];
 
         return $columnChunkContainers;
+    }
+
+    /**
+     * @psalm-suppress PossiblyNullArgument
+     */
+    private function createColumnChunkContainer(PageContainer $pageContainer, int $offset) : ColumnChunkContainer
+    {
+        return new ColumnChunkContainer(
+            $pageContainer->pageHeaderBuffer . $pageContainer->pageDataBuffer,
+            new ColumnChunk(
+                $this->column->type(),
+                Compressions::UNCOMPRESSED,
+                /** @phpstan-ignore-next-line */
+                $pageContainer->pageHeader->dataValuesCount(),
+                $offset,
+                $this->column->path(),
+                [
+                    Encodings::PLAIN,
+                ],
+                \strlen($pageContainer->pageDataBuffer) + \strlen($pageContainer->pageHeaderBuffer),
+                \strlen($pageContainer->pageDataBuffer) + \strlen($pageContainer->pageHeaderBuffer),
+                dictionaryPageOffset: null,
+                dataPageOffset: $offset,
+                indexPageOffset: null,
+            )
+        );
     }
 }

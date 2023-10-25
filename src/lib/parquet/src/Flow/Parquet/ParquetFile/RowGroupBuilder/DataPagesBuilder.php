@@ -23,7 +23,7 @@ final class DataPagesBuilder
     {
     }
 
-    public function build(FlatColumn $column, DataConverter $dataConverter) : DataPageContainer
+    public function build(FlatColumn $column, DataConverter $dataConverter) : PageContainer
     {
         $shredded = (new Dremel())->shred($this->rows, $column->maxDefinitionsLevel());
 
@@ -53,6 +53,7 @@ final class DataPagesBuilder
         $pageHeader = new PageHeader(
             Type::DATA_PAGE,
             \strlen($pageBuffer),
+            \strlen($pageBuffer),
             dataPageHeader: new DataPageHeader(
                 Encodings::PLAIN,
                 $this->valuesCount($this->rows),
@@ -62,7 +63,7 @@ final class DataPagesBuilder
         );
         $pageHeader->toThrift()->write(new TCompactProtocol($pageHeaderBuffer = new TMemoryBuffer()));
 
-        return new DataPageContainer(
+        return new PageContainer(
             $pageHeaderBuffer->getBuffer(),
             $pageBuffer,
             $pageHeader
