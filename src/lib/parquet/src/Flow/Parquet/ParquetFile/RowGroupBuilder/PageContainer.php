@@ -8,13 +8,14 @@ final class PageContainer
 {
     public function __construct(
         public readonly string $pageHeaderBuffer,
-        public readonly string $pageDataBuffer,
+        public readonly string $pageBuffer,
+        public readonly array $values,
         public readonly PageHeader $pageHeader
     ) {
     }
 
     public function size() : int
     {
-        return \strlen($this->pageHeaderBuffer) + \strlen($this->pageDataBuffer);
+        return \strlen($this->pageHeaderBuffer) + \strlen($this->pageBuffer);
     }
 }

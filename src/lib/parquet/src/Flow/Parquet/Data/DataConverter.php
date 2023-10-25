@@ -8,6 +8,7 @@ use Flow\Parquet\Data\Converter\Int32DateTimeConverter;
 use Flow\Parquet\Data\Converter\Int64DateTimeConverter;
 use Flow\Parquet\Data\Converter\Int96DateTimeConverter;
 use Flow\Parquet\Data\Converter\TimeConverter;
+use Flow\Parquet\Exception\DataConversionException;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 
@@ -56,7 +57,15 @@ final class DataConverter
             if ($converter->isFor($column, $this->options)) {
                 $this->cache[$column->flatPath()] = $converter;
 
-                return $converter->fromParquetType($data);
+                try {
+                    return $converter->fromParquetType($data);
+                } catch (\Throwable $e) {
+                    throw new DataConversionException(
+                        "Failed to convert data from parquet type for column '{$column->flatPath()}'. {$e->getMessage()}",
+                        0,
+                        $e
+                    );
+                }
             }
         }
 

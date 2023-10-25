@@ -3,6 +3,7 @@
 namespace Flow\Parquet;
 
 use Flow\Parquet\Data\DataConverter;
+use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\ParquetFile\Metadata;
 use Flow\Parquet\ParquetFile\RowGroupBuilder;
@@ -26,8 +27,9 @@ final class Writer
      */
     public function write(string $path, Schema $schema, iterable $rows) : void
     {
+        // This will be later replaced with append
         if (\file_exists($path)) {
-            \unlink($path);
+            throw new InvalidArgumentException("File {$path} already exists");
         }
 
         $stream = \fopen($path, 'wb');

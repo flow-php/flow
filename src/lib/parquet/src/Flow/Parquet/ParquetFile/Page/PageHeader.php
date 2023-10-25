@@ -118,7 +118,7 @@ final class PageHeader
             'crc' => null,
             'data_page_header' => $this->dataPageHeader?->toThrift(),
             'data_page_header_v2' => null,
-            'dictionary_page_header' => null,
+            'dictionary_page_header' => $this->dictionaryPageHeader?->toThrift(),
             'index_page_header' => null,
         ]);
     }
