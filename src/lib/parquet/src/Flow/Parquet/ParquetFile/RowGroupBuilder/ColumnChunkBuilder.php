@@ -33,8 +33,6 @@ final class ColumnChunkBuilder
 
     /**
      * @param array<PageContainer> $pageContainers
-     *
-     * @psalm-suppress PossiblyNullArgument
      */
     private function createColumnChunkContainer(array $pageContainers, int $offset) : ColumnChunkContainer
     {
