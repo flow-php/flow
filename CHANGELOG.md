@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-10-25
 
 ### Added
+- [#646](https://github.com/flow-php/flow/pull/646) - **Parquet - dictionary encoded pages** - [@norberttech](https://github.com/norberttech)
 - [#644](https://github.com/flow-php/flow/pull/644) - **Possibility to iterate through all parquet file column chunk page headers** - [@norberttech](https://github.com/norberttech)
 - [#642](https://github.com/flow-php/flow/pull/642) - **Extracted data conversion between parquet/php types to a standalone class** - [@norberttech](https://github.com/norberttech)
 - [#638](https://github.com/flow-php/flow/pull/638) - **date and datetime support for parquet writter** - [@norberttech](https://github.com/norberttech)
