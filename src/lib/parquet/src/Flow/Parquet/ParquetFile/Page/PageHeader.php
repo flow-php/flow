@@ -16,6 +16,7 @@ final class PageHeader
     public function __construct(
         private readonly Type $type,
         private readonly int $compressedPageSize,
+        private readonly int $uncompressedPageSize,
         private readonly ?DataPageHeader $dataPageHeader,
         private readonly ?DataPageHeaderV2 $dataPageHeaderV2,
         private readonly ?DictionaryPageHeader $dictionaryPageHeader
@@ -30,6 +31,7 @@ final class PageHeader
         return new self(
             Type::from($thrift->type),
             $thrift->compressed_page_size,
+            $thrift->uncompressed_page_size,
             $thrift->data_page_header !== null ? DataPageHeader::fromThrift($thrift->data_page_header) : null,
             $thrift->data_page_header_v2 !== null ? DataPageHeaderV2::fromThrift($thrift->data_page_header_v2) : null,
             $thrift->dictionary_page_header !== null ? DictionaryPageHeader::fromThrift($thrift->dictionary_page_header) : null
@@ -112,7 +114,7 @@ final class PageHeader
         return new \Flow\Parquet\Thrift\PageHeader([
             'type' => $this->type->value,
             'compressed_page_size' => $this->compressedPageSize,
-            'uncompressed_page_size' => $this->compressedPageSize,
+            'uncompressed_page_size' => $this->uncompressedPageSize,
             'crc' => null,
             'data_page_header' => $this->dataPageHeader?->toThrift(),
             'data_page_header_v2' => null,
@@ -124,5 +126,10 @@ final class PageHeader
     public function type() : Type
     {
         return $this->type;
+    }
+
+    public function uncompressedPageSize() : int
+    {
+        return $this->uncompressedPageSize;
     }
 }

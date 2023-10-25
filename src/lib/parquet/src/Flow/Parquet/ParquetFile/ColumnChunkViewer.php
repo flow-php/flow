@@ -5,12 +5,10 @@ namespace Flow\Parquet\ParquetFile;
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 
-interface ColumnChunkReader
+interface ColumnChunkViewer
 {
     /**
      * @param resource $stream
-     *
-     * @return \Generator<array<mixed>>
      */
-    public function read(ColumnChunk $columnChunk, FlatColumn $column, $stream, int $limit = null) : \Generator;
+    public function view(ColumnChunk $columnChunk, FlatColumn $column, $stream) : \Generator;
 }

@@ -7,9 +7,12 @@ namespace Flow\Parquet;
 use Flow\Parquet\Data\DataConverter;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Exception\RuntimeException;
-use Flow\Parquet\ParquetFile\ColumnChunkReader\WholeChunk;
+use Flow\Parquet\ParquetFile\ColumnChunkReader\WholeChunkReader;
+use Flow\Parquet\ParquetFile\ColumnChunkViewer\WholeChunkViewer;
+use Flow\Parquet\ParquetFile\ColumnPageHeader;
 use Flow\Parquet\ParquetFile\Data\DataBuilder;
 use Flow\Parquet\ParquetFile\Metadata;
+use Flow\Parquet\ParquetFile\Page\PageHeader;
 use Flow\Parquet\ParquetFile\PageReader;
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\ParquetFile\Schema;
@@ -72,9 +75,21 @@ final class ParquetFile
         return $this->metadata;
     }
 
+    /**
+     * @return \Generator<ColumnPageHeader>
+     */
+    public function pageHeaders() : \Generator
+    {
+        foreach ($this->schema()->columnsFlat() as $column) {
+            foreach ($this->viewChunksPages($column) as $pageHeader) {
+                yield new ColumnPageHeader($column, $pageHeader);
+            }
+        }
+    }
+
     public function readChunks(FlatColumn $column, int $limit = null) : \Generator
     {
-        $reader = new WholeChunk(
+        $reader = new WholeChunkReader(
             new DataBuilder($this->dataConverter, $this->logger),
             new PageReader($column, $this->byteOrder, $this->logger),
             $this->logger
@@ -221,7 +236,7 @@ final class ParquetFile
         $keysColumn = $mapColumn->getMapKeyColumn();
         $valuesColumn = $mapColumn->getMapValueColumn();
 
-        $keys = $this->readChunks($keysColumn, $limit);
+        $keys = $this->readFlat($keysColumn, $limit);
 
         $values = null;
 
@@ -330,6 +345,22 @@ final class ParquetFile
                     $row[$childColumn->name()] = $childColumnValue;
                 }
                 yield $row;
+            }
+        }
+    }
+
+    /**
+     * @return \Generator<PageHeader>
+     */
+    private function viewChunksPages(FlatColumn $column) : \Generator
+    {
+        $viewer = new WholeChunkViewer($this->logger);
+
+        foreach ($this->getColumnChunks($column) as $columnChunks) {
+            foreach ($columnChunks as $columnChunk) {
+                foreach ($viewer->view($columnChunk, $column, $this->stream) as $pageHeader) {
+                    yield $pageHeader;
+                }
             }
         }
     }

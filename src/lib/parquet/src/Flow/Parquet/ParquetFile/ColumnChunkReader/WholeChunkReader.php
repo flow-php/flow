@@ -9,7 +9,6 @@ use Flow\Parquet\ParquetFile\Page\ColumnData;
 use Flow\Parquet\ParquetFile\Page\PageHeader;
 use Flow\Parquet\ParquetFile\PageReader;
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
-use Flow\Parquet\ParquetFile\Schema\Column;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ThriftStream\TPhpFileStream;
 use Psr\Log\LoggerInterface;
@@ -17,7 +16,7 @@ use Psr\Log\NullLogger;
 use Thrift\Protocol\TCompactProtocol;
 use Thrift\Transport\TBufferedTransport;
 
-final class WholeChunk implements ColumnChunkReader
+final class WholeChunkReader implements ColumnChunkReader
 {
     public function __construct(
         private readonly DataBuilder $dataBuilder,
@@ -28,6 +27,8 @@ final class WholeChunk implements ColumnChunkReader
 
     /**
      * @param resource $stream
+     *
+     * @return \Generator<array<mixed>>
      */
     public function read(ColumnChunk $columnChunk, FlatColumn $column, $stream, int $limit = null) : \Generator
     {
@@ -105,7 +106,7 @@ final class WholeChunk implements ColumnChunkReader
         try {
             \fseek($stream, $pageOffset);
             $thriftHeader = new \Flow\Parquet\Thrift\PageHeader();
-            $thriftHeader->read(new TCompactProtocol(new TBufferedTransport(new TPhpFileStream($stream))));
+            @$thriftHeader->read(new TCompactProtocol(new TBufferedTransport(new TPhpFileStream($stream))));
 
             if ($thriftHeader->type === null) {
                 return null;
