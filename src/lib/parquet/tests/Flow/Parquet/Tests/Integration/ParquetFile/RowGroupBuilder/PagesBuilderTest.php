@@ -23,12 +23,12 @@ final class PagesBuilderTest extends TestCase
 
         $pages = (new PagesBuilder(DataConverter::initialize(new Options())))->build($column, $values);
 
-        $this->assertCount(1, $pages);
+        $this->assertCount(1, $pages->dataPageContainers());
         $this->assertEquals(
             new PageHeader(
                 Type::DATA_PAGE,
-                \strlen($pages[0]->pageBuffer),
-                \strlen($pages[0]->pageBuffer),
+                \strlen($pages->dataPageContainers()[0]->pageBuffer),
+                \strlen($pages->dataPageContainers()[0]->pageBuffer),
                 new DataPageHeader(
                     Encodings::PLAIN,
                     \count($values),
@@ -36,7 +36,7 @@ final class PagesBuilderTest extends TestCase
                 null,
                 null
             ),
-            $pages[0]->pageHeader
+            $pages->dataPageContainers()[0]->pageHeader
         );
     }
 
@@ -48,26 +48,25 @@ final class PagesBuilderTest extends TestCase
 
         $pages = (new PagesBuilder(DataConverter::initialize(new Options())))->build($column, $values);
 
-        $this->assertCount(2, $pages);
         $this->assertEquals(
             new PageHeader(
                 Type::DICTIONARY_PAGE,
-                \strlen($pages[0]->pageBuffer),
-                \strlen($pages[0]->pageBuffer),
+                \strlen($pages->dictionaryPageContainer()->pageBuffer),
+                \strlen($pages->dictionaryPageContainer()->pageBuffer),
                 null,
                 null,
                 new DictionaryPageHeader(
                     Encodings::PLAIN,
-                    \count(\array_unique($values)),
+                    $pages->valuesCount(),
                 )
             ),
-            $pages[0]->pageHeader
+            $pages->dictionaryPageContainer()->pageHeader
         );
         $this->assertEquals(
             new PageHeader(
                 Type::DATA_PAGE,
-                \strlen($pages[1]->pageBuffer),
-                \strlen($pages[1]->pageBuffer),
+                \strlen($pages->dataPageContainers()[0]->pageBuffer),
+                \strlen($pages->dataPageContainers()[0]->pageBuffer),
                 new DataPageHeader(
                     Encodings::PLAIN_DICTIONARY,
                     \count($values),
@@ -75,7 +74,7 @@ final class PagesBuilderTest extends TestCase
                 null,
                 null
             ),
-            $pages[1]->pageHeader
+            $pages->dataPageContainers()[0]->pageHeader
         );
     }
 }

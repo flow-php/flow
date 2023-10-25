@@ -14,20 +14,21 @@ final class PagesBuilder
     {
     }
 
-    /**
-     * @return array<PageContainer>
-     */
-    public function build(FlatColumn $column, array $rows) : array
+    public function build(FlatColumn $column, array $rows) : PageContainers
     {
+        $containers = new PageContainers();
+
         if ($column->logicalType()?->name() === LogicalType::STRING) {
             $dictionaryPageContainer = (new DictionaryPageBuilder())->build($column, $this->dataConverter, $rows);
 
-            return [
-                $dictionaryPageContainer,
-                (new DataPageBuilder($dictionaryPageContainer->values))->build($column, $this->dataConverter, $rows),
-            ];
+            $containers->add($dictionaryPageContainer);
+            $containers->add((new DataPageBuilder($dictionaryPageContainer->values))->build($column, $this->dataConverter, $rows));
+
+            return $containers;
         }
 
-        return [(new DataPageBuilder())->build($column, $this->dataConverter, $rows)];
+        $containers->add((new DataPageBuilder())->build($column, $this->dataConverter, $rows));
+
+        return $containers;
     }
 }
