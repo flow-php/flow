@@ -73,9 +73,6 @@ final class SnappyCompressor
         $baseIp = $ip;
         $nextEmit = $ip;
 
-        $flag = true;
-        $candidate = 0;
-
         $inputMargin = 15;
 
         if ($inputSize >= $inputMargin) {
@@ -84,7 +81,9 @@ final class SnappyCompressor
             $ip++;
             $nextHash = $this->hashFunc($this->load32($input, $ip), $hashFuncShift);
 
-            while ($flag) {
+            $candidate = 0;
+
+            while (true) {
                 $skip = 32;
                 $nextIp = $ip;
 
@@ -96,9 +95,7 @@ final class SnappyCompressor
                     $nextIp = $ip + $bytesBetweenHashLookups;
 
                     if ($ip > $ipLimit) {
-                        $flag = false;
-
-                        break;
+                        break 2;
                     }
 
                     $nextHash = $this->hashFunc($this->load32($input, $nextIp), $hashFuncShift);
@@ -106,10 +103,6 @@ final class SnappyCompressor
                     $candidate = $baseIp + $hashTable[$hash];
                     $hashTable[$hash] = $ip - $baseIp;
                 } while (!$this->equals32($input, $ip, $candidate));
-
-                if (!$flag) {
-                    break;
-                }
 
                 $op = $this->emitLiteral($input, $nextEmit, $ip - $nextEmit, $output, $op);
 
@@ -128,9 +121,7 @@ final class SnappyCompressor
                     $nextEmit = $ip;
 
                     if ($ip >= $ipLimit) {
-                        $flag = false;
-
-                        break;
+                        break 2;
                     }
 
                     $prevHash = $this->hashFunc($this->load32($input, $ip - 1), $hashFuncShift);
@@ -140,17 +131,13 @@ final class SnappyCompressor
                     $hashTable[$curHash] = $ip - $baseIp;
                 } while ($this->equals32($input, $ip, $candidate));
 
-                if (!$flag) {
-                    break;
-                }
-
                 $ip++;
                 $nextHash = $this->hashFunc($this->load32($input, $ip), $hashFuncShift);
             }
         }
 
         if ($nextEmit < $ipEnd) {
-            $op = $this->emitLiteral($input, $nextEmit, $ipEnd - $nextEmit, $output, $op);
+            return $this->emitLiteral($input, $nextEmit, $ipEnd - $nextEmit, $output, $op);
         }
 
         return $op;

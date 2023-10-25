@@ -29,6 +29,7 @@
         <directory name="src/lib/doctrine-dbal-bulk/src" />
         <directory name="src/lib/parquet/src" />
         <directory name="src/lib/dremel/src" />
+        <directory name="src/lib/snappy/src" />
         <ignoreFiles>
             <directory name="vendor"/>
 

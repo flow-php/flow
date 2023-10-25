@@ -23,6 +23,7 @@ parameters:
         - src/lib/doctrine-dbal-bulk/src
         - src/lib/dremel/src
         - src/lib/parquet/src
+        - src/lib/snappy/src
 
     excludePaths:
         - src/core/etl/src/Flow/ETL/Formatter/ASCII/ASCIITable.php
