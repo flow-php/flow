@@ -12,7 +12,6 @@ use Flow\Parquet\ParquetFile\ColumnChunkViewer\WholeChunkViewer;
 use Flow\Parquet\ParquetFile\ColumnPageHeader;
 use Flow\Parquet\ParquetFile\Data\DataBuilder;
 use Flow\Parquet\ParquetFile\Metadata;
-use Flow\Parquet\ParquetFile\Page\PageHeader;
 use Flow\Parquet\ParquetFile\PageReader;
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\ParquetFile\Schema;
@@ -82,7 +81,7 @@ final class ParquetFile
     {
         foreach ($this->schema()->columnsFlat() as $column) {
             foreach ($this->viewChunksPages($column) as $pageHeader) {
-                yield new ColumnPageHeader($column, $pageHeader);
+                yield $pageHeader;
             }
         }
     }
@@ -350,7 +349,7 @@ final class ParquetFile
     }
 
     /**
-     * @return \Generator<PageHeader>
+     * @return \Generator<ColumnPageHeader>
      */
     private function viewChunksPages(FlatColumn $column) : \Generator
     {
@@ -359,7 +358,7 @@ final class ParquetFile
         foreach ($this->getColumnChunks($column) as $columnChunks) {
             foreach ($columnChunks as $columnChunk) {
                 foreach ($viewer->view($columnChunk, $column, $this->stream) as $pageHeader) {
-                    yield $pageHeader;
+                    yield new ColumnPageHeader($column, $columnChunk, $pageHeader);
                 }
             }
         }

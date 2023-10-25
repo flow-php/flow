@@ -124,11 +124,6 @@ final class ColumnChunk
         return $offset;
     }
 
-    public function rootName() : string
-    {
-        return $this->path[0];
-    }
-
     public function totalCompressedSize() : int
     {
         return $this->totalCompressedSize;

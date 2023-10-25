@@ -407,7 +407,7 @@ final class SimpleTypesReadingTest extends ParquetIntegrationTestCase
         $count = 0;
 
         foreach ($file->values(['time']) as $row) {
-            $this->assertIsInt($row['time']);
+            $this->assertInstanceOf(\DateInterval::class, $row['time']);
             $count++;
         }
         $this->assertSame(100, $count);
@@ -426,7 +426,7 @@ final class SimpleTypesReadingTest extends ParquetIntegrationTestCase
 
         foreach ($file->values(['time_nullable']) as $rowIndex => $row) {
             if ($rowIndex % 2 === 0) {
-                $this->assertIsInt($row['time_nullable']);
+                $this->assertInstanceOf(\DateInterval::class, $row['time_nullable']);
             } else {
                 $this->assertNull($row['time_nullable']);
             }

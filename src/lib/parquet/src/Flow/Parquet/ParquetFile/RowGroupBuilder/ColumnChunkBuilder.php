@@ -3,8 +3,10 @@
 namespace Flow\Parquet\ParquetFile\RowGroupBuilder;
 
 use Flow\Parquet\Data\DataConverter;
+use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Encodings;
+use Flow\Parquet\ParquetFile\Page\Header\Type;
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 
@@ -21,45 +23,60 @@ final class ColumnChunkBuilder
         $this->data[] = $data;
     }
 
-    /**
-     * @return array<ColumnChunkContainer>
-     */
-    public function flush(int $fileOffset) : array
+    public function flush(int $fileOffset) : ColumnChunkContainer
     {
-        $offset = $fileOffset;
-        $columnChunkContainers = [];
-
-        $pageContainer = (new DataPagesBuilder($this->data))->build($this->column, $this->dataConverter);
-
-        $columnChunkContainers[] = $this->createColumnChunkContainer($pageContainer, $offset);
-        $offset += $pageContainer->size();
-
-        $this->data = [];
-
-        return $columnChunkContainers;
+        return $this->createColumnChunkContainer(
+            (new PagesBuilder($this->dataConverter))->build($this->column, $this->data),
+            $fileOffset
+        );
     }
 
     /**
-     * @psalm-suppress PossiblyNullArgument
+     * @param array<PageContainer> $pageContainers
      */
-    private function createColumnChunkContainer(PageContainer $pageContainer, int $offset) : ColumnChunkContainer
+    private function createColumnChunkContainer(array $pageContainers, int $offset) : ColumnChunkContainer
     {
+        $buffer = '';
+        $encodings = [];
+        $valuesCount = 0;
+        $size = 0;
+        $dictionaryPageSize = null;
+        $dictionaryPageOffset = null;
+        $pageOffset = $offset;
+
+        foreach ($pageContainers as $pageContainer) {
+            if ($pageContainer->pageHeader->type() === Type::DICTIONARY_PAGE) {
+                if ($dictionaryPageSize !== null) {
+                    throw new RuntimeException('There can be only one dictionary page in column chunk');
+                }
+
+                $dictionaryPageOffset = $pageOffset;
+                $dictionaryPageSize = $pageContainer->size();
+            }
+
+            $buffer .= $pageContainer->pageHeaderBuffer . $pageContainer->pageBuffer;
+            $encodings[] = $pageContainer->pageHeader->encoding()->value;
+            $valuesCount += \count($pageContainer->values);
+            $size += $pageContainer->size();
+            $pageOffset += $pageContainer->size();
+        }
+
+        $encodings = \array_values(\array_unique($encodings));
+        $encodings = \array_map(static fn (int $encoding) => Encodings::from($encoding), $encodings);
+
         return new ColumnChunkContainer(
-            $pageContainer->pageHeaderBuffer . $pageContainer->pageDataBuffer,
+            $buffer,
             new ColumnChunk(
-                $this->column->type(),
-                Compressions::UNCOMPRESSED,
-                /** @phpstan-ignore-next-line */
-                $pageContainer->pageHeader->dataValuesCount(),
-                $offset,
-                $this->column->path(),
-                [
-                    Encodings::PLAIN,
-                ],
-                \strlen($pageContainer->pageDataBuffer) + \strlen($pageContainer->pageHeaderBuffer),
-                \strlen($pageContainer->pageDataBuffer) + \strlen($pageContainer->pageHeaderBuffer),
-                dictionaryPageOffset: null,
-                dataPageOffset: $offset,
+                type: $this->column->type(),
+                codec: Compressions::UNCOMPRESSED,
+                valuesCount: $valuesCount,
+                fileOffset: $offset,
+                path: $this->column->path(),
+                encodings: $encodings,
+                totalCompressedSize: $size,
+                totalUncompressedSize: $size,
+                dictionaryPageOffset: $dictionaryPageOffset,
+                dataPageOffset: ($dictionaryPageOffset) ? $offset + $dictionaryPageSize : $offset,
                 indexPageOffset: null,
             )
         );

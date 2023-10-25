@@ -29,6 +29,15 @@ final class DictionaryPageHeader
         return $this->encoding;
     }
 
+    public function toThrift() : \Flow\Parquet\Thrift\DictionaryPageHeader
+    {
+        return new \Flow\Parquet\Thrift\DictionaryPageHeader([
+            'encoding' => $this->encoding->value,
+            'num_values' => $this->valuesCount,
+            'is_sorted' => false,
+        ]);
+    }
+
     public function valuesCount() : int
     {
         return $this->valuesCount;
