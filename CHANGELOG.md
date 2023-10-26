@@ -23,6 +23,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#650](https://github.com/flow-php/flow/pull/650) - **Run cs-fixer against codebase** - [@stloyd](https://github.com/stloyd)
 - [#649](https://github.com/flow-php/flow/pull/649) - **Cleanup of parquet PageBuilders** - [@norberttech](https://github.com/norberttech)
 - [#645](https://github.com/flow-php/flow/pull/645) - **Rework `SnappyCompressor::compressFragment()` method** - [@stloyd](https://github.com/stloyd)
 - [#645](https://github.com/flow-php/flow/pull/645) - **Add code of Snappy to static analysis** - [@stloyd](https://github.com/stloyd)
