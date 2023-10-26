@@ -25,7 +25,7 @@ Given schema:
 schema
 |-- id: Flow\ETL\Row\Entry\IntegerEntry (nullable = false)
 
-Does not match rows: 
+Does not match rows:
 schema
 |-- id: Flow\ETL\Row\Entry\StringEntry (nullable = false)
 

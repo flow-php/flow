@@ -13,7 +13,7 @@ use PHPUnit\Framework\TestCase;
 
 final class CompressingSerializerTest extends TestCase
 {
-    public function setUp() : void
+    protected function setUp() : void
     {
         if (!\function_exists('gzcompress')) {
             $this->markTestSkipped('gzcompress unavailable.');

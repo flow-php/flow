@@ -38,8 +38,8 @@ final class MySQLDialect implements Dialect
 
         if (\array_key_exists('upsert', $insertOptions) && $insertOptions['upsert'] === true) {
             return \sprintf(
-                'INSERT INTO %s (%s) 
-                VALUES %s 
+                'INSERT INTO %s (%s)
+                VALUES %s
                 ON DUPLICATE KEY UPDATE %s',
                 $table->name(),
                 $bulkData->columns()->concat(','),

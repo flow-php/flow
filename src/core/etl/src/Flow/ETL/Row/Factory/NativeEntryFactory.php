@@ -290,7 +290,7 @@ final class NativeEntryFactory implements EntryFactory
      */
     private function getClass(object $object) : string
     {
-        $class = \get_class($object);
+        $class = $object::class;
 
         if ($class === \DateTimeImmutable::class || $class === \DateTime::class) {
             return \DateTimeInterface::class;

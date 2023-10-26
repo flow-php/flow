@@ -40,8 +40,7 @@ final class HashTest extends TestCase
 
     public function test_hashing_null_value() : void
     {
-        $this->assertSame(
-            null,
+        $this->assertNull(
             ref('value')->hash()->eval(Row::create(Entry::null('value'))),
         );
     }
