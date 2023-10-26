@@ -22,7 +22,7 @@ final class Reader
             throw new InvalidArgumentException("File {$path} does not exist");
         }
 
-        $stream = \fopen($path, 'r');
+        $stream = \fopen($path, 'rb');
 
         if (!\is_resource($stream)) {
             throw new InvalidArgumentException("File {$path} is not a valid resource");

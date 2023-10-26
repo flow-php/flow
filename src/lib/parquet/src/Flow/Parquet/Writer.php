@@ -32,7 +32,7 @@ final class Writer
             throw new InvalidArgumentException("File {$path} already exists");
         }
 
-        $stream = \fopen($path, 'w');
+        $stream = \fopen($path, 'wb');
 
         if ($stream === false) {
             throw new RuntimeException("Can't open {$path} for writing");

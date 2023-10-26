@@ -42,7 +42,7 @@ final class LocalFilesystemCache implements Cache
 
     public function add(string $id, Rows $rows) : void
     {
-        $cacheStream = \fopen($this->cachePath($id), 'a');
+        $cacheStream = \fopen($this->cachePath($id), 'ab');
 
         if ($cacheStream === false) {
             throw new InvalidArgumentException("Failed to create cache file: \"{$this->cachePath($id)}\", mode \"a\"");
@@ -77,7 +77,7 @@ final class LocalFilesystemCache implements Cache
         }
 
         /** @var resource $cacheStream */
-        $cacheStream = \fopen($cachePath, 'r');
+        $cacheStream = \fopen($cachePath, 'rb');
 
         while (($serializedRow = \fgets($cacheStream)) !== false) {
             /** @var Rows $rows */

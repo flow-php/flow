@@ -23,7 +23,7 @@ final class PipelineFactory
             throw InvalidArgumentException::because('Input file must be a PHP one!');
         }
 
-        $resource = \fopen($this->filename, 'r');
+        $resource = \fopen($this->filename, 'rb');
 
         if (false === $resource) {
             throw InvalidArgumentException::because('Input file cannot be read!');

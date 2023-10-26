@@ -67,6 +67,7 @@ return (new PhpCsFixer\Config())
         'encoding' => true,
         'explicit_indirect_variable' => true,
         'explicit_string_variable' => true,
+        'fopen_flags' => true,
         'full_opening_tag' => true,
         'fully_qualified_strict_types' => true,
         'function_typehint_space' => true,
