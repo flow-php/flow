@@ -7,6 +7,7 @@ use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\ParquetFile\Metadata;
 use Flow\Parquet\ParquetFile\RowGroupBuilder;
+use Flow\Parquet\ParquetFile\RowGroupBuilder\PageSizeCalculator;
 use Flow\Parquet\ParquetFile\RowGroups;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ThriftStream\TPhpFileStream;
@@ -39,18 +40,27 @@ final class Writer
         }
 
         \fwrite($stream, ParquetFile::PARQUET_MAGIC_NUMBER);
-
-        foreach ($rows as $row) {
-            $this->rowGroupBuilder($schema)->addRow($row);
-        }
+        $fileOffset = \strlen(ParquetFile::PARQUET_MAGIC_NUMBER);
 
         $metadata = (new Metadata($schema, new RowGroups([]), 0, self::VERSION, 'flow-parquet'));
 
-        $rowGroupContainer = $this->rowGroupBuilder($schema)->flush(\strlen(ParquetFile::PARQUET_MAGIC_NUMBER));
+        foreach ($rows as $row) {
+            $this->rowGroupBuilder($schema)->addRow($row);
 
-        \fwrite($stream, $rowGroupContainer->binaryBuffer);
+            if ($this->rowGroupBuilder($schema)->isFull()) {
+                $rowGroupContainer = $this->rowGroupBuilder($schema)->flush($fileOffset);
+                \fwrite($stream, $rowGroupContainer->binaryBuffer);
+                $metadata->rowGroups()->add($rowGroupContainer->rowGroup);
+                $fileOffset += \strlen($rowGroupContainer->binaryBuffer);
+            }
+        }
 
-        $metadata->rowGroups()->add($rowGroupContainer->rowGroup);
+        if (!$this->rowGroupBuilder($schema)->isEmpty()) {
+            $rowGroupContainer = $this->rowGroupBuilder($schema)->flush($fileOffset);
+            \fwrite($stream, $rowGroupContainer->binaryBuffer);
+            $metadata->rowGroups()->add($rowGroupContainer->rowGroup);
+            $fileOffset += \strlen($rowGroupContainer->binaryBuffer);
+        }
 
         $start = \ftell($stream);
         $metadata->toThrift()->write(new TCompactProtocol(new TPhpFileStream($stream)));
@@ -67,7 +77,12 @@ final class Writer
     private function rowGroupBuilder(Schema $schema) : RowGroupBuilder
     {
         if ($this->rowGroupBuilder === null) {
-            $this->rowGroupBuilder = new RowGroupBuilder($schema, DataConverter::initialize($this->options));
+            $this->rowGroupBuilder = new RowGroupBuilder(
+                $schema,
+                $this->options,
+                DataConverter::initialize($this->options),
+                new PageSizeCalculator($this->options)
+            );
         }
 
         return $this->rowGroupBuilder;
