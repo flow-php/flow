@@ -23,15 +23,15 @@ final class PagesBuilder
         $dictionaryTypes = [LogicalType::STRING, LogicalType::UUID, LogicalType::ENUM, LogicalType::JSON];
 
         if ($logicalType !== null && \in_array($logicalType, $dictionaryTypes, true)) {
-            $dictionaryPageContainer = (new DictionaryPageBuilder())->build($column, $this->dataConverter, $rows);
+            $dictionaryPageContainer = (new DictionaryPageBuilder($this->dataConverter))->build($column, $rows);
 
             $containers->add($dictionaryPageContainer);
-            $containers->add((new DataPageBuilder($dictionaryPageContainer->values))->build($column, $this->dataConverter, $rows));
+            $containers->add((new DataPageBuilder($this->dataConverter, $dictionaryPageContainer->values))->build($column, $rows));
 
             return $containers;
         }
 
-        $containers->add((new DataPageBuilder())->build($column, $this->dataConverter, $rows));
+        $containers->add((new DataPageBuilder($this->dataConverter))->build($column, $rows));
 
         return $containers;
     }
