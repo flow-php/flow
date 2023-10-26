@@ -27,7 +27,7 @@ final class NotEmpty implements Constraint
 
     public function isSatisfiedBy(Entry $entry) : bool
     {
-        return match (\get_class($entry)) {
+        return match ($entry::class) {
             Entry\ArrayEntry::class,
             Entry\CollectionEntry::class,
             Entry\StructureEntry::class,

@@ -23,7 +23,7 @@ final class PipelineFactory
             throw InvalidArgumentException::because('Input file must be a PHP one!');
         }
 
-        $resource = \fopen($this->filename, 'rb');
+        $resource = \fopen($this->filename, 'r');
 
         if (false === $resource) {
             throw InvalidArgumentException::because('Input file cannot be read!');
@@ -39,7 +39,7 @@ final class PipelineFactory
         $pipeline = include $this->filename;
 
         if (!$pipeline instanceof DataFrame) {
-            throw InvalidArgumentException::because('Expecting Flow-PHP DataFrame, received: ' . (\is_object($pipeline) ? \get_class($pipeline) : \gettype($pipeline)));
+            throw InvalidArgumentException::because('Expecting Flow-PHP DataFrame, received: ' . (\is_object($pipeline) ? $pipeline::class : \gettype($pipeline)));
         }
 
         $pipeline->run();

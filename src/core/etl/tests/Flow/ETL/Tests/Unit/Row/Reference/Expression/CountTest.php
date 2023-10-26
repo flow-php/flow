@@ -24,16 +24,14 @@ final class CountTest extends TestCase
             2,
             count(ref('array'))->eval(Row::create(Entry::array('array', ['foo', 'bar'])))
         );
-        $this->assertSame(
-            true,
+        $this->assertTrue(
             ref('array')->count()->equals(lit(2))->eval(Row::create(Entry::array('array', ['foo', 'bar'])))
         );
     }
 
     public function test_count_string() : void
     {
-        $this->assertSame(
-            null,
+        $this->assertNull(
             (new Count(ref('string')))->eval(Row::create(Entry::string('string', 'foo')))
         );
     }

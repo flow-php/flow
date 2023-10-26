@@ -50,8 +50,7 @@ final class MessageBuffer
             /** @phpstan-ignore-next-line  */
             $this->buffers->offsetSet($connection, \array_merge($this->buffers->offsetGet($connection), [$data]));
 
-            /** @phpstan-ignore-next-line  */
-            $data = \implode($this->buffers->offsetGet($connection));
+            $data = \implode('', $this->buffers->offsetGet($connection));
             $this->buffers->offsetSet($connection, []);
         }
 

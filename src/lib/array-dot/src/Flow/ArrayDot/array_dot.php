@@ -273,7 +273,7 @@ function array_dot_rename(array $array, string $path, string $newName) : array
              */
             $nestedValues = array_dot_get($array, \implode('.', $takenSteps));
             $stepsLeft = \array_slice($pathSteps, \count($takenSteps), \count($pathSteps));
-            \array_push($stepsLeft, $lastStep);
+            $stepsLeft[] = $lastStep;
 
             /** @var mixed $nestedValue */
             foreach ($nestedValues as $nestedKey => $nestedValue) {

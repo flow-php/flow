@@ -19,7 +19,7 @@ final class SchemaValidationException extends RuntimeException
             <<<SCHEMA
 Given schema:
 {$schema}
-Does not match rows: 
+Does not match rows:
 {$rowsSchema}
 SCHEMA
         );

@@ -83,7 +83,7 @@ final class AvroLoader implements Closure, Loader, Loader\FileLoader
             $rowData = [];
 
             foreach ($row->entries()->all() as $entry) {
-                $rowData[$entry->name()] = match (\get_class($entry)) {
+                $rowData[$entry->name()] = match ($entry::class) {
                     Row\Entry\ListEntry::class => $this->listEntryToValues($entry),
                     DateTimeEntry::class => (int) $entry->value()->format('Uu'),
                     Row\Entry\UuidEntry::class => $entry->value()->toString(),
