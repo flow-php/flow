@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-10-25
+## [Unreleased] - 2023-10-26
 
 ### Added
 - [#648](https://github.com/flow-php/flow/pull/648) - **JSON/UUID/ENUM - to dictionary encoding - Parquet** - [@norberttech](https://github.com/norberttech)
@@ -23,6 +23,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#649](https://github.com/flow-php/flow/pull/649) - **Cleanup of parquet PageBuilders** - [@norberttech](https://github.com/norberttech)
 - [#645](https://github.com/flow-php/flow/pull/645) - **Rework `SnappyCompressor::compressFragment()` method** - [@stloyd](https://github.com/stloyd)
 - [#645](https://github.com/flow-php/flow/pull/645) - **Add code of Snappy to static analysis** - [@stloyd](https://github.com/stloyd)
 - [#644](https://github.com/flow-php/flow/pull/644) - **PHPUnit code coverage thresholds** - [@norberttech](https://github.com/norberttech)
