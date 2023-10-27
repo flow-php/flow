@@ -1,6 +1,7 @@
-## [Unreleased] - 2023-10-26
+## [Unreleased] - 2023-10-27
 
 ### Added
+- [#652](https://github.com/flow-php/flow/pull/652) - **Parquet - Calculate row group/page size on the fly in order to decide when to flush data to disk** - [@norberttech](https://github.com/norberttech)
 - [#648](https://github.com/flow-php/flow/pull/648) - **JSON/UUID/ENUM - to dictionary encoding - Parquet** - [@norberttech](https://github.com/norberttech)
 - [#646](https://github.com/flow-php/flow/pull/646) - **Parquet - dictionary encoded pages** - [@norberttech](https://github.com/norberttech)
 - [#644](https://github.com/flow-php/flow/pull/644) - **Possibility to iterate through all parquet file column chunk page headers** - [@norberttech](https://github.com/norberttech)
