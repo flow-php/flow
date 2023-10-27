@@ -52,6 +52,11 @@ final class RowGroup
         $this->rowsCount = $rowsCount;
     }
 
+    public function totalByteSize() : int
+    {
+        return \array_sum(\array_map(static fn (ColumnChunk $chunk) => $chunk->totalUncompressedSize(), $this->columnChunks));
+    }
+
     public function toThrift() : \Flow\Parquet\Thrift\RowGroup
     {
         $fileOffset = \count($this->columnChunks) ? \current($this->columnChunks)->fileOffset() : 0;

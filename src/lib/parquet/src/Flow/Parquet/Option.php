@@ -23,8 +23,25 @@ enum Option
     case INT_96_AS_DATETIME;
 
     /**
+     * PageBuilder is going to use this value to determine how many rows should be stored in one page.
+     * PageBuilder is not going to make it precisely equal to this value, but it will try to make it as close as possible.
+     * This should be considered as a threshold rather than a strict value.
+     *
+     * https://parquet.apache.org/docs/file-format/configurations/#data-page--size
+     */
+    case PAGE_SIZE_BYTES;
+
+    /**
      * Since PHP does not support nanoseconds precision for DateTime objects, when this options is set to true,
      * reader will round nanoseconds to microseconds.
      */
     case ROUND_NANOSECONDS;
+
+    /**
+     * RowGroupBuilder is going to use this value to determine for how long it should keep adding rows to the buffer
+     * before flushing it on disk.
+     *
+     * https://parquet.apache.org/docs/file-format/configurations/#row-group-size
+     */
+    case ROW_GROUP_SIZE_BYTES;
 }

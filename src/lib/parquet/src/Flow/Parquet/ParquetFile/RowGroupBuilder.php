@@ -3,9 +3,13 @@
 namespace Flow\Parquet\ParquetFile;
 
 use Flow\Parquet\Data\DataConverter;
+use Flow\Parquet\Option;
+use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnChunkBuilder;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\Flattener;
+use Flow\Parquet\ParquetFile\RowGroupBuilder\PageSizeCalculator;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\RowGroupContainer;
+use Flow\Parquet\ParquetFile\RowGroupBuilder\RowGroupStatistics;
 
 /**
  * @psalm-suppress PropertyNotSetInConstructor
@@ -19,13 +23,18 @@ final class RowGroupBuilder
 
     private Flattener $flattener;
 
-    private int $rowsCount = 0;
+    private RowGroupStatistics $statistics;
 
-    public function __construct(private readonly Schema $schema, private readonly DataConverter $dataConverter)
-    {
+    public function __construct(
+        private readonly Schema $schema,
+        private readonly Options $options,
+        private readonly DataConverter $dataConverter,
+        private readonly PageSizeCalculator $calculator
+    ) {
         $this->flattener = new Flattener();
 
         $this->chunkBuilders = $this->createColumnChunkBuilders($this->schema);
+        $this->statistics = RowGroupStatistics::fromBuilders($this->chunkBuilders);
     }
 
     /**
@@ -42,6 +51,8 @@ final class RowGroupBuilder
         foreach (\array_merge_recursive(...$flatRow) as $columnPath => $columnValues) {
             $this->chunkBuilders[$columnPath]->addRow($columnValues);
         }
+
+        $this->statistics->addRow();
     }
 
     public function flush(int $fileOffset) : RowGroupContainer
@@ -64,12 +75,28 @@ final class RowGroupBuilder
 
         $rowGroupContainer = new RowGroupContainer(
             $buffer,
-            new RowGroup($chunks, $this->rowsCount)
+            new RowGroup($chunks, $this->statistics->rowsCount())
         );
 
         $this->chunkBuilders = $this->createColumnChunkBuilders($this->schema);
+        $this->statistics = RowGroupStatistics::fromBuilders($this->chunkBuilders);
 
         return $rowGroupContainer;
+    }
+
+    public function isEmpty() : bool
+    {
+        return $this->statistics->rowsCount() === 0;
+    }
+
+    public function isFull() : bool
+    {
+        return $this->statistics->uncompressedSize() >= $this->options->get(Option::ROW_GROUP_SIZE_BYTES);
+    }
+
+    public function statistics() : RowGroupStatistics
+    {
+        return $this->statistics;
     }
 
     /**
@@ -80,7 +107,7 @@ final class RowGroupBuilder
         $builders = [];
 
         foreach ($schema->columnsFlat() as $column) {
-            $builders[$column->flatPath()] = new ColumnChunkBuilder($column, $this->dataConverter);
+            $builders[$column->flatPath()] = new ColumnChunkBuilder($column, $this->dataConverter, $this->calculator);
         }
 
         return $builders;

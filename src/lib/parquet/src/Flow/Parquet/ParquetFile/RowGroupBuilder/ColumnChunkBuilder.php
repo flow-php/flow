@@ -9,20 +9,29 @@ use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 
 final class ColumnChunkBuilder
 {
-    private array $data = [];
+    private array $rows = [];
 
-    public function __construct(private readonly FlatColumn $column, private readonly DataConverter $dataConverter)
-    {
+    private ColumnChunkStatistics $statistics;
+
+    public function __construct(
+        private readonly FlatColumn $column,
+        private readonly DataConverter $dataConverter,
+        private readonly PageSizeCalculator $calculator
+    ) {
+        $this->statistics = new ColumnChunkStatistics($column);
     }
 
-    public function addRow(mixed $data) : void
+    public function addRow(mixed $row) : void
     {
-        $this->data[] = $data;
+        $this->statistics->add($row);
+        $this->rows[] = $row;
     }
 
     public function flush(int $fileOffset) : ColumnChunkContainer
     {
-        $pageContainers = (new PagesBuilder($this->dataConverter))->build($this->column, $this->data);
+        $pageContainers = (new PagesBuilder($this->dataConverter, $this->calculator))->build($this->column, $this->rows, $this->statistics);
+
+        $this->statistics->reset();
 
         return new ColumnChunkContainer(
             $pageContainers->buffer(),
@@ -40,5 +49,10 @@ final class ColumnChunkBuilder
                 indexPageOffset: null,
             )
         );
+    }
+
+    public function statistics() : ColumnChunkStatistics
+    {
+        return $this->statistics;
     }
 }

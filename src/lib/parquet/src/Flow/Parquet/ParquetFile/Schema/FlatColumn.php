@@ -2,6 +2,7 @@
 
 namespace Flow\Parquet\ParquetFile\Schema;
 
+use Flow\Parquet\Consts;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ParquetFile\Schema\LogicalType\Timestamp;
 use Flow\Parquet\Thrift\SchemaElement;
@@ -40,6 +41,10 @@ final class FlatColumn implements Column
 
     public static function dateTime(string $name, TimeUnit $timeUnit = TimeUnit::MICROSECONDS) : self
     {
+        if (PHP_INT_MAX !== Consts::PHP_INT64_MAX) {
+            throw new InvalidArgumentException('PHP_INT_MAX must be equal to ' . Consts::PHP_INT64_MAX . ' to support 64-bit timestamps.');
+        }
+
         $timestamp = match ($timeUnit) {
             TimeUnit::MICROSECONDS => new Timestamp(false, false, true, false),
         };
@@ -106,6 +111,10 @@ final class FlatColumn implements Column
 
     public static function int64(string $name) : self
     {
+        if (PHP_INT_MAX !== Consts::PHP_INT64_MAX) {
+            throw new InvalidArgumentException('PHP_INT_MAX must be equal to ' . Consts::PHP_INT64_MAX . ' to support 64-bit timestamps.');
+        }
+
         return new self($name, PhysicalType::INT64, null, Repetition::OPTIONAL);
     }
 

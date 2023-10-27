@@ -26,10 +26,11 @@ final class DictionaryPageBuilder implements PageBuilder
         $dictionary = [];
 
         foreach (array_flatten($rows) as $value) {
-            if (!\in_array($value, $dictionary, true)) {
-                $dictionary[] = $value;
+            if (!\array_key_exists($value, $dictionary)) {
+                $dictionary[$value] = $value;
             }
         }
+        $dictionary = \array_values($dictionary);
 
         $pageBuffer = '';
         $pageWriter = new BinaryBufferWriter($pageBuffer);
