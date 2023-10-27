@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-10-27
 
 ### Added
+- [#654](https://github.com/flow-php/flow/pull/654) - **Parquet - implement logic deciding when to apply dictionary encoding** - [@norberttech](https://github.com/norberttech)
 - [#653](https://github.com/flow-php/flow/pull/653) - **Blackfire PHP SDK to tools** - [@norberttech](https://github.com/norberttech)
 - [#652](https://github.com/flow-php/flow/pull/652) - **Parquet - Calculate row group/page size on the fly in order to decide when to flush data to disk** - [@norberttech](https://github.com/norberttech)
 - [#648](https://github.com/flow-php/flow/pull/648) - **JSON/UUID/ENUM - to dictionary encoding - Parquet** - [@norberttech](https://github.com/norberttech)
