@@ -59,7 +59,7 @@ final class GroupByPipeline implements Pipeline
             $this->groupBy->group($nextRows);
         }
 
-        $this->nextPipeline->source(new Extractor\ProcessExtractor($this->groupBy->result()));
+        $this->nextPipeline->source(new Extractor\ProcessExtractor($this->groupBy->result($context)));
 
         foreach ($this->nextPipeline->process($context) as $nextRows) {
             yield $nextRows;

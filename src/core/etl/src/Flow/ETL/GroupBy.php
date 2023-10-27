@@ -8,7 +8,6 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\GroupBy\Aggregation;
 use Flow\ETL\GroupBy\Aggregator;
-use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 
@@ -81,7 +80,7 @@ final class GroupBy
         }
     }
 
-    public function result() : Rows
+    public function result(FlowContext $context) : Rows
     {
         $rows = [];
 
@@ -90,7 +89,7 @@ final class GroupBy
 
             /** @var mixed $value */
             foreach ($group['values'] ?? [] as $entry => $value) {
-                $entries[] = (new NativeEntryFactory)->create($entry, $value);
+                $entries[] = $context->entryFactory()->create($entry, $value);
             }
 
             foreach ($group['aggregators'] as $aggregator) {
