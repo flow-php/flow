@@ -22,7 +22,7 @@ final class GoogleSheetExtractorTest extends TestCase
     {
         $extractor = GoogleSheet::from_columns(
             $service = $this->createMock(Sheets::class),
-            $spreadSheetId ='spread-id',
+            $spreadSheetId = 'spread-id',
             $sheetName = 'sheet',
             'A',
             'B',

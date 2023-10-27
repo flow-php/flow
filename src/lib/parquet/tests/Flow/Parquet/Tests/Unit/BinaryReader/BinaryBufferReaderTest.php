@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 
 final class BinaryBufferReaderTest extends TestCase
 {
-    public function test_readVarInt() : void
+    public function test_read_var_int() : void
     {
         // Using examples:
         // 1 is encoded as 00000001

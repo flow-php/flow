@@ -43,7 +43,7 @@ final class Elasticsearch7Context implements ElasticsearchContext
         try {
             $params = [
                 'index' => $name,
-                'body'  => [
+                'body' => [
                     'settings' => [
                         'number_of_shards' => 2,
                         'number_of_replicas' => 0,

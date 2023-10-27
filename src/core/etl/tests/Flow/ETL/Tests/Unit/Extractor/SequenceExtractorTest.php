@@ -36,7 +36,7 @@ final class SequenceExtractorTest extends TestCase
 
     public function test_extracting_from_date_period_recurrences() : void
     {
-        $extractor = From::sequence_date_period_recurrences('day', new \DateTimeImmutable('2023-01-01'), new \DateInterval('P1D'), 10, \DatePeriod::EXCLUDE_START_DATE, );
+        $extractor = From::sequence_date_period_recurrences('day', new \DateTimeImmutable('2023-01-01'), new \DateInterval('P1D'), 10, \DatePeriod::EXCLUDE_START_DATE);
 
         $this->assertEquals(
             [

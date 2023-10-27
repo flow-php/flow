@@ -26,7 +26,7 @@ final class DataCoder
         string $buffer,
         Encodings $encoding,
         PhysicalType $physicalType,
-        LogicalType $logicalType = null,
+        ?LogicalType $logicalType,
         int $expectedValuesCount,
         int $maxRepetitionsLevel,
         int $maxDefinitionsLevel,
@@ -40,7 +40,7 @@ final class DataCoder
 
         if ($maxRepetitionsLevel) {
             $this->debugLogRepetitions($maxRepetitionsLevel, $reader);
-            $reader->readInts32(1);// read length of encoded data
+            $reader->readInts32(1); // read length of encoded data
             $repetitions = $this->readRLEBitPackedHybrid(
                 $reader,
                 $RLEBitPackedHybrid,
@@ -53,7 +53,7 @@ final class DataCoder
 
         if ($maxDefinitionsLevel) {
             $this->debugLogDefinitions($maxDefinitionsLevel, $reader);
-            $reader->readInts32(1);// read length of encoded data
+            $reader->readInts32(1); // read length of encoded data
             $definitions = $this->readRLEBitPackedHybrid(
                 $reader,
                 $RLEBitPackedHybrid,

@@ -34,7 +34,7 @@ print "Loading CSV {$csvFileSize}Mb file into json file...\n";
     ->pipeline(
         new LocalSocketPipeline(
             SocketServer::unixDomain(__FLOW_VAR_RUN__, $logger),
-            //SocketServer::tcp(6651, $logger),
+            // SocketServer::tcp(6651, $logger),
             new ChildProcessLauncher(__FLOW_SRC__ . '/adapter/etl-adapter-reactphp/bin/worker-reactphp', $logger),
             $workers = 8
         )

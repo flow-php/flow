@@ -13,8 +13,7 @@ use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\Response;
 use PHPUnit\Framework\TestCase;
 
-final class
-PsrHttpClientStaticExtractorTest extends TestCase
+final class PsrHttpClientStaticExtractorTest extends TestCase
 {
     public function test_http_extractor() : void
     {

@@ -220,7 +220,7 @@ final class FilesystemPlanTest extends TestCase
     {
         $plan = new FilesystemOperations(
             new class implements Extractor,
-            Extractor\FileExtractor {
+                Extractor\FileExtractor {
                 public function extract(FlowContext $context) : \Generator
                 {
                     yield new Rows();
@@ -262,7 +262,7 @@ final class FilesystemPlanTest extends TestCase
     {
         $plan = new FilesystemOperations(
             new class implements Extractor,
-            Extractor\OverridingExtractor {
+                Extractor\OverridingExtractor {
                 public function extract(FlowContext $context) : \Generator
                 {
                     yield new Rows();

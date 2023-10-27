@@ -100,7 +100,7 @@ class Dbal
     final public static function from_queries(
         Connection $connection,
         string $query,
-        ParametersSet $parameters_set = null,
+        ?ParametersSet $parameters_set = null,
         array $types = [],
     ) : Extractor {
         return new DbalQueryExtractor(

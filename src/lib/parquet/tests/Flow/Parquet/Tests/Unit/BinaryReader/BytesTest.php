@@ -52,7 +52,7 @@ final class BytesTest extends TestCase
         $this->assertEquals(1, $bytes->toInt());
     }
 
-    public function test_to_int_big_endian_multiByte() : void
+    public function test_to_int_big_endian_multi_byte() : void
     {
         $bytes = new Bytes([1, 0, 0], ByteOrder::BIG_ENDIAN);  // Big-endian representation of the integer 65536
         $this->assertEquals(65536, $bytes->toInt());

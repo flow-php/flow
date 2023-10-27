@@ -169,12 +169,12 @@ final class SnappyCompressor
     {
         if ($len < 12 && $offset < 2048) {
             $output[$op] = 1 + (($len - 4) << 2) + (($offset >> 8) << 5);
-            $output[$op + 1] = $offset & 0xff;
+            $output[$op + 1] = $offset & 0xFF;
 
             return $op + 2;
         }
         $output[$op] = 2 + (($len - 1) << 2);
-        $output[$op + 1] = $offset & 0xff;
+        $output[$op + 1] = $offset & 0xFF;
         $output[$op + 2] = $offset >> 8;
 
         return $op + 3;
@@ -184,14 +184,14 @@ final class SnappyCompressor
     {
         if ($len <= 60) {
             $output[$op] = ($len - 1) << 2;
-            $op += 1;
+            $op++;
         } elseif ($len < 256) {
             $output[$op] = 60 << 2;
             $output[$op + 1] = $len - 1;
             $op += 2;
         } else {
             $output[$op] = 61 << 2;
-            $output[$op + 1] = ($len - 1) & 0xff;
+            $output[$op + 1] = ($len - 1) & 0xFF;
             $output[$op + 2] = ($len - 1) >> 8;
             $op += 3;
         }
@@ -202,15 +202,15 @@ final class SnappyCompressor
 
     private function equals32(array $array, int $pos1, int $pos2) : bool
     {
-        return $array[$pos1] === $array[$pos2] &&
-            $array[$pos1 + 1] === $array[$pos2 + 1] &&
-            $array[$pos1 + 2] === $array[$pos2 + 2] &&
-            $array[$pos1 + 3] === $array[$pos2 + 3];
+        return $array[$pos1] === $array[$pos2]
+            && $array[$pos1 + 1] === $array[$pos2 + 1]
+            && $array[$pos1 + 2] === $array[$pos2 + 2]
+            && $array[$pos1 + 3] === $array[$pos2 + 3];
     }
 
     private function hashFunc(int $key, int $hashFuncShift) : int
     {
-        $multiplied = $key * 0x1e35a7bd;
+        $multiplied = $key * 0x1E35A7BD;
 
         // Emulate unsigned right shift in PHP
         return ($multiplied >> $hashFuncShift) & ((1 << (32 - $hashFuncShift)) - 1);
@@ -224,7 +224,7 @@ final class SnappyCompressor
     private function putVarInt(int $value, array &$output, int $op) : int
     {
         do {
-            $output[$op] = $value & 0x7f;
+            $output[$op] = $value & 0x7F;
             $value = $value >> 7;
 
             if ($value > 0) {

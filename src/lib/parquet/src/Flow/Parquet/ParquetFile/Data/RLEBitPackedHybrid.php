@@ -54,7 +54,7 @@ final class RLEBitPackedHybrid
                 $resultIndex++;
                 $output[] = $decodedValue;
             } elseif ($byteIndex + 1 < $actualByteCount) {
-                $byteIndex += 1;
+                $byteIndex++;
                 $currentByte |= ($readBytes[$byteIndex] << $bitsLeftInByte);
                 $bitsLeftInByte += 8;
             }

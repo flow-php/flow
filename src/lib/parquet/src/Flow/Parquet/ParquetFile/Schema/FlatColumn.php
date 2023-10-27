@@ -181,7 +181,7 @@ final class FlatColumn implements Column
         }
 
         $path = \array_reverse($path);
-        $this->flatPath =  \implode('.', $path);
+        $this->flatPath = \implode('.', $path);
 
         return $this->flatPath;
     }

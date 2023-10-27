@@ -54,10 +54,10 @@ final class ColumnChunk
         );
     }
 
-//    public function __debugInfo() : ?array
-//    {
-//        return $this->normalize();
-//    }
+    //    public function __debugInfo() : ?array
+    //    {
+    //        return $this->normalize();
+    //    }
 
     public function codec() : Compressions
     {

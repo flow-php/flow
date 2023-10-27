@@ -66,7 +66,7 @@ function exists(Expression $ref) : Expression
     return new Expression\Exists($ref);
 }
 
-function when(Expression $ref, Expression $then, Expression $else = null) : Expression
+function when(Expression $ref, Expression $then, ?Expression $else = null) : Expression
 {
     return new Expression\When($ref, $then, $else);
 }
@@ -111,7 +111,7 @@ function array_keys_style_convert(Expression $ref, StringStyles|string $style = 
     return new Expression\ArrayKeysStyleConvert($ref, $style instanceof StringStyles ? $style : StringStyles::fromString($style));
 }
 
-function array_sort(Expression $expression, string $function = null, int $flags = null, bool $recursive = true) : Expression
+function array_sort(Expression $expression, ?string $function = null, ?int $flags = null, bool $recursive = true) : Expression
 {
     return new Expression\ArraySort($expression, $function ? Sort::fromString($function) : Sort::sort, $flags, $recursive);
 }
@@ -292,7 +292,7 @@ function regex_replace(Expression $pattern, Expression $replacement, Expression 
     return new Expression\PregReplace($pattern, $replacement, $subject);
 }
 
-function regex_match_all(Expression $pattern, Expression $subject, Expression $flags = null) : Expression
+function regex_match_all(Expression $pattern, Expression $subject, ?Expression $flags = null) : Expression
 {
     return new Expression\PregMatchAll($pattern, $subject, $flags);
 }
@@ -307,7 +307,7 @@ function sprintf(Expression $format, Expression ...$args) : Expression
     return new Expression\Sprintf($format, ...$args);
 }
 
-function sanitize(Expression $expression, Expression $placeholder = null, Expression $skipCharacters = null) : Expression
+function sanitize(Expression $expression, ?Expression $placeholder = null, ?Expression $skipCharacters = null) : Expression
 {
     return new Expression\Sanitize($expression, $placeholder ?: new Expression\Literal('*'), $skipCharacters ?: new Expression\Literal(0));
 }
@@ -319,7 +319,7 @@ function sanitize(Expression $expression, Expression $placeholder = null, Expres
  *
  * @return Expression
  */
-function round(Expression $expression, Expression $precision = null, int $mode = PHP_ROUND_HALF_UP) : Expression
+function round(Expression $expression, ?Expression $precision = null, int $mode = PHP_ROUND_HALF_UP) : Expression
 {
     return new Expression\Round($expression, $precision ?? lit(2), $mode);
 }

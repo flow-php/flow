@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
 
 final class PipelineFactoryTest extends TestCase
 {
-    public function testEmptyPhpFile() : void
+    public function test_empty_php_file() : void
     {
         $this->expectExceptionMessage('Input file must be a valid PHP one!');
         $this->expectException(InvalidArgumentException::class);
@@ -19,7 +19,7 @@ final class PipelineFactoryTest extends TestCase
         $factory->run();
     }
 
-    public function testNonExistingFile() : void
+    public function test_non_existing_file() : void
     {
         $this->expectExceptionMessage("Input file (fake) doesn't exists!");
         $this->expectException(InvalidArgumentException::class);
@@ -28,7 +28,7 @@ final class PipelineFactoryTest extends TestCase
         $factory->run();
     }
 
-    public function testNonPhpFile() : void
+    public function test_non_php_file() : void
     {
         $this->expectExceptionMessage('Input file must be a PHP one!');
         $this->expectException(InvalidArgumentException::class);
@@ -37,7 +37,7 @@ final class PipelineFactoryTest extends TestCase
         $factory->run();
     }
 
-    public function testWithDataFrameInFile() : void
+    public function test_with_data_frame_in_file() : void
     {
         $factory = new PipelineFactory(__DIR__ . '/../Fixtures/with-dataframe.php');
         $factory->run();
@@ -45,7 +45,7 @@ final class PipelineFactoryTest extends TestCase
         $this->addToAssertionCount(1);
     }
 
-    public function testWithoutDataFrameInFile() : void
+    public function test_without_data_frame_in_file() : void
     {
         $this->expectExceptionMessage('Expecting Flow-PHP DataFrame, received: ');
         $this->expectException(InvalidArgumentException::class);

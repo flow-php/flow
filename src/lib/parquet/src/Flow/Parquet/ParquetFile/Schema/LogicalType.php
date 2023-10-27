@@ -75,35 +75,35 @@ final class LogicalType
         }
 
         if ($logicalType->MAP !== null) {
-            $name =  self::MAP;
+            $name = self::MAP;
         }
 
         if ($logicalType->LIST !== null) {
-            $name =  self::LIST;
+            $name = self::LIST;
         }
 
         if ($logicalType->ENUM !== null) {
-            $name =  self::ENUM;
+            $name = self::ENUM;
         }
 
         if ($logicalType->DECIMAL !== null) {
-            $name =  self::DECIMAL;
+            $name = self::DECIMAL;
         }
 
         if ($logicalType->DATE !== null) {
-            $name =  self::DATE;
+            $name = self::DATE;
         }
 
         if ($logicalType->TIME !== null) {
-            $name =  self::TIME;
+            $name = self::TIME;
         }
 
         if ($logicalType->TIMESTAMP !== null) {
-            $name =  self::TIMESTAMP;
+            $name = self::TIMESTAMP;
         }
 
         if ($logicalType->INTEGER !== null) {
-            $name =  self::INTEGER;
+            $name = self::INTEGER;
         }
 
         if ($logicalType->UNKNOWN !== null) {
@@ -115,11 +115,11 @@ final class LogicalType
         }
 
         if ($logicalType->BSON !== null) {
-            $name =  self::BSON;
+            $name = self::BSON;
         }
 
         if ($logicalType->UUID !== null) {
-            $name =  self::UUID;
+            $name = self::UUID;
         }
 
         if (null === $name) {

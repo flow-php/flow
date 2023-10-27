@@ -25,7 +25,7 @@ final class ClosureTest extends TestCase
 
                 public function load(Rows $rows, FlowContext $context) : void
                 {
-                    $this->rowsLoaded += 1;
+                    $this->rowsLoaded++;
                 }
 
                 public function closure(Rows $rows, FlowContext $context) : void

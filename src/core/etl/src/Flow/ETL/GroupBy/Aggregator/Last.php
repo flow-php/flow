@@ -10,7 +10,7 @@ use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\EntryReference;
 
-final class Last  implements Aggregator
+final class Last implements Aggregator
 {
     private ?Entry $last;
 

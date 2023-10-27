@@ -34,7 +34,7 @@ final class NotEmpty implements Constraint
             Entry\ListEntry::class => (bool) \count($entry->value()),
             Entry\StringEntry::class => $entry->value() !== '',
             Entry\JsonEntry::class => !\in_array($entry->value(), ['', '[]', '{}'], true),
-            default => true, //everything else can't be empty
+            default => true, // everything else can't be empty
         };
     }
 }

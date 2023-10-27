@@ -40,7 +40,7 @@ final class ElasticsearchLoaderTest extends TestCase
 
         $params = [
             'index' => self::INDEX_NAME,
-            'body'  => [
+            'body' => [
                 'query' => [
                     'match_all' => ['boost' => 1.0],
                 ],
@@ -77,7 +77,7 @@ final class ElasticsearchLoaderTest extends TestCase
 
         $params = [
             'index' => self::INDEX_NAME,
-            'body'  => [
+            'body' => [
                 'query' => [
                     'match_all' => ['boost' => 1.0],
                 ],
@@ -107,7 +107,7 @@ final class ElasticsearchLoaderTest extends TestCase
 
         $params = [
             'index' => self::INDEX_NAME,
-            'body'  => [
+            'body' => [
                 'query' => [
                     'match_all' => ['boost' => 1.0],
                 ],
@@ -147,7 +147,7 @@ final class ElasticsearchLoaderTest extends TestCase
 
         $params = [
             'index' => self::INDEX_NAME,
-            'body'  => [
+            'body' => [
                 'query' => [
                     'match_all' => ['boost' => 1.0],
                 ],
@@ -194,7 +194,7 @@ final class ElasticsearchLoaderTest extends TestCase
 
         $params = [
             'index' => self::INDEX_NAME,
-            'body'  => [
+            'body' => [
                 'query' => [
                     'match_all' => ['boost' => 1.0],
                 ],
@@ -235,7 +235,7 @@ final class ElasticsearchLoaderTest extends TestCase
 
         $params = [
             'index' => self::INDEX_NAME,
-            'body'  => [
+            'body' => [
                 'query' => [
                     'match_all' => ['boost' => 1.0],
                 ],

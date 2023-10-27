@@ -119,7 +119,7 @@ final class GroupBy
         /** @var mixed $value */
         foreach ($values as $value) {
             if ($value === null) {
-                $stringValues[] =\hash('xxh128', 'null');
+                $stringValues[] = \hash('xxh128', 'null');
             } elseif (\is_scalar($value)) {
                 $stringValues[] = (string) $value;
             }

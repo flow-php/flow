@@ -23,7 +23,7 @@ class ChartJS
         return new Chart\BarChart($label, $datasets);
     }
 
-    final public static function chart(Chart $type, Path|string $output = null, Path|string $template = null) : Loader
+    final public static function chart(Chart $type, Path|string|null $output = null, Path|string|null $template = null) : Loader
     {
         if (\is_string($output)) {
             $output = Path::realpath($output);

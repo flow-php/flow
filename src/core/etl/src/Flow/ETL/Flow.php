@@ -11,7 +11,7 @@ final class Flow
 {
     private readonly Config $config;
 
-    public function __construct(Config|ConfigBuilder $config = null)
+    public function __construct(Config|ConfigBuilder|null $config = null)
     {
         if ($config instanceof ConfigBuilder) {
             $config = $config->build();

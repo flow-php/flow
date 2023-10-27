@@ -6,7 +6,7 @@ use Flow\Parquet\Exception\InvalidArgumentException;
 
 final class BytesConverter
 {
-    public static function binToHex(string $binaryData, int $limit = null, string $glue = ' ') : string
+    public static function binToHex(string $binaryData, ?int $limit = null, string $glue = ' ') : string
     {
         if ($limit === null) {
             return \implode($glue, \str_split(\strtoupper(\bin2hex($binaryData)), 2));

@@ -307,8 +307,7 @@ final class NativeEntryFactory implements EntryFactory
 
         if (
             (!\str_starts_with($string, '{') || !\str_ends_with($string, '}'))
-            &&
-            (!\str_starts_with($string, '[') || !\str_ends_with($string, ']'))
+            && (!\str_starts_with($string, '[') || !\str_ends_with($string, ']'))
         ) {
             return false;
         }

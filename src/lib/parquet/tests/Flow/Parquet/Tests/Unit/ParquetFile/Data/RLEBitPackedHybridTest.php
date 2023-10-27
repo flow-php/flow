@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
 
 final class RLEBitPackedHybridTest extends TestCase
 {
-    public function test_decodeBitPacked_with_byteCount_greater_than_rawBytes_length() : void
+    public function test_decode_bit_packed_with_byte_count_greater_than_raw_bytes_length() : void
     {
         $rleBitPackedHybrid = new RLEBitPackedHybrid();
         $binaryReader = $this->getMockBuilder(BinaryReader::class)
@@ -35,7 +35,7 @@ final class RLEBitPackedHybridTest extends TestCase
         $this->assertEquals([8], $result);
     }
 
-    public function test_decodeBitPacked_with_different_bitWidth() : void
+    public function test_decode_bit_packed_with_different_bit_width() : void
     {
         $rleBitPackedHybrid = new RLEBitPackedHybrid();
         $binaryReader = $this->getMockBuilder(BinaryReader::class)
@@ -60,7 +60,7 @@ final class RLEBitPackedHybridTest extends TestCase
         $this->assertEquals([8, 0, 4, 0], $result);
     }
 
-    public function test_decodeBitPacked_with_fewer_remainingBytes_than_byteCount() : void
+    public function test_decode_bit_packed_with_fewer_remaining_bytes_than_byte_count() : void
     {
         $rleBitPackedHybrid = new RLEBitPackedHybrid();
         $binaryReader = $this->getMockBuilder(BinaryReader::class)
@@ -85,7 +85,7 @@ final class RLEBitPackedHybridTest extends TestCase
         $this->assertEquals([8], $result);
     }
 
-    public function test_decodeBitPacked_with_zero_groupCount_and_count() : void
+    public function test_decode_bit_packed_with_zero_group_count_and_count() : void
     {
         $rleBitPackedHybrid = new RLEBitPackedHybrid();
         $binaryReader = $this->getMockBuilder(BinaryReader::class)
@@ -102,7 +102,7 @@ final class RLEBitPackedHybridTest extends TestCase
         $this->assertEquals([], $result);
     }
 
-    public function test_decodeRLE_with_isLiteralRun_false() : void
+    public function test_decode_rl_e_with_is_literal_run_false() : void
     {
         $rleBitPackedHybrid = new RLEBitPackedHybrid();
         $binaryReader = $this->getMockBuilder(BinaryReader::class)
@@ -123,7 +123,7 @@ final class RLEBitPackedHybridTest extends TestCase
         $this->assertEquals([2, 2], $result);
     }
 
-    public function test_decodeRLE_with_isLiteralRun_true() : void
+    public function test_decode_rl_e_with_is_literal_run_true() : void
     {
         $rleBitPackedHybrid = new RLEBitPackedHybrid();
         $binaryReader = $this->getMockBuilder(BinaryReader::class)
@@ -148,7 +148,7 @@ final class RLEBitPackedHybridTest extends TestCase
         $this->assertEquals([[1]], $result);
     }
 
-    public function test_decodeRLE_with_runLength_zero() : void
+    public function test_decode_rl_e_with_run_length_zero() : void
     {
         $rleBitPackedHybrid = new RLEBitPackedHybrid();
         $binaryReader = $this->getMockBuilder(BinaryReader::class)

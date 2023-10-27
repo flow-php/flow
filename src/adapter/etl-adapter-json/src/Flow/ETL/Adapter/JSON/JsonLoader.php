@@ -103,7 +103,7 @@ final class JsonLoader implements Closure, Loader, Loader\FileLoader
 
         \fwrite($stream->resource(), $json);
 
-        $this->writes[$stream->path()->path()] += 1;
+        $this->writes[$stream->path()->path()]++;
     }
 
     private function close(FileStream $stream) : void

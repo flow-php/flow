@@ -84,8 +84,8 @@ final class ListEntry implements Entry, TypedCollection
 
     public function isEqual(Entry $entry) : bool
     {
-        return $this->is($entry->name()) &&
-            $entry instanceof self && (new ArrayComparison())->equals($this->value(), $entry->value())
+        return $this->is($entry->name())
+            && $entry instanceof self && (new ArrayComparison())->equals($this->value(), $entry->value())
             && $this->type->isEqual($entry->type);
     }
 

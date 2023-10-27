@@ -36,7 +36,7 @@ $stopwatch->start();
     ->pipeline(
         new LocalSocketPipeline(
             SocketServer::unixDomain(__FLOW_VAR_RUN__, $logger),
-//            SocketServer::tcp(6651, $logger),
+            // SocketServer::tcp(6651, $logger),
             new ChildProcessLauncher(__FLOW_SRC__ . '/adapter/etl-adapter-amphp/bin/worker-amp', $logger),
             $workers = 8
         )
