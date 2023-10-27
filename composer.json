@@ -202,9 +202,10 @@
             "@tools:install"
         ],
         "post-update-cmd": [
-            "@tools:install"
+            "@tools:update"
         ],
         "tools:install": [
+            "composer install --working-dir=./tools/blackfire",
             "composer install --working-dir=./tools/box",
             "composer install --working-dir=./tools/cs-fixer",
             "composer install --working-dir=./tools/infection",
@@ -213,6 +214,17 @@
             "composer install --working-dir=./tools/phpstan",
             "composer install --working-dir=./tools/psalm",
             "composer install --working-dir=./tools/phpunit"
+        ],
+        "tools:update": [
+            "composer update --working-dir=./tools/blackfire",
+            "composer update --working-dir=./tools/box",
+            "composer update --working-dir=./tools/cs-fixer",
+            "composer update --working-dir=./tools/infection",
+            "composer update --working-dir=./tools/monorepo",
+            "composer update --working-dir=./tools/phpbench",
+            "composer update --working-dir=./tools/phpstan",
+            "composer update --working-dir=./tools/psalm",
+            "composer update --working-dir=./tools/phpunit"
         ]
     },
     "extra": {

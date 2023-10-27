@@ -6,6 +6,11 @@ updates:
       interval: "daily"
 
   - package-ecosystem: "composer"
+    directory: "/tools/blackfire"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "composer"
     directory: "/tools/box"
     schedule:
       interval: "daily"

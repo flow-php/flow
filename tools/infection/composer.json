@@ -1,5 +1,5 @@
 {
-  "name": "flow-php/etl-tools",
+  "name": "flow-php/flow-tools",
   "description": "Flow PHP ETL - Tools",
   "require-dev": {
     "infection/infection": "^0.26.0"
