@@ -7,7 +7,6 @@ use Flow\Parquet\Option;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\PageBuilder\DataPageBuilder;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\PageBuilder\DictionaryPageBuilder;
-use Flow\Parquet\ParquetFile\Schema\ColumnPrimitiveType;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 
 final class PagesBuilder
@@ -23,21 +22,19 @@ final class PagesBuilder
     {
         $containers = new PageContainers();
 
-        if (ColumnPrimitiveType::isString($column)) {
-            if ($statistics->cardinalityRation() <= $this->options->get(Option::DICTIONARY_PAGE_MIN_CARDINALITY_RATION)) {
-                $dictionaryPageContainer = (new DictionaryPageBuilder($this->dataConverter))->build($column, $rows);
+        if ($statistics->cardinalityRation() <= $this->options->get(Option::DICTIONARY_PAGE_MIN_CARDINALITY_RATION)) {
+            $dictionaryPageContainer = (new DictionaryPageBuilder($this->dataConverter))->build($column, $rows);
 
-                if ($dictionaryPageContainer->dataSize() <= $this->options->get(Option::DICTIONARY_PAGE_SIZE)) {
-                    $containers->add($dictionaryPageContainer);
+            if ($dictionaryPageContainer->dataSize() <= $this->options->get(Option::DICTIONARY_PAGE_SIZE)) {
+                $containers->add($dictionaryPageContainer);
 
-                    /* @phpstan-ignore-next-line */
-                    foreach (\array_chunk($rows, $this->pageSizeCalculator->rowsPerPage($column, $statistics)) as $rowsChunk) {
-                        $containers->add((new DataPageBuilder($this->dataConverter, $dictionaryPageContainer->values))->build($column, $rowsChunk));
-                    }
+                $containers->add(
+                    (new DataPageBuilder($this->dataConverter))->build($column, $rows, $dictionaryPageContainer->dictionary, $dictionaryPageContainer->values)
+                );
 
-                    return $containers;
-                }
+                return $containers;
             }
+            $dictionaryPageContainer = null;
         }
 
         /* @phpstan-ignore-next-line */

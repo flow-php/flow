@@ -6,10 +6,18 @@ use Flow\Parquet\ParquetFile\Page\PageHeader;
 
 final class PageContainer
 {
+    /**
+     * @param string $pageHeaderBuffer
+     * @param string $pageBuffer
+     * @param array $values - when dictionary is present values are indices
+     * @param null|array $dictionary
+     * @param PageHeader $pageHeader
+     */
     public function __construct(
         public readonly string $pageHeaderBuffer,
         public readonly string $pageBuffer,
         public readonly array $values,
+        public readonly ?array $dictionary,
         public readonly PageHeader $pageHeader
     ) {
     }

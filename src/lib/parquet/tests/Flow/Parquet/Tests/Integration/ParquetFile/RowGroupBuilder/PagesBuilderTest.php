@@ -79,7 +79,7 @@ final class PagesBuilderTest extends TestCase
                 null,
                 new DictionaryPageHeader(
                     Encodings::PLAIN,
-                    $pages->valuesCount(),
+                    \count($enum),
                 )
             ),
             $pages->dictionaryPageContainer()->pageHeader
@@ -147,7 +147,7 @@ final class PagesBuilderTest extends TestCase
         $pages = (new PagesBuilder(DataConverter::initialize($options), new PageSizeCalculator($options), $options))
             ->build($column, $values, $statistics);
 
-        $this->assertNull($pages->dictionaryPageContainer()->pageHeader);
+        $this->assertNull($pages->dictionaryPageContainer());
         $this->assertEquals(
             new PageHeader(
                 Type::DATA_PAGE,
