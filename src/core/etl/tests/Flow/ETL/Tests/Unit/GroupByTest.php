@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
+use Flow\ETL\Config;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\FlowContext;
 use Flow\ETL\GroupBy;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -44,7 +46,7 @@ final class GroupByTest extends TestCase
                 Row::create(Entry::null('type')),
                 Row::create(Entry::string('type', 'c'))
             ),
-            $groupBy->result()
+            $groupBy->result(new FlowContext(Config::default()))
         );
     }
 
