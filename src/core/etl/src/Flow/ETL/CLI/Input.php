@@ -21,7 +21,7 @@ final class Input
         return $this->argv;
     }
 
-    public function optionValue(string $name, string $default = null) : ?string
+    public function optionValue(string $name, ?string $default = null) : ?string
     {
         foreach ($this->argv as $arg) {
             $parts = \explode('=', $arg);

@@ -131,6 +131,7 @@ return (new Config())
         'return_assignment' => false,
         'return_type_declaration' => ['space_before' => 'one'],
         'self_static_accessor' => true,
+        'single_line_throw' => false,
         'strict_param' => true,
         'ternary_to_null_coalescing' => true,
         'yoda_style' => false,

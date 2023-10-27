@@ -53,7 +53,7 @@ final class ParquetExtractor implements Extractor
                         if ($field->isArray) {
                             /** @phpstan-ignore-next-line */
                             if ($column->repetitionLevels[$row] === 0) {
-                                $arrayRow += 1;
+                                $arrayRow++;
                             }
 
                             $data[$arrayRow][$field->name][] = $value;

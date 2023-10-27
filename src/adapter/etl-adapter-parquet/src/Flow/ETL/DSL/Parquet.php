@@ -70,8 +70,8 @@ class Parquet
     final public static function to(
         string|Path $path,
         int $rows_in_group = 10000,
-        Schema $schema = null,
-        ParquetOptions $options = null
+        ?Schema $schema = null,
+        ?ParquetOptions $options = null
     ) : Loader {
         if ($options === null) {
             $options = new ParquetOptions();

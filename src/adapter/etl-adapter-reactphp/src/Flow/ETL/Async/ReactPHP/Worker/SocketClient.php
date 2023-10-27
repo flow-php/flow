@@ -45,7 +45,7 @@ final class SocketClient implements Client
 
                     $server = new SocketServer($connection, $this->serializer);
 
-                    $connection->on('data', function ($data) use ($id, $server, $connection, $protocol, $loop, &$buffer) : void {
+                    $connection->on('data', function ($data) use ($id, $server, $connection, $protocol, &$buffer) : void {
                         $message = $buffer->buffer($connection, $data);
 
                         if ($message !== null) {

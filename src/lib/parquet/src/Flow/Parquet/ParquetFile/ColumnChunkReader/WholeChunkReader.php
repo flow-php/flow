@@ -30,7 +30,7 @@ final class WholeChunkReader implements ColumnChunkReader
      *
      * @return \Generator<array<mixed>>
      */
-    public function read(ColumnChunk $columnChunk, FlatColumn $column, $stream, int $limit = null) : \Generator
+    public function read(ColumnChunk $columnChunk, FlatColumn $column, $stream, ?int $limit = null) : \Generator
     {
         $this->logger->debug('[Parquet File][Read Column][Read Column Chunk]', ['chunk' => $columnChunk->normalize()]);
         $offset = $columnChunk->pageOffset();

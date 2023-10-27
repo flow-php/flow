@@ -12,7 +12,7 @@ use Flow\Serializer\Serializable;
  * @implements \IteratorAggregate<string, EntryReference>
  * @implements Serializable<array{refs: array<string, EntryReference>}>
  */
-final class References  implements \ArrayAccess, \Countable, \IteratorAggregate, Serializable
+final class References implements \ArrayAccess, \Countable, \IteratorAggregate, Serializable
 {
     /**
      * @var array<string, EntryReference>

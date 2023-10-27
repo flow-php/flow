@@ -22,7 +22,7 @@ class Json
     public static function from(
         string|Path|array $path,
         int $rows_in_batch = 1000,
-        string $pointer = null,
+        ?string $pointer = null,
     ) : Extractor {
         if (\is_array($path)) {
             $extractors = [];

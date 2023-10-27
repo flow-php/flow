@@ -52,7 +52,7 @@ final class ElasticsearchExtractorTest extends TestCase
         $params = [
             'index' => self::INDEX_NAME,
             'size' => 1001,
-            'body'  => [
+            'body' => [
                 'query' => [
                     'match' => [
                         'title' => 'this_cant_be_matched',
@@ -92,7 +92,7 @@ final class ElasticsearchExtractorTest extends TestCase
         $params = [
             'index' => self::INDEX_NAME,
             'size' => 1001,
-            'body'  => [
+            'body' => [
                 'query' => [
                     'match_all' => ['boost' => 1.0],
                 ],
@@ -135,7 +135,7 @@ final class ElasticsearchExtractorTest extends TestCase
         $params = [
             'index' => self::INDEX_NAME,
             'size' => 1001,
-            'body'  => [
+            'body' => [
                 'sort' => [
                     ['position' => ['order' => 'asc']],
                 ],
@@ -171,7 +171,7 @@ final class ElasticsearchExtractorTest extends TestCase
         $params = [
             'index' => self::INDEX_NAME,
             'size' => 1001,
-            'body'  => [
+            'body' => [
                 'sort' => [
                     ['position' => ['order' => 'asc']],
                 ],
@@ -212,7 +212,7 @@ final class ElasticsearchExtractorTest extends TestCase
         $params = [
             'index' => self::INDEX_NAME,
             'size' => 1001,
-            'body'  => [
+            'body' => [
                 'sort' => [
                     ['position' => ['order' => 'asc']],
                 ],

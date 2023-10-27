@@ -34,7 +34,7 @@ final class ParquetFile
      * @param resource $stream
      */
     public function __construct(
-        private                          $stream,
+        private $stream,
         private readonly ByteOrder $byteOrder,
         private readonly DataConverter $dataConverter,
         private readonly LoggerInterface $logger = new NullLogger()
@@ -86,7 +86,7 @@ final class ParquetFile
         }
     }
 
-    public function readChunks(FlatColumn $column, int $limit = null) : \Generator
+    public function readChunks(FlatColumn $column, ?int $limit = null) : \Generator
     {
         $reader = new WholeChunkReader(
             new DataBuilder($this->dataConverter, $this->logger),
@@ -121,7 +121,7 @@ final class ParquetFile
      *
      * @return \Generator<int, array<string, mixed>>
      */
-    public function values(array $columns = [], int $limit = null) : \Generator
+    public function values(array $columns = [], ?int $limit = null) : \Generator
     {
         if (!\count($columns)) {
             $columns = \array_map(static fn (Column $c) => $c->name(), $this->schema()->columns());
@@ -165,7 +165,7 @@ final class ParquetFile
         }
     }
 
-    private function read(Column $column, int $limit = null) : \Generator
+    private function read(Column $column, ?int $limit = null) : \Generator
     {
         if ($column instanceof FlatColumn) {
             $this->logger->info('[Parquet File][Read Column] reading flat column', ['path' => $column->flatPath()]);
@@ -194,12 +194,12 @@ final class ParquetFile
         throw new RuntimeException('Unknown column type');
     }
 
-    private function readFlat(FlatColumn $column, int $limit = null) : \Generator
+    private function readFlat(FlatColumn $column, ?int $limit = null) : \Generator
     {
         return $this->readChunks($column, $limit);
     }
 
-    private function readList(NestedColumn $listColumn, int $limit = null) : \Generator
+    private function readList(NestedColumn $listColumn, ?int $limit = null) : \Generator
     {
         $this->logger->debug('[Parquet File][Read Column][List]', ['column' => $listColumn->normalize()]);
         $elementColumn = $listColumn->getListElement();
@@ -228,7 +228,7 @@ final class ParquetFile
         return $this->readStruct($elementColumn, isCollection: true, limit: $limit);
     }
 
-    private function readMap(NestedColumn $mapColumn, int $limit = null) : \Generator
+    private function readMap(NestedColumn $mapColumn, ?int $limit = null) : \Generator
     {
         $this->logger->debug('[Parquet File][Read Column][Map]', ['column' => $mapColumn->normalize()]);
 
@@ -284,7 +284,7 @@ final class ParquetFile
     /**
      * @param bool $isCollection - when structure is a map or list element, each struct child is a collection for example ['int' => [1, 2, 3]] instead of ['int' => 1]
      */
-    private function readStruct(NestedColumn $structColumn, bool $isCollection = false, int $limit = null) : \Generator
+    private function readStruct(NestedColumn $structColumn, bool $isCollection = false, ?int $limit = null) : \Generator
     {
         $childrenRowsData = new \MultipleIterator(\MultipleIterator::MIT_KEYS_ASSOC);
 

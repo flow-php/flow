@@ -56,7 +56,7 @@ final class IntegrationTest extends TestCase
         $params = [
             'index' => self::SOURCE_INDEX,
             'size' => 1001,
-            'body'  => [
+            'body' => [
                 'sort' => [
                     ['position' => ['order' => 'asc']],
                 ],

@@ -49,7 +49,7 @@ class Avro
      *
      * @return Loader
      */
-    final public static function to(Path|string $path, Schema $schema = null) : Loader
+    final public static function to(Path|string $path, ?Schema $schema = null) : Loader
     {
         return new AvroLoader(
             \is_string($path) ? Path::realpath($path) : $path,

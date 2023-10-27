@@ -44,7 +44,7 @@ final class AwsS3Stream extends FlysystemWrapper
             $clientOptions = \array_merge(
                 [
                     'credentials' => [
-                        'key'    => '',
+                        'key' => '',
                         'secret' => '',
                     ],
                     'region' => '',

@@ -22,7 +22,7 @@ $dbConnection = require __DIR__ . '/../db/db_clean.php';
 \putenv('FLOW_PHP_ASYNC_AUTOLOAD=' . __FLOW_AUTOLOAD__);
 
 $logger = new Logger('server');
-//$logger->pushHandler(new StreamHandler('php://stdout', LogLevel::DEBUG, false));
+// $logger->pushHandler(new StreamHandler('php://stdout', LogLevel::DEBUG, false));
 $logger->pushHandler(new StreamHandler('php://stderr', LogLevel::ERROR, false));
 
 $stopwatch = new Stopwatch();
@@ -36,7 +36,7 @@ print "Loading CSV {$csvFileSize}Mb file into postgresql...\n";
     ->pipeline(
         new LocalSocketPipeline(
             SocketServer::unixDomain(__FLOW_VAR_RUN__, $logger),
-            //SocketServer::tcp(6651, $logger),
+            // SocketServer::tcp(6651, $logger),
             new ChildProcessLauncher(__FLOW_SRC__ . '/adapter/etl-adapter-reactphp/bin/worker-reactphp', $logger),
             $workers = 8
         )

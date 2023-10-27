@@ -323,11 +323,11 @@ final class RowsTest extends TestCase
     public function test_filters_out_rows() : void
     {
         $rows = new Rows(
-            $one   = Row::create(new IntegerEntry('number', 1), new StringEntry('name', 'one')),
-            $two   = Row::create(new IntegerEntry('number', 2), new StringEntry('name', 'two')),
+            $one = Row::create(new IntegerEntry('number', 1), new StringEntry('name', 'one')),
+            $two = Row::create(new IntegerEntry('number', 2), new StringEntry('name', 'two')),
             $three = Row::create(new IntegerEntry('number', 3), new StringEntry('name', 'three')),
-            $four  = Row::create(new IntegerEntry('number', 4), new StringEntry('name', 'four')),
-            $five   = Row::create(new IntegerEntry('number', 5), new StringEntry('name', 'five'))
+            $four = Row::create(new IntegerEntry('number', 4), new StringEntry('name', 'four')),
+            $five = Row::create(new IntegerEntry('number', 5), new StringEntry('name', 'five'))
         );
 
         $evenRows = fn (Row $row) : bool => $row->get('number')->value() % 2 === 0;
@@ -340,10 +340,10 @@ final class RowsTest extends TestCase
     public function test_find() : void
     {
         $rows = new Rows(
-            $one   = Row::create(new IntegerEntry('number', 1), new StringEntry('name', 'one')),
-            $two   = Row::create(new IntegerEntry('number', 2), new StringEntry('name', 'two')),
+            $one = Row::create(new IntegerEntry('number', 1), new StringEntry('name', 'one')),
+            $two = Row::create(new IntegerEntry('number', 2), new StringEntry('name', 'two')),
             $three = Row::create(new IntegerEntry('number', 3), new StringEntry('name', 'one')),
-            $four  = Row::create(new IntegerEntry('number', 4), new StringEntry('name', 'four')),
+            $four = Row::create(new IntegerEntry('number', 4), new StringEntry('name', 'four')),
             $three1 = Row::create(new IntegerEntry('number', 3), new StringEntry('name', 'three')),
         );
 
@@ -364,10 +364,10 @@ final class RowsTest extends TestCase
     public function test_find_one() : void
     {
         $rows = new Rows(
-            $one   = Row::create(new IntegerEntry('number', 1), new StringEntry('name', 'one')),
-            $two   = Row::create(new IntegerEntry('number', 2), new StringEntry('name', 'two')),
+            $one = Row::create(new IntegerEntry('number', 1), new StringEntry('name', 'one')),
+            $two = Row::create(new IntegerEntry('number', 2), new StringEntry('name', 'two')),
             $three = Row::create(new IntegerEntry('number', 3), new StringEntry('name', 'three')),
-            $four  = Row::create(new IntegerEntry('number', 4), new StringEntry('name', 'four')),
+            $four = Row::create(new IntegerEntry('number', 4), new StringEntry('name', 'four')),
             $three1 = Row::create(new IntegerEntry('number', 3), new StringEntry('name', 'three')),
         );
 
@@ -383,10 +383,10 @@ final class RowsTest extends TestCase
     public function test_find_without_results() : void
     {
         $rows = new Rows(
-            $one   = Row::create(new IntegerEntry('number', 1), new StringEntry('name', 'one')),
-            $two   = Row::create(new IntegerEntry('number', 2), new StringEntry('name', 'two')),
+            $one = Row::create(new IntegerEntry('number', 1), new StringEntry('name', 'one')),
+            $two = Row::create(new IntegerEntry('number', 2), new StringEntry('name', 'two')),
             $three = Row::create(new IntegerEntry('number', 3), new StringEntry('name', 'three')),
-            $four  = Row::create(new IntegerEntry('number', 4), new StringEntry('name', 'four')),
+            $four = Row::create(new IntegerEntry('number', 4), new StringEntry('name', 'four')),
             $three1 = Row::create(new IntegerEntry('number', 3), new StringEntry('name', 'three')),
         );
 
@@ -772,10 +772,10 @@ final class RowsTest extends TestCase
     {
         $rows = new Rows(
             $three = Row::create(new IntegerEntry('number', 3), new StringEntry('name', 'three')),
-            $one   = Row::create(new IntegerEntry('number', 1), new StringEntry('name', 'one')),
-            $five  = Row::create(new IntegerEntry('number', 5), new StringEntry('name', 'five')),
-            $two   = Row::create(new IntegerEntry('number', 2), new StringEntry('name', 'two')),
-            $four  = Row::create(new IntegerEntry('number', 4), new StringEntry('name', 'four')),
+            $one = Row::create(new IntegerEntry('number', 1), new StringEntry('name', 'one')),
+            $five = Row::create(new IntegerEntry('number', 5), new StringEntry('name', 'five')),
+            $two = Row::create(new IntegerEntry('number', 2), new StringEntry('name', 'two')),
+            $four = Row::create(new IntegerEntry('number', 4), new StringEntry('name', 'four')),
         );
 
         $sort = $rows->sort(fn (Row $row, Row $nextRow) : int => $row->valueOf('number') <=> $nextRow->valueOf('number'));
@@ -833,10 +833,10 @@ final class RowsTest extends TestCase
     {
         $rows = new Rows(
             $three = Row::create(new IntegerEntry('number', 3), new StringEntry('name', 'three')),
-            $one   = Row::create(new IntegerEntry('number', 1), new StringEntry('name', 'one')),
-            $five   = Row::create(new IntegerEntry('number', 5), new StringEntry('name', 'five')),
-            $two   = Row::create(new IntegerEntry('number', 2), new StringEntry('name', 'two')),
-            $four  = Row::create(new IntegerEntry('number', 4), new StringEntry('name', 'four')),
+            $one = Row::create(new IntegerEntry('number', 1), new StringEntry('name', 'one')),
+            $five = Row::create(new IntegerEntry('number', 5), new StringEntry('name', 'five')),
+            $two = Row::create(new IntegerEntry('number', 2), new StringEntry('name', 'two')),
+            $four = Row::create(new IntegerEntry('number', 4), new StringEntry('name', 'four')),
         );
 
         $ascending = $rows->sortAscending(ref('number'));

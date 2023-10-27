@@ -69,7 +69,7 @@ final class CacheSpy implements Cache
         if (!\array_key_exists($id, $this->reads)) {
             $this->reads[$id] = 1;
         } else {
-            $this->reads[$id] += 1;
+            $this->reads[$id]++;
         }
 
         $this->readsCount++;

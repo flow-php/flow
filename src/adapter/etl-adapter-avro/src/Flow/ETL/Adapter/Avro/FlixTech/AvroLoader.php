@@ -149,7 +149,7 @@ final class AvroLoader implements Closure, Loader, Loader\FileLoader
 
         $schema = \AvroSchema::parse($this->schema());
 
-        $this->writer =  new \AvroDataIOWriter(
+        $this->writer = new \AvroDataIOWriter(
             new AvroResource(
                 $context->streams()->open(
                     $this->path,

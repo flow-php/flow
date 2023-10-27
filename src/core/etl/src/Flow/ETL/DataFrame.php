@@ -78,7 +78,7 @@ final class DataFrame
      *
      * @param null|string $id
      */
-    public function cache(string $id = null) : self
+    public function cache(?string $id = null) : self
     {
         $this->pipeline = new CachingPipeline($this->pipeline, $id);
 
@@ -219,7 +219,7 @@ final class DataFrame
      *
      * @param null|callable(Rows $rows) : void $callback
      */
-    public function forEach(callable $callback = null) : void
+    public function forEach(?callable $callback = null) : void
     {
         $clone = clone $this;
         $clone->run($callback);
@@ -571,7 +571,7 @@ final class DataFrame
      *
      * @param null|callable(Rows $rows): void $callback
      */
-    public function run(callable $callback = null) : void
+    public function run(?callable $callback = null) : void
     {
         $clone = clone $this;
 
@@ -642,7 +642,7 @@ final class DataFrame
      *
      * @param null|SchemaValidator $validator - when null, StrictValidator gets initialized
      */
-    public function validate(Schema $schema, SchemaValidator $validator = null) : self
+    public function validate(Schema $schema, ?SchemaValidator $validator = null) : self
     {
         $this->pipeline->add(new SchemaValidationLoader($schema, $validator ?? new Schema\StrictValidator()));
 

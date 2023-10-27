@@ -26,7 +26,7 @@ final class Count implements Aggregator
     {
         try {
             $row->valueOf($this->ref);
-            $this->count += 1;
+            $this->count++;
         } catch (InvalidArgumentException) {
             // do nothing?
         }

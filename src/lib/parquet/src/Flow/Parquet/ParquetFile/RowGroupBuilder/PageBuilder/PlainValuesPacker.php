@@ -65,7 +65,7 @@ final class PlainValuesPacker
 
                 break;
             case PhysicalType::FIXED_LEN_BYTE_ARRAY:
-                switch($column->logicalType()?->name()) {
+                switch ($column->logicalType()?->name()) {
                     case LogicalType::DECIMAL:
                         /**
                          * @phpstan-ignore-next-line

@@ -111,7 +111,7 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
 
         if (!\array_key_exists($destination->uri(), $this->streams[$basePath->uri()])) {
             $this->streams[$basePath->uri()][$destination->uri()] = $this->filesystem->open(
-                (\count($partitions) || $safe === true)  ? $destination->randomize()->setExtension($extension) : $basePath,
+                (\count($partitions) || $safe === true) ? $destination->randomize()->setExtension($extension) : $basePath,
                 $mode
             );
         }

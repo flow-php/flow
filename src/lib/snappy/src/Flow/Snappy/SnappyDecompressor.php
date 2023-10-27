@@ -7,7 +7,7 @@ namespace Flow\Snappy;
  */
 final class SnappyDecompressor
 {
-    private const WORD_MASK = [0, 0xff, 0xffff, 0xffffff, 0xffffffff];
+    private const WORD_MASK = [0, 0xFF, 0xFFFF, 0xFFFFFF, 0xFFFFFFFF];
 
     private readonly array $array;
 
@@ -29,7 +29,7 @@ final class SnappyDecompressor
         while ($shift < 32 && $this->pos < $this->arrayLength) {
             $c = $this->array[$this->pos];
             $this->pos++;
-            $val = $c & 0x7f;
+            $val = $c & 0x7F;
 
             if (($val << $shift >> $shift) !== $val) {
                 return -1;
@@ -81,7 +81,7 @@ final class SnappyDecompressor
                     case 1:
                         $len = (($c >> 2) & 0x7) + 4;
                         $offset = $this->array[$pos] + (($c >> 5) << 8);
-                        $pos += 1;
+                        $pos++;
 
                         break;
                     case 2:

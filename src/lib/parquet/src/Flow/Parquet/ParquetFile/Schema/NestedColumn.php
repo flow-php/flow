@@ -169,13 +169,13 @@ final class NestedColumn implements Column
             $path[] = $parent->name();
             $parent = $parent->parent();
 
-            if ($parent &&  $parent->schemaRoot) {
+            if ($parent && $parent->schemaRoot) {
                 break;
             }
         }
 
         $path = \array_reverse($path);
-        $this->flatPath =  \implode('.', $path);
+        $this->flatPath = \implode('.', $path);
 
         return $this->flatPath;
     }

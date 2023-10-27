@@ -484,7 +484,7 @@ ASCIITABLE,
 
                 public function transform(Rows $rows, FlowContext $context) : Rows
                 {
-                    $this->rowsTransformed += 1;
+                    $this->rowsTransformed++;
 
                     return $rows;
                 }
@@ -639,7 +639,7 @@ ASCIITABLE,
 
                 public function transform(Rows $rows, FlowContext $context) : Rows
                 {
-                    $this->rowsTransformed += 1;
+                    $this->rowsTransformed++;
 
                     return $rows;
                 }

@@ -40,7 +40,7 @@ class From
         return new Extractor\BufferExtractor($extractor, $max_row_size);
     }
 
-    final public static function cache(string $id, Extractor $fallback_extractor = null, bool $clear = false) : Extractor
+    final public static function cache(string $id, ?Extractor $fallback_extractor = null, bool $clear = false) : Extractor
     {
         return new Extractor\CacheExtractor($id, $fallback_extractor, $clear);
     }

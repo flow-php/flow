@@ -347,7 +347,7 @@ final class Path implements Serializable
         } else {
             $rx = \preg_quote($pattern);
             $rx = \strtr($rx, [
-                '\\*'=>"{$wild}*?", '\\?'=>"{$wild}", '\\['=>'[', '\\]'=>']',
+                '\\*' => "{$wild}*?", '\\?' => "{$wild}", '\\[' => '[', '\\]' => ']',
             ]);
             $rx = '{^' . $rx . '$}' . $rxci;
 

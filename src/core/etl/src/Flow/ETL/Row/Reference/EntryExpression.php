@@ -70,7 +70,7 @@ trait EntryExpression
         return new Expressions(new Expression\ArrayReverse($this, $preserveKeys));
     }
 
-    public function arraySort(string $function = null, int $flags = null, bool $recursive = true) : Expression|EntryReference
+    public function arraySort(?string $function = null, ?int $flags = null, bool $recursive = true) : Expression|EntryReference
     {
         return new Expressions(new Expression\ArraySort($this, $function ? Sort::fromString($function) : Sort::sort, $flags, $recursive));
     }
@@ -292,7 +292,7 @@ trait EntryExpression
         return new Expressions(new Expression\PregMatch($pattern, $this));
     }
 
-    public function regexMatchAll(Expression $pattern, Expression $flags = null) : Expression|EntryReference
+    public function regexMatchAll(Expression $pattern, ?Expression $flags = null) : Expression|EntryReference
     {
         return new Expressions(new Expression\PregMatchAll($pattern, $this, $flags));
     }
@@ -318,7 +318,7 @@ trait EntryExpression
         return new Expressions(new Same($this, $ref));
     }
 
-    public function sanitize(Expression $placeholder = null, Expression $skipCharacters = null) : Expression|EntryReference
+    public function sanitize(?Expression $placeholder = null, ?Expression $skipCharacters = null) : Expression|EntryReference
     {
         return new Expressions(new Expression\Sanitize($this, $placeholder ?: new Expression\Literal('*'), $skipCharacters ?: new Expression\Literal(0)));
     }

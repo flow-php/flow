@@ -33,7 +33,7 @@ final class ConcatTest extends TestCase
     {
         $this->assertSame(
             'abc',
-            concat(lit('a'), lit('b'), lit('c'), )->eval(Row::create()),
+            concat(lit('a'), lit('b'), lit('c'))->eval(Row::create()),
         );
     }
 }

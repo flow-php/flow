@@ -28,18 +28,18 @@ final class DropDuplicatesTransformerTest extends TestCase
         $transformer = new DropDuplicatesTransformer('id');
 
         $rows = new Rows(
-            Row::create(Entry::int('id', 1), Entry::str('name', 'name1'), ),
-            Row::create(Entry::int('id', 1), Entry::str('name', 'name1'), ),
-            Row::create(Entry::int('id', 2), Entry::str('name', 'name2'), ),
-            Row::create(Entry::int('id', 2), Entry::str('name', 'name2'), ),
-            Row::create(Entry::int('id', 3), Entry::str('name', 'name3'), ),
+            Row::create(Entry::int('id', 1), Entry::str('name', 'name1')),
+            Row::create(Entry::int('id', 1), Entry::str('name', 'name1')),
+            Row::create(Entry::int('id', 2), Entry::str('name', 'name2')),
+            Row::create(Entry::int('id', 2), Entry::str('name', 'name2')),
+            Row::create(Entry::int('id', 3), Entry::str('name', 'name3')),
         );
 
         $this->assertEquals(
             new Rows(
-                Row::create(Entry::int('id', 1), Entry::str('name', 'name1'), ),
-                Row::create(Entry::int('id', 2), Entry::str('name', 'name2'), ),
-                Row::create(Entry::int('id', 3), Entry::string('name', 'name3'), ),
+                Row::create(Entry::int('id', 1), Entry::str('name', 'name1')),
+                Row::create(Entry::int('id', 2), Entry::str('name', 'name2')),
+                Row::create(Entry::int('id', 3), Entry::string('name', 'name3')),
             ),
             $transformer->transform($rows, new FlowContext(Config::default()))
         );
@@ -50,20 +50,20 @@ final class DropDuplicatesTransformerTest extends TestCase
         $transformer = new DropDuplicatesTransformer('id');
 
         $rows = new Rows(
-            Row::create(Entry::int('id', 1), Entry::str('name', 'name1'), ),
-            Row::create(Entry::int('id', 1), Entry::str('name', 'name1'), ),
-            Row::create(Entry::int('id', 2), Entry::str('name', 'name2'), ),
-            Row::create(Entry::int('id', 2), Entry::str('name', 'name2'), ),
-            Row::create(Entry::str('name', 'name3'), ),
-            Row::create(Entry::int('id', 4), Entry::str('name', 'name4'), ),
+            Row::create(Entry::int('id', 1), Entry::str('name', 'name1')),
+            Row::create(Entry::int('id', 1), Entry::str('name', 'name1')),
+            Row::create(Entry::int('id', 2), Entry::str('name', 'name2')),
+            Row::create(Entry::int('id', 2), Entry::str('name', 'name2')),
+            Row::create(Entry::str('name', 'name3')),
+            Row::create(Entry::int('id', 4), Entry::str('name', 'name4')),
         );
 
         $this->assertEquals(
             new Rows(
-                Row::create(Entry::int('id', 1), Entry::str('name', 'name1'), ),
-                Row::create(Entry::int('id', 2), Entry::str('name', 'name2'), ),
-                Row::create(Entry::str('name', 'name3'), ),
-                Row::create(Entry::int('id', 4), Entry::str('name', 'name4'), ),
+                Row::create(Entry::int('id', 1), Entry::str('name', 'name1')),
+                Row::create(Entry::int('id', 2), Entry::str('name', 'name2')),
+                Row::create(Entry::str('name', 'name3')),
+                Row::create(Entry::int('id', 4), Entry::str('name', 'name4')),
             ),
             $transformer->transform($rows, new FlowContext(Config::default()))
         );
@@ -74,18 +74,18 @@ final class DropDuplicatesTransformerTest extends TestCase
         $transformer = new DropDuplicatesTransformer('id', 'name');
 
         $rows = new Rows(
-            Row::create(Entry::int('id', 1), Entry::str('name', 'name1'), ),
-            Row::create(Entry::int('id', 1), Entry::str('name', 'name1'), ),
-            Row::create(Entry::int('id', 2), Entry::str('name', 'name2'), ),
-            Row::create(Entry::int('id', 2), Entry::str('name', 'name2'), ),
-            Row::create(Entry::int('id', 3), Entry::str('name', 'name3'), ),
+            Row::create(Entry::int('id', 1), Entry::str('name', 'name1')),
+            Row::create(Entry::int('id', 1), Entry::str('name', 'name1')),
+            Row::create(Entry::int('id', 2), Entry::str('name', 'name2')),
+            Row::create(Entry::int('id', 2), Entry::str('name', 'name2')),
+            Row::create(Entry::int('id', 3), Entry::str('name', 'name3')),
         );
 
         $this->assertEquals(
             new Rows(
-                Row::create(Entry::int('id', 1), Entry::str('name', 'name1'), ),
-                Row::create(Entry::int('id', 2), Entry::str('name', 'name2'), ),
-                Row::create(Entry::int('id', 3), Entry::str('name', 'name3'), ),
+                Row::create(Entry::int('id', 1), Entry::str('name', 'name1')),
+                Row::create(Entry::int('id', 2), Entry::str('name', 'name2')),
+                Row::create(Entry::int('id', 3), Entry::str('name', 'name3')),
             ),
             $transformer->transform($rows, new FlowContext(Config::default()))
         );
