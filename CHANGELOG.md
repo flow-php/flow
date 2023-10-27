@@ -25,6 +25,8 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#651](https://github.com/flow-php/flow/pull/651) - **Update `.php-cs-fixer.php` in matter to use predefined rule-sets** - [@stloyd](https://github.com/stloyd)
+- [#651](https://github.com/flow-php/flow/pull/651) - **Run new cs-fixer configuration against codebase** - [@stloyd](https://github.com/stloyd)
 - [#650](https://github.com/flow-php/flow/pull/650) - **Run cs-fixer against codebase** - [@stloyd](https://github.com/stloyd)
 - [#649](https://github.com/flow-php/flow/pull/649) - **Cleanup of parquet PageBuilders** - [@norberttech](https://github.com/norberttech)
 - [#645](https://github.com/flow-php/flow/pull/645) - **Rework `SnappyCompressor::compressFragment()` method** - [@stloyd](https://github.com/stloyd)
