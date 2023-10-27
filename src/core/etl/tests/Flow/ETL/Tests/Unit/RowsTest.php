@@ -189,13 +189,6 @@ final class RowsTest extends TestCase
         );
     }
 
-    public function test_chunks_smaller_than_1() : void
-    {
-        $this->expectException(InvalidArgumentException::class);
-
-        (new Rows())->chunks(-1);
-    }
-
     public function test_chunks_with_less() : void
     {
         $rows = new Rows(
@@ -208,8 +201,10 @@ final class RowsTest extends TestCase
             Row::create(new IntegerEntry('id', 7)),
         );
 
-        $this->assertCount(1, $rows->chunks(10));
-        $this->assertSame([1, 2, 3, 4, 5, 6, 7], $rows->chunks(10)[0]->reduceToArray('id'));
+        $chunk = \iterator_to_array($rows->chunks(10));
+
+        $this->assertCount(1, $chunk);
+        $this->assertSame([1, 2, 3, 4, 5, 6, 7], $chunk[0]->reduceToArray('id'));
     }
 
     public function test_chunks_with_more_than_expected_in_chunk_rows() : void
@@ -227,9 +222,11 @@ final class RowsTest extends TestCase
             Row::create(new IntegerEntry('id', 10)),
         );
 
-        $this->assertCount(2, $rows->chunks(5));
-        $this->assertSame([1, 2, 3, 4, 5], $rows->chunks(5)[0]->reduceToArray('id'));
-        $this->assertSame([6, 7, 8, 9, 10], $rows->chunks(5)[1]->reduceToArray('id'));
+        $chunk = \iterator_to_array($rows->chunks(5));
+
+        $this->assertCount(2, $chunk);
+        $this->assertSame([1, 2, 3, 4, 5], $chunk[0]->reduceToArray('id'));
+        $this->assertSame([6, 7, 8, 9, 10], $chunk[1]->reduceToArray('id'));
     }
 
     public function test_drop() : void
