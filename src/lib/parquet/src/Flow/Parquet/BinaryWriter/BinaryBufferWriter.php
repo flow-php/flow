@@ -8,23 +8,19 @@ use Flow\Parquet\DataSize;
 
 final class BinaryBufferWriter implements BinaryWriter
 {
-    private DataSize $length;
-
     public function __construct(private string &$buffer, private readonly ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN)
     {
         $this->buffer = '';
-        $this->length = new DataSize(0);
     }
 
     public function append(string $buffer) : void
     {
         $this->buffer .= $buffer;
-        $this->length->addBytes(\strlen($buffer));
     }
 
     public function length() : DataSize
     {
-        return $this->length;
+        return DataSize::fromBytes(\strlen($this->buffer));
     }
 
     public function writeBits(array $bits) : void
@@ -41,7 +37,6 @@ final class BinaryBufferWriter implements BinaryWriter
 
             if ($bitIndex === 8) {
                 $this->buffer .= \chr($byte);
-                $this->length->addBytes(1); // Assume addBytes is a method to add to the length
                 $byte = 0;
                 $bitIndex = 0;
             }
@@ -50,7 +45,6 @@ final class BinaryBufferWriter implements BinaryWriter
         // If there are remaining bits that don't fill a byte
         if ($bitIndex > 0) {
             $this->buffer .= \chr($byte);
-            $this->length->addBytes(1);
         }
     }
 
@@ -69,7 +63,6 @@ final class BinaryBufferWriter implements BinaryWriter
         foreach ($bytes as $byte) {
             $this->buffer .= \chr($byte);
         }
-        $this->length->addBytes(\count($bytes));
     }
 
     public function writeDecimals(array $decimals, int $byteLength, int $precision = 10, int $scale = 2) : void
@@ -96,7 +89,6 @@ final class BinaryBufferWriter implements BinaryWriter
             }
 
             $this->buffer .= $packedBytes;
-            $this->length->addBytes($byteLength);
         }
     }
 
@@ -107,7 +99,6 @@ final class BinaryBufferWriter implements BinaryWriter
         foreach ($doubles as $double) {
             $this->buffer .= \pack($format, $double);
         }
-        $this->length->addBytes(\count($doubles) * 8);
     }
 
     public function writeFloats(array $floats) : void
@@ -117,7 +108,6 @@ final class BinaryBufferWriter implements BinaryWriter
         foreach ($floats as $float) {
             $this->buffer .= \pack($format, $float);
         }
-        $this->length->addBytes(\count($floats) * 4);
     }
 
     public function writeInts32(array $ints) : void
@@ -127,7 +117,6 @@ final class BinaryBufferWriter implements BinaryWriter
         foreach ($ints as $int) {
             $this->buffer .= \pack($format, $int);
         }
-        $this->length->addBytes(\count($ints) * 4);
     }
 
     public function writeInts64(array $ints) : void
@@ -137,7 +126,6 @@ final class BinaryBufferWriter implements BinaryWriter
         foreach ($ints as $int) {
             $this->buffer .= \pack($format, $int);
         }
-        $this->length->addBytes(\count($ints) * 8);
     }
 
     /**
@@ -152,23 +140,24 @@ final class BinaryBufferWriter implements BinaryWriter
             $this->buffer .= \pack($format, $length);
             $this->buffer .= $string;
         }
-
-        $this->length->addBytes(\array_sum(\array_map('strlen', $strings)) + (4 * \count($strings)));
     }
 
     public function writeVarInts32(array $values) : void
     {
         foreach ($values as $value) {
-            do {
-                $temp = $value & 0x7F;
-                $value >>= 7;
+            if ($value < 128) {
+                $this->buffer .= \chr($value);
+            } else {
+                do {
+                    $temp = $value & 0x7F;
+                    $value >>= 7;
 
-                if ($value) {
-                    $temp |= 0x80;
-                }
-                $this->buffer .= \chr($temp);
-                $this->length->addBytes(1);
-            } while ($value);
+                    if ($value) {
+                        $temp |= 0x80;
+                    }
+                    $this->buffer .= \chr($temp);
+                } while ($value);
+            }
         }
     }
 }

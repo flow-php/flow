@@ -2,7 +2,7 @@
   "name": "flow-php/flow-tools",
   "description": "Flow PHP ETL - Tools",
   "require-dev": {
-    "phpunit/phpunit": "^10"
+    "blackfire/php-sdk": "^2.3"
   },
   "config": {
     "allow-plugins": false
