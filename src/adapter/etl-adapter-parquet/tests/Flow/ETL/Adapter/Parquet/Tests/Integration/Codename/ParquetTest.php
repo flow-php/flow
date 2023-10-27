@@ -12,8 +12,6 @@ use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Flow;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
-use Flow\Parquet\Option;
-use Flow\Parquet\Options;
 use PHPUnit\Framework\TestCase;
 
 final class ParquetTest extends TestCase
@@ -121,12 +119,7 @@ final class ParquetTest extends TestCase
             $rows,
             (new Flow())
                 ->read(
-                    Parquet::from(
-                        $path,
-                        options: (new Options())
-                            ->set(Option::BYTE_ARRAY_TO_STRING)
-                            ->set(Option::INT_96_AS_DATETIME)
-                    )
+                    Parquet::from($path)
                 )
                 ->fetch()
         );
@@ -172,9 +165,6 @@ final class ParquetTest extends TestCase
             (new Flow())
                 ->read(Parquet::from(
                     $paths,
-                    options: (new Options())
-                        ->set(Option::BYTE_ARRAY_TO_STRING)
-                        ->set(Option::INT_96_AS_DATETIME)
                 ))
                 ->sortBy(ref('integer'))
                 ->fetch()

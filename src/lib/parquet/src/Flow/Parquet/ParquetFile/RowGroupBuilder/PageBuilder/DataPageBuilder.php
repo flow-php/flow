@@ -52,7 +52,7 @@ final class DataPageBuilder implements PageBuilder
             \strlen($pageBuffer),
             \strlen($pageBuffer),
             dataPageHeader: new DataPageHeader(
-                $this->dictionary ? Encodings::PLAIN_DICTIONARY : Encodings::PLAIN,
+                $this->dictionary ? Encodings::RLE_DICTIONARY : Encodings::PLAIN,
                 \count($shredded->values),
             ),
             dataPageHeaderV2: null,

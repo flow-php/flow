@@ -87,11 +87,11 @@ final class PageContainers
         $size = 0;
 
         if ($this->dictionaryPageContainer) {
-            $size += $this->dictionaryPageContainer->size();
+            $size += $this->dictionaryPageContainer->totalSize();
         }
 
         foreach ($this->dataPageContainers as $pageContainer) {
-            $size += $pageContainer->size();
+            $size += $pageContainer->totalSize();
         }
 
         return $size;

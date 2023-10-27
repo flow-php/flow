@@ -9,18 +9,17 @@ use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 
 final class ColumnChunkStatistics
 {
-    private int $distinctCount;
-
     private int $nullCount;
 
     private int $totalStringLength;
+
+    private array $values = [];
 
     private int $valuesCount;
 
     public function __construct(private readonly FlatColumn $column)
     {
         $this->nullCount = 0;
-        $this->distinctCount = 0;
         $this->valuesCount = 0;
         $this->totalStringLength = 0;
     }
@@ -37,6 +36,14 @@ final class ColumnChunkStatistics
             $this->nullCount++;
 
             return;
+        }
+
+        if (\is_array($value)) {
+            foreach ($value as $val) {
+                $this->values[] = \is_object($val) ? \serialize($val) : $val;
+            }
+        } else {
+            $this->values[] = \is_object($value) ? \serialize($value) : $value;
         }
 
         if ((\is_string($value) || \is_array($value)) && ColumnPrimitiveType::isString($this->column)) {
@@ -59,9 +66,14 @@ final class ColumnChunkStatistics
         return (int) \ceil($this->totalStringLength / $this->notNullCount());
     }
 
+    public function cardinalityRation() : float
+    {
+        return \round($this->distinctCount() / $this->notNullCount(), 2);
+    }
+
     public function distinctCount() : int
     {
-        return $this->distinctCount;
+        return \count(\array_unique($this->values));
     }
 
     public function notNullCount() : int
@@ -77,9 +89,9 @@ final class ColumnChunkStatistics
     public function reset() : void
     {
         $this->nullCount = 0;
-        $this->distinctCount = 0;
         $this->valuesCount = 0;
         $this->totalStringLength = 0;
+        $this->values = [];
     }
 
     public function totalStringLength() : int

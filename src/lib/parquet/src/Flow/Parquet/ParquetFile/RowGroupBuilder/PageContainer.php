@@ -14,8 +14,18 @@ final class PageContainer
     ) {
     }
 
-    public function size() : int
+    public function dataSize() : int
     {
-        return \strlen($this->pageHeaderBuffer) + \strlen($this->pageBuffer);
+        return \strlen($this->pageBuffer);
+    }
+
+    public function headerSize() : int
+    {
+        return \strlen($this->pageHeaderBuffer);
+    }
+
+    public function totalSize() : int
+    {
+        return $this->headerSize() + $this->dataSize();
     }
 }

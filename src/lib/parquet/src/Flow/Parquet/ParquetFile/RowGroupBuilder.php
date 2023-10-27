@@ -107,7 +107,7 @@ final class RowGroupBuilder
         $builders = [];
 
         foreach ($schema->columnsFlat() as $column) {
-            $builders[$column->flatPath()] = new ColumnChunkBuilder($column, $this->dataConverter, $this->calculator);
+            $builders[$column->flatPath()] = new ColumnChunkBuilder($column, $this->dataConverter, $this->calculator, $this->options);
         }
 
         return $builders;
