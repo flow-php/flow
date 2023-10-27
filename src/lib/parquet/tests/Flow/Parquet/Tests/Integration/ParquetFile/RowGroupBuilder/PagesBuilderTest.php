@@ -31,7 +31,8 @@ final class PagesBuilderTest extends TestCase
         foreach ($values as $value) {
             $statistics->add($value);
         }
-        $pages = (new PagesBuilder(DataConverter::initialize($options), new PageSizeCalculator($options)))->build($column, $values, $statistics);
+        $pages = (new PagesBuilder(DataConverter::initialize($options), new PageSizeCalculator($options), $options))
+            ->build($column, $values, $statistics);
 
         $this->assertCount(4, $pages->dataPageContainers());
         $this->assertEquals(
@@ -65,7 +66,8 @@ final class PagesBuilderTest extends TestCase
             $statistics->add($value);
         }
 
-        $pages = (new PagesBuilder(DataConverter::initialize(new Options()), new PageSizeCalculator(new Options())))
+        $options = new Options();
+        $pages = (new PagesBuilder(DataConverter::initialize($options), new PageSizeCalculator($options), $options))
             ->build($column, $values, $statistics);
 
         $this->assertEquals(
@@ -77,7 +79,7 @@ final class PagesBuilderTest extends TestCase
                 null,
                 new DictionaryPageHeader(
                     Encodings::PLAIN,
-                    $pages->valuesCount(),
+                    \count($enum),
                 )
             ),
             $pages->dictionaryPageContainer()->pageHeader
@@ -88,7 +90,7 @@ final class PagesBuilderTest extends TestCase
                 \strlen($pages->dataPageContainers()[0]->pageBuffer),
                 \strlen($pages->dataPageContainers()[0]->pageBuffer),
                 new DataPageHeader(
-                    Encodings::PLAIN_DICTIONARY,
+                    Encodings::RLE_DICTIONARY,
                     \count($values),
                 ),
                 null,
@@ -109,7 +111,9 @@ final class PagesBuilderTest extends TestCase
             $statistics->add($value);
         }
 
-        $pages = (new PagesBuilder(DataConverter::initialize(new Options()), new PageSizeCalculator(new Options())))->build($column, $values, $statistics);
+        $options = new Options();
+        $pages = (new PagesBuilder(DataConverter::initialize($options), new PageSizeCalculator($options), $options))
+            ->build($column, $values, $statistics);
 
         $this->assertCount(1, $pages->dataPageContainers());
         $this->assertEquals(
@@ -138,29 +142,19 @@ final class PagesBuilderTest extends TestCase
         foreach ($values as $value) {
             $statistics->add($value);
         }
-        $pages = (new PagesBuilder(DataConverter::initialize(new Options()), new PageSizeCalculator(new Options())))->build($column, $values, $statistics);
 
-        $this->assertEquals(
-            new PageHeader(
-                Type::DICTIONARY_PAGE,
-                \strlen($pages->dictionaryPageContainer()->pageBuffer),
-                \strlen($pages->dictionaryPageContainer()->pageBuffer),
-                null,
-                null,
-                new DictionaryPageHeader(
-                    Encodings::PLAIN,
-                    $pages->valuesCount(),
-                )
-            ),
-            $pages->dictionaryPageContainer()->pageHeader
-        );
+        $options = new Options();
+        $pages = (new PagesBuilder(DataConverter::initialize($options), new PageSizeCalculator($options), $options))
+            ->build($column, $values, $statistics);
+
+        $this->assertNull($pages->dictionaryPageContainer());
         $this->assertEquals(
             new PageHeader(
                 Type::DATA_PAGE,
                 \strlen($pages->dataPageContainers()[0]->pageBuffer),
                 \strlen($pages->dataPageContainers()[0]->pageBuffer),
                 new DataPageHeader(
-                    Encodings::PLAIN_DICTIONARY,
+                    Encodings::PLAIN,
                     \count($values),
                 ),
                 null,
@@ -170,7 +164,7 @@ final class PagesBuilderTest extends TestCase
         );
     }
 
-    public function test_building_pages_for_string_columns() : void
+    public function test_building_pages_for_string_columns_with_very_low_cardinality() : void
     {
         $column = FlatColumn::string('string');
         $values = \array_map(static fn ($i) => 'abcdefghij', \range(0, 99));
@@ -180,7 +174,9 @@ final class PagesBuilderTest extends TestCase
         foreach ($values as $value) {
             $statistics->add($value);
         }
-        $pages = (new PagesBuilder(DataConverter::initialize($options), new PageSizeCalculator($options)))->build($column, $values, $statistics);
+
+        $pages = (new PagesBuilder(DataConverter::initialize($options), new PageSizeCalculator($options), $options))
+            ->build($column, $values, $statistics);
 
         $this->assertCount(1, $pages->dataPageContainers());
         $this->assertEquals(
@@ -203,7 +199,7 @@ final class PagesBuilderTest extends TestCase
                 \strlen($pages->dataPageContainers()[0]->pageBuffer),
                 \strlen($pages->dataPageContainers()[0]->pageBuffer),
                 new DataPageHeader(
-                    Encodings::PLAIN_DICTIONARY,
+                    Encodings::RLE_DICTIONARY,
                     100,
                 ),
                 null,
@@ -223,29 +219,18 @@ final class PagesBuilderTest extends TestCase
         foreach ($values as $value) {
             $statistics->add($value);
         }
-        $pages = (new PagesBuilder(DataConverter::initialize(new Options()), new PageSizeCalculator(new Options())))->build($column, $values, $statistics);
+        $options = new Options();
+        $pages = (new PagesBuilder(DataConverter::initialize($options), new PageSizeCalculator($options), $options))
+            ->build($column, $values, $statistics);
 
-        $this->assertEquals(
-            new PageHeader(
-                Type::DICTIONARY_PAGE,
-                \strlen($pages->dictionaryPageContainer()->pageBuffer),
-                \strlen($pages->dictionaryPageContainer()->pageBuffer),
-                null,
-                null,
-                new DictionaryPageHeader(
-                    Encodings::PLAIN,
-                    $pages->valuesCount(),
-                )
-            ),
-            $pages->dictionaryPageContainer()->pageHeader
-        );
+        $this->assertNull($pages->dictionaryPageContainer());
         $this->assertEquals(
             new PageHeader(
                 Type::DATA_PAGE,
                 \strlen($pages->dataPageContainers()[0]->pageBuffer),
                 \strlen($pages->dataPageContainers()[0]->pageBuffer),
                 new DataPageHeader(
-                    Encodings::PLAIN_DICTIONARY,
+                    Encodings::PLAIN,
                     \count($values),
                 ),
                 null,

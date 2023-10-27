@@ -10,21 +10,19 @@ use Flow\Parquet\ParquetFile\Encodings;
 use Flow\Parquet\ParquetFile\Page\Header\DataPageHeader;
 use Flow\Parquet\ParquetFile\Page\Header\Type;
 use Flow\Parquet\ParquetFile\Page\PageHeader;
-use Flow\Parquet\ParquetFile\RowGroupBuilder\PageBuilder;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\PageContainer;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Thrift\Protocol\TCompactProtocol;
 use Thrift\Transport\TMemoryBuffer;
 
-final class DataPageBuilder implements PageBuilder
+final class DataPageBuilder
 {
     public function __construct(
         private readonly DataConverter $dataConverter,
-        private readonly ?array $dictionary = null
     ) {
     }
 
-    public function build(FlatColumn $column, array $rows) : PageContainer
+    public function build(FlatColumn $column, array $rows, ?array $dictionary = null, ?array $indices = null) : PageContainer
     {
         $shredded = (new Dremel())->shred($rows, $column->maxDefinitionsLevel());
 
@@ -41,8 +39,8 @@ final class DataPageBuilder implements PageBuilder
             $pageWriter->append((new RLEBitPackedPacker($rleBitPackedHybrid))->pack($shredded->definitions));
         }
 
-        if ($this->dictionary) {
-            $pageWriter->append((new RLEBitPackedPacker($rleBitPackedHybrid))->packWithBitWidth($shredded->indices($this->dictionary)));
+        if ($dictionary && $indices) {
+            $pageWriter->append((new RLEBitPackedPacker($rleBitPackedHybrid))->packWithBitWidth($indices));
         } else {
             $pageWriter->append((new PlainValuesPacker($this->dataConverter))->packValues($column, $shredded->values));
         }
@@ -52,8 +50,8 @@ final class DataPageBuilder implements PageBuilder
             \strlen($pageBuffer),
             \strlen($pageBuffer),
             dataPageHeader: new DataPageHeader(
-                $this->dictionary ? Encodings::PLAIN_DICTIONARY : Encodings::PLAIN,
-                \count($shredded->values),
+                $dictionary && $indices ? Encodings::RLE_DICTIONARY : Encodings::PLAIN,
+                $dictionary && $indices ? \count($indices) : \count($shredded->values),
             ),
             dataPageHeaderV2: null,
             dictionaryPageHeader: null,
@@ -64,6 +62,7 @@ final class DataPageBuilder implements PageBuilder
             $pageHeaderBuffer->getBuffer(),
             $pageBuffer,
             $shredded->values,
+            null,
             $pageHeader
         );
     }

@@ -47,13 +47,17 @@ function array_flatten(array $array) : array
 {
     $result = [];
 
-    foreach ($array as $item) {
-        if (\is_array($item)) {
-            $result = \array_merge($result, array_flatten($item));
-        } else {
-            $result[] = $item;
+    $flatten = function (array $arr) use (&$result, &$flatten) : void {
+        foreach ($arr as $item) {
+            if (\is_array($item)) {
+                $flatten($item);
+            } else {
+                $result[] = $item;
+            }
         }
-    }
+    };
+
+    $flatten($array);
 
     return $result;
 }
