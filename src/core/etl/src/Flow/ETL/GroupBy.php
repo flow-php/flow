@@ -8,7 +8,6 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\GroupBy\Aggregation;
 use Flow\ETL\GroupBy\Aggregator;
-use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
@@ -84,28 +83,26 @@ final class GroupBy
 
     public function result() : Rows
     {
-        $rows = new Rows();
+        $rows = [];
 
         foreach ($this->groups as $group) {
-            $entries = new Entries();
+            $entries = [];
 
-            if (\array_key_exists('values', $group)) {
-                /** @var mixed $value */
-                foreach ($group['values'] as $entry => $value) {
-                    $entries = $entries->add((new NativeEntryFactory)->create($entry, $value));
-                }
+            /** @var mixed $value */
+            foreach ($group['values'] ?? [] as $entry => $value) {
+                $entries[] = (new NativeEntryFactory)->create($entry, $value);
             }
 
             foreach ($group['aggregators'] as $aggregator) {
-                $entries = $entries->add($aggregator->result());
+                $entries[] = $aggregator->result();
             }
 
-            if ($entries->count()) {
-                $rows = $rows->add(new Row($entries));
+            if (\count($entries)) {
+                $rows[] = Row::create(...$entries);
             }
         }
 
-        return $rows;
+        return new Rows(...$rows);
     }
 
     /**
