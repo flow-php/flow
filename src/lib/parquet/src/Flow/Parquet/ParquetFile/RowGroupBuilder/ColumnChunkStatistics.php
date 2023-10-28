@@ -63,16 +63,28 @@ final class ColumnChunkStatistics
 
     public function avgStringLength() : int
     {
+        if (0 === $this->notNullCount()) {
+            return 0;
+        }
+
         return (int) \ceil($this->totalStringLength / $this->notNullCount());
     }
 
     public function cardinalityRation() : float
     {
+        if (0 === $this->notNullCount()) {
+            return 0;
+        }
+
         return \round($this->distinctCount() / $this->notNullCount(), 2);
     }
 
     public function distinctCount() : int
     {
+        if ([] === $this->values) {
+            return 0;
+        }
+
         return \count(\array_unique($this->values));
     }
 
