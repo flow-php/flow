@@ -150,8 +150,8 @@ final class FlatColumn implements Column
     {
         return [
             /** @phpstan-ignore-next-line */
-            'type' => $this->type()->name . ($this->logicalType()?->name() !== null ? ' (' . $this->logicalType()?->name() . ')' : ''),
-            'optional' => $this->repetition()?->value === Repetition::OPTIONAL->value,
+            'type' => $this->type->name . ($this->logicalType?->name() !== null ? ' (' . $this->logicalType?->name() . ')' : ''),
+            'optional' => $this->repetition?->value === Repetition::OPTIONAL->value,
         ];
     }
 
@@ -161,7 +161,7 @@ final class FlatColumn implements Column
             return $this->flatPath;
         }
 
-        $parent = $this->parent();
+        $parent = $this->parent;
 
         if ($parent?->schemaRoot) {
             $this->flatPath = $this->name;
@@ -228,11 +228,11 @@ final class FlatColumn implements Column
             return true;
         }
 
-        if ($this->parent()?->parent()?->logicalType()?->name() === 'MAP') {
+        if ($this->parent->parent()?->logicalType()?->name() === 'MAP') {
             return true;
         }
 
-        if ($this->parent()?->parent()?->parent()?->logicalType()?->name() === 'MAP') {
+        if ($this->parent->parent()?->parent()?->logicalType()?->name() === 'MAP') {
             return true;
         }
 
@@ -297,13 +297,13 @@ final class FlatColumn implements Column
     {
         return [
             'type' => 'flat',
-            'name' => $this->name(),
+            'name' => $this->name,
             'flat_path' => $this->flatPath(),
-            'physical_type' => $this->type()->name,
-            'logical_type' => $this->logicalType()?->name(),
-            'repetition' => $this->repetition()?->name,
-            'precision' => $this->precision(),
-            'scale' => $this->scale(),
+            'physical_type' => $this->type->name,
+            'logical_type' => $this->logicalType?->name(),
+            'repetition' => $this->repetition?->name,
+            'precision' => $this->precision,
+            'scale' => $this->scale,
             'max_definition_level' => $this->maxDefinitionsLevel(),
             'max_repetition_level' => $this->maxRepetitionsLevel(),
             'children' => null,

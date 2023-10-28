@@ -138,7 +138,7 @@ final class NestedColumn implements Column
     {
         $ddlArray = [
             'type' => 'group',
-            'optional' => $this->repetition()?->value === Repetition::OPTIONAL->value,
+            'optional' => $this->repetition?->value === Repetition::OPTIONAL->value,
             'children' => [],
         ];
 
@@ -155,7 +155,7 @@ final class NestedColumn implements Column
             return $this->flatPath;
         }
 
-        $parent = $this->parent();
+        $parent = $this->parent;
 
         if ($parent?->schemaRoot) {
             $this->flatPath = $this->name;
@@ -187,7 +187,7 @@ final class NestedColumn implements Column
     {
         if ($this->isList()) {
             /** @phpstan-ignore-next-line */
-            return $this->children()[0]->children()[0];
+            return $this->children[0]->children()[0];
         }
 
         throw new InvalidArgumentException('Column ' . $this->flatPath() . ' is not a list');
@@ -200,7 +200,7 @@ final class NestedColumn implements Column
     {
         if ($this->isMap()) {
             /** @phpstan-ignore-next-line */
-            return $this->children()[0]->children()[0];
+            return $this->children[0]->children()[0];
         }
 
         throw new InvalidArgumentException('Column ' . $this->flatPath() . ' is not a map');
@@ -213,7 +213,7 @@ final class NestedColumn implements Column
     {
         if ($this->isMap()) {
             /** @phpstan-ignore-next-line */
-            return $this->children()[0]->children()[1];
+            return $this->children[0]->children()[1];
         }
 
         throw new InvalidArgumentException('Column ' . $this->flatPath() . ' is not a map');
@@ -221,7 +221,7 @@ final class NestedColumn implements Column
 
     public function isList() : bool
     {
-        return $this->logicalType()?->name() === 'LIST';
+        return $this->logicalType?->name() === 'LIST';
     }
 
     public function isListElement() : bool
@@ -243,7 +243,7 @@ final class NestedColumn implements Column
 
     public function isMap() : bool
     {
-        return $this->logicalType()?->name() === 'MAP';
+        return $this->logicalType?->name() === 'MAP';
     }
 
     public function isMapElement() : bool
@@ -252,11 +252,11 @@ final class NestedColumn implements Column
             return false;
         }
 
-        if ($this->parent()?->logicalType()?->name() === 'MAP') {
+        if ($this->parent->logicalType()?->name() === 'MAP') {
             return true;
         }
 
-        if ($this->parent()?->parent()?->logicalType()?->name() === 'MAP') {
+        if ($this->parent->parent()?->logicalType()?->name() === 'MAP') {
             return true;
         }
 
@@ -299,7 +299,7 @@ final class NestedColumn implements Column
         if ($this->repetition === null) {
             $level = 0;
         } else {
-            $level = $this->repetition() === Repetition::REQUIRED ? 0 : 1;
+            $level = $this->repetition === Repetition::REQUIRED ? 0 : 1;
         }
 
         return $this->parent ? $level + $this->parent->maxDefinitionsLevel() : $level;
@@ -310,7 +310,7 @@ final class NestedColumn implements Column
         if ($this->repetition === null) {
             $level = 0;
         } else {
-            $level = $this->repetition() === Repetition::REPEATED ? 1 : 0;
+            $level = $this->repetition === Repetition::REPEATED ? 1 : 0;
         }
 
         return $this->parent ? $level + $this->parent->maxRepetitionsLevel() : $level;
@@ -325,11 +325,11 @@ final class NestedColumn implements Column
     {
         return [
             'type' => 'nested',
-            'name' => $this->name(),
+            'name' => $this->name,
             'flat_path' => $this->flatPath(),
-            'physical_type' => $this->type()?->name,
-            'logical_type' => $this->logicalType()?->name(),
-            'repetition' => $this->repetition()?->name,
+            'physical_type' => null,
+            'logical_type' => $this->logicalType?->name(),
+            'repetition' => $this->repetition?->name,
             'max_definition_level' => $this->maxDefinitionsLevel(),
             'max_repetition_level' => $this->maxRepetitionsLevel(),
             'children' => $this->normalizeChildren(),
@@ -393,11 +393,11 @@ final class NestedColumn implements Column
     {
         $elements = [
             new SchemaElement([
-                'name' => $this->name(),
+                'name' => $this->name,
                 'num_children' => \count($this->children),
                 'converted_type' => null,
-                'repetition_type' => $this->repetition()?->value,
-                'logicalType' => $this->logicalType()?->toThrift(),
+                'repetition_type' => $this->repetition?->value,
+                'logicalType' => $this->logicalType?->toThrift(),
             ]),
         ];
 
