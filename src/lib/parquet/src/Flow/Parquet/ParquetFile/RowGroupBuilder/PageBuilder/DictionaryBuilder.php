@@ -29,6 +29,7 @@ final class DictionaryBuilder
             case PhysicalType::FLOAT:
             case PhysicalType::DOUBLE:
                 return (new FloatDictionaryBuilder())->build($rows);
+            case PhysicalType::FIXED_LEN_BYTE_ARRAY:
             case PhysicalType::BYTE_ARRAY:
                 switch ($column->logicalType()?->name()) {
                     case LogicalType::STRING:
