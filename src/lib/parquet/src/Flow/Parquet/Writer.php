@@ -47,10 +47,12 @@ final class Writer
         foreach ($rows as $row) {
             $this->rowGroupBuilder($schema)->addRow($row);
 
-            $rowGroupContainer = $this->rowGroupBuilder($schema)->flush($fileOffset);
-            \fwrite($stream, $rowGroupContainer->binaryBuffer);
-            $metadata->rowGroups()->add($rowGroupContainer->rowGroup);
-            $fileOffset += \strlen($rowGroupContainer->binaryBuffer);
+            if ($this->rowGroupBuilder($schema)->isFull()) {
+                $rowGroupContainer = $this->rowGroupBuilder($schema)->flush($fileOffset);
+                \fwrite($stream, $rowGroupContainer->binaryBuffer);
+                $metadata->rowGroups()->add($rowGroupContainer->rowGroup);
+                $fileOffset += \strlen($rowGroupContainer->binaryBuffer);
+            }
         }
 
         if (!$this->rowGroupBuilder($schema)->isEmpty()) {

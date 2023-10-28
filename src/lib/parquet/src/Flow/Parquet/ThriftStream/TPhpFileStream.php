@@ -3,7 +3,6 @@
 namespace Flow\Parquet\ThriftStream;
 
 use Thrift\Exception\TException;
-use Thrift\Factory\TStringFuncFactory;
 use Thrift\Transport\TTransport;
 
 final class TPhpFileStream extends TTransport
@@ -63,15 +62,16 @@ final class TPhpFileStream extends TTransport
 
     public function write($buf) : void
     {
-        while (TStringFuncFactory::create()->strlen($buf) > 0) {
+        while ($buf != '') {
             $got = @\fwrite($this->stream, $buf);
 
             if ($got === 0 || $got === false) {
                 throw new TException(
-                    'TPhpStream: Could not write ' . TStringFuncFactory::create()->strlen($buf) . ' bytes'
+                    'TPhpStream: Could not write ' . \strlen($buf) . ' bytes'
                 );
             }
-            $buf = TStringFuncFactory::create()->substr($buf, $got);
+
+            $buf = \substr($buf, $got);
         }
     }
 }
