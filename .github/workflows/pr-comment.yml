@@ -46,7 +46,6 @@ jobs:
       - name: "Create or update comment"
         uses: peter-evans/create-or-update-comment@v3
         with:
-          token: "${{ secrets.FLOW_BOT_TOKEN }}"
           comment-id: ${{ steps.fc.outputs.comment-id }}
           issue-number: ${{ steps.pr.outputs.id }}
           body: ${{ steps.get-benchmarks.outputs.content }}
