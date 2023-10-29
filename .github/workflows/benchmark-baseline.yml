@@ -81,14 +81,6 @@ jobs:
       - name: "Install locked dependencies"
         run: "composer install --no-interaction --no-progress"
 
-      - name: "Cache PHPBench reports"
-        uses: "actions/cache@v3"
-        with:
-          path: "var/phpbench"
-          key: "php-${{ matrix.php-version }}-${{ env.PHPBENCH_TAG }}-phpbench"
-          restore-keys: |
-            php-${{ matrix.php-version }}-${{ env.PHPBENCH_TAG }}-phpbench-
-
       - name: "Benchmark"
         run: |
           echo '# Flow PHP - Benchmark - ${{ env.PHPBENCH_TAG }}' >> $GITHUB_STEP_SUMMARY
@@ -98,3 +90,9 @@ jobs:
           composer test:benchmark -- --tag=${{ env.PHPBENCH_TAG }} --progress=none >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
 
+      - name: "Save Benchmark Baseline in cache"
+        id: cache-primes-save
+        uses: actions/cache/save@v3
+        with:
+          path: var/phpbench
+          key: "php-${{ matrix.php-version }}-${{ env.PHPBENCH_TAG }}-phpbench"
