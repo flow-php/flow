@@ -66,7 +66,7 @@ jobs:
           path: "var/phpbench"
           key: "php-${{ matrix.php-version }}-1.x-phpbench"
           restore-keys: |
-            php-${{ matrix.php-version }}-1.x-phpbench-
+            php-${{ matrix.php-version }}-1.x-phpbench
 
       - name: "Execute benchmarks"
         id: init_comment
