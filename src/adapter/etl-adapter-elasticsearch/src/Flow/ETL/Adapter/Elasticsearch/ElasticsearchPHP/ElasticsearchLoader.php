@@ -25,7 +25,7 @@ use Flow\ETL\Rows;
  *    elasticMetaHeader?: boolean,
  *    includePortInHostHeader?: boolean
  *  },
- *  chunk_size: int,
+ *  chunk_size: int<1, max>,
  *  index: string,
  *  id_factory: IdFactory,
  *  parameters: array<mixed>,
@@ -41,6 +41,7 @@ final class ElasticsearchLoader implements Loader
 
     /**
      * @param array{hosts?: array<string>, connectionParams?: array<mixed>, retries?: int, sniffOnStart?: boolean, sslCert?: array<string>, sslKey?: array<string>, sslVerification?: (boolean|string), elasticMetaHeader?: boolean, includePortInHostHeader?: boolean} $config
+     * @param int<1, max> $chunkSize
      * @param array<mixed> $parameters
      */
     public function __construct(
@@ -66,6 +67,7 @@ final class ElasticsearchLoader implements Loader
      *  elasticMetaHeader?: boolean,
      *  includePortInHostHeader?: boolean
      * } $clientConfig
+     * @param int<1, max> $chunkSize
      * @param array<mixed> $parameters
      */
     public static function update(array $clientConfig, int $chunkSize, string $index, IdFactory $idFactory, array $parameters = []) : self

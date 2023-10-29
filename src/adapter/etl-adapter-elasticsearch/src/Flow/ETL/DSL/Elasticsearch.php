@@ -29,7 +29,7 @@ class Elasticsearch
      *  elasticMetaHeader?: boolean,
      *  includePortInHostHeader?: boolean
      * } $config
-     * @param int $chunk_size
+     * @param int<1, max> $chunk_size
      * @param string $index
      * @param IdFactory $id_factory
      * @param array<mixed> $parameters - https://www.elastic.co/guide/en/elasticsearch/reference/master/docs-bulk.html
@@ -60,7 +60,7 @@ class Elasticsearch
      *  elasticMetaHeader?: boolean,
      *  includePortInHostHeader?: boolean
      * } $config
-     * @param int $chunk_size
+     * @param int<1, max> $chunk_size
      * @param string $index
      * @param IdFactory $id_factory
      * @param array<mixed> $parameters - https://www.elastic.co/guide/en/elasticsearch/reference/master/docs-bulk.html

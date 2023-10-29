@@ -31,7 +31,7 @@ final class MemorySort implements ExternalSort
         private readonly Cache $cache,
         private Unit $maximumMemory
     ) {
-        $this->configuration = new Configuration($safetyBufferPercentage = 10);
+        $this->configuration = new Configuration(10);
 
         if ($this->configuration->isLessThan($maximumMemory) && !$this->configuration->isInfinite()) {
             /**
@@ -48,7 +48,7 @@ final class MemorySort implements ExternalSort
         $memoryConsumption = new Consumption();
 
         $mergedRows = new Rows();
-        $maxSize = 0;
+        $maxSize = 1;
 
         foreach ($this->cache->read($this->cacheId) as $rows) {
             $maxSize = \max($rows->count(), $maxSize);
@@ -64,6 +64,6 @@ final class MemorySort implements ExternalSort
 
         $this->cache->clear($this->cacheId);
 
-        return new Extractor\ProcessExtractor(...$mergedRows->sortBy(...$refs)->chunks($maxSize));
+        return new Extractor\GeneratorExtractor($mergedRows->sortBy(...$refs)->chunks($maxSize));
     }
 }

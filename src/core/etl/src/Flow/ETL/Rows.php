@@ -59,26 +59,21 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
     public function add(Row ...$rows) : self
     {
         return new self(
-            ...\array_merge($this->rows, $rows)
+            ...$this->rows,
+            ...$rows
         );
     }
 
     /**
-     * @return Rows[]
+     * @param int<1, max> $size
+     *
+     * @return \Generator<Rows>
      */
-    public function chunks(int $size) : array
+    public function chunks(int $size) : \Generator
     {
-        if ($size < 1) {
-            throw InvalidArgumentException::because('Chunk size must be greater than 0');
-        }
-
-        $chunks = [];
-
         foreach (\array_chunk($this->rows, $size) as $chunk) {
-            $chunks[] = new self(...$chunk);
+            yield new self(...$chunk);
         }
-
-        return $chunks;
     }
 
     public function count() : int

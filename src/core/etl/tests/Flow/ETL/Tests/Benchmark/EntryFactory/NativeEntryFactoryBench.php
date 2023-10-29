@@ -11,7 +11,7 @@ use PhpBench\Attributes\Iterations;
 use PhpBench\Attributes\Revs;
 
 #[Iterations(5)]
-#[Groups(['entry_factory'])]
+#[Groups(['building_blocks'])]
 final class NativeEntryFactoryBench
 {
     private array $rowsArray = [];

@@ -28,6 +28,8 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#656](https://github.com/flow-php/flow/pull/656) - **Adjust Rows::chunk() to work on generators instead of arrays** - [@stloyd](https://github.com/stloyd)
+- [f17d62](https://github.com/flow-php/flow/commit/f17d621d5aeedb13fa759a05a473d98dcff22cc9) - **Save Benchmark baseline in cache** - [@norberttech](https://github.com/norberttech)
 - [05d251](https://github.com/flow-php/flow/commit/05d251ec49c2691c296311d578614c7695fd5fdc) - **Unified steps in pr-comment workflow** - [@norberttech](https://github.com/norberttech)
 - [524fce](https://github.com/flow-php/flow/commit/524fceeba0ece837b73509fa97523ece76f7495d) - **Use different action to download artifacts based on workflow_id** - [@norberttech](https://github.com/norberttech)
 - [#664](https://github.com/flow-php/flow/pull/664) - **Reverted pull-requests to issues write permissions** - [@norberttech](https://github.com/norberttech)
@@ -83,6 +85,8 @@
 - [#584](https://github.com/flow-php/flow/pull/584) - **Adjust `phpunit.xml` to be more efficient** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
+- [fdcaa3](https://github.com/flow-php/flow/commit/fdcaa3664b70b266d4388d3609609e3f49a46eec) - **cmposer cache in benchmark baseline workflow** - [@norberttech](https://github.com/norberttech)
+- [1f172c](https://github.com/flow-php/flow/commit/1f172ce4a8ef18349b69763664c9dc6db94e78ab) - **pr-comment workflow job name** - [@norberttech](https://github.com/norberttech)
 - [a3df35](https://github.com/flow-php/flow/commit/a3df357875bc03d4f3137ba2a021049601ad3e5d) - **restoring cache during test-benchmark workflow** - [@norberttech](https://github.com/norberttech)
 - [bfec21](https://github.com/flow-php/flow/commit/bfec2119f058cca9ab11b4682365255df626878c) - **paths to downloaded artifacts in pr comment workflo** - [@norberttech](https://github.com/norberttech)
 - [#661](https://github.com/flow-php/flow/pull/661) - **NativeEntryFactoryBench** - [@norberttech](https://github.com/norberttech)
@@ -108,6 +112,7 @@
 - [c9fb26](https://github.com/flow-php/flow/commit/c9fb26dc2e0558c0f33b6097286e4dc6e2799d3f) - **test-benchmark.yml** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [8d4882](https://github.com/flow-php/flow/commit/8d4882febeb7848f4b75844a3bd0ea04778782e7) - **additional char in cache restore-keys paremeters for phpbench** - [@norberttech](https://github.com/norberttech)
 - [#661](https://github.com/flow-php/flow/pull/661) - **EntryExpressionEvalTransformerBench** - [@norberttech](https://github.com/norberttech)
 - [#634](https://github.com/flow-php/flow/pull/634) - **Remove Rector tool** - [@stloyd](https://github.com/stloyd)
 - [#618](https://github.com/flow-php/flow/pull/618) - **Remove dead `ArrayRowsFactory` class** - [@stloyd](https://github.com/stloyd)

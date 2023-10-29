@@ -74,20 +74,20 @@ jobs:
         uses: "actions/cache@v3"
         with:
           path: "${{ steps.composer-cache.outputs.dir }}"
-          key: "php-${{ matrix.php-version }}-${{ env.PHPBENCH_TAG }}-phpbench"
+          key: "php-${{ matrix.php-version }}-locked-composer-${{ hashFiles('**/composer.lock') }}"
           restore-keys: |
-            php-${{ matrix.php-version }}-${{ env.PHPBENCH_TAG }}-phpbench-
+            php-${{ matrix.php-version }}-locked-composer-
 
       - name: "Install locked dependencies"
         run: "composer install --no-interaction --no-progress"
 
-      - name: "Cache PHPBench reports"
+      - name: "Restore Benchmark cache"
         uses: "actions/cache@v3"
         with:
           path: "var/phpbench"
           key: "php-${{ matrix.php-version }}-${{ env.PHPBENCH_TAG }}-phpbench"
           restore-keys: |
-            php-${{ matrix.php-version }}-${{ env.PHPBENCH_TAG }}-phpbench-
+            php-${{ matrix.php-version }}-${{ env.PHPBENCH_TAG }}-phpbench
 
       - name: "Benchmark"
         run: |
@@ -98,3 +98,9 @@ jobs:
           composer test:benchmark -- --tag=${{ env.PHPBENCH_TAG }} --progress=none >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
 
+      - name: "Save Benchmark Baseline in cache"
+        id: cache-primes-save
+        uses: actions/cache/save@v3
+        with:
+          path: var/phpbench
+          key: "php-${{ matrix.php-version }}-${{ env.PHPBENCH_TAG }}-phpbench-${{ github.sha }}"

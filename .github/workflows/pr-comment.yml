@@ -7,11 +7,15 @@ on:
       - completed
 
 jobs:
-  upload:
+  pr-comment:
+    name: "Pull Request Comment"
+
     runs-on: ubuntu-latest
+
     if: >
       github.event.workflow_run.event == 'pull_request' &&
       github.event.workflow_run.conclusion == 'success'
+
     steps:
       - name: Download pull request id artifact
         uses: dawidd6/action-download-artifact@v2
@@ -20,7 +24,7 @@ jobs:
           name: pr
           path: ./var/phpbench/pr
 
-      - name: save PR id
+      - name: Save PR id
         id: pr
         run: |
           echo "id=$(<./var/phpbench/pr/pr-id.txt)" >> $GITHUB_OUTPUT

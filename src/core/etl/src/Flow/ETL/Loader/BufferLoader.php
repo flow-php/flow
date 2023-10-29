@@ -10,12 +10,15 @@ use Flow\ETL\Pipeline\Closure;
 use Flow\ETL\Rows;
 
 /**
- * @implements Loader<array{overflow_loader: Loader, buffer_size: int}>
+ * @implements Loader<array{overflow_loader: Loader, buffer_size: int<1, max>}>
  */
 final class BufferLoader implements Closure, Loader, OverridingLoader
 {
     private Rows $buffer;
 
+    /**
+     * @param int<1, max> $bufferSize
+     */
     public function __construct(private readonly Loader $overflowLoader, private readonly int $bufferSize)
     {
         $this->buffer = new Rows();

@@ -416,7 +416,7 @@ final class DataFrame
      *
      * @lazy
      *
-     * @throws InvalidArgumentException
+     * @param int<1, max> $chunks
      */
     public function parallelize(int $chunks) : self
     {
