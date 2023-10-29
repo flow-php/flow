@@ -28,6 +28,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#662](https://github.com/flow-php/flow/pull/662) - **Rework benchmarks to set up test data in constructors** - [@stloyd](https://github.com/stloyd)
 - [#656](https://github.com/flow-php/flow/pull/656) - **Adjust Rows::chunk() to work on generators instead of arrays** - [@stloyd](https://github.com/stloyd)
 - [f17d62](https://github.com/flow-php/flow/commit/f17d621d5aeedb13fa759a05a473d98dcff22cc9) - **Save Benchmark baseline in cache** - [@norberttech](https://github.com/norberttech)
 - [05d251](https://github.com/flow-php/flow/commit/05d251ec49c2691c296311d578614c7695fd5fdc) - **Unified steps in pr-comment workflow** - [@norberttech](https://github.com/norberttech)
