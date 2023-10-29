@@ -28,6 +28,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [f17d62](https://github.com/flow-php/flow/commit/f17d621d5aeedb13fa759a05a473d98dcff22cc9) - **Save Benchmark baseline in cache** - [@norberttech](https://github.com/norberttech)
 - [05d251](https://github.com/flow-php/flow/commit/05d251ec49c2691c296311d578614c7695fd5fdc) - **Unified steps in pr-comment workflow** - [@norberttech](https://github.com/norberttech)
 - [524fce](https://github.com/flow-php/flow/commit/524fceeba0ece837b73509fa97523ece76f7495d) - **Use different action to download artifacts based on workflow_id** - [@norberttech](https://github.com/norberttech)
 - [#664](https://github.com/flow-php/flow/pull/664) - **Reverted pull-requests to issues write permissions** - [@norberttech](https://github.com/norberttech)
