@@ -81,13 +81,19 @@ jobs:
       - name: "Install locked dependencies"
         run: "composer install --no-interaction --no-progress"
 
+      - name: Get Date
+        id: get-date
+        run: |
+          echo "date=$(date -u "+%Y%m%d%H%M%S")" >> $GITHUB_OUTPUT
+        shell: bash
+
       - name: "Restore Benchmark cache"
         uses: "actions/cache@v3"
         with:
           path: "var/phpbench"
-          key: "php-${{ matrix.php-version }}-${{ env.PHPBENCH_TAG }}-phpbench"
+          key: "php-${{ matrix.php-version }}-${{ env.PHPBENCH_TAG }}-phpbench-${{ steps.get-date.outputs.date }}"
           restore-keys: |
-            php-${{ matrix.php-version }}-${{ env.PHPBENCH_TAG }}-phpbench
+            php-${{ matrix.php-version }}-${{ env.PHPBENCH_TAG }}-phpbench-
 
       - name: "Benchmark"
         run: |
@@ -97,10 +103,3 @@ jobs:
           echo '```' >> $GITHUB_STEP_SUMMARY
           composer test:benchmark -- --tag=${{ env.PHPBENCH_TAG }} --progress=none >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
-
-      - name: "Save Benchmark Baseline in cache"
-        id: cache-primes-save
-        uses: actions/cache/save@v3
-        with:
-          path: var/phpbench
-          key: "php-${{ matrix.php-version }}-${{ env.PHPBENCH_TAG }}-phpbench-${{ github.sha }}"
