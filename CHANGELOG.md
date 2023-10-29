@@ -28,6 +28,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#664](https://github.com/flow-php/flow/pull/664) - **Reverted pull-requests to issues write permissions** - [@norberttech](https://github.com/norberttech)
 - [#663](https://github.com/flow-php/flow/pull/663) - **benchmark workflow trigger and permissions** - [@norberttech](https://github.com/norberttech)
 - [#661](https://github.com/flow-php/flow/pull/661) - **Github benchmark comment template** - [@norberttech](https://github.com/norberttech)
 - [#655](https://github.com/flow-php/flow/pull/655) - **Rework `GroupBy::result()` method to not recreate entries & rows in loop** - [@stloyd](https://github.com/stloyd)
