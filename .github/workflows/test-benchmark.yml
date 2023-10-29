@@ -12,7 +12,7 @@ on:
       - 'composer.lock'
 
 permissions:
-  issues: write
+  pull-requests: write
 
 # See https://stackoverflow.com/a/72408109
 concurrency:
