@@ -13,31 +13,33 @@ jobs:
       github.event.workflow_run.event == 'pull_request' &&
       github.event.workflow_run.conclusion == 'success'
     steps:
-      - uses: dawidd6/action-download-artifact@v2
+      - name: Download pull request id artifact
+        uses: dawidd6/action-download-artifact@v2
         with:
           workflow: ${{ github.event.workflow_run.workflow_id }}
           name: pr
-          path: ./var/phpbench/pr-id.txt
+          path: ./var/phpbench/pr
 
       - name: save PR id
         id: pr
         run: |
-          echo "id=$(<pr-id.txt)" >> $GITHUB_OUTPUT
+          echo "id=$(<./var/phpbench/pr/pr-id.txt)" >> $GITHUB_OUTPUT
 
-      - uses: dawidd6/action-download-artifact@v2
+      - name: Download phpbench benchmarks artifact
+        uses: dawidd6/action-download-artifact@v2
         with:
           workflow: ${{ github.event.workflow_run.workflow_id }}
           name: phpbench
-          path: ./var/phpbench/summary.txt
+          path: ./var/phpbench/summary/
 
-      - name: Get Benchmarks Output
+      - name: Get benchmarks output
         id: get-benchmarks
         run: |
           echo "content<<EOF" >> $GITHUB_OUTPUT
-          echo "$(cat ./var/phpbench/summary.txt)" >> $GITHUB_OUTPUT
+          echo "$(cat ./var/phpbench/summary/summary.txt)" >> $GITHUB_OUTPUT
           echo EOF >> $GITHUB_OUTPUT
 
-      - name: "Find Comment"
+      - name: Find comment
         uses: peter-evans/find-comment@v2
         id: fc
         with:
@@ -45,7 +47,7 @@ jobs:
           comment-author: 'github-actions[bot]'
           body-includes: '# Flow PHP - Benchmarks'
 
-      - name: "Create or update comment"
+      - name: Create or update comment
         uses: peter-evans/create-or-update-comment@v3
         with:
           comment-id: ${{ steps.fc.outputs.comment-id }}
