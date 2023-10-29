@@ -28,6 +28,8 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#666](https://github.com/flow-php/flow/pull/666) - **Simplify `Rows::drop()` method** - [@stloyd](https://github.com/stloyd)
+- [#666](https://github.com/flow-php/flow/pull/666) - **Rework benchmark scripts in composer.json** - [@stloyd](https://github.com/stloyd)
 - [91d6e8](https://github.com/flow-php/flow/commit/91d6e8c74b5ee8a905fcf3491176d4664d6e6dde) - **key and restore-keys for benchmark cache** - [@norberttech](https://github.com/norberttech)
 - [#662](https://github.com/flow-php/flow/pull/662) - **Rework benchmarks to set up test data in constructors** - [@stloyd](https://github.com/stloyd)
 - [#656](https://github.com/flow-php/flow/pull/656) - **Adjust Rows::chunk() to work on generators instead of arrays** - [@stloyd](https://github.com/stloyd)
