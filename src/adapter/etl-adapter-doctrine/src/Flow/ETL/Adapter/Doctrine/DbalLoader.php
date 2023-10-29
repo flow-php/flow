@@ -16,7 +16,7 @@ use Flow\ETL\Rows;
 /**
  * @implements Loader<array{
  *  table_name: string,
- *  chunk_size: int,
+ *  chunk_size: int<1, max>,
  *  connection_params: array<string, mixed>,
  *  operation: string,
  *  operation_options: array{
@@ -35,8 +35,7 @@ final class DbalLoader implements Loader
     private string $operation;
 
     /**
-     * @param string $tableName
-     * @param int $chunkSize
+     * @param int<1, max> $chunkSize
      * @param array<string, mixed> $connectionParams
      * @param array{
      *  skip_conflicts?: boolean,
@@ -45,7 +44,6 @@ final class DbalLoader implements Loader
      *  update_columns?: array<string>,
      *  primary_key_columns?: array<string>
      * } $operationOptions
-     * @param string $operation
      *
      * @throws InvalidArgumentException
      */
@@ -66,9 +64,7 @@ final class DbalLoader implements Loader
      * Since Connection::getParams() is marked as an internal method, please
      * use this constructor with caution.
      *
-     * @param Connection $connection
-     * @param string $tableName
-     * @param int $chunkSize
+     * @param int<1, max> $chunkSize
      * @param array{
      *  skip_conflicts?: boolean,
      *  constraint?: string,
@@ -76,7 +72,6 @@ final class DbalLoader implements Loader
      *  update_columns?: array<string>,
      *  primary_key_columns?: array<string>
      * } $operationOptions
-     * @param string $operation
      *
      * @throws InvalidArgumentException
      */

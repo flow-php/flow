@@ -17,6 +17,9 @@ final class BufferCache
      */
     private array $buffers = [];
 
+    /**
+     * @param int<1, max> $bufferSize
+     */
     public function __construct(
         private readonly Cache $overflowCache,
         private readonly int $bufferSize

@@ -99,10 +99,10 @@ jobs:
             echo '  '
             echo '</details>'
             echo '  '
-            echo '<details><summary>Entry Factory</summary>'
+            echo '<details><summary>Building Blocks</summary>'
             echo '  '
             echo '```shell'
-            composer test:benchmark -- --ref=1.x --progress=none --group=entry_factory
+            composer test:benchmark -- --ref=1.x --progress=none --group=building_blocks
             echo '```'
             echo '  '
             echo '</details>'

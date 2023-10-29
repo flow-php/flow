@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Pipeline;
 
 use Flow\ETL\DSL\From;
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
@@ -20,14 +19,13 @@ final class ParallelizingPipeline implements Pipeline
 {
     private readonly Pipeline $nextPipeline;
 
+    /**
+     * @param int<1, max> $parallel
+     */
     public function __construct(
         private readonly Pipeline $pipeline,
         private readonly int $parallel
     ) {
-        if ($parallel < 1) {
-            throw new InvalidArgumentException("Parallel value can't be lower than 1.");
-        }
-
         $this->nextPipeline = $pipeline->cleanCopy();
     }
 

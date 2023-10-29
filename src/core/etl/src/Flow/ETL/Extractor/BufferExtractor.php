@@ -10,6 +10,9 @@ use Flow\ETL\Rows;
 
 final class BufferExtractor implements Extractor, OverridingExtractor
 {
+    /**
+     * @param int<1, max> $maxRowsSize
+     */
     public function __construct(
         private readonly Extractor $extractor,
         private readonly int $maxRowsSize

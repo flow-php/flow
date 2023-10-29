@@ -71,8 +71,6 @@ class Dbal
      * @param int $page_size
      * @param null|int $maximum
      *
-     * @throws InvalidArgumentException
-     *
      * @return Extractor
      */
     final public static function from_limit_offset_qb(
@@ -135,8 +133,7 @@ class Dbal
 
     /**
      * @param array<string, mixed>|Connection $connection
-     * @param string $table
-     * @param int $chunk_size
+     * @param int<1, max> $chunk_size
      * @param array{
      *  skip_conflicts?: boolean,
      *  constraint?: string,
@@ -146,8 +143,6 @@ class Dbal
      * } $options
      *
      * @throws InvalidArgumentException
-     *
-     * @return Loader
      */
     final public static function to_table_insert(
         array|Connection $connection,
@@ -162,8 +157,7 @@ class Dbal
 
     /**
      * @param array<string, mixed>|Connection $connection
-     * @param string $table
-     * @param int $chunk_size
+     * @param int<1, max> $chunk_size
      * @param array{
      *  skip_conflicts?: boolean,
      *  constraint?: string,

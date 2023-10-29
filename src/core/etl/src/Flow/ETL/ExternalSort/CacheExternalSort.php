@@ -34,7 +34,7 @@ final class CacheExternalSort implements ExternalSort
     {
         /** @var array<string, \Generator<Rows>> $cachedPartsArray */
         $cachedPartsArray = [];
-        $maxRowsSize = 0;
+        $maxRowsSize = 1;
 
         /** @var int $i */
         foreach ($this->cache->read($this->id) as $i => $rows) {

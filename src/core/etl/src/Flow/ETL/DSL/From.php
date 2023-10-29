@@ -35,6 +35,9 @@ class From
         return new MemoryExtractor(new ArrayMemory($array), $batch_size);
     }
 
+    /**
+     * @param int<1, max> $max_row_size
+     */
     final public static function buffer(Extractor $extractor, int $max_row_size) : Extractor
     {
         return new Extractor\BufferExtractor($extractor, $max_row_size);
@@ -50,6 +53,9 @@ class From
         return new Extractor\ChainExtractor(...$extractors);
     }
 
+    /**
+     * @param int<1, max> $chunk_size
+     */
     final public static function chunks_from(Extractor $extractor, int $chunk_size) : Extractor
     {
         return new Extractor\ChunkExtractor($extractor, $chunk_size);
