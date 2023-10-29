@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-10-28
+## [Unreleased] - 2023-10-29
 
 ### Added
 - [#654](https://github.com/flow-php/flow/pull/654) - **Parquet - implement logic deciding when to apply dictionary encoding** - [@norberttech](https://github.com/norberttech)
@@ -76,6 +76,7 @@
 - [#584](https://github.com/flow-php/flow/pull/584) - **Adjust `phpunit.xml` to be more efficient** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
+- [#658](https://github.com/flow-php/flow/pull/658) - **Prevent fatal error when no values are set in `ColumnChunkStatistics`** - [@stloyd](https://github.com/stloyd)
 - [#657](https://github.com/flow-php/flow/pull/657) - **parquet writer performance degradation** - [@norberttech](https://github.com/norberttech)
 - [#653](https://github.com/flow-php/flow/pull/653) - **Optimized BinaryBufferWriter** - [@norberttech](https://github.com/norberttech)
 - [#647](https://github.com/flow-php/flow/pull/647) - **bug in calculating number of values when pages are encoded with dictionary** - [@norberttech](https://github.com/norberttech)
