@@ -1,10 +1,7 @@
 name: Benchmark Suite
 
 on:
-  pull_request_target:
-    types:
-      - opened
-      - synchronize
+  pull_request:
     paths:
       - '.github/workflows/**'
       - 'src/adapter/**'
@@ -13,6 +10,9 @@ on:
       - 'tools/**'
       - 'composer.json'
       - 'composer.lock'
+
+permissions:
+  issues: write
 
 # See https://stackoverflow.com/a/72408109
 concurrency:
