@@ -99,10 +99,6 @@ final class PageContainers
 
     public function valuesCount() : int
     {
-        if ($this->dictionaryPageContainer !== null) {
-            return \count($this->dictionaryPageContainer->values);
-        }
-
         $count = 0;
 
         foreach ($this->dataPageContainers as $pageContainer) {

@@ -21,6 +21,10 @@ final class PlainValuesPacker
         $parquetValues = [];
 
         foreach ($values as $value) {
+            if ($value === null) {
+                continue;
+            }
+
             $parquetValues[] = $this->dataConverter->toParquetType($column, $value);
         }
 

@@ -15,6 +15,10 @@ final class ScalarDictionaryBuilder
         $dictionarySize = 0;
 
         foreach (array_flatten($rows) as $value) {
+            if ($value === null) {
+                continue;
+            }
+
             if (!isset($valueToIndex[$value])) {
                 $dictionary[] = $value;
                 $valueToIndex[$value] = $dictionarySize;

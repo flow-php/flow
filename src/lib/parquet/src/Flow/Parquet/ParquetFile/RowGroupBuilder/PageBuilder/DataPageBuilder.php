@@ -51,7 +51,7 @@ final class DataPageBuilder
             \strlen($pageBuffer),
             dataPageHeader: new DataPageHeader(
                 $dictionary && $indices ? Encodings::RLE_DICTIONARY : Encodings::PLAIN,
-                $dictionary && $indices ? \count($indices) : \count($shredded->values),
+                \count($shredded->definitions)
             ),
             dataPageHeaderV2: null,
             dictionaryPageHeader: null,
