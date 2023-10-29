@@ -1,7 +1,7 @@
 name: Benchmark Suite
 
 on:
-  pull_request:
+  pull_request_target:
     paths:
       - '.github/workflows/**'
       - 'src/adapter/**'
@@ -68,7 +68,7 @@ jobs:
           restore-keys: |
             php-${{ matrix.php-version }}-1.x-phpbench-
 
-      - name: Prepare a comment
+      - name: "Execute benchmarks"
         id: init_comment
         run: |
           {
@@ -92,7 +92,7 @@ jobs:
             echo EOF
           } >> "$GITHUB_ENV"
 
-      - name: Find Comment
+      - name: "Find Comment"
         uses: peter-evans/find-comment@v2
         id: fc
         with:
@@ -100,7 +100,7 @@ jobs:
           comment-author: 'github-actions[bot]'
           body-includes: '# Flow PHP - Benchmarks'
 
-      - name: Create or update comment
+      - name: "Create or update comment"
         uses: peter-evans/create-or-update-comment@v3
         with:
           comment-id: ${{ steps.fc.outputs.comment-id }}
@@ -108,6 +108,6 @@ jobs:
           body: ${{ env.COMMENT_CONTENT }}
           edit-mode: replace
 
-      - name: Set job summary
+      - name: "Set job summary"
         run: |
           echo "${{ env.COMMENT_CONTENT }}" >> $GITHUB_STEP_SUMMARY
