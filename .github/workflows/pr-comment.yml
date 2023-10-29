@@ -18,25 +18,25 @@ jobs:
         with:
           workflow: ${{ github.event.workflow_run.workflow_id }}
           name: pr
-          path: ./var/phpbench/pr-id.txt
+          path: ./var/phpbench/pr
 
       - name: save PR id
         id: pr
         run: |
-          echo "id=$(<pr-id.txt)" >> $GITHUB_OUTPUT
+          echo "id=$(<./var/phpbench/pr/pr-id.txt)" >> $GITHUB_OUTPUT
 
       - name: Download phpbench benchmarks artifact
         uses: dawidd6/action-download-artifact@v2
         with:
           workflow: ${{ github.event.workflow_run.workflow_id }}
           name: phpbench
-          path: ./var/phpbench/summary.txt
+          path: ./var/phpbench/summary/
 
       - name: Get benchmarks output
         id: get-benchmarks
         run: |
           echo "content<<EOF" >> $GITHUB_OUTPUT
-          echo "$(cat ./var/phpbench/summary.txt)" >> $GITHUB_OUTPUT
+          echo "$(cat ./var/phpbench/summary/summary.txt)" >> $GITHUB_OUTPUT
           echo EOF >> $GITHUB_OUTPUT
 
       - name: Find comment
