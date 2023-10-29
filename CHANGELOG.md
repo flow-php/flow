@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-10-29
 
 ### Added
+- [#668](https://github.com/flow-php/flow/pull/668) - **Added support for writing simple types nullable columns into parquet** - [@norberttech](https://github.com/norberttech)
 - [#661](https://github.com/flow-php/flow/pull/661) - **Loaders benchmarks** - [@norberttech](https://github.com/norberttech)
 - [#660](https://github.com/flow-php/flow/pull/660) - **Create a comment on each PR with phpbench results** - [@norberttech](https://github.com/norberttech)
 - [#654](https://github.com/flow-php/flow/pull/654) - **Parquet - implement logic deciding when to apply dictionary encoding** - [@norberttech](https://github.com/norberttech)
