@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-10-29
 
 ### Added
+- [#660](https://github.com/flow-php/flow/pull/660) - **Create a comment on each PR with phpbench results** - [@norberttech](https://github.com/norberttech)
 - [#654](https://github.com/flow-php/flow/pull/654) - **Parquet - implement logic deciding when to apply dictionary encoding** - [@norberttech](https://github.com/norberttech)
 - [#653](https://github.com/flow-php/flow/pull/653) - **Blackfire PHP SDK to tools** - [@norberttech](https://github.com/norberttech)
 - [#652](https://github.com/flow-php/flow/pull/652) - **Parquet - Calculate row group/page size on the fly in order to decide when to flush data to disk** - [@norberttech](https://github.com/norberttech)
