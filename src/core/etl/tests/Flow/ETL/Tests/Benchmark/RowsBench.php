@@ -31,4 +31,12 @@ final class RowsBench
 
         }
     }
+
+    #[Revs(5)]
+    public function bench_drop_100() : void
+    {
+        foreach ($this->rows->drop(100) as $chunk) {
+
+        }
+    }
 }
