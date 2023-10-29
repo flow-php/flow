@@ -11,9 +11,6 @@ on:
       - 'composer.json'
       - 'composer.lock'
 
-permissions:
-  pull-requests: write
-
 # See https://stackoverflow.com/a/72408109
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -75,7 +72,6 @@ jobs:
         id: init_comment
         run: |
           {
-            echo 'COMMENT_CONTENT<<EOF'
             echo '# Flow PHP - Benchmarks'
             echo '<sup><sub>Results of the benchmarks from this PR are compared with the results from 1.x branch.</sub></sup>'
             echo '  '
@@ -111,24 +107,21 @@ jobs:
             echo '  '
             echo '</details>'
             echo '  '
-            echo EOF
-          } >> "$GITHUB_ENV"
+          } >> "./var/phpbench/summary.txt"
 
-      - name: "Find Comment"
-        uses: peter-evans/find-comment@v2
-        id: fc
+      - uses: actions/upload-artifact@v3
         with:
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: 'github-actions[bot]'
-          body-includes: '# Flow PHP - Benchmarks'
+          name: phpbench
+          path: ./var/phpbench/summary.txt
 
-      - name: "Create or update comment"
-        uses: peter-evans/create-or-update-comment@v3
+      - name: Save PR number
+        run: echo ${{ github.event.pull_request.number }} > ./pr-id.txt
+
+      - name: Upload PR number
+        uses: actions/upload-artifact@v3
         with:
-          comment-id: ${{ steps.fc.outputs.comment-id }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body: ${{ env.COMMENT_CONTENT }}
-          edit-mode: replace
+          name: pr
+          path: ./pr-id.txt
 
       - name: "Set job summary"
         run: |
