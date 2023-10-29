@@ -84,6 +84,7 @@
 - [#584](https://github.com/flow-php/flow/pull/584) - **Adjust `phpunit.xml` to be more efficient** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
+- [fdcaa3](https://github.com/flow-php/flow/commit/fdcaa3664b70b266d4388d3609609e3f49a46eec) - **cmposer cache in benchmark baseline workflow** - [@norberttech](https://github.com/norberttech)
 - [1f172c](https://github.com/flow-php/flow/commit/1f172ce4a8ef18349b69763664c9dc6db94e78ab) - **pr-comment workflow job name** - [@norberttech](https://github.com/norberttech)
 - [a3df35](https://github.com/flow-php/flow/commit/a3df357875bc03d4f3137ba2a021049601ad3e5d) - **restoring cache during test-benchmark workflow** - [@norberttech](https://github.com/norberttech)
 - [bfec21](https://github.com/flow-php/flow/commit/bfec2119f058cca9ab11b4682365255df626878c) - **paths to downloaded artifacts in pr comment workflo** - [@norberttech](https://github.com/norberttech)
