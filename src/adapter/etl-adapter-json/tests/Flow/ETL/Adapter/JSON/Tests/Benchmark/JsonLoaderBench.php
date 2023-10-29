@@ -6,7 +6,6 @@ use Flow\ETL\Config;
 use Flow\ETL\DSL\Json;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
-use PhpBench\Attributes\BeforeMethods;
 use PhpBench\Attributes\Groups;
 use PhpBench\Attributes\Iterations;
 use PhpBench\Attributes\Revs;
@@ -15,14 +14,13 @@ use PhpBench\Attributes\Revs;
 #[Groups(['loader'])]
 final class JsonLoaderBench
 {
-    private ?FlowContext $context = null;
+    private FlowContext $context;
 
-    private ?Rows $rows = null;
+    private Rows $rows;
 
-    public function setUp() : void
+    public function __construct()
     {
         $this->context = new FlowContext(Config::default());
-
         $this->rows = new Rows();
 
         foreach (Json::from(__DIR__ . '/../Fixtures/orders_flow.json')->extract($this->context) as $rows) {
@@ -30,7 +28,6 @@ final class JsonLoaderBench
         }
     }
 
-    #[BeforeMethods(['setUp'])]
     #[Revs(5)]
     public function bench_load_10k() : void
     {

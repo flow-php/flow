@@ -5,7 +5,6 @@ namespace Flow\ETL\Adapter\Avro\Tests\Benchmark;
 use Flow\ETL\Config;
 use Flow\ETL\DSL\Avro;
 use Flow\ETL\FlowContext;
-use PhpBench\Attributes\BeforeMethods;
 use PhpBench\Attributes\Groups;
 use PhpBench\Attributes\Iterations;
 use PhpBench\Attributes\Revs;
@@ -14,14 +13,13 @@ use PhpBench\Attributes\Revs;
 #[Groups(['extractor'])]
 final class AvroExtractorBench
 {
-    private ?FlowContext $context = null;
+    private FlowContext $context;
 
-    public function setUp() : void
+    public function __construct()
     {
         $this->context = new FlowContext(Config::default());
     }
 
-    #[BeforeMethods(['setUp'])]
     #[Revs(5)]
     public function bench_extract_10k() : void
     {
