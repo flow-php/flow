@@ -3,7 +3,7 @@
 namespace Flow\ETL\Adapter\JSON\Tests\Benchmark;
 
 use Flow\ETL\Config;
-use Flow\ETL\DSL\CSV;
+use Flow\ETL\DSL\Json;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use PhpBench\Attributes\BeforeMethods;
@@ -25,7 +25,7 @@ final class JsonLoaderBench
 
         $this->rows = new Rows();
 
-        foreach (CSV::from(__DIR__ . '/../Fixtures/orders_flow.json')->extract($this->context) as $rows) {
+        foreach (Json::from(__DIR__ . '/../Fixtures/orders_flow.json')->extract($this->context) as $rows) {
             $this->rows = $this->rows->merge($rows);
         }
     }
@@ -34,6 +34,6 @@ final class JsonLoaderBench
     #[Revs(5)]
     public function bench_load_10k() : void
     {
-        CSV::to(\tempnam(\sys_get_temp_dir(), 'etl_json_loader_bench') . '.json')->load($this->rows, $this->context);
+        Json::to(\tempnam(\sys_get_temp_dir(), 'etl_json_loader_bench') . '.json')->load($this->rows, $this->context);
     }
 }

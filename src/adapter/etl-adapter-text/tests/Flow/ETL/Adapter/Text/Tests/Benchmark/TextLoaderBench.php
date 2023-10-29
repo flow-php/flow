@@ -1,9 +1,9 @@
 <?php declare(strict_types=1);
 
-namespace Flow\ETL\Adapter\Avro\Tests\Benchmark;
+namespace Flow\ETL\Adapter\Text\Tests\Benchmark;
 
 use Flow\ETL\Config;
-use Flow\ETL\DSL\Avro;
+use Flow\ETL\DSL\Text;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use PhpBench\Attributes\BeforeMethods;
@@ -13,7 +13,7 @@ use PhpBench\Attributes\Revs;
 
 #[Iterations(3)]
 #[Groups(['loader'])]
-final class AvroLoaderBench
+final class TextLoaderBench
 {
     private ?FlowContext $context = null;
 
@@ -25,7 +25,7 @@ final class AvroLoaderBench
 
         $this->rows = new Rows();
 
-        foreach (Avro::from(__DIR__ . '/../Fixtures/orders_flow.avro')->extract($this->context) as $rows) {
+        foreach (Text::from(__DIR__ . '/../Fixtures/orders_flow.csv', rows_in_batch: 1)->extract($this->context) as $rows) {
             $this->rows = $this->rows->merge($rows);
         }
     }
@@ -34,6 +34,6 @@ final class AvroLoaderBench
     #[Revs(5)]
     public function bench_load_10k() : void
     {
-        Avro::to(\tempnam(\sys_get_temp_dir(), 'etl_avro_loader_bench') . '.avro')->load($this->rows, $this->context);
+        Text::to(\tempnam(\sys_get_temp_dir(), 'etl_txt_loader_bench') . '.txt')->load($this->rows, $this->context);
     }
 }
