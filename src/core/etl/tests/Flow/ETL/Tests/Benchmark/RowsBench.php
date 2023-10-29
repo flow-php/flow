@@ -25,9 +25,17 @@ final class RowsBench
     }
 
     #[Revs(5)]
-    public function bench_chunk_10() : void
+    public function bench_chunk_10_on_10k() : void
     {
         foreach ($this->rows->chunks(10) as $chunk) {
+
+        }
+    }
+
+    #[Revs(5)]
+    public function bench_drop_100_on_10k() : void
+    {
+        foreach ($this->rows->drop(100) as $chunk) {
 
         }
     }

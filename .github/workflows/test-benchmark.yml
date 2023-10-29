@@ -81,7 +81,7 @@ jobs:
             echo '<details><summary>Extractors</summary>'
             echo '  '
             echo '```shell'
-            composer test:benchmark -- --ref=1.x --progress=none --group=extractor
+            composer test:benchmark:extractor -- --ref=1.x --progress=none
             echo '```'
             echo '  '
             echo '</details>'
@@ -89,7 +89,7 @@ jobs:
             echo '<details><summary>Transformers</summary>'
             echo '  '
             echo '```shell'
-            composer test:benchmark -- --ref=1.x --progress=none --group=transformer
+            composer test:benchmark:transformer -- --ref=1.x --progress=none
             echo '```'
             echo '  '
             echo '</details>'
@@ -97,7 +97,7 @@ jobs:
             echo '<details><summary>Loaders</summary>'
             echo '  '
             echo '```shell'
-            composer test:benchmark -- --ref=1.x --progress=none --group=loader
+            composer test:benchmark:loader -- --ref=1.x --progress=none
             echo '```'
             echo '  '
             echo '</details>'
@@ -105,7 +105,7 @@ jobs:
             echo '<details><summary>Building Blocks</summary>'
             echo '  '
             echo '```shell'
-            composer test:benchmark -- --ref=1.x --progress=none --group=building_blocks
+            composer test:benchmark:building_blocks -- --ref=1.x --progress=none
             echo '```'
             echo '  '
             echo '</details>'
