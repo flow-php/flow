@@ -64,6 +64,6 @@ final class MemorySort implements ExternalSort
 
         $this->cache->clear($this->cacheId);
 
-        return new Extractor\ProcessExtractor(...\iterator_to_array($mergedRows->sortBy(...$refs)->chunks($maxSize)));
+        return new Extractor\GeneratorExtractor($mergedRows->sortBy(...$refs)->chunks($maxSize));
     }
 }
