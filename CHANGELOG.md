@@ -87,6 +87,7 @@
 - [#584](https://github.com/flow-php/flow/pull/584) - **Adjust `phpunit.xml` to be more efficient** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
+- [#667](https://github.com/flow-php/flow/pull/667) - **Cleanup old summaries before creating new artifacts** - [@norberttech](https://github.com/norberttech)
 - [35a55d](https://github.com/flow-php/flow/commit/35a55d03b96443627a5b2dcf09c6b1e3ca9eed50) - **baseline cache restoring** - [@norberttech](https://github.com/norberttech)
 - [fdcaa3](https://github.com/flow-php/flow/commit/fdcaa3664b70b266d4388d3609609e3f49a46eec) - **cmposer cache in benchmark baseline workflow** - [@norberttech](https://github.com/norberttech)
 - [1f172c](https://github.com/flow-php/flow/commit/1f172ce4a8ef18349b69763664c9dc6db94e78ab) - **pr-comment workflow job name** - [@norberttech](https://github.com/norberttech)
