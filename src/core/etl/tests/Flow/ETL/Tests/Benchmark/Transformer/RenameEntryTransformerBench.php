@@ -6,7 +6,6 @@ use Flow\ETL\Config;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer\RenameEntryTransformer;
-use PhpBench\Attributes\BeforeMethods;
 use PhpBench\Attributes\Groups;
 use PhpBench\Attributes\Iterations;
 use PhpBench\Attributes\Revs;
@@ -15,11 +14,11 @@ use PhpBench\Attributes\Revs;
 #[Groups(['transformer'])]
 final class RenameEntryTransformerBench
 {
-    private ?FlowContext $context = null;
+    private FlowContext $context;
 
-    private ?Rows $rows = null;
+    private Rows $rows;
 
-    public function setUp() : void
+    public function __construct()
     {
         $this->rows = Rows::fromArray(
             \array_merge(...\array_map(static function () : array {
@@ -35,7 +34,6 @@ final class RenameEntryTransformerBench
         $this->context = new FlowContext(Config::default());
     }
 
-    #[BeforeMethods(['setUp'])]
     #[Revs(5)]
     public function bench_transform_10k_rows() : void
     {

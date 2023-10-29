@@ -13,10 +13,17 @@ use PhpBench\Attributes\Revs;
 #[Groups(['extractor'])]
 final class JsonExtractorBench
 {
+    private FlowContext $context;
+
+    public function __construct()
+    {
+        $this->context = new FlowContext(Config::default());
+    }
+
     #[Revs(5)]
     public function bench_extract_10k() : void
     {
-        foreach (Json::from(__DIR__ . '/../Fixtures/orders_flow.json')->extract(new FlowContext(Config::default())) as $rows) {
+        foreach (Json::from(__DIR__ . '/../Fixtures/orders_flow.json')->extract($this->context) as $rows) {
         }
     }
 }

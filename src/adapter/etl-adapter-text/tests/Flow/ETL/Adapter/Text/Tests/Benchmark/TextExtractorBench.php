@@ -13,10 +13,17 @@ use PhpBench\Attributes\Revs;
 #[Groups(['extractor'])]
 final class TextExtractorBench
 {
+    private FlowContext $context;
+
+    public function __construct()
+    {
+        $this->context = new FlowContext(Config::default());
+    }
+
     #[Revs(5)]
     public function bench_extract_10k() : void
     {
-        foreach (Text::from(__DIR__ . '/../Fixtures/orders_flow.csv')->extract(new FlowContext(Config::default())) as $rows) {
+        foreach (Text::from(__DIR__ . '/../Fixtures/orders_flow.csv')->extract($this->context) as $rows) {
         }
     }
 }

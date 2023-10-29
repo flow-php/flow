@@ -13,10 +13,17 @@ use PhpBench\Attributes\Revs;
 #[Groups(['extractor'])]
 final class XmlExtractorBench
 {
+    private FlowContext $context;
+
+    public function __construct()
+    {
+        $this->context = new FlowContext(Config::default());
+    }
+
     #[Revs(5)]
     public function bench_extract_10k() : void
     {
-        foreach (XML::from(__DIR__ . '/../Fixtures/flow_orders.xml', xml_node_path: 'root/row')->extract(new FlowContext(Config::default())) as $rows) {
+        foreach (XML::from(__DIR__ . '/../Fixtures/flow_orders.xml', xml_node_path: 'root/row')->extract($this->context) as $rows) {
         }
     }
 }
