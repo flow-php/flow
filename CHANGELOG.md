@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-10-29
 
 ### Added
+- [#661](https://github.com/flow-php/flow/pull/661) - **Loaders benchmarks** - [@norberttech](https://github.com/norberttech)
 - [#660](https://github.com/flow-php/flow/pull/660) - **Create a comment on each PR with phpbench results** - [@norberttech](https://github.com/norberttech)
 - [#654](https://github.com/flow-php/flow/pull/654) - **Parquet - implement logic deciding when to apply dictionary encoding** - [@norberttech](https://github.com/norberttech)
 - [#653](https://github.com/flow-php/flow/pull/653) - **Blackfire PHP SDK to tools** - [@norberttech](https://github.com/norberttech)
@@ -27,6 +28,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#661](https://github.com/flow-php/flow/pull/661) - **Github benchmark comment template** - [@norberttech](https://github.com/norberttech)
 - [#655](https://github.com/flow-php/flow/pull/655) - **Rework `GroupBy::result()` method to not recreate entries & rows in loop** - [@stloyd](https://github.com/stloyd)
 - [#655](https://github.com/flow-php/flow/pull/655) - **Use `FlowContext` in `GroupBy`** - [@stloyd](https://github.com/stloyd)
 - [#651](https://github.com/flow-php/flow/pull/651) - **Update `.php-cs-fixer.php` in matter to use predefined rule-sets** - [@stloyd](https://github.com/stloyd)
@@ -77,6 +79,7 @@
 - [#584](https://github.com/flow-php/flow/pull/584) - **Adjust `phpunit.xml` to be more efficient** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
+- [#661](https://github.com/flow-php/flow/pull/661) - **NativeEntryFactoryBench** - [@norberttech](https://github.com/norberttech)
 - [#658](https://github.com/flow-php/flow/pull/658) - **Prevent fatal error when no values are set in `ColumnChunkStatistics`** - [@stloyd](https://github.com/stloyd)
 - [#657](https://github.com/flow-php/flow/pull/657) - **parquet writer performance degradation** - [@norberttech](https://github.com/norberttech)
 - [#653](https://github.com/flow-php/flow/pull/653) - **Optimized BinaryBufferWriter** - [@norberttech](https://github.com/norberttech)
@@ -99,6 +102,7 @@
 - [c9fb26](https://github.com/flow-php/flow/commit/c9fb26dc2e0558c0f33b6097286e4dc6e2799d3f) - **test-benchmark.yml** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#661](https://github.com/flow-php/flow/pull/661) - **EntryExpressionEvalTransformerBench** - [@norberttech](https://github.com/norberttech)
 - [#634](https://github.com/flow-php/flow/pull/634) - **Remove Rector tool** - [@stloyd](https://github.com/stloyd)
 - [#618](https://github.com/flow-php/flow/pull/618) - **Remove dead `ArrayRowsFactory` class** - [@stloyd](https://github.com/stloyd)
 
