@@ -2,6 +2,9 @@ name: Benchmark Suite
 
 on:
   pull_request_target:
+    types:
+      - opened
+      - synchronize
     paths:
       - '.github/workflows/**'
       - 'src/adapter/**'
