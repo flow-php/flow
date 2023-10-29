@@ -95,6 +95,9 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **JsonLoader closing not only json streams** - [@norberttech](https://github.com/norberttech)
 - [#583](https://github.com/flow-php/flow/pull/583) - **Fix warning when bytes are missing in Parquet `BinaryBufferReader`** - [@stloyd](https://github.com/stloyd)
 
+### Updated
+- [c9fb26](https://github.com/flow-php/flow/commit/c9fb26dc2e0558c0f33b6097286e4dc6e2799d3f) - **test-benchmark.yml** - [@norberttech](https://github.com/norberttech)
+
 ### Removed
 - [#634](https://github.com/flow-php/flow/pull/634) - **Remove Rector tool** - [@stloyd](https://github.com/stloyd)
 - [#618](https://github.com/flow-php/flow/pull/618) - **Remove dead `ArrayRowsFactory` class** - [@stloyd](https://github.com/stloyd)
