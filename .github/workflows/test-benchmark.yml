@@ -1,7 +1,11 @@
 name: Benchmark Suite
 
 on:
-  pull_request:
+  pull_request_target:
+    types:
+      - opened
+      - synchronize
+      - edited
     paths:
       - '.github/workflows/**'
       - 'src/adapter/**'
@@ -68,38 +72,46 @@ jobs:
           restore-keys: |
             php-${{ matrix.php-version }}-1.x-phpbench-
 
-      - name: Adding main headline
+      - name: "Execute benchmarks"
+        id: init_comment
         run: |
-          echo '# Flow PHP - Benchmark' >> $GITHUB_STEP_SUMMARY
-          echo ' ' >> $GITHUB_STEP_SUMMARY
-          echo '---' >> $GITHUB_STEP_SUMMARY
+          {
+            echo 'COMMENT_CONTENT<<EOF'
+            echo '# Flow PHP - Benchmarks'
+            echo '<sup><sub>Results of the benchmarks from this PR are compared with the results from 1.x branch.</sub></sup>'
+            echo '## Extractors'
+            echo '```shell'
+            composer test:benchmark -- --ref=1.x --progress=none --group=extractor
+            echo '```'
+            echo "  "
+            echo '## Transformers'
+            echo '```shell'
+            composer test:benchmark -- --ref=1.x --progress=none --group=transformer
+            echo '```'
+            echo "  "
+            echo '## Entry Factory'
+            echo '```shell'
+            composer test:benchmark -- --ref=1.x --progress=none --group=entry_factory
+            echo '```'
+            echo EOF
+          } >> "$GITHUB_ENV"
 
-      - name: "Benchmark Extractors"
-        run: |
-          echo ' ' >> $GITHUB_STEP_SUMMARY
-          echo '## Extractors' >> $GITHUB_STEP_SUMMARY
-          echo ' ' >> $GITHUB_STEP_SUMMARY
-          echo '---' >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          composer test:benchmark -- --ref=1.x --progress=none --group=extractor >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
+      - name: "Find Comment"
+        uses: peter-evans/find-comment@v2
+        id: fc
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: '# Flow PHP - Benchmarks'
 
-      - name: "Benchmark Transformers"
-        run: |
-          echo ' ' >> $GITHUB_STEP_SUMMARY
-          echo '## Transformers' >> $GITHUB_STEP_SUMMARY
-          echo ' ' >> $GITHUB_STEP_SUMMARY
-          echo '---' >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          composer test:benchmark -- --ref=1.x --progress=none --group=transformer >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
+      - name: "Create or update comment"
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: ${{ env.COMMENT_CONTENT }}
+          edit-mode: replace
 
-      - name: "Benchmark Entry Factories"
+      - name: "Set job summary"
         run: |
-          echo ' ' >> $GITHUB_STEP_SUMMARY
-          echo '## Entry Factory' >> $GITHUB_STEP_SUMMARY
-          echo ' ' >> $GITHUB_STEP_SUMMARY
-          echo '---' >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          composer test:benchmark -- --ref=1.x --progress=none --group=entry_factory >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "${{ env.COMMENT_CONTENT }}" >> $GITHUB_STEP_SUMMARY
