@@ -34,6 +34,11 @@ final class AvroLoaderBench
     #[Revs(5)]
     public function bench_load_10k() : void
     {
-        Avro::to(\tempnam(\sys_get_temp_dir(), 'etl_avro_loader_bench') . '.avro')->load($this->rows, $this->context);
+        Avro::to($outputPath = \tempnam(\sys_get_temp_dir(), 'etl_avro_loader_bench') . '.avro')->load($this->rows, $this->context);
+
+        if (!\file_exists($outputPath)) {
+            throw new \RuntimeException("Benchmark failed, \"{$outputPath}\" doesn't exist");
+        }
+        \unlink($outputPath);
     }
 }

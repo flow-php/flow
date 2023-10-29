@@ -34,6 +34,11 @@ final class JsonLoaderBench
     #[Revs(5)]
     public function bench_load_10k() : void
     {
-        Json::to(\tempnam(\sys_get_temp_dir(), 'etl_json_loader_bench') . '.json')->load($this->rows, $this->context);
+        Json::to($outputPath = \tempnam(\sys_get_temp_dir(), 'etl_json_loader_bench') . '.json')->load($this->rows, $this->context);
+
+        if (!\file_exists($outputPath)) {
+            throw new \RuntimeException("Benchmark failed, \"{$outputPath}\" doesn't exist");
+        }
+        \unlink($outputPath);
     }
 }

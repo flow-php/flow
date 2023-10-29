@@ -34,6 +34,11 @@ final class CSVLoaderBench
     #[Revs(5)]
     public function bench_load_10k() : void
     {
-        CSV::to(\tempnam(\sys_get_temp_dir(), 'etl_csv_loader_bench') . '.csv')->load($this->rows, $this->context);
+        CSV::to($outputPath = \tempnam(\sys_get_temp_dir(), 'etl_csv_loader_bench') . '.csv')->load($this->rows, $this->context);
+
+        if (!\file_exists($outputPath)) {
+            throw new \RuntimeException("Benchmark failed, \"{$outputPath}\" doesn't exist");
+        }
+        \unlink($outputPath);
     }
 }

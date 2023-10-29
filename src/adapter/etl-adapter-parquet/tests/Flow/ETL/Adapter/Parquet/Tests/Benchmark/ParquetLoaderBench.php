@@ -34,6 +34,11 @@ final class ParquetLoaderBench
     #[Revs(5)]
     public function bench_load_10k() : void
     {
-        Parquet::to(\tempnam(\sys_get_temp_dir(), 'etl_parquet_loader_bench') . '.parquet')->load($this->rows, $this->context);
+        Parquet::to($outputPath = \tempnam(\sys_get_temp_dir(), 'etl_parquet_loader_bench') . '.parquet')->load($this->rows, $this->context);
+
+        if (!\file_exists($outputPath)) {
+            throw new \RuntimeException("Benchmark failed, \"{$outputPath}\" doesn't exist");
+        }
+        \unlink($outputPath);
     }
 }

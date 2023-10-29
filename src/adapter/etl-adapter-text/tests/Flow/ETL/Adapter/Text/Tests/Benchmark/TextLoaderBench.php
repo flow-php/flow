@@ -34,6 +34,11 @@ final class TextLoaderBench
     #[Revs(5)]
     public function bench_load_10k() : void
     {
-        Text::to(\tempnam(\sys_get_temp_dir(), 'etl_txt_loader_bench') . '.txt')->load($this->rows, $this->context);
+        Text::to($outputPath = \tempnam(\sys_get_temp_dir(), 'etl_txt_loader_bench') . '.txt')->load($this->rows, $this->context);
+
+        if (!\file_exists($outputPath)) {
+            throw new \RuntimeException("Benchmark failed, \"{$outputPath}\" doesn't exist");
+        }
+        \unlink($outputPath);
     }
 }
