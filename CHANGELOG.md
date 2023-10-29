@@ -28,6 +28,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [524fce](https://github.com/flow-php/flow/commit/524fceeba0ece837b73509fa97523ece76f7495d) - **Use different action to download artifacts based on workflow_id** - [@norberttech](https://github.com/norberttech)
 - [#664](https://github.com/flow-php/flow/pull/664) - **Reverted pull-requests to issues write permissions** - [@norberttech](https://github.com/norberttech)
 - [#663](https://github.com/flow-php/flow/pull/663) - **benchmark workflow trigger and permissions** - [@norberttech](https://github.com/norberttech)
 - [#661](https://github.com/flow-php/flow/pull/661) - **Github benchmark comment template** - [@norberttech](https://github.com/norberttech)
