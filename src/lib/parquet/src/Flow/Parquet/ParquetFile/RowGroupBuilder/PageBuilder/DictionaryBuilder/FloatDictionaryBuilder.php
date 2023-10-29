@@ -15,6 +15,10 @@ final class FloatDictionaryBuilder
         $dictionarySize = 0;
 
         foreach (array_flatten($rows) as $value) {
+            if ($value === null) {
+                continue;
+            }
+
             $hash = \serialize($value);
 
             if (!isset($valueToIndex[$hash])) {
