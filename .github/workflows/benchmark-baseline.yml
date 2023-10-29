@@ -74,9 +74,9 @@ jobs:
         uses: "actions/cache@v3"
         with:
           path: "${{ steps.composer-cache.outputs.dir }}"
-          key: "php-${{ matrix.php-version }}-${{ env.PHPBENCH_TAG }}-phpbench"
+          key: "php-${{ matrix.php-version }}-locked-composer-${{ hashFiles('**/composer.lock') }}"
           restore-keys: |
-            php-${{ matrix.php-version }}-${{ env.PHPBENCH_TAG }}-phpbench
+            php-${{ matrix.php-version }}-locked-composer-
 
       - name: "Install locked dependencies"
         run: "composer install --no-interaction --no-progress"
