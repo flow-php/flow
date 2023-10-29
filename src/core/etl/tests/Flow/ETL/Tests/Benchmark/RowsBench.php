@@ -6,7 +6,7 @@ use PhpBench\Attributes\Iterations;
 use PhpBench\Attributes\Revs;
 
 #[Iterations(5)]
-#[Groups(['rows'])]
+#[Groups(['building_blocks'])]
 final class RowsBench
 {
     private Rows $rows;
