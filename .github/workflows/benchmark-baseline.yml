@@ -1,4 +1,4 @@
-name: Benchmark History
+name: Benchmark Baseline
 
 on:
   workflow_dispatch:
@@ -17,7 +17,7 @@ on:
 
 jobs:
   benchmark:
-    name: "Benchmark History"
+    name: "Benchmark Baseline"
 
     runs-on: ${{ matrix.operating-system }}
 
@@ -74,9 +74,9 @@ jobs:
         uses: "actions/cache@v3"
         with:
           path: "${{ steps.composer-cache.outputs.dir }}"
-          key: "php-${{ matrix.php-version }}-locked-composer-${{ hashFiles('**/composer.lock') }}"
+          key: "php-${{ matrix.php-version }}-${{ env.PHPBENCH_TAG }}-phpbench"
           restore-keys: |
-            php-${{ matrix.php-version }}-locked-composer-
+            php-${{ matrix.php-version }}-${{ env.PHPBENCH_TAG }}-phpbench-
 
       - name: "Install locked dependencies"
         run: "composer install --no-interaction --no-progress"
