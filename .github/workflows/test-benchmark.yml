@@ -5,6 +5,7 @@ on:
     types:
       - opened
       - synchronize
+      - edited
     paths:
       - '.github/workflows/**'
       - 'src/adapter/**'
