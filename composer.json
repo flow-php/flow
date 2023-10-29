@@ -169,7 +169,22 @@
             "tools/phpunit/vendor/bin/phpunit"
         ],
         "test:benchmark": [
-            "tools/phpbench/vendor/bin/phpbench run --report=flow-report"
+            "@test:benchmark:building_blocks",
+            "@test:benchmark:extractor",
+            "@test:benchmark:loader,",
+            "@test:benchmark:transformer"
+        ],
+        "test:benchmark:building_blocks": [
+            "tools/phpbench/vendor/bin/phpbench run --report=flow-report --group=building_blocks"
+        ],
+        "test:benchmark:extractor": [
+            "tools/phpbench/vendor/bin/phpbench run --report=flow-report --group=extractor"
+        ],
+        "test:benchmark:loader": [
+            "tools/phpbench/vendor/bin/phpbench run --report=flow-report --group=loader"
+        ],
+        "test:benchmark:transformer": [
+            "tools/phpbench/vendor/bin/phpbench run --report=flow-report --group=transformer"
         ],
         "test:mutation": [
             "tools/infection/vendor/bin/infection -j2"
