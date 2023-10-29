@@ -1,0 +1,53 @@
+name: Pull Request Comment
+
+on:
+  workflow_run:
+    workflows: ["Benchmark Suite"]
+    types:
+      - completed
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    if: >
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success'
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: pr
+          path: ./var/phpbench/pr-id.txt
+
+      - name: save PR id
+        id: pr
+        run: |
+          echo "id=$(<pr-id.txt)" >> $GITHUB_OUTPUT
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: phpbench
+          path: ./var/phpbench/summary.txt
+
+      - name: Get Benchmarks Output
+        id: get-benchmarks
+        run: |
+          echo "content<<EOF" >> $GITHUB_OUTPUT
+          echo "$(cat ./var/phpbench/summary.txt)" >> $GITHUB_OUTPUT
+          echo EOF >> $GITHUB_OUTPUT
+
+      - name: "Find Comment"
+        uses: peter-evans/find-comment@v2
+        id: fc
+        with:
+          issue-number: ${{ steps.pr.outputs.id }}
+          comment-author: 'github-actions[bot]'
+          body-includes: '# Flow PHP - Benchmarks'
+
+      - name: "Create or update comment"
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          token: "${{ secrets.FLOW_BOT_TOKEN }}"
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ steps.pr.outputs.id }}
+          body: ${{ steps.get-benchmarks.outputs.content }}
+          edit-mode: replace
