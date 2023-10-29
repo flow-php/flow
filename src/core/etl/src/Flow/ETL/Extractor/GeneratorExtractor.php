@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Extractor;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
@@ -22,6 +23,12 @@ final class GeneratorExtractor implements Extractor
 
     public function extract(FlowContext $context) : \Generator
     {
-        yield from $this->rows;
+        foreach ($this->rows as $row) {
+            if (!$row instanceof Rows) {
+                throw new InvalidArgumentException('Passed generator can contain only Rows class instances, given: ' . $row::class);
+            }
+
+            yield $row;
+        }
     }
 }
