@@ -14,9 +14,9 @@ use PhpBench\Attributes\Revs;
 final class XmlExtractorBench
 {
     #[Revs(5)]
-    public function bench_extract() : void
+    public function bench_extract_10k() : void
     {
-        foreach (XML::from(__DIR__ . '/../Fixtures/simple_items.xml')->extract(new FlowContext(Config::default())) as $rows) {
+        foreach (XML::from(__DIR__ . '/../Fixtures/flow_orders.xml', xml_node_path: 'root/row')->extract(new FlowContext(Config::default())) as $rows) {
         }
     }
 }

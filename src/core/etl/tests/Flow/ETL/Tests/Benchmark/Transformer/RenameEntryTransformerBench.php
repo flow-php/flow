@@ -22,20 +22,22 @@ final class RenameEntryTransformerBench
     public function setUp() : void
     {
         $this->rows = Rows::fromArray(
-            [
-                ['id' => 1, 'random' => false, 'text' => null, 'from' => 666],
-                ['id' => 2, 'random' => true, 'text' => null, 'from' => 666],
-                ['id' => 3, 'random' => false, 'text' => null, 'from' => 666],
-                ['id' => 4, 'random' => true, 'text' => null, 'from' => 666],
-                ['id' => 5, 'random' => false, 'text' => null, 'from' => 666],
-            ]
+            \array_merge(...\array_map(static function () : array {
+                return [
+                    ['id' => 1, 'random' => false, 'text' => null, 'from' => 666],
+                    ['id' => 2, 'random' => true, 'text' => null, 'from' => 666],
+                    ['id' => 3, 'random' => false, 'text' => null, 'from' => 666],
+                    ['id' => 4, 'random' => true, 'text' => null, 'from' => 666],
+                    ['id' => 5, 'random' => false, 'text' => null, 'from' => 666],
+                ];
+            }, \range(0, 10_000)))
         );
         $this->context = new FlowContext(Config::default());
     }
 
     #[BeforeMethods(['setUp'])]
-    #[Revs(1000)]
-    public function bench_transform() : void
+    #[Revs(5)]
+    public function bench_transform_10k_rows() : void
     {
         (new RenameEntryTransformer('from', 'to'))->transform($this->rows, $this->context);
     }

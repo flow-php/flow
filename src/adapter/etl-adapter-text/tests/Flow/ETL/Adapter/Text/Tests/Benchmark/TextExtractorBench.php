@@ -14,9 +14,9 @@ use PhpBench\Attributes\Revs;
 final class TextExtractorBench
 {
     #[Revs(5)]
-    public function bench_extract() : void
+    public function bench_extract_10k() : void
     {
-        foreach (Text::from(__DIR__ . '/../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv')->extract(new FlowContext(Config::default())) as $rows) {
+        foreach (Text::from(__DIR__ . '/../Fixtures/orders_flow.csv')->extract(new FlowContext(Config::default())) as $rows) {
         }
     }
 }

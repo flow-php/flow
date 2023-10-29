@@ -78,20 +78,39 @@ jobs:
             echo 'COMMENT_CONTENT<<EOF'
             echo '# Flow PHP - Benchmarks'
             echo '<sup><sub>Results of the benchmarks from this PR are compared with the results from 1.x branch.</sub></sup>'
-            echo '## Extractors'
+            echo '  '
+            echo '<details><summary>Extractors</summary>'
+            echo '  '
             echo '```shell'
             composer test:benchmark -- --ref=1.x --progress=none --group=extractor
             echo '```'
-            echo "  "
-            echo '## Transformers'
+            echo '  '
+            echo '</details>'
+            echo '  '
+            echo '<details><summary>Transformers</summary>'
+            echo '  '
             echo '```shell'
             composer test:benchmark -- --ref=1.x --progress=none --group=transformer
             echo '```'
-            echo "  "
-            echo '## Entry Factory'
+            echo '  '
+            echo '</details>'
+            echo '  '
+            echo '<details><summary>Loaders</summary>'
+            echo '  '
+            echo '```shell'
+            composer test:benchmark -- --ref=1.x --progress=none --group=loader
+            echo '```'
+            echo '  '
+            echo '</details>'
+            echo '  '
+            echo '<details><summary>Entry Factory</summary>'
+            echo '  '
             echo '```shell'
             composer test:benchmark -- --ref=1.x --progress=none --group=entry_factory
             echo '```'
+            echo '  '
+            echo '</details>'
+            echo '  '
             echo EOF
           } >> "$GITHUB_ENV"
 
