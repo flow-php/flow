@@ -68,6 +68,9 @@ jobs:
           restore-keys: |
             php-${{ matrix.php-version }}-1.x-phpbench-
 
+      - name: "Clean previous summary"
+        run: rm -rf ./var/phpbench/summary.txt
+
       - name: "Execute benchmarks"
         id: init_comment
         run: |
