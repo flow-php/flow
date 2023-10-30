@@ -134,13 +134,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
 
     public function dropRight(int $size) : self
     {
-        $rows = $this->rows;
-
-        for ($i = 0; $i < $size; $i++) {
-            \array_pop($rows);
-        }
-
-        return new self(...$rows);
+        return new self(...\array_slice($this->rows, 0, -$size));
     }
 
     /**
@@ -556,7 +550,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
          * @var array<string, mixed> $partitionsData
          */
         foreach ($cartesianProduct($partitions) as $partitionsData) {
-            $rows = $this->filter(function (Row $row) use ($partitionsData) : bool {
+            $rows = \array_filter($this->rows, function (Row $row) use ($partitionsData) : bool {
                 /**
                  * @var mixed $value
                  */
@@ -569,8 +563,8 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
                 return true;
             });
 
-            if ($rows->count()) {
-                $partitionedRows[] = new PartitionedRows($rows, ...Partition::fromArray($partitionsData));
+            if ($rows) {
+                $partitionedRows[] = new PartitionedRows(new self(...$rows), ...Partition::fromArray($partitionsData));
             }
         }
 
@@ -672,11 +666,9 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
      */
     public function sortBy(EntryReference ...$refs) : self
     {
-        $sortBy = References::init(...$refs)->reverse();
-
         $rows = $this;
 
-        foreach ($sortBy->all() as $ref) {
+        foreach (\array_reverse($refs) as $ref) {
             $rows = $ref->sort() === SortOrder::ASC ? $rows->sortAscending($ref) : $rows->sortDescending($ref);
         }
 
