@@ -3,11 +3,12 @@ name: Test Mutations
 on:
   pull_request:
     paths:
-      - '.github/workflows/**'
+      - '.github/workflows/test-mutations.yml'
+      - '.github/workflows/test-suite.yml'
       - 'src/adapter/**'
       - 'src/core/**'
       - 'src/lib/**'
-      - 'tools/**'
+      - 'tools/infection/composer.lock'
       - 'composer.lock'
   push:
     branches: [ 1.x ]
