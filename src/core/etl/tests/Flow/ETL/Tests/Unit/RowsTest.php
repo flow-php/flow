@@ -158,7 +158,7 @@ final class RowsTest extends TestCase
     public function test_array_access_unset() : void
     {
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('In order to add new rows use Rows::remove(int $offset) : self');
+        $this->expectExceptionMessage('In order to remove rows use Rows::remove(int $offset) : self');
         $rows = new Rows(Row::create(new IntegerEntry('id', 1)));
         unset($rows[0]);
     }

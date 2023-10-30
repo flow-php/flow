@@ -190,9 +190,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
 
     public function find(callable $callable) : self
     {
-        $rows = $this->rows;
-
-        if (!\count($rows)) {
+        if (0 === $this->count()) {
             return new self();
         }
 
@@ -209,22 +207,10 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
 
     public function findOne(callable $callable) : ?Row
     {
-        $rows = $this->rows;
-
-        if (!\count($rows)) {
-            return null;
-        }
-
-        $rows = [];
-
         foreach ($this->rows as $row) {
             if ($callable($row)) {
-                $rows[] = $row;
+                return $row;
             }
-        }
-
-        if ([] !== $rows) {
-            return \current($rows);
         }
 
         return null;
@@ -232,11 +218,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
 
     public function first() : Row
     {
-        if (empty($this->rows)) {
-            throw new RuntimeException('First row does not exist in empty collection');
-        }
-
-        return $this->rows[0];
+        return $this->rows[0] ?? throw new RuntimeException('First row does not exist in empty collection');
     }
 
     /**
@@ -509,11 +491,11 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
     /**
      * @param int $offset
      *
-     * @throws InvalidArgumentException
+     * @throws RuntimeException
      */
     public function offsetUnset(mixed $offset) : void
     {
-        throw new RuntimeException('In order to add new rows use Rows::remove(int $offset) : self');
+        throw new RuntimeException('In order to remove rows use Rows::remove(int $offset) : self');
     }
 
     /**
@@ -526,9 +508,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
      */
     public function partitionBy(string|Reference $entry, string|Reference ...$entries) : array
     {
-        \array_unshift($entries, $entry);
-
-        $refs = References::init(...$entries);
+        $refs = References::init($entry, ...$entries);
 
         /** @var array<string, array<mixed>> $partitions */
         $partitions = [];
@@ -537,10 +517,10 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
             $partitionEntryValues = [];
 
             foreach ($this->rows as $row) {
-                $partitionEntryValues[] = $row->get($ref)->value();
+                $partitionEntryValues[$row->get($ref)->value()] = true;
             }
 
-            $partitions[$ref->name()] = \array_unique($partitionEntryValues);
+            $partitions[$ref->name()] = \array_keys($partitionEntryValues);
         }
 
         /**
@@ -723,26 +703,12 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
 
     public function take(int $size) : self
     {
-        $rows = $this->rows;
-        $newRows = [];
-
-        for ($i = 0; $i < $size; $i++) {
-            $newRows[] = \array_shift($rows);
-        }
-
-        return new self(...\array_filter($newRows));
+        return new self(...\array_slice($this->rows, 0, $size));
     }
 
     public function takeRight(int $size) : self
     {
-        $rows = $this->rows;
-        $newRows = [];
-
-        for ($i = 0; $i < $size; $i++) {
-            $newRows[] = \array_pop($rows);
-        }
-
-        return new self(...\array_filter($newRows));
+        return new self(...\array_reverse(\array_slice($this->rows, -$size, $size)));
     }
 
     /**
