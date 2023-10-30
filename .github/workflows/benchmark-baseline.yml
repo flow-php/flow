@@ -81,17 +81,11 @@ jobs:
       - name: "Install locked dependencies"
         run: "composer install --no-interaction --no-progress"
 
-      - name: Get Date
-        id: get-date
-        run: |
-          echo "date=$(date -u "+%Y%m%d%H%M%S")" >> $GITHUB_OUTPUT
-        shell: bash
-
       - name: "Restore Benchmark cache"
         uses: "actions/cache@v3"
         with:
           path: "var/phpbench"
-          key: "php-${{ matrix.php-version }}-${{ env.PHPBENCH_TAG }}-phpbench-${{ steps.get-date.outputs.date }}"
+          key: "php-${{ matrix.php-version }}-${{ env.PHPBENCH_TAG }}-phpbench-${{ hashFiles('**/phpbench/**/*.xml') }}"
           restore-keys: |
             php-${{ matrix.php-version }}-${{ env.PHPBENCH_TAG }}-phpbench-
 
