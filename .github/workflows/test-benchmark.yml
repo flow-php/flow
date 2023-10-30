@@ -3,12 +3,12 @@ name: Benchmark Suite
 on:
   pull_request:
     paths:
-      - '.github/workflows/**'
+      - '.github/workflows/benchmark-baseline.yml'
+      - '.github/workflows/test-benchmark.yml'
       - 'src/adapter/**'
       - 'src/core/**'
       - 'src/lib/**'
-      - 'tools/**'
-      - 'composer.json'
+      - 'tools/phpbench/composer.lock'
       - 'composer.lock'
 
 # See https://stackoverflow.com/a/72408109
