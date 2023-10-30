@@ -29,6 +29,8 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#671](https://github.com/flow-php/flow/pull/671) - **Improve performance for a few `Rows` methods** - [@stloyd](https://github.com/stloyd)
+- [#671](https://github.com/flow-php/flow/pull/671) - **Rework benchmark GH action to use artifact for baseline** - [@stloyd](https://github.com/stloyd)
 - [#673](https://github.com/flow-php/flow/pull/673) - **Generate baseline benchmark in one run not per group** - [@stloyd](https://github.com/stloyd)
 - [#670](https://github.com/flow-php/flow/pull/670) - **Cover most methods of `Rows` class by benchmark** - [@stloyd](https://github.com/stloyd)
 - [#666](https://github.com/flow-php/flow/pull/666) - **Simplify `Rows::drop()` method** - [@stloyd](https://github.com/stloyd)
