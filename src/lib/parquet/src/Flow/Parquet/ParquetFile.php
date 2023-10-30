@@ -338,12 +338,23 @@ final class ParquetFile
             } else {
                 $row = [];
 
+                $isNull = true;
+
                 foreach ($childrenRowData as $childColumnPath => $childColumnValue) {
                     $childColumn = $this->schema()->get($childColumnPath);
 
                     $row[$childColumn->name()] = $childColumnValue;
+
+                    if ($childColumnValue !== null) {
+                        $isNull = false;
+                    }
                 }
-                yield $row;
+
+                if ($isNull) {
+                    yield null;
+                } else {
+                    yield $row;
+                }
             }
         }
     }

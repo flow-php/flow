@@ -41,6 +41,41 @@ def generate_struct_flat():
 
     return struct_flat_data
 
+def generate_struct_flat_nullable():
+    struct_flat_data = []
+    for i in range(n_rows):
+        if i % 2 != 0:
+            struct_flat_data.append(None)
+            continue
+
+        string_value = f'string_{i}'
+        string_nullable_value = f'string_{i}' if i % 2 == 0 else None
+        int_value = i
+        int_nullable_value = i if i % 2 == 0 else None
+        bool_value = i % 2 == 0
+        bool_nullable_value = i % 2 == 0 if i % 2 == 0 else None
+        list_of_ints_value = [random.randint(1, 10) for _ in range(3)]
+        list_of_strings_value = [f'str_{j}' for j in range(3)]
+        map_of_string_int_value = {f'key_{j}': j for j in range(3)}
+        map_of_int_int_value = {j: j for j in range(3)}
+
+        struct_flat_element = {
+            'string': string_value,
+            'string_nullable': string_nullable_value,
+            'int': int_value,
+            'int_nullable': int_nullable_value,
+            'bool': bool_value,
+            'bool_nullable': bool_nullable_value,
+            'list_of_ints': list_of_ints_value,
+            'list_of_strings': list_of_strings_value,
+            'map_of_string_int': map_of_string_int_value,
+            'map_of_int_int': map_of_int_int_value
+        }
+
+        struct_flat_data.append(struct_flat_element)
+
+    return struct_flat_data
+
 def generate_struct_nested():
     struct_nested_data = []
     for i in range(n_rows):
@@ -217,6 +252,7 @@ def generate_struct_deeply_nested():
 
 # Columns
 struct_flat_col = generate_struct_flat()
+struct_flat_nullable_col = generate_struct_flat_nullable()
 struct_nested_col = generate_struct_nested()
 struct_nested_with_list_of_lists_col = generate_struct_nested_with_list_of_lists()
 struct_nested_with_list_of_maps_col = generate_struct_nested_with_list_of_maps()
@@ -228,6 +264,7 @@ struct_deeply_nested_col = generate_struct_deeply_nested()
 # Creating the DataFrame with only the new column
 df_nested_list = pd.DataFrame({
     'struct_flat': struct_flat_col,
+    'struct_flat_nullable': struct_flat_nullable_col,
     'struct_nested': struct_nested_col,
     'struct_nested_with_list_of_lists': struct_nested_with_list_of_lists_col,
     'struct_nested_with_list_of_maps': struct_nested_with_list_of_maps_col,
@@ -362,6 +399,7 @@ struct_deeply_nested_type = pa.struct([
 # Define the schema
 schema = pa.schema([
     ('struct_flat', struct_flat_type),
+    ('struct_flat_nullable', struct_flat_type),
     ('struct_nested', struct_nested_type),
     ('struct_nested_with_list_of_lists', struct_nested_with_list_of_lists_type),
     ('struct_nested_with_list_of_maps', struct_nested_with_list_of_maps_type),

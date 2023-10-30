@@ -114,7 +114,7 @@ final class Dremel
         return new DataShredded(
             $this->buildRepetitions($data),
             $definitions,
-            array_flatten($data)
+            \array_values(\array_filter(array_flatten($data), static fn ($item) => $item !== null))
         );
     }
 
@@ -168,7 +168,7 @@ final class Dremel
                 $this->buildDefinitions($value, $definitions, $maxDefinitionLevel);
             } else {
                 if ($value === null) {
-                    $definitions[] = $maxDefinitionLevel - 1;
+                    $definitions[] = 0;
                 } else {
                     $definitions[] = $maxDefinitionLevel;
                 }

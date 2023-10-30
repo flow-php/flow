@@ -71,4 +71,35 @@ final class MapsWritingTest extends TestCase
             \iterator_to_array((new Reader())->read($path)->values())
         );
     }
+
+    public function test_writing_nullable_map_of_int_int() : void
+    {
+        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+
+        $writer = new Writer();
+        $schema = Schema::with(NestedColumn::map('map_int_int', MapKey::int32(), MapValue::int32()));
+
+        $faker = Factory::create();
+        $inputData = \array_merge(...\array_map(static function (int $i) use ($faker) : array {
+            return [
+                [
+                    'map_int_int' => $i % 2 === 0
+                        ? \array_merge(
+                            ...\array_map(
+                                static fn ($i) => [$i => $faker->numberBetween(0, Consts::PHP_INT32_MAX)],
+                                \range(1, \random_int(2, 10))
+                            )
+                        )
+                        : null,
+                ],
+            ];
+        }, \range(0, 99)));
+
+        $writer->write($path, $schema, $inputData);
+
+        $this->assertSame(
+            $inputData,
+            \iterator_to_array((new Reader())->read($path)->values())
+        );
+    }
 }

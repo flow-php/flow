@@ -185,6 +185,62 @@ final class FlattenerTest extends TestCase
         );
     }
 
+    public function test_flattening_nullable_list_of_ints() : void
+    {
+        $column = NestedColumn::list('list', ListElement::int32());
+        $row = [
+            'list' => null,
+        ];
+
+        $flattener = new Flattener();
+        $this->assertSame(
+            [
+                'list.list.element' => null,
+            ],
+            $flattener->flattenColumn($column, $row)
+        );
+    }
+
+    public function test_flattening_nullable_map_string_int() : void
+    {
+        $column = NestedColumn::map('map_string_int', MapKey::string(), MapValue::int32());
+        $row = [
+            'map_string_int' => null,
+        ];
+
+        $flattener = new Flattener();
+        $this->assertSame(
+            [
+                'map_string_int.key_value.key' => null,
+                'map_string_int.key_value.value' => null,
+            ],
+            $flattener->flattenColumn($column, $row)
+        );
+    }
+
+    public function test_flattening_nullable_structure_with_list_of_ints_and_map_string_string() : void
+    {
+        $column = NestedColumn::struct('struct', [
+            FlatColumn::int32('int32'),
+            NestedColumn::list('list_of_ints', ListElement::int32()),
+            NestedColumn::map('map_string_string', MapKey::string(), MapValue::string()),
+        ]);
+        $row = [
+            'struct' => null,
+        ];
+
+        $flattener = new Flattener();
+        $this->assertSame(
+            [
+                'struct.int32' => null,
+                'struct.list_of_ints.list.element' => null,
+                'struct.map_string_string.key_value.key' => null,
+                'struct.map_string_string.key_value.value' => null,
+            ],
+            $flattener->flattenColumn($column, $row)
+        );
+    }
+
     public function test_flattening_structure_with_list_of_ints_and_map_string_string() : void
     {
         $column = NestedColumn::struct('struct', [

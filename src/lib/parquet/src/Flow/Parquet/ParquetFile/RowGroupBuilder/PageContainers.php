@@ -102,7 +102,7 @@ final class PageContainers
         $count = 0;
 
         foreach ($this->dataPageContainers as $pageContainer) {
-            $count += \count($pageContainer->values);
+            $count += $pageContainer->pageHeader->dataValuesCount();
         }
 
         return $count;
