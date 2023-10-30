@@ -4,6 +4,9 @@ namespace Flow\Parquet\ParquetFile\RowGroupBuilder\PageBuilder;
 
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
 use Flow\Parquet\Data\DataConverter;
+use Flow\Parquet\Options;
+use Flow\Parquet\ParquetFile\Codec;
+use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Encodings;
 use Flow\Parquet\ParquetFile\Page\Header\DictionaryPageHeader;
 use Flow\Parquet\ParquetFile\Page\Header\Type;
@@ -15,8 +18,11 @@ use Thrift\Transport\TMemoryBuffer;
 
 final class DictionaryPageBuilder
 {
-    public function __construct(private readonly DataConverter $dataConverter)
-    {
+    public function __construct(
+        private readonly DataConverter $dataConverter,
+        private readonly Compressions $compression,
+        private readonly Options $options,
+    ) {
     }
 
     public function build(FlatColumn $column, array $rows) : PageContainer
@@ -27,9 +33,11 @@ final class DictionaryPageBuilder
         $pageWriter = new BinaryBufferWriter($pageBuffer);
         $pageWriter->append((new PlainValuesPacker($this->dataConverter))->packValues($column, $dictionary->dictionary));
 
+        $compressedBuffer = (new Codec($this->options))->compress($pageBuffer, $this->compression);
+
         $pageHeader = new PageHeader(
             Type::DICTIONARY_PAGE,
-            \strlen($pageBuffer),
+            \strlen($compressedBuffer),
             \strlen($pageBuffer),
             dataPageHeader: null,
             dataPageHeaderV2: null,
@@ -42,7 +50,7 @@ final class DictionaryPageBuilder
 
         return new PageContainer(
             $pageHeaderBuffer->getBuffer(),
-            $pageBuffer,
+            $compressedBuffer,
             $dictionary->indices,
             $dictionary->dictionary,
             $pageHeader

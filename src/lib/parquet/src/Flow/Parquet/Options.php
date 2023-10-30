@@ -19,6 +19,7 @@ final class Options
             Option::ROW_GROUP_SIZE_BYTES->name => Consts::MB_SIZE * 128,
             Option::DICTIONARY_PAGE_SIZE->name => Consts::MB_SIZE,
             Option::DICTIONARY_PAGE_MIN_CARDINALITY_RATION->name => 0.4,
+            Option::GZIP_COMPRESSION_LEVEL->name => 9,
         ];
     }
 

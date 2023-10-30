@@ -6,6 +6,7 @@ use Faker\Factory;
 use Flow\Parquet\Data\DataConverter;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
+use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Encodings;
 use Flow\Parquet\ParquetFile\Page\Header\DataPageHeader;
 use Flow\Parquet\ParquetFile\Page\Header\DictionaryPageHeader;
@@ -31,7 +32,7 @@ final class PagesBuilderTest extends TestCase
         foreach ($values as $value) {
             $statistics->add($value);
         }
-        $pages = (new PagesBuilder(DataConverter::initialize($options), new PageSizeCalculator($options), $options))
+        $pages = (new PagesBuilder(DataConverter::initialize($options), Compressions::UNCOMPRESSED, new PageSizeCalculator($options), $options))
             ->build($column, $values, $statistics);
 
         $this->assertCount(4, $pages->dataPageContainers());
@@ -67,7 +68,7 @@ final class PagesBuilderTest extends TestCase
         }
 
         $options = new Options();
-        $pages = (new PagesBuilder(DataConverter::initialize($options), new PageSizeCalculator($options), $options))
+        $pages = (new PagesBuilder(DataConverter::initialize($options), Compressions::UNCOMPRESSED, new PageSizeCalculator($options), $options))
             ->build($column, $values, $statistics);
 
         $this->assertEquals(
@@ -112,7 +113,7 @@ final class PagesBuilderTest extends TestCase
         }
 
         $options = new Options();
-        $pages = (new PagesBuilder(DataConverter::initialize($options), new PageSizeCalculator($options), $options))
+        $pages = (new PagesBuilder(DataConverter::initialize($options), Compressions::UNCOMPRESSED, new PageSizeCalculator($options), $options))
             ->build($column, $values, $statistics);
 
         $this->assertCount(1, $pages->dataPageContainers());
@@ -144,7 +145,7 @@ final class PagesBuilderTest extends TestCase
         }
 
         $options = new Options();
-        $pages = (new PagesBuilder(DataConverter::initialize($options), new PageSizeCalculator($options), $options))
+        $pages = (new PagesBuilder(DataConverter::initialize($options), Compressions::UNCOMPRESSED, new PageSizeCalculator($options), $options))
             ->build($column, $values, $statistics);
 
         $this->assertNull($pages->dictionaryPageContainer());
@@ -175,7 +176,7 @@ final class PagesBuilderTest extends TestCase
             $statistics->add($value);
         }
 
-        $pages = (new PagesBuilder(DataConverter::initialize($options), new PageSizeCalculator($options), $options))
+        $pages = (new PagesBuilder(DataConverter::initialize($options), Compressions::UNCOMPRESSED, new PageSizeCalculator($options), $options))
             ->build($column, $values, $statistics);
 
         $this->assertCount(1, $pages->dataPageContainers());
@@ -220,7 +221,7 @@ final class PagesBuilderTest extends TestCase
             $statistics->add($value);
         }
         $options = new Options();
-        $pages = (new PagesBuilder(DataConverter::initialize($options), new PageSizeCalculator($options), $options))
+        $pages = (new PagesBuilder(DataConverter::initialize($options), Compressions::UNCOMPRESSED, new PageSizeCalculator($options), $options))
             ->build($column, $values, $statistics);
 
         $this->assertNull($pages->dictionaryPageContainer());

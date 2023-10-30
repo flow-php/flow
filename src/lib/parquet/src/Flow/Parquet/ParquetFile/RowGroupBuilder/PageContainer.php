@@ -32,8 +32,13 @@ final class PageContainer
         return \strlen($this->pageHeaderBuffer);
     }
 
-    public function totalSize() : int
+    public function totalCompressedSize() : int
     {
-        return $this->headerSize() + $this->dataSize();
+        return $this->headerSize() + $this->pageHeader->compressedPageSize();
+    }
+
+    public function totalUncompressedSize() : int
+    {
+        return $this->headerSize() + $this->pageHeader->uncompressedPageSize();
     }
 }

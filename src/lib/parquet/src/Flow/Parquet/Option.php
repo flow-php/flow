@@ -30,6 +30,14 @@ enum Option
     case DICTIONARY_PAGE_SIZE;
 
     /**
+     * Compression level for GZIP codec. This option is going to be passed to gzcompress function when Compression is set to GZIP.
+     * Lower level means faster compression, but bigger file size.
+     *
+     * Default value is 9
+     */
+    case GZIP_COMPRESSION_LEVEL;
+
+    /**
      * When this option is set to true, reader will try to convert INT96 logical type to DateTimeImmutable object.
      * Some parquet writers due to historical reasons might still use INT96 to store timestamps with nanoseconds precision
      * instead of using TIMESTAMP logical type.

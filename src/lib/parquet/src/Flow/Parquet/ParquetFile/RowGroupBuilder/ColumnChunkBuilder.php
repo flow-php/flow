@@ -16,6 +16,7 @@ final class ColumnChunkBuilder
 
     public function __construct(
         private readonly FlatColumn $column,
+        private readonly Compressions $compression,
         private readonly DataConverter $dataConverter,
         private readonly PageSizeCalculator $calculator,
         private readonly Options $options
@@ -31,7 +32,8 @@ final class ColumnChunkBuilder
 
     public function flush(int $fileOffset) : ColumnChunkContainer
     {
-        $pageContainers = (new PagesBuilder($this->dataConverter, $this->calculator, $this->options))->build($this->column, $this->rows, $this->statistics);
+        $pageContainers = (new PagesBuilder($this->dataConverter, $this->compression, $this->calculator, $this->options))
+            ->build($this->column, $this->rows, $this->statistics);
 
         $this->statistics->reset();
 
@@ -39,15 +41,15 @@ final class ColumnChunkBuilder
             $pageContainers->buffer(),
             new ColumnChunk(
                 type: $this->column->type(),
-                codec: Compressions::UNCOMPRESSED,
+                codec: $this->compression,
                 valuesCount: $pageContainers->valuesCount(),
                 fileOffset: $fileOffset,
                 path: $this->column->path(),
                 encodings: $pageContainers->encodings(),
-                totalCompressedSize: $pageContainers->size(),
-                totalUncompressedSize: $pageContainers->size(),
+                totalCompressedSize: $pageContainers->compressedSize(),
+                totalUncompressedSize: $pageContainers->uncompressedSize(),
                 dictionaryPageOffset: ($pageContainers->dictionaryPageContainer()) ? $fileOffset : null,
-                dataPageOffset: ($pageContainers->dictionaryPageContainer()) ? $fileOffset + $pageContainers->dictionaryPageContainer()->totalSize() : $fileOffset,
+                dataPageOffset: ($pageContainers->dictionaryPageContainer()) ? $fileOffset + $pageContainers->dictionaryPageContainer()->totalCompressedSize() : $fileOffset,
                 indexPageOffset: null,
             )
         );

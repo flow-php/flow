@@ -34,7 +34,7 @@ final class Reader
             throw new InvalidArgumentException("File {$path} is not seekable");
         }
 
-        return new ParquetFile($stream, $this->byteOrder, DataConverter::initialize($this->options), $this->logger);
+        return new ParquetFile($stream, $this->byteOrder, DataConverter::initialize($this->options), $this->options, $this->logger);
     }
 
     /**
@@ -53,7 +53,7 @@ final class Reader
             throw new InvalidArgumentException('Given stream is not seekable');
         }
 
-        return new ParquetFile($stream, $this->byteOrder, DataConverter::initialize($this->options), $this->logger);
+        return new ParquetFile($stream, $this->byteOrder, DataConverter::initialize($this->options), $this->options, $this->logger);
     }
 
     public function set(Options $options) : void
