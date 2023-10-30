@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-10-29
+## [Unreleased] - 2023-10-30
 
 ### Added
 - [#668](https://github.com/flow-php/flow/pull/668) - **Added support for writing simple types nullable columns into parquet** - [@norberttech](https://github.com/norberttech)
