@@ -5,6 +5,7 @@ namespace Flow\Parquet;
 use Flow\Parquet\Data\DataConverter;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Exception\RuntimeException;
+use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Metadata;
 use Flow\Parquet\ParquetFile\RowGroupBuilder;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\PageSizeCalculator;
@@ -19,8 +20,19 @@ final class Writer
 
     private ?RowGroupBuilder $rowGroupBuilder = null;
 
-    public function __construct(private Options $options = new Options())
-    {
+    public function __construct(
+        private Compressions $compression = Compressions::SNAPPY,
+        private Options $options = new Options()
+    ) {
+        switch ($this->compression) {
+            case Compressions::UNCOMPRESSED:
+            case Compressions::SNAPPY:
+            case Compressions::GZIP:
+                break;
+
+            default:
+                throw new InvalidArgumentException("Compression \"{$this->compression->name}\" is not supported yet");
+        }
     }
 
     /**
@@ -79,6 +91,7 @@ final class Writer
         if ($this->rowGroupBuilder === null) {
             $this->rowGroupBuilder = new RowGroupBuilder(
                 $schema,
+                $this->compression,
                 $this->options,
                 DataConverter::initialize($this->options),
                 new PageSizeCalculator($this->options)

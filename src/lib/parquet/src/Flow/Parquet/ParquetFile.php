@@ -37,6 +37,7 @@ final class ParquetFile
         private $stream,
         private readonly ByteOrder $byteOrder,
         private readonly DataConverter $dataConverter,
+        private readonly Options $options,
         private readonly LoggerInterface $logger = new NullLogger()
     ) {
     }
@@ -90,7 +91,7 @@ final class ParquetFile
     {
         $reader = new WholeChunkReader(
             new DataBuilder($this->dataConverter, $this->logger),
-            new PageReader($column, $this->byteOrder, $this->logger),
+            new PageReader($column, $this->byteOrder, $this->options, $this->logger),
             $this->logger
         );
 

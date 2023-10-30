@@ -54,6 +54,21 @@ final class PageContainers
         return $buffer;
     }
 
+    public function compressedSize() : int
+    {
+        $size = 0;
+
+        if ($this->dictionaryPageContainer) {
+            $size += $this->dictionaryPageContainer->totalCompressedSize();
+        }
+
+        foreach ($this->dataPageContainers as $pageContainer) {
+            $size += $pageContainer->totalCompressedSize();
+        }
+
+        return $size;
+    }
+
     public function dataPageContainers() : array
     {
         return $this->dataPageContainers;
@@ -82,16 +97,16 @@ final class PageContainers
         return \array_map(static fn (int $encoding) => Encodings::from($encoding), $encodings);
     }
 
-    public function size() : int
+    public function uncompressedSize() : int
     {
         $size = 0;
 
         if ($this->dictionaryPageContainer) {
-            $size += $this->dictionaryPageContainer->totalSize();
+            $size += $this->dictionaryPageContainer->totalUncompressedSize();
         }
 
         foreach ($this->dataPageContainers as $pageContainer) {
-            $size += $pageContainer->totalSize();
+            $size += $pageContainer->totalUncompressedSize();
         }
 
         return $size;

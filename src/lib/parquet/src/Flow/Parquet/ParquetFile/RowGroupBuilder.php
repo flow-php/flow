@@ -27,13 +27,14 @@ final class RowGroupBuilder
 
     public function __construct(
         private readonly Schema $schema,
+        private readonly Compressions $compression,
         private readonly Options $options,
         private readonly DataConverter $dataConverter,
         private readonly PageSizeCalculator $calculator
     ) {
         $this->flattener = new Flattener();
 
-        $this->chunkBuilders = $this->createColumnChunkBuilders($this->schema);
+        $this->chunkBuilders = $this->createColumnChunkBuilders($this->schema, $this->compression);
         $this->statistics = RowGroupStatistics::fromBuilders($this->chunkBuilders);
     }
 
@@ -78,7 +79,7 @@ final class RowGroupBuilder
             new RowGroup($chunks, $this->statistics->rowsCount())
         );
 
-        $this->chunkBuilders = $this->createColumnChunkBuilders($this->schema);
+        $this->chunkBuilders = $this->createColumnChunkBuilders($this->schema, $this->compression);
         $this->statistics = RowGroupStatistics::fromBuilders($this->chunkBuilders);
 
         return $rowGroupContainer;
@@ -102,12 +103,12 @@ final class RowGroupBuilder
     /**
      * @return array<string, ColumnChunkBuilder>
      */
-    private function createColumnChunkBuilders(Schema $schema) : array
+    private function createColumnChunkBuilders(Schema $schema, Compressions $compression) : array
     {
         $builders = [];
 
         foreach ($schema->columnsFlat() as $column) {
-            $builders[$column->flatPath()] = new ColumnChunkBuilder($column, $this->dataConverter, $this->calculator, $this->options);
+            $builders[$column->flatPath()] = new ColumnChunkBuilder($column, $compression, $this->dataConverter, $this->calculator, $this->options);
         }
 
         return $builders;

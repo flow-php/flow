@@ -4,6 +4,7 @@ namespace Flow\Parquet\ParquetFile;
 
 use Flow\Parquet\ByteOrder;
 use Flow\Parquet\Exception\RuntimeException;
+use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Page\ColumnData;
 use Flow\Parquet\ParquetFile\Page\Dictionary;
 use Flow\Parquet\ParquetFile\Page\PageHeader;
@@ -16,6 +17,7 @@ final class PageReader
     public function __construct(
         private readonly FlatColumn $column,
         private readonly ByteOrder $byteOrder,
+        private readonly Options $options,
         private readonly LoggerInterface $logger = new NullLogger()
     ) {
     }
@@ -29,7 +31,7 @@ final class PageReader
     {
         return (new DataCoder($this->byteOrder, $this->logger))
             ->decodeData(
-                (new Codec())
+                (new Codec($this->options))
                     ->decompress(
                         /** @phpstan-ignore-next-line */
                         \fread($stream, $pageHeader->compressedPageSize()),
@@ -59,7 +61,7 @@ final class PageReader
 
         return (new DataCoder($this->byteOrder, $this->logger))
             ->decodeDictionary(
-                (new Codec())
+                (new Codec($this->options))
                     ->decompress(
                         /** @phpstan-ignore-next-line */
                         \fread($stream, $pageHeader->compressedPageSize()),

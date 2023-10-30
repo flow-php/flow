@@ -5,6 +5,9 @@ namespace Flow\Parquet\ParquetFile\RowGroupBuilder\PageBuilder;
 use Flow\Dremel\Dremel;
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
 use Flow\Parquet\Data\DataConverter;
+use Flow\Parquet\Options;
+use Flow\Parquet\ParquetFile\Codec;
+use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Data\RLEBitPackedHybrid;
 use Flow\Parquet\ParquetFile\Encodings;
 use Flow\Parquet\ParquetFile\Page\Header\DataPageHeader;
@@ -19,6 +22,8 @@ final class DataPageBuilder
 {
     public function __construct(
         private readonly DataConverter $dataConverter,
+        private readonly Compressions $compression,
+        private readonly Options $options,
     ) {
     }
 
@@ -45,9 +50,11 @@ final class DataPageBuilder
             $pageWriter->append((new PlainValuesPacker($this->dataConverter))->packValues($column, $shredded->values));
         }
 
+        $compressedBuffer = (new Codec($this->options))->compress($pageBuffer, $this->compression);
+
         $pageHeader = new PageHeader(
             Type::DATA_PAGE,
-            \strlen($pageBuffer),
+            \strlen($compressedBuffer),
             \strlen($pageBuffer),
             dataPageHeader: new DataPageHeader(
                 $dictionary && $indices ? Encodings::RLE_DICTIONARY : Encodings::PLAIN,
@@ -60,7 +67,7 @@ final class DataPageBuilder
 
         return new PageContainer(
             $pageHeaderBuffer->getBuffer(),
-            $pageBuffer,
+            $compressedBuffer,
             $shredded->values,
             null,
             $pageHeader

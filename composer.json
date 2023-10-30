@@ -17,6 +17,7 @@
         "ext-json": "*",
         "ext-mbstring": "*",
         "ext-xmlreader": "*",
+        "ext-zlib": "*",
         "amphp/process": "^2",
         "amphp/socket": "^2",
         "codename/parquet": "~0.6.2 || ~0.7.0",
