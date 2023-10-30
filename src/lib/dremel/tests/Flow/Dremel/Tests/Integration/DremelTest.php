@@ -23,4 +23,23 @@ final class DremelTest extends TestCase
 
         $this->assertSame($values, $assembledValues);
     }
+
+    public function test_dremel_shredding_and_assembling_nullable_nested_values() : void
+    {
+        $repetitions = [0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0];
+        $definitions = [2, 2, 0, 2, 2, 2, 2, 2, 2, 0, 2, 2, 0, 2, 2, 2, 2, 2, 0, 2, 2, 2, 2, 2, 0];
+        $values = [[0, 1], null, [0, 1, 2, 3, 4, 5], null, [0, 1], null, [0, 1, 2, 3, 4], null, [0, 1, 2, 3, 4], null];
+        $flatValues = [0, 1, 0, 1, 2, 3, 4, 5, 0, 1, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4];
+
+        $dremel = new Dremel();
+        $shredded = $dremel->shred($values, 2);
+
+        $this->assertSame($repetitions, $shredded->repetitions);
+        $this->assertSame($definitions, $shredded->definitions);
+        $this->assertSame($flatValues, $shredded->values);
+
+        $assembledValues = \iterator_to_array($dremel->assemble($shredded->repetitions, $shredded->definitions, $flatValues));
+
+        $this->assertSame($values, $assembledValues);
+    }
 }

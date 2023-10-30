@@ -126,6 +126,18 @@ final class SchemaReadingTest extends ParquetIntegrationTestCase
                 NestedColumn::map('map_of_string_int', MapKey::string(), MapValue::int32()),
                 NestedColumn::map('map_of_int_int', MapKey::int32(), MapValue::int32()),
             ]),
+            NestedColumn::struct('struct_flat_nullable', [
+                FlatColumn::string('string'),
+                FlatColumn::string('string_nullable'),
+                FlatColumn::int32('int'),
+                FlatColumn::int32('int_nullable'),
+                FlatColumn::boolean('bool'),
+                FlatColumn::boolean('bool_nullable'),
+                NestedColumn::list('list_of_ints', ListElement::int32()),
+                NestedColumn::list('list_of_strings', ListElement::string()),
+                NestedColumn::map('map_of_string_int', MapKey::string(), MapValue::int32()),
+                NestedColumn::map('map_of_int_int', MapKey::int32(), MapValue::int32()),
+            ]),
             NestedColumn::struct('struct_nested', [
                 FlatColumn::string('string'),
                 NestedColumn::struct('struct_flat', [

@@ -27,12 +27,14 @@ final class Flattener
         }
 
         /** @var NestedColumn $column */
-        if (!\is_array($columnData) && ($column->isMap() || $column->isList())) {
-            return [];
-        }
-
         if ($column->isList()) {
             $listElementColumn = $column->getListElement();
+
+            if ($columnData === null) {
+                return [
+                    $listElementColumn->flatPath() => null,
+                ];
+            }
 
             if ($listElementColumn instanceof FlatColumn) {
                 return [
@@ -52,6 +54,13 @@ final class Flattener
         if ($column->isMap()) {
             $keyColumn = $column->getMapKeyColumn();
             $valueColumn = $column->getMapValueColumn();
+
+            if ($columnData === null) {
+                return [
+                    $keyColumn->flatPath() => null,
+                    $valueColumn->flatPath() => null,
+                ];
+            }
 
             if ($valueColumn instanceof FlatColumn) {
                 return [
@@ -78,7 +87,7 @@ final class Flattener
             $data = [];
 
             foreach ($column->children() as $child) {
-                $data = \array_merge($data, $this->flattenColumn($child, $columnData));
+                $data = \array_merge($data, $this->flattenColumn($child, $columnData ?? [$child->name() => null]));
             }
 
             return $data;

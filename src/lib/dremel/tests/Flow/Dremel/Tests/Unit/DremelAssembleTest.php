@@ -24,7 +24,7 @@ final class DremelAssembleTest extends TestCase
     {
         $repetitions = [];
         $definitions = [1, 0, 1, 0, 1, 0, 1, 0, 1, 0];
-        $values = [0, 2, 4, 6, 8, null, null, null, null, null];
+        $values = [0, 2, 4, 6, 8];
 
         $this->assertSame(
             [0, null, 2, null, 4, null, 6, null, 8, null],

@@ -82,6 +82,31 @@ final class StructsReadingTest extends ParquetIntegrationTestCase
         $this->assertSame($file->metadata()->rowsNumber(), $count);
     }
 
+    public function test_reading_struct_flat_nullable_column() : void
+    {
+        $reader = new Reader(logger: $this->getLogger());
+        $file = $reader->read(__DIR__ . '/../../Fixtures/structs.parquet');
+
+        $this->assertNull($file->metadata()->schema()->get('struct_flat_nullable')->type());
+        $this->assertNull($file->metadata()->schema()->get('struct_flat_nullable')->logicalType());
+
+        $count = 0;
+
+        foreach ($file->values(['struct_flat_nullable']) as $i => $row) {
+            if ($i % 2 === 0) {
+                $this->assertArrayHasKey('string', $row['struct_flat_nullable']);
+                $this->assertArrayHasKey('int', $row['struct_flat_nullable']);
+                $this->assertArrayHasKey('list_of_ints', $row['struct_flat_nullable']);
+                $this->assertArrayHasKey('map_of_string_int', $row['struct_flat_nullable']);
+            } else {
+                $this->assertNull($row['struct_flat_nullable']);
+            }
+            $count++;
+        }
+        $this->assertSame(100, $count);
+        $this->assertSame($file->metadata()->rowsNumber(), $count);
+    }
+
     public function test_reading_struct_nested_column() : void
     {
         $reader = new Reader(logger: $this->getLogger());
