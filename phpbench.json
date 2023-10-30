@@ -23,7 +23,7 @@
     "src/adapter/etl-adapter-xml/tests/Flow/ETL/Adapter/XML/Tests/Benchmark/",
     "src/core/etl/tests/Flow/ETL/Tests/Benchmark/"
   ],
-  "runner.progress": "dots",
-  "runner.retry_threshold": 5,
+  "runner.php_config": { "memory_limit": "1G" },
+  "runner.iterations": 3,
   "storage.xml_storage_path": "var/phpbench"
 }
