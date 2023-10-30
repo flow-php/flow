@@ -60,16 +60,12 @@ jobs:
       - name: "Install locked dependencies"
         run: "composer install --no-interaction --no-progress"
 
-      - name: "Restore PHPBench cache"
-        uses: "actions/cache@v3"
+      - name: "Download phpbench benchmarks artifact"
+        uses: dawidd6/action-download-artifact@v2
         with:
-          path: "var/phpbench"
-          key: "php-${{ matrix.php-version }}-1.x-phpbench-"
-          restore-keys: |
-            php-${{ matrix.php-version }}-1.x-phpbench-
-
-      - name: "Clean previous summary"
-        run: rm -rf ./var/phpbench/summary.txt
+          workflow: benchmark-baseline.yml
+          name: phpbench-baseline
+          path: ./var/phpbench/
 
       - name: "Execute benchmarks"
         id: init_comment
