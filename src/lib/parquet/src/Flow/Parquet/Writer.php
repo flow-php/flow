@@ -18,7 +18,16 @@ final class Writer
 {
     public const VERSION = 2;
 
+    private int $fileOffset = 0;
+
+    private ?Metadata $metadata = null;
+
     private ?RowGroupBuilder $rowGroupBuilder = null;
+
+    /**
+     * @var null|resource
+     */
+    private $stream;
 
     public function __construct(
         private Compressions $compression = Compressions::SNAPPY,
@@ -35,11 +44,55 @@ final class Writer
         }
     }
 
-    /**
-     * @param iterable<array<string, mixed>> $rows
-     */
-    public function write(string $path, Schema $schema, iterable $rows) : void
+    public function __destruct()
     {
+        if ($this->isOpen()) {
+            $this->close();
+        }
+    }
+
+    public function close() : void
+    {
+        if (!$this->isOpen()) {
+            throw new RuntimeException('Writer is not open');
+        }
+
+        if (!$this->rowGroupBuilder()->isEmpty()) {
+            $rowGroupContainer = $this->rowGroupBuilder()->flush($this->fileOffset);
+            \fwrite($this->stream(), $rowGroupContainer->binaryBuffer);
+            $this->metadata()->rowGroups()->add($rowGroupContainer->rowGroup);
+            $this->fileOffset += \strlen($rowGroupContainer->binaryBuffer);
+        }
+
+        $this->rowGroupBuilder = null;
+
+        $start = \ftell($this->stream());
+        $this->metadata()->toThrift()->write(new TCompactProtocol(new TPhpFileStream($this->stream())));
+        $end = \ftell($this->stream());
+        $size = $end - $start;
+        \fwrite($this->stream(), \pack('l', $size));
+        \fwrite($this->stream(), ParquetFile::PARQUET_MAGIC_NUMBER);
+
+        \fseek($this->stream(), -4, SEEK_END);
+
+        /** @psalm-suppress InvalidPassByReference */
+        \fclose($this->stream());
+
+        $this->stream = null;
+        $this->fileOffset = 0;
+    }
+
+    public function isOpen() : bool
+    {
+        return $this->stream !== null;
+    }
+
+    public function open(string $path, Schema $schema) : void
+    {
+        if ($this->isOpen()) {
+            throw new RuntimeException('Writer is already open');
+        }
+
         // This will be later replaced with append
         if (\file_exists($path)) {
             throw new InvalidArgumentException("File {$path} already exists");
@@ -51,42 +104,95 @@ final class Writer
             throw new RuntimeException("Can't open {$path} for writing");
         }
 
-        \fwrite($stream, ParquetFile::PARQUET_MAGIC_NUMBER);
-        $fileOffset = \strlen(ParquetFile::PARQUET_MAGIC_NUMBER);
+        $this->stream = $stream;
+        \fwrite($this->stream(), ParquetFile::PARQUET_MAGIC_NUMBER);
+        $this->fileOffset = \strlen(ParquetFile::PARQUET_MAGIC_NUMBER);
 
-        $metadata = (new Metadata($schema, new RowGroups([]), 0, self::VERSION, 'flow-parquet'));
+        $this->metadata = (new Metadata($schema, new RowGroups([]), 0, self::VERSION, 'flow-parquet'));
 
-        foreach ($rows as $row) {
-            $this->rowGroupBuilder($schema)->addRow($row);
-
-            if ($this->rowGroupBuilder($schema)->isFull()) {
-                $rowGroupContainer = $this->rowGroupBuilder($schema)->flush($fileOffset);
-                \fwrite($stream, $rowGroupContainer->binaryBuffer);
-                $metadata->rowGroups()->add($rowGroupContainer->rowGroup);
-                $fileOffset += \strlen($rowGroupContainer->binaryBuffer);
-            }
-        }
-
-        if (!$this->rowGroupBuilder($schema)->isEmpty()) {
-            $rowGroupContainer = $this->rowGroupBuilder($schema)->flush($fileOffset);
-            \fwrite($stream, $rowGroupContainer->binaryBuffer);
-            $metadata->rowGroups()->add($rowGroupContainer->rowGroup);
-            $fileOffset += \strlen($rowGroupContainer->binaryBuffer);
-        }
-
-        $start = \ftell($stream);
-        $metadata->toThrift()->write(new TCompactProtocol(new TPhpFileStream($stream)));
-        $end = \ftell($stream);
-        $size = $end - $start;
-        \fwrite($stream, \pack('l', $size));
-        \fwrite($stream, ParquetFile::PARQUET_MAGIC_NUMBER);
-
-        \fseek($stream, -4, SEEK_END);
-
-        \fclose($stream);
+        $this->initGroupBuilder($schema);
     }
 
-    private function rowGroupBuilder(Schema $schema) : RowGroupBuilder
+    /**
+     * Opens a writer for an existing stream.
+     *
+     * @param resource $resource
+     */
+    public function openForStream($resource, Schema $schema) : void
+    {
+        /** @psalm-suppress DocblockTypeContradiction */
+        if (!\is_resource($resource)) {
+            throw new InvalidArgumentException('Given argument is not a valid resource');
+        }
+
+        $streamMetadata = \stream_get_meta_data($resource);
+
+        if (!$streamMetadata['seekable']) {
+            throw new InvalidArgumentException('Given stream is not seekable');
+        }
+
+        $this->stream = $resource;
+
+        \fseek($this->stream(), 0);
+        \fwrite($this->stream(), ParquetFile::PARQUET_MAGIC_NUMBER);
+        $this->fileOffset = \strlen(ParquetFile::PARQUET_MAGIC_NUMBER);
+
+        $this->metadata = (new Metadata($schema, new RowGroups([]), 0, self::VERSION, 'flow-parquet'));
+
+        $this->initGroupBuilder($schema);
+    }
+
+    /**
+     * @param iterable<array<string, mixed>> $rows
+     */
+    public function write(string $path, Schema $schema, iterable $rows) : void
+    {
+        $this->open($path, $schema);
+
+        $this->writeBatch($rows);
+
+        $this->close();
+    }
+
+    /**
+     * @param iterable<array<string, mixed>> $rows
+     */
+    public function writeBatch(iterable $rows) : void
+    {
+        foreach ($rows as $row) {
+            $this->writeRow($row);
+        }
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     */
+    public function writeRow(array $row) : void
+    {
+        $this->rowGroupBuilder()->addRow($row);
+
+        if ($this->rowGroupBuilder()->isFull()) {
+            $rowGroupContainer = $this->rowGroupBuilder()->flush($this->fileOffset);
+            \fwrite($this->stream(), $rowGroupContainer->binaryBuffer);
+            $this->metadata()->rowGroups()->add($rowGroupContainer->rowGroup);
+            $this->fileOffset += \strlen($rowGroupContainer->binaryBuffer);
+        }
+    }
+
+    /**
+     * @param resource $resource
+     * @param iterable<array<string, mixed>> $rows
+     */
+    public function writeStream($resource, Schema $schema, iterable $rows) : void
+    {
+        $this->openForStream($resource, $schema);
+
+        $this->writeBatch($rows);
+
+        $this->close();
+    }
+
+    private function initGroupBuilder(Schema $schema) : void
     {
         if ($this->rowGroupBuilder === null) {
             $this->rowGroupBuilder = new RowGroupBuilder(
@@ -96,8 +202,38 @@ final class Writer
                 DataConverter::initialize($this->options),
                 new PageSizeCalculator($this->options)
             );
+        } else {
+            throw new RuntimeException('RowGroupBuilder is already initialized, please close the writer first before initializing a new RowGroupBuilder');
+        }
+    }
+
+    private function metadata() : Metadata
+    {
+        if ($this->metadata === null) {
+            throw new RuntimeException('Writer is not open');
+        }
+
+        return $this->metadata;
+    }
+
+    private function rowGroupBuilder() : RowGroupBuilder
+    {
+        if ($this->rowGroupBuilder === null) {
+            throw new RuntimeException('Writer is not open');
         }
 
         return $this->rowGroupBuilder;
+    }
+
+    /**
+     * @return resource
+     */
+    private function stream()
+    {
+        if ($this->stream === null) {
+            throw new RuntimeException('Writer is not open');
+        }
+
+        return $this->stream;
     }
 }
