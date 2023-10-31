@@ -46,7 +46,7 @@ final class NativeEntryFactoryBench
             ],
             'notes' => \array_map(
                 static fn ($i) => $faker->sentence,
-                \range(1, $faker->numberBetween(1, 5))
+                \range(1, 3)
             ),
         ];
 
