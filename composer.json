@@ -163,6 +163,7 @@
         "build": [
             "@static:analyze",
             "@test",
+            "@test:benchmark",
             "@test:mutation"
         ],
         "test": [

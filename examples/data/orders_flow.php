@@ -44,7 +44,7 @@ $orders = \array_map(
 (new Flow())
     ->read(From::array($orders))
     ->mode(SaveMode::Overwrite)
-    ->write(Parquet::to(__DIR__ . '/orders_flow.parquet', rows_in_group: 20_000))
+    ->write(Parquet::to(__DIR__ . '/orders_flow.parquet'))
     ->write(Json::to(__DIR__ . '/orders_flow.json'))
     ->write(Avro::to(__DIR__ . '/orders_flow.avro'))
     ->withEntry('order_id', ref('order_id')->cast('string'))
