@@ -7,20 +7,20 @@ use Flow\ETL\DSL\Text;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use PhpBench\Attributes\Groups;
-use PhpBench\Attributes\Iterations;
-use PhpBench\Attributes\Revs;
 
-#[Iterations(3)]
 #[Groups(['loader'])]
 final class TextLoaderBench
 {
-    private FlowContext $context;
+    private readonly FlowContext $context;
+
+    private readonly string $outputPath;
 
     private Rows $rows;
 
     public function __construct()
     {
         $this->context = new FlowContext(Config::default());
+        $this->outputPath = \tempnam(\sys_get_temp_dir(), 'etl_txt_loader_bench') . '.txt';
         $this->rows = new Rows();
 
         foreach (Text::from(__DIR__ . '/../Fixtures/orders_flow.csv', rows_in_batch: 1)->extract($this->context) as $rows) {
@@ -28,14 +28,17 @@ final class TextLoaderBench
         }
     }
 
-    #[Revs(5)]
+    public function __destruct()
+    {
+        if (!\file_exists($this->outputPath)) {
+            throw new \RuntimeException("Benchmark failed, \"{$this->outputPath}\" doesn't exist");
+        }
+
+        \unlink($this->outputPath);
+    }
+
     public function bench_load_10k() : void
     {
-        Text::to($outputPath = \tempnam(\sys_get_temp_dir(), 'etl_txt_loader_bench') . '.txt')->load($this->rows, $this->context);
-
-        if (!\file_exists($outputPath)) {
-            throw new \RuntimeException("Benchmark failed, \"{$outputPath}\" doesn't exist");
-        }
-        \unlink($outputPath);
+        Text::to($this->outputPath)->load($this->rows, $this->context);
     }
 }
