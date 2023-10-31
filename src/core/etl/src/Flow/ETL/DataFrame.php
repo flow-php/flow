@@ -99,6 +99,23 @@ final class DataFrame
     }
 
     /**
+     * @trigger
+     * Return total count of rows processed by this pipeline.
+     */
+    public function count() : int
+    {
+        $clone = clone $this;
+
+        $total = 0;
+
+        foreach ($clone->pipeline->process($clone->context) as $rows) {
+            $total += $rows->count();
+        }
+
+        return $total;
+    }
+
+    /**
      * @lazy
      */
     public function crossJoin(self $dataFrame, string $prefix = '') : self

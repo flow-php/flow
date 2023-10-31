@@ -47,6 +47,21 @@ use PHPUnit\Framework\TestCase;
 
 final class DataFrameTest extends TestCase
 {
+    public function test_count() : void
+    {
+        $count = (new Flow())
+            ->read(From::array([
+                ['id' => 1],
+                ['id' => 2],
+                ['id' => 3],
+                ['id' => 4],
+                ['id' => 5],
+            ]))
+            ->count();
+
+        $this->assertSame(5, $count);
+    }
+
     public function test_cross_join() : void
     {
         $loader = $this->createMock(Loader::class);
