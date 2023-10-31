@@ -55,7 +55,7 @@ final class WriterTest extends ParquetIntegrationTestCase
         $writer = new Writer();
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Given stream is not opened in write mode, expected wb+, got: rb+');
+        $this->expectExceptionMessage('Given stream is not opened in write mode, expected wb, got: rb+');
 
         $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
         \file_put_contents($path, 'test');

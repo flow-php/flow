@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Adapter\Parquet\Tests\Integration\Codename;
+namespace Flow\ETL\Adapter\Parquet\Tests\Integration;
 
 use function Flow\ETL\DSL\ref;
 use Flow\ETL\DSL\Entry;
@@ -110,7 +110,7 @@ final class ParquetTest extends TestCase
                     }, \range(1, 100))
                 )
             ))
-            ->write(Parquet::to($path, 10))
+            ->write(Parquet::to($path))
             ->run();
 
         $this->assertFileExists($path);
@@ -150,7 +150,7 @@ final class ParquetTest extends TestCase
                 )
             ))
             ->threadSafe()
-            ->write(Parquet::to($path, 50))
+            ->write(Parquet::to($path))
             ->run();
 
         $this->assertFileExists($path);

@@ -2,16 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Adapter\Parquet\Tests\Unit\Codename;
+namespace Flow\ETL\Adapter\Parquet\Tests\Unit;
 
-use codename\parquet\data\DataField;
-use codename\parquet\data\DataType;
-use codename\parquet\data\DateTimeDataField;
-use codename\parquet\data\Schema as ParquetSchema;
-use Flow\ETL\Adapter\Parquet\Codename\SchemaConverter;
+use Flow\ETL\Adapter\Parquet\SchemaConverter;
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Row\Entry\TypedCollection\ScalarType;
 use Flow\ETL\Row\Schema;
+use Flow\Parquet\ParquetFile\Schema as ParquetSchema;
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use PHPUnit\Framework\TestCase;
 
 final class SchemaConverterTest extends TestCase
@@ -26,27 +23,17 @@ final class SchemaConverterTest extends TestCase
         ));
     }
 
-    public function test_convert_enum_entry_to_parquet_array() : void
-    {
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage("Flow\ETL\Row\Entry\EnumEntry is not yet supported.");
-
-        (new SchemaConverter())->toParquet(new Schema(
-            Schema\Definition::enum('enum', ScalarType::class)
-        ));
-    }
-
     public function test_convert_etl_entries_to_parquet_fields() : void
     {
         $this->assertEquals(
-            new ParquetSchema([
-                new DataField('integer', DataType::Int32, true, false),
-                new DataField('boolean', DataType::Boolean, true, false),
-                new DataField('string', DataType::String, true, false),
-                new DataField('float', DataType::Float, true, false),
-                new DateTimeDataField('datetime', DataType::DateTimeOffset, true, false),
-                new DataField('json', DataType::String, true, false),
-            ]),
+            ParquetSchema::with(
+                FlatColumn::int64('integer'),
+                FlatColumn::boolean('boolean'),
+                FlatColumn::string('string'),
+                FlatColumn::float('float'),
+                FlatColumn::dateTime('datetime'),
+                FlatColumn::json('json')
+            ),
             (new SchemaConverter())->toParquet(new Schema(
                 Schema\Definition::integer('integer'),
                 Schema\Definition::boolean('boolean'),
@@ -61,7 +48,7 @@ final class SchemaConverterTest extends TestCase
     public function test_convert_object_entry_to_parquet_array() : void
     {
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage("Flow\ETL\Row\Entry\ObjectEntry is not yet supported.");
+        $this->expectExceptionMessage("Flow\ETL\Row\Entry\ObjectEntry is not supported.");
 
         (new SchemaConverter())->toParquet(new Schema(
             Schema\Definition::object('object')

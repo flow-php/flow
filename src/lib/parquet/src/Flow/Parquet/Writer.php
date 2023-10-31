@@ -131,8 +131,8 @@ final class Writer
             throw new InvalidArgumentException('Given stream is not seekable');
         }
 
-        if ($streamMetadata['mode'] !== 'wb+') {
-            throw new InvalidArgumentException('Given stream is not opened in write mode, expected wb+, got: ' . $streamMetadata['mode']);
+        if (!\str_starts_with($streamMetadata['mode'], 'wb')) {
+            throw new InvalidArgumentException('Given stream is not opened in write mode, expected wb, got: ' . $streamMetadata['mode']);
         }
 
         $this->stream = $resource;
