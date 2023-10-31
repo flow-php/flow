@@ -54,6 +54,21 @@ jobs:
           ./build/flow-php.phar --version
           ./build/flow-php.phar examples/topics/transformations/array_expand.php
 
+      - name: "Import GPG Key"
+        uses: crazy-max/ghaction-import-gpg@72b6676b71ab476b77e676928516f6982eef7a41
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+
+      - name: "Sign PHAR"
+        run: >
+          gpg
+          --local-user ${{ env.GPG_USER_EMAIL }}
+          --passphrase ${{ secrets.GPG_PASSPHRASE }}
+          --detach-sign
+          --output ./build/flow-php.phar.asc
+          ./build/flow-php.phar
+
       - name: "Prepare artifact name"
         run: |
           BUILD_TAG=${{ github.ref_name }}
@@ -64,5 +79,6 @@ jobs:
         uses: softprops/action-gh-release@v1
         if: ${{startsWith(github.ref, 'refs/tags/') }}
         with:
-          files: build/flow-php.phar
-
+          files: |
+            build/flow-php.phar
+            build/flow-php.phar.asc
