@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\DSL;
 
-use codename\parquet\ParquetOptions;
-use Flow\ETL\Adapter\Parquet\Codename\ParquetLoader;
 use Flow\ETL\Adapter\Parquet\ParquetExtractor;
-use Flow\ETL\Exception\MissingDependencyException;
+use Flow\ETL\Adapter\Parquet\ParquetLoader;
 use Flow\ETL\Extractor;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Loader;
@@ -60,29 +58,23 @@ class Parquet
 
     /**
      * @param Path|string $path
-     * @param int $rows_in_group
      * @param null|Schema $schema
-     *
-     * @throws MissingDependencyException
      *
      * @return Loader
      */
     final public static function to(
         string|Path $path,
-        int $rows_in_group = 10000,
+        ?Options $options = null,
         ?Schema $schema = null,
-        ?ParquetOptions $options = null
     ) : Loader {
         if ($options === null) {
-            $options = new ParquetOptions();
-            $options->TreatByteArrayAsString = true;
+            $options = Options::default();
         }
 
         return new ParquetLoader(
             \is_string($path) ? Path::realpath($path) : $path,
-            $rows_in_group,
+            $options,
             $schema,
-            $options
         );
     }
 }

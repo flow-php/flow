@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3e4118e26e4d7977dbce7d818394e3cf",
+    "content-hash": "6aaf0a11cbf58a79a4beef08cd111bd4",
     "packages": [
         {
             "name": "amphp/amp",
@@ -846,58 +846,6 @@
                 }
             ],
             "time": "2022-02-21T13:15:14+00:00"
-        },
-        {
-            "name": "codename/parquet",
-            "version": "v0.7.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/codename-hub/php-parquet.git",
-                "reference": "63cc7eef6f9c836b18cce2ba86e000e0d7054b40"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/codename-hub/php-parquet/zipball/63cc7eef6f9c836b18cce2ba86e000e0d7054b40",
-                "reference": "63cc7eef6f9c836b18cce2ba86e000e0d7054b40",
-                "shasum": ""
-            },
-            "require": {
-                "ext-bcmath": "*",
-                "ext-gmp": "*",
-                "ext-zlib": "*",
-                "packaged/thrift": "^0.15.0",
-                "pear/math_biginteger": "^1.0",
-                "php": ">=7.3 <=8.2.99"
-            },
-            "require-dev": {
-                "phpunit/php-code-coverage": "^9.2",
-                "phpunit/phpunit": "^9.0"
-            },
-            "suggest": {
-                "ext-snappy": "Install/compile snappy extension to get support for snappy compression reading/writing"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "codename\\parquet\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Kevin Dargel",
-                    "role": "Developer"
-                }
-            ],
-            "description": "Thrift-based PHP implementation for using the Apache Parquet format",
-            "support": {
-                "issues": "https://github.com/codename-hub/php-parquet/issues",
-                "source": "https://github.com/codename-hub/php-parquet/tree/v0.7.0"
-            },
-            "time": "2023-01-17T17:14:05+00:00"
         },
         {
             "name": "daverandom/libdns",
@@ -2858,59 +2806,6 @@
                 "source": "https://github.com/paragonie/random_compat"
             },
             "time": "2020-10-15T08:29:30+00:00"
-        },
-        {
-            "name": "pear/math_biginteger",
-            "version": "v1.0.3",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/pear/Math_BigInteger.git",
-                "reference": "33d4357543037a458fad3e8c837a01b93104e592"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/pear/Math_BigInteger/zipball/33d4357543037a458fad3e8c837a01b93104e592",
-                "reference": "33d4357543037a458fad3e8c837a01b93104e592",
-                "shasum": ""
-            },
-            "require": {
-                "ext-pcre": "*",
-                "php": ">=4.2.0"
-            },
-            "suggest": {
-                "ext-bcmath": "Allows using the BCMath extension internally for computation. Faster than native implementation.",
-                "ext-gmp": "Allows using the GNU Multiple Precision extension internally for computation. If you are doing a lot of computation this is the recommended extension."
-            },
-            "type": "library",
-            "autoload": {
-                "psr-0": {
-                    "Math_": "./"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Jim Wigginton",
-                    "email": "terrafrost@php.net"
-                }
-            ],
-            "description": "Pure-PHP arbitrary precission integer arithmetic library. If GMP or BCMath are available they are used.",
-            "homepage": "https://github.com/pear/Math_BigInteger",
-            "keywords": [
-                "arbitrary",
-                "bcmath",
-                "gmp",
-                "integer",
-                "precision"
-            ],
-            "support": {
-                "issues": "http://pear.php.net/bugs/search.php?cmd=display&package_name[]=Math_BigInteger",
-                "source": "https://github.com/pear/Math_BigInteger"
-            },
-            "time": "2016-04-12T05:46:52+00:00"
         },
         {
             "name": "php-http/client-common",
@@ -6963,7 +6858,8 @@
         "ext-hash": "*",
         "ext-json": "*",
         "ext-mbstring": "*",
-        "ext-xmlreader": "*"
+        "ext-xmlreader": "*",
+        "ext-zlib": "*"
     },
     "platform-dev": [],
     "plugin-api-version": "2.6.0"
