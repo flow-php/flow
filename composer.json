@@ -18,6 +18,7 @@
         "ext-mbstring": "*",
         "ext-xmlreader": "*",
         "ext-zlib": "*",
+        "composer-runtime-api": "^2.1",
         "amphp/process": "^2",
         "amphp/socket": "^2",
         "doctrine/dbal": "^3.6",
