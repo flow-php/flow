@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-10-30
+## [Unreleased] - 2023-10-31
 
 ### Added
 - [#678](https://github.com/flow-php/flow/pull/678) - **Parquet - added support for GZIP and SNAPPY compressions** - [@norberttech](https://github.com/norberttech)
@@ -31,6 +31,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#683](https://github.com/flow-php/flow/pull/683) - **Improve adapters benchmark stability** - [@stloyd](https://github.com/stloyd)
 - [#676](https://github.com/flow-php/flow/pull/676) - **Improve performance for `Rows`: `dropRight`, `partitionBy` & `sortBy`** - [@stloyd](https://github.com/stloyd)
 - [#675](https://github.com/flow-php/flow/pull/675) - **Reduce amount of runs for benchmark testing** - [@stloyd](https://github.com/stloyd)
 - [#674](https://github.com/flow-php/flow/pull/674) - **Reduce amount of runs for infection testing** - [@stloyd](https://github.com/stloyd)
