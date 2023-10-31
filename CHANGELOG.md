@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-10-31
 
 ### Added
+- [#680](https://github.com/flow-php/flow/pull/680) - **Add GPG Signature to "flow-php.phar" artifact** - [@flavioheleno](https://github.com/flavioheleno)
 - [#678](https://github.com/flow-php/flow/pull/678) - **Parquet - added support for GZIP and SNAPPY compressions** - [@norberttech](https://github.com/norberttech)
 - [#677](https://github.com/flow-php/flow/pull/677) - **Parquet - writing & reading nullable structures with nullable fields** - [@norberttech](https://github.com/norberttech)
 - [#668](https://github.com/flow-php/flow/pull/668) - **Added support for writing simple types nullable columns into parquet** - [@norberttech](https://github.com/norberttech)
@@ -1240,6 +1241,7 @@
 
 - @DawidSajdak
 - @drupol
+- @flavioheleno
 - @ghost
 - @jpiatko
 - @jwojtyra-aterian
