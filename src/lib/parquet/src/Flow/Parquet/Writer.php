@@ -131,6 +131,10 @@ final class Writer
             throw new InvalidArgumentException('Given stream is not seekable');
         }
 
+        if ($streamMetadata['mode'] !== 'wb+') {
+            throw new InvalidArgumentException('Given stream is not opened in write mode, expected wb+, got: ' . $streamMetadata['mode']);
+        }
+
         $this->stream = $resource;
 
         \fseek($this->stream(), 0);

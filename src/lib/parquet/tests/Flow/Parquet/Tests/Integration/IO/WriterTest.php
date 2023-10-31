@@ -4,6 +4,7 @@ namespace Flow\Parquet\Tests\Integration\IO;
 
 use Faker\Factory;
 use Flow\Parquet\Consts;
+use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\ListElement;
@@ -47,6 +48,22 @@ final class WriterTest extends ParquetIntegrationTestCase
         $this->expectExceptionMessage('Writer is not open');
 
         $writer->writeBatch([$this->createRow()]);
+    }
+
+    public function test_writing_batch_to_not_writable_stream() : void
+    {
+        $writer = new Writer();
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Given stream is not opened in write mode, expected wb+, got: rb+');
+
+        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        \file_put_contents($path, 'test');
+        $stream = \fopen($path, 'rb+');
+
+        $writer->openForStream($stream, $this->createSchema());
+        $writer->writeBatch([$this->createRow()]);
+        \unlink($path);
     }
 
     public function test_writing_in_batches_to_file() : void
