@@ -9,6 +9,60 @@ Flow is a PHP-based, strongly typed ETL (Extract Transform Load), asynchronous d
 
 Supported PHP versions: [![PHP 8.1](https://img.shields.io/badge/php-~8.1-8892BF.svg)](https://php.net/) [![PHP 8.2](https://img.shields.io/badge/php-~8.2-8892BF.svg)](https://php.net/)
 
+## Usage
+```php
+<?php
+
+declare(strict_types=1);
+
+use Flow\ETL\DSL\Parquet;
+use Flow\ETL\Filesystem\SaveMode;
+use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\ref;
+use Flow\ETL\DSL\To;
+use Flow\ETL\Flow;
+use Flow\ETL\GroupBy\Aggregation;
+
+require __DIR__ . '/vendor/autoload.php';
+
+(new Flow())
+    ->read(Parquet::from(__DIR__ . '/orders_flow.parquet'))
+    ->select('created_at', 'total_price', 'discount')
+    ->withEntry('created_at', ref('created_at')->toDate(\DateTime::RFC3339)->dateFormat('Y/m'))
+    ->withEntry('revenue', ref('total_price')->minus(ref('discount')))
+    ->select('created_at', 'revenue')
+    ->groupBy('created_at')
+    ->aggregate(Aggregation::sum(ref('revenue')))
+    ->sortBy(ref('created_at')->desc())
+    ->withEntry('daily_revenue', ref('revenue_sum')->round(lit(2)))
+    ->drop('revenue_sum')
+    ->withEntry('created_at', ref('created_at')->toDate('Y/m'))
+    ->write(To::output(truncate: false))
+    ->mode(SaveMode::Overwrite)
+    ->write(Parquet::to(__DIR__ . '/daily_revenue.parquet'))
+    ->run();
+```
+
+```console
+$ php daily_revenue.php
++---------------------------+---------------+
+|                created_at | daily_revenue |
++---------------------------+---------------+
+| 2023-10-31T00:00:00+00:00 |     206669.74 |
+| 2023-10-01T00:00:00+00:00 |     227647.47 |
+| 2023-08-31T00:00:00+00:00 |     237027.31 |
+| 2023-07-31T00:00:00+00:00 |     240111.05 |
+| 2023-07-01T00:00:00+00:00 |     225536.35 |
+| 2023-05-31T00:00:00+00:00 |     234624.74 |
+| 2023-05-01T00:00:00+00:00 |     231472.05 |
+| 2023-03-31T00:00:00+00:00 |     231697.36 |
+| 2023-03-03T00:00:00+00:00 |     211048.97 |
+| 2023-01-31T00:00:00+00:00 |     225539.81 |
++---------------------------+---------------+
+10 rows
+```
+
+
 ## Features
 
 * low and constant memory consumption
