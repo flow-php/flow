@@ -277,6 +277,23 @@ trait EntryExpression
         return new Expressions(new NotSame($this, $ref));
     }
 
+    public function numberFormat(?Expression $decimals = null, ?Expression $decimalSeparator = null, ?Expression $thousandsSeparator = null) : Expression|EntryReference
+    {
+        if ($decimals === null) {
+            $decimals = lit(0);
+        }
+
+        if ($decimalSeparator === null) {
+            $decimalSeparator = lit('.');
+        }
+
+        if ($thousandsSeparator === null) {
+            $thousandsSeparator = lit(',');
+        }
+
+        return new Expressions(new Expression\NumberFormat($this, $decimals, $decimalSeparator, $thousandsSeparator));
+    }
+
     public function plus(Expression $ref) : Expression|EntryReference
     {
         return new Expressions(new Plus($this, $ref));

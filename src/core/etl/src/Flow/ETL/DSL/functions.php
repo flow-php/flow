@@ -324,6 +324,23 @@ function round(Expression $expression, ?Expression $precision = null, int $mode 
     return new Expression\Round($expression, $precision ?? lit(2), $mode);
 }
 
+function number_format(Expression $expression, ?Expression $decimals = null, ?Expression $decimalSeparator = null, ?Expression $thousandsSeparator = null) : Expression
+{
+    if ($decimals === null) {
+        $decimals = lit(0);
+    }
+
+    if ($decimalSeparator === null) {
+        $decimalSeparator = lit('.');
+    }
+
+    if ($thousandsSeparator === null) {
+        $thousandsSeparator = lit(',');
+    }
+
+    return new Expression\NumberFormat($expression, $decimals, $decimalSeparator, $thousandsSeparator);
+}
+
 /**
  * @psalm-suppress PossiblyInvalidIterator
  *
