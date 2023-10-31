@@ -35,6 +35,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [1e756d](https://github.com/flow-php/flow/commit/1e756d538b00827aee8efac915dc908f8410d4a2) - **CS Fixes** - [@norberttech](https://github.com/norberttech)
 - [#698](https://github.com/flow-php/flow/pull/698) - **Updated readme** - [@norberttech](https://github.com/norberttech)
 - [#694](https://github.com/flow-php/flow/pull/694) - **Replaced codename parquet with flow parquet library in parquet adapter** - [@norberttech](https://github.com/norberttech)
 - [#690](https://github.com/flow-php/flow/pull/690) - **Reduce a bit randomness in `NativeEntryFactoryBench`** - [@stloyd](https://github.com/stloyd)
