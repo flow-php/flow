@@ -2,6 +2,7 @@
 
 namespace Flow\Parquet;
 
+use Composer\InstalledVersions;
 use Flow\Parquet\Data\DataConverter;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Exception\RuntimeException;
@@ -108,8 +109,7 @@ final class Writer
         \fwrite($this->stream(), ParquetFile::PARQUET_MAGIC_NUMBER);
         $this->fileOffset = \strlen(ParquetFile::PARQUET_MAGIC_NUMBER);
 
-        $this->metadata = (new Metadata($schema, new RowGroups([]), 0, self::VERSION, 'flow-parquet'));
-
+        $this->initMetadata($schema);
         $this->initGroupBuilder($schema);
     }
 
@@ -141,7 +141,7 @@ final class Writer
         \fwrite($this->stream(), ParquetFile::PARQUET_MAGIC_NUMBER);
         $this->fileOffset = \strlen(ParquetFile::PARQUET_MAGIC_NUMBER);
 
-        $this->metadata = (new Metadata($schema, new RowGroups([]), 0, self::VERSION, 'flow-parquet'));
+        $this->initMetadata($schema);
 
         $this->initGroupBuilder($schema);
     }
@@ -209,6 +209,11 @@ final class Writer
         } else {
             throw new RuntimeException('RowGroupBuilder is already initialized, please close the writer first before initializing a new RowGroupBuilder');
         }
+    }
+
+    private function initMetadata(Schema $schema) : void
+    {
+        $this->metadata = (new Metadata($schema, new RowGroups([]), 0, self::VERSION, 'flow-php parquet version ' . InstalledVersions::getRootPackage()['pretty_version']));
     }
 
     private function metadata() : Metadata
