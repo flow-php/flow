@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use Flow\ETL\DSL\Parquet;
-use Flow\ETL\Filesystem\SaveMode;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
+use Flow\ETL\DSL\Parquet;
 use Flow\ETL\DSL\To;
+use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Flow;
 use Flow\ETL\GroupBy\Aggregation;
 
