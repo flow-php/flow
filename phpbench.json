@@ -10,7 +10,8 @@
         "revs": null,
         "its": null,
         "mem_peak": null,
-        "mode": null
+        "mode": null,
+        "rstdev": null
       }
     }
   },
@@ -25,5 +26,6 @@
   ],
   "runner.php_config": { "memory_limit": "1G" },
   "runner.iterations": 3,
+  "runner.retry_threshold": 5,
   "storage.xml_storage_path": "var/phpbench"
 }
