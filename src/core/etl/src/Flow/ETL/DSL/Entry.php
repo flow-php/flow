@@ -222,6 +222,14 @@ class Entry
     }
 
     /**
+     * @param array<array-key, mixed> $map
+     */
+    final public static function map(string $name, array $map) : RowEntry
+    {
+        return new RowEntry\MapEntry($name, $map);
+    }
+
+    /**
      * @throws InvalidArgumentException
      *
      * @return RowEntry\NullEntry

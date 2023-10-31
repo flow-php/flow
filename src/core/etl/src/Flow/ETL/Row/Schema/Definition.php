@@ -128,6 +128,11 @@ final class Definition implements Serializable
         );
     }
 
+    public static function map_entry(string|EntryReference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    {
+        return new self($entry, $nullable ? [Entry\MapEntry::class, NullEntry::class] : [Entry\MapEntry::class], $constraint, $metadata);
+    }
+
     public static function null(string|EntryReference $entry, ?Metadata $metadata = null) : self
     {
         return new self($entry, [NullEntry::class], null, $metadata);
