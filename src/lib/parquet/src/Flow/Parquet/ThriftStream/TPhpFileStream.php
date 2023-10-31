@@ -62,7 +62,7 @@ final class TPhpFileStream extends TTransport
 
     public function write($buf) : void
     {
-        while ($buf != '') {
+        while ($buf !== '') {
             $got = @\fwrite($this->stream, $buf);
 
             if ($got === 0 || $got === false) {
