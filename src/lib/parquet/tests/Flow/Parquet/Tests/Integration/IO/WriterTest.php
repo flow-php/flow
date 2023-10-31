@@ -2,6 +2,7 @@
 
 namespace Flow\Parquet\Tests\Integration\IO;
 
+use Composer\InstalledVersions;
 use Faker\Factory;
 use Flow\Parquet\Consts;
 use Flow\Parquet\Exception\InvalidArgumentException;
@@ -22,6 +23,21 @@ final class WriterTest extends ParquetIntegrationTestCase
         $this->expectExceptionMessage('Writer is not open');
 
         $writer->close();
+    }
+
+    public function test_created_by_metadata() : void
+    {
+        $writer = new Writer();
+
+        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+
+        $schema = $this->createSchema();
+        $writer->open($path, $schema);
+        $writer->close();
+
+        $metadata = (new Reader())->read($path)->metadata();
+
+        $this->assertSame('flow-php parquet version ' . InstalledVersions::getRootPackage()['pretty_version'], $metadata->createdBy());
     }
 
     public function test_opening_already_open_writer() : void
