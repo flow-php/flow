@@ -40,6 +40,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#705](https://github.com/flow-php/flow/pull/705) - **Add missing flag for GPG 2.2+** - [@stloyd](https://github.com/stloyd)
 - [#704](https://github.com/flow-php/flow/pull/704) - **Boolean columns can't be anymore dictionary packed for compatibility with spark** - [@norberttech](https://github.com/norberttech)
 - [1e756d](https://github.com/flow-php/flow/commit/1e756d538b00827aee8efac915dc908f8410d4a2) - **CS Fixes** - [@norberttech](https://github.com/norberttech)
 - [#698](https://github.com/flow-php/flow/pull/698) - **Updated readme** - [@norberttech](https://github.com/norberttech)
