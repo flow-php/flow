@@ -14,6 +14,10 @@ final class ObjectToString
             return $object->format(\DateTimeInterface::RFC3339);
         }
 
+        if ($object instanceof \DateInterval) {
+            return $object->format('%R%yY%mM%dDT%hH%iM%sS.%f');
+        }
+
         return \serialize($object);
     }
 }
