@@ -4,7 +4,6 @@ namespace Flow\Parquet\ParquetFile\Schema;
 
 use Flow\Parquet\Consts;
 use Flow\Parquet\Exception\InvalidArgumentException;
-use Flow\Parquet\ParquetFile\Schema\LogicalType\Timestamp;
 use Flow\Parquet\Thrift\SchemaElement;
 
 /**
@@ -37,20 +36,16 @@ final class FlatColumn implements Column
 
     public static function date(string $name) : self
     {
-        return new self($name, PhysicalType::INT32, ConvertedType::DATE, new LogicalType(LogicalType::DATE), Repetition::OPTIONAL);
+        return new self($name, PhysicalType::INT32, ConvertedType::DATE, LogicalType::date(), Repetition::OPTIONAL);
     }
 
-    public static function dateTime(string $name, TimeUnit $timeUnit = TimeUnit::MICROSECONDS) : self
+    public static function dateTime(string $name) : self
     {
         if (PHP_INT_MAX !== Consts::PHP_INT64_MAX) {
             throw new InvalidArgumentException('PHP_INT_MAX must be equal to ' . Consts::PHP_INT64_MAX . ' to support 64-bit timestamps.');
         }
 
-        $timestamp = match ($timeUnit) {
-            TimeUnit::MICROSECONDS => new Timestamp(false, false, true, false),
-        };
-
-        return new self($name, PhysicalType::INT64, ConvertedType::TIMESTAMP_MICROS, new LogicalType(LogicalType::TIMESTAMP, $timestamp), Repetition::OPTIONAL);
+        return new self($name, PhysicalType::INT64, ConvertedType::TIMESTAMP_MICROS, LogicalType::timestamp(), Repetition::OPTIONAL);
     }
 
     public static function decimal(string $name, int $precision = 10, int $scale = 2) : self
@@ -85,7 +80,7 @@ final class FlatColumn implements Column
 
     public static function enum(string $string) : self
     {
-        return new self($string, PhysicalType::BYTE_ARRAY, ConvertedType::ENUM, new LogicalType(LogicalType::STRING), Repetition::OPTIONAL);
+        return new self($string, PhysicalType::BYTE_ARRAY, ConvertedType::ENUM, LogicalType::string(), Repetition::OPTIONAL);
     }
 
     public static function float(string $name) : self
@@ -123,22 +118,26 @@ final class FlatColumn implements Column
 
     public static function json(string $string) : self
     {
-        return new self($string, PhysicalType::BYTE_ARRAY, ConvertedType::JSON, new LogicalType(LogicalType::STRING), Repetition::OPTIONAL);
+        return new self($string, PhysicalType::BYTE_ARRAY, ConvertedType::JSON, LogicalType::string(), Repetition::OPTIONAL);
     }
 
     public static function string(string $name) : self
     {
-        return new self($name, PhysicalType::BYTE_ARRAY, ConvertedType::UTF8, new LogicalType(LogicalType::STRING), Repetition::OPTIONAL);
+        return new self($name, PhysicalType::BYTE_ARRAY, ConvertedType::UTF8, LogicalType::string(), Repetition::OPTIONAL);
     }
 
     public static function time(string $name) : self
     {
-        return new self($name, PhysicalType::INT64, ConvertedType::TIME_MICROS, new LogicalType(LogicalType::TIME), Repetition::OPTIONAL);
+        if (PHP_INT_MAX !== Consts::PHP_INT64_MAX) {
+            throw new InvalidArgumentException('PHP_INT_MAX must be equal to ' . Consts::PHP_INT64_MAX . ' to support 64-bit timestamps.');
+        }
+
+        return new self($name, PhysicalType::INT64, ConvertedType::TIME_MICROS, LogicalType::time(), Repetition::OPTIONAL);
     }
 
     public static function uuid(string $string) : self
     {
-        return new self($string, PhysicalType::BYTE_ARRAY, null, new LogicalType(LogicalType::STRING), Repetition::OPTIONAL);
+        return new self($string, PhysicalType::BYTE_ARRAY, null, LogicalType::string(), Repetition::OPTIONAL);
     }
 
     public function __debugInfo() : ?array

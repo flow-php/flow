@@ -35,8 +35,8 @@ final class TimeConverter implements Converter
      */
     private function toDateInterval(int $microseconds) : \DateInterval
     {
-        $seconds = (int) \floor($microseconds / 100000000);
-        $remainingMicroseconds = $microseconds % 100000000;
+        $seconds = (int) \floor($microseconds / 1000000);
+        $remainingMicroseconds = $microseconds % 1000000;
 
         $minutes = (int) \floor($seconds / 60);
         $remainingSeconds = $seconds % 60;
@@ -44,14 +44,7 @@ final class TimeConverter implements Converter
         $hours = (int) \floor($minutes / 60);
         $remainingMinutes = $minutes % 60;
 
-        $days = (int) \floor($hours / 24);
         $remainingHours = $hours % 24;
-
-        $months = (int) \floor($days / 30); // Approximation
-
-        if ($months !== 0) {
-            throw new InvalidArgumentException('The DateInterval object contains months, cannot convert to microseconds to represent time.');
-        }
 
         $intervalSpec = \sprintf(
             'PT%dH%dM%dS',
@@ -64,7 +57,7 @@ final class TimeConverter implements Converter
         $interval->y = 0;
         $interval->m = 0;
         $interval->d = 0;
-        $interval->f = ($remainingMicroseconds / 100000000);
+        $interval->f = ($remainingMicroseconds / 1000000);
 
         return $interval;
     }
@@ -81,13 +74,13 @@ final class TimeConverter implements Converter
 
         $microseconds = 0;
 
-        $microseconds += $interval->y * 365 * 24 * 60 * 60 * 100000000; // years to microseconds
-        $microseconds += $interval->m * 30 * 24 * 60 * 60 * 100000000; // months to microseconds (approx)
-        $microseconds += $interval->d * 24 * 60 * 60 * 100000000; // days to microseconds
-        $microseconds += $interval->h * 60 * 60 * 100000000; // hours to microseconds
-        $microseconds += $interval->i * 60 * 100000000; // minutes to microseconds
-        $microseconds += $interval->s * 100000000; // seconds to microseconds
-        $microseconds += (int) (($interval->f) * 100000000); // microseconds
+        $microseconds += $interval->y * 365 * 24 * 60 * 60 * 1000000; // years to microseconds
+        $microseconds += $interval->m * 30 * 24 * 60 * 60 * 1000000; // months to microseconds (approx)
+        $microseconds += $interval->d * 24 * 60 * 60 * 1000000; // days to microseconds
+        $microseconds += $interval->h * 60 * 60 * 1000000; // hours to microseconds
+        $microseconds += $interval->i * 60 * 1000000; // minutes to microseconds
+        $microseconds += $interval->s * 1000000; // seconds to microseconds
+        $microseconds += (int) (($interval->f) * 1000000); // microseconds
 
         return $microseconds;
     }

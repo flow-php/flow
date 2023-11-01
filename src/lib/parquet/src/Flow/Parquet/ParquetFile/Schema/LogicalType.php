@@ -4,6 +4,7 @@ namespace Flow\Parquet\ParquetFile\Schema;
 
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\ParquetFile\Schema\LogicalType\Decimal;
+use Flow\Parquet\ParquetFile\Schema\LogicalType\Time;
 use Flow\Parquet\ParquetFile\Schema\LogicalType\Timestamp;
 use Flow\Parquet\Thrift\TimeUnit;
 
@@ -38,6 +39,7 @@ final class LogicalType
     public function __construct(
         private readonly string $name,
         private readonly ?Timestamp $timestamp = null,
+        private readonly ?Time $time = null,
         private readonly ?Decimal $decimal = null
     ) {
     }
@@ -54,7 +56,7 @@ final class LogicalType
 
     public static function decimal(int $scale, int $precision) : self
     {
-        return new self(self::DECIMAL, null, new Decimal($scale, $precision));
+        return new self(self::DECIMAL, decimal: new Decimal($scale, $precision));
     }
 
     public static function enum() : self
@@ -128,8 +130,9 @@ final class LogicalType
 
         return new self(
             $name,
-            $logicalType->TIMESTAMP !== null ? Timestamp::fromThrift($logicalType->TIMESTAMP) : null,
-            $logicalType->DECIMAL !== null ? Decimal::fromThrift($logicalType->DECIMAL) : null
+            timestamp: $logicalType->TIMESTAMP !== null ? Timestamp::fromThrift($logicalType->TIMESTAMP) : null,
+            time: $logicalType->TIME !== null ? Time::fromThrift($logicalType->TIME) : null,
+            decimal: $logicalType->DECIMAL !== null ? Decimal::fromThrift($logicalType->DECIMAL) : null
         );
     }
 
@@ -160,12 +163,12 @@ final class LogicalType
 
     public static function time() : self
     {
-        return new self(self::TIME);
+        return new self(self::TIME, time: new Time(false, false, true, false));
     }
 
     public static function timestamp() : self
     {
-        return new self(self::TIMESTAMP, new Timestamp(false, false, true, false));
+        return new self(self::TIMESTAMP, timestamp: new Timestamp(false, false, true, false));
     }
 
     public static function unknown() : self
@@ -188,6 +191,11 @@ final class LogicalType
         return $this->name;
     }
 
+    public function timeData() : ?Time
+    {
+        return $this->time;
+    }
+
     public function timestampData() : ?Timestamp
     {
         return $this->timestamp;
@@ -208,7 +216,14 @@ final class LogicalType
             self::LIST => $this->is(self::LIST) ? new \Flow\Parquet\Thrift\ListType() : null,
             self::MAP => $this->is(self::MAP) ? new \Flow\Parquet\Thrift\MapType() : null,
             self::STRING => $this->is(self::STRING) ? new \Flow\Parquet\Thrift\StringType() : null,
-            self::TIME => $this->is(self::TIME) ? new \Flow\Parquet\Thrift\TimeType() : null,
+            self::TIME => $this->is(self::TIME) ? new \Flow\Parquet\Thrift\TimeType([
+                'isAdjustedToUTC' => $this->timeData()?->isAdjustedToUTC(),
+                'unit' => new TimeUnit([
+                    'MILLIS' => $this->timeData()?->millis() ? new \Flow\Parquet\Thrift\MilliSeconds() : null,
+                    'MICROS' => $this->timeData()?->micros() ? new \Flow\Parquet\Thrift\MicroSeconds() : null,
+                    'NANOS' => $this->timeData()?->nanos() ? new \Flow\Parquet\Thrift\NanoSeconds() : null,
+                ]),
+            ]) : null,
             self::TIMESTAMP => $this->is(self::TIMESTAMP) ? new \Flow\Parquet\Thrift\TimestampType([
                 'isAdjustedToUTC' => $this->timestampData()?->isAdjustedToUTC(),
                 'unit' => new TimeUnit([
