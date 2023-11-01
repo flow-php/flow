@@ -63,6 +63,8 @@ jobs:
       - name: "Sign PHAR"
         run: >
           gpg
+          --batch
+          --yes
           --local-user ${{ env.GPG_USER_EMAIL }}
           --passphrase ${{ secrets.GPG_PASSPHRASE }}
           --detach-sign
