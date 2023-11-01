@@ -17,6 +17,7 @@ final class Options
             Option::INT_96_AS_DATETIME->name => true,
             Option::PAGE_SIZE_BYTES->name => Consts::KB_SIZE * 8,
             Option::ROW_GROUP_SIZE_BYTES->name => Consts::MB_SIZE * 128,
+            Option::ROW_GROUP_SIZE_CHECK_INTERVAL->name => 1000,
             Option::DICTIONARY_PAGE_SIZE->name => Consts::MB_SIZE,
             Option::DICTIONARY_PAGE_MIN_CARDINALITY_RATION->name => 0.4,
             Option::GZIP_COMPRESSION_LEVEL->name => 9,

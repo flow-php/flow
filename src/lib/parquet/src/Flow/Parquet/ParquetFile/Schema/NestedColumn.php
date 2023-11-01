@@ -106,11 +106,6 @@ final class NestedColumn implements Column
         return new self($name, Repetition::OPTIONAL, $children);
     }
 
-    public function __debugInfo() : ?array
-    {
-        return $this->normalize();
-    }
-
     /**
      * @return array<Column>
      */
@@ -323,46 +318,6 @@ final class NestedColumn implements Column
     public function name() : string
     {
         return $this->name;
-    }
-
-    public function normalize() : array
-    {
-        return [
-            'type' => 'nested',
-            'name' => $this->name(),
-            'flat_path' => $this->flatPath(),
-            'physical_type' => $this->type()?->name,
-            'logical_type' => $this->logicalType()?->name(),
-            'repetition' => $this->repetition()?->name,
-            'max_definition_level' => $this->maxDefinitionsLevel(),
-            'max_repetition_level' => $this->maxRepetitionsLevel(),
-            'children' => $this->normalizeChildren(),
-        ];
-    }
-
-    public function normalizeChildren() : array
-    {
-        $normalized = [];
-
-        foreach ($this->children as $child) {
-            $childData = [
-                'type' => $child->type()?->name,
-                'name' => $child->name(),
-                'flat_path' => $child->flatPath(),
-                'logical_type' => $child->logicalType()?->name(),
-                'repetition' => $child->repetition()?->name,
-                'max_repetition_level' => $child->maxRepetitionsLevel(),
-                'max_definition_level' => $child->maxDefinitionsLevel(),
-            ];
-
-            if ($child instanceof self) {
-                $childData['children'] = $child->normalizeChildren();
-            }
-
-            $normalized[] = $childData;
-        }
-
-        return $normalized;
     }
 
     public function parent() : ?self

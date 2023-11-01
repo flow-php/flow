@@ -98,17 +98,6 @@ final class PageHeader
         return $this->dataPageHeader->encoding();
     }
 
-    public function normalize() : array
-    {
-        return [
-            'type' => $this->type()->name,
-            'dictionary_values_count' => $this->dictionaryValuesCount(),
-            'data_values_count' => $this->dataValuesCount(),
-            'encoding' => $this->encoding()->name,
-            'compressed_page_size' => $this->compressedPageSize(),
-        ];
-    }
-
     public function toThrift() : \Flow\Parquet\Thrift\PageHeader
     {
         return new \Flow\Parquet\Thrift\PageHeader([

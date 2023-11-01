@@ -4,7 +4,6 @@ namespace Flow\Parquet\ParquetFile\Data;
 
 use Flow\Parquet\BinaryReader;
 use Flow\Parquet\BinaryWriter;
-use Flow\Parquet\Exception\RuntimeException;
 
 final class RLEBitPackedHybrid
 {
@@ -217,10 +216,6 @@ final class RLEBitPackedHybrid
      */
     public function encodeRLE(BinaryWriter $writer, int $bitWidth, array $values) : void
     {
-        if (\count(\array_unique($values)) !== 1) {
-            throw new RuntimeException('RLE encoding only supports repeated values');
-        }
-
         $repeatCount = \count($values);
         $intVar = ($repeatCount << 1);
 

@@ -87,25 +87,6 @@ final class ColumnChunk
         return \implode('.', $this->path);
     }
 
-    public function normalize() : array
-    {
-        return [
-            'file_offset' => $this->fileOffset(),
-            'meta_data' => [
-                'flat_path' => $this->flatPath(),
-                'type' => $this->type()->name,
-                'encodings' => \array_map(static fn (Encodings $encoding) => $encoding->name, $this->encodings()),
-                'codec' => $this->codec()->name,
-                'num_values' => $this->valuesCount(),
-                'total_uncompressed_size' => $this->totalUncompressedSize,
-                'total_compressed_size' => $this->totalCompressedSize,
-                'data_page_offset' => $this->dataPageOffset,
-                'index_page_offset' => $this->indexPageOffset,
-                'dictionary_page_offset' => $this->dictionaryPageOffset,
-            ],
-        ];
-    }
-
     /**
      * @psalm-suppress ArgumentTypeCoercion
      */
