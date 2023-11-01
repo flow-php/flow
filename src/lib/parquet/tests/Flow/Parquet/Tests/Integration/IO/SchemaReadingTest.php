@@ -9,12 +9,13 @@ use Flow\Parquet\ParquetFile\Schema\MapKey;
 use Flow\Parquet\ParquetFile\Schema\MapValue;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\Reader;
+use PHPUnit\Framework\TestCase;
 
-final class SchemaReadingTest extends ParquetIntegrationTestCase
+final class SchemaReadingTest extends TestCase
 {
     public function test_reading_lists_schema_ddl() : void
     {
-        $reader = new Reader(logger: $this->getLogger());
+        $reader = new Reader();
 
         $schema = new Schema(
             NestedColumn::create('schema', [
@@ -37,7 +38,7 @@ final class SchemaReadingTest extends ParquetIntegrationTestCase
 
     public function test_reading_maps_schema_ddl() : void
     {
-        $reader = new Reader(logger: $this->getLogger());
+        $reader = new Reader();
 
         $schema = Schema::with(
             NestedColumn::map('map', MapKey::string(), MapValue::int32()),
@@ -72,7 +73,7 @@ final class SchemaReadingTest extends ParquetIntegrationTestCase
 
     public function test_reading_primitives_schema_ddl() : void
     {
-        $reader = new Reader(logger: $this->getLogger());
+        $reader = new Reader();
 
         $schema = Schema::with(
             FlatColumn::int32('int32'),
@@ -111,7 +112,7 @@ final class SchemaReadingTest extends ParquetIntegrationTestCase
 
     public function test_reading_structs_schema_ddl() : void
     {
-        $reader = new Reader(logger: $this->getLogger());
+        $reader = new Reader();
 
         $schema = Schema::with(
             NestedColumn::struct('struct_flat', [

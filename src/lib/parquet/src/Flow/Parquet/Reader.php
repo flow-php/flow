@@ -4,15 +4,12 @@ namespace Flow\Parquet;
 
 use Flow\Parquet\Data\DataConverter;
 use Flow\Parquet\Exception\InvalidArgumentException;
-use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 
 final class Reader
 {
     public function __construct(
         private readonly ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN,
-        private Options $options = new Options(),
-        private readonly LoggerInterface $logger = new NullLogger()
+        private Options $options = new Options()
     ) {
     }
 
@@ -34,7 +31,7 @@ final class Reader
             throw new InvalidArgumentException("File {$path} is not seekable");
         }
 
-        return new ParquetFile($stream, $this->byteOrder, DataConverter::initialize($this->options), $this->options, $this->logger);
+        return new ParquetFile($stream, $this->byteOrder, DataConverter::initialize($this->options), $this->options);
     }
 
     /**
@@ -53,7 +50,7 @@ final class Reader
             throw new InvalidArgumentException('Given stream is not seekable');
         }
 
-        return new ParquetFile($stream, $this->byteOrder, DataConverter::initialize($this->options), $this->options, $this->logger);
+        return new ParquetFile($stream, $this->byteOrder, DataConverter::initialize($this->options), $this->options);
     }
 
     public function set(Options $options) : void

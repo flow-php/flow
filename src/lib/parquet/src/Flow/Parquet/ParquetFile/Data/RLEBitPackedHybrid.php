@@ -5,12 +5,10 @@ namespace Flow\Parquet\ParquetFile\Data;
 use Flow\Parquet\BinaryReader;
 use Flow\Parquet\BinaryWriter;
 use Flow\Parquet\Exception\RuntimeException;
-use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 
 final class RLEBitPackedHybrid
 {
-    public function __construct(private readonly LoggerInterface $logger = new NullLogger())
+    public function __construct()
     {
     }
 
@@ -65,14 +63,9 @@ final class RLEBitPackedHybrid
     {
         $output = [];
 
-        $iteration = 0;
-
         while (\count($output) < $maxItems) {
-            $iteration++;
             $varInt = $reader->readVarInt();
             $isRle = ($varInt & 1) === 0;
-
-            $this->debugLog($iteration, $varInt, $isRle, $bitWidth, $reader, $output);
 
             if ($isRle) {
                 $this->decodeRLE($reader, $bitWidth, $varInt, $maxItems - \count($output), $output);
@@ -235,21 +228,5 @@ final class RLEBitPackedHybrid
 
         $writer->writeVarInts32([$intVar]);
         $writer->writeBytes(BitWidth::toBytes($value, $bitWidth));
-    }
-
-    private function debugLog(int $iteration, int $varInt, bool $isRle, int $bitWidth, BinaryReader $reader, array $output) : void
-    {
-        if ($this->logger instanceof NullLogger) {
-            return;
-        }
-
-        $this->logger->debug('RLE/BytePacked hybrid decoding', [
-            'iteration' => $iteration,
-            'var_int' => $varInt,
-            'is_rle' => $isRle,
-            'bit_width' => $bitWidth,
-            'reader_position' => ['bits' => $reader->position()->bits(), 'bytes' => $reader->position()->bytes()],
-            'output_count' => \count($output),
-        ]);
     }
 }

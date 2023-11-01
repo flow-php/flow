@@ -3,12 +3,13 @@
 namespace Flow\Parquet\Tests\Integration\IO;
 
 use Flow\Parquet\Reader;
+use PHPUnit\Framework\TestCase;
 
-final class StructsReadingTest extends ParquetIntegrationTestCase
+final class StructsReadingTest extends TestCase
 {
     public function test_reading_struct_deeply_nested_column() : void
     {
-        $reader = new Reader(logger: $this->getLogger());
+        $reader = new Reader();
         $file = $reader->read(__DIR__ . '/../../Fixtures/structs.parquet');
 
         $this->assertNull($file->metadata()->schema()->get('struct_deeply_nested')->type());
@@ -36,7 +37,7 @@ final class StructsReadingTest extends ParquetIntegrationTestCase
 
     public function test_reading_struct_deeply_nested_column_with_limit() : void
     {
-        $reader = new Reader(logger: $this->getLogger());
+        $reader = new Reader();
         $file = $reader->read(__DIR__ . '/../../Fixtures/structs.parquet');
 
         $this->assertNull($file->metadata()->schema()->get('struct_deeply_nested')->type());
@@ -63,7 +64,7 @@ final class StructsReadingTest extends ParquetIntegrationTestCase
 
     public function test_reading_struct_flat_column() : void
     {
-        $reader = new Reader(logger: $this->getLogger());
+        $reader = new Reader();
         $file = $reader->read(__DIR__ . '/../../Fixtures/structs.parquet');
 
         $this->assertNull($file->metadata()->schema()->get('struct_flat')->type());
@@ -84,7 +85,7 @@ final class StructsReadingTest extends ParquetIntegrationTestCase
 
     public function test_reading_struct_flat_nullable_column() : void
     {
-        $reader = new Reader(logger: $this->getLogger());
+        $reader = new Reader();
         $file = $reader->read(__DIR__ . '/../../Fixtures/structs.parquet');
 
         $this->assertNull($file->metadata()->schema()->get('struct_flat_nullable')->type());
@@ -109,7 +110,7 @@ final class StructsReadingTest extends ParquetIntegrationTestCase
 
     public function test_reading_struct_nested_column() : void
     {
-        $reader = new Reader(logger: $this->getLogger());
+        $reader = new Reader();
         $file = $reader->read(__DIR__ . '/../../Fixtures/structs.parquet');
 
         $this->assertNull($file->metadata()->schema()->get('struct_nested')->type());
@@ -131,7 +132,7 @@ final class StructsReadingTest extends ParquetIntegrationTestCase
 
     public function test_reading_struct_nested_with_list_of_lists_column() : void
     {
-        $reader = new Reader(logger: $this->getLogger());
+        $reader = new Reader();
         $file = $reader->read(__DIR__ . '/../../Fixtures/structs.parquet');
 
         $this->assertNull($file->metadata()->schema()->get('struct_nested_with_list_of_lists')->type());
@@ -152,7 +153,7 @@ final class StructsReadingTest extends ParquetIntegrationTestCase
 
     public function test_reading_struct_nested_with_list_of_maps_column() : void
     {
-        $reader = new Reader(logger: $this->getLogger());
+        $reader = new Reader();
         $file = $reader->read(__DIR__ . '/../../Fixtures/structs.parquet');
 
         $this->assertNull($file->metadata()->schema()->get('struct_nested_with_list_of_maps')->type());
@@ -173,7 +174,7 @@ final class StructsReadingTest extends ParquetIntegrationTestCase
 
     public function test_reading_struct_nested_with_map_of_list_of_ints_column() : void
     {
-        $reader = new Reader(logger: $this->getLogger());
+        $reader = new Reader();
         $file = $reader->read(__DIR__ . '/../../Fixtures/structs.parquet');
 
         $this->assertNull($file->metadata()->schema()->get('struct_nested_with_map_of_list_of_ints')->type());
@@ -195,7 +196,7 @@ final class StructsReadingTest extends ParquetIntegrationTestCase
 
     public function test_reading_struct_nested_with_map_of_string_map_of_string_string_column() : void
     {
-        $reader = new Reader(logger: $this->getLogger());
+        $reader = new Reader();
         $file = $reader->read(__DIR__ . '/../../Fixtures/structs.parquet');
 
         $this->assertNull($file->metadata()->schema()->get('struct_nested_with_map_of_string_map_of_string_string')->type());
@@ -218,7 +219,7 @@ final class StructsReadingTest extends ParquetIntegrationTestCase
 
     public function test_reading_struct_nested_with_map_of_string_map_of_string_string_column_with_limit() : void
     {
-        $reader = new Reader(logger: $this->getLogger());
+        $reader = new Reader();
         $file = $reader->read(__DIR__ . '/../../Fixtures/structs.parquet');
 
         $this->assertNull($file->metadata()->schema()->get('struct_nested_with_map_of_string_map_of_string_string')->type());
@@ -240,7 +241,7 @@ final class StructsReadingTest extends ParquetIntegrationTestCase
 
     public function test_reading_struct_with_list_and_map_of_structs_column() : void
     {
-        $reader = new Reader(logger: $this->getLogger());
+        $reader = new Reader();
         $file = $reader->read(__DIR__ . '/../../Fixtures/structs.parquet');
 
         $this->assertNull($file->metadata()->schema()->get('struct_with_list_and_map_of_structs')->type());

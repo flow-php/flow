@@ -11,8 +11,9 @@ use Flow\Parquet\ParquetFile\Schema\ListElement;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\Reader;
 use Flow\Parquet\Writer;
+use PHPUnit\Framework\TestCase;
 
-final class CompressionTest extends ParquetIntegrationTestCase
+final class CompressionTest extends TestCase
 {
     public function test_writing_and_reading_file_with_gzip_compression() : void
     {
