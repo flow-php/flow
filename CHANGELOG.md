@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-10-31
+## [Unreleased] - 2023-11-01
 
 ### Added
 - [#701](https://github.com/flow-php/flow/pull/701) - **count() method to dataframe** - [@norberttech](https://github.com/norberttech)
@@ -111,6 +111,7 @@
 - [#584](https://github.com/flow-php/flow/pull/584) - **Adjust `phpunit.xml` to be more efficient** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
+- [#703](https://github.com/flow-php/flow/pull/703) - **Fix for signing PHAR in CI** - [@stloyd](https://github.com/stloyd)
 - [#672](https://github.com/flow-php/flow/pull/672) - **Fix for wrong cache data & key in benchmark baseline action** - [@stloyd](https://github.com/stloyd)
 - [#667](https://github.com/flow-php/flow/pull/667) - **Cleanup old summaries before creating new artifacts** - [@norberttech](https://github.com/norberttech)
 - [35a55d](https://github.com/flow-php/flow/commit/35a55d03b96443627a5b2dcf09c6b1e3ca9eed50) - **baseline cache restoring** - [@norberttech](https://github.com/norberttech)
