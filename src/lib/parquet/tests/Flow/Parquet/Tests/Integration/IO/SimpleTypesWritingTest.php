@@ -8,8 +8,9 @@ use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\Reader;
 use Flow\Parquet\Writer;
+use PHPUnit\Framework\TestCase;
 
-final class SimpleTypesWritingTest extends ParquetIntegrationTestCase
+final class SimpleTypesWritingTest extends TestCase
 {
     public function test_writing_bool_column() : void
     {

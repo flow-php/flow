@@ -6,20 +6,17 @@ use Flow\Dremel\Dremel;
 use Flow\Parquet\Data\DataConverter;
 use Flow\Parquet\ParquetFile\Page\ColumnData;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 
 final class DataBuilder
 {
     public function __construct(
-        private readonly DataConverter $dataConverter,
-        private readonly LoggerInterface $logger = new NullLogger()
+        private readonly DataConverter $dataConverter
     ) {
     }
 
     public function build(ColumnData $columnData, FlatColumn $column) : \Generator
     {
-        $dremel = new Dremel($this->logger);
+        $dremel = new Dremel();
 
         foreach ($dremel->assemble($columnData->repetitions, $columnData->definitions, $columnData->values) as $value) {
             yield $this->enrichData($value, $column);

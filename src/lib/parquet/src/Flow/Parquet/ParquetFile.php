@@ -20,8 +20,6 @@ use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\Thrift\FileMetaData;
 use Flow\Parquet\ThriftStream\TPhpFileStream;
-use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 use Thrift\Protocol\TCompactProtocol;
 
 final class ParquetFile
@@ -37,8 +35,7 @@ final class ParquetFile
         private $stream,
         private readonly ByteOrder $byteOrder,
         private readonly DataConverter $dataConverter,
-        private readonly Options $options,
-        private readonly LoggerInterface $logger = new NullLogger()
+        private readonly Options $options
     ) {
     }
 
@@ -90,9 +87,8 @@ final class ParquetFile
     public function readChunks(FlatColumn $column, ?int $limit = null) : \Generator
     {
         $reader = new WholeChunkReader(
-            new DataBuilder($this->dataConverter, $this->logger),
-            new PageReader($column, $this->byteOrder, $this->options, $this->logger),
-            $this->logger
+            new DataBuilder($this->dataConverter),
+            new PageReader($column, $this->byteOrder, $this->options),
         );
 
         foreach ($this->getColumnChunks($column) as $columnChunks) {
@@ -127,8 +123,6 @@ final class ParquetFile
         if (!\count($columns)) {
             $columns = \array_map(static fn (Column $c) => $c->name(), $this->schema()->columns());
         }
-
-        $this->logger->info('[Parquet File] Reading values from columns', ['columns' => $columns]);
 
         foreach ($columns as $columnName) {
             if (!$this->metadata()->schema()->has($columnName)) {
@@ -169,25 +163,17 @@ final class ParquetFile
     private function read(Column $column, ?int $limit = null) : \Generator
     {
         if ($column instanceof FlatColumn) {
-            $this->logger->info('[Parquet File][Read Column] reading flat column', ['path' => $column->flatPath()]);
-
             return $this->readFlat($column, $limit);
         }
 
         if ($column instanceof NestedColumn) {
             if ($column->isList()) {
-                $this->logger->info('[Parquet File][Read Column] reading list', ['path' => $column->flatPath()]);
-
                 return $this->readList($column, $limit);
             }
 
             if ($column->isMap()) {
-                $this->logger->info('[Parquet File][Read Column] reading map', ['path' => $column->flatPath()]);
-
                 return $this->readMap($column, $limit);
             }
-
-            $this->logger->info('[Parquet File][Read Column] reading structure', ['path' => $column->flatPath()]);
 
             return $this->readStruct($column, limit: $limit);
         }
@@ -202,37 +188,26 @@ final class ParquetFile
 
     private function readList(NestedColumn $listColumn, ?int $limit = null) : \Generator
     {
-        $this->logger->debug('[Parquet File][Read Column][List]', ['column' => $listColumn->normalize()]);
         $elementColumn = $listColumn->getListElement();
 
         if ($elementColumn instanceof FlatColumn) {
-            $this->logger->info('[Parquet File][Read Column][List] reading list element as a flat column', ['path' => $elementColumn->flatPath()]);
-
             return $this->readFlat($elementColumn, $limit);
         }
 
         /** @var NestedColumn $elementColumn */
         if ($elementColumn->isList()) {
-            $this->logger->info('[Parquet File][Read Column][List] reading list element as list', ['path' => $elementColumn->flatPath()]);
-
             return $this->readList($elementColumn, $limit);
         }
 
         if ($elementColumn->isMap()) {
-            $this->logger->info('[Parquet File][Read Column][List] reading list element as a map', ['path' => $elementColumn->flatPath()]);
-
             return $this->readMap($elementColumn, $limit);
         }
-
-        $this->logger->info('[Parquet File][Read Column][List] reading list element as a structure', ['path' => $elementColumn->flatPath()]);
 
         return $this->readStruct($elementColumn, isCollection: true, limit: $limit);
     }
 
     private function readMap(NestedColumn $mapColumn, ?int $limit = null) : \Generator
     {
-        $this->logger->debug('[Parquet File][Read Column][Map]', ['column' => $mapColumn->normalize()]);
-
         $keysColumn = $mapColumn->getMapKeyColumn();
         $valuesColumn = $mapColumn->getMapValueColumn();
 
@@ -241,23 +216,19 @@ final class ParquetFile
         $values = null;
 
         if ($valuesColumn instanceof FlatColumn) {
-            $this->logger->info('[Parquet File][Read Column][Map] reading values as a flat column', ['path' => $mapColumn->flatPath()]);
             $values = $this->readFlat($valuesColumn, $limit);
         }
 
         /** @var NestedColumn $valuesColumn */
         if ($valuesColumn->isList()) {
-            $this->logger->info('[Parquet File][Read Column][Map] reading values as a list', ['path' => $mapColumn->flatPath()]);
             $values = $this->readList($valuesColumn, $limit);
         }
 
         if ($valuesColumn->isMap()) {
-            $this->logger->info('[Parquet File][Read Column][Map] reading values as a map', ['path' => $mapColumn->flatPath()]);
             $values = $this->readMap($valuesColumn, $limit);
         }
 
         if ($valuesColumn->isStruct()) {
-            $this->logger->info('[Parquet File][Read Column][Map] reading values as a structure', ['path' => $mapColumn->flatPath()]);
             $values = $this->readStruct($valuesColumn, isCollection: true, limit: $limit);
         }
 
@@ -317,8 +288,6 @@ final class ParquetFile
             throw new RuntimeException('Unknown column type');
         }
 
-        $this->logger->debug('[Parquet File][Read Column][Structure]', ['column' => $structColumn->normalize()]);
-
         foreach ($childrenRowsData as $childrenRowData) {
             if ($isCollection) {
                 $structsCollection = new \MultipleIterator(\MultipleIterator::MIT_KEYS_ASSOC);
@@ -365,7 +334,7 @@ final class ParquetFile
      */
     private function viewChunksPages(FlatColumn $column) : \Generator
     {
-        $viewer = new WholeChunkViewer($this->logger);
+        $viewer = new WholeChunkViewer();
 
         foreach ($this->getColumnChunks($column) as $columnChunks) {
             foreach ($columnChunks as $columnChunk) {

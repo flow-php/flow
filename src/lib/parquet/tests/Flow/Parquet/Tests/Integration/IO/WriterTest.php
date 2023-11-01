@@ -12,8 +12,9 @@ use Flow\Parquet\ParquetFile\Schema\ListElement;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\Reader;
 use Flow\Parquet\Writer;
+use PHPUnit\Framework\TestCase;
 
-final class WriterTest extends ParquetIntegrationTestCase
+final class WriterTest extends TestCase
 {
     public function test_closing_not_open_writer() : void
     {

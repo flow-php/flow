@@ -8,24 +8,16 @@ use Flow\Parquet\ParquetFile\Page\PageHeader;
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ThriftStream\TPhpFileStream;
-use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 use Thrift\Protocol\TCompactProtocol;
 use Thrift\Transport\TBufferedTransport;
 
 final class WholeChunkViewer implements ColumnChunkViewer
 {
-    public function __construct(
-        private readonly LoggerInterface $logger = new NullLogger(),
-    ) {
-    }
-
     /**
      * @param resource $stream
      */
     public function view(ColumnChunk $columnChunk, FlatColumn $column, $stream) : \Generator
     {
-        $this->logger->debug('[Parquet File][Read Column][Read Column Chunk]', ['chunk' => $columnChunk->normalize()]);
         $offset = $columnChunk->pageOffset();
 
         \fseek($stream, $offset);

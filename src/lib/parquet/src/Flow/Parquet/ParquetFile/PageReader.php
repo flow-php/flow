@@ -9,16 +9,13 @@ use Flow\Parquet\ParquetFile\Page\ColumnData;
 use Flow\Parquet\ParquetFile\Page\Dictionary;
 use Flow\Parquet\ParquetFile\Page\PageHeader;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 
 final class PageReader
 {
     public function __construct(
         private readonly FlatColumn $column,
         private readonly ByteOrder $byteOrder,
-        private readonly Options $options,
-        private readonly LoggerInterface $logger = new NullLogger()
+        private readonly Options $options
     ) {
     }
 
@@ -29,7 +26,7 @@ final class PageReader
      */
     public function readData(PageHeader $pageHeader, Compressions $codec, ?Dictionary $dictionary, $stream) : ColumnData
     {
-        return (new DataCoder($this->byteOrder, $this->logger))
+        return (new DataCoder($this->byteOrder))
             ->decodeData(
                 (new Codec($this->options))
                     ->decompress(
@@ -59,7 +56,7 @@ final class PageReader
             throw new RuntimeException("Can't read dictionary from non dictionary page header");
         }
 
-        return (new DataCoder($this->byteOrder, $this->logger))
+        return (new DataCoder($this->byteOrder))
             ->decodeDictionary(
                 (new Codec($this->options))
                     ->decompress(

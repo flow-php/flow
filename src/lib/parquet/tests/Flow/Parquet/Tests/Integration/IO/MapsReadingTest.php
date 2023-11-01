@@ -3,12 +3,13 @@
 namespace Flow\Parquet\Tests\Integration\IO;
 
 use Flow\Parquet\Reader;
+use PHPUnit\Framework\TestCase;
 
-final class MapsReadingTest extends ParquetIntegrationTestCase
+final class MapsReadingTest extends TestCase
 {
     public function test_reading_map_column() : void
     {
-        $reader = new Reader(logger: $this->getLogger());
+        $reader = new Reader();
         $file = $reader->read(__DIR__ . '/../../Fixtures/maps.parquet');
 
         $this->assertNull($file->metadata()->schema()->get('map')->type());
@@ -27,7 +28,7 @@ final class MapsReadingTest extends ParquetIntegrationTestCase
 
     public function test_reading_map_nullable_column() : void
     {
-        $reader = new Reader(logger: $this->getLogger());
+        $reader = new Reader();
         $file = $reader->read(__DIR__ . '/../../Fixtures/maps.parquet');
 
         $this->assertNull($file->metadata()->schema()->get('map_nullable')->type());
@@ -50,7 +51,7 @@ final class MapsReadingTest extends ParquetIntegrationTestCase
 
     public function test_reading_map_of_complex_lists() : void
     {
-        $reader = new Reader(logger: $this->getLogger());
+        $reader = new Reader();
         $file = $reader->read(__DIR__ . '/../../Fixtures/maps.parquet');
 
         $this->assertNull($file->metadata()->schema()->get('map_of_complex_lists')->type());
@@ -72,7 +73,7 @@ final class MapsReadingTest extends ParquetIntegrationTestCase
 
     public function test_reading_map_of_list_of_map_of_lists() : void
     {
-        $reader = new Reader(logger: $this->getLogger());
+        $reader = new Reader();
         $file = $reader->read(__DIR__ . '/../../Fixtures/maps.parquet');
 
         $this->assertNull($file->metadata()->schema()->get('map_of_list_of_map_of_lists')->type());
@@ -95,7 +96,7 @@ final class MapsReadingTest extends ParquetIntegrationTestCase
 
     public function test_reading_map_of_lists() : void
     {
-        $reader = new Reader(logger: $this->getLogger());
+        $reader = new Reader();
         $file = $reader->read(__DIR__ . '/../../Fixtures/maps.parquet');
 
         $this->assertNull($file->metadata()->schema()->get('map_of_lists')->type());
@@ -116,7 +117,7 @@ final class MapsReadingTest extends ParquetIntegrationTestCase
 
     public function test_reading_map_of_maps_column() : void
     {
-        $reader = new Reader(logger: $this->getLogger());
+        $reader = new Reader();
         $file = $reader->read(__DIR__ . '/../../Fixtures/maps.parquet');
 
         $this->assertNull($file->metadata()->schema()->get('map_of_maps')->type());
@@ -136,7 +137,7 @@ final class MapsReadingTest extends ParquetIntegrationTestCase
 
     public function test_reading_map_of_struct_of_structs_column() : void
     {
-        $reader = new Reader(logger: $this->getLogger());
+        $reader = new Reader();
         $file = $reader->read(__DIR__ . '/../../Fixtures/maps.parquet');
 
         $this->assertNull($file->metadata()->schema()->get('map_of_struct_of_structs')->type());
@@ -157,7 +158,7 @@ final class MapsReadingTest extends ParquetIntegrationTestCase
 
     public function test_reading_map_of_struct_of_structs_column_with_limit() : void
     {
-        $reader = new Reader(logger: $this->getLogger());
+        $reader = new Reader();
         $file = $reader->read(__DIR__ . '/../../Fixtures/maps.parquet');
 
         $this->assertNull($file->metadata()->schema()->get('map_of_struct_of_structs')->type());
@@ -177,7 +178,7 @@ final class MapsReadingTest extends ParquetIntegrationTestCase
 
     public function test_reading_map_of_structs_column() : void
     {
-        $reader = new Reader(logger: $this->getLogger());
+        $reader = new Reader();
         $file = $reader->read(__DIR__ . '/../../Fixtures/maps.parquet');
 
         $this->assertNull($file->metadata()->schema()->get('map_of_structs')->type());

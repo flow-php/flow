@@ -3,12 +3,13 @@
 namespace Flow\Parquet\Tests\Integration\IO;
 
 use Flow\Parquet\Reader;
+use PHPUnit\Framework\TestCase;
 
-final class ListsReadingTest extends ParquetIntegrationTestCase
+final class ListsReadingTest extends TestCase
 {
     public function test_reading_list_column() : void
     {
-        $reader = new Reader(logger: $this->getLogger());
+        $reader = new Reader();
         $file = $reader->read(__DIR__ . '/../../Fixtures/lists.parquet');
 
         $this->assertNull($file->metadata()->schema()->get('list')->type());
@@ -28,7 +29,7 @@ final class ListsReadingTest extends ParquetIntegrationTestCase
 
     public function test_reading_list_column_with_limit() : void
     {
-        $reader = new Reader(logger: $this->getLogger());
+        $reader = new Reader();
         $file = $reader->read(__DIR__ . '/../../Fixtures/lists.parquet');
 
         $this->assertNull($file->metadata()->schema()->get('list')->type());
@@ -47,7 +48,7 @@ final class ListsReadingTest extends ParquetIntegrationTestCase
 
     public function test_reading_list_nested_column() : void
     {
-        $reader = new Reader(logger: $this->getLogger());
+        $reader = new Reader();
         $file = $reader->read(__DIR__ . '/../../Fixtures/lists.parquet');
 
         $this->assertNull($file->metadata()->schema()->get('list_nested')->type());
@@ -70,7 +71,7 @@ final class ListsReadingTest extends ParquetIntegrationTestCase
 
     public function test_reading_list_nullable_column() : void
     {
-        $reader = new Reader(logger: $this->getLogger());
+        $reader = new Reader();
         $file = $reader->read(__DIR__ . '/../../Fixtures/lists.parquet');
 
         $this->assertNull($file->metadata()->schema()->get('list_nullable')->type());
@@ -94,7 +95,7 @@ final class ListsReadingTest extends ParquetIntegrationTestCase
 
     public function test_reading_list_of_structures_column() : void
     {
-        $reader = new Reader(logger: $this->getLogger());
+        $reader = new Reader();
         $file = $reader->read(__DIR__ . '/../../Fixtures/lists.parquet');
 
         $this->assertNull($file->metadata()->schema()->get('list_mixed_types')->type());

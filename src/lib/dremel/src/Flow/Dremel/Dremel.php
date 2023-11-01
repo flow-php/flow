@@ -5,12 +5,10 @@ namespace Flow\Dremel;
 use function Flow\Parquet\array_flatten;
 use Flow\Dremel\Exception\InvalidArgumentException;
 use Flow\Dremel\Exception\RuntimeException;
-use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 
 final class Dremel
 {
-    public function __construct(private readonly LoggerInterface $logger = new NullLogger())
+    public function __construct()
     {
     }
 
@@ -25,7 +23,6 @@ final class Dremel
     {
         $this->assertInput($repetitions, $definitions);
 
-        $output = [];
         $maxDefinitionLevel = \count($definitions) ? \max($definitions) : 0;
         $maxRepetitionLevel = \count($repetitions) ? \max($repetitions) : 0;
 
@@ -44,62 +41,44 @@ final class Dremel
             return;
         }
 
-        $iteration = 0;
         $stack = new Stack();
 
-        try {
-            foreach ($definitions as $definitionIndex => $definition) {
-                $repetition = $repetitions[$definitionIndex];
+        foreach ($definitions as $definitionIndex => $definition) {
+            $repetition = $repetitions[$definitionIndex];
 
-                if ($repetition === 0) {
-                    if ($stack->size()) {
-                        yield $stack->dropFlat();
-                        $stack->clear();
-                        $stack->push(new ListNode($maxRepetitionLevel));
-                    } else {
-                        $stack->push(new ListNode($maxRepetitionLevel));
-                    }
-                }
-
-                if ($repetition === 0 && $definition === 0) {
-                    yield null;
+            if ($repetition === 0) {
+                if ($stack->size()) {
+                    yield $stack->dropFlat();
                     $stack->clear();
+                    $stack->push(new ListNode($maxRepetitionLevel));
                 } else {
-                    if ($repetition <= $maxRepetitionLevel && $repetition > 0) {
-                        /** @phpstan-ignore-next-line  */
-                        $stack->last()->push(
-                            $this->value($definition, $maxDefinitionLevel, $values, $valueIndex),
-                            $repetition
-                        );
-                    } elseif ($repetition === 0) {
-                        /** @phpstan-ignore-next-line  */
-                        $stack->last()->push(
-                            $this->value($definition, $maxDefinitionLevel, $values, $valueIndex),
-                            $maxRepetitionLevel
-                        );
-                    }
+                    $stack->push(new ListNode($maxRepetitionLevel));
                 }
-
-                $this->debugDecodeNested($iteration, $repetition, $definition, $maxDefinitionLevel, $maxRepetitionLevel, $stack, $output);
-                $iteration++;
             }
 
-            if ($stack->size()) {
-                yield $stack->dropFlat();
+            if ($repetition === 0 && $definition === 0) {
+                yield null;
                 $stack->clear();
+            } else {
+                if ($repetition <= $maxRepetitionLevel && $repetition > 0) {
+                    /** @phpstan-ignore-next-line  */
+                    $stack->last()->push(
+                        $this->value($definition, $maxDefinitionLevel, $values, $valueIndex),
+                        $repetition
+                    );
+                } elseif ($repetition === 0) {
+                    /** @phpstan-ignore-next-line  */
+                    $stack->last()->push(
+                        $this->value($definition, $maxDefinitionLevel, $values, $valueIndex),
+                        $maxRepetitionLevel
+                    );
+                }
             }
-        } catch (\Throwable $e) {
-            $this->logger->error('[Dremel][Decode][Nested] error', [
-                'exception' => $e,
-                'iteration' => $iteration,
-                'repetition' => $repetitions,
-                'definition' => $definitions,
-                'values' => $values,
-                'max_definition_level' => $maxDefinitionLevel,
-                'max_repetition_level' => $maxRepetitionLevel,
-            ]);
+        }
 
-            throw $e;
+        if ($stack->size()) {
+            yield $stack->dropFlat();
+            $stack->clear();
         }
     }
 
@@ -116,33 +95,6 @@ final class Dremel
             $definitions,
             \array_values(\array_filter(array_flatten($data), static fn ($item) => $item !== null))
         );
-    }
-
-    private function arrayTypeToString(?array $inputArray) : string
-    {
-        if ($inputArray === null) {
-            return 'null';
-        }
-
-        if (!\count($inputArray)) {
-            return '';
-        }
-
-        $result = [];
-
-        foreach ($inputArray as $item) {
-            if (\is_array($item)) {
-                $result[] = '[' . $this->arrayTypeToString($item) . ']';
-            } else {
-                if ($item === null) {
-                    $result[] = 'null';
-                } else {
-                    $result[] = (string) $item;
-                }
-            }
-        }
-
-        return \implode(', ', $result);
     }
 
     private function assertInput(array $repetitions, array $definitions) : void
@@ -220,28 +172,6 @@ final class Dremel
         }
 
         return $output;
-    }
-
-    private function debugDecodeNested(int $iteration, ?int $repetition, int $definition, int $maxDefinitionLevel, int $maxRepetitionLevel, Stack $stack, array $output) : void
-    {
-        if ($this->logger instanceof NullLogger) {
-            return;
-        }
-
-        $stackDebug = '[' . $this->arrayTypeToString($stack->__debugInfo()) . ']';
-        $outputDebug = '[' . $this->arrayTypeToString($output) . ']';
-
-        $definitionDebug = $definition === $maxDefinitionLevel ? 'value' : 'null';
-
-        $this->logger->debug('[Dremel][Decode][Nested] data structure', [
-            'iteration' => $iteration,
-            'repetition' => $repetition,
-            'definition' => $definitionDebug,
-            'max_definition_level' => $maxDefinitionLevel,
-            'max_repetition_level' => $maxRepetitionLevel,
-            'stack' => $stackDebug,
-            'output' => $outputDebug,
-        ]);
     }
 
     private function value(int $definition, int $maxDefinitionLevel, array $values, int &$valueIndex) : mixed
