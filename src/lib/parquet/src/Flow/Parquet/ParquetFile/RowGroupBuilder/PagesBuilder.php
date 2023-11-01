@@ -9,6 +9,7 @@ use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\PageBuilder\DataPageBuilder;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\PageBuilder\DictionaryPageBuilder;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 
 final class PagesBuilder
 {
@@ -24,19 +25,21 @@ final class PagesBuilder
     {
         $containers = new PageContainers();
 
-        if ($statistics->cardinalityRation() <= $this->options->get(Option::DICTIONARY_PAGE_MIN_CARDINALITY_RATION)) {
-            $dictionaryPageContainer = (new DictionaryPageBuilder($this->dataConverter, $this->compression, $this->options))->build($column, $rows);
+        if ($column->type() !== PhysicalType::BOOLEAN) {
+            if ($statistics->cardinalityRation() <= $this->options->get(Option::DICTIONARY_PAGE_MIN_CARDINALITY_RATION)) {
+                $dictionaryPageContainer = (new DictionaryPageBuilder($this->dataConverter, $this->compression, $this->options))->build($column, $rows);
 
-            if ($dictionaryPageContainer->dataSize() <= $this->options->get(Option::DICTIONARY_PAGE_SIZE)) {
-                $containers->add($dictionaryPageContainer);
+                if ($dictionaryPageContainer->dataSize() <= $this->options->get(Option::DICTIONARY_PAGE_SIZE)) {
+                    $containers->add($dictionaryPageContainer);
 
-                $containers->add(
-                    (new DataPageBuilder($this->dataConverter, $this->compression, $this->options))->build($column, $rows, $dictionaryPageContainer->dictionary, $dictionaryPageContainer->values)
-                );
+                    $containers->add(
+                        (new DataPageBuilder($this->dataConverter, $this->compression, $this->options))->build($column, $rows, $dictionaryPageContainer->dictionary, $dictionaryPageContainer->values)
+                    );
 
-                return $containers;
+                    return $containers;
+                }
+                $dictionaryPageContainer = null;
             }
-            $dictionaryPageContainer = null;
         }
 
         /* @phpstan-ignore-next-line */

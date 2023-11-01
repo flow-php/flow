@@ -21,6 +21,7 @@ final class FlatColumn implements Column
     public function __construct(
         private readonly string $name,
         private readonly PhysicalType $type,
+        private readonly ?ConvertedType $convertedType = null,
         private readonly ?LogicalType $logicalType = null,
         private readonly ?Repetition $repetition = Repetition::OPTIONAL,
         private readonly ?int $precision = null,
@@ -31,12 +32,12 @@ final class FlatColumn implements Column
 
     public static function boolean(string $name) : self
     {
-        return new self($name, PhysicalType::BOOLEAN, null, Repetition::OPTIONAL);
+        return new self($name, PhysicalType::BOOLEAN, null, null, Repetition::OPTIONAL);
     }
 
     public static function date(string $name) : self
     {
-        return new self($name, PhysicalType::INT32, new LogicalType(LogicalType::DATE), Repetition::OPTIONAL);
+        return new self($name, PhysicalType::INT32, ConvertedType::DATE, new LogicalType(LogicalType::DATE), Repetition::OPTIONAL);
     }
 
     public static function dateTime(string $name, TimeUnit $timeUnit = TimeUnit::MICROSECONDS) : self
@@ -49,7 +50,7 @@ final class FlatColumn implements Column
             TimeUnit::MICROSECONDS => new Timestamp(false, false, true, false),
         };
 
-        return new self($name, PhysicalType::INT64, new LogicalType(LogicalType::TIMESTAMP, $timestamp), Repetition::OPTIONAL);
+        return new self($name, PhysicalType::INT64, ConvertedType::TIMESTAMP_MICROS, new LogicalType(LogicalType::TIMESTAMP, $timestamp), Repetition::OPTIONAL);
     }
 
     public static function decimal(string $name, int $precision = 10, int $scale = 2) : self
@@ -68,6 +69,7 @@ final class FlatColumn implements Column
         return new self(
             $name,
             PhysicalType::FIXED_LEN_BYTE_ARRAY,
+            ConvertedType::DECIMAL,
             LogicalType::decimal($scale, $precision),
             Repetition::OPTIONAL,
             $precision,
@@ -78,17 +80,17 @@ final class FlatColumn implements Column
 
     public static function double(string $name) : self
     {
-        return new self($name, PhysicalType::DOUBLE, null, Repetition::OPTIONAL);
+        return new self($name, PhysicalType::DOUBLE, null, null, Repetition::OPTIONAL);
     }
 
     public static function enum(string $string) : self
     {
-        return new self($string, PhysicalType::BYTE_ARRAY, new LogicalType(LogicalType::STRING), Repetition::OPTIONAL);
+        return new self($string, PhysicalType::BYTE_ARRAY, ConvertedType::ENUM, new LogicalType(LogicalType::STRING), Repetition::OPTIONAL);
     }
 
     public static function float(string $name) : self
     {
-        return new self($name, PhysicalType::FLOAT, null, Repetition::OPTIONAL);
+        return new self($name, PhysicalType::FLOAT, null, null, Repetition::OPTIONAL);
     }
 
     public static function fromThrift(SchemaElement $thrift) : self
@@ -96,6 +98,7 @@ final class FlatColumn implements Column
         return new self(
             $thrift->name,
             PhysicalType::from($thrift->type),
+            $thrift->converted_type === null ? null : ConvertedType::from($thrift->converted_type),
             $thrift->logicalType === null ? null : LogicalType::fromThrift($thrift->logicalType),
             $thrift->repetition_type === null ? null : Repetition::from($thrift->repetition_type),
             $thrift->precision,
@@ -106,7 +109,7 @@ final class FlatColumn implements Column
 
     public static function int32(string $name) : self
     {
-        return new self($name, PhysicalType::INT32, null, Repetition::OPTIONAL);
+        return new self($name, PhysicalType::INT32, ConvertedType::INT_32, null, Repetition::OPTIONAL);
     }
 
     public static function int64(string $name) : self
@@ -115,27 +118,27 @@ final class FlatColumn implements Column
             throw new InvalidArgumentException('PHP_INT_MAX must be equal to ' . Consts::PHP_INT64_MAX . ' to support 64-bit timestamps.');
         }
 
-        return new self($name, PhysicalType::INT64, null, Repetition::OPTIONAL);
+        return new self($name, PhysicalType::INT64, ConvertedType::INT_64, null, Repetition::OPTIONAL);
     }
 
     public static function json(string $string) : self
     {
-        return new self($string, PhysicalType::BYTE_ARRAY, new LogicalType(LogicalType::STRING), Repetition::OPTIONAL);
+        return new self($string, PhysicalType::BYTE_ARRAY, ConvertedType::JSON, new LogicalType(LogicalType::STRING), Repetition::OPTIONAL);
     }
 
     public static function string(string $name) : self
     {
-        return new self($name, PhysicalType::BYTE_ARRAY, new LogicalType(LogicalType::STRING), Repetition::OPTIONAL);
+        return new self($name, PhysicalType::BYTE_ARRAY, ConvertedType::UTF8, new LogicalType(LogicalType::STRING), Repetition::OPTIONAL);
     }
 
     public static function time(string $name) : self
     {
-        return new self($name, PhysicalType::INT64, new LogicalType(LogicalType::TIME), Repetition::OPTIONAL);
+        return new self($name, PhysicalType::INT64, ConvertedType::TIME_MICROS, new LogicalType(LogicalType::TIME), Repetition::OPTIONAL);
     }
 
     public static function uuid(string $string) : self
     {
-        return new self($string, PhysicalType::BYTE_ARRAY, new LogicalType(LogicalType::STRING), Repetition::OPTIONAL);
+        return new self($string, PhysicalType::BYTE_ARRAY, null, new LogicalType(LogicalType::STRING), Repetition::OPTIONAL);
     }
 
     public function __debugInfo() : ?array
@@ -271,7 +274,7 @@ final class FlatColumn implements Column
 
     public function makeRequired() : self
     {
-        return new self($this->name, $this->type, $this->logicalType, Repetition::REQUIRED, $this->precision, $this->scale, $this->typeLength);
+        return new self($this->name, $this->type, $this->convertedType, $this->logicalType, Repetition::REQUIRED, $this->precision, $this->scale, $this->typeLength);
     }
 
     public function maxDefinitionsLevel() : int
@@ -352,6 +355,7 @@ final class FlatColumn implements Column
         return new SchemaElement([
             'name' => $this->name,
             'type' => $this->type->value,
+            'converted_type' => $this->convertedType?->value,
             'repetition_type' => $this->repetition?->value,
             'logicalType' => $this->logicalType?->toThrift(),
             'precision' => $this->precision,

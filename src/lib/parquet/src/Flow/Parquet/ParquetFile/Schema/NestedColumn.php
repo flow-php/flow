@@ -18,6 +18,7 @@ final class NestedColumn implements Column
         private readonly string $name,
         private readonly ?Repetition $repetition,
         private readonly array $children,
+        private readonly ?ConvertedType $convertedType = null,
         private readonly ?LogicalType $logicalType = null,
         public readonly bool $schemaRoot = false
     ) {
@@ -46,6 +47,7 @@ final class NestedColumn implements Column
             $schemaElement->name,
             $schemaElement->repetition_type ? Repetition::from($schemaElement->repetition_type) : null,
             $children,
+            $schemaElement->converted_type ? ConvertedType::from($schemaElement->converted_type) : null,
             /** @phpstan-ignore-next-line */
             $schemaElement->logicalType ? LogicalType::fromThrift($schemaElement->logicalType) : null
         );
@@ -63,6 +65,7 @@ final class NestedColumn implements Column
                     [$element->element]
                 ),
             ],
+            ConvertedType::LIST,
             new LogicalType(LogicalType::LIST)
         );
     }
@@ -82,6 +85,7 @@ final class NestedColumn implements Column
                     ],
                 ),
             ],
+            ConvertedType::MAP,
             new LogicalType(LogicalType::MAP)
         );
     }
@@ -91,7 +95,7 @@ final class NestedColumn implements Column
      */
     public static function schemaRoot(string $name, array $children) : self
     {
-        return new self($name, Repetition::REQUIRED, $children, null, true);
+        return new self($name, Repetition::REQUIRED, $children, null, null, true);
     }
 
     /**
@@ -395,7 +399,7 @@ final class NestedColumn implements Column
             new SchemaElement([
                 'name' => $this->name(),
                 'num_children' => \count($this->children),
-                'converted_type' => null,
+                'converted_type' => $this->convertedType?->value,
                 'repetition_type' => $this->repetition()?->value,
                 'logicalType' => $this->logicalType()?->toThrift(),
             ]),

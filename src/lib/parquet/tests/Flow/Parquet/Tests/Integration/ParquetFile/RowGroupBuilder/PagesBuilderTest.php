@@ -43,6 +43,8 @@ final class PagesBuilderTest extends TestCase
                 \strlen($pages->dataPageContainers()[0]->pageBuffer),
                 new DataPageHeader(
                     Encodings::PLAIN,
+                    Encodings::RLE,
+                    Encodings::RLE,
                     256,
                 ),
                 null,
@@ -79,7 +81,7 @@ final class PagesBuilderTest extends TestCase
                 null,
                 null,
                 new DictionaryPageHeader(
-                    Encodings::PLAIN,
+                    Encodings::PLAIN_DICTIONARY,
                     \count($enum),
                 )
             ),
@@ -92,6 +94,8 @@ final class PagesBuilderTest extends TestCase
                 \strlen($pages->dataPageContainers()[0]->pageBuffer),
                 new DataPageHeader(
                     Encodings::RLE_DICTIONARY,
+                    Encodings::RLE,
+                    Encodings::RLE,
                     \count($values),
                 ),
                 null,
@@ -124,6 +128,8 @@ final class PagesBuilderTest extends TestCase
                 \strlen($pages->dataPageContainers()[0]->pageBuffer),
                 new DataPageHeader(
                     Encodings::PLAIN,
+                    Encodings::RLE,
+                    Encodings::RLE,
                     \count($values),
                 ),
                 null,
@@ -156,6 +162,8 @@ final class PagesBuilderTest extends TestCase
                 \strlen($pages->dataPageContainers()[0]->pageBuffer),
                 new DataPageHeader(
                     Encodings::PLAIN,
+                    Encodings::RLE,
+                    Encodings::RLE,
                     \count($values),
                 ),
                 null,
@@ -188,7 +196,7 @@ final class PagesBuilderTest extends TestCase
                 null,
                 null,
                 new DictionaryPageHeader(
-                    Encodings::PLAIN,
+                    Encodings::PLAIN_DICTIONARY,
                     1, // string is constant, so we only have one value in dictionary
                 )
             ),
@@ -201,6 +209,8 @@ final class PagesBuilderTest extends TestCase
                 \strlen($pages->dataPageContainers()[0]->pageBuffer),
                 new DataPageHeader(
                     Encodings::RLE_DICTIONARY,
+                    Encodings::RLE,
+                    Encodings::RLE,
                     100,
                 ),
                 null,
@@ -232,6 +242,8 @@ final class PagesBuilderTest extends TestCase
                 \strlen($pages->dataPageContainers()[0]->pageBuffer),
                 new DataPageHeader(
                     Encodings::PLAIN,
+                    Encodings::RLE,
+                    Encodings::RLE,
                     \count($values),
                 ),
                 null,

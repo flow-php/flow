@@ -42,7 +42,7 @@ final class DictionaryPageBuilder
             dataPageHeader: null,
             dataPageHeaderV2: null,
             dictionaryPageHeader: new DictionaryPageHeader(
-                Encodings::PLAIN,
+                Encodings::PLAIN_DICTIONARY,
                 \count($dictionary->dictionary)
             ),
         );
