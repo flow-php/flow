@@ -18,9 +18,9 @@ final class MapKey
         return new self(FlatColumn::date('key')->makeRequired());
     }
 
-    public static function datetime(TimeUnit $timeUnit = TimeUnit::MICROSECONDS) : self
+    public static function datetime() : self
     {
-        return new self(FlatColumn::dateTime('key', $timeUnit)->makeRequired());
+        return new self(FlatColumn::dateTime('key')->makeRequired());
     }
 
     public static function decimal(int $precision, int $scale) : self

@@ -35,12 +35,12 @@ final class Int64DateTimeConverter implements Converter
      */
     private function dateTimeToMicroseconds(\DateTimeInterface $dateTime) : int
     {
-        return (int) \bcadd(\bcmul($dateTime->format('U'), '1000000000'), $dateTime->format('u'));
+        return (int) \bcadd(\bcmul($dateTime->format('U'), '1000000'), $dateTime->format('u'));
     }
 
     private function microsecondsToDateTimeImmutable(int $microseconds) : \DateTimeImmutable
     {
-        $seconds = (int) ($microseconds / 1000000000);
+        $seconds = (int) ($microseconds / 1000000);
         $fraction = \str_pad((string) ($microseconds % 1000000), 6, '0', STR_PAD_LEFT);
 
         $dateTime = \DateTimeImmutable::createFromFormat('U.u', \sprintf('%d.%s', $seconds, $fraction));
