@@ -94,12 +94,6 @@ final class Bytes implements \ArrayAccess, \Countable, \IteratorAggregate
 
     public function toString() : string
     {
-        $string = '';
-
-        foreach ($this->bytes as $byte) {
-            $string .= \pack('C', $byte);
-        }
-
-        return $string;
+        return \pack('C*', ...$this->bytes);
     }
 }

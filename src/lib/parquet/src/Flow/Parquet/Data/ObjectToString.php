@@ -11,7 +11,7 @@ final class ObjectToString
         }
 
         if ($object instanceof \DateTimeInterface) {
-            return $object->format(\DateTimeInterface::RFC3339);
+            return ((string) $object->getTimestamp()) . '.' . $object->format('u') . ' ' . $object->getOffset();
         }
 
         if ($object instanceof \DateInterval) {
