@@ -174,7 +174,7 @@ final class RLEBitPackedHybrid
                 continue;
             }
 
-            if (\count($bitPackedBuffer) % 8 === 0) {
+            if (\count($bitPackedBuffer) && \count($bitPackedBuffer) % 8 === 0) {
                 $this->encodeBitPacked($writer, $bitWidth, $bitPackedBuffer);
                 $bitPackedBuffer = [];
             }

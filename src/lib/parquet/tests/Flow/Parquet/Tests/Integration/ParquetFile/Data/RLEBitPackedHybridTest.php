@@ -129,6 +129,23 @@ final class RLEBitPackedHybridTest extends TestCase
         );
     }
 
+    public function test_plain_long_rle() : void
+    {
+        $values = \array_fill(0, 100, 1);
+
+        $buffer = '';
+        (new RLEBitPackedHybrid())->encodeHybrid(new BinaryBufferWriter($buffer), $values);
+
+        $this->assertSame(
+            $values,
+            (new RLEBitPackedHybrid())->decodeHybrid(
+                new BinaryBufferReader($buffer),
+                BitWidth::fromArray($values),
+                \count($values)
+            )
+        );
+    }
+
     public function test_plain_rle_with_two_sequences() : void
     {
         $values = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
