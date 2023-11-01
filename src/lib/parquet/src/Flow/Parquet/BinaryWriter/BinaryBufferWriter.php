@@ -60,9 +60,7 @@ final class BinaryBufferWriter implements BinaryWriter
 
     public function writeBytes(array $bytes) : void
     {
-        foreach ($bytes as $byte) {
-            $this->buffer .= \chr($byte);
-        }
+        $this->buffer .= \pack('C*', ...$bytes);
     }
 
     public function writeDecimals(array $decimals, int $byteLength, int $precision = 10, int $scale = 2) : void

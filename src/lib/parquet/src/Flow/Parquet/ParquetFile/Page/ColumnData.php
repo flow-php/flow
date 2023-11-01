@@ -54,20 +54,6 @@ final class ColumnData
         );
     }
 
-    public function normalize() : array
-    {
-        return [
-            'type' => $this->type->name,
-            'logical_type' => $this->logicalType?->name(),
-            'repetitions_count' => \count($this->repetitions),
-            'repetitions' => $this->repetitions,
-            'definitions_count' => \count($this->definitions),
-            'definitions' => $this->definitions,
-            'values_count' => \count($this->values),
-            'values' => $this->values,
-        ];
-    }
-
     public function size() : int
     {
         if (!\count($this->definitions)) {

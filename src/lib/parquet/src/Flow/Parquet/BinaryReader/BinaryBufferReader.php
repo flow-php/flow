@@ -90,11 +90,8 @@ final class BinaryBufferReader implements BinaryReader
             $position += 4;
 
             $byteStr = \substr($this->buffer, $position, $bytesLength);
-            $byteArray = [];
 
-            for ($i = 0; $i < $bytesLength; $i++) {
-                $byteArray[] = \ord($byteStr[$i]);
-            }
+            $byteArray = \unpack('C*', $byteStr);
 
             $byteArrays[] = new Bytes($byteArray, $this->byteOrder);
             $position += $bytesLength;

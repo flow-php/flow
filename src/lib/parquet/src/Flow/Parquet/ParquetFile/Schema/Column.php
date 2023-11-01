@@ -30,8 +30,6 @@ interface Column
 
     public function name() : string;
 
-    public function normalize() : array;
-
     public function parent() : ?NestedColumn;
 
     /**

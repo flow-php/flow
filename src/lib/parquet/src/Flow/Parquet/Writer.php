@@ -174,8 +174,9 @@ final class Writer
     public function writeRow(array $row) : void
     {
         $this->rowGroupBuilder()->addRow($row);
+        $interval = (int) $this->options->get(Option::ROW_GROUP_SIZE_CHECK_INTERVAL);
 
-        if ($this->rowGroupBuilder()->isFull()) {
+        if (($this->rowGroupBuilder()->statistics()->rowsCount() % $interval === 0) && $this->rowGroupBuilder()->isFull()) {
             $rowGroupContainer = $this->rowGroupBuilder()->flush($this->fileOffset);
             \fwrite($this->stream(), $rowGroupContainer->binaryBuffer);
             $this->metadata()->rowGroups()->add($rowGroupContainer->rowGroup);

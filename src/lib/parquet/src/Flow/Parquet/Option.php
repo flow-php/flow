@@ -79,4 +79,13 @@ enum Option
      * https://parquet.apache.org/docs/file-format/configurations/#row-group-size
      */
     case ROW_GROUP_SIZE_BYTES;
+
+    /**
+     * RowGroupBuilder is going to use this value to determine how often it should check if RowGroup size is not exceeded.
+     * This is a performance optimization, since checking RowGroup size is a costly operation.
+     * If the value is set to 1000, RowGroupBuilder is going to check the size only after adding 1000 rows to the buffer.
+     *
+     * Default value is 1000
+     */
+    case ROW_GROUP_SIZE_CHECK_INTERVAL;
 }

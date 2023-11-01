@@ -2,6 +2,7 @@
 
 namespace Flow\Parquet\ParquetFile\RowGroupBuilder;
 
+use Flow\Parquet\Data\ObjectToString;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\ParquetFile\Schema\ColumnPrimitiveType;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
@@ -9,6 +10,8 @@ use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 
 final class ColumnChunkStatistics
 {
+    private bool $columnIsString;
+
     private int $nullCount;
 
     private int $totalStringLength;
@@ -22,6 +25,7 @@ final class ColumnChunkStatistics
         $this->nullCount = 0;
         $this->valuesCount = 0;
         $this->totalStringLength = 0;
+        $this->columnIsString = ColumnPrimitiveType::isString($this->column);
     }
 
     public function add(string|int|float|null|array|bool|object $value) : void
@@ -40,13 +44,13 @@ final class ColumnChunkStatistics
 
         if (\is_array($value)) {
             foreach ($value as $val) {
-                $this->values[] = \is_object($val) ? \serialize($val) : $val;
+                $this->values[] = \is_object($val) ? ObjectToString::toString($val) : $val;
             }
         } else {
-            $this->values[] = \is_object($value) ? \serialize($value) : $value;
+            $this->values[] = \is_object($value) ? ObjectToString::toString($value) : $value;
         }
 
-        if ((\is_string($value) || \is_array($value)) && ColumnPrimitiveType::isString($this->column)) {
+        if ((\is_string($value) || \is_array($value)) && $this->columnIsString) {
             if (\is_string($value)) {
                 $this->totalStringLength += \strlen($value);
             }
@@ -59,15 +63,6 @@ final class ColumnChunkStatistics
                 }
             }
         }
-    }
-
-    public function avgStringLength() : int
-    {
-        if (0 === $this->notNullCount()) {
-            return 0;
-        }
-
-        return (int) \ceil($this->totalStringLength / $this->notNullCount());
     }
 
     public function cardinalityRation() : float

@@ -140,11 +140,6 @@ final class FlatColumn implements Column
         return new self($string, PhysicalType::BYTE_ARRAY, null, LogicalType::string(), Repetition::OPTIONAL);
     }
 
-    public function __debugInfo() : ?array
-    {
-        return $this->normalize();
-    }
-
     /**
      * @psalm-suppress PossiblyNullOperand
      */
@@ -293,29 +288,6 @@ final class FlatColumn implements Column
     public function name() : string
     {
         return $this->name;
-    }
-
-    public function normalize() : array
-    {
-        return [
-            'type' => 'flat',
-            'name' => $this->name(),
-            'flat_path' => $this->flatPath(),
-            'physical_type' => $this->type()->name,
-            'logical_type' => $this->logicalType()?->name(),
-            'repetition' => $this->repetition()?->name,
-            'precision' => $this->precision(),
-            'scale' => $this->scale(),
-            'max_definition_level' => $this->maxDefinitionsLevel(),
-            'max_repetition_level' => $this->maxRepetitionsLevel(),
-            'children' => null,
-            'is_map' => $this->isMap(),
-            'is_list' => $this->isList(),
-            'is_struct' => $this->isStruct(),
-            'is_list_element' => $this->isListElement(),
-            'is_map_element' => $this->isMapElement(),
-            'is_struct_element' => $this->isStructElement(),
-        ];
     }
 
     public function parent() : ?NestedColumn
