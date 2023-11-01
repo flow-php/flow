@@ -8,7 +8,7 @@ For the code coverage, please install [pcov](https://pecl.php.net/package/pcov).
 ### Prepare Project:
 
 ```shell
-cp docker-compose.yml.dist docker-compose.yml
+cp compose.yml.dist compose.yml
 composer install 
 docker compose up -d
 ```

@@ -7,7 +7,6 @@
 
 /.php_cs export-ignore
 /composer.lock export-ignore
-/docker-compose.yml.dist export-ignore
 /infection.json export-ignore
 /phpstan.neon export-ignore
 /phpunit.xml.dist export-ignore
