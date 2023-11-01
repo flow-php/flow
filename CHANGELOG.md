@@ -40,6 +40,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#710](https://github.com/flow-php/flow/pull/710) - **Improved parquet writer performance** - [@norberttech](https://github.com/norberttech)
 - [#706](https://github.com/flow-php/flow/pull/706) - **Adjusted time related columns to be compatibile with other parquet libraries** - [@norberttech](https://github.com/norberttech)
 - [#705](https://github.com/flow-php/flow/pull/705) - **Add missing flag for GPG 2.2+** - [@stloyd](https://github.com/stloyd)
 - [#704](https://github.com/flow-php/flow/pull/704) - **Boolean columns can't be anymore dictionary packed for compatibility with spark** - [@norberttech](https://github.com/norberttech)
