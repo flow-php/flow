@@ -1,6 +1,8 @@
 ## [Unreleased] - 2023-11-01
 
 ### Added
+- [#704](https://github.com/flow-php/flow/pull/704) - **ConvertedType to column definitions in parquet for compatibility with other readers** - [@norberttech](https://github.com/norberttech)
+- [#704](https://github.com/flow-php/flow/pull/704) - **Repetitions/Definitions levels encodings in DataPage** - [@norberttech](https://github.com/norberttech)
 - [#701](https://github.com/flow-php/flow/pull/701) - **count() method to dataframe** - [@norberttech](https://github.com/norberttech)
 - [#702](https://github.com/flow-php/flow/pull/702) - **number_format expression** - [@norberttech](https://github.com/norberttech)
 - [#700](https://github.com/flow-php/flow/pull/700) - **StandWithUkrain, StandWithUs** - [@norberttech](https://github.com/norberttech)
@@ -38,6 +40,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#704](https://github.com/flow-php/flow/pull/704) - **Boolean columns can't be anymore dictionary packed for compatibility with spark** - [@norberttech](https://github.com/norberttech)
 - [1e756d](https://github.com/flow-php/flow/commit/1e756d538b00827aee8efac915dc908f8410d4a2) - **CS Fixes** - [@norberttech](https://github.com/norberttech)
 - [#698](https://github.com/flow-php/flow/pull/698) - **Updated readme** - [@norberttech](https://github.com/norberttech)
 - [#694](https://github.com/flow-php/flow/pull/694) - **Replaced codename parquet with flow parquet library in parquet adapter** - [@norberttech](https://github.com/norberttech)
@@ -111,6 +114,7 @@
 - [#584](https://github.com/flow-php/flow/pull/584) - **Adjust `phpunit.xml` to be more efficient** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
+- [#704](https://github.com/flow-php/flow/pull/704) - **Bug in RLEBitPackHybrid algorithm that was always bitpacking values** - [@norberttech](https://github.com/norberttech)
 - [#703](https://github.com/flow-php/flow/pull/703) - **Fix for signing PHAR in CI** - [@stloyd](https://github.com/stloyd)
 - [#672](https://github.com/flow-php/flow/pull/672) - **Fix for wrong cache data & key in benchmark baseline action** - [@stloyd](https://github.com/stloyd)
 - [#667](https://github.com/flow-php/flow/pull/667) - **Cleanup old summaries before creating new artifacts** - [@norberttech](https://github.com/norberttech)
