@@ -40,6 +40,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#706](https://github.com/flow-php/flow/pull/706) - **Adjusted time related columns to be compatibile with other parquet libraries** - [@norberttech](https://github.com/norberttech)
 - [#705](https://github.com/flow-php/flow/pull/705) - **Add missing flag for GPG 2.2+** - [@stloyd](https://github.com/stloyd)
 - [#704](https://github.com/flow-php/flow/pull/704) - **Boolean columns can't be anymore dictionary packed for compatibility with spark** - [@norberttech](https://github.com/norberttech)
 - [1e756d](https://github.com/flow-php/flow/commit/1e756d538b00827aee8efac915dc908f8410d4a2) - **CS Fixes** - [@norberttech](https://github.com/norberttech)
@@ -115,6 +116,7 @@
 - [#584](https://github.com/flow-php/flow/pull/584) - **Adjust `phpunit.xml` to be more efficient** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
+- [#707](https://github.com/flow-php/flow/pull/707) - **Small typo in build workflow** - [@norberttech](https://github.com/norberttech)
 - [#704](https://github.com/flow-php/flow/pull/704) - **Bug in RLEBitPackHybrid algorithm that was always bitpacking values** - [@norberttech](https://github.com/norberttech)
 - [#703](https://github.com/flow-php/flow/pull/703) - **Fix for signing PHAR in CI** - [@stloyd](https://github.com/stloyd)
 - [#672](https://github.com/flow-php/flow/pull/672) - **Fix for wrong cache data & key in benchmark baseline action** - [@stloyd](https://github.com/stloyd)
