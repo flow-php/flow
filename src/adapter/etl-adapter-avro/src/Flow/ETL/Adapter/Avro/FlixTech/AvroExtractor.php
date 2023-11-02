@@ -11,7 +11,7 @@ use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 
-final class AvroExtractor implements Extractor
+final class AvroExtractor implements Extractor, Extractor\FileExtractor
 {
     public function __construct(
         private readonly Path $path,
@@ -59,5 +59,10 @@ final class AvroExtractor implements Extractor
         if ([] !== $rows) {
             yield array_to_rows($rows, $context->entryFactory());
         }
+    }
+
+    public function source() : Path
+    {
+        return $this->path;
     }
 }

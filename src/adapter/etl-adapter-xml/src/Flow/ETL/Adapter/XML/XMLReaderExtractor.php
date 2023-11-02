@@ -11,7 +11,7 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 
-final class XMLReaderExtractor implements Extractor
+final class XMLReaderExtractor implements Extractor, Extractor\FileExtractor
 {
     /**
      * In order to iterate only over <element> nodes us root/elements/element.
@@ -95,5 +95,10 @@ final class XMLReaderExtractor implements Extractor
                 yield new Rows(...$rows);
             }
         }
+    }
+
+    public function source() : Path
+    {
+        return $this->path;
     }
 }

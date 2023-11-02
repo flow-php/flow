@@ -93,7 +93,7 @@ JSON,
         $loader = new JsonLoader(Path::realpath($stream));
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage("Appending to existing single file destination \"file:/{$stream}\" in non thread safe mode is not supported.");
+        $this->expectExceptionMessage("Appending to existing single file destination \"file:/{$stream}\" is not supported.");
 
         (new Flow())
             ->process(
