@@ -55,7 +55,7 @@ final class FilesystemProcessor implements Processor
                 }
 
                 if ($context->streams()->fs()->fileExists($loader->destination())) {
-                    throw new RuntimeException('Appending to existing single file destination "' . $loader->destination()->uri() . '" in non thread safe mode is not supported.');
+                    throw new RuntimeException('Appending to existing single file destination "' . $loader->destination()->uri() . '" is not supported.');
                 }
             }
         }

@@ -12,7 +12,7 @@ use Flow\ETL\FlowContext;
 use JsonMachine\Items;
 use JsonMachine\JsonDecoder\ExtJsonDecoder;
 
-final class JsonExtractor implements Extractor
+final class JsonExtractor implements Extractor, Extractor\FileExtractor
 {
     public function __construct(
         private readonly Path $path,
@@ -51,6 +51,11 @@ final class JsonExtractor implements Extractor
                 yield array_to_rows($rows, $context->entryFactory());
             }
         }
+    }
+
+    public function source() : Path
+    {
+        return $this->path;
     }
 
     /**

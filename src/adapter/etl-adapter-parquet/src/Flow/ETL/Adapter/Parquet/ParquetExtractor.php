@@ -12,7 +12,7 @@ use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile;
 use Flow\Parquet\Reader;
 
-final class ParquetExtractor implements Extractor
+final class ParquetExtractor implements Extractor, Extractor\FileExtractor
 {
     /**
      * @param Path $path
@@ -51,6 +51,11 @@ final class ParquetExtractor implements Extractor
                 yield array_to_rows($rows, $context->entryFactory());
             }
         }
+    }
+
+    public function source() : Path
+    {
+        return $this->path;
     }
 
     /**

@@ -11,7 +11,7 @@ use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 
-final class TextExtractor implements Extractor
+final class TextExtractor implements Extractor, Extractor\FileExtractor
 {
     public function __construct(
         private readonly Path $path,
@@ -56,5 +56,10 @@ final class TextExtractor implements Extractor
                 yield array_to_rows($rows, $context->entryFactory());
             }
         }
+    }
+
+    public function source() : Path
+    {
+        return $this->path;
     }
 }

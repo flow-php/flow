@@ -11,7 +11,7 @@ use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 
-final class CSVExtractor implements Extractor
+final class CSVExtractor implements Extractor, Extractor\FileExtractor
 {
     /**
      * @param int<0, max> $charactersReadInLine
@@ -107,5 +107,10 @@ final class CSVExtractor implements Extractor
                 $stream->close();
             }
         }
+    }
+
+    public function source() : Path
+    {
+        return $this->uri;
     }
 }
