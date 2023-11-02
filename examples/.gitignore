@@ -1,6 +1,6 @@
 vendor
 output/*
 !output/.gitkep
-docker-compose.yml
+compose.yml
 var
 .env

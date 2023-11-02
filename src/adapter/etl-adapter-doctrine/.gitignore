@@ -1,5 +1,4 @@
 tools/vendor
 vendor
 var
-docker-compose.yml
 phpunit.xml
