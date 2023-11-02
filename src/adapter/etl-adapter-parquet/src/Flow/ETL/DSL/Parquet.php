@@ -12,6 +12,7 @@ use Flow\ETL\Loader;
 use Flow\ETL\Row\Schema;
 use Flow\Parquet\ByteOrder;
 use Flow\Parquet\Options;
+use Flow\Parquet\ParquetFile\Compressions;
 
 /**
  * @infection-ignore-all
@@ -65,6 +66,7 @@ class Parquet
     final public static function to(
         string|Path $path,
         ?Options $options = null,
+        Compressions $compressions = Compressions::SNAPPY,
         ?Schema $schema = null,
     ) : Loader {
         if ($options === null) {
@@ -74,6 +76,7 @@ class Parquet
         return new ParquetLoader(
             \is_string($path) ? Path::realpath($path) : $path,
             $options,
+            $compressions,
             $schema,
         );
     }

@@ -8,6 +8,8 @@ enum Mode : string
 {
     case APPEND = 'a';
 
+    case APPEND_BINARY = 'ab';
+
     case READ = 'r';
 
     case READ_BINARY = 'rb';

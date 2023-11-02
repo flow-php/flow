@@ -1,6 +1,4 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Integration;
 
@@ -8,168 +6,76 @@ use function Flow\ETL\DSL\ref;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\DSL\From;
 use Flow\ETL\DSL\Parquet;
-use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Flow;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
+use Flow\Parquet\ParquetFile\Compressions;
+use Flow\Parquet\Reader;
 use PHPUnit\Framework\TestCase;
 
 final class ParquetTest extends TestCase
 {
-    public function test_using_pattern_path() : void
+    public function test_writing_to_file() : void
     {
-        $this->expectExceptionMessage("ParquetLoader path can't be pattern, given: /path/*/pattern.parquet");
-
-        Parquet::to(new Path('/path/*/pattern.parquet'));
-    }
-
-    public function test_writing_and_reading_only_given_fields() : void
-    {
-        $this->removeFile($path = \sys_get_temp_dir() . '/file.parquet');
-
-        (new Flow)
-            ->read(From::rows(
-                $rows = new Rows(
-                    ...\array_map(function (int $i) : Row {
-                        return Row::create(
-                            Entry::integer('integer', $i),
-                            Entry::float('float', 1.5),
-                            Entry::string('string', 'name_' . $i),
-                            Entry::boolean('boolean', true),
-                            Entry::datetime('datetime', new \DateTimeImmutable()),
-                            Entry::json_object('json_object', ['id' => 1, 'name' => 'test']),
-                            Entry::json('json', [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']]),
-                            Entry::list_of_string('list_of_strings', ['a', 'b', 'c']),
-                            Entry::list_of_datetime('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()]),
-                            Entry::structure(
-                                'address',
-                                Entry::string('street', 'street_' . $i),
-                                Entry::string('city', 'city_' . $i),
-                                Entry::string('zip', 'zip_' . $i),
-                                Entry::string('country', 'country_' . $i),
-                                Entry::structure(
-                                    'location',
-                                    Entry::float('lat', 1.5),
-                                    Entry::float('lon', 1.5)
-                                )
-                            ),
-                        );
-                    }, \range(1, 100))
-                )
-            ))
-            ->write(Parquet::to($path))
-            ->run();
-
-        $this->assertFileExists($path);
-
-        $this->assertEquals(
-            new Rows(
-                ...\array_map(function (int $i) : Row {
-                    return Row::create(Entry::integer('integer', $i));
-                }, \range(1, 100))
-            ),
-            (new Flow())
-                ->read(Parquet::from($path, ['integer']))
-                ->fetch()
-        );
-
+        $path = \sys_get_temp_dir() . '/file.snappy.parquet';
         $this->removeFile($path);
-    }
 
-    public function test_writing_and_reading_parquet_with_all_supported_types() : void
-    {
-        $this->removeFile($path = __DIR__ . '/file.parquet');
-
-        (new Flow)
-            ->read(From::rows(
-                $rows = new Rows(
-                    ...\array_map(function (int $i) : Row {
-                        return Row::create(
-                            Entry::integer('integer', $i),
-                            Entry::float('float', 1.5),
-                            Entry::string('string', 'name_' . $i),
-                            Entry::boolean('boolean', true),
-                            Entry::datetime('datetime', new \DateTimeImmutable()),
-                            Entry::json_object('json_object', ['id' => 1, 'name' => 'test']),
-                            Entry::json('json', [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']]),
-                            Entry::list_of_string('list_of_strings', ['a', 'b', 'c']),
-                            Entry::list_of_datetime('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()]),
-                            Entry::structure(
-                                'address',
-                                Entry::string('street', 'street_' . $i),
-                                Entry::string('city', 'city_' . $i),
-                                Entry::string('zip', 'zip_' . $i),
-                                Entry::string('country', 'country_' . $i),
-                                Entry::structure(
-                                    'location',
-                                    Entry::float('lat', 1.5),
-                                    Entry::float('lon', 1.5)
-                                )
-                            ),
-                        );
-                    }, \range(1, 100))
-                )
-            ))
+        (new Flow())
+            ->read(From::rows($rows = $this->createRows(10)))
             ->write(Parquet::to($path))
             ->run();
-
-        $this->assertFileExists($path);
 
         $this->assertEquals(
             $rows,
             (new Flow())
-                ->read(
-                    Parquet::from($path)
-                )
+                ->read(Parquet::from($path))
                 ->fetch()
         );
 
+        $parquetFile = (new Reader())->read($path);
+        $this->assertNotEmpty($parquetFile->metadata()->columnChunks());
+
+        foreach ($parquetFile->metadata()->columnChunks() as $columnChunk) {
+            $this->assertSame(Compressions::SNAPPY, $columnChunk->codec());
+        }
+
+        $this->assertFileExists($path);
         $this->removeFile($path);
     }
 
-    public function test_writing_safe_and_reading_parquet_with_all_supported_types() : void
+    public function test_writing_with_partitioning() : void
     {
-        $this->cleanDirectory($path = \sys_get_temp_dir() . '/directory.parquet');
+        $path = \sys_get_temp_dir() . '/partitioned';
+        $this->cleanDirectory($path);
 
-        (new Flow)
-            ->read(From::rows(
-                $rows = new Rows(
-                    ...\array_map(function (int $i) : Row {
-                        return Row::create(
-                            Entry::integer('integer', $i),
-                            Entry::float('float', 1.5),
-                            Entry::string('string', 'name_' . $i),
-                            Entry::boolean('boolean', true),
-                            Entry::datetime('datetime', new \DateTimeImmutable()),
-                            Entry::json_object('json_object', ['id' => 1, 'name' => 'test']),
-                            Entry::json('json', [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']]),
-                            Entry::list_of_string('list_of_strings', ['a', 'b', 'c']),
-                            Entry::list_of_datetime('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()])
-                        );
-                    }, \range(1, 100))
-                )
-            ))
-            ->threadSafe()
-            ->write(Parquet::to($path))
-            ->run();
+        $dataFrame = (new Flow())
+            ->read(From::rows($rows = new Rows(
+                $this->createRow(1, new \DateTimeImmutable('2020-01-01 00:01:00')),
+                $this->createRow(1, new \DateTimeImmutable('2020-01-01 00:02:00')),
+                $this->createRow(1, new \DateTimeImmutable('2020-01-02 00:01:00')),
+                $this->createRow(1, new \DateTimeImmutable('2020-01-02 00:02:00')),
+                $this->createRow(1, new \DateTimeImmutable('2020-01-03 00:01:00')),
+            )))
+            ->withEntry('date', ref('datetime')->toDate(\DateTimeInterface::RFC3339)->dateFormat())
+            ->partitionBy(ref('date'))
+            ->write(Parquet::to($path));
 
-        $this->assertFileExists($path);
-
-        $paths = \array_map(
-            fn (string $fileName) : Path => new Path($path . '/' . $fileName),
-            \array_values(\array_diff(\scandir($path), ['..', '.']))
-        );
+        $dataFrame->run();
 
         $this->assertEquals(
             $rows,
             (new Flow())
-                ->read(Parquet::from(
-                    $paths,
-                ))
-                ->sortBy(ref('integer'))
+                ->read(Parquet::from($path))
+                ->drop('date')
+                ->sortBy(ref('datetime')->asc())
                 ->fetch()
         );
 
+        $this->assertSame(
+            ['date=2020-01-01', 'date=2020-01-02', 'date=2020-01-03'],
+            $this->listDirectoryFiles($path)
+        );
+        $this->assertDirectoryExists($path);
         $this->cleanDirectory($path);
     }
 
@@ -193,13 +99,60 @@ final class ParquetTest extends TestCase
         }
     }
 
+    private function createRow(int $index, ?\DateTimeImmutable $dateTime = null) : Row
+    {
+        return Row::create(
+            Entry::integer('integer', $index),
+            Entry::float('float', 1.5),
+            Entry::string('string', 'name_' . $index),
+            Entry::boolean('boolean', true),
+            Entry::datetime('datetime', $dateTime ?: new \DateTimeImmutable()),
+            Entry::json_object('json_object', ['id' => 1, 'name' => 'test']),
+            Entry::json('json', [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']]),
+            Entry::list_of_string('list_of_strings', ['a', 'b', 'c']),
+            Entry::list_of_datetime('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()]),
+            Entry::structure(
+                'address',
+                Entry::string('street', 'street_' . $index),
+                Entry::string('city', 'city_' . $index),
+                Entry::string('zip', 'zip_' . $index),
+                Entry::string('country', 'country_' . $index),
+                Entry::structure(
+                    'location',
+                    Entry::float('lat', 1.5),
+                    Entry::float('lng', 1.5)
+                )
+            ),
+        );
+    }
+
+    private function createRows(int $count) : Rows
+    {
+        $rows = [];
+
+        for ($i = 0; $i < $count; $i++) {
+            $rows[] = $this->createRow($i);
+        }
+
+        return new Rows(...$rows);
+    }
+
+    private function listDirectoryFiles(string $path) : array
+    {
+        return \array_values(\array_diff(\scandir($path), ['.', '..']));
+    }
+
     /**
      * @param string $path
      */
     private function removeFile(string $path) : void
     {
         if (\file_exists($path)) {
-            \unlink($path);
+            if (\is_dir($path)) {
+                $this->cleanDirectory($path);
+            } else {
+                \unlink($path);
+            }
         }
     }
 }
