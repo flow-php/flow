@@ -12,6 +12,7 @@ use Flow\Parquet\ParquetFile\RowGroupBuilder;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\PageSizeCalculator;
 use Flow\Parquet\ParquetFile\RowGroups;
 use Flow\Parquet\ParquetFile\Schema;
+use Flow\Parquet\Thrift\FileMetaData;
 use Flow\Parquet\ThriftStream\TPhpFileStream;
 use Thrift\Protocol\TCompactProtocol;
 
@@ -32,7 +33,8 @@ final class Writer
 
     public function __construct(
         private Compressions $compression = Compressions::SNAPPY,
-        private Options $options = new Options()
+        private Options $options = new Options(),
+        private ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN
     ) {
         switch ($this->compression) {
             case Compressions::UNCOMPRESSED:
@@ -50,6 +52,21 @@ final class Writer
         if ($this->isOpen()) {
             $this->close();
         }
+    }
+
+    /**
+     * Reopen existing parquet file, read metadata and append new rows.
+     * Once all rows are appended, the file is automatically closed.
+     *
+     * @param iterable<array<string, mixed>> $rows
+     */
+    public function append(string $path, iterable $rows) : void
+    {
+        $this->reopen($path);
+
+        $this->writeBatch($rows);
+
+        $this->close();
     }
 
     public function close() : void
@@ -73,8 +90,6 @@ final class Writer
         $size = $end - $start;
         \fwrite($this->stream(), \pack('l', $size));
         \fwrite($this->stream(), ParquetFile::PARQUET_MAGIC_NUMBER);
-
-        \fseek($this->stream(), -4, SEEK_END);
 
         /** @psalm-suppress InvalidPassByReference */
         \fclose($this->stream());
@@ -147,6 +162,126 @@ final class Writer
     }
 
     /**
+     * Reopen existing Parquet file for appending new rows.
+     * This method will read the metadata from the end of the file and truncate the file.
+     */
+    public function reopen(string $path) : void
+    {
+        if ($this->isOpen()) {
+            throw new RuntimeException('Writer is already open');
+        }
+
+        if (!\file_exists($path)) {
+            throw new InvalidArgumentException("File {$path} don't exists");
+        }
+
+        $stream = \fopen($path, 'ab+');
+
+        if ($stream === false) {
+            throw new RuntimeException("Can't open {$path} for writing");
+        }
+
+        $this->stream = $stream;
+
+        \fseek($this->stream(), -4, SEEK_END);
+
+        if (\fread($this->stream(), 4) !== ParquetFile::PARQUET_MAGIC_NUMBER) {
+            throw new InvalidArgumentException('Given file is not valid Parquet file');
+        }
+
+        \fseek($this->stream(), -8, SEEK_END);
+
+        /**
+         * @phpstan-ignore-next-line
+         */
+        $metadataLength = \unpack($this->byteOrder->value, \fread($this->stream(), 4))[1];
+        \fseek($this->stream(), -($metadataLength + 8), SEEK_END);
+
+        $thriftMetadata = new FileMetaData();
+        $thriftMetadata->read(new TCompactProtocol(new TPhpFileStream($this->stream())));
+
+        $this->metadata = Metadata::fromThrift($thriftMetadata);
+
+        $this->initGroupBuilder($this->metadata()->schema());
+
+        \fseek($this->stream(), -($metadataLength + 8), SEEK_END);
+
+        $fileSizeWithoutMetadata = \ftell($this->stream());
+
+        if ($fileSizeWithoutMetadata === false || $fileSizeWithoutMetadata <= 0) {
+            throw new RuntimeException('File is empty');
+        }
+
+        // Truncate previous metadata
+        \ftruncate($this->stream(), $fileSizeWithoutMetadata);
+
+        $this->fileOffset = $fileSizeWithoutMetadata;
+    }
+
+    /**
+     * Opens a writer for an existing stream.
+     *
+     * @param resource $resource
+     */
+    public function reopenForStream($resource) : void
+    {
+        if ($this->isOpen()) {
+            throw new RuntimeException('Writer is already open');
+        }
+
+        /** @psalm-suppress DocblockTypeContradiction */
+        if (!\is_resource($resource)) {
+            throw new InvalidArgumentException('Given argument is not a valid resource');
+        }
+
+        $streamMetadata = \stream_get_meta_data($resource);
+
+        if (!$streamMetadata['seekable']) {
+            throw new InvalidArgumentException('Given stream is not seekable');
+        }
+
+        \fseek($resource, 0);
+
+        $this->stream = $resource;
+
+        \fseek($this->stream(), -4, SEEK_END);
+
+        if (\fread($this->stream(), 4) !== ParquetFile::PARQUET_MAGIC_NUMBER) {
+            throw new InvalidArgumentException('Given file is not valid Parquet file');
+        }
+
+        \fseek($this->stream(), -8, SEEK_END);
+
+        /**
+         * @phpstan-ignore-next-line
+         */
+        $metadataLength = \unpack($this->byteOrder->value, \fread($this->stream(), 4))[1];
+        \fseek($this->stream(), -($metadataLength + 8), SEEK_END);
+
+        $thriftMetadata = new FileMetaData();
+        $thriftMetadata->read(new TCompactProtocol(new TPhpFileStream($this->stream())));
+
+        $this->metadata = Metadata::fromThrift($thriftMetadata);
+
+        $this->initGroupBuilder($this->metadata()->schema());
+
+        \fseek($this->stream(), -($metadataLength + 8), SEEK_END);
+
+        $fileSizeWithoutMetadata = \ftell($this->stream());
+
+        if ($fileSizeWithoutMetadata === false || $fileSizeWithoutMetadata <= 0) {
+            throw new RuntimeException('File is empty');
+        }
+
+        // Truncate previous metadata
+        \ftruncate($this->stream(), $fileSizeWithoutMetadata);
+
+        $this->fileOffset = $fileSizeWithoutMetadata;
+    }
+
+    /**
+     * Create new parquet file, write rows, write metadata and close the file.
+     *
      * @param iterable<array<string, mixed>> $rows
      */
     public function write(string $path, Schema $schema, iterable $rows) : void
@@ -159,6 +294,10 @@ final class Writer
     }
 
     /**
+     * Write a batch of rows into a parquet file.
+     * Before using this method, you should call open() or openForStream() method to open the writer.
+     * Once all rows are written, you should call close() method to close the writer.
+     *
      * @param iterable<array<string, mixed>> $rows
      */
     public function writeBatch(iterable $rows) : void
@@ -169,6 +308,10 @@ final class Writer
     }
 
     /**
+     * Write a single row into a parquet file.
+     * Before using this method, you should call open() or openForStream() method to open the writer.
+     * Once all rows are written, you should call close() method to close the writer.
+     *
      * @param array<string, mixed> $row
      */
     public function writeRow(array $row) : void
@@ -185,6 +328,8 @@ final class Writer
     }
 
     /**
+     * Create new parquet file directly in stream, write rows, write metadata and close the file.
+     *
      * @param resource $resource
      * @param iterable<array<string, mixed>> $rows
      */

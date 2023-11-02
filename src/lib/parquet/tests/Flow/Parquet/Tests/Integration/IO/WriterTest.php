@@ -16,6 +16,79 @@ use PHPUnit\Framework\TestCase;
 
 final class WriterTest extends TestCase
 {
+    public function test_appending_to_file() : void
+    {
+        $writer = new Writer();
+
+        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+
+        $schema = $this->createSchema();
+        $row = $this->createRow();
+
+        $writer->write($path, $schema, [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row]);
+
+        $writer->append($path, [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row]);
+
+        $this->assertSame(
+            [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row],
+            \iterator_to_array((new Reader())->read($path)->values())
+        );
+        $this->assertFileExists($path);
+        \unlink($path);
+    }
+
+    public function test_appending_to_in_batches_file() : void
+    {
+        $writer = new Writer();
+
+        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+
+        $schema = $this->createSchema();
+        $row = $this->createRow();
+
+        $writer->write($path, $schema, [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row]);
+
+        $writer->reopen($path);
+        $writer->writeBatch([$row, $row]);
+        $writer->writeBatch([$row, $row]);
+        $writer->writeBatch([$row, $row]);
+        $writer->writeBatch([$row, $row]);
+        $writer->writeBatch([$row, $row]);
+        $writer->close();
+
+        $this->assertSame(
+            [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row],
+            \iterator_to_array((new Reader())->read($path)->values())
+        );
+        $this->assertFileExists($path);
+        \unlink($path);
+    }
+
+    public function test_appending_to_stream() : void
+    {
+        $writer = new Writer();
+
+        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+
+        $schema = $this->createSchema();
+        $row = $this->createRow();
+
+        $stream = \fopen($path, 'wb+');
+        $writer->writeStream($stream, $schema, [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row]);
+
+        $stream = \fopen($path, 'ab+');
+        $writer->reopenForStream($stream);
+        $writer->writeBatch([$row, $row, $row, $row, $row, $row, $row, $row, $row, $row]);
+        $writer->close();
+
+        $this->assertSame(
+            [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row],
+            \iterator_to_array((new Reader())->read($path)->values())
+        );
+        $this->assertFileExists($path);
+        \unlink($path);
+    }
+
     public function test_closing_not_open_writer() : void
     {
         $writer = new Writer();
