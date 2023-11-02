@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-11-02
 
 ### Added
+- [#712](https://github.com/flow-php/flow/pull/712) - **Added support for partitioning in parquet loader** - [@norberttech](https://github.com/norberttech)
 - [#711](https://github.com/flow-php/flow/pull/711) - **Allow to append into parquet files** - [@norberttech](https://github.com/norberttech)
 - [#704](https://github.com/flow-php/flow/pull/704) - **ConvertedType to column definitions in parquet for compatibility with other readers** - [@norberttech](https://github.com/norberttech)
 - [#704](https://github.com/flow-php/flow/pull/704) - **Repetitions/Definitions levels encodings in DataPage** - [@norberttech](https://github.com/norberttech)
