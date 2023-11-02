@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-11-02
 
 ### Added
+- [#714](https://github.com/flow-php/flow/pull/714) - **Missing tests for FilesystemProcessor** - [@norberttech](https://github.com/norberttech)
 - [#712](https://github.com/flow-php/flow/pull/712) - **Added support for partitioning in parquet loader** - [@norberttech](https://github.com/norberttech)
 - [#711](https://github.com/flow-php/flow/pull/711) - **Allow to append into parquet files** - [@norberttech](https://github.com/norberttech)
 - [#704](https://github.com/flow-php/flow/pull/704) - **ConvertedType to column definitions in parquet for compatibility with other readers** - [@norberttech](https://github.com/norberttech)
@@ -120,6 +121,7 @@
 - [#584](https://github.com/flow-php/flow/pull/584) - **Adjust `phpunit.xml` to be more efficient** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
+- [#714](https://github.com/flow-php/flow/pull/714) - **Added missing FileExtractor interface to all file based extractors** - [@norberttech](https://github.com/norberttech)
 - [#707](https://github.com/flow-php/flow/pull/707) - **Small typo in build workflow** - [@norberttech](https://github.com/norberttech)
 - [#704](https://github.com/flow-php/flow/pull/704) - **Bug in RLEBitPackHybrid algorithm that was always bitpacking values** - [@norberttech](https://github.com/norberttech)
 - [#703](https://github.com/flow-php/flow/pull/703) - **Fix for signing PHAR in CI** - [@stloyd](https://github.com/stloyd)
