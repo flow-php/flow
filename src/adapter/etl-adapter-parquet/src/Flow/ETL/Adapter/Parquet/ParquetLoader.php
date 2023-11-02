@@ -2,7 +2,6 @@
 
 namespace Flow\ETL\Adapter\Parquet;
 
-use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
@@ -11,6 +10,7 @@ use Flow\ETL\Pipeline\Closure;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Rows;
 use Flow\Parquet\Options;
+use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\Writer;
 
 /**
@@ -24,11 +24,15 @@ final class ParquetLoader implements Closure, Loader, Loader\FileLoader
 
     private ?Schema $inferredSchema = null;
 
-    private ?Writer $writer = null;
+    /**
+     * @var array<string, Writer>
+     */
+    private array $writers = [];
 
     public function __construct(
         private readonly Path $path,
         private readonly Options $options,
+        private readonly Compressions $compressions = Compressions::SNAPPY,
         private readonly ?Schema $schema = null,
     ) {
         $this->converter = new SchemaConverter();
@@ -52,9 +56,14 @@ final class ParquetLoader implements Closure, Loader, Loader\FileLoader
 
     public function closure(Rows $rows, FlowContext $context) : void
     {
-        $this->writer($context)->close();
+        if (\count($this->writers)) {
+            foreach ($this->writers as $writer) {
+                $writer->close();
+            }
+        }
+
         $context->streams()->close($this->path);
-        $this->writer = null;
+        $this->writers = [];
     }
 
     public function destination() : Path
@@ -64,16 +73,45 @@ final class ParquetLoader implements Closure, Loader, Loader\FileLoader
 
     public function load(Rows $rows, FlowContext $context) : void
     {
-        if (\count($context->partitionEntries())) {
-            throw new RuntimeException('Partitioning is not supported yet');
-        }
-
         if ($this->schema === null) {
             $this->inferSchema($rows);
         }
 
-        foreach ($rows as $row) {
-            $this->writer($context)->writeRow($row->toArray());
+        $streams = $context->streams();
+
+        if ($context->partitionEntries()->count()) {
+            foreach ($rows->partitionBy(...$context->partitionEntries()->all()) as $partitions) {
+
+                $stream = $streams->open($this->path, 'parquet', Mode::WRITE_BINARY, $context->threadSafe(), $partitions->partitions);
+
+                if (!\array_key_exists($stream->path()->uri(), $this->writers)) {
+                    $this->writers[$stream->path()->uri()] = new Writer(
+                        compression: $this->compressions,
+                        options: $this->options
+                    );
+
+                    $this->writers[$stream->path()->uri()]->openForStream($stream->resource(), $this->converter->toParquet($this->schema()));
+                }
+
+                foreach ($partitions->rows as $row) {
+                    $this->writers[$stream->path()->uri()]->writeRow($row->toArray());
+                }
+            }
+        } else {
+            $stream = $streams->open($this->path, 'parquet', Mode::WRITE_BINARY, $context->threadSafe());
+
+            if (!\array_key_exists($stream->path()->uri(), $this->writers)) {
+                $this->writers[$stream->path()->uri()] = new Writer(
+                    compression: $this->compressions,
+                    options: $this->options
+                );
+
+                $this->writers[$stream->path()->uri()]->openForStream($stream->resource(), $this->converter->toParquet($this->schema()));
+            }
+
+            foreach ($rows as $row) {
+                $this->writers[$stream->path()->uri()]->writeRow($row->toArray());
+            }
         }
     }
 
@@ -94,27 +132,5 @@ final class ParquetLoader implements Closure, Loader, Loader\FileLoader
     {
         /** @phpstan-ignore-next-line  */
         return $this->schema ?? $this->inferredSchema;
-    }
-
-    private function writer(FlowContext $context) : Writer
-    {
-        if ($this->writer !== null) {
-            return $this->writer;
-        }
-
-        $this->writer = new Writer(
-            options: $this->options
-        );
-        $this->writer->openForStream(
-            $context->streams()->open(
-                $this->path,
-                'parquet',
-                Mode::WRITE_BINARY,
-                $context->threadSafe()
-            )->resource(),
-            $this->converter->toParquet($this->schema())
-        );
-
-        return $this->writer;
     }
 }

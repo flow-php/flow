@@ -2,6 +2,7 @@
 
 namespace Flow\Parquet\ParquetFile;
 
+use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\Thrift\FileMetaData;
 
 final class Metadata
@@ -24,6 +25,22 @@ final class Metadata
             $thrift->version,
             $thrift->created_by
         );
+    }
+
+    /**
+     * @return array<ColumnChunk>
+     */
+    public function columnChunks() : array
+    {
+        $chunks = [];
+
+        foreach ($this->rowGroups->all() as $rowGroup) {
+            foreach ($rowGroup->columnChunks() as $columnChunk) {
+                $chunks[] = $columnChunk;
+            }
+        }
+
+        return $chunks;
     }
 
     public function createdBy() : ?string
