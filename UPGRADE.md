@@ -26,6 +26,10 @@ Which does exactly the same thing as BufferLoader did, but in a more generic way
 Pipeline Closure was reduced to be only Loader Closure and it was moved to \Flow\ETL\Loader namespace. 
 Additionally, \Closure::close method no longer requires Rows to be passed as an argument.
 
+### 5) Parallelize 
+
+DataFrame::parallelize() method is deprecated, and it will be removed, instead use DataFrame::batchSize(int $size) method. 
+
 ---
 
 ## Upgrading from 0.3.x to 0.4.x
