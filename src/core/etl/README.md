@@ -299,7 +299,6 @@ In most cases Loaders (Writers) should be provided by Adapters which you can fin
 please find them below.  
 Please read [tests](tests/Flow/ETL/Tests/Unit/Loader) to find examples of usage.
 
-* [buffer](src/Flow/ETL/Pipeline/Closure.php) - [tests](tests/Flow/ETL/Tests/Unit/Loader/BufferLoaderTest.php)
 * [callback](src/Flow/ETL/Loader/CallbackLoader.php) - [tests](tests/Flow/ETL/Tests/Unit/Loader/CallbackLoaderTest.php)
 * [memory](src/Flow/ETL/Loader/MemoryLoader.php) - [tests](tests/Flow/ETL/Tests/Unit/Loader/MemoryLoaderTest.php)
 * [stream](src/Flow/ETL/Loader/StreamLoader.php) - [tests](tests/Flow/ETL/Tests/Unit/Loader/StreamLoaderTest.php)
@@ -307,11 +306,8 @@ Please read [tests](tests/Flow/ETL/Tests/Unit/Loader) to find examples of usage.
 
 ## Pipeline Closure
 
-If Pipe (Loader or Transformer) implements [Closure interface](src/Flow/ETL/Pipeline/Closure.php), extra `closure(Rows $rows)`
-method will be executed with the last Rows from Extractor.
-
-This can be handy for things like [buffer loader](src/Flow/ETL/Loader/BufferLoader.php) that maintain the state
-but that also needs to clean up that state at last Rows.
+If Pipe (Loader or Transformer) implements [Closure interface](src/Flow/ETL/Pipeline/Closure.php), extra `closure(FlowContext $context)`
+method will be executed.
 
 ## Adapters
 
