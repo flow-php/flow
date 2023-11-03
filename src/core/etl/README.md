@@ -304,10 +304,10 @@ Please read [tests](tests/Flow/ETL/Tests/Unit/Loader) to find examples of usage.
 * [stream](src/Flow/ETL/Loader/StreamLoader.php) - [tests](tests/Flow/ETL/Tests/Unit/Loader/StreamLoaderTest.php)
 * [transforming](src/Flow/ETL/Loader/TransformerLoader.php) - [tests](tests/Flow/ETL/Tests/Unit/Loader/TransformerLoaderTest.php)
 
-## Pipeline Closure
+## Loader Closure
 
-If Pipe (Loader or Transformer) implements [Closure interface](src/Flow/ETL/Pipeline/Closure.php), extra `closure(FlowContext $context)`
-method will be executed.
+Loader implements [Closure interface](src/Flow/ETL/Loader/Closure.php), extra `closure(FlowContext $context)`
+method will be executed once all Rows are processed so Loaders can for example close streams.
 
 ## Adapters
 
