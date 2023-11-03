@@ -12,6 +12,8 @@ use Google\Service\Sheets;
 
 final class GoogleSheetExtractor implements Extractor
 {
+    private const ROWS_IN_BATCH = 100;
+
     /**
      * @param array{dateTimeRenderOption?: string, majorDimension?: string, valueRenderOption?: string} $options
      *
@@ -22,17 +24,17 @@ final class GoogleSheetExtractor implements Extractor
         private readonly string $spreadsheetId,
         private readonly Columns $columnRange,
         private readonly bool $withHeader,
-        private readonly int $rowsInBatch,
+        private readonly int $lastRow,
         private readonly array $options = [],
     ) {
-        if ($this->rowsInBatch < 1) {
-            throw new InvalidArgumentException('Rows in batch must be greater than 0');
+        if ($this->lastRow < 1) {
+            throw new InvalidArgumentException('Last row must be greater than 0');
         }
     }
 
     public function extract(FlowContext $context) : \Generator
     {
-        $cellsRange = new SheetRange($this->columnRange, 1, $this->rowsInBatch);
+        $cellsRange = new SheetRange($this->columnRange, 1, self::ROWS_IN_BATCH);
         $headers = [];
 
         $totalRows = 0;
@@ -92,11 +94,11 @@ final class GoogleSheetExtractor implements Extractor
                 $context->entryFactory()
             );
 
-            if ($totalRows < $cellsRange->endRow) {
+            if ($totalRows >= $this->lastRow) {
                 return;
             }
 
-            $cellsRange = $cellsRange->nextRows($this->rowsInBatch);
+            $cellsRange = new SheetRange($this->columnRange, $totalRows, ($totalRows + self::ROWS_IN_BATCH) >= $this->lastRow ? $this->lastRow : $totalRows);
             /** @var Sheets\ValueRange $response */
             $response = $this->service->spreadsheets_values->get($this->spreadsheetId, $cellsRange->toString(), $this->options);
             /** @var array[] $values */

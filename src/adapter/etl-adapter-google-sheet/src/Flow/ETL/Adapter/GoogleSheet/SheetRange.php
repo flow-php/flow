@@ -34,7 +34,7 @@ final class SheetRange
 
         return new self(
             $this->columnRange,
-            $this->endRow + 1,
+            $count,
             $this->endRow + $count,
         );
     }
