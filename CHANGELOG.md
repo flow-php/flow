@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-11-03
 
 ### Added
+- [#720](https://github.com/flow-php/flow/pull/720) - **DataFrame::batchSize(int $size) method** - [@norberttech](https://github.com/norberttech)
 - [#716](https://github.com/flow-php/flow/pull/716) - **batchSize argument to DataFrame::collect method** - [@norberttech](https://github.com/norberttech)
 - [#714](https://github.com/flow-php/flow/pull/714) - **Missing tests for FilesystemProcessor** - [@norberttech](https://github.com/norberttech)
 - [#712](https://github.com/flow-php/flow/pull/712) - **Added support for partitioning in parquet loader** - [@norberttech](https://github.com/norberttech)
@@ -165,6 +166,9 @@
 - [#661](https://github.com/flow-php/flow/pull/661) - **EntryExpressionEvalTransformerBench** - [@norberttech](https://github.com/norberttech)
 - [#634](https://github.com/flow-php/flow/pull/634) - **Remove Rector tool** - [@stloyd](https://github.com/stloyd)
 - [#618](https://github.com/flow-php/flow/pull/618) - **Remove dead `ArrayRowsFactory` class** - [@stloyd](https://github.com/stloyd)
+
+### Deprecated
+- [#720](https://github.com/flow-php/flow/pull/720) - **DataFrame::parallelize()** - [@norberttech](https://github.com/norberttech)
 
 ## [0.4.0] - 2023-10-13
 
