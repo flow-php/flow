@@ -40,7 +40,7 @@ final class SynchronousPipeline implements Pipeline
     public function closure(FlowContext $context) : void
     {
         foreach ($this->pipes->all() as $pipe) {
-            if ($pipe instanceof Closure) {
+            if ($pipe instanceof Loader && $pipe instanceof Closure) {
                 $pipe->closure($context);
             }
         }

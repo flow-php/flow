@@ -22,7 +22,6 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\GroupBy\Aggregation;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Loader;
-use Flow\ETL\Loader\Closure;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Pipeline\LocalSocketPipeline;
 use Flow\ETL\Row;
@@ -492,7 +491,7 @@ ASCIITABLE,
                 }
             }
         )
-            ->transform($transformer = new class implements Closure, Transformer {
+            ->transform($transformer = new class implements Transformer {
                 public bool $closureCalled = false;
 
                 public int $rowsTransformed = 0;
@@ -502,11 +501,6 @@ ASCIITABLE,
                     $this->rowsTransformed++;
 
                     return $rows;
-                }
-
-                public function closure(FlowContext $context) : void
-                {
-                    $this->closureCalled = true;
                 }
 
                 public function __serialize() : array
@@ -522,7 +516,6 @@ ASCIITABLE,
 
         $this->assertCount(10, $rows);
         $this->assertSame(10, $transformer->rowsTransformed);
-        $this->assertTrue($transformer->closureCalled);
     }
 
     public function test_etl_fetch_with_limit() : void
@@ -626,58 +619,6 @@ ASCIITABLE,
         ->fetch();
 
         $this->assertCount(10, $rows);
-    }
-
-    public function test_etl_limit_with_closure() : void
-    {
-        (new Flow())->extract(
-            new class implements Extractor {
-                /**
-                 * @param FlowContext $context
-                 *
-                 * @return \Generator<int, Rows, mixed, void>
-                 */
-                public function extract(FlowContext $context) : \Generator
-                {
-                    for ($i = 0; $i < 1000; $i++) {
-                        yield new Rows(
-                            Row::create(new IntegerEntry('id', $i)),
-                        );
-                    }
-                }
-            }
-        )
-            ->transform($transformer = new class implements Closure, Transformer {
-                public bool $closureCalled = false;
-
-                public int $rowsTransformed = 0;
-
-                public function transform(Rows $rows, FlowContext $context) : Rows
-                {
-                    $this->rowsTransformed++;
-
-                    return $rows;
-                }
-
-                public function closure(FlowContext $context) : void
-                {
-                    $this->closureCalled = true;
-                }
-
-                public function __serialize() : array
-                {
-                    return [];
-                }
-
-                public function __unserialize(array $data) : void
-                {
-                }
-            })
-            ->limit(10)
-            ->run();
-
-        $this->assertSame(10, $transformer->rowsTransformed);
-        $this->assertTrue($transformer->closureCalled);
     }
 
     public function test_etl_limit_with_collecting() : void

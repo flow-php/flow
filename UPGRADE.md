@@ -21,6 +21,11 @@ BufferLoader was removed in favor of `DataFrame::collect(int $batchSize = null)`
 argument `$batchSize` that will keep collecting Rows from Extractor until the given batch size is reached.
 Which does exactly the same thing as BufferLoader did, but in a more generic way.
 
+### 4) Pipeline Closure 
+
+Pipeline Closure was reduced to be only Loader Closure and it was moved to \Flow\ETL\Loader namespace. 
+Additionally, \Closure::close method no longer requires Rows to be passed as an argument.
+
 ---
 
 ## Upgrading from 0.3.x to 0.4.x
