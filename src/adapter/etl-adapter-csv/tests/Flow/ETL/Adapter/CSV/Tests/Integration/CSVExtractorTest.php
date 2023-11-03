@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV\Tests\Integration;
 
+use Flow\ETL\Adapter\CSV\CSVExtractor;
+use Flow\ETL\DSL\From;
+use Flow\ETL\Extractor\Signal;
 use function Flow\ETL\DSL\ref;
 use Flow\ETL\Config;
 use Flow\ETL\DSL\CSV;
@@ -255,5 +258,30 @@ final class CSVExtractorTest extends TestCase
                 ->fetch()
                 ->toArray()
         );
+    }
+
+    public function test_signal_stop() : void
+    {
+        $path = sys_get_temp_dir() . '/csv_extractor_signal_stop.csv';
+        if (\file_exists($path)) {
+            \unlink($path);
+        }
+
+        (new Flow())->read(From::array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
+            ->write(CSV::to($path))
+            ->run();
+
+
+        $extractor = new CSVExtractor(Path::realpath($path), rowsInBatch: 2);
+
+        $generator = $extractor->extract(new FlowContext(Config::default()));
+
+        $this->assertSame([['id' => '1'], ['id' => '2']], $generator->current()->toArray());
+        $generator->next();
+        $this->assertTrue($generator->valid());
+        $this->assertSame([['id' => '3'], ['id' => '4']], $generator->current()->toArray());
+        $this->assertTrue($generator->valid());
+        $generator->send(Signal::STOP);
+        $this->assertFalse($generator->valid());
     }
 }

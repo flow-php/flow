@@ -129,11 +129,19 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
 
     public function drop(int $size) : self
     {
+        if ($size === 0) {
+            return $this;
+        }
+
         return new self(...\array_slice($this->rows, $size));
     }
 
     public function dropRight(int $size) : self
     {
+        if ($size === 0) {
+            return $this;
+        }
+
         return new self(...\array_slice($this->rows, 0, -$size));
     }
 

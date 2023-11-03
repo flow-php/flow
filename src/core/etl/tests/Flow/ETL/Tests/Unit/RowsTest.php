@@ -298,6 +298,19 @@ final class RowsTest extends TestCase
         $this->assertCount(0, $rows);
     }
 
+    public function test_drop_right_more_than_available() : void
+    {
+        $rows = new Rows(
+            Row::create(new IntegerEntry('id', 1)),
+            Row::create(new IntegerEntry('id', 2)),
+            Row::create(new IntegerEntry('id', 3)),
+        );
+
+        $rows = $rows->dropRight(5);
+
+        $this->assertCount(0, $rows);
+    }
+
     public function test_drop_right_more_than_exists() : void
     {
         $rows = new Rows(
