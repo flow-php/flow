@@ -56,13 +56,6 @@ final class SheetRangeTest extends TestCase
         new SheetRange(new Columns('Sheet2', 'A', 'B'), $startRow, $endRow);
     }
 
-    public function test_next_rows_range() : void
-    {
-        $range = new SheetRange(new Columns('Sheet2', 'A', 'B'), 1, 10);
-        $this->assertSame('Sheet2!A11:B20', $range->nextRows(10)->toString());
-        $this->assertSame('Sheet2!A21:B40', $range->nextRows(10)->nextRows(20)->toString());
-    }
-
     /**
      * @dataProvider example_string_ranges
      */

@@ -26,19 +26,6 @@ final class SheetRange
         }
     }
 
-    public function nextRows(int $count) : self
-    {
-        if ($count < 1) {
-            throw new InvalidArgumentException(\sprintf('Count "%d" must be greater than 0', $count));
-        }
-
-        return new self(
-            $this->columnRange,
-            $this->endRow + 1,
-            $this->endRow + $count,
-        );
-    }
-
     public function toString() : string
     {
         return \sprintf(

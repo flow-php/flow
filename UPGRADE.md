@@ -30,6 +30,10 @@ Additionally, \Closure::close method no longer requires Rows to be passed as an 
 
 DataFrame::parallelize() method is deprecated, and it will be removed, instead use DataFrame::batchSize(int $size) method. 
 
+### 6) `GoogleSheetExtractor::$rowsInBatch` renamed
+
+`GoogleSheetExtractor::$rowsInBatch` was renamed to a more adequate `$endRow`, the same as the one used in the underlying code of the `SheetRange` class. Related code was adjusted to new naming. Additionally,  the `SheetRange::nextRows()` method was removed.
+
 ---
 
 ## Upgrading from 0.3.x to 0.4.x
