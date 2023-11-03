@@ -1,6 +1,7 @@
-## [Unreleased] - 2023-11-02
+## [Unreleased] - 2023-11-03
 
 ### Added
+- [#716](https://github.com/flow-php/flow/pull/716) - **batchSize argument to DataFrame::collect method** - [@norberttech](https://github.com/norberttech)
 - [#714](https://github.com/flow-php/flow/pull/714) - **Missing tests for FilesystemProcessor** - [@norberttech](https://github.com/norberttech)
 - [#712](https://github.com/flow-php/flow/pull/712) - **Added support for partitioning in parquet loader** - [@norberttech](https://github.com/norberttech)
 - [#711](https://github.com/flow-php/flow/pull/711) - **Allow to append into parquet files** - [@norberttech](https://github.com/norberttech)
@@ -43,6 +44,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#716](https://github.com/flow-php/flow/pull/716) - **Closure was moved to Loader namespace as it applies to Loaders, not Pipelines** - [@norberttech](https://github.com/norberttech)
 - [#708](https://github.com/flow-php/flow/pull/708) - **Rename `docker-compose.yml` to `compose.yml` to match specification** - [@stloyd](https://github.com/stloyd)
 - [#710](https://github.com/flow-php/flow/pull/710) - **Improved parquet writer performance** - [@norberttech](https://github.com/norberttech)
 - [#706](https://github.com/flow-php/flow/pull/706) - **Adjusted time related columns to be compatibile with other parquet libraries** - [@norberttech](https://github.com/norberttech)
@@ -155,6 +157,8 @@
 - [c9fb26](https://github.com/flow-php/flow/commit/c9fb26dc2e0558c0f33b6097286e4dc6e2799d3f) - **test-benchmark.yml** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#716](https://github.com/flow-php/flow/pull/716) - **Rows from Closure::closure method** - [@norberttech](https://github.com/norberttech)
+- [#716](https://github.com/flow-php/flow/pull/716) - **BufferLoader** - [@norberttech](https://github.com/norberttech)
 - [#709](https://github.com/flow-php/flow/pull/709) - **Removed logger from parquet** - [@norberttech](https://github.com/norberttech)
 - [#694](https://github.com/flow-php/flow/pull/694) - **Codename Parquet library dependency** - [@norberttech](https://github.com/norberttech)
 - [8d4882](https://github.com/flow-php/flow/commit/8d4882febeb7848f4b75844a3bd0ea04778782e7) - **additional char in cache restore-keys paremeters for phpbench** - [@norberttech](https://github.com/norberttech)
