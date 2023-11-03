@@ -9,7 +9,6 @@ use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Pipeline;
-use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 /**
@@ -41,9 +40,9 @@ final class ParallelizingPipeline implements Pipeline
         return new self($this->pipeline, $this->parallel);
     }
 
-    public function closure(Rows $rows, FlowContext $context) : void
+    public function closure(FlowContext $context) : void
     {
-        $this->pipeline->closure($rows, $context);
+        $this->pipeline->closure($context);
     }
 
     public function has(string $transformerClass) : bool

@@ -1,9 +1,8 @@
 <?php declare(strict_types=1);
 
-namespace Flow\ETL\Pipeline;
+namespace Flow\ETL\Loader;
 
 use Flow\ETL\FlowContext;
-use Flow\ETL\Rows;
 
 /**
  * Loaders implementing this adapter will be additionally notified
@@ -11,5 +10,5 @@ use Flow\ETL\Rows;
  */
 interface Closure
 {
-    public function closure(Rows $rows, FlowContext $context) : void;
+    public function closure(FlowContext $context) : void;
 }

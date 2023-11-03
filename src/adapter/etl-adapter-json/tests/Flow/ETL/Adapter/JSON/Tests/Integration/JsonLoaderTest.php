@@ -69,7 +69,7 @@ JSON,
 
         $loader->load(new Rows(), $context = new FlowContext(Config::default()));
 
-        $loader->closure(new Rows(), $context);
+        $loader->closure($context);
 
         $this->assertJsonStringEqualsJsonString(
             <<<'JSON'
@@ -149,7 +149,7 @@ JSON,
             $context = ($context)->setMode(SaveMode::Overwrite)->setThreadSafe()
         );
 
-        $loader->closure(new Rows(), $context);
+        $loader->closure($context);
 
         $files = \array_values(\array_diff(\scandir($stream), ['..', '.']));
 

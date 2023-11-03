@@ -8,6 +8,7 @@ use Flow\ETL\DSL\From;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
+use Flow\ETL\Loader\Closure;
 use Flow\ETL\Pipeline;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
@@ -36,11 +37,11 @@ final class SynchronousPipeline implements Pipeline
         return new self();
     }
 
-    public function closure(Rows $rows, FlowContext $context) : void
+    public function closure(FlowContext $context) : void
     {
         foreach ($this->pipes->all() as $pipe) {
-            if ($pipe instanceof Pipeline\Closure) {
-                $pipe->closure($rows, $context);
+            if ($pipe instanceof Closure) {
+                $pipe->closure($context);
             }
         }
     }
@@ -91,7 +92,7 @@ final class SynchronousPipeline implements Pipeline
             yield $rows;
         }
 
-        $this->closure($rows, $context);
+        $this->closure($context);
     }
 
     public function source(Extractor $extractor) : self

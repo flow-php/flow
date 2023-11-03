@@ -22,8 +22,8 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\GroupBy\Aggregation;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Loader;
+use Flow\ETL\Loader\Closure;
 use Flow\ETL\Memory\ArrayMemory;
-use Flow\ETL\Pipeline\Closure;
 use Flow\ETL\Pipeline\LocalSocketPipeline;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\ArrayEntry;
@@ -504,7 +504,7 @@ ASCIITABLE,
                     return $rows;
                 }
 
-                public function closure(Rows $rows, FlowContext $context) : void
+                public function closure(FlowContext $context) : void
                 {
                     $this->closureCalled = true;
                 }
@@ -659,7 +659,7 @@ ASCIITABLE,
                     return $rows;
                 }
 
-                public function closure(Rows $rows, FlowContext $context) : void
+                public function closure(FlowContext $context) : void
                 {
                     $this->closureCalled = true;
                 }

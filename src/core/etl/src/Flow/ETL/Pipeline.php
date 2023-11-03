@@ -16,7 +16,7 @@ interface Pipeline
      */
     public function cleanCopy() : self;
 
-    public function closure(Rows $rows, FlowContext $context) : void;
+    public function closure(FlowContext $context) : void;
 
     public function has(string $transformerClass) : bool;
 
