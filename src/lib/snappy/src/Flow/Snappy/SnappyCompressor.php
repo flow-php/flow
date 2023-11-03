@@ -218,7 +218,7 @@ final class SnappyCompressor
 
     private function load32(array $array, int $pos) : int
     {
-        return $array[$pos] + ($array[$pos + 1] << 8) + ($array[$pos + 2] << 16) + ($array[$pos + 3] << 24);
+        return $array[$pos] + ($array[$pos + 1] << 8) + ($array[$pos + 2] << 16) + ($array[$pos + 3] ?? 0 << 24);
     }
 
     private function putVarInt(int $value, array &$output, int $op) : int

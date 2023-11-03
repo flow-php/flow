@@ -47,7 +47,7 @@ final class Bytes implements \ArrayAccess, \Countable, \IteratorAggregate
 
     public function offsetGet($offset) : mixed
     {
-        return $this->bytes[$offset];
+        return $this->bytes[$offset] ?? null;
     }
 
     public function offsetSet($offset, $value) : void
