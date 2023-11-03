@@ -86,14 +86,16 @@ final class DataFrame
     }
 
     /**
-     * Keep extracting rows and passing them through all transformers up to this point.
-     * From here all transformed Rows are collected and merged together before pushing them forward.
+     * Before transforming rows, collect them into batches of given size.
+     * When batch size is not specific, all rows are going to be first collected into memory and then processed.
+     *
+     * @param null|int<1, max> $batchSize
      *
      * @lazy
      */
-    public function collect() : self
+    public function collect(?int $batchSize = null) : self
     {
-        $this->pipeline = new CollectingPipeline($this->pipeline);
+        $this->pipeline = new CollectingPipeline($this->pipeline, $batchSize);
 
         return $this;
     }

@@ -21,4 +21,14 @@ final class ChunkExtractorTest extends TestCase
             \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
         );
     }
+
+    public function test_chunk_extractor_with_chunk_size_greater_than_() : void
+    {
+        $extractor = new ChunkExtractor(new AllRowTypesFakeExtractor(total: 2, rowsSize: 10), chunkSize: 25);
+
+        $this->assertCount(
+            1,
+            \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
+        );
+    }
 }

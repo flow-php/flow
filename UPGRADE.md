@@ -15,6 +15,12 @@ To improve code quality and reduce code coupling `EntryFactory` was removed from
 
 Before, passing `Schema` into `NativeEntryFactory::create()` had fallback when the given entry was not found in a passed schema, now the schema has higher priority & fallback is no longer available, instead when the definition is missing in a passed schema, `InvalidArgumentException` will be thrown.
 
+### 3) BufferLoader was removed
+
+BufferLoader was removed in favor of `DataFrame::collect(int $batchSize = null)` method which now accepts additional
+argument `$batchSize` that will keep collecting Rows from Extractor until the given batch size is reached.
+Which does exactly the same thing as BufferLoader did, but in a more generic way.
+
 ---
 
 ## Upgrading from 0.3.x to 0.4.x
