@@ -130,7 +130,7 @@ final class AvroTest extends TestCase
                     }, \range(1, 100))
                 )
             ))
-            ->parallelize(10)
+            ->batchSize(10)
             ->write(Avro::to($path))
             ->run();
 
