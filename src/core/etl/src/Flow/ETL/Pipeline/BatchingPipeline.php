@@ -1,6 +1,4 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace Flow\ETL\Pipeline;
 
@@ -10,24 +8,30 @@ use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Pipeline;
-use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
-/**
- * @internal
- */
-final class CollectingPipeline implements Pipeline
+final class BatchingPipeline implements Pipeline
 {
     private readonly Pipeline $nextPipeline;
 
     /**
      * @param Pipeline $pipeline
+     * @param int<1, max> $size
      *
      * @throws InvalidArgumentException
      */
-    public function __construct(private readonly Pipeline $pipeline)
+    public function __construct(private readonly Pipeline $pipeline, private readonly int $size)
     {
         $this->nextPipeline = $pipeline->cleanCopy();
+
+        /**
+         * @psalm-suppress DocblockTypeContradiction
+         *
+         * @phpstan-ignore-next-line
+         */
+        if ($this->size <= 0) {
+            throw new InvalidArgumentException('Batch size must be greater than 0, given: ' . $this->size);
+        }
     }
 
     public function add(Loader|Transformer $pipe) : self
@@ -59,9 +63,12 @@ final class CollectingPipeline implements Pipeline
 
     public function process(FlowContext $context) : \Generator
     {
-        $this->nextPipeline->source(From::rows(
-            (new Rows())->merge(...\iterator_to_array($this->pipeline->process($context)))
-        ));
+        $this->nextPipeline->source(
+            From::chunks_from(
+                From::pipeline($this->pipeline),
+                $this->size
+            )
+        );
 
         return $this->nextPipeline->process($context);
     }

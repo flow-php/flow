@@ -14,6 +14,7 @@ use Flow\ETL\Join\Expression;
 use Flow\ETL\Join\Join;
 use Flow\ETL\Loader\SchemaValidationLoader;
 use Flow\ETL\Loader\StreamLoader\Output;
+use Flow\ETL\Pipeline\BatchingPipeline;
 use Flow\ETL\Pipeline\CachingPipeline;
 use Flow\ETL\Pipeline\CollectingPipeline;
 use Flow\ETL\Pipeline\GroupByPipeline;
@@ -69,6 +70,25 @@ final class DataFrame
     }
 
     /**
+     * Merge/Split Rows yielded by Extractor into batches of given size.
+     * For example, when Extractor is yielding one row at time, this method will merge them into batches of given size
+     * before passing them to the next pipeline element.
+     * Similarly when Extractor is yielding batches of rows, this method will split them into smaller batches of given size.
+     *
+     * In order to merge all Rows into a single batch use DataFrame::collect() method.
+     *
+     * @param int<1, max> $size
+     *
+     * @lazy
+     */
+    public function batchSize(int $size) : self
+    {
+        $this->pipeline = new BatchingPipeline($this->pipeline, $size);
+
+        return $this;
+    }
+
+    /**
      * Start processing rows up to this moment and put each instance of Rows
      * into previously defined cache.
      * Cache type can be set through ConfigBuilder.
@@ -86,16 +106,14 @@ final class DataFrame
     }
 
     /**
-     * Before transforming rows, collect them into batches of given size.
-     * When batch size is not specific, all rows are going to be first collected into memory and then processed.
-     *
-     * @param null|int<1, max> $batchSize
+     * Before transforming rows, collect them and merge into single Rows instance.
+     * This might lead to memory issues when processing large amount of rows, use with caution.
      *
      * @lazy
      */
-    public function collect(?int $batchSize = null) : self
+    public function collect() : self
     {
-        $this->pipeline = new CollectingPipeline($this->pipeline, $batchSize);
+        $this->pipeline = new CollectingPipeline($this->pipeline);
 
         return $this;
     }
@@ -430,6 +448,8 @@ final class DataFrame
     }
 
     /**
+     * @deprecated - use DataFrame::batchSize() instead
+     *
      * Keep extracting rows and passing them through all transformers up to this point.
      * From here each transformed Row is divided and pushed forward to following pipeline elements.
      *

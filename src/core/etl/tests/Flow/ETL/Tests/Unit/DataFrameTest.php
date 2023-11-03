@@ -13,6 +13,7 @@ use Flow\ETL\DataFrameFactory;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\DSL\From;
 use Flow\ETL\DSL\Partitions;
+use Flow\ETL\DSL\To;
 use Flow\ETL\DSL\Transform;
 use Flow\ETL\ErrorHandler\IgnoreError;
 use Flow\ETL\Exception\InvalidArgumentException;
@@ -46,6 +47,27 @@ use PHPUnit\Framework\TestCase;
 
 final class DataFrameTest extends TestCase
 {
+    public function test_batch_size() : void
+    {
+        (new Flow())
+            ->read(From::array([
+                ['id' => '01', 'elements' => [['sub_id' => '01_01'], ['sub_id' => '01_02']]],
+                ['id' => '02', 'elements' => [['sub_id' => '02_01'], ['sub_id' => '02_02']]],
+                ['id' => '03', 'elements' => [['sub_id' => '03_01'], ['sub_id' => '03_02']]],
+                ['id' => '04', 'elements' => [['sub_id' => '04_01'], ['sub_id' => '04_02']]],
+                ['id' => '05', 'elements' => [['sub_id' => '05_01'], ['sub_id' => '05_02'], ['sub_id' => '05_03']]],
+            ]))
+            ->batchSize(1)
+            ->load(To::callback(function (Rows $rows) : void {
+                $this->assertCount(1, $rows);
+            }))
+            ->withEntry('element', ref('elements')->expand())
+            ->batchSize(3)
+            ->run(function (Rows $rows) : void {
+                $this->assertLessThanOrEqual(3, $rows->count());
+            });
+    }
+
     public function test_count() : void
     {
         $count = (new Flow())
@@ -75,7 +97,7 @@ final class DataFrameTest extends TestCase
                 Row::create(Entry::integer('id', 4), Entry::string('country', 'PL')),
             )
         )
-            ->parallelize(2)
+            ->batchSize(2)
             ->crossJoin(
                 (new Flow())->process(
                     new Rows(
@@ -621,6 +643,33 @@ ASCIITABLE,
         $this->assertCount(10, $rows);
     }
 
+    public function test_etl_limit_with_batch_size() : void
+    {
+        $rows = (new Flow())->extract(
+            new class implements Extractor {
+                /**
+                 * @param FlowContext $context
+                 *
+                 * @return \Generator<int, Rows, mixed, void>
+                 */
+                public function extract(FlowContext $context) : \Generator
+                {
+                    for ($i = 0; $i < 1000; $i++) {
+                        yield new Rows(
+                            Row::create(new IntegerEntry('id', $i + 1)),
+                            Row::create(new IntegerEntry('id', $i + 2)),
+                        );
+                    }
+                }
+            }
+        )
+            ->batchSize(50)
+            ->limit(10)
+            ->fetch();
+
+        $this->assertCount(10, $rows);
+    }
+
     public function test_etl_limit_with_collecting() : void
     {
         $rows = (new Flow())->extract(
@@ -643,33 +692,6 @@ ASCIITABLE,
         )
             ->limit(10)
             ->collect()
-            ->fetch();
-
-        $this->assertCount(10, $rows);
-    }
-
-    public function test_etl_limit_with_parallelizing() : void
-    {
-        $rows = (new Flow())->extract(
-            new class implements Extractor {
-                /**
-                 * @param FlowContext $context
-                 *
-                 * @return \Generator<int, Rows, mixed, void>
-                 */
-                public function extract(FlowContext $context) : \Generator
-                {
-                    for ($i = 0; $i < 1000; $i++) {
-                        yield new Rows(
-                            Row::create(new IntegerEntry('id', $i + 1)),
-                            Row::create(new IntegerEntry('id', $i + 2)),
-                        );
-                    }
-                }
-            }
-        )
-            ->parallelize(50)
-            ->limit(10)
             ->fetch();
 
         $this->assertCount(10, $rows);
@@ -732,62 +754,7 @@ ASCIITABLE,
         $this->assertEquals($rows, $collectedRows);
     }
 
-    public function test_etl_with_collecting() : void
-    {
-        (new Flow())->extract(
-            new class implements Extractor {
-                /**
-                 * @param FlowContext $context
-                 *
-                 * @return \Generator<int, Rows, mixed, void>
-                 */
-                public function extract(FlowContext $context) : \Generator
-                {
-                    yield new Rows(Row::create(new IntegerEntry('id', 1)));
-                    yield new Rows(Row::create(new IntegerEntry('id', 2)));
-                    yield new Rows(Row::create(new IntegerEntry('id', 3)));
-                }
-            }
-        )
-            ->transform(
-                new class implements Transformer {
-                    public function transform(Rows $rows, FlowContext $context) : Rows
-                    {
-                        return $rows->map(fn (Row $row) => $row->rename('id', 'new_id'));
-                    }
-
-                    public function __serialize() : array
-                    {
-                        return [];
-                    }
-
-                    public function __unserialize(array $data) : void
-                    {
-                    }
-                }
-            )
-            ->collect()
-            ->load(
-                new class implements Loader {
-                    public function load(Rows $rows, FlowContext $context) : void
-                    {
-                        Assert::assertCount(3, $rows);
-                    }
-
-                    public function __serialize() : array
-                    {
-                        return [];
-                    }
-
-                    public function __unserialize(array $data) : void
-                    {
-                    }
-                }
-            )
-            ->run();
-    }
-
-    public function test_etl_with_parallelizing() : void
+    public function test_etl_with_batch_size() : void
     {
         (new Flow())->extract(
             new class implements Extractor {
@@ -830,12 +797,67 @@ ASCIITABLE,
                     }
                 }
             )
-            ->parallelize(2)
+            ->batchSize(2)
             ->load(
                 new class implements Loader {
                     public function load(Rows $rows, FlowContext $context) : void
                     {
                         Assert::assertCount(2, $rows);
+                    }
+
+                    public function __serialize() : array
+                    {
+                        return [];
+                    }
+
+                    public function __unserialize(array $data) : void
+                    {
+                    }
+                }
+            )
+            ->run();
+    }
+
+    public function test_etl_with_collecting() : void
+    {
+        (new Flow())->extract(
+            new class implements Extractor {
+                /**
+                 * @param FlowContext $context
+                 *
+                 * @return \Generator<int, Rows, mixed, void>
+                 */
+                public function extract(FlowContext $context) : \Generator
+                {
+                    yield new Rows(Row::create(new IntegerEntry('id', 1)));
+                    yield new Rows(Row::create(new IntegerEntry('id', 2)));
+                    yield new Rows(Row::create(new IntegerEntry('id', 3)));
+                }
+            }
+        )
+            ->transform(
+                new class implements Transformer {
+                    public function transform(Rows $rows, FlowContext $context) : Rows
+                    {
+                        return $rows->map(fn (Row $row) => $row->rename('id', 'new_id'));
+                    }
+
+                    public function __serialize() : array
+                    {
+                        return [];
+                    }
+
+                    public function __unserialize(array $data) : void
+                    {
+                    }
+                }
+            )
+            ->collect()
+            ->load(
+                new class implements Loader {
+                    public function load(Rows $rows, FlowContext $context) : void
+                    {
+                        Assert::assertCount(3, $rows);
                     }
 
                     public function __serialize() : array
@@ -1026,7 +1048,7 @@ ASCIITABLE,
         );
     }
 
-    public function test_group_by_multiple_columns_and_parallelize() : void
+    public function test_group_by_multiple_columns_and_batch_size() : void
     {
         $loader = $this->createMock(Loader::class);
         $loader->expects($this->exactly(4))
@@ -1045,7 +1067,7 @@ ASCIITABLE,
             )
         )
             ->groupBy('country', 'gender')
-            ->parallelize(1)
+            ->batchSize(1)
             ->write($loader)
             ->fetch();
 
@@ -1190,7 +1212,7 @@ ASCIITABLE,
                 Row::create(Entry::integer('id', 9), Entry::string('country', 'US')),
             )
         )
-            ->parallelize(4)
+            ->batchSize(4)
             ->join(
                 (new Flow())->process(
                     new Rows(
@@ -1236,7 +1258,7 @@ ASCIITABLE,
                 Row::create(Entry::integer('id', 9), Entry::string('country', 'US')),
             )
         )
-            ->parallelize(4)
+            ->batchSize(4)
             ->joinEach(
                 new class implements DataFrameFactory {
                     public function from(Rows $rows) : DataFrame
