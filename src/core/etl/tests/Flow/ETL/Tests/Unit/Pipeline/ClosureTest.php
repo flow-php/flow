@@ -7,7 +7,7 @@ namespace Flow\ETL\Tests\Unit\Pipeline;
 use Flow\ETL\Flow;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
-use Flow\ETL\Pipeline\Closure;
+use Flow\ETL\Loader\Closure;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Double\AllRowTypesFakeExtractor;
 use PHPUnit\Framework\TestCase;
@@ -28,7 +28,7 @@ final class ClosureTest extends TestCase
                     $this->rowsLoaded++;
                 }
 
-                public function closure(Rows $rows, FlowContext $context) : void
+                public function closure(FlowContext $context) : void
                 {
                     $this->closureCalled = true;
                 }

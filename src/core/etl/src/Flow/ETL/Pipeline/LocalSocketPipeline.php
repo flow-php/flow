@@ -51,7 +51,7 @@ final class LocalSocketPipeline implements Pipeline
         return new Pipeline\SynchronousPipeline();
     }
 
-    public function closure(Rows $rows, FlowContext $context) : void
+    public function closure(FlowContext $context) : void
     {
     }
 

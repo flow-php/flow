@@ -18,14 +18,6 @@ use Flow\ETL\Transformer;
  */
 class To
 {
-    /**
-     * @param int<1, max> $bufferSize
-     */
-    final public static function buffer(Loader $overflowLoader, int $bufferSize) : Loader
-    {
-        return new Loader\BufferLoader($overflowLoader, $bufferSize);
-    }
-
     final public static function callback(callable $callable) : Loader
     {
         return new Loader\CallbackLoader($callable);

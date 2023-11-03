@@ -11,6 +11,10 @@ final class DumpLoggerTest extends TestCase
 {
     public function test_logger() : void
     {
+        if (\extension_loaded('xdebug')) {
+            $this->markTestSkipped('Xdebug extension is loaded and it will affect DumpLogger');
+        }
+
         $logger = new DumpLogger();
 
         \ob_start();

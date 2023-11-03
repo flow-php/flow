@@ -9,7 +9,6 @@ use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Pipeline;
-use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 final class LimitingPipeline implements Pipeline
@@ -35,9 +34,9 @@ final class LimitingPipeline implements Pipeline
         return $this->pipeline->cleanCopy();
     }
 
-    public function closure(Rows $rows, FlowContext $context) : void
+    public function closure(FlowContext $context) : void
     {
-        $this->pipeline->closure($rows, $context);
+        $this->pipeline->closure($context);
     }
 
     public function has(string $transformerClass) : bool
@@ -59,7 +58,7 @@ final class LimitingPipeline implements Pipeline
 
             if ($total === $this->limit) {
                 yield $rows;
-                $this->closure($rows, $context);
+                $this->closure($context);
 
                 return;
             }
@@ -71,7 +70,7 @@ final class LimitingPipeline implements Pipeline
                     yield $rows->dropRight($diff);
                 }
 
-                $this->closure($rows->dropRight($diff), $context);
+                $this->closure($context);
 
                 return;
             }

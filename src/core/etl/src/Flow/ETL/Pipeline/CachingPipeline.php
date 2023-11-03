@@ -8,7 +8,6 @@ use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Pipeline;
-use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 final class CachingPipeline implements Pipeline
@@ -29,9 +28,9 @@ final class CachingPipeline implements Pipeline
         return $this->pipeline->cleanCopy();
     }
 
-    public function closure(Rows $rows, FlowContext $context) : void
+    public function closure(FlowContext $context) : void
     {
-        $this->pipeline->closure($rows, $context);
+        $this->pipeline->closure($context);
     }
 
     public function has(string $transformerClass) : bool

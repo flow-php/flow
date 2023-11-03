@@ -9,7 +9,7 @@ use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
-use Flow\ETL\Pipeline\Closure;
+use Flow\ETL\Loader\Closure;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\DateTimeEntry;
 use Flow\ETL\Row\Entry\TypedCollection\ObjectType;
@@ -49,7 +49,7 @@ final class AvroLoader implements Closure, Loader, Loader\FileLoader
         $this->writer = null;
     }
 
-    public function closure(Rows $rows, FlowContext $context) : void
+    public function closure(FlowContext $context) : void
     {
         if ($this->writer !== null) {
             $this->writer($context)->close();

@@ -10,8 +10,8 @@ use Flow\ETL\Filesystem\Stream\FileStream;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
+use Flow\ETL\Loader\Closure;
 use Flow\ETL\Partition;
-use Flow\ETL\Pipeline\Closure;
 use Flow\ETL\Rows;
 
 /**
@@ -43,7 +43,7 @@ final class JsonLoader implements Closure, Loader, Loader\FileLoader
         $this->path = $data['path'];
     }
 
-    public function closure(Rows $rows, FlowContext $context) : void
+    public function closure(FlowContext $context) : void
     {
         foreach ($context->streams() as $stream) {
             if ($stream->path()->extension() === 'json') {

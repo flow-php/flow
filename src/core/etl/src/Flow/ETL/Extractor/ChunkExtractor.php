@@ -6,6 +6,7 @@ namespace Flow\ETL\Extractor;
 
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Rows;
 
 final class ChunkExtractor implements Extractor, OverridingExtractor
 {
@@ -20,10 +21,26 @@ final class ChunkExtractor implements Extractor, OverridingExtractor
 
     public function extract(FlowContext $context) : \Generator
     {
+        $chunk = new Rows();
+
         foreach ($this->extractor->extract($context) as $rows) {
             foreach ($rows->chunks($this->chunkSize) as $rowsChunk) {
-                yield $rowsChunk;
+                $chunk = $chunk->merge($rowsChunk);
+
+                if ($chunk->count() === $this->chunkSize) {
+                    yield $chunk;
+                    $chunk = new Rows();
+                }
+
+                if ($chunk->count() > $this->chunkSize) {
+                    yield $chunk->dropRight($chunk->count() - $this->chunkSize);
+                    $chunk = $chunk->takeRight($chunk->count() - $this->chunkSize);
+                }
             }
+        }
+
+        if ($chunk->count()) {
+            yield $chunk;
         }
     }
 

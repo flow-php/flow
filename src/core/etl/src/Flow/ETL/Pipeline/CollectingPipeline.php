@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Pipeline;
 
 use Flow\ETL\DSL\From;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
@@ -19,9 +20,26 @@ final class CollectingPipeline implements Pipeline
 {
     private readonly Pipeline $nextPipeline;
 
-    public function __construct(private readonly Pipeline $pipeline)
+    /**
+     * @param Pipeline $pipeline
+     * @param null|int<1, max> $batchSize
+     *
+     * @throws InvalidArgumentException
+     */
+    public function __construct(private readonly Pipeline $pipeline, private readonly ?int $batchSize = null)
     {
         $this->nextPipeline = $pipeline->cleanCopy();
+
+        if ($this->batchSize !== null) {
+            /**
+             * @psalm-suppress DocblockTypeContradiction
+             *
+             * @phpstan-ignore-next-line
+             */
+            if ($this->batchSize <= 0) {
+                throw new InvalidArgumentException('Batch size must be greater than 0, given: ' . $this->batchSize);
+            }
+        }
     }
 
     public function add(Loader|Transformer $pipe) : self
@@ -36,9 +54,9 @@ final class CollectingPipeline implements Pipeline
         return $this->pipeline->cleanCopy();
     }
 
-    public function closure(Rows $rows, FlowContext $context) : void
+    public function closure(FlowContext $context) : void
     {
-        $this->pipeline->closure($rows, $context);
+        $this->pipeline->closure($context);
     }
 
     public function has(string $transformerClass) : bool
@@ -53,9 +71,18 @@ final class CollectingPipeline implements Pipeline
 
     public function process(FlowContext $context) : \Generator
     {
-        $this->nextPipeline->source(From::rows(
-            (new Rows())->merge(...\iterator_to_array($this->pipeline->process($context)))
-        ));
+        if ($this->batchSize === null) {
+            $this->nextPipeline->source(From::rows(
+                (new Rows())->merge(...\iterator_to_array($this->pipeline->process($context)))
+            ));
+        } else {
+            $this->nextPipeline->source(
+                From::chunks_from(
+                    From::pipeline($this->pipeline),
+                    $this->batchSize
+                )
+            );
+        }
 
         return $this->nextPipeline->process($context);
     }

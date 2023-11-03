@@ -10,8 +10,8 @@ use Flow\ETL\Filesystem\Stream\FileStream;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
+use Flow\ETL\Loader\Closure;
 use Flow\ETL\Partition;
-use Flow\ETL\Pipeline\Closure;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Rows;
 
@@ -62,7 +62,7 @@ final class CSVLoader implements Closure, Loader, Loader\FileLoader
         $this->newLineSeparator = $data['new_line_separator'];
     }
 
-    public function closure(Rows $rows, FlowContext $context) : void
+    public function closure(FlowContext $context) : void
     {
         $context->streams()->close($this->path);
     }

@@ -6,7 +6,7 @@ use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
-use Flow\ETL\Pipeline\Closure;
+use Flow\ETL\Loader\Closure;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Rows;
 use Flow\Parquet\Options;
@@ -54,7 +54,7 @@ final class ParquetLoader implements Closure, Loader, Loader\FileLoader
         $this->path = $data['path'];
     }
 
-    public function closure(Rows $rows, FlowContext $context) : void
+    public function closure(FlowContext $context) : void
     {
         if (\count($this->writers)) {
             foreach ($this->writers as $writer) {

@@ -27,9 +27,9 @@ final class VoidPipeline implements Pipeline
         return new self($this->pipeline->cleanCopy());
     }
 
-    public function closure(Rows $rows, FlowContext $context) : void
+    public function closure(FlowContext $context) : void
     {
-        $this->pipeline->closure($rows, $context);
+        $this->pipeline->closure($context);
     }
 
     public function has(string $transformerClass) : bool
