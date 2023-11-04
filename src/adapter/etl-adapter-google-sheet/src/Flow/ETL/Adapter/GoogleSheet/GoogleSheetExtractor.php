@@ -7,11 +7,16 @@ namespace Flow\ETL\Adapter\GoogleSheet;
 use function Flow\ETL\DSL\array_to_rows;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\Limitable;
+use Flow\ETL\Extractor\LimitableExtractor;
+use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Google\Service\Sheets;
 
-final class GoogleSheetExtractor implements Extractor
+final class GoogleSheetExtractor implements Extractor, LimitableExtractor
 {
+    use Limitable;
+
     /**
      * @param array{dateTimeRenderOption?: string, majorDimension?: string, valueRenderOption?: string} $options
      *
@@ -28,6 +33,7 @@ final class GoogleSheetExtractor implements Extractor
         if ($this->rowsPerPage < 1) {
             throw new InvalidArgumentException('Rows per page must be greater than 0');
         }
+        $this->resetLimit();
     }
 
     public function extract(FlowContext $context) : \Generator
@@ -95,7 +101,12 @@ final class GoogleSheetExtractor implements Extractor
             $totalRows += \count($rows);
 
             foreach ($rows as $row) {
-                yield array_to_rows($row, $context->entryFactory());
+                $signal = yield array_to_rows($row, $context->entryFactory());
+                $this->countRow();
+
+                if ($signal === Signal::STOP || $this->reachedLimit()) {
+                    return;
+                }
             }
 
             if ($totalRows < $cellsRange->endRow) {

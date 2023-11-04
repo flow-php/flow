@@ -23,7 +23,11 @@ final class ChainExtractor implements Extractor, OverridingExtractor
     {
         foreach ($this->extractors as $extractor) {
             foreach ($extractor->extract($context) as $rows) {
-                yield $rows;
+                $signal = yield $rows;
+
+                if ($signal === Signal::STOP) {
+                    return;
+                }
             }
         }
     }

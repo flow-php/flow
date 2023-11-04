@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Text\Tests\Integration;
 
+use Flow\ETL\Adapter\Text\TextExtractor;
 use Flow\ETL\Config;
+use Flow\ETL\DSL\From;
 use Flow\ETL\DSL\Text;
+use Flow\ETL\Extractor\Signal;
+use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Flow;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
@@ -49,5 +53,52 @@ final class TextExtractorTest extends TestCase
         }
 
         $this->assertSame(2048, $total);
+    }
+
+    public function test_limit() : void
+    {
+        $path = \sys_get_temp_dir() . '/text_extractor_signal_stop.csv';
+
+        if (\file_exists($path)) {
+            \unlink($path);
+        }
+
+        (new Flow())->read(From::array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
+            ->write(Text::to($path))
+            ->run();
+        $extractor = new TextExtractor(Path::realpath($path));
+        $extractor->changeLimit(2);
+
+        $this->assertCount(
+            2,
+            \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
+        );
+    }
+
+    public function test_signal_stop() : void
+    {
+        $path = \sys_get_temp_dir() . '/text_extractor_signal_stop.csv';
+
+        if (\file_exists($path)) {
+            \unlink($path);
+        }
+
+        (new Flow())->read(From::array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
+            ->write(Text::to($path))
+            ->run();
+
+        $extractor = new TextExtractor(Path::realpath($path));
+        $generator = $extractor->extract(new FlowContext(Config::default()));
+
+        $this->assertSame([['text' => '1']], $generator->current()->toArray());
+        $this->assertTrue($generator->valid());
+        $generator->next();
+        $this->assertSame([['text' => '2']], $generator->current()->toArray());
+        $this->assertTrue($generator->valid());
+        $generator->next();
+        $this->assertSame([['text' => '3']], $generator->current()->toArray());
+        $this->assertTrue($generator->valid());
+        $generator->send(Signal::STOP);
+        $this->assertFalse($generator->valid());
     }
 }

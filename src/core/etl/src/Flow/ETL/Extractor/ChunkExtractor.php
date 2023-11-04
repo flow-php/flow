@@ -28,12 +28,20 @@ final class ChunkExtractor implements Extractor, OverridingExtractor
                 $chunk = $chunk->merge($rowsChunk);
 
                 if ($chunk->count() === $this->chunkSize) {
-                    yield $chunk;
+                    $signal = yield $chunk;
+
+                    if ($signal === Signal::STOP) {
+                        return;
+                    }
                     $chunk = new Rows();
                 }
 
                 if ($chunk->count() > $this->chunkSize) {
-                    yield $chunk->dropRight($chunk->count() - $this->chunkSize);
+                    $signal = yield $chunk->dropRight($chunk->count() - $this->chunkSize);
+
+                    if ($signal === Signal::STOP) {
+                        return;
+                    }
                     $chunk = $chunk->takeRight($chunk->count() - $this->chunkSize);
                 }
             }

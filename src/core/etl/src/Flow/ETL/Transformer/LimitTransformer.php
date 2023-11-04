@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Flow\ETL\Transformer;
 
@@ -22,19 +22,19 @@ final class LimitTransformer implements Transformer
         }
     }
 
-    public function __serialize(): array
+    public function __serialize() : array
     {
         return [
             'limit' => $this->limit,
         ];
     }
 
-    public function __unserialize(array $data): void
+    public function __unserialize(array $data) : void
     {
         $this->limit = $data['limit'];
     }
 
-    public function transform(Rows $rows, FlowContext $context): Rows
+    public function transform(Rows $rows, FlowContext $context) : Rows
     {
         $this->rowsCount += $rows->count();
 

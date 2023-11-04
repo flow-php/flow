@@ -18,7 +18,6 @@ use Flow\ETL\Pipeline\BatchingPipeline;
 use Flow\ETL\Pipeline\CachingPipeline;
 use Flow\ETL\Pipeline\CollectingPipeline;
 use Flow\ETL\Pipeline\GroupByPipeline;
-use Flow\ETL\Pipeline\LimitingPipeline;
 use Flow\ETL\Pipeline\NestedPipeline;
 use Flow\ETL\Pipeline\ParallelizingPipeline;
 use Flow\ETL\Pipeline\VoidPipeline;
@@ -35,6 +34,7 @@ use Flow\ETL\Transformer\EntryExpressionFilterTransformer;
 use Flow\ETL\Transformer\JoinEachRowsTransformer;
 use Flow\ETL\Transformer\JoinRowsTransformer;
 use Flow\ETL\Transformer\KeepEntriesTransformer;
+use Flow\ETL\Transformer\LimitTransformer;
 use Flow\ETL\Transformer\RemoveEntriesTransformer;
 use Flow\ETL\Transformer\StyleConverter\StringStyles;
 
@@ -205,6 +205,7 @@ final class DataFrame
     public function fetch(?int $limit = null) : Rows
     {
         $clone = clone $this;
+        $clone->collect();
 
         if ($limit !== null) {
             $clone->limit($limit);
@@ -226,9 +227,13 @@ final class DataFrame
             return $fetchedRows;
         }
 
-        return (new Rows())->merge(
-            ...\iterator_to_array($clone->pipeline->process($clone->context))
-        );
+        $rows = \iterator_to_array($clone->pipeline->process($clone->context));
+
+        if (!\count($rows)) {
+            return new Rows();
+        }
+
+        return $rows[0];
     }
 
     /**
@@ -393,7 +398,7 @@ final class DataFrame
      */
     public function limit(int $limit) : self
     {
-        $this->pipeline = new LimitingPipeline($this->pipeline, $limit);
+        $this->pipeline->add(new LimitTransformer($limit));
 
         return $this;
     }

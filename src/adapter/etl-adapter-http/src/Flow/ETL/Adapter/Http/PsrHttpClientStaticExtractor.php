@@ -55,7 +55,7 @@ final class PsrHttpClientStaticExtractor implements Extractor
             }
 
             if ($shouldPutInputIntoRows) {
-                yield new Rows(
+                $signal = yield new Rows(
                     Row::create(
                         ...\array_merge(
                             $responseFactory->create($response)->all(),
@@ -68,13 +68,21 @@ final class PsrHttpClientStaticExtractor implements Extractor
                         )
                     )
                 );
+
+                if ($signal === Extractor\Signal::STOP) {
+                    return;
+                }
             } else {
-                yield new Rows(
+                $signal = yield new Rows(
                     Row::create(...\array_merge(
                         $responseFactory->create($response)->all(),
                         $requestFactory->create($request)->all()
                     ))
                 );
+
+                if ($signal === Extractor\Signal::STOP) {
+                    return;
+                }
             }
         }
     }

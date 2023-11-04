@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Pipeline;
 
@@ -12,7 +12,7 @@ final class SynchronousPipelineTest extends IntegrationTestCase
 {
     public function test_limit() : void
     {
-        $path = sys_get_temp_dir() . '/synchronous_pipeline_' .__FUNCTION__. '.csv';
+        $path = \sys_get_temp_dir() . '/synchronous_pipeline_' . __FUNCTION__ . '.csv';
 
         if (\file_exists($path)) {
             \unlink($path);
@@ -29,7 +29,6 @@ final class SynchronousPipelineTest extends IntegrationTestCase
             ]))
             ->write(CSV::to($path))
             ->run();
-
 
         $this->assertSame(
             3,

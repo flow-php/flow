@@ -35,7 +35,11 @@ final class MemoryExtractor implements Extractor
                 $rows[] = $chunkEntry;
             }
 
-            yield array_to_rows($rows, $context->entryFactory());
+            $signal = yield array_to_rows($rows, $context->entryFactory());
+
+            if ($signal === Signal::STOP) {
+                return;
+            }
         }
     }
 }

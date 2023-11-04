@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Flow\ETL\Extractor;
 
@@ -9,5 +9,5 @@ namespace Flow\ETL\Extractor;
  */
 interface LimitableExtractor
 {
-    public function limit(int $limit): void;
+    public function changeLimit(int $limit) : void;
 }

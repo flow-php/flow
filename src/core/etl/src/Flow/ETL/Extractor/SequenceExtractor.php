@@ -21,7 +21,11 @@ final class SequenceExtractor implements Extractor
     {
         /** @var mixed $item */
         foreach ($this->generator->generate() as $item) {
-            yield new Rows(Row::create($context->entryFactory()->create($this->entryName, $item)));
+            $signal = yield new Rows(Row::create($context->entryFactory()->create($this->entryName, $item)));
+
+            if ($signal === Signal::STOP) {
+                return;
+            }
         }
     }
 }

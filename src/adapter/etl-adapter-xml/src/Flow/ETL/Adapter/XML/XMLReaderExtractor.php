@@ -6,13 +6,19 @@ namespace Flow\ETL\Adapter\XML;
 
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\FileExtractor;
+use Flow\ETL\Extractor\Limitable;
+use Flow\ETL\Extractor\LimitableExtractor;
+use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 
-final class XMLReaderExtractor implements Extractor, Extractor\FileExtractor
+final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExtractor
 {
+    use Limitable;
+
     /**
      * In order to iterate only over <element> nodes us root/elements/element.
      *
@@ -32,6 +38,7 @@ final class XMLReaderExtractor implements Extractor, Extractor\FileExtractor
         private readonly Path $path,
         private readonly string $xmlNodePath = ''
     ) {
+        $this->resetLimit();
     }
 
     public function extract(FlowContext $context) : \Generator
@@ -76,7 +83,15 @@ final class XMLReaderExtractor implements Extractor, Extractor\FileExtractor
                             $row = Row::create(Entry::xml('node', $node));
                         }
 
-                        yield new Rows($row);
+                        $signal = yield new Rows($row);
+                        $this->countRow();
+
+                        if ($signal === Signal::STOP || $this->reachedLimit()) {
+                            $xmlReader->close();
+                            $context->streams()->close($this->path);
+
+                            return;
+                        }
                     }
 
                     $previousDepth = $xmlReader->depth;
