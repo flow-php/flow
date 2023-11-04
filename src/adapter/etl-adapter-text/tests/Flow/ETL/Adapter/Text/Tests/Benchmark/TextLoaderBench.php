@@ -23,7 +23,7 @@ final class TextLoaderBench
         $this->outputPath = \tempnam(\sys_get_temp_dir(), 'etl_txt_loader_bench') . '.txt';
         $this->rows = new Rows();
 
-        foreach (Text::from(__DIR__ . '/../Fixtures/orders_flow.csv', rows_in_batch: 1)->extract($this->context) as $rows) {
+        foreach (Text::from(__DIR__ . '/../Fixtures/orders_flow.csv')->extract($this->context) as $rows) {
             $this->rows = $this->rows->merge($rows);
         }
     }
