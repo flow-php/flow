@@ -6,8 +6,8 @@ namespace Flow\ETL\Row\Entry;
 
 use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\Entry\TypedCollection\Type;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\Schema\FlowMetadata;
@@ -42,8 +42,10 @@ final class ListEntry implements Entry, TypedCollection
             throw new InvalidArgumentException('Expected list of ' . $type->toString() . ' got array with not sequential integer indexes');
         }
 
-        if (!$type->isValid($value)) {
-            throw new InvalidArgumentException('Expected list of ' . $type->toString() . ' got different types.');
+        foreach ($value as $item) {
+            if (!$type->isValid($item)) {
+                throw new InvalidArgumentException('Expected list of ' . $type->toString() . ' got different types.');
+            }
         }
     }
 

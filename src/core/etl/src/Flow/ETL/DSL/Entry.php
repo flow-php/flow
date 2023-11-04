@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\DSL;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\PHP\Type\ObjectType;
+use Flow\ETL\PHP\Type\ScalarType;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry as RowEntry;
 use Flow\ETL\Row\Entry\Type\Uuid;
-use Flow\ETL\Row\Entry\TypedCollection\ScalarType;
 
 /**
  * @infection-ignore-all
@@ -169,7 +170,7 @@ class Entry
      */
     final public static function list_of_datetime(string $name, array $value) : RowEntry
     {
-        return new RowEntry\ListEntry($name, new RowEntry\TypedCollection\ObjectType(\DateTimeInterface::class), $value);
+        return new RowEntry\ListEntry($name, new ObjectType(\DateTimeInterface::class), $value);
     }
 
     /**
@@ -206,7 +207,7 @@ class Entry
      */
     final public static function list_of_objects(string $name, string $class, array $value) : RowEntry
     {
-        return new RowEntry\ListEntry($name, new RowEntry\TypedCollection\ObjectType($class), $value);
+        return new RowEntry\ListEntry($name, new ObjectType($class), $value);
     }
 
     /**

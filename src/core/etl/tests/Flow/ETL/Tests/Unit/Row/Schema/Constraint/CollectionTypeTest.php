@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Row\Schema\Constraint;
 
 use Flow\ETL\DSL\Entry;
-use Flow\ETL\Row\Entry\TypedCollection\ScalarType;
+use Flow\ETL\PHP\Type\ScalarType;
 use Flow\ETL\Row\Schema\Constraint\CollectionType;
 use PHPUnit\Framework\TestCase;
 

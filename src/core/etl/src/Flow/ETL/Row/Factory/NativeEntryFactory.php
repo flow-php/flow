@@ -6,9 +6,11 @@ namespace Flow\ETL\Row\Factory;
 
 use Flow\ETL\DSL\Entry as EntryDSL;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\PHP\Type\ObjectType;
+use Flow\ETL\PHP\Type\ScalarType;
+use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\Entry\TypedCollection\Type;
 use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Schema;
 
@@ -141,10 +143,10 @@ final class NativeEntryFactory implements EntryFactory
                     $class = \DOMNode::class;
                 }
 
-                return new Entry\ListEntry($entryName, Entry\TypedCollection\ObjectType::of($class), $value);
+                return new Entry\ListEntry($entryName, ObjectType::fromString($class), $value);
             }
 
-            return new Entry\ListEntry($entryName, Entry\TypedCollection\ScalarType::fromString($type), $value);
+            return new Entry\ListEntry($entryName, ScalarType::fromString($type), $value);
         }
 
         if (null === $value) {
@@ -258,7 +260,7 @@ final class NativeEntryFactory implements EntryFactory
                         );
                     }
 
-                    if ($listType instanceof Entry\TypedCollection\ObjectType) {
+                    if ($listType instanceof ObjectType) {
                         /** @var mixed $firstValue */
                         $firstValue = \current($value);
 

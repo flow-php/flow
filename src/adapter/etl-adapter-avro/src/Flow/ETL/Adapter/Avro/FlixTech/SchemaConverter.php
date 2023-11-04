@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Avro\FlixTech;
 
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\PHP\Type\ObjectType;
+use Flow\ETL\PHP\Type\ScalarType;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\ArrayEntry;
 use Flow\ETL\Row\Entry\BooleanEntry;
@@ -17,8 +19,6 @@ use Flow\ETL\Row\Entry\ListEntry;
 use Flow\ETL\Row\Entry\NullEntry;
 use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Row\Entry\StructureEntry;
-use Flow\ETL\Row\Entry\TypedCollection\ObjectType;
-use Flow\ETL\Row\Entry\TypedCollection\ScalarType;
 use Flow\ETL\Row\Entry\UuidEntry;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Row\Schema\Definition;

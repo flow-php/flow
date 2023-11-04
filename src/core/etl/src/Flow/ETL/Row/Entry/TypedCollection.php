@@ -2,7 +2,7 @@
 
 namespace Flow\ETL\Row\Entry;
 
-use Flow\ETL\Row\Entry\TypedCollection\Type;
+use Flow\ETL\PHP\Type\Type;
 
 interface TypedCollection
 {
