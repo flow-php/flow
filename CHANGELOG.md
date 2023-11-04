@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-11-03
+## [Unreleased] - 2023-11-04
 
 ### Added
 - [#720](https://github.com/flow-php/flow/pull/720) - **DataFrame::batchSize(int $size) method** - [@norberttech](https://github.com/norberttech)
@@ -45,6 +45,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#726](https://github.com/flow-php/flow/pull/726) - **GoogleSheet rows_in_batch was renamed into rows_per_page** - [@norberttech](https://github.com/norberttech)
 - [#716](https://github.com/flow-php/flow/pull/716) - **Closure was moved to Loader namespace as it applies to Loaders, not Pipelines** - [@norberttech](https://github.com/norberttech)
 - [#708](https://github.com/flow-php/flow/pull/708) - **Rename `docker-compose.yml` to `compose.yml` to match specification** - [@stloyd](https://github.com/stloyd)
 - [#710](https://github.com/flow-php/flow/pull/710) - **Improved parquet writer performance** - [@norberttech](https://github.com/norberttech)
@@ -124,6 +125,7 @@
 - [#584](https://github.com/flow-php/flow/pull/584) - **Adjust `phpunit.xml` to be more efficient** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
+- [#726](https://github.com/flow-php/flow/pull/726) - **JsonLoader when writing empty Rows** - [@norberttech](https://github.com/norberttech)
 - [#714](https://github.com/flow-php/flow/pull/714) - **Added missing FileExtractor interface to all file based extractors** - [@norberttech](https://github.com/norberttech)
 - [#707](https://github.com/flow-php/flow/pull/707) - **Small typo in build workflow** - [@norberttech](https://github.com/norberttech)
 - [#704](https://github.com/flow-php/flow/pull/704) - **Bug in RLEBitPackHybrid algorithm that was always bitpacking values** - [@norberttech](https://github.com/norberttech)
@@ -158,6 +160,7 @@
 - [c9fb26](https://github.com/flow-php/flow/commit/c9fb26dc2e0558c0f33b6097286e4dc6e2799d3f) - **test-benchmark.yml** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#726](https://github.com/flow-php/flow/pull/726) - **batching logic from extractors** - [@norberttech](https://github.com/norberttech)
 - [#716](https://github.com/flow-php/flow/pull/716) - **Rows from Closure::closure method** - [@norberttech](https://github.com/norberttech)
 - [#716](https://github.com/flow-php/flow/pull/716) - **BufferLoader** - [@norberttech](https://github.com/norberttech)
 - [#709](https://github.com/flow-php/flow/pull/709) - **Removed logger from parquet** - [@norberttech](https://github.com/norberttech)
