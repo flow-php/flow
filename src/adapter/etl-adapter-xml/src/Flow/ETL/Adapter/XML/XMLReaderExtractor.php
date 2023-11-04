@@ -30,8 +30,7 @@ final class XMLReaderExtractor implements Extractor, Extractor\FileExtractor
      */
     public function __construct(
         private readonly Path $path,
-        private readonly string $xmlNodePath = '',
-        private readonly int $rowsInBatch = 1000,
+        private readonly string $xmlNodePath = ''
     ) {
     }
 
@@ -45,8 +44,6 @@ final class XMLReaderExtractor implements Extractor, Extractor\FileExtractor
 
             $previousDepth = 0;
             $currentPathBreadCrumbs = [];
-
-            $rows = [];
 
             while ($xmlReader->read()) {
                 if ($xmlReader->nodeType === \XMLReader::ELEMENT) {
@@ -71,18 +68,15 @@ final class XMLReaderExtractor implements Extractor, Extractor\FileExtractor
                         $node->loadXML($xmlReader->readOuterXml());
 
                         if ($shouldPutInputIntoRows) {
-                            $rows[] = Row::create(
+                            $row = Row::create(
                                 Entry::xml('node', $node),
                                 Entry::string('_input_file_uri', $filePath->uri())
                             );
                         } else {
-                            $rows[] = Row::create(Entry::xml('node', $node));
+                            $row = Row::create(Entry::xml('node', $node));
                         }
 
-                        if (\count($rows) >= $this->rowsInBatch) {
-                            yield new Rows(...$rows);
-                            $rows = [];
-                        }
+                        yield new Rows($row);
                     }
 
                     $previousDepth = $xmlReader->depth;
@@ -90,11 +84,9 @@ final class XMLReaderExtractor implements Extractor, Extractor\FileExtractor
             }
 
             $xmlReader->close();
-
-            if ([] !== $rows) {
-                yield new Rows(...$rows);
-            }
         }
+
+        $context->streams()->close($this->path);
     }
 
     public function source() : Path

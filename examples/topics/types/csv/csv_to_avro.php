@@ -14,7 +14,7 @@ if (!\file_exists(__FLOW_OUTPUT__ . '/dataset.csv')) {
 }
 
 $flow = (new Flow())
-    ->read(CSV::from(__FLOW_OUTPUT__ . '/dataset.csv', 10_000))
+    ->read(CSV::from(__FLOW_OUTPUT__ . '/dataset.csv'))
     ->rename('last name', 'last_name')
     ->write(Avro::to(__FLOW_OUTPUT__ . '/dataset.avro'));
 

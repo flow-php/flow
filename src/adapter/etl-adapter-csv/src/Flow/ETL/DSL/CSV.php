@@ -14,14 +14,13 @@ use Flow\ETL\Loader;
 class CSV
 {
     /**
-     * @param array<Path|string>|Path|string $uri
+     * @param array<Path|string>|Path|string $path
      * @param int<0, max> $characters_read_in_line
      *
      * @throws InvalidArgumentException
      */
     final public static function from(
-        string|Path|array $uri,
-        int $rows_in_batch = 1000,
+        string|Path|array $path,
         bool $with_header = true,
         bool $empty_to_null = true,
         string $delimiter = ',',
@@ -29,13 +28,12 @@ class CSV
         string $escape = '\\',
         int $characters_read_in_line = 1000
     ) : Extractor {
-        if (\is_array($uri)) {
+        if (\is_array($path)) {
             $extractors = [];
 
-            foreach ($uri as $file_uri) {
+            foreach ($path as $file_path) {
                 $extractors[] = new CSVExtractor(
-                    \is_string($file_uri) ? Path::realpath($file_uri) : $file_uri,
-                    $rows_in_batch,
+                    \is_string($file_path) ? Path::realpath($file_path) : $file_path,
                     $with_header,
                     $empty_to_null,
                     $delimiter,
@@ -49,8 +47,7 @@ class CSV
         }
 
         return new CSVExtractor(
-            \is_string($uri) ? Path::realpath($uri) : $uri,
-            $rows_in_batch,
+            \is_string($path) ? Path::realpath($path) : $path,
             $with_header,
             $empty_to_null,
             $delimiter,

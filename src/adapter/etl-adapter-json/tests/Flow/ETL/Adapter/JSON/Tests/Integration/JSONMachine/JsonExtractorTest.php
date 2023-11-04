@@ -19,7 +19,7 @@ final class JsonExtractorTest extends TestCase
     public function test_extracting_json_from_local_file_stream() : void
     {
         $rows = (new Flow(Config::builder()->putInputIntoRows()))
-            ->read(Json::from(__DIR__ . '/../../Fixtures/timezones.json', 5))
+            ->read(Json::from(__DIR__ . '/../../Fixtures/timezones.json'))
             ->fetch();
 
         foreach ($rows as $row) {
@@ -42,7 +42,7 @@ final class JsonExtractorTest extends TestCase
     public function test_extracting_json_from_local_file_stream_using_pointer() : void
     {
         $rows = (new Flow())
-            ->read(Json::from(__DIR__ . '/../../Fixtures/nested_timezones.json', 5, pointer: '/timezones'))
+            ->read(Json::from(__DIR__ . '/../../Fixtures/nested_timezones.json', pointer: '/timezones'))
             ->fetch();
 
         foreach ($rows as $row) {
@@ -64,7 +64,7 @@ final class JsonExtractorTest extends TestCase
 
     public function test_extracting_json_from_local_file_string_uri() : void
     {
-        $extractor = new JsonExtractor(Path::realpath(__DIR__ . '/../../Fixtures/timezones.json'), 5);
+        $extractor = new JsonExtractor(Path::realpath(__DIR__ . '/../../Fixtures/timezones.json'));
 
         $total = 0;
 

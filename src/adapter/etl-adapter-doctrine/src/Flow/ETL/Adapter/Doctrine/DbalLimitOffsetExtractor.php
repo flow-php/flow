@@ -75,8 +75,6 @@ final class DbalLimitOffsetExtractor implements Extractor
                 ->setMaxResults($this->pageSize)
                 ->setFirstResult($offset);
 
-            $rows = [];
-
             $pageResults = $this->connection->executeQuery(
                 $pageQuery->getSQL(),
                 $pageQuery->getParameters(),
@@ -84,7 +82,7 @@ final class DbalLimitOffsetExtractor implements Extractor
             )->fetchAllAssociative();
 
             foreach ($pageResults as $row) {
-                $rows[] = $row;
+                yield array_to_rows($row, $context->entryFactory());
 
                 $totalFetched++;
 
@@ -92,8 +90,6 @@ final class DbalLimitOffsetExtractor implements Extractor
                     break;
                 }
             }
-
-            yield array_to_rows($rows, $context->entryFactory());
         }
     }
 }

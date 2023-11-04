@@ -32,7 +32,7 @@ $csvFileSize = \round(\filesize(__FLOW_OUTPUT__ . '/dataset.csv') / 1024 / 1024)
 print "Loading CSV {$csvFileSize}Mb file into postgresql...\n";
 
 (new Flow())
-    ->read(CSV::from($path = __FLOW_OUTPUT__ . '/dataset.csv', 10_000))
+    ->read(CSV::from($path = __FLOW_OUTPUT__ . '/dataset.csv'))
     ->pipeline(
         new LocalSocketPipeline(
             SocketServer::unixDomain(__FLOW_VAR_RUN__, $logger),

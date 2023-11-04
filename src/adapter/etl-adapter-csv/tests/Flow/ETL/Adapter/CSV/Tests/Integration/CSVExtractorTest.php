@@ -26,19 +26,26 @@ final class CSVExtractorTest extends TestCase
         $this->assertSame(
             [
                 [
-                    'id' => '',
-                    'name' => '',
-                    'active' => 'false',
-                    '_input_file_uri' => $path->uri(),
+                    [
+                        'id' => '',
+                        'name' => '',
+                        'active' => 'false',
+                        '_input_file_uri' => $path->uri(),
+                    ],
                 ],
                 [
-                    'id' => '1',
-                    'name' => 'Norbert',
-                    'active' => '',
-                    '_input_file_uri' => $path->uri(),
+                    [
+                        'id' => '1',
+                        'name' => 'Norbert',
+                        'active' => '',
+                        '_input_file_uri' => $path->uri(),
+                    ],
                 ],
             ],
-            \iterator_to_array($extractor->extract(new FlowContext(Config::builder()->putInputIntoRows()->build())))[0]->toArray()
+            \array_map(
+                static fn (Rows $r) => $r->toArray(),
+                \iterator_to_array($extractor->extract(new FlowContext(Config::builder()->putInputIntoRows()->build())))
+            )
         );
     }
 
@@ -51,17 +58,24 @@ final class CSVExtractorTest extends TestCase
         $this->assertSame(
             [
                 [
-                    'id' => null,
-                    'name' => null,
-                    'active' => 'false',
+                    [
+                        'id' => null,
+                        'name' => null,
+                        'active' => 'false',
+                    ],
                 ],
                 [
-                    'id' => '1',
-                    'name' => 'Norbert',
-                    'active' => null,
+                    [
+                        'id' => '1',
+                        'name' => 'Norbert',
+                        'active' => null,
+                    ],
                 ],
             ],
-            \iterator_to_array($extractor->extract(new FlowContext(Config::default())))[0]->toArray()
+            \array_map(
+                static fn (Rows $r) => $r->toArray(),
+                \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
+            )
         );
     }
 
@@ -72,7 +86,6 @@ final class CSVExtractorTest extends TestCase
                 Path::realpath(__DIR__ . '/../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv'),
                 Path::realpath(__DIR__ . '/../Fixtures/nested/annual-enterprise-survey-2019-financial-year-provisional-csv.csv'),
             ],
-            1000,
             false
         );
 
@@ -126,7 +139,6 @@ final class CSVExtractorTest extends TestCase
     {
         $extractor = CSV::from(
             __DIR__ . '/../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv',
-            5,
             false
         );
 
@@ -152,7 +164,7 @@ final class CSVExtractorTest extends TestCase
             ->extract(CSV::from(__DIR__ . '/../Fixtures/corrupted_row.csv'))
             ->fetch();
 
-        $this->assertSame(2, $rows->count());
+        $this->assertSame(3, $rows->count());
     }
 
     public function test_extracting_csv_with_more_columns_than_headers() : void

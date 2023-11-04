@@ -42,13 +42,9 @@ final class DbalQueryExtractor implements Extractor
     public function extract(FlowContext $context) : \Generator
     {
         foreach ($this->parametersSet->all() as $parameters) {
-            $rows = [];
-
             foreach ($this->connection->fetchAllAssociative($this->query, $parameters, $this->types) as $row) {
-                $rows[] = $row;
+                yield array_to_rows($row, $context->entryFactory());
             }
-
-            yield array_to_rows($rows, $context->entryFactory());
         }
     }
 }

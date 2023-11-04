@@ -14,14 +14,12 @@ class Json
 {
     /**
      * @param array<Path|string>|Path|string $path - string is internally turned into LocalFile stream
-     * @param int $rows_in_batch
      * @param ?string $pointer - if you want to iterate only results of a subtree, use a pointer, read more at https://github.com/halaxa/json-machine#parsing-a-subtree
      *
      * @return Extractor
      */
     public static function from(
         string|Path|array $path,
-        int $rows_in_batch = 1000,
         ?string $pointer = null,
     ) : Extractor {
         if (\is_array($path)) {
@@ -30,7 +28,6 @@ class Json
             foreach ($path as $file) {
                 $extractors[] = new JsonExtractor(
                     \is_string($file) ? Path::realpath($file) : $file,
-                    $rows_in_batch,
                     $pointer,
                 );
             }
@@ -40,7 +37,6 @@ class Json
 
         return new JsonExtractor(
             \is_string($path) ? Path::realpath($path) : $path,
-            $rows_in_batch,
             $pointer,
         );
     }

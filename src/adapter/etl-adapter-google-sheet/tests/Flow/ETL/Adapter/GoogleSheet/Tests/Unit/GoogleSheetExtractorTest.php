@@ -58,7 +58,7 @@ final class GoogleSheetExtractorTest extends TestCase
     public function test_rows_in_batch_must_be_positive_integer() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Rows in batch must be greater than 0');
+        $this->expectExceptionMessage('Rows per page must be greater than 0');
 
         GoogleSheet::from_columns(
             $this->createMock(Sheets::class),

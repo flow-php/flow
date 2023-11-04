@@ -30,6 +30,46 @@ Additionally, \Closure::close method no longer requires Rows to be passed as an 
 
 DataFrame::parallelize() method is deprecated, and it will be removed, instead use DataFrame::batchSize(int $size) method. 
 
+### 6) Rows in batch - Extractors
+
+From now, file based Extractors will always throw one Row at time, in order to merge them into bigger groups
+use `DataFrame::batchSize(int $size)` just after extractor method.
+
+Before:
+```php
+<?php
+
+(new Flow())
+    ->read(CSV::from(__DIR__ . '/1_mln_rows.csv', rows_in_batch: 100))
+    ->write(To::output())
+    ->count();
+```
+
+After: 
+```php
+(new Flow())
+    ->read(CSV::from(__DIR__ . '/1_mln_rows.csv',))
+    ->batchSize(100)
+    ->write(To::output())
+    ->count();
+```
+
+Affected extractors:
+
+- CSV
+- Parquet
+- JSON
+- Text
+- XML
+- Avro
+- DoctrineDBAL - rows_in_batch wasn't removed but now results are thrown row by row, instead of whole page. 
+- GoogleSheet
+
+### 7) GoogleSheetExtractor 
+
+Argument `$rows_in_batch` was renamed to `$rows_per_page` which no longer determines the size of the batch, but the size of the page that will be fetched from Google API. 
+Rows are yielded one by one. 
+
 ---
 
 ## Upgrading from 0.3.x to 0.4.x

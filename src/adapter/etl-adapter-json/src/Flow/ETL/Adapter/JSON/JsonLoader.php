@@ -98,6 +98,10 @@ final class JsonLoader implements Closure, Loader, Loader\FileLoader
      */
     public function writeJSON(Rows $rows, FileStream $stream) : void
     {
+        if (!\count($rows)) {
+            return;
+        }
+
         $json = \substr(\substr(\json_encode($rows->toArray(), JSON_THROW_ON_ERROR), 0, -1), 1);
         $json = ($this->writes[$stream->path()->path()] > 0) ? ',' . $json : $json;
 
