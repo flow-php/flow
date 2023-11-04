@@ -28,7 +28,11 @@ final class GeneratorExtractor implements Extractor
                 throw new InvalidArgumentException('Passed generator can contain only Rows class instances, given: ' . $row::class);
             }
 
-            yield $row;
+            $signal = yield $row;
+
+            if ($signal === Signal::STOP) {
+                return;
+            }
         }
     }
 }

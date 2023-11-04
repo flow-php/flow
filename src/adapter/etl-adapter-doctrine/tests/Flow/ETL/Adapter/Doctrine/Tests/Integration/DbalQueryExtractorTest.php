@@ -10,10 +10,9 @@ use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
 use Flow\ETL\Adapter\Doctrine\DbalLoader;
 use Flow\ETL\Adapter\Doctrine\ParametersSet;
-use Flow\ETL\Adapter\Doctrine\Tests\Double\Stub\ArrayExtractor;
-use Flow\ETL\Adapter\Doctrine\Tests\Double\Stub\TransformTestData;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
 use Flow\ETL\DSL\Dbal;
+use Flow\ETL\DSL\From;
 use Flow\ETL\Flow;
 
 final class DbalQueryExtractorTest extends IntegrationTestCase
@@ -31,13 +30,11 @@ final class DbalQueryExtractorTest extends IntegrationTestCase
             ->setPrimaryKey(['id']));
 
         (new Flow())->extract(
-            new ArrayExtractor(
+            From::array([
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
                 ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
-            )
-        )->transform(
-            new TransformTestData()
+            ])
         )->load(
             DbalLoader::fromConnection($this->pgsqlDatabaseContext->connection(), $table, chunkSize: 10)
         )->run();
@@ -71,24 +68,23 @@ final class DbalQueryExtractorTest extends IntegrationTestCase
         ))
             ->setPrimaryKey(['id']));
 
-        (new Flow())->extract(
-            new ArrayExtractor(
-                ['id' => 1, 'name' => 'Name', 'description' => 'Description'],
-                ['id' => 2, 'name' => 'Name', 'description' => 'Description'],
-                ['id' => 3, 'name' => 'Name', 'description' => 'Description'],
-                ['id' => 4, 'name' => 'Name', 'description' => 'Description'],
-                ['id' => 5, 'name' => 'Name', 'description' => 'Description'],
-                ['id' => 6, 'name' => 'Name', 'description' => 'Description'],
-                ['id' => 7, 'name' => 'Name', 'description' => 'Description'],
-                ['id' => 8, 'name' => 'Name', 'description' => 'Description'],
-                ['id' => 9, 'name' => 'Name', 'description' => 'Description'],
-                ['id' => 10, 'name' => 'Name', 'description' => 'Description'],
+        (new Flow())
+            ->extract(
+                From::array([
+                    ['id' => 1, 'name' => 'Name', 'description' => 'Description'],
+                    ['id' => 2, 'name' => 'Name', 'description' => 'Description'],
+                    ['id' => 3, 'name' => 'Name', 'description' => 'Description'],
+                    ['id' => 4, 'name' => 'Name', 'description' => 'Description'],
+                    ['id' => 5, 'name' => 'Name', 'description' => 'Description'],
+                    ['id' => 6, 'name' => 'Name', 'description' => 'Description'],
+                    ['id' => 7, 'name' => 'Name', 'description' => 'Description'],
+                    ['id' => 8, 'name' => 'Name', 'description' => 'Description'],
+                    ['id' => 9, 'name' => 'Name', 'description' => 'Description'],
+                    ['id' => 10, 'name' => 'Name', 'description' => 'Description'],
+                ])
             )
-        )->transform(
-            new TransformTestData()
-        )->load(
-            DbalLoader::fromConnection($this->pgsqlDatabaseContext->connection(), $table, chunkSize: 10)
-        )->run();
+            ->load(DbalLoader::fromConnection($this->pgsqlDatabaseContext->connection(), $table, chunkSize: 10))
+            ->run();
 
         $rows = (new Flow())->extract(
             Dbal::from_queries(

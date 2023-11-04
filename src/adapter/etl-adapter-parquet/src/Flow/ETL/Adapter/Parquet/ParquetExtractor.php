@@ -4,6 +4,10 @@ namespace Flow\ETL\Adapter\Parquet;
 
 use function Flow\ETL\DSL\array_to_rows;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\FileExtractor;
+use Flow\ETL\Extractor\Limitable;
+use Flow\ETL\Extractor\LimitableExtractor;
+use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
@@ -12,8 +16,10 @@ use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile;
 use Flow\Parquet\Reader;
 
-final class ParquetExtractor implements Extractor, Extractor\FileExtractor
+final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtractor
 {
+    use Limitable;
+
     /**
      * @param Path $path
      * @param array<string> $columns
@@ -24,6 +30,7 @@ final class ParquetExtractor implements Extractor, Extractor\FileExtractor
         private readonly ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN,
         private readonly array $columns = []
     ) {
+        $this->resetLimit();
     }
 
     public function extract(FlowContext $context) : \Generator
@@ -31,12 +38,20 @@ final class ParquetExtractor implements Extractor, Extractor\FileExtractor
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
         foreach ($this->readers($context) as $fileData) {
-            foreach ($fileData['file']->values($this->columns) as $row) {
+            foreach ($fileData['file']->values($this->columns, $this->limit()) as $row) {
                 if ($shouldPutInputIntoRows) {
                     $row['_input_file_uri'] = $fileData['uri'];
                 }
 
-                yield array_to_rows($row, $context->entryFactory());
+                $signal = yield array_to_rows($row, $context->entryFactory());
+
+                $this->countRow();
+
+                if ($signal === Signal::STOP || $this->reachedLimit()) {
+                    $context->streams()->close($this->path);
+
+                    return;
+                }
             }
         }
 

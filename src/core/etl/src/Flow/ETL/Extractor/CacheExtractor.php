@@ -27,12 +27,20 @@ final class CacheExtractor implements Extractor
         if (!$context->cache()->has($this->id)) {
             if ($this->fallbackExtractor !== null) {
                 foreach ($this->fallbackExtractor->extract($context) as $rows) {
-                    yield $rows;
+                    $signal = yield $rows;
+
+                    if ($signal === Signal::STOP) {
+                        return;
+                    }
                 }
             }
         } else {
             foreach ($context->cache()->read($this->id) as $rows) {
-                yield $rows;
+                $signal = yield $rows;
+
+                if ($signal === Signal::STOP) {
+                    return;
+                }
             }
         }
 

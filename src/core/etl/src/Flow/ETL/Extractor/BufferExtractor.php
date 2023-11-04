@@ -32,7 +32,11 @@ final class BufferExtractor implements Extractor, OverridingExtractor
             if ($nextRows->count() >= $this->maxRowsSize) {
                 foreach ($nextRows->chunks($this->maxRowsSize) as $nextRowsChunk) {
                     if ($nextRowsChunk->count() === $this->maxRowsSize) {
-                        yield $nextRowsChunk;
+                        $signal = yield $nextRowsChunk;
+
+                        if ($signal === Signal::STOP) {
+                            return;
+                        }
                     } else {
                         $rows = $rows->merge($nextRowsChunk);
                     }
@@ -47,7 +51,11 @@ final class BufferExtractor implements Extractor, OverridingExtractor
 
                 foreach ($rowsChunks as $rowsChunk) {
                     if ($rowsChunk->count() === $this->maxRowsSize) {
-                        yield $rowsChunk;
+                        $signal = yield $rowsChunk;
+
+                        if ($signal === Signal::STOP) {
+                            return;
+                        }
                     } else {
                         $rows = $rowsChunk;
                     }

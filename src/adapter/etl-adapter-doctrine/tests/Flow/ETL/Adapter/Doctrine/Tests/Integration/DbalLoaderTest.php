@@ -9,10 +9,9 @@ use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
 use Flow\ETL\Adapter\Doctrine\DbalLoader;
-use Flow\ETL\Adapter\Doctrine\Tests\Double\Stub\ArrayExtractor;
-use Flow\ETL\Adapter\Doctrine\Tests\Double\Stub\TransformTestData;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
 use Flow\ETL\DSL\Dbal;
+use Flow\ETL\DSL\From;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Flow;
 use Flow\Serializer\CompressingSerializer;
@@ -76,16 +75,16 @@ final class DbalLoaderTest extends IntegrationTestCase
 
         $loader = Dbal::to_table_insert($this->connectionParams(), $table, $bulkSize = 10);
 
-        (new Flow())->extract(
-            new ArrayExtractor(
+        (new Flow())
+            ->read(
+                From::array([
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
                 ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
+            ])
             )
-        )->transform(
-            new TransformTestData()
-        )->load($loader)
-        ->run();
+            ->load($loader)
+            ->run();
 
         $this->assertEquals(3, $this->pgsqlDatabaseContext->tableCount($table));
     }
@@ -107,15 +106,15 @@ final class DbalLoaderTest extends IntegrationTestCase
         $serializer = new CompressingSerializer(new NativePHPSerializer());
         $loaderSerialized = $serializer->serialize(Dbal::to_table_insert($this->connectionParams(), $table, $bulkSize = 10));
 
-        (new Flow())->extract(
-            new ArrayExtractor(
-                ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
-                ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
-                ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
+        (new Flow())
+            ->read(
+                From::array([
+                    ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
+                    ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
+                    ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
+                ])
             )
-        )->transform(
-            new TransformTestData()
-        )->load($serializer->unserialize($loaderSerialized))
+            ->load($serializer->unserialize($loaderSerialized))
             ->run();
 
         $this->assertEquals(3, $this->pgsqlDatabaseContext->tableCount($table));
@@ -137,15 +136,15 @@ final class DbalLoaderTest extends IntegrationTestCase
 
         $loader = Dbal::to_table_insert($this->pgsqlDatabaseContext->connection(), $table, $bulkSize = 10);
 
-        (new Flow())->extract(
-            new ArrayExtractor(
-                ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
-                ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
-                ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
+        (new Flow())
+            ->read(
+                From::array([
+                    ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
+                    ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
+                    ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
+                ])
             )
-        )->transform(
-            new TransformTestData()
-        )->load($loader)
+            ->load($loader)
             ->run();
 
         $this->assertEquals(3, $this->pgsqlDatabaseContext->tableCount($table));
@@ -164,17 +163,16 @@ final class DbalLoaderTest extends IntegrationTestCase
         ))
             ->setPrimaryKey(['id']));
 
-        (new Flow())->extract(
-            new ArrayExtractor(
-                ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
-                ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
-                ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
+        (new Flow())
+            ->read(
+                From::array([
+                    ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
+                    ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
+                    ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
+                ])
             )
-        )->transform(
-            new TransformTestData()
-        )->load(
-            Dbal::to_table_insert($this->connectionParams(), $table, $bulkSize = 10)
-        )->run();
+            ->load(Dbal::to_table_insert($this->connectionParams(), $table, $bulkSize = 10))
+            ->run();
 
         $this->assertEquals(3, $this->pgsqlDatabaseContext->tableCount($table));
     }
@@ -190,29 +188,27 @@ final class DbalLoaderTest extends IntegrationTestCase
             ],
         ))
             ->setPrimaryKey(['id']));
-        (new Flow())->extract(
-            new ArrayExtractor(
-                ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
-                ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
-                ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
+        (new Flow())
+            ->read(
+                From::array([
+                    ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
+                    ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
+                    ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
+                ])
             )
-        )->transform(
-            new TransformTestData()
-        )->load(
-            Dbal::to_table_insert($this->connectionParams(), $table, $bulkSize = 10)
-        )->run();
+            ->load(Dbal::to_table_insert($this->connectionParams(), $table, $bulkSize = 10))
+            ->run();
 
-        (new Flow())->extract(
-            new ArrayExtractor(
-                ['id' => 2, 'name' => 'New Name Two', 'description' => 'New Description Two'],
-                ['id' => 3, 'name' => 'New Name Three', 'description' => 'New Description Three'],
-                ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Three'],
+        (new Flow())
+            ->read(
+                From::array([
+                    ['id' => 2, 'name' => 'New Name Two', 'description' => 'New Description Two'],
+                    ['id' => 3, 'name' => 'New Name Three', 'description' => 'New Description Three'],
+                    ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Three'],
+                ])
             )
-        )->transform(
-            new TransformTestData()
-        )->load(
-            Dbal::to_table_insert($this->connectionParams(), $table, $bulkSize = 10, ['skip_conflicts' => true])
-        )->run();
+            ->load(Dbal::to_table_insert($this->connectionParams(), $table, $bulkSize = 10, ['skip_conflicts' => true]))
+            ->run();
 
         $this->assertEquals(4, $this->pgsqlDatabaseContext->tableCount($table));
         $this->assertEquals(
@@ -240,29 +236,26 @@ final class DbalLoaderTest extends IntegrationTestCase
             ->setPrimaryKey(['id'])
         );
 
-        (new Flow())->extract(
-            new ArrayExtractor(
-                ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
-                ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
-                ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
+        (new Flow())
+            ->read(
+                From::array([
+                    ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
+                    ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
+                    ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
+                ])
             )
-        )->transform(
-            new TransformTestData()
-        )->load(
-            Dbal::to_table_insert($this->connectionParams(), $table, $bulkSize = 10)
-        )->run();
+            ->load(Dbal::to_table_insert($this->connectionParams(), $table, $bulkSize = 10))
+            ->run();
 
         (new Flow())->extract(
-            new ArrayExtractor(
-                ['id' => 2, 'name' => 'New Name Two', 'description' => 'New Description Two'],
-                ['id' => 3, 'name' => 'New Name Three', 'description' => 'New Description Three'],
-                ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Three'],
-            )
-        )->transform(
-            new TransformTestData()
-        )->load(
-            Dbal::to_table_insert($this->connectionParams(), $table, $bulkSize = 10, ['constraint' => 'flow_doctrine_bulk_test_pkey'])
-        )->run();
+            From::array([
+                    ['id' => 2, 'name' => 'New Name Two', 'description' => 'New Description Two'],
+                    ['id' => 3, 'name' => 'New Name Three', 'description' => 'New Description Three'],
+                    ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Three'],
+                ])
+        )
+            ->load(Dbal::to_table_insert($this->connectionParams(), $table, $bulkSize = 10, ['constraint' => 'flow_doctrine_bulk_test_pkey']))
+            ->run();
 
         $this->assertEquals(4, $this->pgsqlDatabaseContext->tableCount($table));
         $this->assertEquals(
@@ -331,25 +324,24 @@ final class DbalLoaderTest extends IntegrationTestCase
         $updateLoader = Dbal::to_table_update($this->connectionParams(), $table, $bulkSize = 10, ['primary_key_columns' => ['id'], ['update_columns' => ['name']]]);
 
         (new Flow())->extract(
-            new ArrayExtractor(
+            From::array([
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
                 ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
-            )
-        )->transform(
-            new TransformTestData()
-        )->load($insertLoader)
+            ])
+        )
+        ->load($insertLoader)
         ->run();
 
-        (new Flow())->extract(
-            new ArrayExtractor(
-                ['id' => 1, 'name' => 'Changed Name One', 'description' => 'Description One'],
-                ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
-                ['id' => 3, 'name' => 'Changed Name Three', 'description' => 'Description Three'],
+        (new Flow())
+            ->read(
+                From::array([
+                    ['id' => 1, 'name' => 'Changed Name One', 'description' => 'Description One'],
+                    ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
+                    ['id' => 3, 'name' => 'Changed Name Three', 'description' => 'Description Three'],
+            ])
             )
-        )->transform(
-            new TransformTestData()
-        )->load($updateLoader)
+        ->load($updateLoader)
         ->run();
 
         $this->assertSame(

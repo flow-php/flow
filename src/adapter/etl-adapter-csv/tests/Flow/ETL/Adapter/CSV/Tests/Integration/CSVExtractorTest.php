@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\CSV\Tests\Integration;
 
 use function Flow\ETL\DSL\ref;
+use Flow\ETL\Adapter\CSV\CSVExtractor;
 use Flow\ETL\Config;
 use Flow\ETL\DSL\CSV;
+use Flow\ETL\DSL\From;
+use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Flow;
 use Flow\ETL\FlowContext;
@@ -235,6 +238,27 @@ final class CSVExtractorTest extends TestCase
         );
     }
 
+    public function test_limit() : void
+    {
+        $path = \sys_get_temp_dir() . '/csv_extractor_signal_stop.csv';
+
+        if (\file_exists($path)) {
+            \unlink($path);
+        }
+
+        (new Flow())->read(From::array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
+            ->write(CSV::to($path))
+            ->run();
+
+        $extractor = new CSVExtractor(Path::realpath($path));
+        $extractor->changeLimit(2);
+
+        $this->assertCount(
+            2,
+            \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
+        );
+    }
+
     public function test_loading_data_from_all_partitions() : void
     {
         $this->assertSame(
@@ -255,5 +279,33 @@ final class CSVExtractorTest extends TestCase
                 ->fetch()
                 ->toArray()
         );
+    }
+
+    public function test_signal_stop() : void
+    {
+        $path = \sys_get_temp_dir() . '/csv_extractor_signal_stop.csv';
+
+        if (\file_exists($path)) {
+            \unlink($path);
+        }
+
+        (new Flow())->read(From::array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
+            ->write(CSV::to($path))
+            ->run();
+
+        $extractor = new CSVExtractor(Path::realpath($path));
+
+        $generator = $extractor->extract(new FlowContext(Config::default()));
+
+        $this->assertSame([['id' => '1']], $generator->current()->toArray());
+        $this->assertTrue($generator->valid());
+        $generator->next();
+        $this->assertSame([['id' => '2']], $generator->current()->toArray());
+        $this->assertTrue($generator->valid());
+        $generator->next();
+        $this->assertSame([['id' => '3']], $generator->current()->toArray());
+        $this->assertTrue($generator->valid());
+        $generator->send(Signal::STOP);
+        $this->assertFalse($generator->valid());
     }
 }

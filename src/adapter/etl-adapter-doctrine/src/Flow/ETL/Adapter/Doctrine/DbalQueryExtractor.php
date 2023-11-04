@@ -43,7 +43,11 @@ final class DbalQueryExtractor implements Extractor
     {
         foreach ($this->parametersSet->all() as $parameters) {
             foreach ($this->connection->fetchAllAssociative($this->query, $parameters, $this->types) as $row) {
-                yield array_to_rows($row, $context->entryFactory());
+                $signal = yield array_to_rows($row, $context->entryFactory());
+
+                if ($signal === Extractor\Signal::STOP) {
+                    return;
+                }
             }
         }
     }

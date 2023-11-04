@@ -26,7 +26,11 @@ final class ProcessExtractor implements Extractor
     public function extract(FlowContext $context) : \Generator
     {
         foreach ($this->rows as $rows) {
-            yield $rows;
+            $signal = yield $rows;
+
+            if ($signal === Signal::STOP) {
+                return;
+            }
         }
     }
 }

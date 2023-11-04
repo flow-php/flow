@@ -17,7 +17,11 @@ final class DataFrameExtractor implements Extractor
     public function extract(FlowContext $context) : \Generator
     {
         foreach ($this->dataFrame->get() as $rows) {
-            yield $rows;
+            $signal = yield $rows;
+
+            if ($signal === Signal::STOP) {
+                return;
+            }
         }
     }
 }

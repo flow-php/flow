@@ -6,7 +6,9 @@ namespace Flow\ETL\Adapter\JSON\Tests\Integration\JSONMachine;
 
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonExtractor;
 use Flow\ETL\Config;
+use Flow\ETL\DSL\From;
 use Flow\ETL\DSL\Json;
+use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Flow;
 use Flow\ETL\FlowContext;
@@ -87,6 +89,55 @@ final class JsonExtractorTest extends TestCase
         }
 
         $this->assertSame(247, $total);
+    }
+
+    public function test_limit() : void
+    {
+        $path = \sys_get_temp_dir() . '/json_extractor_signal_stop.csv';
+
+        if (\file_exists($path)) {
+            \unlink($path);
+        }
+
+        (new Flow())->read(From::array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
+            ->write(Json::to($path))
+            ->run();
+
+        $extractor = new JsonExtractor(Path::realpath($path));
+        $extractor->changeLimit(2);
+
+        $this->assertCount(
+            2,
+            \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
+        );
+    }
+
+    public function test_signal_stop() : void
+    {
+        $path = \sys_get_temp_dir() . '/json_extractor_signal_stop.csv';
+
+        if (\file_exists($path)) {
+            \unlink($path);
+        }
+
+        (new Flow())->read(From::array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
+            ->write(Json::to($path))
+            ->run();
+
+        $extractor = new JsonExtractor(Path::realpath($path));
+
+        $generator = $extractor->extract(new FlowContext(Config::default()));
+
+        $this->assertSame([['id' => 1]], $generator->current()->toArray());
+        $this->assertTrue($generator->valid());
+        $generator->next();
+        $this->assertSame([['id' => 2]], $generator->current()->toArray());
+        $this->assertTrue($generator->valid());
+        $generator->next();
+        $this->assertSame([['id' => 3]], $generator->current()->toArray());
+        $this->assertTrue($generator->valid());
+        $generator->send(Signal::STOP);
+        $this->assertFalse($generator->valid());
     }
 
     public function test_using_pattern_path() : void

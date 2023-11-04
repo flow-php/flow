@@ -385,7 +385,7 @@ final class DataFrameTest extends TestCase
 5 rows
 
 ASCIITABLE,
-            (clone $etl)->display(5)
+            $etl->display(5)
         );
 
         $this->assertSame(
@@ -403,37 +403,53 @@ ASCIITABLE,
 6 rows
 
 ASCIITABLE,
-            (clone $etl)->display(6, 0)
+            $etl->display(6, 0)
         );
     }
 
     public function test_etl_display_with_very_long_entry_name() : void
     {
-        $etl = (new Flow())->extract(
-            new class implements Extractor {
-                /**
-                 * @param FlowContext $context
-                 *
-                 * @return \Generator<int, Rows, mixed, void>
-                 */
-                public function extract(FlowContext $context) : \Generator
-                {
-                    for ($i = 0; $i < 20; $i++) {
-                        yield new Rows(
-                            Row::create(
-                                new ArrayEntry(
-                                    'this is very long entry name that should be longer than items',
-                                    [
-                                        ['id' => 1, 'status' => 'NEW'],
-                                        ['id' => 2, 'status' => 'PENDING'],
-                                    ]
-                                ),
-                            ),
-                        );
-                    }
-                }
-            }
-        );
+        $etl = (new Flow())
+            ->read(
+                From::array([
+                [
+                    'this is very long entry name that should be longer than items' => [
+                        ['id' => 1, 'status' => 'NEW'],
+                        ['id' => 2, 'status' => 'PENDING'],
+                    ],
+                ],
+                [
+                    'this is very long entry name that should be longer than items' => [
+                        ['id' => 1, 'status' => 'NEW'],
+                        ['id' => 2, 'status' => 'PENDING'],
+                    ],
+                ],
+                [
+                    'this is very long entry name that should be longer than items' => [
+                        ['id' => 1, 'status' => 'NEW'],
+                        ['id' => 2, 'status' => 'PENDING'],
+                    ],
+                ],
+                [
+                    'this is very long entry name that should be longer than items' => [
+                        ['id' => 1, 'status' => 'NEW'],
+                        ['id' => 2, 'status' => 'PENDING'],
+                    ],
+                ],
+                [
+                    'this is very long entry name that should be longer than items' => [
+                        ['id' => 1, 'status' => 'NEW'],
+                        ['id' => 2, 'status' => 'PENDING'],
+                    ],
+                ],
+                [
+                    'this is very long entry name that should be longer than items' => [
+                        ['id' => 1, 'status' => 'NEW'],
+                        ['id' => 2, 'status' => 'PENDING'],
+                    ],
+                ],
+            ])
+            );
 
         $this->assertStringContainsString(
             <<<'ASCIITABLE'
@@ -470,98 +486,37 @@ ASCIITABLE,
 
     public function test_etl_exceeding_the_limit_in_one_rows_set() : void
     {
-        $rows = (new Flow())->extract(
-            new class implements Extractor {
-                /**
-                 * @param FlowContext $context
-                 *
-                 * @return \Generator<int, Rows, mixed, void>
-                 */
-                public function extract(FlowContext $context) : \Generator
-                {
-                    for ($i = 0; $i < 1000; $i++) {
-                        yield new Rows(
-                            Row::create(new IntegerEntry('id', $i + 1)),
-                            Row::create(new IntegerEntry('id', $i + 2)),
-                        );
-                    }
-                }
-            }
-        )
+        $rows = (new Flow())
+            ->read(
+                From::array(\array_map(
+                    fn (int $id) : array => ['id' => $id],
+                    \range(1, 1000)
+                ))
+            )
             ->limit(9)
             ->fetch();
 
         $this->assertCount(9, $rows);
     }
 
-    public function test_etl_fetch_limit_with_closure() : void
-    {
-        $rows = (new Flow())->extract(
-            new class implements Extractor {
-                /**
-                 * @param FlowContext $context
-                 *
-                 * @return \Generator<int, Rows, mixed, void>
-                 */
-                public function extract(FlowContext $context) : \Generator
-                {
-                    for ($i = 0; $i < 1000; $i++) {
-                        yield new Rows(
-                            Row::create(new IntegerEntry('id', $i)),
-                        );
-                    }
-                }
-            }
-        )
-            ->transform($transformer = new class implements Transformer {
-                public bool $closureCalled = false;
-
-                public int $rowsTransformed = 0;
-
-                public function transform(Rows $rows, FlowContext $context) : Rows
-                {
-                    $this->rowsTransformed++;
-
-                    return $rows;
-                }
-
-                public function __serialize() : array
-                {
-                    return [];
-                }
-
-                public function __unserialize(array $data) : void
-                {
-                }
-            })
-            ->fetch(10);
-
-        $this->assertCount(10, $rows);
-        $this->assertSame(10, $transformer->rowsTransformed);
-    }
-
     public function test_etl_fetch_with_limit() : void
     {
-        $rows = (new Flow())->extract(
-            new class implements Extractor {
-                /**
-                 * @param FlowContext $context
-                 *
-                 * @return \Generator<int, Rows, mixed, void>
-                 */
-                public function extract(FlowContext $context) : \Generator
-                {
-                    for ($i = 0; $i < 1000; $i++) {
-                        yield new Rows(
-                            Row::create(new IntegerEntry('id', $i)),
-                        );
-                    }
-                }
-            }
-        )
-        ->fetch(10);
+        $rows = (new Flow())
+            ->read(From::array([
+                ['id' => 1],
+                ['id' => 2],
+                ['id' => 3],
+                ['id' => 4],
+                ['id' => 5],
+                ['id' => 6],
+                ['id' => 7],
+                ['id' => 8],
+                ['id' => 9],
+                ['id' => 10],
+            ]))
+            ->fetch(5);
 
-        $this->assertCount(10, $rows);
+        $this->assertCount(5, $rows);
     }
 
     public function test_etl_fetch_without_limit() : void

@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Pipeline;
 
 use Flow\ETL\DSL\From;
+use Flow\ETL\Exception\LimitReachedException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\Signal;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
@@ -74,7 +76,12 @@ final class SynchronousPipeline implements Pipeline
             foreach ($plan->pipes->all() as $pipe) {
                 try {
                     if ($pipe instanceof Transformer) {
-                        $rows = $pipe->transform($rows, $context);
+                        try {
+                            $rows = $pipe->transform($rows, $context);
+                        } catch (LimitReachedException $limitReachedException) {
+                            $rows = new Rows();
+                            $generator->send(Signal::STOP);
+                        }
                     } elseif ($pipe instanceof Loader) {
                         $pipe->load($rows, $context);
                     }
@@ -89,7 +96,9 @@ final class SynchronousPipeline implements Pipeline
                 }
             }
 
-            yield $rows;
+            if (\count($rows)) {
+                yield $rows;
+            }
         }
 
         $this->closure($context);
