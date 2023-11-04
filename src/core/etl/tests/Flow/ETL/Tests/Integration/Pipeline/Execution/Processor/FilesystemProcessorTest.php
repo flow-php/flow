@@ -9,7 +9,7 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Flow;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Pipeline\Execution\LogicalPlan;
+use Flow\ETL\Pipeline\Execution\ExecutionPlan;
 use Flow\ETL\Pipeline\Execution\Processor\FilesystemProcessor;
 use Flow\ETL\Pipeline\Pipes;
 use PHPUnit\Framework\TestCase;
@@ -36,7 +36,7 @@ final class FilesystemProcessorTest extends TestCase
         $this->expectExceptionMessage("Appending to existing single file destination \"file:/{$path}\" is not supported.");
 
         $processor->process(
-            new LogicalPlan(
+            new ExecutionPlan(
                 $extractor,
                 new Pipes([CSV::to($path)])
             ),
@@ -66,7 +66,7 @@ final class FilesystemProcessorTest extends TestCase
         $this->expectExceptionMessage("Appending to destination \"file:/{$path}\" in non thread safe mode is not supported");
 
         $processor->process(
-            new LogicalPlan(
+            new ExecutionPlan(
                 $extractor,
                 new Pipes([CSV::to($path)])
             ),
@@ -94,7 +94,7 @@ final class FilesystemProcessorTest extends TestCase
         $this->expectExceptionMessage("Destination path \"file:/{$path}\" already exists, please change path to different or set different SaveMode");
 
         $processor->process(
-            new LogicalPlan(
+            new ExecutionPlan(
                 $extractor,
                 new Pipes([CSV::to($path)])
             ),
@@ -119,7 +119,7 @@ final class FilesystemProcessorTest extends TestCase
         $extractor = CSV::from($path);
 
         $plan = $processor->process(
-            new LogicalPlan(
+            new ExecutionPlan(
                 $extractor,
                 new Pipes([CSV::to($path)])
             ),
@@ -147,7 +147,7 @@ final class FilesystemProcessorTest extends TestCase
         $extractor = CSV::from($path);
 
         $processor->process(
-            new LogicalPlan(
+            new ExecutionPlan(
                 $extractor,
                 new Pipes([CSV::to($path)])
             ),
@@ -166,7 +166,7 @@ final class FilesystemProcessorTest extends TestCase
         $this->expectExceptionMessage('Not existing path used to extract data: file://not_existing_file.csv');
 
         $processor->process(
-            new LogicalPlan(
+            new ExecutionPlan(
                 $extractor,
                 Pipes::empty()
             ),

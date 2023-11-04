@@ -19,7 +19,7 @@ final class Processors
         $this->processors = $processors;
     }
 
-    public function process(LogicalPlan $plan, FlowContext $context) : LogicalPlan
+    public function process(ExecutionPlan $plan, FlowContext $context) : ExecutionPlan
     {
         $processedPlan = $plan;
 

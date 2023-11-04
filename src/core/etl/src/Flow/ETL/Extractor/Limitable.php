@@ -24,6 +24,11 @@ trait Limitable
         $this->yieldedRows++;
     }
 
+    public function isLimited() : bool
+    {
+        return $this->limit !== null;
+    }
+
     public function limit() : ?int
     {
         return $this->limit;

@@ -67,7 +67,7 @@ final class LocalSocketPipelineTest extends TestCase
             ->with($this->isInstanceOf(Pool::class), 'host');
 
         $pipeline
-            ->source(new ProcessExtractor(
+            ->setSource(new ProcessExtractor(
                 new Rows(
                     Row::create(Entry::integer('id', 1)),
                     Row::create(Entry::integer('id', 2)),

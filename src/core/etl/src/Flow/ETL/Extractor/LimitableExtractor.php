@@ -10,4 +10,6 @@ namespace Flow\ETL\Extractor;
 interface LimitableExtractor
 {
     public function changeLimit(int $limit) : void;
+
+    public function isLimited() : bool;
 }

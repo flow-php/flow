@@ -43,6 +43,11 @@ final class CachingPipeline implements Pipeline
         return false;
     }
 
+    public function pipes() : Pipes
+    {
+        return $this->pipeline->pipes();
+    }
+
     public function process(FlowContext $context) : \Generator
     {
         $context->config->cache()->clear($id = $this->id ?: $context->config->id());
@@ -53,10 +58,15 @@ final class CachingPipeline implements Pipeline
         }
     }
 
-    public function source(Extractor $extractor) : Pipeline
+    public function setSource(Extractor $extractor) : Pipeline
     {
-        $this->pipeline->source($extractor);
+        $this->pipeline->setSource($extractor);
 
         return $this;
+    }
+
+    public function source() : Extractor
+    {
+        return $this->pipeline->source();
     }
 }

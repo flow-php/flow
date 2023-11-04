@@ -14,7 +14,7 @@ final class CollectingPipelineTest extends TestCase
     public function test_collecting() : void
     {
         $pipeline = new CollectingPipeline(new SynchronousPipeline());
-        $pipeline->source(From::chain(
+        $pipeline->setSource(From::chain(
             From::array([
                 ['id' => 1],
                 ['id' => 2],

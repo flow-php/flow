@@ -42,6 +42,11 @@ final class VoidPipeline implements Pipeline
         return false;
     }
 
+    public function pipes() : Pipes
+    {
+        return $this->pipeline->pipes();
+    }
+
     public function process(FlowContext $context) : \Generator
     {
         foreach ($this->pipeline->process($context) as $rows) {
@@ -51,8 +56,13 @@ final class VoidPipeline implements Pipeline
         yield new Rows();
     }
 
-    public function source(Extractor $extractor) : self
+    public function setSource(Extractor $extractor) : self
     {
         return $this;
+    }
+
+    public function source() : Extractor
+    {
+        return $this->pipeline->source();
     }
 }

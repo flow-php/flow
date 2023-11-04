@@ -8,7 +8,7 @@ use Flow\ETL\Extractor;
 use Flow\ETL\Pipeline\Execution\Plan\FilesystemOperations;
 use Flow\ETL\Pipeline\Pipes;
 
-final class LogicalPlan
+final class ExecutionPlan
 {
     public function __construct(public readonly Extractor $extractor, public readonly Pipes $pipes)
     {

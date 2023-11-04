@@ -13,7 +13,7 @@ use Flow\ETL\Transformer;
 final class NestedPipeline implements Pipeline
 {
     public function __construct(
-        private readonly Pipeline $currentPipeline,
+        private readonly Pipeline $pipeline,
         private readonly Pipeline $nextPipeline
     ) {
     }
@@ -28,37 +28,47 @@ final class NestedPipeline implements Pipeline
     public function cleanCopy() : Pipeline
     {
         return new self(
-            $this->currentPipeline->cleanCopy(),
+            $this->pipeline->cleanCopy(),
             $this->nextPipeline->cleanCopy(),
         );
     }
 
     public function closure(FlowContext $context) : void
     {
-        $this->currentPipeline->closure($context);
+        $this->pipeline->closure($context);
     }
 
     public function has(string $transformerClass) : bool
     {
-        return $this->currentPipeline->has($transformerClass);
+        return $this->pipeline->has($transformerClass);
     }
 
     public function isAsync() : bool
     {
-        return $this->currentPipeline->isAsync() || $this->nextPipeline->isAsync();
+        return $this->pipeline->isAsync() || $this->nextPipeline->isAsync();
+    }
+
+    public function pipes() : Pipes
+    {
+        return $this->pipeline->pipes()->merge($this->nextPipeline->pipes());
     }
 
     public function process(FlowContext $context) : \Generator
     {
-        foreach ($this->nextPipeline->source(new Extractor\PipelineExtractor($this->currentPipeline))->process($context) as $rows) {
+        foreach ($this->nextPipeline->setSource(new Extractor\PipelineExtractor($this->pipeline))->process($context) as $rows) {
             yield $rows;
         }
     }
 
-    public function source(Extractor $extractor) : Pipeline
+    public function setSource(Extractor $extractor) : Pipeline
     {
-        $this->currentPipeline->source($extractor);
+        $this->pipeline->setSource($extractor);
 
         return $this;
+    }
+
+    public function source() : Extractor
+    {
+        return $this->pipeline->source();
     }
 }
