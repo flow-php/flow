@@ -14,7 +14,7 @@ if (!\file_exists(__FLOW_OUTPUT__ . '/dataset.csv')) {
 }
 
 $flow = (new Flow())
-    ->read(CSV::from(__FLOW_OUTPUT__ . '/dataset.csv', 10_000))
+    ->read(CSV::from(__FLOW_OUTPUT__ . '/dataset.csv'))
     ->write(Parquet::to(__FLOW_OUTPUT__ . '/dataset_10k.parquet'));
 
 if ($_ENV['FLOW_PHAR_APP'] ?? false) {

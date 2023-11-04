@@ -20,8 +20,7 @@ class Avro
      * @param array<Path|string>|Path|string $path
      */
     final public static function from(
-        Path|string|array $path,
-        int $rows_in_batch = 1000,
+        Path|string|array $path
     ) : Extractor {
         if (\is_array($path)) {
             /** @var array<Extractor> $extractors */
@@ -30,7 +29,6 @@ class Avro
             foreach ($path as $next_path) {
                 $extractors[] = new AvroExtractor(
                     \is_string($next_path) ? Path::realpath($next_path) : $next_path,
-                    $rows_in_batch
                 );
             }
 
@@ -38,8 +36,7 @@ class Avro
         }
 
         return new AvroExtractor(
-            \is_string($path) ? Path::realpath($path) : $path,
-            $rows_in_batch
+            \is_string($path) ? Path::realpath($path) : $path
         );
     }
 

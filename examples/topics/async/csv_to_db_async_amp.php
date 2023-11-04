@@ -32,7 +32,7 @@ $stopwatch = new Stopwatch();
 $stopwatch->start();
 
 (new Flow())
-    ->read(CSV::from($path = __FLOW_OUTPUT__ . '/dataset.csv', 10_000))
+    ->read(CSV::from($path = __FLOW_OUTPUT__ . '/dataset.csv'))
     ->pipeline(
         new LocalSocketPipeline(
             SocketServer::unixDomain(__FLOW_VAR_RUN__, $logger),

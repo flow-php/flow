@@ -22,8 +22,7 @@ final class ParquetExtractor implements Extractor, Extractor\FileExtractor
         private readonly Path $path,
         private readonly Options $options,
         private readonly ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN,
-        private readonly array $columns = [],
-        private readonly int $rowsInBatch = 1000,
+        private readonly array $columns = []
     ) {
     }
 
@@ -32,25 +31,16 @@ final class ParquetExtractor implements Extractor, Extractor\FileExtractor
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
         foreach ($this->readers($context) as $fileData) {
-            $rows = [];
-
             foreach ($fileData['file']->values($this->columns) as $row) {
                 if ($shouldPutInputIntoRows) {
                     $row['_input_file_uri'] = $fileData['uri'];
                 }
 
-                $rows[] = $row;
-
-                if (\count($rows) >= $this->rowsInBatch) {
-                    yield array_to_rows($rows, $context->entryFactory());
-                    $rows = [];
-                }
-            }
-
-            if (\count($rows)) {
-                yield array_to_rows($rows, $context->entryFactory());
+                yield array_to_rows($row, $context->entryFactory());
             }
         }
+
+        $context->streams()->close($this->path);
     }
 
     public function source() : Path

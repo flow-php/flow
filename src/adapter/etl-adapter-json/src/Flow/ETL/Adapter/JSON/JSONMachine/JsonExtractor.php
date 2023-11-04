@@ -16,15 +16,12 @@ final class JsonExtractor implements Extractor, Extractor\FileExtractor
 {
     public function __construct(
         private readonly Path $path,
-        private readonly int $rowsInBatch = 1000,
         private readonly ?string $pointer = null,
     ) {
     }
 
     public function extract(FlowContext $context) : \Generator
     {
-        $rows = [];
-
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
         foreach ($context->streams()->fs()->scan($this->path, $context->partitionFilter()) as $filePath) {
@@ -38,19 +35,11 @@ final class JsonExtractor implements Extractor, Extractor\FileExtractor
                     $row['_input_file_uri'] = $filePath->uri();
                 }
 
-                $rows[] = $row;
-
-                if (\count($rows) >= $this->rowsInBatch) {
-                    yield array_to_rows($rows, $context->entryFactory());
-
-                    $rows = [];
-                }
-            }
-
-            if ([] !== $rows) {
-                yield array_to_rows($rows, $context->entryFactory());
+                yield array_to_rows($row, $context->entryFactory());
             }
         }
+
+        $context->streams()->close($this->path);
     }
 
     public function source() : Path

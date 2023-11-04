@@ -21,7 +21,6 @@ class CSV
      */
     final public static function from(
         string|Path|array $uri,
-        int $rows_in_batch = 1000,
         bool $with_header = true,
         bool $empty_to_null = true,
         string $delimiter = ',',
@@ -35,7 +34,6 @@ class CSV
             foreach ($uri as $file_uri) {
                 $extractors[] = new CSVExtractor(
                     \is_string($file_uri) ? Path::realpath($file_uri) : $file_uri,
-                    $rows_in_batch,
                     $with_header,
                     $empty_to_null,
                     $delimiter,
@@ -50,7 +48,6 @@ class CSV
 
         return new CSVExtractor(
             \is_string($uri) ? Path::realpath($uri) : $uri,
-            $rows_in_batch,
             $with_header,
             $empty_to_null,
             $delimiter,

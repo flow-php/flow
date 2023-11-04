@@ -30,7 +30,6 @@ class Parquet
         array $fields = [],
         Options $options = new Options(),
         ByteOrder $byte_order = ByteOrder::LITTLE_ENDIAN,
-        int $rows_in_batch = 1000,
     ) : Extractor {
         if (\is_array($uri)) {
             $extractors = [];
@@ -40,8 +39,7 @@ class Parquet
                     $filePath,
                     $options,
                     $byte_order,
-                    $fields,
-                    $rows_in_batch,
+                    $fields
                 );
             }
 
@@ -52,8 +50,7 @@ class Parquet
             \is_string($uri) ? Path::realpath($uri) : $uri,
             $options,
             $byte_order,
-            $fields,
-            $rows_in_batch,
+            $fields
         );
     }
 

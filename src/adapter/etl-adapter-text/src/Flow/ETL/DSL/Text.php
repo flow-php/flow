@@ -14,13 +14,11 @@ class Text
 {
     /**
      * @param array<Path|string>|Path|string $path
-     * @param int $rows_in_batch
      *
      * @return Extractor
      */
     final public static function from(
         string|Path|array $path,
-        int $rows_in_batch = 1000,
     ) : Extractor {
         if (\is_array($path)) {
             $extractors = [];
@@ -28,7 +26,6 @@ class Text
             foreach ($path as $file_path) {
                 $extractors[] = new TextExtractor(
                     \is_string($file_path) ? Path::realpath($file_path) : $file_path,
-                    $rows_in_batch,
                 );
             }
 
@@ -37,7 +34,6 @@ class Text
 
         return new TextExtractor(
             \is_string($path) ? Path::realpath($path) : $path,
-            $rows_in_batch,
         );
     }
 

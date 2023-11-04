@@ -9,22 +9,17 @@ use Flow\ETL\Extractor;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
 
 final class AvroExtractor implements Extractor, Extractor\FileExtractor
 {
     public function __construct(
-        private readonly Path $path,
-        private readonly int $rowsInBach = 1000
+        private readonly Path $path
     ) {
     }
 
     public function extract(FlowContext $context) : \Generator
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
-
-        /** @var array<Row> $rows */
-        $rows = [];
 
         foreach ($context->streams()->fs()->scan($this->path, $context->partitionFilter()) as $filePath) {
             $reader = new \AvroDataIOReader(
@@ -46,19 +41,11 @@ final class AvroExtractor implements Extractor, Extractor\FileExtractor
                     $row['_input_file_uri'] = $filePath->uri();
                 }
 
-                $rows[] = $row;
-
-                if (\count($rows) >= $this->rowsInBach) {
-                    yield array_to_rows($rows, $context->entryFactory());
-                    /** @var array<Row> $rows */
-                    $rows = [];
-                }
+                yield array_to_rows($row, $context->entryFactory());
             }
         }
 
-        if ([] !== $rows) {
-            yield array_to_rows($rows, $context->entryFactory());
-        }
+        $context->streams()->close($this->path);
     }
 
     public function source() : Path

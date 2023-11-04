@@ -9,7 +9,6 @@ use Flow\ETL\Extractor;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
 
 final class CSVExtractor implements Extractor, Extractor\FileExtractor
 {
@@ -17,8 +16,7 @@ final class CSVExtractor implements Extractor, Extractor\FileExtractor
      * @param int<0, max> $charactersReadInLine
      */
     public function __construct(
-        private readonly Path $uri,
-        private readonly int $rowsInBatch = 1000,
+        private readonly Path $path,
         private readonly bool $withHeader = true,
         private readonly bool $emptyToNull = true,
         private readonly string $separator = ',',
@@ -32,11 +30,9 @@ final class CSVExtractor implements Extractor, Extractor\FileExtractor
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
-        foreach ($context->streams()->fs()->scan($this->uri, $context->partitionFilter()) as $path) {
+        foreach ($context->streams()->fs()->scan($this->path, $context->partitionFilter()) as $path) {
             $stream = $context->streams()->fs()->open($path, Mode::READ);
 
-            /** @var array<Row> $rows */
-            $rows = [];
             $headers = [];
 
             if ($this->withHeader && \count($headers) === 0) {
@@ -63,8 +59,7 @@ final class CSVExtractor implements Extractor, Extractor\FileExtractor
                 }
 
                 if (\count($rowData) > \count($headers)) {
-                    /** @phpstan-ignore-next-line */
-                    $rowData = \array_chunk($rowData, \count($headers));
+                    $rowData = \array_slice($rowData, 0, \count($headers));
                 }
 
                 if ($this->emptyToNull) {
@@ -87,30 +82,17 @@ final class CSVExtractor implements Extractor, Extractor\FileExtractor
                     $row['_input_file_uri'] = $stream->path()->uri();
                 }
 
-                $rows[] = $row;
-
-                if (\count($rows) >= $this->rowsInBatch) {
-                    yield array_to_rows($rows, $context->entryFactory());
-
-                    /** @var array<Row> $rows */
-                    $rows = [];
-                }
+                yield array_to_rows($row, $context->entryFactory());
 
                 $rowData = \fgetcsv($stream->resource(), $this->charactersReadInLine, $this->separator, $this->enclosure, $this->escape);
             }
-
-            if ([] !== $rows) {
-                yield array_to_rows($rows, $context->entryFactory());
-            }
-
-            if ($stream->isOpen()) {
-                $stream->close();
-            }
         }
+
+        $context->streams()->close($this->path);
     }
 
     public function source() : Path
     {
-        return $this->uri;
+        return $this->path;
     }
 }
