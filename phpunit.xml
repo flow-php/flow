@@ -7,6 +7,8 @@
         cacheResultFile="./var/phpunit/phpunit.cache"
         displayDetailsOnTestsThatTriggerWarnings="true"
         displayDetailsOnTestsThatTriggerErrors="true"
+        failOnNotice="true"
+        failOnWarning="true"
         executionOrder="random"
 >
   <coverage cacheDirectory="./var/phpunit/">

@@ -170,6 +170,9 @@
         "test": [
             "tools/phpunit/vendor/bin/phpunit"
         ],
+        "test:no-coverage": [
+            "tools/phpunit/vendor/bin/phpunit --no-coverage"
+        ],
         "test:benchmark": [
             "@test:benchmark:building_blocks",
             "@test:benchmark:extractor",
