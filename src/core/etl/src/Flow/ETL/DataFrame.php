@@ -70,6 +70,19 @@ final class DataFrame
     }
 
     /**
+     * @lazy
+     * When set to true, files are never written under the origin name but instead initial path is turned
+     * into a folder in which each process writes to a new file.
+     * This is also mandatory for SaveMode::Append
+     */
+    public function appendSafe(bool $appendSafe = true) : self
+    {
+        $this->context->setAppendSafe($appendSafe);
+
+        return $this;
+    }
+
+    /**
      * Merge/Split Rows yielded by Extractor into batches of given size.
      * For example, when Extractor is yielding one row at time, this method will merge them into batches of given size
      * before passing them to the next pipeline element.
@@ -439,6 +452,10 @@ final class DataFrame
     {
         $this->context->setMode($mode);
 
+        if ($mode === SaveMode::Append) {
+            $this->appendSafe();
+        }
+
         return $this;
     }
 
@@ -653,16 +670,13 @@ final class DataFrame
     }
 
     /**
+     * @deprecated please use DataFrame::appendSafe() instead
+     *
      * @lazy
-     * When set to true, files are never written under the origin name but instead initial path is turned
-     * into a folder in which each process writes to a new file.
-     * Otherwise parallel processing would not be possible due to a single file bottleneck.
-     * In a single process pipelines there is not much added value from this setting unless
-     * there is a chance that the same pipeline execution might overlap.
      */
-    public function threadSafe(bool $threadSafe = true) : self
+    public function threadSafe(bool $appendSafe = true) : self
     {
-        $this->context->setThreadSafe($threadSafe);
+        $this->appendSafe($appendSafe);
 
         return $this;
     }

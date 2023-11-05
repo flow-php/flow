@@ -16,39 +16,6 @@ use PHPUnit\Framework\TestCase;
 
 final class CSVLoaderTest extends TestCase
 {
-    public function test_appending_to_csv_in_non_thread_safe() : void
-    {
-        $path = \rtrim(\sys_get_temp_dir(), '/') . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.csv';
-        $this->expectExceptionMessage("Appending to destination \"file:/{$path}\" in non thread safe mode is not supported.");
-
-        (new Flow())
-            ->process(
-                new Rows(
-                    Row::create(Entry::integer('id', 1), Entry::string('name', 'Norbert')),
-                    Row::create(Entry::integer('id', 2), Entry::string('name', 'Tomek')),
-                    Row::create(Entry::integer('id', 3), Entry::string('name', 'Dawid')),
-                )
-            )
-            ->load(CSV::to($path))
-            ->run();
-
-        (new Flow())
-            ->process(
-                new Rows(
-                    Row::create(Entry::integer('id', 1), Entry::string('name', 'Norbert')),
-                    Row::create(Entry::integer('id', 2), Entry::string('name', 'Tomek')),
-                    Row::create(Entry::integer('id', 3), Entry::string('name', 'Dawid')),
-                )
-            )
-            ->mode(SaveMode::Append)
-            ->load(CSV::to($path))
-            ->run();
-
-        if (\file_exists($path)) {
-            \unlink($path);
-        }
-    }
-
     public function test_loading_array_entry() : void
     {
         $path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.csv';
@@ -69,7 +36,7 @@ final class CSVLoaderTest extends TestCase
         }
     }
 
-    public function test_loading_csv_files_with_threadsafe() : void
+    public function test_loading_csv_files_with_append_safe() : void
     {
         $path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.csv';
 
@@ -81,7 +48,7 @@ final class CSVLoaderTest extends TestCase
                     Row::create(new Row\Entry\IntegerEntry('id', 3), new Row\Entry\StringEntry('name', 'Dawid')),
                 )
             )
-            ->threadSafe()
+            ->appendSafe()
             ->load(CSV::to($path))
             ->run();
 

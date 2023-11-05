@@ -97,14 +97,14 @@ final class CSVLoader implements Closure, Loader, Loader\FileLoader
         if ($this->header && !$context->streams()->exists($this->path, $partitions)) {
             $this->writeCSV(
                 $headers,
-                $context->streams()->open($this->path, 'csv', Mode::WRITE, $context->threadSafe(), $partitions)
+                $context->streams()->open($this->path, 'csv', Mode::WRITE, $context->appendSafe(), $partitions)
             );
         }
 
         foreach ($nextRows as $row) {
             $this->writeCSV(
                 $row->toArray(),
-                $context->streams()->open($this->path, 'csv', Mode::WRITE, $context->threadSafe(), $partitions)
+                $context->streams()->open($this->path, 'csv', Mode::WRITE, $context->appendSafe(), $partitions)
             );
         }
     }

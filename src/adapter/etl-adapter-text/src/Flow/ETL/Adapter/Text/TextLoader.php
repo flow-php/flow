@@ -63,7 +63,7 @@ final class TextLoader implements Closure, Loader, Loader\FileLoader
                     }
 
                     \fwrite(
-                        $context->streams()->open($this->path, 'text', Mode::WRITE, $context->threadSafe(), $partition->partitions)->resource(),
+                        $context->streams()->open($this->path, 'text', Mode::WRITE, $context->appendSafe(), $partition->partitions)->resource(),
                         $row->entries()->all()[0]->toString() . $this->newLineSeparator
                     );
                 }
@@ -75,7 +75,7 @@ final class TextLoader implements Closure, Loader, Loader\FileLoader
                 }
 
                 \fwrite(
-                    $context->streams()->open($this->path, 'text', Mode::WRITE, $context->threadSafe(), [])->resource(),
+                    $context->streams()->open($this->path, 'text', Mode::WRITE, $context->appendSafe(), [])->resource(),
                     $row->entries()->all()[0]->toString() . $this->newLineSeparator
                 );
             }

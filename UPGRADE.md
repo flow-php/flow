@@ -70,6 +70,12 @@ Affected extractors:
 Argument `$rows_in_batch` was renamed to `$rows_per_page` which no longer determines the size of the batch, but the size of the page that will be fetched from Google API. 
 Rows are yielded one by one. 
 
+### 8) DataFrame::threadSafe() method was replaced by DataFrame::appendSafe()
+
+`DataFrame::appendSafe()` is doing exactly the same thing as the old method, it's just more 
+descriptive and self-explanatory. 
+It's no longer mandatory to set this flat to true when using SaveMode::APPEND, it's now set automatically. 
+
 ---
 
 ## Upgrading from 0.3.x to 0.4.x

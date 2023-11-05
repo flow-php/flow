@@ -84,39 +84,6 @@ JSON,
         }
     }
 
-    public function test_json_loader_with_a_thread_safe_and_append_mode() : void
-    {
-        $stream = \rtrim(\sys_get_temp_dir(), '/') . '/' . \uniqid('flow_php_etl_json_loader', true) . '.json';
-
-        \file_put_contents($stream, '[]');
-
-        $loader = new JsonLoader(Path::realpath($stream));
-
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage("Appending to existing single file destination \"file:/{$stream}\" is not supported.");
-
-        (new Flow())
-            ->process(
-                new Rows(
-                    ...\array_map(
-                        fn (int $i) : Row => Row::create(
-                            new Row\Entry\IntegerEntry('id', $i),
-                            new Row\Entry\StringEntry('name', 'name_' . $i)
-                        ),
-                        \range(0, 5)
-                    )
-                )
-            )
-            ->mode(SaveMode::Append)
-            ->threadSafe()
-            ->load($loader)
-            ->run();
-
-        if (\file_exists($stream)) {
-            \unlink($stream);
-        }
-    }
-
     public function test_json_loader_with_a_thread_safe_and_overwrite() : void
     {
         $stream = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_json_loader', true) . '.json';
@@ -133,7 +100,7 @@ JSON,
                     \range(0, 5)
                 )
             ),
-            ($context = new FlowContext(Config::default()))->setThreadSafe()
+            ($context = new FlowContext(Config::default()))->setAppendSafe()
         );
 
         $loader->load(
@@ -146,7 +113,7 @@ JSON,
                     \range(6, 10)
                 )
             ),
-            $context = ($context)->setMode(SaveMode::Overwrite)->setThreadSafe()
+            $context = ($context)->setMode(SaveMode::Overwrite)->setAppendSafe()
         );
 
         $loader->closure($context);
@@ -174,6 +141,38 @@ JSON,
 
         if (\file_exists($stream . DIRECTORY_SEPARATOR . $files[0])) {
             \unlink($stream . DIRECTORY_SEPARATOR . $files[0]);
+        }
+    }
+
+    public function test_json_loader_with_append_mode() : void
+    {
+        $stream = \rtrim(\sys_get_temp_dir(), '/') . '/' . \uniqid('flow_php_etl_json_loader', true) . '.json';
+
+        \file_put_contents($stream, '[]');
+
+        $loader = new JsonLoader(Path::realpath($stream));
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage("Appending to existing single file destination \"file:/{$stream}\" is not supported.");
+
+        (new Flow())
+            ->process(
+                new Rows(
+                    ...\array_map(
+                        fn (int $i) : Row => Row::create(
+                            new Row\Entry\IntegerEntry('id', $i),
+                            new Row\Entry\StringEntry('name', 'name_' . $i)
+                        ),
+                        \range(0, 5)
+                    )
+                )
+            )
+            ->mode(SaveMode::Append)
+            ->load($loader)
+            ->run();
+
+        if (\file_exists($stream)) {
+            \unlink($stream);
         }
     }
 }

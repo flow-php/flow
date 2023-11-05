@@ -20,6 +20,8 @@ use Flow\Serializer\Serializer;
  */
 final class FlowContext
 {
+    private bool $appendSafe = false;
+
     private ErrorHandler $errorHandler;
 
     private SaveMode $mode = SaveMode::ExceptionIfExists;
@@ -28,13 +30,16 @@ final class FlowContext
 
     private References $partitions;
 
-    private bool $threadSafe = false;
-
     public function __construct(public readonly Config $config)
     {
         $this->partitionFilter = new NoopFilter();
         $this->errorHandler = new ThrowError();
         $this->partitions = new References();
+    }
+
+    public function appendSafe() : bool
+    {
+        return $this->appendSafe;
     }
 
     public function cache() : Cache
@@ -86,6 +91,13 @@ final class FlowContext
         return $this->config->serializer();
     }
 
+    public function setAppendSafe(bool $appendSafe = true) : self
+    {
+        $this->appendSafe = $appendSafe;
+
+        return $this;
+    }
+
     public function setErrorHandler(ErrorHandler $handler) : self
     {
         $this->errorHandler = $handler;
@@ -100,20 +112,8 @@ final class FlowContext
         return $this;
     }
 
-    public function setThreadSafe(bool $threadSafe = true) : self
-    {
-        $this->threadSafe = $threadSafe;
-
-        return $this;
-    }
-
     public function streams() : FilesystemStreams
     {
         return $this->config->filesystemStreams();
-    }
-
-    public function threadSafe() : bool
-    {
-        return $this->threadSafe;
     }
 }

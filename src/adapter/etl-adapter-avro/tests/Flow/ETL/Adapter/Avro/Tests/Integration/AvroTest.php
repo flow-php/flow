@@ -92,7 +92,7 @@ final class AvroTest extends TestCase
                     }, \range(1, 100))
                 )
             ))
-            ->threadSafe()
+            ->appendSafe()
             ->write(Avro::to($path))
             ->run();
 
