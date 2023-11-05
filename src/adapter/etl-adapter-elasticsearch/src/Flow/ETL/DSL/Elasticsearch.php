@@ -18,6 +18,8 @@ class Elasticsearch
     /**
      * https://www.elastic.co/guide/en/elasticsearch/reference/master/docs-bulk.html.
      *
+     * In order to control the size of the single request, use DataFrame::chunkSize() method just before calling DataFrame::load().
+     *
      * @param array{
      *  hosts?: array<string>,
      *  connectionParams?: array<mixed>,
@@ -29,7 +31,6 @@ class Elasticsearch
      *  elasticMetaHeader?: boolean,
      *  includePortInHostHeader?: boolean
      * } $config
-     * @param int<1, max> $chunk_size
      * @param string $index
      * @param IdFactory $id_factory
      * @param array<mixed> $parameters - https://www.elastic.co/guide/en/elasticsearch/reference/master/docs-bulk.html
@@ -38,16 +39,17 @@ class Elasticsearch
      */
     final public static function bulk_index(
         array $config,
-        int $chunk_size,
         string $index,
         IdFactory $id_factory,
         array $parameters = []
     ) : Loader {
-        return new ElasticsearchLoader($config, $chunk_size, $index, $id_factory, $parameters);
+        return new ElasticsearchLoader($config, $index, $id_factory, $parameters);
     }
 
     /**
      *  https://www.elastic.co/guide/en/elasticsearch/reference/master/docs-bulk.html.
+     *
+     * In order to control the size of the single request, use DataFrame::chunkSize() method just before calling DataFrame::load().
      *
      * @param array{
      *  hosts?: array<string>,
@@ -60,7 +62,6 @@ class Elasticsearch
      *  elasticMetaHeader?: boolean,
      *  includePortInHostHeader?: boolean
      * } $config
-     * @param int<1, max> $chunk_size
      * @param string $index
      * @param IdFactory $id_factory
      * @param array<mixed> $parameters - https://www.elastic.co/guide/en/elasticsearch/reference/master/docs-bulk.html
@@ -69,12 +70,11 @@ class Elasticsearch
      */
     final public static function bulk_update(
         array $config,
-        int $chunk_size,
         string $index,
         IdFactory $id_factory,
         array $parameters = []
     ) : Loader {
-        return ElasticsearchLoader::update($config, $chunk_size, $index, $id_factory, $parameters);
+        return ElasticsearchLoader::update($config, $index, $id_factory, $parameters);
     }
 
     /**

@@ -25,7 +25,6 @@ use Flow\ETL\Rows;
  *    elasticMetaHeader?: boolean,
  *    includePortInHostHeader?: boolean
  *  },
- *  chunk_size: int<1, max>,
  *  index: string,
  *  id_factory: IdFactory,
  *  parameters: array<mixed>,
@@ -41,12 +40,10 @@ final class ElasticsearchLoader implements Loader
 
     /**
      * @param array{hosts?: array<string>, connectionParams?: array<mixed>, retries?: int, sniffOnStart?: boolean, sslCert?: array<string>, sslKey?: array<string>, sslVerification?: (boolean|string), elasticMetaHeader?: boolean, includePortInHostHeader?: boolean} $config
-     * @param int<1, max> $chunkSize
      * @param array<mixed> $parameters
      */
     public function __construct(
         private array $config,
-        private int $chunkSize,
         private string $index,
         private IdFactory $idFactory,
         private array $parameters = []
@@ -67,12 +64,11 @@ final class ElasticsearchLoader implements Loader
      *  elasticMetaHeader?: boolean,
      *  includePortInHostHeader?: boolean
      * } $clientConfig
-     * @param int<1, max> $chunkSize
      * @param array<mixed> $parameters
      */
-    public static function update(array $clientConfig, int $chunkSize, string $index, IdFactory $idFactory, array $parameters = []) : self
+    public static function update(array $clientConfig, string $index, IdFactory $idFactory, array $parameters = []) : self
     {
-        $loader = new self($clientConfig, $chunkSize, $index, $idFactory, $parameters);
+        $loader = new self($clientConfig, $index, $idFactory, $parameters);
         $loader->method = 'update';
 
         return $loader;
@@ -82,7 +78,6 @@ final class ElasticsearchLoader implements Loader
     {
         return [
             'config' => $this->config,
-            'chunk_size' => $this->chunkSize,
             'index' => $this->index,
             'id_factory' => $this->idFactory,
             'parameters' => $this->parameters,
@@ -93,7 +88,6 @@ final class ElasticsearchLoader implements Loader
     public function __unserialize(array $data) : void
     {
         $this->config = $data['config'];
-        $this->chunkSize = $data['chunk_size'];
         $this->index = $data['index'];
         $this->idFactory = $data['id_factory'];
         $this->parameters = $data['parameters'];
@@ -108,50 +102,47 @@ final class ElasticsearchLoader implements Loader
         }
 
         $factory = $this->idFactory;
+        $parameters = $this->parameters;
+        $parameters['body'] = [];
 
-        foreach ($rows->chunks($this->chunkSize) as $chunk) {
-            $parameters = $this->parameters;
-            $parameters['body'] = [];
-
-            /**
-             * @var array<int, array{body:array,id:string}> $dataCollection
-             */
-            $dataCollection = $chunk->map(fn (Row $row) : Row => Row::create(
-                $factory->create($row),
-                new Row\Entry\ArrayEntry('body', $row->map(
-                    function (Row\Entry $entry) : Row\Entry {
-                        if ($entry instanceof Row\Entry\JsonEntry) {
-                            return new Row\Entry\ArrayEntry($entry->name(), (array) \json_decode($entry->value(), true, 512, JSON_THROW_ON_ERROR));
-                        }
-
-                        return $entry;
+        /**
+         * @var array<int, array{body:array,id:string}> $dataCollection
+         */
+        $dataCollection = $rows->map(fn (Row $row) : Row => Row::create(
+            $factory->create($row),
+            new Row\Entry\ArrayEntry('body', $row->map(
+                function (Row\Entry $entry) : Row\Entry {
+                    if ($entry instanceof Row\Entry\JsonEntry) {
+                        return new Row\Entry\ArrayEntry($entry->name(), (array) \json_decode($entry->value(), true, 512, JSON_THROW_ON_ERROR));
                     }
-                )->toArray())
-            ))->toArray();
 
-            foreach ($dataCollection as $data) {
-                $parameters['body'][] = [
-                    $this->method => [
-                        '_id' => $data['id'],
-                        '_index' => $this->index,
-                    ],
-                ];
-
-                if ($this->method === 'update') {
-                    $parameters['body'][] = ['doc' => $data['body']];
-                } else {
-                    $parameters['body'][] = $data['body'];
+                    return $entry;
                 }
-            }
+            )->toArray())
+        ))->toArray();
 
-            /**
-             * @psalm-suppress UndefinedClass
-             * @psalm-suppress InvalidArgument
-             *
-             * @phpstan-ignore-next-line
-             */
-            $this->client()->bulk($parameters);
+        foreach ($dataCollection as $data) {
+            $parameters['body'][] = [
+                $this->method => [
+                    '_id' => $data['id'],
+                    '_index' => $this->index,
+                ],
+            ];
+
+            if ($this->method === 'update') {
+                $parameters['body'][] = ['doc' => $data['body']];
+            } else {
+                $parameters['body'][] = $data['body'];
+            }
         }
+
+        /**
+         * @psalm-suppress UndefinedClass
+         * @psalm-suppress InvalidArgument
+         *
+         * @phpstan-ignore-next-line
+         */
+        $this->client()->bulk($parameters);
     }
 
     /**

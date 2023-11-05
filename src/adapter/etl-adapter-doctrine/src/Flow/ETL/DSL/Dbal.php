@@ -132,8 +132,9 @@ class Dbal
     }
 
     /**
+     * In order to control the size of the single insert, use DataFrame::chunkSize() method just before calling DataFrame::load().
+     *
      * @param array<string, mixed>|Connection $connection
-     * @param int<1, max> $chunk_size
      * @param array{
      *  skip_conflicts?: boolean,
      *  constraint?: string,
@@ -147,17 +148,17 @@ class Dbal
     final public static function to_table_insert(
         array|Connection $connection,
         string $table,
-        int $chunk_size = 1000,
         array $options = [],
     ) : Loader {
         return \is_array($connection)
-            ? new DbalLoader($table, $chunk_size, $connection, $options, 'insert')
-            : DbalLoader::fromConnection($connection, $table, $chunk_size, $options, 'insert');
+            ? new DbalLoader($table, $connection, $options, 'insert')
+            : DbalLoader::fromConnection($connection, $table, $options, 'insert');
     }
 
     /**
+     *  In order to control the size of the single request, use DataFrame::chunkSize() method just before calling DataFrame::load().
+     *
      * @param array<string, mixed>|Connection $connection
-     * @param int<1, max> $chunk_size
      * @param array{
      *  skip_conflicts?: boolean,
      *  constraint?: string,
@@ -173,11 +174,10 @@ class Dbal
     final public static function to_table_update(
         array|Connection $connection,
         string $table,
-        int $chunk_size = 1000,
         array $options = [],
     ) : Loader {
         return \is_array($connection)
-            ? new DbalLoader($table, $chunk_size, $connection, $options, 'update')
-            : DbalLoader::fromConnection($connection, $table, $chunk_size, $options, 'update');
+            ? new DbalLoader($table, $connection, $options, 'update')
+            : DbalLoader::fromConnection($connection, $table, $options, 'update');
     }
 }

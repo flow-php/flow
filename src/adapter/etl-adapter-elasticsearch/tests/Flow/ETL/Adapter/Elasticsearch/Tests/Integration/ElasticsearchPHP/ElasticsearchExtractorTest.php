@@ -35,7 +35,7 @@ final class ElasticsearchExtractorTest extends TestCase
 
     public function test_empty_extraction() : void
     {
-        $loader = Elasticsearch::bulk_index($this->elasticsearchContext->clientConfig(), 100, self::INDEX_NAME, new EntryIdFactory('id'), ['refresh' => true]);
+        $loader = Elasticsearch::bulk_index($this->elasticsearchContext->clientConfig(), self::INDEX_NAME, new EntryIdFactory('id'), ['refresh' => true]);
 
         $loader->load(new Rows(
             ...\array_map(
@@ -75,7 +75,7 @@ final class ElasticsearchExtractorTest extends TestCase
 
     public function test_extraction_index_with_from_and_size() : void
     {
-        $loader = Elasticsearch::bulk_index($this->elasticsearchContext->clientConfig(), 100, self::INDEX_NAME, new EntryIdFactory('id'), ['refresh' => true]);
+        $loader = Elasticsearch::bulk_index($this->elasticsearchContext->clientConfig(), self::INDEX_NAME, new EntryIdFactory('id'), ['refresh' => true]);
 
         $loader->load(new Rows(
             ...\array_map(
@@ -118,7 +118,7 @@ final class ElasticsearchExtractorTest extends TestCase
 
     public function test_extraction_index_with_search_after() : void
     {
-        $loader = Elasticsearch::bulk_index($this->elasticsearchContext->clientConfig(), 100, self::INDEX_NAME, new EntryIdFactory('id'), ['refresh' => true]);
+        $loader = Elasticsearch::bulk_index($this->elasticsearchContext->clientConfig(), self::INDEX_NAME, new EntryIdFactory('id'), ['refresh' => true]);
 
         $loader->load(new Rows(
             ...\array_map(
@@ -154,7 +154,7 @@ final class ElasticsearchExtractorTest extends TestCase
 
     public function test_extraction_index_with_search_after_with_point_in_time() : void
     {
-        $loader = Elasticsearch::bulk_index($this->elasticsearchContext->clientConfig(), 100, self::INDEX_NAME, new EntryIdFactory('id'), ['refresh' => true]);
+        $loader = Elasticsearch::bulk_index($this->elasticsearchContext->clientConfig(), self::INDEX_NAME, new EntryIdFactory('id'), ['refresh' => true]);
 
         $loader->load(new Rows(
             ...\array_map(
@@ -195,7 +195,7 @@ final class ElasticsearchExtractorTest extends TestCase
 
     public function test_extraction_whole_index_with_point_in_time() : void
     {
-        $loader = Elasticsearch::bulk_index($this->elasticsearchContext->clientConfig(), 100, self::INDEX_NAME, new EntryIdFactory('id'), ['refresh' => true]);
+        $loader = Elasticsearch::bulk_index($this->elasticsearchContext->clientConfig(), self::INDEX_NAME, new EntryIdFactory('id'), ['refresh' => true]);
 
         $loader->load(new Rows(
             ...\array_map(

@@ -71,7 +71,6 @@ final class Elasticsearch7Context implements ElasticsearchContext
     {
         Elasticsearch::bulk_index(
             $this->clientConfig(),
-            100,
             $index,
             $idFactory,
             ['refresh' => true]
