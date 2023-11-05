@@ -76,6 +76,11 @@ Rows are yielded one by one.
 descriptive and self-explanatory. 
 It's no longer mandatory to set this flat to true when using SaveMode::APPEND, it's now set automatically. 
 
+### 9) Loaders - chunk size
+
+Loaders are no longer accepting chunk_size parameter, from now in order to control 
+the number of rows saved at once use `DataFrame::batchSize(int $size)` method.
+
 ---
 
 ## Upgrading from 0.3.x to 0.4.x
