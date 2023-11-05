@@ -63,6 +63,23 @@ final class RLEBitPackedHybridTest extends TestCase
         );
     }
 
+    public function test_bit_packing_zeroes() : void
+    {
+        $values = [0, 0, 0, 0];
+
+        $buffer = '';
+        (new RLEBitPackedHybrid())->encodeHybrid(new BinaryBufferWriter($buffer), $values);
+
+        $this->assertSame(
+            $values,
+            (new RLEBitPackedHybrid())->decodeHybrid(
+                new BinaryBufferReader($buffer),
+                BitWidth::fromArray($values),
+                \count($values)
+            )
+        );
+    }
+
     public function test_bit_rle_reading_with_extra_bytes_in_the_buffer() : void
     {
         $values = [3, 3, 3, 3, 3, 3, 3, 3, 3, 3];

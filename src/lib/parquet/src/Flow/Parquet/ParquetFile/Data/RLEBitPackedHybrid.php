@@ -23,6 +23,12 @@ final class RLEBitPackedHybrid
             return;
         }
 
+        if ($bitWidth === 0) {
+            $output = \array_merge($output, \array_fill(0, \min($numGroups * 8, $maxItems), 0));
+
+            return;
+        }
+
         $count = $numGroups * 8;
         $totalByteCount = (int) (($bitWidth * $count) / 8);
 
