@@ -79,11 +79,11 @@ final class JsonLoader implements Closure, Loader, Loader\FileLoader
         $streams = $context->streams();
 
         if (!$streams->isOpen($this->path, $partitions)) {
-            $stream = $streams->open($this->path, 'json', $mode, $context->threadSafe(), $partitions);
+            $stream = $streams->open($this->path, 'json', $mode, $context->appendSafe(), $partitions);
 
             $this->init($stream);
         } else {
-            $stream = $streams->open($this->path, 'json', $mode, $context->threadSafe(), $partitions);
+            $stream = $streams->open($this->path, 'json', $mode, $context->appendSafe(), $partitions);
         }
 
         $this->writeJSON($nextRows, $stream);

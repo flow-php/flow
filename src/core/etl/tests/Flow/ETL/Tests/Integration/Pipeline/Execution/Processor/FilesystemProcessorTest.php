@@ -41,36 +41,8 @@ final class FilesystemProcessorTest extends TestCase
                 new Pipes([CSV::to($path)])
             ),
             (new FlowContext(Config::default()))
-                ->setThreadSafe()
+                ->setAppendSafe()
                 ->setMode(SaveMode::Append)
-        );
-    }
-
-    public function test_append_mode_without_thread_safe() : void
-    {
-        $path = \sys_get_temp_dir() . '/flow-etl-filesystem-processor-test-overwrite-mode.csv';
-
-        if (\file_exists($path)) {
-            \unlink($path);
-        }
-
-        (new Flow())
-            ->read(From::array([['id' => 1], ['id' => 2]]))
-            ->write(CSV::to($path))
-            ->run();
-
-        $processor = new FilesystemProcessor();
-        $extractor = CSV::from($path);
-
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage("Appending to destination \"file:/{$path}\" in non thread safe mode is not supported");
-
-        $processor->process(
-            new ExecutionPlan(
-                $extractor,
-                new Pipes([CSV::to($path)])
-            ),
-            (new FlowContext(Config::default()))->setMode(SaveMode::Append)
         );
     }
 

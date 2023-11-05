@@ -72,7 +72,7 @@ final class LocalSocketPipeline implements Pipeline
 
     public function process(FlowContext $context) : \Generator
     {
-        $threadSafeContext = $context->setThreadSafe();
+        $threadSafeContext = $context->setAppendSafe();
 
         $plan = $threadSafeContext
             ->config

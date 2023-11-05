@@ -82,7 +82,7 @@ final class ParquetLoader implements Closure, Loader, Loader\FileLoader
         if ($context->partitionEntries()->count()) {
             foreach ($rows->partitionBy(...$context->partitionEntries()->all()) as $partitions) {
 
-                $stream = $streams->open($this->path, 'parquet', Mode::WRITE_BINARY, $context->threadSafe(), $partitions->partitions);
+                $stream = $streams->open($this->path, 'parquet', Mode::WRITE_BINARY, $context->appendSafe(), $partitions->partitions);
 
                 if (!\array_key_exists($stream->path()->uri(), $this->writers)) {
                     $this->writers[$stream->path()->uri()] = new Writer(
@@ -98,7 +98,7 @@ final class ParquetLoader implements Closure, Loader, Loader\FileLoader
                 }
             }
         } else {
-            $stream = $streams->open($this->path, 'parquet', Mode::WRITE_BINARY, $context->threadSafe());
+            $stream = $streams->open($this->path, 'parquet', Mode::WRITE_BINARY, $context->appendSafe());
 
             if (!\array_key_exists($stream->path()->uri(), $this->writers)) {
                 $this->writers[$stream->path()->uri()] = new Writer(

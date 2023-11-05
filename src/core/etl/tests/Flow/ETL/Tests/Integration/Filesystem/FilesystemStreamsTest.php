@@ -13,7 +13,7 @@ use PHPUnit\Framework\TestCase;
 
 class FilesystemStreamsTest extends TestCase
 {
-    public function test_closing_stream_with_non_thread_safe_base_path() : void
+    public function test_closing_stream_with_non_append_safe_base_path() : void
     {
         $streams = (new FilesystemStreams(new FlysystemFS()));
 

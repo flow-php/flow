@@ -56,7 +56,7 @@ final class Processor
              * each worker would remove all files created by other workers.
              */
             ->mode(SaveMode::Append)
-            ->threadSafe();
+            ->appendSafe();
 
         if ([] !== $this->partitionEntries) {
             $dataFrame = $dataFrame->partitionBy(...$this->partitionEntries);

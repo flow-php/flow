@@ -155,7 +155,7 @@ final class AvroLoader implements Closure, Loader, Loader\FileLoader
                     $this->path,
                     'avro',
                     Mode::WRITE_BINARY,
-                    $context->threadSafe()
+                    $context->appendSafe()
                 )->resource()
             ),
             new \AvroIODatumWriter($schema),

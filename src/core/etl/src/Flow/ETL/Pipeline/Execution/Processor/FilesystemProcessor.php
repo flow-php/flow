@@ -50,8 +50,8 @@ final class FilesystemProcessor implements Processor
             }
 
             if ($context->mode() === SaveMode::Append) {
-                if (!$context->threadSafe()) {
-                    throw new RuntimeException('Appending to destination "' . $loader->destination()->uri() . '" in non thread safe mode is not supported.');
+                if (!$context->appendSafe()) {
+                    throw new RuntimeException('Appending to destination "' . $loader->destination()->uri() . '" in non append safe mode is not supported.');
                 }
 
                 if ($context->streams()->fs()->fileExists($loader->destination())) {
