@@ -167,6 +167,7 @@
 - [c9fb26](https://github.com/flow-php/flow/commit/c9fb26dc2e0558c0f33b6097286e4dc6e2799d3f) - **test-benchmark.yml** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#733](https://github.com/flow-php/flow/pull/733) - **Loaders are no longer allowing for setting chunk size** - [@norberttech](https://github.com/norberttech)
 - [#729](https://github.com/flow-php/flow/pull/729) - **LimitPipeline** - [@norberttech](https://github.com/norberttech)
 - [#726](https://github.com/flow-php/flow/pull/726) - **batching logic from extractors** - [@norberttech](https://github.com/norberttech)
 - [#716](https://github.com/flow-php/flow/pull/716) - **Rows from Closure::closure method** - [@norberttech](https://github.com/norberttech)
