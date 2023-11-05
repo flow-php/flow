@@ -11,22 +11,57 @@ use Flow\Parquet\ParquetFile\Encodings;
 final class DataPageHeaderV2
 {
     public function __construct(
-        private readonly Encodings $encoding,
         private readonly int $valuesCount,
+        private readonly int $nullsCount,
+        private readonly int $rowsCount,
+        private readonly Encodings $encoding,
+        private readonly int $definitionsByteLength,
+        private readonly int $repetitionsByteLength,
+        private readonly ?bool $isCompressed
     ) {
     }
 
     public static function fromThrift(\Flow\Parquet\Thrift\DataPageHeaderV2 $thrift) : self
     {
+        /** @psalm-suppress DocblockTypeContradiction */
         return new self(
+            $thrift->num_values,
+            $thrift->num_nulls,
+            $thrift->num_rows,
             Encodings::from($thrift->encoding),
-            $thrift->num_values
+            $thrift->definition_levels_byte_length,
+            $thrift->repetition_levels_byte_length,
+            /** @phpstan-ignore-next-line */
+            $thrift->is_compressed ?? null
         );
+    }
+
+    public function definitionsByteLength() : int
+    {
+        return $this->definitionsByteLength;
     }
 
     public function encoding() : Encodings
     {
         return $this->encoding;
+    }
+
+    public function repetitionsByteLength() : int
+    {
+        return $this->repetitionsByteLength;
+    }
+
+    public function toThrift() : \Flow\Parquet\Thrift\DataPageHeaderV2
+    {
+        return new \Flow\Parquet\Thrift\DataPageHeaderV2([
+            'num_values' => $this->valuesCount,
+            'num_nulls' => $this->nullsCount,
+            'num_rows' => $this->rowsCount,
+            'definition_levels_byte_length' => $this->definitionsByteLength,
+            'repetition_levels_byte_length' => $this->repetitionsByteLength,
+            'encoding' => $this->encoding->value,
+            'is_compressed' => $this->isCompressed,
+        ]);
     }
 
     public function valuesCount() : int

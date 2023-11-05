@@ -88,4 +88,14 @@ enum Option
      * Default value is 1000
      */
     case ROW_GROUP_SIZE_CHECK_INTERVAL;
+
+    /**
+     * There are only two available versions of Parquet format: V1 and V2.
+     * This option is going to tell the writer which version should be used to create DataPages.
+     * - 1 will use DataPage
+     * - 2 will use DataPageV2.
+     *
+     * Default 1
+     */
+    case WRITER_VERSION;
 }

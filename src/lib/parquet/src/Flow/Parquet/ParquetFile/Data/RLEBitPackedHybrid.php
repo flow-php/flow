@@ -88,6 +88,8 @@ final class RLEBitPackedHybrid
         $runLength = $intVar >> 1;
 
         if ($runLength === 0) {
+            $output[] = 0;
+
             return;
         }
 

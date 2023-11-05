@@ -105,6 +105,90 @@ final class DataCoder
         throw new RuntimeException('Encoding ' . $encoding->name . ' not supported');
     }
 
+    public function decodeDataV2(
+        string $buffer,
+        Encodings $encoding,
+        PhysicalType $physicalType,
+        ?LogicalType $logicalType,
+        int $expectedValuesCount,
+        int $maxRepetitionsLevel,
+        int $maxDefinitionsLevel,
+        ?int $typeLength = null,
+        ?Dictionary $dictionary = null
+    ) : ColumnData {
+        $reader = new BinaryBufferReader($buffer, $this->byteOrder);
+
+        $RLEBitPackedHybrid = new RLEBitPackedHybrid();
+
+        if ($maxRepetitionsLevel) {
+            $repetitions = $this->readRLEBitPackedHybrid(
+                $reader,
+                $RLEBitPackedHybrid,
+                BitWidth::calculate($maxRepetitionsLevel),
+                $expectedValuesCount,
+            );
+        } else {
+            $repetitions = [];
+        }
+
+        if ($maxDefinitionsLevel) {
+            $definitions = $this->readRLEBitPackedHybrid(
+                $reader,
+                $RLEBitPackedHybrid,
+                BitWidth::calculate($maxDefinitionsLevel),
+                $expectedValuesCount,
+            );
+        } else {
+            $definitions = [];
+        }
+
+        $nullsCount = \count($definitions) ? \count(\array_filter($definitions, static fn ($definition) => $definition !== $maxDefinitionsLevel)) : 0;
+
+        if ($encoding === Encodings::PLAIN) {
+            return new ColumnData(
+                $physicalType,
+                $logicalType,
+                $repetitions,
+                $definitions,
+                $this->readPlainValues(
+                    $physicalType,
+                    $reader,
+                    $expectedValuesCount - $nullsCount,
+                    $logicalType,
+                    $typeLength
+                )
+            );
+        }
+
+        if ($encoding === Encodings::RLE_DICTIONARY || $encoding === Encodings::PLAIN_DICTIONARY) {
+            if (\count($definitions)) {
+                // while reading indices, there is no length at the beginning since length is simply a remaining length of the buffer
+                // however we need to know bitWidth which is the first value in the buffer after definitions
+                $bitWidth = $reader->readBytes(1)->toInt();
+                /** @var array<int> $indices */
+                $indices = $this->readRLEBitPackedHybrid(
+                    $reader,
+                    $RLEBitPackedHybrid,
+                    $bitWidth,
+                    $expectedValuesCount - $nullsCount,
+                );
+
+                /** @var array<mixed> $values */
+                $values = [];
+
+                foreach ($indices as $index) {
+                    $values[] = $dictionary?->values[$index];
+                }
+            } else {
+                $values = [];
+            }
+
+            return new ColumnData($physicalType, $logicalType, $repetitions, $definitions, $values);
+        }
+
+        throw new RuntimeException('Encoding ' . $encoding->name . ' not supported');
+    }
+
     public function decodeDictionary(
         string $buffer,
         PhysicalType $physicalType,

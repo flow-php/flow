@@ -106,7 +106,7 @@ final class PageHeader
             'uncompressed_page_size' => $this->uncompressedPageSize,
             'crc' => null,
             'data_page_header' => $this->dataPageHeader?->toThrift(),
-            'data_page_header_v2' => null,
+            'data_page_header_v2' => $this->dataPageHeaderV2?->toThrift(),
             'dictionary_page_header' => $this->dictionaryPageHeader?->toThrift(),
             'index_page_header' => null,
         ]);

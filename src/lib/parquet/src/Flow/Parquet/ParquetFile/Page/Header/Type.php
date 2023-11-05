@@ -11,6 +11,6 @@ enum Type : int
 
     public function isDataPage() : bool
     {
-        return $this->value === self::DATA_PAGE->value;
+        return $this->value === self::DATA_PAGE->value || $this->value === self::DATA_PAGE_V2->value;
     }
 }

@@ -3,7 +3,6 @@
 namespace Flow\Parquet\ParquetFile\RowGroupBuilder;
 
 use Flow\Parquet\Exception\InvalidArgumentException;
-use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\ParquetFile\Encodings;
 use Flow\Parquet\ParquetFile\Page\Header\Type;
 
@@ -92,15 +91,15 @@ final class PageContainers
         }
 
         foreach ($this->dataPageContainers as $pageContainer) {
-            $dataPageHeader = $pageContainer->pageHeader->dataPageHeader();
-
-            if ($dataPageHeader === null) {
-                throw new RuntimeException('Data page header not set for DataPage container');
+            if ($pageContainer->pageHeader->dataPageHeader()) {
+                $encodings[] = $pageContainer->pageHeader->dataPageHeader()->repetitionLevelEncoding()->value;
+                $encodings[] = $pageContainer->pageHeader->dataPageHeader()->definitionLevelEncoding()->value;
+                $encodings[] = $pageContainer->pageHeader->dataPageHeader()->encoding()->value;
             }
 
-            $encodings[] = $dataPageHeader->repetitionLevelEncoding()->value;
-            $encodings[] = $dataPageHeader->definitionLevelEncoding()->value;
-            $encodings[] = $dataPageHeader->encoding()->value;
+            if ($pageContainer->pageHeader->dataPageHeaderV2()) {
+                $encodings[] = $pageContainer->pageHeader->dataPageHeaderV2()->encoding()->value;
+            }
         }
 
         $encodings = \array_unique($encodings);
