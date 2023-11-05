@@ -1,6 +1,8 @@
-## [Unreleased] - 2023-11-04
+## [Unreleased] - 2023-11-05
 
 ### Added
+- [#730](https://github.com/flow-php/flow/pull/730) - **Pipeline Optimizer** - [@norberttech](https://github.com/norberttech)
+- [#730](https://github.com/flow-php/flow/pull/730) - **LimitOptimization** - [@norberttech](https://github.com/norberttech)
 - [#729](https://github.com/flow-php/flow/pull/729) - **LimitTransformer** - [@norberttech](https://github.com/norberttech)
 - [#729](https://github.com/flow-php/flow/pull/729) - **Limit directly to Extractors** - [@norberttech](https://github.com/norberttech)
 - [#720](https://github.com/flow-php/flow/pull/720) - **DataFrame::batchSize(int $size) method** - [@norberttech](https://github.com/norberttech)
@@ -47,6 +49,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#730](https://github.com/flow-php/flow/pull/730) - **Renamed LogicalPlan into ExecutionPlan** - [@norberttech](https://github.com/norberttech)
 - [#726](https://github.com/flow-php/flow/pull/726) - **GoogleSheet rows_in_batch was renamed into rows_per_page** - [@norberttech](https://github.com/norberttech)
 - [#716](https://github.com/flow-php/flow/pull/716) - **Closure was moved to Loader namespace as it applies to Loaders, not Pipelines** - [@norberttech](https://github.com/norberttech)
 - [#708](https://github.com/flow-php/flow/pull/708) - **Rename `docker-compose.yml` to `compose.yml` to match specification** - [@stloyd](https://github.com/stloyd)
