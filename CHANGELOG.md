@@ -49,6 +49,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#732](https://github.com/flow-php/flow/pull/732) - **Renamed threadSafe into appendSafe** - [@norberttech](https://github.com/norberttech)
 - [#730](https://github.com/flow-php/flow/pull/730) - **Renamed LogicalPlan into ExecutionPlan** - [@norberttech](https://github.com/norberttech)
 - [#726](https://github.com/flow-php/flow/pull/726) - **GoogleSheet rows_in_batch was renamed into rows_per_page** - [@norberttech](https://github.com/norberttech)
 - [#716](https://github.com/flow-php/flow/pull/716) - **Closure was moved to Loader namespace as it applies to Loaders, not Pipelines** - [@norberttech](https://github.com/norberttech)
@@ -178,6 +179,7 @@
 - [#618](https://github.com/flow-php/flow/pull/618) - **Remove dead `ArrayRowsFactory` class** - [@stloyd](https://github.com/stloyd)
 
 ### Deprecated
+- [#732](https://github.com/flow-php/flow/pull/732) - **DataFrame::threadSafe()** - [@norberttech](https://github.com/norberttech)
 - [#720](https://github.com/flow-php/flow/pull/720) - **DataFrame::parallelize()** - [@norberttech](https://github.com/norberttech)
 
 ## [0.4.0] - 2023-10-13
