@@ -49,7 +49,7 @@ use Flow\ETL\GroupBy\Aggregation;
 require __DIR__ . '/vendor/autoload.php';
 
 (new Flow())
-    ->read(Parquet::from(__DIR__ . '/orders_flow.parquet'))
+    ->read(Parquet::from(__FLOW_DATA__ . '/orders_flow.parquet'))
     ->select('created_at', 'total_price', 'discount')
     ->withEntry('created_at', ref('created_at')->toDate(\DateTime::RFC3339)->dateFormat('Y/m'))
     ->withEntry('revenue', ref('total_price')->minus(ref('discount')))
@@ -57,31 +57,31 @@ require __DIR__ . '/vendor/autoload.php';
     ->groupBy('created_at')
     ->aggregate(Aggregation::sum(ref('revenue')))
     ->sortBy(ref('created_at')->desc())
-    ->withEntry('daily_revenue', ref('revenue_sum')->round(lit(2)))
+    ->withEntry('daily_revenue', ref('revenue_sum')->round(lit(2))->numberFormat(lit(2)))
     ->drop('revenue_sum')
-    ->withEntry('created_at', ref('created_at')->toDate('Y/m'))
     ->write(To::output(truncate: false))
     ->mode(SaveMode::Overwrite)
-    ->write(Parquet::to(__DIR__ . '/daily_revenue.parquet'))
+    ->withEntry('created_at', ref('created_at')->toDate('Y/m'))
+    ->write(Parquet::to(__FLOW_OUTPUT__ . '/daily_revenue.parquet'))
     ->run();
 ```
 
 ```console
 $ php daily_revenue.php
-+---------------------------+---------------+
-|                created_at | daily_revenue |
-+---------------------------+---------------+
-| 2023-10-31T00:00:00+00:00 |     206669.74 |
-| 2023-10-01T00:00:00+00:00 |     227647.47 |
-| 2023-08-31T00:00:00+00:00 |     237027.31 |
-| 2023-07-31T00:00:00+00:00 |     240111.05 |
-| 2023-07-01T00:00:00+00:00 |     225536.35 |
-| 2023-05-31T00:00:00+00:00 |     234624.74 |
-| 2023-05-01T00:00:00+00:00 |     231472.05 |
-| 2023-03-31T00:00:00+00:00 |     231697.36 |
-| 2023-03-03T00:00:00+00:00 |     211048.97 |
-| 2023-01-31T00:00:00+00:00 |     225539.81 |
-+---------------------------+---------------+
++------------+---------------+
+| created_at | daily_revenue |
++------------+---------------+
+|    2023/10 |    206,669.74 |
+|    2023/09 |    227,647.47 |
+|    2023/08 |    237,027.31 |
+|    2023/07 |    240,111.05 |
+|    2023/06 |    225,536.35 |
+|    2023/05 |    234,624.74 |
+|    2023/04 |    231,472.05 |
+|    2023/03 |    231,697.36 |
+|    2023/02 |    211,048.97 |
+|    2023/01 |    225,539.81 |
++------------+---------------+
 10 rows
 ```
 
