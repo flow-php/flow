@@ -398,7 +398,7 @@ final class DataFrame
      */
     public function limit(int $limit) : self
     {
-        $this->pipeline->add(new LimitTransformer($limit));
+        $this->pipeline = $this->context->config->optimizer()->optimize(new LimitTransformer($limit), $this->pipeline);
 
         return $this;
     }
@@ -647,7 +647,7 @@ final class DataFrame
             ->run();
 
         $this->pipeline = $this->pipeline->cleanCopy();
-        $this->pipeline->source($this->context->config->externalSort()->sortBy(...$entries));
+        $this->pipeline->setSource($this->context->config->externalSort()->sortBy(...$entries));
 
         return $this;
     }

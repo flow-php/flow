@@ -26,7 +26,7 @@ final class NestedPipelineTest extends TestCase
             new ParallelizingPipeline(new SynchronousPipeline(), 1)
         );
 
-        $pipeline->source(new ProcessExtractor(
+        $pipeline->setSource(new ProcessExtractor(
             new Rows(
                 Row::create(Entry::integer('id', 1)),
                 Row::create(Entry::integer('id', 2))

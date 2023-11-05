@@ -58,12 +58,17 @@ final class SynchronousPipeline implements Pipeline
         return false;
     }
 
+    public function pipes() : Pipes
+    {
+        return $this->pipes;
+    }
+
     public function process(FlowContext $context) : \Generator
     {
         $plan = $context
             ->config
             ->processors()
-            ->process(new Pipeline\Execution\LogicalPlan($this->extractor, $this->pipes), $context);
+            ->process(new Pipeline\Execution\ExecutionPlan($this->extractor, $this->pipes), $context);
 
         $generator = $plan->extractor->extract($context);
 
@@ -104,10 +109,15 @@ final class SynchronousPipeline implements Pipeline
         $this->closure($context);
     }
 
-    public function source(Extractor $extractor) : self
+    public function setSource(Extractor $extractor) : self
     {
         $this->extractor = $extractor;
 
         return $this;
+    }
+
+    public function source() : Extractor
+    {
+        return $this->extractor;
     }
 }

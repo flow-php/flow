@@ -53,6 +53,11 @@ final class WindowPartitioningPipeline implements Pipeline
         return false;
     }
 
+    public function pipes() : Pipes
+    {
+        return $this->pipeline->pipes()->merge($this->nextPipeline->pipes());
+    }
+
     public function process(FlowContext $context) : \Generator
     {
         $window = $this->window;
@@ -72,7 +77,7 @@ final class WindowPartitioningPipeline implements Pipeline
             }
         }
 
-        $this->nextPipeline->source(new ChainExtractor(...\array_map(
+        $this->nextPipeline->setSource(new ChainExtractor(...\array_map(
             static fn (string $id) : Extractor => new CollectingExtractor(new CacheExtractor($id, null, true)),
             \array_unique($partitionIds)
         )));
@@ -82,10 +87,15 @@ final class WindowPartitioningPipeline implements Pipeline
         }
     }
 
-    public function source(Extractor $extractor) : Pipeline
+    public function setSource(Extractor $extractor) : Pipeline
     {
-        $this->pipeline->source($extractor);
+        $this->pipeline->setSource($extractor);
 
         return $this;
+    }
+
+    public function source() : Extractor
+    {
+        return $this->pipeline->source();
     }
 }

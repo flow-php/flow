@@ -28,7 +28,7 @@ final class Flow
     public function extract(Extractor $extractor) : DataFrame
     {
         return new DataFrame(
-            (new SynchronousPipeline())->source($extractor),
+            (new SynchronousPipeline())->setSource($extractor),
             $this->config
         );
     }
@@ -36,7 +36,7 @@ final class Flow
     public function process(Rows ...$rows) : DataFrame
     {
         return new DataFrame(
-            (new SynchronousPipeline())->source(new ProcessExtractor(...$rows)),
+            (new SynchronousPipeline())->setSource(new ProcessExtractor(...$rows)),
             $this->config
         );
     }

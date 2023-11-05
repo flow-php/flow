@@ -52,23 +52,33 @@ final class GroupByPipeline implements Pipeline
         return $this->pipeline->isAsync();
     }
 
+    public function pipes() : Pipes
+    {
+        return $this->pipeline->pipes()->merge($this->nextPipeline->pipes());
+    }
+
     public function process(FlowContext $context) : \Generator
     {
         foreach ($this->pipeline->process($context) as $nextRows) {
             $this->groupBy->group($nextRows);
         }
 
-        $this->nextPipeline->source(new Extractor\ProcessExtractor($this->groupBy->result($context)));
+        $this->nextPipeline->setSource(new Extractor\ProcessExtractor($this->groupBy->result($context)));
 
         foreach ($this->nextPipeline->process($context) as $nextRows) {
             yield $nextRows;
         }
     }
 
-    public function source(Extractor $extractor) : self
+    public function setSource(Extractor $extractor) : self
     {
-        $this->pipeline->source($extractor);
+        $this->pipeline->setSource($extractor);
 
         return $this;
+    }
+
+    public function source() : Extractor
+    {
+        return $this->pipeline->source();
     }
 }

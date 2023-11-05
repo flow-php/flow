@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use Flow\ETL\Pipeline\Pipes;
+
 /**
  * @internal
  */
@@ -22,10 +24,14 @@ interface Pipeline
 
     public function isAsync() : bool;
 
+    public function pipes() : Pipes;
+
     /**
      * @return \Generator<Rows>
      */
     public function process(FlowContext $context) : \Generator;
 
-    public function source(Extractor $extractor) : self;
+    public function setSource(Extractor $extractor) : self;
+
+    public function source() : Extractor;
 }

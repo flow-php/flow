@@ -55,9 +55,14 @@ final class ParallelizingPipeline implements Pipeline
         return $this->pipeline->isAsync();
     }
 
+    public function pipes() : Pipes
+    {
+        return $this->pipeline->pipes()->merge($this->nextPipeline->pipes());
+    }
+
     public function process(FlowContext $context) : \Generator
     {
-        $this->nextPipeline->source(
+        $this->nextPipeline->setSource(
             From::chunks_from(
                 From::pipeline($this->pipeline),
                 $this->parallel
@@ -67,10 +72,15 @@ final class ParallelizingPipeline implements Pipeline
         return $this->nextPipeline->process($context);
     }
 
-    public function source(Extractor $extractor) : self
+    public function setSource(Extractor $extractor) : self
     {
-        $this->pipeline->source($extractor);
+        $this->pipeline->setSource($extractor);
 
         return $this;
+    }
+
+    public function source() : Extractor
+    {
+        return $this->pipeline->source();
     }
 }

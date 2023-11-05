@@ -17,7 +17,7 @@ final class ParallelizingPipelineTest extends TestCase
             new SynchronousPipeline(),
             5
         );
-        $pipeline->source(From::array([
+        $pipeline->setSource(From::array([
             ['id' => 1],
             ['id' => 2],
             ['id' => 3],
@@ -42,7 +42,7 @@ final class ParallelizingPipelineTest extends TestCase
             new SynchronousPipeline(),
             15
         );
-        $pipeline->source(From::array([
+        $pipeline->setSource(From::array([
             ['id' => 1],
             ['id' => 2],
             ['id' => 3],

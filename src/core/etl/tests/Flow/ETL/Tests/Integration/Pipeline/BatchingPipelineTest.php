@@ -15,7 +15,7 @@ final class BatchingPipelineTest extends TestCase
     public function test_batching_rows() : void
     {
         $pipeline = new BatchingPipeline(new SynchronousPipeline(), size: 10);
-        $pipeline->source(From::chain(
+        $pipeline->setSource(From::chain(
             From::array([
                 ['id' => 1],
                 ['id' => 2],
@@ -41,7 +41,7 @@ final class BatchingPipelineTest extends TestCase
     public function test_that_rows_are_not_lost() : void
     {
         $pipeline = new BatchingPipeline(new SynchronousPipeline(), $batchSize = 7);
-        $pipeline->source(From::chain(
+        $pipeline->setSource(From::chain(
             From::array([
                 ['id' => 1],
                 ['id' => 2],
@@ -83,7 +83,7 @@ final class BatchingPipelineTest extends TestCase
     public function test_using_bigger_batch_size_than_total_number_of_rows() : void
     {
         $pipeline = new BatchingPipeline(new SynchronousPipeline(), size: 11);
-        $pipeline->source(From::chain(
+        $pipeline->setSource(From::chain(
             From::array([
                 ['id' => 1],
                 ['id' => 2],
@@ -109,7 +109,7 @@ final class BatchingPipelineTest extends TestCase
     public function test_using_smaller_batch_size_than_total_number_of_rows() : void
     {
         $pipeline = new BatchingPipeline(new SynchronousPipeline(), size: 5);
-        $pipeline->source(From::chain(
+        $pipeline->setSource(From::chain(
             From::array([
                 ['id' => 1],
                 ['id' => 2],

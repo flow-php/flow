@@ -65,6 +65,11 @@ final class LocalSocketPipeline implements Pipeline
         return true;
     }
 
+    public function pipes() : Pipes
+    {
+        return $this->pipes;
+    }
+
     public function process(FlowContext $context) : \Generator
     {
         $threadSafeContext = $context->setThreadSafe();
@@ -72,7 +77,7 @@ final class LocalSocketPipeline implements Pipeline
         $plan = $threadSafeContext
             ->config
             ->processors()
-            ->process(new Pipeline\Execution\LogicalPlan($this->extractor, $this->pipes), $threadSafeContext);
+            ->process(new Pipeline\Execution\ExecutionPlan($this->extractor, $this->pipes), $threadSafeContext);
 
         $pool = Pool::generate($this->totalWorkers);
 
@@ -87,10 +92,15 @@ final class LocalSocketPipeline implements Pipeline
         return $threadSafeContext->config->cache()->read($id);
     }
 
-    public function source(Extractor $extractor) : self
+    public function setSource(Extractor $extractor) : self
     {
         $this->extractor = $extractor;
 
         return $this;
+    }
+
+    public function source() : Extractor
+    {
+        return $this->extractor;
     }
 }

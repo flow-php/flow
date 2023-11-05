@@ -84,4 +84,17 @@ final class Pipes implements Serializable
 
         return $loaders;
     }
+
+    public function merge(self $pipes) : self
+    {
+        if (!\count($this->pipes)) {
+            return $pipes;
+        }
+
+        if (!\count($pipes->pipes)) {
+            return $this;
+        }
+
+        return new self(\array_merge($this->pipes, $pipes->pipes));
+    }
 }

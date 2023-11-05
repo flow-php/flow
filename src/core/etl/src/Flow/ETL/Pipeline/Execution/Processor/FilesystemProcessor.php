@@ -8,12 +8,12 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader\FileLoader;
-use Flow\ETL\Pipeline\Execution\LogicalPlan;
+use Flow\ETL\Pipeline\Execution\ExecutionPlan;
 use Flow\ETL\Pipeline\Pipes;
 
 final class FilesystemProcessor implements Processor
 {
-    public function process(LogicalPlan $plan, FlowContext $context) : LogicalPlan
+    public function process(ExecutionPlan $plan, FlowContext $context) : ExecutionPlan
     {
         $operations = $plan->filesystemOperations();
 
@@ -76,6 +76,6 @@ final class FilesystemProcessor implements Processor
             }
         }
 
-        return new LogicalPlan($plan->extractor, $newPipes);
+        return new ExecutionPlan($plan->extractor, $newPipes);
     }
 }

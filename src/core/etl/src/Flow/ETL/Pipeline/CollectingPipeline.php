@@ -57,19 +57,29 @@ final class CollectingPipeline implements Pipeline
         return $this->pipeline->isAsync();
     }
 
+    public function pipes() : Pipes
+    {
+        return $this->pipeline->pipes()->merge($this->nextPipeline->pipes());
+    }
+
     public function process(FlowContext $context) : \Generator
     {
-        $this->nextPipeline->source(From::rows(
+        $this->nextPipeline->setSource(From::rows(
             (new Rows())->merge(...\iterator_to_array($this->pipeline->process($context)))
         ));
 
         return $this->nextPipeline->process($context);
     }
 
-    public function source(Extractor $extractor) : self
+    public function setSource(Extractor $extractor) : self
     {
-        $this->pipeline->source($extractor);
+        $this->pipeline->setSource($extractor);
 
         return $this;
+    }
+
+    public function source() : Extractor
+    {
+        return $this->pipeline->source();
     }
 }

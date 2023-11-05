@@ -18,7 +18,7 @@ final class EntryExpressionEvalTransformer implements Transformer
 {
     public function __construct(
         private readonly string $entryName,
-        private readonly Expression $expression,
+        public readonly Expression $expression,
     ) {
     }
 
