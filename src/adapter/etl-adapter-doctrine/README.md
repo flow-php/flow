@@ -36,9 +36,9 @@ ETL::extract(
 
 All supported types of `DbalBulkLoader` loading: 
 
-- `::insert(Connection $connection, int $bulkChunkSize, string $table, QueryFactory $queryFactory = null) : self`
-- `::insertOrSkipOnConflict(Connection $connection, int $bulkChunkSize, string $table, QueryFactory $queryFactory = null) : self`
-- `::insertOrUpdateOnConstraintConflict(Connection $connection, int $bulkChunkSize, string $table, string $constraint, QueryFactory $queryFactory = null) : self`
+- `::insert(Connection $connection, string $table, QueryFactory $queryFactory = null) : self`
+- `::insertOrSkipOnConflict(Connection $connection, string $table, QueryFactory $queryFactory = null) : self`
+- `::insertOrUpdateOnConstraintConflict(Connection $connection, string $table, string $constraint, QueryFactory $queryFactory = null) : self`
 
 The `bulkSize` means how many rows you want to push to a database in a single `INSERT` query. Each extracted rows set
 is going to be split before inserting data into the database.

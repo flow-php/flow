@@ -36,7 +36,7 @@ final class DbalQueryExtractorTest extends IntegrationTestCase
                 ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
             ])
         )->load(
-            DbalLoader::fromConnection($this->pgsqlDatabaseContext->connection(), $table, chunkSize: 10)
+            DbalLoader::fromConnection($this->pgsqlDatabaseContext->connection(), $table)
         )->run();
 
         $rows = (new Flow())->extract(
@@ -83,7 +83,7 @@ final class DbalQueryExtractorTest extends IntegrationTestCase
                     ['id' => 10, 'name' => 'Name', 'description' => 'Description'],
                 ])
             )
-            ->load(DbalLoader::fromConnection($this->pgsqlDatabaseContext->connection(), $table, chunkSize: 10))
+            ->load(DbalLoader::fromConnection($this->pgsqlDatabaseContext->connection(), $table))
             ->run();
 
         $rows = (new Flow())->extract(

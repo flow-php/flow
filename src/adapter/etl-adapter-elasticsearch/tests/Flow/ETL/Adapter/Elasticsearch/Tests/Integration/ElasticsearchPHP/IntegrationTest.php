@@ -73,7 +73,6 @@ final class IntegrationTest extends TestCase
             ->load(
                 Elasticsearch::bulk_index(
                     $this->elasticsearchContext->clientConfig(),
-                    chunk_size: 100,
                     index: self::DESTINATION_INDEX,
                     id_factory: new EntryIdFactory('id')
                 )

@@ -15,7 +15,6 @@ use Flow\ETL\DSL\From;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Flow;
 use Flow\Serializer\CompressingSerializer;
-use Flow\Serializer\NativePHPSerializer;
 
 final class DbalLoaderTest extends IntegrationTestCase
 {
@@ -34,7 +33,7 @@ final class DbalLoaderTest extends IntegrationTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Operation can be insert or update, delete given.');
 
-        new DbalLoader($table, $bulkSize = 10, $this->connectionParams(), [], 'delete');
+        new DbalLoader($table, $this->connectionParams(), [], 'delete');
     }
 
     public function test_create_loader_with_invalid_operation_from_connection() : void
@@ -55,7 +54,6 @@ final class DbalLoaderTest extends IntegrationTestCase
         DbalLoader::fromConnection(
             $this->pgsqlDatabaseContext->connection(),
             $table,
-            $bulkSize = 10,
             [],
             'delete'
         );
@@ -73,7 +71,7 @@ final class DbalLoaderTest extends IntegrationTestCase
         ))
             ->setPrimaryKey(['id']));
 
-        $loader = Dbal::to_table_insert($this->connectionParams(), $table, $bulkSize = 10);
+        $loader = Dbal::to_table_insert($this->connectionParams(), $table);
 
         (new Flow())
             ->read(
@@ -103,8 +101,8 @@ final class DbalLoaderTest extends IntegrationTestCase
                 ->setPrimaryKey(['id'])
         );
 
-        $serializer = new CompressingSerializer(new NativePHPSerializer());
-        $loaderSerialized = $serializer->serialize(Dbal::to_table_insert($this->connectionParams(), $table, $bulkSize = 10));
+        $serializer = new CompressingSerializer();
+        $loaderSerialized = $serializer->serialize(Dbal::to_table_insert($this->connectionParams(), $table));
 
         (new Flow())
             ->read(
@@ -134,7 +132,7 @@ final class DbalLoaderTest extends IntegrationTestCase
                 ->setPrimaryKey(['id'])
         );
 
-        $loader = Dbal::to_table_insert($this->pgsqlDatabaseContext->connection(), $table, $bulkSize = 10);
+        $loader = Dbal::to_table_insert($this->pgsqlDatabaseContext->connection(), $table);
 
         (new Flow())
             ->read(
@@ -171,7 +169,7 @@ final class DbalLoaderTest extends IntegrationTestCase
                     ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
                 ])
             )
-            ->load(Dbal::to_table_insert($this->connectionParams(), $table, $bulkSize = 10))
+            ->load(Dbal::to_table_insert($this->connectionParams(), $table))
             ->run();
 
         $this->assertEquals(3, $this->pgsqlDatabaseContext->tableCount($table));
@@ -196,7 +194,7 @@ final class DbalLoaderTest extends IntegrationTestCase
                     ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
                 ])
             )
-            ->load(Dbal::to_table_insert($this->connectionParams(), $table, $bulkSize = 10))
+            ->load(Dbal::to_table_insert($this->connectionParams(), $table))
             ->run();
 
         (new Flow())
@@ -207,7 +205,7 @@ final class DbalLoaderTest extends IntegrationTestCase
                     ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Three'],
                 ])
             )
-            ->load(Dbal::to_table_insert($this->connectionParams(), $table, $bulkSize = 10, ['skip_conflicts' => true]))
+            ->load(Dbal::to_table_insert($this->connectionParams(), $table, ['skip_conflicts' => true]))
             ->run();
 
         $this->assertEquals(4, $this->pgsqlDatabaseContext->tableCount($table));
@@ -244,7 +242,7 @@ final class DbalLoaderTest extends IntegrationTestCase
                     ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
                 ])
             )
-            ->load(Dbal::to_table_insert($this->connectionParams(), $table, $bulkSize = 10))
+            ->load(Dbal::to_table_insert($this->connectionParams(), $table))
             ->run();
 
         (new Flow())->extract(
@@ -254,7 +252,7 @@ final class DbalLoaderTest extends IntegrationTestCase
                     ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Three'],
                 ])
         )
-            ->load(Dbal::to_table_insert($this->connectionParams(), $table, $bulkSize = 10, ['constraint' => 'flow_doctrine_bulk_test_pkey']))
+            ->load(Dbal::to_table_insert($this->connectionParams(), $table, ['constraint' => 'flow_doctrine_bulk_test_pkey']))
             ->run();
 
         $this->assertEquals(4, $this->pgsqlDatabaseContext->tableCount($table));
@@ -281,7 +279,7 @@ final class DbalLoaderTest extends IntegrationTestCase
         ))
             ->setPrimaryKey(['id']));
 
-        $loader = Dbal::to_table_insert($this->connectionParams(), $table, $bulkSize = 10);
+        $loader = Dbal::to_table_insert($this->connectionParams(), $table);
 
         $this->assertSame($loader->__serialize()['operation'], 'insert');
     }
@@ -301,7 +299,6 @@ final class DbalLoaderTest extends IntegrationTestCase
         $loader = Dbal::to_table_insert(
             $this->pgsqlDatabaseContext->connection(),
             $table,
-            $bulkSize = 10,
             $this->connectionParams()
         );
 
@@ -320,8 +317,8 @@ final class DbalLoaderTest extends IntegrationTestCase
         ))
             ->setPrimaryKey(['id']));
 
-        $insertLoader = Dbal::to_table_insert($this->connectionParams(), $table, $bulkSize = 10);
-        $updateLoader = Dbal::to_table_update($this->connectionParams(), $table, $bulkSize = 10, ['primary_key_columns' => ['id'], ['update_columns' => ['name']]]);
+        $insertLoader = Dbal::to_table_insert($this->connectionParams(), $table);
+        $updateLoader = Dbal::to_table_update($this->connectionParams(), $table, ['primary_key_columns' => ['id'], ['update_columns' => ['name']]]);
 
         (new Flow())->extract(
             From::array([
@@ -330,6 +327,7 @@ final class DbalLoaderTest extends IntegrationTestCase
                 ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
             ])
         )
+        ->batchSize(10)
         ->load($insertLoader)
         ->run();
 
@@ -341,6 +339,7 @@ final class DbalLoaderTest extends IntegrationTestCase
                     ['id' => 3, 'name' => 'Changed Name Three', 'description' => 'Description Three'],
             ])
             )
+        ->batchSize(10)
         ->load($updateLoader)
         ->run();
 
