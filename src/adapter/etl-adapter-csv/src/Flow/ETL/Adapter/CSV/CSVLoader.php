@@ -94,7 +94,7 @@ final class CSVLoader implements Closure, Loader, Loader\FileLoader
      */
     public function write(Rows $nextRows, array $headers, FlowContext $context, array $partitions) : void
     {
-        if ($this->header && !$context->streams()->exists($this->path, $partitions)) {
+        if ($this->header && !$context->streams()->isOpen($this->path, $partitions)) {
             $this->writeCSV(
                 $headers,
                 $context->streams()->open($this->path, 'csv', Mode::WRITE, $context->appendSafe(), $partitions)

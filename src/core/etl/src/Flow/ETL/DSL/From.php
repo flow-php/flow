@@ -28,19 +28,10 @@ class From
 
     /**
      * @param array<array<string, mixed>> $array
-     * @param int<1, max> $batch_size
      */
-    final public static function array(array $array, int $batch_size = 100) : Extractor
+    final public static function array(array $array) : Extractor
     {
-        return new MemoryExtractor(new ArrayMemory($array), $batch_size);
-    }
-
-    /**
-     * @param int<1, max> $max_row_size
-     */
-    final public static function buffer(Extractor $extractor, int $max_row_size) : Extractor
-    {
-        return new Extractor\BufferExtractor($extractor, $max_row_size);
+        return new MemoryExtractor(new ArrayMemory($array));
     }
 
     final public static function cache(string $id, ?Extractor $fallback_extractor = null, bool $clear = false) : Extractor
@@ -68,13 +59,12 @@ class From
 
     /**
      * @param Memory $memory
-     * @param int<1, max> $chunk_size
      *
      * @return Extractor
      */
-    final public static function memory(Memory $memory, int $chunk_size = 100) : Extractor
+    final public static function memory(Memory $memory) : Extractor
     {
-        return new MemoryExtractor($memory, $chunk_size);
+        return new MemoryExtractor($memory);
     }
 
     final public static function pipeline(Pipeline $pipeline) : Extractor
