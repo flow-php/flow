@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-11-06
 
 ### Added
+- [#755](https://github.com/flow-php/flow/pull/755) - **Parquet - DataPageV2 statistics** - [@norberttech](https://github.com/norberttech)
 - [#754](https://github.com/flow-php/flow/pull/754) - **write column chunk statistics** - [@norberttech](https://github.com/norberttech)
 - [#744](https://github.com/flow-php/flow/pull/744) - **Parquet statistics reader** - [@norberttech](https://github.com/norberttech)
 - [#736](https://github.com/flow-php/flow/pull/736) - **Parquet - DataPageV2 support** - [@norberttech](https://github.com/norberttech)
