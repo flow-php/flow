@@ -1,6 +1,7 @@
-## [Unreleased] - 2023-11-05
+## [Unreleased] - 2023-11-06
 
 ### Added
+- [#736](https://github.com/flow-php/flow/pull/736) - **Parquet - DataPageV2 support** - [@norberttech](https://github.com/norberttech)
 - [#730](https://github.com/flow-php/flow/pull/730) - **Pipeline Optimizer** - [@norberttech](https://github.com/norberttech)
 - [#730](https://github.com/flow-php/flow/pull/730) - **LimitOptimization** - [@norberttech](https://github.com/norberttech)
 - [#729](https://github.com/flow-php/flow/pull/729) - **LimitTransformer** - [@norberttech](https://github.com/norberttech)
