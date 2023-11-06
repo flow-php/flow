@@ -94,6 +94,14 @@ final class DataPageBuilder
 
     private function buildDataPageV2(array $rows, FlatColumn $column, ?array $dictionary, ?array $indices) : PageContainer
     {
+        $statistics = new DataPageV2Statistics();
+
+        foreach ($rows as $row) {
+            $statistics->add($row);
+        }
+
+        $statistics = (new StatisticsBuilder($this->dataConverter))->build($column, $statistics);
+
         $shredded = (new Dremel())->shred($rows, $column->maxDefinitionsLevel());
 
         $rleBitPackedHybrid = new RLEBitPackedHybrid();
@@ -138,6 +146,7 @@ final class DataPageBuilder
                 definitionsByteLength: $definitionsLength,
                 repetitionsByteLength: $repetitionsLength,
                 isCompressed: !($this->compression === Compressions::UNCOMPRESSED),
+                statistics: $statistics,
             ),
             dictionaryPageHeader: null,
         );

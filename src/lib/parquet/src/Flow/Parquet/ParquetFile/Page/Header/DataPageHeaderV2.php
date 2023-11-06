@@ -3,6 +3,8 @@
 namespace Flow\Parquet\ParquetFile\Page\Header;
 
 use Flow\Parquet\ParquetFile\Encodings;
+use Flow\Parquet\ParquetFile\RowGroup\StatisticsReader;
+use Flow\Parquet\ParquetFile\Statistics;
 
 /**
  * @psalm-suppress RedundantConditionGivenDocblockType
@@ -17,7 +19,8 @@ final class DataPageHeaderV2
         private readonly Encodings $encoding,
         private readonly int $definitionsByteLength,
         private readonly int $repetitionsByteLength,
-        private readonly ?bool $isCompressed
+        private readonly ?bool $isCompressed,
+        private readonly ?Statistics $statistics
     ) {
     }
 
@@ -32,7 +35,9 @@ final class DataPageHeaderV2
             $thrift->definition_levels_byte_length,
             $thrift->repetition_levels_byte_length,
             /** @phpstan-ignore-next-line */
-            $thrift->is_compressed ?? null
+            $thrift->is_compressed ?? null,
+            /** @phpstan-ignore-next-line */
+            $thrift->statistics ? Statistics::fromThrift($thrift->statistics) : null
         );
     }
 
@@ -51,6 +56,15 @@ final class DataPageHeaderV2
         return $this->repetitionsByteLength;
     }
 
+    public function statistics() : ?StatisticsReader
+    {
+        if ($this->statistics === null) {
+            return null;
+        }
+
+        return new StatisticsReader($this->statistics);
+    }
+
     public function toThrift() : \Flow\Parquet\Thrift\DataPageHeaderV2
     {
         return new \Flow\Parquet\Thrift\DataPageHeaderV2([
@@ -61,6 +75,7 @@ final class DataPageHeaderV2
             'repetition_levels_byte_length' => $this->repetitionsByteLength,
             'encoding' => $this->encoding->value,
             'is_compressed' => $this->isCompressed,
+            'statistics' => $this->statistics?->toThrift(),
         ]);
     }
 
