@@ -51,6 +51,7 @@ final class ColumnChunkBuilder
                 dictionaryPageOffset: ($pageContainers->dictionaryPageContainer()) ? $fileOffset : null,
                 dataPageOffset: ($pageContainers->dictionaryPageContainer()) ? $fileOffset + $pageContainers->dictionaryPageContainer()->totalCompressedSize() : $fileOffset,
                 indexPageOffset: null,
+                statistics: null
             )
         );
     }

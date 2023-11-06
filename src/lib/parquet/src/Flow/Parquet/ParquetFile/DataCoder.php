@@ -6,11 +6,14 @@ use Flow\Parquet\BinaryReader\BinaryBufferReader;
 use Flow\Parquet\ByteOrder;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\ParquetFile\Data\BitWidth;
+use Flow\Parquet\ParquetFile\Data\PlainValueUnpacker;
 use Flow\Parquet\ParquetFile\Data\RLEBitPackedHybrid;
 use Flow\Parquet\ParquetFile\Page\ColumnData;
 use Flow\Parquet\ParquetFile\Page\Dictionary;
-use Flow\Parquet\ParquetFile\Schema\LogicalType;
-use Flow\Parquet\ParquetFile\Schema\PhysicalType;
+use Flow\Parquet\ParquetFile\Page\Header\DataPageHeader;
+use Flow\Parquet\ParquetFile\Page\Header\DataPageHeaderV2;
+use Flow\Parquet\ParquetFile\Page\Header\DictionaryPageHeader;
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 
 final class DataCoder
 {
@@ -21,62 +24,51 @@ final class DataCoder
 
     public function decodeData(
         string $buffer,
-        Encodings $encoding,
-        PhysicalType $physicalType,
-        ?LogicalType $logicalType,
-        int $expectedValuesCount,
-        int $maxRepetitionsLevel,
-        int $maxDefinitionsLevel,
-        ?int $typeLength = null,
+        FlatColumn $column,
+        DataPageHeader $pageHeader,
         ?Dictionary $dictionary = null
     ) : ColumnData {
         $reader = new BinaryBufferReader($buffer, $this->byteOrder);
 
         $RLEBitPackedHybrid = new RLEBitPackedHybrid();
 
-        if ($maxRepetitionsLevel) {
+        if ($column->maxRepetitionsLevel()) {
             $reader->readInts32(1); // read length of encoded data
             $repetitions = $this->readRLEBitPackedHybrid(
                 $reader,
                 $RLEBitPackedHybrid,
-                BitWidth::calculate($maxRepetitionsLevel),
-                $expectedValuesCount,
+                BitWidth::calculate($column->maxRepetitionsLevel()),
+                $pageHeader->valuesCount(),
             );
         } else {
             $repetitions = [];
         }
 
-        if ($maxDefinitionsLevel) {
+        if ($column->maxDefinitionsLevel()) {
             $reader->readInts32(1); // read length of encoded data
             $definitions = $this->readRLEBitPackedHybrid(
                 $reader,
                 $RLEBitPackedHybrid,
-                BitWidth::calculate($maxDefinitionsLevel),
-                $expectedValuesCount,
+                BitWidth::calculate($column->maxDefinitionsLevel()),
+                $pageHeader->valuesCount(),
             );
         } else {
             $definitions = [];
         }
 
-        $nullsCount = \count($definitions) ? \count(\array_filter($definitions, static fn ($definition) => $definition !== $maxDefinitionsLevel)) : 0;
+        $nullsCount = \count($definitions) ? \count(\array_filter($definitions, static fn ($definition) => $definition === 0)) : 0;
 
-        if ($encoding === Encodings::PLAIN) {
+        if ($pageHeader->encoding() === Encodings::PLAIN) {
             return new ColumnData(
-                $physicalType,
-                $logicalType,
+                $column->type(),
+                $column->logicalType(),
                 $repetitions,
                 $definitions,
-                $this->readPlainValues(
-                    $physicalType,
-                    $reader,
-                    $expectedValuesCount - $nullsCount,
-                    $logicalType,
-                    $typeLength
-                )
+                (new PlainValueUnpacker($reader))->unpack($column, $pageHeader->valuesCount() - $nullsCount)
             );
         }
 
-        if ($encoding === Encodings::RLE_DICTIONARY || $encoding === Encodings::PLAIN_DICTIONARY) {
+        if ($pageHeader->encoding() === Encodings::RLE_DICTIONARY || $pageHeader->encoding() === Encodings::PLAIN_DICTIONARY) {
             if (\count($definitions)) {
                 // while reading indices, there is no length at the beginning since length is simply a remaining length of the buffer
                 // however we need to know bitWidth which is the first value in the buffer after definitions
@@ -86,7 +78,7 @@ final class DataCoder
                     $reader,
                     $RLEBitPackedHybrid,
                     $bitWidth,
-                    $expectedValuesCount - $nullsCount,
+                    $pageHeader->valuesCount() - $nullsCount,
                 );
 
                 /** @var array<mixed> $values */
@@ -99,68 +91,57 @@ final class DataCoder
                 $values = [];
             }
 
-            return new ColumnData($physicalType, $logicalType, $repetitions, $definitions, $values);
+            return new ColumnData($column->type(), $column->logicalType(), $repetitions, $definitions, $values);
         }
 
-        throw new RuntimeException('Encoding ' . $encoding->name . ' not supported');
+        throw new RuntimeException('Encoding ' . $pageHeader->encoding()->name . ' not supported');
     }
 
     public function decodeDataV2(
         string $buffer,
-        Encodings $encoding,
-        PhysicalType $physicalType,
-        ?LogicalType $logicalType,
-        int $expectedValuesCount,
-        int $maxRepetitionsLevel,
-        int $maxDefinitionsLevel,
-        ?int $typeLength = null,
+        FlatColumn $column,
+        DataPageHeaderV2 $pageHeader,
         ?Dictionary $dictionary = null
     ) : ColumnData {
         $reader = new BinaryBufferReader($buffer, $this->byteOrder);
 
         $RLEBitPackedHybrid = new RLEBitPackedHybrid();
 
-        if ($maxRepetitionsLevel) {
+        if ($column->maxRepetitionsLevel()) {
             $repetitions = $this->readRLEBitPackedHybrid(
                 $reader,
                 $RLEBitPackedHybrid,
-                BitWidth::calculate($maxRepetitionsLevel),
-                $expectedValuesCount,
+                BitWidth::calculate($column->maxRepetitionsLevel()),
+                $pageHeader->valuesCount(),
             );
         } else {
             $repetitions = [];
         }
 
-        if ($maxDefinitionsLevel) {
+        if ($column->maxDefinitionsLevel()) {
             $definitions = $this->readRLEBitPackedHybrid(
                 $reader,
                 $RLEBitPackedHybrid,
-                BitWidth::calculate($maxDefinitionsLevel),
-                $expectedValuesCount,
+                BitWidth::calculate($column->maxDefinitionsLevel()),
+                $pageHeader->valuesCount(),
             );
         } else {
             $definitions = [];
         }
 
-        $nullsCount = \count($definitions) ? \count(\array_filter($definitions, static fn ($definition) => $definition !== $maxDefinitionsLevel)) : 0;
+        $nullsCount = \count($definitions) ? \count(\array_filter($definitions, static fn ($definition) => $definition === 0)) : 0;
 
-        if ($encoding === Encodings::PLAIN) {
+        if ($pageHeader->encoding() === Encodings::PLAIN) {
             return new ColumnData(
-                $physicalType,
-                $logicalType,
+                $column->type(),
+                $column->logicalType(),
                 $repetitions,
                 $definitions,
-                $this->readPlainValues(
-                    $physicalType,
-                    $reader,
-                    $expectedValuesCount - $nullsCount,
-                    $logicalType,
-                    $typeLength
-                )
+                (new PlainValueUnpacker($reader))->unpack($column, $pageHeader->valuesCount() - $nullsCount)
             );
         }
 
-        if ($encoding === Encodings::RLE_DICTIONARY || $encoding === Encodings::PLAIN_DICTIONARY) {
+        if ($pageHeader->encoding() === Encodings::RLE_DICTIONARY || $pageHeader->encoding() === Encodings::PLAIN_DICTIONARY) {
             if (\count($definitions)) {
                 // while reading indices, there is no length at the beginning since length is simply a remaining length of the buffer
                 // however we need to know bitWidth which is the first value in the buffer after definitions
@@ -170,7 +151,7 @@ final class DataCoder
                     $reader,
                     $RLEBitPackedHybrid,
                     $bitWidth,
-                    $expectedValuesCount - $nullsCount,
+                    $pageHeader->valuesCount() - $nullsCount,
                 );
 
                 /** @var array<mixed> $values */
@@ -183,50 +164,22 @@ final class DataCoder
                 $values = [];
             }
 
-            return new ColumnData($physicalType, $logicalType, $repetitions, $definitions, $values);
+            return new ColumnData($column->type(), $column->logicalType(), $repetitions, $definitions, $values);
         }
 
-        throw new RuntimeException('Encoding ' . $encoding->name . ' not supported');
+        throw new RuntimeException('Encoding ' . $pageHeader->encoding()->name . ' not supported');
     }
 
     public function decodeDictionary(
         string $buffer,
-        PhysicalType $physicalType,
-        ?LogicalType $logicalType,
-        Encodings $encoding,
-        int $expectedValuesCount,
-        ?int $typeLength = null
+        FlatColumn $column,
+        DictionaryPageHeader $pageHeader
     ) : Dictionary {
         $reader = new BinaryBufferReader($buffer, $this->byteOrder);
 
         return new Dictionary(
-            $this->readPlainValues($physicalType, $reader, $expectedValuesCount, $logicalType, $typeLength)
+            (new PlainValueUnpacker($reader))->unpack($column, $pageHeader->valuesCount())
         );
-    }
-
-    /**
-     * @psalm-suppress PossiblyNullReference
-     */
-    private function readPlainValues(PhysicalType $physicalType, BinaryBufferReader $reader, int $total, ?LogicalType $logicalType, ?int $typeLength) : array
-    {
-        /** @psalm-suppress PossiblyNullArgument */
-        return match ($physicalType) {
-            PhysicalType::INT32 => $reader->readInts32($total),
-            PhysicalType::INT64 => $reader->readInts64($total),
-            PhysicalType::INT96 => $reader->readInts96($total),
-            PhysicalType::FLOAT => $reader->readFloats($total),
-            PhysicalType::DOUBLE => $reader->readDoubles($total),
-            PhysicalType::BYTE_ARRAY => match ($logicalType?->name()) {
-                LogicalType::STRING => $reader->readStrings($total),
-                default => $reader->readByteArrays($total)
-            },
-            PhysicalType::FIXED_LEN_BYTE_ARRAY => match ($logicalType?->name()) {
-                /** @phpstan-ignore-next-line */
-                LogicalType::DECIMAL => $reader->readDecimals($total, $typeLength, $logicalType->decimalData()->precision(), $logicalType->decimalData()->scale()),
-                default => throw new RuntimeException('Unsupported logical type ' . ($logicalType?->name() ?: 'null') . ' for FIXED_LEN_BYTE_ARRAY'),
-            },
-            PhysicalType::BOOLEAN => $reader->readBooleans($total),
-        };
     }
 
     private function readRLEBitPackedHybrid(BinaryBufferReader $reader, RLEBitPackedHybrid $RLEBitPackedHybrid, int $bitWidth, int $expectedValuesCount) : array

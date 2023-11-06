@@ -14,7 +14,6 @@ use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 final class PageReader
 {
     public function __construct(
-        private readonly FlatColumn $column,
         private readonly ByteOrder $byteOrder,
         private readonly Options $options
     ) {
@@ -24,8 +23,9 @@ final class PageReader
      * @param resource $stream
      *
      * @psalm-suppress PossiblyNullReference
+     * @psalm-suppress PossiblyNullArgument
      */
-    public function readData(PageHeader $pageHeader, Compressions $codec, ?Dictionary $dictionary, $stream) : ColumnData
+    public function readData(FlatColumn $column, PageHeader $pageHeader, Compressions $codec, ?Dictionary $dictionary, $stream) : ColumnData
     {
         switch ($pageHeader->type()) {
             case Type::DATA_PAGE:
@@ -36,20 +36,8 @@ final class PageReader
                         $codec
                     );
 
-                return (new DataCoder($this->byteOrder))
-                    ->decodeData(
-                        $data,
-                        /** @phpstan-ignore-next-line  */
-                        $pageHeader->dataPageHeader()->encoding(),
-                        $this->column->type(),
-                        $this->column->logicalType(),
-                        /** @phpstan-ignore-next-line  */
-                        $pageHeader->dataPageHeader()->valuesCount(),
-                        $this->column->maxRepetitionsLevel(),
-                        $this->column->maxDefinitionsLevel(),
-                        $this->column->typeLength(),
-                        $dictionary
-                    );
+                /** @phpstan-ignore-next-line  */
+                return (new DataCoder($this->byteOrder))->decodeData($data, $column, $pageHeader->dataPageHeader(), $dictionary);
             case Type::DATA_PAGE_V2:
 
                 /* @phpstan-ignore-next-line */
@@ -65,19 +53,8 @@ final class PageReader
                     );
 
                 return (new DataCoder($this->byteOrder))
-                    ->decodeDataV2(
-                        $levels . $data,
-                        /** @phpstan-ignore-next-line  */
-                        $pageHeader->dataPageHeaderV2()->encoding(),
-                        $this->column->type(),
-                        $this->column->logicalType(),
-                        /** @phpstan-ignore-next-line  */
-                        $pageHeader->dataPageHeaderV2()->valuesCount(),
-                        $this->column->maxRepetitionsLevel(),
-                        $this->column->maxDefinitionsLevel(),
-                        $this->column->typeLength(),
-                        $dictionary
-                    );
+                    /** @phpstan-ignore-next-line */
+                    ->decodeDataV2($levels . $data, $column, $pageHeader->dataPageHeaderV2(), $dictionary);
 
             default:
                 throw new RuntimeException("Unknown page header type '{$pageHeader->type()->name}'");
@@ -87,7 +64,7 @@ final class PageReader
     /**
      * @param resource $stream
      */
-    public function readDictionary(PageHeader $pageHeader, Compressions $codec, $stream) : Dictionary
+    public function readDictionary(FlatColumn $column, PageHeader $pageHeader, Compressions $codec, $stream) : Dictionary
     {
         if (!$pageHeader->dictionaryPageHeader()) {
             throw new RuntimeException("Can't read dictionary from non dictionary page header");
@@ -101,11 +78,8 @@ final class PageReader
                         \fread($stream, $pageHeader->compressedPageSize()),
                         $codec
                     ),
-                $this->column->type(),
-                $this->column->logicalType(),
-                $pageHeader->dictionaryPageHeader()->encoding(),
-                $pageHeader->dictionaryPageHeader()->valuesCount(),
-                $this->column->typeLength(),
+                $column,
+                $pageHeader->dictionaryPageHeader()
             );
     }
 }

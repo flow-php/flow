@@ -88,7 +88,7 @@ final class ParquetFile
     {
         $reader = new WholeChunkReader(
             new DataBuilder($this->dataConverter),
-            new PageReader($column, $this->byteOrder, $this->options),
+            new PageReader($this->byteOrder, $this->options),
         );
 
         foreach ($this->getColumnChunks($column) as $columnChunks) {
