@@ -39,9 +39,9 @@ final class NativeEntryFactory implements EntryFactory
         }
 
         if (\is_string($value)) {
-            if ('' !== $value) {
-                $trimmedValue = \trim($value);
+            $trimmedValue = \trim($value);
 
+            if ('' !== $trimmedValue) {
                 if ($this->isJson($trimmedValue)) {
                     return Row\Entry\JsonEntry::fromJsonString($entryName, $value);
                 }
