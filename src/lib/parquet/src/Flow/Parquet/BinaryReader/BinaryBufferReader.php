@@ -300,7 +300,13 @@ final class BinaryBufferReader implements BinaryReader
         $shift = 0;
 
         do {
-            $byte = $this->readBytes(1)->toArray()[0];
+            $bytes = $this->readBytes(1);
+
+            if ($bytes->count() === 0) {
+                break;
+            }
+
+            $byte = $bytes->toArray()[0];
             $result |= ($byte & 0x7F) << $shift;
             $shift += 7;
         } while ($byte >= 0x80);
