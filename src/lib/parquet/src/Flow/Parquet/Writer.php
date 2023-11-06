@@ -18,8 +18,6 @@ use Thrift\Protocol\TCompactProtocol;
 
 final class Writer
 {
-    public const VERSION = 2;
-
     private int $fileOffset = 0;
 
     private ?Metadata $metadata = null;
@@ -359,7 +357,7 @@ final class Writer
 
     private function initMetadata(Schema $schema) : void
     {
-        $this->metadata = (new Metadata($schema, new RowGroups([]), 0, self::VERSION, 'flow-php parquet version ' . InstalledVersions::getRootPackage()['pretty_version']));
+        $this->metadata = (new Metadata($schema, new RowGroups([]), 0, $this->options->getInt(Option::WRITER_VERSION), 'flow-php parquet version ' . InstalledVersions::getRootPackage()['pretty_version']));
     }
 
     private function metadata() : Metadata

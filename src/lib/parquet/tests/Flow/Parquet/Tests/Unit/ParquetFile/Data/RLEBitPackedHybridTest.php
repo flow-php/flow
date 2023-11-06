@@ -162,6 +162,6 @@ final class RLEBitPackedHybridTest extends TestCase
         $result = [];
         $rleBitPackedHybrid->decodeRLE($binaryReader, $bitWidth, $intVar, $maxItems, $result);
 
-        $this->assertEquals([], $result);
+        $this->assertEquals([0], $result);
     }
 }

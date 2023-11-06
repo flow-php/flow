@@ -6,6 +6,8 @@ use Composer\InstalledVersions;
 use Faker\Factory;
 use Flow\Parquet\Consts;
 use Flow\Parquet\Exception\InvalidArgumentException;
+use Flow\Parquet\Option;
+use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\ListElement;
@@ -258,6 +260,29 @@ final class WriterTest extends TestCase
 
         $writer->write($path, $schema, [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row]);
 
+        $this->assertSame(
+            [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row],
+            \iterator_to_array((new Reader())->read($path)->values())
+        );
+        $this->assertFileExists($path);
+        \unlink($path);
+    }
+
+    public function test_writing_to_file_v2() : void
+    {
+        $writer = new Writer(
+            options: Options::default()
+                ->set(Option::WRITER_VERSION, 2)
+        );
+
+        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-v2-', true) . '.parquet';
+
+        $schema = $this->createSchema();
+        $row = $this->createRow();
+
+        $writer->write($path, $schema, [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row]);
+
+        $this->assertSame(2, (new Reader())->read($path)->metadata()->version());
         $this->assertSame(
             [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row],
             \iterator_to_array((new Reader())->read($path)->values())

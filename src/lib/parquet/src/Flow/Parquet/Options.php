@@ -2,6 +2,8 @@
 
 namespace Flow\Parquet;
 
+use Flow\Parquet\Exception\InvalidArgumentException;
+
 final class Options
 {
     /**
@@ -21,6 +23,7 @@ final class Options
             Option::DICTIONARY_PAGE_SIZE->name => Consts::MB_SIZE,
             Option::DICTIONARY_PAGE_MIN_CARDINALITY_RATION->name => 0.4,
             Option::GZIP_COMPRESSION_LEVEL->name => 9,
+            Option::WRITER_VERSION->name => 1,
         ];
     }
 
@@ -32,6 +35,17 @@ final class Options
     public function get(Option $option) : bool|int|float
     {
         return $this->options[$option->name];
+    }
+
+    public function getInt(Option $option) : int
+    {
+        $value = $this->options[$option->name];
+
+        if (!\is_int($value)) {
+            throw new InvalidArgumentException("Option {$option->name} is not an integer, but: " . \gettype($value));
+        }
+
+        return $value;
     }
 
     public function set(Option $option, bool|int|float $value) : self

@@ -7,6 +7,7 @@ use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Page\ColumnData;
 use Flow\Parquet\ParquetFile\Page\Dictionary;
+use Flow\Parquet\ParquetFile\Page\Header\Type;
 use Flow\Parquet\ParquetFile\Page\PageHeader;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 
@@ -26,25 +27,61 @@ final class PageReader
      */
     public function readData(PageHeader $pageHeader, Compressions $codec, ?Dictionary $dictionary, $stream) : ColumnData
     {
-        return (new DataCoder($this->byteOrder))
-            ->decodeData(
-                (new Codec($this->options))
+        switch ($pageHeader->type()) {
+            case Type::DATA_PAGE:
+                $data = (new Codec($this->options))
                     ->decompress(
                         /** @phpstan-ignore-next-line */
                         \fread($stream, $pageHeader->compressedPageSize()),
                         $codec
-                    ),
-                /** @phpstan-ignore-next-line  */
-                $pageHeader->dataPageHeader()->encoding(),
-                $this->column->type(),
-                $this->column->logicalType(),
-                /** @phpstan-ignore-next-line  */
-                $pageHeader->dataPageHeader()->valuesCount(),
-                $this->column->maxRepetitionsLevel(),
-                $this->column->maxDefinitionsLevel(),
-                $this->column->typeLength(),
-                $dictionary
-            );
+                    );
+
+                return (new DataCoder($this->byteOrder))
+                    ->decodeData(
+                        $data,
+                        /** @phpstan-ignore-next-line  */
+                        $pageHeader->dataPageHeader()->encoding(),
+                        $this->column->type(),
+                        $this->column->logicalType(),
+                        /** @phpstan-ignore-next-line  */
+                        $pageHeader->dataPageHeader()->valuesCount(),
+                        $this->column->maxRepetitionsLevel(),
+                        $this->column->maxDefinitionsLevel(),
+                        $this->column->typeLength(),
+                        $dictionary
+                    );
+            case Type::DATA_PAGE_V2:
+
+                /* @phpstan-ignore-next-line */
+                $levelsLength = $pageHeader->dataPageHeaderV2()->repetitionsByteLength() + $pageHeader->dataPageHeaderV2()->definitionsByteLength();
+                /* @phpstan-ignore-next-line */
+                $levels = \fread($stream, $levelsLength);
+
+                $data = (new Codec($this->options))
+                    ->decompress(
+                        /** @phpstan-ignore-next-line */
+                        \fread($stream, $pageHeader->compressedPageSize() - $levelsLength),
+                        $codec
+                    );
+
+                return (new DataCoder($this->byteOrder))
+                    ->decodeDataV2(
+                        $levels . $data,
+                        /** @phpstan-ignore-next-line  */
+                        $pageHeader->dataPageHeaderV2()->encoding(),
+                        $this->column->type(),
+                        $this->column->logicalType(),
+                        /** @phpstan-ignore-next-line  */
+                        $pageHeader->dataPageHeaderV2()->valuesCount(),
+                        $this->column->maxRepetitionsLevel(),
+                        $this->column->maxDefinitionsLevel(),
+                        $this->column->typeLength(),
+                        $dictionary
+                    );
+
+            default:
+                throw new RuntimeException("Unknown page header type '{$pageHeader->type()->name}'");
+        }
     }
 
     /**
