@@ -6,7 +6,8 @@ namespace Flow\ETL\Row\Entry;
 
 use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Type;
+use Flow\ETL\PHP\Type\Logical\List\ListElement;
+use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
@@ -16,42 +17,38 @@ use Flow\ETL\Row\Schema\Metadata;
 /**
  * @template T
  *
- * @implements Entry<array<T>, array{name: string, type: Type, value: array<T>}>
+ * @implements Entry<array<T>, array{name: string, list: ListType, value: array<T>}>
  */
 final class ListEntry implements Entry, TypedCollection
 {
     use EntryRef;
 
+    private readonly ListType $list;
+
     /**
-     * @param string $name
-     * @param Type $type
      * @param array<T> $value
      *
      * @throws InvalidArgumentException
      */
     public function __construct(
         private readonly string $name,
-        private readonly Type $type,
+        ListElement $element,
         private readonly array $value
     ) {
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        if ([] !== $value && !\array_is_list($value)) {
-            throw new InvalidArgumentException('Expected list of ' . $type->toString() . ' got array with not sequential integer indexes');
-        }
+        $this->list = new ListType($element);
 
-        foreach ($value as $item) {
-            if (!$type->isValid($item)) {
-                throw new InvalidArgumentException('Expected list of ' . $type->toString() . ' got different types.');
-            }
+        if (!$this->list->isValid($value)) {
+            throw InvalidArgumentException::because('Expected list of ' . $element->toString() . ' got different types.');
         }
     }
 
     public function __serialize() : array
     {
-        return ['name' => $this->name, 'type' => $this->type, 'value' => $this->value];
+        return ['name' => $this->name, 'list' => $this->list, 'value' => $this->value];
     }
 
     public function __toString() : string
@@ -62,7 +59,7 @@ final class ListEntry implements Entry, TypedCollection
     public function __unserialize(array $data) : void
     {
         $this->name = $data['name'];
-        $this->type = $data['type'];
+        $this->list = $data['list'];
         $this->value = $data['value'];
     }
 
@@ -70,7 +67,7 @@ final class ListEntry implements Entry, TypedCollection
     {
         return Definition::list(
             $this->name,
-            $this->type,
+            $this->list->element(),
             metadata: Metadata::with(FlowMetadata::METADATA_LIST_ENTRY_TYPE, $this->type())
         );
     }
@@ -87,13 +84,14 @@ final class ListEntry implements Entry, TypedCollection
     public function isEqual(Entry $entry) : bool
     {
         return $this->is($entry->name())
-            && $entry instanceof self && (new ArrayComparison())->equals($this->value(), $entry->value())
-            && $this->type->isEqual($entry->type);
+            && $entry instanceof self
+            && (new ArrayComparison())->equals($this->value, $entry->value())
+            && $this->list->isEqual($entry->list);
     }
 
     public function map(callable $mapper) : Entry
     {
-        return new self($this->name, $this->type, $mapper($this->value));
+        return new self($this->name, $this->list->element(), $mapper($this->value));
     }
 
     public function name() : string
@@ -103,7 +101,7 @@ final class ListEntry implements Entry, TypedCollection
 
     public function rename(string $name) : Entry
     {
-        return new self($name, $this->type, $this->value);
+        return new self($name, $this->list->element(), $this->value);
     }
 
     public function toString() : string
@@ -111,9 +109,9 @@ final class ListEntry implements Entry, TypedCollection
         return \json_encode($this->value(), JSON_THROW_ON_ERROR);
     }
 
-    public function type() : Type
+    public function type() : ListType
     {
-        return $this->type;
+        return $this->list;
     }
 
     public function value() : array

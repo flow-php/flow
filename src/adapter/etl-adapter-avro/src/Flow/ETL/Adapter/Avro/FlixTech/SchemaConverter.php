@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Avro\FlixTech;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\PHP\Type\ObjectType;
-use Flow\ETL\PHP\Type\ScalarType;
+use Flow\ETL\PHP\Type\Logical\List\ListElement;
+use Flow\ETL\PHP\Type\Native\ObjectType;
+use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\ArrayEntry;
 use Flow\ETL\Row\Entry\BooleanEntry;
@@ -55,10 +56,11 @@ final class SchemaConverter
         $type = $this->typeFromDefinition($definition);
 
         if ($type === ListEntry::class) {
+            /** @var ListElement $listType */
             $listType = $definition->metadata()->get(Schema\FlowMetadata::METADATA_LIST_ENTRY_TYPE);
 
-            if ($listType instanceof ScalarType) {
-                return match ($listType) {
+            if ($listType->value() instanceof ScalarType) {
+                return match ($listType->value()) {
                     ScalarType::string => ['name' => $definition->entry()->name(), 'type' => ['type' => 'array', 'items' => \AvroSchema::STRING_TYPE]],
                     ScalarType::integer => ['name' => $definition->entry()->name(), 'type' => ['type' => 'array', 'items' => \AvroSchema::INT_TYPE]],
                     ScalarType::float => ['name' => $definition->entry()->name(), 'type' => ['type' => 'array', 'items' => \AvroSchema::FLOAT_TYPE]],
@@ -66,12 +68,12 @@ final class SchemaConverter
                 };
             }
 
-            if ($listType instanceof ObjectType) {
-                if (\is_a($listType->class, \DateTimeInterface::class, true)) {
+            if ($listType->value() instanceof ObjectType) {
+                if (\is_a($listType->value()->class, \DateTimeInterface::class, true)) {
                     return ['name' => $definition->entry()->name(), 'type' => ['type' => 'array', 'items' => 'long', \AvroSchema::LOGICAL_TYPE_ATTR => 'timestamp-micros']];
                 }
 
-                throw new RuntimeException("List of {$listType->class} is not supported yet supported.");
+                throw new RuntimeException("List of {$listType->toString()} is not supported yet supported.");
             }
         }
 

@@ -6,7 +6,7 @@ namespace Flow\ETL\Tests\Unit\Row\Schema;
 
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\ScalarType;
+use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Row\Entry\ListEntry;
 use Flow\ETL\Row\Entry\NullEntry;
@@ -46,22 +46,22 @@ final class DefinitionTest extends TestCase
 
     public function test_equals_but_different_constraints() : void
     {
-        $def = Definition::list('list', ScalarType::integer);
+        $def = Definition::list('list', ListElement::integer());
 
         $this->assertFalse(
             $def->isEqual(
-                Definition::list('list', ScalarType::string)
+                Definition::list('list', ListElement::string())
             )
         );
     }
 
     public function test_equals_types_and_constraints() : void
     {
-        $def = Definition::list('list', ScalarType::integer);
+        $def = Definition::list('list', ListElement::integer());
 
         $this->assertTrue(
             $def->isEqual(
-                Definition::list('list', ScalarType::integer)
+                Definition::list('list', ListElement::integer())
             )
         );
     }
@@ -147,10 +147,10 @@ final class DefinitionTest extends TestCase
                 'list',
                 [ListEntry::class, NullEntry::class],
                 null,
-                Metadata::empty()->add(FlowMetadata::METADATA_LIST_ENTRY_TYPE, ScalarType::string)
+                Metadata::empty()->add(FlowMetadata::METADATA_LIST_ENTRY_TYPE, ListElement::string())
             ),
-            Definition::list('list', ScalarType::integer)
-                ->merge(Definition::list('list', ScalarType::string, true))
+            Definition::list('list', ListElement::integer())
+                ->merge(Definition::list('list', ListElement::string(), true))
         );
     }
 

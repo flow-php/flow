@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Row\Schema;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Type;
+use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\ArrayEntry;
 use Flow\ETL\Row\Entry\BooleanEntry;
@@ -116,7 +116,7 @@ final class Definition implements Serializable
         return new self($entry, ($nullable) ? [JsonEntry::class, NullEntry::class] : [JsonEntry::class], $constraint, $metadata);
     }
 
-    public static function list(string|EntryReference $entry, Type $type, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function list(string|EntryReference $entry, ListElement $type, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
         return new self(
             $entry,

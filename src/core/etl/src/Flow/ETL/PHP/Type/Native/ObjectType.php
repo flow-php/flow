@@ -2,11 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\PHP\Type;
+namespace Flow\ETL\PHP\Type\Native;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\PHP\Type\Type;
 
-final class ObjectType implements Type
+final class ObjectType implements NativeType
 {
     /**
      * @param class-string $class

@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\DSL;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\ObjectType;
-use Flow\ETL\PHP\Type\ScalarType;
+use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry as RowEntry;
 use Flow\ETL\Row\Entry\Type\Uuid;
@@ -158,7 +157,7 @@ class Entry
      */
     final public static function list_of_boolean(string $name, array $value) : RowEntry
     {
-        return new RowEntry\ListEntry($name, ScalarType::boolean, $value);
+        return new RowEntry\ListEntry($name, ListElement::boolean(), $value);
     }
 
     /**
@@ -170,7 +169,7 @@ class Entry
      */
     final public static function list_of_datetime(string $name, array $value) : RowEntry
     {
-        return new RowEntry\ListEntry($name, new ObjectType(\DateTimeInterface::class), $value);
+        return new RowEntry\ListEntry($name, ListElement::object(\DateTimeInterface::class), $value);
     }
 
     /**
@@ -182,7 +181,7 @@ class Entry
      */
     final public static function list_of_float(string $name, array $value) : RowEntry
     {
-        return new RowEntry\ListEntry($name, ScalarType::float, $value);
+        return new RowEntry\ListEntry($name, ListElement::float(), $value);
     }
 
     /**
@@ -194,7 +193,7 @@ class Entry
      */
     final public static function list_of_int(string $name, array $value) : RowEntry
     {
-        return new RowEntry\ListEntry($name, ScalarType::integer, $value);
+        return new RowEntry\ListEntry($name, ListElement::integer(), $value);
     }
 
     /**
@@ -207,7 +206,7 @@ class Entry
      */
     final public static function list_of_objects(string $name, string $class, array $value) : RowEntry
     {
-        return new RowEntry\ListEntry($name, new ObjectType($class), $value);
+        return new RowEntry\ListEntry($name, ListElement::object($class), $value);
     }
 
     /**
@@ -219,7 +218,7 @@ class Entry
      */
     final public static function list_of_string(string $name, array $value) : RowEntry
     {
-        return new RowEntry\ListEntry($name, ScalarType::string, $value);
+        return new RowEntry\ListEntry($name, ListElement::string(), $value);
     }
 
     /**

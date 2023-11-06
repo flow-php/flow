@@ -6,9 +6,8 @@ namespace Flow\ETL\Row\Factory;
 
 use Flow\ETL\DSL\Entry as EntryDSL;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\ObjectType;
-use Flow\ETL\PHP\Type\ScalarType;
-use Flow\ETL\PHP\Type\Type;
+use Flow\ETL\PHP\Type\Logical\List\ListElement;
+use Flow\ETL\PHP\Type\Native\ObjectType;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\EntryFactory;
@@ -143,10 +142,10 @@ final class NativeEntryFactory implements EntryFactory
                     $class = \DOMNode::class;
                 }
 
-                return new Entry\ListEntry($entryName, ObjectType::fromString($class), $value);
+                return new Entry\ListEntry($entryName, ListElement::fromString($class), $value);
             }
 
-            return new Entry\ListEntry($entryName, ScalarType::fromString($type), $value);
+            return new Entry\ListEntry($entryName, ListElement::fromString($type), $value);
         }
 
         if (null === $value) {
@@ -249,7 +248,7 @@ final class NativeEntryFactory implements EntryFactory
 
             if ($type === Entry\ListEntry::class && \is_array($value) && \array_is_list($value)) {
                 try {
-                    /** @var Type $listType */
+                    /** @var ListElement $listType */
                     $listType = $definition->metadata()->get(Schema\FlowMetadata::METADATA_LIST_ENTRY_TYPE);
 
                     if (!\count($value)) {
@@ -260,11 +259,11 @@ final class NativeEntryFactory implements EntryFactory
                         );
                     }
 
-                    if ($listType instanceof ObjectType) {
+                    if ($listType->value() instanceof ObjectType) {
                         /** @var mixed $firstValue */
                         $firstValue = \current($value);
 
-                        if (\is_a($listType->class, \DateTimeInterface::class, true) && \is_string($firstValue)) {
+                        if (\is_a($listType->value()->class, \DateTimeInterface::class, true) && \is_string($firstValue)) {
                             return new Entry\ListEntry(
                                 $definition->entry()->name(),
                                 $listType,

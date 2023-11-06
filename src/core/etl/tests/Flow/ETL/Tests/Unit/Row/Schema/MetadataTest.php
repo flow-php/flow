@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Row\Schema;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\ScalarType;
+use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\Row\Schema\Metadata;
 use PHPUnit\Framework\TestCase;
 
