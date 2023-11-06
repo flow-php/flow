@@ -133,6 +133,7 @@
 - [#584](https://github.com/flow-php/flow/pull/584) - **Adjust `phpunit.xml` to be more efficient** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
+- [#743](https://github.com/flow-php/flow/pull/743) - **Prevent uninitialized string check in `NativeEntryFactory`** - [@stloyd](https://github.com/stloyd)
 - [#731](https://github.com/flow-php/flow/pull/731) - **bitpacking zero values** - [@norberttech](https://github.com/norberttech)
 - [#726](https://github.com/flow-php/flow/pull/726) - **JsonLoader when writing empty Rows** - [@norberttech](https://github.com/norberttech)
 - [#714](https://github.com/flow-php/flow/pull/714) - **Added missing FileExtractor interface to all file based extractors** - [@norberttech](https://github.com/norberttech)
