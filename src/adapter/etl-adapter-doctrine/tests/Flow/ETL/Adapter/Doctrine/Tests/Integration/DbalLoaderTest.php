@@ -142,6 +142,7 @@ final class DbalLoaderTest extends IntegrationTestCase
                     ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
                 ])
             )
+            ->batchSize(3)
             ->load($loader)
             ->run();
 
