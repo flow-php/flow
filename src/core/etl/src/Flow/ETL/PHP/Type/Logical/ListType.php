@@ -4,11 +4,25 @@ namespace Flow\ETL\PHP\Type\Logical;
 
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Type;
+use Flow\Serializer\Serializable;
 
-final class ListType implements Type
+/**
+ * @implements Serializable<array{element: ListElement}>
+ */
+final class ListType implements Serializable, Type
 {
     public function __construct(private readonly List\ListElement $element)
     {
+    }
+
+    public function __serialize() : array
+    {
+        return ['element' => $this->element];
+    }
+
+    public function __unserialize(array $data) : void
+    {
+        $this->element = $data['element'];
     }
 
     public function element() : ListElement
@@ -22,11 +36,7 @@ final class ListType implements Type
             return false;
         }
 
-        if ($this->element->toString() !== $type->element()->toString()) {
-            return false;
-        }
-
-        return true;
+        return $this->element->toString() === $type->element()->toString();
     }
 
     public function isValid(mixed $value) : bool

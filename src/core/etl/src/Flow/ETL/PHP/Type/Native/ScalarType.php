@@ -7,7 +7,7 @@ namespace Flow\ETL\PHP\Type\Native;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Type;
 
-enum ScalarType : string implements NativeType
+enum ScalarType : string implements Type
 {
     case boolean = 'boolean';
     case float = 'float';

@@ -142,10 +142,10 @@ final class NativeEntryFactory implements EntryFactory
                     $class = \DOMNode::class;
                 }
 
-                return new Entry\ListEntry($entryName, ListElement::fromString($class), $value);
+                return new Entry\ListEntry($entryName, ListElement::object($class), $value);
             }
 
-            return new Entry\ListEntry($entryName, ListElement::fromString($type), $value);
+            return new Entry\ListEntry($entryName, ListElement::scalar($type), $value);
         }
 
         if (null === $value) {

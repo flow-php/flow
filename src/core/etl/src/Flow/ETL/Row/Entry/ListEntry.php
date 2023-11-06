@@ -17,13 +17,13 @@ use Flow\ETL\Row\Schema\Metadata;
 /**
  * @template T
  *
- * @implements Entry<array<T>, array{name: string, list: ListType, value: array<T>}>
+ * @implements Entry<array<T>, array{name: string, type: ListType, value: array<T>}>
  */
 final class ListEntry implements Entry, TypedCollection
 {
     use EntryRef;
 
-    private readonly ListType $list;
+    private readonly ListType $type;
 
     /**
      * @param array<T> $value
@@ -39,16 +39,16 @@ final class ListEntry implements Entry, TypedCollection
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        $this->list = new ListType($element);
+        $this->type = new ListType($element);
 
-        if (!$this->list->isValid($value)) {
+        if (!$this->type->isValid($value)) {
             throw InvalidArgumentException::because('Expected list of ' . $element->toString() . ' got different types.');
         }
     }
 
     public function __serialize() : array
     {
-        return ['name' => $this->name, 'list' => $this->list, 'value' => $this->value];
+        return ['name' => $this->name, 'type' => $this->type, 'value' => $this->value];
     }
 
     public function __toString() : string
@@ -59,7 +59,7 @@ final class ListEntry implements Entry, TypedCollection
     public function __unserialize(array $data) : void
     {
         $this->name = $data['name'];
-        $this->list = $data['list'];
+        $this->type = $data['type'];
         $this->value = $data['value'];
     }
 
@@ -67,7 +67,7 @@ final class ListEntry implements Entry, TypedCollection
     {
         return Definition::list(
             $this->name,
-            $this->list->element(),
+            $this->type->element(),
             metadata: Metadata::with(FlowMetadata::METADATA_LIST_ENTRY_TYPE, $this->type())
         );
     }
@@ -86,12 +86,12 @@ final class ListEntry implements Entry, TypedCollection
         return $this->is($entry->name())
             && $entry instanceof self
             && (new ArrayComparison())->equals($this->value, $entry->value())
-            && $this->list->isEqual($entry->list);
+            && $this->type->isEqual($entry->type);
     }
 
     public function map(callable $mapper) : Entry
     {
-        return new self($this->name, $this->list->element(), $mapper($this->value));
+        return new self($this->name, $this->type->element(), $mapper($this->value));
     }
 
     public function name() : string
@@ -101,7 +101,7 @@ final class ListEntry implements Entry, TypedCollection
 
     public function rename(string $name) : Entry
     {
-        return new self($name, $this->list->element(), $this->value);
+        return new self($name, $this->type->element(), $this->value);
     }
 
     public function toString() : string
@@ -111,7 +111,7 @@ final class ListEntry implements Entry, TypedCollection
 
     public function type() : ListType
     {
-        return $this->list;
+        return $this->type;
     }
 
     public function value() : array

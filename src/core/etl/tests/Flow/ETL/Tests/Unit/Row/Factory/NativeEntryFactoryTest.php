@@ -221,7 +221,7 @@ final class NativeEntryFactoryTest extends TestCase
         $this->assertEquals(
             Entry::list_of_datetime('e', $list = [new \DateTimeImmutable('now'), new \DateTimeImmutable('tomorrow')]),
             (new NativeEntryFactory())
-                ->create('e', $list, new Schema(Schema\Definition::list('e', ListElement::fromString(\DateTimeInterface::class))))
+                ->create('e', $list, new Schema(Schema\Definition::list('e', ListElement::object(\DateTimeInterface::class))))
         );
     }
 
@@ -249,7 +249,7 @@ final class NativeEntryFactoryTest extends TestCase
                 ->create(
                     'e',
                     ['2022-01-01 00:00:00 UTC', '2022-01-01 00:00:00 UTC'],
-                    new Schema(Schema\Definition::list('e', ListElement::fromString(\DateTimeInterface::class)))
+                    new Schema(Schema\Definition::list('e', ListElement::object(\DateTimeInterface::class)))
                 )
         );
     }
