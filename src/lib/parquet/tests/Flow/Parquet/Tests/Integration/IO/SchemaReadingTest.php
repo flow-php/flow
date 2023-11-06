@@ -2,6 +2,7 @@
 
 namespace Flow\Parquet\Tests\Integration\IO;
 
+use Flow\Parquet\ParquetFile\RowGroup\StatisticsReader;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\ListElement;
@@ -108,6 +109,15 @@ final class SchemaReadingTest extends TestCase
             ($reader->read(__DIR__ . '/../../Fixtures/primitives.parquet'))->metadata()->schema()->toDDL(),
             $schema->toDDL()
         );
+    }
+
+    public function test_reading_statistics() : void
+    {
+        $metadata = (new Reader())->read(__DIR__ . '/../../Fixtures/primitives.parquet')->metadata();
+
+        foreach ($metadata->columnChunks() as $chunk) {
+            $this->assertInstanceOf(StatisticsReader::class, $chunk->statistics());
+        }
     }
 
     public function test_reading_structs_schema_ddl() : void

@@ -41,6 +41,7 @@ final class WholeChunkReader implements ColumnChunkReader
             }
 
             $dictionary = $this->pageReader->readDictionary(
+                $column,
                 $dictionaryHeader,
                 $columnChunk->codec(),
                 $stream
@@ -80,6 +81,7 @@ final class WholeChunkReader implements ColumnChunkReader
             }
 
             $columnData = $columnData->merge($this->pageReader->readData(
+                $column,
                 $dataHeader,
                 $columnChunk->codec(),
                 $dictionary,

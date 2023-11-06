@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 
-namespace Flow\Parquet\ParquetFile\RowGroupBuilder\PageBuilder;
+namespace Flow\Parquet\ParquetFile\Data;
 
-use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
+use Flow\Parquet\BinaryWriter;
 use Flow\Parquet\Data\DataConverter;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\LogicalType;
@@ -11,13 +11,13 @@ use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 final class PlainValuesPacker
 {
     public function __construct(
+        private readonly BinaryWriter $writer,
         private readonly DataConverter $dataConverter,
     ) {
     }
 
-    public function packValues(FlatColumn $column, array $values) : string
+    public function packValues(FlatColumn $column, array $values) : void
     {
-        $valuesBuffer = '';
         $parquetValues = [];
 
         foreach ($values as $value) {
@@ -26,17 +26,17 @@ final class PlainValuesPacker
 
         switch ($column->type()) {
             case PhysicalType::BOOLEAN:
-                (new BinaryBufferWriter($valuesBuffer))->writeBooleans($parquetValues);
+                $this->writer->writeBooleans($parquetValues);
 
                 break;
             case PhysicalType::INT32:
                 switch ($column->logicalType()?->name()) {
                     case LogicalType::DATE:
-                        (new BinaryBufferWriter($valuesBuffer))->writeInts32($parquetValues);
+                        $this->writer->writeInts32($parquetValues);
 
                         break;
                     case null:
-                        (new BinaryBufferWriter($valuesBuffer))->writeInts32($parquetValues);
+                        $this->writer->writeInts32($parquetValues);
 
                         break;
                 }
@@ -46,22 +46,22 @@ final class PlainValuesPacker
                 switch ($column->logicalType()?->name()) {
                     case LogicalType::TIME:
                     case LogicalType::TIMESTAMP:
-                        (new BinaryBufferWriter($valuesBuffer))->writeInts64($parquetValues);
+                        $this->writer->writeInts64($parquetValues);
 
                         break;
                     case null:
-                        (new BinaryBufferWriter($valuesBuffer))->writeInts64($parquetValues);
+                        $this->writer->writeInts64($parquetValues);
 
                         break;
                 }
 
                 break;
             case PhysicalType::FLOAT:
-                (new BinaryBufferWriter($valuesBuffer))->writeFloats($parquetValues);
+                $this->writer->writeFloats($parquetValues);
 
                 break;
             case PhysicalType::DOUBLE:
-                (new BinaryBufferWriter($valuesBuffer))->writeDoubles($parquetValues);
+                $this->writer->writeDoubles($parquetValues);
 
                 break;
             case PhysicalType::FIXED_LEN_BYTE_ARRAY:
@@ -72,7 +72,7 @@ final class PlainValuesPacker
                          *
                          * @psalm-suppress PossiblyNullArgument
                          */
-                        (new BinaryBufferWriter($valuesBuffer))->writeDecimals($parquetValues, $column->typeLength(), $column->precision(), $column->scale());
+                        $this->writer->writeDecimals($parquetValues, $column->typeLength(), $column->precision(), $column->scale());
 
                         break;
 
@@ -86,7 +86,7 @@ final class PlainValuesPacker
                     case LogicalType::JSON:
                     case LogicalType::UUID:
                     case LogicalType::STRING:
-                        (new BinaryBufferWriter($valuesBuffer))->writeStrings($parquetValues);
+                        $this->writer->writeStrings($parquetValues);
 
                         break;
 
@@ -99,7 +99,5 @@ final class PlainValuesPacker
             default:
                 throw new \RuntimeException('Writing physical type "' . $column->type()->name . '" is not implemented yet');
         }
-
-        return $valuesBuffer;
     }
 }

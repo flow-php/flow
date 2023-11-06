@@ -9,6 +9,7 @@ use Flow\Parquet\Option;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Codec;
 use Flow\Parquet\ParquetFile\Compressions;
+use Flow\Parquet\ParquetFile\Data\PlainValuesPacker;
 use Flow\Parquet\ParquetFile\Data\RLEBitPackedHybrid;
 use Flow\Parquet\ParquetFile\Encodings;
 use Flow\Parquet\ParquetFile\Page\Header\DataPageHeader;
@@ -62,7 +63,7 @@ final class DataPageBuilder
         if ($dictionary && $indices) {
             $pageWriter->append((new RLEBitPackedPacker($rleBitPackedHybrid))->packWithBitWidth($indices));
         } else {
-            $pageWriter->append((new PlainValuesPacker($this->dataConverter))->packValues($column, $shredded->values));
+            (new PlainValuesPacker($pageWriter, $this->dataConverter))->packValues($column, $shredded->values);
         }
 
         $compressedBuffer = (new Codec($this->options))->compress($pageBuffer, $this->compression);
@@ -119,7 +120,7 @@ final class DataPageBuilder
         if ($dictionary && $indices) {
             $pageWriter->append((new RLEBitPackedPacker($rleBitPackedHybrid))->packWithBitWidth($indices));
         } else {
-            $pageWriter->append((new PlainValuesPacker($this->dataConverter))->packValues($column, $shredded->values));
+            (new PlainValuesPacker($pageWriter, $this->dataConverter))->packValues($column, $shredded->values);
         }
 
         $compressedBuffer = (new Codec($this->options))->compress($pageBuffer, $this->compression);

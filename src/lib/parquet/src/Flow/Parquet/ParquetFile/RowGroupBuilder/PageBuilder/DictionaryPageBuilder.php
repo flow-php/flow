@@ -7,6 +7,7 @@ use Flow\Parquet\Data\DataConverter;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Codec;
 use Flow\Parquet\ParquetFile\Compressions;
+use Flow\Parquet\ParquetFile\Data\PlainValuesPacker;
 use Flow\Parquet\ParquetFile\Encodings;
 use Flow\Parquet\ParquetFile\Page\Header\DictionaryPageHeader;
 use Flow\Parquet\ParquetFile\Page\Header\Type;
@@ -31,7 +32,7 @@ final class DictionaryPageBuilder
 
         $pageBuffer = '';
         $pageWriter = new BinaryBufferWriter($pageBuffer);
-        $pageWriter->append((new PlainValuesPacker($this->dataConverter))->packValues($column, $dictionary->dictionary));
+        (new PlainValuesPacker($pageWriter, $this->dataConverter))->packValues($column, $dictionary->dictionary);
 
         $compressedBuffer = (new Codec($this->options))->compress($pageBuffer, $this->compression);
 
