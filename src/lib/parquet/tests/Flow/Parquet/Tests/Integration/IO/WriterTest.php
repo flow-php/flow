@@ -158,6 +158,35 @@ final class WriterTest extends TestCase
         \unlink($path);
     }
 
+    public function test_writing_column_statistics() : void
+    {
+        $writer = new Writer(
+            options: Options::default()
+                ->set(Option::WRITER_VERSION, 1)
+        );
+
+        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-v2-', true) . '.parquet';
+
+        $schema = Schema::with($column = FlatColumn::int32('int32'));
+
+        $writer->write($path, $schema, \array_map(
+            static fn ($i) => ['int32' => $i],
+            \range(1, 100)
+        ));
+
+        $statistics = (new Reader())->read($path)->metadata()->columnChunks()[0]->statistics();
+
+        $this->assertSame(1, $statistics->min($column));
+        $this->assertSame(100, $statistics->max($column));
+        $this->assertSame(1, $statistics->minValue($column));
+        $this->assertSame(100, $statistics->maxValue($column));
+        $this->assertSame(100, $statistics->distinctCount());
+        $this->assertSame(0, $statistics->nullCount());
+
+        $this->assertFileExists($path);
+        \unlink($path);
+    }
+
     public function test_writing_in_batches_to_file() : void
     {
         $writer = new Writer();

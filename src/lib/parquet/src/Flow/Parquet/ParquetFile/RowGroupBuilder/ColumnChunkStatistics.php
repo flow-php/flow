@@ -4,6 +4,7 @@ namespace Flow\Parquet\ParquetFile\RowGroupBuilder;
 
 use Flow\Parquet\Data\ObjectToString;
 use Flow\Parquet\Exception\RuntimeException;
+use Flow\Parquet\ParquetFile\RowGroupBuilder\Statistics\Comparator;
 use Flow\Parquet\ParquetFile\Schema\ColumnPrimitiveType;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
@@ -11,6 +12,12 @@ use Flow\Parquet\ParquetFile\Schema\PhysicalType;
 final class ColumnChunkStatistics
 {
     private bool $columnIsString;
+
+    private Comparator $comparator;
+
+    private mixed $max;
+
+    private mixed $min;
 
     private int $nullCount;
 
@@ -26,6 +33,9 @@ final class ColumnChunkStatistics
         $this->valuesCount = 0;
         $this->totalStringLength = 0;
         $this->columnIsString = ColumnPrimitiveType::isString($this->column);
+        $this->min = null;
+        $this->max = null;
+        $this->comparator = new Comparator();
     }
 
     public function add(string|int|float|null|array|bool|object $value) : void
@@ -44,9 +54,26 @@ final class ColumnChunkStatistics
 
         if (\is_array($value)) {
             foreach ($value as $val) {
+
+                if ($this->comparator->isLessThan($val, $this->min)) {
+                    $this->min = $val;
+                }
+
+                if ($this->comparator->isGreaterThan($val, $this->max)) {
+                    $this->max = $val;
+                }
+
                 $this->values[] = \is_object($val) ? ObjectToString::toString($val) : $val;
             }
         } else {
+            if ($this->comparator->isLessThan($value, $this->min)) {
+                $this->min = $value;
+            }
+
+            if ($this->comparator->isGreaterThan($value, $this->max)) {
+                $this->max = $value;
+            }
+
             $this->values[] = \is_object($value) ? ObjectToString::toString($value) : $value;
         }
 
@@ -83,6 +110,16 @@ final class ColumnChunkStatistics
         return \count(\array_unique($this->values));
     }
 
+    public function max() : mixed
+    {
+        return $this->max;
+    }
+
+    public function min() : mixed
+    {
+        return $this->min;
+    }
+
     public function notNullCount() : int
     {
         return $this->valuesCount - $this->nullCount;
@@ -98,6 +135,8 @@ final class ColumnChunkStatistics
         $this->nullCount = 0;
         $this->valuesCount = 0;
         $this->totalStringLength = 0;
+        $this->min = null;
+        $this->max = null;
         $this->values = [];
     }
 
@@ -131,6 +170,11 @@ final class ColumnChunkStatistics
         }
 
         throw new RuntimeException('Unknown column type');
+    }
+
+    public function values() : array
+    {
+        return $this->values;
     }
 
     public function valuesCount() : int
