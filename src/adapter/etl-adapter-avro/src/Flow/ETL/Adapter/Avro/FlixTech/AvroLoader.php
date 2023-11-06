@@ -10,9 +10,9 @@ use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
+use Flow\ETL\PHP\Type\ObjectType;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\DateTimeEntry;
-use Flow\ETL\Row\Entry\TypedCollection\ObjectType;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Rows;
 

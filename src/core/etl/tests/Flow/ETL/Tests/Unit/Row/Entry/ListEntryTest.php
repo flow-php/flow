@@ -6,9 +6,9 @@ namespace Flow\ETL\Tests\Unit\Row\Entry;
 
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\PHP\Type\ObjectType;
+use Flow\ETL\PHP\Type\ScalarType;
 use Flow\ETL\Row\Entry\ListEntry;
-use Flow\ETL\Row\Entry\TypedCollection\ObjectType;
-use Flow\ETL\Row\Entry\TypedCollection\ScalarType;
 use Flow\ETL\Row\Schema\Definition;
 use PHPUnit\Framework\TestCase;
 

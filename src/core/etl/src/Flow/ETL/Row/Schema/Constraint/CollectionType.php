@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Schema\Constraint;
 
+use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\Entry\TypedCollection\Type;
 use Flow\ETL\Row\Schema\Constraint;
 
 /**

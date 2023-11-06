@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Row\Entry\TypedCollection;
+namespace Flow\ETL\PHP\Type;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 
@@ -29,26 +29,20 @@ enum ScalarType : string implements Type
         return $type instanceof self && $type->value === $this->value;
     }
 
-    public function isValid(array $collection) : bool
+    public function isValid(mixed $value) : bool
     {
-        if (!\array_is_list($collection)) {
+        if (!\is_scalar($value)) {
             return false;
         }
 
-        foreach ($collection as $value) {
-            if (!\is_scalar($value)) {
+        if ($this->value === 'float') {
+            // php gettype returns double for floats for historical reasons
+            if ('double' !== \gettype($value)) {
                 return false;
             }
-
-            if ($this->value === 'float') {
-                // php gettype returns double for floats for historical reasons
-                if ('double' !== \gettype($value)) {
-                    return false;
-                }
-            } else {
-                if ($this->value !== \gettype($value)) {
-                    return false;
-                }
+        } else {
+            if ($this->value !== \gettype($value)) {
+                return false;
             }
         }
 

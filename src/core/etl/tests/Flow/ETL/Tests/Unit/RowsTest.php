@@ -10,6 +10,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Partition;
 use Flow\ETL\PartitionedRows;
+use Flow\ETL\PHP\Type\ScalarType;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Comparator\NativeComparator;
 use Flow\ETL\Row\Entry\BooleanEntry;
@@ -18,7 +19,6 @@ use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Row\Entry\NullEntry;
 use Flow\ETL\Row\Entry\ObjectEntry;
 use Flow\ETL\Row\Entry\StringEntry;
-use Flow\ETL\Row\Entry\TypedCollection\ScalarType;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Rows;
@@ -732,8 +732,8 @@ final class RowsTest extends TestCase
             new Schema(
                 Definition::integer('id'),
                 Definition::union('name', [StringEntry::class, NullEntry::class, IntegerEntry::class]),
-                Definition::array('tags', $nullable = true),
-                Definition::list('list', ScalarType::integer, $nullable = true)
+                Definition::array('tags', true),
+                Definition::list('list', ScalarType::integer, true)
             ),
             $rows->schema()
         );

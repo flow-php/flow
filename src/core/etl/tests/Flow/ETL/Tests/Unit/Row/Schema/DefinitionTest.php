@@ -6,11 +6,11 @@ namespace Flow\ETL\Tests\Unit\Row\Schema;
 
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\PHP\Type\ScalarType;
 use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Row\Entry\ListEntry;
 use Flow\ETL\Row\Entry\NullEntry;
 use Flow\ETL\Row\Entry\StringEntry;
-use Flow\ETL\Row\Entry\TypedCollection\ScalarType;
 use Flow\ETL\Row\Schema\Constraint;
 use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\Schema\FlowMetadata;

@@ -6,8 +6,8 @@ namespace Flow\ETL\Tests\Unit\Row\Factory;
 
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Row\Entry\TypedCollection\ObjectType;
-use Flow\ETL\Row\Entry\TypedCollection\ScalarType;
+use Flow\ETL\PHP\Type\ObjectType;
+use Flow\ETL\PHP\Type\ScalarType;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Tests\Fixtures\Enum\BackedIntEnum;
@@ -218,7 +218,7 @@ final class NativeEntryFactoryTest extends TestCase
         $this->assertEquals(
             Entry::list_of_datetime('e', $list = [new \DateTimeImmutable('now'), new \DateTimeImmutable('tomorrow')]),
             (new NativeEntryFactory())
-                ->create('e', $list, new Schema(Schema\Definition::list('e', ObjectType::of(\DateTimeInterface::class))))
+                ->create('e', $list, new Schema(Schema\Definition::list('e', ObjectType::fromString(\DateTimeInterface::class))))
         );
     }
 
@@ -243,7 +243,11 @@ final class NativeEntryFactoryTest extends TestCase
         $this->assertEquals(
             Entry::list_of_datetime('e', [new \DateTimeImmutable('2022-01-01 00:00:00 UTC'), new \DateTimeImmutable('2022-01-01 00:00:00 UTC')]),
             (new NativeEntryFactory())
-                ->create('e', ['2022-01-01 00:00:00 UTC', '2022-01-01 00:00:00 UTC'], new Schema(Schema\Definition::list('e', ObjectType::of(\DateTimeInterface::class))))
+                ->create(
+                    'e',
+                    ['2022-01-01 00:00:00 UTC', '2022-01-01 00:00:00 UTC'],
+                    new Schema(Schema\Definition::list('e', ObjectType::fromString(\DateTimeInterface::class)))
+                )
         );
     }
 

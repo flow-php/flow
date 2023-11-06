@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Row\Entry\TypedCollection;
+namespace Flow\ETL\PHP\Type;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 
@@ -19,6 +19,16 @@ final class ObjectType implements Type
     }
 
     /**
+     * @psalm-suppress MoreSpecificImplementedParamType
+     *
+     * @param class-string $value
+     */
+    public static function fromString(string $value) : self
+    {
+        return new self($value);
+    }
+
+    /**
      * @param class-string $class
      */
     public static function of(string $class) : self
@@ -31,23 +41,9 @@ final class ObjectType implements Type
         return $type instanceof self && $type->class === $this->class;
     }
 
-    public function isValid(array $collection) : bool
+    public function isValid(mixed $value) : bool
     {
-        if (!\array_is_list($collection)) {
-            return false;
-        }
-
-        foreach ($collection as $value) {
-            if (!\is_object($value)) {
-                return false;
-            }
-
-            if (!$value instanceof $this->class) {
-                return false;
-            }
-        }
-
-        return true;
+        return $value instanceof $this->class;
     }
 
     public function toString() : string
