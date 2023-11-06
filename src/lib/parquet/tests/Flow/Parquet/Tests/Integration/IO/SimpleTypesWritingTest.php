@@ -234,7 +234,30 @@ final class SimpleTypesWritingTest extends TestCase
 
     public function test_writing_enum_column() : void
     {
-        $this->markTestSkipped('Not implemented yet');
+        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+
+        $writer = new Writer();
+        $schema = Schema::with(FlatColumn::enum('enum'));
+
+        $enum = ['A', 'B', 'C', 'D'];
+
+        $inputData = \array_merge(...\array_map(static function (int $i) use ($enum) : array {
+            return [
+                [
+                    'enum' => $enum[\random_int(0, 3)],
+                ],
+            ];
+        }, \range(1, 100)));
+
+        $writer->write($path, $schema, $inputData);
+
+        $this->assertEquals(
+            $inputData,
+            \iterator_to_array((new Reader())->read($path)->values())
+        );
+
+        $this->assertTrue(\file_exists($path));
+        \unlink($path);
     }
 
     public function test_writing_float_column() : void

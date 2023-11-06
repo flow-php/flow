@@ -35,6 +35,8 @@ final class ColumnChunkBuilder
         $pageContainers = (new PagesBuilder($this->dataConverter, $this->compression, $this->calculator, $this->options))
             ->build($this->column, $this->rows, $this->statistics);
 
+        $statistics = (new StatisticsBuilder($this->dataConverter))->build($this->column, $this->statistics);
+
         $this->statistics->reset();
 
         return new ColumnChunkContainer(
@@ -51,7 +53,7 @@ final class ColumnChunkBuilder
                 dictionaryPageOffset: ($pageContainers->dictionaryPageContainer()) ? $fileOffset : null,
                 dataPageOffset: ($pageContainers->dictionaryPageContainer()) ? $fileOffset + $pageContainers->dictionaryPageContainer()->totalCompressedSize() : $fileOffset,
                 indexPageOffset: null,
-                statistics: null
+                statistics: $statistics
             )
         );
     }
