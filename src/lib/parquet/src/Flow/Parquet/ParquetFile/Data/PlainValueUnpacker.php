@@ -17,8 +17,10 @@ final class PlainValueUnpacker
 
     /**
      * @psalm-suppress PossiblyNullArgument
+     *
+     * @return array<mixed>
      */
-    public function unpack(FlatColumn $column, int $total) : mixed
+    public function unpack(FlatColumn $column, int $total) : array
     {
         return match ($column->type()) {
             PhysicalType::INT32 => $this->reader->readInts32($total),

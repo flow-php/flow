@@ -113,9 +113,13 @@ final class ColumnChunk
         return $offset;
     }
 
-    public function statistics() : ?Statistics
+    public function statistics() : ?StatisticsReader
     {
-        return $this->statistics;
+        if ($this->statistics === null) {
+            return null;
+        }
+
+        return new StatisticsReader($this->statistics);
     }
 
     public function totalCompressedSize() : int
