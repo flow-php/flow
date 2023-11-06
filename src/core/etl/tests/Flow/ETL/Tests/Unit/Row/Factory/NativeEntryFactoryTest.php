@@ -11,10 +11,38 @@ use Flow\ETL\PHP\Type\ScalarType;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Tests\Fixtures\Enum\BackedIntEnum;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class NativeEntryFactoryTest extends TestCase
 {
+    public static function provide_unrecognized_data() : \Generator
+    {
+        yield 'json alike' => [
+            '{"id":1',
+        ];
+
+        yield 'uuid alike' => [
+            '00000000-0000-0000-0000-00000',
+        ];
+
+        yield 'xml alike' => [
+            '<root',
+        ];
+
+        yield 'space' => [
+            ' ',
+        ];
+
+        yield 'new line' => [
+            "\n",
+        ];
+
+        yield 'invisible' => [
+            '‎ ',
+        ];
+    }
+
     public function test_array() : void
     {
         $this->assertEquals(
@@ -138,30 +166,6 @@ final class NativeEntryFactoryTest extends TestCase
         $this->assertEquals(
             Entry::integer('e', 1),
             (new NativeEntryFactory())->create('e', 1, new Schema(Schema\Definition::integer('e')))
-        );
-    }
-
-    public function test_invalid_json() : void
-    {
-        $this->assertEquals(
-            Entry::string('e', $invalid = '{"id":1'),
-            (new NativeEntryFactory())->create('e', $invalid)
-        );
-    }
-
-    public function test_invalid_uuid() : void
-    {
-        $this->assertEquals(
-            Entry::string('e', $invalid = '00000000-0000-0000-0000-00000'),
-            (new NativeEntryFactory())->create('e', $invalid)
-        );
-    }
-
-    public function test_invalid_xml() : void
-    {
-        $this->assertEquals(
-            Entry::string('e', $invalid = '<root'),
-            (new NativeEntryFactory())->create('e', $invalid)
         );
     }
 
@@ -341,6 +345,15 @@ final class NativeEntryFactoryTest extends TestCase
                 Entry::string('zip', '31-021')
             ),
             (new NativeEntryFactory())->create('address', ['city' => 'Krakow', 'street' => 'Floriańska', 'zip' => '31-021'])
+        );
+    }
+
+    #[DataProvider('provide_unrecognized_data')]
+    public function test_unrecognized_data_set_same_as_provided(string $input) : void
+    {
+        $this->assertEquals(
+            Entry::string('e', $input),
+            (new NativeEntryFactory())->create('e', $input)
         );
     }
 
