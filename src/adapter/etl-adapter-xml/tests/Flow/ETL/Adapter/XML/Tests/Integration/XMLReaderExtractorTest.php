@@ -14,17 +14,16 @@ use Flow\ETL\Flow;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
+use Flow\ETL\Test\FilesystemTestHelper;
 use PHPUnit\Framework\TestCase;
 
 final class XMLReaderExtractorTest extends TestCase
 {
+    use FilesystemTestHelper;
+
     public function test_limit() : void
     {
-        $path = \sys_get_temp_dir() . '/xml_extractor_signal_stop.csv';
-
-        if (\file_exists($path)) {
-            \unlink($path);
-        }
+        $path = $this->createTemporaryFile('xml_extractor_signal_stop', '.csv');
 
         \file_put_contents($path, <<<'XML'
 <?xml version="1.0"?>
@@ -55,6 +54,8 @@ XML);
             2,
             \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
         );
+
+        $this->removeFile($path);
     }
 
     public function test_reading_deep_xml() : void
@@ -151,11 +152,7 @@ XML);
 
     public function test_signal_stop() : void
     {
-        $path = \sys_get_temp_dir() . '/xml_extractor_signal_stop.csv';
-
-        if (\file_exists($path)) {
-            \unlink($path);
-        }
+        $path = $this->createTemporaryFile('xml_extractor_signal_stop', '.csv');
 
         \file_put_contents($path, <<<'XML'
 <?xml version="1.0"?>
@@ -193,5 +190,7 @@ XML);
         $this->assertTrue($generator->valid());
         $generator->send(Signal::STOP);
         $this->assertFalse($generator->valid());
+
+        $this->removeFile($path);
     }
 }

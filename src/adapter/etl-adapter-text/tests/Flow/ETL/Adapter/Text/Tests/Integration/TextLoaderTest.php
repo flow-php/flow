@@ -9,14 +9,17 @@ use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Flow;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
+use Flow\ETL\Test\FilesystemTestHelper;
 use Flow\Serializer\CompressingSerializer;
 use PHPUnit\Framework\TestCase;
 
 final class TextLoaderTest extends TestCase
 {
+    use FilesystemTestHelper;
+
     public function test_loading_text_files_with_append_safe() : void
     {
-        $path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.csv';
+        $path = $this->createTemporaryFile('flow_php_etl_csv_loader', '.csv');
 
         (new Flow())
             ->process(
@@ -41,14 +44,12 @@ TEXT,
             \file_get_contents($path . DIRECTORY_SEPARATOR . $files[0])
         );
 
-        if (\file_exists($path . DIRECTORY_SEPARATOR . $files[0])) {
-            \unlink($path . DIRECTORY_SEPARATOR . $files[0]);
-        }
+        $this->removeFile($path . DIRECTORY_SEPARATOR . $files[0]);
     }
 
     public function test_loading_text_files_without_safe_mode() : void
     {
-        $path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.csv';
+        $path = $this->createTemporaryFile('flow_php_etl_csv_loader', '.csv');
 
         (new Flow())
             ->process(
@@ -70,14 +71,12 @@ TEXT,
             \file_get_contents($path)
         );
 
-        if (\file_exists($path)) {
-            \unlink($path);
-        }
+        $this->removeFile($path);
     }
 
     public function test_loading_text_files_without_safe_mode_and_with_serialization() : void
     {
-        $path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.csv';
+        $path = $this->createTemporaryFile('flow_php_etl_csv_loader', '.csv');
 
         $serializer = new CompressingSerializer();
 
@@ -101,9 +100,7 @@ TEXT,
             \file_get_contents($path)
         );
 
-        if (\file_exists($path)) {
-            \unlink($path);
-        }
+        $this->removeFile($path);
     }
 
     public function test_using_pattern_path() : void

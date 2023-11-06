@@ -5,18 +5,17 @@ namespace Flow\ETL\Tests\Integration\Pipeline;
 use Flow\ETL\DSL\CSV;
 use Flow\ETL\DSL\From;
 use Flow\ETL\Flow;
+use Flow\ETL\Test\FilesystemTestHelper;
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
 use Flow\ETL\Transformer\LimitTransformer;
 
 final class SynchronousPipelineTest extends IntegrationTestCase
 {
+    use FilesystemTestHelper;
+
     public function test_limit() : void
     {
-        $path = \sys_get_temp_dir() . '/synchronous_pipeline_' . __FUNCTION__ . '.csv';
-
-        if (\file_exists($path)) {
-            \unlink($path);
-        }
+        $path = $this->createTemporaryFile('synchronous_pipeline_' . __FUNCTION__, '.csv');
 
         (new Flow())
             ->read(From::array([
@@ -37,5 +36,7 @@ final class SynchronousPipelineTest extends IntegrationTestCase
                 ->transform(new LimitTransformer(3))
                 ->count()
         );
+
+        $this->removeFile($path);
     }
 }

@@ -9,16 +9,18 @@ use Flow\ETL\DSL\Parquet;
 use Flow\ETL\Flow;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
+use Flow\ETL\Test\FilesystemTestHelper;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\Reader;
 use PHPUnit\Framework\TestCase;
 
 final class ParquetTest extends TestCase
 {
+    use FilesystemTestHelper;
+
     public function test_writing_to_file() : void
     {
-        $path = \sys_get_temp_dir() . '/file.snappy.parquet';
-        $this->removeFile($path);
+        $path = $this->createTemporaryFile('file.snappy', '.parquet');
 
         (new Flow())
             ->read(From::rows($rows = $this->createRows(10)))
@@ -39,7 +41,6 @@ final class ParquetTest extends TestCase
             $this->assertSame(Compressions::SNAPPY, $columnChunk->codec());
         }
 
-        $this->assertFileExists($path);
         $this->removeFile($path);
     }
 
@@ -79,26 +80,6 @@ final class ParquetTest extends TestCase
         $this->cleanDirectory($path);
     }
 
-    /**
-     * @param string $path
-     */
-    private function cleanDirectory(string $path) : void
-    {
-        if (\file_exists($path) && \is_dir($path)) {
-            $files = \array_values(\array_diff(\scandir($path), ['..', '.']));
-
-            foreach ($files as $file) {
-                if (\is_file($path . DIRECTORY_SEPARATOR . $file)) {
-                    $this->removeFile($path . DIRECTORY_SEPARATOR . $file);
-                } else {
-                    $this->cleanDirectory($path . DIRECTORY_SEPARATOR . $file);
-                }
-            }
-
-            \rmdir($path);
-        }
-    }
-
     private function createRow(int $index, ?\DateTimeImmutable $dateTime = null) : Row
     {
         return Row::create(
@@ -135,24 +116,5 @@ final class ParquetTest extends TestCase
         }
 
         return new Rows(...$rows);
-    }
-
-    private function listDirectoryFiles(string $path) : array
-    {
-        return \array_values(\array_diff(\scandir($path), ['.', '..']));
-    }
-
-    /**
-     * @param string $path
-     */
-    private function removeFile(string $path) : void
-    {
-        if (\file_exists($path)) {
-            if (\is_dir($path)) {
-                $this->cleanDirectory($path);
-            } else {
-                \unlink($path);
-            }
-        }
     }
 }

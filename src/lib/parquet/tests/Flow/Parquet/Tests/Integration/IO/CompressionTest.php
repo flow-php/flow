@@ -3,6 +3,7 @@
 namespace Flow\Parquet\Tests\Integration\IO;
 
 use Faker\Factory;
+use Flow\ETL\Test\FilesystemTestHelper;
 use Flow\Parquet\Consts;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Schema;
@@ -15,9 +16,11 @@ use PHPUnit\Framework\TestCase;
 
 final class CompressionTest extends TestCase
 {
+    use FilesystemTestHelper;
+
     public function test_writing_and_reading_file_with_gzip_compression() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $writer = new Writer(Compressions::GZIP);
 
@@ -58,13 +61,12 @@ final class CompressionTest extends TestCase
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertFileExists($path);
-        \unlink($path);
+        $this->removeFile($path);
     }
 
     public function test_writing_and_reading_file_with_snappy_compression() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $writer = new Writer(Compressions::SNAPPY);
 
@@ -105,13 +107,12 @@ final class CompressionTest extends TestCase
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertFileExists($path);
-        \unlink($path);
+        $this->removeFile($path);
     }
 
     public function test_writing_and_reading_file_with_uncompressed_compression() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $writer = new Writer(Compressions::UNCOMPRESSED);
 
@@ -152,7 +153,6 @@ final class CompressionTest extends TestCase
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertFileExists($path);
-        \unlink($path);
+        $this->removeFile($path);
     }
 }

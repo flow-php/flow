@@ -11,14 +11,17 @@ use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Flow;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
+use Flow\ETL\Test\FilesystemTestHelper;
 use Flow\Serializer\CompressingSerializer;
 use PHPUnit\Framework\TestCase;
 
 final class CSVLoaderTest extends TestCase
 {
+    use FilesystemTestHelper;
+
     public function test_loading_array_entry() : void
     {
-        $path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.csv';
+        $path = $this->createTemporaryFile('flow_php_etl_csv_loader', '.csv');
 
         $this->expectExceptionMessage('Entry "data" is an list|array, please cast to string before writing to CSV. Easiest way to cast arrays to string is to use Transform::to_json transformer.');
 
@@ -31,14 +34,12 @@ final class CSVLoaderTest extends TestCase
             ->write(CSV::to($path))
             ->run();
 
-        if (\file_exists($path)) {
-            \unlink($path);
-        }
+        $this->removeFile($path);
     }
 
     public function test_loading_csv_files_with_append_safe() : void
     {
-        $path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.csv';
+        $path = $this->createTemporaryFile('flow_php_etl_csv_loader', '.csv');
 
         (new Flow())
             ->process(
@@ -64,14 +65,12 @@ CSV,
             \file_get_contents($path . DIRECTORY_SEPARATOR . $files[0])
         );
 
-        if (\file_exists($path . DIRECTORY_SEPARATOR . $files[0])) {
-            \unlink($path . DIRECTORY_SEPARATOR . $files[0]);
-        }
+        $this->removeFile($path . DIRECTORY_SEPARATOR . $files[0]);
     }
 
     public function test_loading_csv_files_without_thread_safe_and_with_serialization() : void
     {
-        $path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.csv';
+        $path = $this->createTemporaryFile('flow_php_etl_csv_loader', '.csv');
 
         $serializer = new CompressingSerializer();
 
@@ -96,14 +95,12 @@ CSV,
             \file_get_contents($path)
         );
 
-        if (\file_exists($path)) {
-            \unlink($path);
-        }
+        $this->removeFile($path);
     }
 
     public function test_loading_csv_files_without_threadsafe() : void
     {
-        $path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.csv';
+        $path = $this->createTemporaryFile('flow_php_etl_csv_loader', '.csv');
 
         (new Flow())
             ->process(
@@ -126,14 +123,12 @@ CSV,
             \file_get_contents($path)
         );
 
-        if (\file_exists($path)) {
-            \unlink($path);
-        }
+        $this->removeFile($path);
     }
 
     public function test_loading_csv_with_partitioning() : void
     {
-        $path = \sys_get_temp_dir() . '/' . \str_replace('.', '', \uniqid('partitioned_', true));
+        $path = $this->createTemporaryFile('partitioned_', '.csv');
 
         (new Flow())
             ->process(
@@ -184,7 +179,7 @@ CSV,
 
     public function test_loading_overwrite_csv() : void
     {
-        $path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.csv';
+        $path = $this->createTemporaryFile('flow_php_etl_csv_loader', '.csv');
 
         (new Flow())
             ->process(
@@ -219,9 +214,7 @@ CSV,
             \file_get_contents($path)
         );
 
-        if (\file_exists($path)) {
-            \unlink($path);
-        }
+        $this->removeFile($path);
     }
 
     public function test_using_pattern_path() : void
@@ -229,35 +222,5 @@ CSV,
         $this->expectExceptionMessage("CSVLoader path can't be pattern, given: /path/*/pattern.csv");
 
         CSV::to(new Path('/path/*/pattern.csv'));
-    }
-
-    /**
-     * @param string $path
-     */
-    private function cleanDirectory(string $path) : void
-    {
-        if (\file_exists($path) && \is_dir($path)) {
-            $files = \array_values(\array_diff(\scandir($path), ['..', '.']));
-
-            foreach ($files as $file) {
-                if (\is_file($path . DIRECTORY_SEPARATOR . $file)) {
-                    $this->removeFile($path . DIRECTORY_SEPARATOR . $file);
-                } else {
-                    $this->cleanDirectory($path . DIRECTORY_SEPARATOR . $file);
-                }
-            }
-
-            \rmdir($path);
-        }
-    }
-
-    /**
-     * @param string $path
-     */
-    private function removeFile(string $path) : void
-    {
-        if (\file_exists($path)) {
-            \unlink($path);
-        }
     }
 }

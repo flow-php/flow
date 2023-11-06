@@ -4,6 +4,7 @@ namespace Flow\Parquet\Tests\Integration\IO;
 
 use Composer\InstalledVersions;
 use Faker\Factory;
+use Flow\ETL\Test\FilesystemTestHelper;
 use Flow\Parquet\Consts;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Option;
@@ -18,11 +19,13 @@ use PHPUnit\Framework\TestCase;
 
 final class WriterTest extends TestCase
 {
+    use FilesystemTestHelper;
+
     public function test_appending_to_file() : void
     {
         $writer = new Writer();
 
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $schema = $this->createSchema();
         $row = $this->createRow();
@@ -35,15 +38,14 @@ final class WriterTest extends TestCase
             [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row],
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertFileExists($path);
-        \unlink($path);
+        $this->removeFile($path);
     }
 
     public function test_appending_to_in_batches_file() : void
     {
         $writer = new Writer();
 
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $schema = $this->createSchema();
         $row = $this->createRow();
@@ -62,15 +64,14 @@ final class WriterTest extends TestCase
             [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row],
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertFileExists($path);
-        \unlink($path);
+        $this->removeFile($path);
     }
 
     public function test_appending_to_stream() : void
     {
         $writer = new Writer();
 
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $schema = $this->createSchema();
         $row = $this->createRow();
@@ -87,8 +88,7 @@ final class WriterTest extends TestCase
             [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row],
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertFileExists($path);
-        \unlink($path);
+        $this->removeFile($path);
     }
 
     public function test_closing_not_open_writer() : void
@@ -105,7 +105,7 @@ final class WriterTest extends TestCase
     {
         $writer = new Writer();
 
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $schema = $this->createSchema();
         $writer->open($path, $schema);
@@ -114,13 +114,14 @@ final class WriterTest extends TestCase
         $metadata = (new Reader())->read($path)->metadata();
 
         $this->assertSame('flow-php parquet version ' . InstalledVersions::getRootPackage()['pretty_version'], $metadata->createdBy());
+        $this->removeFile($path);
     }
 
     public function test_opening_already_open_writer() : void
     {
         $writer = new Writer();
 
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $schema = $this->createSchema();
 
@@ -130,6 +131,7 @@ final class WriterTest extends TestCase
         $this->expectExceptionMessage('Writer is already open');
 
         $writer->open($path, $schema);
+        $this->removeFile($path);
     }
 
     public function test_writing_batch_to_not_open_stream() : void
@@ -149,13 +151,14 @@ final class WriterTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Given stream is not opened in write mode, expected wb, got: rb+');
 
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
+
         \file_put_contents($path, 'test');
         $stream = \fopen($path, 'rb+');
 
         $writer->openForStream($stream, $this->createSchema());
         $writer->writeBatch([$this->createRow()]);
-        \unlink($path);
+        $this->removeFile($path);
     }
 
     public function test_writing_column_statistics() : void
@@ -221,7 +224,7 @@ final class WriterTest extends TestCase
     {
         $writer = new Writer();
 
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $schema = $this->createSchema();
 
@@ -240,15 +243,14 @@ final class WriterTest extends TestCase
             [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row],
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertFileExists($path);
-        \unlink($path);
+        $this->removeFile($path);
     }
 
     public function test_writing_in_batches_to_file_without_explicit_close() : void
     {
         $writer = new Writer();
 
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $schema = $this->createSchema();
 
@@ -267,14 +269,14 @@ final class WriterTest extends TestCase
             \iterator_to_array((new Reader())->read($path)->values())
         );
         $this->assertFileExists($path);
-        \unlink($path);
+        $this->removeFile($path);
     }
 
     public function test_writing_in_batches_to_stream() : void
     {
         $writer = new Writer();
 
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $schema = $this->createSchema();
 
@@ -294,8 +296,7 @@ final class WriterTest extends TestCase
             [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row],
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertFileExists($path);
-        \unlink($path);
+        $this->removeFile($path);
     }
 
     public function test_writing_row_to_not_open_stream() : void
@@ -312,7 +313,7 @@ final class WriterTest extends TestCase
     {
         $writer = new Writer();
 
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $schema = $this->createSchema();
         $row = $this->createRow();
@@ -323,8 +324,7 @@ final class WriterTest extends TestCase
             [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row],
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertFileExists($path);
-        \unlink($path);
+        $this->removeFile($path);
     }
 
     public function test_writing_to_file_v2() : void
@@ -334,7 +334,7 @@ final class WriterTest extends TestCase
                 ->set(Option::WRITER_VERSION, 2)
         );
 
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-v2-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-v2-', '.parquet');
 
         $schema = $this->createSchema();
         $row = $this->createRow();
@@ -346,15 +346,14 @@ final class WriterTest extends TestCase
             [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row],
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertFileExists($path);
-        \unlink($path);
+        $this->removeFile($path);
     }
 
     public function test_writing_to_stream() : void
     {
         $writer = new Writer();
 
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $schema = $this->createSchema();
         $row = $this->createRow();
@@ -367,8 +366,7 @@ final class WriterTest extends TestCase
             [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row],
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertFileExists($path);
-        \unlink($path);
+        $this->removeFile($path);
     }
 
     private function createRow() : array

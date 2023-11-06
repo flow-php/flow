@@ -14,13 +14,16 @@ use Flow\ETL\Flow;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
+use Flow\ETL\Test\FilesystemTestHelper;
 use PHPUnit\Framework\TestCase;
 
 final class JsonLoaderTest extends TestCase
 {
+    use FilesystemTestHelper;
+
     public function test_json_loader() : void
     {
-        $stream = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_json_loader', true) . '.json';
+        $path = $this->createTemporaryFile('flow_php_etl_json_loader', '.json');
 
         (new Flow())
             ->process(
@@ -34,7 +37,7 @@ final class JsonLoaderTest extends TestCase
                     )
                 )
             )
-            ->write(Json::to($stream))
+            ->write(Json::to($path))
             ->run();
 
         $this->assertJsonStringEqualsJsonString(
@@ -53,19 +56,17 @@ final class JsonLoaderTest extends TestCase
   {"id":10,"name":"name_10"}
 ]
 JSON,
-            \file_get_contents($stream)
+            \file_get_contents($path)
         );
 
-        if (\file_exists($stream)) {
-            \unlink($stream);
-        }
+        $this->removeFile($path);
     }
 
     public function test_json_loader_loading_empty_string() : void
     {
-        $stream = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_json_loader', true) . '.json';
+        $path = $this->createTemporaryFile('flow_php_etl_json_loader', '.json');
 
-        $loader = new JsonLoader(Path::realpath($stream));
+        $loader = new JsonLoader(Path::realpath($path));
 
         $loader->load(new Rows(), $context = new FlowContext(Config::default()));
 
@@ -76,19 +77,17 @@ JSON,
 [
 ]
 JSON,
-            \file_get_contents($stream)
+            \file_get_contents($path)
         );
 
-        if (\file_exists($stream)) {
-            \unlink($stream);
-        }
+        $this->removeFile($path);
     }
 
     public function test_json_loader_with_a_thread_safe_and_overwrite() : void
     {
-        $stream = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_json_loader', true) . '.json';
+        $path = $this->createTemporaryFile('flow_php_etl_json_loader', '.json');
 
-        $loader = new JsonLoader(Path::realpath($stream));
+        $loader = new JsonLoader(Path::realpath($path));
 
         $loader->load(
             new Rows(
@@ -118,7 +117,7 @@ JSON,
 
         $loader->closure($context);
 
-        $files = \array_values(\array_diff(\scandir($stream), ['..', '.']));
+        $files = \array_values(\array_diff(\scandir($path), ['..', '.']));
 
         $this->assertJsonStringEqualsJsonString(
             <<<'JSON'
@@ -136,24 +135,22 @@ JSON,
       {"id":10,"name":"name_10"}
 ]
 JSON,
-            \file_get_contents($stream . DIRECTORY_SEPARATOR . $files[0])
+            \file_get_contents($path . DIRECTORY_SEPARATOR . $files[0])
         );
 
-        if (\file_exists($stream . DIRECTORY_SEPARATOR . $files[0])) {
-            \unlink($stream . DIRECTORY_SEPARATOR . $files[0]);
-        }
+        $this->removeFile($path . DIRECTORY_SEPARATOR . $files[0]);
     }
 
     public function test_json_loader_with_append_mode() : void
     {
-        $stream = \rtrim(\sys_get_temp_dir(), '/') . '/' . \uniqid('flow_php_etl_json_loader', true) . '.json';
+        $path = $this->createTemporaryFile('flow_php_etl_json_loader', '.json');
 
-        \file_put_contents($stream, '[]');
+        \file_put_contents($path, '[]');
 
-        $loader = new JsonLoader(Path::realpath($stream));
+        $loader = new JsonLoader(Path::realpath($path));
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage("Appending to existing single file destination \"file:/{$stream}\" is not supported.");
+        $this->expectExceptionMessage("Appending to existing single file destination \"file:/{$path}\" is not supported.");
 
         (new Flow())
             ->process(
@@ -171,8 +168,6 @@ JSON,
             ->load($loader)
             ->run();
 
-        if (\file_exists($stream)) {
-            \unlink($stream);
-        }
+        $this->removeFile($path);
     }
 }

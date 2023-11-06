@@ -14,10 +14,13 @@ use Flow\ETL\Flow;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
+use Flow\ETL\Test\FilesystemTestHelper;
 use PHPUnit\Framework\TestCase;
 
 final class JsonExtractorTest extends TestCase
 {
+    use FilesystemTestHelper;
+
     public function test_extracting_json_from_local_file_stream() : void
     {
         $rows = (new Flow(Config::builder()->putInputIntoRows()))
@@ -93,11 +96,7 @@ final class JsonExtractorTest extends TestCase
 
     public function test_limit() : void
     {
-        $path = \sys_get_temp_dir() . '/json_extractor_signal_stop.csv';
-
-        if (\file_exists($path)) {
-            \unlink($path);
-        }
+        $path = $this->createTemporaryFile('xml_extractor_signal_stop', '.csv');
 
         (new Flow())->read(From::array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
             ->write(Json::to($path))
@@ -110,15 +109,13 @@ final class JsonExtractorTest extends TestCase
             2,
             \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
         );
+
+        $this->removeFile($path);
     }
 
     public function test_signal_stop() : void
     {
-        $path = \sys_get_temp_dir() . '/json_extractor_signal_stop.csv';
-
-        if (\file_exists($path)) {
-            \unlink($path);
-        }
+        $path = $this->createTemporaryFile('xml_extractor_signal_stop', '.csv');
 
         (new Flow())->read(From::array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
             ->write(Json::to($path))
@@ -138,6 +135,8 @@ final class JsonExtractorTest extends TestCase
         $this->assertTrue($generator->valid());
         $generator->send(Signal::STOP);
         $this->assertFalse($generator->valid());
+
+        $this->removeFile($path);
     }
 
     public function test_using_pattern_path() : void

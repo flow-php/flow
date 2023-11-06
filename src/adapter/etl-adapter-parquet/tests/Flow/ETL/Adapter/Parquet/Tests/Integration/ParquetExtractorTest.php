@@ -10,18 +10,17 @@ use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Flow;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Test\FilesystemTestHelper;
 use Flow\Parquet\Options;
 use PHPUnit\Framework\TestCase;
 
 final class ParquetExtractorTest extends TestCase
 {
+    use FilesystemTestHelper;
+
     public function test_limit() : void
     {
-        $path = \sys_get_temp_dir() . '/parquet_extractor_signal_stop.csv';
-
-        if (\file_exists($path)) {
-            \unlink($path);
-        }
+        $path = $this->createTemporaryFile('parquet_extractor_signal_stop', '.csv');
 
         (new Flow())->read(From::array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
             ->write(Parquet::to($path))
@@ -34,15 +33,12 @@ final class ParquetExtractorTest extends TestCase
             2,
             \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
         );
+        $this->removeFile($path);
     }
 
     public function test_signal_stop() : void
     {
-        $path = \sys_get_temp_dir() . '/parquet_extractor_signal_stop.csv';
-
-        if (\file_exists($path)) {
-            \unlink($path);
-        }
+        $path = $this->createTemporaryFile('parquet_extractor_signal_stop', '.csv');
 
         (new Flow())->read(From::array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
             ->write(Parquet::to($path))
@@ -62,5 +58,7 @@ final class ParquetExtractorTest extends TestCase
         $this->assertTrue($generator->valid());
         $generator->send(Signal::STOP);
         $this->assertFalse($generator->valid());
+
+        $this->removeFile($path);
     }
 }

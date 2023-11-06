@@ -3,6 +3,7 @@
 namespace Flow\Parquet\Tests\Integration\IO;
 
 use Faker\Factory;
+use Flow\ETL\Test\FilesystemTestHelper;
 use Flow\Parquet\Consts;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\MapKey;
@@ -14,9 +15,11 @@ use PHPUnit\Framework\TestCase;
 
 final class MapsWritingTest extends TestCase
 {
+    use FilesystemTestHelper;
+
     public function test_writing_map_of_int_int() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $writer = new Writer();
         $schema = Schema::with(NestedColumn::map('map_int_int', MapKey::int32(), MapValue::int32()));
@@ -41,11 +44,12 @@ final class MapsWritingTest extends TestCase
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
+        $this->removeFile($path);
     }
 
     public function test_writing_map_of_int_string() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $writer = new Writer();
         $schema = Schema::with(NestedColumn::map('map_int_string', MapKey::int32(), MapValue::string()));
@@ -70,11 +74,12 @@ final class MapsWritingTest extends TestCase
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
+        $this->removeFile($path);
     }
 
     public function test_writing_nullable_map_of_int_int() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $writer = new Writer();
         $schema = Schema::with(NestedColumn::map('map_int_int', MapKey::int32(), MapValue::int32()));
@@ -101,5 +106,6 @@ final class MapsWritingTest extends TestCase
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
+        $this->removeFile($path);
     }
 }

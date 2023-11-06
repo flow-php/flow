@@ -16,17 +16,16 @@ use Flow\ETL\Flow;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
+use Flow\ETL\Test\FilesystemTestHelper;
 use PHPUnit\Framework\TestCase;
 
 final class AvroTest extends TestCase
 {
+    use FilesystemTestHelper;
+
     public function test_limit() : void
     {
-        $path = \sys_get_temp_dir() . '/avro_extractor_signal_stop.csv';
-
-        if (\file_exists($path)) {
-            \unlink($path);
-        }
+        $path = $this->createTemporaryFile('avro_extractor_signal_stop', '.csv');
 
         (new Flow())->read(From::array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
             ->write(Avro::to($path))
@@ -39,6 +38,8 @@ final class AvroTest extends TestCase
             2,
             \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
         );
+
+        $this->removeFile($path);
     }
 
     public function test_partitioning() : void
@@ -115,11 +116,7 @@ final class AvroTest extends TestCase
 
     public function test_signal_stop() : void
     {
-        $path = \sys_get_temp_dir() . '/avro_extractor_signal_stop.csv';
-
-        if (\file_exists($path)) {
-            \unlink($path);
-        }
+        $path = $this->createTemporaryFile('avro_extractor_signal_stop', '.csv');
 
         (new Flow())->read(From::array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
             ->write(Avro::to($path))
@@ -139,6 +136,8 @@ final class AvroTest extends TestCase
         $this->assertTrue($generator->valid());
         $generator->send(Signal::STOP);
         $this->assertFalse($generator->valid());
+
+        $this->removeFile($path);
     }
 
     public function test_using_pattern_path() : void
@@ -375,31 +374,5 @@ final class AvroTest extends TestCase
         );
 
         $this->removeFile($path);
-    }
-
-    /**
-     * @param string $path
-     */
-    private function cleanDirectory(string $path) : void
-    {
-        if (\file_exists($path) && \is_dir($path)) {
-            $files = \array_values(\array_diff(\scandir($path), ['..', '.']));
-
-            foreach ($files as $file) {
-                $this->removeFile($path . DIRECTORY_SEPARATOR . $file);
-            }
-
-            \rmdir($path);
-        }
-    }
-
-    /**
-     * @param string $path
-     */
-    private function removeFile(string $path) : void
-    {
-        if (\file_exists($path)) {
-            \unlink($path);
-        }
     }
 }

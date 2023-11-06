@@ -3,6 +3,7 @@
 namespace Flow\Parquet\Tests\Integration\IO;
 
 use Faker\Factory;
+use Flow\ETL\Test\FilesystemTestHelper;
 use Flow\Parquet\Consts;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\ListElement;
@@ -13,9 +14,11 @@ use PHPUnit\Framework\TestCase;
 
 final class ListsWritingTest extends TestCase
 {
+    use FilesystemTestHelper;
+
     public function test_writing_list_of_ints() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $writer = new Writer();
         $schema = Schema::with(NestedColumn::list('list_of_ints', ListElement::int32()));
@@ -35,11 +38,12 @@ final class ListsWritingTest extends TestCase
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
+        $this->removeFile($path);
     }
 
     public function test_writing_list_of_strings() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $writer = new Writer();
         $schema = Schema::with(NestedColumn::list('list_of_strings', ListElement::string()));
@@ -59,11 +63,12 @@ final class ListsWritingTest extends TestCase
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
+        $this->removeFile($path);
     }
 
     public function test_writing_nullable_list_of_ints() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $writer = new Writer();
         $schema = Schema::with(NestedColumn::list('list_of_ints', ListElement::int32()));
@@ -85,5 +90,6 @@ final class ListsWritingTest extends TestCase
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
+        $this->removeFile($path);
     }
 }

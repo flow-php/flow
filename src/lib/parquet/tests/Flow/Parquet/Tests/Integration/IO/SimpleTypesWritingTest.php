@@ -3,6 +3,7 @@
 namespace Flow\Parquet\Tests\Integration\IO;
 
 use Faker\Factory;
+use Flow\ETL\Test\FilesystemTestHelper;
 use Flow\Parquet\Consts;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
@@ -12,9 +13,11 @@ use PHPUnit\Framework\TestCase;
 
 final class SimpleTypesWritingTest extends TestCase
 {
+    use FilesystemTestHelper;
+
     public function test_writing_bool_column() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::boolean('boolean'));
@@ -33,14 +36,12 @@ final class SimpleTypesWritingTest extends TestCase
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-
-        $this->assertTrue(\file_exists($path));
-        \unlink($path);
+        $this->removeFile($path);
     }
 
     public function test_writing_bool_nullable_column() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::boolean('boolean'));
@@ -59,14 +60,12 @@ final class SimpleTypesWritingTest extends TestCase
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-
-        $this->assertTrue(\file_exists($path));
-        \unlink($path);
+        $this->removeFile($path);
     }
 
     public function test_writing_date_column() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::date('date'));
@@ -87,14 +86,12 @@ final class SimpleTypesWritingTest extends TestCase
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-
-        $this->assertTrue(\file_exists($path));
-        \unlink($path);
+        $this->removeFile($path);
     }
 
     public function test_writing_date_nullable_column() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::date('date'));
@@ -115,14 +112,12 @@ final class SimpleTypesWritingTest extends TestCase
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-
-        $this->assertTrue(\file_exists($path));
-        \unlink($path);
+        $this->removeFile($path);
     }
 
     public function test_writing_decimal_column() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::decimal('decimal'));
@@ -143,14 +138,12 @@ final class SimpleTypesWritingTest extends TestCase
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-
-        $this->assertTrue(\file_exists($path));
-        \unlink($path);
+        $this->removeFile($path);
     }
 
     public function test_writing_decimal_nullable_column() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::decimal('decimal'));
@@ -171,14 +164,12 @@ final class SimpleTypesWritingTest extends TestCase
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-
-        $this->assertTrue(\file_exists($path));
-        \unlink($path);
+        $this->removeFile($path);
     }
 
     public function test_writing_double_column() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::double('double'));
@@ -199,14 +190,12 @@ final class SimpleTypesWritingTest extends TestCase
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-
-        $this->assertTrue(\file_exists($path));
-        \unlink($path);
+        $this->removeFile($path);
     }
 
     public function test_writing_double_nullable_column() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::double('double'));
@@ -227,9 +216,7 @@ final class SimpleTypesWritingTest extends TestCase
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-
-        $this->assertTrue(\file_exists($path));
-        \unlink($path);
+        $this->removeFile($path);
     }
 
     public function test_writing_enum_column() : void
@@ -262,7 +249,7 @@ final class SimpleTypesWritingTest extends TestCase
 
     public function test_writing_float_column() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::float('float'));
@@ -281,14 +268,12 @@ final class SimpleTypesWritingTest extends TestCase
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-
-        $this->assertTrue(\file_exists($path));
-        \unlink($path);
+        $this->removeFile($path);
     }
 
     public function test_writing_float_nullable_column() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::float('float'));
@@ -307,14 +292,12 @@ final class SimpleTypesWritingTest extends TestCase
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-
-        $this->assertTrue(\file_exists($path));
-        \unlink($path);
+        $this->removeFile($path);
     }
 
     public function test_writing_int32_column() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::int32('int32'));
@@ -335,14 +318,12 @@ final class SimpleTypesWritingTest extends TestCase
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-
-        $this->assertTrue(\file_exists($path));
-        \unlink($path);
+        $this->removeFile($path);
     }
 
     public function test_writing_int32_nullable_column() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::int32('int32'));
@@ -363,14 +344,12 @@ final class SimpleTypesWritingTest extends TestCase
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-
-        $this->assertTrue(\file_exists($path));
-        \unlink($path);
+        $this->removeFile($path);
     }
 
     public function test_writing_int64() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::int64('int64'));
@@ -391,13 +370,12 @@ final class SimpleTypesWritingTest extends TestCase
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertTrue(\file_exists($path));
-        \unlink($path);
+        $this->removeFile($path);
     }
 
     public function test_writing_int64_nullable_column() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::int64('int64'));
@@ -418,13 +396,12 @@ final class SimpleTypesWritingTest extends TestCase
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertTrue(\file_exists($path));
-        \unlink($path);
+        $this->removeFile($path);
     }
 
     public function test_writing_json_column() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::json('json'));
@@ -445,13 +422,12 @@ final class SimpleTypesWritingTest extends TestCase
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertTrue(\file_exists($path));
-        \unlink($path);
+        $this->removeFile($path);
     }
 
     public function test_writing_json_nullable_column() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::json('json'));
@@ -474,13 +450,12 @@ final class SimpleTypesWritingTest extends TestCase
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertTrue(\file_exists($path));
-        \unlink($path);
+        $this->removeFile($path);
     }
 
     public function test_writing_string_column() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::string('string'));
@@ -501,13 +476,12 @@ final class SimpleTypesWritingTest extends TestCase
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertTrue(\file_exists($path));
-        \unlink($path);
+        $this->removeFile($path);
     }
 
     public function test_writing_string_nullable_column() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::string('string'));
@@ -528,13 +502,12 @@ final class SimpleTypesWritingTest extends TestCase
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertTrue(\file_exists($path));
-        \unlink($path);
+        $this->removeFile($path);
     }
 
     public function test_writing_time_column() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::time('time'));
@@ -553,13 +526,12 @@ final class SimpleTypesWritingTest extends TestCase
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertTrue(\file_exists($path));
-        \unlink($path);
+        $this->removeFile($path);
     }
 
     public function test_writing_time_nullable_column() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::time('time'));
@@ -578,13 +550,12 @@ final class SimpleTypesWritingTest extends TestCase
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertTrue(\file_exists($path));
-        \unlink($path);
+        $this->removeFile($path);
     }
 
     public function test_writing_timestamp_column() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::dateTime('dateTime'));
@@ -605,13 +576,12 @@ final class SimpleTypesWritingTest extends TestCase
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertTrue(\file_exists($path));
-        \unlink($path);
+        $this->removeFile($path);
     }
 
     public function test_writing_timestamp_nullable_column() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::dateTime('dateTime'));
@@ -632,13 +602,12 @@ final class SimpleTypesWritingTest extends TestCase
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertTrue(\file_exists($path));
-        \unlink($path);
+        $this->removeFile($path);
     }
 
     public function test_writing_uuid_column() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::uuid('uuid'));
@@ -659,13 +628,12 @@ final class SimpleTypesWritingTest extends TestCase
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertTrue(\file_exists($path));
-        \unlink($path);
+        $this->removeFile($path);
     }
 
     public function test_writing_uuid_nullable_column() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = $this->createTemporaryFile('parquet-test-', '.parquet');
 
         $writer = new Writer();
         $schema = Schema::with(FlatColumn::uuid('uuid'));
@@ -686,7 +654,6 @@ final class SimpleTypesWritingTest extends TestCase
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertTrue(\file_exists($path));
-        \unlink($path);
+        $this->removeFile($path);
     }
 }

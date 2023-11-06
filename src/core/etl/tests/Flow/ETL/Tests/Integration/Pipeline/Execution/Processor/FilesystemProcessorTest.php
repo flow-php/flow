@@ -12,17 +12,16 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Pipeline\Execution\ExecutionPlan;
 use Flow\ETL\Pipeline\Execution\Processor\FilesystemProcessor;
 use Flow\ETL\Pipeline\Pipes;
+use Flow\ETL\Test\FilesystemTestHelper;
 use PHPUnit\Framework\TestCase;
 
 final class FilesystemProcessorTest extends TestCase
 {
+    use FilesystemTestHelper;
+
     public function test_append_mode_to_a_single_file() : void
     {
-        $path = \sys_get_temp_dir() . '/flow-etl-filesystem-processor-test-overwrite-mode.csv';
-
-        if (\file_exists($path)) {
-            \unlink($path);
-        }
+        $path = $this->createTemporaryFile('flow-etl-filesystem-processor-test-overwrite-mode', '.csv');
 
         (new Flow())
             ->read(From::array([['id' => 1], ['id' => 2]]))
@@ -44,15 +43,13 @@ final class FilesystemProcessorTest extends TestCase
                 ->setAppendSafe()
                 ->setMode(SaveMode::Append)
         );
+
+        $this->removeFile($path);
     }
 
     public function test_exception_if_exists_mode() : void
     {
-        $path = \sys_get_temp_dir() . '/flow-etl-filesystem-processor-test-overwrite-mode.csv';
-
-        if (\file_exists($path)) {
-            \unlink($path);
-        }
+        $path = $this->createTemporaryFile('flow-etl-filesystem-processor-test-overwrite-mode', '.csv');
 
         (new Flow())
             ->read(From::array([['id' => 1], ['id' => 2]]))
@@ -72,15 +69,13 @@ final class FilesystemProcessorTest extends TestCase
             ),
             (new FlowContext(Config::default()))->setMode(SaveMode::ExceptionIfExists)
         );
+
+        $this->removeFile($path);
     }
 
     public function test_ignore_mode() : void
     {
-        $path = \sys_get_temp_dir() . '/flow-etl-filesystem-processor-test-overwrite-mode.csv';
-
-        if (\file_exists($path)) {
-            \unlink($path);
-        }
+        $path = $this->createTemporaryFile('flow-etl-filesystem-processor-test-overwrite-mode', '.csv');
 
         (new Flow())
             ->read(From::array([['id' => 1], ['id' => 2]]))
@@ -100,15 +95,12 @@ final class FilesystemProcessorTest extends TestCase
 
         $this->assertFileExists($path);
         $this->assertCount(0, $plan->pipes->all());
+        $this->removeFile($path);
     }
 
     public function test_overwrite_mode() : void
     {
-        $path = \sys_get_temp_dir() . '/flow-etl-filesystem-processor-test-overwrite-mode.csv';
-
-        if (\file_exists($path)) {
-            \unlink($path);
-        }
+        $path = $this->createTemporaryFile('flow-etl-filesystem-processor-test-overwrite-mode', '.csv');
 
         (new Flow())
             ->read(From::array([['id' => 1], ['id' => 2]]))
