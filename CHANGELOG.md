@@ -134,6 +134,7 @@
 - [#584](https://github.com/flow-php/flow/pull/584) - **Adjust `phpunit.xml` to be more efficient** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
+- [#750](https://github.com/flow-php/flow/pull/750) - **CSV loader working on remote streams** - [@norberttech](https://github.com/norberttech)
 - [#743](https://github.com/flow-php/flow/pull/743) - **Prevent uninitialized string check in `NativeEntryFactory`** - [@stloyd](https://github.com/stloyd)
 - [#731](https://github.com/flow-php/flow/pull/731) - **bitpacking zero values** - [@norberttech](https://github.com/norberttech)
 - [#726](https://github.com/flow-php/flow/pull/726) - **JsonLoader when writing empty Rows** - [@norberttech](https://github.com/norberttech)
@@ -172,6 +173,8 @@
 - [c9fb26](https://github.com/flow-php/flow/commit/c9fb26dc2e0558c0f33b6097286e4dc6e2799d3f) - **test-benchmark.yml** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#750](https://github.com/flow-php/flow/pull/750) - **BufferExtractor** - [@norberttech](https://github.com/norberttech)
+- [#750](https://github.com/flow-php/flow/pull/750) - **Batch Size parameter from MemoryExtractor** - [@norberttech](https://github.com/norberttech)
 - [#733](https://github.com/flow-php/flow/pull/733) - **Loaders are no longer allowing for setting chunk size** - [@norberttech](https://github.com/norberttech)
 - [#729](https://github.com/flow-php/flow/pull/729) - **LimitPipeline** - [@norberttech](https://github.com/norberttech)
 - [#726](https://github.com/flow-php/flow/pull/726) - **batching logic from extractors** - [@norberttech](https://github.com/norberttech)
