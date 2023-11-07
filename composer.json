@@ -21,6 +21,7 @@
         "composer-runtime-api": "^2.1",
         "amphp/process": "^2",
         "amphp/socket": "^2",
+        "coduo/php-humanizer": "^4.0",
         "doctrine/dbal": "^3.6",
         "elasticsearch/elasticsearch": "^7.6|^8.0",
         "flix-tech/avro-php": "~4.2.0 || ~4.3.0",
@@ -85,6 +86,7 @@
                 "src/lib/array-dot/src/Flow",
                 "src/lib/doctrine-dbal-bulk/src/Flow",
                 "src/lib/dremel/src/Flow",
+                "src/lib/parquet-viewer/src/Flow",
                 "src/lib/parquet/src/Flow",
                 "src/lib/snappy/src/Flow"
             ],
@@ -118,6 +120,7 @@
                 "src/lib/array-dot/tests/Flow",
                 "src/lib/doctrine-dbal-bulk/tests/Flow",
                 "src/lib/dremel/tests/Flow",
+                "src/lib/parquet-viewer/tests/Flow",
                 "src/lib/parquet/tests/Flow",
                 "src/lib/snappy/tests/Flow"
             ],
@@ -158,6 +161,7 @@
         "flow-php/etl-adapter-text": "self.version",
         "flow-php/etl-adapter-xml": "self.version",
         "flow-php/parquet": "self.version",
+        "flow-php/parquet-viewer": "self.version",
         "flow-php/snappy": "self.version"
     },
     "scripts": {
