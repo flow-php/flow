@@ -7,6 +7,7 @@ namespace Flow\ETL\Row\Factory;
 use Flow\ETL\DSL\Entry as EntryDSL;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
+use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Native\ObjectType;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
@@ -275,6 +276,45 @@ final class NativeEntryFactory implements EntryFactory
                     return new Entry\ListEntry(
                         $definition->entry()->name(),
                         $listType,
+                        $value
+                    );
+                } catch (InvalidArgumentException $e) {
+                    throw new InvalidArgumentException("Field \"{$definition->entry()}\" conversion exception. {$e->getMessage()}", previous: $e);
+                }
+            }
+
+            if ($type === Entry\MapEntry::class && \is_array($value) && \array_is_list($value)) {
+                try {
+                    /** @var MapType $mapType */
+                    $mapType = $definition->metadata()->get(Schema\FlowMetadata::METADATA_MAP_ENTRY_TYPE);
+
+                    if (!\count($value)) {
+                        return new Entry\MapEntry(
+                            $definition->entry()->name(),
+                            $mapType->key(),
+                            $mapType->value(),
+                            []
+                        );
+                    }
+
+                    if ($mapType->value()->value() instanceof ObjectType) {
+                        /** @var mixed $firstValue */
+                        $firstValue = \current($value);
+
+                        if (\is_a($mapType->value()->value()->class, \DateTimeInterface::class, true) && \is_string($firstValue)) {
+                            return new Entry\MapEntry(
+                                $definition->entry()->name(),
+                                $mapType->key(),
+                                $mapType->value(),
+                                \array_map(static fn (string $datetime) : \DateTimeImmutable => new \DateTimeImmutable($datetime), $value)
+                            );
+                        }
+                    }
+
+                    return new Entry\MapEntry(
+                        $definition->entry()->name(),
+                        $mapType->key(),
+                        $mapType->value(),
                         $value
                     );
                 } catch (InvalidArgumentException $e) {
