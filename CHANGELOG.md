@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-11-07
 
 ### Added
+- [#759](https://github.com/flow-php/flow/pull/759) - **CLI App - Parquet viewer** - [@norberttech](https://github.com/norberttech)
 - [#749](https://github.com/flow-php/flow/pull/749) - **Implement new `ListType` logical type** - [@stloyd](https://github.com/stloyd)
 - [#755](https://github.com/flow-php/flow/pull/755) - **Parquet - DataPageV2 statistics** - [@norberttech](https://github.com/norberttech)
 - [#754](https://github.com/flow-php/flow/pull/754) - **write column chunk statistics** - [@norberttech](https://github.com/norberttech)
@@ -137,6 +138,7 @@
 - [#584](https://github.com/flow-php/flow/pull/584) - **Adjust `phpunit.xml` to be more efficient** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
+- [#759](https://github.com/flow-php/flow/pull/759) - **missing dependencies in parquet lib** - [@norberttech](https://github.com/norberttech)
 - [#760](https://github.com/flow-php/flow/pull/760) - **Fixed snappy warnings** - [@norberttech](https://github.com/norberttech)
 - [#751](https://github.com/flow-php/flow/pull/751) - **Fixed reading varInt** - [@norberttech](https://github.com/norberttech)
 - [#750](https://github.com/flow-php/flow/pull/750) - **CSV loader working on remote streams** - [@norberttech](https://github.com/norberttech)
