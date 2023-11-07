@@ -26,5 +26,12 @@
             <td><img src="img/daisy_bush.png" alt="Daisy Bush" title="Daisy Bush" width="100px" height="100px"></td>
             <td><img src="img/mirage.png" alt="Mirage" title="Warm Blue" width="100px" height="100px"></td>
         </tr>
+        <tr>
+            <td align="center"><code>#FF5547</code></td>
+            <td align="center"><code>#806DFE</code></td>
+            <td align="center"><code>#5945D8</code></td>
+            <td align="center"><code>#4026AC</code></td>
+            <td align="center"><code>#1B1924</code></td>
+        </tr>
     </tbody>
 </table>
