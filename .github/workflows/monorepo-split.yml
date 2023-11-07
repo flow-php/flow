@@ -28,6 +28,8 @@ jobs:
             split_repository: 'doctrine-dbal-bulk'
           - local_path: 'src/lib/parquet'
             split_repository: 'parquet'
+          - local_path: 'src/lib/parquet-viewer'
+            split_repository: 'parquet-viewer'
           - local_path: 'src/lib/dremel'
             split_repository: 'dremel'
           - local_path: 'src/lib/snappy'

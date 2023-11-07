@@ -21,13 +21,13 @@ class Parquet
 {
     /**
      * @param array<Path>|Path|string $uri
-     * @param array<string> $fields
+     * @param array<string> $columns
      *
      * @return Extractor
      */
     final public static function from(
         string|Path|array $uri,
-        array $fields = [],
+        array $columns = [],
         Options $options = new Options(),
         ByteOrder $byte_order = ByteOrder::LITTLE_ENDIAN,
     ) : Extractor {
@@ -39,7 +39,7 @@ class Parquet
                     $filePath,
                     $options,
                     $byte_order,
-                    $fields
+                    $columns
                 );
             }
 
@@ -50,7 +50,7 @@ class Parquet
             \is_string($uri) ? Path::realpath($uri) : $uri,
             $options,
             $byte_order,
-            $fields
+            $columns
         );
     }
 

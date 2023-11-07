@@ -1,0 +1,162 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
+        "This file is @generated automatically"
+    ],
+    "content-hash": "6e07142979263583290f40b5092eb918",
+    "packages": [
+        {
+            "name": "flow-php/dremel",
+            "version": "1.x-dev",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/flow-php/dremel.git",
+                "reference": "557a3aba6ea7e67ae81f16263dd6636ba9acc3de"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/flow-php/dremel/zipball/557a3aba6ea7e67ae81f16263dd6636ba9acc3de",
+                "reference": "557a3aba6ea7e67ae81f16263dd6636ba9acc3de",
+                "shasum": ""
+            },
+            "require": {
+                "php": "~8.1 || ~8.2"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Flow\\": [
+                        "src/Flow"
+                    ]
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "PHP ETL - Dremel algorithm implementation",
+            "keywords": [
+                "Algorithm",
+                "dremel",
+                "etl",
+                "extract",
+                "filter",
+                "load",
+                "transform"
+            ],
+            "support": {
+                "issues": "https://github.com/flow-php/dremel/issues",
+                "source": "https://github.com/flow-php/dremel/tree/1.x"
+            },
+            "time": "2023-11-01T16:00:14+00:00"
+        },
+        {
+            "name": "flow-php/snappy",
+            "version": "1.x-dev",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/flow-php/snappy.git",
+                "reference": "8e471496bff69761f5d90b716edb8a96118149e5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/flow-php/snappy/zipball/8e471496bff69761f5d90b716edb8a96118149e5",
+                "reference": "8e471496bff69761f5d90b716edb8a96118149e5",
+                "shasum": ""
+            },
+            "require": {
+                "php": "~8.1 || ~8.2"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "polifil.php"
+                ],
+                "psr-4": {
+                    "Flow\\": [
+                        "src/Flow"
+                    ]
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "PHP ETL - Google Snappy compression algorithm implementation",
+            "keywords": [
+                "Algorithm",
+                "compression",
+                "etl",
+                "extract",
+                "filter",
+                "load",
+                "snappy",
+                "transform"
+            ],
+            "support": {
+                "issues": "https://github.com/flow-php/snappy/issues",
+                "source": "https://github.com/flow-php/snappy/tree/1.x"
+            },
+            "time": "2023-10-27T12:32:16+00:00"
+        },
+        {
+            "name": "packaged/thrift",
+            "version": "0.15.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/packaged/thrift.git",
+                "reference": "dbf4e5ff5c85d56ccae62265ed25424b366ce269"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/packaged/thrift/zipball/dbf4e5ff5c85d56ccae62265ed25424b366ce269",
+                "reference": "dbf4e5ff5c85d56ccae62265ed25424b366ce269",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^5.5 || ^7.0 || ^8.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Thrift\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "Apache-2.0"
+            ],
+            "description": "Apache Thrift",
+            "homepage": "http://thrift.apache.org/",
+            "keywords": [
+                "apache",
+                "thrift"
+            ],
+            "support": {
+                "issues": "https://github.com/packaged/thrift/issues",
+                "source": "https://github.com/packaged/thrift/tree/0.15.0"
+            },
+            "time": "2021-09-23T10:34:40+00:00"
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "dev",
+    "stability-flags": {
+        "flow-php/dremel": 20,
+        "flow-php/snappy": 20
+    },
+    "prefer-stable": true,
+    "prefer-lowest": false,
+    "platform": {
+        "php": "~8.1 || ~8.2",
+        "ext-bcmath": "*",
+        "ext-zlib": "*",
+        "composer-runtime-api": "^2.1"
+    },
+    "platform-dev": [],
+    "plugin-api-version": "2.6.0"
+}
