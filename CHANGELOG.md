@@ -138,6 +138,7 @@
 - [#584](https://github.com/flow-php/flow/pull/584) - **Adjust `phpunit.xml` to be more efficient** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
+- [eb7cc8](https://github.com/flow-php/flow/commit/eb7cc8c466c2a4ba3f71bc57253e2bca94a2e7f2) - **Reverted snappy compressor if statements order** - [@norberttech](https://github.com/norberttech)
 - [#759](https://github.com/flow-php/flow/pull/759) - **missing dependencies in parquet lib** - [@norberttech](https://github.com/norberttech)
 - [#760](https://github.com/flow-php/flow/pull/760) - **Fixed snappy warnings** - [@norberttech](https://github.com/norberttech)
 - [#751](https://github.com/flow-php/flow/pull/751) - **Fixed reading varInt** - [@norberttech](https://github.com/norberttech)
