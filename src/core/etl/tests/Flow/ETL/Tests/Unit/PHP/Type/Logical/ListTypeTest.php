@@ -52,7 +52,11 @@ final class ListTypeTest extends TestCase
             (new ListType(ListElement::list(new ListType(ListElement::string()))))->isValid([['one', 'two']])
         );
         $this->assertTrue(
-            (new ListType(ListElement::map(new MapType(MapKey::integer(), MapValue::string()))))->isValid([['one', 'two']])
+            (
+                new ListType(
+                    ListElement::map(new MapType(MapKey::string(), MapValue::list(new ListType(ListElement::integer()))))
+                )
+            )->isValid([['one' => [1, 2], 'two' => [3, 4]], ['one' => [5, 6], 'two' => [7, 8]]])
         );
         $this->assertFalse(
             (new ListType(ListElement::string()))->isValid(['one' => 'two'])
