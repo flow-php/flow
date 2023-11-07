@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Schema\Constraint;
 
+use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Schema\Constraint;
@@ -33,6 +34,11 @@ final class CollectionType implements Constraint
             return false;
         }
 
+        if (!$entry->type() instanceof ListType) {
+            return false;
+        }
+
+        /** @psalm-suppress UndefinedInterfaceMethod */
         return $entry->type()->element()->isEqual($this->type);
     }
 }

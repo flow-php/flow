@@ -9,7 +9,7 @@ use Flow\Serializer\Serializable;
 /**
  * @implements Serializable<array{element: ListElement}>
  */
-final class ListType implements Serializable, Type
+final class ListType implements LogicalType, Serializable
 {
     public function __construct(private readonly List\ListElement $element)
     {
