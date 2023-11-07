@@ -88,7 +88,6 @@ final class SchemaConverter
             throw new RuntimeException("List of {$listType->toString()} is not supported yet supported.");
         }
 
-        /** @phpstan-ignore-next-line */
         throw new RuntimeException('List of ' . $listType::class . ' is not supported yet supported.');
     }
 

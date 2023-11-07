@@ -2,12 +2,15 @@
 
 namespace Flow\ETL\PHP\Type\Logical\List;
 
+use Flow\ETL\PHP\Type\Logical\ListType;
+use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Native\ObjectType;
 use Flow\ETL\PHP\Type\Native\ScalarType;
+use Flow\ETL\PHP\Type\Type;
 
 final class ListElement
 {
-    private function __construct(private readonly ScalarType|ObjectType $value)
+    private function __construct(private readonly Type $value)
     {
     }
 
@@ -24,6 +27,16 @@ final class ListElement
     public static function integer() : self
     {
         return new self(ScalarType::integer);
+    }
+
+    public static function list(ListType $type) : self
+    {
+        return new self($type);
+    }
+
+    public static function map(MapType $type) : self
+    {
+        return new self($type);
     }
 
     /**
@@ -59,7 +72,7 @@ final class ListElement
         return $this->value->toString();
     }
 
-    public function value() : ScalarType|ObjectType
+    public function value() : Type
     {
         return $this->value;
     }

@@ -45,6 +45,12 @@ final class MapTypeTest extends TestCase
         $this->assertTrue(
             (new MapType(MapKey::string(), MapValue::string()))->isValid(['one' => 'two'])
         );
+        $this->assertTrue(
+            (new MapType(MapKey::integer(), MapValue::list(new ListType(ListElement::integer()))))->isValid([[1, 2]])
+        );
+        $this->assertTrue(
+            (new MapType(MapKey::integer(), MapValue::map(new MapType(MapKey::integer(), MapValue::integer()))))->isValid([[1, 2]])
+        );
         $this->assertFalse(
             (new MapType(MapKey::integer(), MapValue::string()))->isValid(['one' => 'two'])
         );
