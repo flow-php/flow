@@ -218,6 +218,22 @@ final class SnappyCompressor
 
     private function load32(array $array, int $pos) : int
     {
+        if (!isset($array[$pos + 3])) {
+            return $array[$pos] + ($array[$pos + 1] << 8) + ($array[$pos + 2] << 16);
+        }
+
+        if (!isset($array[$pos + 2])) {
+            return $array[$pos] + ($array[$pos + 1] << 8);
+        }
+
+        if (!isset($array[$pos + 1])) {
+            return $array[$pos];
+        }
+
+        if (!isset($array[$pos])) {
+            return 0;
+        }
+
         return $array[$pos] + ($array[$pos + 1] << 8) + ($array[$pos + 2] << 16) + ($array[$pos + 3] << 24);
     }
 
