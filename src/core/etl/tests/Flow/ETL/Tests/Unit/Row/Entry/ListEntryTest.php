@@ -6,8 +6,8 @@ namespace Flow\ETL\Tests\Unit\Row\Entry;
 
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\ObjectType;
-use Flow\ETL\PHP\Type\ScalarType;
+use Flow\ETL\PHP\Type\Logical\List\ListElement;
+use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\Row\Entry\ListEntry;
 use Flow\ETL\Row\Schema\Definition;
 use PHPUnit\Framework\TestCase;
@@ -27,7 +27,7 @@ final class ListEntryTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected list of boolean got different types');
 
-        new ListEntry('list', ScalarType::boolean, ['string', false]);
+        new ListEntry('list', ListElement::boolean(), ['string', false]);
     }
 
     public function test_creating_datetime_list_from_wrong_value_types() : void
@@ -35,7 +35,7 @@ final class ListEntryTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected list of object<DateTimeInterface> got different types.');
 
-        new ListEntry('list', new ObjectType(\DateTimeInterface::class), ['string', new \DateTimeImmutable()]);
+        new ListEntry('list', ListElement::object(\DateTimeInterface::class), ['string', new \DateTimeImmutable()]);
     }
 
     public function test_creating_float_list_from_wrong_value_types() : void
@@ -43,7 +43,7 @@ final class ListEntryTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected list of float got different types');
 
-        new ListEntry('list', ScalarType::float, ['string', 1.3]);
+        new ListEntry('list', ListElement::float(), ['string', 1.3]);
     }
 
     public function test_creating_integer_list_from_wrong_value_types() : void
@@ -51,15 +51,15 @@ final class ListEntryTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected list of integer got different types');
 
-        new ListEntry('list', ScalarType::integer, ['string', 1]);
+        new ListEntry('list', ListElement::integer(), ['string', 1]);
     }
 
     public function test_creating_list_from_not_list_array() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Expected list of integer got array with not sequential integer indexes');
+        $this->expectExceptionMessage('Expected list of integer got different types');
 
-        new ListEntry('list', ScalarType::integer, ['a' => 1, 'b' => 2]);
+        new ListEntry('list', ListElement::integer(), ['a' => 1, 'b' => 2]);
     }
 
     public function test_creating_string_list_from_wrong_value_types() : void
@@ -67,13 +67,13 @@ final class ListEntryTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected list of string got different types');
 
-        new ListEntry('list', ScalarType::string, ['string', 1]);
+        new ListEntry('list', ListElement::string(), ['string', 1]);
     }
 
     public function test_definition() : void
     {
         $this->assertEquals(
-            Definition::list('strings', ScalarType::string, false),
+            Definition::list('strings', ListElement::string()),
             Entry::list_of_string('strings', ['one', 'two', 'three'])->definition()
         );
     }
@@ -129,7 +129,7 @@ final class ListEntryTest extends TestCase
     public function test_type() : void
     {
         $this->assertEquals(
-            ScalarType::string,
+            new ListType(ListElement::string()),
             Entry::list_of_string('strings', ['one', 'two', 'three'])->type()
         );
     }

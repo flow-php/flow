@@ -10,7 +10,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Partition;
 use Flow\ETL\PartitionedRows;
-use Flow\ETL\PHP\Type\ScalarType;
+use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Comparator\NativeComparator;
 use Flow\ETL\Row\Entry\BooleanEntry;
@@ -733,7 +733,7 @@ final class RowsTest extends TestCase
                 Definition::integer('id'),
                 Definition::union('name', [StringEntry::class, NullEntry::class, IntegerEntry::class]),
                 Definition::array('tags', true),
-                Definition::list('list', ScalarType::integer, true)
+                Definition::list('list', ListElement::integer(), true)
             ),
             $rows->schema()
         );
@@ -747,7 +747,7 @@ final class RowsTest extends TestCase
         );
 
         $this->assertEquals(
-            new Schema(Definition::list('list', ScalarType::integer)),
+            new Schema(Definition::list('list', ListElement::integer())),
             $rows->schema()
         );
     }

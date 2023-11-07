@@ -10,7 +10,8 @@ use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
-use Flow\ETL\PHP\Type\ObjectType;
+use Flow\ETL\PHP\Type\Logical\List\ListElement;
+use Flow\ETL\PHP\Type\Native\ObjectType;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\DateTimeEntry;
 use Flow\ETL\Row\Schema;
@@ -98,10 +99,11 @@ final class AvroLoader implements Closure, Loader, Loader\FileLoader
 
     private function listEntryToValues(Row\Entry\ListEntry $entry) : array
     {
+        /** @var ListElement $listType */
         $listType = $entry->definition()->metadata()->get(Schema\FlowMetadata::METADATA_LIST_ENTRY_TYPE);
 
-        if ($listType instanceof ObjectType) {
-            if (\is_a($listType->class, Row\Entry\Type\Uuid::class, true)) {
+        if ($listType->value() instanceof ObjectType) {
+            if (\is_a($listType->value()->class, Row\Entry\Type\Uuid::class, true)) {
                 /** @var array<string> $data */
                 $data = [];
 
@@ -112,7 +114,7 @@ final class AvroLoader implements Closure, Loader, Loader\FileLoader
                 return $data;
             }
 
-            if (\is_a($listType->class, \DateTimeInterface::class, true)) {
+            if (\is_a($listType->value()->class, \DateTimeInterface::class, true)) {
                 /** @var array<int> $data */
                 $data = [];
 

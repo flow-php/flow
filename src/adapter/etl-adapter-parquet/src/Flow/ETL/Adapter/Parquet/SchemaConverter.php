@@ -3,8 +3,9 @@
 namespace Flow\ETL\Adapter\Parquet;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\PHP\Type\ObjectType;
-use Flow\ETL\PHP\Type\ScalarType;
+use Flow\ETL\PHP\Type\Logical\List\ListElement;
+use Flow\ETL\PHP\Type\Native\ObjectType;
+use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\ArrayEntry;
 use Flow\ETL\Row\Entry\BooleanEntry;
@@ -25,7 +26,7 @@ use Flow\ETL\Row\Schema\FlowMetadata;
 use Flow\Parquet\ParquetFile\Schema as ParquetSchema;
 use Flow\Parquet\ParquetFile\Schema\Column;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Flow\Parquet\ParquetFile\Schema\ListElement;
+use Flow\Parquet\ParquetFile\Schema\ListElement as ParquetListElement;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 
 final class SchemaConverter
@@ -64,26 +65,27 @@ final class SchemaConverter
 
     private function listEntryToParquet(Definition $definition) : NestedColumn
     {
+        /** @var ListElement $listType */
         $listType = $definition->metadata()->get(FlowMetadata::METADATA_LIST_ENTRY_TYPE);
 
-        if ($listType instanceof ScalarType) {
+        if ($listType->value() instanceof ScalarType) {
             return NestedColumn::list(
                 $definition->entry()->name(),
-                match ($listType) {
-                    ScalarType::string => ListElement::string(),
-                    ScalarType::integer => ListElement::int64(),
-                    ScalarType::float => ListElement::float(),
-                    ScalarType::boolean => ListElement::boolean()
+                match ($listType->value()) {
+                    ScalarType::string => ParquetListElement::string(),
+                    ScalarType::integer => ParquetListElement::int64(),
+                    ScalarType::float => ParquetListElement::float(),
+                    ScalarType::boolean => ParquetListElement::boolean()
                 }
             );
         }
 
-        if ($listType instanceof ObjectType) {
-            if (\is_a($listType->class, \DateTimeInterface::class, true)) {
-                return NestedColumn::list($definition->entry()->name(), ListElement::datetime());
+        if ($listType->value() instanceof ObjectType) {
+            if (\is_a($listType->value()->class, \DateTimeInterface::class, true)) {
+                return NestedColumn::list($definition->entry()->name(), ParquetListElement::datetime());
             }
 
-            throw new RuntimeException("List of {$listType->class} is not supported yet supported.");
+            throw new RuntimeException("List of {$listType->toString()} is not supported yet supported.");
         }
 
         /** @phpstan-ignore-next-line */

@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\PHP\Type;
+namespace Flow\ETL\PHP\Type\Native;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\PHP\Type\Type;
 
 final class ObjectType implements Type
 {
@@ -13,19 +14,9 @@ final class ObjectType implements Type
      */
     public function __construct(public readonly string $class)
     {
-        if (!\class_exists($class) && !\interface_exists($this->class)) {
+        if (!\class_exists($class) && !\interface_exists($class)) {
             throw new InvalidArgumentException("Class {$class} not found");
         }
-    }
-
-    /**
-     * @psalm-suppress MoreSpecificImplementedParamType
-     *
-     * @param class-string $value
-     */
-    public static function fromString(string $value) : self
-    {
-        return new self($value);
     }
 
     /**

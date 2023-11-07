@@ -33,6 +33,6 @@ final class CollectionType implements Constraint
             return false;
         }
 
-        return $entry->type() === $this->type;
+        return $entry->type()->element()->isEqual($this->type);
     }
 }

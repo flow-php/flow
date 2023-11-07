@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\PHP\Type;
+namespace Flow\ETL\PHP\Type\Native;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\PHP\Type\Type;
 
 enum ScalarType : string implements Type
 {
