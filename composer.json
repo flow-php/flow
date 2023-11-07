@@ -59,7 +59,6 @@
     },
     "autoload": {
         "files": [
-            "build/version.php",
             "src/core/etl/src/Flow/ETL/DSL/functions.php",
             "src/lib/array-dot/src/Flow/ArrayDot/array_dot.php",
             "src/lib/parquet/src/Flow/Parquet/functions.php",

@@ -19,7 +19,7 @@
   ],
   "exclude-dev-files": false,
   "git-version": "git_version",
-  "main": "build/runtime.php",
+  "main": "bin/runtime.php",
   "metadata": "FlowVersion::getVersion",
   "output": "build/flow-php.phar"
 }
