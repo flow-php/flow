@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-11-07
 
 ### Added
+- [#762](https://github.com/flow-php/flow/pull/762) - **Implement new `MapType` logical type** - [@stloyd](https://github.com/stloyd)
 - [#759](https://github.com/flow-php/flow/pull/759) - **CLI App - Parquet viewer** - [@norberttech](https://github.com/norberttech)
 - [#749](https://github.com/flow-php/flow/pull/749) - **Implement new `ListType` logical type** - [@stloyd](https://github.com/stloyd)
 - [#755](https://github.com/flow-php/flow/pull/755) - **Parquet - DataPageV2 statistics** - [@norberttech](https://github.com/norberttech)
