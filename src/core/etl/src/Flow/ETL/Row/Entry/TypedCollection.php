@@ -2,9 +2,9 @@
 
 namespace Flow\ETL\Row\Entry;
 
-use Flow\ETL\PHP\Type\Logical\ListType;
+use Flow\ETL\PHP\Type\Type;
 
 interface TypedCollection
 {
-    public function type() : ListType;
+    public function type() : Type;
 }

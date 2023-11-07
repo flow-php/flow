@@ -8,6 +8,7 @@ use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\ListType;
+use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
@@ -109,7 +110,7 @@ final class ListEntry implements Entry, TypedCollection
         return \json_encode($this->value(), JSON_THROW_ON_ERROR);
     }
 
-    public function type() : ListType
+    public function type() : Type
     {
         return $this->type;
     }
