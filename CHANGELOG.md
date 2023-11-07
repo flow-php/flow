@@ -137,6 +137,7 @@
 - [#584](https://github.com/flow-php/flow/pull/584) - **Adjust `phpunit.xml` to be more efficient** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
+- [#760](https://github.com/flow-php/flow/pull/760) - **Fixed snappy warnings** - [@norberttech](https://github.com/norberttech)
 - [#751](https://github.com/flow-php/flow/pull/751) - **Fixed reading varInt** - [@norberttech](https://github.com/norberttech)
 - [#750](https://github.com/flow-php/flow/pull/750) - **CSV loader working on remote streams** - [@norberttech](https://github.com/norberttech)
 - [#743](https://github.com/flow-php/flow/pull/743) - **Prevent uninitialized string check in `NativeEntryFactory`** - [@stloyd](https://github.com/stloyd)
