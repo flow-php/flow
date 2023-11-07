@@ -8,6 +8,7 @@ if ('' !== \Phar::running(false)) {
     require __DIR__ . '/../vendor/autoload.php';
 }
 
+use Flow\ETL\FlowVersion;
 use Flow\ETL\PipelineFactory;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
