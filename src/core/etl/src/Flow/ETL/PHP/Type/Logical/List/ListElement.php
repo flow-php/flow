@@ -16,17 +16,17 @@ final class ListElement
 
     public static function boolean() : self
     {
-        return new self(ScalarType::boolean);
+        return new self(ScalarType::boolean());
     }
 
     public static function float() : self
     {
-        return new self(ScalarType::float);
+        return new self(ScalarType::float());
     }
 
     public static function integer() : self
     {
-        return new self(ScalarType::integer);
+        return new self(ScalarType::integer());
     }
 
     public static function list(ListType $type) : self
@@ -54,7 +54,7 @@ final class ListElement
 
     public static function string() : self
     {
-        return new self(ScalarType::string);
+        return new self(ScalarType::string());
     }
 
     public function isEqual(mixed $value) : bool

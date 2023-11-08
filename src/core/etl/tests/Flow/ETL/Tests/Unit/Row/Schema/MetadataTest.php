@@ -44,8 +44,8 @@ final class MetadataTest extends TestCase
     public function test_merge_object_metadata() : void
     {
         $this->assertEquals(
-            Metadata::empty()->add('type', ScalarType::integer),
-            Metadata::empty()->add('type', ScalarType::string)->merge(Metadata::empty()->add('type', ScalarType::integer))
+            Metadata::empty()->add('type', ScalarType::integer()),
+            Metadata::empty()->add('type', ScalarType::string())->merge(Metadata::empty()->add('type', ScalarType::integer()))
         );
     }
 
