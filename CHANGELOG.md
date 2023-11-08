@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-11-08
 
 ### Added
+- [#763](https://github.com/flow-php/flow/pull/763) - **Implement recursive type allowance in `MapType` & `ListType`** - [@stloyd](https://github.com/stloyd)
 - [#764](https://github.com/flow-php/flow/pull/764) - **Added Flow style guide** - [@norberttech](https://github.com/norberttech)
 - [#762](https://github.com/flow-php/flow/pull/762) - **Implement new `MapType` logical type** - [@stloyd](https://github.com/stloyd)
 - [#759](https://github.com/flow-php/flow/pull/759) - **CLI App - Parquet viewer** - [@norberttech](https://github.com/norberttech)
