@@ -60,6 +60,6 @@ final class ListType implements LogicalType, Serializable
 
     public function toString() : string
     {
-        return $this->element->toString();
+        return 'list<' . $this->element->toString() . '>';
     }
 }
