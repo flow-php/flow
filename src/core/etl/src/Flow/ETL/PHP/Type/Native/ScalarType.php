@@ -17,9 +17,11 @@ final class ScalarType implements NativeType
 
     public const STRING = 'string';
 
-    private function __construct(private readonly string $value, private readonly bool $optional)
+    private readonly string $value;
+
+    private function __construct(string $value, private readonly bool $optional)
     {
-        match (\strtolower($value)) {
+        $this->value = match (\strtolower($value)) {
             'integer' => self::INTEGER,
             'float', 'double' => self::FLOAT,
             'string' => self::STRING,

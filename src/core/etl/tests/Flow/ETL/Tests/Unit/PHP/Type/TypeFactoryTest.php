@@ -263,18 +263,22 @@ final class TypeFactoryTest extends TestCase
     {
         yield 'bool' => [
             true,
+            'boolean',
         ];
 
         yield 'string' => [
             'test',
+            'string',
         ];
 
         yield 'float' => [
             1.666,
+            'float',
         ];
 
         yield 'integer' => [
             123456789,
+            'integer',
         ];
     }
 
@@ -294,8 +298,10 @@ final class TypeFactoryTest extends TestCase
     }
 
     #[DataProvider('provide_scalar_data')]
-    public function test_scalar_types(mixed $data) : void
+    public function test_scalar_types(mixed $data, string $description) : void
     {
-        $this->assertInstanceOf(ScalarType::class, (new TypeFactory())->getType($data));
+        $type = (new TypeFactory())->getType($data);
+        $this->assertInstanceOf(ScalarType::class, $type);
+        $this->assertSame($description, $type->toString());
     }
 }
