@@ -3,26 +3,31 @@
 namespace Flow\ETL\PHP\Type\Logical;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Type;
 use Flow\Serializer\Serializable;
 
 /**
- * @implements Serializable<array{elements: array<Type>}>
+ * @implements Serializable<array{elements: array<StructureElement>}>
  */
 final class StructureType implements LogicalType, Serializable
 {
     /**
-     * @var array<Type>
+     * @var array<StructureElement>
      */
     private readonly array $elements;
 
-    public function __construct(Type ...$types)
+    public function __construct(StructureElement ...$elements)
     {
-        if (0 === \count($types)) {
+        if (0 === \count($elements)) {
             throw InvalidArgumentException::because('Structure must receive at least one element.');
         }
 
-        $this->elements = $types;
+        if (\count($elements) !== \count(\array_unique(\array_map(fn (StructureElement $element) => $element->name(), $elements)))) {
+            throw InvalidArgumentException::because('All structure element names must be unique');
+        }
+
+        $this->elements = $elements;
     }
 
     public function __serialize() : array
@@ -48,7 +53,7 @@ final class StructureType implements LogicalType, Serializable
 
         foreach ($this->elements as $internalElement) {
             foreach ($type->elements() as $element) {
-                if (!$internalElement->isEqual($element)) {
+                if (!$internalElement->isEqual($element->type())) {
                     return false;
                 }
             }
@@ -88,6 +93,6 @@ final class StructureType implements LogicalType, Serializable
             $content[] = $element->toString();
         }
 
-        return 'structure<' . \implode(', ', $content) . '>';
+        return 'structure{' . \implode(', ', $content) . '}';
     }
 }
