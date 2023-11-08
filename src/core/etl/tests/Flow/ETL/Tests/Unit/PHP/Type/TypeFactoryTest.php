@@ -100,7 +100,7 @@ final class TypeFactoryTest extends TestCase
         yield 'empty array' => [
             [],
             ArrayType::class,
-            'array<mixed>',
+            'array<empty, empty>',
         ];
 
         yield 'list with null' => [

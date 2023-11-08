@@ -8,8 +8,12 @@ use Flow\ETL\PHP\Type\Native\ArrayType;
 use Flow\ETL\PHP\Type\Native\NullType;
 use Flow\ETL\PHP\Type\Native\ScalarType;
 
-final class ArrayTypeDetector
+final class ArrayContentDetector
 {
+    private readonly ScalarType $firstKeyType;
+
+    private readonly Type $firstValueType;
+
     private readonly array $uniqueKeysType;
 
     private readonly array $uniqueValuesType;
@@ -36,21 +40,23 @@ final class ArrayTypeDetector
                 return !($type instanceof ArrayType && $type->empty());
             }))
         );
+        $this->firstKeyType = \unserialize($this->uniqueKeysType[0]);
+        $this->firstValueType = \unserialize($this->uniqueValuesType[0]);
     }
 
     public function firstKeyType() : ScalarType
     {
-        return \unserialize($this->uniqueKeysType[0]);
+        return $this->firstKeyType;
     }
 
     public function firstValueType() : Type
     {
-        return \unserialize($this->uniqueValuesType[0]);
+        return $this->firstValueType;
     }
 
     public function isList() : bool
     {
-        return 1 === \count($this->uniqueValuesType) && $this->firstKeyType()->isInteger();
+        return 1 === \count($this->uniqueValuesType) && $this->firstKeyType->isInteger();
     }
 
     public function isMap() : bool
@@ -60,9 +66,7 @@ final class ArrayTypeDetector
                 return false;
             }
 
-            $type = $this->firstKeyType();
-
-            if (1 === \count($this->uniqueKeysType) && ($type->isString() || $type->isInteger())) {
+            if (1 === \count($this->uniqueKeysType) && ($this->firstKeyType->isString() || $this->firstKeyType->isInteger())) {
                 return true;
             }
         }
@@ -76,6 +80,6 @@ final class ArrayTypeDetector
             return false;
         }
 
-        return 1 === \count($this->uniqueKeysType) && $this->firstKeyType()->isString();
+        return 1 === \count($this->uniqueKeysType) && $this->firstKeyType->isString();
     }
 }

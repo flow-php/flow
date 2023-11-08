@@ -28,6 +28,10 @@ final class ArrayType implements NativeType
 
     public function toString() : string
     {
+        if ($this->empty) {
+            return 'array<empty, empty>';
+        }
+
         return 'array<mixed>';
     }
 }

@@ -38,7 +38,7 @@ final class TypeFactory
                 return new ArrayType(true);
             }
 
-            $detector = new ArrayTypeDetector(
+            $detector = new ArrayContentDetector(
                 \array_map([$this, 'getType'], \array_keys($value)),
                 \array_map([$this, 'getType'], \array_values($value))
             );
