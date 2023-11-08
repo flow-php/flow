@@ -7,22 +7,50 @@ namespace Flow\ETL\PHP\Type\Native;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Type;
 
-enum ScalarType : string implements NativeType
+final class ScalarType implements NativeType
 {
-    case boolean = 'boolean';
-    case float = 'float';
-    case integer = 'integer';
-    case string = 'string';
+    public const BOOLEAN = 'boolean';
 
-    public static function fromString(string $value) : self
+    public const FLOAT = 'float';
+
+    public const INTEGER = 'integer';
+
+    public const STRING = 'string';
+
+    private function __construct(private readonly string $value, private readonly bool $optional)
     {
-        return match (\strtolower($value)) {
-            'integer' => self::integer,
-            'float', 'double' => self::float,
-            'string' => self::string,
-            'boolean' => self::boolean,
+        match (\strtolower($value)) {
+            'integer' => self::INTEGER,
+            'float', 'double' => self::FLOAT,
+            'string' => self::STRING,
+            'boolean' => self::BOOLEAN,
             default => throw new InvalidArgumentException("Unsupported scalar type: {$value}")
         };
+    }
+
+    public static function boolean(bool $optional = false) : self
+    {
+        return new self(self::BOOLEAN, $optional);
+    }
+
+    public static function float(bool $optional = false) : self
+    {
+        return new self(self::FLOAT, $optional);
+    }
+
+    public static function fromString(string $value, bool $optional = false) : self
+    {
+        return new self($value, $optional);
+    }
+
+    public static function integer(bool $optional = false) : self
+    {
+        return new self(self::INTEGER, $optional);
+    }
+
+    public static function string(bool $optional = false) : self
+    {
+        return new self(self::STRING, $optional);
     }
 
     public function isEqual(Type $type) : bool
@@ -32,6 +60,10 @@ enum ScalarType : string implements NativeType
 
     public function isValid(mixed $value) : bool
     {
+        if (null === $value && $this->optional) {
+            return true;
+        }
+
         if (!\is_scalar($value)) {
             return false;
         }
@@ -50,8 +82,13 @@ enum ScalarType : string implements NativeType
         return true;
     }
 
+    public function optional() : bool
+    {
+        return $this->optional;
+    }
+
     public function toString() : string
     {
-        return $this->value;
+        return ($this->optional ? '?' : '') . $this->value;
     }
 }

@@ -31,7 +31,7 @@ final class NotEmptyTest extends TestCase
         $this->assertTrue($constraint->isSatisfiedBy(Entry::boolean('e', false)));
         $this->assertTrue($constraint->isSatisfiedBy(Entry::collection('e', new Entries())));
         $this->assertTrue($constraint->isSatisfiedBy(Entry::datetime('e', new \DateTimeImmutable())));
-        $this->assertTrue($constraint->isSatisfiedBy(Entry::enum('e', ScalarType::integer)));
+        $this->assertTrue($constraint->isSatisfiedBy(Entry::object('e', ScalarType::integer())));
         $this->assertTrue($constraint->isSatisfiedBy(Entry::float('e', 1.1)));
         $this->assertTrue($constraint->isSatisfiedBy(Entry::integer('e', 1)));
         $this->assertTrue($constraint->isSatisfiedBy(Entry::json('e', [1, 2])));

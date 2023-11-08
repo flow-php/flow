@@ -71,11 +71,12 @@ final class SchemaConverter
         if ($listType->value() instanceof ScalarType) {
             return NestedColumn::list(
                 $definition->entry()->name(),
-                match ($listType->value()) {
-                    ScalarType::string => ParquetListElement::string(),
-                    ScalarType::integer => ParquetListElement::int64(),
-                    ScalarType::float => ParquetListElement::float(),
-                    ScalarType::boolean => ParquetListElement::boolean()
+                match ($listType->value()->toString()) {
+                    ScalarType::STRING => ParquetListElement::string(),
+                    ScalarType::INTEGER => ParquetListElement::int64(),
+                    ScalarType::FLOAT => ParquetListElement::float(),
+                    ScalarType::BOOLEAN => ParquetListElement::boolean(),
+                    default => throw new RuntimeException('List of ' . $listType->value()->toString() . ' is not supported yet supported.'),
                 }
             );
         }

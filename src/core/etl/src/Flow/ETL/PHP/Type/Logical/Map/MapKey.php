@@ -12,12 +12,12 @@ final class MapKey
 
     public static function integer() : self
     {
-        return new self(ScalarType::integer);
+        return new self(ScalarType::integer());
     }
 
     public static function string() : self
     {
-        return new self(ScalarType::string);
+        return new self(ScalarType::string());
     }
 
     public function isEqual(mixed $value) : bool

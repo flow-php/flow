@@ -60,11 +60,12 @@ final class SchemaConverter
             $listType = $definition->metadata()->get(Schema\FlowMetadata::METADATA_LIST_ENTRY_TYPE);
 
             if ($listType->value() instanceof ScalarType) {
-                return match ($listType->value()) {
-                    ScalarType::string => ['name' => $definition->entry()->name(), 'type' => ['type' => 'array', 'items' => \AvroSchema::STRING_TYPE]],
-                    ScalarType::integer => ['name' => $definition->entry()->name(), 'type' => ['type' => 'array', 'items' => \AvroSchema::INT_TYPE]],
-                    ScalarType::float => ['name' => $definition->entry()->name(), 'type' => ['type' => 'array', 'items' => \AvroSchema::FLOAT_TYPE]],
-                    ScalarType::boolean => ['name' => $definition->entry()->name(), 'type' => ['type' => 'array', 'items' => \AvroSchema::BOOLEAN_TYPE]],
+                return match ($listType->value()->toString()) {
+                    ScalarType::STRING => ['name' => $definition->entry()->name(), 'type' => ['type' => 'array', 'items' => \AvroSchema::STRING_TYPE]],
+                    ScalarType::INTEGER => ['name' => $definition->entry()->name(), 'type' => ['type' => 'array', 'items' => \AvroSchema::INT_TYPE]],
+                    ScalarType::FLOAT => ['name' => $definition->entry()->name(), 'type' => ['type' => 'array', 'items' => \AvroSchema::FLOAT_TYPE]],
+                    ScalarType::BOOLEAN => ['name' => $definition->entry()->name(), 'type' => ['type' => 'array', 'items' => \AvroSchema::BOOLEAN_TYPE]],
+                    default => throw new RuntimeException('List of ' . $listType->value()->toString() . ' is not supported yet supported.'),
                 };
             }
 
