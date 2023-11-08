@@ -2,7 +2,7 @@
 
 namespace Flow\ParquetViewer\Tests\Integration;
 
-use Flow\ParquetViewer\Application;
+use Flow\ParquetViewer\Parquet;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\ApplicationTester;
 
@@ -10,7 +10,7 @@ final class ReadDataCommandTest extends TestCase
 {
     public function test_read_data_command() : void
     {
-        $application = new Application();
+        $application = new Parquet();
         $application->setAutoExit(false);
         $application->setCatchExceptions(false);
 

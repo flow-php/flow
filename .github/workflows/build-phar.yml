@@ -55,8 +55,8 @@ jobs:
 
       - name: "Validate Flow PHAR"
         run: |
-          ./build/flow-php.phar --version
-          ./build/flow-php.phar examples/topics/transformations/array_expand.php
+          ./build/flow.phar --version
+          ./build/flow.phar examples/topics/transformations/array_expand.php
 
       - name: "Prepare artifact name"
         if: ${{ github.event_name == 'push' }}
@@ -67,5 +67,5 @@ jobs:
 
       - uses: actions/upload-artifact@v3
         with:
-          name: flow-php-${{ env.BUILD_TAG }}.phar
-          path: build/flow-php.phar
+          name: flow-${{ env.BUILD_TAG }}.phar
+          path: build/flow.phar
