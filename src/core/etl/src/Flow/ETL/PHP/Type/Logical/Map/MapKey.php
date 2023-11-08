@@ -10,6 +10,11 @@ final class MapKey
     {
     }
 
+    public static function fromType(ScalarType $type) : self
+    {
+        return new self($type);
+    }
+
     public static function integer() : self
     {
         return new self(ScalarType::integer());

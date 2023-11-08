@@ -53,9 +53,29 @@ final class ScalarType implements NativeType
         return new self(self::STRING, $optional);
     }
 
+    public function isBoolean() : bool
+    {
+        return $this->value === self::BOOLEAN;
+    }
+
     public function isEqual(Type $type) : bool
     {
         return $type instanceof self && $type->value === $this->value;
+    }
+
+    public function isFloat() : bool
+    {
+        return $this->value === self::FLOAT;
+    }
+
+    public function isInteger() : bool
+    {
+        return $this->value === self::INTEGER;
+    }
+
+    public function isString() : bool
+    {
+        return $this->value === self::STRING;
     }
 
     public function isValid(mixed $value) : bool
