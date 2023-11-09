@@ -94,7 +94,7 @@ final class EntryExpressionEvalTransformerTest extends TestCase
         $xpath = new \DOMXPath($document);
 
         $this->assertEquals(
-            Entry::list_of_objects('xpath', \DOMNode::class, [
+            Entry::list_of_objects('xpath', \DOMElement::class, [
                 $xpath->query('/root/foo')->item(0),
                 $xpath->query('/root/foo')->item(1),
             ]),

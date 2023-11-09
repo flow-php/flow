@@ -5,6 +5,14 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit;
 
 use Flow\ETL\DSL\Entry;
+use Flow\ETL\PHP\Type\Logical\List\ListElement;
+use Flow\ETL\PHP\Type\Logical\ListType;
+use Flow\ETL\PHP\Type\Logical\Map\MapKey;
+use Flow\ETL\PHP\Type\Logical\Map\MapValue;
+use Flow\ETL\PHP\Type\Logical\MapType;
+use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
+use Flow\ETL\PHP\Type\Logical\StructureType;
+use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry\ArrayEntry;
@@ -42,13 +50,45 @@ final class RowTest extends TestCase
         ];
         yield 'simple same collection entries' => [
             true,
-            new Row(new Entries(new StructureEntry('json', new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3)))),
-            new Row(new Entries(new StructureEntry('json', new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3)))),
+            new Row(
+                new Entries(
+                    new StructureEntry(
+                        'json',
+                        ['json', ['1' => 1, '2' => 2, '3' => 3]],
+                        new StructureType(new StructureElement('json', new ListType(ListElement::map(new MapType(MapKey::string(), MapValue::string())))))
+                    )
+                )
+            ),
+            new Row(
+                new Entries(
+                    new StructureEntry(
+                        'json',
+                        ['json', ['1' => 1, '2' => 2, '3' => 3]],
+                        new StructureType(new StructureElement('json', new ListType(ListElement::map(new MapType(MapKey::string(), MapValue::string())))))
+                    )
+                )
+            ),
         ];
         yield 'simple different collection entries' => [
             false,
-            new Row(new Entries(new StructureEntry('json', new IntegerEntry('5', 5), new IntegerEntry('2', 2), new IntegerEntry('3', 3)))),
-            new Row(new Entries(new StructureEntry('json', new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3)))),
+            new Row(
+                new Entries(
+                    new StructureEntry(
+                        'json',
+                        ['json', ['5' => 5, '2' => 2, '1' => 1]],
+                        new StructureType(new StructureElement('json', new ListType(ListElement::map(new MapType(MapKey::string(), MapValue::string())))))
+                    )
+                )
+            ),
+            new Row(
+                new Entries(
+                    new StructureEntry(
+                        'json',
+                        ['json', ['1' => 1, '2' => 2, '3' => 3]],
+                        new StructureType(new StructureElement('json', new ListType(ListElement::map(new MapType(MapKey::string(), MapValue::string())))))
+                    )
+                )
+            ),
         ];
     }
 
@@ -131,8 +171,8 @@ final class RowTest extends TestCase
             new NullEntry('phase'),
             new StructureEntry(
                 'items',
-                new IntegerEntry('item-id', 1),
-                new StringEntry('name', 'one'),
+                ['item-id' => 1, 'name' => 'one'],
+                new StructureType(new StructureElement('id', ScalarType::integer()), new StructureElement('name', ScalarType::string()))
             )
         );
 

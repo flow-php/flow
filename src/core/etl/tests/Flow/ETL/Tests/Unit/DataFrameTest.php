@@ -22,6 +22,9 @@ use Flow\ETL\GroupBy\Aggregation;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Loader;
 use Flow\ETL\Memory\ArrayMemory;
+use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
+use Flow\ETL\PHP\Type\Logical\StructureType;
+use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\ArrayEntry;
 use Flow\ETL\Row\Entry\BooleanEntry;
@@ -349,8 +352,11 @@ final class DataFrameTest extends TestCase
                                 ),
                                 new StructureEntry(
                                     'items',
-                                    new IntegerEntry('item-id', 1),
-                                    new StringEntry('name', 'one'),
+                                    ['item-id' => 1, 'name' => 'one'],
+                                    new StructureType(
+                                        new StructureElement('item-id', ScalarType::integer()),
+                                        new StructureElement('item-id', ScalarType::string()),
+                                    )
                                 ),
                                 new Row\Entry\CollectionEntry(
                                     'tags',

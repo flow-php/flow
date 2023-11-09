@@ -7,7 +7,12 @@ namespace Flow\ETL\Row\Factory;
 use Flow\ETL\DSL\Entry as EntryDSL;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
+use Flow\ETL\PHP\Type\Logical\ListType;
+use Flow\ETL\PHP\Type\Logical\MapType;
+use Flow\ETL\PHP\Type\Logical\StructureType;
+use Flow\ETL\PHP\Type\Native\ArrayType;
 use Flow\ETL\PHP\Type\Native\ObjectType;
+use Flow\ETL\PHP\Type\TypeFactory;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\EntryFactory;
@@ -35,6 +40,10 @@ final class NativeEntryFactory implements EntryFactory
     {
         if ($schema !== null) {
             return $this->fromDefinition($schema->getDefinition($entryName), $value);
+        }
+
+        if (null === $value) {
+            return new Row\Entry\NullEntry($entryName);
         }
 
         if (\is_string($value)) {
@@ -93,83 +102,27 @@ final class NativeEntryFactory implements EntryFactory
             return new Row\Entry\ObjectEntry($entryName, $value);
         }
 
-        if (\is_array($value)) {
-            if ([] === $value) {
+        try {
+            $valueType = (new TypeFactory())->getType($value);
+
+            if ($valueType instanceof ArrayType || $valueType instanceof MapType) {
                 return new Row\Entry\ArrayEntry($entryName, $value);
             }
 
-            if ($this->isStructure($value)) {
-                return $this->createStructureEntryFromArray($entryName, $value);
+            if ($valueType instanceof StructureType) {
+                return new Row\Entry\StructureEntry($entryName, $value, $valueType);
             }
 
-            if (!\array_is_list($value)) {
-                return new Row\Entry\ArrayEntry($entryName, $value);
+            if ($valueType instanceof ListType) {
+                return new Entry\ListEntry($entryName, $valueType->element(), $value);
             }
-
-            $type = null;
-            $class = null;
-
-            foreach ($value as $valueElement) {
-                if ($type === null) {
-                    $type = \gettype($valueElement);
-                }
-
-                if ($type === 'object' && $class === null) {
-                    /** @var object $valueElement */
-                    $class = $this->getClass($valueElement);
-                }
-
-                if ($type !== \gettype($valueElement)) {
-                    return new Row\Entry\ArrayEntry($entryName, $value);
-                }
-
-                /** @var object $valueElement */
-                if ($class !== null && $class !== $this->getClass($valueElement)) {
-                    return new Row\Entry\ArrayEntry($entryName, $value);
-                }
-            }
-
-            if ($type === 'array') {
-                return new Row\Entry\ArrayEntry($entryName, $value);
-            }
-
-            if ($class !== null) {
-                if ($class === \DateTimeImmutable::class || $class === \DateTime::class) {
-                    $class = \DateTimeInterface::class;
-                }
-
-                if ($class === \DOMElement::class) {
-                    $class = \DOMNode::class;
-                }
-
-                return new Entry\ListEntry($entryName, ListElement::object($class), $value);
-            }
-
-            return new Entry\ListEntry($entryName, ListElement::scalar($type), $value);
-        }
-
-        if (null === $value) {
-            return new Row\Entry\NullEntry($entryName);
+        } catch (InvalidArgumentException $exception) {
+            // Used below
         }
 
         $type = \gettype($value);
 
-        throw new InvalidArgumentException("{$type} can't be converted to any known Entry");
-    }
-
-    private function createStructureEntryFromArray(string $entryName, array $array) : Row\Entry\StructureEntry
-    {
-        $structureEntries = [];
-
-        foreach ($array as $key => $value) {
-            if (\is_array($value)) {
-                $structureEntries[] = $this->createStructureEntryFromArray($key, $value);
-            } else {
-                $structureEntries[] = $this->create($key, $value);
-            }
-        }
-
-        return new Row\Entry\StructureEntry($entryName, ...$structureEntries);
+        throw new InvalidArgumentException("{$type} can't be converted to any known Entry", 0, $exception ?? null);
     }
 
     private function fromDefinition(Schema\Definition $definition, mixed $value) : Entry
@@ -199,14 +152,6 @@ final class NativeEntryFactory implements EntryFactory
                 return EntryDSL::json($definition->entry()->name(), $value);
             }
 
-            if ($type === Entry\JsonEntry::class && \is_array($value)) {
-                try {
-                    return EntryDSL::json_object($definition->entry()->name(), $value);
-                } catch (InvalidArgumentException $e) {
-                    return EntryDSL::json($definition->entry()->name(), $value);
-                }
-            }
-
             if ($type === Entry\XMLEntry::class && (\is_string($value) || $value instanceof \DOMDocument)) {
                 return EntryDSL::xml($definition->entry()->name(), $value);
             }
@@ -227,10 +172,6 @@ final class NativeEntryFactory implements EntryFactory
                 return EntryDSL::datetime($definition->entry()->name(), new \DateTimeImmutable($value));
             }
 
-            if ($type === Entry\ArrayEntry::class && \is_array($value)) {
-                return EntryDSL::array($definition->entry()->name(), $value);
-            }
-
             if ($type === Entry\EnumEntry::class && \is_string($value)) {
                 /** @var class-string<\UnitEnum> $enumClass */
                 $enumClass = $definition->metadata()->get(Schema\FlowMetadata::METADATA_ENUM_CLASS);
@@ -244,6 +185,18 @@ final class NativeEntryFactory implements EntryFactory
                 }
 
                 throw new InvalidArgumentException("Value \"{$value}\" can't be converted to " . $enumClass . ' enum');
+            }
+
+            if ($type === Entry\JsonEntry::class && \is_array($value)) {
+                try {
+                    return EntryDSL::json_object($definition->entry()->name(), $value);
+                } catch (InvalidArgumentException $e) {
+                    return EntryDSL::json($definition->entry()->name(), $value);
+                }
+            }
+
+            if ($type === Entry\ArrayEntry::class && \is_array($value)) {
+                return EntryDSL::array($definition->entry()->name(), $value);
             }
 
             if ($type === Entry\ListEntry::class && \is_array($value) && \array_is_list($value)) {
@@ -286,20 +239,6 @@ final class NativeEntryFactory implements EntryFactory
         throw new InvalidArgumentException("Can't convert value into entry \"{$definition->entry()}\"");
     }
 
-    /**
-     * @return class-string
-     */
-    private function getClass(object $object) : string
-    {
-        $class = $object::class;
-
-        if ($class === \DateTimeImmutable::class || $class === \DateTime::class) {
-            return \DateTimeInterface::class;
-        }
-
-        return $class;
-    }
-
     private function isJson(string $string) : bool
     {
         if ('{' !== $string[0] && '[' !== $string[0]) {
@@ -318,29 +257,6 @@ final class NativeEntryFactory implements EntryFactory
         } catch (\Exception) {
             return false;
         }
-    }
-
-    private function isStructure(array $array) : bool
-    {
-        if (\array_is_list($array)) {
-            return false;
-        }
-
-        if (!\count($array)) {
-            return false;
-        }
-
-        foreach ($array as $key => $value) {
-            if (!\is_string($key)) {
-                return false;
-            }
-
-            if (\is_array($value) && !$this->isStructure($value)) {
-                return false;
-            }
-        }
-
-        return true;
     }
 
     private function isUuid(string $string) : bool

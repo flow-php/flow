@@ -6,6 +6,9 @@ namespace Flow\ETL\DSL;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
+use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
+use Flow\ETL\PHP\Type\Logical\StructureType;
+use Flow\ETL\PHP\Type\TypeFactory;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry as RowEntry;
 use Flow\ETL\Row\Entry\Type\Uuid;
@@ -145,7 +148,7 @@ class Entry
      */
     final public static function list_of_datetime(string $name, array $value) : RowEntry
     {
-        return new RowEntry\ListEntry($name, ListElement::object(\DateTimeInterface::class), $value);
+        return new RowEntry\ListEntry($name, ListElement::object(\DateTimeImmutable::class), $value);
     }
 
     /**
@@ -264,7 +267,17 @@ class Entry
      */
     final public static function structure(string $name, RowEntry ...$entries) : RowEntry
     {
-        return new RowEntry\StructureEntry($name, ...$entries);
+        $data = [];
+        $elements = [];
+
+        $factory = new TypeFactory();
+
+        foreach ($entries as $entry) {
+            $data[$entry->name()] = $entry->value();
+            $elements[] = new StructureElement($entry->name(), $factory->getType($entry->value()));
+        }
+
+        return new RowEntry\StructureEntry($name, $data, new StructureType(...$elements));
     }
 
     /**

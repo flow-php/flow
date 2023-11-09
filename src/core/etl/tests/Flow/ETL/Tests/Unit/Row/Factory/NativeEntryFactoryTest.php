@@ -7,6 +7,13 @@ namespace Flow\ETL\Tests\Unit\Row\Factory;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
+use Flow\ETL\PHP\Type\Logical\Map\MapKey;
+use Flow\ETL\PHP\Type\Logical\Map\MapValue;
+use Flow\ETL\PHP\Type\Logical\MapType;
+use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
+use Flow\ETL\PHP\Type\Logical\StructureType;
+use Flow\ETL\PHP\Type\Native\ScalarType;
+use Flow\ETL\Row\Entry\StructureEntry;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Tests\Fixtures\Enum\BackedIntEnum;
@@ -42,11 +49,15 @@ final class NativeEntryFactoryTest extends TestCase
         ];
     }
 
-    public function test_array() : void
+    public function test_array_structure() : void
     {
         $this->assertEquals(
-            Entry::structure('e', Entry::int('a', 1), Entry::int('b', 2)),
-            (new NativeEntryFactory())->create('e', ['a' => 1, 'b' => 2])
+            new StructureEntry(
+                'e',
+                ['a' => 1, 'b' => '2'],
+                new StructureType(new StructureElement('a', ScalarType::integer()), new StructureElement('b', ScalarType::string()))
+            ),
+            (new NativeEntryFactory())->create('e', ['a' => 1, 'b' => '2'])
         );
     }
 
@@ -229,14 +240,14 @@ final class NativeEntryFactoryTest extends TestCase
         $this->assertEquals(
             Entry::list_of_datetime('e', $list = [new \DateTimeImmutable('now'), new \DateTimeImmutable('tomorrow')]),
             (new NativeEntryFactory())
-                ->create('e', $list, new Schema(Schema\Definition::list('e', ListElement::object(\DateTimeInterface::class))))
+                ->create('e', $list, new Schema(Schema\Definition::list('e', ListElement::object(\DateTimeImmutable::class))))
         );
     }
 
     public function test_list_of_datetimes() : void
     {
         $this->assertEquals(
-            Entry::list_of_objects('e', \DateTimeInterface::class, $list = [new \DateTimeImmutable(), new \DateTime()]),
+            Entry::list_of_objects('e', \DateTimeImmutable::class, $list = [new \DateTimeImmutable(), new \DateTimeImmutable()]),
             (new NativeEntryFactory())->create('e', $list)
         );
     }
@@ -257,7 +268,7 @@ final class NativeEntryFactoryTest extends TestCase
                 ->create(
                     'e',
                     ['2022-01-01 00:00:00 UTC', '2022-01-01 00:00:00 UTC'],
-                    new Schema(Schema\Definition::list('e', ListElement::object(\DateTimeInterface::class)))
+                    new Schema(Schema\Definition::list('e', ListElement::object(\DateTimeImmutable::class)))
                 )
         );
     }
@@ -265,16 +276,26 @@ final class NativeEntryFactoryTest extends TestCase
     public function test_nested_structure() : void
     {
         $this->assertEquals(
-            Entry::structure(
+            new StructureEntry(
                 'address',
-                Entry::string('city', 'Krakow'),
-                Entry::structure(
-                    'geo',
-                    Entry::float('lat', 50.06143),
-                    Entry::float('lon', 19.93658)
+                [
+                    'city' => 'Krakow',
+                    'geo' => [
+                        'lat' => 50.06143,
+                        'lon' => 19.93658,
+                    ],
+                    'street' => 'Floriańska',
+                    'zip' => '31-021',
+                ],
+                new StructureType(
+                    new StructureElement('city', ScalarType::string()),
+                    new StructureElement(
+                        'geo',
+                        new MapType(MapKey::string(), MapValue::float()),
+                    ),
+                    new StructureElement('street', ScalarType::string()),
+                    new StructureElement('zip', ScalarType::string()),
                 ),
-                Entry::string('street', 'Floriańska'),
-                Entry::string('zip', '31-021')
             ),
             (new NativeEntryFactory())->create('address', [
                 'city' => 'Krakow',
@@ -345,13 +366,17 @@ final class NativeEntryFactoryTest extends TestCase
     public function test_structure() : void
     {
         $this->assertEquals(
-            Entry::structure(
+            new StructureEntry(
                 'address',
-                Entry::string('city', 'Krakow'),
-                Entry::string('street', 'Floriańska'),
-                Entry::string('zip', '31-021')
+                ['id' => 1, 'city' => 'Krakow', 'street' => 'Floriańska', 'zip' => '31-021'],
+                new StructureType(
+                    new StructureElement('id', ScalarType::integer()),
+                    new StructureElement('city', ScalarType::string()),
+                    new StructureElement('street', ScalarType::string()),
+                    new StructureElement('zip', ScalarType::string())
+                )
             ),
-            (new NativeEntryFactory())->create('address', ['city' => 'Krakow', 'street' => 'Floriańska', 'zip' => '31-021'])
+            (new NativeEntryFactory())->create('address', ['id' => 1, 'city' => 'Krakow', 'street' => 'Floriańska', 'zip' => '31-021'])
         );
     }
 
