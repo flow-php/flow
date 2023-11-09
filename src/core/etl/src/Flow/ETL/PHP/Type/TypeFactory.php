@@ -35,7 +35,7 @@ final class TypeFactory
 
         if (\is_array($value)) {
             if ([] === $value) {
-                return new ArrayType(true);
+                return ArrayType::empty();
             }
 
             $detector = new ArrayContentDetector(

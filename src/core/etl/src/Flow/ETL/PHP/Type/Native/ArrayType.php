@@ -11,9 +11,9 @@ final class ArrayType implements NativeType
     {
     }
 
-    public function empty() : bool
+    public static function empty() : self
     {
-        return $this->empty;
+        return new self(true);
     }
 
     public function isEqual(Type $type) : bool

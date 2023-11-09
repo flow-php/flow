@@ -248,9 +248,9 @@ final class ArrayContentDetectorTest extends TestCase
                 ScalarType::string(),
             ],
             [
-                new ArrayType(true),
-                new ArrayType(true),
-                new ArrayType(true),
+                ArrayType::empty(),
+                ArrayType::empty(),
+                ArrayType::empty(),
             ],
             false,
         ];

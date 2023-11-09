@@ -104,6 +104,11 @@ final class ScalarType implements NativeType
         return true;
     }
 
+    public function isValidArrayKey() : bool
+    {
+        return $this->isString() || $this->isInteger();
+    }
+
     public function optional() : bool
     {
         return $this->optional;

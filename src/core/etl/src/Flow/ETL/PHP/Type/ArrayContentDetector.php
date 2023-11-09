@@ -11,28 +11,24 @@ use Flow\ETL\PHP\Type\Native\ScalarType;
 
 final class ArrayContentDetector
 {
-    private readonly ?Type $firstKeyType;
-
-    private readonly ?Type $firstValueType;
-
     public function __construct(private readonly Types $uniqueKeysType, private readonly Types $uniqueValuesType)
     {
-        $this->firstKeyType = $this->uniqueKeysType->first();
-        $this->firstValueType = $this->uniqueValuesType->first();
     }
 
     public function firstKeyType() : ?ScalarType
     {
-        if (null !== $this->firstKeyType && !$this->firstKeyType instanceof ScalarType) {
-            throw InvalidArgumentException::because('First unique key type must be of ScalarType, given: ' . $this->firstKeyType::class);
+        $type = $this->uniqueKeysType->first();
+
+        if (null !== $type && !$type instanceof ScalarType) {
+            throw InvalidArgumentException::because('First unique key type must be of ScalarType, given: ' . $type::class);
         }
 
-        return $this->firstKeyType;
+        return $type;
     }
 
     public function firstValueType() : ?Type
     {
-        return $this->firstValueType;
+        return $this->uniqueValuesType->first();
     }
 
     public function isList() : bool
@@ -41,17 +37,17 @@ final class ArrayContentDetector
             return false;
         }
 
-        return 1 === $this->uniqueValuesType->without(new ArrayType(true), new NullType())->count();
+        return 1 === $this->uniqueValuesType->without(ArrayType::empty(), new NullType())->count();
     }
 
     public function isMap() : bool
     {
-        if (1 === $this->uniqueValuesType->without(new ArrayType(true), new NullType())->count()) {
+        if (1 === $this->uniqueValuesType->without(ArrayType::empty(), new NullType())->count()) {
             if ($this->isList()) {
                 return false;
             }
 
-            if (!($this->firstKeyType()?->isString() || $this->firstKeyType()?->isInteger())) {
+            if (!$this->firstKeyType()?->isValidArrayKey()) {
                 return false;
             }
 
@@ -69,6 +65,6 @@ final class ArrayContentDetector
 
         return $this->firstKeyType()?->isString()
             && 1 === $this->uniqueKeysType->count()
-            && 0 !== $this->uniqueValuesType->without(new ArrayType(true), new NullType())->count();
+            && 0 !== $this->uniqueValuesType->without(ArrayType::empty(), new NullType())->count();
     }
 }

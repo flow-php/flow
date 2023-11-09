@@ -11,26 +11,22 @@ use PHPUnit\Framework\TestCase;
 
 final class ArrayTypeTest extends TestCase
 {
-    public function test_empty() : void
-    {
-        $this->assertFalse(
-            (new ArrayType())->empty()
-        );
-        $this->assertTrue(
-            (new ArrayType(true))->empty()
-        );
-    }
-
     public function test_equals() : void
     {
         $this->assertTrue(
             (new ArrayType())->isEqual(new ArrayType)
+        );
+        $this->assertTrue(
+            ArrayType::empty()->isEqual(ArrayType::empty())
         );
         $this->assertFalse(
             (new ArrayType())->isEqual(new MapType(MapKey::string(), MapValue::float()))
         );
         $this->assertFalse(
             (new ArrayType())->isEqual(ScalarType::float())
+        );
+        $this->assertFalse(
+            ArrayType::empty()->isEqual(new ArrayType)
         );
     }
 
@@ -42,7 +38,7 @@ final class ArrayTypeTest extends TestCase
         );
         $this->assertSame(
             'array<empty, empty>',
-            (new ArrayType(true))->toString()
+            ArrayType::empty()->toString()
         );
     }
 

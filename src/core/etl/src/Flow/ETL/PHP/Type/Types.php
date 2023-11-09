@@ -6,6 +6,8 @@ namespace Flow\ETL\PHP\Type;
 
 final class Types implements \Countable
 {
+    private readonly ?Type $first;
+
     private readonly array $types;
 
     public function __construct(Type ...$types)
@@ -16,6 +18,7 @@ final class Types implements \Countable
                 \array_map(fn (Type $type) : string => \serialize($type), $types)
             )
         );
+        $this->first = $this->types[0] ?? null;
     }
 
     public function count() : int
@@ -25,7 +28,7 @@ final class Types implements \Countable
 
     public function first() : ?Type
     {
-        return $this->types[0] ?? null;
+        return $this->first;
     }
 
     public function without(Type ...$types) : self
