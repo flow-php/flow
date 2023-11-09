@@ -34,24 +34,24 @@ final class TypeFactory
         }
 
         if (\is_array($value)) {
-            if ([] === \array_filter($value, fn ($value) : bool => null !== $value)) {
+            if ([] === $value) {
                 return new ArrayType(true);
             }
 
             $detector = new ArrayContentDetector(
-                Types::create(...\array_map([$this, 'getType'], \array_keys($value))),
-                Types::create(...\array_map([$this, 'getType'], \array_values($value)))
+                new Types(...\array_map([$this, 'getType'], \array_keys($value))),
+                new Types(...\array_map([$this, 'getType'], \array_values($value)))
             );
 
-            if ($detector->isList()) {
-                return new ListType(ListElement::fromType($detector->firstValueType()));
+            $firstKey = $detector->firstKeyType();
+            $firstValue = $detector->firstValueType();
+
+            if ($detector->isList() && $firstValue) {
+                return new ListType(ListElement::fromType($firstValue));
             }
 
-            if ($detector->isMap()) {
-                return new MapType(
-                    MapKey::fromType($detector->firstKeyType()),
-                    MapValue::fromType($detector->firstValueType())
-                );
+            if ($detector->isMap() && $firstKey && $firstValue) {
+                return new MapType(MapKey::fromType($firstKey), MapValue::fromType($firstValue));
             }
 
             if ($detector->isStructure()) {
@@ -64,7 +64,7 @@ final class TypeFactory
                 return new StructureType(...$elements);
             }
 
-            return new ArrayType();
+            return new ArrayType([] === \array_filter($value, fn ($value) : bool => null !== $value));
         }
 
         throw InvalidArgumentException::because('Unsupported type given: ' . \gettype($value));

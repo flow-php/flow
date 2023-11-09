@@ -18,7 +18,7 @@ final class ArrayType implements NativeType
 
     public function isEqual(Type $type) : bool
     {
-        return $type instanceof self;
+        return $type instanceof self && $this->empty === $type->empty;
     }
 
     public function isValid(mixed $value) : bool

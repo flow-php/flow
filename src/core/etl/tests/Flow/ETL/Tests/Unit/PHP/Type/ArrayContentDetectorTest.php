@@ -10,6 +10,8 @@ use Flow\ETL\PHP\Type\Logical\Map\MapValue;
 use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\StructureType;
+use Flow\ETL\PHP\Type\Native\ArrayType;
+use Flow\ETL\PHP\Type\Native\NullType;
 use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\PHP\Type\Types;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -78,6 +80,18 @@ final class ArrayContentDetectorTest extends TestCase
             ],
             false,
         ];
+
+        yield 'array of nulls' => [
+            [
+                ScalarType::string(),
+            ],
+            [
+                new NullType(),
+                new NullType(),
+                new NullType(),
+            ],
+            false,
+        ];
     }
 
     public static function provide_map_data() : \Generator
@@ -140,6 +154,18 @@ final class ArrayContentDetectorTest extends TestCase
                 ),
             ],
             true,
+        ];
+
+        yield 'array of nulls' => [
+            [
+                ScalarType::string(),
+            ],
+            [
+                new NullType(),
+                new NullType(),
+                new NullType(),
+            ],
+            false,
         ];
     }
 
@@ -204,6 +230,30 @@ final class ArrayContentDetectorTest extends TestCase
             ],
             false,
         ];
+
+        yield 'array of nulls' => [
+            [
+                ScalarType::string(),
+            ],
+            [
+                new NullType(),
+                new NullType(),
+                new NullType(),
+            ],
+            false,
+        ];
+
+        yield 'array of empty arrays' => [
+            [
+                ScalarType::string(),
+            ],
+            [
+                new ArrayType(true),
+                new ArrayType(true),
+                new ArrayType(true),
+            ],
+            false,
+        ];
     }
 
     #[DataProvider('provide_list_data')]
@@ -211,7 +261,7 @@ final class ArrayContentDetectorTest extends TestCase
     {
         $this->assertSame(
             $expected,
-            (new ArrayContentDetector(Types::create(...$keys), Types::create(...$values)))->isList()
+            (new ArrayContentDetector(new Types(...$keys), new Types(...$values)))->isList()
         );
     }
 
@@ -220,7 +270,7 @@ final class ArrayContentDetectorTest extends TestCase
     {
         $this->assertSame(
             $expected,
-            (new ArrayContentDetector(Types::create(...$keys), Types::create(...$values)))->isMap()
+            (new ArrayContentDetector(new Types(...$keys), new Types(...$values)))->isMap()
         );
     }
 
@@ -229,7 +279,7 @@ final class ArrayContentDetectorTest extends TestCase
     {
         $this->assertSame(
             $expected,
-            (new ArrayContentDetector(Types::create(...$keys), Types::create(...$values)))->isStructure()
+            (new ArrayContentDetector(new Types(...$keys), new Types(...$values)))->isStructure()
         );
     }
 }
