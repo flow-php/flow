@@ -24,6 +24,11 @@ final class ListElement
         return new self(ScalarType::float());
     }
 
+    public static function fromType(Type $type) : self
+    {
+        return new self($type);
+    }
+
     public static function integer() : self
     {
         return new self(ScalarType::integer());

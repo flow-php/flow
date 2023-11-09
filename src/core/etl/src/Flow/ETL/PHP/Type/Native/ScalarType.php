@@ -17,9 +17,11 @@ final class ScalarType implements NativeType
 
     public const STRING = 'string';
 
-    private function __construct(private readonly string $value, private readonly bool $optional)
+    private readonly string $value;
+
+    private function __construct(string $value, private readonly bool $optional)
     {
-        match (\strtolower($value)) {
+        $this->value = match (\strtolower($value)) {
             'integer' => self::INTEGER,
             'float', 'double' => self::FLOAT,
             'string' => self::STRING,
@@ -53,9 +55,29 @@ final class ScalarType implements NativeType
         return new self(self::STRING, $optional);
     }
 
+    public function isBoolean() : bool
+    {
+        return $this->value === self::BOOLEAN;
+    }
+
     public function isEqual(Type $type) : bool
     {
         return $type instanceof self && $type->value === $this->value;
+    }
+
+    public function isFloat() : bool
+    {
+        return $this->value === self::FLOAT;
+    }
+
+    public function isInteger() : bool
+    {
+        return $this->value === self::INTEGER;
+    }
+
+    public function isString() : bool
+    {
+        return $this->value === self::STRING;
     }
 
     public function isValid(mixed $value) : bool
@@ -80,6 +102,11 @@ final class ScalarType implements NativeType
         }
 
         return true;
+    }
+
+    public function isValidArrayKey() : bool
+    {
+        return $this->isString() || $this->isInteger();
     }
 
     public function optional() : bool
