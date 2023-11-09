@@ -46,5 +46,5 @@ composer build
 
 ```shell
 composer build:phar
-./build/flow-php.phar --version
+./build/flow.phar --version
 ```

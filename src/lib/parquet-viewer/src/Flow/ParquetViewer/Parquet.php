@@ -4,13 +4,13 @@ namespace Flow\ParquetViewer;
 
 use Flow\ParquetViewer\Command\ReadDataCommand;
 use Flow\ParquetViewer\Command\ReadMetadataCommand;
-use Symfony\Component\Console\Application as SymfonyApplication;
+use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Command\CompleteCommand;
 use Symfony\Component\Console\Command\DumpCompletionCommand;
 use Symfony\Component\Console\Command\HelpCommand;
 use Symfony\Component\Console\Command\ListCommand;
 
-final class Application extends SymfonyApplication
+final class Parquet extends Application
 {
     protected function getDefaultCommands() : array
     {

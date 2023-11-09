@@ -2,7 +2,7 @@
 <?php
 
 use Composer\InstalledVersions;
-use Flow\ParquetViewer\Application;
+use Flow\ParquetViewer\Parquet;
 
 (function () {
     \error_reporting(E_ALL);
@@ -22,6 +22,6 @@ use Flow\ParquetViewer\Application;
         exit(1);
     }
 
-    $application = new Application("Flow PHP - Parquet Viewer", InstalledVersions::getRootPackage()['pretty_version']);
+    $application = new Parquet("Flow PHP - Parquet Viewer", InstalledVersions::getRootPackage()['pretty_version']);
     $application->run();
 })();

@@ -1,5 +1,5 @@
-build/flow-php.phar
-build/flow-php.phar.asc
+build/flow.phar
+build/flow.phar.asc
 var
 vendor
 compose.yml

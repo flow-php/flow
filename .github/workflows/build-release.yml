@@ -51,8 +51,8 @@ jobs:
 
       - name: "Validate Flow PHAR"
         run: |
-          ./build/flow-php.phar --version
-          ./build/flow-php.phar examples/topics/transformations/array_expand.php
+          ./build/flow.phar --version
+          ./build/flow.phar examples/topics/transformations/array_expand.php
 
       - name: "Import GPG Key"
         uses: crazy-max/ghaction-import-gpg@72b6676b71ab476b77e676928516f6982eef7a41
@@ -69,8 +69,8 @@ jobs:
           --passphrase="${{ secrets.GPG_PASSPHRASE }}"
           --pinentry-mode="loopback"
           --detach-sign
-          --output="./build/flow-php.phar.asc"
-          ./build/flow-php.phar
+          --output="./build/flow.phar.asc"
+          ./build/flow.phar
 
       - name: "Prepare artifact name"
         run: |
@@ -83,5 +83,5 @@ jobs:
         if: ${{startsWith(github.ref, 'refs/tags/') }}
         with:
           files: |
-            build/flow-php.phar
-            build/flow-php.phar.asc
+            build/flow.phar
+            build/flow.phar.asc
