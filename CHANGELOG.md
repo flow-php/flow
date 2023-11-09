@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-11-09
 
 ### Added
+- [#772](https://github.com/flow-php/flow/pull/772) - **Add `TypeFactory`, `ArrayType` & `NullType`, `ResourceType`, `CallableType`** - [@stloyd](https://github.com/stloyd)
 - [#773](https://github.com/flow-php/flow/pull/773) - **Added parquet commands to flow.phar** - [@norberttech](https://github.com/norberttech)
 - [#765](https://github.com/flow-php/flow/pull/765) - **Add new logical `StructureType`** - [@stloyd](https://github.com/stloyd)
 - [#763](https://github.com/flow-php/flow/pull/763) - **Implement recursive type allowance in `MapType` & `ListType`** - [@stloyd](https://github.com/stloyd)
