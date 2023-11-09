@@ -7,8 +7,10 @@ namespace Flow\ETL\Row\Factory;
 use Flow\ETL\DSL\Entry as EntryDSL;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
+use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Native\ObjectType;
+use Flow\ETL\PHP\Type\TypeFactory;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\EntryFactory;
@@ -200,14 +202,6 @@ final class NativeEntryFactory implements EntryFactory
                 return EntryDSL::json_string($definition->entry()->name(), $value);
             }
 
-            if ($type === Entry\JsonEntry::class && \is_array($value)) {
-                try {
-                    return EntryDSL::json_object($definition->entry()->name(), $value);
-                } catch (InvalidArgumentException $e) {
-                    return EntryDSL::json($definition->entry()->name(), $value);
-                }
-            }
-
             if ($type === Entry\XMLEntry::class && (\is_string($value) || $value instanceof \DOMDocument)) {
                 return EntryDSL::xml($definition->entry()->name(), $value);
             }
@@ -228,10 +222,6 @@ final class NativeEntryFactory implements EntryFactory
                 return EntryDSL::datetime($definition->entry()->name(), new \DateTimeImmutable($value));
             }
 
-            if ($type === Entry\ArrayEntry::class && \is_array($value)) {
-                return EntryDSL::array($definition->entry()->name(), $value);
-            }
-
             if ($type === Entry\EnumEntry::class && \is_string($value)) {
                 /** @var class-string<\UnitEnum> $enumClass */
                 $enumClass = $definition->metadata()->get(Schema\FlowMetadata::METADATA_ENUM_CLASS);
@@ -247,78 +237,73 @@ final class NativeEntryFactory implements EntryFactory
                 throw new InvalidArgumentException("Value \"not_valid\" can't be converted to " . $enumClass . ' enum');
             }
 
-            if ($type === Entry\ListEntry::class && \is_array($value) && \array_is_list($value)) {
-                try {
-                    /** @var ListElement $listType */
-                    $listType = $definition->metadata()->get(Schema\FlowMetadata::METADATA_LIST_ENTRY_TYPE);
+            if (\is_array($value)) {
+                if ($type === Entry\JsonEntry::class) {
+                    try {
+                        return EntryDSL::json_object($definition->entry()->name(), $value);
+                    } catch (InvalidArgumentException $e) {
+                        return EntryDSL::json($definition->entry()->name(), $value);
+                    }
+                }
 
-                    if (!\count($value)) {
+                if ($type === Entry\ArrayEntry::class) {
+                    return EntryDSL::array($definition->entry()->name(), $value);
+                }
+
+                $valueType = (new TypeFactory())->getType($value);
+
+                if ($type === Entry\ListEntry::class && $valueType instanceof ListType) {
+                    try {
+                        if ($valueType->element()->value() instanceof ObjectType) {
+                            /** @var mixed $firstValue */
+                            $firstValue = \current($value);
+
+                            if (\is_a($valueType->element()->value()->class, \DateTimeInterface::class, true) && \is_string($firstValue)) {
+                                return new Entry\ListEntry(
+                                    $definition->entry()->name(),
+                                    $valueType->element(),
+                                    \array_map(static fn (string $datetime) : \DateTimeImmutable => new \DateTimeImmutable($datetime), $value)
+                                );
+                            }
+                        }
+
                         return new Entry\ListEntry(
                             $definition->entry()->name(),
-                            $listType,
-                            []
+                            $valueType->element(),
+                            $value
                         );
+                    } catch (InvalidArgumentException $e) {
+                        throw new InvalidArgumentException("Field \"{$definition->entry()}\" conversion exception. {$e->getMessage()}", previous: $e);
                     }
-
-                    if ($listType->value() instanceof ObjectType) {
-                        /** @var mixed $firstValue */
-                        $firstValue = \current($value);
-
-                        if (\is_a($listType->value()->class, \DateTimeInterface::class, true) && \is_string($firstValue)) {
-                            return new Entry\ListEntry(
-                                $definition->entry()->name(),
-                                $listType,
-                                \array_map(static fn (string $datetime) : \DateTimeImmutable => new \DateTimeImmutable($datetime), $value)
-                            );
-                        }
-                    }
-
-                    return new Entry\ListEntry(
-                        $definition->entry()->name(),
-                        $listType,
-                        $value
-                    );
-                } catch (InvalidArgumentException $e) {
-                    throw new InvalidArgumentException("Field \"{$definition->entry()}\" conversion exception. {$e->getMessage()}", previous: $e);
                 }
-            }
 
-            if ($type === Entry\MapEntry::class && \is_array($value) && \array_is_list($value)) {
-                try {
-                    /** @var MapType $mapType */
-                    $mapType = $definition->metadata()->get(Schema\FlowMetadata::METADATA_MAP_ENTRY_TYPE);
+                $valueType = (new TypeFactory())->getType($value);
 
-                    if (!\count($value)) {
+                if ($type === Entry\MapEntry::class && $valueType instanceof MapType) {
+                    try {
+                        if ($valueType->value()->value() instanceof ObjectType) {
+                            /** @var mixed $firstValue */
+                            $firstValue = \current($value);
+
+                            if (\is_a($valueType->value()->value()->class, \DateTimeInterface::class, true) && \is_string($firstValue)) {
+                                return new Entry\MapEntry(
+                                    $definition->entry()->name(),
+                                    $valueType->key(),
+                                    $valueType->value(),
+                                    \array_map(static fn (string $datetime) : \DateTimeImmutable => new \DateTimeImmutable($datetime), $value)
+                                );
+                            }
+                        }
+
                         return new Entry\MapEntry(
                             $definition->entry()->name(),
-                            $mapType->key(),
-                            $mapType->value(),
-                            []
+                            $valueType->key(),
+                            $valueType->value(),
+                            $value
                         );
+                    } catch (InvalidArgumentException $e) {
+                        throw new InvalidArgumentException("Field \"{$definition->entry()}\" conversion exception. {$e->getMessage()}", previous: $e);
                     }
-
-                    if ($mapType->value()->value() instanceof ObjectType) {
-                        /** @var mixed $firstValue */
-                        $firstValue = \current($value);
-
-                        if (\is_a($mapType->value()->value()->class, \DateTimeInterface::class, true) && \is_string($firstValue)) {
-                            return new Entry\MapEntry(
-                                $definition->entry()->name(),
-                                $mapType->key(),
-                                $mapType->value(),
-                                \array_map(static fn (string $datetime) : \DateTimeImmutable => new \DateTimeImmutable($datetime), $value)
-                            );
-                        }
-                    }
-
-                    return new Entry\MapEntry(
-                        $definition->entry()->name(),
-                        $mapType->key(),
-                        $mapType->value(),
-                        $value
-                    );
-                } catch (InvalidArgumentException $e) {
-                    throw new InvalidArgumentException("Field \"{$definition->entry()}\" conversion exception. {$e->getMessage()}", previous: $e);
                 }
             }
         }
