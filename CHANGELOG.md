@@ -1,6 +1,7 @@
-## [Unreleased] - 2023-11-08
+## [Unreleased] - 2023-11-09
 
 ### Added
+- [#773](https://github.com/flow-php/flow/pull/773) - **Added parquet commands to flow.phar** - [@norberttech](https://github.com/norberttech)
 - [#765](https://github.com/flow-php/flow/pull/765) - **Add new logical `StructureType`** - [@stloyd](https://github.com/stloyd)
 - [#763](https://github.com/flow-php/flow/pull/763) - **Implement recursive type allowance in `MapType` & `ListType`** - [@stloyd](https://github.com/stloyd)
 - [#764](https://github.com/flow-php/flow/pull/764) - **Added Flow style guide** - [@norberttech](https://github.com/norberttech)
@@ -59,6 +60,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#773](https://github.com/flow-php/flow/pull/773) - **renamed phar file to flow.phar** - [@norberttech](https://github.com/norberttech)
 - [#770](https://github.com/flow-php/flow/pull/770) - **Rework `ScalarType` to hold optional value** - [@stloyd](https://github.com/stloyd)
 - [#761](https://github.com/flow-php/flow/pull/761) - **Move PHAR runtime into `bin`** - [@stloyd](https://github.com/stloyd)
 - [#728](https://github.com/flow-php/flow/pull/728) - **Extract entry types into new namespace for further re-usage** - [@stloyd](https://github.com/stloyd)
