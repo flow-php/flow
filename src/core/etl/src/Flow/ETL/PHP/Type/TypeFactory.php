@@ -39,8 +39,8 @@ final class TypeFactory
             }
 
             $detector = new ArrayContentDetector(
-                \array_map([$this, 'getType'], \array_keys($value)),
-                \array_map([$this, 'getType'], \array_values($value))
+                Types::create(...\array_map([$this, 'getType'], \array_keys($value))),
+                Types::create(...\array_map([$this, 'getType'], \array_values($value)))
             );
 
             if ($detector->isList()) {

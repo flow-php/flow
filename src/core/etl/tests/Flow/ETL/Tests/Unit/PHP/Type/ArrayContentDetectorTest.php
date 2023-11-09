@@ -2,7 +2,6 @@
 
 namespace Flow\ETL\Tests\Unit\PHP\Type;
 
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\ArrayContentDetector;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\ListType;
@@ -12,6 +11,7 @@ use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\PHP\Type\Native\ScalarType;
+use Flow\ETL\PHP\Type\Types;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -206,28 +206,12 @@ final class ArrayContentDetectorTest extends TestCase
         ];
     }
 
-    public function test_empty_keys() : void
-    {
-        $this->expectExceptionMessage('Key type list cannot be empty');
-        $this->expectException(InvalidArgumentException::class);
-
-        (new ArrayContentDetector([], []));
-    }
-
-    public function test_empty_values() : void
-    {
-        $this->expectExceptionMessage('Value type list cannot be empty');
-        $this->expectException(InvalidArgumentException::class);
-
-        (new ArrayContentDetector([1], []));
-    }
-
     #[DataProvider('provide_list_data')]
     public function test_list_data(array $keys, array $values, bool $expected) : void
     {
         $this->assertSame(
             $expected,
-            (new ArrayContentDetector($keys, $values))->isList()
+            (new ArrayContentDetector(Types::create(...$keys), Types::create(...$values)))->isList()
         );
     }
 
@@ -236,7 +220,7 @@ final class ArrayContentDetectorTest extends TestCase
     {
         $this->assertSame(
             $expected,
-            (new ArrayContentDetector($keys, $values))->isMap()
+            (new ArrayContentDetector(Types::create(...$keys), Types::create(...$values)))->isMap()
         );
     }
 
@@ -245,7 +229,7 @@ final class ArrayContentDetectorTest extends TestCase
     {
         $this->assertSame(
             $expected,
-            (new ArrayContentDetector($keys, $values))->isStructure()
+            (new ArrayContentDetector(Types::create(...$keys), Types::create(...$values)))->isStructure()
         );
     }
 }

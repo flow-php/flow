@@ -1,51 +1,31 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Native\ArrayType;
-use Flow\ETL\PHP\Type\Native\NullType;
 use Flow\ETL\PHP\Type\Native\ScalarType;
 
 final class ArrayContentDetector
 {
-    private readonly ScalarType $firstKeyType;
+    private readonly Type $firstKeyType;
 
     private readonly Type $firstValueType;
 
-    private readonly array $uniqueKeysType;
-
-    private readonly array $uniqueValuesType;
-
-    public function __construct(
-        array $keysTypes,
-        array $valuesTypes,
-    ) {
-        if (0 === \count($keysTypes)) {
-            throw new InvalidArgumentException('Key type list cannot be empty');
-        }
-
-        if (0 === \count($valuesTypes)) {
-            throw new InvalidArgumentException('Value type list cannot be empty');
-        }
-
-        $this->uniqueKeysType = \array_unique(\array_map(fn (Type $type) : string => \serialize($type), $keysTypes));
-        $this->uniqueValuesType = \array_unique(
-            \array_map(fn (Type $type) : string => \serialize($type), \array_filter($valuesTypes, function (Type $type) : bool {
-                if ($type instanceof NullType) {
-                    return false;
-                }
-
-                return !($type instanceof ArrayType && $type->empty());
-            }))
-        );
-        $this->firstKeyType = \unserialize($this->uniqueKeysType[0]);
-        $this->firstValueType = \unserialize($this->uniqueValuesType[0]);
+    public function __construct(private readonly Types $uniqueKeysType, private readonly Types $uniqueValuesType)
+    {
+        $this->firstKeyType = $this->uniqueKeysType->first();
+        $this->firstValueType = $this->uniqueValuesType->first();
     }
 
     public function firstKeyType() : ScalarType
     {
+        if (!$this->firstKeyType instanceof ScalarType) {
+            throw InvalidArgumentException::because('First unique key type must be of ScalarType, given: ' . $this->firstKeyType::class);
+        }
+
         return $this->firstKeyType;
     }
 
@@ -56,19 +36,25 @@ final class ArrayContentDetector
 
     public function isList() : bool
     {
-        return 1 === \count($this->uniqueValuesType) && $this->firstKeyType->isInteger();
+        if (!$this->firstKeyType()->isInteger()) {
+            return false;
+        }
+
+        return 1 === $this->uniqueValuesType->filter(fn (Type $type) : bool => !($type instanceof ArrayType && $type->empty()))->count();
     }
 
     public function isMap() : bool
     {
-        if (1 === \count($this->uniqueValuesType)) {
+        if (1 === $this->uniqueValuesType->count()) {
             if ($this->isList()) {
                 return false;
             }
 
-            if (1 === \count($this->uniqueKeysType) && ($this->firstKeyType->isString() || $this->firstKeyType->isInteger())) {
-                return true;
+            if (!($this->firstKeyType()->isString() || $this->firstKeyType()->isInteger())) {
+                return false;
             }
+
+            return 1 === $this->uniqueKeysType->filter(fn (Type $type) : bool => !($type instanceof ArrayType && $type->empty()))->count();
         }
 
         return false;
@@ -80,6 +66,6 @@ final class ArrayContentDetector
             return false;
         }
 
-        return 1 === \count($this->uniqueKeysType) && $this->firstKeyType->isString();
+        return $this->firstKeyType()->isString() && 1 === $this->uniqueKeysType->count();
     }
 }
