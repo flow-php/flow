@@ -52,7 +52,7 @@ jobs:
       - name: "Validate Flow PHAR"
         run: |
           ./build/flow.phar --version
-          ./build/flow.phar examples/topics/transformations/array_expand.php
+          ./build/flow.phar run examples/topics/transformations/array_expand.php
 
       - name: "Import GPG Key"
         uses: crazy-max/ghaction-import-gpg@72b6676b71ab476b77e676928516f6982eef7a41

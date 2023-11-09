@@ -56,7 +56,7 @@ jobs:
       - name: "Validate Flow PHAR"
         run: |
           ./build/flow.phar --version
-          ./build/flow.phar examples/topics/transformations/array_expand.php
+          ./build/flow.phar run examples/topics/transformations/array_expand.php
 
       - name: "Prepare artifact name"
         if: ${{ github.event_name == 'push' }}
