@@ -7,6 +7,9 @@ namespace Flow\ETL\Tests\Double;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
+use Flow\ETL\PHP\Type\Logical\Map\MapKey;
+use Flow\ETL\PHP\Type\Logical\Map\MapValue;
+use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\PHP\Type\Native\ScalarType;
@@ -47,6 +50,12 @@ final class AllRowTypesFakeExtractor implements Extractor
                             ['id' => 2, 'status' => 'PENDING'],
                         ]
                     ),
+                    Entry::list_of_int('list', [1, 2, 3]),
+                    Entry::map(
+                        'map',
+                        ['NEW', 'PENDING'],
+                        new MapType(MapKey::integer(), MapValue::string())
+                    ),
                     Entry::structure(
                         'items',
                         ['item-id' => 1, 'name' => 'one'],
@@ -54,12 +63,6 @@ final class AllRowTypesFakeExtractor implements Extractor
                             new StructureElement('item-id', ScalarType::integer()),
                             new StructureElement('name', ScalarType::string())
                         )
-                    ),
-                    Entry::collection(
-                        'tags',
-                        new Row\Entries(Entry::integer('item-id', 1), Entry::string('name', 'one')),
-                        new Row\Entries(Entry::integer('item-id', 2), Entry::string('name', 'two')),
-                        new Row\Entries(Entry::integer('item-id', 3), Entry::string('name', 'three'))
                     ),
                     Entry::object('object', new \ArrayIterator([1, 2, 3])),
                     Entry::enum('enum', BackedStringEnum::three)

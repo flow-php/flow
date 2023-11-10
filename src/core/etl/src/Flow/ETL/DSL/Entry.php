@@ -49,16 +49,6 @@ class Entry
     /**
      * @throws InvalidArgumentException
      *
-     * @return RowEntry\CollectionEntry
-     */
-    final public static function collection(string $name, Entries ...$entries) : RowEntry
-    {
-        return new RowEntry\CollectionEntry($name, ...$entries);
-    }
-
-    /**
-     * @throws InvalidArgumentException
-     *
      * @return RowEntry\DateTimeEntry
      */
     final public static function datetime(string $name, \DateTimeInterface|string $value) : RowEntry

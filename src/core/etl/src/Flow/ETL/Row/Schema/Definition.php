@@ -12,7 +12,6 @@ use Flow\ETL\PHP\Type\Native\ObjectType;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\ArrayEntry;
 use Flow\ETL\Row\Entry\BooleanEntry;
-use Flow\ETL\Row\Entry\CollectionEntry;
 use Flow\ETL\Row\Entry\DateTimeEntry;
 use Flow\ETL\Row\Entry\EnumEntry;
 use Flow\ETL\Row\Entry\FloatEntry;
@@ -71,11 +70,6 @@ final class Definition implements Serializable
     public static function boolean(string|EntryReference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
         return new self($entry, ($nullable) ? [BooleanEntry::class, NullEntry::class] : [BooleanEntry::class], $constraint, $metadata);
-    }
-
-    public static function collection(string|EntryReference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
-    {
-        return new self($entry, ($nullable) ? [CollectionEntry::class, NullEntry::class] : [CollectionEntry::class], $constraint, $metadata);
     }
 
     public static function dateTime(string|EntryReference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
