@@ -7,6 +7,9 @@ namespace Flow\ETL\PHP\Type\Native;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Type;
 
+/**
+ * @implements NativeType<array{value: string, nullable: bool}>
+ */
 final class ScalarType implements NativeType
 {
     public const BOOLEAN = 'boolean';
@@ -19,7 +22,7 @@ final class ScalarType implements NativeType
 
     private readonly string $value;
 
-    private function __construct(string $value, private readonly bool $optional)
+    private function __construct(string $value, private readonly bool $nullable)
     {
         $this->value = match (\strtolower($value)) {
             'integer' => self::INTEGER,
@@ -55,6 +58,17 @@ final class ScalarType implements NativeType
         return new self(self::STRING, $optional);
     }
 
+    public function __serialize() : array
+    {
+        return ['value' => $this->value, 'nullable' => $this->nullable];
+    }
+
+    public function __unserialize(array $data) : void
+    {
+        $this->value = $data['value'];
+        $this->nullable = $data['nullable'];
+    }
+
     public function isBoolean() : bool
     {
         return $this->value === self::BOOLEAN;
@@ -82,7 +96,7 @@ final class ScalarType implements NativeType
 
     public function isValid(mixed $value) : bool
     {
-        if (null === $value && $this->optional) {
+        if (null === $value && $this->nullable) {
             return true;
         }
 
@@ -109,13 +123,13 @@ final class ScalarType implements NativeType
         return $this->isString() || $this->isInteger();
     }
 
-    public function optional() : bool
+    public function nullable() : bool
     {
-        return $this->optional;
+        return $this->nullable;
     }
 
     public function toString() : string
     {
-        return ($this->optional ? '?' : '') . $this->value;
+        return ($this->nullable ? '?' : '') . $this->value;
     }
 }
