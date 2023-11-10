@@ -5,12 +5,11 @@ namespace Flow\ETL\PHP\Type\Logical;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Type;
-use Flow\Serializer\Serializable;
 
 /**
- * @implements Serializable<array{elements: array<StructureElement>}>
+ * @implements LogicalType<array{elements: array<StructureElement>}>
  */
-final class StructureType implements LogicalType, Serializable
+final class StructureType implements LogicalType
 {
     /**
      * @var array<StructureElement>

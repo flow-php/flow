@@ -7,12 +7,15 @@ namespace Flow\ETL\PHP\Type\Native;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Type;
 
+/**
+ * @implements NativeType<array{class: class-string, nullable: bool}>
+ */
 final class ObjectType implements NativeType
 {
     /**
      * @param class-string $class
      */
-    public function __construct(public readonly string $class)
+    public function __construct(public readonly string $class, private readonly bool $nullable)
     {
         if (!\class_exists($class) && !\interface_exists($class)) {
             throw new InvalidArgumentException("Class {$class} not found");
@@ -24,7 +27,18 @@ final class ObjectType implements NativeType
      */
     public static function of(string $class) : self
     {
-        return new self($class);
+        return new self($class, false);
+    }
+
+    public function __serialize() : array
+    {
+        return ['class' => $this->class, 'nullable' => $this->nullable];
+    }
+
+    public function __unserialize(array $data) : void
+    {
+        $this->class = $data['class'];
+        $this->nullable = $data['nullable'];
     }
 
     public function isEqual(Type $type) : bool
@@ -37,8 +51,13 @@ final class ObjectType implements NativeType
         return $value instanceof $this->class;
     }
 
+    public function nullable() : bool
+    {
+        return $this->nullable;
+    }
+
     public function toString() : string
     {
-        return 'object<' . $this->class . '>';
+        return ($this->nullable ? '?' : '') . 'object<' . $this->class . '>';
     }
 }

@@ -23,13 +23,13 @@ final class ScalarTypeTest extends TestCase
         );
     }
 
-    public function test_optional() : void
+    public function test_nullable() : void
     {
         $this->assertFalse(
-            ScalarType::string()->optional()
+            ScalarType::string()->nullable()
         );
         $this->assertTrue(
-            ScalarType::boolean(true)->optional()
+            ScalarType::boolean(true)->nullable()
         );
     }
 

@@ -4,12 +4,11 @@ namespace Flow\ETL\PHP\Type\Logical;
 
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Type;
-use Flow\Serializer\Serializable;
 
 /**
- * @implements Serializable<array{element: ListElement}>
+ * @implements LogicalType<array{element: ListElement}>
  */
-final class ListType implements LogicalType, Serializable
+final class ListType implements LogicalType
 {
     public function __construct(private readonly List\ListElement $element)
     {

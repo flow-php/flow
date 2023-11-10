@@ -14,13 +14,16 @@ final class ResourceTypeTest extends TestCase
     public function test_equals() : void
     {
         $this->assertTrue(
-            (new ResourceType)->isEqual(new ResourceType)
+            (new ResourceType(false))->isEqual(new ResourceType(false))
         );
         $this->assertFalse(
-            (new ResourceType)->isEqual(new MapType(MapKey::string(), MapValue::float()))
+            (new ResourceType(false))->isEqual(new MapType(MapKey::string(), MapValue::float()))
         );
         $this->assertFalse(
-            (new ResourceType)->isEqual(ScalarType::float())
+            (new ResourceType(false))->isEqual(ScalarType::float())
+        );
+        $this->assertFalse(
+            (new ResourceType(false))->isEqual(new ResourceType(true))
         );
     }
 
@@ -28,7 +31,11 @@ final class ResourceTypeTest extends TestCase
     {
         $this->assertSame(
             'resource',
-            (new ResourceType)->toString()
+            (new ResourceType(false))->toString()
+        );
+        $this->assertSame(
+            '?resource',
+            (new ResourceType(true))->toString()
         );
     }
 
@@ -36,17 +43,17 @@ final class ResourceTypeTest extends TestCase
     {
         $handle = \fopen('php://temp/max', 'r+b');
         $this->assertTrue(
-            (new ResourceType)->isValid($handle)
+            (new ResourceType(false))->isValid($handle)
         );
         \fclose($handle);
         $this->assertFalse(
-            (new ResourceType)->isValid('one')
+            (new ResourceType(false))->isValid('one')
         );
         $this->assertFalse(
-            (new ResourceType)->isValid([1, 2])
+            (new ResourceType(false))->isValid([1, 2])
         );
         $this->assertFalse(
-            (new ResourceType)->isValid(123)
+            (new ResourceType(false))->isValid(123)
         );
     }
 }

@@ -14,13 +14,16 @@ final class CallableTypeTest extends TestCase
     public function test_equals() : void
     {
         $this->assertTrue(
-            (new CallableType)->isEqual(new CallableType)
+            (new CallableType(false))->isEqual(new CallableType(false))
         );
         $this->assertFalse(
-            (new CallableType)->isEqual(new MapType(MapKey::string(), MapValue::float()))
+            (new CallableType(false))->isEqual(new MapType(MapKey::string(), MapValue::float()))
         );
         $this->assertFalse(
-            (new CallableType)->isEqual(ScalarType::float())
+            (new CallableType(false))->isEqual(ScalarType::float())
+        );
+        $this->assertFalse(
+            (new CallableType(false))->isEqual(new CallableType(true))
         );
     }
 
@@ -28,23 +31,27 @@ final class CallableTypeTest extends TestCase
     {
         $this->assertSame(
             'callable',
-            (new CallableType)->toString()
+            (new CallableType(false))->toString()
+        );
+        $this->assertSame(
+            '?callable',
+            (new CallableType(true))->toString()
         );
     }
 
     public function test_valid() : void
     {
         $this->assertTrue(
-            (new CallableType)->isValid('printf')
+            (new CallableType(false))->isValid('printf')
         );
         $this->assertFalse(
-            (new CallableType)->isValid('one')
+            (new CallableType(false))->isValid('one')
         );
         $this->assertFalse(
-            (new CallableType)->isValid([1, 2])
+            (new CallableType(false))->isValid([1, 2])
         );
         $this->assertFalse(
-            (new CallableType)->isValid(123)
+            (new CallableType(false))->isValid(123)
         );
     }
 }

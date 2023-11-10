@@ -5,12 +5,11 @@ namespace Flow\ETL\PHP\Type\Logical;
 use Flow\ETL\PHP\Type\Logical\Map\MapKey;
 use Flow\ETL\PHP\Type\Logical\Map\MapValue;
 use Flow\ETL\PHP\Type\Type;
-use Flow\Serializer\Serializable;
 
 /**
- * @implements Serializable<array{key: MapKey, value: MapValue}>
+ * @implements LogicalType<array{key: MapKey, value: MapValue}>
  */
-final class MapType implements LogicalType, Serializable
+final class MapType implements LogicalType
 {
     public function __construct(private readonly Map\MapKey $key, private readonly Map\MapValue $value)
     {

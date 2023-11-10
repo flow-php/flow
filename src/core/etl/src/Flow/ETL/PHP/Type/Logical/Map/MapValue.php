@@ -49,7 +49,7 @@ final class MapValue
      */
     public static function object(string $class) : self
     {
-        return new self(new ObjectType($class));
+        return new self(ObjectType::of($class));
     }
 
     public static function scalar(string $value) : self
