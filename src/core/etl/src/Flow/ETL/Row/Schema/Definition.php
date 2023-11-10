@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Row\Schema;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Logical\List\ListElement;
-use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
+use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\ArrayEntry;
@@ -117,15 +116,13 @@ final class Definition implements Serializable
         return new self($entry, ($nullable) ? [JsonEntry::class, NullEntry::class] : [JsonEntry::class], $constraint, $metadata);
     }
 
-    public static function list(string|EntryReference $entry, ListElement $type, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function list(string|EntryReference $entry, ListType $type, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
         return new self(
             $entry,
-            ($nullable) ? [ListEntry::class, NullEntry::class] : [ListEntry::class],
+            $nullable ? [ListEntry::class, NullEntry::class] : [ListEntry::class],
             $constraint,
-            ($metadata ?? Metadata::empty())->merge(
-                Metadata::empty()->add(FlowMetadata::METADATA_LIST_ENTRY_TYPE, $type)
-            )
+            Metadata::empty()->add(FlowMetadata::METADATA_LIST_ENTRY_TYPE, $type)->merge($metadata ?? Metadata::empty())
         );
     }
 
@@ -144,24 +141,13 @@ final class Definition implements Serializable
         return new self($entry, ($nullable) ? [StringEntry::class, NullEntry::class] : [StringEntry::class], $constraint, $metadata);
     }
 
-    /**
-     * @param array<StructureElement> $structureElements
-     */
-    public static function structure(string|EntryReference $entry, array $structureElements, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function structure(string|EntryReference $entry, StructureType $type, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
-        $elements = \array_unique(\array_map(fn (StructureElement $element) : string => $element->name(), $structureElements));
-
-        if (0 === \count($elements)) {
-            throw new InvalidArgumentException('Structure type requires at least one entry types.');
-        }
-
         return new self(
             $entry,
-            ($nullable) ? [Entry\StructureEntry::class, NullEntry::class] : [Entry\StructureEntry::class],
+            $nullable ? [Entry\StructureEntry::class, NullEntry::class] : [Entry\StructureEntry::class],
             $constraint,
-            ($metadata ?? Metadata::empty())->merge(
-                Metadata::empty()->add(FlowMetadata::METADATA_STRUCTURE_ENTRY_TYPE, new StructureType(...$structureElements))
-            )
+            Metadata::empty()->add(FlowMetadata::METADATA_STRUCTURE_ENTRY_TYPE, $type)->merge($metadata ?? Metadata::empty())
         );
     }
 

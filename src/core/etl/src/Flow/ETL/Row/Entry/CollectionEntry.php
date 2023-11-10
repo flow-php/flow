@@ -6,6 +6,9 @@ namespace Flow\ETL\Row\Entry;
 
 use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
+use Flow\ETL\PHP\Type\Logical\StructureType;
+use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
@@ -81,6 +84,23 @@ final class CollectionEntry implements \Stringable, Entry
     public function name() : string
     {
         return $this->name;
+    }
+
+    public function phpType() : Type
+    {
+        $array = [];
+
+        foreach ($this->entries as $index => $entries) {
+            $entriesArray = [];
+
+            foreach ($entries as $entry) {
+                $entriesArray[] = new StructureElement($entry->name(), $entry->phpType());
+            }
+
+            $array[] = new StructureElement($index, new StructureType(...$entriesArray));
+        }
+
+        return new StructureType(...$array);
     }
 
     /**

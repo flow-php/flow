@@ -25,55 +25,55 @@ final class ListEntryTest extends TestCase
     public function test_creating_boolean_list_from_wrong_value_types() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Expected list of boolean got different types');
+        $this->expectExceptionMessage('Expected list<boolean> got different types');
 
-        new ListEntry('list', ListElement::boolean(), ['string', false]);
+        new ListEntry('list', ['string', false], new ListType(ListElement::boolean()));
     }
 
     public function test_creating_datetime_list_from_wrong_value_types() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Expected list of object<DateTimeInterface> got different types.');
+        $this->expectExceptionMessage('Expected list<object<DateTimeInterface>> got different types.');
 
-        new ListEntry('list', ListElement::object(\DateTimeInterface::class), ['string', new \DateTimeImmutable()]);
+        new ListEntry('list', ['string', new \DateTimeImmutable()], new ListType(ListElement::object(\DateTimeInterface::class)));
     }
 
     public function test_creating_float_list_from_wrong_value_types() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Expected list of float got different types');
+        $this->expectExceptionMessage('Expected list<float> got different types');
 
-        new ListEntry('list', ListElement::float(), ['string', 1.3]);
+        new ListEntry('list', ['string', 1.3], new ListType(ListElement::float()));
     }
 
     public function test_creating_integer_list_from_wrong_value_types() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Expected list of integer got different types');
+        $this->expectExceptionMessage('Expected list<integer> got different types');
 
-        new ListEntry('list', ListElement::integer(), ['string', 1]);
+        new ListEntry('list', ['string', 1], new ListType(ListElement::integer()));
     }
 
     public function test_creating_list_from_not_list_array() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Expected list of integer got different types');
+        $this->expectExceptionMessage('Expected list<integer> got different types');
 
-        new ListEntry('list', ListElement::integer(), ['a' => 1, 'b' => 2]);
+        new ListEntry('list', ['a' => 1, 'b' => 2], new ListType(ListElement::integer()));
     }
 
     public function test_creating_string_list_from_wrong_value_types() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Expected list of string got different types');
+        $this->expectExceptionMessage('Expected list<string> got different types');
 
-        new ListEntry('list', ListElement::string(), ['string', 1]);
+        new ListEntry('list', ['string', 1], new ListType(ListElement::string()));
     }
 
     public function test_definition() : void
     {
         $this->assertEquals(
-            Definition::list('strings', ListElement::string()),
+            Definition::list('strings', new ListType(ListElement::string())),
             Entry::list_of_string('strings', ['one', 'two', 'three'])->definition()
         );
     }

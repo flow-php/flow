@@ -6,6 +6,8 @@ namespace Flow\ETL\Row\Entry;
 
 use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\PHP\Type\Native\ArrayType;
+use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
@@ -44,8 +46,6 @@ final class JsonEntry implements \Stringable, Entry
     }
 
     /**
-     * @param array<mixed> $value
-     *
      * @throws InvalidArgumentException
      */
     public static function object(string $name, array $value) : self
@@ -112,6 +112,15 @@ final class JsonEntry implements \Stringable, Entry
         return $this->name;
     }
 
+    public function phpType() : Type
+    {
+        if ([] === $this->value) {
+            return ArrayType::empty();
+        }
+
+        return new ArrayType();
+    }
+
     public function rename(string $name) : Entry
     {
         $entry = new self($name, $this->value);
@@ -125,6 +134,9 @@ final class JsonEntry implements \Stringable, Entry
         return $this->value();
     }
 
+    /**
+     * @throws \JsonException
+     */
     public function value() : string
     {
         if (!\count($this->value) && $this->object) {

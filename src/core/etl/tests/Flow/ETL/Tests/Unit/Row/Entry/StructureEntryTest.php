@@ -5,13 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
 use Flow\ETL\DSL\Entry;
-use Flow\ETL\PHP\Type\Logical\List\ListElement;
-use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\PHP\Type\Logical\Map\MapKey;
 use Flow\ETL\PHP\Type\Logical\Map\MapValue;
 use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\StructureType;
+use Flow\ETL\PHP\Type\Native\ArrayType;
 use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\Row\Entry\StructureEntry;
 use Flow\ETL\Row\Schema\Definition;
@@ -64,39 +63,39 @@ final class StructureEntryTest extends TestCase
             true,
             new StructureEntry(
                 'name',
-                ['json', ['foo' => ['bar' => 'baz']]],
-                new StructureType(new StructureElement('json', new ListType(ListElement::map(new MapType(MapKey::string(), MapValue::string())))))
+                ['json' => ['foo' => ['bar' => 'baz']]],
+                new StructureType(new StructureElement('json', new MapType(MapKey::string(), MapValue::map(new MapType(MapKey::string(), MapValue::string())))))
             ),
             new StructureEntry(
                 'name',
-                ['json', ['foo' => ['bar' => 'baz']]],
-                new StructureType(new StructureElement('json', new ListType(ListElement::map(new MapType(MapKey::string(), MapValue::string())))))
+                ['json' => ['foo' => ['bar' => 'baz']]],
+                new StructureType(new StructureElement('json', new MapType(MapKey::string(), MapValue::map(new MapType(MapKey::string(), MapValue::string())))))
             ),
         ];
         yield 'equal names and equal simple same collection entries' => [
             true,
             new StructureEntry(
                 'name',
-                ['json', ['1' => 1, '2' => 2, '3' => 3]],
-                new StructureType(new StructureElement('json', new ListType(ListElement::map(new MapType(MapKey::string(), MapValue::string())))))
+                ['json' => ['1' => 1, '2' => 2, '3' => 3]],
+                new StructureType(new StructureElement('json', new ArrayType()))
             ),
             new StructureEntry(
                 'name',
-                ['json', ['1' => 1, '2' => 2, '3' => 3]],
-                new StructureType(new StructureElement('json', new ListType(ListElement::map(new MapType(MapKey::string(), MapValue::string())))))
+                ['json' => ['1' => 1, '2' => 2, '3' => 3]],
+                new StructureType(new StructureElement('json', new ArrayType()))
             ),
         ];
         yield 'equal names and equal simple different collection entries' => [
             false,
             new StructureEntry(
                 'name',
-                ['json', ['5' => 5, '2' => 2, '1' => 1]],
-                new StructureType(new StructureElement('json', new ListType(ListElement::map(new MapType(MapKey::string(), MapValue::string())))))
+                ['json' => ['5' => 5, '2' => 2, '1' => 1]],
+                new StructureType(new StructureElement('json', new ArrayType()))
             ),
             new StructureEntry(
                 'name',
-                ['json', ['1' => 1, '2' => 2, '3' => 3]],
-                new StructureType(new StructureElement('json', new ListType(ListElement::map(new MapType(MapKey::string(), MapValue::string())))))
+                ['json' => ['1' => 1, '2' => 2, '3' => 3]],
+                new StructureType(new StructureElement('json', new ArrayType()))
             ),
         ];
     }
@@ -105,23 +104,41 @@ final class StructureEntryTest extends TestCase
     {
         $entry = Entry::structure(
             'items',
-            Entry::integer('id', 1),
-            Entry::string('name', 'one'),
-            Entry::structure('address', Entry::string('street', 'foo'), Entry::string('city', 'bar'))
+            [
+                'id' => 1,
+                'name' => 'one',
+                'address' => [
+                    'street' => 'foo',
+                    'city' => 'bar',
+                ],
+            ],
+            new StructureType(
+                new StructureElement('id', ScalarType::integer()),
+                new StructureElement('name', ScalarType::string()),
+                new StructureElement(
+                    'address',
+                    new StructureType(
+                        new StructureElement('street', ScalarType::string()),
+                        new StructureElement('city', ScalarType::string()),
+                    )
+                ),
+            ),
         );
 
         $this->assertEquals(
             Definition::structure(
                 'items',
-                [
-                    'id' => Definition::integer('id', false),
-                    'name' => Definition::string('name', false),
-                    'address' => [
-                        'street' => Definition::string('street', false),
-                        'city' => Definition::string('city', false),
-                    ],
-                ],
-                false
+                new StructureType(
+                    new StructureElement('id', ScalarType::integer()),
+                    new StructureElement('name', ScalarType::string()),
+                    new StructureElement(
+                        'address',
+                        new StructureType(
+                            new StructureElement('street', ScalarType::string()),
+                            new StructureElement('city', ScalarType::string()),
+                        )
+                    )
+                ),
             ),
             $entry->definition()
         );
@@ -208,8 +225,8 @@ final class StructureEntryTest extends TestCase
     {
         $string = new StructureEntry(
             'name',
-            ['json', ['5' => 5, '2' => 2, '3' => 3]],
-            new StructureType(new StructureElement('json', new ListType(ListElement::map(new MapType(MapKey::string(), MapValue::integer())))))
+            ['json' => ['5' => 5, '2' => 2, '3' => 3]],
+            new StructureType(new StructureElement('json', new ArrayType()))
         );
 
         $serialized = \serialize($string);

@@ -7,9 +7,6 @@ namespace Flow\ETL\Tests\Unit;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\ListType;
-use Flow\ETL\PHP\Type\Logical\Map\MapKey;
-use Flow\ETL\PHP\Type\Logical\Map\MapValue;
-use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\PHP\Type\Native\ScalarType;
@@ -54,8 +51,8 @@ final class RowTest extends TestCase
                 new Entries(
                     new StructureEntry(
                         'json',
-                        ['json', ['1' => 1, '2' => 2, '3' => 3]],
-                        new StructureType(new StructureElement('json', new ListType(ListElement::map(new MapType(MapKey::string(), MapValue::string())))))
+                        ['json' => [1, 2, 3]],
+                        new StructureType(new StructureElement('json', new ListType(ListElement::integer())))
                     )
                 )
             ),
@@ -63,8 +60,8 @@ final class RowTest extends TestCase
                 new Entries(
                     new StructureEntry(
                         'json',
-                        ['json', ['1' => 1, '2' => 2, '3' => 3]],
-                        new StructureType(new StructureElement('json', new ListType(ListElement::map(new MapType(MapKey::string(), MapValue::string())))))
+                        ['json' => [1, 2, 3]],
+                        new StructureType(new StructureElement('json', new ListType(ListElement::integer())))
                     )
                 )
             ),
@@ -75,8 +72,8 @@ final class RowTest extends TestCase
                 new Entries(
                     new StructureEntry(
                         'json',
-                        ['json', ['5' => 5, '2' => 2, '1' => 1]],
-                        new StructureType(new StructureElement('json', new ListType(ListElement::map(new MapType(MapKey::string(), MapValue::string())))))
+                        ['json' => ['5', '2', '1']],
+                        new StructureType(new StructureElement('json', new ListType(ListElement::string())))
                     )
                 )
             ),
@@ -84,8 +81,8 @@ final class RowTest extends TestCase
                 new Entries(
                     new StructureEntry(
                         'json',
-                        ['json', ['1' => 1, '2' => 2, '3' => 3]],
-                        new StructureType(new StructureElement('json', new ListType(ListElement::map(new MapType(MapKey::string(), MapValue::string())))))
+                        ['json' => ['1', '2', '3']],
+                        new StructureType(new StructureElement('json', new ListType(ListElement::string())))
                     )
                 )
             ),
@@ -109,8 +106,11 @@ final class RowTest extends TestCase
             ),
             Entry::structure(
                 'items',
-                Entry::integer('item-id', 1),
-                Entry::string('name', 'one'),
+                ['item-id' => 1, 'name' => 'one'],
+                new StructureType(
+                    new StructureElement('item-id', ScalarType::integer()),
+                    new StructureElement('name', ScalarType::string())
+                )
             ),
             Entry::collection(
                 'tags',
@@ -129,7 +129,13 @@ final class RowTest extends TestCase
                 Row\Schema\Definition::dateTime('created-at'),
                 Row\Schema\Definition::null('phase'),
                 Row\Schema\Definition::array('array'),
-                Row\Schema\Definition::structure('items', ['item-id' => Entry::integer('item-id', 1)->definition(), 'name' => Entry::string('name', 'one')->definition()]),
+                Row\Schema\Definition::structure(
+                    'items',
+                    new StructureType(
+                        new StructureElement('item-id', ScalarType::integer()),
+                        new StructureElement('name', ScalarType::string())
+                    )
+                ),
                 Row\Schema\Definition::collection('tags'),
                 Row\Schema\Definition::object('object'),
             ),

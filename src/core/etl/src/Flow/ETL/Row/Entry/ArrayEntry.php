@@ -6,6 +6,8 @@ namespace Flow\ETL\Row\Entry;
 
 use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\PHP\Type\Native\ArrayType;
+use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
@@ -74,6 +76,11 @@ final class ArrayEntry implements \Stringable, Entry
     public function name() : string
     {
         return $this->name;
+    }
+
+    public function phpType() : Type
+    {
+        return new ArrayType([] === $this->value);
     }
 
     public function rename(string $name) : Entry

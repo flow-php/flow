@@ -7,6 +7,9 @@ use Flow\ETL\DSL\Entry;
 use Flow\ETL\DSL\From;
 use Flow\ETL\DSL\Parquet;
 use Flow\ETL\Flow;
+use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
+use Flow\ETL\PHP\Type\Logical\StructureType;
+use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\Parquet\ParquetFile\Compressions;
@@ -113,15 +116,26 @@ final class ParquetTest extends TestCase
             Entry::list_of_datetime('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()]),
             Entry::structure(
                 'address',
-                Entry::string('street', 'street_' . $index),
-                Entry::string('city', 'city_' . $index),
-                Entry::string('zip', 'zip_' . $index),
-                Entry::string('country', 'country_' . $index),
-                Entry::structure(
-                    'location',
-                    Entry::float('lat', 1.5),
-                    Entry::float('lng', 1.5)
-                )
+                [
+                    'street' => 'street_' . $index,
+                    'city' => 'city_' . $index,
+                    'zip' => 'zip_' . $index,
+                    'country' => 'country_' . $index,
+                    'location' => ['lat' => 1.5, 'lon' => 1.5],
+                ],
+                new StructureType(
+                    new StructureElement('street', ScalarType::string()),
+                    new StructureElement('city', ScalarType::string()),
+                    new StructureElement('zip', ScalarType::string()),
+                    new StructureElement('country', ScalarType::string()),
+                    new StructureElement(
+                        'location',
+                        new StructureType(
+                            new StructureElement('lat', ScalarType::float()),
+                            new StructureElement('lon', ScalarType::float()),
+                        )
+                    )
+                ),
             ),
         );
     }

@@ -2,6 +2,8 @@
 
 namespace Flow\ETL\Row\Entry;
 
+use Flow\ETL\PHP\Type\Native\ObjectType;
+use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
@@ -72,6 +74,11 @@ final class XMLNodeEntry implements \Stringable, Entry
     public function name() : string
     {
         return $this->name;
+    }
+
+    public function phpType() : Type
+    {
+        return ObjectType::fromObject($this->value);
     }
 
     public function rename(string $name) : Entry

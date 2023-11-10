@@ -6,14 +6,11 @@ namespace Flow\ETL\Row\Entry;
 
 use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
-use Flow\ETL\Row\Schema\FlowMetadata;
-use Flow\ETL\Row\Schema\Metadata;
 
 /**
  * @template T
@@ -24,8 +21,6 @@ final class ListEntry implements Entry, TypedCollection
 {
     use EntryRef;
 
-    private readonly ListType $type;
-
     /**
      * @param array<T> $value
      *
@@ -33,17 +28,15 @@ final class ListEntry implements Entry, TypedCollection
      */
     public function __construct(
         private readonly string $name,
-        ListElement $element,
-        private readonly array $value
+        private readonly array $value,
+        private readonly ListType $type,
     ) {
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        $this->type = new ListType($element);
-
-        if (!$this->type->isValid($value)) {
-            throw InvalidArgumentException::because('Expected list of ' . $element->toString() . ' got different types.');
+        if (!$type->isValid($value)) {
+            throw InvalidArgumentException::because('Expected ' . $type->toString() . ' got different types.');
         }
     }
 
@@ -66,11 +59,7 @@ final class ListEntry implements Entry, TypedCollection
 
     public function definition() : Definition
     {
-        return Definition::list(
-            $this->name,
-            $this->type->element(),
-            metadata: Metadata::with(FlowMetadata::METADATA_LIST_ENTRY_TYPE, $this->type())
-        );
+        return Definition::list($this->name, $this->type);
     }
 
     public function is(string|Reference $name) : bool
@@ -92,7 +81,7 @@ final class ListEntry implements Entry, TypedCollection
 
     public function map(callable $mapper) : Entry
     {
-        return new self($this->name, $this->type->element(), $mapper($this->value));
+        return new self($this->name, $mapper($this->value), $this->type);
     }
 
     public function name() : string
@@ -100,9 +89,14 @@ final class ListEntry implements Entry, TypedCollection
         return $this->name;
     }
 
+    public function phpType() : Type
+    {
+        return $this->type;
+    }
+
     public function rename(string $name) : Entry
     {
-        return new self($name, $this->type->element(), $this->value);
+        return new self($name, $this->value, $this->type);
     }
 
     public function toString() : string

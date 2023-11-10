@@ -3,7 +3,6 @@
 namespace Flow\ETL\Tests\Unit\PHP\Type;
 
 use Flow\ETL\PHP\Type\Logical\ListType;
-use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\PHP\Type\Native\ArrayType;
 use Flow\ETL\PHP\Type\Native\NullType;
@@ -39,8 +38,8 @@ final class TypeFactoryTest extends TestCase
                 'two' => 'two',
                 'three' => 'three',
             ],
-            MapType::class,
-            'map<string, string>',
+            StructureType::class,
+            'structure{one: string, two: string, three: string}',
         ];
 
         yield 'simple structure' => [
@@ -58,7 +57,7 @@ final class TypeFactoryTest extends TestCase
                 ],
             ],
             StructureType::class,
-            'structure{one: string, two: string, three: string, list: list<integer>, map: map<string, string>}',
+            'structure{one: string, two: string, three: string, list: list<integer>, map: structure{one: string, two: string, three: string}}',
         ];
 
         yield 'list of unique same structures' => [
@@ -93,8 +92,8 @@ final class TypeFactoryTest extends TestCase
                     ],
                 ],
             ],
-            MapType::class,
-            'map<string, map<string, map<string, string>>>',
+            StructureType::class,
+            'structure{one: structure{map: structure{one: string, two: string, three: string}}, two: structure{map: structure{one: string, two: string, three: string}}}',
         ];
 
         yield 'empty array' => [
@@ -239,8 +238,8 @@ final class TypeFactoryTest extends TestCase
                 'two' => null,
                 'three' => 'three',
             ],
-            MapType::class,
-            'map<string, string>',
+            StructureType::class,
+            'structure{one: string, two: null, three: string}',
         ];
     }
 

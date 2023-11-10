@@ -7,9 +7,7 @@ namespace Flow\ETL\Tests\Unit\Row\Factory;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
-use Flow\ETL\PHP\Type\Logical\Map\MapKey;
-use Flow\ETL\PHP\Type\Logical\Map\MapValue;
-use Flow\ETL\PHP\Type\Logical\MapType;
+use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\PHP\Type\Native\ScalarType;
@@ -89,7 +87,7 @@ final class NativeEntryFactoryTest extends TestCase
     public function test_conversion_to_different_type_with_schema() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("Can't convert value into entry \"e\"");
+        $this->expectExceptionMessage("Field \"e\" conversion exception. Flow\ETL\DSL\Entry::string(): Argument #2 (\$value) must be of type string, int given");
 
         (new NativeEntryFactory())
             ->create('e', 1, new Schema(Schema\Definition::string('e')));
@@ -223,16 +221,16 @@ final class NativeEntryFactoryTest extends TestCase
     {
         $this->assertEquals(
             Entry::list_of_int('e', [1, 2, 3]),
-            (new NativeEntryFactory())->create('e', [1, 2, 3], new Schema(Schema\Definition::list('e', ListElement::integer())))
+            (new NativeEntryFactory())->create('e', [1, 2, 3], new Schema(Schema\Definition::list('e', new ListType(ListElement::integer()))))
         );
     }
 
     public function test_list_int_with_schema_but_string_list() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Field "e" conversion exception. Expected list of integer got different types.');
+        $this->expectExceptionMessage('Field "e" conversion exception. Expected list<integer> got different types.');
 
-        (new NativeEntryFactory())->create('e', ['1', '2', '3'], new Schema(Schema\Definition::list('e', ListElement::integer())));
+        (new NativeEntryFactory())->create('e', ['1', '2', '3'], new Schema(Schema\Definition::list('e', new ListType(ListElement::integer()))));
     }
 
     public function test_list_of_datetime_with_schema() : void
@@ -240,7 +238,7 @@ final class NativeEntryFactoryTest extends TestCase
         $this->assertEquals(
             Entry::list_of_datetime('e', $list = [new \DateTimeImmutable('now'), new \DateTimeImmutable('tomorrow')]),
             (new NativeEntryFactory())
-                ->create('e', $list, new Schema(Schema\Definition::list('e', ListElement::object(\DateTimeImmutable::class))))
+                ->create('e', $list, new Schema(Schema\Definition::list('e', new ListType(ListElement::object(\DateTimeImmutable::class)))))
         );
     }
 
@@ -268,7 +266,7 @@ final class NativeEntryFactoryTest extends TestCase
                 ->create(
                     'e',
                     ['2022-01-01 00:00:00 UTC', '2022-01-01 00:00:00 UTC'],
-                    new Schema(Schema\Definition::list('e', ListElement::object(\DateTimeImmutable::class)))
+                    new Schema(Schema\Definition::list('e', new ListType(ListElement::object(\DateTimeImmutable::class))))
                 )
         );
     }
@@ -291,7 +289,10 @@ final class NativeEntryFactoryTest extends TestCase
                     new StructureElement('city', ScalarType::string()),
                     new StructureElement(
                         'geo',
-                        new MapType(MapKey::string(), MapValue::float()),
+                        new StructureType(
+                            new StructureElement('lat', ScalarType::float()),
+                            new StructureElement('lon', ScalarType::float())
+                        ),
                     ),
                     new StructureElement('street', ScalarType::string()),
                     new StructureElement('zip', ScalarType::string()),

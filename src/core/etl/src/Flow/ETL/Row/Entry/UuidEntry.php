@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Row\Entry;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\PHP\Type\Native\ObjectType;
+use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
@@ -16,13 +18,21 @@ final class UuidEntry implements \Stringable, Entry
 {
     use EntryRef;
 
+    private Entry\Type\Uuid $value;
+
     /**
      * @throws InvalidArgumentException
      */
-    public function __construct(private readonly string $name, private readonly Entry\Type\Uuid $value)
+    public function __construct(private readonly string $name, Entry\Type\Uuid|string $value)
     {
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
+        }
+
+        if (\is_string($value)) {
+            $this->value = Entry\Type\Uuid::fromString($value);
+        } else {
+            $this->value = $value;
         }
     }
 
@@ -74,6 +84,11 @@ final class UuidEntry implements \Stringable, Entry
     public function name() : string
     {
         return $this->name;
+    }
+
+    public function phpType() : Type
+    {
+        return ObjectType::fromObject($this->value);
     }
 
     /**

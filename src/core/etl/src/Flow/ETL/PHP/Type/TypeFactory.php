@@ -7,9 +7,6 @@ namespace Flow\ETL\PHP\Type;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\ListType;
-use Flow\ETL\PHP\Type\Logical\Map\MapKey;
-use Flow\ETL\PHP\Type\Logical\Map\MapValue;
-use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\PHP\Type\Native\ArrayType;
@@ -30,7 +27,7 @@ final class TypeFactory
         }
 
         if (\is_object($value)) {
-            return ObjectType::of($value::class);
+            return ObjectType::fromObject($value);
         }
 
         if (\is_array($value)) {
@@ -43,18 +40,13 @@ final class TypeFactory
                 new Types(...\array_map([$this, 'getType'], \array_values($value)))
             );
 
-            $firstKey = $detector->firstKeyType();
             $firstValue = $detector->firstValueType();
 
             if ($detector->isList() && $firstValue) {
                 return new ListType(ListElement::fromType($firstValue));
             }
 
-            if ($detector->isMap() && $firstKey && $firstValue) {
-                return new MapType(MapKey::fromType($firstKey), MapValue::fromType($firstValue));
-            }
-
-            if ($detector->isStructure()) {
+            if ($detector->isStructure() || $detector->isMap()) {
                 $elements = [];
 
                 foreach ($value as $key => $item) {

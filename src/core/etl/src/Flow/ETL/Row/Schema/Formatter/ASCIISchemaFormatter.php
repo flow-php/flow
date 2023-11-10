@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Schema\Formatter;
 
+use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
+use Flow\ETL\PHP\Type\Logical\StructureType;
+use Flow\ETL\PHP\Type\Native\NativeType;
 use Flow\ETL\Row\Entry\StructureEntry;
 use Flow\ETL\Row\Schema;
-use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\Schema\FlowMetadata;
 use Flow\ETL\Row\Schema\SchemaFormatter;
 
@@ -34,7 +36,7 @@ final class ASCIISchemaFormatter implements SchemaFormatter
      *
      * @return array<string>
      */
-    private function formatEntry(Schema\Definition $definition, array $buffer, int $level = 0) : array
+    private function formatEntry(Schema\Definition $definition, array $buffer) : array
     {
         $entry = $definition->entry()->name();
 
@@ -43,22 +45,45 @@ final class ASCIISchemaFormatter implements SchemaFormatter
             default => '[' . \implode(', ', $definition->types()) . ']'
         };
 
+        $indention = '';
+
+        $buffer[] = $indention . '|-- ' . $entry . ': ' . $type . ' (nullable = ' . ($definition->isNullable() ? 'true' : 'false') . ')';
+
+        if (\in_array(StructureEntry::class, $definition->types(), true)) {
+            /** @var StructureType $structureType */
+            $structureType = $definition->metadata()->get(FlowMetadata::METADATA_STRUCTURE_ENTRY_TYPE);
+
+            $fields = [];
+
+            foreach ($structureType->elements() as $structEntry) {
+                $fields += $this->formatStructureElement($structEntry, $fields, 1);
+            }
+
+            $buffer = \array_merge($buffer, $fields);
+        }
+
+        return $buffer;
+    }
+
+    private function formatStructureElement(StructureElement $element, array $buffer, int $level) : array
+    {
+        $entry = $element->name();
+        $structureType = $element->type();
+        $optional = $structureType instanceof NativeType && $structureType->nullable();
+
         $indention = \str_repeat('    ', $level);
 
         if ($indention !== '') {
             $indention = '|' . $indention;
         }
 
-        $buffer[] = $indention . '|-- ' . $entry . ': ' . $type . ' (nullable = ' . ($definition->isNullable() ? 'true' : 'false') . ')';
+        $buffer[] = $indention . '|-- ' . $entry . ': ' . $structureType->toString() . ' (nullable = ' . ($optional ? 'true' : 'false') . ')';
 
-        if (\in_array(StructureEntry::class, $definition->types(), true)) {
-            /** @var array<Definition> $structureEntries */
-            $structureEntries = $definition->metadata()->get(FlowMetadata::METADATA_STRUCTURE_DEFINITIONS);
-
+        if ($structureType instanceof StructureType) {
             $fields = [];
 
-            foreach ($structureEntries as $structEntry) {
-                $fields += $this->formatEntry($structEntry, $fields, $level + 1);
+            foreach ($structureType->elements() as $structEntry) {
+                $fields += $this->formatStructureElement($structEntry, $fields, $level + 1);
             }
 
             $buffer = \array_merge($buffer, $fields);

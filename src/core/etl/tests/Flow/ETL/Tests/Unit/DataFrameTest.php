@@ -352,10 +352,10 @@ final class DataFrameTest extends TestCase
                                 ),
                                 new StructureEntry(
                                     'items',
-                                    ['item-id' => 1, 'name' => 'one'],
+                                    ['item-id' => '1', 'name' => 'one'],
                                     new StructureType(
-                                        new StructureElement('item-id', ScalarType::integer()),
                                         new StructureElement('item-id', ScalarType::string()),
+                                        new StructureElement('name', ScalarType::string()),
                                     )
                                 ),
                                 new Row\Entry\CollectionEntry(

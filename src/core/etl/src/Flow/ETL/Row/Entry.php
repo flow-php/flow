@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row;
 
+use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Schema\Definition;
 use Flow\Serializer\Serializable;
 
@@ -29,6 +30,8 @@ interface Entry extends Serializable
     public function map(callable $mapper) : self;
 
     public function name() : string;
+
+    public function phpType() : Type;
 
     public function ref() : EntryReference;
 

@@ -33,29 +33,29 @@ final class ScalarType implements NativeType
         };
     }
 
-    public static function boolean(bool $optional = false) : self
+    public static function boolean(bool $nullable = false) : self
     {
-        return new self(self::BOOLEAN, $optional);
+        return new self(self::BOOLEAN, $nullable);
     }
 
-    public static function float(bool $optional = false) : self
+    public static function float(bool $nullable = false) : self
     {
-        return new self(self::FLOAT, $optional);
+        return new self(self::FLOAT, $nullable);
     }
 
-    public static function fromString(string $value, bool $optional = false) : self
+    public static function fromString(string $value, bool $nullable = false) : self
     {
-        return new self($value, $optional);
+        return new self($value, $nullable);
     }
 
-    public static function integer(bool $optional = false) : self
+    public static function integer(bool $nullable = false) : self
     {
-        return new self(self::INTEGER, $optional);
+        return new self(self::INTEGER, $nullable);
     }
 
-    public static function string(bool $optional = false) : self
+    public static function string(bool $nullable = false) : self
     {
-        return new self(self::STRING, $optional);
+        return new self(self::STRING, $nullable);
     }
 
     public function __serialize() : array
@@ -76,7 +76,7 @@ final class ScalarType implements NativeType
 
     public function isEqual(Type $type) : bool
     {
-        return $type instanceof self && $type->value === $this->value;
+        return $type instanceof self && $type->value === $this->value && $this->nullable === $type->nullable;
     }
 
     public function isFloat() : bool

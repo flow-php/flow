@@ -7,6 +7,10 @@ namespace Flow\ETL\Tests\Unit\Row\Schema;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
+use Flow\ETL\PHP\Type\Logical\ListType;
+use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
+use Flow\ETL\PHP\Type\Logical\StructureType;
+use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Row\Entry\ListEntry;
 use Flow\ETL\Row\Entry\NullEntry;
@@ -46,22 +50,22 @@ final class DefinitionTest extends TestCase
 
     public function test_equals_but_different_constraints() : void
     {
-        $def = Definition::list('list', ListElement::integer());
+        $def = Definition::list('list', new ListType(ListElement::integer()));
 
         $this->assertFalse(
             $def->isEqual(
-                Definition::list('list', ListElement::string())
+                Definition::list('list', new ListType(ListElement::string()))
             )
         );
     }
 
     public function test_equals_types_and_constraints() : void
     {
-        $def = Definition::list('list', ListElement::integer());
+        $def = Definition::list('list', new ListType(ListElement::integer()));
 
         $this->assertTrue(
             $def->isEqual(
-                Definition::list('list', ListElement::integer())
+                Definition::list('list', new ListType(ListElement::integer()))
             )
         );
     }
@@ -147,10 +151,10 @@ final class DefinitionTest extends TestCase
                 'list',
                 [ListEntry::class, NullEntry::class],
                 null,
-                Metadata::empty()->add(FlowMetadata::METADATA_LIST_ENTRY_TYPE, ListElement::string())
+                Metadata::empty()->add(FlowMetadata::METADATA_LIST_ENTRY_TYPE, new ListType(ListElement::string()))
             ),
-            Definition::list('list', ListElement::integer())
-                ->merge(Definition::list('list', ListElement::string(), true))
+            Definition::list('list', new ListType(ListElement::integer()))
+                ->merge(Definition::list('list', new ListType(ListElement::string()), true))
         );
     }
 
@@ -201,25 +205,37 @@ final class DefinitionTest extends TestCase
     {
         $address = Entry::structure(
             'address',
-            $street = Entry::string('street', 'street'),
-            $city = Entry::string('city', 'city'),
-            Entry::structure(
-                'location',
-                $lat = Entry::float('lat', 1.0),
-                $lng = Entry::float('lng', 1.0),
+            [
+                'street' => 'street',
+                'city' => 'city',
+                'location' => ['lat' => 1.0, 'lng' => 1.0],
+            ],
+            new StructureType(
+                new StructureElement('street', ScalarType::string()),
+                new StructureElement('city', ScalarType::string()),
+                new StructureElement(
+                    'location',
+                    new StructureType(
+                        new StructureElement('lat', ScalarType::float()),
+                        new StructureElement('lng', ScalarType::float()),
+                    )
+                )
             ),
         );
 
         $this->assertEquals(
-            [
-                'street' => $street->definition(),
-                'city' => $city->definition(),
-                'location' => [
-                    'lat' => $lat->definition(),
-                    'lng' => $lng->definition(),
-                ],
-            ],
-            $address->definition()->metadata()->get(FlowMetadata::METADATA_STRUCTURE_DEFINITIONS)
+            new StructureType(
+                new StructureElement('street', ScalarType::string()),
+                new StructureElement('city', ScalarType::string()),
+                new StructureElement(
+                    'location',
+                    new StructureType(
+                        new StructureElement('lat', ScalarType::float()),
+                        new StructureElement('lng', ScalarType::float()),
+                    )
+                )
+            ),
+            $address->definition()->metadata()->get(FlowMetadata::METADATA_STRUCTURE_ENTRY_TYPE)
         );
     }
 

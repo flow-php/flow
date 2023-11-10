@@ -22,12 +22,17 @@ final class ObjectType implements NativeType
         }
     }
 
+    public static function fromObject(object $object, bool $nullable = false) : self
+    {
+        return new self($object::class, $nullable);
+    }
+
     /**
      * @param class-string $class
      */
-    public static function of(string $class) : self
+    public static function of(string $class, bool $nullable = false) : self
     {
-        return new self($class, false);
+        return new self($class, $nullable);
     }
 
     public function __serialize() : array
@@ -43,12 +48,12 @@ final class ObjectType implements NativeType
 
     public function isEqual(Type $type) : bool
     {
-        return $type instanceof self && $type->class === $this->class;
+        return $type instanceof self && $this->class === $type->class && $this->nullable === $type->nullable;
     }
 
     public function isValid(mixed $value) : bool
     {
-        return $value instanceof $this->class;
+        return \is_a($value, $this->class, true);
     }
 
     public function nullable() : bool
