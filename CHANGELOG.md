@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-11-09
+## [Unreleased] - 2023-11-10
 
 ### Added
 - [#772](https://github.com/flow-php/flow/pull/772) - **Add `TypeFactory`, `ArrayType` & `NullType`, `ResourceType`, `CallableType`** - [@stloyd](https://github.com/stloyd)
@@ -61,6 +61,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#777](https://github.com/flow-php/flow/pull/777) - **Make types implementation serializable, mark native types as nullable** - [@stloyd](https://github.com/stloyd)
 - [#773](https://github.com/flow-php/flow/pull/773) - **renamed phar file to flow.phar** - [@norberttech](https://github.com/norberttech)
 - [#770](https://github.com/flow-php/flow/pull/770) - **Rework `ScalarType` to hold optional value** - [@stloyd](https://github.com/stloyd)
 - [#761](https://github.com/flow-php/flow/pull/761) - **Move PHAR runtime into `bin`** - [@stloyd](https://github.com/stloyd)
