@@ -33,7 +33,7 @@ final class Dremel
                 if ($definition === 0) {
                     $output[] = null;
                 } elseif ($definition === $maxDefinitionLevel) {
-                    $output[] = $values[$valueIndex];
+                    $output[] = $values[$valueIndex] ?? null;
                     $valueIndex++;
                 }
             }
