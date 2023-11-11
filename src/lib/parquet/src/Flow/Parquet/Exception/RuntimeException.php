@@ -2,6 +2,6 @@
 
 namespace Flow\Parquet\Exception;
 
-final class RuntimeException extends \RuntimeException
+class RuntimeException extends \RuntimeException
 {
 }
