@@ -1,4 +1,4 @@
-name: Build Release Artifact
+name: Build Release
 
 on:
   release:
@@ -6,7 +6,7 @@ on:
       - published
 
 jobs:
-  build-release-artifact:
+  build-release:
     name: "Build Release Artifacts"
     runs-on: ${{ matrix.operating-system }}
     strategy:
@@ -71,6 +71,32 @@ jobs:
           --detach-sign
           --output="./build/flow.phar.asc"
           ./build/flow.phar
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ghcr.io/flow-php/flow:latest
+          target: flow
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: "Prepare artifact name"
         run: |
