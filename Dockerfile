@@ -3,7 +3,7 @@ ARG FLOW_BASE_IMAGE_TAG_SUFFIX=cli-alpine3.18
 ARG FLOW_BASE_IMAGE_TAG=${FLOW_PHP_VERSION}-${FLOW_BASE_IMAGE_TAG_SUFFIX}
 ARG FLOW_BASE_IMAGE=php:${FLOW_BASE_IMAGE_TAG}
 
-FROM ${FLOW_BASE_IMAGE}
+FROM ${FLOW_BASE_IMAGE} as flow
 
 # Install dependencies and PHP extensions
 RUN apk update && apk add --no-cache \
