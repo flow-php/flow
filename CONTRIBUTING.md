@@ -54,7 +54,7 @@ composer build:phar
 In order to build docker image and load it to local registry please use: 
 
 ```shell
-docker buildx build -t flow-php/flow:latest . --no-cache --progress=plain --build-arg FLOW_VERSION=0.3.3 --load
+docker buildx build -t flow-php/flow:latest . --progress=plain  --load
 ```
 
 Usage:
