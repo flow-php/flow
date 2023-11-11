@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-release:
-    name: "Build Release Artifacts"
+    name: "Build Release"
     runs-on: ${{ matrix.operating-system }}
     strategy:
       matrix:
@@ -93,7 +93,7 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
-            ghcr.io/flow-php/flow:latest
+            ghcr.io/flow-php/flow:${{ github.ref_name }}
           target: flow
           cache-from: type=gha
           cache-to: type=gha,mode=max
