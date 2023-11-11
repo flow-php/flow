@@ -101,7 +101,7 @@ final class Dremel
 
     private function buildDefinitions(array $data, array &$definitions, int $maxDefinitionLevel, int $level = 1) : void
     {
-        $previousElement = null;
+        $previousElementType = null;
 
         foreach ($data as $key => $value) {
             if (\is_array($value)) {
@@ -112,7 +112,7 @@ final class Dremel
                 }
             } else {
                 if ($value === null) {
-                    if ($level === 1 || $previousElement === 'array') {
+                    if ($level === 1 || $previousElementType === 'array') {
                         $definitions[] = 0;
                     } else {
                         $definitions[] = $level;
@@ -122,7 +122,7 @@ final class Dremel
                 }
             }
 
-            $previousElement = \is_array($value) ? 'array' : 'scalar';
+            $previousElementType = \gettype($value);
         }
     }
 
