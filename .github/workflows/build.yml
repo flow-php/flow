@@ -1,4 +1,4 @@
-name: Build Flow-PHP PHAR
+name: Build
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
       - 'CHANGELOG.md'
 
 jobs:
-  build-phar-artifact:
+  build:
     name: "Build Flow-PHP PHAR"
 
     runs-on: ubuntu-latest

@@ -1,4 +1,4 @@
-name: Build Release Artifact
+name: Build Release
 
 on:
   release:
@@ -6,7 +6,7 @@ on:
       - published
 
 jobs:
-  build-release-artifact:
+  build-release:
     name: "Build Release Artifacts"
     runs-on: ${{ matrix.operating-system }}
     strategy:
