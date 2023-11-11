@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-11-11
 
 ### Added
+- [#571](https://github.com/flow-php/flow/pull/571) - **Dockerfile** - [@norberttech](https://github.com/norberttech)
 - [#778](https://github.com/flow-php/flow/pull/778) - **Dremel to properly shred/assemble nested structures with nullable elements** - [@norberttech](https://github.com/norberttech)
 - [#772](https://github.com/flow-php/flow/pull/772) - **Add `TypeFactory`, `ArrayType` & `NullType`, `ResourceType`, `CallableType`** - [@stloyd](https://github.com/stloyd)
 - [#773](https://github.com/flow-php/flow/pull/773) - **Added parquet commands to flow.phar** - [@norberttech](https://github.com/norberttech)
