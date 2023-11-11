@@ -4,7 +4,6 @@ namespace Flow\Dremel;
 
 use function Flow\Parquet\array_flatten;
 use Flow\Dremel\Exception\InvalidArgumentException;
-use Flow\Dremel\Exception\RuntimeException;
 
 final class Dremel
 {
@@ -19,26 +18,27 @@ final class Dremel
      *
      * @psalm-suppress UndefinedInterfaceMethod
      */
-    public function assemble(array $repetitions, array $definitions, array $values) : \Generator
+    public function assemble(array $repetitions, array $definitions, array $values) : array
     {
         $this->assertInput($repetitions, $definitions);
 
         $maxDefinitionLevel = \count($definitions) ? \max($definitions) : 0;
         $maxRepetitionLevel = \count($repetitions) ? \max($repetitions) : 0;
 
+        $output = [];
         $valueIndex = 0;
 
         if ($maxRepetitionLevel === 0) {
             foreach ($definitions as $definition) {
                 if ($definition === 0) {
-                    yield null;
+                    $output[] = null;
                 } elseif ($definition === $maxDefinitionLevel) {
-                    yield $values[$valueIndex];
+                    $output[] = $values[$valueIndex];
                     $valueIndex++;
                 }
             }
 
-            return;
+            return $output;
         }
 
         $stack = new Stack();
@@ -46,40 +46,26 @@ final class Dremel
         foreach ($definitions as $definitionIndex => $definition) {
             $repetition = $repetitions[$definitionIndex];
 
-            if ($repetition === 0) {
-                if ($stack->size()) {
-                    yield $stack->dropFlat();
-                    $stack->clear();
-                    $stack->push(new ListNode($maxRepetitionLevel));
-                } else {
-                    $stack->push(new ListNode($maxRepetitionLevel));
-                }
+            if ($repetition === 0 && $definition !== 0) {
+                $stack->push(new ListNode($maxRepetitionLevel));
             }
 
             if ($repetition === 0 && $definition === 0) {
-                yield null;
-                $stack->clear();
-            } else {
-                if ($repetition <= $maxRepetitionLevel && $repetition > 0) {
-                    /** @phpstan-ignore-next-line  */
-                    $stack->last()->push(
-                        $this->value($definition, $maxDefinitionLevel, $values, $valueIndex),
-                        $repetition
-                    );
-                } elseif ($repetition === 0) {
-                    /** @phpstan-ignore-next-line  */
-                    $stack->last()->push(
-                        $this->value($definition, $maxDefinitionLevel, $values, $valueIndex),
-                        $maxRepetitionLevel
-                    );
-                }
+                $stack->push(new NullNode());
+
+                continue;
+            }
+
+            if ($definition + 1 >= $maxDefinitionLevel) {
+                /** @phpstan-ignore-next-line  */
+                $stack->last()->push(
+                    $this->value($definition, $maxDefinitionLevel, $values, $valueIndex),
+                    $repetition === 0 ? $maxRepetitionLevel : $repetition
+                );
             }
         }
 
-        if ($stack->size()) {
-            yield $stack->dropFlat();
-            $stack->clear();
-        }
+        return $stack->dropFlat();
     }
 
     /**
@@ -89,9 +75,10 @@ final class Dremel
     {
         $definitions = [];
         $this->buildDefinitions($data, $definitions, $maxDefinitionLevel);
+        $repetitions = $this->buildRepetitions($data);
 
         return new DataShredded(
-            $this->buildRepetitions($data),
+            $repetitions,
             $definitions,
             \array_values(\array_filter(array_flatten($data), static fn ($item) => $item !== null))
         );
@@ -112,55 +99,50 @@ final class Dremel
         }
     }
 
-    private function buildDefinitions(array $data, array &$definitions, int $maxDefinitionLevel) : void
+    private function buildDefinitions(array $data, array &$definitions, int $maxDefinitionLevel, int $level = 1) : void
     {
+        $previousElementType = null;
+
         foreach ($data as $key => $value) {
             if (\is_array($value)) {
-                // Recursively call the function if the value is an array
-                $this->buildDefinitions($value, $definitions, $maxDefinitionLevel);
+                if (!\count($value)) {
+                    $definitions[] = $level;
+                } else {
+                    $this->buildDefinitions($value, $definitions, $maxDefinitionLevel, $level + 1);
+                }
             } else {
                 if ($value === null) {
-                    $definitions[] = 0;
+                    if ($level === 1 || $previousElementType === 'array') {
+                        $definitions[] = 0;
+                    } else {
+                        $definitions[] = $level;
+                    }
                 } else {
                     $definitions[] = $maxDefinitionLevel;
                 }
             }
+
+            $previousElementType = \gettype($value);
         }
     }
 
-    private function buildRepetitions(array $data, int $currentLevel = 0, bool $newRow = true) : array
+    private function buildRepetitions(array $data, int $currentLevel = 0, int $topIndex = 0) : array
     {
         $output = [];
 
-        foreach ($data as $item) {
+        foreach ($data as $index => $item) {
             if (\is_array($item)) {
-                $currentLevel++;
 
-                $valueTypes = [];
+                if (!\count($item)) {
+                    $output[] = 0;
 
-                foreach ($item as $subItem) {
-                    $valueTypes[] = \gettype($subItem);
+                    continue;
                 }
 
-                if (\count(\array_unique($valueTypes)) !== 1) {
-                    throw new RuntimeException('Invalid data structure, each row must be an array of arrays or scalars, got both, arrays and scalars. ' . \json_encode($item, \JSON_THROW_ON_ERROR));
-                }
-
-                $newRow = true;
-
-                foreach ($item as $subItem) {
-                    if (\is_array($subItem)) {
-                        $output = \array_merge($output, $this->buildRepetitions($subItem, $currentLevel + 1, $newRow));
-                    } else {
-                        $output[] = $newRow ? 0 : $currentLevel;
-                    }
-
-                    $newRow = false;
-                }
-                $currentLevel--;
+                $output = \array_merge($output, $this->buildRepetitions($item, $currentLevel + 1, $index));
             } else {
                 if (!\count($output)) {
-                    $output[] = $newRow ? 0 : $currentLevel - 1;
+                    $output[] = $topIndex === 0 ? 0 : $currentLevel - 1;
                 } else {
                     $output[] = $currentLevel;
                 }

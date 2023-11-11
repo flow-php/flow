@@ -28,71 +28,139 @@ final class Flattener
 
         /** @var NestedColumn $column */
         if ($column->isList()) {
-            $listElementColumn = $column->getListElement();
+            return $this->flattenList($column, $columnData);
+        }
 
-            if ($columnData === null) {
-                return [
-                    $listElementColumn->flatPath() => null,
-                ];
-            }
+        if ($column->isMap()) {
+            return $this->flattenMap($column, $columnData);
+        }
 
-            if ($listElementColumn instanceof FlatColumn) {
-                return [
-                    $listElementColumn->flatPath() => $columnData,
-                ];
-            }
+        if ($column->isStruct()) {
+            return $this->flattenStructure($column, $columnData);
+        }
 
+        throw new RuntimeException('Unknown column type');
+    }
+
+    private function flattenList(NestedColumn $column, mixed $columnData) : array
+    {
+        $listElementColumn = $column->getListElement();
+
+        if ($columnData === null) {
+            return [
+                $listElementColumn->flatPath() => null,
+            ];
+        }
+
+        if ($listElementColumn instanceof FlatColumn) {
+            return [
+                $listElementColumn->flatPath() => $columnData,
+            ];
+        }
+
+        /** @var NestedColumn $listElementColumn */
+        if ($listElementColumn->isList()) {
             $data = [];
 
             foreach ($columnData as $listElement) {
-                $data[] = $this->flattenColumn($listElementColumn, [$listElementColumn->name() => $listElement]);
+                $data[] = $this->flattenColumn($listElementColumn, [$listElementColumn->name() => [$listElement]]);
             }
 
             return \array_merge_recursive(...$data);
         }
 
-        if ($column->isMap()) {
-            $keyColumn = $column->getMapKeyColumn();
-            $valueColumn = $column->getMapValueColumn();
-
-            if ($columnData === null) {
-                return [
-                    $keyColumn->flatPath() => null,
-                    $valueColumn->flatPath() => null,
-                ];
-            }
-
-            if ($valueColumn instanceof FlatColumn) {
-                return [
-                    $keyColumn->flatPath() => \array_keys($columnData),
-                    $valueColumn->flatPath() => \array_values($columnData),
-                ];
-            }
-
+        if ($listElementColumn->isMap()) {
             $data = [];
 
-            foreach ($columnData as $listElement) {
-                $data[] = $this->flattenColumn($valueColumn, [$valueColumn->name() => $listElement]);
-            }
-
-            return \array_merge(
-                [
-                    $keyColumn->flatPath() => \array_keys($columnData),
-                ],
-                \array_merge_recursive(...$data)
-            );
-        }
-
-        if ($column->isStruct()) {
-            $data = [];
-
-            foreach ($column->children() as $child) {
-                $data = \array_merge($data, $this->flattenColumn($child, $columnData ?? [$child->name() => null]));
+            foreach ($columnData as $listMapElementData) {
+                foreach ($this->flattenMap($listElementColumn, $listMapElementData) as $key => $value) {
+                    $data[$key][] = $value;
+                }
             }
 
             return $data;
         }
 
-        throw new RuntimeException('Unknown column type');
+        $data = [];
+
+        foreach ($columnData as $listStructureElementData) {
+            foreach ($this->flattenStructure($listElementColumn, $listStructureElementData) as $key => $value) {
+                $data[$key][] = $value;
+            }
+        }
+
+        return $data;
+    }
+
+    private function flattenMap(NestedColumn $column, mixed $columnData) : array
+    {
+        $keyColumn = $column->getMapKeyColumn();
+        $valueColumn = $column->getMapValueColumn();
+
+        if ($columnData === null) {
+            return [
+                $keyColumn->flatPath() => null,
+                $valueColumn->flatPath() => null,
+            ];
+        }
+
+        if ($valueColumn instanceof FlatColumn) {
+            return [
+                $keyColumn->flatPath() => \array_keys($columnData),
+                $valueColumn->flatPath() => \array_values($columnData),
+            ];
+        }
+
+        if ($valueColumn->isList()) {
+            $data = [
+                $keyColumn->flatPath() => \array_keys($columnData),
+            ];
+
+            foreach ($columnData as $listElement) {
+                foreach ($this->flattenColumn($valueColumn, [$valueColumn->name() => $listElement]) as $key => $value) {
+                    $data[$key][] = $value;
+                }
+            }
+
+            return $data;
+        }
+
+        if ($valueColumn->isMap()) {
+            $data = [
+                $keyColumn->flatPath() => \array_keys($columnData),
+            ];
+
+            foreach ($columnData as $mapValue) {
+                foreach ($this->flattenColumn($valueColumn, [$valueColumn->name() => $mapValue]) as $key => $value) {
+                    $data[$key][] = $value;
+                }
+            }
+
+            return $data;
+        }
+
+        $data = [];
+
+        foreach ($columnData as $listElement) {
+            $data[] = $this->flattenColumn($valueColumn, [$valueColumn->name() => $listElement]);
+        }
+
+        return \array_merge(
+            [
+                $keyColumn->flatPath() => \array_keys($columnData),
+            ],
+            \array_merge_recursive(...$data)
+        );
+    }
+
+    private function flattenStructure(NestedColumn $column, mixed $columnData) : array
+    {
+        $data = [];
+
+        foreach ($column->children() as $child) {
+            $data = \array_merge($data, $this->flattenColumn($child, $columnData ?? [$child->name() => null]));
+        }
+
+        return $data;
     }
 }

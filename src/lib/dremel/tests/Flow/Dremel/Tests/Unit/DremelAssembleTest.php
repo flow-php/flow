@@ -8,6 +8,18 @@ use PHPUnit\Framework\TestCase;
 
 final class DremelAssembleTest extends TestCase
 {
+    public function test_assembly_shred_on_nested_nullable_lists() : void
+    {
+        $repetitions = [0, 2, 2, 0, 2, 0, 2, 2];
+        $definitions = [2, 2, 2, 1, 1, 2, 2, 2];
+        $values = [0, 1, 2, 4, 5, 6];
+
+        $this->assertSame(
+            [[[0, 1, 2]], [[null, null]], [[4, 5, 6]]],
+            (new Dremel())->assemble($repetitions, $definitions, $values)
+        );
+    }
+
     public function test_decode_column_of_integer_list() : void
     {
         $repetitions = [0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1];
@@ -16,7 +28,7 @@ final class DremelAssembleTest extends TestCase
 
         $this->assertSame(
             [[3, 7, 5], [4, 4, 7], [10, 6, 4], [10, 3, 2], [10, 4, 4], [5, 3, 2], [1, 4, 3], [4, 3, 9], [10, 3, 4], [5, 7, 4]],
-            \iterator_to_array((new Dremel())->assemble($repetitions, $definitions, $values))
+            (new Dremel())->assemble($repetitions, $definitions, $values)
         );
     }
 
@@ -28,7 +40,7 @@ final class DremelAssembleTest extends TestCase
 
         $this->assertSame(
             [0, null, 2, null, 4, null, 6, null, 8, null],
-            \iterator_to_array((new Dremel())->assemble($repetitions, $definitions, $values))
+            (new Dremel())->assemble($repetitions, $definitions, $values)
         );
     }
 
@@ -40,7 +52,7 @@ final class DremelAssembleTest extends TestCase
 
         $this->assertSame(
             [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-            \iterator_to_array((new Dremel())->assemble($repetitions, $definitions, $values))
+            (new Dremel())->assemble($repetitions, $definitions, $values)
         );
     }
 
@@ -52,7 +64,7 @@ final class DremelAssembleTest extends TestCase
 
         $this->assertSame(
             [[10], [7, null, null], [9], [8, null], [9], [4, null, null, null, null], [6], [3, null, null], [10, null, null], [8, null]],
-            \iterator_to_array((new Dremel())->assemble($repetitions, $definitions, $values))
+            (new Dremel())->assemble($repetitions, $definitions, $values)
         );
     }
 
@@ -164,7 +176,7 @@ final class DremelAssembleTest extends TestCase
                 [[[8, 4, 4], [10]], [[3, 1, 7], [7], [1, 1]], [[2], [1]]],
                 [[[6, 5], [7, 3], [9]], [[5, 6, 1]], [[4, 8], [7]]],
             ],
-            \iterator_to_array((new Dremel())->assemble($repetitions, $definitions, $values))
+            (new Dremel())->assemble($repetitions, $definitions, $values)
         );
     }
 
@@ -176,7 +188,7 @@ final class DremelAssembleTest extends TestCase
 
         $this->assertSame(
             [[5, 9, 2], null, [3, 2, 9], null, [5, 2, 3], null, [7, 2, 3], null, [2, 6, 6], null],
-            \iterator_to_array((new Dremel())->assemble($repetitions, $definitions, $values))
+            (new Dremel())->assemble($repetitions, $definitions, $values)
         );
     }
 
@@ -220,7 +232,7 @@ final class DremelAssembleTest extends TestCase
                 [[null, 5], [1, null]],
                 [[2, null, null], [null, 2, 3], [null, null, 9]],
             ],
-            \iterator_to_array((new Dremel())->assemble($repetitions, $definitions, $values))
+            (new Dremel())->assemble($repetitions, $definitions, $values)
         );
     }
 
@@ -252,7 +264,7 @@ final class DremelAssembleTest extends TestCase
                 [[[2, 7, 6], [10, 2, null], [null, null, null]], [[5, 7, 5], [null, null, 3], [9, 10, 1]], [[null, 5, 7], [null, null, 6], [7, 4, 4]]],
                 [[[6, 7, 7, 6], [3, 6, 1, 8]], [[2, 8, 3, null], [7, 9, 3, 5]], [[8, 5, null, 2], [null, 2, 5, null]]],
             ],
-            \iterator_to_array((new Dremel())->assemble($repetitions, $definitions, $values))
+            (new Dremel())->assemble($repetitions, $definitions, $values)
         );
     }
 
@@ -333,7 +345,7 @@ final class DremelAssembleTest extends TestCase
                     ],
                 ],
             ],
-            \iterator_to_array((new Dremel())->assemble($repetitions, $definitions, $values))
+            (new Dremel())->assemble($repetitions, $definitions, $values)
         );
     }
 
@@ -346,6 +358,6 @@ final class DremelAssembleTest extends TestCase
         $definitions = [4, 4, 4, 4, 4, 4];
         $values = ['value', 'value', 'value', 'value', 'value', 'value'];
 
-        \iterator_to_array((new Dremel())->assemble($repetitions, $definitions, $values));
+        (new Dremel())->assemble($repetitions, $definitions, $values);
     }
 }

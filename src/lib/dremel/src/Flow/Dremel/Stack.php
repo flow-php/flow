@@ -31,13 +31,13 @@ final class Stack
         $this->nodes = [];
     }
 
-    public function dropFlat() : ?array
+    public function dropFlat() : array
     {
-        $output = [];
-
-        if (\count($this->nodes) === 1) {
-            return $this->nodes[0]->value();
+        if (!\count($this->nodes)) {
+            return [];
         }
+
+        $output = [];
 
         foreach ($this->nodes as $node) {
             $output[] = $node->value();
