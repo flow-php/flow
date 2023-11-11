@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-11-11
 
 ### Added
+- [d92b51](https://github.com/flow-php/flow/commit/d92b514201e989c74acec4b2707b3dbcdce83d85) - **Docker installation manual** - [@norberttech](https://github.com/norberttech)
 - [#571](https://github.com/flow-php/flow/pull/571) - **Dockerfile** - [@norberttech](https://github.com/norberttech)
 - [#778](https://github.com/flow-php/flow/pull/778) - **Dremel to properly shred/assemble nested structures with nullable elements** - [@norberttech](https://github.com/norberttech)
 - [#772](https://github.com/flow-php/flow/pull/772) - **Add `TypeFactory`, `ArrayType` & `NullType`, `ResourceType`, `CallableType`** - [@stloyd](https://github.com/stloyd)
