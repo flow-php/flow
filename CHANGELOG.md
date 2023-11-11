@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-11-11
 
 ### Added
+- [#778](https://github.com/flow-php/flow/pull/778) - **Dremel to properly shred/assemble nested structures with nullable elements** - [@norberttech](https://github.com/norberttech)
 - [#772](https://github.com/flow-php/flow/pull/772) - **Add `TypeFactory`, `ArrayType` & `NullType`, `ResourceType`, `CallableType`** - [@stloyd](https://github.com/stloyd)
 - [#773](https://github.com/flow-php/flow/pull/773) - **Added parquet commands to flow.phar** - [@norberttech](https://github.com/norberttech)
 - [#765](https://github.com/flow-php/flow/pull/765) - **Add new logical `StructureType`** - [@stloyd](https://github.com/stloyd)
@@ -61,6 +62,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#778](https://github.com/flow-php/flow/pull/778) - **Dremel algorithms are no longer working as Generators** - [@norberttech](https://github.com/norberttech)
 - [#777](https://github.com/flow-php/flow/pull/777) - **Make types implementation serializable, mark native types as nullable** - [@stloyd](https://github.com/stloyd)
 - [#773](https://github.com/flow-php/flow/pull/773) - **renamed phar file to flow.phar** - [@norberttech](https://github.com/norberttech)
 - [#770](https://github.com/flow-php/flow/pull/770) - **Rework `ScalarType` to hold optional value** - [@stloyd](https://github.com/stloyd)
