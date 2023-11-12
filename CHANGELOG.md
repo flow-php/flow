@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-11-11
+## [Unreleased] - 2023-11-12
 
 ### Added
 - [d92b51](https://github.com/flow-php/flow/commit/d92b514201e989c74acec4b2707b3dbcdce83d85) - **Docker installation manual** - [@norberttech](https://github.com/norberttech)
@@ -202,6 +202,7 @@
 - [c9fb26](https://github.com/flow-php/flow/commit/c9fb26dc2e0558c0f33b6097286e4dc6e2799d3f) - **test-benchmark.yml** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#787](https://github.com/flow-php/flow/pull/787) - **Removed DSL functions: `datetime_string()`, `json_string()`** - [@stloyd](https://github.com/stloyd)
 - [#750](https://github.com/flow-php/flow/pull/750) - **BufferExtractor** - [@norberttech](https://github.com/norberttech)
 - [#750](https://github.com/flow-php/flow/pull/750) - **Batch Size parameter from MemoryExtractor** - [@norberttech](https://github.com/norberttech)
 - [#733](https://github.com/flow-php/flow/pull/733) - **Loaders are no longer allowing for setting chunk size** - [@norberttech](https://github.com/norberttech)
