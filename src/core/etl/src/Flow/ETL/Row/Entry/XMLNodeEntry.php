@@ -50,7 +50,7 @@ final class XMLNodeEntry implements \Stringable, Entry
 
     public function definition() : Definition
     {
-        return Definition::xml_node($this->ref(), false);
+        return Definition::xml_node($this->ref(), $this->type->nullable());
     }
 
     public function is(Reference|string $name) : bool
@@ -65,6 +65,10 @@ final class XMLNodeEntry implements \Stringable, Entry
     public function isEqual(Entry $entry) : bool
     {
         if (!$entry instanceof self || !$this->is($entry->name())) {
+            return false;
+        }
+
+        if (!$this->type->isEqual($entry->type)) {
             return false;
         }
 

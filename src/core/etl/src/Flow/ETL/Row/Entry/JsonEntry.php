@@ -13,7 +13,7 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @implements Entry<string, array{name: string, value: array, object: boolean, type: Type}>
+ * @implements Entry<string, array{name: string, value: array, object: boolean, type: ScalarType}>
  */
 final class JsonEntry implements \Stringable, Entry
 {
@@ -21,7 +21,7 @@ final class JsonEntry implements \Stringable, Entry
 
     private bool $object = false;
 
-    private readonly Type $type;
+    private readonly ScalarType $type;
 
     private readonly array $value;
 
@@ -91,7 +91,7 @@ final class JsonEntry implements \Stringable, Entry
 
     public function definition() : Definition
     {
-        return Definition::json($this->name);
+        return Definition::json($this->name, $this->type->nullable());
     }
 
     public function is(string|Reference $name) : bool
@@ -105,7 +105,7 @@ final class JsonEntry implements \Stringable, Entry
 
     public function isEqual(Entry $entry) : bool
     {
-        return $this->is($entry->name()) && $entry instanceof self && (new ArrayComparison())->equals($this->value, $entry->value);
+        return $this->is($entry->name()) && $entry instanceof self && $this->type->isEqual($entry->type) && (new ArrayComparison())->equals($this->value, $entry->value);
     }
 
     public function map(callable $mapper) : Entry

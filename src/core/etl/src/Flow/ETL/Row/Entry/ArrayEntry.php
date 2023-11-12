@@ -56,7 +56,7 @@ final class ArrayEntry implements \Stringable, Entry
 
     public function definition() : Definition
     {
-        return Definition::array($this->name, false);
+        return Definition::array($this->name, $this->type->nullable());
     }
 
     public function is(string|Reference $name) : bool

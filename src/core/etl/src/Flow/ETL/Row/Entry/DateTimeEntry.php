@@ -63,7 +63,7 @@ final class DateTimeEntry implements \Stringable, Entry
 
     public function definition() : Definition
     {
-        return Definition::dateTime($this->name);
+        return Definition::dateTime($this->name, $this->type->nullable());
     }
 
     public function is(string|Reference $name) : bool
@@ -77,7 +77,7 @@ final class DateTimeEntry implements \Stringable, Entry
 
     public function isEqual(Entry $entry) : bool
     {
-        return $this->is($entry->name()) && $entry instanceof self && $this->value() == $entry->value();
+        return $this->is($entry->name()) && $entry instanceof self && $this->type->isEqual($entry->type) && $this->value() == $entry->value();
     }
 
     public function map(callable $mapper) : Entry

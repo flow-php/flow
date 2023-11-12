@@ -78,7 +78,7 @@ final class UuidEntry implements \Stringable, Entry
 
     public function isEqual(Entry $entry) : bool
     {
-        return $this->is($entry->name()) && $entry instanceof self && $this->value()->isEqual($entry->value());
+        return $this->is($entry->name()) && $entry instanceof self && $this->type->isEqual($entry->type) && $this->value()->isEqual($entry->value());
     }
 
     public function map(callable $mapper) : Entry

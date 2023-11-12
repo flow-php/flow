@@ -61,7 +61,7 @@ final class FloatEntry implements \Stringable, Entry
 
     public function definition() : Definition
     {
-        return Definition::float($this->name, false);
+        return Definition::float($this->name, $this->type->nullable());
     }
 
     public function is(string|Reference $name) : bool
@@ -77,6 +77,7 @@ final class FloatEntry implements \Stringable, Entry
     {
         return $this->is($entry->name())
             && $entry instanceof self
+            && $this->type->isEqual($entry->type)
             && \bccomp((string) $this->value(), (string) $entry->value(), $this->precision) === 0;
     }
 

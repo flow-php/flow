@@ -74,7 +74,7 @@ final class BooleanEntry implements \Stringable, Entry
 
     public function definition() : Definition
     {
-        return Definition::boolean($this->name, false);
+        return Definition::boolean($this->name, $this->type->nullable());
     }
 
     public function is(string|Reference $name) : bool
@@ -88,7 +88,7 @@ final class BooleanEntry implements \Stringable, Entry
 
     public function isEqual(Entry $entry) : bool
     {
-        return $this->is($entry->name()) && $entry instanceof self && $this->value() === $entry->value();
+        return $this->is($entry->name()) && $entry instanceof self && $this->type->isEqual($entry->type) && $this->value() === $entry->value();
     }
 
     public function map(callable $mapper) : Entry

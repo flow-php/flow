@@ -82,8 +82,8 @@ final class MapEntry implements Entry
     {
         return $this->is($entry->name())
             && $entry instanceof self
-            && (new ArrayComparison())->equals($this->value, $entry->value())
-            && $this->type->isEqual($entry->type);
+            && $this->type->isEqual($entry->type)
+            && (new ArrayComparison())->equals($this->value, $entry->value());
     }
 
     public function map(callable $mapper) : Entry

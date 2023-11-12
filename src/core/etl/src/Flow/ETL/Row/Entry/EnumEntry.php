@@ -4,23 +4,26 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use Flow\ETL\PHP\Type\Native\ObjectType;
+use Flow\ETL\PHP\Type\Native\EnumType;
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @implements Entry<\UnitEnum, array{name: string, value: \UnitEnum}>
+ * @implements Entry<\UnitEnum, array{name: string, value: \UnitEnum, type: EnumType}>
  */
 final class EnumEntry implements Entry
 {
     use EntryRef;
 
+    private readonly EnumType $type;
+
     public function __construct(
         private readonly string $name,
         private readonly \UnitEnum $value
     ) {
+        $this->type = EnumType::of($value::class);
     }
 
     public function __serialize() : array
@@ -28,6 +31,7 @@ final class EnumEntry implements Entry
         return [
             'name' => $this->name,
             'value' => $this->value,
+            'type' => $this->type,
         ];
     }
 
@@ -40,13 +44,15 @@ final class EnumEntry implements Entry
     {
         $this->name = $data['name'];
         $this->value = $data['value'];
+        $this->type = $data['type'];
     }
 
     public function definition() : Definition
     {
         return Definition::enum(
             $this->name,
-            \get_class($this->value)
+            $this->type->class,
+            $this->type->nullable()
         );
     }
 
@@ -61,7 +67,7 @@ final class EnumEntry implements Entry
 
     public function isEqual(Entry $entry) : bool
     {
-        return $entry instanceof self && $this->value === $entry->value;
+        return $entry instanceof self && $this->type->isEqual($entry->type) && $this->value === $entry->value;
     }
 
     public function map(callable $mapper) : self
@@ -86,7 +92,7 @@ final class EnumEntry implements Entry
 
     public function type() : Type
     {
-        return ObjectType::fromObject($this->value);
+        return $this->type;
     }
 
     public function value() : \UnitEnum

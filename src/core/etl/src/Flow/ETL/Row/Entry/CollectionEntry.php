@@ -63,7 +63,7 @@ final class CollectionEntry implements \Stringable, Entry
 
     public function definition() : Definition
     {
-        return Definition::collection($this->name, false);
+        return Definition::collection($this->name, $this->type->nullable());
     }
 
     public function is(string|Reference $name) : bool
@@ -77,7 +77,7 @@ final class CollectionEntry implements \Stringable, Entry
 
     public function isEqual(Entry $entry) : bool
     {
-        return $this->is($entry->name()) && $entry instanceof self && (new ArrayComparison())->equals($this->value(), $entry->value());
+        return $this->is($entry->name()) && $entry instanceof self && $this->type->isEqual($entry->type) && (new ArrayComparison())->equals($this->value(), $entry->value());
     }
 
     public function map(callable $mapper) : Entry

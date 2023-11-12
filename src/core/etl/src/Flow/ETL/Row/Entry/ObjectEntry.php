@@ -67,8 +67,8 @@ final class ObjectEntry implements \Stringable, Entry
     {
         return $this->is($entry->name())
             && $entry instanceof self
-            && \serialize($this->__serialize()['value']) === \serialize($entry->__serialize()['value'])
-            && $this->type->isEqual($entry->type);
+            && $this->type->isEqual($entry->type)
+            && \serialize($this->__serialize()['value']) === \serialize($entry->__serialize()['value']);
     }
 
     public function map(callable $mapper) : Entry

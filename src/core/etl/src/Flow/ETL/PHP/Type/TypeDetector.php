@@ -10,6 +10,7 @@ use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\PHP\Type\Native\ArrayType;
+use Flow\ETL\PHP\Type\Native\EnumType;
 use Flow\ETL\PHP\Type\Native\NullType;
 use Flow\ETL\PHP\Type\Native\ObjectType;
 use Flow\ETL\PHP\Type\Native\ScalarType;
@@ -27,6 +28,10 @@ final class TypeDetector
         }
 
         if (\is_object($value)) {
+            if ($value instanceof \UnitEnum) {
+                return EnumType::of($value::class);
+            }
+
             return ObjectType::fromObject($value);
         }
 

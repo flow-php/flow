@@ -61,7 +61,7 @@ final class XMLEntry implements \Stringable, Entry
 
     public function definition() : Definition
     {
-        return Definition::xml($this->ref());
+        return Definition::xml($this->ref(), $this->type->nullable());
     }
 
     public function is(Reference|string $name) : bool
@@ -76,6 +76,10 @@ final class XMLEntry implements \Stringable, Entry
     public function isEqual(Entry $entry) : bool
     {
         if (!$entry instanceof self || !$this->is($entry->name())) {
+            return false;
+        }
+
+        if (!$this->type->isEqual($entry->type)) {
             return false;
         }
 
