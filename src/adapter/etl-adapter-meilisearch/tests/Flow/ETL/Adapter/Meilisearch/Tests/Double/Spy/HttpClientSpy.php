@@ -23,7 +23,7 @@ final class HttpClientSpy implements ClientInterface
             \json_encode([
                 'taskUid' => 1000,
                 'indexUid' => 'index-uid',
-                'status' => 'processed',
+                'status' => 'succeeded',
             ])
         );
     }
