@@ -113,10 +113,10 @@ final class NativeEntryFactoryTest extends TestCase
     public function test_enum_invalid_value_with_schema() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("Value \"not_valid\" can't be converted to " . BackedIntEnum::class . ' enum');
+        $this->expectExceptionMessage("Value \"invalid\" can't be converted to " . BackedIntEnum::class . ' enum');
 
         (new NativeEntryFactory())
-            ->create('e', 'not_valid', new Schema(Schema\Definition::enum('e', BackedIntEnum::class)));
+            ->create('e', 'invalid', new Schema(Schema\Definition::enum('e', BackedIntEnum::class)));
     }
 
     public function test_enum_with_schema() : void
