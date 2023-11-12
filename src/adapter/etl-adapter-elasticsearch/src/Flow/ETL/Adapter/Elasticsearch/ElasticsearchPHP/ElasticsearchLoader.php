@@ -142,7 +142,7 @@ final class ElasticsearchLoader implements Loader
          *
          * @phpstan-ignore-next-line
          */
-        $this->client()->bulk($parameters);
+        $res = $this->client()->bulk($parameters);
     }
 
     /**

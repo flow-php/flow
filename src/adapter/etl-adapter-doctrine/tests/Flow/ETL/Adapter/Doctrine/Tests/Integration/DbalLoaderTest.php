@@ -142,7 +142,6 @@ final class DbalLoaderTest extends IntegrationTestCase
                     ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
                 ])
             )
-            ->batchSize(3)
             ->load($loader)
             ->run();
 
@@ -328,7 +327,6 @@ final class DbalLoaderTest extends IntegrationTestCase
                 ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
             ])
         )
-        ->batchSize(10)
         ->load($insertLoader)
         ->run();
 
@@ -340,7 +338,6 @@ final class DbalLoaderTest extends IntegrationTestCase
                     ['id' => 3, 'name' => 'Changed Name Three', 'description' => 'Description Three'],
             ])
             )
-        ->batchSize(10)
         ->load($updateLoader)
         ->run();
 

@@ -421,7 +421,7 @@ final class DataFrame
      */
     public function load(Loader $loader) : self
     {
-        $this->pipeline->add($loader);
+        $this->pipeline = $this->context->config->optimizer()->optimize($loader, $this->pipeline);
 
         return $this;
     }
@@ -472,6 +472,7 @@ final class DataFrame
     /**
      * @deprecated - use DataFrame::batchSize() instead
      *
+     * @psalm-suppress DeprecatedClass
      * Keep extracting rows and passing them through all transformers up to this point.
      * From here each transformed Row is divided and pushed forward to following pipeline elements.
      *

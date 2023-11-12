@@ -10,11 +10,12 @@ use Flow\ETL\Adapter\Meilisearch\MeilisearchPHP\MeilisearchLoader;
 use Flow\ETL\Extractor;
 use Flow\ETL\Loader;
 use Flow\ETL\Transformer;
+use Psr\Http\Client\ClientInterface;
 
 class Meilisearch
 {
     /**
-     * @param array{url: string, apiKey: string} $config
+     * @param array{url: string, apiKey: string, httpClient: ?ClientInterface} $config
      */
     final public static function bulk_index(
         array $config,
@@ -24,7 +25,7 @@ class Meilisearch
     }
 
     /**
-     * @param array{url: string, apiKey: string} $config
+     * @param array{url: string, apiKey: string, httpClient: ?ClientInterface} $config
      */
     final public static function bulk_update(
         array $config,
