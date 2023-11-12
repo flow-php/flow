@@ -58,19 +58,9 @@ class Entry
      *
      * @return RowEntry\DateTimeEntry
      */
-    final public static function datetime(string $name, \DateTimeInterface $value) : RowEntry
+    final public static function datetime(string $name, \DateTimeInterface|string $value) : RowEntry
     {
         return new RowEntry\DateTimeEntry($name, $value);
-    }
-
-    /**
-     * @throws InvalidArgumentException
-     *
-     * @return RowEntry\DateTimeEntry
-     */
-    final public static function datetime_string(string $name, string $value) : RowEntry
-    {
-        return new RowEntry\DateTimeEntry($name, new \DateTimeImmutable($value));
     }
 
     /**
@@ -117,18 +107,14 @@ class Entry
     }
 
     /**
-     * @param array<mixed> $data
-     *
      * @return RowEntry\JsonEntry
      */
-    final public static function json(string $name, array $data) : RowEntry
+    final public static function json(string $name, array|string $data) : RowEntry
     {
         return new RowEntry\JsonEntry($name, $data);
     }
 
     /**
-     * @param array<mixed> $data
-     *
      * @throws InvalidArgumentException
      *
      * @return RowEntry\JsonEntry
@@ -136,16 +122,6 @@ class Entry
     final public static function json_object(string $name, array $data) : RowEntry
     {
         return RowEntry\JsonEntry::object($name, $data);
-    }
-
-    /**
-     * @param string $data
-     *
-     * @return RowEntry\JsonEntry
-     */
-    final public static function json_string(string $name, string $data) : RowEntry
-    {
-        return RowEntry\JsonEntry::fromJsonString($name, $data);
     }
 
     /**

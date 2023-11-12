@@ -13,7 +13,7 @@ final class CallMethodTest extends TestCase
     public function test_call_method() : void
     {
         $row = Row::create(
-            Entry::datetime_string('object', '2023-01-01 00:00:00 UTC'),
+            Entry::datetime('object', '2023-01-01 00:00:00 UTC'),
             Entry::str('method', 'format'),
             Entry::str('method_param', 'H:i:s Y-m-d'),
         );
@@ -31,8 +31,8 @@ final class CallMethodTest extends TestCase
     public function test_method_not_string() : void
     {
         $row = Row::create(
-            Entry::datetime_string('object', '2023-01-01 00:00:00 UTC'),
-            Entry::datetime_string('method', '2023-01-01 00:00:00 UTC'),
+            Entry::datetime('object', '2023-01-01 00:00:00 UTC'),
+            Entry::datetime('method', '2023-01-01 00:00:00 UTC'),
         );
 
         $this->assertNull(
@@ -46,7 +46,7 @@ final class CallMethodTest extends TestCase
     public function test_not_existing_method() : void
     {
         $row = Row::create(
-            Entry::datetime_string('object', '2023-01-01 00:00:00 UTC'),
+            Entry::datetime('object', '2023-01-01 00:00:00 UTC'),
             Entry::str('method', 'method_that_not_exists'),
         );
 
@@ -61,7 +61,7 @@ final class CallMethodTest extends TestCase
     public function test_null_method() : void
     {
         $row = Row::create(
-            Entry::datetime_string('object', '2023-01-01 00:00:00 UTC'),
+            Entry::datetime('object', '2023-01-01 00:00:00 UTC'),
             Entry::null('method'),
         );
 

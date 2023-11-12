@@ -81,6 +81,12 @@ It's no longer mandatory to set this flat to true when using SaveMode::APPEND, i
 Loaders are no longer accepting chunk_size parameter, from now in order to control 
 the number of rows saved at once use `DataFrame::batchSize(int $size)` method.
 
+### 10) Removed DSL functions: `datetime_string()`, `json_string()`
+
+Those functions were removed in favor of accepting string values in related DSL functions:
+- `datetime_string()` => `datetime()`,
+- `json_string()` => `json()` & `json_object()`
+
 ---
 
 ## Upgrading from 0.3.x to 0.4.x
