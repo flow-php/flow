@@ -1,6 +1,8 @@
 ## [Unreleased] - 2023-11-12
 
 ### Added
+- [#788](https://github.com/flow-php/flow/pull/788) - **BatchSizeOptimization** - [@norberttech](https://github.com/norberttech)
+- [#788](https://github.com/flow-php/flow/pull/788) - **httpClient option to Meilisearch loader configuration** - [@norberttech](https://github.com/norberttech)
 - [d92b51](https://github.com/flow-php/flow/commit/d92b514201e989c74acec4b2707b3dbcdce83d85) - **Docker installation manual** - [@norberttech](https://github.com/norberttech)
 - [#571](https://github.com/flow-php/flow/pull/571) - **Dockerfile** - [@norberttech](https://github.com/norberttech)
 - [#778](https://github.com/flow-php/flow/pull/778) - **Dremel to properly shred/assemble nested structures with nullable elements** - [@norberttech](https://github.com/norberttech)
@@ -64,6 +66,8 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#788](https://github.com/flow-php/flow/pull/788) - **Optimizer can be now configured through ConfigBuilder** - [@norberttech](https://github.com/norberttech)
+- [#788](https://github.com/flow-php/flow/pull/788) - **Execution Plan Processors can be now configured through ConfigBuilder** - [@norberttech](https://github.com/norberttech)
 - [#786](https://github.com/flow-php/flow/pull/786) - **Reduce docker image size** - [@norberttech](https://github.com/norberttech)
 - [#778](https://github.com/flow-php/flow/pull/778) - **Dremel algorithms are no longer working as Generators** - [@norberttech](https://github.com/norberttech)
 - [#777](https://github.com/flow-php/flow/pull/777) - **Make types implementation serializable, mark native types as nullable** - [@stloyd](https://github.com/stloyd)
