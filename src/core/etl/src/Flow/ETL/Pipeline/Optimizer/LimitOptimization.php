@@ -26,6 +26,9 @@ use Flow\ETL\Transformer\RenameStrReplaceAllEntriesTransformer;
 
 final class LimitOptimization implements Optimization
 {
+    /**
+     * @psalm-suppress DeprecatedClass
+     */
     private array $nonExpandingPipelines = [
         SynchronousPipeline::class,
         CollectingPipeline::class,

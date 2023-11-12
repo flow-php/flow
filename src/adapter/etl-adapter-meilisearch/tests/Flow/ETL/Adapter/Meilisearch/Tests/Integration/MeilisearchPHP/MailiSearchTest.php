@@ -5,13 +5,15 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Meilisearch\Tests\Integration\MeilisearchPHP;
 
 use Flow\ETL\Adapter\Meilisearch\Tests\Context\MeilisearchContext;
+use Flow\ETL\Adapter\Meilisearch\Tests\Double\Spy\HttpClientSpy;
+use Flow\ETL\DSL\From;
 use Flow\ETL\DSL\Meilisearch;
 use Flow\ETL\Flow;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use PHPUnit\Framework\TestCase;
 
-final class IntegrationTest extends TestCase
+final class MailiSearchTest extends TestCase
 {
     private const DESTINATION_INDEX = 'etl-test-destination-index';
 
@@ -34,6 +36,34 @@ final class IntegrationTest extends TestCase
 
         $this->meilisearchContext->deleteIndex(self::SOURCE_INDEX);
         $this->meilisearchContext->deleteIndex(self::DESTINATION_INDEX);
+    }
+
+    public function test_batch_size_when_its_not_explicitly_set() : void
+    {
+        (new Flow())
+            ->read(From::array([
+                ['id' => 1, 'text' => 'lorem ipsum'],
+                ['id' => 2, 'text' => 'lorem ipsum'],
+                ['id' => 3, 'text' => 'lorem ipsum'],
+                ['id' => 4, 'text' => 'lorem ipsum'],
+                ['id' => 5, 'text' => 'lorem ipsum'],
+                ['id' => 6, 'text' => 'lorem ipsum'],
+            ]))
+            ->write(
+                Meilisearch::bulk_index(
+                    \array_merge(
+                        $this->meilisearchContext->clientConfig(),
+                        ['httpClient' => $httpClient = new HttpClientSpy()]
+                    ),
+                    'test',
+                )
+            )
+            ->run();
+
+        $this->assertCount(
+            2, // second request is to check if the first one was processed
+            $httpClient->requests
+        );
     }
 
     public function test_loading_and_extraction_with_limit_and_transformation() : void

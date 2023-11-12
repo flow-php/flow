@@ -19,8 +19,17 @@ final class Optimizer
         $this->optimizations = $optimizations;
     }
 
+    public function disabled() : self
+    {
+        return new self();
+    }
+
     public function optimize(Loader|Transformer $element, Pipeline $pipeline) : Pipeline
     {
+        if (!\count($this->optimizations)) {
+            return $pipeline->add($element);
+        }
+
         $optimized = false;
 
         foreach ($this->optimizations as $optimization) {

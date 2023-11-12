@@ -26,6 +26,10 @@ final class ConfigBuilder
 
     private ?string $id;
 
+    private ?Optimizer $optimizer;
+
+    private ?Processors $processors;
+
     private bool $putInputIntoRows;
 
     private ?Serializer $serializer;
@@ -38,6 +42,8 @@ final class ConfigBuilder
         $this->serializer = null;
         $this->filesystem = null;
         $this->putInputIntoRows = false;
+        $this->optimizer = null;
+        $this->processors = null;
     }
 
     /**
@@ -60,18 +66,22 @@ final class ConfigBuilder
         );
         $this->filesystem ??= new FlysystemFS();
 
+        $this->processors ??= new Processors(
+            new FilesystemProcessor()
+        );
+        $this->optimizer ??= new Optimizer(
+            new Optimizer\LimitOptimization(),
+            new Optimizer\BatchSizeOptimization(batchSize: 1000),
+        );
+
         return new Config(
             $this->id,
             $this->cache,
             $this->externalSort,
             $this->serializer,
             new FilesystemStreams($this->filesystem),
-            new Processors(
-                new FilesystemProcessor()
-            ),
-            new Optimizer(
-                new Optimizer\LimitOptimization()
-            ),
+            $this->processors,
+            $this->optimizer,
             $this->putInputIntoRows,
             new NativeEntryFactory()
         );
@@ -108,6 +118,20 @@ final class ConfigBuilder
     public function id(string $id) : self
     {
         $this->id = $id;
+
+        return $this;
+    }
+
+    public function optimizer(Optimizer $optimizer) : self
+    {
+        $this->optimizer = $optimizer;
+
+        return $this;
+    }
+
+    public function processors(Processors $processors) : self
+    {
+        $this->processors = $processors;
 
         return $this;
     }
