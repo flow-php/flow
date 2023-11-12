@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Schema\Formatter;
 
+use Flow\ETL\PHP\Type\Logical\List\ListElement;
+use Flow\ETL\PHP\Type\Logical\ListType;
+use Flow\ETL\PHP\Type\Logical\Map\MapKey;
+use Flow\ETL\PHP\Type\Logical\Map\MapValue;
+use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\PHP\Type\Native\ScalarType;
@@ -34,25 +39,25 @@ final class ASCIISchemaFormatterTest extends TestCase
                 ),
             ),
             Schema\Definition::string('name', nullable: true),
-            Schema\Definition::array('tags', nullable: false),
-            Schema\Definition::boolean('active', false),
-            Schema\Definition::xml('xml', false)
+            Schema\Definition::array('tags'),
+            Schema\Definition::boolean('active'),
+            Schema\Definition::xml('xml')
         );
 
         $this->assertSame(
-            <<<SCHEMA
+            <<<'SCHEMA'
 schema
-|-- user: Flow\ETL\Row\Entry\StructureEntry (nullable = false)
-|    |-- name: ?string (nullable = true)
-|    |-- age: integer (nullable = false)
-|    |-- address: structure{street: ?string, city: ?string, country: ?string} (nullable = false)
-|        |-- street: ?string (nullable = true)
-|        |-- city: ?string (nullable = true)
-|        |-- country: ?string (nullable = true)
-|-- name: [Flow\ETL\Row\Entry\StringEntry, Flow\ETL\Row\Entry\NullEntry] (nullable = true)
-|-- tags: Flow\ETL\Row\Entry\ArrayEntry (nullable = false)
-|-- active: Flow\ETL\Row\Entry\BooleanEntry (nullable = false)
-|-- xml: Flow\ETL\Row\Entry\XMLEntry (nullable = false)
+|-- user: structure
+|    |-- name: ?string
+|    |-- age: integer
+|    |-- address: structure
+|        |-- street: ?string
+|        |-- city: ?string
+|        |-- country: ?string
+|-- name: ?string
+|-- tags: array<mixed>
+|-- active: boolean
+|-- xml: object<DOMDocument>
 
 SCHEMA,
             (new ASCIISchemaFormatter())->format($schema)
@@ -64,19 +69,23 @@ SCHEMA,
         $schema = new Schema(
             Schema\Definition::union('number', [IntegerEntry::class, FloatEntry::class]),
             Schema\Definition::string('name', nullable: true),
-            Schema\Definition::array('tags', nullable: false),
-            Schema\Definition::boolean('active', false),
-            Schema\Definition::xml('xml', false)
+            Schema\Definition::array('tags'),
+            Schema\Definition::boolean('active'),
+            Schema\Definition::xml('xml'),
+            Schema\Definition::map('map', new MapType(MapKey::string(), MapValue::string())),
+            Schema\Definition::list('list', new ListType(ListElement::map(new MapType(MapKey::string(), MapValue::integer()))))
         );
 
         $this->assertSame(
-            <<<SCHEMA
+            <<<'SCHEMA'
 schema
-|-- number: [Flow\ETL\Row\Entry\IntegerEntry, Flow\ETL\Row\Entry\FloatEntry] (nullable = false)
-|-- name: [Flow\ETL\Row\Entry\StringEntry, Flow\ETL\Row\Entry\NullEntry] (nullable = true)
-|-- tags: Flow\ETL\Row\Entry\ArrayEntry (nullable = false)
-|-- active: Flow\ETL\Row\Entry\BooleanEntry (nullable = false)
-|-- xml: Flow\ETL\Row\Entry\XMLEntry (nullable = false)
+|-- number: integer
+|-- name: ?string
+|-- tags: array<mixed>
+|-- active: boolean
+|-- xml: object<DOMDocument>
+|-- map: map<string, string>
+|-- list: list<map<string, integer>>
 
 SCHEMA,
             (new ASCIISchemaFormatter())->format($schema)

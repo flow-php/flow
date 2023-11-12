@@ -4,10 +4,31 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Schema\Formatter;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\StructureType;
-use Flow\ETL\PHP\Type\Native\NativeType;
+use Flow\ETL\PHP\Type\Native\ArrayType;
+use Flow\ETL\PHP\Type\Native\EnumType;
+use Flow\ETL\PHP\Type\Native\ObjectType;
+use Flow\ETL\PHP\Type\Native\ScalarType;
+use Flow\ETL\PHP\Type\Type;
+use Flow\ETL\Row\Entry\ArrayEntry;
+use Flow\ETL\Row\Entry\BooleanEntry;
+use Flow\ETL\Row\Entry\DateTimeEntry;
+use Flow\ETL\Row\Entry\EnumEntry;
+use Flow\ETL\Row\Entry\FloatEntry;
+use Flow\ETL\Row\Entry\IntegerEntry;
+use Flow\ETL\Row\Entry\JsonEntry;
+use Flow\ETL\Row\Entry\ListEntry;
+use Flow\ETL\Row\Entry\MapEntry;
+use Flow\ETL\Row\Entry\NullEntry;
+use Flow\ETL\Row\Entry\ObjectEntry;
+use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Row\Entry\StructureEntry;
+use Flow\ETL\Row\Entry\Type\Uuid;
+use Flow\ETL\Row\Entry\UuidEntry;
+use Flow\ETL\Row\Entry\XMLEntry;
+use Flow\ETL\Row\Entry\XMLNodeEntry;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Row\Schema\FlowMetadata;
 use Flow\ETL\Row\Schema\SchemaFormatter;
@@ -40,16 +61,39 @@ final class ASCIISchemaFormatter implements SchemaFormatter
     {
         $entry = $definition->entry()->name();
 
-        $type = match (\count($definition->types())) {
-            1 => $definition->types()[0],
-            default => '[' . \implode(', ', $definition->types()) . ']'
+        $nullable = false;
+        $types = $definition->types();
+        $index = \array_search(NullEntry::class, $types, true);
+
+        if (false !== $index) {
+            $nullable = true;
+            unset($types[$index]);
+        }
+
+        /** @var null|Type $definitionType */
+        $definitionType = match (\current($types)) {
+            ArrayEntry::class => new ArrayType($nullable),
+            BooleanEntry::class => ScalarType::boolean($nullable),
+            DateTimeEntry::class => ObjectType::of(\DateTimeImmutable::class, $nullable),
+            EnumEntry::class => EnumType::of(\UnitEnum::class, $nullable),
+            FloatEntry::class => ScalarType::float($nullable),
+            IntegerEntry::class => ScalarType::integer($nullable),
+            JsonEntry::class => ScalarType::string($nullable),
+            ListEntry::class => $definition->metadata()->get(FlowMetadata::METADATA_LIST_ENTRY_TYPE),
+            MapEntry::class => $definition->metadata()->get(FlowMetadata::METADATA_MAP_ENTRY_TYPE),
+            ObjectEntry::class => $definition->metadata()->get(FlowMetadata::METADATA_OBJECT_ENTRY_TYPE),
+            StringEntry::class => ScalarType::string($nullable),
+            UuidEntry::class => ObjectType::of(Uuid::class, $nullable),
+            XMLEntry::class => ObjectType::of(\DOMDocument::class, $nullable),
+            XMLNodeEntry::class => ObjectType::of(\DOMElement::class, $nullable),
+            default => null,
         };
 
         $indention = '';
 
-        $buffer[] = $indention . '|-- ' . $entry . ': ' . $type . ' (nullable = ' . ($definition->isNullable() ? 'true' : 'false') . ')';
-
         if (\in_array(StructureEntry::class, $definition->types(), true)) {
+            $buffer[] = $indention . '|-- ' . $entry . ': structure';
+
             /** @var StructureType $structureType */
             $structureType = $definition->metadata()->get(FlowMetadata::METADATA_STRUCTURE_ENTRY_TYPE);
 
@@ -60,6 +104,12 @@ final class ASCIISchemaFormatter implements SchemaFormatter
             }
 
             $buffer = \array_merge($buffer, $fields);
+        } else {
+            if (null === $definitionType) {
+                throw new InvalidArgumentException('Cannot extract definition type for entry: ' . $definition->entry()->name());
+            }
+
+            $buffer[] = $indention . '|-- ' . $entry . ': ' . $definitionType->toString();
         }
 
         return $buffer;
@@ -67,9 +117,7 @@ final class ASCIISchemaFormatter implements SchemaFormatter
 
     private function formatStructureElement(StructureElement $element, array $buffer, int $level) : array
     {
-        $entry = $element->name();
         $structureType = $element->type();
-        $optional = $structureType instanceof NativeType && $structureType->nullable();
 
         $indention = \str_repeat('    ', $level);
 
@@ -77,9 +125,9 @@ final class ASCIISchemaFormatter implements SchemaFormatter
             $indention = '|' . $indention;
         }
 
-        $buffer[] = $indention . '|-- ' . $entry . ': ' . $structureType->toString() . ' (nullable = ' . ($optional ? 'true' : 'false') . ')';
-
         if ($structureType instanceof StructureType) {
+            $buffer[] = $indention . '|-- ' . $element->name() . ': structure';
+
             $fields = [];
 
             foreach ($structureType->elements() as $structEntry) {
@@ -87,6 +135,8 @@ final class ASCIISchemaFormatter implements SchemaFormatter
             }
 
             $buffer = \array_merge($buffer, $fields);
+        } else {
+            $buffer[] = $indention . '|-- ' . $element->name() . ': ' . $structureType->toString();
         }
 
         return $buffer;

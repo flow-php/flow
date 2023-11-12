@@ -1385,16 +1385,16 @@ ASCII,
         $output = \ob_get_clean();
 
         $this->assertStringContainsString(
-            <<<ASCII
+            <<<'ASCII'
 schema
-|-- id: Flow\ETL\Row\Entry\IntegerEntry (nullable = false)
-|-- country: Flow\ETL\Row\Entry\StringEntry (nullable = false)
-|-- age: Flow\ETL\Row\Entry\IntegerEntry (nullable = false)
+|-- id: integer
+|-- country: string
+|-- age: integer
 schema
-|-- id: Flow\ETL\Row\Entry\IntegerEntry (nullable = false)
-|-- country: Flow\ETL\Row\Entry\StringEntry (nullable = false)
-|-- age: Flow\ETL\Row\Entry\IntegerEntry (nullable = false)
-|-- salary: [Flow\ETL\Row\Entry\IntegerEntry, Flow\ETL\Row\Entry\NullEntry] (nullable = true)
+|-- id: integer
+|-- country: string
+|-- age: integer
+|-- salary: ?integer
 ASCII,
             $output
         );

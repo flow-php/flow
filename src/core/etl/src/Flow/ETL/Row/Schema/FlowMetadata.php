@@ -14,5 +14,7 @@ final class FlowMetadata
 
     public const METADATA_MAP_ENTRY_TYPE = 'flow_map_entry_type';
 
+    public const METADATA_OBJECT_ENTRY_TYPE = 'flow_object_entry_type';
+
     public const METADATA_STRUCTURE_ENTRY_TYPE = 'flow_structure_entry_type';
 }

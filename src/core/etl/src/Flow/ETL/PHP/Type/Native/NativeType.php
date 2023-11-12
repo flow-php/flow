@@ -13,5 +13,4 @@ use Flow\ETL\PHP\Type\Type;
  */
 interface NativeType extends Type
 {
-    public function nullable() : bool;
 }

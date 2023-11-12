@@ -10,6 +10,7 @@ use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\StructureType;
+use Flow\ETL\PHP\Type\Native\ObjectType;
 use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\Row\Entry\StructureEntry;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
@@ -344,7 +345,7 @@ final class NativeEntryFactoryTest extends TestCase
         $this->assertEquals(
             Entry::object('e', $object = new \ArrayObject([1, 2, 3])),
             (new NativeEntryFactory())
-                ->create('e', $object, new Schema(Schema\Definition::object('e')))
+                ->create('e', $object, new Schema(Schema\Definition::object('e', ObjectType::fromObject($object))))
         );
     }
 

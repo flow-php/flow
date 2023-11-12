@@ -51,7 +51,7 @@ final class ParquetTest extends TestCase
         $path = \sys_get_temp_dir() . '/partitioned';
         $this->cleanDirectory($path);
 
-        $dataFrame = (new Flow())
+        (new Flow())
             ->read(From::rows($rows = new Rows(
                 $this->createRow(1, new \DateTimeImmutable('2020-01-01 00:01:00')),
                 $this->createRow(1, new \DateTimeImmutable('2020-01-01 00:02:00')),
@@ -61,9 +61,8 @@ final class ParquetTest extends TestCase
             )))
             ->withEntry('date', ref('datetime')->toDate(\DateTimeInterface::RFC3339)->dateFormat())
             ->partitionBy(ref('date'))
-            ->write(Parquet::to($path));
-
-        $dataFrame->run();
+            ->write(Parquet::to($path))
+            ->run();
 
         $this->assertEquals(
             $rows,

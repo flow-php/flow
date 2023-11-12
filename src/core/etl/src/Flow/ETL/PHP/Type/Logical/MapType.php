@@ -59,6 +59,11 @@ final class MapType implements LogicalType
         return $this->key;
     }
 
+    public function nullable() : bool
+    {
+        return false;
+    }
+
     public function toString() : string
     {
         return 'map<' . $this->key->toString() . ', ' . $this->value->toString() . '>';

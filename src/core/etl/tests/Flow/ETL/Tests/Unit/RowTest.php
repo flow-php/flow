@@ -12,6 +12,7 @@ use Flow\ETL\PHP\Type\Logical\Map\MapValue;
 use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\StructureType;
+use Flow\ETL\PHP\Type\Native\ObjectType;
 use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entries;
@@ -149,7 +150,7 @@ final class RowTest extends TestCase
                     new MapType(MapKey::integer(), MapValue::string())
                 ),
                 Row\Schema\Definition::collection('tags'),
-                Row\Schema\Definition::object('object'),
+                Row\Schema\Definition::object('object', ObjectType::of(\ArrayIterator::class)),
             ),
             $row->schema()
         );

@@ -87,11 +87,11 @@ final class NativeEntryFactory implements EntryFactory
                 return new Row\Entry\XMLEntry($entryName, $value);
             }
 
-            if ($valueType->class === \DOMNode::class) {
+            if (\in_array($valueType->class, [\DOMElement::class, \DOMNode::class], true)) {
                 return new Row\Entry\XMLNodeEntry($entryName, $value);
             }
 
-            if ($valueType->class === \DateTimeImmutable::class) {
+            if (\in_array($valueType->class, [\DateTimeImmutable::class, \DateTimeInterface::class, \DateTime::class], true)) {
                 return new Row\Entry\DateTimeEntry($entryName, $value);
             }
 
@@ -195,24 +195,24 @@ final class NativeEntryFactory implements EntryFactory
                 }
 
                 if ($type === Entry\MapEntry::class) {
-                    /** @var MapType $mapType */
-                    $mapType = $definition->metadata()->get(Schema\FlowMetadata::METADATA_MAP_ENTRY_TYPE);
+                    /** @var MapType $entryType */
+                    $entryType = $definition->metadata()->get(Schema\FlowMetadata::METADATA_MAP_ENTRY_TYPE);
 
-                    return EntryDSL::map($definition->entry()->name(), $value, $mapType);
+                    return EntryDSL::map($definition->entry()->name(), $value, $entryType);
                 }
 
                 if ($type === Entry\StructureEntry::class) {
-                    /** @var StructureType $structureType */
-                    $structureType = $definition->metadata()->get(Schema\FlowMetadata::METADATA_STRUCTURE_ENTRY_TYPE);
+                    /** @var StructureType $entryType */
+                    $entryType = $definition->metadata()->get(Schema\FlowMetadata::METADATA_STRUCTURE_ENTRY_TYPE);
 
-                    return EntryDSL::structure($definition->entry()->name(), $value, $structureType);
+                    return EntryDSL::structure($definition->entry()->name(), $value, $entryType);
                 }
 
                 if ($type === Entry\ListEntry::class) {
-                    /** @var ListType $listType */
-                    $listType = $definition->metadata()->get(Schema\FlowMetadata::METADATA_LIST_ENTRY_TYPE);
+                    /** @var ListType $entryType */
+                    $entryType = $definition->metadata()->get(Schema\FlowMetadata::METADATA_LIST_ENTRY_TYPE);
 
-                    $elementType = $listType->element();
+                    $elementType = $entryType->element();
 
                     if ($elementType->value() instanceof ObjectType) {
                         /** @var mixed $firstValue */
@@ -222,12 +222,12 @@ final class NativeEntryFactory implements EntryFactory
                             return new Entry\ListEntry(
                                 $definition->entry()->name(),
                                 \array_map(static fn (string $datetime) : \DateTimeImmutable => new \DateTimeImmutable($datetime), $value),
-                                $listType,
+                                $entryType,
                             );
                         }
                     }
 
-                    return new Entry\ListEntry($definition->entry()->name(), $value, $listType);
+                    return new Entry\ListEntry($definition->entry()->name(), $value, $entryType);
                 }
             }
         } catch (InvalidArgumentException|\TypeError $e) {

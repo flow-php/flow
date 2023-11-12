@@ -26,12 +26,12 @@ final class StructureEntryTest extends TestCase
             new StructureEntry(
                 'name',
                 ['1' => 1, '2' => 2, '3' => 3],
-                new StructureType(new StructureElement('1', ScalarType::integer()), new StructureElement('2', ScalarType::string()), new StructureElement('3', ScalarType::string()))
+                new StructureType(new StructureElement('1', ScalarType::integer()), new StructureElement('2', ScalarType::integer()), new StructureElement('3', ScalarType::integer()))
             ),
             new StructureEntry(
                 'name',
                 ['1' => 1, '2' => 2, '3' => 3],
-                new StructureType(new StructureElement('1', ScalarType::integer()), new StructureElement('2', ScalarType::string()), new StructureElement('3', ScalarType::string()))
+                new StructureType(new StructureElement('1', ScalarType::integer()), new StructureElement('2', ScalarType::integer()), new StructureElement('3', ScalarType::integer()))
             ),
         ];
         yield 'equal names and equal simple same integer entries with different number of entries' => [
@@ -97,6 +97,19 @@ final class StructureEntryTest extends TestCase
                 'name',
                 ['json' => ['1' => 1, '2' => 2, '3' => 3]],
                 new StructureType(new StructureElement('json', new ArrayType()))
+            ),
+        ];
+        yield 'equal names and nullable entries' => [
+            false,
+            new StructureEntry(
+                'name',
+                ['a' => 'a', 'b' => 'b', 'c' => 'c'],
+                new StructureType(new StructureElement('a', ScalarType::string()), new StructureElement('b', ScalarType::string(true)), new StructureElement('c', ScalarType::string()))
+            ),
+            new StructureEntry(
+                'name',
+                ['a' => 'a', 'b' => null, 'c' => 'c'],
+                new StructureType(new StructureElement('a', ScalarType::string()), new StructureElement('b', ScalarType::string(true)), new StructureElement('c', ScalarType::string()))
             ),
         ];
     }

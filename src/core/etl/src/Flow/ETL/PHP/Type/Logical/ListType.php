@@ -57,6 +57,11 @@ final class ListType implements LogicalType
         return true;
     }
 
+    public function nullable() : bool
+    {
+        return false;
+    }
+
     public function toString() : string
     {
         return 'list<' . $this->element->toString() . '>';

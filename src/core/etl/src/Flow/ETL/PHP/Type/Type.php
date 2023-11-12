@@ -17,5 +17,7 @@ interface Type extends Serializable
 
     public function isValid(mixed $value) : bool;
 
+    public function nullable() : bool;
+
     public function toString() : string;
 }

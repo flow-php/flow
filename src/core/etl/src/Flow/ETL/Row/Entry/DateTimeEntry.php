@@ -37,6 +37,8 @@ final class DateTimeEntry implements \Stringable, Entry
             } catch (\Exception $e) {
                 throw new InvalidArgumentException("Invalid value given: '{$value}', reason: " . $e->getMessage(), previous: $e);
             }
+        } elseif ($value instanceof \DateTime) {
+            $this->value = \DateTimeImmutable::createFromMutable($value);
         } else {
             $this->value = $value;
         }

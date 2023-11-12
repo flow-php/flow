@@ -6,24 +6,16 @@ namespace Flow\ETL\Adapter\Avro\FlixTech;
 
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\PHP\Type\Logical\ListType;
+use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\PHP\Type\Native\ArrayType;
 use Flow\ETL\PHP\Type\Native\ObjectType;
 use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\Entry\ArrayEntry;
-use Flow\ETL\Row\Entry\BooleanEntry;
-use Flow\ETL\Row\Entry\DateTimeEntry;
-use Flow\ETL\Row\Entry\EnumEntry;
-use Flow\ETL\Row\Entry\FloatEntry;
-use Flow\ETL\Row\Entry\IntegerEntry;
-use Flow\ETL\Row\Entry\JsonEntry;
 use Flow\ETL\Row\Entry\ListEntry;
 use Flow\ETL\Row\Entry\NullEntry;
-use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Row\Entry\StructureEntry;
-use Flow\ETL\Row\Entry\UuidEntry;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\Schema\FlowMetadata;
@@ -44,11 +36,7 @@ final class SchemaConverter
             $fields[] = $this->convert($definition);
         }
 
-        return \json_encode([
-            'name' => 'row',
-            'type' => 'record',
-            'fields' => $fields,
-        ]);
+        return \json_encode(['name' => 'row', 'type' => 'record', 'fields' => $fields], flags: \JSON_THROW_ON_ERROR);
     }
 
     /**
@@ -77,9 +65,22 @@ final class SchemaConverter
                 if (\is_a($listElement->value()->class, \DateTimeInterface::class, true)) {
                     return ['name' => $definition->entry()->name(), 'type' => ['type' => 'array', 'items' => 'long', \AvroSchema::LOGICAL_TYPE_ATTR => 'timestamp-micros']];
                 }
-
-                throw new RuntimeException("List of {$listElement->toString()} is not supported yet supported.");
             }
+
+            throw new RuntimeException("List of {$listElement->toString()} is not supported yet supported.");
+        }
+
+        if ($type === Entry\MapEntry::class) {
+            /** @var MapType $mapType */
+            $mapType = $definition->metadata()->get(Schema\FlowMetadata::METADATA_MAP_ENTRY_TYPE);
+
+            return match ($mapType->value()->value()->toString()) {
+                ScalarType::STRING => ['name' => $definition->entry()->name(), 'type' => ['type' => 'map', 'values' => \AvroSchema::STRING_TYPE]],
+                ScalarType::INTEGER => ['name' => $definition->entry()->name(), 'type' => ['type' => 'map', 'values' => \AvroSchema::INT_TYPE]],
+                ScalarType::FLOAT => ['name' => $definition->entry()->name(), 'type' => ['type' => 'map', 'values' => \AvroSchema::FLOAT_TYPE]],
+                ScalarType::BOOLEAN => ['name' => $definition->entry()->name(), 'type' => ['type' => 'map', 'values' => \AvroSchema::BOOLEAN_TYPE]],
+                default => throw new RuntimeException('Map ' . $mapType->toString() . ' is not supported yet supported.'),
+            };
         }
 
         if ($type === StructureEntry::class) {
@@ -117,8 +118,8 @@ final class SchemaConverter
         }
 
         $avroType = match ($type) {
-            StringEntry::class, JsonEntry::class, UuidEntry::class => ['name' => $definition->entry()->name(), 'type' => \AvroSchema::STRING_TYPE],
-            EnumEntry::class => [
+            Entry\StringEntry::class, Entry\JsonEntry::class, Entry\UuidEntry::class => ['name' => $definition->entry()->name(), 'type' => \AvroSchema::STRING_TYPE],
+            Entry\EnumEntry::class => [
                 'name' => $definition->entry()->name(),
                 'type' => [
                     'name' => $definition->entry()->name(),
@@ -129,12 +130,12 @@ final class SchemaConverter
                     ),
                 ],
             ],
-            IntegerEntry::class => ['name' => $definition->entry()->name(), 'type' => \AvroSchema::INT_TYPE],
-            FloatEntry::class => ['name' => $definition->entry()->name(), 'type' => \AvroSchema::FLOAT_TYPE],
-            BooleanEntry::class => ['name' => $definition->entry()->name(), 'type' => \AvroSchema::BOOLEAN_TYPE],
-            ArrayEntry::class => throw new RuntimeException("ArrayEntry entry can't be saved in Avro file, try convert it to ListEntry"),
-            DateTimeEntry::class => ['name' => $definition->entry()->name(), 'type' => 'long', \AvroSchema::LOGICAL_TYPE_ATTR => 'timestamp-micros'],
-            NullEntry::class => ['name' => $definition->entry()->name(), 'type' => \AvroSchema::NULL_TYPE],
+            Entry\IntegerEntry::class => ['name' => $definition->entry()->name(), 'type' => \AvroSchema::INT_TYPE],
+            Entry\FloatEntry::class => ['name' => $definition->entry()->name(), 'type' => \AvroSchema::FLOAT_TYPE],
+            Entry\BooleanEntry::class => ['name' => $definition->entry()->name(), 'type' => \AvroSchema::BOOLEAN_TYPE],
+            Entry\ArrayEntry::class => throw new RuntimeException("ArrayEntry entry can't be saved in Avro file, try convert it to ListEntry"),
+            Entry\DateTimeEntry::class => ['name' => $definition->entry()->name(), 'type' => 'long', \AvroSchema::LOGICAL_TYPE_ATTR => 'timestamp-micros'],
+            Entry\NullEntry::class => ['name' => $definition->entry()->name(), 'type' => \AvroSchema::NULL_TYPE],
             default => throw new RuntimeException($type . ' is not yet supported.')
         };
 

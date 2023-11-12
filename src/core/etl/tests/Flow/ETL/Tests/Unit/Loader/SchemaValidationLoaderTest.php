@@ -20,14 +20,14 @@ final class SchemaValidationLoaderTest extends TestCase
     {
         $this->expectException(SchemaValidationException::class);
         $this->expectExceptionMessage(
-            <<<EXCEPTION
+            <<<'EXCEPTION'
 Given schema:
 schema
-|-- id: Flow\ETL\Row\Entry\IntegerEntry (nullable = false)
+|-- id: integer
 
 Does not match rows:
 schema
-|-- id: Flow\ETL\Row\Entry\StringEntry (nullable = false)
+|-- id: string
 
 EXCEPTION
         );
@@ -58,6 +58,6 @@ EXCEPTION
         ), new FlowContext(Config::default()));
 
         // validate that error wasn't thrown
-        $this->assertTrue(true);
+        $this->addToAssertionCount(1);
     }
 }

@@ -63,8 +63,8 @@ final class StreamLoaderTest extends TestCase
 3 rows
 
 schema
-|-- id: Flow\ETL\Row\Entry\IntegerEntry (nullable = false)
-|-- name: Flow\ETL\Row\Entry\StringEntry (nullable = false)
+|-- id: integer
+|-- name: string
 
 ASCII,
             $output
@@ -123,8 +123,8 @@ TABLE,
         $this->assertSame(
             <<<'ASCII'
 schema
-|-- id: Flow\ETL\Row\Entry\IntegerEntry (nullable = false)
-|-- name: Flow\ETL\Row\Entry\StringEntry (nullable = false)
+|-- id: integer
+|-- name: string
 
 ASCII,
             $output

@@ -8,6 +8,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Logical\StructureType;
+use Flow\ETL\PHP\Type\Native\ObjectType;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\ArrayEntry;
 use Flow\ETL\Row\Entry\BooleanEntry;
@@ -95,10 +96,9 @@ final class Definition implements Serializable
             $entry,
             ($nullable) ? [EnumEntry::class, NullEntry::class] : [EnumEntry::class],
             $constraint,
-            ($metadata ?? Metadata::empty())->merge(
-                Metadata::with(FlowMetadata::METADATA_ENUM_CLASS, $type)
-                    ->add(FlowMetadata::METADATA_ENUM_CASES, $type::cases())
-            )
+            Metadata::with(FlowMetadata::METADATA_ENUM_CLASS, $type)
+                ->add(FlowMetadata::METADATA_ENUM_CASES, $type::cases())
+                ->merge($metadata ?? Metadata::empty())
         );
     }
 
@@ -142,9 +142,14 @@ final class Definition implements Serializable
         return new self($entry, [NullEntry::class], null, $metadata);
     }
 
-    public static function object(string|EntryReference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function object(string|EntryReference $entry, ObjectType $type, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
-        return new self($entry, ($nullable) ? [ObjectEntry::class, NullEntry::class] : [ObjectEntry::class], $constraint, $metadata);
+        return new self(
+            $entry,
+            ($nullable) ? [ObjectEntry::class, NullEntry::class] : [ObjectEntry::class],
+            $constraint,
+            Metadata::empty()->add(FlowMetadata::METADATA_OBJECT_ENTRY_TYPE, $type)->merge($metadata ?? Metadata::empty())
+        );
     }
 
     public static function string(string|EntryReference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self

@@ -13,7 +13,6 @@ use Flow\ETL\Loader\Closure;
 use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\PHP\Type\Native\ObjectType;
 use Flow\ETL\Row;
-use Flow\ETL\Row\Entry\DateTimeEntry;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Rows;
 
@@ -86,7 +85,7 @@ final class AvroLoader implements Closure, Loader, Loader\FileLoader
             foreach ($row->entries()->all() as $entry) {
                 $rowData[$entry->name()] = match ($entry::class) {
                     Row\Entry\ListEntry::class => $this->listEntryToValues($entry),
-                    DateTimeEntry::class => (int) $entry->value()->format('Uu'),
+                    Row\Entry\DateTimeEntry::class => (int) $entry->value()->format('Uu'),
                     Row\Entry\UuidEntry::class => $entry->value()->toString(),
                     Row\Entry\EnumEntry::class => $entry->value()->name,
                     default => $entry->value(),

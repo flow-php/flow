@@ -51,7 +51,7 @@ final class ObjectEntry implements \Stringable, Entry
 
     public function definition() : Definition
     {
-        return Definition::object($this->name, $this->type->nullable());
+        return Definition::object($this->name, $this->type);
     }
 
     public function is(string|Reference $name) : bool
