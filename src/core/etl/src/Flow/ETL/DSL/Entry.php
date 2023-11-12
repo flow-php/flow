@@ -7,6 +7,7 @@ namespace Flow\ETL\DSL;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\ListType;
+use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry as RowEntry;
@@ -201,6 +202,16 @@ class Entry
     final public static function list_of_string(string $name, array $value) : RowEntry
     {
         return new RowEntry\ListEntry($name, $value, new ListType(ListElement::string()));
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     *
+     * @return RowEntry\MapEntry
+     */
+    final public static function map(string $name, array $values, MapType $mapType) : RowEntry
+    {
+        return new RowEntry\MapEntry($name, $values, $mapType);
     }
 
     /**

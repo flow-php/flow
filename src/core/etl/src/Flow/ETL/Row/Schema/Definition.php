@@ -6,6 +6,7 @@ namespace Flow\ETL\Row\Schema;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\ListType;
+use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\ArrayEntry;
@@ -123,6 +124,16 @@ final class Definition implements Serializable
             $nullable ? [ListEntry::class, NullEntry::class] : [ListEntry::class],
             $constraint,
             Metadata::empty()->add(FlowMetadata::METADATA_LIST_ENTRY_TYPE, $type)->merge($metadata ?? Metadata::empty())
+        );
+    }
+
+    public static function map(string|EntryReference $entry, MapType $type, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    {
+        return new self(
+            $entry,
+            $nullable ? [Entry\MapEntry::class, NullEntry::class] : [Entry\MapEntry::class],
+            $constraint,
+            Metadata::empty()->add(FlowMetadata::METADATA_MAP_ENTRY_TYPE, $type)->merge($metadata ?? Metadata::empty())
         );
     }
 

@@ -7,6 +7,9 @@ namespace Flow\ETL\Tests\Unit;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\ListType;
+use Flow\ETL\PHP\Type\Logical\Map\MapKey;
+use Flow\ETL\PHP\Type\Logical\Map\MapValue;
+use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\PHP\Type\Native\ScalarType;
@@ -112,6 +115,11 @@ final class RowTest extends TestCase
                     new StructureElement('name', ScalarType::string())
                 )
             ),
+            Entry::map(
+                'statuses',
+                ['NEW', 'PENDING'],
+                new MapType(MapKey::integer(), MapValue::string())
+            ),
             Entry::collection(
                 'tags',
                 new Row\Entries(Entry::integer('item-id', 1), Entry::string('name', 'one')),
@@ -135,6 +143,10 @@ final class RowTest extends TestCase
                         new StructureElement('item-id', ScalarType::integer()),
                         new StructureElement('name', ScalarType::string())
                     )
+                ),
+                Row\Schema\Definition::map(
+                    'statuses',
+                    new MapType(MapKey::integer(), MapValue::string())
                 ),
                 Row\Schema\Definition::collection('tags'),
                 Row\Schema\Definition::object('object'),
@@ -179,6 +191,11 @@ final class RowTest extends TestCase
                 'items',
                 ['item-id' => 1, 'name' => 'one'],
                 new StructureType(new StructureElement('id', ScalarType::integer()), new StructureElement('name', ScalarType::string()))
+            ),
+            new Row\Entry\MapEntry(
+                'statuses',
+                ['NEW', 'PENDING'],
+                new MapType(MapKey::integer(), MapValue::string())
             )
         );
 
@@ -192,6 +209,7 @@ final class RowTest extends TestCase
                     'item-id' => 1,
                     'name' => 'one',
                 ],
+                'statuses' => ['NEW', 'PENDING'],
             ],
             $row->toArray(),
         );

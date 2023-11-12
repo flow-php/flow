@@ -7,6 +7,7 @@ namespace Flow\ETL\Row\Factory;
 use Flow\ETL\DSL\Entry as EntryDSL;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\ListType;
+use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\PHP\Type\Native\ArrayType;
 use Flow\ETL\PHP\Type\Native\ObjectType;
@@ -113,6 +114,10 @@ final class NativeEntryFactory implements EntryFactory
             return new Entry\ListEntry($entryName, $value, $valueType);
         }
 
+        if ($valueType instanceof MapType) {
+            return new Row\Entry\MapEntry($entryName, $value, $valueType);
+        }
+
         if ($valueType instanceof StructureType) {
             return new Row\Entry\StructureEntry($entryName, $value, $valueType);
         }
@@ -187,6 +192,20 @@ final class NativeEntryFactory implements EntryFactory
 
                 if ($type === Entry\ArrayEntry::class) {
                     return EntryDSL::array($definition->entry()->name(), $value);
+                }
+
+                if ($type === Entry\MapEntry::class) {
+                    /** @var MapType $mapType */
+                    $mapType = $definition->metadata()->get(Schema\FlowMetadata::METADATA_MAP_ENTRY_TYPE);
+
+                    return EntryDSL::map($definition->entry()->name(), $value, $mapType);
+                }
+
+                if ($type === Entry\StructureEntry::class) {
+                    /** @var StructureType $structureType */
+                    $structureType = $definition->metadata()->get(Schema\FlowMetadata::METADATA_STRUCTURE_ENTRY_TYPE);
+
+                    return EntryDSL::structure($definition->entry()->name(), $value, $structureType);
                 }
 
                 if ($type === Entry\ListEntry::class) {
