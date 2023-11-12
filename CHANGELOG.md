@@ -153,6 +153,7 @@
 - [#584](https://github.com/flow-php/flow/pull/584) - **Adjust `phpunit.xml` to be more efficient** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
+- [#789](https://github.com/flow-php/flow/pull/789) - **Fix hardcoded entry name for enum entry with schema** - [@stloyd](https://github.com/stloyd)
 - [cc4bd8](https://github.com/flow-php/flow/commit/cc4bd8d8bfd7540df4b2917eff04255332d32dec) - **incorrect tags in docker building workflows** - [@norberttech](https://github.com/norberttech)
 - [#779](https://github.com/flow-php/flow/pull/779) - **Covered additional parquet edge cases** - [@norberttech](https://github.com/norberttech)
 - [523741](https://github.com/flow-php/flow/commit/523741a7f002ccd2647fbbdc123a1f082689f9aa) - **broken phar builds** - [@norberttech](https://github.com/norberttech)
