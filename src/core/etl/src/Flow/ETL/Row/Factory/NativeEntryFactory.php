@@ -243,7 +243,7 @@ final class NativeEntryFactory implements EntryFactory
                     }
                 }
 
-                throw new InvalidArgumentException("Value \"not_valid\" can't be converted to " . $enumClass . ' enum');
+                throw new InvalidArgumentException("Value \"{$value}\" can't be converted to " . $enumClass . ' enum');
             }
 
             if ($type === Entry\ListEntry::class && \is_array($value) && \array_is_list($value)) {
