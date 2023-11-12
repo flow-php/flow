@@ -31,13 +31,13 @@ interface Entry extends Serializable
 
     public function name() : string;
 
-    public function phpType() : Type;
-
     public function ref() : EntryReference;
 
     public function rename(string $name) : self;
 
     public function toString() : string;
+
+    public function type() : Type;
 
     /**
      * @return TValue

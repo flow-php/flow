@@ -12,11 +12,13 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @implements Entry<\DateTimeInterface, array{name: string, value: \DateTimeInterface}>
+ * @implements Entry<\DateTimeInterface, array{name: string, value: \DateTimeInterface, type: ObjectType}>
  */
 final class DateTimeEntry implements \Stringable, Entry
 {
     use EntryRef;
+
+    private readonly ObjectType $type;
 
     private readonly \DateTimeInterface $value;
 
@@ -38,11 +40,13 @@ final class DateTimeEntry implements \Stringable, Entry
         } else {
             $this->value = $value;
         }
+
+        $this->type = ObjectType::fromObject($this->value);
     }
 
     public function __serialize() : array
     {
-        return ['name' => $this->name, 'value' => $this->value];
+        return ['name' => $this->name, 'value' => $this->value, 'type' => $this->type];
     }
 
     public function __toString() : string
@@ -54,6 +58,7 @@ final class DateTimeEntry implements \Stringable, Entry
     {
         $this->name = $data['name'];
         $this->value = $data['value'];
+        $this->type = $data['type'];
     }
 
     public function definition() : Definition
@@ -85,11 +90,6 @@ final class DateTimeEntry implements \Stringable, Entry
         return $this->name;
     }
 
-    public function phpType() : Type
-    {
-        return ObjectType::fromObject($this->value);
-    }
-
     public function rename(string $name) : Entry
     {
         return new self($name, $this->value);
@@ -98,6 +98,11 @@ final class DateTimeEntry implements \Stringable, Entry
     public function toString() : string
     {
         return $this->value()->format(\DateTimeInterface::ATOM);
+    }
+
+    public function type() : Type
+    {
+        return $this->type;
     }
 
     public function value() : \DateTimeInterface

@@ -12,11 +12,13 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @implements Entry<float, array{name: string, value: float, precision: int}>
+ * @implements Entry<float, array{name: string, value: float, precision: int, type: ScalarType}>
  */
 final class FloatEntry implements \Stringable, Entry
 {
     use EntryRef;
+
+    private readonly ScalarType $type;
 
     /**
      * @throws InvalidArgumentException
@@ -26,6 +28,8 @@ final class FloatEntry implements \Stringable, Entry
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
+
+        $this->type = ScalarType::float();
     }
 
     public static function from(string $name, float|int|string $value) : self
@@ -39,7 +43,7 @@ final class FloatEntry implements \Stringable, Entry
 
     public function __serialize() : array
     {
-        return ['name' => $this->name, 'value' => $this->value, 'precision' => $this->precision];
+        return ['name' => $this->name, 'value' => $this->value, 'precision' => $this->precision, 'type' => $this->type];
     }
 
     public function __toString() : string
@@ -52,6 +56,7 @@ final class FloatEntry implements \Stringable, Entry
         $this->name = $data['name'];
         $this->value = $data['value'];
         $this->precision = $data['precision'];
+        $this->type = $data['type'];
     }
 
     public function definition() : Definition
@@ -85,11 +90,6 @@ final class FloatEntry implements \Stringable, Entry
         return $this->name;
     }
 
-    public function phpType() : Type
-    {
-        return ScalarType::float();
-    }
-
     /**
      * @throws InvalidArgumentException
      */
@@ -101,6 +101,11 @@ final class FloatEntry implements \Stringable, Entry
     public function toString() : string
     {
         return (string) $this->value();
+    }
+
+    public function type() : Type
+    {
+        return $this->type;
     }
 
     public function value() : float

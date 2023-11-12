@@ -12,11 +12,13 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @implements Entry<object, array{name: string, value: object}>
+ * @implements Entry<object, array{name: string, value: object, type: ObjectType}>
  */
 final class ObjectEntry implements \Stringable, Entry
 {
     use EntryRef;
+
+    private readonly ObjectType $type;
 
     /**
      * @throws InvalidArgumentException
@@ -26,11 +28,13 @@ final class ObjectEntry implements \Stringable, Entry
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
+
+        $this->type = ObjectType::fromObject($value);
     }
 
     public function __serialize() : array
     {
-        return ['name' => $this->name, 'value' => $this->value];
+        return ['name' => $this->name, 'value' => $this->value, 'type' => $this->type];
     }
 
     public function __toString() : string
@@ -42,11 +46,12 @@ final class ObjectEntry implements \Stringable, Entry
     {
         $this->name = $data['name'];
         $this->value = $data['value'];
+        $this->type = $data['type'];
     }
 
     public function definition() : Definition
     {
-        return Definition::object($this->name, false);
+        return Definition::object($this->name, $this->type->nullable());
     }
 
     public function is(string|Reference $name) : bool
@@ -62,7 +67,8 @@ final class ObjectEntry implements \Stringable, Entry
     {
         return $this->is($entry->name())
             && $entry instanceof self
-            && \serialize($this->__serialize()['value']) === \serialize($entry->__serialize()['value']);
+            && \serialize($this->__serialize()['value']) === \serialize($entry->__serialize()['value'])
+            && $this->type->isEqual($entry->type);
     }
 
     public function map(callable $mapper) : Entry
@@ -75,11 +81,6 @@ final class ObjectEntry implements \Stringable, Entry
         return $this->name;
     }
 
-    public function phpType() : Type
-    {
-        return new ObjectType(\get_class($this->value), false);
-    }
-
     /**
      * @throws InvalidArgumentException
      */
@@ -90,7 +91,12 @@ final class ObjectEntry implements \Stringable, Entry
 
     public function toString() : string
     {
-        return (string) \preg_replace('!\s+!', ' ', \str_replace("\n", '', \print_r($this->value(), true)));
+        return ($this->type->nullable() ? '?' : '') . \preg_replace('!\s+!', ' ', \str_replace("\n", '', \print_r($this->value(), true)));
+    }
+
+    public function type() : Type
+    {
+        return $this->type;
     }
 
     public function value() : object

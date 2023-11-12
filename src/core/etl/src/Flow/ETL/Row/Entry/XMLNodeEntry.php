@@ -9,14 +9,17 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @implements Entry<\DOMNode, array{name: string, value: \DOMNode}>
+ * @implements Entry<\DOMNode, array{name: string, value: \DOMNode, type: ObjectType}>
  */
 final class XMLNodeEntry implements \Stringable, Entry
 {
     use EntryRef;
 
+    private readonly ObjectType $type;
+
     public function __construct(private readonly string $name, private readonly \DOMNode $value)
     {
+        $this->type = ObjectType::fromObject($this->value);
     }
 
     public function __serialize() : array
@@ -24,6 +27,7 @@ final class XMLNodeEntry implements \Stringable, Entry
         return [
             'name' => $this->name,
             'value' => $this->value,
+            'type' => $this->type,
         ];
     }
 
@@ -41,6 +45,7 @@ final class XMLNodeEntry implements \Stringable, Entry
     {
         $this->name = $data['name'];
         $this->value = $data['value'];
+        $this->type = $data['type'];
     }
 
     public function definition() : Definition
@@ -76,11 +81,6 @@ final class XMLNodeEntry implements \Stringable, Entry
         return $this->name;
     }
 
-    public function phpType() : Type
-    {
-        return ObjectType::fromObject($this->value);
-    }
-
     public function rename(string $name) : Entry
     {
         return new self($name, $this->value);
@@ -94,6 +94,11 @@ final class XMLNodeEntry implements \Stringable, Entry
          * @phpstan-ignore-next-line
          */
         return $this->value->ownerDocument->saveXML($this->value);
+    }
+
+    public function type() : Type
+    {
+        return $this->type;
     }
 
     public function value() : \DOMNode

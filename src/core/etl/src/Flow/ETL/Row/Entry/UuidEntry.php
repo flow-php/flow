@@ -12,11 +12,13 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @implements Entry<Entry\Type\Uuid, array{name: string, value: string}>
+ * @implements Entry<Entry\Type\Uuid, array{name: string, value: string, type: ObjectType}>
  */
 final class UuidEntry implements \Stringable, Entry
 {
     use EntryRef;
+
+    private readonly ObjectType $type;
 
     private Entry\Type\Uuid $value;
 
@@ -34,6 +36,8 @@ final class UuidEntry implements \Stringable, Entry
         } else {
             $this->value = $value;
         }
+
+        $this->type = ObjectType::fromObject($this->value);
     }
 
     public static function from(string $name, string $value) : self
@@ -43,7 +47,7 @@ final class UuidEntry implements \Stringable, Entry
 
     public function __serialize() : array
     {
-        return ['name' => $this->name, 'value' => $this->value->toString()];
+        return ['name' => $this->name, 'value' => $this->value->toString(), 'type' => $this->type];
     }
 
     public function __toString() : string
@@ -55,6 +59,7 @@ final class UuidEntry implements \Stringable, Entry
     {
         $this->name = $data['name'];
         $this->value = new Entry\Type\Uuid($data['value']);
+        $this->type = $data['type'];
     }
 
     public function definition() : Definition
@@ -86,11 +91,6 @@ final class UuidEntry implements \Stringable, Entry
         return $this->name;
     }
 
-    public function phpType() : Type
-    {
-        return ObjectType::fromObject($this->value);
-    }
-
     /**
      * @throws InvalidArgumentException
      */
@@ -102,6 +102,11 @@ final class UuidEntry implements \Stringable, Entry
     public function toString() : string
     {
         return $this->value->toString();
+    }
+
+    public function type() : Type
+    {
+        return $this->type;
     }
 
     public function value() : Entry\Type\Uuid

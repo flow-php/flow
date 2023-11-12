@@ -74,11 +74,6 @@ final class EnumEntry implements Entry
         return $this->name;
     }
 
-    public function phpType() : Type
-    {
-        return ObjectType::fromObject($this->value);
-    }
-
     public function rename(string $name) : self
     {
         return new self($name, $this->value);
@@ -87,6 +82,11 @@ final class EnumEntry implements Entry
     public function toString() : string
     {
         return $this->value->name;
+    }
+
+    public function type() : Type
+    {
+        return ObjectType::fromObject($this->value);
     }
 
     public function value() : \UnitEnum

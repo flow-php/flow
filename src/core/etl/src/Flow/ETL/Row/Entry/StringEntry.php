@@ -12,11 +12,13 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @implements Entry<string, array{name: string, value: string}>
+ * @implements Entry<string, array{name: string, value: string, type: ScalarType}>
  */
 final class StringEntry implements \Stringable, Entry
 {
     use EntryRef;
+
+    private readonly ScalarType $type;
 
     /**
      * @throws InvalidArgumentException
@@ -26,6 +28,8 @@ final class StringEntry implements \Stringable, Entry
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
+
+        $this->type = ScalarType::string();
     }
 
     /**
@@ -54,7 +58,7 @@ final class StringEntry implements \Stringable, Entry
 
     public function __serialize() : array
     {
-        return ['name' => $this->name, 'value' => $this->value];
+        return ['name' => $this->name, 'value' => $this->value, 'type' => $this->type];
     }
 
     public function __toString() : string
@@ -66,6 +70,7 @@ final class StringEntry implements \Stringable, Entry
     {
         $this->name = $data['name'];
         $this->value = $data['value'];
+        $this->type = $data['type'];
     }
 
     public function definition() : Definition
@@ -97,11 +102,6 @@ final class StringEntry implements \Stringable, Entry
         return $this->name;
     }
 
-    public function phpType() : Type
-    {
-        return ScalarType::string();
-    }
-
     /**
      * @throws InvalidArgumentException
      */
@@ -113,6 +113,11 @@ final class StringEntry implements \Stringable, Entry
     public function toString() : string
     {
         return $this->value();
+    }
+
+    public function type() : Type
+    {
+        return $this->type;
     }
 
     public function value() : string

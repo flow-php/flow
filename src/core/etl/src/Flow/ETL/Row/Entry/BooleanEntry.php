@@ -12,11 +12,13 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @implements Entry<bool, array{name: string, value: bool}>
+ * @implements Entry<bool, array{name: string, value: bool, type: ScalarType}>
  */
 final class BooleanEntry implements \Stringable, Entry
 {
     use EntryRef;
+
+    private readonly ScalarType $type;
 
     /**
      * @throws InvalidArgumentException
@@ -26,6 +28,8 @@ final class BooleanEntry implements \Stringable, Entry
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
+
+        $this->type = ScalarType::boolean();
     }
 
     public static function from(string $name, bool|int|string $value) : self
@@ -53,7 +57,7 @@ final class BooleanEntry implements \Stringable, Entry
 
     public function __serialize() : array
     {
-        return ['name' => $this->name, 'value' => $this->value];
+        return ['name' => $this->name, 'value' => $this->value, 'type' => $this->type];
     }
 
     public function __toString() : string
@@ -65,6 +69,7 @@ final class BooleanEntry implements \Stringable, Entry
     {
         $this->name = $data['name'];
         $this->value = $data['value'];
+        $this->type = $data['type'];
     }
 
     public function definition() : Definition
@@ -96,11 +101,6 @@ final class BooleanEntry implements \Stringable, Entry
         return $this->name;
     }
 
-    public function phpType() : Type
-    {
-        return ScalarType::boolean();
-    }
-
     /**
      * @throws InvalidArgumentException
      */
@@ -112,6 +112,11 @@ final class BooleanEntry implements \Stringable, Entry
     public function toString() : string
     {
         return $this->value() ? 'true' : 'false';
+    }
+
+    public function type() : Type
+    {
+        return $this->type;
     }
 
     public function value() : bool

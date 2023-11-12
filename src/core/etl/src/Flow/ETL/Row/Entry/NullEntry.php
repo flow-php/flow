@@ -72,11 +72,6 @@ final class NullEntry implements \Stringable, Entry
         return $this->name;
     }
 
-    public function phpType() : Type
-    {
-        return new NullType();
-    }
-
     /**
      * @throws InvalidArgumentException
      */
@@ -88,6 +83,11 @@ final class NullEntry implements \Stringable, Entry
     public function toString() : string
     {
         return 'null';
+    }
+
+    public function type() : Type
+    {
+        return new NullType();
     }
 
     public function value()

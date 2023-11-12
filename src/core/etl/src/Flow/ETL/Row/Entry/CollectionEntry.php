@@ -6,8 +6,7 @@ namespace Flow\ETL\Row\Entry;
 
 use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
-use Flow\ETL\PHP\Type\Logical\StructureType;
+use Flow\ETL\PHP\Type\Native\ArrayType;
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry;
@@ -15,7 +14,7 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @implements Entry<array<Entries>, array{name: string, entries: array<Entries>}>
+ * @implements Entry<array<Entries>, array{name: string, entries: array<Entries>, type: ArrayType}>
  */
 final class CollectionEntry implements \Stringable, Entry
 {
@@ -25,6 +24,8 @@ final class CollectionEntry implements \Stringable, Entry
      * @var array<Entries>
      */
     private readonly array $entries;
+
+    private readonly ArrayType $type;
 
     /**
      * @throws InvalidArgumentException
@@ -36,6 +37,7 @@ final class CollectionEntry implements \Stringable, Entry
         }
 
         $this->entries = $entries;
+        $this->type = new ArrayType(0 === \count($entries));
     }
 
     public function __serialize() : array
@@ -43,6 +45,7 @@ final class CollectionEntry implements \Stringable, Entry
         return [
             'name' => $this->name,
             'entries' => $this->entries,
+            'type' => $this->type,
         ];
     }
 
@@ -55,6 +58,7 @@ final class CollectionEntry implements \Stringable, Entry
     {
         $this->name = $data['name'];
         $this->entries = $data['entries'];
+        $this->type = $data['type'];
     }
 
     public function definition() : Definition
@@ -86,23 +90,6 @@ final class CollectionEntry implements \Stringable, Entry
         return $this->name;
     }
 
-    public function phpType() : Type
-    {
-        $array = [];
-
-        foreach ($this->entries as $index => $entries) {
-            $entriesArray = [];
-
-            foreach ($entries as $entry) {
-                $entriesArray[] = new StructureElement($entry->name(), $entry->phpType());
-            }
-
-            $array[] = new StructureElement($index, new StructureType(...$entriesArray));
-        }
-
-        return new StructureType(...$array);
-    }
-
     /**
      * @throws InvalidArgumentException
      */
@@ -126,6 +113,11 @@ final class CollectionEntry implements \Stringable, Entry
         }
 
         return \json_encode($array, JSON_THROW_ON_ERROR);
+    }
+
+    public function type() : Type
+    {
+        return $this->type;
     }
 
     public function value() : array

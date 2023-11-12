@@ -12,11 +12,13 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @implements Entry<int, array{name: string, value: integer}>
+ * @implements Entry<int, array{name: string, value: integer, type: ScalarType}>
  */
 final class IntegerEntry implements \Stringable, Entry
 {
     use EntryRef;
+
+    private readonly ScalarType $type;
 
     /**
      * @throws InvalidArgumentException
@@ -26,6 +28,8 @@ final class IntegerEntry implements \Stringable, Entry
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
+
+        $this->type = ScalarType::integer();
     }
 
     public static function from(string $name, float|int|string $value) : self
@@ -39,7 +43,7 @@ final class IntegerEntry implements \Stringable, Entry
 
     public function __serialize() : array
     {
-        return ['name' => $this->name, 'value' => $this->value];
+        return ['name' => $this->name, 'value' => $this->value, 'type' => $this->type];
     }
 
     public function __toString() : string
@@ -51,11 +55,12 @@ final class IntegerEntry implements \Stringable, Entry
     {
         $this->name = $data['name'];
         $this->value = $data['value'];
+        $this->type = $data['type'];
     }
 
     public function definition() : Definition
     {
-        return Definition::integer($this->name, false);
+        return Definition::integer($this->name);
     }
 
     public function is(string|Reference $name) : bool
@@ -82,11 +87,6 @@ final class IntegerEntry implements \Stringable, Entry
         return $this->name;
     }
 
-    public function phpType() : Type
-    {
-        return ScalarType::integer();
-    }
-
     /**
      * @throws InvalidArgumentException
      */
@@ -98,6 +98,11 @@ final class IntegerEntry implements \Stringable, Entry
     public function toString() : string
     {
         return (string) $this->value();
+    }
+
+    public function type() : Type
+    {
+        return $this->type;
     }
 
     public function value() : int

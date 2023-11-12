@@ -95,11 +95,6 @@ final class MapEntry implements Entry
         return $this->name;
     }
 
-    public function phpType() : Type
-    {
-        return $this->type;
-    }
-
     public function rename(string $name) : Entry
     {
         return new self($name, $this->value, $this->type);

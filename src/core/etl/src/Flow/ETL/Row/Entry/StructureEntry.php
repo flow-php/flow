@@ -92,11 +92,6 @@ final class StructureEntry implements \Stringable, Entry
         return $this->name;
     }
 
-    public function phpType() : Type
-    {
-        return $this->type;
-    }
-
     public function rename(string $name) : Entry
     {
         return new self($name, $this->value, $this->type);
@@ -105,6 +100,11 @@ final class StructureEntry implements \Stringable, Entry
     public function toString() : string
     {
         return \json_encode($this->value, JSON_THROW_ON_ERROR);
+    }
+
+    public function type() : Type
+    {
+        return $this->type;
     }
 
     public function value() : array

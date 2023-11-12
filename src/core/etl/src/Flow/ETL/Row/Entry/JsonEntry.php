@@ -6,20 +6,22 @@ namespace Flow\ETL\Row\Entry;
 
 use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Native\ArrayType;
+use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @implements Entry<string, array{name: string, value: array, object: boolean}>
+ * @implements Entry<string, array{name: string, value: array, object: boolean, type: Type}>
  */
 final class JsonEntry implements \Stringable, Entry
 {
     use EntryRef;
 
     private bool $object = false;
+
+    private readonly Type $type;
 
     private readonly array $value;
 
@@ -43,6 +45,8 @@ final class JsonEntry implements \Stringable, Entry
         } else {
             $this->value = $value;
         }
+
+        $this->type = ScalarType::string();
     }
 
     /**
@@ -68,6 +72,7 @@ final class JsonEntry implements \Stringable, Entry
             'name' => $this->name,
             'value' => $this->value,
             'object' => $this->object,
+            'type' => $this->type,
         ];
     }
 
@@ -81,6 +86,7 @@ final class JsonEntry implements \Stringable, Entry
         $this->name = $data['name'];
         $this->value = $data['value'];
         $this->object = $data['object'];
+        $this->type = $data['type'];
     }
 
     public function definition() : Definition
@@ -112,15 +118,6 @@ final class JsonEntry implements \Stringable, Entry
         return $this->name;
     }
 
-    public function phpType() : Type
-    {
-        if ([] === $this->value) {
-            return ArrayType::empty();
-        }
-
-        return new ArrayType();
-    }
-
     public function rename(string $name) : Entry
     {
         $entry = new self($name, $this->value);
@@ -132,6 +129,11 @@ final class JsonEntry implements \Stringable, Entry
     public function toString() : string
     {
         return $this->value();
+    }
+
+    public function type() : Type
+    {
+        return $this->type;
     }
 
     /**

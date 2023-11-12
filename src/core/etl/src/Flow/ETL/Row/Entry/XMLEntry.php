@@ -10,11 +10,13 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @implements Entry<\DOMDocument, array{name: string, value: \DOMDocument}>
+ * @implements Entry<\DOMDocument, array{name: string, value: \DOMDocument, type: ObjectType}>
  */
 final class XMLEntry implements \Stringable, Entry
 {
     use EntryRef;
+
+    private readonly ObjectType $type;
 
     private readonly \DOMDocument $value;
 
@@ -31,6 +33,8 @@ final class XMLEntry implements \Stringable, Entry
         } else {
             $this->value = $value;
         }
+
+        $this->type = ObjectType::fromObject($this->value);
     }
 
     public function __serialize() : array
@@ -38,6 +42,7 @@ final class XMLEntry implements \Stringable, Entry
         return [
             'name' => $this->name,
             'value' => $this->value,
+            'type' => $this->type,
         ];
     }
 
@@ -51,11 +56,12 @@ final class XMLEntry implements \Stringable, Entry
     {
         $this->name = $data['name'];
         $this->value = $data['value'];
+        $this->type = $data['type'];
     }
 
     public function definition() : Definition
     {
-        return Definition::xml($this->ref(), false);
+        return Definition::xml($this->ref());
     }
 
     public function is(Reference|string $name) : bool
@@ -90,11 +96,6 @@ final class XMLEntry implements \Stringable, Entry
         return $this->name;
     }
 
-    public function phpType() : Type
-    {
-        return ObjectType::fromObject($this->value);
-    }
-
     public function rename(string $name) : Entry
     {
         return new self($name, $this->value);
@@ -104,6 +105,11 @@ final class XMLEntry implements \Stringable, Entry
     {
         /** @phpstan-ignore-next-line */
         return $this->value->saveXML();
+    }
+
+    public function type() : Type
+    {
+        return $this->type;
     }
 
     public function value() : \DOMDocument
