@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry\DateTimeEntry;
 use PHPUnit\Framework\TestCase;
 
@@ -26,6 +27,14 @@ final class DateTimeEntryTest extends TestCase
         $this->assertSame('0', (new DateTimeEntry('0', new \DateTimeImmutable('2020-07-13 12:00')))->name());
     }
 
+    public function test_invalid_date() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Invalid value given: 'random string', reason: Failed to parse time string (random string) at position 0 (r): The timezone could not be found in the database");
+
+        new DateTimeEntry('a', 'random string');
+    }
+
     /**
      * @dataProvider is_equal_data_provider
      */
@@ -46,6 +55,7 @@ final class DateTimeEntryTest extends TestCase
 
     public function test_prevents_from_creating_entry_with_empty_entry_name() : void
     {
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Entry name cannot be empty');
 
         new DateTimeEntry('', new \DateTimeImmutable('2020-07-13 12:00'));
@@ -75,6 +85,6 @@ final class DateTimeEntryTest extends TestCase
     {
         $entry = new DateTimeEntry('entry-name', new \DateTimeImmutable('2020-07-13 12:00'));
 
-        $this->assertEquals(new \DateTimeImmutable('2020-07-13 12:00'), new \DateTimeImmutable('2020-07-13 12:00'));
+        $this->assertEquals($entry->value(), new \DateTimeImmutable('2020-07-13 12:00'));
     }
 }

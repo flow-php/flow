@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Row\Entry\JsonEntry;
 use Flow\Serializer\NativePHPSerializer;
@@ -94,6 +95,14 @@ final class JsonEntryTest extends TestCase
         $this->assertSame('0', (new JsonEntry('0', [1]))->name());
     }
 
+    public function test_invalid_json() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Invalid value given: 'random string', reason: Syntax error");
+
+        new JsonEntry('a', 'random string');
+    }
+
     /**
      * @dataProvider is_equal_data_provider
      */
@@ -135,6 +144,7 @@ final class JsonEntryTest extends TestCase
 
     public function test_prevent_from_creating_object_with_integers_as_keys_in_entry() : void
     {
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('All keys for JsonEntry object must be strings');
 
         JsonEntry::object('entry-name', [1 => 'one', 'id' => 1, 'name' => 'one']);
@@ -142,6 +152,7 @@ final class JsonEntryTest extends TestCase
 
     public function test_prevents_from_creating_entry_with_empty_entry_name() : void
     {
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Entry name cannot be empty');
 
         new JsonEntry('', [1, 2, 3]);

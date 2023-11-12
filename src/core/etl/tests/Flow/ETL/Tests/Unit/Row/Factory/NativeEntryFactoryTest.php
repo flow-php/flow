@@ -95,7 +95,7 @@ final class NativeEntryFactoryTest extends TestCase
     public function test_datetime_string_with_schema() : void
     {
         $this->assertEquals(
-            Entry::datetime_string('e', '2022-01-01 00:00:00 UTC'),
+            Entry::datetime('e', '2022-01-01 00:00:00 UTC'),
             (new NativeEntryFactory())
                 ->create('e', '2022-01-01 00:00:00 UTC', new Schema(Schema\Definition::dateTime('e')))
         );
@@ -176,14 +176,6 @@ final class NativeEntryFactoryTest extends TestCase
         );
     }
 
-    public function test_json_array_with_schema() : void
-    {
-        $this->assertEquals(
-            Entry::json('e', [['id' => 1]]),
-            (new NativeEntryFactory())->create('e', [['id' => 1]], new Schema(Schema\Definition::json('e')))
-        );
-    }
-
     public function test_json_object_array_with_schema() : void
     {
         $this->assertEquals(
@@ -192,11 +184,27 @@ final class NativeEntryFactoryTest extends TestCase
         );
     }
 
+    public function test_json_string() : void
+    {
+        $this->assertEquals(
+            Entry::json('e', '{"id": 1}'),
+            (new NativeEntryFactory())->create('e', '{"id": 1}')
+        );
+    }
+
     public function test_json_string_with_schema() : void
     {
         $this->assertEquals(
-            Entry::json_string('e', '{"id": 1}'),
+            Entry::json('e', '{"id": 1}'),
             (new NativeEntryFactory())->create('e', '{"id": 1}', new Schema(Schema\Definition::json('e')))
+        );
+    }
+
+    public function test_json_with_schema() : void
+    {
+        $this->assertEquals(
+            Entry::json('e', [['id' => 1]]),
+            (new NativeEntryFactory())->create('e', [['id' => 1]], new Schema(Schema\Definition::json('e')))
         );
     }
 

@@ -11,41 +11,36 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @implements Entry<string, array{name: string, value: array<mixed>, object: boolean}>
+ * @implements Entry<string, array{name: string, value: array, object: boolean}>
  */
 final class JsonEntry implements \Stringable, Entry
 {
     use EntryRef;
 
-    private bool $object;
+    private bool $object = false;
+
+    private readonly array $value;
 
     /**
-     * JsonEntry constructor.
-     *
-     * @param array<mixed> $value
-     *
      * @throws InvalidArgumentException
      */
-    public function __construct(private readonly string $name, private readonly array $value)
+    public function __construct(private readonly string $name, array|string $value)
     {
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        $this->object = false;
-    }
+        if (\is_string($value)) {
+            $this->object = \str_starts_with($value, '{') && \str_ends_with($value, '}');
 
-    /**
-     * @throws InvalidArgumentException
-     * @throws \JsonException
-     */
-    public static function fromJsonString(string $name, string $json) : self
-    {
-        if (\str_starts_with($json, '{') && \str_ends_with($json, '}')) {
-            return self::object($name, (array) \json_decode($json, true, 515, JSON_THROW_ON_ERROR));
+            try {
+                $this->value = (array) \json_decode($value, true, flags: \JSON_THROW_ON_ERROR);
+            } catch (\JsonException $e) {
+                throw new InvalidArgumentException("Invalid value given: '{$value}', reason: " . $e->getMessage(), previous: $e);
+            }
+        } else {
+            $this->value = $value;
         }
-
-        return new self($name, (array) \json_decode($json, true, 515, JSON_THROW_ON_ERROR));
     }
 
     /**
@@ -90,7 +85,7 @@ final class JsonEntry implements \Stringable, Entry
 
     public function definition() : Definition
     {
-        return Definition::json($this->name, false);
+        return Definition::json($this->name);
     }
 
     public function is(string|Reference $name) : bool
@@ -109,7 +104,7 @@ final class JsonEntry implements \Stringable, Entry
 
     public function map(callable $mapper) : Entry
     {
-        return self::fromJsonString($this->name, $mapper($this->value()));
+        return new self($this->name, $mapper($this->value()));
     }
 
     public function name() : string
@@ -132,7 +127,7 @@ final class JsonEntry implements \Stringable, Entry
 
     public function value() : string
     {
-        if (empty($this->value) && $this->object) {
+        if (!\count($this->value) && $this->object) {
             return '{}';
         }
 

@@ -16,13 +16,25 @@ final class DateTimeEntry implements \Stringable, Entry
 {
     use EntryRef;
 
+    private readonly \DateTimeInterface $value;
+
     /**
      * @throws InvalidArgumentException
      */
-    public function __construct(private readonly string $name, private readonly \DateTimeInterface $value)
+    public function __construct(private readonly string $name, \DateTimeInterface|string $value)
     {
         if ($name === '') {
             throw InvalidArgumentException::because('Entry name cannot be empty');
+        }
+
+        if (\is_string($value)) {
+            try {
+                $this->value = new \DateTimeImmutable($value);
+            } catch (\Exception $e) {
+                throw new InvalidArgumentException("Invalid value given: '{$value}', reason: " . $e->getMessage(), previous: $e);
+            }
+        } else {
+            $this->value = $value;
         }
     }
 
@@ -44,7 +56,7 @@ final class DateTimeEntry implements \Stringable, Entry
 
     public function definition() : Definition
     {
-        return Definition::dateTime($this->name, false);
+        return Definition::dateTime($this->name);
     }
 
     public function is(string|Reference $name) : bool

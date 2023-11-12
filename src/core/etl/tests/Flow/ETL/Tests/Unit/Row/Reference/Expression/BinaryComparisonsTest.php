@@ -33,7 +33,7 @@ final class BinaryComparisonsTest extends TestCase
 {
     public function test_equals() : void
     {
-        $row = Row::create(Entry::integer('a', 100), Entry::integer('b', 100), Entry::integer('c', 10), Entry::datetime_string('d', '2023-01-01 00:00:00 UTC'), Entry::datetime_string('e', '2023-01-01 00:00:00 UTC'));
+        $row = Row::create(Entry::integer('a', 100), Entry::integer('b', 100), Entry::integer('c', 10), Entry::datetime('d', '2023-01-01 00:00:00 UTC'), Entry::datetime('e', '2023-01-01 00:00:00 UTC'));
 
         $this->assertTrue(
             (new Equals(ref('a'), ref('b')))->eval($row)
@@ -52,8 +52,8 @@ final class BinaryComparisonsTest extends TestCase
             Entry::integer('a', 100),
             Entry::integer('b', 100),
             Entry::integer('c', 10),
-            Entry::datetime_string('d', '2023-01-01 00:00:00 UTC'),
-            Entry::datetime_string('e', '2023-01-02 00:00:00 UTC'),
+            Entry::datetime('d', '2023-01-01 00:00:00 UTC'),
+            Entry::datetime('e', '2023-01-02 00:00:00 UTC'),
         );
 
         $this->assertTrue((new GreaterThan(ref('a'), ref('c')))->eval($row));
@@ -177,7 +177,7 @@ final class BinaryComparisonsTest extends TestCase
 
     public function test_same() : void
     {
-        $row = Row::create(Entry::integer('a', 100), Entry::integer('b', 100), Entry::integer('c', 10), Entry::datetime_string('d', '2023-01-01 00:00:00 UTC'), Entry::datetime_string('e', '2023-01-01 00:00:00 UTC'));
+        $row = Row::create(Entry::integer('a', 100), Entry::integer('b', 100), Entry::integer('c', 10), Entry::datetime('d', '2023-01-01 00:00:00 UTC'), Entry::datetime('e', '2023-01-01 00:00:00 UTC'));
 
         $this->assertTrue(
             (new Same(ref('a'), ref('b')))->eval($row)

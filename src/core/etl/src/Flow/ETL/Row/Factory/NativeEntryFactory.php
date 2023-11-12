@@ -42,7 +42,7 @@ final class NativeEntryFactory implements EntryFactory
 
             if ('' !== $trimmedValue) {
                 if ($this->isJson($trimmedValue)) {
-                    return Row\Entry\JsonEntry::fromJsonString($entryName, $value);
+                    return new Row\Entry\JsonEntry($entryName, $value);
                 }
 
                 if ($this->isUuid($trimmedValue)) {
@@ -196,7 +196,7 @@ final class NativeEntryFactory implements EntryFactory
             }
 
             if ($type === Entry\JsonEntry::class && \is_string($value)) {
-                return EntryDSL::json_string($definition->entry()->name(), $value);
+                return EntryDSL::json($definition->entry()->name(), $value);
             }
 
             if ($type === Entry\JsonEntry::class && \is_array($value)) {
