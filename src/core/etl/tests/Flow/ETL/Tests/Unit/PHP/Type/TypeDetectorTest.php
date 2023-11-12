@@ -8,11 +8,11 @@ use Flow\ETL\PHP\Type\Native\ArrayType;
 use Flow\ETL\PHP\Type\Native\NullType;
 use Flow\ETL\PHP\Type\Native\ObjectType;
 use Flow\ETL\PHP\Type\Native\ScalarType;
-use Flow\ETL\PHP\Type\TypeFactory;
+use Flow\ETL\PHP\Type\TypeDetector;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
-final class TypeFactoryTest extends TestCase
+final class TypeDetectorTest extends TestCase
 {
     public static function provide_data() : \Generator
     {
@@ -284,7 +284,7 @@ final class TypeFactoryTest extends TestCase
     #[DataProvider('provide_data')]
     public function test_data($data, string $class, string $description) : void
     {
-        $type = (new TypeFactory())->getType($data);
+        $type = (new TypeDetector())->detectType($data);
 
         $this->assertInstanceOf($class, $type);
         $this->assertSame($description, $type->toString());
@@ -293,13 +293,13 @@ final class TypeFactoryTest extends TestCase
     #[DataProvider('provide_object_data')]
     public function test_object_types(mixed $data) : void
     {
-        $this->assertInstanceOf(ObjectType::class, (new TypeFactory())->getType($data));
+        $this->assertInstanceOf(ObjectType::class, (new TypeDetector())->detectType($data));
     }
 
     #[DataProvider('provide_scalar_data')]
     public function test_scalar_types(mixed $data, string $description) : void
     {
-        $type = (new TypeFactory())->getType($data);
+        $type = (new TypeDetector())->detectType($data);
         $this->assertInstanceOf(ScalarType::class, $type);
         $this->assertSame($description, $type->toString());
     }

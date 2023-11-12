@@ -25,7 +25,7 @@ final class MapEntryTest extends TestCase
     public function test_creating_boolean_map_from_wrong_value_types() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Expected map of integer with value of boolean got different types');
+        $this->expectExceptionMessage('Expected map<integer, boolean> got different types: array<mixed>');
 
         new MapEntry('map', ['string', false], new MapType(MapKey::integer(), MapValue::boolean()));
     }
@@ -33,7 +33,7 @@ final class MapEntryTest extends TestCase
     public function test_creating_datetime_map_from_wrong_value_types() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Expected map of integer with value of object<DateTimeInterface> got different types.');
+        $this->expectExceptionMessage('Expected map<integer, object<DateTimeInterface>> got different types: array<mixed>');
 
         new MapEntry('map', ['string', new \DateTimeImmutable()], new MapType(MapKey::integer(), MapValue::object(\DateTimeInterface::class)));
     }
@@ -41,7 +41,7 @@ final class MapEntryTest extends TestCase
     public function test_creating_float_map_from_wrong_value_types() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Expected map of integer with value of float got different types');
+        $this->expectExceptionMessage('Expected map<integer, float> got different types: array<mixed>');
 
         new MapEntry('map', ['string', 1.3], new MapType(MapKey::integer(), MapValue::float()));
     }
@@ -49,7 +49,7 @@ final class MapEntryTest extends TestCase
     public function test_creating_integer_map_from_wrong_value_types() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Expected map of integer with value of integer got different types');
+        $this->expectExceptionMessage('Expected map<integer, integer> got different types: array<mixed>');
 
         new MapEntry('map', ['string', 1], new MapType(MapKey::integer(), MapValue::integer()));
     }
@@ -57,7 +57,7 @@ final class MapEntryTest extends TestCase
     public function test_creating_map_from_not_map_array() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Expected map of integer with value of integer got different types');
+        $this->expectExceptionMessage('Expected map<integer, integer> got different types: structure{a: integer, b: integer}');
 
         new MapEntry('map', ['a' => 1, 'b' => 2], new MapType(MapKey::integer(), MapValue::integer()));
     }
@@ -65,7 +65,7 @@ final class MapEntryTest extends TestCase
     public function test_creating_string_map_from_wrong_value_types() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Expected map of integer with value of string got different types');
+        $this->expectExceptionMessage('Expected map<integer, string> got different types: array<mixed>');
 
         new MapEntry('map', ['string', 1], new MapType(MapKey::integer(), MapValue::string()));
     }

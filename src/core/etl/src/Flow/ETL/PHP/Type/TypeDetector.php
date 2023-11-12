@@ -14,9 +14,9 @@ use Flow\ETL\PHP\Type\Native\NullType;
 use Flow\ETL\PHP\Type\Native\ObjectType;
 use Flow\ETL\PHP\Type\Native\ScalarType;
 
-final class TypeFactory
+final class TypeDetector
 {
-    public function getType(mixed $value) : Type
+    public function detectType(mixed $value) : Type
     {
         if (null === $value) {
             return new NullType();
@@ -36,8 +36,8 @@ final class TypeFactory
             }
 
             $detector = new ArrayContentDetector(
-                new Types(...\array_map([$this, 'getType'], \array_keys($value))),
-                new Types(...\array_map([$this, 'getType'], \array_values($value)))
+                new Types(...\array_map([$this, 'detectType'], \array_keys($value))),
+                new Types(...\array_map([$this, 'detectType'], \array_values($value)))
             );
 
             $firstValue = $detector->firstValueType();
@@ -50,7 +50,7 @@ final class TypeFactory
                 $elements = [];
 
                 foreach ($value as $key => $item) {
-                    $elements[] = new StructureElement($key, $this->getType($item));
+                    $elements[] = new StructureElement($key, $this->detectType($item));
                 }
 
                 return new StructureType(...$elements);

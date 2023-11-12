@@ -12,7 +12,7 @@ use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\PHP\Type\Native\ArrayType;
 use Flow\ETL\PHP\Type\Native\ObjectType;
 use Flow\ETL\PHP\Type\Native\ScalarType;
-use Flow\ETL\PHP\Type\TypeFactory;
+use Flow\ETL\PHP\Type\TypeDetector;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\EntryFactory;
@@ -46,7 +46,7 @@ final class NativeEntryFactory implements EntryFactory
             return new Row\Entry\NullEntry($entryName);
         }
 
-        $valueType = (new TypeFactory())->getType($value);
+        $valueType = (new TypeDetector())->detectType($value);
 
         if ($valueType instanceof ScalarType) {
             if ($valueType->isString()) {

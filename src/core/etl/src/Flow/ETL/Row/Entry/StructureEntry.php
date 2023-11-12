@@ -8,6 +8,7 @@ use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\PHP\Type\Type;
+use Flow\ETL\PHP\Type\TypeDetector;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
@@ -38,7 +39,7 @@ final class StructureEntry implements \Stringable, Entry
         }
 
         if (!$type->isValid($value)) {
-            throw InvalidArgumentException::because('Expected ' . $type->toString() . ' got different types.');
+            throw InvalidArgumentException::because('Expected ' . $type->toString() . ' got different types: ' . (new TypeDetector())->detectType($this->value)->toString());
         }
     }
 

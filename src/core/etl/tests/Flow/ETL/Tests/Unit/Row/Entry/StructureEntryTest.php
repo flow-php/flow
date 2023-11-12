@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
 use Flow\ETL\DSL\Entry;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\Map\MapKey;
 use Flow\ETL\PHP\Type\Logical\Map\MapValue;
 use Flow\ETL\PHP\Type\Logical\MapType;
@@ -100,6 +101,18 @@ final class StructureEntryTest extends TestCase
         ];
     }
 
+    public function test_creating_string_structure_from_wrong_value_types() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Expected structure{id: integer, name: string} got different types: list<integer>');
+
+        new StructureEntry(
+            'test',
+            [1, 2, 3],
+            new StructureType(new StructureElement('id', ScalarType::integer()), new StructureElement('name', ScalarType::string()))
+        );
+    }
+
     public function test_definition() : void
     {
         $entry = Entry::structure(
@@ -182,6 +195,7 @@ final class StructureEntryTest extends TestCase
 
     public function test_prevents_from_creating_entry_with_empty_entry_name() : void
     {
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Entry name cannot be empty');
 
         new StructureEntry(
