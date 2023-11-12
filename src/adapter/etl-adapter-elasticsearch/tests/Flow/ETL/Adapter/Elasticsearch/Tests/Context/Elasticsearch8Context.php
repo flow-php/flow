@@ -76,4 +76,9 @@ final class Elasticsearch8Context implements ElasticsearchContext
         )
             ->load($rows, new FlowContext(Config::default()));
     }
+
+    public function version() : int
+    {
+        return 8;
+    }
 }

@@ -11,4 +11,6 @@ interface ElasticsearchContext
     public function createIndex(string $name) : void;
 
     public function deleteIndex(string $name) : void;
+
+    public function version() : int;
 }

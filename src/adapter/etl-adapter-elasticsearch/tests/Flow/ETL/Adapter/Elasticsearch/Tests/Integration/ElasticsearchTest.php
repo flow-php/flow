@@ -12,6 +12,10 @@ final class ElasticsearchTest extends TestCase
 {
     public function test_batch_size_when_its_not_explicitly_set() : void
     {
+        if ($this->elasticsearchContext->version() <= 7) {
+            $this->markTestSkipped('httpClient option is not accepted in Elasticsearch 7');
+        }
+
         (new Flow())
             ->read(From::array([
                 ['id' => 1, 'text' => 'lorem ipsum'],
