@@ -47,6 +47,8 @@ jobs:
             split_repository: 'etl-adapter-doctrine'
           - local_path: 'src/adapter/etl-adapter-elasticsearch'
             split_repository: 'etl-adapter-elasticsearch'
+          - local_path: 'src/adapter/etl-adapter-filesystem'
+            split_repository: 'etl-adapter-filesystem'
           - local_path: 'src/adapter/etl-adapter-meilisearch'
             split_repository: 'etl-adapter-meilisearch'
           - local_path: 'src/adapter/etl-adapter-google-sheet'

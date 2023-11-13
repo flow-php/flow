@@ -2,13 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Filesystem;
+namespace Flow\ETL\Adapter\Filesystem;
 
 use Aws\S3\S3Client;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\MissingDependencyException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Filesystem;
+use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\Stream\FileStream;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\Partition\NoopFilter;
@@ -178,6 +179,7 @@ final class FlysystemFS implements Filesystem
         }
 
         $filter = function (FileAttributes|DirectoryAttributes $file) use ($path, $partitionFilter) : bool {
+            //            var_dump($file->path());
             if ($file instanceof DirectoryAttributes) {
                 return false;
             }

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "59f188fe625a8def83e99b55089edbbc",
+    "content-hash": "2d471870c5017bbc75040fef20928b2d",
     "packages": [
         {
             "name": "aeon-php/calendar",
@@ -1670,16 +1670,16 @@
         },
         {
             "name": "google/apiclient-services",
-            "version": "v0.323.0",
+            "version": "v0.324.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/googleapis/google-api-php-client-services.git",
-                "reference": "d5497d30ddfafe7592102ca48bedaf222a4ca7a6"
+                "reference": "585cc823c3d59788e4a0829d5b7e41c76950d801"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/googleapis/google-api-php-client-services/zipball/d5497d30ddfafe7592102ca48bedaf222a4ca7a6",
-                "reference": "d5497d30ddfafe7592102ca48bedaf222a4ca7a6",
+                "url": "https://api.github.com/repos/googleapis/google-api-php-client-services/zipball/585cc823c3d59788e4a0829d5b7e41c76950d801",
+                "reference": "585cc823c3d59788e4a0829d5b7e41c76950d801",
                 "shasum": ""
             },
             "require": {
@@ -1708,9 +1708,9 @@
             ],
             "support": {
                 "issues": "https://github.com/googleapis/google-api-php-client-services/issues",
-                "source": "https://github.com/googleapis/google-api-php-client-services/tree/v0.323.0"
+                "source": "https://github.com/googleapis/google-api-php-client-services/tree/v0.324.0"
             },
-            "time": "2023-11-06T01:08:38+00:00"
+            "time": "2023-11-13T01:06:14+00:00"
         },
         {
             "name": "google/auth",
@@ -3987,16 +3987,16 @@
         },
         {
             "name": "react/event-loop",
-            "version": "v1.4.0",
+            "version": "v1.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/reactphp/event-loop.git",
-                "reference": "6e7e587714fff7a83dcc7025aee42ab3b265ae05"
+                "reference": "bbe0bd8c51ffc05ee43f1729087ed3bdf7d53354"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/reactphp/event-loop/zipball/6e7e587714fff7a83dcc7025aee42ab3b265ae05",
-                "reference": "6e7e587714fff7a83dcc7025aee42ab3b265ae05",
+                "url": "https://api.github.com/repos/reactphp/event-loop/zipball/bbe0bd8c51ffc05ee43f1729087ed3bdf7d53354",
+                "reference": "bbe0bd8c51ffc05ee43f1729087ed3bdf7d53354",
                 "shasum": ""
             },
             "require": {
@@ -4047,7 +4047,7 @@
             ],
             "support": {
                 "issues": "https://github.com/reactphp/event-loop/issues",
-                "source": "https://github.com/reactphp/event-loop/tree/v1.4.0"
+                "source": "https://github.com/reactphp/event-loop/tree/v1.5.0"
             },
             "funding": [
                 {
@@ -4055,7 +4055,7 @@
                     "type": "open_collective"
                 }
             ],
-            "time": "2023-05-05T10:11:24+00:00"
+            "time": "2023-11-13T13:48:05+00:00"
         },
         {
             "name": "react/promise",
@@ -5408,6 +5408,55 @@
                 }
             ],
             "time": "2023-11-06T10:58:05+00:00"
+        },
+        {
+            "name": "webmozart/glob",
+            "version": "4.6.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/webmozarts/glob.git",
+                "reference": "3c17f7dec3d9d0e87b575026011f2e75a56ed655"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/webmozarts/glob/zipball/3c17f7dec3d9d0e87b575026011f2e75a56ed655",
+                "reference": "3c17f7dec3d9d0e87b575026011f2e75a56ed655",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.3 || ^8.0.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9.5",
+                "symfony/filesystem": "^5.3"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "4.1-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Webmozart\\Glob\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Bernhard Schussek",
+                    "email": "bschussek@gmail.com"
+                }
+            ],
+            "description": "A PHP implementation of Ant's glob.",
+            "support": {
+                "issues": "https://github.com/webmozarts/glob/issues",
+                "source": "https://github.com/webmozarts/glob/tree/4.6.0"
+            },
+            "time": "2022-05-24T19:45:58+00:00"
         }
     ],
     "packages-dev": [
@@ -5467,16 +5516,16 @@
         },
         {
             "name": "aws/aws-sdk-php",
-            "version": "3.285.4",
+            "version": "3.286.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aws/aws-sdk-php.git",
-                "reference": "c462af819d81cba49939949032b20799f5ef0fff"
+                "reference": "568f0f770b8b26afce41ff93348b248c3a7090c9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/c462af819d81cba49939949032b20799f5ef0fff",
-                "reference": "c462af819d81cba49939949032b20799f5ef0fff",
+                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/568f0f770b8b26afce41ff93348b248c3a7090c9",
+                "reference": "568f0f770b8b26afce41ff93348b248c3a7090c9",
                 "shasum": ""
             },
             "require": {
@@ -5556,9 +5605,9 @@
             "support": {
                 "forum": "https://forums.aws.amazon.com/forum.jspa?forumID=80",
                 "issues": "https://github.com/aws/aws-sdk-php/issues",
-                "source": "https://github.com/aws/aws-sdk-php/tree/3.285.4"
+                "source": "https://github.com/aws/aws-sdk-php/tree/3.286.0"
             },
-            "time": "2023-11-10T19:25:49+00:00"
+            "time": "2023-11-13T21:11:04+00:00"
         },
         {
             "name": "brick/math",
@@ -6226,16 +6275,16 @@
         },
         {
             "name": "nyholm/psr7",
-            "version": "1.8.0",
+            "version": "1.8.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Nyholm/psr7.git",
-                "reference": "3cb4d163b58589e47b35103e8e5e6a6a475b47be"
+                "reference": "aa5fc277a4f5508013d571341ade0c3886d4d00e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Nyholm/psr7/zipball/3cb4d163b58589e47b35103e8e5e6a6a475b47be",
-                "reference": "3cb4d163b58589e47b35103e8e5e6a6a475b47be",
+                "url": "https://api.github.com/repos/Nyholm/psr7/zipball/aa5fc277a4f5508013d571341ade0c3886d4d00e",
+                "reference": "aa5fc277a4f5508013d571341ade0c3886d4d00e",
                 "shasum": ""
             },
             "require": {
@@ -6288,7 +6337,7 @@
             ],
             "support": {
                 "issues": "https://github.com/Nyholm/psr7/issues",
-                "source": "https://github.com/Nyholm/psr7/tree/1.8.0"
+                "source": "https://github.com/Nyholm/psr7/tree/1.8.1"
             },
             "funding": [
                 {
@@ -6300,7 +6349,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2023-05-02T11:26:24+00:00"
+            "time": "2023-11-13T09:31:12+00:00"
         },
         {
             "name": "php-http/curl-client",

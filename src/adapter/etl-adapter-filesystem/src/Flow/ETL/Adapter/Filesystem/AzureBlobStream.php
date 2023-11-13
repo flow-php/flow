@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Filesystem;
+namespace Flow\ETL\Adapter\Filesystem;
 
 use Flow\ETL\Exception\MissingDependencyException;
 use Flow\ETL\Exception\RuntimeException;
