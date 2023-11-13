@@ -6,11 +6,11 @@ if ($_ENV['FLOW_PHAR_APP'] ?? false) {
     exit(1);
 }
 
-use Flow\ETL\Adapter\Filesystem\AwsS3Stream;
-use Flow\ETL\Adapter\Filesystem\AzureBlobStream;
 use function Flow\ETL\DSL\concat;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
+use Flow\ETL\Adapter\Filesystem\AwsS3Stream;
+use Flow\ETL\Adapter\Filesystem\AzureBlobStream;
 use Flow\ETL\DSL\Json;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Flow;
