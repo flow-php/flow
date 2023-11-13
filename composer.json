@@ -152,6 +152,7 @@
         "flow-php/etl-adapter-dbal-tools": "self.version",
         "flow-php/etl-adapter-doctrine": "self.version",
         "flow-php/etl-adapter-elasticsearch": "self.version",
+        "flow-php/etl-adapter-filesystem": "self.version",
         "flow-php/etl-adapter-google-sheet": "self.version",
         "flow-php/etl-adapter-http": "self.version",
         "flow-php/etl-adapter-json": "self.version",
