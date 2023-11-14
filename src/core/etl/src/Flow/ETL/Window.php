@@ -7,6 +7,8 @@ namespace Flow\ETL;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Window\Average;
+use Flow\ETL\Window\Count;
+use Flow\ETL\Window\DensRank;
 use Flow\ETL\Window\Rank;
 use Flow\ETL\Window\RowNumber;
 use Flow\ETL\Window\Sum;
@@ -39,6 +41,20 @@ final class Window
     public function avg(EntryReference $ref) : self
     {
         $this->function = new Average($ref);
+
+        return $this;
+    }
+
+    public function count(EntryReference $ref) : self
+    {
+        $this->function = new Count($ref);
+
+        return $this;
+    }
+
+    public function densRank() : self
+    {
+        $this->function = new DensRank();
 
         return $this;
     }
