@@ -4,37 +4,48 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
+use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Native\ObjectType;
+use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Type;
+use Flow\ETL\PHP\Type\TypeDetector;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
+use Flow\ETL\Row\Schema\FlowMetadata;
+use Flow\ETL\Row\Schema\Metadata;
 
 /**
- * @implements Entry<object, array{name: string, value: object, type: ObjectType}>
+ * @template T
+ *
+ * @implements Entry<array<T>, array{name: string, type: MapType, value: array<T>}>
  */
-final class ObjectEntry implements \Stringable, Entry
+final class MapEntry implements Entry
 {
     use EntryRef;
 
-    private readonly ObjectType $type;
-
     /**
+     * @param array<T> $value
+     *
      * @throws InvalidArgumentException
      */
-    public function __construct(private readonly string $name, private readonly object $value)
-    {
+    public function __construct(
+        private readonly string $name,
+        private readonly array $value,
+        private readonly MapType $type,
+    ) {
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        $this->type = ObjectType::fromObject($value);
+        if (!$type->isValid($value)) {
+            throw InvalidArgumentException::because('Expected ' . $type->toString() . ' got different types: ' . (new TypeDetector())->detectType($this->value)->toString());
+        }
     }
 
     public function __serialize() : array
     {
-        return ['name' => $this->name, 'value' => $this->value, 'type' => $this->type];
+        return ['name' => $this->name, 'type' => $this->type, 'value' => $this->value];
     }
 
     public function __toString() : string
@@ -45,13 +56,17 @@ final class ObjectEntry implements \Stringable, Entry
     public function __unserialize(array $data) : void
     {
         $this->name = $data['name'];
-        $this->value = $data['value'];
         $this->type = $data['type'];
+        $this->value = $data['value'];
     }
 
     public function definition() : Definition
     {
-        return Definition::object($this->name, $this->type);
+        return Definition::map(
+            $this->name,
+            $this->type,
+            metadata: Metadata::with(FlowMetadata::METADATA_MAP_ENTRY_TYPE, $this->type())
+        );
     }
 
     public function is(string|Reference $name) : bool
@@ -68,12 +83,12 @@ final class ObjectEntry implements \Stringable, Entry
         return $this->is($entry->name())
             && $entry instanceof self
             && $this->type->isEqual($entry->type)
-            && \serialize($this->__serialize()['value']) === \serialize($entry->__serialize()['value']);
+            && (new ArrayComparison())->equals($this->value, $entry->value());
     }
 
     public function map(callable $mapper) : Entry
     {
-        return new self($this->name, $mapper($this->value()));
+        return new self($this->name, $mapper($this->value), $this->type);
     }
 
     public function name() : string
@@ -81,17 +96,14 @@ final class ObjectEntry implements \Stringable, Entry
         return $this->name;
     }
 
-    /**
-     * @throws InvalidArgumentException
-     */
     public function rename(string $name) : Entry
     {
-        return new self($name, $this->value);
+        return new self($name, $this->value, $this->type);
     }
 
     public function toString() : string
     {
-        return ($this->type->nullable() ? '?' : '') . \preg_replace('!\s+!', ' ', \str_replace("\n", '', \print_r($this->value(), true)));
+        return \json_encode($this->value(), JSON_THROW_ON_ERROR);
     }
 
     public function type() : Type
@@ -99,7 +111,7 @@ final class ObjectEntry implements \Stringable, Entry
         return $this->type;
     }
 
-    public function value() : object
+    public function value() : array
     {
         return $this->value;
     }

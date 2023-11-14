@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Row\Schema;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Logical\List\ListElement;
+use Flow\ETL\PHP\Type\Logical\ListType;
+use Flow\ETL\PHP\Type\Logical\MapType;
+use Flow\ETL\PHP\Type\Logical\StructureType;
+use Flow\ETL\PHP\Type\Native\ObjectType;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\ArrayEntry;
 use Flow\ETL\Row\Entry\BooleanEntry;
@@ -19,7 +22,6 @@ use Flow\ETL\Row\Entry\ListEntry;
 use Flow\ETL\Row\Entry\NullEntry;
 use Flow\ETL\Row\Entry\ObjectEntry;
 use Flow\ETL\Row\Entry\StringEntry;
-use Flow\ETL\Row\Entry\StructureEntry;
 use Flow\ETL\Row\Entry\UuidEntry;
 use Flow\ETL\Row\Entry\XMLEntry;
 use Flow\ETL\Row\EntryReference;
@@ -94,10 +96,9 @@ final class Definition implements Serializable
             $entry,
             ($nullable) ? [EnumEntry::class, NullEntry::class] : [EnumEntry::class],
             $constraint,
-            ($metadata ?? Metadata::empty())->merge(
-                Metadata::with(FlowMetadata::METADATA_ENUM_CLASS, $type)
-                    ->add(FlowMetadata::METADATA_ENUM_CASES, $type::cases())
-            )
+            Metadata::with(FlowMetadata::METADATA_ENUM_CLASS, $type)
+                ->add(FlowMetadata::METADATA_ENUM_CASES, $type::cases())
+                ->merge($metadata ?? Metadata::empty())
         );
     }
 
@@ -116,15 +117,23 @@ final class Definition implements Serializable
         return new self($entry, ($nullable) ? [JsonEntry::class, NullEntry::class] : [JsonEntry::class], $constraint, $metadata);
     }
 
-    public static function list(string|EntryReference $entry, ListElement $type, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function list(string|EntryReference $entry, ListType $type, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
         return new self(
             $entry,
-            ($nullable) ? [ListEntry::class, NullEntry::class] : [ListEntry::class],
+            $nullable ? [ListEntry::class, NullEntry::class] : [ListEntry::class],
             $constraint,
-            ($metadata ?? Metadata::empty())->merge(
-                Metadata::empty()->add(FlowMetadata::METADATA_LIST_ENTRY_TYPE, $type)
-            )
+            Metadata::empty()->add(FlowMetadata::METADATA_LIST_ENTRY_TYPE, $type)->merge($metadata ?? Metadata::empty())
+        );
+    }
+
+    public static function map(string|EntryReference $entry, MapType $type, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    {
+        return new self(
+            $entry,
+            $nullable ? [Entry\MapEntry::class, NullEntry::class] : [Entry\MapEntry::class],
+            $constraint,
+            Metadata::empty()->add(FlowMetadata::METADATA_MAP_ENTRY_TYPE, $type)->merge($metadata ?? Metadata::empty())
         );
     }
 
@@ -133,9 +142,14 @@ final class Definition implements Serializable
         return new self($entry, [NullEntry::class], null, $metadata);
     }
 
-    public static function object(string|EntryReference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function object(string|EntryReference $entry, ObjectType $type, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
-        return new self($entry, ($nullable) ? [ObjectEntry::class, NullEntry::class] : [ObjectEntry::class], $constraint, $metadata);
+        return new self(
+            $entry,
+            ($nullable) ? [ObjectEntry::class, NullEntry::class] : [ObjectEntry::class],
+            $constraint,
+            Metadata::empty()->add(FlowMetadata::METADATA_OBJECT_ENTRY_TYPE, $type)->merge($metadata ?? Metadata::empty())
+        );
     }
 
     public static function string(string|EntryReference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
@@ -143,38 +157,13 @@ final class Definition implements Serializable
         return new self($entry, ($nullable) ? [StringEntry::class, NullEntry::class] : [StringEntry::class], $constraint, $metadata);
     }
 
-    /**
-     * @param array<Definition> $structureDefinitions
-     */
-    public static function structure(string|EntryReference $entry, array $structureDefinitions, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function structure(string|EntryReference $entry, StructureType $type, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
-        /**
-         * @param array<Definition> $structureDefinitions
-         */
-        $entriesToMetadata = static function (array $entries) use (&$entriesToMetadata) : array {
-            $metadata = [];
-
-            /** @var array<Definition>|Definition $definition */
-            foreach ($entries as $name => $definition) {
-                if (\is_array($definition)) {
-                    $metadata[$name] = $entriesToMetadata($definition);
-                } else {
-                    $metadata[$name] = $definition;
-                }
-            }
-
-            return $metadata;
-        };
-
         return new self(
             $entry,
-            ($nullable)
-                ? [StructureEntry::class, NullEntry::class]
-                : [StructureEntry::class],
+            $nullable ? [Entry\StructureEntry::class, NullEntry::class] : [Entry\StructureEntry::class],
             $constraint,
-            ($metadata ?? Metadata::empty())->merge(
-                Metadata::empty()->add(FlowMetadata::METADATA_STRUCTURE_DEFINITIONS, $entriesToMetadata($structureDefinitions))
-            )
+            Metadata::empty()->add(FlowMetadata::METADATA_STRUCTURE_ENTRY_TYPE, $type)->merge($metadata ?? Metadata::empty())
         );
     }
 

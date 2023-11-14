@@ -6,13 +6,15 @@ namespace Flow\ETL\Row\Entry;
 
 use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\PHP\Type\Native\ArrayType;
+use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @implements Entry<array<Entries>, array{name: string, entries: array<Entries>}>
+ * @implements Entry<array<Entries>, array{name: string, entries: array<Entries>, type: ArrayType}>
  */
 final class CollectionEntry implements \Stringable, Entry
 {
@@ -22,6 +24,8 @@ final class CollectionEntry implements \Stringable, Entry
      * @var array<Entries>
      */
     private readonly array $entries;
+
+    private readonly ArrayType $type;
 
     /**
      * @throws InvalidArgumentException
@@ -33,6 +37,7 @@ final class CollectionEntry implements \Stringable, Entry
         }
 
         $this->entries = $entries;
+        $this->type = new ArrayType(0 === \count($entries));
     }
 
     public function __serialize() : array
@@ -40,6 +45,7 @@ final class CollectionEntry implements \Stringable, Entry
         return [
             'name' => $this->name,
             'entries' => $this->entries,
+            'type' => $this->type,
         ];
     }
 
@@ -52,11 +58,12 @@ final class CollectionEntry implements \Stringable, Entry
     {
         $this->name = $data['name'];
         $this->entries = $data['entries'];
+        $this->type = $data['type'];
     }
 
     public function definition() : Definition
     {
-        return Definition::collection($this->name, false);
+        return Definition::collection($this->name, $this->type->nullable());
     }
 
     public function is(string|Reference $name) : bool
@@ -70,7 +77,7 @@ final class CollectionEntry implements \Stringable, Entry
 
     public function isEqual(Entry $entry) : bool
     {
-        return $this->is($entry->name()) && $entry instanceof self && (new ArrayComparison())->equals($this->value(), $entry->value());
+        return $this->is($entry->name()) && $entry instanceof self && $this->type->isEqual($entry->type) && (new ArrayComparison())->equals($this->value(), $entry->value());
     }
 
     public function map(callable $mapper) : Entry
@@ -106,6 +113,11 @@ final class CollectionEntry implements \Stringable, Entry
         }
 
         return \json_encode($array, JSON_THROW_ON_ERROR);
+    }
+
+    public function type() : Type
+    {
+        return $this->type;
     }
 
     public function value() : array

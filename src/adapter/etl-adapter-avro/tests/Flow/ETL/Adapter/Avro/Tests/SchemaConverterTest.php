@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Adapter\Parquet\Tests\Unit;
+namespace Flow\ETL\Adapter\Avro\Tests;
 
-use Flow\ETL\Adapter\Parquet\SchemaConverter;
+use Flow\ETL\Adapter\Avro\FlixTech\SchemaConverter;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\ListType;
@@ -16,38 +16,75 @@ use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\PHP\Type\Native\ObjectType;
 use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\Row\Schema;
-use Flow\Parquet\ParquetFile\Schema as ParquetSchema;
-use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use PHPUnit\Framework\TestCase;
 
 final class SchemaConverterTest extends TestCase
 {
-    public function test_convert_array_entry_to_parquet_array() : void
+    public function test_convert_etl_entries_to_avro_json() : void
     {
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage("ArrayEntry entry can't be saved in Parquet file, try convert it to ListEntry");
-
-        (new SchemaConverter())->toParquet(new Schema(
-            Schema\Definition::array('array')
-        ));
+        $this->assertSame(
+            <<<'AVRO_JSON'
+{
+  "name": "row",
+  "type": "record",
+  "fields": [
+    {
+      "name": "integer",
+      "type": "int"
+    },
+    {
+      "name": "boolean",
+      "type": "boolean"
+    },
+    {
+      "name": "string",
+      "type": "string"
+    },
+    {
+      "name": "float",
+      "type": "float"
+    },
+    {
+      "name": "datetime",
+      "type": "long",
+      "logicalType": "timestamp-micros"
+    },
+    {
+      "name": "json",
+      "type": "string"
+    },
+    {
+      "name": "list",
+      "type": {
+        "type": "array",
+        "items": "string"
+      }
+    },
+    {
+      "name": "structure",
+      "type": {
+        "name": "Structure",
+        "type": "record",
+        "fields": [
+          {
+            "name": "a",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "map",
+      "type": {
+        "type": "map",
+        "values": "int"
+      }
     }
-
-    public function test_convert_etl_entries_to_parquet_fields() : void
-    {
-        $this->assertEquals(
-            ParquetSchema::with(
-                FlatColumn::int64('integer'),
-                FlatColumn::boolean('boolean'),
-                FlatColumn::string('string'),
-                FlatColumn::float('float'),
-                FlatColumn::dateTime('datetime'),
-                FlatColumn::json('json'),
-                NestedColumn::list('list', ParquetSchema\ListElement::string()),
-                NestedColumn::struct('structure', [FlatColumn::string('a')]),
-                NestedColumn::map('map', ParquetSchema\MapKey::string(), ParquetSchema\MapValue::int64())
-            ),
-            (new SchemaConverter())->toParquet(new Schema(
+  ]
+}
+AVRO_JSON
+            ,
+            (new SchemaConverter())->toAvroJsonSchema(new Schema(
                 Schema\Definition::integer('integer'),
                 Schema\Definition::boolean('boolean'),
                 Schema\Definition::string('string'),
@@ -61,12 +98,12 @@ final class SchemaConverterTest extends TestCase
         );
     }
 
-    public function test_convert_object_entry_to_parquet_array() : void
+    public function test_convert_object_entry_to_avro_array() : void
     {
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage("Flow\ETL\Row\Entry\ObjectEntry is not yet supported.");
 
-        (new SchemaConverter())->toParquet(new Schema(
+        (new SchemaConverter())->toAvroJsonSchema(new Schema(
             Schema\Definition::object('object', new ObjectType(\stdClass::class, false))
         ));
     }

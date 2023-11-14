@@ -5,9 +5,14 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
 use Flow\ETL\DSL\Entry;
-use Flow\ETL\Row\Entry\ArrayEntry;
-use Flow\ETL\Row\Entry\IntegerEntry;
-use Flow\ETL\Row\Entry\StringEntry;
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\PHP\Type\Logical\Map\MapKey;
+use Flow\ETL\PHP\Type\Logical\Map\MapValue;
+use Flow\ETL\PHP\Type\Logical\MapType;
+use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
+use Flow\ETL\PHP\Type\Logical\StructureType;
+use Flow\ETL\PHP\Type\Native\ArrayType;
+use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\Row\Entry\StructureEntry;
 use Flow\ETL\Row\Schema\Definition;
 use PHPUnit\Framework\TestCase;
@@ -18,57 +23,148 @@ final class StructureEntryTest extends TestCase
     {
         yield 'equal names and equal simple same integer entries' => [
             true,
-            new StructureEntry('name', new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3)),
-            new StructureEntry('name', new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3)),
+            new StructureEntry(
+                'name',
+                ['1' => 1, '2' => 2, '3' => 3],
+                new StructureType(new StructureElement('1', ScalarType::integer()), new StructureElement('2', ScalarType::integer()), new StructureElement('3', ScalarType::integer()))
+            ),
+            new StructureEntry(
+                'name',
+                ['1' => 1, '2' => 2, '3' => 3],
+                new StructureType(new StructureElement('1', ScalarType::integer()), new StructureElement('2', ScalarType::integer()), new StructureElement('3', ScalarType::integer()))
+            ),
         ];
         yield 'equal names and equal simple same integer entries with different number of entries' => [
             false,
-            new StructureEntry('name', new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3)),
-            new StructureEntry('name', new IntegerEntry('1', 1), new IntegerEntry('2', 2)),
+            new StructureEntry(
+                'name',
+                ['1' => 1, '2' => 2, '3' => 3],
+                new StructureType(new StructureElement('1', ScalarType::integer()), new StructureElement('2', ScalarType::string()), new StructureElement('3', ScalarType::string()))
+            ),
+            new StructureEntry(
+                'name',
+                ['1' => 1, '2' => 2],
+                new StructureType(new StructureElement('1', ScalarType::integer()), new StructureElement('2', ScalarType::string()))
+            ),
         ];
         yield 'equal names and equal simple same integer entries with different number of entries reversed' => [
             false,
-            new StructureEntry('name', new IntegerEntry('1', 1), new IntegerEntry('2', 2)),
-            new StructureEntry('name', new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3)),
+            new StructureEntry(
+                'name',
+                ['1' => 1, '2' => 2],
+                new StructureType(new StructureElement('1', ScalarType::integer()), new StructureElement('2', ScalarType::string()))
+            ),
+            new StructureEntry(
+                'name',
+                ['1' => 1, '2' => 2, '3' => 3],
+                new StructureType(new StructureElement('1', ScalarType::integer()), new StructureElement('2', ScalarType::string()), new StructureElement('3', ScalarType::string()))
+            ),
         ];
         yield 'equal names and equal simple same array entries' => [
             true,
-            new StructureEntry('name', new ArrayEntry('json', ['foo' => ['bar' => 'baz']])),
-            new StructureEntry('name', new ArrayEntry('json', ['foo' => ['bar' => 'baz']])),
+            new StructureEntry(
+                'name',
+                ['json' => ['foo' => ['bar' => 'baz']]],
+                new StructureType(new StructureElement('json', new MapType(MapKey::string(), MapValue::map(new MapType(MapKey::string(), MapValue::string())))))
+            ),
+            new StructureEntry(
+                'name',
+                ['json' => ['foo' => ['bar' => 'baz']]],
+                new StructureType(new StructureElement('json', new MapType(MapKey::string(), MapValue::map(new MapType(MapKey::string(), MapValue::string())))))
+            ),
         ];
         yield 'equal names and equal simple same collection entries' => [
             true,
-            new StructureEntry('name', new StructureEntry('json', new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3))),
-            new StructureEntry('name', new StructureEntry('json', new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3))),
+            new StructureEntry(
+                'name',
+                ['json' => ['1' => 1, '2' => 2, '3' => 3]],
+                new StructureType(new StructureElement('json', new ArrayType()))
+            ),
+            new StructureEntry(
+                'name',
+                ['json' => ['1' => 1, '2' => 2, '3' => 3]],
+                new StructureType(new StructureElement('json', new ArrayType()))
+            ),
         ];
         yield 'equal names and equal simple different collection entries' => [
             false,
-            new StructureEntry('name', new StructureEntry('json', new IntegerEntry('5', 5), new IntegerEntry('2', 2), new IntegerEntry('3', 3))),
-            new StructureEntry('name', new StructureEntry('json', new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3))),
+            new StructureEntry(
+                'name',
+                ['json' => ['5' => 5, '2' => 2, '1' => 1]],
+                new StructureType(new StructureElement('json', new ArrayType()))
+            ),
+            new StructureEntry(
+                'name',
+                ['json' => ['1' => 1, '2' => 2, '3' => 3]],
+                new StructureType(new StructureElement('json', new ArrayType()))
+            ),
         ];
+        yield 'equal names and nullable entries' => [
+            false,
+            new StructureEntry(
+                'name',
+                ['a' => 'a', 'b' => 'b', 'c' => 'c'],
+                new StructureType(new StructureElement('a', ScalarType::string()), new StructureElement('b', ScalarType::string(true)), new StructureElement('c', ScalarType::string()))
+            ),
+            new StructureEntry(
+                'name',
+                ['a' => 'a', 'b' => null, 'c' => 'c'],
+                new StructureType(new StructureElement('a', ScalarType::string()), new StructureElement('b', ScalarType::string(true)), new StructureElement('c', ScalarType::string()))
+            ),
+        ];
+    }
+
+    public function test_creating_string_structure_from_wrong_value_types() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Expected structure{id: integer, name: string} got different types: list<integer>');
+
+        new StructureEntry(
+            'test',
+            [1, 2, 3],
+            new StructureType(new StructureElement('id', ScalarType::integer()), new StructureElement('name', ScalarType::string()))
+        );
     }
 
     public function test_definition() : void
     {
         $entry = Entry::structure(
             'items',
-            Entry::integer('id', 1),
-            Entry::string('name', 'one'),
-            Entry::structure('address', Entry::string('street', 'foo'), Entry::string('city', 'bar'))
+            [
+                'id' => 1,
+                'name' => 'one',
+                'address' => [
+                    'street' => 'foo',
+                    'city' => 'bar',
+                ],
+            ],
+            new StructureType(
+                new StructureElement('id', ScalarType::integer()),
+                new StructureElement('name', ScalarType::string()),
+                new StructureElement(
+                    'address',
+                    new StructureType(
+                        new StructureElement('street', ScalarType::string()),
+                        new StructureElement('city', ScalarType::string()),
+                    )
+                ),
+            ),
         );
 
         $this->assertEquals(
             Definition::structure(
                 'items',
-                [
-                    'id' => Definition::integer('id', false),
-                    'name' => Definition::string('name', false),
-                    'address' => [
-                        'street' => Definition::string('street', false),
-                        'city' => Definition::string('city', false),
-                    ],
-                ],
-                false
+                new StructureType(
+                    new StructureElement('id', ScalarType::integer()),
+                    new StructureElement('name', ScalarType::string()),
+                    new StructureElement(
+                        'address',
+                        new StructureType(
+                            new StructureElement('street', ScalarType::string()),
+                            new StructureElement('city', ScalarType::string()),
+                        )
+                    )
+                ),
             ),
             $entry->definition()
         );
@@ -76,7 +172,16 @@ final class StructureEntryTest extends TestCase
 
     public function test_entry_name_can_be_zero() : void
     {
-        $this->assertSame('0', (new StructureEntry('0', new IntegerEntry('id', 1), new StringEntry('name', 'one')))->name());
+        $this->assertSame(
+            '0',
+            (
+                new StructureEntry(
+                    '0',
+                    ['id' => 1, 'name' => 'one'],
+                    new StructureType(new StructureElement('id', ScalarType::integer()), new StructureElement('name', ScalarType::string()))
+                )
+            )->name()
+        );
     }
 
     /**
@@ -89,7 +194,11 @@ final class StructureEntryTest extends TestCase
 
     public function test_map() : void
     {
-        $entry = new StructureEntry('entry-name', new IntegerEntry('id', 1234));
+        $entry = new StructureEntry(
+            'entry-name',
+            ['id' => 1234],
+            new StructureType(new StructureElement('id', ScalarType::integer()))
+        );
 
         $this->assertEquals(
             $entry,
@@ -99,18 +208,23 @@ final class StructureEntryTest extends TestCase
 
     public function test_prevents_from_creating_entry_with_empty_entry_name() : void
     {
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Entry name cannot be empty');
 
         new StructureEntry(
             '',
-            new IntegerEntry('id', 1),
-            new StringEntry('name', 'one')
+            ['id' => 1, 'name' => 'one'],
+            new StructureType(new StructureElement('id', ScalarType::integer()), new StructureElement('name', ScalarType::string()))
         );
     }
 
     public function test_renames_entry() : void
     {
-        $entry = new StructureEntry('entry-name', new IntegerEntry('id', 1234));
+        $entry = new StructureEntry(
+            'entry-name',
+            ['id' => 1234],
+            new StructureType(new StructureElement('id', ScalarType::integer()))
+        );
         $newEntry = $entry->rename('new-entry-name');
 
         $this->assertEquals('new-entry-name', $newEntry->name());
@@ -121,8 +235,8 @@ final class StructureEntryTest extends TestCase
     {
         $entry = new StructureEntry(
             'items',
-            new IntegerEntry('item-id', 1),
-            new StringEntry('name', 'one'),
+            ['item-id' => 1, 'name' => 'one'],
+            new StructureType(new StructureElement('id', ScalarType::integer()), new StructureElement('name', ScalarType::string()))
         );
 
         $this->assertEquals(
@@ -136,7 +250,11 @@ final class StructureEntryTest extends TestCase
 
     public function test_serialization() : void
     {
-        $string = new StructureEntry('name', new StructureEntry('json', new IntegerEntry('5', 5), new IntegerEntry('2', 2), new IntegerEntry('3', 3)));
+        $string = new StructureEntry(
+            'name',
+            ['json' => ['5' => 5, '2' => 2, '3' => 3]],
+            new StructureType(new StructureElement('json', new ArrayType()))
+        );
 
         $serialized = \serialize($string);
         /** @var StructureEntry $unserialized */

@@ -7,6 +7,9 @@ namespace Flow\ETL\Tests\Double;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
+use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
+use Flow\ETL\PHP\Type\Logical\StructureType;
+use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
@@ -46,8 +49,11 @@ final class AllRowTypesFakeExtractor implements Extractor
                     ),
                     Entry::structure(
                         'items',
-                        Entry::integer('item-id', 1),
-                        Entry::string('name', 'one'),
+                        ['item-id' => 1, 'name' => 'one'],
+                        new StructureType(
+                            new StructureElement('item-id', ScalarType::integer()),
+                            new StructureElement('name', ScalarType::string())
+                        )
                     ),
                     Entry::collection(
                         'tags',

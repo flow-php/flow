@@ -5,25 +5,39 @@ declare(strict_types=1);
 namespace Flow\ETL\Row\Entry;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\PHP\Type\Native\ObjectType;
+use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @implements Entry<Entry\Type\Uuid, array{name: string, value: string}>
+ * @implements Entry<Entry\Type\Uuid, array{name: string, value: string, type: ObjectType}>
  */
 final class UuidEntry implements \Stringable, Entry
 {
     use EntryRef;
 
+    private readonly ObjectType $type;
+
+    private Entry\Type\Uuid $value;
+
     /**
      * @throws InvalidArgumentException
      */
-    public function __construct(private readonly string $name, private readonly Entry\Type\Uuid $value)
+    public function __construct(private readonly string $name, Entry\Type\Uuid|string $value)
     {
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
+
+        if (\is_string($value)) {
+            $this->value = Entry\Type\Uuid::fromString($value);
+        } else {
+            $this->value = $value;
+        }
+
+        $this->type = ObjectType::fromObject($this->value);
     }
 
     public static function from(string $name, string $value) : self
@@ -33,7 +47,7 @@ final class UuidEntry implements \Stringable, Entry
 
     public function __serialize() : array
     {
-        return ['name' => $this->name, 'value' => $this->value->toString()];
+        return ['name' => $this->name, 'value' => $this->value->toString(), 'type' => $this->type];
     }
 
     public function __toString() : string
@@ -45,6 +59,7 @@ final class UuidEntry implements \Stringable, Entry
     {
         $this->name = $data['name'];
         $this->value = new Entry\Type\Uuid($data['value']);
+        $this->type = $data['type'];
     }
 
     public function definition() : Definition
@@ -63,7 +78,7 @@ final class UuidEntry implements \Stringable, Entry
 
     public function isEqual(Entry $entry) : bool
     {
-        return $this->is($entry->name()) && $entry instanceof self && $this->value()->isEqual($entry->value());
+        return $this->is($entry->name()) && $entry instanceof self && $this->type->isEqual($entry->type) && $this->value()->isEqual($entry->value());
     }
 
     public function map(callable $mapper) : Entry
@@ -87,6 +102,11 @@ final class UuidEntry implements \Stringable, Entry
     public function toString() : string
     {
         return $this->value->toString();
+    }
+
+    public function type() : Type
+    {
+        return $this->type;
     }
 
     public function value() : Entry\Type\Uuid

@@ -6,6 +6,9 @@ namespace Flow\ETL\DSL;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
+use Flow\ETL\PHP\Type\Logical\ListType;
+use Flow\ETL\PHP\Type\Logical\MapType;
+use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry as RowEntry;
 use Flow\ETL\Row\Entry\Type\Uuid;
@@ -119,8 +122,12 @@ class Entry
      *
      * @return RowEntry\JsonEntry
      */
-    final public static function json_object(string $name, array $data) : RowEntry
+    final public static function json_object(string $name, array|string $data) : RowEntry
     {
+        if (\is_string($data)) {
+            return new RowEntry\JsonEntry($name, $data);
+        }
+
         return RowEntry\JsonEntry::object($name, $data);
     }
 
@@ -133,7 +140,7 @@ class Entry
      */
     final public static function list_of_boolean(string $name, array $value) : RowEntry
     {
-        return new RowEntry\ListEntry($name, ListElement::boolean(), $value);
+        return new RowEntry\ListEntry($name, $value, new ListType(ListElement::boolean()));
     }
 
     /**
@@ -145,7 +152,7 @@ class Entry
      */
     final public static function list_of_datetime(string $name, array $value) : RowEntry
     {
-        return new RowEntry\ListEntry($name, ListElement::object(\DateTimeInterface::class), $value);
+        return new RowEntry\ListEntry($name, $value, new ListType(ListElement::object(\DateTimeImmutable::class)));
     }
 
     /**
@@ -157,7 +164,7 @@ class Entry
      */
     final public static function list_of_float(string $name, array $value) : RowEntry
     {
-        return new RowEntry\ListEntry($name, ListElement::float(), $value);
+        return new RowEntry\ListEntry($name, $value, new ListType(ListElement::float()));
     }
 
     /**
@@ -169,7 +176,7 @@ class Entry
      */
     final public static function list_of_int(string $name, array $value) : RowEntry
     {
-        return new RowEntry\ListEntry($name, ListElement::integer(), $value);
+        return new RowEntry\ListEntry($name, $value, new ListType(ListElement::integer()));
     }
 
     /**
@@ -182,7 +189,7 @@ class Entry
      */
     final public static function list_of_objects(string $name, string $class, array $value) : RowEntry
     {
-        return new RowEntry\ListEntry($name, ListElement::object($class), $value);
+        return new RowEntry\ListEntry($name, $value, new ListType(ListElement::object($class)));
     }
 
     /**
@@ -194,7 +201,17 @@ class Entry
      */
     final public static function list_of_string(string $name, array $value) : RowEntry
     {
-        return new RowEntry\ListEntry($name, ListElement::string(), $value);
+        return new RowEntry\ListEntry($name, $value, new ListType(ListElement::string()));
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     *
+     * @return RowEntry\MapEntry
+     */
+    final public static function map(string $name, array $values, MapType $mapType) : RowEntry
+    {
+        return new RowEntry\MapEntry($name, $values, $mapType);
     }
 
     /**
@@ -252,9 +269,9 @@ class Entry
         return RowEntry\StringEntry::uppercase($name, $value);
     }
 
-    final public static function struct(string $name, RowEntry ...$entries) : RowEntry
+    final public static function struct(string $name, array $values, StructureType $structureType) : RowEntry
     {
-        return self::structure($name, ...$entries);
+        return self::structure($name, $values, $structureType);
     }
 
     /**
@@ -262,17 +279,17 @@ class Entry
      *
      * @return RowEntry\StructureEntry
      */
-    final public static function structure(string $name, RowEntry ...$entries) : RowEntry
+    final public static function structure(string $name, array $values, StructureType $structureType) : RowEntry
     {
-        return new RowEntry\StructureEntry($name, ...$entries);
+        return new RowEntry\StructureEntry($name, $values, $structureType);
     }
 
     /**
      * @return RowEntry\UuidEntry
      */
-    final public static function uuid(string $name, string $value) : RowEntry
+    final public static function uuid(string $name, Uuid|string $value) : RowEntry
     {
-        return new RowEntry\UuidEntry($name, Uuid::fromString($value));
+        return new RowEntry\UuidEntry($name, $value);
     }
 
     /**

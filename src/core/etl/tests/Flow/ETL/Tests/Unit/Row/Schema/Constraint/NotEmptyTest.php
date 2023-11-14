@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Row\Schema\Constraint;
 
 use Flow\ETL\DSL\Entry;
+use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
+use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Schema\Constraint\NotEmpty;
@@ -39,6 +41,6 @@ final class NotEmptyTest extends TestCase
         $this->assertTrue($constraint->isSatisfiedBy(Entry::null('e')));
         $this->assertTrue($constraint->isSatisfiedBy(Entry::object('e', new \SplFixedArray(2))));
         $this->assertTrue($constraint->isSatisfiedBy(Entry::string('e', 'e')));
-        $this->assertTrue($constraint->isSatisfiedBy(Entry::structure('e', Entry::integer('id', 1))));
+        $this->assertTrue($constraint->isSatisfiedBy(Entry::structure('e', ['id' => 1], new StructureType(new StructureElement('id', ScalarType::integer())))));
     }
 }

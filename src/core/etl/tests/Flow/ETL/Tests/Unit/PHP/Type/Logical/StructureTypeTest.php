@@ -35,7 +35,7 @@ final class StructureTypeTest extends TestCase
         );
         $this->assertFalse(
             (new StructureType(new StructureElement('string', ScalarType::string()), new StructureElement('bool', ScalarType::boolean())))
-                ->isEqual(new StructureType(new StructureElement('bool', ScalarType::boolean()), new StructureElement('string', ScalarType::string())))
+                ->isEqual(new StructureType(new StructureElement('bool', ScalarType::boolean()), new StructureElement('integer', ScalarType::string())))
         );
     }
 

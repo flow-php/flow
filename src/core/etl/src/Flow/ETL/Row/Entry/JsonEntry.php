@@ -6,18 +6,22 @@ namespace Flow\ETL\Row\Entry;
 
 use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\PHP\Type\Native\ScalarType;
+use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @implements Entry<string, array{name: string, value: array, object: boolean}>
+ * @implements Entry<string, array{name: string, value: array, object: boolean, type: ScalarType}>
  */
 final class JsonEntry implements \Stringable, Entry
 {
     use EntryRef;
 
     private bool $object = false;
+
+    private readonly ScalarType $type;
 
     private readonly array $value;
 
@@ -41,11 +45,11 @@ final class JsonEntry implements \Stringable, Entry
         } else {
             $this->value = $value;
         }
+
+        $this->type = ScalarType::string();
     }
 
     /**
-     * @param array<mixed> $value
-     *
      * @throws InvalidArgumentException
      */
     public static function object(string $name, array $value) : self
@@ -68,6 +72,7 @@ final class JsonEntry implements \Stringable, Entry
             'name' => $this->name,
             'value' => $this->value,
             'object' => $this->object,
+            'type' => $this->type,
         ];
     }
 
@@ -81,11 +86,12 @@ final class JsonEntry implements \Stringable, Entry
         $this->name = $data['name'];
         $this->value = $data['value'];
         $this->object = $data['object'];
+        $this->type = $data['type'];
     }
 
     public function definition() : Definition
     {
-        return Definition::json($this->name);
+        return Definition::json($this->name, $this->type->nullable());
     }
 
     public function is(string|Reference $name) : bool
@@ -99,7 +105,7 @@ final class JsonEntry implements \Stringable, Entry
 
     public function isEqual(Entry $entry) : bool
     {
-        return $this->is($entry->name()) && $entry instanceof self && (new ArrayComparison())->equals($this->value, $entry->value);
+        return $this->is($entry->name()) && $entry instanceof self && $this->type->isEqual($entry->type) && (new ArrayComparison())->equals($this->value, $entry->value);
     }
 
     public function map(callable $mapper) : Entry
@@ -125,6 +131,14 @@ final class JsonEntry implements \Stringable, Entry
         return $this->value();
     }
 
+    public function type() : Type
+    {
+        return $this->type;
+    }
+
+    /**
+     * @throws \JsonException
+     */
     public function value() : string
     {
         if (!\count($this->value) && $this->object) {

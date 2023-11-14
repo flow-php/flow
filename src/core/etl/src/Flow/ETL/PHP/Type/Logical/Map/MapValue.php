@@ -47,14 +47,14 @@ final class MapValue
     /**
      * @param class-string $class
      */
-    public static function object(string $class) : self
+    public static function object(string $class, bool $optional = false) : self
     {
-        return new self(ObjectType::of($class));
+        return new self(ObjectType::of($class, $optional));
     }
 
-    public static function scalar(string $value) : self
+    public static function scalar(string $value, bool $optional = false) : self
     {
-        return new self(ScalarType::fromString($value));
+        return new self(ScalarType::fromString($value, $optional));
     }
 
     public static function string() : self

@@ -7,6 +7,9 @@ namespace Flow\ETL\Tests\Unit\Row;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
+use Flow\ETL\PHP\Type\Logical\StructureType;
+use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry\BooleanEntry;
 use Flow\ETL\Row\Entry\DateTimeEntry;
@@ -369,8 +372,8 @@ final class EntriesTest extends TestCase
             $phase = new NullEntry('phase'),
             $items = new StructureEntry(
                 'items',
-                new IntegerEntry('item-id', 1),
-                new StringEntry('name', 'one'),
+                ['item-id' => 1, 'name' => 'one'],
+                new StructureType(new StructureElement('id', ScalarType::integer()), new StructureElement('name', ScalarType::string()))
             )
         );
 
@@ -383,8 +386,8 @@ final class EntriesTest extends TestCase
                 $id = new IntegerEntry('id', 1234),
                 $items = new StructureEntry(
                     'items',
-                    new IntegerEntry('item-id', 1),
-                    new StringEntry('name', 'one'),
+                    ['item-id' => 1, 'name' => 'one'],
+                    new StructureType(new StructureElement('id', ScalarType::integer()), new StructureElement('name', ScalarType::string()))
                 ),
                 $phase = new NullEntry('phase')
             ),
@@ -401,8 +404,8 @@ final class EntriesTest extends TestCase
             new NullEntry('phase'),
             new StructureEntry(
                 'items',
-                new IntegerEntry('item-id', 1),
-                new StringEntry('name', 'one'),
+                ['item-id' => 1, 'name' => 'one'],
+                new StructureType(new StructureElement('id', ScalarType::integer()), new StructureElement('name', ScalarType::string()))
             ),
             new EnumEntry('enum', BasicEnum::three)
         );

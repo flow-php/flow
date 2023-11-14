@@ -52,10 +52,12 @@ final class StructureType implements LogicalType
 
         foreach ($this->elements as $internalElement) {
             foreach ($type->elements() as $element) {
-                if (!$internalElement->isEqual($element->type())) {
-                    return false;
+                if ($internalElement->name() === $element->name() && $internalElement->isEqual($element->type())) {
+                    return true;
                 }
             }
+
+            return false;
         }
 
         return true;
@@ -82,6 +84,11 @@ final class StructureType implements LogicalType
         }
 
         return true;
+    }
+
+    public function nullable() : bool
+    {
+        return false;
     }
 
     public function toString() : string

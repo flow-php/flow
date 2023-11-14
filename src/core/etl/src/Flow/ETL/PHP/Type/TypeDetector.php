@@ -7,19 +7,17 @@ namespace Flow\ETL\PHP\Type;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\ListType;
-use Flow\ETL\PHP\Type\Logical\Map\MapKey;
-use Flow\ETL\PHP\Type\Logical\Map\MapValue;
-use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\PHP\Type\Native\ArrayType;
+use Flow\ETL\PHP\Type\Native\EnumType;
 use Flow\ETL\PHP\Type\Native\NullType;
 use Flow\ETL\PHP\Type\Native\ObjectType;
 use Flow\ETL\PHP\Type\Native\ScalarType;
 
-final class TypeFactory
+final class TypeDetector
 {
-    public function getType(mixed $value) : Type
+    public function detectType(mixed $value) : Type
     {
         if (null === $value) {
             return new NullType();
@@ -30,7 +28,11 @@ final class TypeFactory
         }
 
         if (\is_object($value)) {
-            return ObjectType::of($value::class);
+            if ($value instanceof \UnitEnum) {
+                return EnumType::of($value::class);
+            }
+
+            return ObjectType::fromObject($value);
         }
 
         if (\is_array($value)) {
@@ -39,26 +41,21 @@ final class TypeFactory
             }
 
             $detector = new ArrayContentDetector(
-                new Types(...\array_map([$this, 'getType'], \array_keys($value))),
-                new Types(...\array_map([$this, 'getType'], \array_values($value)))
+                new Types(...\array_map([$this, 'detectType'], \array_keys($value))),
+                new Types(...\array_map([$this, 'detectType'], \array_values($value)))
             );
 
-            $firstKey = $detector->firstKeyType();
             $firstValue = $detector->firstValueType();
 
             if ($detector->isList() && $firstValue) {
                 return new ListType(ListElement::fromType($firstValue));
             }
 
-            if ($detector->isMap() && $firstKey && $firstValue) {
-                return new MapType(MapKey::fromType($firstKey), MapValue::fromType($firstValue));
-            }
-
-            if ($detector->isStructure()) {
+            if ($detector->isStructure() || $detector->isMap()) {
                 $elements = [];
 
                 foreach ($value as $key => $item) {
-                    $elements[] = new StructureElement($key, $this->getType($item));
+                    $elements[] = new StructureElement($key, $this->detectType($item));
                 }
 
                 return new StructureType(...$elements);

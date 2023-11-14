@@ -47,14 +47,14 @@ final class ListElement
     /**
      * @param class-string $class
      */
-    public static function object(string $class) : self
+    public static function object(string $class, bool $nullable = false) : self
     {
-        return new self(ObjectType::of($class));
+        return new self(ObjectType::of($class, $nullable));
     }
 
-    public static function scalar(string $value) : self
+    public static function scalar(string $value, bool $nullable = false) : self
     {
-        return new self(ScalarType::fromString($value));
+        return new self(ScalarType::fromString($value, $nullable));
     }
 
     public static function string() : self

@@ -8,27 +8,22 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Type;
 
 /**
- * @implements NativeType<array{class: class-string, nullable: bool}>
+ * @implements NativeType<array{class: class-string<\UnitEnum>, nullable: bool}>
  */
-final class ObjectType implements NativeType
+final class EnumType implements NativeType
 {
     /**
-     * @param class-string $class
+     * @param class-string<\UnitEnum> $class
      */
     public function __construct(public readonly string $class, private readonly bool $nullable)
     {
-        if (!\class_exists($class) && !\interface_exists($class)) {
-            throw new InvalidArgumentException("Class {$class} not found");
+        if (!\enum_exists($class)) {
+            throw new InvalidArgumentException("Enum {$class} not found");
         }
     }
 
-    public static function fromObject(object $object, bool $nullable = false) : self
-    {
-        return new self($object::class, $nullable);
-    }
-
     /**
-     * @param class-string $class
+     * @param class-string<\UnitEnum> $class
      */
     public static function of(string $class, bool $nullable = false) : self
     {
@@ -63,6 +58,6 @@ final class ObjectType implements NativeType
 
     public function toString() : string
     {
-        return ($this->nullable ? '?' : '') . 'object<' . $this->class . '>';
+        return ($this->nullable ? '?' : '') . 'enum<' . $this->class . '>';
     }
 }

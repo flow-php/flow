@@ -6,8 +6,13 @@ namespace Flow\ETL\Row\Factory;
 
 use Flow\ETL\DSL\Entry as EntryDSL;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Logical\List\ListElement;
+use Flow\ETL\PHP\Type\Logical\ListType;
+use Flow\ETL\PHP\Type\Logical\MapType;
+use Flow\ETL\PHP\Type\Logical\StructureType;
+use Flow\ETL\PHP\Type\Native\ArrayType;
 use Flow\ETL\PHP\Type\Native\ObjectType;
+use Flow\ETL\PHP\Type\Native\ScalarType;
+use Flow\ETL\PHP\Type\TypeDetector;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\EntryFactory;
@@ -37,53 +42,61 @@ final class NativeEntryFactory implements EntryFactory
             return $this->fromDefinition($schema->getDefinition($entryName), $value);
         }
 
-        if (\is_string($value)) {
-            $trimmedValue = \trim($value);
+        if (null === $value) {
+            return new Row\Entry\NullEntry($entryName);
+        }
 
-            if ('' !== $trimmedValue) {
-                if ($this->isJson($trimmedValue)) {
-                    return new Row\Entry\JsonEntry($entryName, $value);
+        $valueType = (new TypeDetector())->detectType($value);
+
+        if ($valueType instanceof ScalarType) {
+            if ($valueType->isString()) {
+                $trimmedValue = \trim($value);
+
+                if ('' !== $trimmedValue) {
+                    if ($this->isJson($trimmedValue)) {
+                        return new Row\Entry\JsonEntry($entryName, $value);
+                    }
+
+                    if ($this->isUuid($trimmedValue)) {
+                        return new Row\Entry\UuidEntry($entryName, Entry\Type\Uuid::fromString($value));
+                    }
+
+                    if ($this->isXML($trimmedValue)) {
+                        return new Entry\XMLEntry($entryName, $value);
+                    }
                 }
 
-                if ($this->isUuid($trimmedValue)) {
-                    return new Row\Entry\UuidEntry($entryName, Entry\Type\Uuid::fromString($value));
-                }
-
-                if ($this->isXML($trimmedValue)) {
-                    return new Entry\XMLEntry($entryName, $value);
-                }
+                return new Row\Entry\StringEntry($entryName, $value);
             }
 
-            return new Row\Entry\StringEntry($entryName, $value);
+            if ($valueType->isFloat()) {
+                return new Row\Entry\FloatEntry($entryName, $value);
+            }
+
+            if ($valueType->isInteger()) {
+                return new Row\Entry\IntegerEntry($entryName, $value);
+            }
+
+            if ($valueType->isBoolean()) {
+                return new Row\Entry\BooleanEntry($entryName, $value);
+            }
         }
 
-        if (\is_float($value)) {
-            return new Row\Entry\FloatEntry($entryName, $value);
-        }
-
-        if (\is_int($value)) {
-            return new Row\Entry\IntegerEntry($entryName, $value);
-        }
-
-        if (\is_bool($value)) {
-            return new Row\Entry\BooleanEntry($entryName, $value);
-        }
-
-        if (\is_object($value)) {
-            if ($value instanceof \DOMDocument) {
+        if ($valueType instanceof ObjectType) {
+            if ($valueType->class === \DOMDocument::class) {
                 return new Row\Entry\XMLEntry($entryName, $value);
             }
 
-            if ($value instanceof \DOMNode) {
+            if (\in_array($valueType->class, [\DOMElement::class, \DOMNode::class], true)) {
                 return new Row\Entry\XMLNodeEntry($entryName, $value);
             }
 
-            if ($value instanceof \DateTimeImmutable) {
+            if (\in_array($valueType->class, [\DateTimeImmutable::class, \DateTimeInterface::class, \DateTime::class], true)) {
                 return new Row\Entry\DateTimeEntry($entryName, $value);
             }
 
-            if ($value instanceof Entry\Type\Uuid || $value instanceof \Ramsey\Uuid\UuidInterface || $value instanceof \Symfony\Component\Uid\Uuid) {
-                if ($value instanceof \Ramsey\Uuid\UuidInterface || $value instanceof \Symfony\Component\Uid\Uuid) {
+            if (\in_array($valueType->class, [Entry\Type\Uuid::class, \Ramsey\Uuid\UuidInterface::class, \Symfony\Component\Uid\Uuid::class], true)) {
+                if (\in_array($valueType->class, [\Ramsey\Uuid\UuidInterface::class, \Symfony\Component\Uid\Uuid::class], true)) {
                     return new Row\Entry\UuidEntry($entryName, new Entry\Type\Uuid($value));
                 }
 
@@ -93,83 +106,25 @@ final class NativeEntryFactory implements EntryFactory
             return new Row\Entry\ObjectEntry($entryName, $value);
         }
 
-        if (\is_array($value)) {
-            if ([] === $value) {
-                return new Row\Entry\ArrayEntry($entryName, $value);
-            }
-
-            if ($this->isStructure($value)) {
-                return $this->createStructureEntryFromArray($entryName, $value);
-            }
-
-            if (!\array_is_list($value)) {
-                return new Row\Entry\ArrayEntry($entryName, $value);
-            }
-
-            $type = null;
-            $class = null;
-
-            foreach ($value as $valueElement) {
-                if ($type === null) {
-                    $type = \gettype($valueElement);
-                }
-
-                if ($type === 'object' && $class === null) {
-                    /** @var object $valueElement */
-                    $class = $this->getClass($valueElement);
-                }
-
-                if ($type !== \gettype($valueElement)) {
-                    return new Row\Entry\ArrayEntry($entryName, $value);
-                }
-
-                /** @var object $valueElement */
-                if ($class !== null && $class !== $this->getClass($valueElement)) {
-                    return new Row\Entry\ArrayEntry($entryName, $value);
-                }
-            }
-
-            if ($type === 'array') {
-                return new Row\Entry\ArrayEntry($entryName, $value);
-            }
-
-            if ($class !== null) {
-                if ($class === \DateTimeImmutable::class || $class === \DateTime::class) {
-                    $class = \DateTimeInterface::class;
-                }
-
-                if ($class === \DOMElement::class) {
-                    $class = \DOMNode::class;
-                }
-
-                return new Entry\ListEntry($entryName, ListElement::object($class), $value);
-            }
-
-            return new Entry\ListEntry($entryName, ListElement::scalar($type), $value);
+        if ($valueType instanceof ArrayType) {
+            return new Row\Entry\ArrayEntry($entryName, $value);
         }
 
-        if (null === $value) {
-            return new Row\Entry\NullEntry($entryName);
+        if ($valueType instanceof ListType) {
+            return new Entry\ListEntry($entryName, $value, $valueType);
+        }
+
+        if ($valueType instanceof MapType) {
+            return new Row\Entry\MapEntry($entryName, $value, $valueType);
+        }
+
+        if ($valueType instanceof StructureType) {
+            return new Row\Entry\StructureEntry($entryName, $value, $valueType);
         }
 
         $type = \gettype($value);
 
         throw new InvalidArgumentException("{$type} can't be converted to any known Entry");
-    }
-
-    private function createStructureEntryFromArray(string $entryName, array $array) : Row\Entry\StructureEntry
-    {
-        $structureEntries = [];
-
-        foreach ($array as $key => $value) {
-            if (\is_array($value)) {
-                $structureEntries[] = $this->createStructureEntryFromArray($key, $value);
-            } else {
-                $structureEntries[] = $this->create($key, $value);
-            }
-        }
-
-        return new Row\Entry\StructureEntry($entryName, ...$structureEntries);
     }
 
     private function fromDefinition(Schema\Definition $definition, mixed $value) : Entry
@@ -178,126 +133,108 @@ final class NativeEntryFactory implements EntryFactory
             return EntryDSL::null($definition->entry()->name());
         }
 
-        foreach ($definition->types() as $type) {
-            if ($type === Entry\StringEntry::class && \is_string($value)) {
-                return EntryDSL::string($definition->entry()->name(), $value);
-            }
-
-            if ($type === Entry\IntegerEntry::class && \is_int($value)) {
-                return EntryDSL::integer($definition->entry()->name(), $value);
-            }
-
-            if ($type === Entry\FloatEntry::class && \is_float($value)) {
-                return EntryDSL::float($definition->entry()->name(), $value);
-            }
-
-            if ($type === Entry\BooleanEntry::class && \is_bool($value)) {
-                return EntryDSL::boolean($definition->entry()->name(), $value);
-            }
-
-            if ($type === Entry\JsonEntry::class && \is_string($value)) {
-                return EntryDSL::json($definition->entry()->name(), $value);
-            }
-
-            if ($type === Entry\JsonEntry::class && \is_array($value)) {
-                try {
-                    return EntryDSL::json_object($definition->entry()->name(), $value);
-                } catch (InvalidArgumentException $e) {
-                    return EntryDSL::json($definition->entry()->name(), $value);
+        try {
+            foreach ($definition->types() as $type) {
+                if ($type === Entry\StringEntry::class) {
+                    return EntryDSL::string($definition->entry()->name(), $value);
                 }
-            }
 
-            if ($type === Entry\XMLEntry::class && (\is_string($value) || $value instanceof \DOMDocument)) {
-                return EntryDSL::xml($definition->entry()->name(), $value);
-            }
+                if ($type === Entry\IntegerEntry::class) {
+                    return EntryDSL::integer($definition->entry()->name(), $value);
+                }
 
-            if ($type === Entry\UuidEntry::class && (\is_string($value) || $value instanceof Entry\Type\Uuid)) {
-                return EntryDSL::uuid($definition->entry()->name(), \is_string($value) ? $value : $value->toString());
-            }
+                if ($type === Entry\FloatEntry::class) {
+                    return EntryDSL::float($definition->entry()->name(), $value);
+                }
 
-            if ($type === Entry\ObjectEntry::class && \is_object($value)) {
-                return EntryDSL::object($definition->entry()->name(), $value);
-            }
+                if ($type === Entry\BooleanEntry::class) {
+                    return EntryDSL::boolean($definition->entry()->name(), $value);
+                }
 
-            if ($type === Entry\DateTimeEntry::class && $value instanceof \DateTimeInterface) {
-                return EntryDSL::datetime($definition->entry()->name(), $value);
-            }
+                if ($type === Entry\XMLEntry::class) {
+                    return EntryDSL::xml($definition->entry()->name(), $value);
+                }
 
-            if ($type === Entry\DateTimeEntry::class && \is_string($value)) {
-                return EntryDSL::datetime($definition->entry()->name(), new \DateTimeImmutable($value));
-            }
+                if ($type === Entry\UuidEntry::class) {
+                    return EntryDSL::uuid($definition->entry()->name(), $value);
+                }
 
-            if ($type === Entry\ArrayEntry::class && \is_array($value)) {
-                return EntryDSL::array($definition->entry()->name(), $value);
-            }
+                if ($type === Entry\ObjectEntry::class) {
+                    return EntryDSL::object($definition->entry()->name(), $value);
+                }
 
-            if ($type === Entry\EnumEntry::class && \is_string($value)) {
-                /** @var class-string<\UnitEnum> $enumClass */
-                $enumClass = $definition->metadata()->get(Schema\FlowMetadata::METADATA_ENUM_CLASS);
-                /** @var array<\UnitEnum> $cases */
-                $cases = $definition->metadata()->get(Schema\FlowMetadata::METADATA_ENUM_CASES);
+                if ($type === Entry\DateTimeEntry::class) {
+                    return EntryDSL::datetime($definition->entry()->name(), $value);
+                }
 
-                foreach ($cases as $case) {
-                    if ($case->name === $value) {
-                        return EntryDSL::enum($definition->entry()->name(), $case);
+                if ($type === Entry\EnumEntry::class) {
+                    /** @var class-string<\UnitEnum> $enumClass */
+                    $enumClass = $definition->metadata()->get(Schema\FlowMetadata::METADATA_ENUM_CLASS);
+                    /** @var array<\UnitEnum> $cases */
+                    $cases = $definition->metadata()->get(Schema\FlowMetadata::METADATA_ENUM_CASES);
+
+                    foreach ($cases as $case) {
+                        if ($case->name === $value) {
+                            return EntryDSL::enum($definition->entry()->name(), $case);
+                        }
+                    }
+
+                    throw new InvalidArgumentException("Value \"{$value}\" can't be converted to " . $enumClass . ' enum');
+                }
+
+                if ($type === Entry\JsonEntry::class) {
+                    try {
+                        return EntryDSL::json_object($definition->entry()->name(), $value);
+                    } catch (InvalidArgumentException) {
+                        return EntryDSL::json($definition->entry()->name(), $value);
                     }
                 }
 
-                throw new InvalidArgumentException("Value \"{$value}\" can't be converted to " . $enumClass . ' enum');
-            }
+                if ($type === Entry\ArrayEntry::class) {
+                    return EntryDSL::array($definition->entry()->name(), $value);
+                }
 
-            if ($type === Entry\ListEntry::class && \is_array($value) && \array_is_list($value)) {
-                try {
-                    /** @var ListElement $listType */
-                    $listType = $definition->metadata()->get(Schema\FlowMetadata::METADATA_LIST_ENTRY_TYPE);
+                if ($type === Entry\MapEntry::class) {
+                    /** @var MapType $entryType */
+                    $entryType = $definition->metadata()->get(Schema\FlowMetadata::METADATA_MAP_ENTRY_TYPE);
 
-                    if (!\count($value)) {
-                        return new Entry\ListEntry(
-                            $definition->entry()->name(),
-                            $listType,
-                            []
-                        );
-                    }
+                    return EntryDSL::map($definition->entry()->name(), $value, $entryType);
+                }
 
-                    if ($listType->value() instanceof ObjectType) {
+                if ($type === Entry\StructureEntry::class) {
+                    /** @var StructureType $entryType */
+                    $entryType = $definition->metadata()->get(Schema\FlowMetadata::METADATA_STRUCTURE_ENTRY_TYPE);
+
+                    return EntryDSL::structure($definition->entry()->name(), $value, $entryType);
+                }
+
+                if ($type === Entry\ListEntry::class) {
+                    /** @var ListType $entryType */
+                    $entryType = $definition->metadata()->get(Schema\FlowMetadata::METADATA_LIST_ENTRY_TYPE);
+
+                    $elementType = $entryType->element();
+
+                    if ($elementType->value() instanceof ObjectType) {
                         /** @var mixed $firstValue */
                         $firstValue = \current($value);
 
-                        if (\is_a($listType->value()->class, \DateTimeInterface::class, true) && \is_string($firstValue)) {
+                        if (\is_a($elementType->value()->class, \DateTimeInterface::class, true) && \is_string($firstValue)) {
                             return new Entry\ListEntry(
                                 $definition->entry()->name(),
-                                $listType,
-                                \array_map(static fn (string $datetime) : \DateTimeImmutable => new \DateTimeImmutable($datetime), $value)
+                                \array_map(static fn (string $datetime) : \DateTimeImmutable => new \DateTimeImmutable($datetime), $value),
+                                $entryType,
                             );
                         }
                     }
 
-                    return new Entry\ListEntry(
-                        $definition->entry()->name(),
-                        $listType,
-                        $value
-                    );
-                } catch (InvalidArgumentException $e) {
-                    throw new InvalidArgumentException("Field \"{$definition->entry()}\" conversion exception. {$e->getMessage()}", previous: $e);
+                    return new Entry\ListEntry($definition->entry()->name(), $value, $entryType);
                 }
             }
+        } catch (InvalidArgumentException|\TypeError $e) {
+            throw new InvalidArgumentException("Field \"{$definition->entry()}\" conversion exception. {$e->getMessage()}", previous: $e);
         }
 
         throw new InvalidArgumentException("Can't convert value into entry \"{$definition->entry()}\"");
-    }
-
-    /**
-     * @return class-string
-     */
-    private function getClass(object $object) : string
-    {
-        $class = $object::class;
-
-        if ($class === \DateTimeImmutable::class || $class === \DateTime::class) {
-            return \DateTimeInterface::class;
-        }
-
-        return $class;
     }
 
     private function isJson(string $string) : bool
@@ -318,29 +255,6 @@ final class NativeEntryFactory implements EntryFactory
         } catch (\Exception) {
             return false;
         }
-    }
-
-    private function isStructure(array $array) : bool
-    {
-        if (\array_is_list($array)) {
-            return false;
-        }
-
-        if (!\count($array)) {
-            return false;
-        }
-
-        foreach ($array as $key => $value) {
-            if (!\is_string($key)) {
-                return false;
-            }
-
-            if (\is_array($value) && !$this->isStructure($value)) {
-                return false;
-            }
-        }
-
-        return true;
     }
 
     private function isUuid(string $string) : bool
