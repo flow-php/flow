@@ -114,7 +114,6 @@ this will reduce the number of unnecessary dependencies in your project (less ma
 
 - [ETL](src/core/etl/README.md) 
 - Adapters
-  - [amphp](src/adapter/etl-adapter-amphp/README.md)
   - [avro](src/adapter/etl-adapter-avro/README.md)
   - [chartjs](src/adapter/etl-adapter-chartjs/README.md)
   - [csv](src/adapter/etl-adapter-csv/README.md)
@@ -126,7 +125,6 @@ this will reduce the number of unnecessary dependencies in your project (less ma
   - [json](src/adapter/etl-adapter-json/README.md)
   - [logger](src/adapter/etl-adapter-logger/README.md)
   - [parquet](src/adapter/etl-adapter-parquet/README.md)
-  - [reactphp](src/adapter/etl-adapter-reactphp/README.md)
   - [text](src/adapter/etl-adapter-text/README.md)
   - [xml](src/adapter/etl-adapter-xml/README.md) 
 - Libraries
