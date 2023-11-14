@@ -169,7 +169,7 @@ final class SchemaConverter
         }
 
         if ($elementType instanceof ArrayType) {
-            throw new RuntimeException("ArrayEntry entry can't be saved in Parquet file, try convert it to ListEntry or StructEntry");
+            throw new RuntimeException("ArrayEntry entry can't be saved in Avro file, try convert it to ListEntry, MapEntry or StructEntry");
         }
 
         if ($elementType instanceof ObjectType) {
