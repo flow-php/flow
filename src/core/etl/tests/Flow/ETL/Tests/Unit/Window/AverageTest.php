@@ -17,14 +17,14 @@ final class AverageTest extends TestCase
     {
         $rows = new Rows(
             $row1 = Row::create(Entry::int('id', 1), Entry::int('value', 1)),
-            Row::create(Entry::int('id', 2), Entry::int('value', 1)),
-            Row::create(Entry::int('id', 3), Entry::int('value', 1)),
-            Row::create(Entry::int('id', 4), Entry::int('value', 1)),
-            Row::create(Entry::int('id', 5), Entry::int('value', 1)),
+            Row::create(Entry::int('id', 2), Entry::int('value', 100)),
+            Row::create(Entry::int('id', 3), Entry::int('value', 25)),
+            Row::create(Entry::int('id', 4), Entry::int('value', 64)),
+            Row::create(Entry::int('id', 5), Entry::int('value', 23)),
         );
 
-        $window = Window::partitionBy(ref('value'))->orderBy(ref('id')->desc())->avg(ref('id'));
+        $window = Window::partitionBy(ref('value'))->orderBy(ref('id')->desc())->avg(ref('value'));
 
-        $this->assertSame(3, $window->function()->apply($row1, $rows, $window));
+        $this->assertSame(42.6, $window->function()->apply($row1, $rows, $window));
     }
 }
