@@ -1,6 +1,8 @@
 ## [Unreleased] - 2023-11-14
 
 ### Added
+- [#780](https://github.com/flow-php/flow/pull/780) - **Add `MapEntry`** - [@stloyd](https://github.com/stloyd)
+- [#780](https://github.com/flow-php/flow/pull/780) - **Add `EnumType`** - [@stloyd](https://github.com/stloyd)
 - [#795](https://github.com/flow-php/flow/pull/795) - **Window function count** - [@norberttech](https://github.com/norberttech)
 - [#795](https://github.com/flow-php/flow/pull/795) - **Window function dens rank** - [@norberttech](https://github.com/norberttech)
 - [#791](https://github.com/flow-php/flow/pull/791) - **Extracted Flysystem dependency to standalone adapter** - [@norberttech](https://github.com/norberttech)
@@ -69,6 +71,8 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#780](https://github.com/flow-php/flow/pull/780) - **Rework `StructureEntry` to use types** - [@stloyd](https://github.com/stloyd)
+- [#780](https://github.com/flow-php/flow/pull/780) - **Rework `NativeEntryFactory` to use types** - [@stloyd](https://github.com/stloyd)
 - [#788](https://github.com/flow-php/flow/pull/788) - **Optimizer can be now configured through ConfigBuilder** - [@norberttech](https://github.com/norberttech)
 - [#788](https://github.com/flow-php/flow/pull/788) - **Execution Plan Processors can be now configured through ConfigBuilder** - [@norberttech](https://github.com/norberttech)
 - [#786](https://github.com/flow-php/flow/pull/786) - **Reduce docker image size** - [@norberttech](https://github.com/norberttech)
