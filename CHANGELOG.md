@@ -1,6 +1,8 @@
 ## [Unreleased] - 2023-11-14
 
 ### Added
+- [#795](https://github.com/flow-php/flow/pull/795) - **Window function count** - [@norberttech](https://github.com/norberttech)
+- [#795](https://github.com/flow-php/flow/pull/795) - **Window function dens rank** - [@norberttech](https://github.com/norberttech)
 - [#791](https://github.com/flow-php/flow/pull/791) - **Extracted Flysystem dependency to standalone adapter** - [@norberttech](https://github.com/norberttech)
 - [#788](https://github.com/flow-php/flow/pull/788) - **BatchSizeOptimization** - [@norberttech](https://github.com/norberttech)
 - [#788](https://github.com/flow-php/flow/pull/788) - **httpClient option to Meilisearch loader configuration** - [@norberttech](https://github.com/norberttech)
@@ -158,6 +160,7 @@
 - [#584](https://github.com/flow-php/flow/pull/584) - **Adjust `phpunit.xml` to be more efficient** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
+- [#795](https://github.com/flow-php/flow/pull/795) - **Window function rank** - [@norberttech](https://github.com/norberttech)
 - [#789](https://github.com/flow-php/flow/pull/789) - **Fix hardcoded entry name for enum entry with schema** - [@stloyd](https://github.com/stloyd)
 - [cc4bd8](https://github.com/flow-php/flow/commit/cc4bd8d8bfd7540df4b2917eff04255332d32dec) - **incorrect tags in docker building workflows** - [@norberttech](https://github.com/norberttech)
 - [#779](https://github.com/flow-php/flow/pull/779) - **Covered additional parquet edge cases** - [@norberttech](https://github.com/norberttech)
