@@ -87,6 +87,15 @@ Those functions were removed in favor of accepting string values in related DSL 
 - `datetime_string()` => `datetime()`,
 - `json_string()` => `json()` & `json_object()`
 
+### 11) Removed Asynchronous Processing
+
+More details can be found in [this issue](https://github.com/flow-php/flow/issues/793). 
+
+- Removed etl-adapter-amphp
+- Removed etl-adapter-reactphp
+- Removed LocalSocketPipeline
+- Removed `DataFrame::pipeline()` 
+
 ---
 
 ## Upgrading from 0.3.x to 0.4.x

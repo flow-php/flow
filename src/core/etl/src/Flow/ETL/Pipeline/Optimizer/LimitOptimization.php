@@ -7,7 +7,6 @@ use Flow\ETL\Loader;
 use Flow\ETL\Pipeline;
 use Flow\ETL\Pipeline\BatchingPipeline;
 use Flow\ETL\Pipeline\CollectingPipeline;
-use Flow\ETL\Pipeline\LocalSocketPipeline;
 use Flow\ETL\Pipeline\NestedPipeline;
 use Flow\ETL\Pipeline\ParallelizingPipeline;
 use Flow\ETL\Pipeline\SynchronousPipeline;
@@ -33,7 +32,6 @@ final class LimitOptimization implements Optimization
         SynchronousPipeline::class,
         CollectingPipeline::class,
         BatchingPipeline::class,
-        LocalSocketPipeline::class,
         NestedPipeline::class,
         ParallelizingPipeline::class,
         VoidPipeline::class,

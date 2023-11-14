@@ -22,8 +22,6 @@ interface Pipeline
 
     public function has(string $transformerClass) : bool;
 
-    public function isAsync() : bool;
-
     public function pipes() : Pipes;
 
     /**
