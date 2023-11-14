@@ -3,7 +3,6 @@
 namespace Flow\ETL\Tests\Benchmark\EntryFactory;
 
 use function Flow\ETL\DSL\array_to_rows;
-use Faker\Factory;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
 use PhpBench\Attributes\Groups;
 use PhpBench\Attributes\ParamProviders;
@@ -19,35 +18,32 @@ final class NativeEntryFactoryBench
 
     public function provideRows() : \Generator
     {
-        $faker = Factory::create();
+        $createdAt = (new \DateTimeImmutable('-10 day ago'))->format(\DateTimeInterface::RFC3339);
+        $updatedAt = (new \DateTimeImmutable('+1 week'))->format(\DateTimeInterface::RFC3339);
 
         $callback = static fn (int $i) : array => [
-            'order_id' => $faker->uuid,
-            'created_at' => $faker->dateTimeThisYear->format(\DateTimeInterface::RFC3339),
-            'updated_at' => $faker->dateTimeThisMonth->format(\DateTimeInterface::RFC3339),
-            'cancelled_at' => ($i % 10) === 0 ? $faker->dateTimeThisMonth->format(\DateTimeInterface::RFC3339) : null,
-            'active' => !(($i % 20) === 0),
-            'total_price' => $faker->randomFloat(2, 0, 500),
-            'discount' => $faker->randomFloat(2, 0, 50),
+            'order_id' => '2d76fb83-c1a7-4b6e-9d68-46258af783b4',
+            'created_at' => $createdAt,
+            'updated_at' => $updatedAt,
+            'active' => true,
+            'total_price' => 123.45,
+            'discount' => 5.5,
             'customer' => [
-                'name' => $faker->firstName,
-                'last_name' => $faker->lastName,
-                'email' => $faker->email,
+                'name' => 'firstName',
+                'last_name' => 'lastName',
+                'email' => 'foo@bar.test',
             ],
             'address' => [
-                'street' => $faker->streetAddress,
-                'city' => $faker->city,
-                'zip' => $faker->postcode,
-                'country' => $faker->country,
+                'street' => 'streetAddress',
+                'city' => 'city',
+                'zip' => '12-345',
+                'country' => 'country',
                 'location' => [
-                    'lat' => $faker->latitude,
-                    'lng' => $faker->longitude,
+                    'lat' => 66.6,
+                    'lng' => 33.3,
                 ],
             ],
-            'notes' => \array_map(
-                static fn ($i) => $faker->sentence,
-                \range(1, 3)
-            ),
+            'notes' => "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
         ];
 
         yield '10k' => ['rows' => \array_map($callback, \range(1, 10_000))];
