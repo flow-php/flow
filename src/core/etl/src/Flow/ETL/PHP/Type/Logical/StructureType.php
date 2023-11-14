@@ -53,7 +53,7 @@ final class StructureType implements LogicalType
         foreach ($this->elements as $internalElement) {
             foreach ($type->elements() as $element) {
                 if ($internalElement->name() === $element->name() && $internalElement->isEqual($element->type())) {
-                    continue 2;
+                    return true;
                 }
             }
 
