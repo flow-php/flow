@@ -10,6 +10,7 @@ parameters:
         - src/adapter/etl-adapter-csv/src
         - src/adapter/etl-adapter-doctrine/src
         - src/adapter/etl-adapter-elasticsearch/src
+        - src/adapter/etl-adapter-filesystem/src
         - src/adapter/etl-adapter-google-sheet/src
         - src/adapter/etl-adapter-http/src
         - src/adapter/etl-adapter-json/src

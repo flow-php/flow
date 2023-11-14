@@ -7,9 +7,11 @@ namespace Flow\ETL\Adapter\CSV\Tests\Integration;
 use function Flow\ETL\DSL\ref;
 use Flow\ETL\Adapter\CSV\CSVExtractor;
 use Flow\ETL\Config;
+use Flow\ETL\ConfigBuilder;
 use Flow\ETL\DSL\CSV;
 use Flow\ETL\DSL\From;
 use Flow\ETL\Extractor\Signal;
+use Flow\ETL\Filesystem\LocalFilesystem;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Flow;
 use Flow\ETL\FlowContext;
@@ -273,7 +275,29 @@ final class CSVExtractorTest extends TestCase
                 ['group' => '2', 'id' => 8, 'value' => 'h'],
             ],
             (new Flow())
-                ->read(CSV::from(__DIR__ . '/../Fixtures/partitioned/group=*'))
+                ->read(CSV::from(__DIR__ . '/../Fixtures/partitioned/group=*/*.csv'))
+                ->withEntry('id', ref('id')->cast('int'))
+                ->sortBy(ref('id'))
+                ->fetch()
+                ->toArray()
+        );
+    }
+
+    public function test_loading_data_from_all_with_local_fs() : void
+    {
+        $this->assertSame(
+            [
+                ['group' => '1', 'id' => 1, 'value' => 'a'],
+                ['group' => '1', 'id' => 2, 'value' => 'b'],
+                ['group' => '1', 'id' => 3, 'value' => 'c'],
+                ['group' => '1', 'id' => 4, 'value' => 'd'],
+                ['group' => '2', 'id' => 5, 'value' => 'e'],
+                ['group' => '2', 'id' => 6, 'value' => 'f'],
+                ['group' => '2', 'id' => 7, 'value' => 'g'],
+                ['group' => '2', 'id' => 8, 'value' => 'h'],
+            ],
+            (new Flow((new ConfigBuilder())->filesystem(new LocalFilesystem())))
+                ->read(CSV::from(__DIR__ . '/../Fixtures/partitioned/group=*/*.csv'))
                 ->withEntry('id', ref('id')->cast('int'))
                 ->sortBy(ref('id'))
                 ->fetch()

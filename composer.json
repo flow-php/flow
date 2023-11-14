@@ -37,7 +37,8 @@
         "react/child-process": "^0.6.4",
         "react/promise": "^2.9.0",
         "react/socket": "^1.11",
-        "symfony/console": "^6.3"
+        "symfony/console": "^6.3",
+        "webmozart/glob": "^3.0 || ^4.0"
     },
     "require-dev": {
         "aeon-php/calendar": "^1.0",
@@ -72,6 +73,7 @@
                 "src/adapter/etl-adapter-csv/src/Flow",
                 "src/adapter/etl-adapter-doctrine/src/Flow",
                 "src/adapter/etl-adapter-elasticsearch/src/Flow",
+                "src/adapter/etl-adapter-filesystem/src/Flow",
                 "src/adapter/etl-adapter-google-sheet/src/Flow",
                 "src/adapter/etl-adapter-http/src/Flow",
                 "src/adapter/etl-adapter-json/src/Flow",
@@ -106,6 +108,7 @@
                 "src/adapter/etl-adapter-csv/tests/Flow",
                 "src/adapter/etl-adapter-doctrine/tests/Flow",
                 "src/adapter/etl-adapter-elasticsearch/tests/Flow",
+                "src/adapter/etl-adapter-filesystem/tests/Flow",
                 "src/adapter/etl-adapter-google-sheet/tests/Flow",
                 "src/adapter/etl-adapter-http/tests/Flow",
                 "src/adapter/etl-adapter-json/tests/Flow",
@@ -149,6 +152,7 @@
         "flow-php/etl-adapter-dbal-tools": "self.version",
         "flow-php/etl-adapter-doctrine": "self.version",
         "flow-php/etl-adapter-elasticsearch": "self.version",
+        "flow-php/etl-adapter-filesystem": "self.version",
         "flow-php/etl-adapter-google-sheet": "self.version",
         "flow-php/etl-adapter-http": "self.version",
         "flow-php/etl-adapter-json": "self.version",

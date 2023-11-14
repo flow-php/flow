@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Tests\Integration\Filesystem;
+namespace Flow\ETL\Adapter\Filesystem\Tests\Integration;
 
+use Flow\ETL\Adapter\Filesystem\FlysystemFS;
 use Flow\ETL\DSL\Partitions;
-use Flow\ETL\Filesystem\FlysystemFS;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\Partition\NoopFilter;

@@ -46,6 +46,7 @@
       <directory>src/adapter/etl-adapter-avro/tests/Flow/ETL/Adapter/Avro/Tests/Integration</directory>
       <directory>src/adapter/etl-adapter-chartjs/tests/Flow/ETL/Adapter/ChartJS/Tests/Integration</directory>
       <directory>src/adapter/etl-adapter-csv/tests/Flow/ETL/Adapter/CSV/Tests/Integration</directory>
+      <directory>src/adapter/etl-adapter-filesystem/tests/Flow/ETL/Adapter/Filesystem/Tests/Integration</directory>
       <directory>src/adapter/etl-adapter-http/tests/Flow/ETL/Adapter/HTTP/Tests/Integration</directory>
       <directory>src/adapter/etl-adapter-json/tests/Flow/ETL/Adapter/JSON/Tests/Integration</directory>
       <directory>src/adapter/etl-adapter-parquet/tests/Flow/ETL/Adapter/Parquet/Tests/Integration</directory>

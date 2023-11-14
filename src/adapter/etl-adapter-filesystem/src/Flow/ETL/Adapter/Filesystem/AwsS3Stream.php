@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Filesystem;
+namespace Flow\ETL\Adapter\Filesystem;
 
 use Aws\S3\S3Client;
 use Flow\ETL\Exception\MissingDependencyException;

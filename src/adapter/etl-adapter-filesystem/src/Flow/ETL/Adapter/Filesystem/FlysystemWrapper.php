@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Filesystem;
+namespace Flow\ETL\Adapter\Filesystem;
 
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Filesystem\LocalBuffer;
 use Flow\ETL\Filesystem\Stream\StreamWrapper;
+use Flow\ETL\Filesystem\TmpfileBuffer;
 use League\Flysystem\Filesystem;
 
 abstract class FlysystemWrapper implements StreamWrapper
