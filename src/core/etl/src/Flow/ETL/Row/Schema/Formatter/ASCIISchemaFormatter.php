@@ -53,6 +53,42 @@ final class ASCIISchemaFormatter implements SchemaFormatter
     }
 
     /**
+     * @param array<class-string> $types
+     *
+     * @return string[]
+     */
+    private function definitionTypesFromEntry(array $types, bool $nullable, Schema\Metadata $metadata) : array
+    {
+        $definitionTypes = [];
+
+        foreach ($types as $type) {
+            /** @var Type $definitionType */
+            $definitionType = match ($type) {
+                ArrayEntry::class => new ArrayType($nullable),
+                BooleanEntry::class => ScalarType::boolean($nullable),
+                DateTimeEntry::class => ObjectType::of(\DateTimeImmutable::class, $nullable),
+                EnumEntry::class => EnumType::of(\UnitEnum::class, $nullable),
+                FloatEntry::class => ScalarType::float($nullable),
+                IntegerEntry::class => ScalarType::integer($nullable),
+                StringEntry::class, JsonEntry::class => ScalarType::string($nullable),
+                ListEntry::class => $metadata->get(FlowMetadata::METADATA_LIST_ENTRY_TYPE),
+                MapEntry::class => $metadata->get(FlowMetadata::METADATA_MAP_ENTRY_TYPE),
+                ObjectEntry::class => $metadata->get(FlowMetadata::METADATA_OBJECT_ENTRY_TYPE),
+                UuidEntry::class => ObjectType::of(Uuid::class, $nullable),
+                XMLEntry::class => ObjectType::of(\DOMDocument::class, $nullable),
+                XMLNodeEntry::class => ObjectType::of(\DOMElement::class, $nullable),
+                // Fallback
+                StructureEntry::class => new ArrayType(false),
+                default => throw new InvalidArgumentException('Unknown entry type given: ' . $type)
+            };
+
+            $definitionTypes[] = $definitionType->toString();
+        }
+
+        return $definitionTypes;
+    }
+
+    /**
      * @param array<string> $buffer
      *
      * @return array<string>
@@ -61,37 +97,25 @@ final class ASCIISchemaFormatter implements SchemaFormatter
     {
         $entry = $definition->entry()->name();
 
-        $nullable = false;
+        $nullable = $structure = false;
         $types = $definition->types();
-        $index = \array_search(NullEntry::class, $types, true);
+        $nullIndex = \array_search(NullEntry::class, $types, true);
 
-        if (false !== $index) {
+        if (false !== $nullIndex) {
             $nullable = true;
-            unset($types[$index]);
+            unset($types[$nullIndex]);
         }
 
-        /** @var null|Type $definitionType */
-        $definitionType = match (\current($types)) {
-            ArrayEntry::class => new ArrayType($nullable),
-            BooleanEntry::class => ScalarType::boolean($nullable),
-            DateTimeEntry::class => ObjectType::of(\DateTimeImmutable::class, $nullable),
-            EnumEntry::class => EnumType::of(\UnitEnum::class, $nullable),
-            FloatEntry::class => ScalarType::float($nullable),
-            IntegerEntry::class => ScalarType::integer($nullable),
-            JsonEntry::class => ScalarType::string($nullable),
-            ListEntry::class => $definition->metadata()->get(FlowMetadata::METADATA_LIST_ENTRY_TYPE),
-            MapEntry::class => $definition->metadata()->get(FlowMetadata::METADATA_MAP_ENTRY_TYPE),
-            ObjectEntry::class => $definition->metadata()->get(FlowMetadata::METADATA_OBJECT_ENTRY_TYPE),
-            StringEntry::class => ScalarType::string($nullable),
-            UuidEntry::class => ObjectType::of(Uuid::class, $nullable),
-            XMLEntry::class => ObjectType::of(\DOMDocument::class, $nullable),
-            XMLNodeEntry::class => ObjectType::of(\DOMElement::class, $nullable),
-            default => null,
-        };
+        $structureIndex = \array_search(StructureEntry::class, $types, true);
+
+        if (false !== $structureIndex) {
+            $structure = true;
+            unset($types[$structureIndex]);
+        }
 
         $indention = '';
 
-        if (\in_array(StructureEntry::class, $definition->types(), true)) {
+        if ($structure) {
             $buffer[] = $indention . '|-- ' . $entry . ': structure';
 
             /** @var StructureType $structureType */
@@ -105,11 +129,7 @@ final class ASCIISchemaFormatter implements SchemaFormatter
 
             $buffer = \array_merge($buffer, $fields);
         } else {
-            if (null === $definitionType) {
-                throw new InvalidArgumentException('Cannot extract definition type for entry: ' . $definition->entry()->name());
-            }
-
-            $buffer[] = $indention . '|-- ' . $entry . ': ' . $definitionType->toString();
+            $buffer[] = $indention . '|-- ' . $entry . ': ' . \implode('|', $this->definitionTypesFromEntry($types, $nullable, $definition->metadata()));
         }
 
         return $buffer;

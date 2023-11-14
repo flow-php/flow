@@ -23,6 +23,7 @@ final class ASCIISchemaFormatterTest extends TestCase
     public function test_format_nested_schema() : void
     {
         $schema = new Schema(
+            Schema\Definition::union('number', [IntegerEntry::class, FloatEntry::class]),
             Schema\Definition::structure(
                 'user',
                 new StructureType(
@@ -47,6 +48,7 @@ final class ASCIISchemaFormatterTest extends TestCase
         $this->assertSame(
             <<<'SCHEMA'
 schema
+|-- number: integer|float
 |-- user: structure
 |    |-- name: ?string
 |    |-- age: integer
@@ -79,7 +81,7 @@ SCHEMA,
         $this->assertSame(
             <<<'SCHEMA'
 schema
-|-- number: integer
+|-- number: integer|float
 |-- name: ?string
 |-- tags: array<mixed>
 |-- active: boolean
