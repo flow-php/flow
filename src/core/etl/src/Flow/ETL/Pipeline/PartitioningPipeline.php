@@ -12,18 +12,20 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Partition;
 use Flow\ETL\Pipeline;
+use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Transformer;
-use Flow\ETL\Transformer\WindowFunctionTransformer;
-use Flow\ETL\Window;
 
-final class WindowPartitioningPipeline implements OverridingPipeline, Pipeline
+final class PartitioningPipeline implements OverridingPipeline, Pipeline
 {
     private Pipeline $nextPipeline;
 
-    public function __construct(private readonly Pipeline $pipeline, private readonly Window $window, private readonly string $entryName)
+    /**
+     * @param Pipeline $pipeline
+     * @param array<EntryReference> $orderBy
+     */
+    public function __construct(private readonly Pipeline $pipeline, private readonly array $orderBy = [])
     {
         $this->nextPipeline = $this->pipeline->cleanCopy();
-        $this->nextPipeline->add(new WindowFunctionTransformer($this->entryName, $this->window));
     }
 
     public function add(Loader|Transformer $pipe) : Pipeline
@@ -60,6 +62,11 @@ final class WindowPartitioningPipeline implements OverridingPipeline, Pipeline
         }
         $pipelines[] = $this->pipeline;
 
+        if ($this->nextPipeline instanceof OverridingPipeline) {
+            $pipelines = $this->nextPipeline->pipelines();
+        }
+        $pipelines[] = $this->nextPipeline;
+
         return $pipelines;
     }
 
@@ -70,12 +77,12 @@ final class WindowPartitioningPipeline implements OverridingPipeline, Pipeline
 
     public function process(FlowContext $context) : \Generator
     {
-        $window = $this->window;
         $partitionIds = [];
 
         foreach ($this->pipeline->process($context) as $rows) {
-            foreach ($rows->partitionBy(...$this->window->partitions()) as $partitionedRows) {
-                $orderedRows = $partitionedRows->orderBy(...$window->order());
+            foreach ($rows->partitionBy(...$context->partitionEntries()->all()) as $partitionedRows) {
+
+                $rows = $partitionedRows->orderBy(...$this->orderBy);
 
                 $partitionId = \hash('xxh128', \implode(',', \array_map(
                     static fn (Partition $partition) : string => $partition->id(),
@@ -83,7 +90,7 @@ final class WindowPartitioningPipeline implements OverridingPipeline, Pipeline
                 )));
 
                 $partitionIds[] = $partitionId;
-                $context->cache()->add($partitionId, $orderedRows);
+                $context->cache()->add($partitionId, $rows);
             }
         }
 

@@ -10,11 +10,11 @@ use Flow\ETL\Window;
 
 final class RowNumber implements WindowFunction
 {
-    public function apply(Row $row, Rows $partition, Window $windowSpec) : mixed
+    public function apply(Row $row, Rows $partition, Window $window) : mixed
     {
         $number = 1;
 
-        foreach ($partition->sortBy(...$windowSpec->order()) as $partitionRow) {
+        foreach ($partition->sortBy(...$window->order()) as $partitionRow) {
             if ($partitionRow->isEqual($row)) {
                 return $number;
             }
@@ -23,5 +23,10 @@ final class RowNumber implements WindowFunction
         }
 
         return null;
+    }
+
+    public function toString() : string
+    {
+        return 'row_number()';
     }
 }

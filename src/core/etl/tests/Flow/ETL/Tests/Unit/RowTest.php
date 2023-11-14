@@ -159,6 +159,74 @@ final class RowTest extends TestCase
         $this->assertSame($equals, $row->isEqual($nextRow));
     }
 
+    public function test_keep() : void
+    {
+        $row = new Row(new Entries(
+            Entry::int('id', 1),
+            Entry::string('name', 'test'),
+            Entry::boolean('active', true)
+        ));
+
+        $this->assertEquals(
+            new Row(new Entries(
+                Entry::int('id', 1),
+                Entry::boolean('active', true)
+            )),
+            $row->keep('id', 'active')
+        );
+    }
+
+    public function test_keep_non_existing_entry() : void
+    {
+        $this->expectExceptionMessage('Entry "something" does not exist.');
+
+        $row = new Row(new Entries(
+            Entry::int('id', 1),
+            Entry::string('name', 'test'),
+            Entry::boolean('active', true)
+        ));
+
+        $this->assertEquals(
+            new Row(new Entries()),
+            $row->keep('something')
+        );
+    }
+
+    public function test_remove() : void
+    {
+        $row = new Row(new Entries(
+            Entry::int('id', 1),
+            Entry::string('name', 'test'),
+            Entry::boolean('active', true)
+        ));
+
+        $this->assertEquals(
+            new Row(new Entries(
+                Entry::int('id', 1),
+                Entry::string('name', 'test')
+            )),
+            $row->remove('active')
+        );
+    }
+
+    public function test_remove_non_existing_entry() : void
+    {
+        $row = new Row(new Entries(
+            Entry::int('id', 1),
+            Entry::string('name', 'test'),
+            Entry::boolean('active', true)
+        ));
+
+        $this->assertEquals(
+            new Row(new Entries(
+                Entry::int('id', 1),
+                Entry::string('name', 'test'),
+                Entry::boolean('active', true)
+            )),
+            $row->remove('something')
+        );
+    }
+
     public function test_renames_entry() : void
     {
         $row = Row::create(

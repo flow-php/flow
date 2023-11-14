@@ -14,12 +14,12 @@ final class Count implements WindowFunction
     {
     }
 
-    public function apply(Row $row, Rows $partition, Window $windowSpec) : mixed
+    public function apply(Row $row, Rows $partition, Window $window) : mixed
     {
         $count = 0;
         $value = $row->valueOf($this->ref);
 
-        foreach ($partition->sortBy(...$windowSpec->order()) as $partitionRow) {
+        foreach ($partition->sortBy(...$window->order()) as $partitionRow) {
             $partitionValue = $partitionRow->valueOf($this->ref);
 
             if ($partitionValue === $value) {
@@ -28,5 +28,10 @@ final class Count implements WindowFunction
         }
 
         return $count;
+    }
+
+    public function toString() : string
+    {
+        return 'count()';
     }
 }

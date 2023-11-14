@@ -8,6 +8,8 @@ use Flow\ETL\Pipeline\BatchingPipeline;
 use Flow\ETL\Pipeline\CollectingPipeline;
 use Flow\ETL\Pipeline\OverridingPipeline;
 use Flow\ETL\Pipeline\ParallelizingPipeline;
+use Flow\ETL\Pipeline\PartitioningPipeline;
+use Flow\ETL\Pipeline\WindowPartitioningPipeline;
 use Flow\ETL\Transformer;
 
 /**
@@ -29,6 +31,8 @@ final class BatchSizeOptimization implements Optimization
         BatchingPipeline::class,
         CollectingPipeline::class,
         ParallelizingPipeline::class,
+        WindowPartitioningPipeline::class,
+        PartitioningPipeline::class,
     ];
 
     /**

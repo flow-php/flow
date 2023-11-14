@@ -14,12 +14,12 @@ final class Average implements WindowFunction
     {
     }
 
-    public function apply(Row $row, Rows $partition, Window $windowSpec) : mixed
+    public function apply(Row $row, Rows $partition, Window $window) : mixed
     {
         $sum = 0;
         $count = 0;
 
-        foreach ($partition->sortBy(...$windowSpec->order()) as $partitionRow) {
+        foreach ($partition->sortBy(...$window->order()) as $partitionRow) {
             /** @var mixed $value */
             $value = $partitionRow->valueOf($this->ref);
 
@@ -30,5 +30,10 @@ final class Average implements WindowFunction
         }
 
         return $sum / $count;
+    }
+
+    public function toString() : string
+    {
+        return 'average()';
     }
 }

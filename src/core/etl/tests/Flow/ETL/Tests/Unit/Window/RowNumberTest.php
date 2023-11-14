@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Window;
 
 use function Flow\ETL\DSL\ref;
+use Flow\ETL\_Window;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
-use Flow\ETL\Window;
 use PHPUnit\Framework\TestCase;
 
 final class RowNumberTest extends TestCase
@@ -23,7 +23,7 @@ final class RowNumberTest extends TestCase
             Row::create(Entry::int('id', 5), Entry::int('value', 1)),
         );
 
-        $window = Window::partitionBy(ref('value'))->orderBy(ref('id')->desc())->rowNumber();
+        $window = _Window::partitionBy(ref('value'))->orderBy(ref('id')->desc())->rowNumber();
 
         $this->assertSame(5, $window->function()->apply($row1, $rows, $window));
     }

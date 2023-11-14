@@ -78,6 +78,17 @@ final class Row implements Serializable
         return $this->entries->isEqual($row->entries());
     }
 
+    public function keep(string|Reference ...$names) : self
+    {
+        $entries = [];
+
+        foreach (References::init(...$names) as $ref) {
+            $entries[] = $this->entries->get($ref);
+        }
+
+        return new self(new Entries(...$entries));
+    }
+
     /**
      * @param callable(Entry) : Entry $mapper
      */

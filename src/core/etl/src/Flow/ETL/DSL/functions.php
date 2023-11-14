@@ -17,6 +17,11 @@ use Flow\ETL\Row\Reference\Expression\Literal;
 use Flow\ETL\Row\Reference\Expression\StyleConverter\StringStyles;
 use Flow\ETL\Row\StructureReference;
 use Flow\ETL\Rows;
+use Flow\ETL\Window;
+use Flow\ETL\Window\Average;
+use Flow\ETL\Window\DensRank;
+use Flow\ETL\Window\Rank;
+use Flow\ETL\Window\WindowExpression;
 
 function col(string $entry, string ...$entries) : Reference
 {
@@ -379,4 +384,24 @@ function array_to_rows(array $data, EntryFactory $entryFactory = new NativeEntry
     }
 
     return new Rows(...$rows);
+}
+
+function rank() : WindowExpression
+{
+    return new WindowExpression(new Rank());
+}
+
+function dens_rank() : WindowExpression
+{
+    return new WindowExpression(new DensRank());
+}
+
+function average(EntryReference $ref) : WindowExpression
+{
+    return new WindowExpression(new Average($ref));
+}
+
+function window() : Window
+{
+    return new Window();
 }

@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Window;
 
+use function Flow\ETL\DSL\average;
 use function Flow\ETL\DSL\ref;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
-use Flow\ETL\Window;
 use PHPUnit\Framework\TestCase;
+use function Flow\ETL\DSL\window;
 
 final class AverageTest extends TestCase
 {
@@ -23,8 +24,8 @@ final class AverageTest extends TestCase
             Row::create(Entry::int('id', 5), Entry::int('value', 23)),
         );
 
-        $window = Window::partitionBy(ref('value'))->orderBy(ref('id')->desc())->avg(ref('value'));
+        $expression = average(ref('value'))->over(window()->orderBy(ref('value')));
 
-        $this->assertSame(42.6, $window->function()->apply($row1, $rows, $window));
+        $this->assertSame(42.6, $expression->function()->apply($row1, $rows, $expression->window()));
     }
 }

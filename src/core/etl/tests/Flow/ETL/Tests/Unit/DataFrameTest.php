@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
+use function Flow\ETL\DSL\average;
 use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\rank;
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\window;
 use Flow\ETL\DataFrame;
 use Flow\ETL\DataFrameFactory;
 use Flow\ETL\DSL\Entry;
@@ -48,7 +51,6 @@ use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Transformation;
 use Flow\ETL\Transformer;
 use Flow\ETL\Transformer\StyleConverter\StringStyles;
-use Flow\ETL\Window;
 use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\TestCase;
 
@@ -1341,6 +1343,47 @@ ASCIITABLE,
         );
     }
 
+    public function test_partition_by() : void
+    {
+        $rows = (new Flow())->process(
+            new Rows(
+                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20)),
+                Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20)),
+                Row::create(Entry::integer('id', 3), Entry::string('country', 'PL'), Entry::integer('age', 25)),
+                Row::create(Entry::integer('id', 4), Entry::string('country', 'PL'), Entry::integer('age', 30)),
+                Row::create(Entry::integer('id', 5), Entry::string('country', 'US'), Entry::integer('age', 40)),
+                Row::create(Entry::integer('id', 6), Entry::string('country', 'US'), Entry::integer('age', 40)),
+                Row::create(Entry::integer('id', 7), Entry::string('country', 'US'), Entry::integer('age', 45)),
+                Row::create(Entry::integer('id', 9), Entry::string('country', 'US'), Entry::integer('age', 50)),
+            )
+        )
+            ->partitionBy(ref('country'))
+            ->batchSize(2) // split each partition into two
+            ->get();
+
+        $this->assertEquals(
+            [
+                new Rows(
+                    Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20)),
+                    Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20))
+                ),
+                new Rows(
+                    Row::create(Entry::integer('id', 3), Entry::string('country', 'PL'), Entry::integer('age', 25)),
+                    Row::create(Entry::integer('id', 4), Entry::string('country', 'PL'), Entry::integer('age', 30)),
+                ),
+                new Rows(
+                    Row::create(Entry::integer('id', 5), Entry::string('country', 'US'), Entry::integer('age', 40)),
+                    Row::create(Entry::integer('id', 6), Entry::string('country', 'US'), Entry::integer('age', 40))
+                ),
+                new Rows(
+                    Row::create(Entry::integer('id', 7), Entry::string('country', 'US'), Entry::integer('age', 45)),
+                    Row::create(Entry::integer('id', 9), Entry::string('country', 'US'), Entry::integer('age', 50)),
+                ),
+            ],
+            \iterator_to_array($rows)
+        );
+    }
+
     public function test_print_rows() : void
     {
         \ob_start();
@@ -1741,7 +1784,8 @@ ASCII,
             ],
             (new Flow)
                 ->read(From::chain(From::memory($memoryPage1), From::memory($memoryPage2)))
-                ->withEntry('avg_salary', Window::partitionBy(ref('department'))->orderBy(ref('salary')->desc())->avg(ref('salary')))
+                ->withEntry('avg_salary', average(ref('salary'))->over(window()->partitionBy(ref('department'))))
+//                ->withEntry('avg_salary', _Window::partitionBy(ref('department'))->orderBy(ref('salary')->desc())->avg(ref('salary')))
                 ->select('department', 'avg_salary')
                 ->dropDuplicates(ref('department'), ref('avg_salary'))
                 ->withEntry('avg_salary', ref('avg_salary')->round(lit(0)))
@@ -1788,7 +1832,8 @@ ASCII,
             (new Flow)
                 ->read(From::all(From::memory($memoryPage1), From::memory($memoryPage2)))
                 ->dropDuplicates(ref('employee_name'), ref('department'))
-                ->withEntry('rank', Window::partitionBy(ref('department'))->orderBy(ref('salary')->desc())->rank())
+                ->withEntry('rank', rank()->over(window()->partitionBy(ref('department'))->orderBy(ref('salary')->desc())))
+//                ->withEntry('rank', _Window::partitionBy(ref('department'))->orderBy(ref('salary')->desc())->rank())
                 ->filter(ref('rank')->equals(lit(1)))
                 ->fetch()
                 ->toArray()

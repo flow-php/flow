@@ -19,8 +19,8 @@ use Flow\ETL\Pipeline\CachingPipeline;
 use Flow\ETL\Pipeline\CollectingPipeline;
 use Flow\ETL\Pipeline\GroupByPipeline;
 use Flow\ETL\Pipeline\ParallelizingPipeline;
+use Flow\ETL\Pipeline\PartitioningPipeline;
 use Flow\ETL\Pipeline\VoidPipeline;
-use Flow\ETL\Pipeline\WindowPartitioningPipeline;
 use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
@@ -36,6 +36,8 @@ use Flow\ETL\Transformer\KeepEntriesTransformer;
 use Flow\ETL\Transformer\LimitTransformer;
 use Flow\ETL\Transformer\RemoveEntriesTransformer;
 use Flow\ETL\Transformer\StyleConverter\StringStyles;
+use Flow\ETL\Transformer\WindowFunctionTransformer;
+use Flow\ETL\Window\WindowExpression;
 
 final class DataFrame
 {
@@ -490,6 +492,7 @@ final class DataFrame
         \array_unshift($entries, $entry);
 
         $this->context->partitionBy(...References::init(...$entries)->all());
+        $this->pipeline = new PartitioningPipeline($this->pipeline);
 
         return $this;
     }
@@ -704,7 +707,7 @@ final class DataFrame
     /**
      * @lazy
      *
-     * @param array<string, Reference\Expression|Window> $refs
+     * @param array<string, _Window|Reference\Expression> $refs
      */
     public function withEntries(array $refs) : self
     {
@@ -718,10 +721,21 @@ final class DataFrame
     /**
      * @lazy
      */
-    public function withEntry(string $entryName, Reference\Expression|Window $ref) : self
+    public function withEntry(string $entryName, Reference\Expression|WindowExpression $ref) : self
     {
-        if ($ref instanceof Window) {
-            $this->pipeline = new WindowPartitioningPipeline($this->pipeline, $ref, $entryName);
+        if ($ref instanceof WindowExpression) {
+            if (\count($ref->window()->partitions())) {
+                $this->context->partitionBy(...$ref->window()->partitions());
+                $this->pipeline = new PartitioningPipeline($this->pipeline, $ref->window()->order());
+            } else {
+                $this->collect();
+
+                if (\count($ref->window()->order())) {
+                    $this->sortBy(...$ref->window()->order());
+                }
+            }
+
+            $this->pipeline->add(new WindowFunctionTransformer($entryName, $ref));
         } else {
             $this->transform(new EntryExpressionEvalTransformer($entryName, $ref));
         }

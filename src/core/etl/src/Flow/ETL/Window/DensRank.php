@@ -10,11 +10,11 @@ use Flow\ETL\Window;
 
 final class DensRank implements WindowFunction
 {
-    public function apply(Row $row, Rows $partition, Window $windowSpec) : mixed
+    public function apply(Row $row, Rows $partition, Window $window) : mixed
     {
         $rank = 1;
 
-        $orderBy = $windowSpec->order();
+        $orderBy = $window->order();
 
         if (\count($orderBy) > 1) {
             throw new \RuntimeException('Dens Rank window function supports only one order by column');
@@ -28,7 +28,7 @@ final class DensRank implements WindowFunction
 
         $countedValues = [];
 
-        foreach ($partition->sortBy(...$windowSpec->order()) as $partitionRow) {
+        foreach ($partition->sortBy(...$window->order()) as $partitionRow) {
 
             $partitionValue = $partitionRow->valueOf($orderBy[0]->name());
 
@@ -41,5 +41,10 @@ final class DensRank implements WindowFunction
         }
 
         return $rank;
+    }
+
+    public function toString() : string
+    {
+        return 'dens_rank()';
     }
 }

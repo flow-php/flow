@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Window;
 
 use function Flow\ETL\DSL\ref;
+use Flow\ETL\_Window;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
-use Flow\ETL\Window;
 use PHPUnit\Framework\TestCase;
 
 final class RankTest extends TestCase
@@ -23,7 +23,7 @@ final class RankTest extends TestCase
             $row5 = Row::create(Entry::int('id', 5), Entry::int('value', 1), Entry::int('salary', 4000)),
         );
 
-        $window = Window::partitionBy(ref('value'))->orderBy(ref('salary')->desc())->rank();
+        $window = _Window::partitionBy()->orderBy(ref('salary')->desc())->rank();
 
         $this->assertSame(1, $window->function()->apply($row1, $rows, $window));
         $this->assertSame(1, $window->function()->apply($row2, $rows, $window));
@@ -44,7 +44,7 @@ final class RankTest extends TestCase
             Row::create(Entry::int('id', 5), Entry::int('value', 1), Entry::int('salary', 4000)),
         );
 
-        $window = Window::partitionBy(ref('value'))->orderBy(ref('salary'), ref('id'))->rank();
+        $window = _Window::partitionBy(ref('value'))->orderBy(ref('salary'), ref('id'))->rank();
 
         $this->assertSame(1, $window->function()->apply($row1, $rows, $window));
     }
@@ -60,7 +60,7 @@ final class RankTest extends TestCase
             Row::create(Entry::int('id', 5), Entry::int('value', 1), Entry::int('salary', 4000)),
         );
 
-        $window = Window::partitionBy(ref('value'))->rank();
+        $window = _Window::partitionBy(ref('value'))->rank();
 
         $this->assertSame(1, $window->function()->apply($row1, $rows, $window));
     }
