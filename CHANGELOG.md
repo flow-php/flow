@@ -208,6 +208,8 @@
 - [c9fb26](https://github.com/flow-php/flow/commit/c9fb26dc2e0558c0f33b6097286e4dc6e2799d3f) - **test-benchmark.yml** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#794](https://github.com/flow-php/flow/pull/794) - **Removed async processing** - [@norberttech](https://github.com/norberttech)
+- [#794](https://github.com/flow-php/flow/pull/794) - **DataFrame::pipeline method** - [@norberttech](https://github.com/norberttech)
 - [#787](https://github.com/flow-php/flow/pull/787) - **Removed DSL functions: `datetime_string()`, `json_string()`** - [@stloyd](https://github.com/stloyd)
 - [#750](https://github.com/flow-php/flow/pull/750) - **BufferExtractor** - [@norberttech](https://github.com/norberttech)
 - [#750](https://github.com/flow-php/flow/pull/750) - **Batch Size parameter from MemoryExtractor** - [@norberttech](https://github.com/norberttech)
