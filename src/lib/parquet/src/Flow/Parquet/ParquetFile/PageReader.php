@@ -42,8 +42,13 @@ final class PageReader
 
                 /* @phpstan-ignore-next-line */
                 $levelsLength = $pageHeader->dataPageHeaderV2()->repetitionsByteLength() + $pageHeader->dataPageHeaderV2()->definitionsByteLength();
-                /* @phpstan-ignore-next-line */
-                $levels = \fread($stream, $levelsLength);
+
+                if ($levelsLength) {
+                    /* @phpstan-ignore-next-line */
+                    $levels = \fread($stream, $levelsLength);
+                } else {
+                    $levels = '';
+                }
 
                 $data = (new Codec($this->options))
                     ->decompress(

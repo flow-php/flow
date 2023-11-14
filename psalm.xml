@@ -10,18 +10,17 @@
         findUnusedCode="false"
 >
     <projectFiles>
-<!--        <directory name="src/adapter/etl-adapter-amphp/src" />-->
         <directory name="src/adapter/etl-adapter-avro/src" />
         <directory name="src/adapter/etl-adapter-csv/src" />
         <directory name="src/adapter/etl-adapter-chartjs/src" />
         <directory name="src/adapter/etl-adapter-doctrine/src" />
         <directory name="src/adapter/etl-adapter-elasticsearch/src" />
+        <directory name="src/adapter/etl-adapter-filesystem/src" />
         <directory name="src/adapter/etl-adapter-google-sheet/src" />
         <directory name="src/adapter/etl-adapter-http/src" />
         <directory name="src/adapter/etl-adapter-json/src" />
         <directory name="src/adapter/etl-adapter-logger/src" />
         <directory name="src/adapter/etl-adapter-parquet/src" />
-<!--        <directory name="src/adapter/etl-adapter-reactphp/src" />-->
         <directory name="src/adapter/etl-adapter-text/src" />
         <directory name="src/adapter/etl-adapter-xml/src" />
         <directory name="src/core/etl/src" />
@@ -43,8 +42,8 @@
             <file name="src/adapter/etl-adapter-avro/src/Flow/ETL/Adapter/Avro/FlixTech/SchemaConverter.php" />
             <file name="src/adapter/etl-adapter-avro/src/Flow/ETL/Adapter/Avro/FlixTech/ValueConverter.php" />
 
-            <file name="src/core/etl/src/Flow/ETL/Filesystem/AwsS3Stream.php" />
-            <file name="src/core/etl/src/Flow/ETL/Filesystem/AzureBlobStream.php" />
+            <file name="src/adapter/etl-adapter-filesystem/src/Flow/ETL/Adapter/Filesystem/AwsS3Stream.php" />
+            <file name="src/adapter/etl-adapter-filesystem/src/Flow/ETL/Adapter/Filesystem/AzureBlobStream.php" />
 
             <directory name="src/lib/parquet/src/Flow/Parquet/ThriftStream/" />
             <directory name="src/lib/parquet/src/Flow/Parquet/Thrift/" />

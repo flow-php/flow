@@ -4,7 +4,6 @@ namespace Flow\Dremel\Tests\Unit;
 
 use function Flow\Parquet\array_flatten;
 use Flow\Dremel\Dremel;
-use Flow\Dremel\Exception\RuntimeException;
 use PHPUnit\Framework\TestCase;
 
 final class DremelShredTest extends TestCase
@@ -43,11 +42,11 @@ final class DremelShredTest extends TestCase
             ],
         ];
 
-        $shredded = (new Dremel())->shred($data, 2);
+        $shredded = (new Dremel())->shred($data, 5);
         $this->assertSame(
             [
                 'repetitions' => [0, 2, 2, 0, 2, 2, 1, 2, 2, 0, 2, 2],
-                'definitions' => [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+                'definitions' => [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
                 'values' => array_flatten($data),
             ],
             [
@@ -81,6 +80,25 @@ final class DremelShredTest extends TestCase
         );
     }
 
+    public function test_dremel_shred_on_nested_nullable_lists() : void
+    {
+        $data = [[1, 2, 3], [null, null], [4, 5, 6]];
+
+        $shredded = (new Dremel())->shred($data, 3);
+        $this->assertSame(
+            [
+                'repetitions' => [0, 1, 1, 0, 1, 0, 1, 1],
+                'definitions' => [3, 3, 3, 2, 2, 3, 3, 3],
+                'values' => [1, 2, 3, 4, 5, 6],
+            ],
+            [
+                'repetitions' => $shredded->repetitions,
+                'definitions' => $shredded->definitions,
+                'values' => $shredded->values,
+            ]
+        );
+    }
+
     public function test_dremel_shred_on_repeated_columns() : void
     {
         $data = [
@@ -102,26 +120,5 @@ final class DremelShredTest extends TestCase
                 'values' => $shredded->values,
             ]
         );
-    }
-
-    public function test_dremel_with_rows_with_combined_scalar_values_and_array_values() : void
-    {
-        $data = [
-            [
-                [0, 1, 2],
-            ],
-            [
-                3, 4, 5,
-                [3, 4, 5],
-            ],
-            [
-                [6, 7, 8],
-            ],
-        ];
-
-        $this->expectExceptionMessage('Invalid data structure, each row must be an array of arrays or scalars, got both, arrays and scalars. [3,4,5,[3,4,5]]');
-        $this->expectException(RuntimeException::class);
-
-        (new Dremel())->shred($data, 2);
     }
 }

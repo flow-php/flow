@@ -7,7 +7,6 @@ use Flow\ETL\Loader;
 use Flow\ETL\Pipeline;
 use Flow\ETL\Pipeline\BatchingPipeline;
 use Flow\ETL\Pipeline\CollectingPipeline;
-use Flow\ETL\Pipeline\LocalSocketPipeline;
 use Flow\ETL\Pipeline\NestedPipeline;
 use Flow\ETL\Pipeline\ParallelizingPipeline;
 use Flow\ETL\Pipeline\SynchronousPipeline;
@@ -26,11 +25,13 @@ use Flow\ETL\Transformer\RenameStrReplaceAllEntriesTransformer;
 
 final class LimitOptimization implements Optimization
 {
+    /**
+     * @psalm-suppress DeprecatedClass
+     */
     private array $nonExpandingPipelines = [
         SynchronousPipeline::class,
         CollectingPipeline::class,
         BatchingPipeline::class,
-        LocalSocketPipeline::class,
         NestedPipeline::class,
         ParallelizingPipeline::class,
         VoidPipeline::class,

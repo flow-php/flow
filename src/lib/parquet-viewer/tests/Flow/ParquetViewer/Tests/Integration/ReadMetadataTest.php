@@ -2,7 +2,7 @@
 
 namespace Flow\ParquetViewer\Tests\Integration;
 
-use Flow\ParquetViewer\Application;
+use Flow\ParquetViewer\Parquet;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Tester\ApplicationTester;
 
@@ -10,7 +10,7 @@ final class ReadMetadataTest extends TestCase
 {
     public function test_reading_metadata_from_non_json_file() : void
     {
-        $application = new Application();
+        $application = new Parquet();
         $application->setAutoExit(false);
         $application->setCatchExceptions(false);
 
@@ -31,7 +31,7 @@ final class ReadMetadataTest extends TestCase
 
     public function test_reading_metadata_from_parquet_file() : void
     {
-        $application = new Application();
+        $application = new Parquet();
         $application->setAutoExit(false);
         $application->setCatchExceptions(false);
 

@@ -48,7 +48,7 @@ final class RLEBitPackedPacker
         $this->bitPackedHybrid->encodeHybrid(new BinaryBufferWriter($dataBuffer), $values);
         $outputBuffer = '';
         $outputWriter = new BinaryBufferWriter($outputBuffer);
-        $outputWriter->writeInts32([\strlen($dataBuffer)]);
+        $outputWriter->writeInts32([$length = \strlen($dataBuffer)]);
         $outputWriter->append($dataBuffer);
 
         return $outputBuffer;

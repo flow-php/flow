@@ -5,6 +5,15 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit;
 
 use Flow\ETL\DSL\Entry;
+use Flow\ETL\PHP\Type\Logical\List\ListElement;
+use Flow\ETL\PHP\Type\Logical\ListType;
+use Flow\ETL\PHP\Type\Logical\Map\MapKey;
+use Flow\ETL\PHP\Type\Logical\Map\MapValue;
+use Flow\ETL\PHP\Type\Logical\MapType;
+use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
+use Flow\ETL\PHP\Type\Logical\StructureType;
+use Flow\ETL\PHP\Type\Native\ObjectType;
+use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry\ArrayEntry;
@@ -42,13 +51,45 @@ final class RowTest extends TestCase
         ];
         yield 'simple same collection entries' => [
             true,
-            new Row(new Entries(new StructureEntry('json', new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3)))),
-            new Row(new Entries(new StructureEntry('json', new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3)))),
+            new Row(
+                new Entries(
+                    new StructureEntry(
+                        'json',
+                        ['json' => [1, 2, 3]],
+                        new StructureType(new StructureElement('json', new ListType(ListElement::integer())))
+                    )
+                )
+            ),
+            new Row(
+                new Entries(
+                    new StructureEntry(
+                        'json',
+                        ['json' => [1, 2, 3]],
+                        new StructureType(new StructureElement('json', new ListType(ListElement::integer())))
+                    )
+                )
+            ),
         ];
         yield 'simple different collection entries' => [
             false,
-            new Row(new Entries(new StructureEntry('json', new IntegerEntry('5', 5), new IntegerEntry('2', 2), new IntegerEntry('3', 3)))),
-            new Row(new Entries(new StructureEntry('json', new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3)))),
+            new Row(
+                new Entries(
+                    new StructureEntry(
+                        'json',
+                        ['json' => ['5', '2', '1']],
+                        new StructureType(new StructureElement('json', new ListType(ListElement::string())))
+                    )
+                )
+            ),
+            new Row(
+                new Entries(
+                    new StructureEntry(
+                        'json',
+                        ['json' => ['1', '2', '3']],
+                        new StructureType(new StructureElement('json', new ListType(ListElement::string())))
+                    )
+                )
+            ),
         ];
     }
 
@@ -69,14 +110,17 @@ final class RowTest extends TestCase
             ),
             Entry::structure(
                 'items',
-                Entry::integer('item-id', 1),
-                Entry::string('name', 'one'),
+                ['item-id' => 1, 'name' => 'one'],
+                new StructureType(
+                    new StructureElement('item-id', ScalarType::integer()),
+                    new StructureElement('name', ScalarType::string())
+                )
             ),
-            Entry::collection(
-                'tags',
-                new Row\Entries(Entry::integer('item-id', 1), Entry::string('name', 'one')),
-                new Row\Entries(Entry::integer('item-id', 2), Entry::string('name', 'two')),
-                new Row\Entries(Entry::integer('item-id', 3), Entry::string('name', 'three'))
+            Entry::list_of_int('list', [1, 2, 3]),
+            Entry::map(
+                'statuses',
+                ['NEW', 'PENDING'],
+                new MapType(MapKey::integer(), MapValue::string())
             ),
             Entry::object('object', new \ArrayIterator([1, 2, 3]))
         );
@@ -89,9 +133,19 @@ final class RowTest extends TestCase
                 Row\Schema\Definition::dateTime('created-at'),
                 Row\Schema\Definition::null('phase'),
                 Row\Schema\Definition::array('array'),
-                Row\Schema\Definition::structure('items', ['item-id' => Entry::integer('item-id', 1)->definition(), 'name' => Entry::string('name', 'one')->definition()]),
-                Row\Schema\Definition::collection('tags'),
-                Row\Schema\Definition::object('object'),
+                Row\Schema\Definition::structure(
+                    'items',
+                    new StructureType(
+                        new StructureElement('item-id', ScalarType::integer()),
+                        new StructureElement('name', ScalarType::string())
+                    )
+                ),
+                Row\Schema\Definition::map(
+                    'statuses',
+                    new MapType(MapKey::integer(), MapValue::string())
+                ),
+                Row\Schema\Definition::list('list', new ListType(ListElement::integer())),
+                Row\Schema\Definition::object('object', ObjectType::of(\ArrayIterator::class)),
             ),
             $row->schema()
         );
@@ -131,8 +185,13 @@ final class RowTest extends TestCase
             new NullEntry('phase'),
             new StructureEntry(
                 'items',
-                new IntegerEntry('item-id', 1),
-                new StringEntry('name', 'one'),
+                ['item-id' => 1, 'name' => 'one'],
+                new StructureType(new StructureElement('id', ScalarType::integer()), new StructureElement('name', ScalarType::string()))
+            ),
+            new Row\Entry\MapEntry(
+                'statuses',
+                ['NEW', 'PENDING'],
+                new MapType(MapKey::integer(), MapValue::string())
             )
         );
 
@@ -146,6 +205,7 @@ final class RowTest extends TestCase
                     'item-id' => 1,
                     'name' => 'one',
                 ],
+                'statuses' => ['NEW', 'PENDING'],
             ],
             $row->toArray(),
         );

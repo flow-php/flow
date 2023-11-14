@@ -6,49 +6,49 @@ namespace Flow\ETL\Row\Entry;
 
 use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\PHP\Type\Logical\StructureType;
+use Flow\ETL\PHP\Type\Type;
+use Flow\ETL\PHP\Type\TypeDetector;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @implements Entry<array<array-key, Entry>, array{name: string, entries: array<Entry>}>
+ * @implements Entry<array<array-key, mixed>, array{name: string, value: array<array-key, mixed>, type: StructureType}>
  */
 final class StructureEntry implements \Stringable, Entry
 {
     use EntryRef;
 
     /**
-     * @var array<Entry>
-     */
-    private readonly array $entries;
-
-    /**
+     * @param array<array-key, mixed> $value
+     *
      * @throws InvalidArgumentException
      */
-    public function __construct(private readonly string $name, Entry ...$entries)
-    {
+    public function __construct(
+        private readonly string $name,
+        private readonly array $value,
+        private readonly StructureType $type
+    ) {
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        if (!\count($entries)) {
+        if (0 === \count($value)) {
             throw InvalidArgumentException::because('Structure must have at least one entry, ' . $name . ' got none.');
         }
 
-        $entryNames = \array_map(static fn (Entry $entry) => $entry->name(), $entries);
-
-        if (\count(\array_unique($entryNames)) !== \count($entryNames)) {
-            throw InvalidArgumentException::because('Each entry name in structure must be unique, given: ' . \implode(', ', $entryNames));
+        if (!$type->isValid($value)) {
+            throw InvalidArgumentException::because('Expected ' . $type->toString() . ' got different types: ' . (new TypeDetector())->detectType($this->value)->toString());
         }
-
-        $this->entries = $entries;
     }
 
     public function __serialize() : array
     {
         return [
             'name' => $this->name,
-            'entries' => $this->entries,
+            'value' => $this->value,
+            'type' => $this->type,
         ];
     }
 
@@ -60,40 +60,13 @@ final class StructureEntry implements \Stringable, Entry
     public function __unserialize(array $data) : void
     {
         $this->name = $data['name'];
-        $this->entries = $data['entries'];
+        $this->value = $data['value'];
+        $this->type = $data['type'];
     }
 
     public function definition() : Definition
     {
-        /**
-         * @param array<string, Entry|mixed> $entries
-         *
-         * @return array<string, array<Entry|string>|Entry>
-         */
-        $buildDefinitions = static function (array $entries) use (&$buildDefinitions) : array {
-            $definitions = [];
-
-            /** @var Entry $entry */
-            foreach ($entries as $entry) {
-                if ($entry instanceof self) {
-                    $definitions[$entry->name()] = $buildDefinitions($entry->entries());
-                } else {
-                    $definitions[$entry->name()] = $entry->definition();
-                }
-            }
-
-            return $definitions;
-        };
-
-        return Definition::structure($this->name, $buildDefinitions($this->entries), false);
-    }
-
-    /**
-     * @return array<Entry>
-     */
-    public function entries() : array
-    {
-        return $this->entries;
+        return Definition::structure($this->name, $this->type);
     }
 
     public function is(string|Reference $name) : bool
@@ -107,12 +80,12 @@ final class StructureEntry implements \Stringable, Entry
 
     public function isEqual(Entry $entry) : bool
     {
-        return $this->is($entry->name()) && $entry instanceof self && (new ArrayComparison())->equals($this->value(), $entry->value());
+        return $this->is($entry->name()) && $entry instanceof self && $this->type->isEqual($entry->type) && (new ArrayComparison())->equals($this->value, $entry->value);
     }
 
     public function map(callable $mapper) : Entry
     {
-        return new self($this->name, ...$mapper($this->entries));
+        return new self($this->name, $mapper($this->value), $this->type);
     }
 
     public function name() : string
@@ -122,35 +95,21 @@ final class StructureEntry implements \Stringable, Entry
 
     public function rename(string $name) : Entry
     {
-        return new self($name, ...$this->entries);
+        return new self($name, $this->value, $this->type);
     }
 
     public function toString() : string
     {
-        $array = [];
-
-        foreach ($this->entries as $entry) {
-            $array[$entry->name()] = $entry->toString();
-        }
-
-        return \json_encode($array, JSON_THROW_ON_ERROR);
+        return \json_encode($this->value, JSON_THROW_ON_ERROR);
     }
 
-    /**
-     * @psalm-suppress LessSpecificImplementedReturnType
-     *
-     * @return array<string, mixed>
-     */
+    public function type() : Type
+    {
+        return $this->type;
+    }
+
     public function value() : array
     {
-        /** @var array<string, mixed> $structure */
-        $structure = [];
-
-        /** @var Entry $entry */
-        foreach ($this->entries as $entry) {
-            $structure[$entry->name()] = $entry->value();
-        }
-
-        return $structure;
+        return $this->value;
     }
 }

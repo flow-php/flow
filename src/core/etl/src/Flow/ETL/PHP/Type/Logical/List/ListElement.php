@@ -2,46 +2,64 @@
 
 namespace Flow\ETL\PHP\Type\Logical\List;
 
+use Flow\ETL\PHP\Type\Logical\ListType;
+use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Native\ObjectType;
 use Flow\ETL\PHP\Type\Native\ScalarType;
+use Flow\ETL\PHP\Type\Type;
 
 final class ListElement
 {
-    private function __construct(private readonly ScalarType|ObjectType $value)
+    private function __construct(private readonly Type $value)
     {
     }
 
     public static function boolean() : self
     {
-        return new self(ScalarType::boolean);
+        return new self(ScalarType::boolean());
     }
 
     public static function float() : self
     {
-        return new self(ScalarType::float);
+        return new self(ScalarType::float());
+    }
+
+    public static function fromType(Type $type) : self
+    {
+        return new self($type);
     }
 
     public static function integer() : self
     {
-        return new self(ScalarType::integer);
+        return new self(ScalarType::integer());
+    }
+
+    public static function list(ListType $type) : self
+    {
+        return new self($type);
+    }
+
+    public static function map(MapType $type) : self
+    {
+        return new self($type);
     }
 
     /**
      * @param class-string $class
      */
-    public static function object(string $class) : self
+    public static function object(string $class, bool $nullable = false) : self
     {
-        return new self(new ObjectType($class));
+        return new self(ObjectType::of($class, $nullable));
     }
 
-    public static function scalar(string $value) : self
+    public static function scalar(string $value, bool $nullable = false) : self
     {
-        return new self(ScalarType::fromString($value));
+        return new self(ScalarType::fromString($value, $nullable));
     }
 
     public static function string() : self
     {
-        return new self(ScalarType::string);
+        return new self(ScalarType::string());
     }
 
     public function isEqual(mixed $value) : bool
@@ -59,7 +77,7 @@ final class ListElement
         return $this->value->toString();
     }
 
-    public function value() : ScalarType|ObjectType
+    public function value() : Type
     {
         return $this->value;
     }

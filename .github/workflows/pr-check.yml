@@ -29,6 +29,7 @@ jobs:
           xl_label: 'size: XL'
           fail_if_xl: false
           files_to_ignore: 'composer.lock timezones.json nested_timezones.json'
+          message_if_xl: ''
 
   pull-request-type:
     name: "Label PR Type"

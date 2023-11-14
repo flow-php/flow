@@ -10,7 +10,7 @@ use Flow\ETL\Loader;
 use Flow\ETL\Pipeline;
 use Flow\ETL\Transformer;
 
-final class NestedPipeline implements Pipeline
+final class NestedPipeline implements OverridingPipeline, Pipeline
 {
     public function __construct(
         private readonly Pipeline $pipeline,
@@ -43,9 +43,26 @@ final class NestedPipeline implements Pipeline
         return $this->pipeline->has($transformerClass);
     }
 
-    public function isAsync() : bool
+    /**
+     * @return array<Pipeline>
+     */
+    public function pipelines() : array
     {
-        return $this->pipeline->isAsync() || $this->nextPipeline->isAsync();
+        $pipelines = [];
+
+        if ($this->pipeline instanceof OverridingPipeline) {
+            $pipelines = $this->pipeline->pipelines();
+        }
+
+        $pipelines[] = $this->pipeline;
+
+        if ($this->nextPipeline instanceof OverridingPipeline) {
+            $pipelines = \array_merge($pipelines, $this->nextPipeline->pipelines());
+        }
+
+        $pipelines[] = $this->nextPipeline;
+
+        return $pipelines;
     }
 
     public function pipes() : Pipes

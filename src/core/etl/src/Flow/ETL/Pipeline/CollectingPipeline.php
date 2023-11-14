@@ -16,7 +16,7 @@ use Flow\ETL\Transformer;
 /**
  * @internal
  */
-final class CollectingPipeline implements Pipeline
+final class CollectingPipeline implements OverridingPipeline, Pipeline
 {
     private readonly Pipeline $nextPipeline;
 
@@ -52,9 +52,19 @@ final class CollectingPipeline implements Pipeline
         return $this->pipeline->has($transformerClass);
     }
 
-    public function isAsync() : bool
+    /**
+     * @return array<Pipeline>
+     */
+    public function pipelines() : array
     {
-        return $this->pipeline->isAsync();
+        $pipelines = [];
+
+        if ($this->pipeline instanceof OverridingPipeline) {
+            $pipelines = $this->pipeline->pipelines();
+        }
+        $pipelines[] = $this->pipeline;
+
+        return $pipelines;
     }
 
     public function pipes() : Pipes

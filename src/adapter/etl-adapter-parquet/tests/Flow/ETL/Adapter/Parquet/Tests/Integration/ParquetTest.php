@@ -7,6 +7,9 @@ use Flow\ETL\DSL\Entry;
 use Flow\ETL\DSL\From;
 use Flow\ETL\DSL\Parquet;
 use Flow\ETL\Flow;
+use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
+use Flow\ETL\PHP\Type\Logical\StructureType;
+use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Test\FilesystemTestHelper;
@@ -49,7 +52,7 @@ final class ParquetTest extends TestCase
         $path = \sys_get_temp_dir() . '/partitioned';
         $this->cleanDirectory($path);
 
-        $dataFrame = (new Flow())
+        (new Flow())
             ->read(From::rows($rows = new Rows(
                 $this->createRow(1, new \DateTimeImmutable('2020-01-01 00:01:00')),
                 $this->createRow(1, new \DateTimeImmutable('2020-01-01 00:02:00')),
@@ -59,9 +62,8 @@ final class ParquetTest extends TestCase
             )))
             ->withEntry('date', ref('datetime')->toDate(\DateTimeInterface::RFC3339)->dateFormat())
             ->partitionBy(ref('date'))
-            ->write(Parquet::to($path));
-
-        $dataFrame->run();
+            ->write(Parquet::to($path))
+            ->run();
 
         $this->assertEquals(
             $rows,
@@ -94,15 +96,26 @@ final class ParquetTest extends TestCase
             Entry::list_of_datetime('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()]),
             Entry::structure(
                 'address',
-                Entry::string('street', 'street_' . $index),
-                Entry::string('city', 'city_' . $index),
-                Entry::string('zip', 'zip_' . $index),
-                Entry::string('country', 'country_' . $index),
-                Entry::structure(
-                    'location',
-                    Entry::float('lat', 1.5),
-                    Entry::float('lng', 1.5)
-                )
+                [
+                    'street' => 'street_' . $index,
+                    'city' => 'city_' . $index,
+                    'zip' => 'zip_' . $index,
+                    'country' => 'country_' . $index,
+                    'location' => ['lat' => 1.5, 'lon' => 1.5],
+                ],
+                new StructureType(
+                    new StructureElement('street', ScalarType::string()),
+                    new StructureElement('city', ScalarType::string()),
+                    new StructureElement('zip', ScalarType::string()),
+                    new StructureElement('country', ScalarType::string()),
+                    new StructureElement(
+                        'location',
+                        new StructureType(
+                            new StructureElement('lat', ScalarType::float()),
+                            new StructureElement('lon', ScalarType::float()),
+                        )
+                    )
+                ),
             ),
         );
     }

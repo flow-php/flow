@@ -2,19 +2,24 @@
 
 namespace Flow\ETL\Row\Entry;
 
+use Flow\ETL\PHP\Type\Native\ObjectType;
+use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @implements Entry<\DOMNode, array{name: string, value: \DOMNode}>
+ * @implements Entry<\DOMNode, array{name: string, value: \DOMNode, type: ObjectType}>
  */
 final class XMLNodeEntry implements \Stringable, Entry
 {
     use EntryRef;
 
+    private readonly ObjectType $type;
+
     public function __construct(private readonly string $name, private readonly \DOMNode $value)
     {
+        $this->type = ObjectType::fromObject($this->value);
     }
 
     public function __serialize() : array
@@ -22,6 +27,7 @@ final class XMLNodeEntry implements \Stringable, Entry
         return [
             'name' => $this->name,
             'value' => $this->value,
+            'type' => $this->type,
         ];
     }
 
@@ -39,11 +45,12 @@ final class XMLNodeEntry implements \Stringable, Entry
     {
         $this->name = $data['name'];
         $this->value = $data['value'];
+        $this->type = $data['type'];
     }
 
     public function definition() : Definition
     {
-        return Definition::xml_node($this->ref(), false);
+        return Definition::xml_node($this->ref(), $this->type->nullable());
     }
 
     public function is(Reference|string $name) : bool
@@ -58,6 +65,10 @@ final class XMLNodeEntry implements \Stringable, Entry
     public function isEqual(Entry $entry) : bool
     {
         if (!$entry instanceof self || !$this->is($entry->name())) {
+            return false;
+        }
+
+        if (!$this->type->isEqual($entry->type)) {
             return false;
         }
 
@@ -87,6 +98,11 @@ final class XMLNodeEntry implements \Stringable, Entry
          * @phpstan-ignore-next-line
          */
         return $this->value->ownerDocument->saveXML($this->value);
+    }
+
+    public function type() : Type
+    {
+        return $this->type;
     }
 
     public function value() : \DOMNode

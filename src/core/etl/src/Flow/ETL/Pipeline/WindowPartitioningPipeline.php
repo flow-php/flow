@@ -16,7 +16,7 @@ use Flow\ETL\Transformer;
 use Flow\ETL\Transformer\WindowFunctionTransformer;
 use Flow\ETL\Window;
 
-final class WindowPartitioningPipeline implements Pipeline
+final class WindowPartitioningPipeline implements OverridingPipeline, Pipeline
 {
     private Pipeline $nextPipeline;
 
@@ -48,9 +48,19 @@ final class WindowPartitioningPipeline implements Pipeline
         return $this->pipeline->has($transformerClass) || $this->nextPipeline->has($transformerClass);
     }
 
-    public function isAsync() : bool
+    /**
+     * @return array<Pipeline>
+     */
+    public function pipelines() : array
     {
-        return false;
+        $pipelines = [];
+
+        if ($this->pipeline instanceof OverridingPipeline) {
+            $pipelines = $this->pipeline->pipelines();
+        }
+        $pipelines[] = $this->pipeline;
+
+        return $pipelines;
     }
 
     public function pipes() : Pipes

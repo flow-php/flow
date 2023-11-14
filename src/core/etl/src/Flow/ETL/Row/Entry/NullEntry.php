@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Row\Entry;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\PHP\Type\Native\NullType;
+use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
@@ -81,6 +83,11 @@ final class NullEntry implements \Stringable, Entry
     public function toString() : string
     {
         return 'null';
+    }
+
+    public function type() : Type
+    {
+        return new NullType();
     }
 
     public function value()

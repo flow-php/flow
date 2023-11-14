@@ -125,6 +125,14 @@ final class PathTest extends TestCase
         $this->assertSame($result, (new Path($path))->matches(new Path($pattern)));
     }
 
+    public function test_not_matching_items_under_directory_that_matches_pattern() : void
+    {
+        $path = new Path('flow-file://var/file/partition=*');
+
+        $this->assertTrue($path->matches(new Path('flow-file://var/file/partition=1')));
+        $this->assertFalse($path->matches(new Path('flow-file://var/file/partition=1/file.csv')));
+    }
+
     /**
      * @dataProvider paths
      */

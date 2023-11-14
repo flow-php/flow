@@ -6,8 +6,6 @@ namespace Flow\ETL\Tests\Unit;
 
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
-use Flow\ETL\Async\Socket\Server\Server;
-use Flow\ETL\Async\Socket\Worker\WorkerLauncher;
 use Flow\ETL\DataFrame;
 use Flow\ETL\DataFrameFactory;
 use Flow\ETL\DSL\Entry;
@@ -24,13 +22,22 @@ use Flow\ETL\GroupBy\Aggregation;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Loader;
 use Flow\ETL\Memory\ArrayMemory;
-use Flow\ETL\Pipeline\LocalSocketPipeline;
+use Flow\ETL\PHP\Type\Logical\List\ListElement;
+use Flow\ETL\PHP\Type\Logical\ListType;
+use Flow\ETL\PHP\Type\Logical\Map\MapKey;
+use Flow\ETL\PHP\Type\Logical\Map\MapValue;
+use Flow\ETL\PHP\Type\Logical\MapType;
+use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
+use Flow\ETL\PHP\Type\Logical\StructureType;
+use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\ArrayEntry;
 use Flow\ETL\Row\Entry\BooleanEntry;
 use Flow\ETL\Row\Entry\DateTimeEntry;
 use Flow\ETL\Row\Entry\FloatEntry;
 use Flow\ETL\Row\Entry\IntegerEntry;
+use Flow\ETL\Row\Entry\ListEntry;
+use Flow\ETL\Row\Entry\MapEntry;
 use Flow\ETL\Row\Entry\NullEntry;
 use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Row\Entry\StructureEntry;
@@ -341,7 +348,7 @@ final class DataFrameTest extends TestCase
                                 new FloatEntry('price', 123.45),
                                 new IntegerEntry('100', 100),
                                 new BooleanEntry('deleted', false),
-                                new DateTimeEntry('created-at', $createdAt = new \DateTimeImmutable('2020-07-13 15:00')),
+                                new DateTimeEntry('created-at', new \DateTimeImmutable('2020-07-13 15:00')),
                                 new NullEntry('phase'),
                                 new ArrayEntry(
                                     'array',
@@ -350,16 +357,23 @@ final class DataFrameTest extends TestCase
                                         ['id' => 2, 'status' => 'PENDING'],
                                     ]
                                 ),
+                                new ListEntry(
+                                    'list',
+                                    [1, 2, 3],
+                                    new ListType(ListElement::integer())
+                                ),
+                                new MapEntry(
+                                    'map',
+                                    ['NEW', 'PENDING'],
+                                    new MapType(MapKey::integer(), MapValue::string())
+                                ),
                                 new StructureEntry(
                                     'items',
-                                    new IntegerEntry('item-id', 1),
-                                    new StringEntry('name', 'one'),
-                                ),
-                                new Row\Entry\CollectionEntry(
-                                    'tags',
-                                    new Row\Entries(new IntegerEntry('item-id', 1), new StringEntry('name', 'one')),
-                                    new Row\Entries(new IntegerEntry('item-id', 2), new StringEntry('name', 'two')),
-                                    new Row\Entries(new IntegerEntry('item-id', 3), new StringEntry('name', 'three'))
+                                    ['item-id' => '1', 'name' => 'one'],
+                                    new StructureType(
+                                        new StructureElement('item-id', ScalarType::string()),
+                                        new StructureElement('name', ScalarType::string()),
+                                    )
                                 ),
                                 new Row\Entry\ObjectEntry('object', new \ArrayIterator([1, 2, 3])),
                                 new Row\Entry\EnumEntry('enum', BackedStringEnum::three),
@@ -373,15 +387,15 @@ final class DataFrameTest extends TestCase
 
         $this->assertSame(
             <<<'ASCIITABLE'
-+------+--------+-----+---------+----------------------+-------+----------------------+----------------------+----------------------+----------------------+-------+----------------------+
-|   id |  price | 100 | deleted |           created-at | phase |                array |                items |                 tags |               object |  enum |                  xml |
-+------+--------+-----+---------+----------------------+-------+----------------------+----------------------+----------------------+----------------------+-------+----------------------+
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | {"item-id":"1","name | [{"item-id":"1","nam | ArrayIterator Object | three | <?xml version="1.0"? |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | {"item-id":"1","name | [{"item-id":"1","nam | ArrayIterator Object | three | <?xml version="1.0"? |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | {"item-id":"1","name | [{"item-id":"1","nam | ArrayIterator Object | three | <?xml version="1.0"? |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | {"item-id":"1","name | [{"item-id":"1","nam | ArrayIterator Object | three | <?xml version="1.0"? |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | {"item-id":"1","name | [{"item-id":"1","nam | ArrayIterator Object | three | <?xml version="1.0"? |
-+------+--------+-----+---------+----------------------+-------+----------------------+----------------------+----------------------+----------------------+-------+----------------------+
++------+--------+-----+---------+----------------------+-------+----------------------+---------+-------------------+----------------------+----------------------+-------+----------------------+
+|   id |  price | 100 | deleted |           created-at | phase |                array |    list |               map |                items |               object |  enum |                  xml |
++------+--------+-----+---------+----------------------+-------+----------------------+---------+-------------------+----------------------+----------------------+-------+----------------------+
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | ArrayIterator Object | three | <?xml version="1.0"? |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | ArrayIterator Object | three | <?xml version="1.0"? |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | ArrayIterator Object | three | <?xml version="1.0"? |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | ArrayIterator Object | three | <?xml version="1.0"? |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | ArrayIterator Object | three | <?xml version="1.0"? |
++------+--------+-----+---------+----------------------+-------+----------------------+---------+-------------------+----------------------+----------------------+-------+----------------------+
 5 rows
 
 ASCIITABLE,
@@ -390,16 +404,16 @@ ASCIITABLE,
 
         $this->assertSame(
             <<<'ASCIITABLE'
-+------+--------+-----+---------+---------------------------+-------+-------------------------------------------------------+------------------------------+--------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------+-------+--------------------------------------------------------------------------+
-|   id |  price | 100 | deleted |                created-at | phase |                                                 array |                        items |                                                                                       tags |                                                                                         object |  enum |                                                                      xml |
-+------+--------+-----+---------+---------------------------+-------+-------------------------------------------------------+------------------------------+--------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------+-------+--------------------------------------------------------------------------+
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three | <?xml version="1.0"?><xml><node id="123">test<foo>bar</foo></node></xml> |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three | <?xml version="1.0"?><xml><node id="123">test<foo>bar</foo></node></xml> |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three | <?xml version="1.0"?><xml><node id="123">test<foo>bar</foo></node></xml> |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three | <?xml version="1.0"?><xml><node id="123">test<foo>bar</foo></node></xml> |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three | <?xml version="1.0"?><xml><node id="123">test<foo>bar</foo></node></xml> |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three | <?xml version="1.0"?><xml><node id="123">test<foo>bar</foo></node></xml> |
-+------+--------+-----+---------+---------------------------+-------+-------------------------------------------------------+------------------------------+--------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------+-------+--------------------------------------------------------------------------+
++------+--------+-----+---------+---------------------------+-------+-------------------------------------------------------+---------+-------------------+------------------------------+------------------------------------------------------------------------------------------------+-------+--------------------------------------------------------------------------+
+|   id |  price | 100 | deleted |                created-at | phase |                                                 array |    list |               map |                        items |                                                                                         object |  enum |                                                                      xml |
++------+--------+-----+---------+---------------------------+-------+-------------------------------------------------------+---------+-------------------+------------------------------+------------------------------------------------------------------------------------------------+-------+--------------------------------------------------------------------------+
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name":"one"} | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three | <?xml version="1.0"?><xml><node id="123">test<foo>bar</foo></node></xml> |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name":"one"} | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three | <?xml version="1.0"?><xml><node id="123">test<foo>bar</foo></node></xml> |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name":"one"} | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three | <?xml version="1.0"?><xml><node id="123">test<foo>bar</foo></node></xml> |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name":"one"} | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three | <?xml version="1.0"?><xml><node id="123">test<foo>bar</foo></node></xml> |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name":"one"} | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three | <?xml version="1.0"?><xml><node id="123">test<foo>bar</foo></node></xml> |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name":"one"} | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three | <?xml version="1.0"?><xml><node id="123">test<foo>bar</foo></node></xml> |
++------+--------+-----+---------+---------------------------+-------+-------------------------------------------------------+---------+-------------------+------------------------------+------------------------------------------------------------------------------------------------+-------+--------------------------------------------------------------------------+
 6 rows
 
 ASCIITABLE,
@@ -1382,16 +1396,16 @@ ASCII,
         $output = \ob_get_clean();
 
         $this->assertStringContainsString(
-            <<<ASCII
+            <<<'ASCII'
 schema
-|-- id: Flow\ETL\Row\Entry\IntegerEntry (nullable = false)
-|-- country: Flow\ETL\Row\Entry\StringEntry (nullable = false)
-|-- age: Flow\ETL\Row\Entry\IntegerEntry (nullable = false)
+|-- id: integer
+|-- country: string
+|-- age: integer
 schema
-|-- id: Flow\ETL\Row\Entry\IntegerEntry (nullable = false)
-|-- country: Flow\ETL\Row\Entry\StringEntry (nullable = false)
-|-- age: Flow\ETL\Row\Entry\IntegerEntry (nullable = false)
-|-- salary: [Flow\ETL\Row\Entry\IntegerEntry, Flow\ETL\Row\Entry\NullEntry] (nullable = true)
+|-- id: integer
+|-- country: string
+|-- age: integer
+|-- salary: ?integer
 ASCII,
             $output
         );
@@ -1671,56 +1685,6 @@ ASCII,
             ),
             $rows
         );
-    }
-
-    public function test_using_drop_duplicates_with_and_then_turning_pipeline_into_async() : void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('dropDuplicates() is not supported in asynchronous pipelines yet');
-
-        (new Flow())
-            ->extract(From::rows(
-                new Rows(
-                    Row::create(Entry::integer('id', 1), Entry::string('name', 'foo')),
-                    Row::create(Entry::integer('id', 2), Entry::string('name', 'bar')),
-                    Row::create(Entry::integer('id', 3), Entry::string('name', 'baz')),
-                    Row::create(Entry::integer('id', 4), Entry::string('name', 'foo')),
-                    Row::create(Entry::integer('id', 5), Entry::string('name', 'bar')),
-                    Row::create(Entry::integer('id', 6), Entry::string('name', 'baz')),
-                )
-            ))
-            ->dropDuplicates('id')
-            ->pipeline(new LocalSocketPipeline(
-                $this->createMock(Server::class),
-                $this->createMock(WorkerLauncher::class),
-                5
-            ))
-            ->run();
-    }
-
-    public function test_using_drop_duplicates_with_local_socket_pipeline() : void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('dropDuplicates() is not supported in asynchronous pipelines yet');
-
-        (new Flow())
-            ->extract(From::rows(
-                new Rows(
-                    Row::create(Entry::integer('id', 1), Entry::string('name', 'foo')),
-                    Row::create(Entry::integer('id', 2), Entry::string('name', 'bar')),
-                    Row::create(Entry::integer('id', 3), Entry::string('name', 'baz')),
-                    Row::create(Entry::integer('id', 4), Entry::string('name', 'foo')),
-                    Row::create(Entry::integer('id', 5), Entry::string('name', 'bar')),
-                    Row::create(Entry::integer('id', 6), Entry::string('name', 'baz')),
-                )
-            ))
-            ->pipeline(new LocalSocketPipeline(
-                $this->createMock(Server::class),
-                $this->createMock(WorkerLauncher::class),
-                5
-            ))
-            ->dropDuplicates('id')
-            ->run();
     }
 
     public function test_void() : void

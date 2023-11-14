@@ -10,10 +10,9 @@ use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
-use Flow\ETL\PHP\Type\Logical\List\ListElement;
+use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\PHP\Type\Native\ObjectType;
 use Flow\ETL\Row;
-use Flow\ETL\Row\Entry\DateTimeEntry;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Rows;
 
@@ -86,7 +85,7 @@ final class AvroLoader implements Closure, Loader, Loader\FileLoader
             foreach ($row->entries()->all() as $entry) {
                 $rowData[$entry->name()] = match ($entry::class) {
                     Row\Entry\ListEntry::class => $this->listEntryToValues($entry),
-                    DateTimeEntry::class => (int) $entry->value()->format('Uu'),
+                    Row\Entry\DateTimeEntry::class => (int) $entry->value()->format('Uu'),
                     Row\Entry\UuidEntry::class => $entry->value()->toString(),
                     Row\Entry\EnumEntry::class => $entry->value()->name,
                     default => $entry->value(),
@@ -99,11 +98,12 @@ final class AvroLoader implements Closure, Loader, Loader\FileLoader
 
     private function listEntryToValues(Row\Entry\ListEntry $entry) : array
     {
-        /** @var ListElement $listType */
+        /** @var ListType $listType */
         $listType = $entry->definition()->metadata()->get(Schema\FlowMetadata::METADATA_LIST_ENTRY_TYPE);
+        $listElement = $listType->element();
 
-        if ($listType->value() instanceof ObjectType) {
-            if (\is_a($listType->value()->class, Row\Entry\Type\Uuid::class, true)) {
+        if ($listElement->value() instanceof ObjectType) {
+            if (\is_a($listElement->value()->class, Row\Entry\Type\Uuid::class, true)) {
                 /** @var array<string> $data */
                 $data = [];
 
@@ -114,7 +114,7 @@ final class AvroLoader implements Closure, Loader, Loader\FileLoader
                 return $data;
             }
 
-            if (\is_a($listType->value()->class, \DateTimeInterface::class, true)) {
+            if (\is_a($listElement->value()->class, \DateTimeInterface::class, true)) {
                 /** @var array<int> $data */
                 $data = [];
 

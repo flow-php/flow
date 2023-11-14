@@ -67,6 +67,34 @@ final class FlattenerTest extends TestCase
         );
     }
 
+    public function test_flattening_list_of_lists() : void
+    {
+        $column = NestedColumn::list('list', ListElement::list(ListElement::int32()));
+        $row = [
+            'list' => [
+                [1, 2, 3],
+                [],
+                [4, 5, 6],
+                null,
+                [null, null, null],
+            ],
+        ];
+
+        $flattener = new Flattener();
+        $this->assertSame(
+            [
+                'list.list.element.list.element' => [
+                    [1, 2, 3],
+                    [],
+                    [4, 5, 6],
+                    null,
+                    [null, null, null],
+                ],
+            ],
+            $flattener->flattenColumn($column, $row)
+        );
+    }
+
     public function test_flattening_list_of_maps() : void
     {
         $column = NestedColumn::list('list_of_maps', ListElement::map(MapKey::string(), MapValue::int32()));
@@ -90,8 +118,8 @@ final class FlattenerTest extends TestCase
         $flattener = new Flattener();
         $this->assertSame(
             [
-                'list_of_maps.list.element.key_value.key' => ['a', 'b', 'c', 'd', 'e', 'f'],
-                'list_of_maps.list.element.key_value.value' => [1, 2, 3, 4, 5, 6],
+                'list_of_maps.list.element.key_value.key' => [['a', 'b'], ['c', 'd'], ['e', 'f']],
+                'list_of_maps.list.element.key_value.value' => [[1, 2], [3, 4], [5, 6]],
             ],
             $flattener->flattenColumn($column, $row)
         );
@@ -125,6 +153,54 @@ final class FlattenerTest extends TestCase
             [
                 'list_of_structs.list.element.int32' => [1, 2, 3],
                 'list_of_structs.list.element.string' => ['string', 'string', 'string'],
+            ],
+            $flattener->flattenColumn($column, $row)
+        );
+    }
+
+    public function test_flattening_map_of_lists() : void
+    {
+        $column = NestedColumn::map('map_of_lists', MapKey::string(), MapValue::list(ListElement::int32()));
+        $row = [
+            'map_of_lists' => [
+                'a' => [1, 2, 3, 4],
+                'b' => [null, null],
+                'c' => [10, 11],
+            ],
+        ];
+
+        $flattener = new Flattener();
+        $this->assertSame(
+            [
+                'map_of_lists.key_value.key' => ['a', 'b', 'c'],
+                'map_of_lists.key_value.value.list.element' => [[1, 2, 3, 4], [null, null], [10, 11]],
+            ],
+            $flattener->flattenColumn($column, $row)
+        );
+    }
+
+    public function test_flattening_map_of_maps() : void
+    {
+        $column = NestedColumn::map('map_of_maps', MapKey::string(), MapValue::map(MapKey::string(), MapValue::int32()));
+        $row = [
+            'map_of_maps' => [
+                'a' => [
+                    'd' => 1,
+                    'e' => 2,
+                ],
+                'b' => [
+                    'f' => null,
+                ],
+                'c' => null,
+            ],
+        ];
+
+        $flattener = new Flattener();
+        $this->assertSame(
+            [
+                'map_of_maps.key_value.key' => ['a', 'b', 'c'],
+                'map_of_maps.key_value.value.key_value.key' => [['d', 'e'], ['f'], null],
+                'map_of_maps.key_value.value.key_value.value' => [[1, 2], [null], null],
             ],
             $flattener->flattenColumn($column, $row)
         );

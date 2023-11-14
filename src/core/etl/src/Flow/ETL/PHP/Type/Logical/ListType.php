@@ -4,12 +4,11 @@ namespace Flow\ETL\PHP\Type\Logical;
 
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Type;
-use Flow\Serializer\Serializable;
 
 /**
- * @implements Serializable<array{element: ListElement}>
+ * @implements LogicalType<array{element: ListElement}>
  */
-final class ListType implements LogicalType, Serializable
+final class ListType implements LogicalType
 {
     public function __construct(private readonly List\ListElement $element)
     {
@@ -58,8 +57,13 @@ final class ListType implements LogicalType, Serializable
         return true;
     }
 
+    public function nullable() : bool
+    {
+        return false;
+    }
+
     public function toString() : string
     {
-        return $this->element->toString();
+        return 'list<' . $this->element->toString() . '>';
     }
 }

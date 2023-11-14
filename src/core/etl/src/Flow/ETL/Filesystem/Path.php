@@ -314,14 +314,11 @@ final class Path implements Serializable
     }
 
     /**
-     * Credits: https://github.com/Polycademy/upgradephp/blob/65c5a9be1e039bbc1ac83addaeba5bd875d758ea/upgrade.php#L2802.
+     * Modified function from: https://github.com/Polycademy/upgradephp/blob/65c5a9be1e039bbc1ac83addaeba5bd875d758ea/upgrade.php#L2802.
+     * This modified version is detecting double ** and single * in the same pattern.
      */
     private function fnmatch(string $pattern, string $filename, int $flags = 0) : bool
     {
-        if (\function_exists('fnmatch')) {
-            return \fnmatch($pattern, $filename);
-        }
-
         if ($flags & 4) {
             if (($filename[0] === '.') && ($pattern[0] !== '.')) {
                 return false;
@@ -334,21 +331,19 @@ final class Path implements Serializable
             $rxci = 'i';
         }
 
-        $wild = '.';
-
-        if ($flags & 1) {
-            $wild = '[^/' . DIRECTORY_SEPARATOR . DIRECTORY_SEPARATOR . ']';
-        }
-
         static $cmp = [];
 
         if (isset($cmp["{$pattern}+{$flags}"])) {
             $rx = $cmp["{$pattern}+{$flags}"];
         } else {
-            $rx = \preg_quote($pattern);
-            $rx = \strtr($rx, [
-                '\\*' => "{$wild}*?", '\\?' => "{$wild}", '\\[' => '[', '\\]' => ']',
-            ]);
+            $rx = \preg_quote($pattern, null);
+            // Replace '**' with a regex that matches any number of directories
+            $rx = \str_replace('\\*\\*', '(.*)?', $rx);
+            // Replace '*' with a regex that matches any character except for directory separators
+            $rx = \str_replace('\\*', '[^/]*', $rx);
+
+            // Handle other special characters
+            $rx = \strtr($rx, ['\\?' => '[^/]', '\\[' => '[', '\\]' => ']']);
             $rx = '{^' . $rx . '$}' . $rxci;
 
             if (\count($cmp) >= 50) {

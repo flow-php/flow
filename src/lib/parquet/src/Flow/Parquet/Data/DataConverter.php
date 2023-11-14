@@ -44,6 +44,10 @@ final class DataConverter
 
     public function fromParquetType(FlatColumn $column, mixed $data) : mixed
     {
+        if ($data === null) {
+            return null;
+        }
+
         if (\array_key_exists($column->flatPath(), $this->cache)) {
             if ($this->cache[$column->flatPath()] === null) {
                 return $data;

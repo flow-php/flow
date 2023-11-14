@@ -7,7 +7,7 @@ namespace Flow\ETL;
 use Flow\ETL\Cache\LocalFilesystemCache;
 use Flow\ETL\ExternalSort\MemorySort;
 use Flow\ETL\Filesystem\FilesystemStreams;
-use Flow\ETL\Filesystem\FlysystemFS;
+use Flow\ETL\Filesystem\LocalFilesystem;
 use Flow\ETL\Monitoring\Memory\Unit;
 use Flow\ETL\Pipeline\Execution\Processor\FilesystemProcessor;
 use Flow\ETL\Pipeline\Execution\Processors;
@@ -26,6 +26,10 @@ final class ConfigBuilder
 
     private ?string $id;
 
+    private ?Optimizer $optimizer;
+
+    private ?Processors $processors;
+
     private bool $putInputIntoRows;
 
     private ?Serializer $serializer;
@@ -38,6 +42,8 @@ final class ConfigBuilder
         $this->serializer = null;
         $this->filesystem = null;
         $this->putInputIntoRows = false;
+        $this->optimizer = null;
+        $this->processors = null;
     }
 
     /**
@@ -58,7 +64,27 @@ final class ConfigBuilder
             $this->cache,
             \is_string(\getenv(Config::EXTERNAL_SORT_MAX_MEMORY_ENV)) ? Unit::fromString(\getenv(Config::EXTERNAL_SORT_MAX_MEMORY_ENV)) : Unit::fromMb(200)
         );
-        $this->filesystem ??= new FlysystemFS();
+
+        // We need to keep it as a string in order to avoid circular dependency between etl and flysystem adapter
+        $flysystemFSClass = '\Flow\ETL\Adapter\Filesystem\FlysystemFS';
+
+        if (!$this->filesystem instanceof Filesystem) {
+            if (\class_exists($flysystemFSClass)) {
+                /** @var Filesystem $flysystemFS */
+                $flysystemFS = new $flysystemFSClass();
+                $this->filesystem = $flysystemFS;
+            } else {
+                $this->filesystem = new LocalFilesystem();
+            }
+        }
+
+        $this->processors ??= new Processors(
+            new FilesystemProcessor()
+        );
+        $this->optimizer ??= new Optimizer(
+            new Optimizer\LimitOptimization(),
+            new Optimizer\BatchSizeOptimization(batchSize: 1000),
+        );
 
         return new Config(
             $this->id,
@@ -66,12 +92,8 @@ final class ConfigBuilder
             $this->externalSort,
             $this->serializer,
             new FilesystemStreams($this->filesystem),
-            new Processors(
-                new FilesystemProcessor()
-            ),
-            new Optimizer(
-                new Optimizer\LimitOptimization()
-            ),
+            $this->processors,
+            $this->optimizer,
             $this->putInputIntoRows,
             new NativeEntryFactory()
         );
@@ -108,6 +130,20 @@ final class ConfigBuilder
     public function id(string $id) : self
     {
         $this->id = $id;
+
+        return $this;
+    }
+
+    public function optimizer(Optimizer $optimizer) : self
+    {
+        $this->optimizer = $optimizer;
+
+        return $this;
+    }
+
+    public function processors(Processors $processors) : self
+    {
+        $this->processors = $processors;
 
         return $this;
     }

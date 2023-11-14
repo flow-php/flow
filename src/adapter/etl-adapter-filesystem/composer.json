@@ -1,0 +1,42 @@
+{
+    "name": "flow-php/etl-adapter-filesystem",
+    "type": "library",
+    "description": "PHP ETL - Adapter - Filesystem",
+    "keywords": [
+        "etl",
+        "extract",
+        "transform",
+        "load",
+        "parquet",
+        "adapter"
+    ],
+    "require": {
+        "php": "~8.1 || ~8.2",
+        "ext-json": "*",
+        "flow-php/etl": "^0.4 || 1.x-dev",
+        "league/flysystem": "^3.0"
+    },
+    "require-dev": {
+        "league/flysystem-aws-s3-v3": "^3.0",
+        "league/flysystem-azure-blob-storage": "^3.0"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Flow\\": [
+                "src/Flow"
+            ]
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Flow\\": "tests/Flow"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

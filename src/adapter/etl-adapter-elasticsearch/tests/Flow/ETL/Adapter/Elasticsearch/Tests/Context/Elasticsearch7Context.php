@@ -77,4 +77,9 @@ final class Elasticsearch7Context implements ElasticsearchContext
         )
             ->load($rows, new FlowContext(Config::default()));
     }
+
+    public function version() : int
+    {
+        return 7;
+    }
 }

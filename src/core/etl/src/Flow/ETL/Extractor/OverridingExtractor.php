@@ -8,7 +8,7 @@ use Flow\ETL\Extractor;
 
 /**
  * Extractors implementing OverridingExtractor interface overrides one or more extractors.
- * This interface is required by Execution Logical Plan to fully understand execution plan.
+ * This interface is required by Execution Plan / Optimizer to fully understand execution plan.
  *
  * Examples: ChainLoader
  */

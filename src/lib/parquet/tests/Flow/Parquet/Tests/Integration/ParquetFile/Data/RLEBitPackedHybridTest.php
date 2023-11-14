@@ -10,6 +10,36 @@ use PHPUnit\Framework\TestCase;
 
 final class RLEBitPackedHybridTest extends TestCase
 {
+    public function test_() : void
+    {
+        $values = [0, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+        $buffer = '';
+        (new RLEBitPackedHybrid())->encodeHybrid($writer = new BinaryBufferWriter($buffer), $values);
+        $this->assertSame(
+            $values,
+            (new RLEBitPackedHybrid())->decodeHybrid(
+                new BinaryBufferReader($buffer),
+                BitWidth::fromArray($values),
+                \count($values)
+            )
+        );
+    }
+
+    public function test_1() : void
+    {
+        $values = [5, 5, 5, 5, 5, 5, 4, 4, 4, 4];
+        $buffer = '';
+        (new RLEBitPackedHybrid())->encodeHybrid($writer = new BinaryBufferWriter($buffer), $values);
+        $this->assertSame(
+            $values,
+            (new RLEBitPackedHybrid())->decodeHybrid(
+                new BinaryBufferReader($buffer),
+                BitWidth::fromArray($values),
+                \count($values)
+            )
+        );
+    }
+
     public function test_bit_packing_reading_with_extra_bytes_in_the_buffer() : void
     {
         $values = [3, 3, 3, 3];

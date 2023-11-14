@@ -1,6 +1,20 @@
-## [Unreleased] - 2023-11-07
+## [Unreleased] - 2023-11-14
 
 ### Added
+- [#780](https://github.com/flow-php/flow/pull/780) - **Add `MapEntry`** - [@stloyd](https://github.com/stloyd)
+- [#780](https://github.com/flow-php/flow/pull/780) - **Add `EnumType`** - [@stloyd](https://github.com/stloyd)
+- [#795](https://github.com/flow-php/flow/pull/795) - **Window function count** - [@norberttech](https://github.com/norberttech)
+- [#795](https://github.com/flow-php/flow/pull/795) - **Window function dens rank** - [@norberttech](https://github.com/norberttech)
+- [#791](https://github.com/flow-php/flow/pull/791) - **Extracted Flysystem dependency to standalone adapter** - [@norberttech](https://github.com/norberttech)
+- [#788](https://github.com/flow-php/flow/pull/788) - **BatchSizeOptimization** - [@norberttech](https://github.com/norberttech)
+- [#788](https://github.com/flow-php/flow/pull/788) - **httpClient option to Meilisearch loader configuration** - [@norberttech](https://github.com/norberttech)
+- [d92b51](https://github.com/flow-php/flow/commit/d92b514201e989c74acec4b2707b3dbcdce83d85) - **Docker installation manual** - [@norberttech](https://github.com/norberttech)
+- [#571](https://github.com/flow-php/flow/pull/571) - **Dockerfile** - [@norberttech](https://github.com/norberttech)
+- [#778](https://github.com/flow-php/flow/pull/778) - **Dremel to properly shred/assemble nested structures with nullable elements** - [@norberttech](https://github.com/norberttech)
+- [#772](https://github.com/flow-php/flow/pull/772) - **Add `TypeFactory`, `ArrayType` & `NullType`, `ResourceType`, `CallableType`** - [@stloyd](https://github.com/stloyd)
+- [#773](https://github.com/flow-php/flow/pull/773) - **Added parquet commands to flow.phar** - [@norberttech](https://github.com/norberttech)
+- [#765](https://github.com/flow-php/flow/pull/765) - **Add new logical `StructureType`** - [@stloyd](https://github.com/stloyd)
+- [#763](https://github.com/flow-php/flow/pull/763) - **Implement recursive type allowance in `MapType` & `ListType`** - [@stloyd](https://github.com/stloyd)
 - [#764](https://github.com/flow-php/flow/pull/764) - **Added Flow style guide** - [@norberttech](https://github.com/norberttech)
 - [#762](https://github.com/flow-php/flow/pull/762) - **Implement new `MapType` logical type** - [@stloyd](https://github.com/stloyd)
 - [#759](https://github.com/flow-php/flow/pull/759) - **CLI App - Parquet viewer** - [@norberttech](https://github.com/norberttech)
@@ -57,6 +71,15 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#780](https://github.com/flow-php/flow/pull/780) - **Rework `StructureEntry` to use types** - [@stloyd](https://github.com/stloyd)
+- [#780](https://github.com/flow-php/flow/pull/780) - **Rework `NativeEntryFactory` to use types** - [@stloyd](https://github.com/stloyd)
+- [#788](https://github.com/flow-php/flow/pull/788) - **Optimizer can be now configured through ConfigBuilder** - [@norberttech](https://github.com/norberttech)
+- [#788](https://github.com/flow-php/flow/pull/788) - **Execution Plan Processors can be now configured through ConfigBuilder** - [@norberttech](https://github.com/norberttech)
+- [#786](https://github.com/flow-php/flow/pull/786) - **Reduce docker image size** - [@norberttech](https://github.com/norberttech)
+- [#778](https://github.com/flow-php/flow/pull/778) - **Dremel algorithms are no longer working as Generators** - [@norberttech](https://github.com/norberttech)
+- [#777](https://github.com/flow-php/flow/pull/777) - **Make types implementation serializable, mark native types as nullable** - [@stloyd](https://github.com/stloyd)
+- [#773](https://github.com/flow-php/flow/pull/773) - **renamed phar file to flow.phar** - [@norberttech](https://github.com/norberttech)
+- [#770](https://github.com/flow-php/flow/pull/770) - **Rework `ScalarType` to hold optional value** - [@stloyd](https://github.com/stloyd)
 - [#761](https://github.com/flow-php/flow/pull/761) - **Move PHAR runtime into `bin`** - [@stloyd](https://github.com/stloyd)
 - [#728](https://github.com/flow-php/flow/pull/728) - **Extract entry types into new namespace for further re-usage** - [@stloyd](https://github.com/stloyd)
 - [#732](https://github.com/flow-php/flow/pull/732) - **Renamed threadSafe into appendSafe** - [@norberttech](https://github.com/norberttech)
@@ -141,6 +164,11 @@
 - [#584](https://github.com/flow-php/flow/pull/584) - **Adjust `phpunit.xml` to be more efficient** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
+- [#795](https://github.com/flow-php/flow/pull/795) - **Window function rank** - [@norberttech](https://github.com/norberttech)
+- [#789](https://github.com/flow-php/flow/pull/789) - **Fix hardcoded entry name for enum entry with schema** - [@stloyd](https://github.com/stloyd)
+- [cc4bd8](https://github.com/flow-php/flow/commit/cc4bd8d8bfd7540df4b2917eff04255332d32dec) - **incorrect tags in docker building workflows** - [@norberttech](https://github.com/norberttech)
+- [#779](https://github.com/flow-php/flow/pull/779) - **Covered additional parquet edge cases** - [@norberttech](https://github.com/norberttech)
+- [523741](https://github.com/flow-php/flow/commit/523741a7f002ccd2647fbbdc123a1f082689f9aa) - **broken phar builds** - [@norberttech](https://github.com/norberttech)
 - [#766](https://github.com/flow-php/flow/pull/766) - **Fix wrong namespace in PHAR runtime file** - [@stloyd](https://github.com/stloyd)
 - [eb7cc8](https://github.com/flow-php/flow/commit/eb7cc8c466c2a4ba3f71bc57253e2bca94a2e7f2) - **Reverted snappy compressor if statements order** - [@norberttech](https://github.com/norberttech)
 - [#759](https://github.com/flow-php/flow/pull/759) - **missing dependencies in parquet lib** - [@norberttech](https://github.com/norberttech)
@@ -181,11 +209,16 @@
 - [#583](https://github.com/flow-php/flow/pull/583) - **Fix warning when bytes are missing in Parquet `BinaryBufferReader`** - [@stloyd](https://github.com/stloyd)
 
 ### Updated
+- [a32cc4](https://github.com/flow-php/flow/commit/a32cc46f4600168bde575bd9ae5b14af64444476) - **pr-check.yml** - [@norberttech](https://github.com/norberttech)
 - [02e1c4](https://github.com/flow-php/flow/commit/02e1c4c223d0986b7080cb5a45938b598469934b) - **style_guide.md** - [@norberttech](https://github.com/norberttech)
 - [e641e7](https://github.com/flow-php/flow/commit/e641e7eceaac1a41d84c12b4c1058f40419750ee) - **README.md** - [@norberttech](https://github.com/norberttech)
 - [c9fb26](https://github.com/flow-php/flow/commit/c9fb26dc2e0558c0f33b6097286e4dc6e2799d3f) - **test-benchmark.yml** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#776](https://github.com/flow-php/flow/pull/776) - **Remove `CollectionEntry`** - [@stloyd](https://github.com/stloyd)
+- [#794](https://github.com/flow-php/flow/pull/794) - **Removed async processing** - [@norberttech](https://github.com/norberttech)
+- [#794](https://github.com/flow-php/flow/pull/794) - **DataFrame::pipeline method** - [@norberttech](https://github.com/norberttech)
+- [#787](https://github.com/flow-php/flow/pull/787) - **Removed DSL functions: `datetime_string()`, `json_string()`** - [@stloyd](https://github.com/stloyd)
 - [#750](https://github.com/flow-php/flow/pull/750) - **BufferExtractor** - [@norberttech](https://github.com/norberttech)
 - [#750](https://github.com/flow-php/flow/pull/750) - **Batch Size parameter from MemoryExtractor** - [@norberttech](https://github.com/norberttech)
 - [#733](https://github.com/flow-php/flow/pull/733) - **Loaders are no longer allowing for setting chunk size** - [@norberttech](https://github.com/norberttech)

@@ -7,6 +7,12 @@ namespace Flow\ETL\Tests\Unit\Row\Factory;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
+use Flow\ETL\PHP\Type\Logical\ListType;
+use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
+use Flow\ETL\PHP\Type\Logical\StructureType;
+use Flow\ETL\PHP\Type\Native\ObjectType;
+use Flow\ETL\PHP\Type\Native\ScalarType;
+use Flow\ETL\Row\Entry\StructureEntry;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Tests\Fixtures\Enum\BackedIntEnum;
@@ -42,11 +48,15 @@ final class NativeEntryFactoryTest extends TestCase
         ];
     }
 
-    public function test_array() : void
+    public function test_array_structure() : void
     {
         $this->assertEquals(
-            Entry::structure('e', Entry::int('a', 1), Entry::int('b', 2)),
-            (new NativeEntryFactory())->create('e', ['a' => 1, 'b' => 2])
+            new StructureEntry(
+                'e',
+                ['a' => 1, 'b' => '2'],
+                new StructureType(new StructureElement('a', ScalarType::integer()), new StructureElement('b', ScalarType::string()))
+            ),
+            (new NativeEntryFactory())->create('e', ['a' => 1, 'b' => '2'])
         );
     }
 
@@ -78,7 +88,7 @@ final class NativeEntryFactoryTest extends TestCase
     public function test_conversion_to_different_type_with_schema() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("Can't convert value into entry \"e\"");
+        $this->expectExceptionMessage("Field \"e\" conversion exception. Flow\ETL\DSL\Entry::string(): Argument #2 (\$value) must be of type string, int given");
 
         (new NativeEntryFactory())
             ->create('e', 1, new Schema(Schema\Definition::string('e')));
@@ -95,7 +105,7 @@ final class NativeEntryFactoryTest extends TestCase
     public function test_datetime_string_with_schema() : void
     {
         $this->assertEquals(
-            Entry::datetime_string('e', '2022-01-01 00:00:00 UTC'),
+            Entry::datetime('e', '2022-01-01 00:00:00 UTC'),
             (new NativeEntryFactory())
                 ->create('e', '2022-01-01 00:00:00 UTC', new Schema(Schema\Definition::dateTime('e')))
         );
@@ -113,10 +123,10 @@ final class NativeEntryFactoryTest extends TestCase
     public function test_enum_invalid_value_with_schema() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("Value \"not_valid\" can't be converted to " . BackedIntEnum::class . ' enum');
+        $this->expectExceptionMessage("Value \"invalid\" can't be converted to " . BackedIntEnum::class . ' enum');
 
         (new NativeEntryFactory())
-            ->create('e', 'not_valid', new Schema(Schema\Definition::enum('e', BackedIntEnum::class)));
+            ->create('e', 'invalid', new Schema(Schema\Definition::enum('e', BackedIntEnum::class)));
     }
 
     public function test_enum_with_schema() : void
@@ -176,14 +186,6 @@ final class NativeEntryFactoryTest extends TestCase
         );
     }
 
-    public function test_json_array_with_schema() : void
-    {
-        $this->assertEquals(
-            Entry::json('e', [['id' => 1]]),
-            (new NativeEntryFactory())->create('e', [['id' => 1]], new Schema(Schema\Definition::json('e')))
-        );
-    }
-
     public function test_json_object_array_with_schema() : void
     {
         $this->assertEquals(
@@ -192,11 +194,27 @@ final class NativeEntryFactoryTest extends TestCase
         );
     }
 
+    public function test_json_string() : void
+    {
+        $this->assertEquals(
+            Entry::json('e', '{"id": 1}'),
+            (new NativeEntryFactory())->create('e', '{"id": 1}')
+        );
+    }
+
     public function test_json_string_with_schema() : void
     {
         $this->assertEquals(
-            Entry::json_string('e', '{"id": 1}'),
+            Entry::json('e', '{"id": 1}'),
             (new NativeEntryFactory())->create('e', '{"id": 1}', new Schema(Schema\Definition::json('e')))
+        );
+    }
+
+    public function test_json_with_schema() : void
+    {
+        $this->assertEquals(
+            Entry::json('e', [['id' => 1]]),
+            (new NativeEntryFactory())->create('e', [['id' => 1]], new Schema(Schema\Definition::json('e')))
         );
     }
 
@@ -204,16 +222,16 @@ final class NativeEntryFactoryTest extends TestCase
     {
         $this->assertEquals(
             Entry::list_of_int('e', [1, 2, 3]),
-            (new NativeEntryFactory())->create('e', [1, 2, 3], new Schema(Schema\Definition::list('e', ListElement::integer())))
+            (new NativeEntryFactory())->create('e', [1, 2, 3], new Schema(Schema\Definition::list('e', new ListType(ListElement::integer()))))
         );
     }
 
     public function test_list_int_with_schema_but_string_list() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Field "e" conversion exception. Expected list of integer got different types.');
+        $this->expectExceptionMessage('Field "e" conversion exception. Expected list<integer> got different types: list<string>');
 
-        (new NativeEntryFactory())->create('e', ['1', '2', '3'], new Schema(Schema\Definition::list('e', ListElement::integer())));
+        (new NativeEntryFactory())->create('e', ['1', '2', '3'], new Schema(Schema\Definition::list('e', new ListType(ListElement::integer()))));
     }
 
     public function test_list_of_datetime_with_schema() : void
@@ -221,14 +239,14 @@ final class NativeEntryFactoryTest extends TestCase
         $this->assertEquals(
             Entry::list_of_datetime('e', $list = [new \DateTimeImmutable('now'), new \DateTimeImmutable('tomorrow')]),
             (new NativeEntryFactory())
-                ->create('e', $list, new Schema(Schema\Definition::list('e', ListElement::object(\DateTimeInterface::class))))
+                ->create('e', $list, new Schema(Schema\Definition::list('e', new ListType(ListElement::object(\DateTimeImmutable::class)))))
         );
     }
 
     public function test_list_of_datetimes() : void
     {
         $this->assertEquals(
-            Entry::list_of_objects('e', \DateTimeInterface::class, $list = [new \DateTimeImmutable(), new \DateTime()]),
+            Entry::list_of_objects('e', \DateTimeImmutable::class, $list = [new \DateTimeImmutable(), new \DateTimeImmutable()]),
             (new NativeEntryFactory())->create('e', $list)
         );
     }
@@ -249,7 +267,7 @@ final class NativeEntryFactoryTest extends TestCase
                 ->create(
                     'e',
                     ['2022-01-01 00:00:00 UTC', '2022-01-01 00:00:00 UTC'],
-                    new Schema(Schema\Definition::list('e', ListElement::object(\DateTimeInterface::class)))
+                    new Schema(Schema\Definition::list('e', new ListType(ListElement::object(\DateTimeImmutable::class))))
                 )
         );
     }
@@ -257,16 +275,29 @@ final class NativeEntryFactoryTest extends TestCase
     public function test_nested_structure() : void
     {
         $this->assertEquals(
-            Entry::structure(
+            new StructureEntry(
                 'address',
-                Entry::string('city', 'Krakow'),
-                Entry::structure(
-                    'geo',
-                    Entry::float('lat', 50.06143),
-                    Entry::float('lon', 19.93658)
+                [
+                    'city' => 'Krakow',
+                    'geo' => [
+                        'lat' => 50.06143,
+                        'lon' => 19.93658,
+                    ],
+                    'street' => 'Floriańska',
+                    'zip' => '31-021',
+                ],
+                new StructureType(
+                    new StructureElement('city', ScalarType::string()),
+                    new StructureElement(
+                        'geo',
+                        new StructureType(
+                            new StructureElement('lat', ScalarType::float()),
+                            new StructureElement('lon', ScalarType::float())
+                        ),
+                    ),
+                    new StructureElement('street', ScalarType::string()),
+                    new StructureElement('zip', ScalarType::string()),
                 ),
-                Entry::string('street', 'Floriańska'),
-                Entry::string('zip', '31-021')
             ),
             (new NativeEntryFactory())->create('address', [
                 'city' => 'Krakow',
@@ -314,7 +345,7 @@ final class NativeEntryFactoryTest extends TestCase
         $this->assertEquals(
             Entry::object('e', $object = new \ArrayObject([1, 2, 3])),
             (new NativeEntryFactory())
-                ->create('e', $object, new Schema(Schema\Definition::object('e')))
+                ->create('e', $object, new Schema(Schema\Definition::object('e', ObjectType::fromObject($object))))
         );
     }
 
@@ -337,13 +368,17 @@ final class NativeEntryFactoryTest extends TestCase
     public function test_structure() : void
     {
         $this->assertEquals(
-            Entry::structure(
+            new StructureEntry(
                 'address',
-                Entry::string('city', 'Krakow'),
-                Entry::string('street', 'Floriańska'),
-                Entry::string('zip', '31-021')
+                ['id' => 1, 'city' => 'Krakow', 'street' => 'Floriańska', 'zip' => '31-021'],
+                new StructureType(
+                    new StructureElement('id', ScalarType::integer()),
+                    new StructureElement('city', ScalarType::string()),
+                    new StructureElement('street', ScalarType::string()),
+                    new StructureElement('zip', ScalarType::string())
+                )
             ),
-            (new NativeEntryFactory())->create('address', ['city' => 'Krakow', 'street' => 'Floriańska', 'zip' => '31-021'])
+            (new NativeEntryFactory())->create('address', ['id' => 1, 'city' => 'Krakow', 'street' => 'Floriańska', 'zip' => '31-021'])
         );
     }
 

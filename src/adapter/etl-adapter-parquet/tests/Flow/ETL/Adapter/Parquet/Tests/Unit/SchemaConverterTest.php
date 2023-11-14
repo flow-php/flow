@@ -6,9 +6,19 @@ namespace Flow\ETL\Adapter\Parquet\Tests\Unit;
 
 use Flow\ETL\Adapter\Parquet\SchemaConverter;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\PHP\Type\Logical\List\ListElement;
+use Flow\ETL\PHP\Type\Logical\ListType;
+use Flow\ETL\PHP\Type\Logical\Map\MapKey;
+use Flow\ETL\PHP\Type\Logical\Map\MapValue;
+use Flow\ETL\PHP\Type\Logical\MapType;
+use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
+use Flow\ETL\PHP\Type\Logical\StructureType;
+use Flow\ETL\PHP\Type\Native\ObjectType;
+use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\Row\Schema;
 use Flow\Parquet\ParquetFile\Schema as ParquetSchema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use PHPUnit\Framework\TestCase;
 
 final class SchemaConverterTest extends TestCase
@@ -32,7 +42,10 @@ final class SchemaConverterTest extends TestCase
                 FlatColumn::string('string'),
                 FlatColumn::float('float'),
                 FlatColumn::dateTime('datetime'),
-                FlatColumn::json('json')
+                FlatColumn::json('json'),
+                NestedColumn::list('list', ParquetSchema\ListElement::string()),
+                NestedColumn::struct('structure', [FlatColumn::string('a')]),
+                NestedColumn::map('map', ParquetSchema\MapKey::string(), ParquetSchema\MapValue::int64())
             ),
             (new SchemaConverter())->toParquet(new Schema(
                 Schema\Definition::integer('integer'),
@@ -41,6 +54,9 @@ final class SchemaConverterTest extends TestCase
                 Schema\Definition::float('float'),
                 Schema\Definition::dateTime('datetime'),
                 Schema\Definition::json('json'),
+                Schema\Definition::list('list', new ListType(ListElement::string())),
+                Schema\Definition::structure('structure', new StructureType(new StructureElement('a', ScalarType::string()))),
+                Schema\Definition::map('map', new MapType(MapKey::string(), MapValue::integer()))
             ))
         );
     }
@@ -48,10 +64,10 @@ final class SchemaConverterTest extends TestCase
     public function test_convert_object_entry_to_parquet_array() : void
     {
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage("Flow\ETL\Row\Entry\ObjectEntry is not supported.");
+        $this->expectExceptionMessage("Flow\ETL\Row\Entry\ObjectEntry is not yet supported.");
 
         (new SchemaConverter())->toParquet(new Schema(
-            Schema\Definition::object('object')
+            Schema\Definition::object('object', new ObjectType(\stdClass::class, false))
         ));
     }
 }

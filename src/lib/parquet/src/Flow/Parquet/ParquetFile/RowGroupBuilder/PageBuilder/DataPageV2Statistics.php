@@ -2,6 +2,7 @@
 
 namespace Flow\Parquet\ParquetFile\RowGroupBuilder\PageBuilder;
 
+use function Flow\Parquet\array_flatten;
 use Flow\Parquet\Data\ObjectToString;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\Statistics\Comparator;
 
@@ -30,6 +31,10 @@ final class DataPageV2Statistics
 
     public function add(string|int|float|null|array|bool|object $value) : void
     {
+        if (\is_array($value)) {
+            $value = array_flatten($value);
+        }
+
         if (\is_array($value)) {
             $this->valuesCount += \count($value);
         } else {

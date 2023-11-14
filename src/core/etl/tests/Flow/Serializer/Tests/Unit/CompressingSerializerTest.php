@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Flow\Serializer\Tests\Unit;
 
 use Flow\ETL\DSL\Entry;
+use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
+use Flow\ETL\PHP\Type\Logical\StructureType;
+use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\Serializer\CompressingSerializer;
@@ -34,8 +37,11 @@ final class CompressingSerializerTest extends TestCase
                     Entry::object('object', new \ArrayIterator([1, 2, 3])),
                     Entry::structure(
                         'struct',
-                        Entry::integer('integer', 1),
-                        Entry::string('string', 'string'),
+                        ['integer' => 1, 'string' => 'string'],
+                        new StructureType(
+                            new StructureElement('integer', ScalarType::integer()),
+                            new StructureElement('string', ScalarType::string())
+                        )
                     )
                 ),
                 \range(0, 100)

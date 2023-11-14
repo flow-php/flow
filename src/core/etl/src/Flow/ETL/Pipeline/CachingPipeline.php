@@ -10,7 +10,7 @@ use Flow\ETL\Loader;
 use Flow\ETL\Pipeline;
 use Flow\ETL\Transformer;
 
-final class CachingPipeline implements Pipeline
+final class CachingPipeline implements OverridingPipeline, Pipeline
 {
     public function __construct(private readonly Pipeline $pipeline, private readonly ?string $id = null)
     {
@@ -38,9 +38,20 @@ final class CachingPipeline implements Pipeline
         return $this->pipeline->has($transformerClass);
     }
 
-    public function isAsync() : bool
+    /**
+     * @return array<Pipeline>
+     */
+    public function pipelines() : array
     {
-        return false;
+        $pipelines = [];
+
+        if ($this->pipeline instanceof OverridingPipeline) {
+            $pipelines = $this->pipeline->pipelines();
+        }
+
+        $pipelines[] = $this->pipeline;
+
+        return $pipelines;
     }
 
     public function pipes() : Pipes

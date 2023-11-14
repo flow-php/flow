@@ -65,12 +65,12 @@ Affected extractors:
 - DoctrineDBAL - rows_in_batch wasn't removed but now results are thrown row by row, instead of whole page. 
 - GoogleSheet
 
-### 7) GoogleSheetExtractor 
+### 7) `GoogleSheetExtractor`
 
 Argument `$rows_in_batch` was renamed to `$rows_per_page` which no longer determines the size of the batch, but the size of the page that will be fetched from Google API. 
 Rows are yielded one by one. 
 
-### 8) DataFrame::threadSafe() method was replaced by DataFrame::appendSafe()
+### 8) `DataFrame::threadSafe()` method was replaced by `DataFrame::appendSafe()`
 
 `DataFrame::appendSafe()` is doing exactly the same thing as the old method, it's just more 
 descriptive and self-explanatory. 
@@ -80,6 +80,25 @@ It's no longer mandatory to set this flat to true when using SaveMode::APPEND, i
 
 Loaders are no longer accepting chunk_size parameter, from now in order to control 
 the number of rows saved at once use `DataFrame::batchSize(int $size)` method.
+
+### 10) Removed DSL functions: `datetime_string()`, `json_string()`
+
+Those functions were removed in favor of accepting string values in related DSL functions:
+- `datetime_string()` => `datetime()`,
+- `json_string()` => `json()` & `json_object()`
+
+### 11) Removed Asynchronous Processing
+
+More details can be found in [this issue](https://github.com/flow-php/flow/issues/793). 
+
+- Removed etl-adapter-amphp
+- Removed etl-adapter-reactphp
+- Removed LocalSocketPipeline
+- Removed `DataFrame::pipeline()` 
+
+### 12) `CollectionEntry` removal
+
+After adding native & logical types into the Flow, we remove the `CollectionEntry` as obsolete. New types that cover it better are: `ListType`, `MapType` & `StructureType` along with related new entry types.
 
 ---
 

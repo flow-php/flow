@@ -2,6 +2,6 @@
 
 namespace Flow\Parquet\Exception;
 
-final class DataConversionException extends \Flow\ETL\Exception\RuntimeException
+final class DataConversionException extends RuntimeException
 {
 }

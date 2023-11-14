@@ -29,9 +29,8 @@ final class NotEmpty implements Constraint
     {
         return match ($entry::class) {
             Entry\ArrayEntry::class,
-            Entry\CollectionEntry::class,
             Entry\StructureEntry::class,
-            Entry\ListEntry::class => (bool) \count($entry->value()),
+            Entry\ListEntry::class => 0 !== \count($entry->value()),
             Entry\StringEntry::class => $entry->value() !== '',
             Entry\JsonEntry::class => !\in_array($entry->value(), ['', '[]', '{}'], true),
             default => true, // everything else can't be empty

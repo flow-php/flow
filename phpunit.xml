@@ -26,7 +26,6 @@
   </php>
   <testsuites>
     <testsuite name="unit">
-      <directory>src/adapter/etl-adapter-amphp/tests/Flow/ETL/Adapter/AMPHP/Tests/Unit</directory>
       <directory>src/adapter/etl-adapter-avro/tests/Flow/ETL/Adapter/Avro/Tests/Unit</directory>
       <directory>src/adapter/etl-adapter-chartjs/tests/Flow/ETL/Adapter/ChartJS/Tests/Unit</directory>
       <directory>src/adapter/etl-adapter-doctrine/tests/Flow/ETL/Adapter/Doctrine/Tests/Unit</directory>
@@ -34,7 +33,6 @@
       <directory>src/adapter/etl-adapter-http/tests/Flow/ETL/Adapter/HTTP/Tests/Unit</directory>
       <directory>src/adapter/etl-adapter-logger/tests/Flow/ETL/Adapter/Logger/Tests/Unit</directory>
       <directory>src/adapter/etl-adapter-parquet/tests/Flow/ETL/Adapter/Parquet/Tests/Unit</directory>
-      <directory>src/adapter/etl-adapter-reactphp/tests/Flow/ETL/Adapter/ReactPHP/Tests/Unit</directory>
       <directory>src/core/etl/tests/Flow/ETL/Tests/Unit</directory>
       <directory>src/lib/array-dot/tests/Flow/ArrayDot/Tests/Unit</directory>
       <directory>src/lib/doctrine-dbal-bulk/tests/Flow/Doctrine/Bulk/Tests/Unit</directory>
@@ -42,14 +40,13 @@
       <directory>src/lib/parquet/tests/Flow/Parquet/Tests/Unit</directory>
     </testsuite>
     <testsuite name="integration-io">
-      <directory>src/adapter/etl-adapter-amphp/tests/Flow/ETL/Adapter/AMPHP/Tests/Integration</directory>
       <directory>src/adapter/etl-adapter-avro/tests/Flow/ETL/Adapter/Avro/Tests/Integration</directory>
       <directory>src/adapter/etl-adapter-chartjs/tests/Flow/ETL/Adapter/ChartJS/Tests/Integration</directory>
       <directory>src/adapter/etl-adapter-csv/tests/Flow/ETL/Adapter/CSV/Tests/Integration</directory>
+      <directory>src/adapter/etl-adapter-filesystem/tests/Flow/ETL/Adapter/Filesystem/Tests/Integration</directory>
       <directory>src/adapter/etl-adapter-http/tests/Flow/ETL/Adapter/HTTP/Tests/Integration</directory>
       <directory>src/adapter/etl-adapter-json/tests/Flow/ETL/Adapter/JSON/Tests/Integration</directory>
       <directory>src/adapter/etl-adapter-parquet/tests/Flow/ETL/Adapter/Parquet/Tests/Integration</directory>
-      <directory>src/adapter/etl-adapter-reactphp/tests/Flow/ETL/Adapter/ReactPHP/Tests/Integration</directory>
       <directory>src/adapter/etl-adapter-text/tests/Flow/ETL/Adapter/Text/Tests/Integration</directory>
       <directory>src/adapter/etl-adapter-xml/tests/Flow/ETL/Adapter/XML/Tests/Integration</directory>
       <directory>src/core/etl/tests/Flow/ETL/Tests/Integration</directory>

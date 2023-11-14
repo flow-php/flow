@@ -14,14 +14,27 @@ final class Rank implements WindowFunction
     {
         $rank = 1;
 
-        foreach ($partition->sortBy(...$windowSpec->order()) as $partitionRow) {
-            if ($partitionRow->isEqual($row)) {
-                return $rank;
-            }
+        $orderBy = $windowSpec->order();
 
-            $rank++;
+        if (\count($orderBy) > 1) {
+            throw new \RuntimeException('Rank window function supports only one order by column');
         }
 
-        return null;
+        if (\count($orderBy) === 0) {
+            throw new \RuntimeException('Rank window function requires to be ordered by one column');
+        }
+
+        $value = $row->valueOf($orderBy[0]->name());
+
+        foreach ($partition->sortBy(...$windowSpec->order()) as $partitionRow) {
+
+            $partitionValue = $partitionRow->valueOf($orderBy[0]->name());
+
+            if ($value < $partitionValue) {
+                $rank++;
+            }
+        }
+
+        return $rank;
     }
 }

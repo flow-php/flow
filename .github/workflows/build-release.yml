@@ -1,4 +1,4 @@
-name: Build Release Artifact
+name: Build Release
 
 on:
   release:
@@ -6,8 +6,8 @@ on:
       - published
 
 jobs:
-  build-release-artifact:
-    name: "Build Release Artifacts"
+  build-release:
+    name: "Build Release"
     runs-on: ${{ matrix.operating-system }}
     strategy:
       matrix:
@@ -51,8 +51,8 @@ jobs:
 
       - name: "Validate Flow PHAR"
         run: |
-          ./build/flow-php.phar --version
-          ./build/flow-php.phar examples/topics/transformations/array_expand.php
+          ./build/flow.phar --version
+          ./build/flow.phar run examples/topics/transformations/array_expand.php
 
       - name: "Import GPG Key"
         uses: crazy-max/ghaction-import-gpg@72b6676b71ab476b77e676928516f6982eef7a41
@@ -69,8 +69,34 @@ jobs:
           --passphrase="${{ secrets.GPG_PASSPHRASE }}"
           --pinentry-mode="loopback"
           --detach-sign
-          --output="./build/flow-php.phar.asc"
-          ./build/flow-php.phar
+          --output="./build/flow.phar.asc"
+          ./build/flow.phar
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ghcr.io/flow-php/flow:${{ github.ref_name }}
+          target: flow
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: "Prepare artifact name"
         run: |
@@ -83,5 +109,5 @@ jobs:
         if: ${{startsWith(github.ref, 'refs/tags/') }}
         with:
           files: |
-            build/flow-php.phar
-            build/flow-php.phar.asc
+            build/flow.phar
+            build/flow.phar.asc

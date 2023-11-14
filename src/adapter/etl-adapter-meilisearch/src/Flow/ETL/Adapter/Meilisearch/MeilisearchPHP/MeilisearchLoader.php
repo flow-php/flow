@@ -9,12 +9,14 @@ use Flow\ETL\Loader;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Meilisearch\Client;
+use Psr\Http\Client\ClientInterface;
 
 /**
  * @implements Loader<array{
  *  config: array{
  *     url: string,
- *     apiKey: string
+ *     apiKey: string,
+ *     httpClient: ?ClientInterface
  *  },
  *  index: string,
  *  method: string
@@ -27,7 +29,7 @@ final class MeilisearchLoader implements Loader
     private string $method;
 
     /**
-     * @param array{url: string, apiKey: string} $config
+     * @param array{url: string, apiKey: string, httpClient: ?ClientInterface} $config
      */
     public function __construct(
         private array $config,
@@ -37,7 +39,7 @@ final class MeilisearchLoader implements Loader
     }
 
     /**
-     * @param array{url: string, apiKey: string} $config
+     * @param array{url: string, apiKey: string, httpClient: ?ClientInterface} $config
      */
     public static function update(array $config, string $index) : self
     {
@@ -83,14 +85,13 @@ final class MeilisearchLoader implements Loader
         ))->toArray();
 
         $promise = $this->client()->index($this->index)->updateDocuments($dataCollection);
-
         $this->client()->waitForTask($promise['taskUid']);
     }
 
     private function client() : Client
     {
         if ($this->client === null) {
-            $this->client = new Client($this->config['url'], $this->config['apiKey']);
+            $this->client = new Client($this->config['url'], $this->config['apiKey'], $this->config['httpClient'] ?? null);
         }
 
         return $this->client;

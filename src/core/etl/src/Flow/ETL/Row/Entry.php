@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row;
 
+use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Schema\Definition;
 use Flow\Serializer\Serializable;
 
@@ -35,6 +36,8 @@ interface Entry extends Serializable
     public function rename(string $name) : self;
 
     public function toString() : string;
+
+    public function type() : Type;
 
     /**
      * @return TValue

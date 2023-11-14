@@ -11,7 +11,7 @@ use Flow\ETL\Loader;
 use Flow\ETL\Pipeline;
 use Flow\ETL\Transformer;
 
-final class GroupByPipeline implements Pipeline
+final class GroupByPipeline implements OverridingPipeline, Pipeline
 {
     private readonly Pipeline $nextPipeline;
 
@@ -47,9 +47,19 @@ final class GroupByPipeline implements Pipeline
         return $this->pipeline->has($transformerClass);
     }
 
-    public function isAsync() : bool
+    /**
+     * @return array<Pipeline>
+     */
+    public function pipelines() : array
     {
-        return $this->pipeline->isAsync();
+        $pipelines = [];
+
+        if ($this->pipeline instanceof OverridingPipeline) {
+            $pipelines = $this->pipeline->pipelines();
+        }
+        $pipelines[] = $this->pipeline;
+
+        return $pipelines;
     }
 
     public function pipes() : Pipes

@@ -14,6 +14,9 @@ use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Flow;
 use Flow\ETL\FlowContext;
+use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
+use Flow\ETL\PHP\Type\Logical\StructureType;
+use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Test\FilesystemTestHelper;
@@ -167,15 +170,26 @@ final class AvroTest extends TestCase
                             Entry::list_of_datetime('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()]),
                             Entry::structure(
                                 'address',
-                                Entry::string('street', 'street_' . $i),
-                                Entry::string('city', 'city_' . $i),
-                                Entry::string('zip', 'zip_' . $i),
-                                Entry::string('country', 'country_' . $i),
-                                Entry::structure(
-                                    'location',
-                                    Entry::float('lat', 1.5),
-                                    Entry::float('lon', 1.5)
-                                )
+                                [
+                                    'street' => 'street_' . $i,
+                                    'city' => 'city_' . $i,
+                                    'zip' => 'zip_' . $i,
+                                    'country' => 'country_' . $i,
+                                    'location' => ['lat' => 1.5, 'lon' => 1.5],
+                                ],
+                                new StructureType(
+                                    new StructureElement('street', ScalarType::string()),
+                                    new StructureElement('city', ScalarType::string()),
+                                    new StructureElement('zip', ScalarType::string()),
+                                    new StructureElement('country', ScalarType::string()),
+                                    new StructureElement(
+                                        'location',
+                                        new StructureType(
+                                            new StructureElement('lat', ScalarType::float()),
+                                            new StructureElement('lon', ScalarType::float()),
+                                        )
+                                    )
+                                ),
                             ),
                         );
                     }, \range(1, 100))

@@ -53,11 +53,6 @@ final class SynchronousPipeline implements Pipeline
         return $this->pipes->has($transformerClass);
     }
 
-    public function isAsync() : bool
-    {
-        return false;
-    }
-
     public function pipes() : Pipes
     {
         return $this->pipes;

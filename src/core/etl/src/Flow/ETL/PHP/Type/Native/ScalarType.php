@@ -7,31 +7,99 @@ namespace Flow\ETL\PHP\Type\Native;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Type;
 
-enum ScalarType : string implements Type
+/**
+ * @implements NativeType<array{value: string, nullable: bool}>
+ */
+final class ScalarType implements NativeType
 {
-    case boolean = 'boolean';
-    case float = 'float';
-    case integer = 'integer';
-    case string = 'string';
+    public const BOOLEAN = 'boolean';
 
-    public static function fromString(string $value) : self
+    public const FLOAT = 'float';
+
+    public const INTEGER = 'integer';
+
+    public const STRING = 'string';
+
+    private readonly string $value;
+
+    private function __construct(string $value, private readonly bool $nullable)
     {
-        return match (\strtolower($value)) {
-            'integer' => self::integer,
-            'float', 'double' => self::float,
-            'string' => self::string,
-            'boolean' => self::boolean,
+        $this->value = match (\strtolower($value)) {
+            'integer' => self::INTEGER,
+            'float', 'double' => self::FLOAT,
+            'string' => self::STRING,
+            'boolean' => self::BOOLEAN,
             default => throw new InvalidArgumentException("Unsupported scalar type: {$value}")
         };
     }
 
+    public static function boolean(bool $nullable = false) : self
+    {
+        return new self(self::BOOLEAN, $nullable);
+    }
+
+    public static function float(bool $nullable = false) : self
+    {
+        return new self(self::FLOAT, $nullable);
+    }
+
+    public static function fromString(string $value, bool $nullable = false) : self
+    {
+        return new self($value, $nullable);
+    }
+
+    public static function integer(bool $nullable = false) : self
+    {
+        return new self(self::INTEGER, $nullable);
+    }
+
+    public static function string(bool $nullable = false) : self
+    {
+        return new self(self::STRING, $nullable);
+    }
+
+    public function __serialize() : array
+    {
+        return ['value' => $this->value, 'nullable' => $this->nullable];
+    }
+
+    public function __unserialize(array $data) : void
+    {
+        $this->value = $data['value'];
+        $this->nullable = $data['nullable'];
+    }
+
+    public function isBoolean() : bool
+    {
+        return $this->value === self::BOOLEAN;
+    }
+
     public function isEqual(Type $type) : bool
     {
-        return $type instanceof self && $type->value === $this->value;
+        return $type instanceof self && $type->value === $this->value && $this->nullable === $type->nullable;
+    }
+
+    public function isFloat() : bool
+    {
+        return $this->value === self::FLOAT;
+    }
+
+    public function isInteger() : bool
+    {
+        return $this->value === self::INTEGER;
+    }
+
+    public function isString() : bool
+    {
+        return $this->value === self::STRING;
     }
 
     public function isValid(mixed $value) : bool
     {
+        if (null === $value && $this->nullable) {
+            return true;
+        }
+
         if (!\is_scalar($value)) {
             return false;
         }
@@ -50,8 +118,18 @@ enum ScalarType : string implements Type
         return true;
     }
 
+    public function isValidArrayKey() : bool
+    {
+        return $this->isString() || $this->isInteger();
+    }
+
+    public function nullable() : bool
+    {
+        return $this->nullable;
+    }
+
     public function toString() : string
     {
-        return $this->value;
+        return ($this->nullable ? '?' : '') . $this->value;
     }
 }
