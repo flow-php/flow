@@ -1,6 +1,7 @@
-## [Unreleased] - 2023-11-12
+## [Unreleased] - 2023-11-14
 
 ### Added
+- [#791](https://github.com/flow-php/flow/pull/791) - **Extracted Flysystem dependency to standalone adapter** - [@norberttech](https://github.com/norberttech)
 - [#788](https://github.com/flow-php/flow/pull/788) - **BatchSizeOptimization** - [@norberttech](https://github.com/norberttech)
 - [#788](https://github.com/flow-php/flow/pull/788) - **httpClient option to Meilisearch loader configuration** - [@norberttech](https://github.com/norberttech)
 - [d92b51](https://github.com/flow-php/flow/commit/d92b514201e989c74acec4b2707b3dbcdce83d85) - **Docker installation manual** - [@norberttech](https://github.com/norberttech)
