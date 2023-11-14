@@ -22,6 +22,11 @@ use Flow\ETL\GroupBy\Aggregation;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Loader;
 use Flow\ETL\Memory\ArrayMemory;
+use Flow\ETL\PHP\Type\Logical\List\ListElement;
+use Flow\ETL\PHP\Type\Logical\ListType;
+use Flow\ETL\PHP\Type\Logical\Map\MapKey;
+use Flow\ETL\PHP\Type\Logical\Map\MapValue;
+use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\PHP\Type\Native\ScalarType;
@@ -31,6 +36,8 @@ use Flow\ETL\Row\Entry\BooleanEntry;
 use Flow\ETL\Row\Entry\DateTimeEntry;
 use Flow\ETL\Row\Entry\FloatEntry;
 use Flow\ETL\Row\Entry\IntegerEntry;
+use Flow\ETL\Row\Entry\ListEntry;
+use Flow\ETL\Row\Entry\MapEntry;
 use Flow\ETL\Row\Entry\NullEntry;
 use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Row\Entry\StructureEntry;
@@ -341,7 +348,7 @@ final class DataFrameTest extends TestCase
                                 new FloatEntry('price', 123.45),
                                 new IntegerEntry('100', 100),
                                 new BooleanEntry('deleted', false),
-                                new DateTimeEntry('created-at', $createdAt = new \DateTimeImmutable('2020-07-13 15:00')),
+                                new DateTimeEntry('created-at', new \DateTimeImmutable('2020-07-13 15:00')),
                                 new NullEntry('phase'),
                                 new ArrayEntry(
                                     'array',
@@ -350,6 +357,16 @@ final class DataFrameTest extends TestCase
                                         ['id' => 2, 'status' => 'PENDING'],
                                     ]
                                 ),
+                                new ListEntry(
+                                    'list',
+                                    [1, 2, 3],
+                                    new ListType(ListElement::integer())
+                                ),
+                                new MapEntry(
+                                    'map',
+                                    ['NEW', 'PENDING'],
+                                    new MapType(MapKey::integer(), MapValue::string())
+                                ),
                                 new StructureEntry(
                                     'items',
                                     ['item-id' => '1', 'name' => 'one'],
@@ -357,12 +374,6 @@ final class DataFrameTest extends TestCase
                                         new StructureElement('item-id', ScalarType::string()),
                                         new StructureElement('name', ScalarType::string()),
                                     )
-                                ),
-                                new Row\Entry\CollectionEntry(
-                                    'tags',
-                                    new Row\Entries(new IntegerEntry('item-id', 1), new StringEntry('name', 'one')),
-                                    new Row\Entries(new IntegerEntry('item-id', 2), new StringEntry('name', 'two')),
-                                    new Row\Entries(new IntegerEntry('item-id', 3), new StringEntry('name', 'three'))
                                 ),
                                 new Row\Entry\ObjectEntry('object', new \ArrayIterator([1, 2, 3])),
                                 new Row\Entry\EnumEntry('enum', BackedStringEnum::three),
@@ -376,15 +387,15 @@ final class DataFrameTest extends TestCase
 
         $this->assertSame(
             <<<'ASCIITABLE'
-+------+--------+-----+---------+----------------------+-------+----------------------+----------------------+----------------------+----------------------+-------+----------------------+
-|   id |  price | 100 | deleted |           created-at | phase |                array |                items |                 tags |               object |  enum |                  xml |
-+------+--------+-----+---------+----------------------+-------+----------------------+----------------------+----------------------+----------------------+-------+----------------------+
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | {"item-id":"1","name | [{"item-id":"1","nam | ArrayIterator Object | three | <?xml version="1.0"? |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | {"item-id":"1","name | [{"item-id":"1","nam | ArrayIterator Object | three | <?xml version="1.0"? |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | {"item-id":"1","name | [{"item-id":"1","nam | ArrayIterator Object | three | <?xml version="1.0"? |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | {"item-id":"1","name | [{"item-id":"1","nam | ArrayIterator Object | three | <?xml version="1.0"? |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | {"item-id":"1","name | [{"item-id":"1","nam | ArrayIterator Object | three | <?xml version="1.0"? |
-+------+--------+-----+---------+----------------------+-------+----------------------+----------------------+----------------------+----------------------+-------+----------------------+
++------+--------+-----+---------+----------------------+-------+----------------------+---------+-------------------+----------------------+----------------------+-------+----------------------+
+|   id |  price | 100 | deleted |           created-at | phase |                array |    list |               map |                items |               object |  enum |                  xml |
++------+--------+-----+---------+----------------------+-------+----------------------+---------+-------------------+----------------------+----------------------+-------+----------------------+
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | ArrayIterator Object | three | <?xml version="1.0"? |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | ArrayIterator Object | three | <?xml version="1.0"? |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | ArrayIterator Object | three | <?xml version="1.0"? |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | ArrayIterator Object | three | <?xml version="1.0"? |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | ArrayIterator Object | three | <?xml version="1.0"? |
++------+--------+-----+---------+----------------------+-------+----------------------+---------+-------------------+----------------------+----------------------+-------+----------------------+
 5 rows
 
 ASCIITABLE,
@@ -393,16 +404,16 @@ ASCIITABLE,
 
         $this->assertSame(
             <<<'ASCIITABLE'
-+------+--------+-----+---------+---------------------------+-------+-------------------------------------------------------+------------------------------+--------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------+-------+--------------------------------------------------------------------------+
-|   id |  price | 100 | deleted |                created-at | phase |                                                 array |                        items |                                                                                       tags |                                                                                         object |  enum |                                                                      xml |
-+------+--------+-----+---------+---------------------------+-------+-------------------------------------------------------+------------------------------+--------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------+-------+--------------------------------------------------------------------------+
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three | <?xml version="1.0"?><xml><node id="123">test<foo>bar</foo></node></xml> |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three | <?xml version="1.0"?><xml><node id="123">test<foo>bar</foo></node></xml> |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three | <?xml version="1.0"?><xml><node id="123">test<foo>bar</foo></node></xml> |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three | <?xml version="1.0"?><xml><node id="123">test<foo>bar</foo></node></xml> |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three | <?xml version="1.0"?><xml><node id="123">test<foo>bar</foo></node></xml> |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | {"item-id":"1","name":"one"} | [{"item-id":"1","name":"one"},{"item-id":"2","name":"two"},{"item-id":"3","name":"three"}] | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three | <?xml version="1.0"?><xml><node id="123">test<foo>bar</foo></node></xml> |
-+------+--------+-----+---------+---------------------------+-------+-------------------------------------------------------+------------------------------+--------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------+-------+--------------------------------------------------------------------------+
++------+--------+-----+---------+---------------------------+-------+-------------------------------------------------------+---------+-------------------+------------------------------+------------------------------------------------------------------------------------------------+-------+--------------------------------------------------------------------------+
+|   id |  price | 100 | deleted |                created-at | phase |                                                 array |    list |               map |                        items |                                                                                         object |  enum |                                                                      xml |
++------+--------+-----+---------+---------------------------+-------+-------------------------------------------------------+---------+-------------------+------------------------------+------------------------------------------------------------------------------------------------+-------+--------------------------------------------------------------------------+
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name":"one"} | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three | <?xml version="1.0"?><xml><node id="123">test<foo>bar</foo></node></xml> |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name":"one"} | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three | <?xml version="1.0"?><xml><node id="123">test<foo>bar</foo></node></xml> |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name":"one"} | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three | <?xml version="1.0"?><xml><node id="123">test<foo>bar</foo></node></xml> |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name":"one"} | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three | <?xml version="1.0"?><xml><node id="123">test<foo>bar</foo></node></xml> |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name":"one"} | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three | <?xml version="1.0"?><xml><node id="123">test<foo>bar</foo></node></xml> |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name":"one"} | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three | <?xml version="1.0"?><xml><node id="123">test<foo>bar</foo></node></xml> |
++------+--------+-----+---------+---------------------------+-------+-------------------------------------------------------+---------+-------------------+------------------------------+------------------------------------------------------------------------------------------------+-------+--------------------------------------------------------------------------+
 6 rows
 
 ASCIITABLE,

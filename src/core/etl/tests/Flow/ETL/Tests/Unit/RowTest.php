@@ -116,16 +116,11 @@ final class RowTest extends TestCase
                     new StructureElement('name', ScalarType::string())
                 )
             ),
+            Entry::list_of_int('list', [1, 2, 3]),
             Entry::map(
                 'statuses',
                 ['NEW', 'PENDING'],
                 new MapType(MapKey::integer(), MapValue::string())
-            ),
-            Entry::collection(
-                'tags',
-                new Row\Entries(Entry::integer('item-id', 1), Entry::string('name', 'one')),
-                new Row\Entries(Entry::integer('item-id', 2), Entry::string('name', 'two')),
-                new Row\Entries(Entry::integer('item-id', 3), Entry::string('name', 'three'))
             ),
             Entry::object('object', new \ArrayIterator([1, 2, 3]))
         );
@@ -149,7 +144,7 @@ final class RowTest extends TestCase
                     'statuses',
                     new MapType(MapKey::integer(), MapValue::string())
                 ),
-                Row\Schema\Definition::collection('tags'),
+                Row\Schema\Definition::list('list', new ListType(ListElement::integer())),
                 Row\Schema\Definition::object('object', ObjectType::of(\ArrayIterator::class)),
             ),
             $row->schema()
