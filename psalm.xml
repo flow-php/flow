@@ -10,7 +10,6 @@
         findUnusedCode="false"
 >
     <projectFiles>
-<!--        <directory name="src/adapter/etl-adapter-amphp/src" />-->
         <directory name="src/adapter/etl-adapter-avro/src" />
         <directory name="src/adapter/etl-adapter-csv/src" />
         <directory name="src/adapter/etl-adapter-chartjs/src" />
@@ -22,7 +21,6 @@
         <directory name="src/adapter/etl-adapter-json/src" />
         <directory name="src/adapter/etl-adapter-logger/src" />
         <directory name="src/adapter/etl-adapter-parquet/src" />
-<!--        <directory name="src/adapter/etl-adapter-reactphp/src" />-->
         <directory name="src/adapter/etl-adapter-text/src" />
         <directory name="src/adapter/etl-adapter-xml/src" />
         <directory name="src/core/etl/src" />

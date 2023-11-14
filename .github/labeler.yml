@@ -20,8 +20,6 @@ lib-dremel:
 lib-snappy:
   - any: ["src/lib/snappy/**/*"]
 
-adapter-amphp:
-  - any: ["src/adapter/etl-adapter-amphp/**/*"]
 adapter-ampavrohp:
   - any: ["src/adapter/etl-adapter-avro/**/*"]
 adapter-chartjs:
@@ -32,6 +30,8 @@ adapter-doctrine:
   - any: ["src/adapter/etl-adapter-doctrine/**/*"]
 adapter-elasticsearch:
   - any: ["src/adapter/etl-adapter-elasticsearch/**/*"]
+adapter-filesystem:
+  - any: ["src/adapter/etl-adapter-filesystem/**/*"]
 adapter-meilisearch:
   - any: ["src/adapter/etl-adapter-meilisearch/**/*"]
 adapter-google-sheet:
@@ -44,8 +44,6 @@ adapter-logger:
   - any: ["src/adapter/etl-adapter-logger/**/*"]
 adapter-parquet:
   - any: ["src/adapter/etl-adapter-parquet/**/*"]
-adapter-reactphp:
-  - any: ["src/adapter/etl-adapter-reactphp/**/*"]
 adapter-text:
   - any: ["src/adapter/etl-adapter-text/**/*"]
 adapter-xml:

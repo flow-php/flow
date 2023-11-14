@@ -43,11 +43,6 @@ final class NestedPipeline implements OverridingPipeline, Pipeline
         return $this->pipeline->has($transformerClass);
     }
 
-    public function isAsync() : bool
-    {
-        return $this->pipeline->isAsync() || $this->nextPipeline->isAsync();
-    }
-
     /**
      * @return array<Pipeline>
      */

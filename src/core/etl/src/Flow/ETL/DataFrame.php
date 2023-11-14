@@ -18,7 +18,6 @@ use Flow\ETL\Pipeline\BatchingPipeline;
 use Flow\ETL\Pipeline\CachingPipeline;
 use Flow\ETL\Pipeline\CollectingPipeline;
 use Flow\ETL\Pipeline\GroupByPipeline;
-use Flow\ETL\Pipeline\NestedPipeline;
 use Flow\ETL\Pipeline\ParallelizingPipeline;
 use Flow\ETL\Pipeline\VoidPipeline;
 use Flow\ETL\Pipeline\WindowPartitioningPipeline;
@@ -193,10 +192,6 @@ final class DataFrame
      */
     public function dropDuplicates(string|EntryReference ...$entries) : self
     {
-        if ($this->pipeline->isAsync()) {
-            throw new InvalidArgumentException('dropDuplicates() is not supported in asynchronous pipelines yet');
-        }
-
         $this->pipeline->add(new DropDuplicatesTransformer(...$entries));
 
         return $this;
@@ -495,22 +490,6 @@ final class DataFrame
         \array_unshift($entries, $entry);
 
         $this->context->partitionBy(...References::init(...$entries)->all());
-
-        return $this;
-    }
-
-    /**
-     * @lazy
-     */
-    public function pipeline(Pipeline $pipeline) : self
-    {
-        if ($pipeline->isAsync()) {
-            if ($this->pipeline->has(DropDuplicatesTransformer::class)) {
-                throw new InvalidArgumentException('dropDuplicates() is not supported in asynchronous pipelines yet');
-            }
-        }
-
-        $this->pipeline = new NestedPipeline($this->pipeline, $pipeline);
 
         return $this;
     }

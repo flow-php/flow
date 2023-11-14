@@ -20,7 +20,7 @@ if (false === \in_array(PHP_SAPI, ['cli', 'phpdbg', 'embed'], true)) {
 \ini_set('memory_limit', -1);
 
 print "Running all available examples.\n";
-print "Excluding: async, database & remote filesystem. Those examples require additional manual setup to be run properly.\n";
+print "Excluding: database & remote filesystem. Those examples require additional manual setup to be run properly.\n";
 print "Removing previously generated output files.\n";
 
 $finder = new Finder();
@@ -35,8 +35,8 @@ include __DIR__ . '/setup/php_to_csv.php';
 
 $finder = new Finder();
 $finder->in(__DIR__ . '/topics')
-    // async, database & remote filesystem examples require additional manual setup to be run properly
-    ->exclude(['async', 'db', 'fs'])
+    // database & remote filesystem examples require additional manual setup to be run properly
+    ->exclude(['db', 'fs'])
     ->files()
     ->name('*.php');
 

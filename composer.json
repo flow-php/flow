@@ -19,8 +19,6 @@
         "ext-xmlreader": "*",
         "ext-zlib": "*",
         "composer-runtime-api": "^2.1",
-        "amphp/process": "^2",
-        "amphp/socket": "^2",
         "coduo/php-humanizer": "^4.0",
         "doctrine/dbal": "^3.6",
         "elasticsearch/elasticsearch": "^7.6|^8.0",
@@ -34,9 +32,6 @@
         "psr/http-client": "^1.0",
         "psr/log": "^2.0 || ^3.0",
         "psr/simple-cache": "^1.0 || ^2.0 || ^3.0",
-        "react/child-process": "^0.6.4",
-        "react/promise": "^2.9.0",
-        "react/socket": "^1.11",
         "symfony/console": "^6.3",
         "webmozart/glob": "^3.0 || ^4.0"
     },
@@ -67,7 +62,6 @@
         ],
         "psr-4": {
             "Flow\\": [
-                "src/adapter/etl-adapter-amphp/src/Flow",
                 "src/adapter/etl-adapter-avro/src/Flow",
                 "src/adapter/etl-adapter-chartjs/src/Flow",
                 "src/adapter/etl-adapter-csv/src/Flow",
@@ -80,7 +74,6 @@
                 "src/adapter/etl-adapter-logger/src/Flow",
                 "src/adapter/etl-adapter-meilisearch/src/Flow",
                 "src/adapter/etl-adapter-parquet/src/Flow",
-                "src/adapter/etl-adapter-reactphp/src/Flow",
                 "src/adapter/etl-adapter-text/src/Flow",
                 "src/adapter/etl-adapter-xml/src/Flow",
                 "src/core/etl/src/Flow",
@@ -102,7 +95,6 @@
     "autoload-dev": {
         "psr-4": {
             "Flow\\": [
-                "src/adapter/etl-adapter-amphp/tests/Flow",
                 "src/adapter/etl-adapter-avro/tests/Flow",
                 "src/adapter/etl-adapter-chartjs/tests/Flow",
                 "src/adapter/etl-adapter-csv/tests/Flow",
@@ -115,7 +107,6 @@
                 "src/adapter/etl-adapter-logger/tests/Flow",
                 "src/adapter/etl-adapter-meilisearch/tests/Flow",
                 "src/adapter/etl-adapter-parquet/tests/Flow",
-                "src/adapter/etl-adapter-reactphp/tests/Flow",
                 "src/adapter/etl-adapter-text/tests/Flow",
                 "src/adapter/etl-adapter-xml/tests/Flow",
                 "src/core/etl/tests/Flow",
@@ -145,7 +136,6 @@
         "flow-php/doctrine-dbal-bulk-tools": "self.version",
         "flow-php/dremel": "self.version",
         "flow-php/etl": "self.version",
-        "flow-php/etl-adapter-amphp": "self.version",
         "flow-php/etl-adapter-avro": "self.version",
         "flow-php/etl-adapter-chartjs": "self.version",
         "flow-php/etl-adapter-csv": "self.version",
@@ -160,7 +150,6 @@
         "flow-php/etl-adapter-logger-tools": "self.version",
         "flow-php/etl-adapter-meilisearch": "self.version",
         "flow-php/etl-adapter-parquet": "self.version",
-        "flow-php/etl-adapter-reactphp": "self.version",
         "flow-php/etl-adapter-text": "self.version",
         "flow-php/etl-adapter-xml": "self.version",
         "flow-php/parquet": "self.version",

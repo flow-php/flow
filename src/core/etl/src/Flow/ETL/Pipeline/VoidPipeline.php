@@ -37,11 +37,6 @@ final class VoidPipeline implements OverridingPipeline, Pipeline
         return $this->pipeline->has($transformerClass);
     }
 
-    public function isAsync() : bool
-    {
-        return false;
-    }
-
     /**
      * @return array<Pipeline>
      */

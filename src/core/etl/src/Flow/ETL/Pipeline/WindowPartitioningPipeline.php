@@ -48,11 +48,6 @@ final class WindowPartitioningPipeline implements OverridingPipeline, Pipeline
         return $this->pipeline->has($transformerClass) || $this->nextPipeline->has($transformerClass);
     }
 
-    public function isAsync() : bool
-    {
-        return false;
-    }
-
     /**
      * @return array<Pipeline>
      */

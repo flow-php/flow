@@ -47,11 +47,6 @@ final class GroupByPipeline implements OverridingPipeline, Pipeline
         return $this->pipeline->has($transformerClass);
     }
 
-    public function isAsync() : bool
-    {
-        return $this->pipeline->isAsync();
-    }
-
     /**
      * @return array<Pipeline>
      */

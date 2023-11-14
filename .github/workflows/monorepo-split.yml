@@ -35,8 +35,6 @@ jobs:
           - local_path: 'src/lib/snappy'
             split_repository: 'snappy'
 
-          - local_path: 'src/adapter/etl-adapter-amphp'
-            split_repository: 'etl-adapter-amphp'
           - local_path: 'src/adapter/etl-adapter-avro'
             split_repository: 'etl-adapter-avro'
           - local_path: 'src/adapter/etl-adapter-chartjs'
@@ -61,8 +59,6 @@ jobs:
             split_repository: 'etl-adapter-logger'
           - local_path: 'src/adapter/etl-adapter-parquet'
             split_repository: 'etl-adapter-parquet'
-          - local_path: 'src/adapter/etl-adapter-reactphp'
-            split_repository: 'etl-adapter-reactphp'
           - local_path: 'src/adapter/etl-adapter-text'
             split_repository: 'etl-adapter-text'
           - local_path: 'src/adapter/etl-adapter-xml'
