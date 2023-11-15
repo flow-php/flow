@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-11-14
+## [Unreleased] - 2023-11-15
 
 ### Added
 - [#780](https://github.com/flow-php/flow/pull/780) - **Add `MapEntry`** - [@stloyd](https://github.com/stloyd)
@@ -215,6 +215,7 @@
 - [c9fb26](https://github.com/flow-php/flow/commit/c9fb26dc2e0558c0f33b6097286e4dc6e2799d3f) - **test-benchmark.yml** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#796](https://github.com/flow-php/flow/pull/796) - **Remove Faker library from benchmark** - [@stloyd](https://github.com/stloyd)
 - [#776](https://github.com/flow-php/flow/pull/776) - **Remove `CollectionEntry`** - [@stloyd](https://github.com/stloyd)
 - [#794](https://github.com/flow-php/flow/pull/794) - **Removed async processing** - [@norberttech](https://github.com/norberttech)
 - [#794](https://github.com/flow-php/flow/pull/794) - **DataFrame::pipeline method** - [@norberttech](https://github.com/norberttech)
