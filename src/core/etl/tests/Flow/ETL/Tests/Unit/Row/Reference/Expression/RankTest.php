@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Tests\Unit\Window;
+namespace Flow\ETL\Tests\Unit\Row\Reference\Expression;
 
+use function Flow\ETL\DSL\rank;
 use function Flow\ETL\DSL\ref;
-use Flow\ETL\_Window;
+use function Flow\ETL\DSL\window;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -23,13 +24,13 @@ final class RankTest extends TestCase
             $row5 = Row::create(Entry::int('id', 5), Entry::int('value', 1), Entry::int('salary', 4000)),
         );
 
-        $window = _Window::partitionBy()->orderBy(ref('salary')->desc())->rank();
+        $rank = rank()->over(window()->orderBy(ref('salary')->desc()));
 
-        $this->assertSame(1, $window->function()->apply($row1, $rows, $window));
-        $this->assertSame(1, $window->function()->apply($row2, $rows, $window));
-        $this->assertSame(1, $window->function()->apply($row3, $rows, $window));
-        $this->assertSame(5, $window->function()->apply($row4, $rows, $window));
-        $this->assertSame(4, $window->function()->apply($row5, $rows, $window));
+        $this->assertSame(1, $rank->apply($row1, $rows));
+        $this->assertSame(1, $rank->apply($row2, $rows));
+        $this->assertSame(1, $rank->apply($row3, $rows));
+        $this->assertSame(5, $rank->apply($row4, $rows));
+        $this->assertSame(4, $rank->apply($row5, $rows));
     }
 
     public function test_rank_function_without_more_than_one_order_by_entries() : void
@@ -44,14 +45,14 @@ final class RankTest extends TestCase
             Row::create(Entry::int('id', 5), Entry::int('value', 1), Entry::int('salary', 4000)),
         );
 
-        $window = _Window::partitionBy(ref('value'))->orderBy(ref('salary'), ref('id'))->rank();
+        $rank = rank()->over(window()->partitionBy(ref('value'))->orderBy(ref('salary'), ref('id')));
 
-        $this->assertSame(1, $window->function()->apply($row1, $rows, $window));
+        $this->assertSame(1, $rank->apply($row1, $rows));
     }
 
     public function test_rank_function_without_order_by() : void
     {
-        $this->expectExceptionMessage('Rank window function requires to be ordered by one column');
+        $this->expectExceptionMessage('Window function "rank()" requires an OVER clause.');
         $rows = new Rows(
             $row1 = Row::create(Entry::int('id', 1), Entry::int('value', 1), Entry::int('salary', 6000)),
             Row::create(Entry::int('id', 2), Entry::int('value', 1), Entry::int('salary', 6000)),
@@ -60,8 +61,8 @@ final class RankTest extends TestCase
             Row::create(Entry::int('id', 5), Entry::int('value', 1), Entry::int('salary', 4000)),
         );
 
-        $window = _Window::partitionBy(ref('value'))->rank();
+        $rank = rank();
 
-        $this->assertSame(1, $window->function()->apply($row1, $rows, $window));
+        $this->assertSame(1, $rank->apply($row1, $rows));
     }
 }

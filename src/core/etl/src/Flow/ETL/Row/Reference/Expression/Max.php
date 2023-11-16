@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\GroupBy\Aggregator;
+namespace Flow\ETL\Row\Reference\Expression;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\GroupBy\Aggregator;

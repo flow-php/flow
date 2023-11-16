@@ -10,7 +10,11 @@ use Flow\ETL\Window;
 
 interface WindowFunction
 {
-    public function apply(Row $row, Rows $partition, Window $window) : mixed;
+    public function apply(Row $row, Rows $partition) : mixed;
+
+    public function over(Window $window) : self;
 
     public function toString() : string;
+
+    public function window() : Window;
 }

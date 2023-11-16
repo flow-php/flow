@@ -9,16 +9,16 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
-use Flow\ETL\Window\WindowExpression;
+use Flow\ETL\Window\WindowFunction;
 
 /**
- * @implements Transformer<array{entry_name: string, expr: WindowExpression}>
+ * @implements Transformer<array{entry_name: string, expr: WindowFunction}>
  */
 final class WindowFunctionTransformer implements Transformer
 {
     public function __construct(
         private readonly string $entryName,
-        private readonly WindowExpression $expr,
+        private readonly WindowFunction $function,
     ) {
     }
 
@@ -26,14 +26,14 @@ final class WindowFunctionTransformer implements Transformer
     {
         return [
             'entry_name' => $this->entryName,
-            'expr' => $this->expr,
+            'expr' => $this->function,
         ];
     }
 
     public function __unserialize(array $data) : void
     {
         $this->entryName = $data['entry_name'];
-        $this->expr = $data['expr'];
+        $this->function = $data['expr'];
     }
 
     /**
@@ -47,7 +47,7 @@ final class WindowFunctionTransformer implements Transformer
 
         foreach ($rows as $row) {
             $newRows = $newRows->add(
-                $row->add($context->entryFactory()->create($this->entryName, $this->expr->function()->apply($row, $rows, $this->expr->window())))
+                $row->add($context->entryFactory()->create($this->entryName, $this->function->apply($row, $rows)))
             );
         }
 

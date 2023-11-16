@@ -6,7 +6,6 @@ namespace Flow\ETL;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\GroupBy\Aggregation;
 use Flow\ETL\GroupBy\Aggregator;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
@@ -14,7 +13,7 @@ use Flow\ETL\Row\References;
 final class GroupBy
 {
     /**
-     * @var array<Aggregation>
+     * @var array<Aggregator>
      */
     private array $aggregations;
 
@@ -32,13 +31,13 @@ final class GroupBy
         $this->groups = [];
     }
 
-    public function aggregate(Aggregation ...$aggregations) : void
+    public function aggregate(Aggregator ...$aggregator) : void
     {
-        if (!\count($aggregations)) {
+        if (!\count($aggregator)) {
             throw new InvalidArgumentException("Aggregations can't be empty");
         }
 
-        $this->aggregations = $aggregations;
+        $this->aggregations = $aggregator;
     }
 
     public function group(Rows $rows) : void
@@ -69,8 +68,8 @@ final class GroupBy
                     'aggregators' => [],
                 ];
 
-                foreach ($this->aggregations as $aggregation) {
-                    $this->groups[$valuesHash]['aggregators'][] = $aggregation->create();
+                foreach ($this->aggregations as $aggregator) {
+                    $this->groups[$valuesHash]['aggregators'][] = clone $aggregator;
                 }
             }
 

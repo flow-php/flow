@@ -2,23 +2,20 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\GroupBy\Aggregator;
+namespace Flow\ETL\Row\Reference\Expression;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\GroupBy\Aggregator;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
 
 final class First implements Aggregator
 {
     private ?Entry $first;
 
-    private readonly EntryReference $ref;
-
-    public function __construct(string|EntryReference $entry)
+    public function __construct(private readonly Reference $ref)
     {
-        $this->ref = EntryReference::init($entry);
         $this->first = null;
     }
 

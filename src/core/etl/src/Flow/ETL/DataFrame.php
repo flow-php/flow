@@ -9,7 +9,7 @@ use Flow\ETL\DSL\Transform;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Formatter\AsciiTableFormatter;
-use Flow\ETL\GroupBy\Aggregation;
+use Flow\ETL\GroupBy\Aggregator;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Join\Join;
 use Flow\ETL\Loader\SchemaValidationLoader;
@@ -37,7 +37,7 @@ use Flow\ETL\Transformer\LimitTransformer;
 use Flow\ETL\Transformer\RemoveEntriesTransformer;
 use Flow\ETL\Transformer\StyleConverter\StringStyles;
 use Flow\ETL\Transformer\WindowFunctionTransformer;
-use Flow\ETL\Window\WindowExpression;
+use Flow\ETL\Window\WindowFunction;
 
 final class DataFrame
 {
@@ -56,7 +56,7 @@ final class DataFrame
      *
      * @throws InvalidArgumentException
      */
-    public function aggregate(Aggregation ...$aggregations) : self
+    public function aggregate(Aggregator ...$aggregations) : self
     {
         if ($this->groupBy === null) {
             $this->groupBy = new GroupBy();
@@ -707,7 +707,7 @@ final class DataFrame
     /**
      * @lazy
      *
-     * @param array<string, _Window|Reference\Expression> $refs
+     * @param array<string, Reference\Expression> $refs
      */
     public function withEntries(array $refs) : self
     {
@@ -721,9 +721,9 @@ final class DataFrame
     /**
      * @lazy
      */
-    public function withEntry(string $entryName, Reference\Expression|WindowExpression $ref) : self
+    public function withEntry(string $entryName, Reference\Expression|WindowFunction $ref) : self
     {
-        if ($ref instanceof WindowExpression) {
+        if ($ref instanceof WindowFunction) {
             if (\count($ref->window()->partitions())) {
                 $this->context->partitionBy(...$ref->window()->partitions());
                 $this->pipeline = new PartitioningPipeline($this->pipeline, $ref->window()->order());

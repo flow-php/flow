@@ -13,15 +13,23 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Reference\Expression;
 use Flow\ETL\Row\Reference\Expression\ArrayExpand\ArrayExpand;
 use Flow\ETL\Row\Reference\Expression\ArraySort\Sort;
+use Flow\ETL\Row\Reference\Expression\Average;
+use Flow\ETL\Row\Reference\Expression\Collect;
+use Flow\ETL\Row\Reference\Expression\CollectUnique;
+use Flow\ETL\Row\Reference\Expression\Count;
+use Flow\ETL\Row\Reference\Expression\DensRank;
+use Flow\ETL\Row\Reference\Expression\First;
+use Flow\ETL\Row\Reference\Expression\Last;
 use Flow\ETL\Row\Reference\Expression\Literal;
+use Flow\ETL\Row\Reference\Expression\Max;
+use Flow\ETL\Row\Reference\Expression\Min;
+use Flow\ETL\Row\Reference\Expression\Rank;
+use Flow\ETL\Row\Reference\Expression\RowNumber;
 use Flow\ETL\Row\Reference\Expression\StyleConverter\StringStyles;
+use Flow\ETL\Row\Reference\Expression\Sum;
 use Flow\ETL\Row\StructureReference;
 use Flow\ETL\Rows;
 use Flow\ETL\Window;
-use Flow\ETL\Window\Average;
-use Flow\ETL\Window\DensRank;
-use Flow\ETL\Window\Rank;
-use Flow\ETL\Window\WindowExpression;
 
 function col(string $entry, string ...$entries) : Reference
 {
@@ -174,9 +182,9 @@ function cast(Expression $expression, string $type) : Expression
     return new Expression\Cast($expression, $type);
 }
 
-function count(Expression $expression) : Expression
+function count(Expression $expression) : Count
 {
-    return new Expression\Count($expression);
+    return new Count($expression);
 }
 
 /**
@@ -386,22 +394,62 @@ function array_to_rows(array $data, EntryFactory $entryFactory = new NativeEntry
     return new Rows(...$rows);
 }
 
-function rank() : WindowExpression
+function rank() : Rank
 {
-    return new WindowExpression(new Rank());
+    return new Rank();
 }
 
-function dens_rank() : WindowExpression
+function dens_rank() : DensRank
 {
-    return new WindowExpression(new DensRank());
+    return new DensRank();
 }
 
-function average(EntryReference $ref) : WindowExpression
+function average(EntryReference $ref) : Average
 {
-    return new WindowExpression(new Average($ref));
+    return new Average($ref);
+}
+
+function collect(Reference $ref) : Collect
+{
+    return new Collect($ref);
+}
+
+function collect_unique(Reference $ref) : CollectUnique
+{
+    return new CollectUnique($ref);
 }
 
 function window() : Window
 {
     return new Window();
+}
+
+function sum(Reference $expression) : Sum
+{
+    return new Sum($expression);
+}
+
+function first(Reference $ref) : First
+{
+    return new First($ref);
+}
+
+function last(Reference $ref) : Last
+{
+    return new Last($ref);
+}
+
+function max(Reference $ref) : Max
+{
+    return new Max($ref);
+}
+
+function min(Reference $ref) : Min
+{
+    return new Min($ref);
+}
+
+function row_number() : RowNumber
+{
+    return new RowNumber();
 }

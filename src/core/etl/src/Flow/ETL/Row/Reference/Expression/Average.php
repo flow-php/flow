@@ -1,6 +1,4 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace Flow\ETL\Row\Reference\Expression;
 
@@ -9,58 +7,57 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\GroupBy\Aggregator;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\Reference\Expression;
+use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
 use Flow\ETL\Window;
 use Flow\ETL\Window\WindowFunction;
 
-final class Count implements Aggregator, Expression, WindowFunction
+final class Average implements Aggregator, WindowFunction
 {
     private int $count;
 
+    private float $sum;
+
     private ?Window $window;
 
-    public function __construct(private readonly Expression $ref)
+    public function __construct(private readonly Reference $ref)
     {
         $this->window = null;
         $this->count = 0;
+        $this->sum = 0;
     }
 
     public function aggregate(Row $row) : void
     {
         try {
-            $row->valueOf($this->ref);
-            $this->count++;
+            /** @var mixed $value */
+            $value = $row->valueOf($this->ref);
+
+            if (\is_numeric($value)) {
+                $this->sum += $value;
+                $this->count++;
+            }
         } catch (InvalidArgumentException) {
+            // do nothing?
         }
     }
 
     public function apply(Row $row, Rows $partition) : mixed
     {
+        $sum = 0;
         $count = 0;
-        $value = $row->valueOf($this->ref);
 
         foreach ($partition->sortBy(...$this->window()->order()) as $partitionRow) {
-            $partitionValue = $partitionRow->valueOf($this->ref);
+            /** @var mixed $value */
+            $value = $partitionRow->valueOf($this->ref);
 
-            if ($partitionValue === $value) {
+            if (\is_numeric($value)) {
+                $sum += $value;
                 $count++;
             }
         }
 
-        return $count;
-    }
-
-    public function eval(Row $row) : mixed
-    {
-        /** @var mixed $val */
-        $val = $this->ref->eval($row);
-
-        if (\is_countable($val)) {
-            return \count($val);
-        }
-
-        return null;
+        return $sum / $count;
     }
 
     public function over(Window $window) : WindowFunction
@@ -73,15 +70,27 @@ final class Count implements Aggregator, Expression, WindowFunction
     public function result() : Entry
     {
         if (!$this->ref->hasAlias()) {
-            $this->ref->as($this->ref->to() . '_count');
+            $this->ref->as($this->ref->to() . '_avg');
         }
 
-        return \Flow\ETL\DSL\Entry::integer($this->ref->name(), $this->count);
+        if (0 !== $this->count) {
+            $result = $this->sum / $this->count;
+            $resultInt = (int) $result;
+        } else {
+            $result = 0.0;
+            $resultInt = 0;
+        }
+
+        if ($result - $resultInt === 0.0) {
+            return \Flow\ETL\DSL\Entry::integer($this->ref->name(), (int) $result);
+        }
+
+        return \Flow\ETL\DSL\Entry::float($this->ref->name(), $result);
     }
 
     public function toString() : string
     {
-        return 'count()';
+        return 'average()';
     }
 
     public function window() : Window

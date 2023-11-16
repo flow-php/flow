@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\GroupBy\Aggregator;
+namespace Flow\ETL\Row\Reference\Expression;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\GroupBy\Aggregator;
@@ -11,18 +11,15 @@ use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
 
-final class Collect implements Aggregator
+final class CollectUnique implements Aggregator
 {
     /**
      * @var array<mixed>
      */
     private array $collection;
 
-    private readonly Reference $ref;
-
-    public function __construct(string|Reference $entry)
+    public function __construct(private readonly Reference $ref)
     {
-        $this->ref = \is_string($entry) ? new EntryReference($entry) : $entry;
         $this->collection = [];
     }
 
@@ -46,9 +43,16 @@ final class Collect implements Aggregator
             }
 
             if ($this->ref instanceof EntryReference) {
-                $this->collection[] = \current($values);
+                /** @var mixed $value */
+                $value = \current($values);
+
+                if (!\in_array($value, $this->collection, true)) {
+                    $this->collection[] = $value;
+                }
             } else {
-                $this->collection[] = $values;
+                if (!\in_array($values, $this->collection, true)) {
+                    $this->collection[] = $values;
+                }
             }
         } catch (InvalidArgumentException) {
             // do nothing?
@@ -58,7 +62,7 @@ final class Collect implements Aggregator
     public function result() : Entry
     {
         if (!$this->ref->hasAlias()) {
-            $this->ref->as($this->ref->name() . '_collection');
+            $this->ref->as($this->ref->name() . '_collection_unique');
         }
 
         return \Flow\ETL\DSL\Entry::array($this->ref->name(), $this->collection);

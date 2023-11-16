@@ -2,18 +2,19 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Tests\Unit\GroupBy\Aggregator;
+namespace Flow\ETL\Tests\Unit\Row\Reference\Expression;
 
+use function Flow\ETL\DSL\min;
+use function Flow\ETL\DSL\ref;
 use Flow\ETL\DSL\Entry;
-use Flow\ETL\GroupBy\Aggregator\Max;
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;
 
-final class MaxTest extends TestCase
+final class MinTest extends TestCase
 {
-    public function test_max_from_numeric_values() : void
+    public function test_aggregation_min_from_numeric_values() : void
     {
-        $aggregator = new Max('int');
+        $aggregator = min(ref('int'));
 
         $aggregator->aggregate(Row::create(Entry::string('int', '10')));
         $aggregator->aggregate(Row::create(Entry::string('int', '20')));
@@ -22,14 +23,14 @@ final class MaxTest extends TestCase
         $aggregator->aggregate(Row::create(Entry::null('not_int')));
 
         $this->assertSame(
-            55,
+            10,
             $aggregator->result()->value()
         );
     }
 
-    public function test_max_including_null_value() : void
+    public function test_aggregation_min_including_null_value() : void
     {
-        $aggregator = new Max('int');
+        $aggregator = min(ref('int'));
 
         $aggregator->aggregate(Row::create(Entry::integer('int', 10)));
         $aggregator->aggregate(Row::create(Entry::integer('int', 20)));
@@ -37,29 +38,29 @@ final class MaxTest extends TestCase
         $aggregator->aggregate(Row::create(Entry::null('int')));
 
         $this->assertSame(
-            30,
+            10,
             $aggregator->result()->value()
         );
     }
 
-    public function test_max_with_float_result() : void
+    public function test_aggregation_min_with_float_result() : void
     {
-        $aggregator = new Max('int');
+        $aggregator = min(ref('int'));
 
-        $aggregator->aggregate(Row::create(Entry::integer('int', 10)));
+        $aggregator->aggregate(Row::create(Entry::float('int', 10.25)));
         $aggregator->aggregate(Row::create(Entry::integer('int', 20)));
-        $aggregator->aggregate(Row::create(Entry::float('int', 30.5)));
+        $aggregator->aggregate(Row::create(Entry::integer('int', 305)));
         $aggregator->aggregate(Row::create(Entry::integer('int', 25)));
 
         $this->assertSame(
-            30.5,
+            10.25,
             $aggregator->result()->value()
         );
     }
 
-    public function test_max_with_integer_result() : void
+    public function test_aggregation_min_with_integer_result() : void
     {
-        $aggregator = new Max('int');
+        $aggregator = min(ref('int'));
 
         $aggregator->aggregate(Row::create(Entry::integer('int', 10)));
         $aggregator->aggregate(Row::create(Entry::integer('int', 20)));
@@ -67,7 +68,7 @@ final class MaxTest extends TestCase
         $aggregator->aggregate(Row::create(Entry::integer('int', 40)));
 
         $this->assertSame(
-            40,
+            10,
             $aggregator->result()->value()
         );
     }

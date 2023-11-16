@@ -6,10 +6,10 @@ namespace Flow\ETL\Adapter\ChartJS\Tests\Integration;
 
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\sum;
 use Flow\ETL\DSL\ChartJS;
 use Flow\ETL\DSL\From;
 use Flow\ETL\Flow;
-use Flow\ETL\GroupBy\Aggregation;
 use Flow\ETL\Memory\ArrayMemory;
 use PHPUnit\Framework\TestCase;
 
@@ -182,12 +182,12 @@ final class ChartJSLoaderTest extends TestCase
             ->read(From::memory(new ArrayMemory($data)))
             ->withEntry('Profit', ref('Revenue')->minus(ref('CM'))->minus(ref('Ads Spends'))->minus(ref('Storage Costs'))->minus(ref('Shipping Costs'))->round(lit(2)))
             ->aggregate(
-                Aggregation::sum(ref('Revenue')->as('Revenue')),
-                Aggregation::sum(ref('CM')->as('CM')),
-                Aggregation::sum(ref('Ads Spends')->as('Ads Spends')),
-                Aggregation::sum(ref('Storage Costs')->as('Storage Costs')),
-                Aggregation::sum(ref('Shipping Costs')->as('Shipping Costs')),
-                Aggregation::sum(ref('Profit')->as('Profit')),
+                sum(ref('Revenue')->as('Revenue')),
+                sum(ref('CM')->as('CM')),
+                sum(ref('Ads Spends')->as('Ads Spends')),
+                sum(ref('Storage Costs')->as('Storage Costs')),
+                sum(ref('Shipping Costs')->as('Shipping Costs')),
+                sum(ref('Profit')->as('Profit')),
             )
             ->write(
                 ChartJS::chart(

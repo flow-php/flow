@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Tests\Unit\Window;
+namespace Flow\ETL\Tests\Unit\Row\Reference\Expression;
 
+use function Flow\ETL\DSL\dens_rank;
 use function Flow\ETL\DSL\ref;
-use Flow\ETL\_Window;
+use function Flow\ETL\DSL\window;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -23,13 +24,13 @@ final class DensRankTest extends TestCase
             $row5 = Row::create(Entry::int('id', 5), Entry::int('value', 1), Entry::int('salary', 4000)),
         );
 
-        $window = _Window::partitionBy(ref('value'))->orderBy(ref('salary')->desc())->densRank();
+        $densRank = dens_rank()->over(window()->orderBy(ref('salary')->desc()));
 
-        $this->assertSame(1, $window->function()->apply($row1, $rows, $window));
-        $this->assertSame(1, $window->function()->apply($row2, $rows, $window));
-        $this->assertSame(1, $window->function()->apply($row3, $rows, $window));
-        $this->assertSame(3, $window->function()->apply($row4, $rows, $window));
-        $this->assertSame(2, $window->function()->apply($row5, $rows, $window));
+        $this->assertSame(1, $densRank->apply($row1, $rows));
+        $this->assertSame(1, $densRank->apply($row2, $rows));
+        $this->assertSame(1, $densRank->apply($row3, $rows));
+        $this->assertSame(3, $densRank->apply($row4, $rows));
+        $this->assertSame(2, $densRank->apply($row5, $rows));
     }
 
     public function test_rank_function_without_more_than_one_order_by_entries() : void
@@ -44,14 +45,14 @@ final class DensRankTest extends TestCase
             Row::create(Entry::int('id', 5), Entry::int('value', 1), Entry::int('salary', 4000)),
         );
 
-        $window = _Window::partitionBy(ref('value'))->orderBy(ref('salary'), ref('id'))->densRank();
+        $densRank = dens_rank()->over(window()->orderBy(ref('salary'), ref('id')));
 
-        $this->assertSame(1, $window->function()->apply($row1, $rows, $window));
+        $this->assertSame(1, $densRank->apply($row1, $rows));
     }
 
     public function test_rank_function_without_order_by() : void
     {
-        $this->expectExceptionMessage('Dens Rank window function requires to be ordered by one column');
+        $this->expectExceptionMessage('Window function "dens_rank()" requires an OVER clause.');
         $rows = new Rows(
             $row1 = Row::create(Entry::int('id', 1), Entry::int('value', 1), Entry::int('salary', 6000)),
             Row::create(Entry::int('id', 2), Entry::int('value', 1), Entry::int('salary', 6000)),
@@ -60,8 +61,6 @@ final class DensRankTest extends TestCase
             Row::create(Entry::int('id', 5), Entry::int('value', 1), Entry::int('salary', 4000)),
         );
 
-        $window = _Window::partitionBy(ref('value'))->densRank();
-
-        $this->assertSame(1, $window->function()->apply($row1, $rows, $window));
+        dens_rank()->apply($row1, $rows);
     }
 }

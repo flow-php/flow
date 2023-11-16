@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit;
 
 use function Flow\ETL\DSL\average;
 use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\max;
 use function Flow\ETL\DSL\rank;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\window;
@@ -21,7 +22,6 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Flow;
 use Flow\ETL\FlowContext;
-use Flow\ETL\GroupBy\Aggregation;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Loader;
 use Flow\ETL\Memory\ArrayMemory;
@@ -1068,7 +1068,7 @@ ASCIITABLE,
             )
         )
             ->groupBy('country', 'gender')
-            ->aggregate(Aggregation::avg('age'))
+            ->aggregate(average(ref('age')))
             ->fetch();
 
         $this->assertEquals(
@@ -1097,7 +1097,7 @@ ASCIITABLE,
             )
         )
             ->groupBy('country', 'gender')
-            ->aggregate(Aggregation::avg('age'))
+            ->aggregate(average(ref('age')))
             ->fetch();
 
         $this->assertEquals(
@@ -1153,7 +1153,7 @@ ASCIITABLE,
             )
         )
             ->groupBy('country')
-            ->aggregate(Aggregation::avg('age'))
+            ->aggregate(average(ref('age')))
             ->fetch();
 
         $this->assertEquals(
@@ -1664,7 +1664,7 @@ ASCII,
                 Row::create(Entry::integer('id', 9), Entry::string('country', 'US'), Entry::integer('age', 50)),
             )
         )
-            ->aggregate(Aggregation::avg('age'))
+            ->aggregate(average(ref('age')))
             ->rows(Transform::rename('age_avg', 'average_age'))
             ->fetch();
 
@@ -1690,7 +1690,7 @@ ASCII,
                 Row::create(Entry::integer('id', 9), Entry::string('country', 'US'), Entry::integer('age', 50)),
             )
         )
-            ->aggregate(Aggregation::avg('age'), Aggregation::max('age'))
+            ->aggregate(average(ref('age')), max(ref('age')))
             ->run(function (Rows $rows) : void {
                 $this->assertEquals(
                     new Rows(
@@ -1746,7 +1746,7 @@ ASCII,
         )
             ->rename('country', 'country_code')
             ->void()
-            ->aggregate(Aggregation::avg('age'))
+            ->aggregate(average(ref('age')))
             ->rows(Transform::rename('age_avg', 'average_age'))
             ->fetch();
 
