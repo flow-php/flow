@@ -8,7 +8,6 @@ use Flow\ETL\DSL\Entry as EntryDSL;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Rows;
@@ -44,7 +43,7 @@ final class KeepEntriesTransformer implements Transformer
             $allEntries = $row->entries()->map(fn (Entry $entry) : string => $entry->name());
             $removeEntries = \array_diff(
                 $allEntries,
-                \array_map(static fn (EntryReference $r) : string => $r->name(), $this->refs->all())
+                \array_map(static fn (Reference $r) : string => $r->name(), $this->refs->all())
             );
 
             $newEntries = $row->remove(...$removeEntries);

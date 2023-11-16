@@ -23,7 +23,7 @@ final class EntryReference implements Reference, ScalarFunction
     {
     }
 
-    public static function init(string|self $ref) : self
+    public static function init(string|Reference $ref) : Reference
     {
         if (\is_string($ref)) {
             return new self($ref);

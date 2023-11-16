@@ -22,7 +22,7 @@ final class Concat implements ScalarFunction
     public function eval(Row $row) : mixed
     {
         $values = \array_map(function (ScalarFunction $ref) use ($row) : mixed {
-            $ref = new Expressions(new Cast($ref, 'string'));
+            $ref = new ScalarFunctions(new Cast($ref, 'string'));
 
             return $ref->eval($row);
         }, $this->refs);

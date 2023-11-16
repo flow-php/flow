@@ -2,17 +2,17 @@
 
 namespace Flow\ETL;
 
-use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
 
 final class Window
 {
     /**
-     * @var array<EntryReference>
+     * @var array<Reference>
      */
     private array $orderBy;
 
     /**
-     * @var array<EntryReference>
+     * @var array<Reference>
      */
     private array $partitions;
 
@@ -23,14 +23,14 @@ final class Window
     }
 
     /**
-     * @return array<EntryReference>
+     * @return array<Reference>
      */
     public function order() : array
     {
         return $this->orderBy;
     }
 
-    public function orderBy(EntryReference $ref, EntryReference ...$refs) : self
+    public function orderBy(Reference $ref, Reference ...$refs) : self
     {
         \array_unshift($refs, $ref);
 
@@ -39,7 +39,7 @@ final class Window
         return $this;
     }
 
-    public function partitionBy(EntryReference $ref, EntryReference ...$refs) : self
+    public function partitionBy(Reference $ref, Reference ...$refs) : self
     {
         \array_unshift($refs, $ref);
 
@@ -50,7 +50,7 @@ final class Window
     }
 
     /**
-     * @return array<EntryReference>
+     * @return array<Reference>
      */
     public function partitions() : array
     {

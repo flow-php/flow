@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\ExternalSort;
 
-use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
 
 final class CachedParts
@@ -27,7 +27,7 @@ final class CachedParts
     /**
      * @throws \Flow\ETL\Exception\InvalidArgumentException
      */
-    public function createHeap(EntryReference ...$refs) : RowsMinHeap
+    public function createHeap(Reference ...$refs) : RowsMinHeap
     {
         $heap = new RowsMinHeap(...$refs);
 

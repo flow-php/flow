@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use function Flow\ETL\DSL\count;
-use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\window;
 use Flow\ETL\DSL\Entry;
@@ -59,28 +58,6 @@ final class CountTest extends TestCase
         $this->assertSame(
             4,
             $aggregator->result()->value()
-        );
-    }
-
-    public function test_count_array_entry() : void
-    {
-        $this->assertSame(
-            2,
-            count(ref('array'))->eval(Row::create(Entry::array('array', ['foo', 'bar'])))
-        );
-        $this->assertSame(
-            2,
-            count(ref('array'))->eval(Row::create(Entry::array('array', ['foo', 'bar'])))
-        );
-        $this->assertTrue(
-            ref('array')->count()->equals(lit(2))->eval(Row::create(Entry::array('array', ['foo', 'bar'])))
-        );
-    }
-
-    public function test_count_string() : void
-    {
-        $this->assertNull(
-            count(ref('string'))->eval(Row::create(Entry::string('string', 'foo')))
         );
     }
 

@@ -7,7 +7,6 @@ namespace Flow\ETL\Function;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
 
 final class CollectUnique implements AggregatingFunction
@@ -28,30 +27,13 @@ final class CollectUnique implements AggregatingFunction
             /** @var array<string, mixed> $values */
             $values = [];
 
-            if ($this->ref instanceof Row\StructureReference) {
-                foreach ($this->ref->to() as $ref) {
-                    $values[$ref->name()] = $row->valueOf($ref);
-                }
-            } else {
-                /**
-                 * @psalm-suppress InvalidArgument
-                 *
-                 * @phpstan-ignore-next-line
-                 */
-                $values[$this->ref->name()] = $row->valueOf($this->ref);
-            }
+            $values[$this->ref->name()] = $row->valueOf($this->ref);
 
-            if ($this->ref instanceof EntryReference) {
-                /** @var mixed $value */
-                $value = \current($values);
+            /** @var mixed $value */
+            $value = \current($values);
 
-                if (!\in_array($value, $this->collection, true)) {
-                    $this->collection[] = $value;
-                }
-            } else {
-                if (!\in_array($values, $this->collection, true)) {
-                    $this->collection[] = $values;
-                }
+            if (!\in_array($value, $this->collection, true)) {
+                $this->collection[] = $value;
             }
         } catch (InvalidArgumentException) {
             // do nothing?

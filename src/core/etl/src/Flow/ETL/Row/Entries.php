@@ -93,7 +93,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
     /**
      * @throws InvalidArgumentException
      */
-    public function get(string|EntryReference $name) : Entry
+    public function get(string|Reference $name) : Entry
     {
         $entry = $this->find($name);
 
@@ -104,7 +104,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
         return $entry;
     }
 
-    public function getAll(string|EntryReference ...$names) : self
+    public function getAll(string|Reference ...$names) : self
     {
         $entries = [];
 
@@ -123,10 +123,10 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
         return new \ArrayIterator($this->all());
     }
 
-    public function has(string|EntryReference ...$refs) : bool
+    public function has(string|Reference ...$refs) : bool
     {
         foreach ($refs as $ref) {
-            if ($ref instanceof EntryReference) {
+            if ($ref instanceof Reference) {
                 if (!\array_key_exists($ref->name(), $this->entries)) {
                     return false;
                 }
@@ -243,7 +243,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
         throw new RuntimeException('In order to add new rows use Entries::remove(string $name) : self');
     }
 
-    public function order(string|EntryReference ...$entries) : self
+    public function order(string|Reference ...$entries) : self
     {
         $sortedEntries = [];
 
@@ -251,7 +251,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
             throw InvalidArgumentException::because(
                 \sprintf(
                     'In order to sort entries in a given order you need to provide all entry names, given: "%s", expected: "%s"',
-                    \implode('", "', \array_map(static fn (EntryReference|string $ref) : string => $ref instanceof EntryReference ? $ref->name() : $ref, $entries)),
+                    \implode('", "', \array_map(static fn (Reference|string $ref) : string => $ref instanceof Reference ? $ref->name() : $ref, $entries)),
                     \implode('", "', \array_map(static fn (Entry $entry) => $entry->name(), $this->entries)),
                 )
             );
@@ -262,13 +262,13 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
                 throw InvalidArgumentException::because(
                     \sprintf(
                         'There is no entry with name \"%s\" in the dataset, available names: \"%s\"',
-                        $ref instanceof EntryReference ? $ref->name() : $ref,
+                        $ref instanceof Reference ? $ref->name() : $ref,
                         \implode('", "', \array_map(static fn (Entry $entry) => $entry->name(), $this->entries)),
                     )
                 );
             }
 
-            if ($ref instanceof EntryReference) {
+            if ($ref instanceof Reference) {
                 $sortedEntries[$ref->name()] = $this->entries[$ref->name()];
             } else {
                 $sortedEntries[$ref] = $this->entries[$ref];
@@ -278,20 +278,20 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
         return self::recreate($sortedEntries);
     }
 
-    public function remove(string|EntryReference ...$names) : self
+    public function remove(string|Reference ...$names) : self
     {
         $entries = $this->entries;
 
         foreach ($names as $ref) {
             if ($this->has($ref) === false) {
-                if ($ref instanceof EntryReference) {
+                if ($ref instanceof Reference) {
                     throw InvalidLogicException::because(\sprintf('Entry "%s" does not exist', $ref->name()));
                 }
 
                 throw InvalidLogicException::because(\sprintf('Entry "%s" does not exist', $ref));
             }
 
-            if ($ref instanceof EntryReference) {
+            if ($ref instanceof Reference) {
                 unset($entries[$ref->name()]);
             } else {
                 unset($entries[$ref]);
@@ -301,23 +301,23 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
         return self::recreate($entries);
     }
 
-    public function rename(string|EntryReference $currentName, string|EntryReference $newName) : self
+    public function rename(string|Reference $currentName, string|Reference $newName) : self
     {
         if (!$this->has($currentName)) {
-            throw InvalidLogicException::because(\sprintf('Entry "%s" does not exist', $currentName instanceof EntryReference ? $currentName->name() : $currentName));
+            throw InvalidLogicException::because(\sprintf('Entry "%s" does not exist', $currentName instanceof Reference ? $currentName->name() : $currentName));
         }
 
         $entries = $this->entries;
 
         $entry = $this->get($currentName);
 
-        if ($currentName instanceof EntryReference) {
+        if ($currentName instanceof Reference) {
             unset($entries[$currentName->name()]);
         } else {
             unset($entries[$currentName]);
         }
 
-        if ($newName instanceof EntryReference) {
+        if ($newName instanceof Reference) {
             $entries[$newName->name()] = $entry->rename($newName->name());
         } else {
             $entries[$newName] = $entry->rename($newName);
@@ -362,10 +362,10 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
         return $data;
     }
 
-    private function find(string|EntryReference $entry) : ?Entry
+    private function find(string|Reference $entry) : ?Entry
     {
         if ($this->has($entry)) {
-            return $entry instanceof EntryReference ? $this->entries[$entry->name()] : $this->entries[$entry];
+            return $entry instanceof Reference ? $this->entries[$entry->name()] : $this->entries[$entry];
         }
 
         return null;

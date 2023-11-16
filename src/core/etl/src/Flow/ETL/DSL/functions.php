@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\DSL;
 
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Function\All;
 use Flow\ETL\Function\Any;
 use Flow\ETL\Function\ArrayExists;
@@ -67,20 +66,15 @@ use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Row\Reference;
-use Flow\ETL\Row\StructureReference;
 use Flow\ETL\Rows;
 use Flow\ETL\Window;
 
-function col(string $entry, string ...$entries) : Reference
+function col(string $entry) : Reference
 {
-    if ([] !== $entries) {
-        return new StructureReference($entry, ...$entries);
-    }
-
     return new EntryReference($entry);
 }
 
-function entry(string $entry) : EntryReference
+function entry(string $entry) : Reference
 {
     return new EntryReference($entry);
 }
@@ -88,7 +82,7 @@ function entry(string $entry) : EntryReference
 /**
  * Alias for entry function.
  */
-function ref(string $entry) : EntryReference
+function ref(string $entry) : Reference
 {
     return entry($entry);
 }
@@ -96,17 +90,6 @@ function ref(string $entry) : EntryReference
 function optional(ScalarFunction $expression) : ScalarFunction
 {
     return new Optional($expression);
-}
-
-function struct(string ...$entries) : StructureReference
-{
-    if (!\count($entries)) {
-        throw new InvalidArgumentException('struct (StructureReference) require at least one entry');
-    }
-
-    $entry = \array_shift($entries);
-
-    return new StructureReference($entry, ...$entries);
 }
 
 function lit(mixed $value) : ScalarFunction
@@ -222,7 +205,7 @@ function cast(ScalarFunction $expression, string $type) : ScalarFunction
     return new Cast($expression, $type);
 }
 
-function count(ScalarFunction $expression) : Count
+function count(Reference $expression) : Count
 {
     return new Count($expression);
 }
@@ -444,7 +427,7 @@ function dens_rank() : DensRank
     return new DensRank();
 }
 
-function average(EntryReference $ref) : Average
+function average(Reference $ref) : Average
 {
     return new Average($ref);
 }

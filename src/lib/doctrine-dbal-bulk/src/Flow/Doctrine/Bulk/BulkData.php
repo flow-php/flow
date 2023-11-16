@@ -17,6 +17,8 @@ final class BulkData
     private array $rows;
 
     /**
+     * @psalm-suppress DocblockTypeContradiction
+     *
      * @param array<int, array<string, mixed>> $rows
      */
     public function __construct(array $rows)

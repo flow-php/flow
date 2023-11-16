@@ -7,17 +7,14 @@ namespace Flow\ETL\Function;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
 
 final class Max implements AggregatingFunction
 {
     private ?float $max;
 
-    private readonly EntryReference $ref;
-
-    public function __construct(string|EntryReference $entry)
+    public function __construct(private readonly Reference $ref)
     {
-        $this->ref = EntryReference::init($entry);
         $this->max = null;
     }
 

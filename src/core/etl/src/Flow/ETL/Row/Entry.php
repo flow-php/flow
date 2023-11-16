@@ -31,7 +31,7 @@ interface Entry extends Serializable
 
     public function name() : string;
 
-    public function ref() : EntryReference;
+    public function ref() : Reference;
 
     public function rename(string $name) : self;
 

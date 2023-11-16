@@ -22,7 +22,6 @@ use Flow\ETL\Pipeline\GroupByPipeline;
 use Flow\ETL\Pipeline\ParallelizingPipeline;
 use Flow\ETL\Pipeline\PartitioningPipeline;
 use Flow\ETL\Pipeline\VoidPipeline;
-use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Row\Schema;
@@ -186,13 +185,13 @@ final class DataFrame
     }
 
     /**
-     * @param EntryReference|string ...$entries
+     * @param Reference|string ...$entries
      *
      * @lazy
      *
      * @return $this
      */
-    public function dropDuplicates(string|EntryReference ...$entries) : self
+    public function dropDuplicates(string|Reference ...$entries) : self
     {
         $this->pipeline->add(new DropDuplicatesTransformer(...$entries));
 
@@ -640,7 +639,7 @@ final class DataFrame
     /**
      * @lazy
      */
-    public function sortBy(EntryReference ...$entries) : self
+    public function sortBy(Reference ...$entries) : self
     {
         $this
             ->cache($this->context->config->id())

@@ -7,7 +7,6 @@ namespace Flow\ETL;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Row\Schema;
@@ -63,12 +62,12 @@ final class Row implements Serializable
     /**
      * @throws InvalidArgumentException
      */
-    public function get(string|EntryReference $ref) : Entry
+    public function get(string|Reference $ref) : Entry
     {
         return $this->entries->get($ref);
     }
 
-    public function has(string|EntryReference $ref) : bool
+    public function has(string|Reference $ref) : bool
     {
         return $this->entries->has($ref);
     }
@@ -161,7 +160,7 @@ final class Row implements Serializable
      *
      * @return mixed
      */
-    public function valueOf(string|EntryReference $name)
+    public function valueOf(string|Reference $name)
     {
         return $this->get($name)->value();
     }

@@ -8,7 +8,6 @@ use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\max;
 use function Flow\ETL\DSL\min;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\struct;
 use function Flow\ETL\DSL\sum;
 use Flow\ETL\DSL\CSV;
 use Flow\ETL\DSL\To;
@@ -21,7 +20,7 @@ $flow = (new Flow())
     ->withEntry('production_kwh', ref('Produkcja(kWh)'))
     ->withEntry('consumption_kwh', ref('Zużycie(kWh)'))
     ->withEntry('date', ref('Zaktualizowany czas')->toDate('Y/m/d')->dateFormat('Y/m'))
-    ->select(struct('date', 'production_kwh', 'consumption_kwh'))
+    ->select('date', 'production_kwh', 'consumption_kwh')
     ->groupBy(ref('date'))
     ->aggregate(
         average(ref('production_kwh')),

@@ -7,7 +7,7 @@ namespace Flow\ETL\Function;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
 
 final class IsType implements ScalarFunction
 {
@@ -36,7 +36,7 @@ final class IsType implements ScalarFunction
 
     public function eval(Row $row) : bool
     {
-        if (!$this->ref instanceof EntryReference) {
+        if (!$this->ref instanceof Reference) {
             return false;
         }
 

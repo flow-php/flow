@@ -8,16 +8,17 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
+use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
 use Flow\ETL\Window;
 
-final class Count implements AggregatingFunction, ScalarFunction, WindowFunction
+final class Count implements AggregatingFunction, WindowFunction
 {
     private int $count;
 
     private ?Window $window;
 
-    public function __construct(private readonly ScalarFunction $ref)
+    public function __construct(private readonly Reference $ref)
     {
         $this->window = null;
         $this->count = 0;
@@ -46,18 +47,6 @@ final class Count implements AggregatingFunction, ScalarFunction, WindowFunction
         }
 
         return $count;
-    }
-
-    public function eval(Row $row) : mixed
-    {
-        /** @var mixed $val */
-        $val = $this->ref->eval($row);
-
-        if (\is_countable($val)) {
-            return \count($val);
-        }
-
-        return null;
     }
 
     public function over(Window $window) : WindowFunction

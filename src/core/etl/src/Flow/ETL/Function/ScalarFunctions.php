@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
+use Flow\ETL\Row\Reference;
 
-final class Expressions implements ExpandResults, ScalarFunction, UnpackResults
+final class ScalarFunctions implements ExpandResults, ScalarFunction, UnpackResults
 {
-    use \Flow\ETL\Function\EntryScalarFunction;
+    use EntryScalarFunction;
 
     /**
      * @var array<ScalarFunction>
@@ -27,7 +28,7 @@ final class Expressions implements ExpandResults, ScalarFunction, UnpackResults
         foreach ($this->expressions as $expression) {
             $lastValue = $expression->eval($row);
 
-            if ($expression instanceof Row\EntryReference) {
+            if ($expression instanceof Reference) {
                 $row = $row->set((new Row\Factory\NativeEntryFactory())->create($expression->to(), $lastValue));
             }
         }

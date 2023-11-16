@@ -7,15 +7,16 @@ namespace Flow\ETL\Join\Comparison;
 use Flow\ETL\Join\Comparison;
 use Flow\ETL\Row;
 use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
 
 /**
- * @implements Comparison<array{entry_left: string|EntryReference, entry_right: string|EntryReference}>
+ * @implements Comparison<array{entry_left: string|Reference, entry_right: string|Reference}>
  */
 final class LessThan implements Comparison
 {
     public function __construct(
-        private readonly string|EntryReference $entryLeft,
-        private readonly string|EntryReference $entryRight
+        private readonly string|Reference $entryLeft,
+        private readonly string|Reference $entryRight
     ) {
     }
 
@@ -39,7 +40,7 @@ final class LessThan implements Comparison
     }
 
     /**
-     * @return array<EntryReference>
+     * @return array<Reference>
      */
     public function left() : array
     {
@@ -47,7 +48,7 @@ final class LessThan implements Comparison
     }
 
     /**
-     * @return array<EntryReference>
+     * @return array<Reference>
      */
     public function right() : array
     {

@@ -59,7 +59,7 @@ final class Schema implements \Countable, Serializable
     }
 
     /**
-     * @return array<EntryReference>
+     * @return array<Reference>
      */
     public function entries() : array
     {
@@ -72,9 +72,9 @@ final class Schema implements \Countable, Serializable
         return $refs;
     }
 
-    public function findDefinition(string|EntryReference $ref) : ?Definition
+    public function findDefinition(string|Reference $ref) : ?Definition
     {
-        if ($ref instanceof EntryReference) {
+        if ($ref instanceof Reference) {
             if (!\array_key_exists($ref->name(), $this->definitions)) {
                 return null;
             }
@@ -92,7 +92,7 @@ final class Schema implements \Countable, Serializable
     /**
      * @throws InvalidArgumentException
      */
-    public function getDefinition(string|EntryReference $ref) : Definition
+    public function getDefinition(string|Reference $ref) : Definition
     {
         return $this->findDefinition($ref) ?: throw new InvalidArgumentException("There is no definition for \"{$ref}\" in the schema.");
     }

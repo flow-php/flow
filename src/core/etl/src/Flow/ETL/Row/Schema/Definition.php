@@ -24,13 +24,14 @@ use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Row\Entry\UuidEntry;
 use Flow\ETL\Row\Entry\XMLEntry;
 use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Constraint\Any;
 use Flow\ETL\Row\Schema\Constraint\VoidConstraint;
 use Flow\Serializer\Serializable;
 
 /**
  * @implements Serializable<array{
- *     ref: EntryReference,
+ *     ref: Reference,
  *     classes:array<class-string<Entry>>,
  *     constraint: Constraint,
  *     metadata: Metadata
@@ -42,13 +43,13 @@ final class Definition implements Serializable
 
     private Metadata $metadata;
 
-    private readonly EntryReference $ref;
+    private readonly Reference $ref;
 
     /**
      * @param array<class-string<Entry>> $classes
      */
     public function __construct(
-        string|EntryReference $ref,
+        string|Reference $ref,
         private readonly array $classes,
         ?Constraint $constraint = null,
         ?Metadata $metadata = null
@@ -62,17 +63,17 @@ final class Definition implements Serializable
         $this->ref = EntryReference::init($ref);
     }
 
-    public static function array(string|EntryReference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function array(string|Reference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
         return new self($entry, ($nullable) ? [ArrayEntry::class, NullEntry::class] : [ArrayEntry::class], $constraint, $metadata);
     }
 
-    public static function boolean(string|EntryReference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function boolean(string|Reference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
         return new self($entry, ($nullable) ? [BooleanEntry::class, NullEntry::class] : [BooleanEntry::class], $constraint, $metadata);
     }
 
-    public static function dateTime(string|EntryReference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function dateTime(string|Reference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
         return new self($entry, ($nullable) ? [DateTimeEntry::class, NullEntry::class] : [DateTimeEntry::class], $constraint, $metadata);
     }
@@ -80,7 +81,7 @@ final class Definition implements Serializable
     /**
      * @param class-string<\UnitEnum> $type
      */
-    public static function enum(string|EntryReference $entry, string $type, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function enum(string|Reference $entry, string $type, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
         if (!\enum_exists($type)) {
             throw new InvalidArgumentException("Enum of type \"{$type}\" not found");
@@ -96,22 +97,22 @@ final class Definition implements Serializable
         );
     }
 
-    public static function float(string|EntryReference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function float(string|Reference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
         return new self($entry, ($nullable) ? [FloatEntry::class, NullEntry::class] : [FloatEntry::class], $constraint, $metadata);
     }
 
-    public static function integer(string|EntryReference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function integer(string|Reference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
         return new self($entry, ($nullable) ? [IntegerEntry::class, NullEntry::class] : [IntegerEntry::class], $constraint, $metadata);
     }
 
-    public static function json(string|EntryReference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function json(string|Reference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
         return new self($entry, ($nullable) ? [JsonEntry::class, NullEntry::class] : [JsonEntry::class], $constraint, $metadata);
     }
 
-    public static function list(string|EntryReference $entry, ListType $type, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function list(string|Reference $entry, ListType $type, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
         return new self(
             $entry,
@@ -121,7 +122,7 @@ final class Definition implements Serializable
         );
     }
 
-    public static function map(string|EntryReference $entry, MapType $type, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function map(string|Reference $entry, MapType $type, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
         return new self(
             $entry,
@@ -131,12 +132,12 @@ final class Definition implements Serializable
         );
     }
 
-    public static function null(string|EntryReference $entry, ?Metadata $metadata = null) : self
+    public static function null(string|Reference $entry, ?Metadata $metadata = null) : self
     {
         return new self($entry, [NullEntry::class], null, $metadata);
     }
 
-    public static function object(string|EntryReference $entry, ObjectType $type, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function object(string|Reference $entry, ObjectType $type, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
         return new self(
             $entry,
@@ -146,12 +147,12 @@ final class Definition implements Serializable
         );
     }
 
-    public static function string(string|EntryReference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function string(string|Reference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
         return new self($entry, ($nullable) ? [StringEntry::class, NullEntry::class] : [StringEntry::class], $constraint, $metadata);
     }
 
-    public static function structure(string|EntryReference $entry, StructureType $type, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function structure(string|Reference $entry, StructureType $type, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
         return new self(
             $entry,
@@ -166,7 +167,7 @@ final class Definition implements Serializable
      *
      * @return Definition
      */
-    public static function union(string|EntryReference $entry, array $entryClasses, ?Constraint $constraint = null, ?Metadata $metadata = null)
+    public static function union(string|Reference $entry, array $entryClasses, ?Constraint $constraint = null, ?Metadata $metadata = null)
     {
         $types = \array_values(\array_unique($entryClasses));
 
@@ -177,17 +178,17 @@ final class Definition implements Serializable
         return new self($entry, $types, $constraint, $metadata);
     }
 
-    public static function uuid(string|EntryReference $entry, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function uuid(string|Reference $entry, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
         return new self($entry, [UuidEntry::class], $constraint, $metadata);
     }
 
-    public static function xml(string|EntryReference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function xml(string|Reference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
         return new self($entry, ($nullable) ? [XMLEntry::class, NullEntry::class] : [XMLEntry::class], $constraint, $metadata);
     }
 
-    public static function xml_node(string|EntryReference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function xml_node(string|Reference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
         return new self($entry, ($nullable) ? [Entry\XMLNodeEntry::class, NullEntry::class] : [Entry\XMLNodeEntry::class], $constraint, $metadata);
     }
@@ -217,7 +218,7 @@ final class Definition implements Serializable
     }
     // @codeCoverageIgnoreEnd
 
-    public function entry() : EntryReference
+    public function entry() : Reference
     {
         return $this->ref;
     }

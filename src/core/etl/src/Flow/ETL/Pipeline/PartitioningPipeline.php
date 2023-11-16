@@ -12,7 +12,7 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Partition;
 use Flow\ETL\Pipeline;
-use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
 use Flow\ETL\Transformer;
 
 final class PartitioningPipeline implements OverridingPipeline, Pipeline
@@ -21,7 +21,7 @@ final class PartitioningPipeline implements OverridingPipeline, Pipeline
 
     /**
      * @param Pipeline $pipeline
-     * @param array<EntryReference> $orderBy
+     * @param array<Reference> $orderBy
      */
     public function __construct(private readonly Pipeline $pipeline, private readonly array $orderBy = [])
     {
