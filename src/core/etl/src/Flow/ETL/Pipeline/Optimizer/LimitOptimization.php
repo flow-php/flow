@@ -3,6 +3,7 @@
 namespace Flow\ETL\Pipeline\Optimizer;
 
 use Flow\ETL\Extractor\LimitableExtractor;
+use Flow\ETL\Function\ExpandResults;
 use Flow\ETL\Loader;
 use Flow\ETL\Pipeline;
 use Flow\ETL\Pipeline\BatchingPipeline;
@@ -11,7 +12,6 @@ use Flow\ETL\Pipeline\NestedPipeline;
 use Flow\ETL\Pipeline\ParallelizingPipeline;
 use Flow\ETL\Pipeline\SynchronousPipeline;
 use Flow\ETL\Pipeline\VoidPipeline;
-use Flow\ETL\Row\Reference\ExpandResults;
 use Flow\ETL\Transformer;
 use Flow\ETL\Transformer\CallbackRowTransformer;
 use Flow\ETL\Transformer\EntryExpressionEvalTransformer;

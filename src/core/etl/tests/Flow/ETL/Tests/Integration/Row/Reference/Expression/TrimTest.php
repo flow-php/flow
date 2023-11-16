@@ -8,8 +8,8 @@ use function Flow\ETL\DSL\ref;
 use Flow\ETL\DSL\From;
 use Flow\ETL\DSL\To;
 use Flow\ETL\Flow;
+use Flow\ETL\Function\Trim\Type;
 use Flow\ETL\Memory\ArrayMemory;
-use Flow\ETL\Row\Reference\Expression\Trim\Type;
 use PHPUnit\Framework\TestCase;
 
 final class TrimTest extends TestCase

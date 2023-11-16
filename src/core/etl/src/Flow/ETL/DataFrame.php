@@ -9,7 +9,8 @@ use Flow\ETL\DSL\Transform;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Formatter\AsciiTableFormatter;
-use Flow\ETL\GroupBy\Aggregator;
+use Flow\ETL\Function\AggregatingFunction;
+use Flow\ETL\Function\WindowFunction;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Join\Join;
 use Flow\ETL\Loader\SchemaValidationLoader;
@@ -37,7 +38,6 @@ use Flow\ETL\Transformer\LimitTransformer;
 use Flow\ETL\Transformer\RemoveEntriesTransformer;
 use Flow\ETL\Transformer\StyleConverter\StringStyles;
 use Flow\ETL\Transformer\WindowFunctionTransformer;
-use Flow\ETL\Window\WindowFunction;
 
 final class DataFrame
 {
@@ -56,7 +56,7 @@ final class DataFrame
      *
      * @throws InvalidArgumentException
      */
-    public function aggregate(Aggregator ...$aggregations) : self
+    public function aggregate(AggregatingFunction ...$aggregations) : self
     {
         if ($this->groupBy === null) {
             $this->groupBy = new GroupBy();
@@ -249,7 +249,7 @@ final class DataFrame
     /**
      * @lazy
      */
-    public function filter(Reference\Expression $callback) : self
+    public function filter(Function\ScalarFunction $callback) : self
     {
         $this->pipeline->add(new EntryExpressionFilterTransformer($callback));
 
@@ -707,7 +707,7 @@ final class DataFrame
     /**
      * @lazy
      *
-     * @param array<string, Reference\Expression> $refs
+     * @param array<string, \Flow\ETL\Function\ScalarFunction> $refs
      */
     public function withEntries(array $refs) : self
     {
@@ -721,7 +721,7 @@ final class DataFrame
     /**
      * @lazy
      */
-    public function withEntry(string $entryName, Reference\Expression|WindowFunction $ref) : self
+    public function withEntry(string $entryName, Function\ScalarFunction|WindowFunction $ref) : self
     {
         if ($ref instanceof WindowFunction) {
             if (\count($ref->window()->partitions())) {

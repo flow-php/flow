@@ -9,8 +9,8 @@ use function Flow\ETL\DSL\ref;
 use Flow\ETL\DSL\From;
 use Flow\ETL\DSL\To;
 use Flow\ETL\Flow;
+use Flow\ETL\Function\ArrayExpand\ArrayExpand;
 use Flow\ETL\Memory\ArrayMemory;
-use Flow\ETL\Row\Reference\Expression\ArrayExpand\ArrayExpand;
 use PHPUnit\Framework\TestCase;
 
 final class ArrayExpandTest extends TestCase

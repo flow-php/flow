@@ -7,9 +7,9 @@ namespace Flow\ETL\Transformer;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Function\WindowFunction;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
-use Flow\ETL\Window\WindowFunction;
 
 /**
  * @implements Transformer<array{entry_name: string, expr: WindowFunction}>

@@ -5,20 +5,20 @@ declare(strict_types=1);
 namespace Flow\ETL\Transformer;
 
 use Flow\ETL\FlowContext;
+use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entries;
-use Flow\ETL\Row\Reference\Expression;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
 /**
- * @implements Transformer<array{entry: string, expression: Expression}>
+ * @implements Transformer<array{entry: string, expression: ScalarFunction}>
  */
 final class EntryExpressionEvalTransformer implements Transformer
 {
     public function __construct(
         private readonly string $entryName,
-        public readonly Expression $expression,
+        public readonly ScalarFunction $expression,
     ) {
     }
 
@@ -38,7 +38,7 @@ final class EntryExpressionEvalTransformer implements Transformer
 
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
-        if ($this->expression instanceof Row\Reference\ExpandResults && $this->expression->expand()) {
+        if ($this->expression instanceof \Flow\ETL\Function\ExpandResults && $this->expression->expand()) {
             return $rows->flatMap(
                 fn (Row $r) : array => \array_map(
                     fn ($val) : Row => new Row(
@@ -56,7 +56,7 @@ final class EntryExpressionEvalTransformer implements Transformer
                 $value = $this->expression->eval($r);
 
                 if (\is_array($value)) {
-                    if ($this->expression instanceof Row\Reference\UnpackResults && $this->expression->unpack()) {
+                    if ($this->expression instanceof \Flow\ETL\Function\UnpackResults && $this->expression->unpack()) {
                         /**
                          * @var array-key $key
                          * @var mixed $val
