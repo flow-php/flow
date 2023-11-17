@@ -8,7 +8,7 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Join\Comparison\All;
 use Flow\ETL\Join\Comparison\Identical;
 use Flow\ETL\Row;
-use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
 use Flow\Serializer\Serializable;
 
 /**
@@ -66,7 +66,7 @@ final class Expression implements Serializable
     }
 
     /**
-     * @return array<EntryReference>
+     * @return array<Reference>
      */
     public function left() : array
     {
@@ -84,7 +84,7 @@ final class Expression implements Serializable
     }
 
     /**
-     * @return array<EntryReference>
+     * @return array<Reference>
      */
     public function right() : array
     {

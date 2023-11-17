@@ -10,7 +10,7 @@ use Flow\ETL\Extractor;
 use Flow\ETL\Monitoring\Memory\Configuration;
 use Flow\ETL\Monitoring\Memory\Consumption;
 use Flow\ETL\Monitoring\Memory\Unit;
-use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
 
 /**
@@ -43,7 +43,7 @@ final class MemorySort implements ExternalSort
         }
     }
 
-    public function sortBy(EntryReference ...$refs) : Extractor
+    public function sortBy(Reference ...$refs) : Extractor
     {
         $memoryConsumption = new Consumption();
 

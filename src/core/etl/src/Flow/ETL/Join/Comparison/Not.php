@@ -6,7 +6,7 @@ namespace Flow\ETL\Join\Comparison;
 
 use Flow\ETL\Join\Comparison;
 use Flow\ETL\Row;
-use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
 
 /**
  * @implements Comparison<array{comparison: Comparison}>
@@ -35,7 +35,7 @@ final class Not implements Comparison
     }
 
     /**
-     * @return array<EntryReference>
+     * @return array<Reference>
      */
     public function left() : array
     {
@@ -43,7 +43,7 @@ final class Not implements Comparison
     }
 
     /**
-     * @return array<EntryReference>
+     * @return array<Reference>
      */
     public function right() : array
     {

@@ -1,117 +1,59 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace Flow\ETL;
 
-use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Row\EntryReference;
-use Flow\ETL\Window\Average;
-use Flow\ETL\Window\Count;
-use Flow\ETL\Window\DensRank;
-use Flow\ETL\Window\Rank;
-use Flow\ETL\Window\RowNumber;
-use Flow\ETL\Window\Sum;
-use Flow\ETL\Window\WindowFunction;
+use Flow\ETL\Row\Reference;
 
 final class Window
 {
-    private ?WindowFunction $function = null;
-
     /**
-     * @var array<EntryReference>
+     * @var array<Reference>
      */
-    private array $orderBy = [];
+    private array $orderBy;
 
     /**
-     * @var array<EntryReference>
+     * @var array<Reference>
      */
     private array $partitions;
 
-    private function __construct(EntryReference ...$partitions)
+    public function __construct()
     {
-        $this->partitions = $partitions;
-    }
-
-    public static function partitionBy(EntryReference ...$partitions) : self
-    {
-        return new self(...$partitions);
-    }
-
-    public function avg(EntryReference $ref) : self
-    {
-        $this->function = new Average($ref);
-
-        return $this;
-    }
-
-    public function count(EntryReference $ref) : self
-    {
-        $this->function = new Count($ref);
-
-        return $this;
-    }
-
-    public function densRank() : self
-    {
-        $this->function = new DensRank();
-
-        return $this;
+        $this->partitions = [];
+        $this->orderBy = [];
     }
 
     /**
-     * @throws RuntimeException
-     */
-    public function function() : WindowFunction
-    {
-        if ($this->function === null) {
-            throw new RuntimeException('Window function is not set');
-        }
-
-        return $this->function;
-    }
-
-    /**
-     * @return EntryReference[]
+     * @return array<Reference>
      */
     public function order() : array
     {
         return $this->orderBy;
     }
 
-    public function orderBy(EntryReference ...$refs) : self
+    public function orderBy(Reference $ref, Reference ...$refs) : self
     {
+        \array_unshift($refs, $ref);
+
+        $this->orderBy = $refs;
+
+        return $this;
+    }
+
+    public function partitionBy(Reference $ref, Reference ...$refs) : self
+    {
+        \array_unshift($refs, $ref);
+
+        $this->partitions = $refs;
         $this->orderBy = $refs;
 
         return $this;
     }
 
     /**
-     * @return EntryReference[]
+     * @return array<Reference>
      */
     public function partitions() : array
     {
         return $this->partitions;
-    }
-
-    public function rank() : self
-    {
-        $this->function = new Rank();
-
-        return $this;
-    }
-
-    public function rowNumber() : self
-    {
-        $this->function = new RowNumber();
-
-        return $this;
-    }
-
-    public function sum(EntryReference $ref) : self
-    {
-        $this->function = new Sum($ref);
-
-        return $this;
     }
 }

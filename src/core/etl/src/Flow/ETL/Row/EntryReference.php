@@ -4,15 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row;
 
+use Flow\ETL\Function\EntryScalarFunction;
+use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Row;
-use Flow\ETL\Row\Reference\Expression;
 
 /**
  * @implements Reference<array{entry: string, alias: ?string}>
  */
-final class EntryReference implements Expression, Reference
+final class EntryReference implements Reference, ScalarFunction
 {
-    use Row\Reference\EntryExpression;
+    use EntryScalarFunction;
 
     private ?string $alias = null;
 
@@ -22,7 +23,7 @@ final class EntryReference implements Expression, Reference
     {
     }
 
-    public static function init(string|self $ref) : self
+    public static function init(string|Reference $ref) : Reference
     {
         if (\is_string($ref)) {
             return new self($ref);

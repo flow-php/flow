@@ -23,8 +23,7 @@ interface Reference extends Serializable
 
     public function name() : string;
 
-    /**
-     * @return array<EntryReference>|string
-     */
-    public function to() : string|array;
+    public function sort() : SortOrder;
+
+    public function to() : string;
 }

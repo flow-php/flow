@@ -29,8 +29,8 @@
     },
     "suggest": {
         "jawira/case-converter": "Provides CaseConverter that is required by the EntryNameCaseConverterTransformer",
-        "moneyphp/money": "Provides MoneyParser that is required by ToMoney expression",
-        "ramsey/uuid": "Provides expressions `uuid_v4` and `uuid_v7` that allow generate uuid entry"
+        "moneyphp/money": "Provides MoneyParser that is required by ToMoney scalar function",
+        "ramsey/uuid": "Provides scalar function `uuid_v4` and `uuid_v7` that allow generate uuid entry"
     },
     "license": "MIT",
     "autoload": {

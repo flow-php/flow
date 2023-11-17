@@ -446,11 +446,11 @@ This approach is way more developer friendly as IDE can autocomplete all filteri
     ->run();
 ```
 
-So in general all filtering functions are available as [Reference Expression](/src/core/etl/src/Flow/ETL/Row/Reference/Expression.php).
+So in general all filtering functions are available as [Scalar Functions](/src/core/etl/src/Flow/ETL/Function/ScalarFunction.php).
 This means you can chain them creating readable conditions that will significantly improve maintainability of your 
 data processing pipelines.
 
-All possible expressions are available through [EntryReference.php](/src/core/etl/src/Flow/ETL/Row/EntryReference.php).
+All possible scalar functions are available through [EntryReference.php](/src/core/etl/src/Flow/ETL/Row/EntryReference.php).
 
 ## Group By
 

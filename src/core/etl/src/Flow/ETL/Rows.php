@@ -14,7 +14,6 @@ use Flow\ETL\Row\Comparator\NativeComparator;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry\NullEntry;
 use Flow\ETL\Row\EntryFactory;
-use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
@@ -292,7 +291,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
                     try {
                         $joinedRow = $leftRow
                             ->merge($rightRow, $expression->prefix())
-                            ->remove(...\array_map(static fn (EntryReference $e) : string => $expression->prefix() . $e->name(), $expression->right()));
+                            ->remove(...\array_map(static fn (Reference $e) : string => $expression->prefix() . $e->name(), $expression->right()));
                     } catch (InvalidArgumentException $e) {
                         throw new InvalidArgumentException($e->getMessage() . '. Please consider using Condition, join prefix option');
                     }
@@ -330,7 +329,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
                     try {
                         $joinedRow = $leftRow
                             ->merge($rightRow, $expression->prefix())
-                            ->remove(...\array_map(static fn (EntryReference $e) : string => $expression->prefix() . $e->name(), $expression->right()));
+                            ->remove(...\array_map(static fn (Reference $e) : string => $expression->prefix() . $e->name(), $expression->right()));
                     } catch (InvalidArgumentException $e) {
                         throw new InvalidArgumentException($e->getMessage() . '. Please consider using Condition, join prefix option');
                     }
@@ -344,7 +343,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
                     ...\array_map(
                         static fn (string $e) : NullEntry => Entry::null($e),
                         \array_map(
-                            static fn (EntryReference $r) : string => $r->name(),
+                            static fn (Reference $r) : string => $r->name(),
                             $rightSchema->entries()
                         )
                     )
@@ -406,7 +405,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
                         $joinedRow = $rightRow
                             ->merge($leftRow, $expression->prefix())
                             ->remove(
-                                ...\array_map(static fn (EntryReference $e) : string => $expression->prefix() . $e->name(), $expression->left())
+                                ...\array_map(static fn (Reference $e) : string => $expression->prefix() . $e->name(), $expression->left())
                             );
                     } catch (InvalidArgumentException $e) {
                         throw new InvalidArgumentException($e->getMessage() . '. Please consider using Condition, join prefix option');
@@ -419,7 +418,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
             if ($joinedRow === null) {
                 $joined[] = $rightRow->merge(
                     Row::create(
-                        ...\array_map(static fn (EntryReference $e) : NullEntry => Entry::null($e->name()), $leftSchema->entries())
+                        ...\array_map(static fn (Reference $e) : NullEntry => Entry::null($e->name()), $leftSchema->entries())
                     ),
                     $expression->prefix()
                 );
@@ -595,7 +594,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
      *
      * @return mixed[]
      */
-    public function reduceToArray(string|EntryReference $ref) : array
+    public function reduceToArray(string|Reference $ref) : array
     {
         return $this->reduce(
             function (array $ids, Row $row) use ($ref) : array {
@@ -659,7 +658,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
      *
      * @return $this
      */
-    public function sortAscending(string|EntryReference $ref) : self
+    public function sortAscending(string|Reference $ref) : self
     {
         $rows = $this->rows;
         \usort($rows, fn (Row $a, Row $b) : int => $a->valueOf($ref) <=> $b->valueOf($ref));
@@ -672,7 +671,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
      *
      * @return $this
      */
-    public function sortBy(EntryReference ...$refs) : self
+    public function sortBy(Reference ...$refs) : self
     {
         $rows = $this;
 
@@ -688,7 +687,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
      *
      * @return $this
      */
-    public function sortDescending(string|EntryReference $ref) : self
+    public function sortDescending(string|Reference $ref) : self
     {
         $rows = $this->rows;
         \usort($rows, fn (Row $a, Row $b) : int => -($a->valueOf($ref) <=> $b->valueOf($ref)));

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
-use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
 
 final class PartitionedRows
 {
@@ -20,7 +20,7 @@ final class PartitionedRows
         $this->partitions = $partitions;
     }
 
-    public function orderBy(EntryReference ...$refs) : Rows
+    public function orderBy(Reference ...$refs) : Rows
     {
         return $this->rows->sortBy(...$refs);
     }

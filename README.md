@@ -89,7 +89,6 @@ $ php daily_revenue.php
 ## Features
 
 * low and constant memory consumption
-* asynchronous data processing
 * reading from any data source
 * writing to any data source
 * rich collection of data transformation functions
@@ -195,11 +194,6 @@ In order to understand how Flow works, please read [documentation](src/core/etl/
 * **L**oader (Writer) - Memory safe representation of Data Sink, the responsibility of Loader is to write `Rows` into destination storage, one at time.
 * Pipeline - Interface representing ETL process, each received `Rows` instanced is passed through all `Pipes`, also responsible for error handling.
 * Pipe - Loader of Transformer instance existing in the `Pipes` collection.
-
-## Asynchronous Processing
-
-* [etl-adapter-amphp](https://github.com/flow-php/etl-adapter-amphp)
-* [etl-adapter-reactphp](https://github.com/flow-php/etl-adapter-reactphp)
 
 ### GitHub Stars
 

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\ExternalSort;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Row\SortOrder;
 
@@ -18,7 +18,7 @@ final class RowsMinHeap extends \SplMinHeap
 {
     private readonly References $ref;
 
-    public function __construct(EntryReference ...$refs)
+    public function __construct(Reference ...$refs)
     {
         $this->ref = References::init(...$refs);
     }

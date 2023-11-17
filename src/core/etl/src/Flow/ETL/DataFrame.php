@@ -9,7 +9,8 @@ use Flow\ETL\DSL\Transform;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Formatter\AsciiTableFormatter;
-use Flow\ETL\GroupBy\Aggregation;
+use Flow\ETL\Function\AggregatingFunction;
+use Flow\ETL\Function\WindowFunction;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Join\Join;
 use Flow\ETL\Loader\SchemaValidationLoader;
@@ -19,23 +20,23 @@ use Flow\ETL\Pipeline\CachingPipeline;
 use Flow\ETL\Pipeline\CollectingPipeline;
 use Flow\ETL\Pipeline\GroupByPipeline;
 use Flow\ETL\Pipeline\ParallelizingPipeline;
+use Flow\ETL\Pipeline\PartitioningPipeline;
 use Flow\ETL\Pipeline\VoidPipeline;
-use Flow\ETL\Pipeline\WindowPartitioningPipeline;
-use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Transformer\CallbackRowTransformer;
 use Flow\ETL\Transformer\CrossJoinRowsTransformer;
 use Flow\ETL\Transformer\DropDuplicatesTransformer;
-use Flow\ETL\Transformer\EntryExpressionEvalTransformer;
-use Flow\ETL\Transformer\EntryExpressionFilterTransformer;
 use Flow\ETL\Transformer\JoinEachRowsTransformer;
 use Flow\ETL\Transformer\JoinRowsTransformer;
 use Flow\ETL\Transformer\KeepEntriesTransformer;
 use Flow\ETL\Transformer\LimitTransformer;
 use Flow\ETL\Transformer\RemoveEntriesTransformer;
+use Flow\ETL\Transformer\ScalarFunctionFilterTransformer;
+use Flow\ETL\Transformer\ScalarFunctionTransformer;
 use Flow\ETL\Transformer\StyleConverter\StringStyles;
+use Flow\ETL\Transformer\WindowFunctionTransformer;
 
 final class DataFrame
 {
@@ -54,7 +55,7 @@ final class DataFrame
      *
      * @throws InvalidArgumentException
      */
-    public function aggregate(Aggregation ...$aggregations) : self
+    public function aggregate(AggregatingFunction ...$aggregations) : self
     {
         if ($this->groupBy === null) {
             $this->groupBy = new GroupBy();
@@ -184,13 +185,13 @@ final class DataFrame
     }
 
     /**
-     * @param EntryReference|string ...$entries
+     * @param Reference|string ...$entries
      *
      * @lazy
      *
      * @return $this
      */
-    public function dropDuplicates(string|EntryReference ...$entries) : self
+    public function dropDuplicates(string|Reference ...$entries) : self
     {
         $this->pipeline->add(new DropDuplicatesTransformer(...$entries));
 
@@ -247,9 +248,9 @@ final class DataFrame
     /**
      * @lazy
      */
-    public function filter(Reference\Expression $callback) : self
+    public function filter(Function\ScalarFunction $callback) : self
     {
-        $this->pipeline->add(new EntryExpressionFilterTransformer($callback));
+        $this->pipeline->add(new ScalarFunctionFilterTransformer($callback));
 
         return $this;
     }
@@ -490,6 +491,7 @@ final class DataFrame
         \array_unshift($entries, $entry);
 
         $this->context->partitionBy(...References::init(...$entries)->all());
+        $this->pipeline = new PartitioningPipeline($this->pipeline);
 
         return $this;
     }
@@ -637,7 +639,7 @@ final class DataFrame
     /**
      * @lazy
      */
-    public function sortBy(EntryReference ...$entries) : self
+    public function sortBy(Reference ...$entries) : self
     {
         $this
             ->cache($this->context->config->id())
@@ -704,7 +706,7 @@ final class DataFrame
     /**
      * @lazy
      *
-     * @param array<string, Reference\Expression|Window> $refs
+     * @param array<string, \Flow\ETL\Function\ScalarFunction> $refs
      */
     public function withEntries(array $refs) : self
     {
@@ -718,12 +720,23 @@ final class DataFrame
     /**
      * @lazy
      */
-    public function withEntry(string $entryName, Reference\Expression|Window $ref) : self
+    public function withEntry(string $entryName, Function\ScalarFunction|WindowFunction $ref) : self
     {
-        if ($ref instanceof Window) {
-            $this->pipeline = new WindowPartitioningPipeline($this->pipeline, $ref, $entryName);
+        if ($ref instanceof WindowFunction) {
+            if (\count($ref->window()->partitions())) {
+                $this->context->partitionBy(...$ref->window()->partitions());
+                $this->pipeline = new PartitioningPipeline($this->pipeline, $ref->window()->order());
+            } else {
+                $this->collect();
+
+                if (\count($ref->window()->order())) {
+                    $this->sortBy(...$ref->window()->order());
+                }
+            }
+
+            $this->pipeline->add(new WindowFunctionTransformer($entryName, $ref));
         } else {
-            $this->transform(new EntryExpressionEvalTransformer($entryName, $ref));
+            $this->transform(new ScalarFunctionTransformer($entryName, $ref));
         }
 
         return $this;

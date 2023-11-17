@@ -7,18 +7,18 @@ namespace Flow\ETL\Transformer;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Function\WindowFunction;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
-use Flow\ETL\Window;
 
 /**
- * @implements Transformer<array{entry_name: string, window: Window}>
+ * @implements Transformer<array{entry_name: string, expr: WindowFunction}>
  */
 final class WindowFunctionTransformer implements Transformer
 {
     public function __construct(
         private readonly string $entryName,
-        private readonly Window $window,
+        private readonly WindowFunction $function,
     ) {
     }
 
@@ -26,14 +26,14 @@ final class WindowFunctionTransformer implements Transformer
     {
         return [
             'entry_name' => $this->entryName,
-            'window' => $this->window,
+            'expr' => $this->function,
         ];
     }
 
     public function __unserialize(array $data) : void
     {
         $this->entryName = $data['entry_name'];
-        $this->window = $data['window'];
+        $this->function = $data['expr'];
     }
 
     /**
@@ -47,7 +47,7 @@ final class WindowFunctionTransformer implements Transformer
 
         foreach ($rows as $row) {
             $newRows = $newRows->add(
-                $row->add($context->entryFactory()->create($this->entryName, $this->window->function()->apply($row, $rows, $this->window)))
+                $row->add($context->entryFactory()->create($this->entryName, $this->function->apply($row, $rows)))
             );
         }
 

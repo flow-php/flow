@@ -3,11 +3,11 @@
 declare(strict_types=1);
 
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\sum;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\DSL\From;
 use Flow\ETL\DSL\To;
 use Flow\ETL\Flow;
-use Flow\ETL\GroupBy\Aggregation;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 
@@ -23,7 +23,7 @@ $flow = (new Flow())
             Row::with(Entry::int('a', 400))
         ))
     )
-    ->aggregate(Aggregation::sum(ref('a')))
+    ->aggregate(sum(ref('a')))
     ->write(To::output(false));
 
 if ($_ENV['FLOW_PHAR_APP'] ?? false) {

@@ -8,14 +8,14 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\Serializer\Serializable;
 
 /**
- * @implements \ArrayAccess<string, EntryReference>
- * @implements \IteratorAggregate<string, EntryReference>
- * @implements Serializable<array{refs: array<string, EntryReference>}>
+ * @implements \ArrayAccess<string, Reference>
+ * @implements \IteratorAggregate<string, Reference>
+ * @implements Serializable<array{refs: array<string, Reference>}>
  */
 final class References implements \ArrayAccess, \Countable, \IteratorAggregate, Serializable
 {
     /**
-     * @var array<string, EntryReference>
+     * @var array<string, Reference>
      */
     private readonly array $refs;
 
@@ -24,16 +24,7 @@ final class References implements \ArrayAccess, \Countable, \IteratorAggregate, 
         $refs = [];
 
         foreach ($reference as $ref) {
-            if ($ref instanceof StructureReference) {
-                $refs = \array_merge($refs, $ref->to());
-            } else {
-                /**
-                 * @psalm-suppress PossiblyInvalidArgument
-                 *
-                 * @phpstan-ignore-next-line
-                 */
-                $refs[] = EntryReference::init($ref);
-            }
+            $refs[] = EntryReference::init($ref);
         }
 
         $indexedRefs = [];
@@ -63,7 +54,7 @@ final class References implements \ArrayAccess, \Countable, \IteratorAggregate, 
     }
 
     /**
-     * @return array<EntryReference>
+     * @return array<Reference>
      */
     public function all() : array
     {
@@ -76,14 +67,14 @@ final class References implements \ArrayAccess, \Countable, \IteratorAggregate, 
     }
 
     /**
-     * @return \Traversable<string, EntryReference>
+     * @return \Traversable<string, Reference>
      */
     public function getIterator() : \Traversable
     {
         return new \ArrayIterator($this->refs);
     }
 
-    public function has(string|EntryReference $reference) : bool
+    public function has(string|Reference $reference) : bool
     {
         foreach ($this->refs as $ref) {
             if ($ref->is(EntryReference::init($reference))) {
@@ -109,9 +100,9 @@ final class References implements \ArrayAccess, \Countable, \IteratorAggregate, 
      *
      * @throws InvalidArgumentException
      *
-     * @return EntryReference
+     * @return Reference
      */
-    public function offsetGet($offset) : EntryReference
+    public function offsetGet($offset) : Reference
     {
         if ($this->offsetExists($offset)) {
             return $this->refs[$offset];

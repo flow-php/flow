@@ -8,7 +8,7 @@ use Flow\ETL\Cache;
 use Flow\ETL\ExternalSort;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\CacheExtractor;
-use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
 
 /**
@@ -30,7 +30,7 @@ final class CacheExternalSort implements ExternalSort
     ) {
     }
 
-    public function sortBy(EntryReference ...$refs) : Extractor
+    public function sortBy(Reference ...$refs) : Extractor
     {
         /** @var array<string, \Generator<Rows>> $cachedPartsArray */
         $cachedPartsArray = [];

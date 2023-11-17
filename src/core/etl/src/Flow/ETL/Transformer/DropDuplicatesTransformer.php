@@ -7,7 +7,7 @@ namespace Flow\ETL\Transformer;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 use Flow\ETL\Transformer\DropDuplicates\Hashes;
@@ -20,11 +20,11 @@ final class DropDuplicatesTransformer implements Transformer
     private Hashes $deduplication;
 
     /**
-     * @var array<EntryReference|string>
+     * @var array<Reference|string>
      */
     private array $entries;
 
-    public function __construct(string|EntryReference ...$entries)
+    public function __construct(string|Reference ...$entries)
     {
         if ([] === $entries) {
             throw new InvalidArgumentException('DropDuplicatesTransformer requires at least one entry');

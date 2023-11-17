@@ -4,30 +4,77 @@ declare(strict_types=1);
 
 namespace Flow\ETL\DSL;
 
-use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Function\All;
+use Flow\ETL\Function\Any;
+use Flow\ETL\Function\ArrayExists;
+use Flow\ETL\Function\ArrayExpand\ArrayExpand;
+use Flow\ETL\Function\ArrayGet;
+use Flow\ETL\Function\ArrayGetCollection;
+use Flow\ETL\Function\ArrayKeyRename;
+use Flow\ETL\Function\ArrayKeysStyleConvert;
+use Flow\ETL\Function\ArrayMerge;
+use Flow\ETL\Function\ArrayMergeCollection;
+use Flow\ETL\Function\ArrayReverse;
+use Flow\ETL\Function\ArraySort;
+use Flow\ETL\Function\ArraySort\Sort;
+use Flow\ETL\Function\ArrayUnpack;
+use Flow\ETL\Function\Average;
+use Flow\ETL\Function\CallMethod;
+use Flow\ETL\Function\Cast;
+use Flow\ETL\Function\Collect;
+use Flow\ETL\Function\CollectUnique;
+use Flow\ETL\Function\Combine;
+use Flow\ETL\Function\Concat;
+use Flow\ETL\Function\Count;
+use Flow\ETL\Function\DateTimeFormat;
+use Flow\ETL\Function\DensRank;
+use Flow\ETL\Function\Exists;
+use Flow\ETL\Function\First;
+use Flow\ETL\Function\Hash;
+use Flow\ETL\Function\Last;
+use Flow\ETL\Function\Literal;
+use Flow\ETL\Function\Max;
+use Flow\ETL\Function\Min;
+use Flow\ETL\Function\Not;
+use Flow\ETL\Function\Now;
+use Flow\ETL\Function\NumberFormat;
+use Flow\ETL\Function\Optional;
+use Flow\ETL\Function\PregMatch;
+use Flow\ETL\Function\PregMatchAll;
+use Flow\ETL\Function\PregReplace;
+use Flow\ETL\Function\Rank;
+use Flow\ETL\Function\Round;
+use Flow\ETL\Function\RowNumber;
+use Flow\ETL\Function\Sanitize;
+use Flow\ETL\Function\ScalarFunction;
+use Flow\ETL\Function\Size;
+use Flow\ETL\Function\Split;
+use Flow\ETL\Function\Sprintf;
+use Flow\ETL\Function\StyleConverter\StringStyles;
+use Flow\ETL\Function\Sum;
+use Flow\ETL\Function\ToDate;
+use Flow\ETL\Function\ToDateTime;
+use Flow\ETL\Function\ToLower;
+use Flow\ETL\Function\ToMoney;
+use Flow\ETL\Function\ToTimeZone;
+use Flow\ETL\Function\ToUpper;
+use Flow\ETL\Function\Ulid;
+use Flow\ETL\Function\Uuid;
+use Flow\ETL\Function\When;
 use Flow\ETL\Row;
 use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Row\Reference;
-use Flow\ETL\Row\Reference\Expression;
-use Flow\ETL\Row\Reference\Expression\ArrayExpand\ArrayExpand;
-use Flow\ETL\Row\Reference\Expression\ArraySort\Sort;
-use Flow\ETL\Row\Reference\Expression\Literal;
-use Flow\ETL\Row\Reference\Expression\StyleConverter\StringStyles;
-use Flow\ETL\Row\StructureReference;
 use Flow\ETL\Rows;
+use Flow\ETL\Window;
 
-function col(string $entry, string ...$entries) : Reference
+function col(string $entry) : Reference
 {
-    if ([] !== $entries) {
-        return new StructureReference($entry, ...$entries);
-    }
-
     return new EntryReference($entry);
 }
 
-function entry(string $entry) : EntryReference
+function entry(string $entry) : Reference
 {
     return new EntryReference($entry);
 }
@@ -35,143 +82,132 @@ function entry(string $entry) : EntryReference
 /**
  * Alias for entry function.
  */
-function ref(string $entry) : EntryReference
+function ref(string $entry) : Reference
 {
     return entry($entry);
 }
 
-function optional(Expression $expression) : Expression
+function optional(ScalarFunction $function) : ScalarFunction
 {
-    return new Expression\Optional($expression);
+    return new Optional($function);
 }
 
-function struct(string ...$entries) : StructureReference
-{
-    if (!\count($entries)) {
-        throw new InvalidArgumentException('struct (StructureReference) require at least one entry');
-    }
-
-    $entry = \array_shift($entries);
-
-    return new StructureReference($entry, ...$entries);
-}
-
-function lit(mixed $value) : Expression
+function lit(mixed $value) : ScalarFunction
 {
     return new Literal($value);
 }
 
-function exists(Expression $ref) : Expression
+function exists(ScalarFunction $ref) : ScalarFunction
 {
-    return new Expression\Exists($ref);
+    return new Exists($ref);
 }
 
-function when(Expression $ref, Expression $then, ?Expression $else = null) : Expression
+function when(ScalarFunction $ref, ScalarFunction $then, ?ScalarFunction $else = null) : ScalarFunction
 {
-    return new Expression\When($ref, $then, $else);
+    return new When($ref, $then, $else);
 }
 
-function array_get(Expression $ref, string $path) : Expression
+function array_get(ScalarFunction $ref, string $path) : ScalarFunction
 {
-    return new Expression\ArrayGet($ref, $path);
+    return new ArrayGet($ref, $path);
 }
 
-function array_get_collection(Expression $ref, string ...$keys) : Expression
+function array_get_collection(ScalarFunction $ref, string ...$keys) : ScalarFunction
 {
-    return new Expression\ArrayGetCollection($ref, $keys);
+    return new ArrayGetCollection($ref, $keys);
 }
 
-function array_get_collection_first(Expression $ref, string ...$keys) : Expression
+function array_get_collection_first(ScalarFunction $ref, string ...$keys) : ScalarFunction
 {
-    return Expression\ArrayGetCollection::fromFirst($ref, $keys);
+    return ArrayGetCollection::fromFirst($ref, $keys);
 }
 
-function array_exists(Expression $ref, string $path) : Expression
+function array_exists(ScalarFunction $ref, string $path) : ScalarFunction
 {
-    return new Expression\ArrayExists($ref, $path);
+    return new ArrayExists($ref, $path);
 }
 
-function array_merge(Expression $left, Expression $right) : Expression
+function array_merge(ScalarFunction $left, ScalarFunction $right) : ScalarFunction
 {
-    return new Expression\ArrayMerge($left, $right);
+    return new ArrayMerge($left, $right);
 }
 
-function array_merge_collection(Expression $ref) : Expression
+function array_merge_collection(ScalarFunction $ref) : ScalarFunction
 {
-    return new Expression\ArrayMergeCollection($ref);
+    return new ArrayMergeCollection($ref);
 }
 
-function array_key_rename(Expression $ref, string $path, string $newName) : Expression
+function array_key_rename(ScalarFunction $ref, string $path, string $newName) : ScalarFunction
 {
-    return new Expression\ArrayKeyRename($ref, $path, $newName);
+    return new ArrayKeyRename($ref, $path, $newName);
 }
 
-function array_keys_style_convert(Expression $ref, StringStyles|string $style = StringStyles::SNAKE) : Expression
+function array_keys_style_convert(ScalarFunction $ref, StringStyles|string $style = StringStyles::SNAKE) : ScalarFunction
 {
-    return new Expression\ArrayKeysStyleConvert($ref, $style instanceof StringStyles ? $style : StringStyles::fromString($style));
+    return new ArrayKeysStyleConvert($ref, $style instanceof StringStyles ? $style : StringStyles::fromString($style));
 }
 
-function array_sort(Expression $expression, ?string $function = null, ?int $flags = null, bool $recursive = true) : Expression
+function array_sort(ScalarFunction $function, ?string $sort_function = null, ?int $flags = null, bool $recursive = true) : ScalarFunction
 {
-    return new Expression\ArraySort($expression, $function ? Sort::fromString($function) : Sort::sort, $flags, $recursive);
+    return new ArraySort($function, $sort_function ? Sort::fromString($sort_function) : Sort::sort, $flags, $recursive);
 }
 
-function array_reverse(Expression $expression, bool $preserveKeys = false) : Expression
+function array_reverse(ScalarFunction $function, bool $preserveKeys = false) : ScalarFunction
 {
-    return new Expression\ArrayReverse($expression, $preserveKeys);
+    return new ArrayReverse($function, $preserveKeys);
 }
 
-function now(\DateTimeZone $time_zone = new \DateTimeZone('UTC')) : Expression
+function now(\DateTimeZone $time_zone = new \DateTimeZone('UTC')) : ScalarFunction
 {
-    return new Expression\Now($time_zone);
+    return new Now($time_zone);
 }
 
-function to_date_time(Expression $ref, string $format = 'Y-m-d H:i:s', \DateTimeZone $timeZone = new \DateTimeZone('UTC')) : Expression
+function to_date_time(ScalarFunction $ref, string $format = 'Y-m-d H:i:s', \DateTimeZone $timeZone = new \DateTimeZone('UTC')) : ScalarFunction
 {
-    return new Expression\ToDateTime($ref, $format, $timeZone);
+    return new ToDateTime($ref, $format, $timeZone);
 }
 
-function to_date(Expression $ref, string $format = 'Y-m-d', \DateTimeZone $timeZone = new \DateTimeZone('UTC')) : Expression
+function to_date(ScalarFunction $ref, string $format = 'Y-m-d', \DateTimeZone $timeZone = new \DateTimeZone('UTC')) : ScalarFunction
 {
-    return new Expression\ToDate($ref, $format, $timeZone);
+    return new ToDate($ref, $format, $timeZone);
 }
 
-function date_time_format(Expression $ref, string $format) : Expression
+function date_time_format(ScalarFunction $ref, string $format) : ScalarFunction
 {
-    return new Expression\DateTimeFormat($ref, $format);
+    return new DateTimeFormat($ref, $format);
 }
 
 /**
  * @param non-empty-string $separator
  */
-function split(Expression $ref, string $separator, int $limit = PHP_INT_MAX) : Expression
+function split(ScalarFunction $ref, string $separator, int $limit = PHP_INT_MAX) : ScalarFunction
 {
-    return new Expression\Split($ref, $separator, $limit);
+    return new Split($ref, $separator, $limit);
 }
 
-function combine(Expression $keys, Expression $values) : Expression
+function combine(ScalarFunction $keys, ScalarFunction $values) : ScalarFunction
 {
-    return new Expression\Combine($keys, $values);
+    return new Combine($keys, $values);
 }
 
-function concat(Expression ...$expressions) : Expression
+function concat(ScalarFunction ...$functions) : ScalarFunction
 {
-    return new Expression\Concat(...$expressions);
+    return new Concat(...$functions);
 }
 
-function hash(Expression $expression, string $algorithm = 'xxh128', bool $binary = false, array $options = []) : Expression
+function hash(ScalarFunction $function, string $algorithm = 'xxh128', bool $binary = false, array $options = []) : ScalarFunction
 {
-    return new Expression\Hash($expression, $algorithm, $binary, $options);
+    return new Hash($function, $algorithm, $binary, $options);
 }
 
-function cast(Expression $expression, string $type) : Expression
+function cast(ScalarFunction $function, string $type) : ScalarFunction
 {
-    return new Expression\Cast($expression, $type);
+    return new Cast($function, $type);
 }
 
-function count(Expression $expression) : Expression
+function count(Reference $function) : Count
 {
-    return new Expression\Count($expression);
+    return new Count($function);
 }
 
 /**
@@ -193,9 +229,9 @@ function count(Expression $expression) : Expression
  * | 2|     |     |    4|    5|    6|
  * +--+-----+-----+-----+-----+-----+
  */
-function array_unpack(Expression $expression, array $skip_keys = [], ?string $entry_prefix = null) : Expression
+function array_unpack(ScalarFunction $function, array $skip_keys = [], ?string $entry_prefix = null) : ScalarFunction
 {
-    return new Expression\ArrayUnpack($expression, $skip_keys, $entry_prefix);
+    return new ArrayUnpack($function, $skip_keys, $entry_prefix);
 }
 
 /**
@@ -218,113 +254,113 @@ function array_unpack(Expression $expression, array $skip_keys = [], ?string $en
  *   | 1|       3|
  *   +--+--------+
  */
-function array_expand(Expression $expression, ArrayExpand $expand = ArrayExpand::VALUES) : Expression
+function array_expand(ScalarFunction $function, ArrayExpand $expand = ArrayExpand::VALUES) : ScalarFunction
 {
-    return new Expression\ArrayExpand($expression, $expand);
+    return new \Flow\ETL\Function\ArrayExpand($function, $expand);
 }
 
-function size(Expression $expression) : Expression
+function size(ScalarFunction $function) : ScalarFunction
 {
-    return new Expression\Size($expression);
+    return new Size($function);
 }
 
-function uuid_v4() : Expression
+function uuid_v4() : ScalarFunction
 {
-    return Expression\Uuid::uuid4();
+    return Uuid::uuid4();
 }
 
-function uuid_v7(?Expression $expression = null) : Expression
+function uuid_v7(?ScalarFunction $function = null) : ScalarFunction
 {
-    return Expression\Uuid::uuid7($expression);
+    return Uuid::uuid7($function);
 }
 
-function ulid(?Expression $expression = null) : Expression
+function ulid(?ScalarFunction $function = null) : ScalarFunction
 {
-    return new Expression\Ulid($expression);
+    return new Ulid($function);
 }
 
-function lower(Expression $expression) : Expression
+function lower(ScalarFunction $function) : ScalarFunction
 {
-    return new Expression\ToLower($expression);
+    return new ToLower($function);
 }
 
-function upper(Expression $expression) : Expression
+function upper(ScalarFunction $function) : ScalarFunction
 {
-    return new Expression\ToUpper($expression);
+    return new ToUpper($function);
 }
 
-function call_method(Expression $object, Expression $method, Expression ...$params) : Expression
+function call_method(ScalarFunction $object, ScalarFunction $method, ScalarFunction ...$params) : ScalarFunction
 {
-    return new Expression\CallMethod($object, $method, ...$params);
+    return new CallMethod($object, $method, ...$params);
 }
 
-function all(Expression ...$expressions) : Expression
+function all(ScalarFunction ...$functions) : ScalarFunction
 {
-    return new Expression\All(...$expressions);
+    return new All(...$functions);
 }
 
-function any(Expression ...$expressions) : Expression
+function any(ScalarFunction ...$functions) : ScalarFunction
 {
-    return new Expression\Any(...$expressions);
+    return new Any(...$functions);
 }
 
-function not(Expression $expression) : Expression
+function not(ScalarFunction $function) : ScalarFunction
 {
-    return new Expression\Not($expression);
+    return new Not($function);
 }
 
-function to_timezone(Expression $expression, Expression $timeZone) : Expression
+function to_timezone(ScalarFunction $function, ScalarFunction $timeZone) : ScalarFunction
 {
-    return new Expression\ToTimeZone($expression, $timeZone);
+    return new ToTimeZone($function, $timeZone);
 }
 
-function to_money(Expression $amount, Expression $currency, ?\Money\MoneyParser $moneyParser = null) : Expression
+function to_money(ScalarFunction $amount, ScalarFunction $currency, ?\Money\MoneyParser $moneyParser = null) : ScalarFunction
 {
     if (null !== $moneyParser) {
-        return new Expression\ToMoney($amount, $currency, $moneyParser);
+        return new ToMoney($amount, $currency, $moneyParser);
     }
 
-    return new Expression\ToMoney($amount, $currency);
+    return new ToMoney($amount, $currency);
 }
 
-function regex_replace(Expression $pattern, Expression $replacement, Expression $subject) : Expression
+function regex_replace(ScalarFunction $pattern, ScalarFunction $replacement, ScalarFunction $subject) : ScalarFunction
 {
-    return new Expression\PregReplace($pattern, $replacement, $subject);
+    return new PregReplace($pattern, $replacement, $subject);
 }
 
-function regex_match_all(Expression $pattern, Expression $subject, ?Expression $flags = null) : Expression
+function regex_match_all(ScalarFunction $pattern, ScalarFunction $subject, ?ScalarFunction $flags = null) : ScalarFunction
 {
-    return new Expression\PregMatchAll($pattern, $subject, $flags);
+    return new PregMatchAll($pattern, $subject, $flags);
 }
 
-function regex_match(Expression $pattern, Expression $subject) : Expression
+function regex_match(ScalarFunction $pattern, ScalarFunction $subject) : ScalarFunction
 {
-    return new Expression\PregMatch($pattern, $subject);
+    return new PregMatch($pattern, $subject);
 }
 
-function sprintf(Expression $format, Expression ...$args) : Expression
+function sprintf(ScalarFunction $format, ScalarFunction ...$args) : ScalarFunction
 {
-    return new Expression\Sprintf($format, ...$args);
+    return new Sprintf($format, ...$args);
 }
 
-function sanitize(Expression $expression, ?Expression $placeholder = null, ?Expression $skipCharacters = null) : Expression
+function sanitize(ScalarFunction $function, ?ScalarFunction $placeholder = null, ?ScalarFunction $skipCharacters = null) : ScalarFunction
 {
-    return new Expression\Sanitize($expression, $placeholder ?: new Expression\Literal('*'), $skipCharacters ?: new Expression\Literal(0));
+    return new Sanitize($function, $placeholder ?: new Literal('*'), $skipCharacters ?: new Literal(0));
 }
 
 /**
- * @param Expression $expression
- * @param null|Expression $precision
+ * @param ScalarFunction $function
+ * @param null|ScalarFunction $precision
  * @param int<0, max> $mode
  *
- * @return Expression
+ * @return ScalarFunction
  */
-function round(Expression $expression, ?Expression $precision = null, int $mode = PHP_ROUND_HALF_UP) : Expression
+function round(ScalarFunction $function, ?ScalarFunction $precision = null, int $mode = PHP_ROUND_HALF_UP) : ScalarFunction
 {
-    return new Expression\Round($expression, $precision ?? lit(2), $mode);
+    return new Round($function, $precision ?? lit(2), $mode);
 }
 
-function number_format(Expression $expression, ?Expression $decimals = null, ?Expression $decimalSeparator = null, ?Expression $thousandsSeparator = null) : Expression
+function number_format(ScalarFunction $function, ?ScalarFunction $decimals = null, ?ScalarFunction $decimalSeparator = null, ?ScalarFunction $thousandsSeparator = null) : ScalarFunction
 {
     if ($decimals === null) {
         $decimals = lit(0);
@@ -338,7 +374,7 @@ function number_format(Expression $expression, ?Expression $decimals = null, ?Ex
         $thousandsSeparator = lit(',');
     }
 
-    return new Expression\NumberFormat($expression, $decimals, $decimalSeparator, $thousandsSeparator);
+    return new NumberFormat($function, $decimals, $decimalSeparator, $thousandsSeparator);
 }
 
 /**
@@ -379,4 +415,64 @@ function array_to_rows(array $data, EntryFactory $entryFactory = new NativeEntry
     }
 
     return new Rows(...$rows);
+}
+
+function rank() : Rank
+{
+    return new Rank();
+}
+
+function dens_rank() : DensRank
+{
+    return new DensRank();
+}
+
+function average(Reference $ref) : Average
+{
+    return new Average($ref);
+}
+
+function collect(Reference $ref) : Collect
+{
+    return new Collect($ref);
+}
+
+function collect_unique(Reference $ref) : CollectUnique
+{
+    return new CollectUnique($ref);
+}
+
+function window() : Window
+{
+    return new Window();
+}
+
+function sum(Reference $ref) : Sum
+{
+    return new Sum($ref);
+}
+
+function first(Reference $ref) : First
+{
+    return new First($ref);
+}
+
+function last(Reference $ref) : Last
+{
+    return new Last($ref);
+}
+
+function max(Reference $ref) : Max
+{
+    return new Max($ref);
+}
+
+function min(Reference $ref) : Min
+{
+    return new Min($ref);
+}
+
+function row_number() : RowNumber
+{
+    return new RowNumber();
 }

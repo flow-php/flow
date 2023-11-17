@@ -3,10 +3,10 @@
 declare(strict_types=1);
 
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\sum;
 use Flow\ETL\DSL\To;
 use Flow\ETL\DSL\XML;
 use Flow\ETL\Flow;
-use Flow\ETL\GroupBy\Aggregation;
 
 require __DIR__ . '/../../../bootstrap.php';
 
@@ -21,7 +21,7 @@ $flow = (new Flow())
     ->withEntry('department_salary', ref('department')->xpath('/Department/TotalSalary')->domNodeValue())
     ->drop('node', 'months', 'month', 'departments', 'department')
     ->groupBy(ref('month_name'))
-    ->aggregate(Aggregation::sum(ref('department_salary')))
+    ->aggregate(sum(ref('department_salary')))
     ->rename('department_salary_sum', 'total_monthly_salaries')
     ->write(To::output(false));
 
