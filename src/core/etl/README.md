@@ -492,7 +492,7 @@ $rows = $flow->process(
         )
     )
     ->groupBy('country')
-    ->aggregate(Aggregation::avg('age'))
+    ->aggregate(average(ref('age')))
     ->fetch();
 
 $this->assertEquals(

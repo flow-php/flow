@@ -40,11 +40,9 @@ declare(strict_types=1);
 
 use Flow\ETL\DSL\Parquet;
 use Flow\ETL\Filesystem\SaveMode;
-use function Flow\ETL\DSL\lit;
-use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\{lit, ref, sum};
 use Flow\ETL\DSL\To;
 use Flow\ETL\Flow;
-use Flow\ETL\GroupBy\Aggregation;
 
 require __DIR__ . '/vendor/autoload.php';
 
@@ -55,7 +53,7 @@ require __DIR__ . '/vendor/autoload.php';
     ->withEntry('revenue', ref('total_price')->minus(ref('discount')))
     ->select('created_at', 'revenue')
     ->groupBy('created_at')
-    ->aggregate(Aggregation::sum(ref('revenue')))
+    ->aggregate(sum(ref('revenue')))
     ->sortBy(ref('created_at')->desc())
     ->withEntry('daily_revenue', ref('revenue_sum')->round(lit(2))->numberFormat(lit(2)))
     ->drop('revenue_sum')
