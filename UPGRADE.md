@@ -104,13 +104,13 @@ After adding native & logical types into the Flow, we remove the `CollectionEntr
 
 ## Upgrading from 0.3.x to 0.4.x
 
-### 1) Transformers replaced with expressions
+### 1) Transformers replaced with scalar functions
 
 Transformers are a really powerful tool that was used in Flow since the beginning, but that tool was too powerful for the simple cases that were needed, and introduced additional complexity and maintenance issues when they were handwritten.
 
-We reworked most of the internal transformers to new expressions and entry expressions (based on the built-in expressions), and we still internally use that powerful tool, but we don't expose it to end users, instead, we provide easy-to-use, covering all user needs expressions.
+We reworked most of the internal transformers to new scalar functions and entry scalar functions (based on the built-in functions), and we still internally use that powerful tool, but we don't expose it to end users, instead, we provide easy-to-use, covering all user needs functions.
 
-All available expressions can be found in [`ETL\Row\Reference\Expression` folder](src/core/etl/src/Flow/ETL/Row/Reference/Expression) or in [`ETL\DSL\functions` file](src/core/etl/src/Flow/ETL/DSL/functions.php), and entry expression are defined in [`EntryExpression` trait](src/core/etl/src/Flow/ETL/Row/Reference/EntryExpression.php).
+All available functions can be found in [`ETL\Row\Function` folder](src/core/etl/src/Flow/ETL/Function) or in [`ETL\DSL\functions` file](src/core/etl/src/Flow/ETL/DSL/functions.php), and entry scalar functions are defined in [`EntryScalarFunction` trait](src/core/etl/src/Flow/ETL/Function/EntryScalarFunction.php).
 
 To see what transformers are available see [`ETL\DSL\Transform` class](src/core/etl/src/Flow/ETL/DSL/Transform.php).
 
@@ -141,10 +141,10 @@ use Flow\ETL\Flow;
     ->withEntry('name', concat(ref('name'), lit(' '), ref('last name')))
 ```
 
-### 2) `ref` expression nullability 
+### 2) `ref` function nullability 
 
 `ref("entry_name")` is no longer returning null when the entry is not found. Instead, it throws an exception.
-The same behavior can be achieved through using a newly introduced `optional` expression: 
+The same behavior can be achieved through using a newly introduced `optional` function: 
 
 Before:
 ```php
