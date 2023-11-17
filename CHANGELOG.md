@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-11-15
+## [Unreleased] - 2023-11-17
 
 ### Added
 - [#780](https://github.com/flow-php/flow/pull/780) - **Add `MapEntry`** - [@stloyd](https://github.com/stloyd)
@@ -71,6 +71,8 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#797](https://github.com/flow-php/flow/pull/797) - **Expression is now ScalarFunction** - [@norberttech](https://github.com/norberttech)
+- [#797](https://github.com/flow-php/flow/pull/797) - **Aggregator is now AggregationFunction** - [@norberttech](https://github.com/norberttech)
 - [#780](https://github.com/flow-php/flow/pull/780) - **Rework `StructureEntry` to use types** - [@stloyd](https://github.com/stloyd)
 - [#780](https://github.com/flow-php/flow/pull/780) - **Rework `NativeEntryFactory` to use types** - [@stloyd](https://github.com/stloyd)
 - [#788](https://github.com/flow-php/flow/pull/788) - **Optimizer can be now configured through ConfigBuilder** - [@norberttech](https://github.com/norberttech)
@@ -215,6 +217,7 @@
 - [c9fb26](https://github.com/flow-php/flow/commit/c9fb26dc2e0558c0f33b6097286e4dc6e2799d3f) - **test-benchmark.yml** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#797](https://github.com/flow-php/flow/pull/797) - **struct reference** - [@norberttech](https://github.com/norberttech)
 - [#796](https://github.com/flow-php/flow/pull/796) - **Remove Faker library from benchmark** - [@stloyd](https://github.com/stloyd)
 - [#776](https://github.com/flow-php/flow/pull/776) - **Remove `CollectionEntry`** - [@stloyd](https://github.com/stloyd)
 - [#794](https://github.com/flow-php/flow/pull/794) - **Removed async processing** - [@norberttech](https://github.com/norberttech)
