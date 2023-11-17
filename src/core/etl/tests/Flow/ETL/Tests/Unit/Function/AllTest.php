@@ -13,14 +13,14 @@ use PHPUnit\Framework\TestCase;
 
 final class AllTest extends TestCase
 {
-    public function test_all_expression_on_boolean_false_value() : void
+    public function test_all_function_on_boolean_false_value() : void
     {
         $this->assertFalse(
             all(lit(false))->eval(Row::create())
         );
     }
 
-    public function test_all_expression_on_boolean_true_value() : void
+    public function test_all_function_on_boolean_true_value() : void
     {
         $this->assertTrue(
             all(lit(true))->eval(Row::create())

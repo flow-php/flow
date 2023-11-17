@@ -6,16 +6,16 @@ use Flow\ETL\Row;
 
 final class Optional implements ScalarFunction
 {
-    use \Flow\ETL\Function\EntryScalarFunction;
+    use EntryScalarFunction;
 
-    public function __construct(private readonly ScalarFunction $expression)
+    public function __construct(private readonly ScalarFunction $function)
     {
     }
 
     public function eval(Row $row) : mixed
     {
         try {
-            return $this->expression->eval($row);
+            return $this->function->eval($row);
         } catch (\Exception $e) {
             return null;
         }

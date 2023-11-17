@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Function\ScalarFunction\ExpandResults;
 use Flow\ETL\Row;
 
 final class ArrayExpand implements ExpandResults, ScalarFunction

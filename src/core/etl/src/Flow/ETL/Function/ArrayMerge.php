@@ -7,7 +7,7 @@ namespace Flow\ETL\Function;
 use Flow\ETL\Row;
 
 /**
- * Entry expression that takes two other expressions, checks if both of them are arrays and merges them.
+ * Scalar function that takes two other functions, checks if both of them are arrays and merges them.
  */
 final class ArrayMerge implements ScalarFunction
 {

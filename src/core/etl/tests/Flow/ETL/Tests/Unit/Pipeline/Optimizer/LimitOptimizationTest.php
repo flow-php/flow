@@ -12,10 +12,10 @@ use Flow\ETL\Pipeline\Optimizer\LimitOptimization;
 use Flow\ETL\Pipeline\PartitioningPipeline;
 use Flow\ETL\Pipeline\SynchronousPipeline;
 use Flow\ETL\Transformer\DropDuplicatesTransformer;
-use Flow\ETL\Transformer\EntryExpressionEvalTransformer;
 use Flow\ETL\Transformer\KeepEntriesTransformer;
 use Flow\ETL\Transformer\LimitTransformer;
 use Flow\ETL\Transformer\RenameEntryTransformer;
+use Flow\ETL\Transformer\ScalarFunctionTransformer;
 use PHPUnit\Framework\TestCase;
 
 final class LimitOptimizationTest extends TestCase
@@ -38,7 +38,7 @@ final class LimitOptimizationTest extends TestCase
     {
         $pipeline = new SynchronousPipeline();
         $pipeline->setSource(new CSVExtractor(Path::realpath('file.csv')));
-        $pipeline->add(new EntryExpressionEvalTransformer('expanded', ref('data')->expand()));
+        $pipeline->add(new ScalarFunctionTransformer('expanded', ref('data')->expand()));
 
         $optimizedPipeline = (new Optimizer(new LimitOptimization()))->optimize(new LimitTransformer(10), $pipeline);
 

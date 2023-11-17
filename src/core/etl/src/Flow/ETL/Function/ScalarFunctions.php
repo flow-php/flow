@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Function\ScalarFunction\ExpandResults;
+use Flow\ETL\Function\ScalarFunction\UnpackResults;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 
@@ -14,22 +16,22 @@ final class ScalarFunctions implements ExpandResults, ScalarFunction, UnpackResu
     /**
      * @var array<ScalarFunction>
      */
-    private array $expressions;
+    private array $functions;
 
-    public function __construct(ScalarFunction ...$expressions)
+    public function __construct(ScalarFunction ...$functions)
     {
-        $this->expressions = $expressions;
+        $this->functions = $functions;
     }
 
     public function eval(Row $row) : mixed
     {
         $lastValue = null;
 
-        foreach ($this->expressions as $expression) {
-            $lastValue = $expression->eval($row);
+        foreach ($this->functions as $function) {
+            $lastValue = $function->eval($row);
 
-            if ($expression instanceof Reference) {
-                $row = $row->set((new Row\Factory\NativeEntryFactory())->create($expression->to(), $lastValue));
+            if ($function instanceof Reference) {
+                $row = $row->set((new Row\Factory\NativeEntryFactory())->create($function->to(), $lastValue));
             }
         }
 
@@ -38,9 +40,9 @@ final class ScalarFunctions implements ExpandResults, ScalarFunction, UnpackResu
 
     public function expand() : bool
     {
-        foreach ($this->expressions as $expression) {
-            if ($expression instanceof ExpandResults) {
-                return $expression->expand();
+        foreach ($this->functions as $function) {
+            if ($function instanceof ExpandResults) {
+                return $function->expand();
             }
         }
 
@@ -49,9 +51,9 @@ final class ScalarFunctions implements ExpandResults, ScalarFunction, UnpackResu
 
     public function unpack() : bool
     {
-        foreach ($this->expressions as $expression) {
-            if ($expression instanceof UnpackResults) {
-                return $expression->unpack();
+        foreach ($this->functions as $function) {
+            if ($function instanceof UnpackResults) {
+                return $function->unpack();
             }
         }
 

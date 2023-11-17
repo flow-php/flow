@@ -20,7 +20,7 @@ final class ExistsTest extends TestCase
         );
     }
 
-    public function test_that_lit_expression_exists() : void
+    public function test_that_lit_function_exists() : void
     {
         $this->assertTrue(
             (new Exists(lit('val')))->eval(Row::create())

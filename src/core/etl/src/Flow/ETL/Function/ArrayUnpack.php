@@ -6,7 +6,7 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class ArrayUnpack implements \Flow\ETL\Function\UnpackResults, ScalarFunction
+final class ArrayUnpack implements ScalarFunction, ScalarFunction\UnpackResults
 {
     public function __construct(
         private readonly ScalarFunction $ref,

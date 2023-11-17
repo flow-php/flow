@@ -87,9 +87,9 @@ function ref(string $entry) : Reference
     return entry($entry);
 }
 
-function optional(ScalarFunction $expression) : ScalarFunction
+function optional(ScalarFunction $function) : ScalarFunction
 {
-    return new Optional($expression);
+    return new Optional($function);
 }
 
 function lit(mixed $value) : ScalarFunction
@@ -147,14 +147,14 @@ function array_keys_style_convert(ScalarFunction $ref, StringStyles|string $styl
     return new ArrayKeysStyleConvert($ref, $style instanceof StringStyles ? $style : StringStyles::fromString($style));
 }
 
-function array_sort(ScalarFunction $expression, ?string $function = null, ?int $flags = null, bool $recursive = true) : ScalarFunction
+function array_sort(ScalarFunction $function, ?string $sort_function = null, ?int $flags = null, bool $recursive = true) : ScalarFunction
 {
-    return new ArraySort($expression, $function ? Sort::fromString($function) : Sort::sort, $flags, $recursive);
+    return new ArraySort($function, $sort_function ? Sort::fromString($sort_function) : Sort::sort, $flags, $recursive);
 }
 
-function array_reverse(ScalarFunction $expression, bool $preserveKeys = false) : ScalarFunction
+function array_reverse(ScalarFunction $function, bool $preserveKeys = false) : ScalarFunction
 {
-    return new ArrayReverse($expression, $preserveKeys);
+    return new ArrayReverse($function, $preserveKeys);
 }
 
 function now(\DateTimeZone $time_zone = new \DateTimeZone('UTC')) : ScalarFunction
@@ -190,24 +190,24 @@ function combine(ScalarFunction $keys, ScalarFunction $values) : ScalarFunction
     return new Combine($keys, $values);
 }
 
-function concat(ScalarFunction ...$expressions) : ScalarFunction
+function concat(ScalarFunction ...$functions) : ScalarFunction
 {
-    return new Concat(...$expressions);
+    return new Concat(...$functions);
 }
 
-function hash(ScalarFunction $expression, string $algorithm = 'xxh128', bool $binary = false, array $options = []) : ScalarFunction
+function hash(ScalarFunction $function, string $algorithm = 'xxh128', bool $binary = false, array $options = []) : ScalarFunction
 {
-    return new Hash($expression, $algorithm, $binary, $options);
+    return new Hash($function, $algorithm, $binary, $options);
 }
 
-function cast(ScalarFunction $expression, string $type) : ScalarFunction
+function cast(ScalarFunction $function, string $type) : ScalarFunction
 {
-    return new Cast($expression, $type);
+    return new Cast($function, $type);
 }
 
-function count(Reference $expression) : Count
+function count(Reference $function) : Count
 {
-    return new Count($expression);
+    return new Count($function);
 }
 
 /**
@@ -229,9 +229,9 @@ function count(Reference $expression) : Count
  * | 2|     |     |    4|    5|    6|
  * +--+-----+-----+-----+-----+-----+
  */
-function array_unpack(ScalarFunction $expression, array $skip_keys = [], ?string $entry_prefix = null) : ScalarFunction
+function array_unpack(ScalarFunction $function, array $skip_keys = [], ?string $entry_prefix = null) : ScalarFunction
 {
-    return new ArrayUnpack($expression, $skip_keys, $entry_prefix);
+    return new ArrayUnpack($function, $skip_keys, $entry_prefix);
 }
 
 /**
@@ -254,14 +254,14 @@ function array_unpack(ScalarFunction $expression, array $skip_keys = [], ?string
  *   | 1|       3|
  *   +--+--------+
  */
-function array_expand(ScalarFunction $expression, ArrayExpand $expand = ArrayExpand::VALUES) : ScalarFunction
+function array_expand(ScalarFunction $function, ArrayExpand $expand = ArrayExpand::VALUES) : ScalarFunction
 {
-    return new \Flow\ETL\Function\ArrayExpand($expression, $expand);
+    return new \Flow\ETL\Function\ArrayExpand($function, $expand);
 }
 
-function size(ScalarFunction $expression) : ScalarFunction
+function size(ScalarFunction $function) : ScalarFunction
 {
-    return new Size($expression);
+    return new Size($function);
 }
 
 function uuid_v4() : ScalarFunction
@@ -269,24 +269,24 @@ function uuid_v4() : ScalarFunction
     return Uuid::uuid4();
 }
 
-function uuid_v7(?ScalarFunction $expression = null) : ScalarFunction
+function uuid_v7(?ScalarFunction $function = null) : ScalarFunction
 {
-    return Uuid::uuid7($expression);
+    return Uuid::uuid7($function);
 }
 
-function ulid(?ScalarFunction $expression = null) : ScalarFunction
+function ulid(?ScalarFunction $function = null) : ScalarFunction
 {
-    return new Ulid($expression);
+    return new Ulid($function);
 }
 
-function lower(ScalarFunction $expression) : ScalarFunction
+function lower(ScalarFunction $function) : ScalarFunction
 {
-    return new ToLower($expression);
+    return new ToLower($function);
 }
 
-function upper(ScalarFunction $expression) : ScalarFunction
+function upper(ScalarFunction $function) : ScalarFunction
 {
-    return new ToUpper($expression);
+    return new ToUpper($function);
 }
 
 function call_method(ScalarFunction $object, ScalarFunction $method, ScalarFunction ...$params) : ScalarFunction
@@ -294,24 +294,24 @@ function call_method(ScalarFunction $object, ScalarFunction $method, ScalarFunct
     return new CallMethod($object, $method, ...$params);
 }
 
-function all(ScalarFunction ...$expressions) : ScalarFunction
+function all(ScalarFunction ...$functions) : ScalarFunction
 {
-    return new All(...$expressions);
+    return new All(...$functions);
 }
 
-function any(ScalarFunction ...$expressions) : ScalarFunction
+function any(ScalarFunction ...$functions) : ScalarFunction
 {
-    return new Any(...$expressions);
+    return new Any(...$functions);
 }
 
-function not(ScalarFunction $expression) : ScalarFunction
+function not(ScalarFunction $function) : ScalarFunction
 {
-    return new Not($expression);
+    return new Not($function);
 }
 
-function to_timezone(ScalarFunction $expression, ScalarFunction $timeZone) : ScalarFunction
+function to_timezone(ScalarFunction $function, ScalarFunction $timeZone) : ScalarFunction
 {
-    return new ToTimeZone($expression, $timeZone);
+    return new ToTimeZone($function, $timeZone);
 }
 
 function to_money(ScalarFunction $amount, ScalarFunction $currency, ?\Money\MoneyParser $moneyParser = null) : ScalarFunction
@@ -343,24 +343,24 @@ function sprintf(ScalarFunction $format, ScalarFunction ...$args) : ScalarFuncti
     return new Sprintf($format, ...$args);
 }
 
-function sanitize(ScalarFunction $expression, ?ScalarFunction $placeholder = null, ?ScalarFunction $skipCharacters = null) : ScalarFunction
+function sanitize(ScalarFunction $function, ?ScalarFunction $placeholder = null, ?ScalarFunction $skipCharacters = null) : ScalarFunction
 {
-    return new Sanitize($expression, $placeholder ?: new Literal('*'), $skipCharacters ?: new Literal(0));
+    return new Sanitize($function, $placeholder ?: new Literal('*'), $skipCharacters ?: new Literal(0));
 }
 
 /**
- * @param ScalarFunction $expression
+ * @param ScalarFunction $function
  * @param null|ScalarFunction $precision
  * @param int<0, max> $mode
  *
  * @return ScalarFunction
  */
-function round(ScalarFunction $expression, ?ScalarFunction $precision = null, int $mode = PHP_ROUND_HALF_UP) : ScalarFunction
+function round(ScalarFunction $function, ?ScalarFunction $precision = null, int $mode = PHP_ROUND_HALF_UP) : ScalarFunction
 {
-    return new Round($expression, $precision ?? lit(2), $mode);
+    return new Round($function, $precision ?? lit(2), $mode);
 }
 
-function number_format(ScalarFunction $expression, ?ScalarFunction $decimals = null, ?ScalarFunction $decimalSeparator = null, ?ScalarFunction $thousandsSeparator = null) : ScalarFunction
+function number_format(ScalarFunction $function, ?ScalarFunction $decimals = null, ?ScalarFunction $decimalSeparator = null, ?ScalarFunction $thousandsSeparator = null) : ScalarFunction
 {
     if ($decimals === null) {
         $decimals = lit(0);
@@ -374,7 +374,7 @@ function number_format(ScalarFunction $expression, ?ScalarFunction $decimals = n
         $thousandsSeparator = lit(',');
     }
 
-    return new NumberFormat($expression, $decimals, $decimalSeparator, $thousandsSeparator);
+    return new NumberFormat($function, $decimals, $decimalSeparator, $thousandsSeparator);
 }
 
 /**
@@ -447,9 +447,9 @@ function window() : Window
     return new Window();
 }
 
-function sum(Reference $expression) : Sum
+function sum(Reference $ref) : Sum
 {
-    return new Sum($expression);
+    return new Sum($ref);
 }
 
 function first(Reference $ref) : First

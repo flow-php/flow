@@ -9,7 +9,7 @@ use Flow\ETL\Row;
 final class ToTimeZone implements ScalarFunction
 {
     public function __construct(
-        private readonly ScalarFunction $expression,
+        private readonly ScalarFunction $function,
         private readonly ScalarFunction $timezone
     ) {
     }
@@ -19,7 +19,7 @@ final class ToTimeZone implements ScalarFunction
         /**
          * @var mixed $dateTime
          */
-        $dateTime = $this->expression->eval($row);
+        $dateTime = $this->function->eval($row);
         /**
          * @var mixed $tz
          */

@@ -28,13 +28,13 @@ use Flow\ETL\Row\Schema;
 use Flow\ETL\Transformer\CallbackRowTransformer;
 use Flow\ETL\Transformer\CrossJoinRowsTransformer;
 use Flow\ETL\Transformer\DropDuplicatesTransformer;
-use Flow\ETL\Transformer\EntryExpressionEvalTransformer;
-use Flow\ETL\Transformer\EntryExpressionFilterTransformer;
 use Flow\ETL\Transformer\JoinEachRowsTransformer;
 use Flow\ETL\Transformer\JoinRowsTransformer;
 use Flow\ETL\Transformer\KeepEntriesTransformer;
 use Flow\ETL\Transformer\LimitTransformer;
 use Flow\ETL\Transformer\RemoveEntriesTransformer;
+use Flow\ETL\Transformer\ScalarFunctionFilterTransformer;
+use Flow\ETL\Transformer\ScalarFunctionTransformer;
 use Flow\ETL\Transformer\StyleConverter\StringStyles;
 use Flow\ETL\Transformer\WindowFunctionTransformer;
 
@@ -250,7 +250,7 @@ final class DataFrame
      */
     public function filter(Function\ScalarFunction $callback) : self
     {
-        $this->pipeline->add(new EntryExpressionFilterTransformer($callback));
+        $this->pipeline->add(new ScalarFunctionFilterTransformer($callback));
 
         return $this;
     }
@@ -736,7 +736,7 @@ final class DataFrame
 
             $this->pipeline->add(new WindowFunctionTransformer($entryName, $ref));
         } else {
-            $this->transform(new EntryExpressionEvalTransformer($entryName, $ref));
+            $this->transform(new ScalarFunctionTransformer($entryName, $ref));
         }
 
         return $this;

@@ -14,7 +14,7 @@ use Flow\ETL\Pipeline\ParallelizingPipeline;
 use Flow\ETL\Pipeline\SynchronousPipeline;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
-use Flow\ETL\Transformer\EntryExpressionEvalTransformer;
+use Flow\ETL\Transformer\ScalarFunctionTransformer;
 use PHPUnit\Framework\TestCase;
 
 final class NestedPipelineTest extends TestCase
@@ -22,7 +22,7 @@ final class NestedPipelineTest extends TestCase
     public function test_nested_pipelines() : void
     {
         $pipeline = new NestedPipeline(
-            (new SynchronousPipeline())->add(new EntryExpressionEvalTransformer('active', lit(true))),
+            (new SynchronousPipeline())->add(new ScalarFunctionTransformer('active', lit(true))),
             new ParallelizingPipeline(new SynchronousPipeline(), 1)
         );
 

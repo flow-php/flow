@@ -27,14 +27,14 @@ final class ArrayMergeTest extends TestCase
         );
     }
 
-    public function test_array_merge_two_lit_expressions() : void
+    public function test_array_merge_two_lit_functions() : void
     {
-        $expression = new ArrayMerge(
+        $function = new ArrayMerge(
             lit(['a' => 1]),
             lit(['b' => 2])
         );
 
-        $this->assertSame(['a' => 1, 'b' => 2], $expression->eval(Row::create()));
+        $this->assertSame(['a' => 1, 'b' => 2], $function->eval(Row::create()));
     }
 
     public function test_array_merge_when_left_side_is_not_an_array() : void
