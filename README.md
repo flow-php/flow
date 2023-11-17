@@ -116,20 +116,22 @@ this will reduce the number of unnecessary dependencies in your project (less ma
   - [csv](src/adapter/etl-adapter-csv/README.md)
   - [doctrine](src/adapter/etl-adapter-doctrine/README.md)
   - [elasticsearch](src/adapter/etl-adapter-elasticsearch/README.md)
+  - [filesystem](src/adapter/etl-adapter-filesystem/README.md)
   - [google sheet](src/adapter/etl-adapter-google-sheet/README.md)
-  - [meilisearch](src/adapter/etl-adapter-meilisearch/README.md)
   - [http](src/adapter/etl-adapter-http/README.md)
   - [json](src/adapter/etl-adapter-json/README.md)
   - [logger](src/adapter/etl-adapter-logger/README.md)
+  - [meilisearch](src/adapter/etl-adapter-meilisearch/README.md)
   - [parquet](src/adapter/etl-adapter-parquet/README.md)
   - [text](src/adapter/etl-adapter-text/README.md)
   - [xml](src/adapter/etl-adapter-xml/README.md) 
 - Libraries
   - [array-dot](src/lib/array-dot/README.md)
   - [doctrine-dbal-bulk](src/lib/doctrine-dbal-bulk/README.md)
-  - [Google Dremel algorithm](src/lib/dremel/README.md)
-  - [Parquet](src/lib/parquet/README.md)
-  - [Snappy](src/lib/snappy/README.md)
+  - [dremel](src/lib/dremel/README.md)
+  - [parquet](src/lib/parquet/README.md)
+  - [parquet-viewer](src/lib/parquet-viewer/README.md)
+  - [snappy](src/lib/snappy/README.md)
 
 For example, if you want to work with JSON/CSV files here are the dependencies you will need to install: 
 
