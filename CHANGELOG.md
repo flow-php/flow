@@ -71,6 +71,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#799](https://github.com/flow-php/flow/pull/799) - **Expanded Parquet schema converter in order to support deeply nested data types** - [@norberttech](https://github.com/norberttech)
 - [700dc7](https://github.com/flow-php/flow/commit/700dc71d76684eabca7f0fc5e7adf55e58b0b313) - **Docs fixes** - [@norberttech](https://github.com/norberttech)
 - [#797](https://github.com/flow-php/flow/pull/797) - **Expression is now ScalarFunction** - [@norberttech](https://github.com/norberttech)
 - [#797](https://github.com/flow-php/flow/pull/797) - **Aggregator is now AggregationFunction** - [@norberttech](https://github.com/norberttech)
