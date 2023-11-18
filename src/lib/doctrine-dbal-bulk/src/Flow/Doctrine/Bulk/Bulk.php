@@ -40,7 +40,7 @@ final class Bulk
      */
     public function insert(Connection $connection, string $table, BulkData $bulkData, array $insertOptions = []) : void
     {
-        $tableDefinition = new TableDefinition($table, ...\array_values($connection->getSchemaManager()->listTableColumns($table)));
+        $tableDefinition = new TableDefinition($table, ...\array_values($connection->createSchemaManager()->listTableColumns($table)));
 
         $connection->executeStatement(
             $this->queryFactory->insert($connection->getDatabasePlatform(), $tableDefinition, $bulkData, $insertOptions),
@@ -64,7 +64,7 @@ final class Bulk
      */
     public function update(Connection $connection, string $table, BulkData $bulkData, array $updateOptions = []) : void
     {
-        $tableDefinition = new TableDefinition($table, ...\array_values($connection->getSchemaManager()->listTableColumns($table)));
+        $tableDefinition = new TableDefinition($table, ...\array_values($connection->createSchemaManager()->listTableColumns($table)));
 
         $connection->executeQuery(
             $this->queryFactory->update($connection->getDatabasePlatform(), $tableDefinition, $bulkData, $updateOptions),
