@@ -40,7 +40,7 @@ final class MapKey
         return $this->value->toString();
     }
 
-    public function value() : ScalarType
+    public function type() : ScalarType
     {
         return $this->value;
     }

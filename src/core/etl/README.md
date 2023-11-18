@@ -846,7 +846,6 @@ $flow->read($from)
 
 - [all](src/Flow/ETL/Row/Schema/Constraint/All.php)
 - [any](src/Flow/ETL/Row/Schema/Constraint/Any.php)
-- [collection type](src/Flow/ETL/Row/Schema/Constraint/CollectionType.php)
 - [same as](src/Flow/ETL/Row/Schema/Constraint/SameAs.php)
 - [is instance of](src/Flow/ETL/Row/Schema/Constraint/IsInstanceOf.php)
 

@@ -51,18 +51,18 @@ final class SchemaConverter
             $listType = $definition->metadata()->get(Schema\FlowMetadata::METADATA_LIST_ENTRY_TYPE);
             $listElement = $listType->element();
 
-            if ($listElement->value() instanceof ScalarType) {
-                return match ($listElement->value()->toString()) {
+            if ($listElement->type() instanceof ScalarType) {
+                return match ($listElement->type()->toString()) {
                     ScalarType::STRING => ['name' => $definition->entry()->name(), 'type' => ['type' => 'array', 'items' => \AvroSchema::STRING_TYPE]],
                     ScalarType::INTEGER => ['name' => $definition->entry()->name(), 'type' => ['type' => 'array', 'items' => \AvroSchema::INT_TYPE]],
                     ScalarType::FLOAT => ['name' => $definition->entry()->name(), 'type' => ['type' => 'array', 'items' => \AvroSchema::FLOAT_TYPE]],
                     ScalarType::BOOLEAN => ['name' => $definition->entry()->name(), 'type' => ['type' => 'array', 'items' => \AvroSchema::BOOLEAN_TYPE]],
-                    default => throw new RuntimeException('List of ' . $listElement->value()->toString() . ' is not supported yet supported.'),
+                    default => throw new RuntimeException('List of ' . $listElement->type()->toString() . ' is not supported yet supported.'),
                 };
             }
 
-            if ($listElement->value() instanceof ObjectType) {
-                if (\is_a($listElement->value()->class, \DateTimeInterface::class, true)) {
+            if ($listElement->type() instanceof ObjectType) {
+                if (\is_a($listElement->type()->class, \DateTimeInterface::class, true)) {
                     return ['name' => $definition->entry()->name(), 'type' => ['type' => 'array', 'items' => 'long', \AvroSchema::LOGICAL_TYPE_ATTR => 'timestamp-micros']];
                 }
             }
@@ -74,7 +74,7 @@ final class SchemaConverter
             /** @var MapType $mapType */
             $mapType = $definition->metadata()->get(Schema\FlowMetadata::METADATA_MAP_ENTRY_TYPE);
 
-            return match ($mapType->value()->value()->toString()) {
+            return match ($mapType->value()->type()->toString()) {
                 ScalarType::STRING => ['name' => $definition->entry()->name(), 'type' => ['type' => 'map', 'values' => \AvroSchema::STRING_TYPE]],
                 ScalarType::INTEGER => ['name' => $definition->entry()->name(), 'type' => ['type' => 'map', 'values' => \AvroSchema::INT_TYPE]],
                 ScalarType::FLOAT => ['name' => $definition->entry()->name(), 'type' => ['type' => 'map', 'values' => \AvroSchema::FLOAT_TYPE]],
@@ -187,12 +187,12 @@ final class SchemaConverter
         if ($elementType instanceof ListType) {
             $listElement = $elementType->element();
 
-            return match ($listElement->value()->toString()) {
+            return match ($listElement->type()->toString()) {
                 ScalarType::STRING => ['name' => $element->name(), 'type' => ['type' => 'array', 'items' => \AvroSchema::STRING_TYPE]],
                 ScalarType::INTEGER => ['name' => $element->name(), 'type' => ['type' => 'array', 'items' => \AvroSchema::INT_TYPE]],
                 ScalarType::FLOAT => ['name' => $element->name(), 'type' => ['type' => 'array', 'items' => \AvroSchema::FLOAT_TYPE]],
                 ScalarType::BOOLEAN => ['name' => $element->name(), 'type' => ['type' => 'array', 'items' => \AvroSchema::BOOLEAN_TYPE]],
-                default => throw new RuntimeException('List of ' . $listElement->value()->toString() . ' is not supported yet supported.'),
+                default => throw new RuntimeException('List of ' . $listElement->type()->toString() . ' is not supported yet supported.'),
             };
         }
 

@@ -4,12 +4,14 @@ namespace Flow\ETL\Adapter\Parquet;
 
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\PHP\Type\Logical\ListType;
+use Flow\ETL\PHP\Type\Logical\Map\MapKey;
+use Flow\ETL\PHP\Type\Logical\Map\MapValue;
 use Flow\ETL\PHP\Type\Logical\MapType;
-use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\StructureType;
-use Flow\ETL\PHP\Type\Native\ArrayType;
+use Flow\ETL\PHP\Type\Native\NullType;
 use Flow\ETL\PHP\Type\Native\ObjectType;
 use Flow\ETL\PHP\Type\Native\ScalarType;
+use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\NullEntry;
 use Flow\ETL\Row\Schema;
@@ -28,202 +30,206 @@ final class SchemaConverter
         $columns = [];
 
         foreach ($schema->definitions() as $definition) {
-            $columns[] = $this->convertEntry($definition);
+            $columns[] = $this->flowTypeToParquetType(
+                $definition->entry()->name(),
+                $this->typeFromDefinition($definition)
+            );
         }
 
         return ParquetSchema::with(...$columns);
     }
 
-    private function convertEntry(Definition $definition) : Column
+    private function flowListToParquetList(ListType $type) : ListElement
     {
-        $type = $this->typeFromDefinition($definition);
+        $element = $type->element()->type();
 
-        return match ($type) {
-            Entry\ArrayEntry::class => throw new RuntimeException("ArrayEntry entry can't be saved in Parquet file, try convert it to ListEntry or StructEntry"),
-            Entry\StringEntry::class, Entry\EnumEntry::class => FlatColumn::string($definition->entry()->name()),
-            Entry\JsonEntry::class => FlatColumn::json($definition->entry()->name()),
-            Entry\IntegerEntry::class => FlatColumn::int64($definition->entry()->name()),
-            Entry\FloatEntry::class => FlatColumn::float($definition->entry()->name()),
-            Entry\BooleanEntry::class => FlatColumn::boolean($definition->entry()->name()),
-            Entry\DateTimeEntry::class => FlatColumn::dateTime($definition->entry()->name()),
-            Entry\UuidEntry::class => FlatColumn::uuid($definition->entry()->name()),
-            Entry\ListEntry::class => $this->listEntryToParquet($definition),
-            Entry\MapEntry::class => $this->mapEntryToParquet($definition),
-            Entry\StructureEntry::class => $this->structureEntryToParquet($definition),
-            default => throw new RuntimeException($type . ' is not yet supported.')
-        };
-    }
-
-    private function listEntryToParquet(Definition $definition) : NestedColumn
-    {
-        /** @var ListType $listType */
-        $listType = $definition->metadata()->get(FlowMetadata::METADATA_LIST_ENTRY_TYPE);
-        $listElement = $listType->element();
-
-        if ($listElement->value() instanceof ScalarType) {
-            return NestedColumn::list(
-                $definition->entry()->name(),
-                match ($listElement->toString()) {
-                    ScalarType::STRING => ListElement::string(),
-                    ScalarType::INTEGER => ListElement::int64(),
-                    ScalarType::FLOAT => ListElement::float(),
-                    ScalarType::BOOLEAN => ListElement::boolean(),
-                    default => throw new RuntimeException('List of ' . $listElement->toString() . ' is not supported yet supported.'),
+        switch ($element::class) {
+            case ScalarType::class:
+                switch ($element->type()) {
+                    case ScalarType::FLOAT:
+                        return ListElement::float();
+                    case ScalarType::INTEGER:
+                        return ListElement::int64();
+                    case ScalarType::STRING:
+                        return ListElement::string();
+                    case ScalarType::BOOLEAN:
+                        return ListElement::boolean();
                 }
-            );
-        }
 
-        if ($listElement->value() instanceof ObjectType) {
-            if (\is_a($listElement->value()->class, \DateTimeInterface::class, true)) {
-                return NestedColumn::list($definition->entry()->name(), ListElement::datetime());
-            }
+                break;
+            case ObjectType::class:
+                $class = $element->class;
 
-            throw new RuntimeException("List of {$listElement->value()->class} is not supported yet supported.");
-        }
-
-        throw new RuntimeException($listType->toString() . ' is not supported yet supported.');
-    }
-
-    private function mapEntryToParquet(Definition $definition) : NestedColumn
-    {
-        /** @var MapType $mapType */
-        $mapType = $definition->metadata()->get(FlowMetadata::METADATA_MAP_ENTRY_TYPE);
-
-        if ($mapType->value()->value() instanceof ScalarType) {
-            return NestedColumn::map(
-                $definition->entry()->name(),
-                match ($mapType->key()->value()->toString()) {
-                    ScalarType::STRING => ParquetSchema\MapKey::string(),
-                    ScalarType::INTEGER => ParquetSchema\MapKey::int64(),
-                    default => throw new RuntimeException('Map ' . $mapType->key()->toString() . ' is not supported yet supported.'),
-                },
-                match ($mapType->value()->value()->toString()) {
-                    ScalarType::STRING => ParquetSchema\MapValue::string(),
-                    ScalarType::INTEGER => ParquetSchema\MapValue::int64(),
-                    ScalarType::FLOAT => ParquetSchema\MapValue::float(),
-                    ScalarType::BOOLEAN => ParquetSchema\MapValue::boolean(),
-                    default => throw new RuntimeException('Map ' . $mapType->value()->toString() . ' is not supported yet supported.'),
+                if (\is_a($class, \DateTimeInterface::class, true)) {
+                    return ListElement::datetime();
                 }
-            );
-        }
 
-        throw new RuntimeException($mapType->toString() . ' is not supported yet supported.');
-    }
+                if ($class === Entry\Type\Uuid::class) {
+                    return ListElement::string();
+                }
 
-    private function structureElementToParquet(StructureElement $element) : Column
-    {
-        $elementType = $element->type();
+                if ($class === \DateInterval::class) {
+                    return ListElement::time();
+                }
 
-        if ($elementType instanceof ScalarType) {
-            if ($elementType->isString()) {
-                return FlatColumn::string($element->name());
-            }
-
-            if ($elementType->isInteger()) {
-                return FlatColumn::int64($element->name());
-            }
-
-            if ($elementType->isFloat()) {
-                return FlatColumn::float($element->name());
-            }
-
-            if ($elementType->isBoolean()) {
-                return FlatColumn::boolean($element->name());
-            }
-        }
-
-        if ($elementType instanceof ArrayType) {
-            throw new RuntimeException("ArrayEntry entry can't be saved in Parquet file, try convert it to ListEntry or StructEntry");
-        }
-
-        if ($elementType instanceof ObjectType) {
-            if (\in_array($elementType->class, [\DateTimeImmutable::class, \DateTimeInterface::class, \DateTime::class], true)) {
-                return FlatColumn::dateTime($element->name());
-            }
-
-            if ($elementType->class === Entry\Type\Uuid::class) {
-                return FlatColumn::uuid($element->name());
-            }
-
-            throw new RuntimeException($elementType->class . ' is not supported.');
-        }
-
-        if ($elementType instanceof ListType) {
-            $listElement = $elementType->element();
-
-            if ($listElement->value() instanceof ScalarType) {
-                return NestedColumn::list(
-                    $element->name(),
-                    match ($listElement->toString()) {
-                        ScalarType::STRING => ListElement::string(),
-                        ScalarType::INTEGER => ListElement::int64(),
-                        ScalarType::FLOAT => ListElement::float(),
-                        ScalarType::BOOLEAN => ListElement::boolean(),
-                        default => throw new RuntimeException('List of ' . $listElement->toString() . ' is not supported yet supported.'),
-                    }
+                throw new \Flow\Parquet\Exception\RuntimeException($class . ' can\'t be converted to any parquet columns.');
+            case ListType::class:
+                return ListElement::list($this->flowListToParquetList($element));
+            case MapType::class:
+                return ListElement::map(
+                    $this->flowMapKeyToParquetMapKey($element->key()),
+                    $this->flowMapValueToParquetMapValue($element->value())
                 );
-            }
-
-            if ($listElement->value() instanceof ObjectType) {
-                if (\is_a($listElement->value()->class, \DateTimeInterface::class, true)) {
-                    return NestedColumn::list($element->name(), ListElement::datetime());
-                }
-
-                throw new RuntimeException("List of {$listElement->value()->class} is not supported yet supported.");
-            }
+            case StructureType::class:
+                return ListElement::structure(...$this->flowStructureToParquetStructureElements($element));
         }
 
-        if ($elementType instanceof MapType) {
-            if ($elementType->value()->value() instanceof ScalarType) {
+        throw new RuntimeException($element::class . ' is not supported.');
+    }
+
+    private function flowMapKeyToParquetMapKey(MapKey $mapKey) : ParquetSchema\MapKey
+    {
+        switch ($mapKey->type()::class) {
+            case ScalarType::class:
+                switch ($mapKey->type()->type()) {
+                    case ScalarType::FLOAT:
+                        return ParquetSchema\MapKey::float();
+                    case ScalarType::INTEGER:
+                        return ParquetSchema\MapKey::int64();
+                    case ScalarType::STRING:
+                        return ParquetSchema\MapKey::string();
+                    case ScalarType::BOOLEAN:
+                        return ParquetSchema\MapKey::boolean();
+                }
+
+                break;
+        }
+
+        throw new RuntimeException($mapKey->type()::class . ' is not supported.');
+    }
+
+    private function flowMapValueToParquetMapValue(MapValue $mapValue) : ParquetSchema\MapValue
+    {
+        $mapValueType = $mapValue->type();
+
+        switch ($mapValueType::class) {
+            case ScalarType::class:
+                switch ($mapValueType->type()) {
+                    case ScalarType::FLOAT:
+                        return ParquetSchema\MapValue::float();
+                    case ScalarType::INTEGER:
+                        return ParquetSchema\MapValue::int64();
+                    case ScalarType::STRING:
+                        return ParquetSchema\MapValue::string();
+                    case ScalarType::BOOLEAN:
+                        return ParquetSchema\MapValue::boolean();
+                }
+
+                break;
+            case ObjectType::class:
+                $class = $mapValueType->class;
+
+                if (\is_a($class, \DateTimeInterface::class, true)) {
+                    return ParquetSchema\MapValue::datetime();
+                }
+
+                if ($class === Entry\Type\Uuid::class) {
+                    return ParquetSchema\MapValue::string();
+                }
+
+                if ($class === \DateInterval::class) {
+                    return ParquetSchema\MapValue::time();
+                }
+
+                throw new \Flow\Parquet\Exception\RuntimeException($class . ' can\'t be converted to any parquet columns.');
+            case ListType::class:
+                return ParquetSchema\MapValue::list($this->flowListToParquetList($mapValueType));
+            case MapType::class:
+                return ParquetSchema\MapValue::map(
+                    $this->flowMapKeyToParquetMapKey($mapValueType->key()),
+                    $this->flowMapValueToParquetMapValue($mapValueType->value())
+                );
+            case StructureType::class:
+                return ParquetSchema\MapValue::structure(...$this->flowStructureToParquetStructureElements($mapValueType));
+        }
+
+        throw new RuntimeException($mapValueType::class . ' is not supported.');
+    }
+
+    private function flowObjectToParquetFlat(ObjectType $type, string $name) : FlatColumn
+    {
+        $class = $type->class;
+
+        if (\is_a($class, \DateTimeInterface::class, true)) {
+            return FlatColumn::datetime($name);
+        }
+
+        if ($class === Entry\Type\Uuid::class) {
+            return FlatColumn::string($name);
+        }
+
+        if ($class === \DateInterval::class) {
+            return FlatColumn::time($name);
+        }
+
+        throw new RuntimeException($class . ' can\'t be converted to any parquet columns.');
+    }
+
+    private function flowScalarToParquetFlat(ScalarType $type, string $name) : FlatColumn
+    {
+        switch ($type->type()) {
+            case ScalarType::FLOAT:
+                return FlatColumn::float($name);
+            case ScalarType::INTEGER:
+                return FlatColumn::int64($name);
+            case ScalarType::STRING:
+                return FlatColumn::string($name);
+            case ScalarType::BOOLEAN:
+                return FlatColumn::boolean($name);
+
+            default:
+                throw new RuntimeException($type->type() . ' is not supported.');
+        }
+    }
+
+    private function flowStructureToParquetStructureElements(StructureType $structureType) : array
+    {
+        $elements = [];
+
+        foreach ($structureType->elements() as $element) {
+            $elements[] = $this->flowTypeToParquetType($element->name(), $element->type());
+        }
+
+        return $elements;
+    }
+
+    private function flowTypeToParquetType(string $name, Type $type) : Column
+    {
+        switch ($type::class) {
+            case ScalarType::class:
+                return $this->flowScalarToParquetFlat($type, $name);
+            case ObjectType::class:
+                return $this->flowObjectToParquetFlat($type, $name);
+            case ListType::class:
+                return NestedColumn::list($name, $this->flowListToParquetList($type));
+            case MapType::class:
                 return NestedColumn::map(
-                    $element->name(),
-                    match ($elementType->key()->value()->toString()) {
-                        ScalarType::STRING => ParquetSchema\MapKey::string(),
-                        ScalarType::INTEGER => ParquetSchema\MapKey::int64(),
-                        default => throw new RuntimeException('Map ' . $elementType->key()->toString() . ' is not supported yet supported.'),
-                    },
-                    match ($elementType->value()->value()->toString()) {
-                        ScalarType::STRING => ParquetSchema\MapValue::string(),
-                        ScalarType::INTEGER => ParquetSchema\MapValue::int64(),
-                        ScalarType::FLOAT => ParquetSchema\MapValue::float(),
-                        ScalarType::BOOLEAN => ParquetSchema\MapValue::boolean(),
-                        default => throw new RuntimeException('Map ' . $elementType->value()->toString() . ' is not supported yet supported.'),
-                    }
+                    $name,
+                    $this->flowMapKeyToParquetMapKey($type->key()),
+                    $this->flowMapValueToParquetMapValue($type->value())
                 );
-            }
-
-            throw new RuntimeException($elementType->toString() . ' is not supported yet supported.');
+            case StructureType::class:
+                return NestedColumn::struct($name, $this->flowStructureToParquetStructureElements($type));
         }
 
-        throw new RuntimeException($element->toString() . ' is not yet supported.');
+        throw new RuntimeException($type::class . ' is not supported.');
     }
 
-    private function structureEntryToParquet(Definition $definition) : NestedColumn
-    {
-        /** @var StructureType $structureType */
-        $structureType = $definition->metadata()->get(FlowMetadata::METADATA_STRUCTURE_ENTRY_TYPE);
-
-        $structConverter = function (array $definitions) use (&$structConverter) : array {
-            $structureFields = [];
-
-            /** @var StructureElement $structureElement */
-            foreach ($definitions as $structureElement) {
-                $type = $structureElement->type();
-
-                if ($type instanceof StructureType) {
-                    $structureFields[] = NestedColumn::struct($structureElement->name(), $structConverter($type->elements()));
-                } else {
-                    $structureFields[] = $this->structureElementToParquet($structureElement);
-                }
-            }
-
-            return $structureFields;
-        };
-
-        return NestedColumn::struct($definition->entry()->name(), $structConverter($structureType->elements()));
-    }
-
-    private function typeFromDefinition(Definition $definition) : string
+    /**
+     * @psalm-suppress InvalidReturnType
+     * @psalm-suppress InvalidReturnStatement
+     */
+    private function typeFromDefinition(Definition $definition) : Type
     {
         if ($definition->isNullable() && \count($definition->types()) === 2) {
             /** @var class-string<Entry> $type */
@@ -234,6 +240,49 @@ final class SchemaConverter
             throw new RuntimeException('Union types are not supported by Parquet file format. Invalid type: ' . $definition->entry()->name());
         }
 
-        return $type;
+        if ($type === Entry\ObjectEntry::class) {
+            /** @phpstan-ignore-next-line */
+            return $definition->metadata()->get(FlowMetadata::METADATA_OBJECT_ENTRY_TYPE);
+        }
+
+        if ($type === Entry\ListEntry::class) {
+            /** @phpstan-ignore-next-line */
+            return $definition->metadata()->get(FlowMetadata::METADATA_LIST_ENTRY_TYPE);
+        }
+
+        if ($type === Entry\MapEntry::class) {
+            /** @phpstan-ignore-next-line */
+            return $definition->metadata()->get(FlowMetadata::METADATA_MAP_ENTRY_TYPE);
+        }
+
+        if ($type === Entry\StructureEntry::class) {
+            /** @phpstan-ignore-next-line */
+            return $definition->metadata()->get(FlowMetadata::METADATA_STRUCTURE_ENTRY_TYPE);
+        }
+
+        if ($type === Entry\ArrayEntry::class) {
+            throw new RuntimeException('ArrayEntry entry can\'t be saved in Parquet file, try convert it to ListEntry');
+        }
+
+        switch ($type) {
+            case Entry\IntegerEntry::class:
+                return ScalarType::integer($definition->isNullable());
+            case Entry\BooleanEntry::class:
+                return ScalarType::boolean($definition->isNullable());
+            case Entry\FloatEntry::class:
+                return ScalarType::float($definition->isNullable());
+            case Entry\EnumEntry::class:
+            case Entry\JsonEntry::class:
+            case Entry\StringEntry::class:
+                return ScalarType::string($definition->isNullable());
+            case Entry\NullEntry::class:
+                return new NullType();
+            case Entry\DateTimeEntry::class:
+                return new ObjectType(\DateTimeInterface::class, $definition->isNullable());
+            case Entry\UuidEntry::class:
+                return new ObjectType(Entry\Type\Uuid::class, $definition->isNullable());
+        }
+
+        throw new RuntimeException($type . ' is not supported.');
     }
 }

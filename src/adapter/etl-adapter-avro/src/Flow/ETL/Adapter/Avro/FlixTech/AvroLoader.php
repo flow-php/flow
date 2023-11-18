@@ -102,8 +102,8 @@ final class AvroLoader implements Closure, Loader, Loader\FileLoader
         $listType = $entry->definition()->metadata()->get(Schema\FlowMetadata::METADATA_LIST_ENTRY_TYPE);
         $listElement = $listType->element();
 
-        if ($listElement->value() instanceof ObjectType) {
-            if (\is_a($listElement->value()->class, Row\Entry\Type\Uuid::class, true)) {
+        if ($listElement->type() instanceof ObjectType) {
+            if (\is_a($listElement->type()->class, Row\Entry\Type\Uuid::class, true)) {
                 /** @var array<string> $data */
                 $data = [];
 
@@ -114,7 +114,7 @@ final class AvroLoader implements Closure, Loader, Loader\FileLoader
                 return $data;
             }
 
-            if (\is_a($listElement->value()->class, \DateTimeInterface::class, true)) {
+            if (\is_a($listElement->type()->class, \DateTimeInterface::class, true)) {
                 /** @var array<int> $data */
                 $data = [];
 
