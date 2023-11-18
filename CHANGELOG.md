@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-11-17
+## [Unreleased] - 2023-11-18
 
 ### Added
 - [#780](https://github.com/flow-php/flow/pull/780) - **Add `MapEntry`** - [@stloyd](https://github.com/stloyd)
@@ -167,6 +167,7 @@
 - [#584](https://github.com/flow-php/flow/pull/584) - **Adjust `phpunit.xml` to be more efficient** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
+- [#798](https://github.com/flow-php/flow/pull/798) - **Deprecated notice for using Connection::getSchemaManager()** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#795](https://github.com/flow-php/flow/pull/795) - **Window function rank** - [@norberttech](https://github.com/norberttech)
 - [#789](https://github.com/flow-php/flow/pull/789) - **Fix hardcoded entry name for enum entry with schema** - [@stloyd](https://github.com/stloyd)
 - [cc4bd8](https://github.com/flow-php/flow/commit/cc4bd8d8bfd7540df4b2917eff04255332d32dec) - **incorrect tags in docker building workflows** - [@norberttech](https://github.com/norberttech)
