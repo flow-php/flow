@@ -132,4 +132,9 @@ final class ScalarType implements NativeType
     {
         return ($this->nullable ? '?' : '') . $this->value;
     }
+
+    public function type() : string
+    {
+        return $this->value;
+    }
 }

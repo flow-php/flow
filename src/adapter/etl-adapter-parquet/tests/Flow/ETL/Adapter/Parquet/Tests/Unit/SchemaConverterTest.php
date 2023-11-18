@@ -42,10 +42,11 @@ final class SchemaConverterTest extends TestCase
                 FlatColumn::string('string'),
                 FlatColumn::float('float'),
                 FlatColumn::dateTime('datetime'),
-                FlatColumn::json('json'),
+                FlatColumn::string('json'),
                 NestedColumn::list('list', ParquetSchema\ListElement::string()),
                 NestedColumn::struct('structure', [FlatColumn::string('a')]),
-                NestedColumn::map('map', ParquetSchema\MapKey::string(), ParquetSchema\MapValue::int64())
+                NestedColumn::map('map', ParquetSchema\MapKey::string(), ParquetSchema\MapValue::int64()),
+                FlatColumn::time('time')
             ),
             (new SchemaConverter())->toParquet(new Schema(
                 Schema\Definition::integer('integer'),
@@ -56,7 +57,8 @@ final class SchemaConverterTest extends TestCase
                 Schema\Definition::json('json'),
                 Schema\Definition::list('list', new ListType(ListElement::string())),
                 Schema\Definition::structure('structure', new StructureType(new StructureElement('a', ScalarType::string()))),
-                Schema\Definition::map('map', new MapType(MapKey::string(), MapValue::integer()))
+                Schema\Definition::map('map', new MapType(MapKey::string(), MapValue::integer())),
+                Schema\Definition::object('time', new ObjectType(\DateInterval::class, false))
             ))
         );
     }
@@ -64,7 +66,7 @@ final class SchemaConverterTest extends TestCase
     public function test_convert_object_entry_to_parquet_array() : void
     {
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage("Flow\ETL\Row\Entry\ObjectEntry is not yet supported.");
+        $this->expectExceptionMessage("stdClass can't be converted to any parquet columns.");
 
         (new SchemaConverter())->toParquet(new Schema(
             Schema\Definition::object('object', new ObjectType(\stdClass::class, false))

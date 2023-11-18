@@ -77,7 +77,7 @@ final class ListElement
         return $this->value->toString();
     }
 
-    public function value() : Type
+    public function type() : Type
     {
         return $this->value;
     }

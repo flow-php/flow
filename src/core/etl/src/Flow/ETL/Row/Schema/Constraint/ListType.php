@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Schema\Constraint;
 
-use Flow\ETL\PHP\Type\Logical\ListType;
+use Flow\ETL\PHP\Type\Logical\ListType as PHPListType;
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Schema\Constraint;
@@ -12,7 +12,7 @@ use Flow\ETL\Row\Schema\Constraint;
 /**
  * @implements Constraint<array{type: Type}>
  */
-final class CollectionType implements Constraint
+final class ListType implements Constraint
 {
     public function __construct(private readonly Type $type)
     {
@@ -30,11 +30,7 @@ final class CollectionType implements Constraint
 
     public function isSatisfiedBy(Entry $entry) : bool
     {
-        if (!$entry instanceof Entry\TypedCollection) {
-            return false;
-        }
-
-        if (!$entry->type() instanceof ListType) {
+        if (!$entry->type() instanceof PHPListType) {
             return false;
         }
 

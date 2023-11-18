@@ -18,7 +18,7 @@ use Flow\ETL\Row\Schema\Definition;
  *
  * @implements Entry<array<T>, array{name: string, type: ListType, value: array<T>}>
  */
-final class ListEntry implements Entry, TypedCollection
+final class ListEntry implements Entry
 {
     use EntryRef;
 

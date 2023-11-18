@@ -214,11 +214,11 @@ final class NativeEntryFactory implements EntryFactory
 
                     $elementType = $entryType->element();
 
-                    if ($elementType->value() instanceof ObjectType) {
+                    if ($elementType->type() instanceof ObjectType) {
                         /** @var mixed $firstValue */
                         $firstValue = \current($value);
 
-                        if (\is_a($elementType->value()->class, \DateTimeInterface::class, true) && \is_string($firstValue)) {
+                        if (\is_a($elementType->type()->class, \DateTimeInterface::class, true) && \is_string($firstValue)) {
                             return new Entry\ListEntry(
                                 $definition->entry()->name(),
                                 \array_map(static fn (string $datetime) : \DateTimeImmutable => new \DateTimeImmutable($datetime), $value),
