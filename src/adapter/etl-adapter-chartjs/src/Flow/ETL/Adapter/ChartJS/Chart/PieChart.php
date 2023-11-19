@@ -6,7 +6,6 @@ namespace Flow\ETL\Adapter\ChartJS\Chart;
 
 use Flow\ETL\Adapter\ChartJS\Chart;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Rows;
 
@@ -15,7 +14,7 @@ final class PieChart implements Chart
     /**
      * @var array{
      *   labels: array<string>,
-     *   datasets: array<string, array{data: array}>
+     *   datasets: array<string, array{data: array, label: ?string}>
      * }
      */
     private array $data = [
@@ -26,6 +25,8 @@ final class PieChart implements Chart
     /**
      * @var array<array-key, mixed>
      */
+    private array $datasetOptions = [];
+
     private array $options = [];
 
     /**
@@ -34,6 +35,7 @@ final class PieChart implements Chart
      * @throws InvalidArgumentException
      */
     public function __construct(
+        private readonly EntryReference $label,
         private readonly array $datasets,
     ) {
         if (!\count($this->datasets)) {
@@ -41,7 +43,7 @@ final class PieChart implements Chart
         }
 
         foreach ($this->datasets as $dataset) {
-            $this->options[$dataset->name()] = [];
+            $this->datasetOptions[$dataset->name()] = [];
             $this->data['labels'][] = $dataset->name();
         }
     }
@@ -53,9 +55,11 @@ final class PieChart implements Chart
                 if (!\array_key_exists('pie', $this->data['datasets'])) {
                     $this->data['datasets']['pie'] = [
                         'data' => [$row->valueOf($dataset)],
+                        'label' => (string) $row->valueOf($this->label),
                     ];
                 } else {
                     $this->data['datasets']['pie']['data'][] = $row->valueOf($dataset);
+                    $this->data['datasets']['pie']['label'] = (string) $row->valueOf($this->label);
                 }
             }
         }
@@ -64,9 +68,9 @@ final class PieChart implements Chart
     public function data() : array
     {
         /** @var array<array-key, mixed> $options */
-        $options = $this->options['pie'] ?? [];
+        $options = $this->datasetOptions['pie'] ?? [];
 
-        return [
+        $data = [
             'type' => 'pie',
             'data' => [
                 'labels' => $this->data['labels'],
@@ -76,6 +80,12 @@ final class PieChart implements Chart
                 )),
             ],
         ];
+
+        if ($this->options) {
+            $data['options'] = $this->options;
+        }
+
+        return $data;
     }
 
     /**
@@ -83,12 +93,18 @@ final class PieChart implements Chart
      */
     public function setDatasetOptions(EntryReference $dataset, array $options) : self
     {
-        throw new RuntimeException('Please use setOptions while using PieChart');
+        if (!\array_key_exists($dataset->name(), $this->datasetOptions)) {
+            throw new InvalidArgumentException(\sprintf('Dataset "%s" does not exists', $dataset->name()));
+        }
+
+        $this->datasetOptions[$dataset->name()] = $options;
+
+        return $this;
     }
 
     public function setOptions(array $options) : self
     {
-        $this->options['pie'] = $options;
+        $this->options = $options;
 
         return $this;
     }
