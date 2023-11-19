@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\ChartJS\Tests\Integration;
 
+use function Flow\ETL\DSL\first;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\sum;
@@ -167,6 +168,7 @@ final class ChartJSLoaderTest extends TestCase
         ];
 
         $chart = ChartJS::pie(
+            ref('Date'),
             [
                 ref('Revenue'),
                 ref('CM'),
@@ -182,6 +184,7 @@ final class ChartJSLoaderTest extends TestCase
             ->read(From::memory(new ArrayMemory($data)))
             ->withEntry('Profit', ref('Revenue')->minus(ref('CM'))->minus(ref('Ads Spends'))->minus(ref('Storage Costs'))->minus(ref('Shipping Costs'))->round(lit(2)))
             ->aggregate(
+                first(ref('Date')->as('Date')),
                 sum(ref('Revenue')->as('Revenue')),
                 sum(ref('CM')->as('CM')),
                 sum(ref('Ads Spends')->as('Ads Spends')),
@@ -212,9 +215,12 @@ final class ChartJSLoaderTest extends TestCase
                                 10853,
                                 4760.3099999999995,
                             ],
-                            'label' => 'PnL',
+                            'label' => '2023-01-01',
                         ],
                     ],
+                ],
+                'options' => [
+                    'label' => 'PnL',
                 ],
             ],
             $chart->data(),

@@ -6,7 +6,6 @@ namespace Flow\ETL\Adapter\ChartJS\Chart;
 
 use Flow\ETL\Adapter\ChartJS\Chart;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Rows;
 
@@ -22,6 +21,8 @@ final class LineChart implements Chart
         'labels' => [],
         'datasets' => [],
     ];
+
+    private array $datasetOptions = [];
 
     private array $options = [];
 
@@ -40,7 +41,7 @@ final class LineChart implements Chart
         }
 
         foreach ($this->datasets as $dataset) {
-            $this->options[$dataset->name()] = [];
+            $this->datasetOptions[$dataset->name()] = [];
         }
     }
 
@@ -64,14 +65,14 @@ final class LineChart implements Chart
 
     public function data() : array
     {
-        return [
+        $data = [
             'type' => 'line',
             'data' => [
                 'labels' => $this->data['labels'],
                 'datasets' => \array_values(\array_map(
                     function (array $dataset) : array {
                         /** @var array<array-key, mixed> $options */
-                        $options = $this->options[$dataset['label']] ?? [];
+                        $options = $this->datasetOptions[$dataset['label']] ?? [];
 
                         return \array_merge($dataset, $options);
                     },
@@ -79,6 +80,12 @@ final class LineChart implements Chart
                 )),
             ],
         ];
+
+        if ($this->options) {
+            $data['options'] = $this->options;
+        }
+
+        return $data;
     }
 
     /**
@@ -86,17 +93,19 @@ final class LineChart implements Chart
      */
     public function setDatasetOptions(EntryReference $dataset, array $options) : self
     {
-        if (!\array_key_exists($dataset->name(), $this->options)) {
+        if (!\array_key_exists($dataset->name(), $this->datasetOptions)) {
             throw new InvalidArgumentException(\sprintf('Dataset "%s" does not exists', $dataset->name()));
         }
 
-        $this->options[$dataset->name()] = $options;
+        $this->datasetOptions[$dataset->name()] = $options;
 
         return $this;
     }
 
     public function setOptions(array $options) : self
     {
-        throw new RuntimeException('Please use setDatasetOptions while using LineChart');
+        $this->options = $options;
+
+        return $this;
     }
 }

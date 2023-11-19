@@ -55,8 +55,8 @@ class ChartJS
      *
      * @throws InvalidArgumentException
      */
-    final public static function pie(array $datasets) : Chart
+    final public static function pie(EntryReference $label, array $datasets) : Chart
     {
-        return new Chart\PieChart($datasets);
+        return new Chart\PieChart($label, $datasets);
     }
 }
