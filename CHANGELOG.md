@@ -1,6 +1,7 @@
-## [Unreleased] - 2023-11-18
+## [Unreleased] - 2023-11-19
 
 ### Added
+- [#801](https://github.com/flow-php/flow/pull/801) - **Add top-level options support for ChartJS** - [@stloyd](https://github.com/stloyd)
 - [#780](https://github.com/flow-php/flow/pull/780) - **Add `MapEntry`** - [@stloyd](https://github.com/stloyd)
 - [#780](https://github.com/flow-php/flow/pull/780) - **Add `EnumType`** - [@stloyd](https://github.com/stloyd)
 - [#795](https://github.com/flow-php/flow/pull/795) - **Window function count** - [@norberttech](https://github.com/norberttech)
