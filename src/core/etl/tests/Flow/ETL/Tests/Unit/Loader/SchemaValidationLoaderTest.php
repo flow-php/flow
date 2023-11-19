@@ -9,6 +9,7 @@ use Flow\ETL\DSL\Entry;
 use Flow\ETL\Exception\SchemaValidationException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader\SchemaValidationLoader;
+use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Rows;
@@ -34,7 +35,7 @@ EXCEPTION
 
         $loader = new SchemaValidationLoader(
             new Schema(
-                Schema\Definition::integer('id')
+                Schema\Definition::integer('id', ScalarType::integer64())
             ),
             new Schema\StrictValidator()
         );
@@ -48,7 +49,7 @@ EXCEPTION
     {
         $loader = new SchemaValidationLoader(
             new Schema(
-                Schema\Definition::integer('id')
+                Schema\Definition::integer('id', ScalarType::integer64())
             ),
             new Schema\StrictValidator()
         );

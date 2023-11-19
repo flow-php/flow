@@ -9,6 +9,7 @@ use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Logical\StructureType;
+use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry as RowEntry;
 use Flow\ETL\Row\Entry\Type\Uuid;
@@ -94,9 +95,9 @@ class Entry
      *
      * @return RowEntry\IntegerEntry
      */
-    final public static function integer(string $name, int $value) : RowEntry
+    final public static function integer(string $name, int $value, ?ScalarType $type = null) : RowEntry
     {
-        return new RowEntry\IntegerEntry($name, $value);
+        return new RowEntry\IntegerEntry($name, $value, $type ?: ScalarType::integer64());
     }
 
     /**

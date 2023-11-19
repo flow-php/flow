@@ -12,6 +12,7 @@ use Flow\ETL\Partition;
 use Flow\ETL\PartitionedRows;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\ListType;
+use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Comparator\NativeComparator;
 use Flow\ETL\Row\Entry\BooleanEntry;
@@ -731,8 +732,12 @@ final class RowsTest extends TestCase
 
         $this->assertEquals(
             new Schema(
-                Definition::integer('id'),
-                Definition::union('name', [StringEntry::class, NullEntry::class, IntegerEntry::class]),
+                Definition::integer('id', ScalarType::integer64()),
+                Definition::union(
+                    'name',
+                    [StringEntry::class, NullEntry::class, IntegerEntry::class],
+                    metadata: Schema\Metadata::with(Schema\FlowMetadata::METADATA_INTEGER_ENTRY_TYPE, ScalarType::integer64())
+                ),
                 Definition::array('tags', true),
                 Definition::list('list', new ListType(ListElement::integer()), true)
             ),

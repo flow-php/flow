@@ -140,7 +140,10 @@ final class NativeEntryFactory implements EntryFactory
                 }
 
                 if ($type === Entry\IntegerEntry::class) {
-                    return EntryDSL::integer($definition->entry()->name(), $value);
+                    /** @var ScalarType $scalarType */
+                    $scalarType = $definition->metadata()->get(Schema\FlowMetadata::METADATA_INTEGER_ENTRY_TYPE);
+
+                    return EntryDSL::integer($definition->entry()->name(), $value, $scalarType);
                 }
 
                 if ($type === Entry\FloatEntry::class) {

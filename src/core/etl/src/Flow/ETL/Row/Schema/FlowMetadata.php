@@ -10,6 +10,8 @@ final class FlowMetadata
 
     public const METADATA_ENUM_CLASS = 'flow_enum_class';
 
+    public const METADATA_INTEGER_ENTRY_TYPE = 'flow_integer_entry_type';
+
     public const METADATA_LIST_ENTRY_TYPE = 'flow_list_entry_type';
 
     public const METADATA_MAP_ENTRY_TYPE = 'flow_map_entry_type';

@@ -1636,7 +1636,7 @@ ASCII,
                 Row::create(Entry::integer('id', 2), Entry::string('name', 'bar'), Entry::boolean('active', false)),
             )
         )->validate(
-            new Schema(Schema\Definition::integer('id', $nullable = false)),
+            new Schema(Schema\Definition::integer('id', ScalarType::integer64())),
             new Schema\SelectiveValidator()
         )->fetch();
 
@@ -1714,9 +1714,9 @@ ASCII,
             )
         )->validate(
             new Schema(
-                Schema\Definition::integer('id', $nullable = false),
-                Schema\Definition::string('name', $nullable = true),
-                Schema\Definition::boolean('active', $nullable = false),
+                Schema\Definition::integer('id', ScalarType::integer32()),
+                Schema\Definition::string('name', true),
+                Schema\Definition::boolean('active'),
             )
         )->fetch();
 

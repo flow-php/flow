@@ -49,7 +49,7 @@ final class SchemaConverterTest extends TestCase
                 FlatColumn::time('time')
             ),
             (new SchemaConverter())->toParquet(new Schema(
-                Schema\Definition::integer('integer'),
+                Schema\Definition::integer('integer', ScalarType::integer64()),
                 Schema\Definition::boolean('boolean'),
                 Schema\Definition::string('string'),
                 Schema\Definition::float('float'),

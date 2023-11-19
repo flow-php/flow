@@ -174,7 +174,7 @@ final class NativeEntryFactoryTest extends TestCase
     {
         $this->assertEquals(
             Entry::integer('e', 1),
-            (new NativeEntryFactory())->create('e', 1, new Schema(Schema\Definition::integer('e')))
+            (new NativeEntryFactory())->create('e', 1, new Schema(Schema\Definition::integer('e', ScalarType::integer64())))
         );
     }
 

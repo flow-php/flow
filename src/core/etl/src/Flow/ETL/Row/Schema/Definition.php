@@ -9,6 +9,7 @@ use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\PHP\Type\Native\ObjectType;
+use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\ArrayEntry;
 use Flow\ETL\Row\Entry\BooleanEntry;
@@ -102,9 +103,18 @@ final class Definition implements Serializable
         return new self($entry, ($nullable) ? [FloatEntry::class, NullEntry::class] : [FloatEntry::class], $constraint, $metadata);
     }
 
-    public static function integer(string|Reference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function integer(string|Reference $entry, ScalarType $type, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
-        return new self($entry, ($nullable) ? [IntegerEntry::class, NullEntry::class] : [IntegerEntry::class], $constraint, $metadata);
+        if (!$type->isInteger()) {
+            throw new InvalidArgumentException('Type must be integer, given: ' . $type->toString());
+        }
+
+        return new self(
+            $entry,
+            $nullable ? [IntegerEntry::class, NullEntry::class] : [IntegerEntry::class],
+            $constraint,
+            Metadata::empty()->add(FlowMetadata::METADATA_INTEGER_ENTRY_TYPE, $type)->merge($metadata ?? Metadata::empty())
+        );
     }
 
     public static function json(string|Reference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self

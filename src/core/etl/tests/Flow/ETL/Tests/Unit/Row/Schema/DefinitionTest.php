@@ -77,21 +77,21 @@ final class DefinitionTest extends TestCase
             ->method('isSatisfiedBy')
             ->willReturn(true);
 
-        $def = Definition::integer('test', false, $constraint);
+        $def = Definition::integer('test', ScalarType::integer64(), false, $constraint);
 
         $this->assertTrue($def->matches(Entry::integer('test', 1)));
     }
 
     public function test_matches_when_nullable_and_name_matches() : void
     {
-        $def = Definition::integer('test', $nullable = true);
+        $def = Definition::integer('test', ScalarType::integer64(), true);
 
         $this->assertTrue($def->matches(Entry::null('test')));
     }
 
     public function test_matches_when_type_and_name_match() : void
     {
-        $def = Definition::integer('test');
+        $def = Definition::integer('test', ScalarType::integer64());
 
         $this->assertTrue($def->matches(Entry::integer('test', 1)));
     }
@@ -105,9 +105,10 @@ final class DefinitionTest extends TestCase
                 new Constraint\Any(
                     new Constraint\SameAs(1),
                     new Constraint\SameAs('one')
-                )
+                ),
+                metadata: Metadata::with(FlowMetadata::METADATA_INTEGER_ENTRY_TYPE, ScalarType::integer64())
             )->nullable(),
-            Definition::integer('id', false, new Constraint\SameAs(1))
+            Definition::integer('id', ScalarType::integer64(), false, new Constraint\SameAs(1))
                 ->merge(Definition::string('id', true, new Constraint\SameAs('one')))
         );
     }
@@ -118,9 +119,10 @@ final class DefinitionTest extends TestCase
             Definition::union(
                 'id',
                 [StringEntry::class, IntegerEntry::class],
-                new Constraint\SameAs(1)
+                new Constraint\SameAs(1),
+                metadata: Metadata::with(FlowMetadata::METADATA_INTEGER_ENTRY_TYPE, ScalarType::integer64())
             )->nullable(),
-            Definition::string('id', false, new Constraint\SameAs(1))->merge(Definition::integer('id', true))
+            Definition::string('id', false, new Constraint\SameAs(1))->merge(Definition::integer('id', ScalarType::integer64(), true))
         );
     }
 
@@ -130,17 +132,22 @@ final class DefinitionTest extends TestCase
             Definition::union(
                 'id',
                 [StringEntry::class, IntegerEntry::class],
-                new Constraint\SameAs(2)
+                new Constraint\SameAs(2),
+                metadata: Metadata::with(FlowMetadata::METADATA_INTEGER_ENTRY_TYPE, ScalarType::integer64())
             )->nullable(),
-            Definition::string('id')->merge(Definition::integer('id', true, new Constraint\SameAs(2)))
+            Definition::string('id')->merge(Definition::integer('id', ScalarType::integer64(), true, new Constraint\SameAs(2)))
         );
     }
 
     public function test_merge_definitions_without_constraints() : void
     {
         $this->assertEquals(
-            Definition::union('id', [StringEntry::class, IntegerEntry::class])->nullable(),
-            Definition::string('id')->merge(Definition::integer('id', true))
+            Definition::union(
+                'id',
+                [StringEntry::class, IntegerEntry::class],
+                metadata: Metadata::with(FlowMetadata::METADATA_INTEGER_ENTRY_TYPE, ScalarType::integer64())
+            )->nullable(),
+            Definition::string('id')->merge(Definition::integer('id', ScalarType::integer64(), true))
         );
     }
 
@@ -170,28 +177,28 @@ final class DefinitionTest extends TestCase
             ->method('isSatisfiedBy')
             ->willReturn(false);
 
-        $def = Definition::integer('test', false, $constraint);
+        $def = Definition::integer('test', ScalarType::integer64(), false, $constraint);
 
         $this->assertFalse($def->matches(Entry::integer('test', 1)));
     }
 
     public function test_not_matches_when_not_nullable_name_matches_but_null_given() : void
     {
-        $def = Definition::integer('test', $nullable = false);
+        $def = Definition::integer('test', ScalarType::integer64(), false);
 
         $this->assertFalse($def->matches(Entry::null('test')));
     }
 
     public function test_not_matches_when_type_does_not_match() : void
     {
-        $def = Definition::integer('test');
+        $def = Definition::integer('test', ScalarType::integer64());
 
         $this->assertFalse($def->matches(Entry::string('test', 'test')));
     }
 
     public function test_not_matches_when_type_name_not_match() : void
     {
-        $def = Definition::integer('test');
+        $def = Definition::integer('test', ScalarType::integer64());
 
         $this->assertFalse($def->matches(Entry::integer('not-test', 1)));
     }
