@@ -20,6 +20,16 @@ final class MapKey
         return new self(ScalarType::integer());
     }
 
+    public static function integer32() : self
+    {
+        return new self(ScalarType::integer32());
+    }
+
+    public static function integer64() : self
+    {
+        return new self(ScalarType::integer64());
+    }
+
     public static function string() : self
     {
         return new self(ScalarType::string());

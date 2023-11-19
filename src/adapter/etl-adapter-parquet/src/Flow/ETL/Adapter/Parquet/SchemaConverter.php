@@ -48,7 +48,9 @@ final class SchemaConverter
                 switch ($element->type()) {
                     case ScalarType::FLOAT:
                         return ListElement::float();
-                    case ScalarType::INTEGER:
+                    case ScalarType::INTEGER_32:
+                        return ListElement::int32();
+                    case ScalarType::INTEGER_64:
                         return ListElement::int64();
                     case ScalarType::STRING:
                         return ListElement::string();
@@ -94,7 +96,9 @@ final class SchemaConverter
                 switch ($mapKey->type()->type()) {
                     case ScalarType::FLOAT:
                         return ParquetSchema\MapKey::float();
-                    case ScalarType::INTEGER:
+                    case ScalarType::INTEGER_32:
+                        return ParquetSchema\MapKey::int32();
+                    case ScalarType::INTEGER_64:
                         return ParquetSchema\MapKey::int64();
                     case ScalarType::STRING:
                         return ParquetSchema\MapKey::string();
@@ -117,7 +121,9 @@ final class SchemaConverter
                 switch ($mapValueType->type()) {
                     case ScalarType::FLOAT:
                         return ParquetSchema\MapValue::float();
-                    case ScalarType::INTEGER:
+                    case ScalarType::INTEGER_32:
+                        return ParquetSchema\MapValue::int32();
+                    case ScalarType::INTEGER_64:
                         return ParquetSchema\MapValue::int64();
                     case ScalarType::STRING:
                         return ParquetSchema\MapValue::string();
@@ -180,7 +186,9 @@ final class SchemaConverter
         switch ($type->type()) {
             case ScalarType::FLOAT:
                 return FlatColumn::float($name);
-            case ScalarType::INTEGER:
+            case ScalarType::INTEGER_32:
+                return FlatColumn::int32($name);
+            case ScalarType::INTEGER_64:
                 return FlatColumn::int64($name);
             case ScalarType::STRING:
                 return FlatColumn::string($name);

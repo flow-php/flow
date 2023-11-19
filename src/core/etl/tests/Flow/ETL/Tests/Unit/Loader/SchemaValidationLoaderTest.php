@@ -23,7 +23,7 @@ final class SchemaValidationLoaderTest extends TestCase
             <<<'EXCEPTION'
 Given schema:
 schema
-|-- id: integer
+|-- id: integer64
 
 Does not match rows:
 schema

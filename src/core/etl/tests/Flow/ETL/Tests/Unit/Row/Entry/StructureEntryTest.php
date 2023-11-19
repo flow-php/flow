@@ -117,7 +117,7 @@ final class StructureEntryTest extends TestCase
     public function test_creating_string_structure_from_wrong_value_types() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Expected structure{id: integer, name: string} got different types: list<integer>');
+        $this->expectExceptionMessage('Expected structure{id: integer64, name: string} got different types: list<integer64>');
 
         new StructureEntry(
             'test',

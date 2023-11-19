@@ -14,14 +14,14 @@ final class ListElement
     {
     }
 
-    public static function boolean() : self
+    public static function boolean(bool $nullable = false) : self
     {
-        return new self(ScalarType::boolean());
+        return new self(ScalarType::boolean($nullable));
     }
 
-    public static function float() : self
+    public static function float(bool $nullable = false) : self
     {
-        return new self(ScalarType::float());
+        return new self(ScalarType::float($nullable));
     }
 
     public static function fromType(Type $type) : self
@@ -29,9 +29,19 @@ final class ListElement
         return new self($type);
     }
 
-    public static function integer() : self
+    public static function integer(bool $nullable = false) : self
     {
-        return new self(ScalarType::integer());
+        return new self(ScalarType::integer($nullable));
+    }
+
+    public static function integer32(bool $nullable = false) : self
+    {
+        return new self(ScalarType::integer32($nullable));
+    }
+
+    public static function integer64(bool $nullable = false) : self
+    {
+        return new self(ScalarType::integer64($nullable));
     }
 
     public static function list(ListType $type) : self
@@ -52,14 +62,9 @@ final class ListElement
         return new self(ObjectType::of($class, $nullable));
     }
 
-    public static function scalar(string $value, bool $nullable = false) : self
+    public static function string(bool $nullable = false) : self
     {
-        return new self(ScalarType::fromString($value, $nullable));
-    }
-
-    public static function string() : self
-    {
-        return new self(ScalarType::string());
+        return new self(ScalarType::string($nullable));
     }
 
     public function isEqual(mixed $value) : bool

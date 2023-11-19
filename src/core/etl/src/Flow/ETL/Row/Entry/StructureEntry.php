@@ -39,7 +39,7 @@ final class StructureEntry implements \Stringable, Entry
         }
 
         if (!$type->isValid($value)) {
-            throw InvalidArgumentException::because('Expected ' . $type->toString() . ' got different types: ' . (new TypeDetector())->detectType($this->value)->toString());
+            throw InvalidArgumentException::because('Expected ' . $type->toString() . ' got different types: ' . (new TypeDetector())->detectType($value)->toString());
         }
     }
 

@@ -13,6 +13,9 @@ final class ScalarTypeTest extends TestCase
     public function test_equals() : void
     {
         $this->assertTrue(
+            ScalarType::string()->isEqual(ScalarType::string())
+        );
+        $this->assertTrue(
             ScalarType::integer()->isEqual(ScalarType::integer())
         );
         $this->assertFalse(
@@ -20,6 +23,9 @@ final class ScalarTypeTest extends TestCase
         );
         $this->assertFalse(
             ScalarType::integer()->isEqual(ScalarType::float())
+        );
+        $this->assertFalse(
+            ScalarType::integer32()->isEqual(ScalarType::integer64())
         );
     }
 
@@ -40,6 +46,14 @@ final class ScalarTypeTest extends TestCase
             ScalarType::boolean()->toString()
         );
         $this->assertSame(
+            'integer32',
+            ScalarType::integer32()->toString()
+        );
+        $this->assertSame(
+            'integer64',
+            ScalarType::integer64()->toString()
+        );
+        $this->assertSame(
             '?string',
             ScalarType::string(true)->toString()
         );
@@ -57,10 +71,22 @@ final class ScalarTypeTest extends TestCase
             ScalarType::integer()->isValid(1)
         );
         $this->assertTrue(
+            ScalarType::integer32()->isValid(0x7FFFFFFF)
+        );
+        $this->assertTrue(
+            ScalarType::integer64()->isValid(0x7FFFFFFFFFFFFFFF)
+        );
+        $this->assertTrue(
             ScalarType::integer(true)->isValid(null)
         );
         $this->assertFalse(
             ScalarType::integer()->isValid('one')
+        );
+        $this->assertFalse(
+            ScalarType::integer32()->isValid(0x7FFFFFFFFFFFFFFF)
+        );
+        $this->assertFalse(
+            ScalarType::integer64()->isValid(0x7FFFFFFFFFFFFFFFF)
         );
         $this->assertFalse(
             ScalarType::string()->isValid([1, 2])

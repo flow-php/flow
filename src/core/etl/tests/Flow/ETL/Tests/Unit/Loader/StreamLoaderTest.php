@@ -63,7 +63,7 @@ final class StreamLoaderTest extends TestCase
 3 rows
 
 schema
-|-- id: integer
+|-- id: integer64
 |-- name: string
 
 ASCII,
@@ -123,7 +123,7 @@ TABLE,
         $this->assertSame(
             <<<'ASCII'
 schema
-|-- id: integer
+|-- id: integer64
 |-- name: string
 
 ASCII,

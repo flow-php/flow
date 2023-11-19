@@ -48,10 +48,10 @@ final class ASCIISchemaFormatterTest extends TestCase
         $this->assertSame(
             <<<'SCHEMA'
 schema
-|-- number: integer|float
+|-- number: integer64|float
 |-- user: structure
 |    |-- name: ?string
-|    |-- age: integer
+|    |-- age: integer64
 |    |-- address: structure
 |        |-- street: ?string
 |        |-- city: ?string
@@ -75,19 +75,19 @@ SCHEMA,
             Schema\Definition::boolean('active'),
             Schema\Definition::xml('xml'),
             Schema\Definition::map('map', new MapType(MapKey::string(), MapValue::string())),
-            Schema\Definition::list('list', new ListType(ListElement::map(new MapType(MapKey::string(), MapValue::integer()))))
+            Schema\Definition::list('list', new ListType(ListElement::map(new MapType(MapKey::string(), MapValue::integer32()))))
         );
 
         $this->assertSame(
             <<<'SCHEMA'
 schema
-|-- number: integer|float
+|-- number: integer64|float
 |-- name: ?string
 |-- tags: array<mixed>
 |-- active: boolean
 |-- xml: object<DOMDocument>
 |-- map: map<string, string>
-|-- list: list<map<string, integer>>
+|-- list: list<map<string, integer32>>
 
 SCHEMA,
             (new ASCIISchemaFormatter())->format($schema)

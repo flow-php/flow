@@ -49,7 +49,7 @@ final class ListEntryTest extends TestCase
     public function test_creating_integer_list_from_wrong_value_types() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Expected list<integer> got different types: array<mixed>');
+        $this->expectExceptionMessage('Expected list<integer64> got different types: array<mixed>');
 
         new ListEntry('list', ['string', 1], new ListType(ListElement::integer()));
     }
@@ -57,7 +57,7 @@ final class ListEntryTest extends TestCase
     public function test_creating_list_from_not_list_array() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Expected list<integer> got different types: structure{a: integer, b: integer}');
+        $this->expectExceptionMessage('Expected list<integer64> got different types: structure{a: integer64, b: integer64}');
 
         new ListEntry('list', ['a' => 1, 'b' => 2], new ListType(ListElement::integer()));
     }

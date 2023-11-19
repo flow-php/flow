@@ -1441,14 +1441,14 @@ ASCII,
         $this->assertStringContainsString(
             <<<'ASCII'
 schema
-|-- id: integer
+|-- id: integer64
 |-- country: string
-|-- age: integer
+|-- age: integer64
 schema
-|-- id: integer
+|-- id: integer64
 |-- country: string
-|-- age: integer
-|-- salary: ?integer
+|-- age: integer64
+|-- salary: ?integer64
 ASCII,
             $output
         );

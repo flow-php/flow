@@ -24,7 +24,14 @@ final class TypeDetector
         }
 
         if (\is_scalar($value)) {
-            return ScalarType::fromString(\gettype($value));
+            $type = \strtolower(\gettype($value));
+
+            return match ($type) {
+                'boolean' => ScalarType::boolean(),
+                'double' => ScalarType::float(),
+                'integer' => ScalarType::integer(),
+                'string' => ScalarType::string(),
+            };
         }
 
         if (\is_object($value)) {

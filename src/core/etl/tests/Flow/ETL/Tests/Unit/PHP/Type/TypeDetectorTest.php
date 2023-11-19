@@ -59,7 +59,7 @@ final class TypeDetectorTest extends TestCase
                 ],
             ],
             StructureType::class,
-            'structure{one: string, two: string, three: string, list: list<integer>, map: structure{one: string, two: string, three: string}}',
+            'structure{one: string, two: string, three: string, list: list<integer64>, map: structure{one: string, two: string, three: string}}',
         ];
 
         yield 'list of unique same structures' => [
@@ -74,7 +74,7 @@ final class TypeDetectorTest extends TestCase
                 ],
             ],
             ListType::class,
-            'list<structure{id: integer, name: string}>',
+            'list<structure{id: integer64, name: string}>',
         ];
 
         yield 'map with string key, of maps string with string' => [
@@ -113,7 +113,7 @@ final class TypeDetectorTest extends TestCase
                 5,
             ],
             ListType::class,
-            'list<integer>',
+            'list<integer64>',
         ];
 
         yield 'one level list' => [
@@ -186,7 +186,7 @@ final class TypeDetectorTest extends TestCase
                 ],
             ],
             ListType::class,
-            'list<list<integer>>',
+            'list<list<integer64>>',
         ];
 
         yield 'list of lists with null' => [
@@ -200,7 +200,7 @@ final class TypeDetectorTest extends TestCase
                 ],
             ],
             ListType::class,
-            'list<list<integer>>',
+            'list<list<integer64>>',
         ];
 
         yield 'list of lists with empty' => [
@@ -215,7 +215,7 @@ final class TypeDetectorTest extends TestCase
                 ],
             ],
             ListType::class,
-            'list<list<integer>>',
+            'list<list<integer64>>',
         ];
 
         yield 'list of lists with array of nulls' => [
@@ -231,7 +231,7 @@ final class TypeDetectorTest extends TestCase
                 ],
             ],
             ListType::class,
-            'list<list<integer>>',
+            'list<list<integer64>>',
         ];
 
         yield 'map with null' => [
@@ -279,7 +279,7 @@ final class TypeDetectorTest extends TestCase
 
         yield 'integer' => [
             123456789,
-            'integer',
+            'integer64',
         ];
     }
 

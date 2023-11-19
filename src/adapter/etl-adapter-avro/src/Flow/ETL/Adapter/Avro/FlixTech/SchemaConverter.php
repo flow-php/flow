@@ -54,7 +54,7 @@ final class SchemaConverter
             if ($listElement->type() instanceof ScalarType) {
                 return match ($listElement->type()->toString()) {
                     ScalarType::STRING => ['name' => $definition->entry()->name(), 'type' => ['type' => 'array', 'items' => \AvroSchema::STRING_TYPE]],
-                    ScalarType::INTEGER => ['name' => $definition->entry()->name(), 'type' => ['type' => 'array', 'items' => \AvroSchema::INT_TYPE]],
+                    ScalarType::INTEGER_32, ScalarType::INTEGER_64 => ['name' => $definition->entry()->name(), 'type' => ['type' => 'array', 'items' => \AvroSchema::INT_TYPE]],
                     ScalarType::FLOAT => ['name' => $definition->entry()->name(), 'type' => ['type' => 'array', 'items' => \AvroSchema::FLOAT_TYPE]],
                     ScalarType::BOOLEAN => ['name' => $definition->entry()->name(), 'type' => ['type' => 'array', 'items' => \AvroSchema::BOOLEAN_TYPE]],
                     default => throw new RuntimeException('List of ' . $listElement->type()->toString() . ' is not supported yet supported.'),
@@ -76,7 +76,7 @@ final class SchemaConverter
 
             return match ($mapType->value()->type()->toString()) {
                 ScalarType::STRING => ['name' => $definition->entry()->name(), 'type' => ['type' => 'map', 'values' => \AvroSchema::STRING_TYPE]],
-                ScalarType::INTEGER => ['name' => $definition->entry()->name(), 'type' => ['type' => 'map', 'values' => \AvroSchema::INT_TYPE]],
+                ScalarType::INTEGER_32, ScalarType::INTEGER_64 => ['name' => $definition->entry()->name(), 'type' => ['type' => 'map', 'values' => \AvroSchema::INT_TYPE]],
                 ScalarType::FLOAT => ['name' => $definition->entry()->name(), 'type' => ['type' => 'map', 'values' => \AvroSchema::FLOAT_TYPE]],
                 ScalarType::BOOLEAN => ['name' => $definition->entry()->name(), 'type' => ['type' => 'map', 'values' => \AvroSchema::BOOLEAN_TYPE]],
                 default => throw new RuntimeException('Map ' . $mapType->toString() . ' is not supported yet supported.'),
@@ -189,7 +189,7 @@ final class SchemaConverter
 
             return match ($listElement->type()->toString()) {
                 ScalarType::STRING => ['name' => $element->name(), 'type' => ['type' => 'array', 'items' => \AvroSchema::STRING_TYPE]],
-                ScalarType::INTEGER => ['name' => $element->name(), 'type' => ['type' => 'array', 'items' => \AvroSchema::INT_TYPE]],
+                ScalarType::INTEGER_32, ScalarType::INTEGER_64 => ['name' => $element->name(), 'type' => ['type' => 'array', 'items' => \AvroSchema::INT_TYPE]],
                 ScalarType::FLOAT => ['name' => $element->name(), 'type' => ['type' => 'array', 'items' => \AvroSchema::FLOAT_TYPE]],
                 ScalarType::BOOLEAN => ['name' => $element->name(), 'type' => ['type' => 'array', 'items' => \AvroSchema::BOOLEAN_TYPE]],
                 default => throw new RuntimeException('List of ' . $listElement->type()->toString() . ' is not supported yet supported.'),
