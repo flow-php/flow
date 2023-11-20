@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-11-19
+## [Unreleased] - 2023-11-20
 
 ### Added
 - [#801](https://github.com/flow-php/flow/pull/801) - **Add top-level options support for ChartJS** - [@stloyd](https://github.com/stloyd)
@@ -222,6 +222,7 @@
 - [c9fb26](https://github.com/flow-php/flow/commit/c9fb26dc2e0558c0f33b6097286e4dc6e2799d3f) - **test-benchmark.yml** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#804](https://github.com/flow-php/flow/pull/804) - **Remove `from*` methods from scalar entry classes** - [@stloyd](https://github.com/stloyd)
 - [#797](https://github.com/flow-php/flow/pull/797) - **struct reference** - [@norberttech](https://github.com/norberttech)
 - [#796](https://github.com/flow-php/flow/pull/796) - **Remove Faker library from benchmark** - [@stloyd](https://github.com/stloyd)
 - [#776](https://github.com/flow-php/flow/pull/776) - **Remove `CollectionEntry`** - [@stloyd](https://github.com/stloyd)
