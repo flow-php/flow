@@ -32,29 +32,6 @@ final class BooleanEntry implements \Stringable, Entry
         $this->type = ScalarType::boolean();
     }
 
-    public static function from(string $name, bool|int|string $value) : self
-    {
-        if (\is_bool($value)) {
-            return new self($name, $value);
-        }
-
-        $value = \mb_strtolower(\trim((string) $value));
-
-        if (!\in_array($value, ['1', '0', 'true', 'false', 'yes', 'no'], true)) {
-            throw InvalidArgumentException::because('Value "%s" can\'t be casted to boolean.', $value);
-        }
-
-        if ($value === 'true' || $value === 'yes') {
-            return new self($name, true);
-        }
-
-        if ($value === 'false' || $value === 'no') {
-            return new self($name, false);
-        }
-
-        return new self($name, (bool) $value);
-    }
-
     public function __serialize() : array
     {
         return ['name' => $this->name, 'value' => $this->value, 'type' => $this->type];

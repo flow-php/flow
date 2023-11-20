@@ -35,14 +35,6 @@ final class StringEntry implements \Stringable, Entry
     /**
      * @throws InvalidArgumentException
      */
-    public static function fromDateTime(string $name, \DateTimeInterface $dateTime, string $format = \DateTimeInterface::ATOM) : self
-    {
-        return new self($name, $dateTime->format($format));
-    }
-
-    /**
-     * @throws InvalidArgumentException
-     */
     public static function lowercase(string $name, string $value) : self
     {
         return new self($name, \mb_strtolower($value));

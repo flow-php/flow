@@ -18,13 +18,6 @@ final class StringEntryTest extends TestCase
         yield 'different names characters and equal values' => [false, new StringEntry('NAME', 'value'), new StringEntry('name', 'value')];
     }
 
-    public function test_creates_datetime_value() : void
-    {
-        $entry = StringEntry::fromDateTime('datetime', new \DateTimeImmutable('2021-06-01 00:00:00 UTC'));
-
-        $this->assertEquals('2021-06-01T00:00:00+00:00', $entry->value());
-    }
-
     public function test_creates_lowercase_value() : void
     {
         $entry = StringEntry::lowercase('lowercase', 'It Should Be Lowercase');

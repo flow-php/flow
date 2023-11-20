@@ -9,11 +9,6 @@ use PHPUnit\Framework\TestCase;
 
 final class FloatEntryTest extends TestCase
 {
-    public static function invalid_entries() : \Generator
-    {
-        yield ['random_value'];
-    }
-
     public static function is_equal_data_provider() : \Generator
     {
         yield 'equal names and values' => [true, new FloatEntry('name', 1.0), new FloatEntry('name', 1.0)];
@@ -22,24 +17,6 @@ final class FloatEntryTest extends TestCase
         yield 'different names characters and equal values' => [false, new FloatEntry('NAME', 1.1), new FloatEntry('name', 1.1)];
         yield 'different names characters and equal values with high precision' => [false, new FloatEntry('NAME', 1.00001), new FloatEntry('name', 1.00001)];
         yield 'different names characters and different values with high precision' => [false, new FloatEntry('NAME', 1.205502), new FloatEntry('name', 1.205501)];
-    }
-
-    public static function valid_float_entries() : \Generator
-    {
-        yield [100];
-        yield [100.00];
-        yield ['100'];
-        yield ['100.00'];
-    }
-
-    /**
-     * @dataProvider valid_float_entries
-     */
-    public function test_creates_true_entry_from_not_boolean_values($value) : void
-    {
-        $entry = FloatEntry::from('entry-name', $value);
-
-        $this->assertEquals((int) $value, $entry->value());
     }
 
     public function test_entry_name_can_be_zero() : void
@@ -63,16 +40,6 @@ final class FloatEntryTest extends TestCase
             $entry,
             $entry->map(fn (float $float) => $float)
         );
-    }
-
-    /**
-     * @dataProvider invalid_entries
-     */
-    public function test_prevents_from_creating_entry_from_invalid_entry_values($value) : void
-    {
-        $this->expectExceptionMessage(\sprintf('Value "%s" can\'t be casted to integer', $value));
-
-        FloatEntry::from('entry-name', $value);
     }
 
     public function test_prevents_from_creating_entry_with_empty_entry_name() : void

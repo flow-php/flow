@@ -32,15 +32,6 @@ final class IntegerEntry implements \Stringable, Entry
         $this->type = ScalarType::integer();
     }
 
-    public static function from(string $name, float|int|string $value) : self
-    {
-        if (!\is_numeric($value) || $value != (int) $value) {
-            throw InvalidArgumentException::because(\sprintf('Value "%s" can\'t be casted to integer.', $value));
-        }
-
-        return new self($name, (int) $value);
-    }
-
     public function __serialize() : array
     {
         return ['name' => $this->name, 'value' => $this->value, 'type' => $this->type];
