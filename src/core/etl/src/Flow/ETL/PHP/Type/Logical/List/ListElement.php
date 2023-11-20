@@ -52,11 +52,6 @@ final class ListElement
         return new self(ObjectType::of($class, $nullable));
     }
 
-    public static function scalar(string $value, bool $nullable = false) : self
-    {
-        return new self(ScalarType::fromString($value, $nullable));
-    }
-
     public static function string() : self
     {
         return new self(ScalarType::string());
