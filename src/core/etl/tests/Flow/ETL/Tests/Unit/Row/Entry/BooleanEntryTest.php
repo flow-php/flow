@@ -17,44 +17,6 @@ final class BooleanEntryTest extends TestCase
         yield 'different names characters and equal values' => [false, new BooleanEntry('NAME', true), new BooleanEntry('name', true)];
     }
 
-    public static function valid_false_entries() : \Generator
-    {
-        yield [false];
-        yield [0];
-        yield ['0'];
-        yield ['false'];
-        yield ['no'];
-    }
-
-    public static function valid_true_entries() : \Generator
-    {
-        yield [true];
-        yield [1];
-        yield ['1'];
-        yield ['true'];
-        yield ['yes'];
-    }
-
-    /**
-     * @dataProvider valid_false_entries
-     */
-    public function test_creates_false_entry_from_not_boolean_values($value) : void
-    {
-        $entry = BooleanEntry::from('entry-name', $value);
-
-        $this->assertFalse($entry->value());
-    }
-
-    /**
-     * @dataProvider valid_true_entries
-     */
-    public function test_creates_true_entry_from_not_boolean_values($value) : void
-    {
-        $entry = BooleanEntry::from('entry-name', $value);
-
-        $this->assertTrue($entry->value());
-    }
-
     public function test_entry_name_can_be_zero() : void
     {
         $this->assertSame('0', (new BooleanEntry('0', true))->name());
@@ -76,13 +38,6 @@ final class BooleanEntryTest extends TestCase
             $entry,
             $entry->map(fn (bool $value) => $value)
         );
-    }
-
-    public function test_prevents_from_creating_entry_from_random_value() : void
-    {
-        $this->expectExceptionMessage('Value "random-value" can\'t be casted to boolean');
-
-        BooleanEntry::from('entry-name', 'random-value');
     }
 
     public function test_prevents_from_creating_entry_with_empty_entry_name() : void

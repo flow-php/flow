@@ -93,12 +93,16 @@ More details can be found in [this issue](https://github.com/flow-php/flow/issue
 
 - Removed etl-adapter-amphp
 - Removed etl-adapter-reactphp
-- Removed LocalSocketPipeline
+- Removed `LocalSocketPipeline`
 - Removed `DataFrame::pipeline()` 
 
 ### 12) `CollectionEntry` removal
 
 After adding native & logical types into the Flow, we remove the `CollectionEntry` as obsolete. New types that cover it better are: `ListType`, `MapType` & `StructureType` along with related new entry types.
+
+### 13) Removed `from*()` methods from scalar entries
+
+Removed `BooleanEntry::from()`, `FloatEntry::from()`, `IntegerEntry::from()`, `StringEntry::fromDateTime()` methods in favor of using DSL functions.
 
 ---
 
