@@ -1730,6 +1730,39 @@ ASCII,
         );
     }
 
+    public function test_until() : void
+    {
+        $rows = (new Flow())
+            ->read(From::chain(
+                From::array([
+                    ['id' => 1],
+                    ['id' => 2],
+                    ['id' => 3],
+                    ['id' => 4],
+                    ['id' => 5],
+                ]),
+                From::array([
+                    ['id' => 6],
+                    ['id' => 7],
+                    ['id' => 8],
+                    ['id' => 9],
+                    ['id' => 10],
+                ])
+            ))
+            ->until(ref('id')->lessThanEqual(lit(3)))
+            ->fetch();
+
+        $this->assertCount(3, $rows);
+        $this->assertSame(
+            [
+                ['id' => 1],
+                ['id' => 2],
+                ['id' => 3],
+            ],
+            $rows->toArray()
+        );
+    }
+
     public function test_void() : void
     {
         $rows = (new Flow())->process(
@@ -1785,7 +1818,6 @@ ASCII,
             (new Flow)
                 ->read(From::chain(From::memory($memoryPage1), From::memory($memoryPage2)))
                 ->withEntry('avg_salary', average(ref('salary'))->over(window()->partitionBy(ref('department'))))
-//                ->withEntry('avg_salary', _Window::partitionBy(ref('department'))->orderBy(ref('salary')->desc())->avg(ref('salary')))
                 ->select('department', 'avg_salary')
                 ->dropDuplicates(ref('department'), ref('avg_salary'))
                 ->withEntry('avg_salary', ref('avg_salary')->round(lit(0)))
@@ -1833,7 +1865,6 @@ ASCII,
                 ->read(From::all(From::memory($memoryPage1), From::memory($memoryPage2)))
                 ->dropDuplicates(ref('employee_name'), ref('department'))
                 ->withEntry('rank', rank()->over(window()->partitionBy(ref('department'))->orderBy(ref('salary')->desc())))
-//                ->withEntry('rank', _Window::partitionBy(ref('department'))->orderBy(ref('salary')->desc())->rank())
                 ->filter(ref('rank')->equals(lit(1)))
                 ->fetch()
                 ->toArray()
