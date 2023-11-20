@@ -59,7 +59,7 @@ final class ParquetTest extends TestCase
                 $this->createRow(1, new \DateTimeImmutable('2020-01-02 00:02:00')),
                 $this->createRow(1, new \DateTimeImmutable('2020-01-03 00:01:00')),
             )))
-            ->withEntry('date', ref('datetime')->toDate(\DateTimeInterface::RFC3339)->dateFormat())
+            ->withEntry('date', ref('datetime')->toDate()->dateFormat())
             ->partitionBy(ref('date'))
             ->write(Parquet::to($path))
             ->run();
