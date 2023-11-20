@@ -736,7 +736,7 @@ final class RowsTest extends TestCase
                 Definition::union(
                     'name',
                     [StringEntry::class, NullEntry::class, IntegerEntry::class],
-                    metadata: Schema\Metadata::with(Schema\FlowMetadata::METADATA_INTEGER_ENTRY_TYPE, ScalarType::integer64())
+                    metadata: Schema\Metadata::with(Schema\FlowMetadata::METADATA_PHP_TYPE, ScalarType::integer64())
                 ),
                 Definition::array('tags', true),
                 Definition::list('list', new ListType(ListElement::integer()), true)

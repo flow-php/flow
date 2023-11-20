@@ -42,9 +42,9 @@ class Entry
      *
      * @return RowEntry\BooleanEntry
      */
-    final public static function boolean(string $name, bool $value) : RowEntry
+    final public static function boolean(string $name, bool $value, ?ScalarType $type = null) : RowEntry
     {
-        return new RowEntry\BooleanEntry($name, $value);
+        return new RowEntry\BooleanEntry($name, $value, $type);
     }
 
     /**
@@ -80,9 +80,9 @@ class Entry
      *
      * @return RowEntry\FloatEntry
      */
-    final public static function float(string $name, float $value) : RowEntry
+    final public static function float(string $name, float $value, ?ScalarType $type = null) : RowEntry
     {
-        return new RowEntry\FloatEntry($name, $value);
+        return new RowEntry\FloatEntry($name, $value, type: $type);
     }
 
     final public static function int(string $name, int $value) : RowEntry
@@ -235,9 +235,9 @@ class Entry
      *
      * @return RowEntry\StringEntry
      */
-    final public static function string(string $name, string $value) : RowEntry
+    final public static function string(string $name, string $value, ?ScalarType $type = null) : RowEntry
     {
-        return new RowEntry\StringEntry($name, $value);
+        return new RowEntry\StringEntry($name, $value, $type);
     }
 
     /**

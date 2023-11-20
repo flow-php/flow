@@ -10,13 +10,13 @@ final class FlowMetadata
 
     public const METADATA_ENUM_CLASS = 'flow_enum_class';
 
-    public const METADATA_INTEGER_ENTRY_TYPE = 'flow_integer_entry_type';
-
     public const METADATA_LIST_ENTRY_TYPE = 'flow_list_entry_type';
 
     public const METADATA_MAP_ENTRY_TYPE = 'flow_map_entry_type';
 
     public const METADATA_OBJECT_ENTRY_TYPE = 'flow_object_entry_type';
+
+    public const METADATA_PHP_TYPE = 'flow_php_type';
 
     public const METADATA_STRUCTURE_ENTRY_TYPE = 'flow_structure_entry_type';
 }

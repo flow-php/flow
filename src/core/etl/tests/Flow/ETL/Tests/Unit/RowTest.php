@@ -128,8 +128,8 @@ final class RowTest extends TestCase
         $this->assertEquals(
             new Row\Schema(
                 Row\Schema\Definition::integer('id', ScalarType::integer64()),
-                Row\Schema\Definition::float('price'),
-                Row\Schema\Definition::boolean('deleted'),
+                Row\Schema\Definition::float('price', type: ScalarType::float()),
+                Row\Schema\Definition::boolean('deleted', ScalarType::boolean()),
                 Row\Schema\Definition::dateTime('created-at'),
                 Row\Schema\Definition::null('phase'),
                 Row\Schema\Definition::array('array'),

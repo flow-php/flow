@@ -43,7 +43,7 @@ final class DefinitionTest extends TestCase
 
         $this->assertFalse(
             $def->isEqual(
-                Definition::boolean('test', false)
+                Definition::boolean('test')
             )
         );
     }
@@ -106,10 +106,10 @@ final class DefinitionTest extends TestCase
                     new Constraint\SameAs(1),
                     new Constraint\SameAs('one')
                 ),
-                metadata: Metadata::with(FlowMetadata::METADATA_INTEGER_ENTRY_TYPE, ScalarType::integer64())
+                metadata: Metadata::with(FlowMetadata::METADATA_PHP_TYPE, ScalarType::integer64())
             )->nullable(),
             Definition::integer('id', ScalarType::integer64(), false, new Constraint\SameAs(1))
-                ->merge(Definition::string('id', true, new Constraint\SameAs('one')))
+                ->merge(Definition::string('id', nullable: true, constraint: new Constraint\SameAs('one')))
         );
     }
 
@@ -120,9 +120,9 @@ final class DefinitionTest extends TestCase
                 'id',
                 [StringEntry::class, IntegerEntry::class],
                 new Constraint\SameAs(1),
-                metadata: Metadata::with(FlowMetadata::METADATA_INTEGER_ENTRY_TYPE, ScalarType::integer64())
+                metadata: Metadata::with(FlowMetadata::METADATA_PHP_TYPE, ScalarType::integer64())
             )->nullable(),
-            Definition::string('id', false, new Constraint\SameAs(1))->merge(Definition::integer('id', ScalarType::integer64(), true))
+            Definition::string('id', constraint: new Constraint\SameAs(1))->merge(Definition::integer('id', ScalarType::integer64(), true))
         );
     }
 
@@ -133,7 +133,7 @@ final class DefinitionTest extends TestCase
                 'id',
                 [StringEntry::class, IntegerEntry::class],
                 new Constraint\SameAs(2),
-                metadata: Metadata::with(FlowMetadata::METADATA_INTEGER_ENTRY_TYPE, ScalarType::integer64())
+                metadata: Metadata::with(FlowMetadata::METADATA_PHP_TYPE, ScalarType::integer64())
             )->nullable(),
             Definition::string('id')->merge(Definition::integer('id', ScalarType::integer64(), true, new Constraint\SameAs(2)))
         );
@@ -145,7 +145,7 @@ final class DefinitionTest extends TestCase
             Definition::union(
                 'id',
                 [StringEntry::class, IntegerEntry::class],
-                metadata: Metadata::with(FlowMetadata::METADATA_INTEGER_ENTRY_TYPE, ScalarType::integer64())
+                metadata: Metadata::with(FlowMetadata::METADATA_PHP_TYPE, ScalarType::integer64())
             )->nullable(),
             Definition::string('id')->merge(Definition::integer('id', ScalarType::integer64(), true))
         );
@@ -205,7 +205,7 @@ final class DefinitionTest extends TestCase
 
     public function test_nullable_is_not_union() : void
     {
-        $this->assertFalse(Definition::string('id', true)->isUnion());
+        $this->assertFalse(Definition::string('id', nullable: true)->isUnion());
     }
 
     public function test_structure_definition_metadata() : void

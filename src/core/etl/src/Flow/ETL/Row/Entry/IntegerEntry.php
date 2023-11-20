@@ -71,7 +71,7 @@ final class IntegerEntry implements \Stringable, Entry
             $this->name,
             $this->type,
             $this->type->nullable(),
-            metadata: Metadata::with(FlowMetadata::METADATA_INTEGER_ENTRY_TYPE, $this->type)
+            metadata: Metadata::with(FlowMetadata::METADATA_PHP_TYPE, $this->type)
         );
     }
 

@@ -36,13 +36,13 @@ final class SchemaTest extends TestCase
     {
         $schema = new Schema(
             Schema\Definition::integer('id', ScalarType::integer64()),
-            Schema\Definition::string('name', true)
+            Schema\Definition::string('name', nullable: true)
         );
 
         $this->assertEquals(
             new Schema(
                 Schema\Definition::integer('id', ScalarType::integer64(), true),
-                Schema\Definition::string('name', true)
+                Schema\Definition::string('name', nullable: true)
             ),
             $schema->nullable()
         );
@@ -53,7 +53,7 @@ final class SchemaTest extends TestCase
         $schema = (new Schema())->merge(
             $notEmptySchema = new Schema(
                 Schema\Definition::integer('id', ScalarType::integer64(), true),
-                Schema\Definition::string('name', true)
+                Schema\Definition::string('name', nullable: true)
             )
         );
 
@@ -67,7 +67,7 @@ final class SchemaTest extends TestCase
     {
         $schema = (new Schema(
             Schema\Definition::integer('id', ScalarType::integer64(), true),
-            Schema\Definition::string('name', true)
+            Schema\Definition::string('name', nullable: true)
         ))->merge(
             new Schema(
                 Schema\Definition::null('test'),
@@ -77,7 +77,7 @@ final class SchemaTest extends TestCase
         $this->assertEquals(
             new Schema(
                 Schema\Definition::integer('id', ScalarType::integer64(), true),
-                Schema\Definition::string('name', true),
+                Schema\Definition::string('name', nullable: true),
                 Schema\Definition::null('test'),
             ),
             $schema
@@ -88,7 +88,7 @@ final class SchemaTest extends TestCase
     {
         $schema = ($notEmptySchema = new Schema(
             Schema\Definition::integer('id', ScalarType::integer64(), true),
-            Schema\Definition::string('name', true)
+            Schema\Definition::string('name', nullable: true)
         ))->merge(
             new Schema()
         );

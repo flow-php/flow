@@ -7,9 +7,12 @@ namespace Flow\ETL\Row\Entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\PHP\Type\Type;
+use Flow\ETL\PHP\Type\TypeDetector;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
+use Flow\ETL\Row\Schema\FlowMetadata;
+use Flow\ETL\Row\Schema\Metadata;
 
 /**
  * @implements Entry<bool, array{name: string, value: bool, type: ScalarType}>
@@ -23,13 +26,17 @@ final class BooleanEntry implements \Stringable, Entry
     /**
      * @throws InvalidArgumentException
      */
-    public function __construct(private readonly string $name, private readonly bool $value)
+    public function __construct(private readonly string $name, private readonly bool $value, ?ScalarType $type = null)
     {
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        $this->type = ScalarType::boolean();
+        if ($type !== null && !$type->isValid($value)) {
+            throw InvalidArgumentException::because('Expected ' . $type->toString() . ' got different types: ' . (new TypeDetector())->detectType($value)->toString());
+        }
+
+        $this->type = $type ?: ScalarType::boolean();
     }
 
     public static function from(string $name, bool|int|string $value) : self
@@ -74,7 +81,12 @@ final class BooleanEntry implements \Stringable, Entry
 
     public function definition() : Definition
     {
-        return Definition::boolean($this->name, $this->type->nullable());
+        return Definition::boolean(
+            $this->name,
+            $this->type,
+            $this->type->nullable(),
+            metadata: Metadata::with(FlowMetadata::METADATA_PHP_TYPE, $this->type)
+        );
     }
 
     public function is(string|Reference $name) : bool

@@ -328,7 +328,7 @@ final class NativeEntryFactoryTest extends TestCase
 
         $this->assertEquals(
             Entry::null('e'),
-            (new NativeEntryFactory())->create('e', null, new Schema(Schema\Definition::string('e', true)))
+            (new NativeEntryFactory())->create('e', null, new Schema(Schema\Definition::string('e', nullable: true)))
         );
     }
 

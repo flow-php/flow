@@ -69,9 +69,18 @@ final class Definition implements Serializable
         return new self($entry, ($nullable) ? [ArrayEntry::class, NullEntry::class] : [ArrayEntry::class], $constraint, $metadata);
     }
 
-    public static function boolean(string|Reference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function boolean(string|Reference $entry, ?ScalarType $type = null, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
-        return new self($entry, ($nullable) ? [BooleanEntry::class, NullEntry::class] : [BooleanEntry::class], $constraint, $metadata);
+        if (null !== $type && !$type->isBoolean()) {
+            throw new InvalidArgumentException('Type must be boolean, given: ' . $type->toString());
+        }
+
+        return new self(
+            $entry,
+            $nullable ? [BooleanEntry::class, NullEntry::class] : [BooleanEntry::class],
+            $constraint,
+            $type ? Metadata::empty()->add(FlowMetadata::METADATA_PHP_TYPE, $type)->merge($metadata ?? Metadata::empty()) : $metadata
+        );
     }
 
     public static function dateTime(string|Reference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
@@ -98,14 +107,23 @@ final class Definition implements Serializable
         );
     }
 
-    public static function float(string|Reference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function float(string|Reference $entry, ?ScalarType $type = null, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
-        return new self($entry, ($nullable) ? [FloatEntry::class, NullEntry::class] : [FloatEntry::class], $constraint, $metadata);
+        if (null !== $type && !$type->isFloat()) {
+            throw new InvalidArgumentException('Type must be float, given: ' . $type->toString());
+        }
+
+        return new self(
+            $entry,
+            $nullable ? [FloatEntry::class, NullEntry::class] : [FloatEntry::class],
+            $constraint,
+            $type ? Metadata::empty()->add(FlowMetadata::METADATA_PHP_TYPE, $type)->merge($metadata ?? Metadata::empty()) : $metadata
+        );
     }
 
-    public static function integer(string|Reference $entry, ScalarType $type, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function integer(string|Reference $entry, ?ScalarType $type = null, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
-        if (!$type->isInteger()) {
+        if (null !== $type && !$type->isInteger()) {
             throw new InvalidArgumentException('Type must be integer, given: ' . $type->toString());
         }
 
@@ -113,7 +131,7 @@ final class Definition implements Serializable
             $entry,
             $nullable ? [IntegerEntry::class, NullEntry::class] : [IntegerEntry::class],
             $constraint,
-            Metadata::empty()->add(FlowMetadata::METADATA_INTEGER_ENTRY_TYPE, $type)->merge($metadata ?? Metadata::empty())
+            $type ? Metadata::empty()->add(FlowMetadata::METADATA_PHP_TYPE, $type)->merge($metadata ?? Metadata::empty()) : $metadata
         );
     }
 
@@ -157,9 +175,18 @@ final class Definition implements Serializable
         );
     }
 
-    public static function string(string|Reference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function string(string|Reference $entry, ?ScalarType $type = null, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
-        return new self($entry, ($nullable) ? [StringEntry::class, NullEntry::class] : [StringEntry::class], $constraint, $metadata);
+        if (null !== $type && !$type->isString()) {
+            throw new InvalidArgumentException('Type must be string, given: ' . $type->toString());
+        }
+
+        return new self(
+            $entry,
+            $nullable ? [StringEntry::class, NullEntry::class] : [StringEntry::class],
+            $constraint,
+            $type ? Metadata::empty()->add(FlowMetadata::METADATA_PHP_TYPE, $type)->merge($metadata ?? Metadata::empty()) : $metadata
+        );
     }
 
     public static function structure(string|Reference $entry, StructureType $type, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self

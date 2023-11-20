@@ -1715,7 +1715,7 @@ ASCII,
         )->validate(
             new Schema(
                 Schema\Definition::integer('id', ScalarType::integer32()),
-                Schema\Definition::string('name', true),
+                Schema\Definition::string('name', nullable: true),
                 Schema\Definition::boolean('active'),
             )
         )->fetch();
