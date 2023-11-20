@@ -1,5 +1,7 @@
 <?php declare(strict_types=1);
 
+namespace Flow\ETL\Tests\Benchmark;
+
 use function Flow\ETL\DSL\ref;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\StringEntry;
