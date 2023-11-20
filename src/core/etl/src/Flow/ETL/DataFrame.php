@@ -10,6 +10,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Formatter\AsciiTableFormatter;
 use Flow\ETL\Function\AggregatingFunction;
+use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Function\WindowFunction;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Join\Join;
@@ -36,6 +37,7 @@ use Flow\ETL\Transformer\RemoveEntriesTransformer;
 use Flow\ETL\Transformer\ScalarFunctionFilterTransformer;
 use Flow\ETL\Transformer\ScalarFunctionTransformer;
 use Flow\ETL\Transformer\StyleConverter\StringStyles;
+use Flow\ETL\Transformer\UntilTransformer;
 use Flow\ETL\Transformer\WindowFunctionTransformer;
 
 final class DataFrame
@@ -248,9 +250,9 @@ final class DataFrame
     /**
      * @lazy
      */
-    public function filter(Function\ScalarFunction $callback) : self
+    public function filter(ScalarFunction $function) : self
     {
-        $this->pipeline->add(new ScalarFunctionFilterTransformer($callback));
+        $this->pipeline->add(new ScalarFunctionFilterTransformer($function));
 
         return $this;
     }
@@ -675,6 +677,19 @@ final class DataFrame
         }
 
         return $transformer->transform($this);
+    }
+
+    /**
+     * The difference between filter and until is that filter will keep filtering rows until extractors finish yielding rows.
+     * Until will send a STOP signal to the Extractor when the condition is not met.
+     *
+     * @lazy
+     */
+    public function until(ScalarFunction $function) : self
+    {
+        $this->pipeline->add(new UntilTransformer($function));
+
+        return $this;
     }
 
     /**
