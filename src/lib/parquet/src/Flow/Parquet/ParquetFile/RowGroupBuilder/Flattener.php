@@ -9,9 +9,15 @@ use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 
 final class Flattener
 {
+    public function __construct(private readonly Validator $validator)
+    {
+    }
+
     public function flattenColumn(Column $column, array $row) : array
     {
         if (!\array_key_exists($column->name(), $row)) {
+            $this->validator->validate($column, null);
+
             return [];
         }
 
@@ -20,7 +26,13 @@ final class Flattener
          */
         $columnData = $row[$column->name()];
 
+        if ($columnData === null) {
+            $this->validator->validate($column, null);
+        }
+
         if ($column instanceof FlatColumn) {
+            $this->validator->validate($column, $columnData);
+
             return [
                 $column->flatPath() => $columnData,
             ];
@@ -53,6 +65,8 @@ final class Flattener
         }
 
         if ($listElementColumn instanceof FlatColumn) {
+            $this->validator->validate($listElementColumn, $columnData);
+
             return [
                 $listElementColumn->flatPath() => $columnData,
             ];
@@ -105,6 +119,9 @@ final class Flattener
         }
 
         if ($valueColumn instanceof FlatColumn) {
+            $this->validator->validate($keyColumn, \array_keys($columnData));
+            $this->validator->validate($valueColumn, \array_values($columnData));
+
             return [
                 $keyColumn->flatPath() => \array_keys($columnData),
                 $valueColumn->flatPath() => \array_values($columnData),

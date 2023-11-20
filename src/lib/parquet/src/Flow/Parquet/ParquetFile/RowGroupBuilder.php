@@ -10,6 +10,8 @@ use Flow\Parquet\ParquetFile\RowGroupBuilder\Flattener;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\PageSizeCalculator;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\RowGroupContainer;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\RowGroupStatistics;
+use Flow\Parquet\ParquetFile\RowGroupBuilder\Validator\ColumnDataValidator;
+use Flow\Parquet\ParquetFile\RowGroupBuilder\Validator\DisabledValidator;
 
 /**
  * @psalm-suppress PropertyNotSetInConstructor
@@ -32,7 +34,11 @@ final class RowGroupBuilder
         private readonly DataConverter $dataConverter,
         private readonly PageSizeCalculator $calculator
     ) {
-        $this->flattener = new Flattener();
+        $this->flattener = new Flattener(
+            $this->options->getBool(Option::VALIDATE_DATA)
+                ? new ColumnDataValidator()
+                : new DisabledValidator()
+        );
 
         $this->chunkBuilders = $this->createColumnChunkBuilders($this->schema, $this->compression);
         $this->statistics = RowGroupStatistics::fromBuilders($this->chunkBuilders);

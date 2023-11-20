@@ -16,7 +16,7 @@ final class NestedColumn implements Column
      */
     public function __construct(
         private readonly string $name,
-        private readonly ?Repetition $repetition,
+        private ?Repetition $repetition,
         private readonly array $children,
         private readonly ?ConvertedType $convertedType = null,
         private readonly ?LogicalType $logicalType = null,
@@ -291,6 +291,13 @@ final class NestedColumn implements Column
     public function logicalType() : ?LogicalType
     {
         return $this->logicalType;
+    }
+
+    public function makeRequired() : self
+    {
+        $this->repetition = Repetition::REQUIRED;
+
+        return $this;
     }
 
     public function maxDefinitionsLevel() : int

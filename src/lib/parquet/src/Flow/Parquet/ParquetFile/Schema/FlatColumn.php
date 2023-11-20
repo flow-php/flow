@@ -29,26 +29,26 @@ final class FlatColumn implements Column
     ) {
     }
 
-    public static function boolean(string $name) : self
+    public static function boolean(string $name, Repetition $repetition = Repetition::OPTIONAL) : self
     {
-        return new self($name, PhysicalType::BOOLEAN, null, null, Repetition::OPTIONAL);
+        return new self($name, PhysicalType::BOOLEAN, null, null, $repetition);
     }
 
-    public static function date(string $name) : self
+    public static function date(string $name, Repetition $repetition = Repetition::OPTIONAL) : self
     {
-        return new self($name, PhysicalType::INT32, ConvertedType::DATE, LogicalType::date(), Repetition::OPTIONAL);
+        return new self($name, PhysicalType::INT32, ConvertedType::DATE, LogicalType::date(), $repetition);
     }
 
-    public static function dateTime(string $name) : self
+    public static function dateTime(string $name, Repetition $repetition = Repetition::OPTIONAL) : self
     {
         if (PHP_INT_MAX !== Consts::PHP_INT64_MAX) {
             throw new InvalidArgumentException('PHP_INT_MAX must be equal to ' . Consts::PHP_INT64_MAX . ' to support 64-bit timestamps.');
         }
 
-        return new self($name, PhysicalType::INT64, ConvertedType::TIMESTAMP_MICROS, LogicalType::timestamp(), Repetition::OPTIONAL);
+        return new self($name, PhysicalType::INT64, ConvertedType::TIMESTAMP_MICROS, LogicalType::timestamp(), $repetition);
     }
 
-    public static function decimal(string $name, int $precision = 10, int $scale = 2) : self
+    public static function decimal(string $name, int $precision = 10, int $scale = 2, Repetition $repetition = Repetition::OPTIONAL) : self
     {
         if ($scale < 0 || $scale > 38) {
             throw new InvalidArgumentException('Scale must be between 0 and 38, ' . $scale . ' given.');
@@ -66,26 +66,26 @@ final class FlatColumn implements Column
             PhysicalType::FIXED_LEN_BYTE_ARRAY,
             ConvertedType::DECIMAL,
             LogicalType::decimal($scale, $precision),
-            Repetition::OPTIONAL,
+            $repetition,
             $precision,
             $scale,
             $byteLength
         );
     }
 
-    public static function double(string $name) : self
+    public static function double(string $name, Repetition $repetition = Repetition::OPTIONAL) : self
     {
-        return new self($name, PhysicalType::DOUBLE, null, null, Repetition::OPTIONAL);
+        return new self($name, PhysicalType::DOUBLE, null, null, $repetition);
     }
 
-    public static function enum(string $string) : self
+    public static function enum(string $string, Repetition $repetition = Repetition::OPTIONAL) : self
     {
-        return new self($string, PhysicalType::BYTE_ARRAY, ConvertedType::ENUM, LogicalType::string(), Repetition::OPTIONAL);
+        return new self($string, PhysicalType::BYTE_ARRAY, ConvertedType::ENUM, LogicalType::string(), $repetition);
     }
 
-    public static function float(string $name) : self
+    public static function float(string $name, Repetition $repetition = Repetition::OPTIONAL) : self
     {
-        return new self($name, PhysicalType::FLOAT, null, null, Repetition::OPTIONAL);
+        return new self($name, PhysicalType::FLOAT, null, null, $repetition);
     }
 
     public static function fromThrift(SchemaElement $thrift) : self
@@ -102,42 +102,42 @@ final class FlatColumn implements Column
         );
     }
 
-    public static function int32(string $name) : self
+    public static function int32(string $name, Repetition $repetition = Repetition::OPTIONAL) : self
     {
-        return new self($name, PhysicalType::INT32, ConvertedType::INT_32, null, Repetition::OPTIONAL);
+        return new self($name, PhysicalType::INT32, ConvertedType::INT_32, null, $repetition);
     }
 
-    public static function int64(string $name) : self
+    public static function int64(string $name, Repetition $repetition = Repetition::OPTIONAL) : self
     {
         if (PHP_INT_MAX !== Consts::PHP_INT64_MAX) {
             throw new InvalidArgumentException('PHP_INT_MAX must be equal to ' . Consts::PHP_INT64_MAX . ' to support 64-bit timestamps.');
         }
 
-        return new self($name, PhysicalType::INT64, ConvertedType::INT_64, null, Repetition::OPTIONAL);
+        return new self($name, PhysicalType::INT64, ConvertedType::INT_64, null, $repetition);
     }
 
-    public static function json(string $string) : self
+    public static function json(string $string, Repetition $repetition = Repetition::OPTIONAL) : self
     {
-        return new self($string, PhysicalType::BYTE_ARRAY, ConvertedType::JSON, LogicalType::string(), Repetition::OPTIONAL);
+        return new self($string, PhysicalType::BYTE_ARRAY, ConvertedType::JSON, LogicalType::string(), $repetition);
     }
 
-    public static function string(string $name) : self
+    public static function string(string $name, Repetition $repetition = Repetition::OPTIONAL) : self
     {
-        return new self($name, PhysicalType::BYTE_ARRAY, ConvertedType::UTF8, LogicalType::string(), Repetition::OPTIONAL);
+        return new self($name, PhysicalType::BYTE_ARRAY, ConvertedType::UTF8, LogicalType::string(), $repetition);
     }
 
-    public static function time(string $name) : self
+    public static function time(string $name, Repetition $repetition = Repetition::OPTIONAL) : self
     {
         if (PHP_INT_MAX !== Consts::PHP_INT64_MAX) {
             throw new InvalidArgumentException('PHP_INT_MAX must be equal to ' . Consts::PHP_INT64_MAX . ' to support 64-bit timestamps.');
         }
 
-        return new self($name, PhysicalType::INT64, ConvertedType::TIME_MICROS, LogicalType::time(), Repetition::OPTIONAL);
+        return new self($name, PhysicalType::INT64, ConvertedType::TIME_MICROS, LogicalType::time(), $repetition);
     }
 
-    public static function uuid(string $string) : self
+    public static function uuid(string $string, Repetition $repetition = Repetition::OPTIONAL) : self
     {
-        return new self($string, PhysicalType::BYTE_ARRAY, null, LogicalType::string(), Repetition::OPTIONAL);
+        return new self($string, PhysicalType::BYTE_ARRAY, null, LogicalType::string(), $repetition);
     }
 
     /**

@@ -24,6 +24,7 @@ final class Options
             Option::DICTIONARY_PAGE_MIN_CARDINALITY_RATION->name => 0.4,
             Option::GZIP_COMPRESSION_LEVEL->name => 9,
             Option::WRITER_VERSION->name => 1,
+            Option::VALIDATE_DATA->name => true,
         ];
     }
 
@@ -35,6 +36,17 @@ final class Options
     public function get(Option $option) : bool|int|float
     {
         return $this->options[$option->name];
+    }
+
+    public function getBool(Option $option) : bool
+    {
+        $value = $this->options[$option->name];
+
+        if (!\is_bool($value)) {
+            throw new InvalidArgumentException("Option {$option->name} is not a boolean, but: " . \gettype($value));
+        }
+
+        return $value;
     }
 
     public function getInt(Option $option) : int

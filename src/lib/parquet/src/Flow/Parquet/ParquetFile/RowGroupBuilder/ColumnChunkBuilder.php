@@ -21,7 +21,7 @@ final class ColumnChunkBuilder
         private readonly PageSizeCalculator $calculator,
         private readonly Options $options
     ) {
-        $this->statistics = new ColumnChunkStatistics($column);
+        $this->statistics = new ColumnChunkStatistics($this->column);
     }
 
     public function addRow(mixed $row) : void
