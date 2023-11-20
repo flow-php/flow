@@ -345,7 +345,7 @@ trait EntryScalarFunction
      *
      * @return ScalarFunction
      */
-    public function toDate(string $format = 'Y-m-d', \DateTimeZone $timeZone = new \DateTimeZone('UTC')) : ScalarFunction|EntryReference
+    public function toDate(string $format = \DateTimeInterface::RFC3339, \DateTimeZone $timeZone = new \DateTimeZone('UTC')) : ScalarFunction|EntryReference
     {
         return new ScalarFunctions(new Function\ToDate($this, $format, $timeZone));
     }

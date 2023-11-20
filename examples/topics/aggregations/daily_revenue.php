@@ -15,7 +15,7 @@ require __DIR__ . '/../../bootstrap.php';
 $flow = (new Flow())
     ->read(Parquet::from(__FLOW_DATA__ . '/orders_flow.parquet'))
     ->select('created_at', 'total_price', 'discount')
-    ->withEntry('created_at', ref('created_at')->toDate(\DateTime::RFC3339)->dateFormat('Y/m'))
+    ->withEntry('created_at', ref('created_at')->toDate()->dateFormat('Y/m'))
     ->withEntry('revenue', ref('total_price')->minus(ref('discount')))
     ->select('created_at', 'revenue')
     ->groupBy('created_at')
