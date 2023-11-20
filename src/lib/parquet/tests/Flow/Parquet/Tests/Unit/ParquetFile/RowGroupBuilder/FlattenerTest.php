@@ -3,6 +3,7 @@
 namespace Flow\Parquet\Tests\Unit\ParquetFile\RowGroupBuilder;
 
 use Flow\Parquet\ParquetFile\RowGroupBuilder\Flattener;
+use Flow\Parquet\ParquetFile\RowGroupBuilder\Validator\DisabledValidator;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\ListElement;
 use Flow\Parquet\ParquetFile\Schema\MapKey;
@@ -19,7 +20,7 @@ final class FlattenerTest extends TestCase
             'int32' => 1,
         ];
 
-        $flattener = new Flattener();
+        $flattener = new Flattener(new DisabledValidator());
         $this->assertSame(
             [
                 'int32' => 1,
@@ -41,7 +42,7 @@ final class FlattenerTest extends TestCase
             ],
         ];
 
-        $flattener = new Flattener();
+        $flattener = new Flattener(new DisabledValidator());
         $this->assertSame(
             [
                 'struct.int32' => 1,
@@ -58,7 +59,7 @@ final class FlattenerTest extends TestCase
             'list' => [1, 2, 3],
         ];
 
-        $flattener = new Flattener();
+        $flattener = new Flattener(new DisabledValidator());
         $this->assertSame(
             [
                 'list.list.element' => [1, 2, 3],
@@ -80,7 +81,7 @@ final class FlattenerTest extends TestCase
             ],
         ];
 
-        $flattener = new Flattener();
+        $flattener = new Flattener(new DisabledValidator());
         $this->assertSame(
             [
                 'list.list.element.list.element' => [
@@ -115,7 +116,7 @@ final class FlattenerTest extends TestCase
             ],
         ];
 
-        $flattener = new Flattener();
+        $flattener = new Flattener(new DisabledValidator());
         $this->assertSame(
             [
                 'list_of_maps.list.element.key_value.key' => [['a', 'b'], ['c', 'd'], ['e', 'f']],
@@ -148,7 +149,7 @@ final class FlattenerTest extends TestCase
             ],
         ];
 
-        $flattener = new Flattener();
+        $flattener = new Flattener(new DisabledValidator());
         $this->assertSame(
             [
                 'list_of_structs.list.element.int32' => [1, 2, 3],
@@ -169,7 +170,7 @@ final class FlattenerTest extends TestCase
             ],
         ];
 
-        $flattener = new Flattener();
+        $flattener = new Flattener(new DisabledValidator());
         $this->assertSame(
             [
                 'map_of_lists.key_value.key' => ['a', 'b', 'c'],
@@ -195,7 +196,7 @@ final class FlattenerTest extends TestCase
             ],
         ];
 
-        $flattener = new Flattener();
+        $flattener = new Flattener(new DisabledValidator());
         $this->assertSame(
             [
                 'map_of_maps.key_value.key' => ['a', 'b', 'c'],
@@ -229,7 +230,7 @@ final class FlattenerTest extends TestCase
             ],
         ];
 
-        $flattener = new Flattener();
+        $flattener = new Flattener(new DisabledValidator());
         $this->assertSame(
             [
                 'map_of_string_struct.key_value.key' => ['a', 'b', 'c'],
@@ -251,7 +252,7 @@ final class FlattenerTest extends TestCase
             ],
         ];
 
-        $flattener = new Flattener();
+        $flattener = new Flattener(new DisabledValidator());
         $this->assertSame(
             [
                 'map_string_int.key_value.key' => ['a', 'b', 'c'],
@@ -268,7 +269,7 @@ final class FlattenerTest extends TestCase
             'list' => null,
         ];
 
-        $flattener = new Flattener();
+        $flattener = new Flattener(new DisabledValidator());
         $this->assertSame(
             [
                 'list.list.element' => null,
@@ -284,7 +285,7 @@ final class FlattenerTest extends TestCase
             'map_string_int' => null,
         ];
 
-        $flattener = new Flattener();
+        $flattener = new Flattener(new DisabledValidator());
         $this->assertSame(
             [
                 'map_string_int.key_value.key' => null,
@@ -305,7 +306,7 @@ final class FlattenerTest extends TestCase
             'struct' => null,
         ];
 
-        $flattener = new Flattener();
+        $flattener = new Flattener(new DisabledValidator());
         $this->assertSame(
             [
                 'struct.int32' => null,
@@ -336,7 +337,7 @@ final class FlattenerTest extends TestCase
             ],
         ];
 
-        $flattener = new Flattener();
+        $flattener = new Flattener(new DisabledValidator());
         $this->assertSame(
             [
                 'struct.int32' => 1,
@@ -353,7 +354,7 @@ final class FlattenerTest extends TestCase
         $column = FlatColumn::int32('int32');
         $row = [];
 
-        $flattener = new Flattener();
+        $flattener = new Flattener(new DisabledValidator());
         $this->assertSame([], $flattener->flattenColumn($column, $row));
     }
 }

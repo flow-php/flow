@@ -90,6 +90,12 @@ enum Option
     case ROW_GROUP_SIZE_CHECK_INTERVAL;
 
     /**
+     * This option is going to tell the writer to validate data against schema.
+     * In most cases that should be enabled, however if performance is critical, it can be disabled.
+     */
+    case VALIDATE_DATA;
+
+    /**
      * There are only two available versions of Parquet format: V1 and V2.
      * This option is going to tell the writer which version should be used to create DataPages.
      * - 1 will use DataPage
