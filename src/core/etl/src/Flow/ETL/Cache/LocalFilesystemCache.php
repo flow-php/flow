@@ -90,6 +90,6 @@ final class LocalFilesystemCache implements Cache
 
     private function cachePath(string $id) : string
     {
-        return \rtrim($this->path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . \hash('xxh128', $id);
+        return \rtrim($this->path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $id;
     }
 }

@@ -84,7 +84,7 @@ final class PartitioningPipeline implements OverridingPipeline, Pipeline
 
                 $rows = $partitionedRows->sortBy(...$this->orderBy);
 
-                $partitionId = \hash('xxh128', \implode(',', \array_map(
+                $partitionId = \hash('xxh128', $context->config->id() . '_' . \implode('_', \array_map(
                     static fn (Partition $partition) : string => $partition->id(),
                     $partitionedRows->partitions()
                 )));
