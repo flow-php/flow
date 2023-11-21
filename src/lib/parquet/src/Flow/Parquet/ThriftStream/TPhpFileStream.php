@@ -37,7 +37,7 @@ final class TPhpFileStream extends TTransport
         @\fflush($this->stream);
     }
 
-    public function isOpen()
+    public function isOpen() : bool
     {
         return \is_resource($this->stream);
     }
@@ -49,7 +49,7 @@ final class TPhpFileStream extends TTransport
         }
     }
 
-    public function read($len)
+    public function read($len) : string
     {
         $data = @\fread($this->stream, $len);
 
