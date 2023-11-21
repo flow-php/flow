@@ -75,6 +75,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#813](https://github.com/flow-php/flow/pull/813) - **Improve performance of `ArrayContentDetector`** - [@stloyd](https://github.com/stloyd)
 - [#810](https://github.com/flow-php/flow/pull/810) - **Moved handling SaveMode to FilesystemStreams** - [@norberttech](https://github.com/norberttech)
 - [#812](https://github.com/flow-php/flow/pull/812) - **Improve performance of `Types`** - [@stloyd](https://github.com/stloyd)
 - [#811](https://github.com/flow-php/flow/pull/811) - **Improve performance of `TypeDetector`** - [@stloyd](https://github.com/stloyd)
