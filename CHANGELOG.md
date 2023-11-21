@@ -75,6 +75,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#812](https://github.com/flow-php/flow/pull/812) - **Improve performance of `Types`** - [@stloyd](https://github.com/stloyd)
 - [#811](https://github.com/flow-php/flow/pull/811) - **Improve performance of `TypeDetector`** - [@stloyd](https://github.com/stloyd)
 - [#809](https://github.com/flow-php/flow/pull/809) - **Changed default value for format in toDate scalar function** - [@norberttech](https://github.com/norberttech)
 - [#799](https://github.com/flow-php/flow/pull/799) - **Expanded Parquet schema converter in order to support deeply nested data types** - [@norberttech](https://github.com/norberttech)
