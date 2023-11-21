@@ -9,7 +9,6 @@ use Flow\ETL\DSL\Entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Partition;
-use Flow\ETL\PartitionedRows;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\Row;
@@ -511,34 +510,36 @@ final class RowsTest extends TestCase
     {
         $this->assertEquals(
             [
-                new PartitionedRows(
-                    new Rows(
+                Rows::partitioned(
+                    [
                         Row::create(Entry::integer('num', 1), Entry::string('cat', 'a')),
                         Row::create(Entry::integer('num', 1), Entry::string('cat', 'a')),
-                    ),
-                    new Partition('num', '1'),
-                    new Partition('cat', 'a'),
+                    ],
+                    [
+                        new Partition('num', '1'),
+                        new Partition('cat', 'a'),
+                    ]
                 ),
-                new PartitionedRows(
-                    new Rows(
-                        Row::create(Entry::integer('num', 1), Entry::string('cat', 'b'))
-                    ),
-                    new Partition('num', '1'),
-                    new Partition('cat', 'b'),
+                Rows::partitioned(
+                    [Row::create(Entry::integer('num', 1), Entry::string('cat', 'b'))],
+                    [
+                        new Partition('num', '1'),
+                        new Partition('cat', 'b'),
+                    ]
                 ),
-                new PartitionedRows(
-                    new Rows(
-                        Row::create(Entry::integer('num', 3), Entry::string('cat', 'a'))
-                    ),
-                    new Partition('num', '3'),
-                    new Partition('cat', 'a'),
+                Rows::partitioned(
+                    [Row::create(Entry::integer('num', 3), Entry::string('cat', 'a'))],
+                    [
+                        new Partition('num', '3'),
+                        new Partition('cat', 'a'),
+                    ]
                 ),
-                new PartitionedRows(
-                    new Rows(
-                        Row::create(Entry::integer('num', 2), Entry::string('cat', 'b'))
-                    ),
-                    new Partition('num', '2'),
-                    new Partition('cat', 'b'),
+                Rows::partitioned(
+                    [Row::create(Entry::integer('num', 2), Entry::string('cat', 'b'))],
+                    [
+                        new Partition('num', '2'),
+                        new Partition('cat', 'b'),
+                    ]
                 ),
             ],
             (new Rows(
@@ -555,34 +556,36 @@ final class RowsTest extends TestCase
     {
         $this->assertEquals(
             [
-                new PartitionedRows(
-                    new Rows(
+                Rows::partitioned(
+                    [
                         Row::create(Entry::integer('num', 1), Entry::string('cat', 'a')),
                         Row::create(Entry::integer('num', 1), Entry::string('cat', 'a')),
-                    ),
-                    new Partition('num', '1'),
-                    new Partition('cat', 'a')
+                    ],
+                    [
+                        new Partition('num', '1'),
+                        new Partition('cat', 'a'),
+                    ]
                 ),
-                new PartitionedRows(
-                    new Rows(
-                        Row::create(Entry::integer('num', 1), Entry::string('cat', 'b'))
-                    ),
-                    new Partition('num', '1'),
-                    new Partition('cat', 'b')
+                Rows::partitioned(
+                    [Row::create(Entry::integer('num', 1), Entry::string('cat', 'b'))],
+                    [
+                        new Partition('num', '1'),
+                        new Partition('cat', 'b'),
+                    ]
                 ),
-                new PartitionedRows(
-                    new Rows(
-                        Row::create(Entry::integer('num', 3), Entry::string('cat', 'a'))
-                    ),
-                    new Partition('num', '3'),
-                    new Partition('cat', 'a')
+                Rows::partitioned(
+                    [Row::create(Entry::integer('num', 3), Entry::string('cat', 'a'))],
+                    [
+                        new Partition('num', '3'),
+                        new Partition('cat', 'a'),
+                    ]
                 ),
-                new PartitionedRows(
-                    new Rows(
-                        Row::create(Entry::integer('num', 2), Entry::string('cat', 'b'))
-                    ),
-                    new Partition('num', '2'),
-                    new Partition('cat', 'b')
+                Rows::partitioned(
+                    [Row::create(Entry::integer('num', 2), Entry::string('cat', 'b'))],
+                    [
+                        new Partition('num', '2'),
+                        new Partition('cat', 'b'),
+                    ]
                 ),
             ],
             (new Rows(
@@ -613,22 +616,13 @@ final class RowsTest extends TestCase
     {
         $this->assertEquals(
             [
-                new PartitionedRows(
-                    new Rows(Row::create(new IntegerEntry('number', 1)), Row::create(new IntegerEntry('number', 1))),
-                    new Partition('number', '1')
+                Rows::partitioned(
+                    [Row::create(new IntegerEntry('number', 1)), Row::create(new IntegerEntry('number', 1))],
+                    [new Partition('number', '1')]
                 ),
-                new PartitionedRows(
-                    new Rows(Row::create(new IntegerEntry('number', 3))),
-                    new Partition('number', '3')
-                ),
-                new PartitionedRows(
-                    new Rows(Row::create(new IntegerEntry('number', 2))),
-                    new Partition('number', '2')
-                ),
-                new PartitionedRows(
-                    new Rows(Row::create(new IntegerEntry('number', 4))),
-                    new Partition('number', '4')
-                ),
+                Rows::partitioned([Row::create(new IntegerEntry('number', 3))], [new Partition('number', '3')]),
+                Rows::partitioned([Row::create(new IntegerEntry('number', 2))], [new Partition('number', '2')]),
+                Rows::partitioned([Row::create(new IntegerEntry('number', 4))], [new Partition('number', '4')]),
             ],
             (new Rows(
                 Row::create(new IntegerEntry('number', 1)),
@@ -651,7 +645,7 @@ final class RowsTest extends TestCase
 
         $this->assertEquals(
             [new Partition('group', 'a')],
-            $rows[0]->partitions
+            $rows[0]->partitions()
         );
     }
 

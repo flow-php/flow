@@ -39,7 +39,7 @@ class FilesystemStreamsTest extends TestCase
         ]))->partitionBy('group')[0];
 
         $stream = (new FilesystemStreams(new LocalFilesystem()))
-            ->open(Path::realpath($dir = \rtrim(\sys_get_temp_dir(), '/')), 'csv', Mode::APPEND, false, $rows->partitions)
+            ->open(Path::realpath($dir = \rtrim(\sys_get_temp_dir(), '/')), 'csv', Mode::APPEND, false, $rows->partitions())
             ->path();
         $this->assertStringStartsWith(
             $dir . '/group=a/',

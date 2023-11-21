@@ -29,6 +29,7 @@ final class TextExtractor implements Extractor, FileExtractor, LimitableExtracto
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
         foreach ($context->streams()->fs()->scan($this->path, $context->partitionFilter()) as $filePath) {
+            $partitions = $filePath->partitions();
             $fileStream = $context->streams()->fs()->open($filePath, Mode::READ);
 
             $rowData = \fgets($fileStream->resource());
@@ -44,7 +45,7 @@ final class TextExtractor implements Extractor, FileExtractor, LimitableExtracto
                     $row = [['text' => \rtrim($rowData)]];
                 }
 
-                $signal = yield array_to_rows($row, $context->entryFactory());
+                $signal = yield array_to_rows($row, $context->entryFactory(), $partitions);
 
                 $this->countRow();
 

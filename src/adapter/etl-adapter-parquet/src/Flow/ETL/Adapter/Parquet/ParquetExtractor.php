@@ -11,6 +11,7 @@ use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Partition;
 use Flow\Parquet\ByteOrder;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile;
@@ -43,7 +44,7 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
                     $row['_input_file_uri'] = $fileData['uri'];
                 }
 
-                $signal = yield array_to_rows($row, $context->entryFactory());
+                $signal = yield array_to_rows($row, $context->entryFactory(), $fileData['partitions']);
 
                 $this->countRow();
 
@@ -64,7 +65,7 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
     }
 
     /**
-     * @return \Generator<int, array{file: ParquetFile, uri: string}>
+     * @return \Generator<int, array{file: ParquetFile, uri: string, partitions: array<Partition>}>
      */
     private function readers(FlowContext $context) : \Generator
     {
@@ -76,6 +77,7 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
                 ))
                     ->readStream($context->streams()->fs()->open($filePath, Mode::READ)->resource()),
                 'uri' => $filePath->uri(),
+                'partitions' => $filePath->partitions(),
             ];
         }
     }

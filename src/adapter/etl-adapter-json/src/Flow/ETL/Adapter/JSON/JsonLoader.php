@@ -63,7 +63,7 @@ final class JsonLoader implements Closure, Loader, Loader\FileLoader
     {
         if ($context->partitionEntries()->count()) {
             foreach ($rows->partitionBy(...$context->partitionEntries()->all()) as $partitionedRows) {
-                $this->write($partitionedRows->rows, $partitionedRows->partitions, $context);
+                $this->write($partitionedRows, $partitionedRows->partitions(), $context);
             }
         } else {
             $this->write($rows, [], $context);

@@ -24,10 +24,15 @@ use Flow\Serializer\Serializable;
 /**
  * @implements \ArrayAccess<int, Row>
  * @implements \IteratorAggregate<int, Row>
- * @implements Serializable<array{rows: array<int, Row>}>
+ * @implements Serializable<array{rows: array<int, Row>, partitions: array<Partition>}>
  */
 final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serializable
 {
+    /**
+     * @var array<Partition>
+     */
+    private array $partitions;
+
     /**
      * @var array<int, Row>
      */
@@ -36,6 +41,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
     public function __construct(Row ...$rows)
     {
         $this->rows = \array_values($rows);
+        $this->partitions = [];
     }
 
     public static function fromArray(array $data, EntryFactory $entryFactory = new NativeEntryFactory()) : self
@@ -43,16 +49,33 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
         return array_to_rows($data, $entryFactory);
     }
 
+    /**
+     * @param array<int, Row>|array<Row> $rows
+     */
+    public static function partitioned(array $rows, array $partitions) : self
+    {
+        if (!\count($rows)) {
+            return new self();
+        }
+
+        $rows = new self(...$rows);
+        $rows->partitions = $partitions;
+
+        return $rows;
+    }
+
     public function __serialize() : array
     {
         return [
             'rows' => $this->rows,
+            'partitions' => $this->partitions,
         ];
     }
 
     public function __unserialize(array $data) : void
     {
         $this->rows = $data['rows'];
+        $this->partitions = $data['partitions'];
     }
 
     public function add(Row ...$rows) : self
@@ -71,7 +94,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
     public function chunks(int $size) : \Generator
     {
         foreach (\array_chunk($this->rows, $size) as $chunk) {
-            yield new self(...$chunk);
+            yield self::partitioned($chunk, $this->partitions);
         }
     }
 
@@ -100,7 +123,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
             }
         }
 
-        return new self(...$differentRows);
+        return self::partitioned($differentRows, $this->partitions);
     }
 
     public function diffRight(self $rows) : self
@@ -123,7 +146,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
             }
         }
 
-        return new self(...$differentRows);
+        return self::partitioned($differentRows, $this->partitions);
     }
 
     public function drop(int $size) : self
@@ -132,7 +155,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
             return $this;
         }
 
-        return new self(...\array_slice($this->rows, $size));
+        return self::partitioned(\array_slice($this->rows, $size), $this->partitions);
     }
 
     public function dropRight(int $size) : self
@@ -141,7 +164,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
             return $this;
         }
 
-        return new self(...\array_slice($this->rows, 0, -$size));
+        return self::partitioned(\array_slice($this->rows, 0, -$size), $this->partitions);
     }
 
     /**
@@ -186,7 +209,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
             }
         }
 
-        return new self(...$results);
+        return self::partitioned($results, $this->partitions);
     }
 
     public function find(callable $callable) : self
@@ -203,7 +226,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
             }
         }
 
-        return new self(...$rows);
+        return self::partitioned($rows, $this->partitions);
     }
 
     public function findOne(callable $callable) : ?Row
@@ -242,6 +265,11 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
     public function getIterator() : \Iterator
     {
         return new \ArrayIterator($this->rows);
+    }
+
+    public function isPartitioned() : bool
+    {
+        return \count($this->partitions) > 0;
     }
 
     public function joinCross(self $right, string $joinPrefix = '') : self
@@ -505,7 +533,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
      *
      * @throws InvalidArgumentException
      *
-     * @return array<PartitionedRows>
+     * @return array<Rows>
      */
     public function partitionBy(string|Reference $entry, string|Reference ...$entries) : array
     {
@@ -550,7 +578,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
             return $result;
         };
 
-        /** @var array<PartitionedRows> $partitionedRows */
+        /** @var array<Rows> $partitionedRows */
         $partitionedRows = [];
 
         /**
@@ -571,11 +599,16 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
             });
 
             if ($rows) {
-                $partitionedRows[] = new PartitionedRows(new self(...$rows), ...Partition::fromArray($partitionsData));
+                $partitionedRows[] = self::partitioned($rows, Partition::fromArray($partitionsData));
             }
         }
 
         return $partitionedRows;
+    }
+
+    public function partitions() : array
+    {
+        return $this->partitions;
     }
 
     /**
@@ -615,12 +648,12 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
         $rows = \iterator_to_array($this->getIterator());
         unset($rows[$offset]);
 
-        return new self(...[...$rows]);
+        return self::partitioned($rows, $this->partitions);
     }
 
     public function reverse() : self
     {
-        return new self(...\array_reverse($this->rows));
+        return self::partitioned(\array_reverse($this->rows), $this->partitions);
     }
 
     public function schema() : Schema
@@ -650,7 +683,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
         $rows = $this->rows;
         \usort($rows, $callback);
 
-        return new self(...$rows);
+        return self::partitioned($rows, $this->partitions);
     }
 
     /**
@@ -663,7 +696,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
         $rows = $this->rows;
         \usort($rows, fn (Row $a, Row $b) : int => $a->valueOf($ref) <=> $b->valueOf($ref));
 
-        return new self(...$rows);
+        return self::partitioned($rows, $this->partitions);
     }
 
     /**
@@ -692,7 +725,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
         $rows = $this->rows;
         \usort($rows, fn (Row $a, Row $b) : int => -($a->valueOf($ref) <=> $b->valueOf($ref)));
 
-        return new self(...$rows);
+        return self::partitioned($rows, $this->partitions);
     }
 
     public function sortEntries() : self
@@ -702,12 +735,12 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
 
     public function take(int $size) : self
     {
-        return new self(...\array_slice($this->rows, 0, $size));
+        return self::partitioned(\array_slice($this->rows, 0, $size), $this->partitions);
     }
 
     public function takeRight(int $size) : self
     {
-        return new self(...\array_reverse(\array_slice($this->rows, -$size, $size)));
+        return self::partitioned(\array_reverse(\array_slice($this->rows, -$size, $size)), $this->partitions);
     }
 
     /**
@@ -747,6 +780,6 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
             }
         }
 
-        return new self(...$uniqueRows);
+        return self::partitioned($uniqueRows, $this->partitions);
     }
 }

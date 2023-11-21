@@ -230,8 +230,8 @@ final class DataFrame
             $fetchedRows = (new Rows());
 
             foreach ($rows->partitionBy(...$clone->context->partitionEntries()->all()) as $partitionedRows) {
-                if ($clone->context->partitionFilter()->keep(...$partitionedRows->partitions)) {
-                    $fetchedRows = $fetchedRows->merge($partitionedRows->rows);
+                if ($clone->context->partitionFilter()->keep(...$partitionedRows->partitions())) {
+                    $fetchedRows = $fetchedRows->merge($partitionedRows);
                 }
             }
 
