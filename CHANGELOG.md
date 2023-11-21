@@ -75,6 +75,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#810](https://github.com/flow-php/flow/pull/810) - **Moved handling SaveMode to FilesystemStreams** - [@norberttech](https://github.com/norberttech)
 - [#812](https://github.com/flow-php/flow/pull/812) - **Improve performance of `Types`** - [@stloyd](https://github.com/stloyd)
 - [#811](https://github.com/flow-php/flow/pull/811) - **Improve performance of `TypeDetector`** - [@stloyd](https://github.com/stloyd)
 - [#809](https://github.com/flow-php/flow/pull/809) - **Changed default value for format in toDate scalar function** - [@norberttech](https://github.com/norberttech)
@@ -228,6 +229,7 @@
 - [c9fb26](https://github.com/flow-php/flow/commit/c9fb26dc2e0558c0f33b6097286e4dc6e2799d3f) - **test-benchmark.yml** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#810](https://github.com/flow-php/flow/pull/810) - **Execution Plan and Processors** - [@norberttech](https://github.com/norberttech)
 - [#804](https://github.com/flow-php/flow/pull/804) - **Remove `from*` methods from scalar entry classes** - [@stloyd](https://github.com/stloyd)
 - [#797](https://github.com/flow-php/flow/pull/797) - **struct reference** - [@norberttech](https://github.com/norberttech)
 - [#796](https://github.com/flow-php/flow/pull/796) - **Remove Faker library from benchmark** - [@stloyd](https://github.com/stloyd)
