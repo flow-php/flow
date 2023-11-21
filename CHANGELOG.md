@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-11-20
+## [Unreleased] - 2023-11-21
 
 ### Added
 - [#808](https://github.com/flow-php/flow/pull/808) - **Added DataFrame::until** - [@norberttech](https://github.com/norberttech)
@@ -75,6 +75,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#811](https://github.com/flow-php/flow/pull/811) - **Improve performance of `TypeDetector`** - [@stloyd](https://github.com/stloyd)
 - [#809](https://github.com/flow-php/flow/pull/809) - **Changed default value for format in toDate scalar function** - [@norberttech](https://github.com/norberttech)
 - [#799](https://github.com/flow-php/flow/pull/799) - **Expanded Parquet schema converter in order to support deeply nested data types** - [@norberttech](https://github.com/norberttech)
 - [700dc7](https://github.com/flow-php/flow/commit/700dc71d76684eabca7f0fc5e7adf55e58b0b313) - **Docs fixes** - [@norberttech](https://github.com/norberttech)
