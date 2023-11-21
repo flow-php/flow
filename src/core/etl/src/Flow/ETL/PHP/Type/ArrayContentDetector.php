@@ -11,11 +11,11 @@ use Flow\ETL\PHP\Type\Native\ScalarType;
 
 final class ArrayContentDetector
 {
-    private readonly int $countUniqueValuesWithoutEmptyData;
+    private readonly int $uniqueValuesCount;
 
     public function __construct(private readonly Types $uniqueKeysType, private readonly Types $uniqueValuesType)
     {
-        $this->countUniqueValuesWithoutEmptyData = $this->uniqueValuesType->without(ArrayType::empty(), new NullType())->count();
+        $this->uniqueValuesCount = $this->uniqueValuesType->without(ArrayType::empty(), new NullType())->count();
     }
 
     public function firstKeyType() : ?ScalarType
@@ -40,7 +40,7 @@ final class ArrayContentDetector
             return false;
         }
 
-        return 1 === $this->countUniqueValuesWithoutEmptyData;
+        return 1 === $this->uniqueValuesCount;
     }
 
     public function isMap() : bool
@@ -49,7 +49,7 @@ final class ArrayContentDetector
             return false;
         }
 
-        if (1 === $this->countUniqueValuesWithoutEmptyData) {
+        if (1 === $this->uniqueValuesCount) {
             /** @psalm-suppress PossiblyNullReference */
             if (!$this->firstKeyType()->isInteger()) {
                 return 1 === $this->uniqueKeysType->count();
@@ -67,6 +67,6 @@ final class ArrayContentDetector
 
         return $this->firstKeyType()?->isString()
             && 1 === $this->uniqueKeysType->count()
-            && 0 !== $this->countUniqueValuesWithoutEmptyData;
+            && 0 !== $this->uniqueValuesCount;
     }
 }
