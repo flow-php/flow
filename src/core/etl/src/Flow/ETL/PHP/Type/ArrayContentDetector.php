@@ -11,8 +11,11 @@ use Flow\ETL\PHP\Type\Native\ScalarType;
 
 final class ArrayContentDetector
 {
+    private readonly int $countUniqueValuesWithoutEmptyData;
+
     public function __construct(private readonly Types $uniqueKeysType, private readonly Types $uniqueValuesType)
     {
+        $this->countUniqueValuesWithoutEmptyData = $this->uniqueValuesType->without(ArrayType::empty(), new NullType())->count();
     }
 
     public function firstKeyType() : ?ScalarType
@@ -37,21 +40,20 @@ final class ArrayContentDetector
             return false;
         }
 
-        return 1 === $this->uniqueValuesType->without(ArrayType::empty(), new NullType())->count();
+        return 1 === $this->countUniqueValuesWithoutEmptyData;
     }
 
     public function isMap() : bool
     {
-        if (1 === $this->uniqueValuesType->without(ArrayType::empty(), new NullType())->count()) {
-            if ($this->isList()) {
-                return false;
-            }
+        if (!$this->firstKeyType()?->isValidArrayKey()) {
+            return false;
+        }
 
-            if (!$this->firstKeyType()?->isValidArrayKey()) {
-                return false;
+        if (1 === $this->countUniqueValuesWithoutEmptyData) {
+            /** @psalm-suppress PossiblyNullReference */
+            if (!$this->firstKeyType()->isInteger()) {
+                return 1 === $this->uniqueKeysType->count();
             }
-
-            return 1 === $this->uniqueKeysType->count();
         }
 
         return false;
@@ -65,6 +67,6 @@ final class ArrayContentDetector
 
         return $this->firstKeyType()?->isString()
             && 1 === $this->uniqueKeysType->count()
-            && 0 !== $this->uniqueValuesType->without(ArrayType::empty(), new NullType())->count();
+            && 0 !== $this->countUniqueValuesWithoutEmptyData;
     }
 }
