@@ -47,6 +47,7 @@ class FilesystemStreamsTest extends TestCase
         ]))->partitionBy('group')[0];
 
         $stream = (new FilesystemStreams(new LocalFilesystem()))
+            ->setMode(SaveMode::Overwrite)
             ->open(Path::realpath($dir = \rtrim(\sys_get_temp_dir(), '/')), 'csv', false, $rows->partitions())
             ->path();
         $this->assertStringStartsWith(
