@@ -6,10 +6,12 @@ namespace Flow\ETL\Row\Factory;
 
 use Flow\ETL\DSL\Entry as EntryDSL;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\PHP\Type\Native\ArrayType;
+use Flow\ETL\PHP\Type\Native\EnumType;
 use Flow\ETL\PHP\Type\Native\ObjectType;
 use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\PHP\Type\TypeDetector;
@@ -34,7 +36,7 @@ final class NativeEntryFactory implements EntryFactory
 
     /**
      * @throws InvalidArgumentException
-     * @throws \JsonException
+     * @throws RuntimeException
      */
     public function create(string $entryName, mixed $value, ?Schema $schema = null) : Entry
     {
@@ -106,6 +108,10 @@ final class NativeEntryFactory implements EntryFactory
             return new Row\Entry\ObjectEntry($entryName, $value);
         }
 
+        if ($valueType instanceof EnumType) {
+            return new Row\Entry\EnumEntry($entryName, $value);
+        }
+
         if ($valueType instanceof ArrayType) {
             return new Row\Entry\ArrayEntry($entryName, $value);
         }
@@ -122,9 +128,7 @@ final class NativeEntryFactory implements EntryFactory
             return new Row\Entry\StructureEntry($entryName, $value, $valueType);
         }
 
-        $type = \gettype($value);
-
-        throw new InvalidArgumentException("{$type} can't be converted to any known Entry");
+        throw new InvalidArgumentException("{$valueType->toString()} can't be converted to any known Entry");
     }
 
     private function fromDefinition(Schema\Definition $definition, mixed $value) : Entry
