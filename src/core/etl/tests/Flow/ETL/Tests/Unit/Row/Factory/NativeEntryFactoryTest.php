@@ -120,6 +120,24 @@ final class NativeEntryFactoryTest extends TestCase
         );
     }
 
+    public function test_enum() : void
+    {
+        $this->assertEquals(
+            Entry::enum('e', $enum = BackedIntEnum::one),
+            (new NativeEntryFactory())
+                ->create('e', $enum)
+        );
+    }
+
+    public function test_enum_from_string_with_schema() : void
+    {
+        $this->assertEquals(
+            Entry::enum('e', BackedIntEnum::one),
+            (new NativeEntryFactory())
+                ->create('e', 'one', new Schema(Schema\Definition::enum('e', BackedIntEnum::class)))
+        );
+    }
+
     public function test_enum_invalid_value_with_schema() : void
     {
         $this->expectException(InvalidArgumentException::class);
@@ -127,15 +145,6 @@ final class NativeEntryFactoryTest extends TestCase
 
         (new NativeEntryFactory())
             ->create('e', 'invalid', new Schema(Schema\Definition::enum('e', BackedIntEnum::class)));
-    }
-
-    public function test_enum_with_schema() : void
-    {
-        $this->assertEquals(
-            Entry::enum('e', BackedIntEnum::one),
-            (new NativeEntryFactory())
-                ->create('e', 'one', new Schema(Schema\Definition::enum('e', BackedIntEnum::class)))
-        );
     }
 
     public function test_float() : void
