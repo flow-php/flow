@@ -8,17 +8,17 @@ final class Types implements \Countable
 {
     private readonly ?Type $first;
 
-    private readonly array $types;
+    /**
+     * @var string[]
+     */
+    private array $types;
 
     public function __construct(Type ...$types)
     {
-        $this->types = \array_map(
-            fn (string $type) : Type => \unserialize($type),
-            \array_unique(
-                \array_map(fn (Type $type) : string => \serialize($type), $types)
-            )
+        $this->types = \array_unique(
+            \array_map(fn (Type $type) : string => $type->toString(), $types)
         );
-        $this->first = $this->types[0] ?? null;
+        $this->first = $types[0] ?? null;
     }
 
     public function count() : int
@@ -33,14 +33,16 @@ final class Types implements \Countable
 
     public function without(Type ...$types) : self
     {
-        return new self(...\array_filter($this->types, function (Type $type) use ($types) : bool {
+        $this->types = \array_filter($this->types, function (string $type) use ($types) : bool {
             foreach ($types as $withoutType) {
-                if ($type->isEqual($withoutType)) {
+                if ($type === $withoutType->toString()) {
                     return false;
                 }
             }
 
             return true;
-        }));
+        });
+
+        return $this;
     }
 }
