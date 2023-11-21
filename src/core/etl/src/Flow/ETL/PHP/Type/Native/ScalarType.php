@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type\Native;
 
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Type;
 
 /**
@@ -20,17 +19,8 @@ final class ScalarType implements NativeType
 
     public const STRING = 'string';
 
-    private readonly string $value;
-
-    private function __construct(string $value, private readonly bool $nullable)
+    private function __construct(private readonly string $value, private readonly bool $nullable)
     {
-        $this->value = match (\strtolower($value)) {
-            'integer' => self::INTEGER,
-            'float', 'double' => self::FLOAT,
-            'string' => self::STRING,
-            'boolean' => self::BOOLEAN,
-            default => throw new InvalidArgumentException("Unsupported scalar type: {$value}")
-        };
     }
 
     public static function boolean(bool $nullable = false) : self
@@ -41,11 +31,6 @@ final class ScalarType implements NativeType
     public static function float(bool $nullable = false) : self
     {
         return new self(self::FLOAT, $nullable);
-    }
-
-    public static function fromString(string $value, bool $nullable = false) : self
-    {
-        return new self($value, $nullable);
     }
 
     public static function integer(bool $nullable = false) : self

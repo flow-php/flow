@@ -52,11 +52,6 @@ final class MapValue
         return new self(ObjectType::of($class, $optional));
     }
 
-    public static function scalar(string $value, bool $optional = false) : self
-    {
-        return new self(ScalarType::fromString($value, $optional));
-    }
-
     public static function string() : self
     {
         return new self(ScalarType::string());
