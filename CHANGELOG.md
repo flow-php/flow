@@ -177,6 +177,7 @@
 - [#584](https://github.com/flow-php/flow/pull/584) - **Adjust `phpunit.xml` to be more efficient** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
+- [#816](https://github.com/flow-php/flow/pull/816) - **Prevent reading multiple times from the same partitioning cache** - [@norberttech](https://github.com/norberttech)
 - [#815](https://github.com/flow-php/flow/pull/815) - **Add missing `EnumType` detection in `NativeEntryFactory`** - [@stloyd](https://github.com/stloyd)
 - [#814](https://github.com/flow-php/flow/pull/814) - **Fix wrong return type on entry reference DSL functions** - [@stloyd](https://github.com/stloyd)
 - [#798](https://github.com/flow-php/flow/pull/798) - **Deprecated notice for using Connection::getSchemaManager()** - [@tomaszhanc](https://github.com/tomaszhanc)
