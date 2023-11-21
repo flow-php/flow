@@ -75,6 +75,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#813](https://github.com/flow-php/flow/pull/813) - **Improve performance of `ArrayContentDetector`** - [@stloyd](https://github.com/stloyd)
 - [#810](https://github.com/flow-php/flow/pull/810) - **Moved handling SaveMode to FilesystemStreams** - [@norberttech](https://github.com/norberttech)
 - [#812](https://github.com/flow-php/flow/pull/812) - **Improve performance of `Types`** - [@stloyd](https://github.com/stloyd)
 - [#811](https://github.com/flow-php/flow/pull/811) - **Improve performance of `TypeDetector`** - [@stloyd](https://github.com/stloyd)
@@ -176,6 +177,8 @@
 - [#584](https://github.com/flow-php/flow/pull/584) - **Adjust `phpunit.xml` to be more efficient** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
+- [#815](https://github.com/flow-php/flow/pull/815) - **Add missing `EnumType` detection in `NativeEntryFactory`** - [@stloyd](https://github.com/stloyd)
+- [#814](https://github.com/flow-php/flow/pull/814) - **Fix wrong return type on entry reference DSL functions** - [@stloyd](https://github.com/stloyd)
 - [#798](https://github.com/flow-php/flow/pull/798) - **Deprecated notice for using Connection::getSchemaManager()** - [@tomaszhanc](https://github.com/tomaszhanc)
 - [#795](https://github.com/flow-php/flow/pull/795) - **Window function rank** - [@norberttech](https://github.com/norberttech)
 - [#789](https://github.com/flow-php/flow/pull/789) - **Fix hardcoded entry name for enum entry with schema** - [@stloyd](https://github.com/stloyd)
