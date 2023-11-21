@@ -7,7 +7,6 @@ namespace Flow\ETL\Adapter\JSON;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\Stream\FileStream;
-use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
@@ -75,15 +74,14 @@ final class JsonLoader implements Closure, Loader, Loader\FileLoader
      */
     public function write(Rows $nextRows, array $partitions, FlowContext $context) : void
     {
-        $mode = Mode::WRITE;
         $streams = $context->streams();
 
         if (!$streams->isOpen($this->path, $partitions)) {
-            $stream = $streams->open($this->path, 'json', $mode, $context->appendSafe(), $partitions);
+            $stream = $streams->open($this->path, 'json', $context->appendSafe(), $partitions);
 
             $this->init($stream);
         } else {
-            $stream = $streams->open($this->path, 'json', $mode, $context->appendSafe(), $partitions);
+            $stream = $streams->open($this->path, 'json', $context->appendSafe(), $partitions);
         }
 
         $this->writeJSON($nextRows, $stream);

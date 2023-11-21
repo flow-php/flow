@@ -7,7 +7,6 @@ namespace Flow\ETL\Adapter\CSV;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\Stream\FileStream;
-use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
@@ -97,14 +96,14 @@ final class CSVLoader implements Closure, Loader, Loader\FileLoader
         if ($this->header && !$context->streams()->isOpen($this->path, $partitions)) {
             $this->writeCSV(
                 $headers,
-                $context->streams()->open($this->path, 'csv', Mode::WRITE, $context->appendSafe(), $partitions)
+                $context->streams()->open($this->path, 'csv', $context->appendSafe(), $partitions)
             );
         }
 
         foreach ($nextRows as $row) {
             $this->writeCSV(
                 $row->toArray(),
-                $context->streams()->open($this->path, 'csv', Mode::WRITE, $context->appendSafe(), $partitions)
+                $context->streams()->open($this->path, 'csv', $context->appendSafe(), $partitions)
             );
         }
     }

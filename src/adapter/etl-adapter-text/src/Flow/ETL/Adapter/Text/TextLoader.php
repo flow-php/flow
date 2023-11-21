@@ -6,7 +6,6 @@ namespace Flow\ETL\Adapter\Text;
 
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Filesystem\Path;
-use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
@@ -63,7 +62,7 @@ final class TextLoader implements Closure, Loader, Loader\FileLoader
                     }
 
                     \fwrite(
-                        $context->streams()->open($this->path, 'text', Mode::WRITE, $context->appendSafe(), $partitionedRows->partitions())->resource(),
+                        $context->streams()->open($this->path, 'text', $context->appendSafe(), $partitionedRows->partitions())->resource(),
                         $row->entries()->all()[0]->toString() . $this->newLineSeparator
                     );
                 }
@@ -75,7 +74,7 @@ final class TextLoader implements Closure, Loader, Loader\FileLoader
                 }
 
                 \fwrite(
-                    $context->streams()->open($this->path, 'text', Mode::WRITE, $context->appendSafe(), [])->resource(),
+                    $context->streams()->open($this->path, 'text', $context->appendSafe(), [])->resource(),
                     $row->entries()->all()[0]->toString() . $this->newLineSeparator
                 );
             }

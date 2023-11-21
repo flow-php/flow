@@ -49,7 +49,7 @@ final class ChartJSLoader implements Closure, Loader
             $context->streams()->rm($this->output);
         }
 
-        $stream = $context->streams()->open($this->output, 'html', Mode::WRITE, false);
+        $stream = $context->streams()->open($this->output, 'html', false);
 
         $templateStream = $context->streams()->fs()->open($this->template, Mode::READ);
 

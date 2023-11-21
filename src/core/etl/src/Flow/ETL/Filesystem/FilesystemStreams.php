@@ -6,6 +6,7 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Filesystem;
 use Flow\ETL\Filesystem\Stream\FileStream;
 use Flow\ETL\Filesystem\Stream\Mode;
+use Flow\ETL\Filesystem\Stream\VoidStreamWrapper;
 use Flow\ETL\Partition;
 
 /**
@@ -13,6 +14,8 @@ use Flow\ETL\Partition;
  */
 final class FilesystemStreams implements \Countable, \IteratorAggregate
 {
+    private SaveMode $mode;
+
     /**
      * @var array<string, array<string, FileStream>>
      */
@@ -21,6 +24,8 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
     public function __construct(private readonly Filesystem $filesystem)
     {
         $this->streams = [];
+        $this->mode = SaveMode::ExceptionIfExists;
+        VoidStreamWrapper::register();
     }
 
     public function close(Path $basePath) : void
@@ -91,7 +96,7 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
     /**
      * @param array<Partition> $partitions
      */
-    public function open(Path $basePath, string $extension, Mode $mode, bool $safe, array $partitions = []) : FileStream
+    public function open(Path $basePath, string $extension, bool $safe, array $partitions = []) : FileStream
     {
         if (!\array_key_exists($basePath->uri(), $this->streams)) {
             $this->streams[$basePath->uri()] = [];
@@ -109,11 +114,41 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
             throw new RuntimeException("Destination path can't be patter, given:" . $destination->uri());
         }
 
+        $path = (\count($partitions) || $safe === true) ? $destination->randomize()->setExtension($extension) : $basePath;
+
         if (!\array_key_exists($destination->uri(), $this->streams[$basePath->uri()])) {
-            $this->streams[$basePath->uri()][$destination->uri()] = $this->filesystem->open(
-                (\count($partitions) || $safe === true) ? $destination->randomize()->setExtension($extension) : $basePath,
-                $mode
-            );
+            if ($this->mode === SaveMode::Overwrite) {
+                if ($this->filesystem->exists($path)) {
+                    $this->filesystem->rm($path);
+                }
+            }
+
+            if ($this->mode === SaveMode::ExceptionIfExists) {
+                if ($this->filesystem->exists($path)) {
+                    throw new RuntimeException('Destination path "' . $path->uri() . '" already exists, please change path to different or set different SaveMode');
+                }
+            }
+
+            if ($this->mode === SaveMode::Append) {
+                if (!$safe) {
+                    throw new RuntimeException('Appending to destination "' . $path->uri() . '" in non append safe mode is not supported.');
+                }
+
+                if ($this->filesystem->fileExists($path) && !\count($partitions)) {
+                    throw new RuntimeException('Appending to existing single file destination "' . $path->uri() . '" is not supported.');
+                }
+            }
+
+            if ($this->mode === SaveMode::Ignore) {
+                if ($this->filesystem->exists($path)) {
+                    /** @phpstan-ignore-next-line */
+                    $this->streams[$basePath->uri()][$destination->uri()] = new FileStream($path, \fopen('void://' . $path->uri(), 'wb+'));
+                } else {
+                    $this->streams[$basePath->uri()][$destination->uri()] = $this->filesystem->open($path, Mode::WRITE_BINARY);
+                }
+            } else {
+                $this->streams[$basePath->uri()][$destination->uri()] = $this->filesystem->open($path, Mode::WRITE_BINARY);
+            }
         }
 
         return $this->streams[$basePath->uri()][$destination->uri()];
@@ -132,5 +167,12 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
         if ($this->filesystem->exists($destination)) {
             $this->filesystem->rm($destination);
         }
+    }
+
+    public function setMode(SaveMode $mode) : self
+    {
+        $this->mode = $mode;
+
+        return $this;
     }
 }

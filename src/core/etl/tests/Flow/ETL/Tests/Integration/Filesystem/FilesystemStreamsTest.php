@@ -6,7 +6,7 @@ use Flow\ETL\DSL\Entry;
 use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Filesystem\LocalFilesystem;
 use Flow\ETL\Filesystem\Path;
-use Flow\ETL\Filesystem\Stream\Mode;
+use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use PHPUnit\Framework\TestCase;
@@ -17,8 +17,16 @@ class FilesystemStreamsTest extends TestCase
     {
         $streams = (new FilesystemStreams(new LocalFilesystem()));
 
-        $streams->open($csvPath = Path::realpath(\sys_get_temp_dir() . '/file.csv'), 'csv', Mode::APPEND, false);
-        $streams->open($jsonPath = Path::realpath(\sys_get_temp_dir() . '/file.json'), 'json', Mode::APPEND, false);
+        if (\file_exists(\sys_get_temp_dir() . '/file.json')) {
+            \unlink(\sys_get_temp_dir() . '/file.json');
+        }
+
+        if (\file_exists(\sys_get_temp_dir() . '/file.csv')) {
+            \unlink(\sys_get_temp_dir() . '/file.csv');
+        }
+
+        $streams->open($csvPath = Path::realpath(\sys_get_temp_dir() . '/file.csv'), 'csv', false);
+        $streams->open($jsonPath = Path::realpath(\sys_get_temp_dir() . '/file.json'), 'json', false);
 
         $streams->close($jsonPath);
 
@@ -39,7 +47,7 @@ class FilesystemStreamsTest extends TestCase
         ]))->partitionBy('group')[0];
 
         $stream = (new FilesystemStreams(new LocalFilesystem()))
-            ->open(Path::realpath($dir = \rtrim(\sys_get_temp_dir(), '/')), 'csv', Mode::APPEND, false, $rows->partitions())
+            ->open(Path::realpath($dir = \rtrim(\sys_get_temp_dir(), '/')), 'csv', false, $rows->partitions())
             ->path();
         $this->assertStringStartsWith(
             $dir . '/group=a/',
@@ -66,7 +74,8 @@ class FilesystemStreamsTest extends TestCase
         ]));
 
         $stream = (new FilesystemStreams(new LocalFilesystem()))
-            ->open(Path::realpath($dir = \rtrim(\sys_get_temp_dir(), '/') . '/file.csv'), 'csv', Mode::APPEND, false)
+            ->setMode(SaveMode::Overwrite)
+            ->open(Path::realpath($dir = \rtrim(\sys_get_temp_dir(), '/') . '/file.csv'), 'csv', false)
             ->path();
         $this->assertStringStartsWith(
             $dir,
@@ -80,5 +89,47 @@ class FilesystemStreamsTest extends TestCase
         if (\file_exists($stream->path())) {
             \unlink($stream->path());
         }
+    }
+
+    public function test_overwrite_mode_on_processed_partitions() : void
+    {
+        $partitionedRows = (new Rows(...[
+            Row::create(Entry::integer('id', 1), Entry::string('group', 'a')),
+            Row::create(Entry::integer('id', 2), Entry::string('group', 'a')),
+            Row::create(Entry::integer('id', 3), Entry::string('group', 'b')),
+            Row::create(Entry::integer('id', 4), Entry::string('group', 'b')),
+            Row::create(Entry::integer('id', 5), Entry::string('group', 'b')),
+        ]))->partitionBy('group');
+
+        $streams = new FilesystemStreams(new LocalFilesystem());
+        $streams->setMode(SaveMode::Overwrite);
+
+        $groupAStream = $streams
+            ->open(Path::realpath($dir = \rtrim(\sys_get_temp_dir(), '/')), 'csv', false, $partitionedRows[0]->partitions())
+            ->path();
+        $this->assertStringStartsWith(
+            $dir . '/group=a/',
+            $groupAStream->path()
+        );
+        $groupBStream = $streams
+            ->open(Path::realpath($dir), 'csv', false, $partitionedRows[1]->partitions())
+            ->path();
+        $this->assertStringStartsWith(
+            $dir . '/group=b/',
+            $groupBStream->path()
+        );
+        \file_put_contents($groupAStream->path(), 'test_a');
+        \file_put_contents($groupBStream->path(), 'test_b');
+
+        // Close all streams
+        $streams->close(Path::realpath($dir));
+
+        // Open stream again, but just touched partition
+        $groupAStream = $streams
+            ->open(Path::realpath($dir), 'csv', false, $partitionedRows[0]->partitions())
+            ->path();
+
+        $this->assertEquals('', \file_get_contents($groupAStream->path()));
+        $this->assertEquals('test_b', \file_get_contents($groupBStream->path()));
     }
 }

@@ -9,8 +9,6 @@ use Flow\ETL\ExternalSort\MemorySort;
 use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Filesystem\LocalFilesystem;
 use Flow\ETL\Monitoring\Memory\Unit;
-use Flow\ETL\Pipeline\Execution\Processor\FilesystemProcessor;
-use Flow\ETL\Pipeline\Execution\Processors;
 use Flow\ETL\Pipeline\Optimizer;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\Serializer\CompressingSerializer;
@@ -28,8 +26,6 @@ final class ConfigBuilder
 
     private ?Optimizer $optimizer;
 
-    private ?Processors $processors;
-
     private bool $putInputIntoRows;
 
     private ?Serializer $serializer;
@@ -43,7 +39,6 @@ final class ConfigBuilder
         $this->filesystem = null;
         $this->putInputIntoRows = false;
         $this->optimizer = null;
-        $this->processors = null;
     }
 
     /**
@@ -78,9 +73,6 @@ final class ConfigBuilder
             }
         }
 
-        $this->processors ??= new Processors(
-            new FilesystemProcessor()
-        );
         $this->optimizer ??= new Optimizer(
             new Optimizer\LimitOptimization(),
             new Optimizer\BatchSizeOptimization(batchSize: 1000),
@@ -92,7 +84,6 @@ final class ConfigBuilder
             $this->externalSort,
             $this->serializer,
             new FilesystemStreams($this->filesystem),
-            $this->processors,
             $this->optimizer,
             $this->putInputIntoRows,
             new NativeEntryFactory()
@@ -137,13 +128,6 @@ final class ConfigBuilder
     public function optimizer(Optimizer $optimizer) : self
     {
         $this->optimizer = $optimizer;
-
-        return $this;
-    }
-
-    public function processors(Processors $processors) : self
-    {
-        $this->processors = $processors;
 
         return $this;
     }

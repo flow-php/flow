@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL;
 
 use Flow\ETL\Filesystem\FilesystemStreams;
-use Flow\ETL\Pipeline\Execution\Processors;
 use Flow\ETL\Pipeline\Optimizer;
 use Flow\ETL\Row\EntryFactory;
 use Flow\Serializer\Serializer;
@@ -26,7 +25,6 @@ final class Config
         private readonly ExternalSort $externalSort,
         private readonly Serializer $serializer,
         private readonly FilesystemStreams $filesystemStreams,
-        private readonly Processors $processors,
         private readonly Optimizer $optimizer,
         private readonly bool $putInputIntoRows,
         private readonly EntryFactory $entryFactory
@@ -71,11 +69,6 @@ final class Config
     public function optimizer() : Optimizer
     {
         return $this->optimizer;
-    }
-
-    public function processors() : Processors
-    {
-        return $this->processors;
     }
 
     public function serializer() : Serializer
