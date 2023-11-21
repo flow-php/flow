@@ -6,7 +6,6 @@ namespace Flow\ETL\Adapter\Avro\FlixTech;
 
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Filesystem\Path;
-use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
@@ -156,7 +155,6 @@ final class AvroLoader implements Closure, Loader, Loader\FileLoader
                 $context->streams()->open(
                     $this->path,
                     'avro',
-                    Mode::WRITE_BINARY,
                     $context->appendSafe()
                 )->resource()
             ),

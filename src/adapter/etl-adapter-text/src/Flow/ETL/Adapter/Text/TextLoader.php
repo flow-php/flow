@@ -6,7 +6,6 @@ namespace Flow\ETL\Adapter\Text;
 
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Filesystem\Path;
-use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
@@ -56,14 +55,14 @@ final class TextLoader implements Closure, Loader, Loader\FileLoader
     public function load(Rows $rows, FlowContext $context) : void
     {
         if ($context->partitionEntries()->count()) {
-            foreach ($rows->partitionBy(...$context->partitionEntries()->all()) as $partition) {
-                foreach ($partition->rows as $row) {
+            foreach ($rows->partitionBy(...$context->partitionEntries()->all()) as $partitionedRows) {
+                foreach ($partitionedRows as $row) {
                     if ($row->entries()->count() > 1) {
                         throw new RuntimeException(\sprintf('Text data loader supports only a single entry rows, and you have %d rows.', $row->entries()->count()));
                     }
 
                     \fwrite(
-                        $context->streams()->open($this->path, 'text', Mode::WRITE, $context->appendSafe(), $partition->partitions)->resource(),
+                        $context->streams()->open($this->path, 'text', $context->appendSafe(), $partitionedRows->partitions())->resource(),
                         $row->entries()->all()[0]->toString() . $this->newLineSeparator
                     );
                 }
@@ -75,7 +74,7 @@ final class TextLoader implements Closure, Loader, Loader\FileLoader
                 }
 
                 \fwrite(
-                    $context->streams()->open($this->path, 'text', Mode::WRITE, $context->appendSafe(), [])->resource(),
+                    $context->streams()->open($this->path, 'text', $context->appendSafe(), [])->resource(),
                     $row->entries()->all()[0]->toString() . $this->newLineSeparator
                 );
             }

@@ -14,9 +14,9 @@ abstract class IntegrationTestCase extends TestCase
 {
     protected string $cacheDir;
 
-    private string $baseMemoryLimit;
+    protected Filesystem $fs;
 
-    private Filesystem $fs;
+    private string $baseMemoryLimit;
 
     protected function setUp() : void
     {

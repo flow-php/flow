@@ -46,6 +46,8 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
         foreach ($context->streams()->fs()->scan($this->path, $context->partitionFilter()) as $filePath) {
+            $partitions = $filePath->partitions();
+
             $xmlReader = new \XMLReader();
             $xmlReader->open($filePath->path());
 
@@ -83,7 +85,10 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
                             $row = Row::create(Entry::xml('node', $node));
                         }
 
-                        $signal = yield new Rows($row);
+                        $signal = yield \count($partitions)
+                            ? Rows::partitioned([$row], $partitions)
+                            : new Rows($row);
+
                         $this->countRow();
 
                         if ($signal === Signal::STOP || $this->reachedLimit()) {

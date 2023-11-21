@@ -230,8 +230,8 @@ final class DataFrame
             $fetchedRows = (new Rows());
 
             foreach ($rows->partitionBy(...$clone->context->partitionEntries()->all()) as $partitionedRows) {
-                if ($clone->context->partitionFilter()->keep(...$partitionedRows->partitions)) {
-                    $fetchedRows = $fetchedRows->merge($partitionedRows->rows);
+                if ($clone->context->partitionFilter()->keep(...$partitionedRows->partitions())) {
+                    $fetchedRows = $fetchedRows->merge($partitionedRows);
                 }
             }
 
@@ -448,7 +448,7 @@ final class DataFrame
      */
     public function mode(SaveMode $mode) : self
     {
-        $this->context->setMode($mode);
+        $this->context->streams()->setSaveMode($mode);
 
         if ($mode === SaveMode::Append) {
             $this->appendSafe();

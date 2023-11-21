@@ -135,6 +135,11 @@ final class Path implements Serializable
         return new self(DIRECTORY_SEPARATOR . \implode(DIRECTORY_SEPARATOR, $absoluteParts), $options);
     }
 
+    public static function tmpFile(string $extension) : self
+    {
+        return new self(\sys_get_temp_dir() . DIRECTORY_SEPARATOR . \str_replace('.', '', \uniqid('', true)) . '.' . $extension);
+    }
+
     public function __serialize() : array
     {
         return [

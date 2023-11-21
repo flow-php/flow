@@ -60,20 +60,13 @@ final class SynchronousPipeline implements Pipeline
 
     public function process(FlowContext $context) : \Generator
     {
-        $plan = $context
-            ->config
-            ->processors()
-            ->process(new Pipeline\Execution\ExecutionPlan($this->extractor, $this->pipes), $context);
-
-        $generator = $plan->extractor->extract($context);
-
-        $rows = new Rows();
+        $generator = $this->extractor->extract($context);
 
         while ($generator->valid()) {
             $rows = $generator->current();
             $generator->next();
 
-            foreach ($plan->pipes->all() as $pipe) {
+            foreach ($this->pipes()->all() as $pipe) {
                 try {
                     if ($pipe instanceof Transformer) {
                         try {

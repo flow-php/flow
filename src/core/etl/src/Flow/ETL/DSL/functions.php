@@ -61,6 +61,7 @@ use Flow\ETL\Function\ToUpper;
 use Flow\ETL\Function\Ulid;
 use Flow\ETL\Function\Uuid;
 use Flow\ETL\Function\When;
+use Flow\ETL\Partition;
 use Flow\ETL\Row;
 use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\EntryReference;
@@ -381,8 +382,9 @@ function number_format(ScalarFunction $function, ?ScalarFunction $decimals = nul
  * @psalm-suppress PossiblyInvalidIterator
  *
  * @param array<array<mixed>>|array<mixed|string> $data
+ * @param array<Partition> $partitions
  */
-function array_to_rows(array $data, EntryFactory $entryFactory = new NativeEntryFactory()) : Rows
+function array_to_rows(array $data, EntryFactory $entryFactory = new NativeEntryFactory(), array $partitions = []) : Rows
 {
     $isRows = true;
 
@@ -401,7 +403,9 @@ function array_to_rows(array $data, EntryFactory $entryFactory = new NativeEntry
             $entries[] = $entryFactory->create(\is_int($key) ? 'e' . \str_pad((string) $key, 2, '0', STR_PAD_LEFT) : $key, $value);
         }
 
-        return new Rows(Row::create(...$entries));
+        return \count($partitions)
+            ? Rows::partitioned([Row::create(...$entries)], $partitions)
+            : new Rows(Row::create(...$entries));
     }
     $rows = [];
 
@@ -414,7 +418,9 @@ function array_to_rows(array $data, EntryFactory $entryFactory = new NativeEntry
         $rows[] = Row::create(...$entries);
     }
 
-    return new Rows(...$rows);
+    return \count($partitions)
+        ? Rows::partitioned($rows, $partitions)
+        : new Rows(...$rows);
 }
 
 function rank() : Rank

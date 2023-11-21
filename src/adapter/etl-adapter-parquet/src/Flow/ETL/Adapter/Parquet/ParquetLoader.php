@@ -3,7 +3,6 @@
 namespace Flow\ETL\Adapter\Parquet;
 
 use Flow\ETL\Filesystem\Path;
-use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
@@ -80,9 +79,9 @@ final class ParquetLoader implements Closure, Loader, Loader\FileLoader
         $streams = $context->streams();
 
         if ($context->partitionEntries()->count()) {
-            foreach ($rows->partitionBy(...$context->partitionEntries()->all()) as $partitions) {
+            foreach ($rows->partitionBy(...$context->partitionEntries()->all()) as $partitionedRows) {
 
-                $stream = $streams->open($this->path, 'parquet', Mode::WRITE_BINARY, $context->appendSafe(), $partitions->partitions);
+                $stream = $streams->open($this->path, 'parquet', $context->appendSafe(), $partitionedRows->partitions());
 
                 if (!\array_key_exists($stream->path()->uri(), $this->writers)) {
                     $this->writers[$stream->path()->uri()] = new Writer(
@@ -93,12 +92,12 @@ final class ParquetLoader implements Closure, Loader, Loader\FileLoader
                     $this->writers[$stream->path()->uri()]->openForStream($stream->resource(), $this->converter->toParquet($this->schema()));
                 }
 
-                foreach ($partitions->rows as $row) {
+                foreach ($partitionedRows as $row) {
                     $this->writers[$stream->path()->uri()]->writeRow($row->toArray());
                 }
             }
         } else {
-            $stream = $streams->open($this->path, 'parquet', Mode::WRITE_BINARY, $context->appendSafe());
+            $stream = $streams->open($this->path, 'parquet', $context->appendSafe());
 
             if (!\array_key_exists($stream->path()->uri(), $this->writers)) {
                 $this->writers[$stream->path()->uri()] = new Writer(

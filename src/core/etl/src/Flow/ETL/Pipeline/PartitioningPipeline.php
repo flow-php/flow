@@ -82,11 +82,11 @@ final class PartitioningPipeline implements OverridingPipeline, Pipeline
         foreach ($this->pipeline->process($context) as $rows) {
             foreach ($rows->partitionBy(...$context->partitionEntries()->all()) as $partitionedRows) {
 
-                $rows = $partitionedRows->orderBy(...$this->orderBy);
+                $rows = $partitionedRows->sortBy(...$this->orderBy);
 
                 $partitionId = \hash('xxh128', \implode(',', \array_map(
                     static fn (Partition $partition) : string => $partition->id(),
-                    $partitionedRows->partitions
+                    $partitionedRows->partitions()
                 )));
 
                 $partitionIds[] = $partitionId;

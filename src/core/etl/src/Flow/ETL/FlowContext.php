@@ -6,7 +6,6 @@ namespace Flow\ETL;
 
 use Flow\ETL\ErrorHandler\ThrowError;
 use Flow\ETL\Filesystem\FilesystemStreams;
-use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Partition\NoopFilter;
 use Flow\ETL\Partition\PartitionFilter;
 use Flow\ETL\Row\EntryFactory;
@@ -23,8 +22,6 @@ final class FlowContext
     private bool $appendSafe = false;
 
     private ErrorHandler $errorHandler;
-
-    private SaveMode $mode = SaveMode::ExceptionIfExists;
 
     private PartitionFilter $partitionFilter;
 
@@ -64,11 +61,6 @@ final class FlowContext
         return $this;
     }
 
-    public function mode() : SaveMode
-    {
-        return $this->mode;
-    }
-
     public function partitionBy(string|Reference ...$entry) : self
     {
         $this->partitions = References::init(...$entry);
@@ -101,13 +93,6 @@ final class FlowContext
     public function setErrorHandler(ErrorHandler $handler) : self
     {
         $this->errorHandler = $handler;
-
-        return $this;
-    }
-
-    public function setMode(SaveMode $mode) : self
-    {
-        $this->mode = $mode;
 
         return $this;
     }
