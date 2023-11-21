@@ -448,7 +448,7 @@ final class DataFrame
      */
     public function mode(SaveMode $mode) : self
     {
-        $this->context->streams()->setMode($mode);
+        $this->context->streams()->setSaveMode($mode);
 
         if ($mode === SaveMode::Append) {
             $this->appendSafe();

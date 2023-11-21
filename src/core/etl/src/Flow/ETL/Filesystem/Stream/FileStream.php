@@ -21,6 +21,21 @@ final class FileStream
         }
     }
 
+    public static function voidStream(Path $path) : self
+    {
+        VoidStreamWrapper::register();
+
+        $resourcePath = 'void://' . $path->uri();
+
+        $resource = \fopen($resourcePath, Mode::WRITE_BINARY->value);
+
+        if ($resource === false) {
+            throw new RuntimeException("Cannot open void stream for {$resourcePath}");
+        }
+
+        return new self($path, $resource);
+    }
+
     /**
      * @psalm-suppress InvalidPropertyAssignmentValue
      */
