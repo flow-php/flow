@@ -70,22 +70,19 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
 use Flow\ETL\Window;
 
-function col(string $entry) : Reference
+function col(string $entry) : EntryReference
 {
     return new EntryReference($entry);
 }
 
-function entry(string $entry) : Reference
+function entry(string $entry) : EntryReference
 {
     return new EntryReference($entry);
 }
 
-/**
- * Alias for entry function.
- */
-function ref(string $entry) : Reference
+function ref(string $entry) : EntryReference
 {
-    return entry($entry);
+    return new EntryReference($entry);
 }
 
 function optional(ScalarFunction $function) : ScalarFunction
