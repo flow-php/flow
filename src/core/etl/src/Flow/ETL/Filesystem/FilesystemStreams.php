@@ -118,14 +118,14 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
 
         if (!\array_key_exists($destination->uri(), $this->streams[$basePath->uri()])) {
             if ($this->mode === SaveMode::Overwrite) {
-                if ($this->filesystem->exists($path)) {
-                    $this->filesystem->rm($path);
+                if ($this->filesystem->exists($destination)) {
+                    $this->filesystem->rm($destination);
                 }
             }
 
             if ($this->mode === SaveMode::ExceptionIfExists) {
-                if ($this->filesystem->exists($path)) {
-                    throw new RuntimeException('Destination path "' . $path->uri() . '" already exists, please change path to different or set different SaveMode');
+                if ($this->filesystem->exists($destination)) {
+                    throw new RuntimeException('Destination path "' . $destination->uri() . '" already exists, please change path to different or set different SaveMode');
                 }
             }
 
@@ -134,13 +134,13 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
                     throw new RuntimeException('Appending to destination "' . $path->uri() . '" in non append safe mode is not supported.');
                 }
 
-                if ($this->filesystem->fileExists($path) && !\count($partitions)) {
+                if ($this->filesystem->fileExists($destination) && !\count($partitions)) {
                     throw new RuntimeException('Appending to existing single file destination "' . $path->uri() . '" is not supported.');
                 }
             }
 
             if ($this->mode === SaveMode::Ignore) {
-                if ($this->filesystem->exists($path)) {
+                if ($this->filesystem->exists($destination)) {
                     /** @phpstan-ignore-next-line */
                     $this->streams[$basePath->uri()][$destination->uri()] = new FileStream($path, \fopen('void://' . $path->uri(), 'wb+'));
                 } else {

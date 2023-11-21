@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON\Tests\Integration;
 
+use function Flow\ETL\DSL\ref;
 use Flow\ETL\Adapter\JSON\JsonLoader;
 use Flow\ETL\Config;
 use Flow\ETL\DSL\From;
@@ -142,6 +143,133 @@ JSON,
         if (\file_exists($stream . DIRECTORY_SEPARATOR . $files[0])) {
             \unlink($stream . DIRECTORY_SEPARATOR . $files[0]);
         }
+    }
+
+    public function test_save_mode_ignore_on_partitioned_rows() : void
+    {
+        $path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_json_loader_ignore_mode', true);
+
+        if (\file_exists($path)) {
+            \unlink($path);
+        }
+
+        (new Flow)
+            ->read(From::array([
+                ['id' => 1, 'partition' => 'a'],
+                ['id' => 2, 'partition' => 'a'],
+                ['id' => 3, 'partition' => 'a'],
+                ['id' => 4, 'partition' => 'b'],
+                ['id' => 5, 'partition' => 'b'],
+            ]))
+            ->partitionBy(ref('partition'))
+            ->mode(SaveMode::Overwrite)
+            ->write(Json::to($path))
+            ->run();
+
+        (new Flow)
+            ->read(From::array([
+                ['id' => 8, 'partition' => 'b'],
+                ['id' => 10, 'partition' => 'b'],
+            ]))
+            ->partitionBy(ref('partition'))
+            ->mode(SaveMode::Ignore)
+            ->write(Json::to($path))
+            ->run();
+
+        $this->assertSame(
+            [
+                ['id' => 1, 'partition' => 'a'],
+                ['id' => 2, 'partition' => 'a'],
+                ['id' => 3, 'partition' => 'a'],
+                ['id' => 4, 'partition' => 'b'],
+                ['id' => 5, 'partition' => 'b'],
+            ],
+            (new Flow())
+                ->read(Json::from($path))
+                ->fetch()
+                ->toArray()
+        );
+    }
+
+    public function test_save_mode_overwrite_on_partitioned_rows() : void
+    {
+        $path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_json_loader_ignore_mode', true);
+
+        if (\file_exists($path)) {
+            \unlink($path);
+        }
+
+        (new Flow)
+            ->read(From::array([
+                ['id' => 1, 'partition' => 'a'],
+                ['id' => 2, 'partition' => 'a'],
+                ['id' => 3, 'partition' => 'a'],
+                ['id' => 4, 'partition' => 'b'],
+                ['id' => 5, 'partition' => 'b'],
+            ]))
+            ->partitionBy(ref('partition'))
+            ->mode(SaveMode::Overwrite)
+            ->write(Json::to($path))
+            ->run();
+
+        (new Flow)
+            ->read(From::array([
+                ['id' => 8, 'partition' => 'b'],
+                ['id' => 10, 'partition' => 'b'],
+            ]))
+            ->partitionBy(ref('partition'))
+            ->mode(SaveMode::Overwrite)
+            ->write(Json::to($path))
+            ->run();
+
+        $this->assertSame(
+            [
+                ['id' => 1, 'partition' => 'a'],
+                ['id' => 2, 'partition' => 'a'],
+                ['id' => 3, 'partition' => 'a'],
+                ['id' => 8, 'partition' => 'b'],
+                ['id' => 10, 'partition' => 'b'],
+            ],
+            (new Flow())
+                ->read(Json::from($path))
+                ->fetch()
+                ->toArray()
+        );
+    }
+
+    public function test_save_mode_throw_exception_on_partitioned_rows() : void
+    {
+        $path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_json_loader_exception_mode', true);
+
+        if (\file_exists($path)) {
+            \unlink($path);
+        }
+
+        (new Flow)
+            ->read(From::array([
+                ['id' => 1, 'partition' => 'a'],
+                ['id' => 2, 'partition' => 'a'],
+                ['id' => 3, 'partition' => 'a'],
+                ['id' => 4, 'partition' => 'b'],
+                ['id' => 5, 'partition' => 'b'],
+            ]))
+            ->partitionBy(ref('partition'))
+            ->mode(SaveMode::ExceptionIfExists)
+            ->write(Json::to($path))
+            ->run();
+
+        $this->expectExceptionMessage('Destination path "file:/' . $path . '/partition=b" already exists, please change path to different or set different SaveMode');
+
+        (new Flow)
+            ->read(From::array([
+                ['id' => 8, 'partition' => 'b'],
+                ['id' => 10, 'partition' => 'b'],
+            ]))
+            ->partitionBy(ref('partition'))
+            ->mode(SaveMode::ExceptionIfExists)
+            ->write(Json::to($path))
+            ->run();
+
     }
 
     public function test_save_with_ignore_mode() : void
