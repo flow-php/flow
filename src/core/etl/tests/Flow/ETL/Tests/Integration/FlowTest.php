@@ -26,7 +26,7 @@ final class FlowTest extends IntegrationTestCase
 
         $cacheContent = \array_values(\array_diff(\scandir($this->cacheDir), ['..', '.']));
 
-        $this->assertContains(\hash('xxh128', 'test_etl_cache'), $cacheContent);
+        $this->assertContains('test_etl_cache', $cacheContent);
     }
 
     public function test_etl_psr_cache() : void
