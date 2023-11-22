@@ -15,8 +15,6 @@ use Flow\Doctrine\Bulk\Exception\RuntimeException;
 
 /**
  * @infection-ignore-all
- *
- * @codeCoverageIgnore
  */
 final class DbalPlatform
 {

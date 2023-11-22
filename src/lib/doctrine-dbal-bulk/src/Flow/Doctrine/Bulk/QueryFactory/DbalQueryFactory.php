@@ -11,7 +11,7 @@ use Flow\Doctrine\Bulk\Exception\RuntimeException;
 use Flow\Doctrine\Bulk\QueryFactory;
 use Flow\Doctrine\Bulk\TableDefinition;
 
-class DbalQueryFactory implements QueryFactory
+final class DbalQueryFactory implements QueryFactory
 {
     /**
      * @param AbstractPlatform $platform

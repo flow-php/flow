@@ -56,6 +56,8 @@ $bulk->update(
 ## Supported Dialects
 
 * PostgreSQL
+* MySQL / MariaDB
+* SQLite
 
 ### Adding new Dialects
 
