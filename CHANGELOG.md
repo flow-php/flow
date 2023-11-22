@@ -1,6 +1,7 @@
-## [Unreleased] - 2023-11-21
+## [Unreleased] - 2023-11-22
 
 ### Added
+- [#820](https://github.com/flow-php/flow/pull/820) - **Add testing of PHP 8.3 into the pipeline** - [@stloyd](https://github.com/stloyd)
 - [#808](https://github.com/flow-php/flow/pull/808) - **Added DataFrame::until** - [@norberttech](https://github.com/norberttech)
 - [#807](https://github.com/flow-php/flow/pull/807) - **validator to Parquet Writer** - [@norberttech](https://github.com/norberttech)
 - [#805](https://github.com/flow-php/flow/pull/805) - **Add `TypeDetectorBench`** - [@stloyd](https://github.com/stloyd)
