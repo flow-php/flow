@@ -50,8 +50,7 @@ final class SearchResults
     public function total() : int
     {
         try {
-            /** @phpstan-ignore-next-line */
-            return $this->results->getTotalHits();
+            return $this->results->getTotalHits() ?: 0;
         } catch (\Error) {
             return $this->results->getEstimatedTotalHits();
         }

@@ -49,9 +49,16 @@ final class ReadDataCommand extends Command
             return Command::FAILURE;
         }
 
+        $batchSize = (int) $input->getOption('batch-size');
+
+        if ($batchSize < 1) {
+            $style->error('Batch size must be positive number, got: ' . $batchSize);
+
+            return Command::FAILURE;
+        }
+
         $limit = (int) $input->getOption('limit');
         $columns = $input->getOption('columns');
-        $batchSize = (int) $input->getOption('batch-size');
         $truncate = $input->getOption('truncate') ? (int) $input->getOption('truncate') : false;
 
         \ob_start();
@@ -63,7 +70,7 @@ final class ReadDataCommand extends Command
             ->write(To::output($truncate))
             ->run();
 
-        $output->write(\ob_get_clean());
+        $output->write(\ob_get_clean() ?: '');
 
         return Command::SUCCESS;
     }

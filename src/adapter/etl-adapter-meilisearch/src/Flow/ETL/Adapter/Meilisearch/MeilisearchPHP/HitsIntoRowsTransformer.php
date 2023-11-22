@@ -35,7 +35,7 @@ final class HitsIntoRowsTransformer implements Transformer
             $entries = [];
 
             foreach ($row->toArray() as $key => $value) {
-                $entries[] = $context->entryFactory()->create((string) $key, $value);
+                $entries[] = $context->entryFactory()->create($key, $value);
             }
 
             $newRows[] = Row::create(...$entries);
