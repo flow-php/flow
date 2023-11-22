@@ -76,6 +76,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#821](https://github.com/flow-php/flow/pull/821) - **Simplify PHPUnit configuration** - [@stloyd](https://github.com/stloyd)
 - [#819](https://github.com/flow-php/flow/pull/819) - **Simplify `ScalarType::isValid()` method** - [@stloyd](https://github.com/stloyd)
 - [#813](https://github.com/flow-php/flow/pull/813) - **Improve performance of `ArrayContentDetector`** - [@stloyd](https://github.com/stloyd)
 - [#810](https://github.com/flow-php/flow/pull/810) - **Moved handling SaveMode to FilesystemStreams** - [@norberttech](https://github.com/norberttech)
