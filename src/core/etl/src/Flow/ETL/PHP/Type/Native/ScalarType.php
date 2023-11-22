@@ -7,7 +7,7 @@ namespace Flow\ETL\PHP\Type\Native;
 use Flow\ETL\PHP\Type\Type;
 
 /**
- * @implements NativeType<array{value: string, nullable: bool}>
+ * @implements NativeType<array{value: ScalarType::*, nullable: bool}>
  */
 final class ScalarType implements NativeType
 {
@@ -19,6 +19,9 @@ final class ScalarType implements NativeType
 
     public const STRING = 'string';
 
+    /**
+     * @param self::* $value
+     */
     private function __construct(private readonly string $value, private readonly bool $nullable)
     {
     }
@@ -85,27 +88,17 @@ final class ScalarType implements NativeType
             return true;
         }
 
-        if (!\is_scalar($value)) {
-            return false;
-        }
-
-        if ($this->value === 'float') {
-            // php gettype returns double for floats for historical reasons
-            if ('double' !== \gettype($value)) {
-                return false;
-            }
-        } else {
-            if ($this->value !== \gettype($value)) {
-                return false;
-            }
-        }
-
-        return true;
+        return match ($this->value) {
+            self::STRING => \is_string($value),
+            self::INTEGER => \is_int($value),
+            self::FLOAT => \is_float($value),
+            self::BOOLEAN => \is_bool($value),
+        };
     }
 
     public function isValidArrayKey() : bool
     {
-        return $this->isString() || $this->isInteger();
+        return \in_array($this->value, [self::INTEGER, self::STRING], true);
     }
 
     public function nullable() : bool
