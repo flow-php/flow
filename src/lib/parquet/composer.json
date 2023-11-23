@@ -11,7 +11,7 @@
         "parquet"
     ],
     "require": {
-        "php": "~8.1 || ~8.2",
+        "php": "~8.1 || ~8.2 || ~8.3",
         "ext-bcmath": "*",
         "ext-zlib": "*",
         "composer-runtime-api": "^2.1",

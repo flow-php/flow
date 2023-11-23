@@ -11,7 +11,7 @@
         "adapter"
     ],
     "require": {
-        "php": "~8.1 || ~8.2",
+        "php": "~8.1 || ~8.2 || ~8.3",
         "ext-dom": "*",
         "ext-xmlreader": "*",
         "flow-php/etl": "^0.4 || 1.x-dev"

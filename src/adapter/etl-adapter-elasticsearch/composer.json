@@ -11,7 +11,7 @@
         "adapter"
     ],
     "require": {
-        "php": "~8.1 || ~8.2",
+        "php": "~8.1 || ~8.2 || ~8.3",
         "ext-hash": "*",
         "ext-json": "*",
         "elasticsearch/elasticsearch": "^7.6|^8.0",
