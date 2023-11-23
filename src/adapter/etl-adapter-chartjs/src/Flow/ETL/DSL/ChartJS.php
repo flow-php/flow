@@ -18,7 +18,17 @@ class ChartJS
         return new Chart\BarChart($label, $datasets);
     }
 
-    final public static function chart(Chart $type, Path|string|null $output = null, Path|string|null $template = null) : Loader
+    final public static function line(EntryReference $label, References $datasets) : Chart
+    {
+        return new Chart\LineChart($label, $datasets);
+    }
+
+    final public static function pie(EntryReference $label, References $datasets) : Chart
+    {
+        return new Chart\PieChart($label, $datasets);
+    }
+
+    final public static function to_file(Chart $type, Path|string|null $output = null, Path|string|null $template = null) : Loader
     {
         if (\is_string($output)) {
             $output = Path::realpath($output);
@@ -32,16 +42,12 @@ class ChartJS
             $template = Path::realpath($template);
         }
 
-        return new ChartJSLoader($type, $output, $template);
+        return new ChartJSLoader($type, output: $output, template: $template);
     }
 
-    final public static function line(EntryReference $label, References $datasets) : Chart
+    final public static function to_var(Chart $type, array &$output) : Loader
     {
-        return new Chart\LineChart($label, $datasets);
-    }
-
-    final public static function pie(EntryReference $label, References $datasets) : Chart
-    {
-        return new Chart\PieChart($label, $datasets);
+        /** @psalm-suppress ReferenceConstraintViolation */
+        return new ChartJSLoader($type, outputVar: $output);
     }
 }
