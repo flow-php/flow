@@ -8,7 +8,6 @@ use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\refs;
 use Flow\ETL\Adapter\ChartJS\Chart\BarChart;
 use Flow\ETL\DSL\From;
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Flow;
 use Flow\ETL\Memory\ArrayMemory;
 use PHPUnit\Framework\TestCase;
@@ -69,6 +68,7 @@ final class BarChartTest extends TestCase
             $chart->data(),
         );
     }
+<<<<<<< Updated upstream
 
     public function test_setting_option_for_non_existing_dataset() : void
     {
@@ -79,4 +79,6 @@ final class BarChartTest extends TestCase
 
         $chart->setDatasetOptions(ref('CM'), ['label' => 'CM']);
     }
+=======
+>>>>>>> Stashed changes
 }
