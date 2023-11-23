@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\sum;
 use Flow\ETL\Config;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\Exception\InvalidArgumentException;
@@ -50,11 +52,80 @@ final class GroupByTest extends TestCase
         );
     }
 
+    public function test_group_by_with_aggregation() : void
+    {
+        $group = (new GroupBy('type'));
+
+        $group->aggregate(sum(ref('id')));
+        $group->group(new Rows(
+            Row::create(Entry::int('id', 1), Entry::string('type', 'a')),
+            Row::create(Entry::int('id', 2), Entry::string('type', 'b')),
+            Row::create(Entry::int('id', 3), Entry::string('type', 'c')),
+            Row::create(Entry::int('id', 4), Entry::string('type', 'a')),
+            Row::create(Entry::int('id', 5), Entry::string('type', 'd'))
+        ));
+
+        $this->assertEquals(
+            new Rows(
+                Row::create(Entry::int('id_sum', 5), Entry::string('type', 'a')),
+                Row::create(Entry::int('id_sum', 2), Entry::string('type', 'b')),
+                Row::create(Entry::int('id_sum', 3), Entry::string('type', 'c')),
+                Row::create(Entry::int('id_sum', 5), Entry::string('type', 'd')),
+            ),
+            $group->result(new FlowContext(Config::default()))
+        );
+    }
+
     public function test_group_by_with_empty_aggregations() : void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("Aggregations can't be empty");
         $groupBy = new GroupBy();
         $groupBy->aggregate();
+    }
+
+    public function test_group_by_with_pivoting() : void
+    {
+        $rows = new Rows(
+            Row::create(Entry::string('product', 'Banana'), Entry::int('amount', 1000), Entry::string('country', 'USA')),
+            Row::create(Entry::string('product', 'Carrots'), Entry::int('amount', 1500), Entry::string('country', 'USA')),
+            Row::create(Entry::string('product', 'Beans'), Entry::int('amount', 1600), Entry::string('country', 'USA')),
+            Row::create(Entry::string('product', 'Orange'), Entry::int('amount', 2000), Entry::string('country', 'USA')),
+            Row::create(Entry::string('product', 'Orange'), Entry::int('amount', 2000), Entry::string('country', 'USA')),
+            Row::create(Entry::string('product', 'Banana'), Entry::int('amount', 400), Entry::string('country', 'China')),
+            Row::create(Entry::string('product', 'Carrots'), Entry::int('amount', 1200), Entry::string('country', 'China')),
+            Row::create(Entry::string('product', 'Beans'), Entry::int('amount', 1500), Entry::string('country', 'China')),
+            Row::create(Entry::string('product', 'Orange'), Entry::int('amount', 4000), Entry::string('country', 'China')),
+            Row::create(Entry::string('product', 'Banana'), Entry::int('amount', 2000), Entry::string('country', 'Canada')),
+            Row::create(Entry::string('product', 'Carrots'), Entry::int('amount', 2000), Entry::string('country', 'Canada')),
+            Row::create(Entry::string('product', 'Beans'), Entry::int('amount', 2000), Entry::string('country', 'Mexico')),
+        );
+
+        $group = new GroupBy(ref('product'));
+        $group->aggregate(sum(ref('amount')));
+        $group->pivot(ref('country'));
+
+        $group->group($rows);
+
+        $this->assertEquals(
+            new Rows(
+                Row::create(Entry::string('product', 'Banana'), Entry::int('Canada', 2000), Entry::int('China', 400), Entry::null('Mexico'), Entry::int('USA', 1000)),
+                Row::create(Entry::string('product', 'Beans'), Entry::null('Canada'), Entry::int('China', 1500), Entry::int('Mexico', 2000), Entry::int('USA', 1600)),
+                Row::create(Entry::string('product', 'Carrots'), Entry::int('Canada', 2000), Entry::int('China', 1200), Entry::null('Mexico'), Entry::int('USA', 1500)),
+                Row::create(Entry::string('product', 'Orange'), Entry::null('Canada'), Entry::int('China', 4000), Entry::null('Mexico'), Entry::int('USA', 4000)),
+            ),
+            $group->result(new FlowContext(Config::default()))->sortBy(ref('product'))
+        );
+    }
+
+    public function test_pivot_with_more_than_one_group_by_entry() : void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Pivot requires exactly one entry reference in group by, given: 2');
+
+        $group = (new GroupBy('type', 'id'));
+
+        $group->aggregate(sum(ref('id')));
+        $group->pivot(ref('id'));
     }
 }

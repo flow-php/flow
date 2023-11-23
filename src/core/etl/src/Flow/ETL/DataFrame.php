@@ -7,6 +7,7 @@ namespace Flow\ETL;
 use Flow\ETL\DSL\To;
 use Flow\ETL\DSL\Transform;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Formatter\AsciiTableFormatter;
 use Flow\ETL\Function\AggregatingFunction;
@@ -494,6 +495,17 @@ final class DataFrame
 
         $this->context->partitionBy(...References::init(...$entries)->all());
         $this->pipeline = new PartitioningPipeline($this->pipeline);
+
+        return $this;
+    }
+
+    public function pivot(Reference $ref) : self
+    {
+        if ($this->groupBy === null) {
+            throw new RuntimeException('Pivot can be used only with groupBy');
+        }
+
+        $this->groupBy->pivot($ref);
 
         return $this;
     }
