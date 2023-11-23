@@ -57,8 +57,6 @@ final class GroupBy
     public function group(Rows $rows) : void
     {
         if ($this->pivot) {
-            $this->pivotColumns = [];
-
             foreach ($rows as $row) {
                 try {
                     $pivotValue = $row->valueOf($this->pivot);
