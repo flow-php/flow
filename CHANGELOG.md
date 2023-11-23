@@ -78,6 +78,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#833](https://github.com/flow-php/flow/pull/833) - **Use references instead of array of strings in Charts** - [@norberttech](https://github.com/norberttech)
 - [#822](https://github.com/flow-php/flow/pull/822) - **Rework Psalm configuration & adjust codebase** - [@stloyd](https://github.com/stloyd)
 - [#831](https://github.com/flow-php/flow/pull/831) - **Updated dependencies** - [@norberttech](https://github.com/norberttech)
 - [#823](https://github.com/flow-php/flow/pull/823) - **Improve Dbal Bulk coverage** - [@stloyd](https://github.com/stloyd)
