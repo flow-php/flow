@@ -9,6 +9,7 @@ use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\max;
 use function Flow\ETL\DSL\rank;
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\refs;
 use function Flow\ETL\DSL\sum;
 use function Flow\ETL\DSL\window;
 use Flow\ETL\DataFrame;
@@ -76,6 +77,33 @@ final class DataFrameTest extends TestCase
             ->run(function (Rows $rows) : void {
                 $this->assertLessThanOrEqual(3, $rows->count());
             });
+    }
+
+    public function test_collect_references() : void
+    {
+        $dataset1 = [
+            ['id' => 1, 'name' => 'test', 'active' => false],
+            ['id' => 1, 'name' => 'test', 'active' => false],
+            ['id' => 1, 'name' => 'test', 'active' => false],
+            ['id' => 1, 'name' => 'test', 'active' => false],
+        ];
+        $dataset2 = [
+            ['id' => 1, 'name' => 'test', 'active' => false, 'country' => 'US'],
+            ['id' => 1, 'name' => 'test', 'active' => false, 'group' => 'A'],
+        ];
+
+        (new Flow())
+            ->read(From::chain(
+                From::array($dataset1),
+                From::array($dataset2),
+            ))
+            ->collectRefs($refs = refs())
+            ->run();
+
+        $this->assertEquals(
+            refs('id', 'name', 'active', 'country', 'group'),
+            $refs
+        );
     }
 
     public function test_count() : void

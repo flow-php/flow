@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use function Flow\ETL\DSL\refs;
+use Flow\ETL\DSL\From;
 use Flow\ETL\DSL\To;
 use Flow\ETL\DSL\Transform;
 use Flow\ETL\Exception\InvalidArgumentException;
@@ -130,6 +132,31 @@ final class DataFrame
     public function collect() : self
     {
         $this->pipeline = new CollectingPipeline($this->pipeline);
+
+        return $this;
+    }
+
+    /**
+     * This method allows to collect references to all entries used in this pipeline.
+     *
+     * ```php
+     * (new Flow())
+     *   ->read(From::chain())
+     *   ->collectRefs($refs = refs())
+     *   ->run();
+     * ```
+     *
+     * @lazy
+     */
+    public function collectRefs(References $references) : self
+    {
+        $this->transform(new CallbackRowTransformer(function (Row $row) use ($references) : Row {
+            foreach ($row->entries()->all() as $entry) {
+                $references->add($entry->ref());
+            }
+
+            return $row;
+        }));
 
         return $this;
     }

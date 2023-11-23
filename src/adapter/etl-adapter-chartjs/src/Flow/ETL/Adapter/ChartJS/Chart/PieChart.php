@@ -6,7 +6,8 @@ namespace Flow\ETL\Adapter\ChartJS\Chart;
 
 use Flow\ETL\Adapter\ChartJS\Chart;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\References;
 use Flow\ETL\Rows;
 
 final class PieChart implements Chart
@@ -30,13 +31,13 @@ final class PieChart implements Chart
     private array $options = [];
 
     /**
-     * @param array<EntryReference> $datasets
+     * @param array<Reference> $datasets
      *
      * @throws InvalidArgumentException
      */
     public function __construct(
-        private readonly EntryReference $label,
-        private readonly array $datasets,
+        private readonly Reference $label,
+        private readonly array|References $datasets,
     ) {
         if (!\count($this->datasets)) {
             throw new InvalidArgumentException('Bar chart must have at least one dataset, please provide at least one entry reference');
@@ -91,7 +92,7 @@ final class PieChart implements Chart
     /**
      * @throws InvalidArgumentException
      */
-    public function setDatasetOptions(EntryReference $dataset, array $options) : self
+    public function setDatasetOptions(Reference $dataset, array $options) : self
     {
         if (!\array_key_exists($dataset->name(), $this->datasetOptions)) {
             throw new InvalidArgumentException(\sprintf('Dataset "%s" does not exists', $dataset->name()));

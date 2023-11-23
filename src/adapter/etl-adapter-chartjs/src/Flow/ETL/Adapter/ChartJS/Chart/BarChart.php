@@ -6,7 +6,7 @@ namespace Flow\ETL\Adapter\ChartJS\Chart;
 
 use Flow\ETL\Adapter\ChartJS\Chart;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
 
 final class BarChart implements Chart
@@ -27,13 +27,13 @@ final class BarChart implements Chart
     private array $options = [];
 
     /**
-     * @param EntryReference $label
-     * @param array<EntryReference> $datasets
+     * @param Reference $label
+     * @param array<Reference> $datasets
      *
      * @throws InvalidArgumentException
      */
     public function __construct(
-        private readonly EntryReference $label,
+        private readonly Reference $label,
         private readonly array $datasets,
     ) {
         if (!\count($this->datasets)) {
@@ -91,7 +91,7 @@ final class BarChart implements Chart
     /**
      * @throws InvalidArgumentException
      */
-    public function setDatasetOptions(EntryReference $dataset, array $options) : self
+    public function setDatasetOptions(Reference $dataset, array $options) : self
     {
         if (!\array_key_exists($dataset->name(), $this->datasetOptions)) {
             throw new InvalidArgumentException(\sprintf('Dataset "%s" does not exists', $dataset->name()));
