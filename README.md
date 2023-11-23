@@ -145,7 +145,7 @@ Since some of the Flow adapters require additional PHP extensions, we have prepa
 
 ```shell
 $ docker pull ghcr.io/flow-php/flow:latest
-$ docker run -v $(pwd):/flow-workspace --rm -it flow-php/flow:latest
+$ docker run -v $(pwd):/flow-workspace --rm -it ghcr.io/flow-php/flow:latest
 Flow-PHP - Extract Transform Load - Data processing framework 0.4.0-325-g6c3e4404
 
 Usage:
@@ -167,6 +167,18 @@ Available commands:
  parquet
   parquet:read:data      Read data from parquet file
   parquet:read:metadata  Read metadata from parquet file
+```
+
+To simplify the usage of Flow CLI, you can create an command alias for it:
+
+```
+alias flow='docker run -v $(pwd):/flow-workspace --rm -it ghcr.io/flow-php/flow:latest'
+```
+
+Now you can use Flow CLI as follows:
+
+```shell
+flow --help
 ```
 
 If you would like to try Flow, fork this repository, navigate to it through command line interface and execute following command:
