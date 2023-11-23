@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-11-23
 
 ### Added
+- [#836](https://github.com/flow-php/flow/pull/836) - **Writing chartjs output to variable** - [@norberttech](https://github.com/norberttech)
 - [#830](https://github.com/flow-php/flow/pull/830) - **DataFrame::collectRefs()** - [@norberttech](https://github.com/norberttech)
 - [#825](https://github.com/flow-php/flow/pull/825) - **pivoting datasets** - [@norberttech](https://github.com/norberttech)
 - [#820](https://github.com/flow-php/flow/pull/820) - **Add testing of PHP 8.3 into the pipeline** - [@stloyd](https://github.com/stloyd)
