@@ -104,6 +104,13 @@ After adding native & logical types into the Flow, we remove the `CollectionEntr
 
 Removed `BooleanEntry::from()`, `FloatEntry::from()`, `IntegerEntry::from()`, `StringEntry::fromDateTime()` methods in favor of using DSL functions.
 
+### 14) Removed deprecated `Sha1IdFactory`
+
+Class `Sha1IdFactory` was removed, use `HashIdFactory` class:
+```php
+(new HashIdFactory('entry_name'))->withHash('sha1');
+```
+
 ---
 
 ## Upgrading from 0.3.x to 0.4.x
