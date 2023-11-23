@@ -19,6 +19,11 @@ final class References implements \ArrayAccess, \Countable, \IteratorAggregate, 
      */
     private array $refs;
 
+    /**
+     * @var array<string>
+     */
+    private array $without = [];
+
     public function __construct(string|Reference ...$reference)
     {
         $refs = [];
@@ -56,6 +61,11 @@ final class References implements \ArrayAccess, \Countable, \IteratorAggregate, 
     public function add(string|Reference $ref) : self
     {
         $reference = EntryReference::init($ref);
+
+        if (\in_array($reference->name(), $this->without, true)) {
+            return $this;
+        }
+
         $this->refs[$reference->name()] = $reference;
 
         return $this;
@@ -148,16 +158,18 @@ final class References implements \ArrayAccess, \Countable, \IteratorAggregate, 
         /**
          * @var array<string>
          */
-        $refNames = [];
+        $without = [];
 
         foreach ($reference as $ref) {
-            $refNames[] = $ref instanceof Reference ? $ref->name() : $ref;
+            $without[] = $ref instanceof Reference ? $ref->name() : $ref;
         }
+
+        $this->without = \array_values(\array_unique(\array_merge($this->without, $without)));
 
         $keepReferences = [];
 
         foreach ($this->refs as $refName => $ref) {
-            if (\in_array($refName, $refNames, true)) {
+            if (\in_array($refName, $without, true)) {
                 continue;
             }
 

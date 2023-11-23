@@ -11,6 +11,16 @@ use PHPUnit\Framework\TestCase;
 
 final class ReferencesTest extends TestCase
 {
+    public function test_lazy_without() : void
+    {
+        $refs = refs()->without('id')->add('id')->add('name');
+
+        $this->assertEquals(
+            refs('name')->all(),
+            $refs->all()
+        );
+    }
+
     public function test_that_reference_with_alias_exists() : void
     {
         $refs = new References(ref('id')->as('test'), ref('name'));
@@ -30,8 +40,8 @@ final class ReferencesTest extends TestCase
     public function test_without() : void
     {
         $this->assertEquals(
-            refs('name'),
-            refs('id', 'name')->without('id')
+            refs('name')->all(),
+            refs('id', 'name')->without('id')->all()
         );
     }
 }

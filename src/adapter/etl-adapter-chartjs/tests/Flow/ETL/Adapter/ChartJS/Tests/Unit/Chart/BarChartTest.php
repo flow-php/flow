@@ -8,7 +8,6 @@ use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\refs;
 use Flow\ETL\Adapter\ChartJS\Chart\BarChart;
 use Flow\ETL\DSL\From;
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Flow;
 use Flow\ETL\Memory\ArrayMemory;
 use PHPUnit\Framework\TestCase;
@@ -68,15 +67,5 @@ final class BarChartTest extends TestCase
             ],
             $chart->data(),
         );
-    }
-
-    public function test_setting_option_for_non_existing_dataset() : void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Dataset "CM" does not exist');
-
-        $chart = new BarChart(ref('Date'), refs(ref('Revenue'), ref('Ads Spends'), ref('Storage Costs'), ref('Shipping Costs')));
-
-        $chart->setDatasetOptions(ref('CM'), ['label' => 'CM']);
     }
 }

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\ChartJS\Chart;
 
 use Flow\ETL\Adapter\ChartJS\Chart;
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Rows;
@@ -27,22 +26,10 @@ final class LineChart implements Chart
 
     private array $options = [];
 
-    /**
-     * @param Reference $label
-     *
-     * @throws InvalidArgumentException
-     */
     public function __construct(
         private readonly Reference $label,
         private readonly References $datasets,
     ) {
-        if (!\count($this->datasets)) {
-            throw new InvalidArgumentException('Bar chart must have at least one dataset, please provide at least one entry reference');
-        }
-
-        foreach ($this->datasets as $dataset) {
-            $this->datasetOptions[$dataset->name()] = [];
-        }
     }
 
     public function collect(Rows $rows) : void
@@ -88,15 +75,8 @@ final class LineChart implements Chart
         return $data;
     }
 
-    /**
-     * @throws InvalidArgumentException
-     */
     public function setDatasetOptions(Reference $dataset, array $options) : self
     {
-        if (!\array_key_exists($dataset->name(), $this->datasetOptions)) {
-            throw new InvalidArgumentException(\sprintf('Dataset "%s" does not exists', $dataset->name()));
-        }
-
         $this->datasetOptions[$dataset->name()] = $options;
 
         return $this;
