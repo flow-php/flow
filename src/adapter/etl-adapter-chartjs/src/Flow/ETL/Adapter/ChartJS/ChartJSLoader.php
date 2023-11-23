@@ -19,7 +19,8 @@ final class ChartJSLoader implements Closure, Loader
     public function __construct(
         private readonly Chart $type,
         private readonly ?Path $output = null,
-        private readonly Path $template = new Path(__DIR__ . '/Resources/template/full_page.html')
+        private readonly Path $template = new Path(__DIR__ . '/Resources/template/full_page.html'),
+        private readonly string $jsLocation = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js'
     ) {
     }
 
@@ -52,14 +53,16 @@ final class ChartJSLoader implements Closure, Loader
         $stream = $context->streams()->open($this->output, 'html', false);
 
         $templateStream = $context->streams()->fs()->open($this->template, Mode::READ);
-
-        /** @var string $template */
-        $template = \stream_get_contents($context->streams()->fs()->open($this->template, Mode::READ)->resource());
+        $template = \stream_get_contents($templateStream->resource());
         $templateStream->close();
 
+        if (false === $template) {
+            return;
+        }
+
         $output = \str_replace(
-            '%_CHART_DATA_%',
-            \json_encode($this->type->data(), JSON_THROW_ON_ERROR),
+            ['%_JS_LOCATION_%', '%_CHART_DATA_%'],
+            [$this->jsLocation, \json_encode($this->type->data(), JSON_THROW_ON_ERROR)],
             $template
         );
 
