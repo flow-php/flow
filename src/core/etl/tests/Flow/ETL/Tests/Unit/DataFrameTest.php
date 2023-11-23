@@ -9,6 +9,7 @@ use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\max;
 use function Flow\ETL\DSL\rank;
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\sum;
 use function Flow\ETL\DSL\window;
 use Flow\ETL\DataFrame;
 use Flow\ETL\DataFrameFactory;
@@ -1381,6 +1382,68 @@ ASCIITABLE,
                 ),
             ],
             \iterator_to_array($rows)
+        );
+    }
+
+    public function test_pivot() : void
+    {
+        $dataset1 = [
+            ['date' => '2023-11-01', 'user' => 'norberttech', 'contributions' => 5],
+            ['date' => '2023-11-01', 'user' => 'stloyd', 'contributions' => 4],
+            ['date' => '2023-11-02', 'user' => 'norberttech', 'contributions' => 3],
+            ['date' => '2023-11-02', 'user' => 'stloyd', 'contributions' => 6],
+        ];
+
+        $dataset2 = [
+            ['date' => '2023-11-03', 'user' => 'norberttech', 'contributions' => 2],
+            ['date' => '2023-11-03', 'user' => 'stloyd', 'contributions' => 7],
+            ['date' => '2023-11-04', 'user' => 'norberttech', 'contributions' => 3],
+            ['date' => '2023-11-04', 'user' => 'stloyd', 'contributions' => 5],
+            ['date' => '2023-11-05', 'user' => 'norberttech', 'contributions' => 7],
+            ['date' => '2023-11-05', 'user' => 'stloyd', 'contributions' => 11],
+        ];
+
+        $rows = (new Flow())
+            ->read(
+                From::chain(
+                    From::array($dataset1),
+                    From::array($dataset2),
+                )
+            )
+            ->groupBy(ref('date'))
+            ->pivot(ref('user'))
+            ->aggregate(sum(ref('contributions')))
+            ->fetch();
+
+        $this->assertSame(
+            [
+                [
+                    'date' => '2023-11-01',
+                    'norberttech' => 5,
+                    'stloyd' => 4,
+                ],
+                [
+                    'date' => '2023-11-02',
+                    'norberttech' => 3,
+                    'stloyd' => 6,
+                ],
+                [
+                    'date' => '2023-11-03',
+                    'norberttech' => 2,
+                    'stloyd' => 7,
+                ],
+                [
+                    'date' => '2023-11-04',
+                    'norberttech' => 3,
+                    'stloyd' => 5,
+                ],
+                [
+                    'date' => '2023-11-05',
+                    'norberttech' => 7,
+                    'stloyd' => 11,
+                ],
+            ],
+            $rows->toArray()
         );
     }
 

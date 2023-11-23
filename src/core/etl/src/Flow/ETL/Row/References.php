@@ -66,6 +66,15 @@ final class References implements \ArrayAccess, \Countable, \IteratorAggregate, 
         return \count($this->refs);
     }
 
+    public function first() : Reference
+    {
+        if (!\count($this->refs)) {
+            throw new InvalidArgumentException('References are empty.');
+        }
+
+        return \current($this->refs);
+    }
+
     /**
      * @return \Traversable<string, Reference>
      */

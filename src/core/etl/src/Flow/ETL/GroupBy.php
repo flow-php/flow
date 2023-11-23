@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use function Flow\ETL\DSL\array_to_rows;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Function\AggregatingFunction;
@@ -20,7 +21,13 @@ final class GroupBy
     /**
      * @var array<string, array{values?: array<string, mixed>, aggregators: array<AggregatingFunction>}>
      */
-    private array $groups;
+    private array $groupedTable;
+
+    private ?Reference $pivot;
+
+    private array $pivotColumns;
+
+    private array $pivotedTable;
 
     private readonly References $refs;
 
@@ -28,7 +35,10 @@ final class GroupBy
     {
         $this->refs = References::init(...\array_unique($entries));
         $this->aggregations = [];
-        $this->groups = [];
+        $this->groupedTable = [];
+        $this->pivotedTable = [];
+        $this->pivotColumns = [];
+        $this->pivot = null;
     }
 
     public function aggregate(AggregatingFunction ...$aggregator) : void
@@ -37,53 +47,127 @@ final class GroupBy
             throw new InvalidArgumentException("Aggregations can't be empty");
         }
 
+        if ($this->pivot !== null && \count($aggregator) !== 1) {
+            throw new RuntimeException('Pivot requires exactly one aggregation in group by, given: ' . \count($aggregator));
+        }
+
         $this->aggregations = $aggregator;
     }
 
     public function group(Rows $rows) : void
     {
-        foreach ($rows as $row) {
-            /** @var array<string, null|mixed> $values */
-            $values = [];
+        if ($this->pivot) {
+            $this->pivotColumns = [];
 
-            foreach ($this->refs as $ref) {
+            foreach ($rows as $row) {
                 try {
-                    $value = $row->valueOf($ref);
+                    $pivotValue = $row->valueOf($this->pivot);
 
-                    if (!\is_scalar($value) && null !== $value) {
-                        throw new RuntimeException('Grouping by non scalar values is not supported, given: ' . \gettype($value));
+                    if (!\is_scalar($pivotValue) && null !== $pivotValue) {
+                        throw new RuntimeException('Pivoting by non scalar values is not supported, given: ' . \gettype($pivotValue));
                     }
 
-                    $values[$ref->name()] = $value;
+                    $this->pivotColumns[] = $pivotValue;
                 } catch (InvalidArgumentException) {
-                    $values[$ref->name()] = null;
+                    $this->pivotColumns[] = null;
                 }
             }
 
-            $valuesHash = $this->hash($values);
+            $this->pivotColumns = \array_values(\array_unique($this->pivotColumns));
 
-            if (!\array_key_exists($valuesHash, $this->groups)) {
-                $this->groups[$valuesHash] = [
-                    'values' => $values,
-                    'aggregators' => [],
-                ];
+            $indexRef = $this->refs->first();
 
-                foreach ($this->aggregations as $aggregator) {
-                    $this->groups[$valuesHash]['aggregators'][] = clone $aggregator;
+            foreach ($rows as $row) {
+                $indexValue = $row->valueOf($indexRef);
+                $pivotValue = $row->valueOf($this->pivot);
+
+                if (!\array_key_exists($indexValue, $this->pivotedTable)) {
+                    $this->pivotedTable[$indexValue] = [];
                 }
+
+                if (!\array_key_exists($pivotValue, $this->pivotedTable[$indexValue])) {
+                    /** @phpstan-ignore-next-line */
+                    $this->pivotedTable[$indexValue][$pivotValue] = clone \current($this->aggregations);
+                }
+
+                $this->pivotedTable[$indexValue][$pivotValue]->aggregate($row);
             }
 
-            foreach ($this->groups[$valuesHash]['aggregators'] as $aggregator) {
-                $aggregator->aggregate($row);
+        } else {
+
+            foreach ($rows as $row) {
+                /** @var array<string, null|mixed> $values */
+                $values = [];
+
+                foreach ($this->refs as $ref) {
+                    try {
+                        $value = $row->valueOf($ref);
+
+                        if (!\is_scalar($value) && null !== $value) {
+                            throw new RuntimeException('Grouping by non scalar values is not supported, given: ' . \gettype($value));
+                        }
+
+                        $values[$ref->name()] = $value;
+                    } catch (InvalidArgumentException) {
+                        $values[$ref->name()] = null;
+                    }
+                }
+
+                $valuesHash = $this->hash($values);
+
+                if (!\array_key_exists($valuesHash, $this->groupedTable)) {
+                    $this->groupedTable[$valuesHash] = [
+                        'values' => $values,
+                        'aggregators' => [],
+                    ];
+
+                    foreach ($this->aggregations as $aggregator) {
+                        $this->groupedTable[$valuesHash]['aggregators'][] = clone $aggregator;
+                    }
+                }
+
+                foreach ($this->groupedTable[$valuesHash]['aggregators'] as $aggregator) {
+                    $aggregator->aggregate($row);
+                }
             }
         }
+    }
+
+    public function pivot(Reference $ref) : void
+    {
+        if ($this->refs->count() !== 1) {
+            throw new RuntimeException('Pivot requires exactly one entry reference in group by, given: ' . $this->refs->count() . '');
+        }
+
+        $this->pivot = $ref;
     }
 
     public function result(FlowContext $context) : Rows
     {
         $rows = [];
 
-        foreach ($this->groups as $group) {
+        if ($this->pivot) {
+            foreach ($this->pivotedTable as $index => $columns) {
+                $row = [$this->refs->first()->name() => $index];
+
+                foreach ($columns as $rowIndex => $values) {
+                    $row[$rowIndex] = $values->result()->value();
+                }
+
+                foreach ($this->pivotColumns as $column) {
+                    if (!\array_key_exists($column, $row)) {
+                        $row[$column] = null;
+                    }
+                }
+
+                $rows[] = $row;
+            }
+
+            return array_to_rows($rows, $context->entryFactory());
+
+        }
+
+        foreach ($this->groupedTable as $group) {
             $entries = [];
 
             /** @var mixed $value */
@@ -114,7 +198,7 @@ final class GroupBy
         /** @var mixed $value */
         foreach ($values as $value) {
             if ($value === null) {
-                $stringValues[] = \hash('xxh128', 'null');
+                $stringValues[] = 'null';
             } elseif (\is_scalar($value)) {
                 $stringValues[] = (string) $value;
             }
