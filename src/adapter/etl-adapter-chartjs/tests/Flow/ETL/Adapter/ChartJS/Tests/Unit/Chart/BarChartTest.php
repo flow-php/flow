@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\ChartJS\Tests\Unit\Chart;
 
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\refs;
 use Flow\ETL\Adapter\ChartJS\Chart\BarChart;
 use Flow\ETL\DSL\From;
 use Flow\ETL\Exception\InvalidArgumentException;
@@ -29,7 +30,7 @@ final class BarChartTest extends TestCase
             ->read(From::memory(new ArrayMemory($data)))
             ->fetch();
 
-        $chart = new BarChart(ref('Date'), [ref('Revenue'), ref('CM'), ref('Ads Spends'), ref('Storage Costs'), ref('Shipping Costs')]);
+        $chart = new BarChart(ref('Date'), refs(ref('Revenue'), ref('CM'), ref('Ads Spends'), ref('Storage Costs'), ref('Shipping Costs')));
 
         $chart->setDatasetOptions(ref('Revenue'), ['backgroundColor' => 'green']);
 
@@ -74,7 +75,7 @@ final class BarChartTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Dataset "CM" does not exist');
 
-        $chart = new BarChart(ref('Date'), [ref('Revenue'), ref('Ads Spends'), ref('Storage Costs'), ref('Shipping Costs')]);
+        $chart = new BarChart(ref('Date'), refs(ref('Revenue'), ref('Ads Spends'), ref('Storage Costs'), ref('Shipping Costs')));
 
         $chart->setDatasetOptions(ref('CM'), ['label' => 'CM']);
     }

@@ -10,15 +10,14 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Loader;
 use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\References;
 
 class ChartJS
 {
     /**
-     * @param array<EntryReference> $datasets
-     *
      * @throws InvalidArgumentException
      */
-    final public static function bar(EntryReference $label, array $datasets) : Chart
+    final public static function bar(EntryReference $label, References $datasets) : Chart
     {
         return new Chart\BarChart($label, $datasets);
     }
@@ -41,21 +40,17 @@ class ChartJS
     }
 
     /**
-     * @param array<EntryReference> $datasets
-     *
      * @throws InvalidArgumentException
      */
-    final public static function line(EntryReference $label, array $datasets) : Chart
+    final public static function line(EntryReference $label, References $datasets) : Chart
     {
         return new Chart\LineChart($label, $datasets);
     }
 
     /**
-     * @param array<EntryReference> $datasets
-     *
      * @throws InvalidArgumentException
      */
-    final public static function pie(EntryReference $label, array $datasets) : Chart
+    final public static function pie(EntryReference $label, References $datasets) : Chart
     {
         return new Chart\PieChart($label, $datasets);
     }

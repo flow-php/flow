@@ -31,13 +31,11 @@ final class PieChart implements Chart
     private array $options = [];
 
     /**
-     * @param array<Reference> $datasets
-     *
      * @throws InvalidArgumentException
      */
     public function __construct(
         private readonly Reference $label,
-        private readonly array|References $datasets,
+        private readonly References $datasets,
     ) {
         if (!\count($this->datasets)) {
             throw new InvalidArgumentException('Bar chart must have at least one dataset, please provide at least one entry reference');
