@@ -45,7 +45,7 @@ $flow = (new Flow)
     ->withEntry('consumption', ref('consumption')->multiply(lit(100))->round(lit(2)))
     ->withEntry('consumption', concat(ref('consumption'), lit('%')))
     ->write(
-        ChartJS::chart(
+        ChartJS::to_file(
             ChartJS::bar(label: ref('date'), datasets: [ref('production_kwh_avg'), ref('consumption_kwh_avg')])
                 ->setOptions(['indexAxis' => 'y']),
             output: __FLOW_OUTPUT__ . '/power_plant_bar_chart.html'
