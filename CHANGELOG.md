@@ -78,6 +78,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#835](https://github.com/flow-php/flow/pull/835) - **Simplified how charts are handling references** - [@norberttech](https://github.com/norberttech)
 - [#834](https://github.com/flow-php/flow/pull/834) - **Added php ~8.3 constraint to composer.json files** - [@norberttech](https://github.com/norberttech)
 - [#833](https://github.com/flow-php/flow/pull/833) - **Use references instead of array of strings in Charts** - [@norberttech](https://github.com/norberttech)
 - [#822](https://github.com/flow-php/flow/pull/822) - **Rework Psalm configuration & adjust codebase** - [@stloyd](https://github.com/stloyd)
