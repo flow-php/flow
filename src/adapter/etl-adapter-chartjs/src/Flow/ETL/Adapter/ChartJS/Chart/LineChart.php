@@ -26,15 +26,6 @@ final class LineChart implements Chart
 
     private array $options = [];
 
-    /**
-     * @param Reference $label
-<<<<<<< Updated upstream
-     *
-     * @throws InvalidArgumentException
-=======
-     * @param array<Reference> $datasets
->>>>>>> Stashed changes
-     */
     public function __construct(
         private readonly Reference $label,
         private readonly References $datasets,

@@ -68,17 +68,4 @@ final class BarChartTest extends TestCase
             $chart->data(),
         );
     }
-<<<<<<< Updated upstream
-
-    public function test_setting_option_for_non_existing_dataset() : void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Dataset "CM" does not exist');
-
-        $chart = new BarChart(ref('Date'), refs(ref('Revenue'), ref('Ads Spends'), ref('Storage Costs'), ref('Shipping Costs')));
-
-        $chart->setDatasetOptions(ref('CM'), ['label' => 'CM']);
-    }
-=======
->>>>>>> Stashed changes
 }

@@ -27,13 +27,6 @@ final class PieChart implements Chart
 
     private array $options = [];
 
-    /**
-<<<<<<< Updated upstream
-     * @throws InvalidArgumentException
-=======
-     * @param array<Reference> $datasets
->>>>>>> Stashed changes
-     */
     public function __construct(
         private readonly Reference $label,
         private readonly References $datasets,

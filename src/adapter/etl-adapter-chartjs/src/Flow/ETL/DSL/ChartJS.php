@@ -6,7 +6,6 @@ namespace Flow\ETL\DSL;
 
 use Flow\ETL\Adapter\ChartJS\Chart;
 use Flow\ETL\Adapter\ChartJS\ChartJSLoader;
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Loader;
 use Flow\ETL\Row\EntryReference;
@@ -14,9 +13,6 @@ use Flow\ETL\Row\References;
 
 class ChartJS
 {
-    /**
-     * @throws InvalidArgumentException
-     */
     final public static function bar(EntryReference $label, References $datasets) : Chart
     {
         return new Chart\BarChart($label, $datasets);
@@ -39,17 +35,11 @@ class ChartJS
         return new ChartJSLoader($type, $output, $template);
     }
 
-    /**
-     * @throws InvalidArgumentException
-     */
     final public static function line(EntryReference $label, References $datasets) : Chart
     {
         return new Chart\LineChart($label, $datasets);
     }
 
-    /**
-     * @throws InvalidArgumentException
-     */
     final public static function pie(EntryReference $label, References $datasets) : Chart
     {
         return new Chart\PieChart($label, $datasets);
