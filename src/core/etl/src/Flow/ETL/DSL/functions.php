@@ -67,6 +67,7 @@ use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\References;
 use Flow\ETL\Rows;
 use Flow\ETL\Window;
 
@@ -83,6 +84,11 @@ function entry(string $entry) : EntryReference
 function ref(string $entry) : EntryReference
 {
     return new EntryReference($entry);
+}
+
+function refs(string|Reference ...$entries) : References
+{
+    return new References(...$entries);
 }
 
 function optional(ScalarFunction $function) : ScalarFunction
