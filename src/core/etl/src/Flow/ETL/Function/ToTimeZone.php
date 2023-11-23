@@ -29,6 +29,7 @@ final class ToTimeZone implements ScalarFunction
             return null;
         }
 
+        /** @psalm-suppress ArgumentTypeCoercion */
         $tz = match (\gettype($tz)) {
             'string' => new \DateTimeZone($tz),
             'object' => $tz instanceof \DateTimeZone ? $tz : null,
