@@ -7,6 +7,7 @@ namespace Flow\ETL\Adapter\ChartJS\Chart;
 use Flow\ETL\Adapter\ChartJS\Chart;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\References;
 use Flow\ETL\Rows;
 
 final class LineChart implements Chart
@@ -28,13 +29,12 @@ final class LineChart implements Chart
 
     /**
      * @param Reference $label
-     * @param array<Reference> $datasets
      *
      * @throws InvalidArgumentException
      */
     public function __construct(
         private readonly Reference $label,
-        private readonly array $datasets,
+        private readonly References $datasets,
     ) {
         if (!\count($this->datasets)) {
             throw new InvalidArgumentException('Bar chart must have at least one dataset, please provide at least one entry reference');

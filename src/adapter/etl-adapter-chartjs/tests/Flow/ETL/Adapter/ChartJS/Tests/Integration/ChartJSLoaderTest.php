@@ -7,6 +7,7 @@ namespace Flow\ETL\Adapter\ChartJS\Tests\Integration;
 use function Flow\ETL\DSL\first;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\refs;
 use function Flow\ETL\DSL\sum;
 use Flow\ETL\DSL\ChartJS;
 use Flow\ETL\DSL\From;
@@ -34,14 +35,14 @@ final class ChartJSLoaderTest extends TestCase
                 ChartJS::chart(
                     $chart = ChartJS::bar(
                         ref('Date'),
-                        [
+                        refs(
                             ref('Revenue'),
                             ref('CM'),
                             ref('Ads Spends'),
                             ref('Storage Costs'),
                             ref('Shipping Costs'),
                             ref('Profit'),
-                        ]
+                        )
                     ),
                     $output = __DIR__ . '/Output/bar_chart.html'
                 )
@@ -104,14 +105,14 @@ final class ChartJSLoaderTest extends TestCase
                 ChartJS::chart(
                     $chart = ChartJS::line(
                         ref('Date'),
-                        [
+                        refs(
                             ref('Revenue'),
                             ref('CM'),
                             ref('Ads Spends'),
                             ref('Storage Costs'),
                             ref('Shipping Costs'),
                             ref('Profit'),
-                        ]
+                        )
                     ),
                     $output = __DIR__ . '/Output/line_chart.html'
                 )
@@ -169,14 +170,14 @@ final class ChartJSLoaderTest extends TestCase
 
         $chart = ChartJS::pie(
             ref('Date'),
-            [
+            refs(
                 ref('Revenue'),
                 ref('CM'),
                 ref('Ads Spends'),
                 ref('Storage Costs'),
                 ref('Shipping Costs'),
                 ref('Profit'),
-            ]
+            )
         )
             ->setOptions(['label' => 'PnL']);
 
