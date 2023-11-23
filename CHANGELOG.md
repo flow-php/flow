@@ -1,6 +1,7 @@
-## [Unreleased] - 2023-11-22
+## [Unreleased] - 2023-11-23
 
 ### Added
+- [#825](https://github.com/flow-php/flow/pull/825) - **pivoting datasets** - [@norberttech](https://github.com/norberttech)
 - [#820](https://github.com/flow-php/flow/pull/820) - **Add testing of PHP 8.3 into the pipeline** - [@stloyd](https://github.com/stloyd)
 - [#808](https://github.com/flow-php/flow/pull/808) - **Added DataFrame::until** - [@norberttech](https://github.com/norberttech)
 - [#807](https://github.com/flow-php/flow/pull/807) - **validator to Parquet Writer** - [@norberttech](https://github.com/norberttech)
