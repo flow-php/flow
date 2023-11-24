@@ -51,7 +51,7 @@ final class HashIdFactory implements IdFactory
         );
     }
 
-    public function withHash(string $hashName) : self
+    public function withAlgorithm(string $hashName) : self
     {
         if (!\in_array($hashName, \hash_algos(), true)) {
             throw InvalidArgumentException::because('Unsupported hash algorithm name provided: ' . $hashName . ', did you mean: ' . \implode(', ', \hash_algos()));

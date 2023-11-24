@@ -27,7 +27,7 @@ final class HashIdFactoryTest extends TestCase
 
     public function test_create_row_with_different_hash() : void
     {
-        $factory = (new HashIdFactory('first_name', 'last_name'))->withHash('sha1');
+        $factory = (new HashIdFactory('first_name', 'last_name'))->withAlgorithm('sha1');
 
         $this->assertEquals(
             new Row\Entry\StringEntry(
@@ -45,6 +45,6 @@ final class HashIdFactoryTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Unsupported hash algorithm name provided: whatever, did you mean: ');
 
-        (new HashIdFactory('first_name'))->withHash('whatever');
+        (new HashIdFactory('first_name'))->withAlgorithm('whatever');
     }
 }

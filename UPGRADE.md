@@ -108,7 +108,7 @@ Removed `BooleanEntry::from()`, `FloatEntry::from()`, `IntegerEntry::from()`, `S
 
 Class `Sha1IdFactory` was removed, use `HashIdFactory` class:
 ```php
-(new HashIdFactory('entry_name'))->withHash('sha1');
+(new HashIdFactory('entry_name'))->withAlgorithm('sha1');
 ```
 
 ---
