@@ -34,29 +34,15 @@ final class BatchSizeOptimization implements Optimization
     ];
 
     /**
-     * We can't use DbalLoader::class here because that would create a circular dependency between ETL and Adapters.
-     * All adapters requires ETL, but ELT does not require a single adapter to be present.
-     *
-     * @psalm-suppress PropertyTypeCoercion
-     *
-     * @var array<class-string<Loader>>
-     */
-    private array $supportedLoaders = [
-        'Flow\ETL\Adapter\Doctrine\DbalLoader',
-        'Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\ElasticsearchLoader',
-        'Flow\ETL\Adapter\Meilisearch\MeilisearchPHP\MeilisearchLoader',
-    ];
-
-    /**
      * @param int<1, max> $batchSize
      */
-    public function __construct(private int $batchSize = 1000)
+    public function __construct(private readonly int $batchSize = 1000)
     {
     }
 
     public function isFor(Loader|Transformer $element, Pipeline $pipeline) : bool
     {
-        // Pipeline is already batching so we don't need to optimize it
+        // Pipeline is already batching, so we don't need to optimize it
         if (\in_array($pipeline::class, $this->batchingPipelines, true)) {
             return false;
         }
@@ -69,11 +55,7 @@ final class BatchSizeOptimization implements Optimization
             }
         }
 
-        if (\in_array($element::class, $this->supportedLoaders, true)) {
-            return true;
-        }
-
-        return false;
+        return \is_a($element, Loader\BatchLoader::class, true);
     }
 
     public function optimize(Loader|Transformer $element, Pipeline $pipeline) : Pipeline

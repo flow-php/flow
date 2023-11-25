@@ -22,7 +22,7 @@ use Psr\Http\Client\ClientInterface;
  *  method: string
  * }>
  */
-final class MeilisearchLoader implements Loader
+final class MeilisearchLoader implements Loader, Loader\BatchLoader
 {
     private Client|null $client = null;
 

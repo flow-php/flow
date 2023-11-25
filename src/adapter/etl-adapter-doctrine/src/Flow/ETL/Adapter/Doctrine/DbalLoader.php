@@ -27,7 +27,7 @@ use Flow\ETL\Rows;
  *  }
  * }>
  */
-final class DbalLoader implements Loader
+final class DbalLoader implements Loader, Loader\BatchLoader
 {
     private ?Connection $connection = null;
 

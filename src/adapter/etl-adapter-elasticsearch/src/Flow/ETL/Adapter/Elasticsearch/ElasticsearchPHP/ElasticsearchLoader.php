@@ -31,7 +31,7 @@ use Flow\ETL\Rows;
  *  method: string
  * }>
  */
-final class ElasticsearchLoader implements Loader
+final class ElasticsearchLoader implements Loader, Loader\BatchLoader
 {
     /** @phpstan-ignore-next-line */
     private \Elasticsearch\Client|\Elastic\Elasticsearch\Client|null $client;
