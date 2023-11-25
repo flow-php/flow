@@ -1,6 +1,7 @@
-## [Unreleased] - 2023-11-23
+## [Unreleased] - 2023-11-25
 
 ### Added
+- [#832](https://github.com/flow-php/flow/pull/832) - **Allow to change hash algorithm in `HashIdFactory`** - [@stloyd](https://github.com/stloyd)
 - [#836](https://github.com/flow-php/flow/pull/836) - **Writing chartjs output to variable** - [@norberttech](https://github.com/norberttech)
 - [#830](https://github.com/flow-php/flow/pull/830) - **DataFrame::collectRefs()** - [@norberttech](https://github.com/norberttech)
 - [#825](https://github.com/flow-php/flow/pull/825) - **pivoting datasets** - [@norberttech](https://github.com/norberttech)
@@ -79,6 +80,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#824](https://github.com/flow-php/flow/pull/824) - **Improve performance of `ArrayContentDetector`** - [@stloyd](https://github.com/stloyd)
 - [#835](https://github.com/flow-php/flow/pull/835) - **Simplified how charts are handling references** - [@norberttech](https://github.com/norberttech)
 - [#834](https://github.com/flow-php/flow/pull/834) - **Added php ~8.3 constraint to composer.json files** - [@norberttech](https://github.com/norberttech)
 - [#833](https://github.com/flow-php/flow/pull/833) - **Use references instead of array of strings in Charts** - [@norberttech](https://github.com/norberttech)
@@ -247,6 +249,7 @@
 - [c9fb26](https://github.com/flow-php/flow/commit/c9fb26dc2e0558c0f33b6097286e4dc6e2799d3f) - **test-benchmark.yml** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#832](https://github.com/flow-php/flow/pull/832) - **Remove `Sha1IdFactory`** - [@stloyd](https://github.com/stloyd)
 - [#810](https://github.com/flow-php/flow/pull/810) - **Execution Plan and Processors** - [@norberttech](https://github.com/norberttech)
 - [#804](https://github.com/flow-php/flow/pull/804) - **Remove `from*` methods from scalar entry classes** - [@stloyd](https://github.com/stloyd)
 - [#797](https://github.com/flow-php/flow/pull/797) - **struct reference** - [@norberttech](https://github.com/norberttech)
