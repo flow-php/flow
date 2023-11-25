@@ -231,7 +231,7 @@ final class Definition implements Serializable
         \sort($classes);
         \sort($otherClasses);
 
-        if ($this->classes !== $otherClasses) {
+        if ($classes !== $otherClasses) {
             return false;
         }
 
