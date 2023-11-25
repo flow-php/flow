@@ -191,6 +191,7 @@
 - [#584](https://github.com/flow-php/flow/pull/584) - **Adjust `phpunit.xml` to be more efficient** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
+- [#838](https://github.com/flow-php/flow/pull/838) - **Fix `Definition::isEqual()` with random class order** - [@stloyd](https://github.com/stloyd)
 - [#826](https://github.com/flow-php/flow/pull/826) - **overwriting pivot columns** - [@norberttech](https://github.com/norberttech)
 - [#817](https://github.com/flow-php/flow/pull/817) - **Fixed some warnings in parquet library** - [@norberttech](https://github.com/norberttech)
 - [#816](https://github.com/flow-php/flow/pull/816) - **Prevent reading multiple times from the same partitioning cache** - [@norberttech](https://github.com/norberttech)
