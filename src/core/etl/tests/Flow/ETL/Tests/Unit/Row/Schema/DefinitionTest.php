@@ -33,17 +33,23 @@ final class DefinitionTest extends TestCase
 
     public function test_equals() : void
     {
-        $def = Definition::union('test', [IntegerEntry::class, StringEntry::class]);
+        $def = Definition::union('test', [IntegerEntry::class, StringEntry::class, NullEntry::class]);
 
         $this->assertTrue(
             $def->isEqual(
-                Definition::union('test', [StringEntry::class, IntegerEntry::class])
+                Definition::union('test', [StringEntry::class, IntegerEntry::class, NullEntry::class])
+            )
+        );
+
+        $this->assertTrue(
+            $def->isEqual(
+                Definition::union('test', [NullEntry::class, StringEntry::class, IntegerEntry::class])
             )
         );
 
         $this->assertFalse(
             $def->isEqual(
-                Definition::boolean('test', false)
+                Definition::boolean('test')
             )
         );
     }
