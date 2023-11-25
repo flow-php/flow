@@ -11,49 +11,45 @@ use Flow\ETL\PHP\Type\Native\ScalarType;
 
 final class ArrayContentDetector
 {
+    private readonly ?Type $firstKeyType;
+
+    private readonly ?Type $firstValueType;
+
+    private readonly int $uniqueKeysCount;
+
     private readonly int $uniqueValuesCount;
 
-    public function __construct(private readonly Types $uniqueKeysType, private readonly Types $uniqueValuesType)
+    public function __construct(Types $uniqueKeysType, Types $uniqueValuesType)
     {
-        $this->uniqueValuesCount = $this->uniqueValuesType->without(ArrayType::empty(), new NullType())->count();
+        $this->firstKeyType = $uniqueKeysType->first();
+        $this->firstValueType = $uniqueValuesType->first();
+        $this->uniqueKeysCount = $uniqueKeysType->count();
+        $this->uniqueValuesCount = $uniqueValuesType->without(ArrayType::empty(), new NullType())->count();
     }
 
     public function firstKeyType() : ?ScalarType
     {
-        $type = $this->uniqueKeysType->first();
-
-        if (null !== $type && !$type instanceof ScalarType) {
-            throw InvalidArgumentException::because('First unique key type must be of ScalarType, given: ' . $type::class);
+        if (null !== $this->firstKeyType && !$this->firstKeyType instanceof ScalarType) {
+            throw InvalidArgumentException::because('First unique key type must be of ScalarType, given: ' . $this->firstKeyType::class);
         }
 
-        return $type;
+        return $this->firstKeyType;
     }
 
     public function firstValueType() : ?Type
     {
-        return $this->uniqueValuesType->first();
+        return $this->firstValueType;
     }
 
     public function isList() : bool
     {
-        if (!$this->firstKeyType()?->isInteger()) {
-            return false;
-        }
-
-        return 1 === $this->uniqueValuesCount;
+        return 1 === $this->uniqueValuesCount && $this->firstKeyType()?->isInteger();
     }
 
     public function isMap() : bool
     {
-        if (!$this->firstKeyType()?->isValidArrayKey()) {
-            return false;
-        }
-
-        if (1 === $this->uniqueValuesCount) {
-            /** @psalm-suppress PossiblyNullReference */
-            if (!$this->firstKeyType()->isInteger()) {
-                return 1 === $this->uniqueKeysType->count();
-            }
+        if (1 === $this->uniqueValuesCount && 1 === $this->uniqueKeysCount) {
+            return !$this->firstKeyType()?->isInteger();
         }
 
         return false;
@@ -65,8 +61,8 @@ final class ArrayContentDetector
             return false;
         }
 
-        return $this->firstKeyType()?->isString()
-            && 1 === $this->uniqueKeysType->count()
-            && 0 !== $this->uniqueValuesCount;
+        return 0 !== $this->uniqueValuesCount
+            && 1 === $this->uniqueKeysCount
+            && $this->firstKeyType()?->isString();
     }
 }

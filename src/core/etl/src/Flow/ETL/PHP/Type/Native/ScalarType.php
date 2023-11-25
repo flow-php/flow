@@ -96,11 +96,6 @@ final class ScalarType implements NativeType
         };
     }
 
-    public function isValidArrayKey() : bool
-    {
-        return \in_array($this->value, [self::INTEGER, self::STRING], true);
-    }
-
     public function nullable() : bool
     {
         return $this->nullable;
