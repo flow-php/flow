@@ -51,13 +51,13 @@ final class SearchResults
         return \count($this->results['hits']['hits']);
     }
 
-    public function toRows(EntryFactory $entryFactory) : Rows
+    public function toRows(EntryFactory $entryFactory, ?Row\Schema $schema = null) : Rows
     {
         /** @var array<Row\Entry> $entries */
         $entries = [];
 
         foreach (\array_keys($this->results) as $key) {
-            $entries[$key] = $entryFactory->create($key, $this->results[$key]);
+            $entries[$key] = $entryFactory->create($key, $this->results[$key], $schema);
         }
 
         return new Rows(Row::create(...$entries));

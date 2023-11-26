@@ -29,7 +29,7 @@ final class SearchResults
         return $this->results->getHitsCount();
     }
 
-    public function toRows(EntryFactory $entryFactory) : Rows
+    public function toRows(EntryFactory $entryFactory, ?Row\Schema $schema = null) : Rows
     {
         $newRows = [];
 
@@ -38,7 +38,7 @@ final class SearchResults
             $entries = [];
 
             foreach ($hit as $key => $value) {
-                $entries[$key] = $entryFactory->create((string) $key, $value);
+                $entries[$key] = $entryFactory->create((string) $key, $value, $schema);
             }
 
             $newRows[] = Row::create(...$entries);

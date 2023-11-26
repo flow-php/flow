@@ -33,7 +33,7 @@ final class MeilisearchExtractor implements Extractor
             return;
         }
 
-        yield $results->toRows($context->entryFactory());
+        yield $results->toRows($context->entryFactory(), $context->schema());
 
         $fetched = $results->size();
 
@@ -55,7 +55,7 @@ final class MeilisearchExtractor implements Extractor
 
             $fetched += $nextResults->size();
 
-            $signal = yield $nextResults->toRows($context->entryFactory());
+            $signal = yield $nextResults->toRows($context->entryFactory(), $context->schema());
 
             if ($signal === Extractor\Signal::STOP) {
                 return;

@@ -82,7 +82,7 @@ final class DbalLimitOffsetExtractor implements Extractor
             )->fetchAllAssociative();
 
             foreach ($pageResults as $row) {
-                $signal = yield array_to_rows($row, $context->entryFactory());
+                $signal = yield array_to_rows($row, $context->entryFactory(), schema: $context->schema());
 
                 if ($signal === Extractor\Signal::STOP) {
                     return;

@@ -44,7 +44,7 @@ final class ScalarFunctionTransformer implements Transformer
                 fn (Row $r) : array => \array_map(
                     fn ($val) : Row => new Row(
                         $r->entries()
-                            ->merge(new Entries($context->entryFactory()->create($this->entryName, $val)))
+                            ->merge(new Entries($context->entryFactory()->create($this->entryName, $val, $context->schema())))
                     ),
                     (array) $this->function->eval($r)
                 )
@@ -63,14 +63,14 @@ final class ScalarFunctionTransformer implements Transformer
                          * @var mixed $val
                          */
                         foreach ($value as $key => $val) {
-                            $r = $r->set($context->entryFactory()->create($this->entryName . '.' . $key, $val));
+                            $r = $r->set($context->entryFactory()->create($this->entryName . '.' . $key, $val, $context->schema()));
                         }
 
                         return $r;
                     }
                 }
 
-                return $r->set($context->entryFactory()->create($this->entryName, $this->function->eval($r)));
+                return $r->set($context->entryFactory()->create($this->entryName, $this->function->eval($r), $context->schema()));
             }
         );
     }

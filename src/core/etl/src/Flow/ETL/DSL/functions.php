@@ -387,8 +387,12 @@ function number_format(ScalarFunction $function, ?ScalarFunction $decimals = nul
  * @param array<array<mixed>>|array<mixed|string> $data
  * @param array<Partition> $partitions
  */
-function array_to_rows(array $data, EntryFactory $entryFactory = new NativeEntryFactory(), array $partitions = []) : Rows
-{
+function array_to_rows(
+    array $data,
+    EntryFactory $entryFactory = new NativeEntryFactory(),
+    array $partitions = [],
+    ?Row\Schema $schema = null
+) : Rows {
     $isRows = true;
 
     foreach ($data as $v) {
@@ -403,7 +407,7 @@ function array_to_rows(array $data, EntryFactory $entryFactory = new NativeEntry
         $entries = [];
 
         foreach ($data as $key => $value) {
-            $entries[] = $entryFactory->create(\is_int($key) ? 'e' . \str_pad((string) $key, 2, '0', STR_PAD_LEFT) : $key, $value);
+            $entries[] = $entryFactory->create(\is_int($key) ? 'e' . \str_pad((string) $key, 2, '0', STR_PAD_LEFT) : $key, $value, $schema);
         }
 
         return \count($partitions)
@@ -416,7 +420,7 @@ function array_to_rows(array $data, EntryFactory $entryFactory = new NativeEntry
         $entries = [];
 
         foreach ($row as $column => $value) {
-            $entries[] = $entryFactory->create(\is_int($column) ? 'e' . \str_pad((string) $column, 2, '0', STR_PAD_LEFT) : $column, $value);
+            $entries[] = $entryFactory->create(\is_int($column) ? 'e' . \str_pad((string) $column, 2, '0', STR_PAD_LEFT) : $column, $value, $schema);
         }
         $rows[] = Row::create(...$entries);
     }

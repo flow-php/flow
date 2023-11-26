@@ -170,7 +170,7 @@ final class GroupBy
 
             /** @var mixed $value */
             foreach ($group['values'] ?? [] as $entry => $value) {
-                $entries[] = $context->entryFactory()->create($entry, $value);
+                $entries[] = $context->entryFactory()->create($entry, $value, $context->schema());
             }
 
             foreach ($group['aggregators'] as $aggregator) {

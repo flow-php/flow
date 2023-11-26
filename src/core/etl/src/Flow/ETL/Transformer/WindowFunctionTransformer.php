@@ -47,7 +47,7 @@ final class WindowFunctionTransformer implements Transformer
 
         foreach ($rows as $row) {
             $newRows = $newRows->add(
-                $row->add($context->entryFactory()->create($this->entryName, $this->function->apply($row, $rows)))
+                $row->add($context->entryFactory()->create($this->entryName, $this->function->apply($row, $rows), $context->schema()))
             );
         }
 

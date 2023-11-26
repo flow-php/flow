@@ -70,7 +70,7 @@ final class ElasticsearchExtractor implements Extractor
             return;
         }
 
-        yield $results->toRows($context->entryFactory());
+        yield $results->toRows($context->entryFactory(), $context->schema());
 
         // Go with search_after pagination
         if ($params->hasSort()) {
@@ -92,7 +92,7 @@ final class ElasticsearchExtractor implements Extractor
                     break;
                 }
 
-                yield $nextResults->toRows($context->entryFactory());
+                yield $nextResults->toRows($context->entryFactory(), $context->schema());
             }
         } else {
             $fetched = $results->size();
@@ -124,7 +124,7 @@ final class ElasticsearchExtractor implements Extractor
 
                 $fetched += $nextResults->size();
 
-                $signal = yield $nextResults->toRows($context->entryFactory());
+                $signal = yield $nextResults->toRows($context->entryFactory(), $context->schema());
 
                 if ($signal === Extractor\Signal::STOP) {
                     return;

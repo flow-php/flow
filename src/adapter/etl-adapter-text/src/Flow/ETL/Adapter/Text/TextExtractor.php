@@ -45,7 +45,7 @@ final class TextExtractor implements Extractor, FileExtractor, LimitableExtracto
                     $row = [['text' => \rtrim($rowData)]];
                 }
 
-                $signal = yield array_to_rows($row, $context->entryFactory(), $partitions);
+                $signal = yield array_to_rows($row, $context->entryFactory(), $partitions, $context->schema());
 
                 $this->countRow();
 

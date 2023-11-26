@@ -11,6 +11,7 @@ use Flow\ETL\Partition\PartitionFilter;
 use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
+use Flow\ETL\Row\Schema;
 use Flow\Serializer\Serializer;
 
 /**
@@ -26,6 +27,8 @@ final class FlowContext
     private PartitionFilter $partitionFilter;
 
     private References $partitions;
+
+    private ?Schema $schema = null;
 
     public function __construct(public readonly Config $config)
     {
@@ -78,6 +81,11 @@ final class FlowContext
         return $this->partitionFilter;
     }
 
+    public function schema() : ?Schema
+    {
+        return $this->schema;
+    }
+
     public function serializer() : Serializer
     {
         return $this->config->serializer();
@@ -93,6 +101,13 @@ final class FlowContext
     public function setErrorHandler(ErrorHandler $handler) : self
     {
         $this->errorHandler = $handler;
+
+        return $this;
+    }
+
+    public function setSchema(Schema $schema) : self
+    {
+        $this->schema = $schema;
 
         return $this;
     }

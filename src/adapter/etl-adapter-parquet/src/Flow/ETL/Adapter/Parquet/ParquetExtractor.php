@@ -44,7 +44,7 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
                     $row['_input_file_uri'] = $fileData['uri'];
                 }
 
-                $signal = yield array_to_rows($row, $context->entryFactory(), $fileData['partitions']);
+                $signal = yield array_to_rows($row, $context->entryFactory(), $fileData['partitions'], $context->schema());
 
                 $this->countRow();
 

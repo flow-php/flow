@@ -58,7 +58,7 @@ final class HitsIntoRowsTransformer implements Transformer
                  * @var mixed $value
                  */
                 foreach ($hit[$source] as $key => $value) {
-                    $entries[] = $context->entryFactory()->create($key, $value);
+                    $entries[] = $context->entryFactory()->create($key, $value, $context->schema());
                 }
 
                 $newRows[] = Row::create(...$entries);
