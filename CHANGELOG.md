@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-11-25
+## [Unreleased] - 2023-11-26
 
 ### Added
 - [#832](https://github.com/flow-php/flow/pull/832) - **Allow to change hash algorithm in `HashIdFactory`** - [@stloyd](https://github.com/stloyd)
@@ -80,6 +80,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#840](https://github.com/flow-php/flow/pull/840) - **reorganized data frame tests** - [@norberttech](https://github.com/norberttech)
 - [#824](https://github.com/flow-php/flow/pull/824) - **Improve performance of `ArrayContentDetector`** - [@stloyd](https://github.com/stloyd)
 - [#835](https://github.com/flow-php/flow/pull/835) - **Simplified how charts are handling references** - [@norberttech](https://github.com/norberttech)
 - [#834](https://github.com/flow-php/flow/pull/834) - **Added php ~8.3 constraint to composer.json files** - [@norberttech](https://github.com/norberttech)
@@ -191,6 +192,8 @@
 - [#584](https://github.com/flow-php/flow/pull/584) - **Adjust `phpunit.xml` to be more efficient** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
+- [#840](https://github.com/flow-php/flow/pull/840) - **multiple group by execution in single pipeline** - [@norberttech](https://github.com/norberttech)
+- [#840](https://github.com/flow-php/flow/pull/840) - **moved elasticsearch HTTP Spy test double under Test namespace** - [@norberttech](https://github.com/norberttech)
 - [#838](https://github.com/flow-php/flow/pull/838) - **Fix `Definition::isEqual()` with random class order** - [@stloyd](https://github.com/stloyd)
 - [#826](https://github.com/flow-php/flow/pull/826) - **overwriting pivot columns** - [@norberttech](https://github.com/norberttech)
 - [#817](https://github.com/flow-php/flow/pull/817) - **Fixed some warnings in parquet library** - [@norberttech](https://github.com/norberttech)
