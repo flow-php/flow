@@ -48,12 +48,21 @@ final class ConfigBuilder
     {
         $this->id ??= \uniqid('flow_php', true);
         $this->serializer ??= new CompressingSerializer();
-        $this->cache ??= new LocalFilesystemCache(
-            \is_string(\getenv(Config::CACHE_DIR_ENV)) && \realpath(\getenv(Config::CACHE_DIR_ENV))
-                ? \getenv(Config::CACHE_DIR_ENV)
-                : \sys_get_temp_dir(),
-            $this->serializer
-        );
+        $cachePath = \is_string(\getenv(Config::CACHE_DIR_ENV)) && \realpath(\getenv(Config::CACHE_DIR_ENV))
+            ? \getenv(Config::CACHE_DIR_ENV)
+            : \sys_get_temp_dir() . '/flow_php/';
+
+        if ($this->cache === null) {
+            if (!\file_exists($cachePath)) {
+                \mkdir($cachePath, 0777, true);
+            }
+
+            $this->cache ??= new LocalFilesystemCache(
+                $cachePath,
+                $this->serializer
+            );
+        }
+
         $this->externalSort ??= new MemorySort(
             $this->id,
             $this->cache,
