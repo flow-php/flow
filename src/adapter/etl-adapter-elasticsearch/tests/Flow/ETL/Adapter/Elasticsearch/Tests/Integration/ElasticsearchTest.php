@@ -2,8 +2,8 @@
 
 namespace Flow\ETL\Adapter\Elasticsearch\Tests\Integration;
 
-use Flow\ETL\Adapter\Elasticsearch\Doubles\Spy\HttpClientSpy;
 use Flow\ETL\Adapter\Elasticsearch\EntryIdFactory\EntryIdFactory;
+use Flow\ETL\Adapter\Elasticsearch\Tests\Doubles\Spy\HttpClientSpy;
 use Flow\ETL\DSL\Elasticsearch;
 use Flow\ETL\DSL\From;
 use Flow\ETL\Flow;

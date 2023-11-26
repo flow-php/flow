@@ -17,12 +17,10 @@ final class GroupByPipeline implements OverridingPipeline, Pipeline
 
     private readonly Pipeline $pipeline;
 
-    public function __construct(private readonly GroupBy $groupBy, Pipeline $pipeline)
+    public function __construct(public readonly GroupBy $groupBy, Pipeline $pipeline)
     {
-        $existingPipeline = $pipeline instanceof self ? $pipeline->pipeline : $pipeline;
-
-        $this->pipeline = $existingPipeline;
-        $this->nextPipeline = $existingPipeline->cleanCopy();
+        $this->pipeline = $pipeline;
+        $this->nextPipeline = new SynchronousPipeline();
     }
 
     public function add(Loader|Transformer $pipe) : self

@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Flow\ETL\Adapter\Elasticsearch\Doubles\Spy;
+namespace Flow\ETL\Adapter\Elasticsearch\Tests\Doubles\Spy;
 
 use Elastic\Elasticsearch\Response\Elasticsearch;
 use Nyholm\Psr7\Response;
