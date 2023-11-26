@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
-use function Flow\ETL\DSL\refs;
-use Flow\ETL\DSL\From;
 use Flow\ETL\DSL\To;
 use Flow\ETL\DSL\Transform;
 use Flow\ETL\Exception\InvalidArgumentException;
@@ -47,11 +45,8 @@ final class DataFrame
 {
     private FlowContext $context;
 
-    private ?GroupBy $groupBy;
-
     public function __construct(private Pipeline $pipeline, Config $configuration)
     {
-        $this->groupBy = null;
         $this->context = new FlowContext($configuration);
     }
 
@@ -62,14 +57,11 @@ final class DataFrame
      */
     public function aggregate(AggregatingFunction ...$aggregations) : self
     {
-        if ($this->groupBy === null) {
-            $this->groupBy = new GroupBy();
+        if (!$this->pipeline instanceof GroupByPipeline) {
+            $this->pipeline = new GroupByPipeline(new GroupBy(), $this->pipeline);
         }
 
-        $this->groupBy->aggregate(...$aggregations);
-
-        $this->pipeline = new GroupByPipeline($this->groupBy, $this->pipeline);
-        $this->groupBy = null;
+        $this->pipeline->groupBy->aggregate(...$aggregations);
 
         return $this;
     }
@@ -377,8 +369,7 @@ final class DataFrame
      */
     public function groupBy(string|Reference ...$entries) : self
     {
-        $this->groupBy = new GroupBy(...$entries);
-        $this->pipeline = new GroupByPipeline($this->groupBy, $this->pipeline);
+        $this->pipeline = new GroupByPipeline(new GroupBy(...$entries), $this->pipeline);
 
         return $this;
     }
@@ -528,11 +519,11 @@ final class DataFrame
 
     public function pivot(Reference $ref) : self
     {
-        if ($this->groupBy === null) {
-            throw new RuntimeException('Pivot can be used only with groupBy');
+        if (!$this->pipeline instanceof GroupByPipeline) {
+            throw new RuntimeException('Pivot can be used only after groupBy');
         }
 
-        $this->groupBy->pivot($ref);
+        $this->pipeline->groupBy->pivot($ref);
 
         return $this;
     }
