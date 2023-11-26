@@ -57,7 +57,7 @@ final class ConfigBuilder
                 \mkdir($cachePath, 0777, true);
             }
 
-            $this->cache ??= new LocalFilesystemCache(
+            $this->cache = new LocalFilesystemCache(
                 $cachePath,
                 $this->serializer
             );
