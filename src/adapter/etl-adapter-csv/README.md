@@ -26,7 +26,7 @@ use Flow\ETL\DSL\CSV;
 use Flow\ETL\Flow;
 
 $rows = (new Flow())
-    ->read(CSV::from(new LocalFile($path)))
+    ->read(CSV::from($path))
     ->fetch();
 ```
 
