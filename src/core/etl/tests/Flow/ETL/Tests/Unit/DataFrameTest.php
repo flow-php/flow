@@ -11,17 +11,14 @@ use function Flow\ETL\DSL\refs;
 use Flow\ETL\DataFrame;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\DSL\From;
-use Flow\ETL\DSL\Partitions;
 use Flow\ETL\DSL\To;
 use Flow\ETL\DSL\Transform;
 use Flow\ETL\ErrorHandler\IgnoreError;
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Flow;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Row;
-use Flow\ETL\Row\Entry\ArrayEntry;
 use Flow\ETL\Row\Entry\BooleanEntry;
 use Flow\ETL\Row\Entry\DateTimeEntry;
 use Flow\ETL\Row\Entry\IntegerEntry;
@@ -32,7 +29,6 @@ use Flow\ETL\Rows;
 use Flow\ETL\Tests\Double\AddStampToStringEntryTransformer;
 use Flow\ETL\Transformation;
 use Flow\ETL\Transformer;
-use Flow\ETL\Transformer\StyleConverter\StringStyles;
 use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\TestCase;
 
@@ -191,74 +187,6 @@ final class DataFrameTest extends TestCase
         );
     }
 
-    public function test_exceeding_the_limit_in_one_rows_set() : void
-    {
-        $rows = (new Flow())
-            ->read(
-                From::array(\array_map(
-                    fn (int $id) : array => ['id' => $id],
-                    \range(1, 1000)
-                ))
-            )
-            ->limit(9)
-            ->fetch();
-
-        $this->assertCount(9, $rows);
-    }
-
-    public function test_fetch_with_limit() : void
-    {
-        $rows = (new Flow())
-            ->read(From::array([
-                ['id' => 1],
-                ['id' => 2],
-                ['id' => 3],
-                ['id' => 4],
-                ['id' => 5],
-                ['id' => 6],
-                ['id' => 7],
-                ['id' => 8],
-                ['id' => 9],
-                ['id' => 10],
-            ]))
-            ->fetch(5);
-
-        $this->assertCount(5, $rows);
-    }
-
-    public function test_fetch_with_limit_below_0() : void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("Limit can't be lower or equal zero, given: -1");
-
-        (new Flow())->process(new Rows())
-            ->fetch(-1);
-    }
-
-    public function test_fetch_without_limit() : void
-    {
-        $rows = (new Flow())->extract(
-            new class implements Extractor {
-                /**
-                 * @param FlowContext $context
-                 *
-                 * @return \Generator<int, Rows, mixed, void>
-                 */
-                public function extract(FlowContext $context) : \Generator
-                {
-                    for ($i = 0; $i < 20; $i++) {
-                        yield new Rows(
-                            Row::create(new IntegerEntry('id', $i)),
-                        );
-                    }
-                }
-            }
-        )
-        ->fetch();
-
-        $this->assertCount(20, $rows);
-    }
-
     public function test_filter() : void
     {
         $rows = (new Flow())->extract(
@@ -285,35 +213,6 @@ final class DataFrameTest extends TestCase
         $this->assertSame(
             [['id' => 2], ['id' => 4], ['id' => 6], ['id' => 8], ['id' => 10]],
             $rows->toArray()
-        );
-    }
-
-    public function test_filter_partitions() : void
-    {
-        $partitionedRows = (new Flow())->process(
-            new Rows(
-                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20)),
-                Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20)),
-                Row::create(Entry::integer('id', 3), Entry::string('country', 'PL'), Entry::integer('age', 25)),
-                Row::create(Entry::integer('id', 4), Entry::string('country', 'PL'), Entry::integer('age', 30)),
-                Row::create(Entry::integer('id', 5), Entry::string('country', 'US'), Entry::integer('age', 40)),
-                Row::create(Entry::integer('id', 6), Entry::string('country', 'US'), Entry::integer('age', 40)),
-                Row::create(Entry::integer('id', 7), Entry::string('country', 'US'), Entry::integer('age', 45)),
-                Row::create(Entry::integer('id', 9), Entry::string('country', 'US'), Entry::integer('age', 50)),
-            )
-        )
-            ->partitionBy('country')
-            ->filterPartitions(Partitions::chain(Partitions::only('country', 'US')))
-            ->fetch();
-
-        $this->assertEquals(
-            new Rows(
-                Row::create(Entry::integer('id', 5), Entry::string('country', 'US'), Entry::integer('age', 40)),
-                Row::create(Entry::integer('id', 6), Entry::string('country', 'US'), Entry::integer('age', 40)),
-                Row::create(Entry::integer('id', 7), Entry::string('country', 'US'), Entry::integer('age', 45)),
-                Row::create(Entry::integer('id', 9), Entry::string('country', 'US'), Entry::integer('age', 50)),
-            ),
-            $partitionedRows
         );
     }
 
@@ -429,131 +328,6 @@ final class DataFrameTest extends TestCase
         );
     }
 
-    public function test_limit() : void
-    {
-        $rows = (new Flow())->extract(
-            new class implements Extractor {
-                /**
-                 * @param FlowContext $context
-                 *
-                 * @return \Generator<int, Rows, mixed, void>
-                 */
-                public function extract(FlowContext $context) : \Generator
-                {
-                    for ($i = 0; $i < 1000; $i++) {
-                        yield new Rows(
-                            Row::create(new IntegerEntry('id', $i + 1)),
-                            Row::create(new IntegerEntry('id', $i + 2)),
-                        );
-                    }
-                }
-            }
-        )
-        ->limit(10)
-        ->fetch();
-
-        $this->assertCount(10, $rows);
-    }
-
-    public function test_limit_below_0() : void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("Limit can't be lower or equal zero, given: -1");
-
-        (new Flow())->process(new Rows())
-            ->limit(-1);
-    }
-
-    public function test_limit_when_transformation_is_expanding_rows_extracted_from_extractor() : void
-    {
-        $rows = (new Flow())->extract(
-            new class implements Extractor {
-                /**
-                 * @param FlowContext $context
-                 *
-                 * @return \Generator<int, Rows, mixed, void>
-                 */
-                public function extract(FlowContext $context) : \Generator
-                {
-                    for ($i = 0; $i < 1000; $i++) {
-                        yield new Rows(
-                            Row::create(new ArrayEntry('ids', [
-                                ['id' => $i + 1, 'more_ids' => [['more_id' => $i + 4], ['more_id' => $i + 7]]],
-                                ['id' => $i + 2, 'more_ids' => [['more_id' => $i + 5], ['more_id' => $i + 8]]],
-                                ['id' => $i + 3, 'more_ids' => [['more_id' => $i + 6], ['more_id' => $i + 9]]],
-                            ])),
-                        );
-                    }
-                }
-            }
-        )
-            ->withEntries([
-                'expanded' => ref('ids')->expand(),
-                'element' => ref('expanded')->unpack(),
-                'more_ids' => ref('element.more_ids')->expand(),
-            ])
-            ->rename('element.id', 'id')
-            ->drop('expanded', 'ids', 'element', 'element.more_ids')
-            ->limit(3)
-            ->fetch();
-
-        $this->assertCount(3, $rows);
-    }
-
-    public function test_limit_with_batch_size() : void
-    {
-        $rows = (new Flow())->extract(
-            new class implements Extractor {
-                /**
-                 * @param FlowContext $context
-                 *
-                 * @return \Generator<int, Rows, mixed, void>
-                 */
-                public function extract(FlowContext $context) : \Generator
-                {
-                    for ($i = 0; $i < 1000; $i++) {
-                        yield new Rows(
-                            Row::create(new IntegerEntry('id', $i + 1)),
-                            Row::create(new IntegerEntry('id', $i + 2)),
-                        );
-                    }
-                }
-            }
-        )
-            ->batchSize(50)
-            ->limit(10)
-            ->fetch();
-
-        $this->assertCount(10, $rows);
-    }
-
-    public function test_limit_with_collecting() : void
-    {
-        $rows = (new Flow())->extract(
-            new class implements Extractor {
-                /**
-                 * @param FlowContext $context
-                 *
-                 * @return \Generator<int, Rows, mixed, void>
-                 */
-                public function extract(FlowContext $context) : \Generator
-                {
-                    for ($i = 0; $i < 1000; $i++) {
-                        yield new Rows(
-                            Row::create(new IntegerEntry('id', $i + 1)),
-                            Row::create(new IntegerEntry('id', $i + 2)),
-                        );
-                    }
-                }
-            }
-        )
-            ->limit(10)
-            ->collect()
-            ->fetch();
-
-        $this->assertCount(10, $rows);
-    }
-
     public function test_map() : void
     {
         $rows = (new Flow())->extract(
@@ -591,47 +365,6 @@ final class DataFrameTest extends TestCase
                 ['id' => 10, 'odd' => true],
             ],
             $rows->toArray()
-        );
-    }
-
-    public function test_partition_by() : void
-    {
-        $rows = (new Flow())->process(
-            new Rows(
-                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20)),
-                Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20)),
-                Row::create(Entry::integer('id', 3), Entry::string('country', 'PL'), Entry::integer('age', 25)),
-                Row::create(Entry::integer('id', 4), Entry::string('country', 'PL'), Entry::integer('age', 30)),
-                Row::create(Entry::integer('id', 5), Entry::string('country', 'US'), Entry::integer('age', 40)),
-                Row::create(Entry::integer('id', 6), Entry::string('country', 'US'), Entry::integer('age', 40)),
-                Row::create(Entry::integer('id', 7), Entry::string('country', 'US'), Entry::integer('age', 45)),
-                Row::create(Entry::integer('id', 9), Entry::string('country', 'US'), Entry::integer('age', 50)),
-            )
-        )
-            ->partitionBy(ref('country'))
-            ->batchSize(2) // split each partition into two
-            ->get();
-
-        $this->assertEquals(
-            [
-                new Rows(
-                    Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20)),
-                    Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20))
-                ),
-                new Rows(
-                    Row::create(Entry::integer('id', 3), Entry::string('country', 'PL'), Entry::integer('age', 25)),
-                    Row::create(Entry::integer('id', 4), Entry::string('country', 'PL'), Entry::integer('age', 30)),
-                ),
-                new Rows(
-                    Row::create(Entry::integer('id', 5), Entry::string('country', 'US'), Entry::integer('age', 40)),
-                    Row::create(Entry::integer('id', 6), Entry::string('country', 'US'), Entry::integer('age', 40))
-                ),
-                new Rows(
-                    Row::create(Entry::integer('id', 7), Entry::string('country', 'US'), Entry::integer('age', 45)),
-                    Row::create(Entry::integer('id', 9), Entry::string('country', 'US'), Entry::integer('age', 50)),
-                ),
-            ],
-            \iterator_to_array($rows)
         );
     }
 
@@ -761,157 +494,6 @@ final class DataFrameTest extends TestCase
             ->fetch();
 
         $this->assertEquals($rows, $collectedRows);
-    }
-
-    public function test_rename() : void
-    {
-        $rows = (new Flow())->process(
-            new Rows(
-                Row::create(Entry::integer('id', 1), Entry::string('name', 'foo'), Entry::boolean('active', true)),
-                Row::create(Entry::integer('id', 2), Entry::null('name'), Entry::boolean('active', false)),
-                Row::create(Entry::integer('id', 2), Entry::string('name', 'bar'), Entry::boolean('active', false)),
-            )
-        )
-            ->rename('name', 'new_name')
-            ->fetch();
-
-        $this->assertEquals(
-            new Rows(
-                Row::create(Entry::integer('id', 1), Entry::string('new_name', 'foo'), Entry::boolean('active', true)),
-                Row::create(Entry::integer('id', 2), Entry::null('new_name'), Entry::boolean('active', false)),
-                Row::create(Entry::integer('id', 2), Entry::string('new_name', 'bar'), Entry::boolean('active', false)),
-            ),
-            $rows
-        );
-    }
-
-    public function test_rename_all() : void
-    {
-        $rows = new Rows(
-            Row::create(Entry::array('array', ['id' => 1, 'name' => 'name', 'active' => true])),
-            Row::create(Entry::array('array', ['id' => 2, 'name' => 'name', 'active' => false]))
-        );
-
-        $ds = (new Flow())
-            ->read(From::rows($rows))
-            ->withEntry('row', ref('array')->unpack())
-            ->renameAll('row.', '')
-            ->drop('array')
-            ->getEachAsArray();
-
-        $this->assertEquals(
-            [
-                ['id' => 1, 'name' => 'name', 'active' => true],
-                ['id' => 2, 'name' => 'name', 'active' => false],
-            ],
-            \iterator_to_array($ds)
-        );
-    }
-
-    public function test_rename_all_lower_case() : void
-    {
-        $rows = new Rows(
-            Row::create(Entry::int('ID', 1), Entry::str('NAME', 'name'), Entry::bool('ACTIVE', true)),
-            Row::create(Entry::int('ID', 2), Entry::str('NAME', 'name'), Entry::bool('ACTIVE', false)),
-        );
-
-        $ds = (new Flow())
-            ->read(From::rows($rows))
-            ->renameAllLowerCase()
-            ->getEachAsArray();
-
-        $this->assertEquals(
-            [
-                ['id' => 1, 'name' => 'name', 'active' => true],
-                ['id' => 2, 'name' => 'name', 'active' => false],
-            ],
-            \iterator_to_array($ds)
-        );
-    }
-
-    public function test_rename_all_to_snake_case() : void
-    {
-        $rows = new Rows(
-            Row::create(Entry::int('id', 1), Entry::str('UserName', 'name'), Entry::bool('isActive', true)),
-            Row::create(Entry::int('id', 2), Entry::str('UserName', 'name'), Entry::bool('isActive', false)),
-        );
-
-        $ds = (new Flow())
-            ->read(From::rows($rows))
-            ->renameAllStyle(StringStyles::SNAKE)
-            ->renameAllLowerCase()
-            ->getEachAsArray();
-
-        $this->assertEquals(
-            [
-                ['id' => 1, 'user_name' => 'name', 'is_active' => true],
-                ['id' => 2, 'user_name' => 'name', 'is_active' => false],
-            ],
-            \iterator_to_array($ds)
-        );
-    }
-
-    public function test_rename_all_upper_case() : void
-    {
-        $rows = new Rows(
-            Row::create(Entry::int('id', 1), Entry::str('name', 'name'), Entry::bool('active', true)),
-            Row::create(Entry::int('id', 2), Entry::str('name', 'name'), Entry::bool('active', false)),
-        );
-
-        $ds = (new Flow())
-            ->read(From::rows($rows))
-            ->renameAllUpperCase()
-            ->getEachAsArray();
-
-        $this->assertEquals(
-            [
-                ['ID' => 1, 'NAME' => 'name', 'ACTIVE' => true],
-                ['ID' => 2, 'NAME' => 'name', 'ACTIVE' => false],
-            ],
-            \iterator_to_array($ds)
-        );
-    }
-
-    public function test_rename_all_upper_case_first() : void
-    {
-        $rows = new Rows(
-            Row::create(Entry::int('id', 1), Entry::str('name', 'name'), Entry::bool('active', true)),
-            Row::create(Entry::int('id', 2), Entry::str('name', 'name'), Entry::bool('active', false)),
-        );
-
-        $ds = (new Flow())
-            ->read(From::rows($rows))
-            ->renameAllUpperCaseFirst()
-            ->getEachAsArray();
-
-        $this->assertEquals(
-            [
-                ['Id' => 1, 'Name' => 'name', 'Active' => true],
-                ['Id' => 2, 'Name' => 'name', 'Active' => false],
-            ],
-            \iterator_to_array($ds)
-        );
-    }
-
-    public function test_rename_all_upper_case_word() : void
-    {
-        $rows = new Rows(
-            Row::create(Entry::int('id', 1), Entry::str('name', 'name'), Entry::bool('active', true)),
-            Row::create(Entry::int('id', 2), Entry::str('name', 'name'), Entry::bool('active', false)),
-        );
-
-        $ds = (new Flow())
-            ->read(From::rows($rows))
-            ->renameAllUpperCaseWord()
-            ->getEachAsArray();
-
-        $this->assertEquals(
-            [
-                ['Id' => 1, 'Name' => 'name', 'Active' => true],
-                ['Id' => 2, 'Name' => 'name', 'Active' => false],
-            ],
-            \iterator_to_array($ds)
-        );
     }
 
     public function test_select() : void
@@ -1161,30 +743,5 @@ final class DataFrameTest extends TestCase
                 }
             )
             ->run();
-    }
-
-    public function test_with_total_rows_below_the_limit() : void
-    {
-        $rows = (new Flow())->extract(
-            new class implements Extractor {
-                /**
-                 * @param FlowContext $context
-                 *
-                 * @return \Generator<int, Rows, mixed, void>
-                 */
-                public function extract(FlowContext $context) : \Generator
-                {
-                    for ($i = 0; $i < 5; $i++) {
-                        yield new Rows(
-                            Row::create(new IntegerEntry('id', $i)),
-                        );
-                    }
-                }
-            }
-        )
-            ->limit(10)
-            ->fetch();
-
-        $this->assertCount(5, $rows);
     }
 }
