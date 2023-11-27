@@ -1,52 +1,18 @@
-<?php
+<?php declare(strict_types=1);
 
-declare(strict_types=1);
-
-namespace Flow\ETL\Tests\Integration;
+namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use function Flow\ETL\DSL\ref;
-use Flow\ETL\Cache\PSRSimpleCache;
 use Flow\ETL\Config;
-use Flow\ETL\DSL\From;
 use Flow\ETL\ExternalSort\MemorySort;
 use Flow\ETL\Flow;
 use Flow\ETL\Monitoring\Memory\Unit;
 use Flow\ETL\Tests\Double\AllRowTypesFakeExtractor;
 use Flow\ETL\Tests\Double\CacheSpy;
-use Symfony\Component\Cache\Adapter\ArrayAdapter;
-use Symfony\Component\Cache\Psr16Cache;
+use Flow\ETL\Tests\Integration\IntegrationTestCase;
 
-final class FlowTest extends IntegrationTestCase
+final class SortTest extends IntegrationTestCase
 {
-    public function test_etl_cache() : void
-    {
-        (new Flow())->extract(new AllRowTypesFakeExtractor($rowsets = 20, $rows = 2))
-            ->cache('test_etl_cache')
-            ->run();
-
-        $cacheContent = \array_values(\array_diff(\scandir($this->cacheDir), ['..', '.']));
-
-        $this->assertContains('test_etl_cache', $cacheContent);
-    }
-
-    public function test_etl_psr_cache() : void
-    {
-        Flow::setUp(
-            Config::builder()->cache($cache = new PSRSimpleCache(new Psr16Cache(new ArrayAdapter())))->build()
-        )->extract(new AllRowTypesFakeExtractor($rowsets = 20, $rows = 2))
-            ->cache('test_etl_cache')
-            ->run();
-
-        $cachedRows = Flow::setUp(Config::builder()->cache($cache)->build())
-            ->read(From::cache('test_etl_cache'))
-            ->fetch();
-
-        $this->assertCount($rowsets * $rows, $cachedRows);
-
-        $cache->clear('test_etl_cache');
-        $this->assertCount(0, \iterator_to_array($cache->read('test_etl_cache')));
-    }
-
     public function test_etl_sort_at_disk_in_memory() : void
     {
         \ini_set('memory_limit', '500M');

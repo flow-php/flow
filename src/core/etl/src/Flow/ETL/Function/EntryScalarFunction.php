@@ -145,6 +145,11 @@ trait EntryScalarFunction
         return new Equals(new Mod($this, lit(2)), lit(0));
     }
 
+    public function isFalse() : ScalarFunction|EntryReference
+    {
+        return new ScalarFunctions(new Same($this, lit(false)));
+    }
+
     public function isIn(ScalarFunction $haystack) : ScalarFunction|EntryReference
     {
         return new ScalarFunctions(new IsIn($haystack, $this));
@@ -173,6 +178,11 @@ trait EntryScalarFunction
     public function isOdd() : ScalarFunction|EntryReference
     {
         return new NotEquals(new Mod($this, lit(2)), lit(0));
+    }
+
+    public function isTrue() : ScalarFunction|EntryReference
+    {
+        return new ScalarFunctions(new Same($this, lit(true)));
     }
 
     /**
