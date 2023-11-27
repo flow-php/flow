@@ -1,6 +1,8 @@
 ## [Unreleased] - 2023-11-27
 
 ### Added
+- [#844](https://github.com/flow-php/flow/pull/844) - **ref()->isTrue()** - [@norberttech](https://github.com/norberttech)
+- [#844](https://github.com/flow-php/flow/pull/844) - **ref()->isFalse()** - [@norberttech](https://github.com/norberttech)
 - [#832](https://github.com/flow-php/flow/pull/832) - **Allow to change hash algorithm in `HashIdFactory`** - [@stloyd](https://github.com/stloyd)
 - [#836](https://github.com/flow-php/flow/pull/836) - **Writing chartjs output to variable** - [@norberttech](https://github.com/norberttech)
 - [#830](https://github.com/flow-php/flow/pull/830) - **DataFrame::collectRefs()** - [@norberttech](https://github.com/norberttech)
