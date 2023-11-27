@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-11-26
+## [Unreleased] - 2023-11-27
 
 ### Added
 - [#832](https://github.com/flow-php/flow/pull/832) - **Allow to change hash algorithm in `HashIdFactory`** - [@stloyd](https://github.com/stloyd)
