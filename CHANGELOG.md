@@ -196,6 +196,7 @@
 - [#584](https://github.com/flow-php/flow/pull/584) - **Adjust `phpunit.xml` to be more efficient** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
+- [#848](https://github.com/flow-php/flow/pull/848) - **Use platform for column escaping in bulk insert** - [@stloyd](https://github.com/stloyd)
 - [#840](https://github.com/flow-php/flow/pull/840) - **multiple group by execution in single pipeline** - [@norberttech](https://github.com/norberttech)
 - [#840](https://github.com/flow-php/flow/pull/840) - **moved elasticsearch HTTP Spy test double under Test namespace** - [@norberttech](https://github.com/norberttech)
 - [#838](https://github.com/flow-php/flow/pull/838) - **Fix `Definition::isEqual()` with random class order** - [@stloyd](https://github.com/stloyd)
