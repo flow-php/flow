@@ -2,8 +2,8 @@
 
 namespace Flow\ETL\Adapter\CSV\Tests\Benchmark;
 
+use function Flow\ETL\DSL\from_csv;
 use Flow\ETL\Config;
-use Flow\ETL\DSL\CSV;
 use Flow\ETL\FlowContext;
 use PhpBench\Attributes\Groups;
 
@@ -19,7 +19,7 @@ final class CSVExtractorBench
 
     public function bench_extract_10k() : void
     {
-        foreach (CSV::from(__DIR__ . '/../Fixtures/orders_flow.csv')->extract($this->context) as $rows) {
+        foreach (from_csv(__DIR__ . '/../Fixtures/orders_flow.csv')->extract($this->context) as $rows) {
         }
     }
 }

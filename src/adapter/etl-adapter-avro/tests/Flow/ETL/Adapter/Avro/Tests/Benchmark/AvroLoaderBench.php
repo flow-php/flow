@@ -2,8 +2,9 @@
 
 namespace Flow\ETL\Adapter\Avro\Tests\Benchmark;
 
+use function Flow\ETL\DSL\from_avro;
+use function Flow\ETL\DSL\to_avro;
 use Flow\ETL\Config;
-use Flow\ETL\DSL\Avro;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use PhpBench\Attributes\Groups;
@@ -23,7 +24,7 @@ final class AvroLoaderBench
         $this->outputPath = \tempnam(\sys_get_temp_dir(), 'etl_avro_loader_bench') . '.avro';
         $this->rows = new Rows();
 
-        foreach (Avro::from(__DIR__ . '/../Fixtures/orders_flow.avro')->extract($this->context) as $rows) {
+        foreach (from_avro(__DIR__ . '/../Fixtures/orders_flow.avro')->extract($this->context) as $rows) {
             $this->rows = $this->rows->merge($rows);
         }
     }
@@ -39,6 +40,6 @@ final class AvroLoaderBench
 
     public function bench_load_10k() : void
     {
-        Avro::to($this->outputPath)->load($this->rows, $this->context);
+        to_avro($this->outputPath)->load($this->rows, $this->context);
     }
 }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV\Tests\Integration;
 
-use Flow\ETL\DSL\CSV;
+use function Flow\ETL\DSL\to_csv;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\SaveMode;
@@ -28,7 +28,7 @@ final class CSVLoaderTest extends TestCase
                     Row::create(Entry::integer('id', 1), Entry::array('data', ['foo' => 'bar'])),
                 )
             )
-            ->write(CSV::to($path))
+            ->write(to_csv($path))
             ->run();
 
         if (\file_exists($path)) {
@@ -49,7 +49,7 @@ final class CSVLoaderTest extends TestCase
                 )
             )
             ->appendSafe()
-            ->load(CSV::to($path))
+            ->load(to_csv($path))
             ->run();
 
         $files = \array_values(\array_diff(\scandir($path), ['..', '.']));
@@ -83,7 +83,7 @@ CSV,
                     Row::create(Entry::integer('id', 3), Entry::string('name', 'Dawid')),
                 )
             )
-            ->load($serializer->unserialize($serializer->serialize(CSV::to($path, $withHeader = true))))
+            ->load($serializer->unserialize($serializer->serialize(to_csv($path, $withHeader = true))))
             ->run();
 
         $this->assertStringContainsString(
@@ -113,7 +113,7 @@ CSV,
                     Row::create(Entry::integer('id', 3), Entry::string('name', 'Dawid')),
                 )
             )
-            ->load(CSV::to($path))
+            ->load(to_csv($path))
             ->run();
 
         $this->assertStringContainsString(
@@ -144,7 +144,7 @@ CSV,
                     Row::create(Entry::integer('id', 4), Entry::integer('group', 2)),
                 )
             )
-            ->load(CSV::to($path))
+            ->load(to_csv($path))
             ->partitionBy('group')
             ->run();
 
@@ -194,7 +194,7 @@ CSV,
                     Row::create(Entry::integer('id', 3), Entry::string('name', 'Dawid')),
                 )
             )
-            ->load(CSV::to($path))
+            ->load(to_csv($path))
             ->run();
 
         (new Flow())
@@ -206,7 +206,7 @@ CSV,
                 )
             )
             ->mode(SaveMode::Overwrite)
-            ->load(CSV::to($path))
+            ->load(to_csv($path))
             ->run();
 
         $this->assertStringContainsString(
@@ -228,7 +228,7 @@ CSV,
     {
         $this->expectExceptionMessage("CSVLoader path can't be pattern, given: /path/*/pattern.csv");
 
-        CSV::to(new Path('/path/*/pattern.csv'));
+        to_csv(new Path('/path/*/pattern.csv'));
     }
 
     /**

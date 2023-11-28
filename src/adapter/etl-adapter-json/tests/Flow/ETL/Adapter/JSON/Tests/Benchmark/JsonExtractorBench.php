@@ -2,8 +2,8 @@
 
 namespace Flow\ETL\Adapter\JSON\Tests\Benchmark;
 
+use function Flow\ETL\DSL\from_json;
 use Flow\ETL\Config;
-use Flow\ETL\DSL\Json;
 use Flow\ETL\FlowContext;
 use PhpBench\Attributes\Groups;
 
@@ -19,7 +19,7 @@ final class JsonExtractorBench
 
     public function bench_extract_10k() : void
     {
-        foreach (Json::from(__DIR__ . '/../Fixtures/orders_flow.json')->extract($this->context) as $rows) {
+        foreach (from_json(__DIR__ . '/../Fixtures/orders_flow.json')->extract($this->context) as $rows) {
         }
     }
 }

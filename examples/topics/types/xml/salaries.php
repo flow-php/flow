@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
+use function Flow\ETL\DSL\from_xml;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\sum;
 use function Flow\ETL\DSL\to_output;
-use Flow\ETL\DSL\XML;
 use Flow\ETL\Flow;
 
 require __DIR__ . '/../../../bootstrap.php';
 
 $flow = (new Flow())
-    ->read(XML::from(__FLOW_DATA__ . '/salaries.xml'))
+    ->read(from_xml(__FLOW_DATA__ . '/salaries.xml'))
     ->withEntry('months', ref('node')->xpath('/Salaries/Month'))
     ->withEntry('month', ref('months')->expand())
     ->withEntry('month_name', ref('month')->domNodeAttribute('name'))

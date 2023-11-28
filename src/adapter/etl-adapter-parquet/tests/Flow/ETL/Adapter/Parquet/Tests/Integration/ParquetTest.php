@@ -2,11 +2,12 @@
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Integration;
 
+use function Flow\ETL\DSL\from_parquet;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\read;
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\to_parquet;
 use Flow\ETL\DSL\Entry;
-use Flow\ETL\DSL\Parquet;
 use Flow\ETL\Flow;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\StructureType;
@@ -25,13 +26,13 @@ final class ParquetTest extends TestCase
         $this->removeFile($path);
 
         read(from_rows($rows = $this->createRows(10)))
-            ->write(Parquet::to($path))
+            ->write(to_parquet($path))
             ->run();
 
         $this->assertEquals(
             $rows,
             (new Flow())
-                ->read(Parquet::from($path))
+                ->read(from_parquet($path))
                 ->fetch()
         );
 
@@ -60,13 +61,13 @@ final class ParquetTest extends TestCase
         )))
             ->withEntry('date', ref('datetime')->toDate()->dateFormat())
             ->partitionBy(ref('date'))
-            ->write(Parquet::to($path))
+            ->write(to_parquet($path))
             ->run();
 
         $this->assertEquals(
             $rows,
             (new Flow())
-                ->read(Parquet::from($path))
+                ->read(from_parquet($path))
                 ->drop('date')
                 ->sortBy(ref('datetime')->asc())
                 ->fetch()

@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Meilisearch\Tests\Integration\MeilisearchPHP;
 
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\from_meilisearch;
+use function Flow\ETL\DSL\meilisearch_hits_to_rows;
+use function Flow\ETL\DSL\to_meilisearch_bulk_index;
 use Flow\ETL\Adapter\Meilisearch\Tests\Context\MeilisearchContext;
 use Flow\ETL\Adapter\Meilisearch\Tests\Double\Spy\HttpClientSpy;
-use Flow\ETL\DSL\Meilisearch;
 use Flow\ETL\Flow;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -50,7 +52,7 @@ final class MailiSearchTest extends TestCase
                 ['id' => 6, 'text' => 'lorem ipsum'],
             ]))
             ->write(
-                Meilisearch::bulk_index(
+                to_meilisearch_bulk_index(
                     \array_merge(
                         $this->meilisearchContext->clientConfig(),
                         ['httpClient' => $httpClient = new HttpClientSpy()]
@@ -89,11 +91,11 @@ final class MailiSearchTest extends TestCase
         ];
 
         $results = (new Flow())
-            ->extract(Meilisearch::search($this->meilisearchContext->clientConfig(), $params, self::SOURCE_INDEX))
-            ->rows(Meilisearch::hits_to_rows())
+            ->extract(from_meilisearch($this->meilisearchContext->clientConfig(), $params, self::SOURCE_INDEX))
+            ->rows(meilisearch_hits_to_rows())
             ->limit($limit)
             ->load(
-                Meilisearch::bulk_index(
+                to_meilisearch_bulk_index(
                     $this->meilisearchContext->clientConfig(),
                     self::DESTINATION_INDEX
                 )

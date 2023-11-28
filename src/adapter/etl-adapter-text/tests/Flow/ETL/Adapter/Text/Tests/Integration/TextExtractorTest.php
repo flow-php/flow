@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Text\Tests\Integration;
 
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\from_text;
+use function Flow\ETL\DSL\to_text;
 use Flow\ETL\Adapter\Text\TextExtractor;
 use Flow\ETL\Config;
-use Flow\ETL\DSL\Text;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Flow;
@@ -23,7 +24,7 @@ final class TextExtractorTest extends TestCase
         $path = __DIR__ . '/../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv';
 
         $rows = (new Flow())
-            ->read(Text::from($path))
+            ->read(from_text($path))
             ->fetch();
 
         foreach ($rows as $row) {
@@ -35,7 +36,7 @@ final class TextExtractorTest extends TestCase
 
     public function test_extracting_text_files_from_directory() : void
     {
-        $extractor = Text::from(
+        $extractor = from_text(
             [
                 __DIR__ . '/../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv',
                 __DIR__ . '/../Fixtures/nested/annual-enterprise-survey-2019-financial-year-provisional-csv.csv',
@@ -64,7 +65,7 @@ final class TextExtractorTest extends TestCase
         }
 
         (new Flow())->read(from_array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
-            ->write(Text::to($path))
+            ->write(to_text($path))
             ->run();
         $extractor = new TextExtractor(Path::realpath($path));
         $extractor->changeLimit(2);
@@ -84,7 +85,7 @@ final class TextExtractorTest extends TestCase
         }
 
         (new Flow())->read(from_array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
-            ->write(Text::to($path))
+            ->write(to_text($path))
             ->run();
 
         $extractor = new TextExtractor(Path::realpath($path));

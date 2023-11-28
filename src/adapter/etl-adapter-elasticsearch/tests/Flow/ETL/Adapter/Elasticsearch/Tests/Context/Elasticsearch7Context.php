@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Elasticsearch\Tests\Context;
 
+use function Flow\ETL\DSL\to_es_bulk_index;
 use Elasticsearch\Client;
 use Elasticsearch\ClientBuilder;
 use Elasticsearch\Common\Exceptions\BadRequest400Exception;
 use Elasticsearch\Common\Exceptions\Missing404Exception;
 use Flow\ETL\Adapter\Elasticsearch\IdFactory;
 use Flow\ETL\Config;
-use Flow\ETL\DSL\Elasticsearch;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 
@@ -69,7 +69,7 @@ final class Elasticsearch7Context implements ElasticsearchContext
 
     public function loadRows(Rows $rows, string $index, IdFactory $idFactory) : void
     {
-        Elasticsearch::bulk_index(
+        to_es_bulk_index(
             $this->clientConfig(),
             $index,
             $idFactory,

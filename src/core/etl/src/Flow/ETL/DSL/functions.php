@@ -4,13 +4,52 @@ declare(strict_types=1);
 
 namespace Flow\ETL\DSL;
 
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Query\QueryBuilder;
+use Doctrine\DBAL\Types\Type;
+use Flow\ETL\Adapter\Avro\FlixTech\AvroExtractor;
+use Flow\ETL\Adapter\Avro\FlixTech\AvroLoader;
+use Flow\ETL\Adapter\ChartJS\Chart;
+use Flow\ETL\Adapter\ChartJS\Chart\BarChart;
+use Flow\ETL\Adapter\ChartJS\Chart\LineChart;
+use Flow\ETL\Adapter\ChartJS\Chart\PieChart;
+use Flow\ETL\Adapter\ChartJS\ChartJSLoader;
+use Flow\ETL\Adapter\CSV\CSVExtractor;
+use Flow\ETL\Adapter\CSV\CSVLoader;
+use Flow\ETL\Adapter\Doctrine\DbalDataFrameFactory;
+use Flow\ETL\Adapter\Doctrine\DbalLimitOffsetExtractor;
+use Flow\ETL\Adapter\Doctrine\DbalLoader;
+use Flow\ETL\Adapter\Doctrine\DbalQueryExtractor;
+use Flow\ETL\Adapter\Doctrine\OrderBy;
+use Flow\ETL\Adapter\Doctrine\ParametersSet;
+use Flow\ETL\Adapter\Doctrine\QueryParameter;
+use Flow\ETL\Adapter\Doctrine\Table;
+use Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\DocumentDataSource;
+use Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\ElasticsearchExtractor;
+use Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\ElasticsearchLoader;
+use Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\HitsIntoRowsTransformer;
+use Flow\ETL\Adapter\Elasticsearch\IdFactory;
+use Flow\ETL\Adapter\GoogleSheet\Columns;
+use Flow\ETL\Adapter\GoogleSheet\GoogleSheetExtractor;
+use Flow\ETL\Adapter\JSON\JsonLoader;
+use Flow\ETL\Adapter\JSON\JSONMachine\JsonExtractor;
+use Flow\ETL\Adapter\Meilisearch\MeilisearchPHP\MeilisearchExtractor;
+use Flow\ETL\Adapter\Meilisearch\MeilisearchPHP\MeilisearchLoader;
+use Flow\ETL\Adapter\Parquet\ParquetExtractor;
+use Flow\ETL\Adapter\Parquet\ParquetLoader;
+use Flow\ETL\Adapter\Text\TextExtractor;
+use Flow\ETL\Adapter\Text\TextLoader;
+use Flow\ETL\Adapter\XML\XMLReaderExtractor;
 use Flow\ETL\Config;
 use Flow\ETL\ConfigBuilder;
 use Flow\ETL\DataFrame;
+use Flow\ETL\DataFrameFactory;
 use Flow\ETL\ErrorHandler\IgnoreError;
 use Flow\ETL\ErrorHandler\SkipRows;
 use Flow\ETL\ErrorHandler\ThrowError;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
+use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\Flow;
 use Flow\ETL\Formatter;
@@ -88,11 +127,18 @@ use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
+use Flow\ETL\Row\Schema;
 use Flow\ETL\Row\Schema\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Row\Schema\SchemaFormatter;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 use Flow\ETL\Window;
+use Flow\Parquet\ByteOrder;
+use Flow\Parquet\Options;
+use Flow\Parquet\ParquetFile\Compressions;
+use Google\Client;
+use Google\Service\Sheets;
+use Psr\Http\Client\ClientInterface;
 
 function read(Extractor $extractor, Config|ConfigBuilder|null $config = null) : DataFrame
 {
@@ -646,4 +692,695 @@ function min(Reference $ref) : Min
 function row_number() : RowNumber
 {
     return new RowNumber();
+}
+
+if (\class_exists('\Flow\ETL\Adapter\Avro\FlixTech\AvroLoader')) {
+    function from_avro(Path|string|array $path) : Extractor
+    {
+        if (\is_array($path)) {
+            /** @var array<Extractor> $extractors */
+            $extractors = [];
+
+            foreach ($path as $next_path) {
+                $extractors[] = new AvroExtractor(
+                    \is_string($next_path) ? Path::realpath($next_path) : $next_path,
+                );
+            }
+
+            return from_all(...$extractors);
+        }
+
+        return new AvroExtractor(
+            \is_string($path) ? Path::realpath($path) : $path
+        );
+    }
+
+    function to_avro(Path|string $path, ?Schema $schema = null) : AvroLoader
+    {
+        return new AvroLoader(
+            \is_string($path) ? Path::realpath($path) : $path,
+            $schema
+        );
+    }
+}
+
+if (\class_exists('\Flow\ETL\Adapter\ChartJS\ChartJSLoader')) {
+    function bar_chart(EntryReference $label, References $datasets) : BarChart
+    {
+        return new BarChart($label, $datasets);
+    }
+
+    function line_chart(EntryReference $label, References $datasets) : LineChart
+    {
+        return new LineChart($label, $datasets);
+    }
+
+    function pie_chart(EntryReference $label, References $datasets) : PieChart
+    {
+        return new PieChart($label, $datasets);
+    }
+
+    function to_chartjs_file(Chart $type, Path|string|null $output = null, Path|string|null $template = null) : ChartJSLoader
+    {
+        if (\is_string($output)) {
+            $output = Path::realpath($output);
+        }
+
+        if (null === $template) {
+            return new ChartJSLoader($type, $output);
+        }
+
+        if (\is_string($template)) {
+            $template = Path::realpath($template);
+        }
+
+        return new ChartJSLoader($type, output: $output, template: $template);
+    }
+
+    function to_chartjs_var(Chart $type, array &$output) : ChartJSLoader
+    {
+        /** @psalm-suppress ReferenceConstraintViolation */
+        return new ChartJSLoader($type, outputVar: $output);
+    }
+}
+
+if (\class_exists('\Flow\ETL\Adapter\CSV\CSVExtractor')) {
+    /**
+     * @param int<0, max> $characters_read_in_line
+     */
+    function from_csv(
+        string|Path|array $path,
+        bool $with_header = true,
+        bool $empty_to_null = true,
+        string $delimiter = ',',
+        string $enclosure = '"',
+        string $escape = '\\',
+        int $characters_read_in_line = 1000
+    ) : Extractor {
+        if (\is_array($path)) {
+            $extractors = [];
+
+            foreach ($path as $file_path) {
+                $extractors[] = new CSVExtractor(
+                    \is_string($file_path) ? Path::realpath($file_path) : $file_path,
+                    $with_header,
+                    $empty_to_null,
+                    $delimiter,
+                    $enclosure,
+                    $escape,
+                    $characters_read_in_line,
+                );
+            }
+
+            return from_all(...$extractors);
+        }
+
+        return new CSVExtractor(
+            \is_string($path) ? Path::realpath($path) : $path,
+            $with_header,
+            $empty_to_null,
+            $delimiter,
+            $enclosure,
+            $escape,
+            $characters_read_in_line,
+        );
+    }
+
+    function to_csv(
+        string|Path $uri,
+        bool $with_header = true,
+        string $separator = ',',
+        string $enclosure = '"',
+        string $escape = '\\',
+        string $new_line_separator = PHP_EOL
+    ) : Loader {
+        return new CSVLoader(
+            \is_string($uri) ? Path::realpath($uri) : $uri,
+            $with_header,
+            $separator,
+            $enclosure,
+            $escape,
+            $new_line_separator
+        );
+    }
+}
+
+if (\class_exists('\Flow\ETL\Adapter\Doctrine\DbalLimitOffsetExtractor')) {
+    /**
+     * @param array<string, mixed>|Connection $connection
+     * @param string $query
+     * @param QueryParameter ...$parameters
+     *
+     * @return DataFrameFactory
+     */
+    function dbal_dataframe_factory(
+        array|Connection $connection,
+        string $query,
+        QueryParameter ...$parameters
+    ) : DataFrameFactory {
+        return \is_array($connection)
+            ? new DbalDataFrameFactory($connection, $query, ...$parameters)
+            : DbalDataFrameFactory::fromConnection($connection, $query, ...$parameters);
+    }
+
+    /**
+     * @param Connection $connection
+     * @param string|Table $table
+     * @param array<OrderBy>|OrderBy $order_by
+     * @param int $page_size
+     * @param null|int $maximum
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return Extractor
+     */
+    function from_dbal_limit_offset(
+        Connection $connection,
+        string|Table $table,
+        array|OrderBy $order_by,
+        int $page_size = 1000,
+        ?int $maximum = null,
+    ) : Extractor {
+        return DbalLimitOffsetExtractor::table(
+            $connection,
+            \is_string($table) ? new Table($table) : $table,
+            $order_by instanceof OrderBy ? [$order_by] : $order_by,
+            $page_size,
+            $maximum,
+        );
+    }
+
+    /**
+     * @param Connection $connection
+     * @param int $page_size
+     * @param null|int $maximum
+     *
+     * @return Extractor
+     */
+    function from_dbal_limit_offset_qb(
+        Connection $connection,
+        QueryBuilder $queryBuilder,
+        int $page_size = 1000,
+        ?int $maximum = null,
+    ) : Extractor {
+        return new DbalLimitOffsetExtractor(
+            $connection,
+            $queryBuilder,
+            $page_size,
+            $maximum,
+        );
+    }
+
+    /**
+     * @param Connection $connection
+     * @param string $query
+     * @param null|ParametersSet $parameters_set - each one parameters array will be evaluated as new query
+     * @param array<int, null|int|string|Type>|array<string, null|int|string|Type> $types
+     *
+     * @return Extractor
+     */
+    function dbal_from_queries(
+        Connection $connection,
+        string $query,
+        ?ParametersSet $parameters_set = null,
+        array $types = [],
+    ) : Extractor {
+        return new DbalQueryExtractor(
+            $connection,
+            $query,
+            $parameters_set,
+            $types,
+        );
+    }
+
+    /**
+     * @param Connection $connection
+     * @param string $query
+     * @param array<string, mixed>|list<mixed> $parameters
+     * @param array<int, null|int|string|Type>|array<string, null|int|string|Type> $types
+     *
+     * @return Extractor
+     */
+    function dbal_from_query(
+        Connection $connection,
+        string $query,
+        array $parameters = [],
+        array $types = [],
+    ) : Extractor {
+        return DbalQueryExtractor::single(
+            $connection,
+            $query,
+            $parameters,
+            $types,
+        );
+    }
+
+    /**
+     * In order to control the size of the single insert, use DataFrame::chunkSize() method just before calling DataFrame::load().
+     *
+     * @param array<string, mixed>|Connection $connection
+     * @param array{
+     *  skip_conflicts?: boolean,
+     *  constraint?: string,
+     *  conflict_columns?: array<string>,
+     *  update_columns?: array<string>,
+     *  primary_key_columns?: array<string>
+     * } $options
+     *
+     * @throws InvalidArgumentException
+     */
+    function to_dbal_table_insert(
+        array|Connection $connection,
+        string $table,
+        array $options = [],
+    ) : Loader {
+        return \is_array($connection)
+            ? new DbalLoader($table, $connection, $options, 'insert')
+            : DbalLoader::fromConnection($connection, $table, $options, 'insert');
+    }
+
+    /**
+     *  In order to control the size of the single request, use DataFrame::chunkSize() method just before calling DataFrame::load().
+     *
+     * @param array<string, mixed>|Connection $connection
+     * @param array{
+     *  skip_conflicts?: boolean,
+     *  constraint?: string,
+     *  conflict_columns?: array<string>,
+     *  update_columns?: array<string>,
+     *  primary_key_columns?: array<string>
+     * } $options
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return Loader
+     */
+    function to_dbal_table_update(
+        array|Connection $connection,
+        string $table,
+        array $options = [],
+    ) : Loader {
+        return \is_array($connection)
+            ? new DbalLoader($table, $connection, $options, 'update')
+            : DbalLoader::fromConnection($connection, $table, $options, 'update');
+    }
+}
+
+if (\class_exists('\Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\ElasticsearchExtractor')) {
+    /**
+     * https://www.elastic.co/guide/en/elasticsearch/reference/master/docs-bulk.html.
+     *
+     * In order to control the size of the single request, use DataFrame::chunkSize() method just before calling DataFrame::load().
+     *
+     * @param array{
+     *  hosts?: array<string>,
+     *  connectionParams?: array<mixed>,
+     *  retries?: int,
+     *  sniffOnStart?: boolean,
+     *  sslCert?: array<string>,
+     *  sslKey?: array<string>,
+     *  sslVerification?: boolean|string,
+     *  elasticMetaHeader?: boolean,
+     *  includePortInHostHeader?: boolean
+     * } $config
+     * @param string $index
+     * @param IdFactory $id_factory
+     * @param array<mixed> $parameters - https://www.elastic.co/guide/en/elasticsearch/reference/master/docs-bulk.html
+     *
+     * @return ElasticsearchLoader
+     */
+    function to_es_bulk_index(
+        array $config,
+        string $index,
+        IdFactory $id_factory,
+        array $parameters = []
+    ) : ElasticsearchLoader {
+        return new ElasticsearchLoader($config, $index, $id_factory, $parameters);
+    }
+
+    /**
+     *  https://www.elastic.co/guide/en/elasticsearch/reference/master/docs-bulk.html.
+     *
+     * In order to control the size of the single request, use DataFrame::chunkSize() method just before calling DataFrame::load().
+     *
+     * @param array{
+     *  hosts?: array<string>,
+     *  connectionParams?: array<mixed>,
+     *  retries?: int,
+     *  sniffOnStart?: boolean,
+     *  sslCert?: array<string>,
+     *  sslKey?: array<string>,
+     *  sslVerification?: boolean|string,
+     *  elasticMetaHeader?: boolean,
+     *  includePortInHostHeader?: boolean
+     * } $config
+     * @param string $index
+     * @param IdFactory $id_factory
+     * @param array<mixed> $parameters - https://www.elastic.co/guide/en/elasticsearch/reference/master/docs-bulk.html
+     *
+     * @return Loader
+     */
+    function to_es_bulk_update(
+        array $config,
+        string $index,
+        IdFactory $id_factory,
+        array $parameters = []
+    ) : Loader {
+        return ElasticsearchLoader::update($config, $index, $id_factory, $parameters);
+    }
+
+    /**
+     * Transforms elasticsearch results into clear Flow Rows using ['hits']['hits'][x]['_source'].
+     *
+     * @return HitsIntoRowsTransformer
+     */
+    function es_hits_to_rows(DocumentDataSource $source = DocumentDataSource::source) : HitsIntoRowsTransformer
+    {
+        return new HitsIntoRowsTransformer($source);
+    }
+
+    /**
+     * Extractor will automatically try to iterate over whole index using one of the two iteration methods:.
+     *
+     * - from/size
+     * - search_after
+     *
+     * Search after is selected when you provide define sort parameters in query, otherwise it will fallback to from/size.
+     *
+     * @param array{
+     *  hosts?: array<string>,
+     *  connectionParams?: array<mixed>,
+     *  retries?: int,
+     *  sniffOnStart?: boolean,
+     *  sslCert?: array<string>,
+     *  sslKey?: array<string>,
+     *  sslVerification?: boolean|string,
+     *  elasticMetaHeader?: boolean,
+     *  includePortInHostHeader?: boolean
+     * } $config
+     * @param array<mixed> $params - https://www.elastic.co/guide/en/elasticsearch/reference/master/search-search.html
+     * @param ?array<mixed> $pit_params - when used extractor will create point in time to stabilize search results. Point in time is automatically closed when last element is extracted. https://www.elastic.co/guide/en/elasticsearch/reference/master/point-in-time-api.html
+     */
+    function from_es(array $config, array $params, ?array $pit_params = null) : ElasticsearchExtractor
+    {
+        return new ElasticsearchExtractor(
+            $config,
+            $params,
+            $pit_params,
+        );
+    }
+}
+
+if (\class_exists('\Flow\ETL\Adapter\GoogleSheet\GoogleSheetExtractor')) {
+    /**
+     * @param array{type: string, project_id: string, private_key_id: string, private_key: string, client_email: string, client_id: string, auth_uri: string, token_uri: string, auth_provider_x509_cert_url: string, client_x509_cert_url: string}|Sheets $auth_config
+     * @param string $spreadsheet_id
+     * @param string $sheet_name
+     * @param bool $with_header
+     * @param int $rows_per_page - how many rows per page to fetch from Google Sheets API
+     * @param array{dateTimeRenderOption?: string, majorDimension?: string, valueRenderOption?: string} $options
+     */
+    function from_google_sheet(
+        array|Sheets $auth_config,
+        string $spreadsheet_id,
+        string $sheet_name,
+        bool $with_header = true,
+        int $rows_per_page = 1000,
+        array $options = [],
+    ) : Extractor {
+        if ($auth_config instanceof Sheets) {
+            $sheets = $auth_config;
+        } else {
+            $client = new Client();
+            $client->setScopes(Sheets::SPREADSHEETS_READONLY);
+            $client->setAuthConfig($auth_config);
+            $sheets = new Sheets($client);
+        }
+
+        return new GoogleSheetExtractor(
+            $sheets,
+            $spreadsheet_id,
+            new Columns($sheet_name, 'A', 'Z'),
+            $with_header,
+            $rows_per_page,
+            $options,
+        );
+    }
+
+    /**
+     * @param array{type: string, project_id: string, private_key_id: string, private_key: string, client_email: string, client_id: string, auth_uri: string, token_uri: string, auth_provider_x509_cert_url: string, client_x509_cert_url: string}|Sheets $auth_config
+     * @param string $spreadsheet_id
+     * @param string $sheet_name
+     * @param string $start_range_column
+     * @param string $end_range_column
+     * @param bool $with_header
+     * @param int $rows_per_page - how many rows per page to fetch from Google Sheets API
+     * @param array{dateTimeRenderOption?: string, majorDimension?: string, valueRenderOption?: string} $options
+     */
+    function from_google_sheet_columns(
+        array|Sheets $auth_config,
+        string $spreadsheet_id,
+        string $sheet_name,
+        string $start_range_column,
+        string $end_range_column,
+        bool $with_header = true,
+        int $rows_per_page = 1000,
+        array $options = [],
+    ) : Extractor {
+        if ($auth_config instanceof Sheets) {
+            $sheets = $auth_config;
+        } else {
+            $client = new Client();
+            $client->setScopes(Sheets::SPREADSHEETS_READONLY);
+            $client->setAuthConfig($auth_config);
+            $sheets = new Sheets($client);
+        }
+
+        return new GoogleSheetExtractor(
+            $sheets,
+            $spreadsheet_id,
+            new Columns($sheet_name, $start_range_column, $end_range_column),
+            $with_header,
+            $rows_per_page,
+            $options,
+        );
+    }
+}
+
+if (\class_exists('\Flow\ETL\Adapter\JSON\JsonLoader')) {
+    /**
+     * @param array<Path|string>|Path|string $path - string is internally turned into LocalFile stream
+     * @param ?string $pointer - if you want to iterate only results of a subtree, use a pointer, read more at https://github.com/halaxa/json-machine#parsing-a-subtree
+     *
+     * @return Extractor
+     */
+    function from_json(
+        string|Path|array $path,
+        ?string $pointer = null,
+    ) : Extractor {
+        if (\is_array($path)) {
+            $extractors = [];
+
+            foreach ($path as $file) {
+                $extractors[] = new JsonExtractor(
+                    \is_string($file) ? Path::realpath($file) : $file,
+                    $pointer,
+                );
+            }
+
+            return from_all(...$extractors);
+        }
+
+        return new JsonExtractor(
+            \is_string($path) ? Path::realpath($path) : $path,
+            $pointer,
+        );
+    }
+
+    /**
+     * @param Path|string $path
+     *
+     * @return Loader
+     */
+    function to_json(string|Path $path) : Loader
+    {
+        return new JsonLoader(
+            \is_string($path) ? Path::realpath($path) : $path,
+        );
+    }
+}
+
+if (\class_exists('\Flow\ETL\Adapter\Meilisearch\MeilisearchPHP\MeilisearchExtractor')) {
+    /**
+     * @param array{url: string, apiKey: string, httpClient: ?ClientInterface} $config
+     */
+    function to_meilisearch_bulk_index(
+        array $config,
+        string $index,
+    ) : Loader {
+        return new MeilisearchLoader($config, $index);
+    }
+
+    /**
+     * @param array{url: string, apiKey: string, httpClient: ?ClientInterface} $config
+     */
+    function to_meilisearch_bulk_update(
+        array $config,
+        string $index,
+    ) : Loader {
+        return MeilisearchLoader::update($config, $index);
+    }
+
+    /**
+     * Transforms Meilisearch results into clear Flow Rows.
+     */
+    function meilisearch_hits_to_rows() : \Flow\ETL\Adapter\Meilisearch\MeilisearchPHP\HitsIntoRowsTransformer
+    {
+        return new \Flow\ETL\Adapter\Meilisearch\MeilisearchPHP\HitsIntoRowsTransformer();
+    }
+
+    /**
+     * @param array{url: string, apiKey: string} $config
+     * @param array{q: string, limit: ?int, offset: ?int, attributesToRetrieve: ?array<string>, sort: ?array<string>} $params
+     */
+    function from_meilisearch(array $config, array $params, string $index) : MeilisearchExtractor
+    {
+        return new MeilisearchExtractor($config, $params, $index);
+    }
+}
+
+if (\class_exists('\Flow\ETL\Adapter\Parquet\ParquetExtractor')) {
+    /**
+     * @param array<Path>|Path|string $uri
+     * @param array<string> $columns
+     *
+     * @return Extractor
+     */
+    function from_parquet(
+        string|Path|array $uri,
+        array $columns = [],
+        Options $options = new Options(),
+        ByteOrder $byte_order = ByteOrder::LITTLE_ENDIAN,
+    ) : Extractor {
+        if (\is_array($uri)) {
+            $extractors = [];
+
+            foreach ($uri as $filePath) {
+                $extractors[] = new ParquetExtractor(
+                    $filePath,
+                    $options,
+                    $byte_order,
+                    $columns
+                );
+            }
+
+            return from_all(...$extractors);
+        }
+
+        return new ParquetExtractor(
+            \is_string($uri) ? Path::realpath($uri) : $uri,
+            $options,
+            $byte_order,
+            $columns
+        );
+    }
+
+    /**
+     * @param Path|string $path
+     * @param null|Schema $schema
+     *
+     * @return Loader
+     */
+    function to_parquet(
+        string|Path $path,
+        ?Options $options = null,
+        Compressions $compressions = Compressions::SNAPPY,
+        ?Schema $schema = null,
+    ) : Loader {
+        if ($options === null) {
+            $options = Options::default();
+        }
+
+        return new ParquetLoader(
+            \is_string($path) ? Path::realpath($path) : $path,
+            $options,
+            $compressions,
+            $schema,
+        );
+    }
+}
+
+if (\class_exists('\Flow\ETL\Adapter\Text\TextExtractor')) {
+    /**
+     * @param array<Path|string>|Path|string $path
+     *
+     * @return Extractor
+     */
+    function from_text(
+        string|Path|array $path,
+    ) : Extractor {
+        if (\is_array($path)) {
+            $extractors = [];
+
+            foreach ($path as $file_path) {
+                $extractors[] = new TextExtractor(
+                    \is_string($file_path) ? Path::realpath($file_path) : $file_path,
+                );
+            }
+
+            return new Extractor\ChainExtractor(...$extractors);
+        }
+
+        return new TextExtractor(
+            \is_string($path) ? Path::realpath($path) : $path,
+        );
+    }
+
+    /**
+     * @param Path|string $path
+     * @param string $new_line_separator
+     *
+     * @return Loader
+     */
+    function to_text(
+        string|Path $path,
+        string $new_line_separator = PHP_EOL
+    ) : Loader {
+        return new TextLoader(
+            \is_string($path) ? Path::realpath($path) : $path,
+            $new_line_separator
+        );
+    }
+}
+
+if (\class_exists('\Flow\ETL\Adapter\XML\XMLReaderExtractor')) {
+    /**
+     * @param array<Path|string>|Path|string $path
+     * @param string $xml_node_path
+     *
+     * @return Extractor
+     */
+    function from_xml(
+        string|Path|array $path,
+        string $xml_node_path = ''
+    ) : Extractor {
+        if (\is_array($path)) {
+            /** @var array<Extractor> $extractors */
+            $extractors = [];
+
+            foreach ($path as $next_path) {
+                $extractors[] = new XMLReaderExtractor(
+                    \is_string($next_path) ? Path::realpath($next_path) : $next_path,
+                    $xml_node_path
+                );
+            }
+
+            return from_all(...$extractors);
+        }
+
+        return new XMLReaderExtractor(
+            \is_string($path) ? Path::realpath($path) : $path,
+            $xml_node_path
+        );
+    }
 }

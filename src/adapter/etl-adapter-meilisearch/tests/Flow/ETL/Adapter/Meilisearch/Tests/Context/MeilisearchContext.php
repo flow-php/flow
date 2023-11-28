@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Meilisearch\Tests\Context;
 
+use function Flow\ETL\DSL\to_meilisearch_bulk_index;
 use Flow\ETL\Config;
-use Flow\ETL\DSL\Meilisearch;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Meilisearch\Client;
@@ -62,7 +62,7 @@ final class MeilisearchContext
 
     public function loadRows(Rows $rows, string $index) : void
     {
-        Meilisearch::bulk_index(
+        to_meilisearch_bulk_index(
             $this->clientConfig(),
             $index
         )

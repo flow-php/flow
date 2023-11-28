@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\CSV\Tests\Integration;
 
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\from_csv;
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\to_csv;
 use Flow\ETL\Adapter\CSV\CSVExtractor;
 use Flow\ETL\Config;
 use Flow\ETL\ConfigBuilder;
-use Flow\ETL\DSL\CSV;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Filesystem\LocalFilesystem;
 use Flow\ETL\Filesystem\Path;
@@ -23,7 +24,7 @@ final class CSVExtractorTest extends TestCase
 {
     public function test_extracting_csv_empty_columns_as_empty_strings() : void
     {
-        $extractor = CSV::from(
+        $extractor = from_csv(
             $path = Path::realpath(__DIR__ . '/../Fixtures/file_with_empty_columns.csv'),
             empty_to_null: false,
         );
@@ -56,7 +57,7 @@ final class CSVExtractorTest extends TestCase
 
     public function test_extracting_csv_empty_columns_as_null() : void
     {
-        $extractor = CSV::from(
+        $extractor = from_csv(
             __DIR__ . '/../Fixtures/file_with_empty_columns.csv'
         );
 
@@ -86,7 +87,7 @@ final class CSVExtractorTest extends TestCase
 
     public function test_extracting_csv_files_from_directory_recursively() : void
     {
-        $extractor = CSV::from(
+        $extractor = from_csv(
             [
                 Path::realpath(__DIR__ . '/../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv'),
                 Path::realpath(__DIR__ . '/../Fixtures/nested/annual-enterprise-survey-2019-financial-year-provisional-csv.csv'),
@@ -115,7 +116,7 @@ final class CSVExtractorTest extends TestCase
         $path = __DIR__ . '/../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv';
 
         $rows = (new Flow())
-            ->read(CSV::from($path))
+            ->read(from_csv($path))
             ->fetch();
 
         foreach ($rows as $row) {
@@ -142,7 +143,7 @@ final class CSVExtractorTest extends TestCase
 
     public function test_extracting_csv_files_without_header() : void
     {
-        $extractor = CSV::from(
+        $extractor = from_csv(
             __DIR__ . '/../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv',
             false
         );
@@ -166,7 +167,7 @@ final class CSVExtractorTest extends TestCase
     public function test_extracting_csv_with_corrupted_row() : void
     {
         $rows = (new Flow())
-            ->extract(CSV::from(__DIR__ . '/../Fixtures/corrupted_row.csv'))
+            ->extract(from_csv(__DIR__ . '/../Fixtures/corrupted_row.csv'))
             ->fetch();
 
         $this->assertSame(3, $rows->count());
@@ -174,7 +175,7 @@ final class CSVExtractorTest extends TestCase
 
     public function test_extracting_csv_with_more_columns_than_headers() : void
     {
-        $extractor = CSV::from(
+        $extractor = from_csv(
             __DIR__ . '/../Fixtures/more_columns_than_headers.csv'
         );
 
@@ -196,7 +197,7 @@ final class CSVExtractorTest extends TestCase
 
     public function test_extracting_csv_with_more_headers_than_columns() : void
     {
-        $extractor = CSV::from(
+        $extractor = from_csv(
             Path::realpath(__DIR__ . '/../Fixtures/more_headers_than_columns.csv')
         );
 
@@ -221,7 +222,7 @@ final class CSVExtractorTest extends TestCase
         $this->assertCount(
             2,
             (new Flow())
-                ->read(CSV::from(__DIR__ . '/../Fixtures/more_than_1000_characters_per_line.csv'))
+                ->read(from_csv(__DIR__ . '/../Fixtures/more_than_1000_characters_per_line.csv'))
                 ->fetch()
                 ->toArray(),
             'Long line was broken down into two rows.'
@@ -233,7 +234,7 @@ final class CSVExtractorTest extends TestCase
         $this->assertCount(
             1,
             (new Flow())
-                ->read(CSV::from(__DIR__ . '/../Fixtures/more_than_1000_characters_per_line.csv', characters_read_in_line: 2000))
+                ->read(from_csv(__DIR__ . '/../Fixtures/more_than_1000_characters_per_line.csv', characters_read_in_line: 2000))
                 ->fetch()
                 ->toArray(),
             'Long line was read as one row.'
@@ -249,7 +250,7 @@ final class CSVExtractorTest extends TestCase
         }
 
         (new Flow())->read(from_array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
-            ->write(CSV::to($path))
+            ->write(to_csv($path))
             ->run();
 
         $extractor = new CSVExtractor(Path::realpath($path));
@@ -275,7 +276,7 @@ final class CSVExtractorTest extends TestCase
                 ['group' => '2', 'id' => 8, 'value' => 'h'],
             ],
             (new Flow())
-                ->read(CSV::from(__DIR__ . '/../Fixtures/partitioned/group=*/*.csv'))
+                ->read(from_csv(__DIR__ . '/../Fixtures/partitioned/group=*/*.csv'))
                 ->withEntry('id', ref('id')->cast('int'))
                 ->sortBy(ref('id'))
                 ->fetch()
@@ -297,7 +298,7 @@ final class CSVExtractorTest extends TestCase
                 ['group' => '2', 'id' => 8, 'value' => 'h'],
             ],
             (new Flow((new ConfigBuilder())->filesystem(new LocalFilesystem())))
-                ->read(CSV::from(__DIR__ . '/../Fixtures/partitioned/group=*/*.csv'))
+                ->read(from_csv(__DIR__ . '/../Fixtures/partitioned/group=*/*.csv'))
                 ->withEntry('id', ref('id')->cast('int'))
                 ->sortBy(ref('id'))
                 ->fetch()
@@ -314,7 +315,7 @@ final class CSVExtractorTest extends TestCase
         }
 
         (new Flow())->read(from_array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
-            ->write(CSV::to($path))
+            ->write(to_csv($path))
             ->run();
 
         $extractor = new CSVExtractor(Path::realpath($path));

@@ -2,8 +2,9 @@
 
 namespace Flow\ETL\Adapter\JSON\Tests\Benchmark;
 
+use function Flow\ETL\DSL\from_json;
+use function Flow\ETL\DSL\to_json;
 use Flow\ETL\Config;
-use Flow\ETL\DSL\Json;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use PhpBench\Attributes\Groups;
@@ -23,7 +24,7 @@ final class JsonLoaderBench
         $this->outputPath = \tempnam(\sys_get_temp_dir(), 'etl_json_loader_bench') . '.json';
         $this->rows = new Rows();
 
-        foreach (Json::from(__DIR__ . '/../Fixtures/orders_flow.json')->extract($this->context) as $rows) {
+        foreach (from_json(__DIR__ . '/../Fixtures/orders_flow.json')->extract($this->context) as $rows) {
             $this->rows = $this->rows->merge($rows);
         }
     }
@@ -39,6 +40,6 @@ final class JsonLoaderBench
 
     public function bench_load_10k() : void
     {
-        Json::to($this->outputPath)->load($this->rows, $this->context);
+        to_json($this->outputPath)->load($this->rows, $this->context);
     }
 }

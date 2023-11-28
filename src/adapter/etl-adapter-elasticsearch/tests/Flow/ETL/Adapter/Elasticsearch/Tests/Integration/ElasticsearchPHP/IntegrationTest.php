@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Elasticsearch\Tests\Integration\ElasticsearchPHP;
 
+use function Flow\ETL\DSL\es_hits_to_rows;
+use function Flow\ETL\DSL\from_es;
+use function Flow\ETL\DSL\to_es_bulk_index;
 use Flow\ETL\Adapter\Elasticsearch\EntryIdFactory\EntryIdFactory;
 use Flow\ETL\Adapter\Elasticsearch\Tests\Integration\TestCase;
-use Flow\ETL\DSL\Elasticsearch;
 use Flow\ETL\Flow;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -67,11 +69,11 @@ final class IntegrationTest extends TestCase
         ];
 
         $results = (new Flow())
-            ->extract(Elasticsearch::search($this->elasticsearchContext->clientConfig(), $params))
-            ->rows(Elasticsearch::hits_to_rows())
+            ->extract(from_es($this->elasticsearchContext->clientConfig(), $params))
+            ->rows(es_hits_to_rows())
             ->limit($limit = 20)
             ->load(
-                Elasticsearch::bulk_index(
+                to_es_bulk_index(
                     $this->elasticsearchContext->clientConfig(),
                     index: self::DESTINATION_INDEX,
                     id_factory: new EntryIdFactory('id')

@@ -7,11 +7,12 @@ if ($_ENV['FLOW_PHAR_APP'] ?? false) {
 }
 
 use function Flow\ETL\DSL\concat;
+use function Flow\ETL\DSL\from_csv;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\to_csv;
 use Flow\ETL\Adapter\Filesystem\AwsS3Stream;
 use Flow\ETL\Adapter\Filesystem\AzureBlobStream;
-use Flow\ETL\DSL\CSV;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Flow;
 use Symfony\Component\Dotenv\Dotenv;
@@ -45,9 +46,9 @@ AwsS3Stream::register();
 AzureBlobStream::register();
 
 (new Flow())
-    ->read(CSV::from(new Path('flow-aws-s3://nested/**/*.csv', $s3_client_option)))
+    ->read(from_csv(new Path('flow-aws-s3://nested/**/*.csv', $s3_client_option)))
     ->withEntry('id', ref('id')->cast('int'))
     ->withEntry('name', concat(ref('name'), lit(' '), ref('last name')))
     ->drop('last name')
-    ->write(CSV::to(new Path('flow-azure-blob://output.csv', $azure_blob_connection_string)))
+    ->write(to_csv(new Path('flow-azure-blob://output.csv', $azure_blob_connection_string)))
     ->run();

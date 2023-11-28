@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Text\Tests\Integration;
 
-use Flow\ETL\DSL\Text;
+use function Flow\ETL\DSL\to_text;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Flow;
 use Flow\ETL\Row;
@@ -26,7 +26,7 @@ final class TextLoaderTest extends TestCase
                     Row::create(new Row\Entry\StringEntry('name', 'Dawid')),
                 )
             )
-            ->load(Text::to($path))
+            ->write(to_text($path))
             ->appendSafe()
             ->run();
 
@@ -58,7 +58,7 @@ TEXT,
                     Row::create(new Row\Entry\StringEntry('name', 'Dawid')),
                 )
             )
-            ->load(Text::to($path))
+            ->write(to_text($path))
             ->run();
 
         $this->assertStringContainsString(
@@ -89,7 +89,7 @@ TEXT,
                     Row::create(new Row\Entry\StringEntry('name', 'Dawid')),
                 )
             )
-            ->load($serializer->unserialize($serializer->serialize(Text::to($path))))
+            ->write($serializer->unserialize($serializer->serialize(to_text($path))))
             ->run();
 
         $this->assertStringContainsString(
@@ -110,6 +110,6 @@ TEXT,
     {
         $this->expectExceptionMessage("TextLoader path can't be pattern, given: /path/*/pattern.csv");
 
-        Text::to(new Path('/path/*/pattern.csv'));
+        to_text(new Path('/path/*/pattern.csv'));
     }
 }

@@ -2,18 +2,19 @@
 
 declare(strict_types=1);
 
+use function Flow\ETL\DSL\from_parquet;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\sum;
 use function Flow\ETL\DSL\to_output;
-use Flow\ETL\DSL\Parquet;
+use function Flow\ETL\DSL\to_parquet;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Flow;
 
 require __DIR__ . '/../../bootstrap.php';
 
 $flow = (new Flow())
-    ->read(Parquet::from(__FLOW_DATA__ . '/orders_flow.parquet'))
+    ->read(from_parquet(__FLOW_DATA__ . '/orders_flow.parquet'))
     ->select('created_at', 'total_price', 'discount')
     ->withEntry('created_at', ref('created_at')->toDate()->dateFormat('Y/m'))
     ->withEntry('revenue', ref('total_price')->minus(ref('discount')))
@@ -26,7 +27,7 @@ $flow = (new Flow())
     ->write(to_output(truncate: false))
     ->withEntry('created_at', ref('created_at')->toDate('Y/m'))
     ->mode(SaveMode::Overwrite)
-    ->write(Parquet::to(__FLOW_OUTPUT__ . '/daily_revenue.parquet'));
+    ->write(to_parquet(__FLOW_OUTPUT__ . '/daily_revenue.parquet'));
 
 if ($_ENV['FLOW_PHAR_APP'] ?? false) {
     return $flow;

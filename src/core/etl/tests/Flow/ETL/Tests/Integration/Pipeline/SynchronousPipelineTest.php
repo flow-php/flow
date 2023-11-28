@@ -3,10 +3,10 @@
 namespace Flow\ETL\Tests\Integration\Pipeline;
 
 use function Flow\ETL\DSL\from_array;
-use Flow\ETL\DSL\CSV;
+use function Flow\ETL\DSL\from_csv;
+use function Flow\ETL\DSL\to_csv;
 use Flow\ETL\Flow;
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
-use Flow\ETL\Transformer\LimitTransformer;
 
 final class SynchronousPipelineTest extends IntegrationTestCase
 {
@@ -27,14 +27,14 @@ final class SynchronousPipelineTest extends IntegrationTestCase
                 ['id' => 5],
                 ['id' => 6],
             ]))
-            ->write(CSV::to($path))
+            ->write(to_csv($path))
             ->run();
 
         $this->assertSame(
             3,
             (new Flow())
-                ->read(CSV::from($path))
-                ->transform(new LimitTransformer(3))
+                ->read(from_csv($path))
+                ->limit(3)
                 ->count()
         );
     }

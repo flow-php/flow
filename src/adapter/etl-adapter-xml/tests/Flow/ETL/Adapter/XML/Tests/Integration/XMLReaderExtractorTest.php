@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\XML\Tests\Integration;
 
+use function Flow\ETL\DSL\from_xml;
 use Flow\ETL\Adapter\XML\XMLReaderExtractor;
 use Flow\ETL\Config;
 use Flow\ETL\DSL\Entry;
-use Flow\ETL\DSL\XML;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Flow;
@@ -83,7 +83,7 @@ XML);
                 )),
             ),
             (new Flow())
-                ->read(XML::from(__DIR__ . '/../Fixtures/deepest_items_flat.xml', 'root/items/item/deep'))
+                ->read(from_xml(__DIR__ . '/../Fixtures/deepest_items_flat.xml', 'root/items/item/deep'))
                 ->fetch()
         );
     }
@@ -96,7 +96,7 @@ XML);
         $this->assertEquals(
             (new Rows(Row::create(Entry::xml('node', $xml)))),
             (new Flow())
-                ->read(XML::from(__DIR__ . '/../Fixtures/simple_items.xml'))
+                ->read(from_xml(__DIR__ . '/../Fixtures/simple_items.xml'))
                 ->fetch()
         );
     }
@@ -112,7 +112,7 @@ XML);
                 Row::create(Entry::xml('node', '<item item_attribute_01="5"><id id_attribute_01="5">5</id></item>')),
             ),
             (new Flow())
-                ->read(XML::from(__DIR__ . '/../Fixtures/simple_items_flat.xml', 'root/items/item'))
+                ->read(from_xml(__DIR__ . '/../Fixtures/simple_items_flat.xml', 'root/items/item'))
                 ->fetch()
         );
     }
@@ -144,7 +144,7 @@ XML);
         $this->assertEquals(
             new Rows(Row::create(Entry::xml('node', $xml))),
             (new Flow())
-                ->read(XML::from(__DIR__ . '/../Fixtures/simple_items.xml', 'root/items'))
+                ->read(from_xml(__DIR__ . '/../Fixtures/simple_items.xml', 'root/items'))
                 ->fetch()
         );
     }

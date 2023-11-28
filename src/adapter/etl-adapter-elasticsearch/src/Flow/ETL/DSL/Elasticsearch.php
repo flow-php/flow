@@ -13,6 +13,9 @@ use Flow\ETL\Extractor;
 use Flow\ETL\Loader;
 use Flow\ETL\Transformer;
 
+/**
+ * @deprecated please use functions defined in Flow\ETL\DSL\functions.php
+ */
 class Elasticsearch
 {
     /**

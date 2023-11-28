@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine\Tests\Integration;
 
+use function Flow\ETL\DSL\from_dbal_limit_offset;
+use function Flow\ETL\DSL\from_dbal_limit_offset_qb;
+use function Flow\ETL\DSL\read;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;
@@ -11,7 +14,6 @@ use Doctrine\DBAL\Types\Types;
 use Flow\ETL\Adapter\Doctrine\Order;
 use Flow\ETL\Adapter\Doctrine\OrderBy;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
-use Flow\ETL\DSL\Dbal;
 use Flow\ETL\Flow;
 
 final class DbalLimitOffsetExtractorTest extends IntegrationTestCase
@@ -32,15 +34,14 @@ final class DbalLimitOffsetExtractorTest extends IntegrationTestCase
             $this->pgsqlDatabaseContext->insert($table, ['id' => $i, 'name' => 'name_' . $i, 'description' => 'description_' . $i]);
         }
 
-        $data = (new Flow())
-            ->extract(
-                Dbal::from_limit_offset(
-                    $this->pgsqlDatabaseContext->connection(),
-                    $table,
-                    new OrderBy('id', Order::ASC),
-                    5
-                )
+        $data = read(
+            from_dbal_limit_offset(
+                $this->pgsqlDatabaseContext->connection(),
+                $table,
+                new OrderBy('id', Order::ASC),
+                5
             )
+        )
             ->fetch();
 
         $this->assertSame(
@@ -76,7 +77,7 @@ final class DbalLimitOffsetExtractorTest extends IntegrationTestCase
 
         $data = (new Flow())
             ->extract(
-                Dbal::from_limit_offset_qb(
+                from_dbal_limit_offset_qb(
                     $this->pgsqlDatabaseContext->connection(),
                     $this->pgsqlDatabaseContext->connection()->createQueryBuilder()
                         ->from($table)
@@ -118,16 +119,15 @@ final class DbalLimitOffsetExtractorTest extends IntegrationTestCase
             $this->pgsqlDatabaseContext->insert($table, ['id' => $i, 'name' => 'name_' . $i, 'description' => 'description_' . $i]);
         }
 
-        $data = (new Flow())
-            ->extract(
-                Dbal::from_limit_offset(
-                    $this->pgsqlDatabaseContext->connection(),
-                    $table,
-                    new OrderBy('id', Order::ASC),
-                    5,
-                    7
-                )
+        $data = read(
+            from_dbal_limit_offset(
+                $this->pgsqlDatabaseContext->connection(),
+                $table,
+                new OrderBy('id', Order::ASC),
+                5,
+                7
             )
+        )
             ->fetch();
 
         $this->assertSame(
@@ -160,16 +160,15 @@ final class DbalLimitOffsetExtractorTest extends IntegrationTestCase
             $this->pgsqlDatabaseContext->insert($table, ['id' => $i, 'name' => 'name_' . $i, 'description' => 'description_' . $i]);
         }
 
-        $data = (new Flow())
-            ->extract(
-                Dbal::from_limit_offset(
-                    $this->pgsqlDatabaseContext->connection(),
-                    new \Flow\ETL\Adapter\Doctrine\Table($table, ['name']),
-                    new OrderBy('id', Order::ASC),
-                    5,
-                    7
-                )
+        $data = read(
+            from_dbal_limit_offset(
+                $this->pgsqlDatabaseContext->connection(),
+                new \Flow\ETL\Adapter\Doctrine\Table($table, ['name']),
+                new OrderBy('id', Order::ASC),
+                5,
+                7
             )
+        )
             ->fetch();
 
         $this->assertSame(

@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
+use function Flow\ETL\DSL\to_csv;
 use Aeon\Calendar\Stopwatch;
-use Flow\ETL\DSL\CSV;
 use Flow\ETL\Flow;
 use Flow\ETL\Monitoring\Memory\Consumption;
 
@@ -17,7 +17,7 @@ $extractor = require __FLOW_DATA__ . '/extractor.php';
 
 $flow = (new Flow())
     ->read($extractor)
-    ->write(CSV::to(__FLOW_OUTPUT__ . '/dataset.csv'));
+    ->write(to_csv(__FLOW_OUTPUT__ . '/dataset.csv'));
 
 if ($_ENV['FLOW_PHAR_APP'] ?? false) {
     return $flow;

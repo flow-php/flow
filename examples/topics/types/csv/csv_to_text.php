@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
+use function Flow\ETL\DSL\from_text;
 use Aeon\Calendar\Stopwatch;
-use Flow\ETL\DSL\Text;
 use Flow\ETL\Flow;
 
 require __DIR__ . '/../../../bootstrap.php';
 
 $flow = (new Flow())
-    ->read(Text::from(__FLOW_DATA__ . '/annual-enterprise-survey-2019-financial-year-provisional.csv'));
+    ->read(from_text(__FLOW_DATA__ . '/annual-enterprise-survey-2019-financial-year-provisional.csv'));
 
 if ($_ENV['FLOW_PHAR_APP'] ?? false) {
     return $flow;

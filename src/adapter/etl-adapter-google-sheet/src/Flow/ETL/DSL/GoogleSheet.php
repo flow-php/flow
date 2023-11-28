@@ -10,6 +10,9 @@ use Flow\ETL\Extractor;
 use Google\Client;
 use Google\Service\Sheets;
 
+/**
+ * @deprecated please use functions defined in Flow\ETL\DSL\functions.php
+ */
 class GoogleSheet
 {
     /**

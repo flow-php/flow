@@ -2,8 +2,9 @@
 
 namespace Flow\ETL\Adapter\CSV\Tests\Benchmark;
 
+use function Flow\ETL\DSL\from_csv;
+use function Flow\ETL\DSL\to_csv;
 use Flow\ETL\Config;
-use Flow\ETL\DSL\CSV;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use PhpBench\Attributes\Groups;
@@ -23,7 +24,7 @@ final class CSVLoaderBench
         $this->outputPath = \tempnam(\sys_get_temp_dir(), 'etl_csv_loader_bench') . '.csv';
         $this->rows = new Rows();
 
-        foreach (CSV::from(__DIR__ . '/../Fixtures/orders_flow.csv')->extract($this->context) as $rows) {
+        foreach (from_csv(__DIR__ . '/../Fixtures/orders_flow.csv')->extract($this->context) as $rows) {
             $this->rows = $this->rows->merge($rows);
         }
     }
@@ -39,6 +40,6 @@ final class CSVLoaderBench
 
     public function bench_load_10k() : void
     {
-        CSV::to($this->outputPath)->load($this->rows, $this->context);
+        to_csv($this->outputPath)->load($this->rows, $this->context);
     }
 }

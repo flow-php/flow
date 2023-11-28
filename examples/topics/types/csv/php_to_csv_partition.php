@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
+use function Flow\ETL\DSL\to_csv;
 use Aeon\Calendar\Stopwatch;
-use Flow\ETL\DSL\CSV;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Flow;
 
@@ -15,7 +15,7 @@ $flow = (new Flow())
     ->read($extractor)
     ->mode(SaveMode::Overwrite)
     ->partitionBy('country_code', 't_shirt_color')
-    ->write(CSV::to(__FLOW_OUTPUT__ . '/partitioned'));
+    ->write(to_csv(__FLOW_OUTPUT__ . '/partitioned'));
 
 if ($_ENV['FLOW_PHAR_APP'] ?? false) {
     return $flow;

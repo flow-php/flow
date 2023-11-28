@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Avro\Tests\Integration;
 
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\from_avro;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\read;
+use function Flow\ETL\DSL\to_avro;
 use Flow\ETL\Adapter\Avro\FlixTech\AvroExtractor;
 use Flow\ETL\Config;
-use Flow\ETL\DSL\Avro;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Filesystem\Path;
@@ -34,7 +35,7 @@ final class AvroTest extends TestCase
         }
 
         (new Flow())->read(from_array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
-            ->write(Avro::to($path))
+            ->write(to_avro($path))
             ->run();
 
         $extractor = new AvroExtractor(Path::realpath($path));
@@ -70,7 +71,7 @@ final class AvroTest extends TestCase
             )
         ))
             ->partitionBy('integer')
-            ->write(Avro::to($path))
+            ->write(to_avro($path))
             ->run();
     }
 
@@ -96,7 +97,7 @@ final class AvroTest extends TestCase
             )
         ))
             ->appendSafe()
-            ->write(Avro::to($path))
+            ->write(to_avro($path))
             ->run();
 
         $paths = \array_map(
@@ -109,7 +110,7 @@ final class AvroTest extends TestCase
         $this->assertEquals(
             $rows,
             (new Flow())
-                ->read(Avro::from($paths))
+                ->read(from_avro($paths))
                 ->fetch()
         );
 
@@ -125,7 +126,7 @@ final class AvroTest extends TestCase
         }
 
         (new Flow())->read(from_array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
-            ->write(Avro::to($path))
+            ->write(to_avro($path))
             ->run();
 
         $extractor = new AvroExtractor(Path::realpath($path));
@@ -148,7 +149,7 @@ final class AvroTest extends TestCase
     {
         $this->expectExceptionMessage("AvroLoader path can't be pattern, given: /path/*/pattern.avro");
 
-        Avro::to(new Path('/path/*/pattern.avro'));
+        to_avro(new Path('/path/*/pattern.avro'));
     }
 
     public function test_writing_and_reading_avro_with_all_supported_types() : void
@@ -196,7 +197,7 @@ final class AvroTest extends TestCase
             )
         ))
             ->batchSize(10)
-            ->write(Avro::to($path))
+            ->write(to_avro($path))
             ->run();
 
         $this->assertFileExists($path);
@@ -204,7 +205,7 @@ final class AvroTest extends TestCase
         $this->assertEquals(
             $rows,
             Flow::setUp(Config::builder()->putInputIntoRows()->build())
-                ->read(Avro::from($path))
+                ->read(from_avro($path))
                 ->drop('_input_file_uri')
                 ->fetch()
         );
@@ -235,7 +236,7 @@ final class AvroTest extends TestCase
                 }, \range(1, 100))
             )
         ))
-            ->write(Avro::to($path))
+            ->write(to_avro($path))
             ->run();
 
         read(from_rows(
@@ -255,7 +256,7 @@ final class AvroTest extends TestCase
                 }, \range(1, 100))
             )
         ))
-            ->write(Avro::to($path))
+            ->write(to_avro($path))
             ->run();
 
         $this->assertFileExists($path);
@@ -263,7 +264,7 @@ final class AvroTest extends TestCase
         $this->assertEquals(
             $rows,
             (new Flow())
-                ->read(Avro::from($path))
+                ->read(from_avro($path))
                 ->fetch()
         );
 
@@ -291,7 +292,7 @@ final class AvroTest extends TestCase
                 }, \range(1, 100))
             )
         ))
-            ->write(Avro::to($path))
+            ->write(to_avro($path))
             ->run();
 
         read(from_rows(
@@ -312,7 +313,7 @@ final class AvroTest extends TestCase
             )
         ))
             ->mode(SaveMode::Ignore)
-            ->write(Avro::to($path))
+            ->write(to_avro($path))
             ->run();
 
         $this->assertFileExists($path);
@@ -320,7 +321,7 @@ final class AvroTest extends TestCase
         $this->assertEquals(
             $rows,
             (new Flow())
-                ->read(Avro::from($path))
+                ->read(from_avro($path))
                 ->fetch()
         );
 
@@ -348,7 +349,7 @@ final class AvroTest extends TestCase
                 }, \range(1, 100))
             )
         ))
-            ->write(Avro::to($path))
+            ->write(to_avro($path))
             ->run();
 
         read(from_rows(
@@ -369,7 +370,7 @@ final class AvroTest extends TestCase
             )
         ))
             ->mode(SaveMode::Overwrite)
-            ->write(Avro::to($path))
+            ->write(to_avro($path))
             ->run();
 
         $this->assertFileExists($path);
@@ -377,7 +378,7 @@ final class AvroTest extends TestCase
         $this->assertEquals(
             $rows,
             (new Flow())
-                ->read(Avro::from($path))
+                ->read(from_avro($path))
                 ->fetch()
         );
 

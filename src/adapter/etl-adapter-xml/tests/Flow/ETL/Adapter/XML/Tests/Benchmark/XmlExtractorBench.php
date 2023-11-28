@@ -2,8 +2,8 @@
 
 namespace Flow\ETL\Adapter\XML\Tests\Benchmark;
 
+use function Flow\ETL\DSL\from_xml;
 use Flow\ETL\Config;
-use Flow\ETL\DSL\XML;
 use Flow\ETL\FlowContext;
 use PhpBench\Attributes\Groups;
 
@@ -19,7 +19,7 @@ final class XmlExtractorBench
 
     public function bench_extract_10k() : void
     {
-        foreach (XML::from(__DIR__ . '/../Fixtures/flow_orders.xml', xml_node_path: 'root/row')->extract($this->context) as $rows) {
+        foreach (from_xml(__DIR__ . '/../Fixtures/flow_orders.xml', xml_node_path: 'root/row')->extract($this->context) as $rows) {
         }
     }
 }

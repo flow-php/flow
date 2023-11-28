@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
+use function Flow\ETL\DSL\from_csv;
+use function Flow\ETL\DSL\to_parquet;
 use Aeon\Calendar\Stopwatch;
-use Flow\ETL\DSL\CSV;
-use Flow\ETL\DSL\Parquet;
 use Flow\ETL\Flow;
 
 require __DIR__ . '/../../../bootstrap.php';
@@ -14,8 +14,8 @@ if (!\file_exists(__FLOW_OUTPUT__ . '/dataset.csv')) {
 }
 
 $flow = (new Flow())
-    ->read(CSV::from(__FLOW_OUTPUT__ . '/dataset.csv'))
-    ->write(Parquet::to(__FLOW_OUTPUT__ . '/dataset_10k.parquet'));
+    ->read(from_csv(__FLOW_OUTPUT__ . '/dataset.csv'))
+    ->write(to_parquet(__FLOW_OUTPUT__ . '/dataset_10k.parquet'));
 
 if ($_ENV['FLOW_PHAR_APP'] ?? false) {
     return $flow;

@@ -11,6 +11,9 @@ use Flow\ETL\Loader;
 use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\References;
 
+/**
+ * @deprecated please use functions defined in Flow\ETL\DSL\functions.php
+ */
 class ChartJS
 {
     final public static function bar(EntryReference $label, References $datasets) : Chart

@@ -2,9 +2,10 @@
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Benchmark;
 
+use function Flow\ETL\DSL\from_parquet;
+use function Flow\ETL\DSL\to_parquet;
 use Flow\ETL\Config;
 use Flow\ETL\DSL\Entry;
-use Flow\ETL\DSL\Parquet;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -25,7 +26,7 @@ final class ParquetLoaderBench
         $this->outputPath = \tempnam(\sys_get_temp_dir(), 'etl_parquet_loader_bench') . '.parquet';
         $this->rows = new Rows();
 
-        foreach (Parquet::from(__DIR__ . '/../Fixtures/orders_flow.parquet')->extract($this->context) as $rows) {
+        foreach (from_parquet(__DIR__ . '/../Fixtures/orders_flow.parquet')->extract($this->context) as $rows) {
             $rows = $rows->map(static function (Row $row) : Row {
                 return $row->set(Entry::str('order_id', $row->valueOf('order_id')->toString()));
             });
@@ -45,6 +46,6 @@ final class ParquetLoaderBench
 
     public function bench_load_10k() : void
     {
-        Parquet::to($this->outputPath)->load($this->rows, $this->context);
+        to_parquet($this->outputPath)->load($this->rows, $this->context);
     }
 }

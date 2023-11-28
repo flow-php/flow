@@ -3,9 +3,9 @@
 namespace Flow\ETL\Adapter\Parquet\Tests\Integration;
 
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\to_parquet;
 use Flow\ETL\Adapter\Parquet\ParquetExtractor;
 use Flow\ETL\Config;
-use Flow\ETL\DSL\Parquet;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Flow;
@@ -24,7 +24,7 @@ final class ParquetExtractorTest extends TestCase
         }
 
         (new Flow())->read(from_array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
-            ->write(Parquet::to($path))
+            ->write(to_parquet($path))
             ->run();
 
         $extractor = new ParquetExtractor(Path::realpath($path), Options::default());
@@ -45,7 +45,7 @@ final class ParquetExtractorTest extends TestCase
         }
 
         (new Flow())->read(from_array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
-            ->write(Parquet::to($path))
+            ->write(to_parquet($path))
             ->run();
 
         $extractor = new ParquetExtractor(Path::realpath($path), Options::default());

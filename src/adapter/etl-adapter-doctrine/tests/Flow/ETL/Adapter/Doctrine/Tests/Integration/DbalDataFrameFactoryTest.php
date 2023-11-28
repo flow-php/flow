@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine\Tests\Integration;
 
+use function Flow\ETL\DSL\dbal_dataframe_factory;
 use function Flow\ETL\DSL\ref;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
-use Flow\ETL\Adapter\Doctrine\DbalDataFrameFactory;
 use Flow\ETL\Adapter\Doctrine\LiteralParameter;
 use Flow\ETL\Adapter\Doctrine\Parameter;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
@@ -38,7 +38,7 @@ final class DbalDataFrameFactoryTest extends IntegrationTestCase
         $this->pgsqlDatabaseContext->insert('flow_doctrine_data_factory_test', ['id' => 5, 'name' => 'Name 5', 'description' => 'Some Description 5']);
 
         $rows = (
-            new DbalDataFrameFactory(
+            dbal_dataframe_factory(
                 $this->connectionParams(),
                 'SELECT * FROM flow_doctrine_data_factory_test WHERE id IN (:ids) AND name = :name',
                 Parameter::ints('ids', ref('id')),

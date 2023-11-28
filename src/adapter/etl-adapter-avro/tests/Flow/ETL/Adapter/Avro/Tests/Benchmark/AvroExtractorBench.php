@@ -2,8 +2,8 @@
 
 namespace Flow\ETL\Adapter\Avro\Tests\Benchmark;
 
+use function Flow\ETL\DSL\from_avro;
 use Flow\ETL\Config;
-use Flow\ETL\DSL\Avro;
 use Flow\ETL\FlowContext;
 use PhpBench\Attributes\Groups;
 
@@ -19,7 +19,7 @@ final class AvroExtractorBench
 
     public function bench_extract_10k() : void
     {
-        foreach (Avro::from(__DIR__ . '/../Fixtures/orders_flow.avro')->extract($this->context) as $rows) {
+        foreach (from_avro(__DIR__ . '/../Fixtures/orders_flow.avro')->extract($this->context) as $rows) {
         }
     }
 }

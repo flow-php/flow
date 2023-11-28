@@ -2,8 +2,8 @@
 
 namespace Flow\ETL\Adapter\Text\Tests\Benchmark;
 
+use function Flow\ETL\DSL\from_text;
 use Flow\ETL\Config;
-use Flow\ETL\DSL\Text;
 use Flow\ETL\FlowContext;
 use PhpBench\Attributes\Groups;
 
@@ -19,7 +19,7 @@ final class TextExtractorBench
 
     public function bench_extract_10k() : void
     {
-        foreach (Text::from(__DIR__ . '/../Fixtures/orders_flow.csv')->extract($this->context) as $rows) {
+        foreach (from_text(__DIR__ . '/../Fixtures/orders_flow.csv')->extract($this->context) as $rows) {
         }
     }
 }

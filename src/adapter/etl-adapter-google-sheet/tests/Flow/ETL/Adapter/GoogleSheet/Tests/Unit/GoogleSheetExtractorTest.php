@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\GoogleSheet\Tests\Unit;
 
+use function Flow\ETL\DSL\from_google_sheet_columns;
 use Flow\ETL\ConfigBuilder;
 use Flow\ETL\DSL\Entry;
-use Flow\ETL\DSL\GoogleSheet;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
@@ -20,7 +20,7 @@ final class GoogleSheetExtractorTest extends TestCase
 {
     public function test_its_stop_fetching_data_if_processed_row_count_is_less_then_last_range_end_row() : void
     {
-        $extractor = GoogleSheet::from_columns(
+        $extractor = from_google_sheet_columns(
             $service = $this->createMock(Sheets::class),
             $spreadSheetId = 'spread-id',
             $sheetName = 'sheet',
@@ -60,7 +60,7 @@ final class GoogleSheetExtractorTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Rows per page must be greater than 0');
 
-        GoogleSheet::from_columns(
+        from_google_sheet_columns(
             $this->createMock(Sheets::class),
             'spread-id',
             'sheet',
@@ -73,7 +73,7 @@ final class GoogleSheetExtractorTest extends TestCase
 
     public function test_works_for_no_data() : void
     {
-        $extractor = GoogleSheet::from_columns(
+        $extractor = from_google_sheet_columns(
             $service = $this->createMock(Sheets::class),
             'spread-id',
             'sheet',

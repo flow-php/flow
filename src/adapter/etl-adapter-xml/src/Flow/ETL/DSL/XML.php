@@ -8,6 +8,9 @@ use Flow\ETL\Adapter\XML\XMLReaderExtractor;
 use Flow\ETL\Extractor;
 use Flow\ETL\Filesystem\Path;
 
+/**
+ * @deprecated please use functions defined in Flow\ETL\DSL\functions.php
+ */
 class XML
 {
     /**

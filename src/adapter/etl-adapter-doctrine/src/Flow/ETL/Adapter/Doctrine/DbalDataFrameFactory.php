@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine;
 
+use function Flow\ETL\DSL\dbal_from_query;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Flow\ETL\DataFrame;
 use Flow\ETL\DataFrameFactory;
-use Flow\ETL\DSL\Dbal;
 use Flow\ETL\Flow;
 use Flow\ETL\Rows;
 
@@ -81,7 +81,7 @@ final class DbalDataFrameFactory implements DataFrameFactory
 
         return (new Flow())
             ->extract(
-                Dbal::from_query(
+                dbal_from_query(
                     $this->connection(),
                     $this->query,
                     $parameters,
