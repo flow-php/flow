@@ -12,11 +12,8 @@ use Flow\Doctrine\Bulk\TableDefinition;
 
 final class PostgreSQLDialect implements Dialect
 {
-    private AbstractPlatform $platform;
-
-    public function __construct(AbstractPlatform $platform)
+    public function __construct(private readonly AbstractPlatform $platform)
     {
-        $this->platform = $platform;
     }
 
     /**
@@ -39,7 +36,7 @@ final class PostgreSQLDialect implements Dialect
             return \sprintf(
                 'INSERT INTO %s (%s) VALUES %s ON CONFLICT (%s) DO UPDATE SET %s',
                 $table->name(),
-                $bulkData->columns()->concat(','),
+                \implode(',', \array_map(fn (string $column) : string => $this->platform->quoteIdentifier($column), $bulkData->columns()->all())),
                 $bulkData->toSqlPlaceholders(),
                 \implode(',', $insertOptions['conflict_columns']),
                 (\array_key_exists('update_columns', $insertOptions) && \count($insertOptions['update_columns']))
@@ -52,7 +49,7 @@ final class PostgreSQLDialect implements Dialect
             return \sprintf(
                 'INSERT INTO %s (%s) VALUES %s ON CONFLICT ON CONSTRAINT %s DO UPDATE SET %s',
                 $table->name(),
-                $bulkData->columns()->concat(','),
+                \implode(',', \array_map(fn (string $column) : string => $this->platform->quoteIdentifier($column), $bulkData->columns()->all())),
                 $bulkData->toSqlPlaceholders(),
                 $insertOptions['constraint'],
                 (\array_key_exists('update_columns', $insertOptions) && \count($insertOptions['update_columns']))
@@ -65,7 +62,7 @@ final class PostgreSQLDialect implements Dialect
             return \sprintf(
                 'INSERT INTO %s (%s) VALUES %s ON CONFLICT DO NOTHING',
                 $table->name(),
-                $bulkData->columns()->concat(','),
+                \implode(',', \array_map(fn (string $column) : string => $this->platform->quoteIdentifier($column), $bulkData->columns()->all())),
                 $bulkData->toSqlPlaceholders()
             );
         }
@@ -73,7 +70,7 @@ final class PostgreSQLDialect implements Dialect
         return \sprintf(
             'INSERT INTO %s (%s) VALUES %s',
             $table->name(),
-            $bulkData->columns()->concat(','),
+            \implode(',', \array_map(fn (string $column) : string => $this->platform->quoteIdentifier($column), $bulkData->columns()->all())),
             $bulkData->toSqlPlaceholders()
         );
     }
@@ -109,7 +106,7 @@ final class PostgreSQLDialect implements Dialect
                 ? $this->updatedSelectedColumns($updateOptions['update_columns'], $bulkData->columns()->without(...$updateOptions['primary_key_columns']))
                 : $this->updateAllColumns($bulkData->columns()->without(...$updateOptions['primary_key_columns'])),
             $table->toSqlCastedPlaceholders($bulkData, $this->platform),
-            $bulkData->columns()->concat(','),
+            \implode(',', \array_map(fn (string $column) : string => $this->platform->quoteIdentifier($column), $bulkData->columns()->all())),
             $this->updatedIndexColumns($updateOptions['primary_key_columns'])
         );
     }
@@ -129,7 +126,7 @@ final class PostgreSQLDialect implements Dialect
         return \implode(
             ',',
             $columns->map(
-                fn (string $column) : string => "{$column} = excluded.{$column}"
+                fn (string $column) : string => "{$this->platform->quoteIdentifier($column)} = {$this->platform->quoteIdentifier('excluded.' . $column)}"
             )
         );
     }
@@ -141,7 +138,7 @@ final class PostgreSQLDialect implements Dialect
      */
     private function updatedIndexColumns(array $updateColumns) : string
     {
-        return \implode(' AND ', \array_map(fn (string $column) : string => "existing_table.{$column} = excluded.{$column}", $updateColumns));
+        return \implode(' AND ', \array_map(fn (string $column) : string => "{$this->platform->quoteIdentifier('existing_table.' . $column)} = {$this->platform->quoteIdentifier('excluded.' . $column)}", $updateColumns));
     }
 
     /**
@@ -158,7 +155,7 @@ final class PostgreSQLDialect implements Dialect
          * table's name (or an alias), and to rows proposed for insertion using the special EXCLUDED table.
          */
         return \count($updateColumns)
-            ? \implode(',', \array_map(fn (string $column) : string => "{$column} = excluded.{$column}", $updateColumns))
+            ? \implode(',', \array_map(fn (string $column) : string => "{$this->platform->quoteIdentifier($column)} = {$this->platform->quoteIdentifier('excluded.' . $column)}", $updateColumns))
             : $this->updateAllColumns($columns);
     }
 }

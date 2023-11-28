@@ -29,11 +29,11 @@ final class DbalPlatform
         }
 
         if ($this->isMySQL() || $this->isMariaDB()) {
-            return new MySQLDialect();
+            return new MySQLDialect($this->platform);
         }
 
         if ($this->isSqlite()) {
-            return new SqliteDialect();
+            return new SqliteDialect($this->platform);
         }
 
         throw new RuntimeException(\sprintf(

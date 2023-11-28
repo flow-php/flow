@@ -4,12 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk\Dialect;
 
+use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Flow\Doctrine\Bulk\BulkData;
 use Flow\Doctrine\Bulk\Columns;
 use Flow\Doctrine\Bulk\TableDefinition;
 
 final class SqliteDialect implements Dialect
 {
+    public function __construct(private readonly AbstractPlatform $platform)
+    {
+    }
+
     /**
      * @psalm-suppress MoreSpecificImplementedParamType
      *
@@ -25,7 +30,7 @@ final class SqliteDialect implements Dialect
             return \sprintf(
                 'INSERT INTO %s (%s) VALUES %s ON CONFLICT (%s) DO UPDATE SET %s',
                 $table->name(),
-                $bulkData->columns()->concat(','),
+                \implode(',', \array_map(fn (string $column) : string => $this->platform->quoteIdentifier($column), $bulkData->columns()->all())),
                 $bulkData->toSqlPlaceholders(),
                 \implode(',', $insertOptions['conflict_columns']),
                 (\array_key_exists('update_columns', $insertOptions) && [] !== $insertOptions['update_columns'])
@@ -38,7 +43,7 @@ final class SqliteDialect implements Dialect
             return \sprintf(
                 'INSERT INTO %s (%s) VALUES %s ON CONFLICT DO NOTHING',
                 $table->name(),
-                $bulkData->columns()->concat(','),
+                \implode(',', \array_map(fn (string $column) : string => $this->platform->quoteIdentifier($column), $bulkData->columns()->all())),
                 $bulkData->toSqlPlaceholders()
             );
         }
@@ -46,7 +51,7 @@ final class SqliteDialect implements Dialect
         return \sprintf(
             'INSERT INTO %s (%s) VALUES %s',
             $table->name(),
-            $bulkData->columns()->concat(','),
+            \implode(',', \array_map(fn (string $column) : string => $this->platform->quoteIdentifier($column), $bulkData->columns()->all())),
             $bulkData->toSqlPlaceholders()
         );
     }
@@ -56,7 +61,7 @@ final class SqliteDialect implements Dialect
         return \sprintf(
             'REPLACE INTO %s (%s) VALUES %s',
             $table->name(),
-            $bulkData->columns()->concat(','),
+            \implode(',', \array_map(fn (string $column) : string => $this->platform->quoteIdentifier($column), $bulkData->columns()->all())),
             $bulkData->toSqlPlaceholders()
         );
     }
@@ -66,7 +71,7 @@ final class SqliteDialect implements Dialect
         return \implode(
             ',',
             $columns->map(
-                fn (string $column) : string => "{$column} = excluded.{$column}"
+                fn (string $column) : string => "{$this->platform->quoteIdentifier($column)} = {$this->platform->quoteIdentifier('excluded.' . $column)}"
             )
         );
     }
@@ -77,7 +82,7 @@ final class SqliteDialect implements Dialect
     private function updateSelectedColumns(array $updateColumns, Columns $columns) : string
     {
         return [] !== $updateColumns
-            ? \implode(',', \array_map(static fn (string $column) : string => "{$column} = excluded.{$column}", $updateColumns))
+            ? \implode(',', \array_map(fn (string $column) : string => "{$this->platform->quoteIdentifier($column)} = {$this->platform->quoteIdentifier('excluded.' . $column)}", $updateColumns))
             : $this->updateAllColumns($columns);
     }
 }

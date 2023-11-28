@@ -34,11 +34,6 @@ final class Columns
         return $this->columns;
     }
 
-    public function concat(string $separator) : string
-    {
-        return \implode($separator, $this->columns);
-    }
-
     /**
      * @param string ...$columnNames
      *

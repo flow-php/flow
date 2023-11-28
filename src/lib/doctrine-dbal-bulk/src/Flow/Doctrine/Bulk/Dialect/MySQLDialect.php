@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk\Dialect;
 
+use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Flow\Doctrine\Bulk\BulkData;
 use Flow\Doctrine\Bulk\Columns;
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
@@ -11,6 +12,10 @@ use Flow\Doctrine\Bulk\TableDefinition;
 
 final class MySQLDialect implements Dialect
 {
+    public function __construct(private readonly AbstractPlatform $platform)
+    {
+    }
+
     /**
      * @psalm-suppress MoreSpecificImplementedParamType
      *
@@ -30,7 +35,7 @@ final class MySQLDialect implements Dialect
             return \sprintf(
                 'INSERT INTO %s (%s) VALUES %s ON DUPLICATE KEY UPDATE %4$s=%4$s',
                 $table->name(),
-                $bulkData->columns()->concat(','),
+                \implode(',', \array_map(fn (string $column) : string => $this->platform->quoteIdentifier($column), $bulkData->columns()->all())),
                 $bulkData->toSqlPlaceholders(),
                 \current($bulkData->columns()->all())
             );
@@ -42,7 +47,7 @@ final class MySQLDialect implements Dialect
                 VALUES %s
                 ON DUPLICATE KEY UPDATE %s',
                 $table->name(),
-                $bulkData->columns()->concat(','),
+                \implode(',', \array_map(fn (string $column) : string => $this->platform->quoteIdentifier($column), $bulkData->columns()->all())),
                 $bulkData->toSqlPlaceholders(),
                 \array_key_exists('update_columns', $insertOptions) && \count($insertOptions['update_columns'])
                     ? $this->updateSelectedColumns($insertOptions['update_columns'], $bulkData->columns())
@@ -53,7 +58,7 @@ final class MySQLDialect implements Dialect
         return \sprintf(
             'INSERT INTO %s (%s) VALUES %s',
             $table->name(),
-            $bulkData->columns()->concat(','),
+            \implode(',', \array_map(fn (string $column) : string => $this->platform->quoteIdentifier($column), $bulkData->columns()->all())),
             $bulkData->toSqlPlaceholders()
         );
     }
@@ -72,7 +77,7 @@ final class MySQLDialect implements Dialect
         return \sprintf(
             'REPLACE INTO %s (%s) VALUES %s',
             $table->name(),
-            $bulkData->columns()->concat(','),
+            \implode(',', \array_map(fn (string $column) : string => $this->platform->quoteIdentifier($column), $bulkData->columns()->all())),
             $bulkData->toSqlPlaceholders()
         );
     }
@@ -87,7 +92,7 @@ final class MySQLDialect implements Dialect
         return \implode(
             ',',
             $columns->map(
-                fn (string $column) : string => "{$column} = VALUES({$column})"
+                fn (string $column) : string => "{$this->platform->quoteIdentifier($column)} = VALUES({$this->platform->quoteIdentifier($column)})"
             )
         );
     }
@@ -101,7 +106,7 @@ final class MySQLDialect implements Dialect
     private function updateSelectedColumns(array $updateColumns, Columns $columns) : string
     {
         return \count($updateColumns)
-            ? \implode(',', \array_map(fn (string $column) : string => "{$column} = VALUES({$column})", $updateColumns))
+            ? \implode(',', \array_map(fn (string $column) : string => "{$this->platform->quoteIdentifier($column)} = VALUES({$this->platform->quoteIdentifier($column)})", $updateColumns))
             : $this->updateAllColumns($columns);
     }
 }
