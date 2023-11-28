@@ -9,13 +9,8 @@ use Doctrine\DBAL\Schema\Table;
 
 final class DatabaseContext
 {
-    private readonly InsertQueryCounter $sqlLogger;
-
     public function __construct(private readonly Connection $connection)
     {
-        $this->sqlLogger = new InsertQueryCounter();
-
-        $this->connection->getConfiguration()->setSQLLogger($this->sqlLogger);
     }
 
     public function connection() : Connection
@@ -25,9 +20,7 @@ final class DatabaseContext
 
     public function createTable(Table $table) : void
     {
-        $schemaManager = $this
-            ->connection
-            ->getSchemaManager();
+        $schemaManager = $this->connection->createSchemaManager();
 
         if ($schemaManager->tablesExist($table->getName())) {
             $schemaManager->dropTable($table->getName());
@@ -38,7 +31,7 @@ final class DatabaseContext
 
     public function dropAllTables() : void
     {
-        foreach ($this->connection->getSchemaManager()->listTables() as $table) {
+        foreach ($this->connection->createSchemaManager()->listTables() as $table) {
             if (\str_contains($table->getName(), 'innodb')) {
                 continue;
             }
@@ -47,13 +40,8 @@ final class DatabaseContext
                 continue;
             }
 
-            $this->connection->getSchemaManager()->dropTable($table->getName());
+            $this->connection->createSchemaManager()->dropTable($table->getName());
         }
-    }
-
-    public function numberOfExecutedInsertQueries() : int
-    {
-        return $this->sqlLogger->count;
     }
 
     public function selectAll(string $tableName) : array

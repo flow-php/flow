@@ -4,22 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk\Tests;
 
+use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\DriverManager;
+use Doctrine\DBAL\Logging\Middleware;
 use Flow\Doctrine\Bulk\Tests\Context\DatabaseContext;
-use PHPUnit\Framework\TestCase;
 
-abstract class MysqlIntegrationTestCase extends TestCase
+abstract class MysqlIntegrationTestCase extends IntegrationTestCase
 {
-    protected DatabaseContext $databaseContext;
-
     protected function setUp() : void
     {
-        $this->databaseContext = new DatabaseContext(DriverManager::getConnection(['url' => \getenv('MYSQL_DATABASE_URL')]));
+        $this->databaseContext = new DatabaseContext(
+            DriverManager::getConnection(
+                ['url' => \getenv('MYSQL_DATABASE_URL')],
+                (new Configuration())->setMiddlewares([new Middleware($this->logger)])
+            )
+        );
         $this->databaseContext->connection()->getDatabasePlatform()->registerDoctrineTypeMapping('enum', 'string');
-    }
-
-    protected function tearDown() : void
-    {
-        $this->databaseContext->dropAllTables();
     }
 }
