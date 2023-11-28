@@ -396,14 +396,18 @@ final class AvroTest extends TestCase
      */
     private function cleanDirectory(string $path) : void
     {
-        if (\file_exists($path) && \is_dir($path)) {
-            $files = \array_values(\array_diff(\scandir($path), ['..', '.']));
+        if (\file_exists($path)) {
+            if (\is_dir($path)) {
+                $files = \array_values(\array_diff(\scandir($path), ['..', '.']));
 
-            foreach ($files as $file) {
-                $this->removeFile($path . DIRECTORY_SEPARATOR . $file);
+                foreach ($files as $file) {
+                    $this->removeFile($path . DIRECTORY_SEPARATOR . $file);
+                }
+
+                \rmdir($path);
+            } else {
+                \unlink($path);
             }
-
-            \rmdir($path);
         }
     }
 

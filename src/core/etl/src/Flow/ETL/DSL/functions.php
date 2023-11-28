@@ -20,6 +20,7 @@ use Flow\ETL\Function\ArraySort\Sort;
 use Flow\ETL\Function\ArrayUnpack;
 use Flow\ETL\Function\Average;
 use Flow\ETL\Function\CallMethod;
+use Flow\ETL\Function\Capitalize;
 use Flow\ETL\Function\Cast;
 use Flow\ETL\Function\Collect;
 use Flow\ETL\Function\CollectUnique;
@@ -286,6 +287,11 @@ function ulid(?ScalarFunction $function = null) : ScalarFunction
 function lower(ScalarFunction $function) : ScalarFunction
 {
     return new ToLower($function);
+}
+
+function capitalize(ScalarFunction $function) : ScalarFunction
+{
+    return new Capitalize($function);
 }
 
 function upper(ScalarFunction $function) : ScalarFunction

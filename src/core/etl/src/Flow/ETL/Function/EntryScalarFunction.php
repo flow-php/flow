@@ -50,6 +50,11 @@ trait EntryScalarFunction
         return new ScalarFunctions(new Function\ArraySort($this, $function ? Sort::fromString($function) : Sort::sort, $flags, $recursive));
     }
 
+    public function capitalize() : ScalarFunction|EntryReference
+    {
+        return new ScalarFunctions(new Function\Capitalize($this));
+    }
+
     public function cast(string $type) : ScalarFunction|EntryReference
     {
         return new ScalarFunctions(new Cast($this, $type));
