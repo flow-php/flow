@@ -1,6 +1,7 @@
-## [Unreleased] - 2023-11-27
+## [Unreleased] - 2023-11-28
 
 ### Added
+- [#847](https://github.com/flow-php/flow/pull/847) - **capitalize scalar function** - [@norberttech](https://github.com/norberttech)
 - [#844](https://github.com/flow-php/flow/pull/844) - **ref()->isTrue()** - [@norberttech](https://github.com/norberttech)
 - [#844](https://github.com/flow-php/flow/pull/844) - **ref()->isFalse()** - [@norberttech](https://github.com/norberttech)
 - [#832](https://github.com/flow-php/flow/pull/832) - **Allow to change hash algorithm in `HashIdFactory`** - [@stloyd](https://github.com/stloyd)
