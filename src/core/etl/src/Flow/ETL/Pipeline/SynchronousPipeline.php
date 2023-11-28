@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Pipeline;
 
-use Flow\ETL\DSL\From;
+use function Flow\ETL\DSL\from_rows;
 use Flow\ETL\Exception\LimitReachedException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\Signal;
@@ -24,7 +24,7 @@ final class SynchronousPipeline implements Pipeline
     public function __construct()
     {
         $this->pipes = Pipes::empty();
-        $this->extractor = From::rows(new Rows());
+        $this->extractor = from_rows(new Rows());
     }
 
     public function add(Loader|Transformer $pipe) : self

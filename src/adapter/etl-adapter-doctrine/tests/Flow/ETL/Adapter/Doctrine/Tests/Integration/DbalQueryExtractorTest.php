@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine\Tests\Integration;
 
+use function Flow\ETL\DSL\from_array;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;
@@ -12,7 +13,6 @@ use Flow\ETL\Adapter\Doctrine\DbalLoader;
 use Flow\ETL\Adapter\Doctrine\ParametersSet;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
 use Flow\ETL\DSL\Dbal;
-use Flow\ETL\DSL\From;
 use Flow\ETL\Flow;
 
 final class DbalQueryExtractorTest extends IntegrationTestCase
@@ -30,7 +30,7 @@ final class DbalQueryExtractorTest extends IntegrationTestCase
             ->setPrimaryKey(['id']));
 
         (new Flow())->extract(
-            From::array([
+            from_array([
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
                 ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
@@ -70,7 +70,7 @@ final class DbalQueryExtractorTest extends IntegrationTestCase
 
         (new Flow())
             ->extract(
-                From::array([
+                from_array([
                     ['id' => 1, 'name' => 'Name', 'description' => 'Description'],
                     ['id' => 2, 'name' => 'Name', 'description' => 'Description'],
                     ['id' => 3, 'name' => 'Name', 'description' => 'Description'],

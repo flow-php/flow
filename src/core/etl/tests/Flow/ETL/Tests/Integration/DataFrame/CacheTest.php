@@ -2,10 +2,10 @@
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
+use function Flow\ETL\DSL\from_cache;
+use function Flow\ETL\DSL\read;
 use Flow\ETL\Cache\PSRSimpleCache;
 use Flow\ETL\Config;
-use Flow\ETL\DSL\From;
-use Flow\ETL\Flow;
 use Flow\ETL\Tests\Double\AllRowTypesFakeExtractor;
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
@@ -15,7 +15,7 @@ final class CacheTest extends IntegrationTestCase
 {
     public function test_cache() : void
     {
-        (new Flow())->extract(new AllRowTypesFakeExtractor($rowsets = 20, $rows = 2))
+        read(new AllRowTypesFakeExtractor($rowsets = 20, $rows = 2))
             ->cache('test_etl_cache')
             ->run();
 
@@ -26,15 +26,14 @@ final class CacheTest extends IntegrationTestCase
 
     public function test_psr_cache() : void
     {
-        Flow::setUp(
+        read(
+            new AllRowTypesFakeExtractor($rowsets = 20, $rows = 2),
             Config::builder()->cache($cache = new PSRSimpleCache(new Psr16Cache(new ArrayAdapter())))->build()
-        )->extract(new AllRowTypesFakeExtractor($rowsets = 20, $rows = 2))
+        )
             ->cache('test_etl_cache')
             ->run();
 
-        $cachedRows = Flow::setUp(Config::builder()->cache($cache)->build())
-            ->read(From::cache('test_etl_cache'))
-            ->fetch();
+        $cachedRows = read(from_cache('test_etl_cache'), Config::builder()->cache($cache)->build())->fetch();
 
         $this->assertCount($rowsets * $rows, $cachedRows);
 

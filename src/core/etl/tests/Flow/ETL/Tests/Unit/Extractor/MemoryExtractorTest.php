@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Extractor;
 
+use function Flow\ETL\DSL\from_memory;
+use function Flow\ETL\DSL\to_memory;
 use Flow\ETL\Config;
 use Flow\ETL\DSL\Entry;
-use Flow\ETL\DSL\From;
-use Flow\ETL\DSL\To;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Row;
@@ -16,18 +16,7 @@ use PHPUnit\Framework\TestCase;
 
 final class MemoryExtractorTest extends TestCase
 {
-    public static function chunk_sizes() : \Generator
-    {
-        yield [1];
-        yield [2];
-        yield [3];
-        yield [4];
-    }
-
-    /**
-     * @dataProvider chunk_sizes
-     */
-    public function test_memory_extractor(int $chunkSize) : void
+    public function test_memory_extractor() : void
     {
         $rows = new Rows(
             Row::create(Entry::integer('number', 1), Entry::string('name', 'one')),
@@ -39,9 +28,9 @@ final class MemoryExtractorTest extends TestCase
 
         $memory = new ArrayMemory();
 
-        (To::memory($memory))->load($rows, new FlowContext(Config::default()));
+        (to_memory($memory))->load($rows, new FlowContext(Config::default()));
 
-        $extractor = From::memory($memory, $chunkSize);
+        $extractor = from_memory($memory);
 
         $data = [];
 

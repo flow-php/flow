@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use function Flow\ETL\DSL\to_output;
 use Flow\ETL\DSL\To;
 use Flow\ETL\DSL\Transform;
 use Flow\ETL\Exception\InvalidArgumentException;
@@ -30,6 +31,7 @@ use Flow\ETL\Row\Schema;
 use Flow\ETL\Transformer\CallbackRowTransformer;
 use Flow\ETL\Transformer\CrossJoinRowsTransformer;
 use Flow\ETL\Transformer\DropDuplicatesTransformer;
+use Flow\ETL\Transformer\EntryNameStyleConverterTransformer;
 use Flow\ETL\Transformer\JoinEachRowsTransformer;
 use Flow\ETL\Transformer\JoinRowsTransformer;
 use Flow\ETL\Transformer\KeepEntriesTransformer;
@@ -539,7 +541,7 @@ final class DataFrame
             $clone->limit($limit);
         }
 
-        $clone->load(To::output($truncate, Output::rows, $formatter));
+        $clone->load(to_output($truncate, Output::rows, $formatter));
 
         $clone->run();
     }
@@ -554,7 +556,7 @@ final class DataFrame
         if ($limit !== null) {
             $clone->limit($limit);
         }
-        $clone->load(To::output(false, Output::schema, schemaFormatter: $formatter));
+        $clone->load(to_output(false, Output::schema, schemaFormatter: $formatter));
 
         $clone->run();
     }
@@ -597,7 +599,7 @@ final class DataFrame
      */
     public function renameAllStyle(StringStyles|string $style) : self
     {
-        $this->pipeline->add(Transform::convert_name($style));
+        $this->pipeline->add(new EntryNameStyleConverterTransformer(\is_string($style) ? StringStyles::fromString($style) : $style));
 
         return $this;
     }

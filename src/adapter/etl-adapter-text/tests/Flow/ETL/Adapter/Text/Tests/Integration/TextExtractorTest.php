@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Text\Tests\Integration;
 
+use function Flow\ETL\DSL\from_array;
 use Flow\ETL\Adapter\Text\TextExtractor;
 use Flow\ETL\Config;
-use Flow\ETL\DSL\From;
 use Flow\ETL\DSL\Text;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Filesystem\Path;
@@ -63,7 +63,7 @@ final class TextExtractorTest extends TestCase
             \unlink($path);
         }
 
-        (new Flow())->read(From::array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
+        (new Flow())->read(from_array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
             ->write(Text::to($path))
             ->run();
         $extractor = new TextExtractor(Path::realpath($path));
@@ -83,7 +83,7 @@ final class TextExtractorTest extends TestCase
             \unlink($path);
         }
 
-        (new Flow())->read(From::array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
+        (new Flow())->read(from_array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
             ->write(Text::to($path))
             ->run();
 

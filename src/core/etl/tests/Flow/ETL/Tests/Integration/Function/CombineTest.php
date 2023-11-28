@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Function;
 
 use function Flow\ETL\DSL\combine;
+use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\optional;
 use function Flow\ETL\DSL\ref;
-use Flow\ETL\DSL\From;
-use Flow\ETL\DSL\To;
+use function Flow\ETL\DSL\to_memory;
 use Flow\ETL\Flow;
 use Flow\ETL\Memory\ArrayMemory;
 use PHPUnit\Framework\TestCase;
@@ -19,7 +19,7 @@ final class CombineTest extends TestCase
     {
         (new Flow())
             ->read(
-                From::array(
+                from_array(
                     [
                         ['id' => 1, 'first' => ['a', 'b', 'c'], 'second' => [1, 2, 3]],
                         ['id' => 2],
@@ -28,7 +28,7 @@ final class CombineTest extends TestCase
             )
             ->withEntry('array', optional(combine(ref('first'), ref('second'))))
             ->drop('first', 'second')
-            ->write(To::memory($memory = new ArrayMemory()))
+            ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
         $this->assertSame(

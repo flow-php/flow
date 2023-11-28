@@ -2,27 +2,26 @@
 
 declare(strict_types=1);
 
+use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\read;
+use function Flow\ETL\DSL\to_output;
 use Flow\ETL\DSL\Entry;
-use Flow\ETL\DSL\From;
-use Flow\ETL\DSL\To;
-use Flow\ETL\Flow;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 
 require __DIR__ . '/../../bootstrap.php';
 
-$flow = (new Flow())
-    ->read(
-        From::rows(new Rows(
-            Row::create(Entry::string('name', 'Norbert'))
-        ))
-    )
+$df = read(
+    from_rows(new Rows(
+        Row::create(Entry::string('name', 'Norbert'))
+    ))
+)
     ->withEntry('number', lit(1))
-    ->write(To::output(false));
+    ->write(to_output(false));
 
 if ($_ENV['FLOW_PHAR_APP'] ?? false) {
-    return $flow;
+    return $df;
 }
 
-$flow->run();
+$df->run();

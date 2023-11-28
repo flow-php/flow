@@ -2,6 +2,8 @@
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
+use function Flow\ETL\DSL\from_rows;
+use function Flow\ETL\DSL\read;
 use Flow\ETL\DataFrame;
 use Flow\ETL\DataFrameFactory;
 use Flow\ETL\DSL\Entry;
@@ -20,14 +22,14 @@ final class JoinTest extends IntegrationTestCase
         $loader->expects($this->exactly(2))
             ->method('load');
 
-        $rows = (new Flow())->process(
+        $rows = read(from_rows(
             new Rows(
                 Row::create(Entry::integer('id', 1), Entry::string('country', 'PL')),
                 Row::create(Entry::integer('id', 2), Entry::string('country', 'PL')),
                 Row::create(Entry::integer('id', 3), Entry::string('country', 'PL')),
                 Row::create(Entry::integer('id', 4), Entry::string('country', 'PL')),
             )
-        )
+        ))
             ->batchSize(2)
             ->crossJoin(
                 (new Flow())->process(
@@ -61,7 +63,7 @@ final class JoinTest extends IntegrationTestCase
         $loader->expects($this->exactly(2))
             ->method('load');
 
-        $rows = (new Flow())->process(
+        $rows = read(from_rows(
             new Rows(
                 Row::create(Entry::integer('id', 1), Entry::string('country', 'PL')),
                 Row::create(Entry::integer('id', 2), Entry::string('country', 'PL')),
@@ -72,7 +74,7 @@ final class JoinTest extends IntegrationTestCase
                 Row::create(Entry::integer('id', 7), Entry::string('country', 'US')),
                 Row::create(Entry::integer('id', 9), Entry::string('country', 'US')),
             )
-        )
+        ))
             ->batchSize(4)
             ->join(
                 (new Flow())->process(
@@ -107,7 +109,7 @@ final class JoinTest extends IntegrationTestCase
         $loader->expects($this->exactly(2))
             ->method('load');
 
-        $rows = (new Flow())->process(
+        $rows = read(from_rows(
             new Rows(
                 Row::create(Entry::integer('id', 1), Entry::string('country', 'PL')),
                 Row::create(Entry::integer('id', 2), Entry::string('country', 'PL')),
@@ -118,7 +120,7 @@ final class JoinTest extends IntegrationTestCase
                 Row::create(Entry::integer('id', 7), Entry::string('country', 'US')),
                 Row::create(Entry::integer('id', 9), Entry::string('country', 'US')),
             )
-        )
+        ))
             ->batchSize(4)
             ->joinEach(
                 new class implements DataFrameFactory {

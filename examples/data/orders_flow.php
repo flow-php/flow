@@ -1,9 +1,9 @@
 <?php declare(strict_types=1);
 
+use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\ref;
 use Flow\ETL\DSL\Avro;
 use Flow\ETL\DSL\CSV;
-use Flow\ETL\DSL\From;
 use Flow\ETL\DSL\Json;
 use Flow\ETL\DSL\Parquet;
 use Flow\ETL\Filesystem\SaveMode;
@@ -42,7 +42,7 @@ $orders = \array_map(
 );
 
 (new Flow())
-    ->read(From::array($orders))
+    ->read(from_array($orders))
     ->mode(SaveMode::Overwrite)
     ->write(Parquet::to(__DIR__ . '/orders_flow.parquet'))
     ->write(Json::to(__DIR__ . '/orders_flow.json'))

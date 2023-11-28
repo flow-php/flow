@@ -2,32 +2,31 @@
 
 declare(strict_types=1);
 
+use function Flow\ETL\DSL\from_rows;
+use function Flow\ETL\DSL\read;
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\sum;
+use function Flow\ETL\DSL\to_output;
 use Flow\ETL\DSL\Entry;
-use Flow\ETL\DSL\From;
-use Flow\ETL\DSL\To;
-use Flow\ETL\Flow;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
 
 require __DIR__ . '/../../bootstrap.php';
 
-$flow = (new Flow())
-    ->read(
-        From::rows(new Rows(
-            Row::with(Entry::int('a', 100)),
-            Row::with(Entry::int('a', 100)),
-            Row::with(Entry::int('a', 200)),
-            Row::with(Entry::int('a', 400)),
-            Row::with(Entry::int('a', 400))
-        ))
-    )
+$df = read(
+    from_rows(rows(
+        row(Entry::int('a', 100)),
+        row(Entry::int('a', 100)),
+        row(Entry::int('a', 200)),
+        row(Entry::int('a', 400)),
+        row(Entry::int('a', 400))
+    ))
+)
     ->aggregate(sum(ref('a')))
-    ->write(To::output(false));
+    ->write(to_output(false));
 
 if ($_ENV['FLOW_PHAR_APP'] ?? false) {
-    return $flow;
+    return $df;
 }
 
-$flow->run();
+$df->run();

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Extractor;
 
+use function Flow\ETL\DSL\from_all;
 use Flow\ETL\Config;
 use Flow\ETL\DSL\Entry;
-use Flow\ETL\DSL\From;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
@@ -17,7 +17,7 @@ final class ChainExtractorTest extends TestCase
 {
     public function test_chain_extractor() : void
     {
-        $extractor = From::chain(
+        $extractor = from_all(
             new class implements Extractor {
                 public function extract(FlowContext $context) : \Generator
                 {

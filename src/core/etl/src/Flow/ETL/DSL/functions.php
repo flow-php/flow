@@ -4,6 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\DSL;
 
+use Flow\ETL\Config;
+use Flow\ETL\ConfigBuilder;
+use Flow\ETL\DataFrame;
+use Flow\ETL\ErrorHandler\IgnoreError;
+use Flow\ETL\ErrorHandler\SkipRows;
+use Flow\ETL\ErrorHandler\ThrowError;
+use Flow\ETL\Extractor;
+use Flow\ETL\Filesystem\Stream\Mode;
+use Flow\ETL\Flow;
+use Flow\ETL\Formatter;
 use Flow\ETL\Function\All;
 use Flow\ETL\Function\Any;
 use Flow\ETL\Function\ArrayExists;
@@ -62,15 +72,146 @@ use Flow\ETL\Function\ToUpper;
 use Flow\ETL\Function\Ulid;
 use Flow\ETL\Function\Uuid;
 use Flow\ETL\Function\When;
+use Flow\ETL\Loader;
+use Flow\ETL\Loader\CallbackLoader;
+use Flow\ETL\Loader\MemoryLoader;
+use Flow\ETL\Loader\StreamLoader;
+use Flow\ETL\Loader\StreamLoader\Output;
+use Flow\ETL\Loader\TransformerLoader;
+use Flow\ETL\Memory\ArrayMemory;
+use Flow\ETL\Memory\Memory;
 use Flow\ETL\Partition;
+use Flow\ETL\Pipeline;
 use Flow\ETL\Row;
 use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
+use Flow\ETL\Row\Schema\Formatter\ASCIISchemaFormatter;
+use Flow\ETL\Row\Schema\SchemaFormatter;
 use Flow\ETL\Rows;
+use Flow\ETL\Transformer;
 use Flow\ETL\Window;
+
+function read(Extractor $extractor, Config|ConfigBuilder|null $config = null) : DataFrame
+{
+    return (new Flow($config))->from($extractor);
+}
+
+function from_rows(Rows ...$rows) : Extractor\ProcessExtractor
+{
+    return new Extractor\ProcessExtractor(...$rows);
+}
+
+function from_array(array $array) : Extractor\MemoryExtractor
+{
+    return new Extractor\MemoryExtractor(new ArrayMemory($array));
+}
+
+function from_cache(string $id, ?Extractor $fallback_extractor = null, bool $clear = false) : Extractor\CacheExtractor
+{
+    return new Extractor\CacheExtractor($id, $fallback_extractor, $clear);
+}
+
+function from_all(Extractor ...$extractors) : Extractor\ChainExtractor
+{
+    return new Extractor\ChainExtractor(...$extractors);
+}
+
+function from_memory(Memory $memory) : Extractor\MemoryExtractor
+{
+    return new Extractor\MemoryExtractor($memory);
+}
+
+/**
+ * @param int<1, max> $chunk_size
+ */
+function chunks_from(Extractor $extractor, int $chunk_size) : Extractor\ChunkExtractor
+{
+    return new Extractor\ChunkExtractor($extractor, $chunk_size);
+}
+
+function from_pipeline(Pipeline $pipeline) : Extractor\PipelineExtractor
+{
+    return new Extractor\PipelineExtractor($pipeline);
+}
+
+function from_data_frame(DataFrame $data_frame) : Extractor\DataFrameExtractor
+{
+    return new Extractor\DataFrameExtractor($data_frame);
+}
+
+function from_sequence_date_period(string $entry_name, \DateTimeInterface $start, \DateInterval $interval, \DateTimeInterface $end, int $options = 0) : Extractor\SequenceExtractor
+{
+    /** @psalm-suppress ArgumentTypeCoercion */
+    return new Extractor\SequenceExtractor(
+        new Extractor\SequenceGenerator\DatePeriodSequenceGenerator(new \DatePeriod($start, $interval, $end, $options)),
+        $entry_name
+    );
+}
+
+function from_sequence_date_period_recurrences(string $entry_name, \DateTimeInterface $start, \DateInterval $interval, int $recurrences, int $options = 0) : Extractor\SequenceExtractor
+{
+    /** @psalm-suppress ArgumentTypeCoercion */
+    return new Extractor\SequenceExtractor(
+        new Extractor\SequenceGenerator\DatePeriodSequenceGenerator(new \DatePeriod($start, $interval, $recurrences, $options)),
+        $entry_name
+    );
+}
+
+function from_sequence_number(string $entry_name, string|int|float $start, string|int|float $end, int|float $step = 1) : Extractor\SequenceExtractor
+{
+    return new Extractor\SequenceExtractor(
+        new Extractor\SequenceGenerator\NumberSequenceGenerator($start, $end, $step),
+        $entry_name
+    );
+}
+
+function to_callable(callable $callable) : CallbackLoader
+{
+    return new CallbackLoader($callable);
+}
+
+function to_memory(Memory $memory) : MemoryLoader
+{
+    return new MemoryLoader($memory);
+}
+
+function to_output(int|bool $truncate = 20, Output $output = Output::rows, Formatter $formatter = new Formatter\AsciiTableFormatter(), SchemaFormatter $schemaFormatter = new ASCIISchemaFormatter()) : StreamLoader
+{
+    return StreamLoader::output($truncate, $output, $formatter, $schemaFormatter);
+}
+
+function to_stderr(int|bool $truncate = 20, Output $output = Output::rows, Formatter $formatter = new Formatter\AsciiTableFormatter(), SchemaFormatter $schemaFormatter = new ASCIISchemaFormatter()) : StreamLoader
+{
+    return StreamLoader::stderr($truncate, $output, $formatter, $schemaFormatter);
+}
+
+function to_stdout(int|bool $truncate = 20, Output $output = Output::rows, Formatter $formatter = new Formatter\AsciiTableFormatter(), SchemaFormatter $schemaFormatter = new ASCIISchemaFormatter()) : StreamLoader
+{
+    return StreamLoader::stdout($truncate, $output, $formatter, $schemaFormatter);
+}
+
+function to_stream(string $uri, int|bool $truncate = 20, Output $output = Output::rows, string $mode = 'w', Formatter $formatter = new Formatter\AsciiTableFormatter(), SchemaFormatter $schemaFormatter = new ASCIISchemaFormatter()) : StreamLoader
+{
+    return new StreamLoader($uri, Mode::from($mode), $truncate, $output, $formatter, $schemaFormatter);
+}
+
+function to_transformation(Transformer $transformer, Loader $loader) : TransformerLoader
+{
+    return new TransformerLoader($transformer, $loader);
+}
+
+function row(Row\Entry ...$entry) : Row
+{
+    return Row::create(...$entry);
+}
+
+function rows(Row ...$row) : Rows
+{
+    return new Rows(...$row);
+}
 
 function col(string $entry) : EntryReference
 {
@@ -322,6 +463,21 @@ function not(ScalarFunction $function) : ScalarFunction
 function to_timezone(ScalarFunction $function, ScalarFunction $timeZone) : ScalarFunction
 {
     return new ToTimeZone($function, $timeZone);
+}
+
+function ignore_error_handler() : IgnoreError
+{
+    return new IgnoreError();
+}
+
+function skip_rows_handler() : SkipRows
+{
+    return new SkipRows();
+}
+
+function throw_error_handler() : ThrowError
+{
+    return new ThrowError();
 }
 
 function to_money(ScalarFunction $amount, ScalarFunction $currency, ?\Money\MoneyParser $moneyParser = null) : ScalarFunction

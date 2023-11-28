@@ -4,16 +4,19 @@ namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use function Flow\ETL\DSL\average;
 use function Flow\ETL\DSL\count;
+use function Flow\ETL\DSL\from_all;
+use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\from_memory;
+use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\max;
 use function Flow\ETL\DSL\rank;
+use function Flow\ETL\DSL\read;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\sum;
 use function Flow\ETL\DSL\window;
 use Flow\ETL\DSL\Entry;
-use Flow\ETL\DSL\From;
 use Flow\ETL\DSL\Transform;
-use Flow\ETL\Flow;
 use Flow\ETL\Loader;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Row;
@@ -28,7 +31,7 @@ final class GroupByTest extends IntegrationTestCase
         $loader->expects($this->exactly(4))
             ->method('load');
 
-        $rows = (new Flow())->process(
+        $rows = read(from_rows(
             new Rows(
                 Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20), Entry::string('gender', 'male')),
                 Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20), Entry::string('gender', 'male')),
@@ -39,7 +42,7 @@ final class GroupByTest extends IntegrationTestCase
                 Row::create(Entry::integer('id', 7), Entry::string('country', 'US'), Entry::integer('age', 45), Entry::string('gender', 'female')),
                 Row::create(Entry::integer('id', 9), Entry::string('country', 'US'), Entry::integer('age', 50), Entry::string('gender', 'male')),
             )
-        )
+        ))
             ->groupBy('country', 'gender')
             ->batchSize(1)
             ->write($loader)
@@ -58,7 +61,7 @@ final class GroupByTest extends IntegrationTestCase
 
     public function test_group_by_multiples_columns_with_avg_aggregation() : void
     {
-        $rows = (new Flow())->process(
+        $rows = read(from_rows(
             new Rows(
                 Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20), Entry::string('gender', 'male')),
                 Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20), Entry::string('gender', 'male')),
@@ -69,7 +72,7 @@ final class GroupByTest extends IntegrationTestCase
                 Row::create(Entry::integer('id', 7), Entry::string('country', 'US'), Entry::integer('age', 45), Entry::string('gender', 'female')),
                 Row::create(Entry::integer('id', 9), Entry::string('country', 'US'), Entry::integer('age', 50), Entry::string('gender', 'male')),
             )
-        )
+        ))
             ->groupBy('country', 'gender')
             ->aggregate(average(ref('age')))
             ->fetch();
@@ -87,7 +90,7 @@ final class GroupByTest extends IntegrationTestCase
 
     public function test_group_by_multiples_columns_with_avg_aggregation_with_null() : void
     {
-        $rows = (new Flow())->process(
+        $rows = read(from_rows(
             new Rows(
                 Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20), Entry::string('gender', 'male')),
                 Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20), Entry::string('gender', 'male')),
@@ -98,7 +101,7 @@ final class GroupByTest extends IntegrationTestCase
                 Row::create(Entry::integer('id', 7), Entry::string('country', 'US'), Entry::integer('age', 45), Entry::null('gender')),
                 Row::create(Entry::integer('id', 9), Entry::string('country', 'US'), Entry::integer('age', 50), Entry::string('gender', 'male')),
             )
-        )
+        ))
             ->groupBy('country', 'gender')
             ->aggregate(average(ref('age')))
             ->fetch();
@@ -117,7 +120,7 @@ final class GroupByTest extends IntegrationTestCase
 
     public function test_group_by_single_column() : void
     {
-        $rows = (new Flow())->process(
+        $rows = read(from_rows(
             new Rows(
                 Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20)),
                 Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20)),
@@ -128,7 +131,7 @@ final class GroupByTest extends IntegrationTestCase
                 Row::create(Entry::integer('id', 7), Entry::string('country', 'US'), Entry::integer('age', 45)),
                 Row::create(Entry::integer('id', 9), Entry::string('country', 'US'), Entry::integer('age', 50)),
             )
-        )
+        ))
             ->groupBy('country')
             ->fetch();
 
@@ -143,7 +146,7 @@ final class GroupByTest extends IntegrationTestCase
 
     public function test_group_by_single_column_with_avg_aggregation() : void
     {
-        $rows = (new Flow())->process(
+        $rows = read(from_rows(
             new Rows(
                 Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20)),
                 Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20)),
@@ -154,7 +157,7 @@ final class GroupByTest extends IntegrationTestCase
                 Row::create(Entry::integer('id', 7), Entry::string('country', 'US'), Entry::integer('age', 45)),
                 Row::create(Entry::integer('id', 9), Entry::string('country', 'US'), Entry::integer('age', 50)),
             )
-        )
+        ))
             ->groupBy('country')
             ->aggregate(average(ref('age')))
             ->fetch();
@@ -185,8 +188,7 @@ final class GroupByTest extends IntegrationTestCase
             ['date' => '2023-01-03', 'user' => 'user_04'],
         ];
 
-        $rows = (new Flow())
-            ->read(From::array($dataset))
+        $rows = read(from_array($dataset))
             ->groupBy(ref('date'), ref('user'))
             ->aggregate(count(ref('user')))
             ->rename('user_count', 'contributions')
@@ -224,13 +226,7 @@ final class GroupByTest extends IntegrationTestCase
             ['date' => '2023-11-05', 'user' => 'stloyd', 'contributions' => 11],
         ];
 
-        $rows = (new Flow())
-            ->read(
-                From::chain(
-                    From::array($dataset1),
-                    From::array($dataset2),
-                )
-            )
+        $rows = read(from_all(from_array($dataset1), from_array($dataset2)))
             ->groupBy(ref('date'))
             ->pivot(ref('user'))
             ->aggregate(sum(ref('contributions')))
@@ -270,7 +266,7 @@ final class GroupByTest extends IntegrationTestCase
 
     public function test_standalone_avg_aggregation() : void
     {
-        $rows = (new Flow())->process(
+        $rows = read(from_rows(
             new Rows(
                 Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20)),
                 Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20)),
@@ -281,7 +277,7 @@ final class GroupByTest extends IntegrationTestCase
                 Row::create(Entry::integer('id', 7), Entry::string('country', 'US'), Entry::integer('age', 45)),
                 Row::create(Entry::integer('id', 9), Entry::string('country', 'US'), Entry::integer('age', 50)),
             )
-        )
+        ))
             ->aggregate(average(ref('age')))
             ->rows(Transform::rename('age_avg', 'average_age'))
             ->fetch();
@@ -296,7 +292,7 @@ final class GroupByTest extends IntegrationTestCase
 
     public function test_standalone_avg_and_max_aggregation() : void
     {
-        (new Flow())->process(
+        read(from_rows(
             new Rows(
                 Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20)),
                 Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20)),
@@ -307,7 +303,7 @@ final class GroupByTest extends IntegrationTestCase
                 Row::create(Entry::integer('id', 7), Entry::string('country', 'US'), Entry::integer('age', 45)),
                 Row::create(Entry::integer('id', 9), Entry::string('country', 'US'), Entry::integer('age', 50)),
             )
-        )
+        ))
             ->aggregate(average(ref('age')), max(ref('age')))
             ->run(function (Rows $rows) : void {
                 $this->assertEquals(
@@ -348,8 +344,7 @@ final class GroupByTest extends IntegrationTestCase
                 ['department' => 'Marketing', 'avg_salary' => 2940.0],
                 ['department' => 'Finance', 'avg_salary' => 3550.0],
             ],
-            (new Flow)
-                ->read(From::chain(From::memory($memoryPage1), From::memory($memoryPage2)))
+            read(from_all(from_memory($memoryPage1), from_memory($memoryPage2)))
                 ->withEntry('avg_salary', average(ref('salary'))->over(window()->partitionBy(ref('department'))))
                 ->select('department', 'avg_salary')
                 ->dropDuplicates(ref('department'), ref('avg_salary'))
@@ -394,8 +389,7 @@ final class GroupByTest extends IntegrationTestCase
                 ['employee_name' => 'Sophia', 'department' => 'Finance', 'salary' => 4200, 'rank' => 1],
                 ['employee_name' => 'Noah', 'department' => 'Marketing', 'salary' => 3400, 'rank' => 1],
             ],
-            (new Flow)
-                ->read(From::all(From::memory($memoryPage1), From::memory($memoryPage2)))
+            read(from_all(from_memory($memoryPage1), from_memory($memoryPage2)))
                 ->dropDuplicates(ref('employee_name'), ref('department'))
                 ->withEntry('rank', rank()->over(window()->partitionBy(ref('department'))->orderBy(ref('salary')->desc())))
                 ->filter(ref('rank')->equals(lit(1)))

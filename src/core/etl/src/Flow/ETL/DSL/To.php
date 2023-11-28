@@ -14,6 +14,8 @@ use Flow\ETL\Row\Schema\SchemaFormatter;
 use Flow\ETL\Transformer;
 
 /**
+ * @deprecated please use functions defined in Flow\ETL\DSL\functions.php
+ *
  * @infection-ignore-all
  */
 class To

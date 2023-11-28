@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV\Tests\Integration;
 
+use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\ref;
 use Flow\ETL\Adapter\CSV\CSVExtractor;
 use Flow\ETL\Config;
 use Flow\ETL\ConfigBuilder;
 use Flow\ETL\DSL\CSV;
-use Flow\ETL\DSL\From;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Filesystem\LocalFilesystem;
 use Flow\ETL\Filesystem\Path;
@@ -248,7 +248,7 @@ final class CSVExtractorTest extends TestCase
             \unlink($path);
         }
 
-        (new Flow())->read(From::array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
+        (new Flow())->read(from_array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
             ->write(CSV::to($path))
             ->run();
 
@@ -313,7 +313,7 @@ final class CSVExtractorTest extends TestCase
             \unlink($path);
         }
 
-        (new Flow())->read(From::array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
+        (new Flow())->read(from_array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
             ->write(CSV::to($path))
             ->run();
 

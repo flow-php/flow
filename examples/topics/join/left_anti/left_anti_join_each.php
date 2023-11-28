@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use function Flow\ETL\DSL\to_output;
 use Flow\ETL\DataFrame;
 use Flow\ETL\DataFrameFactory;
 use Flow\ETL\DSL\Entry;
@@ -76,7 +77,7 @@ $flow = (new Flow())
         Expression::on(new Equal('id', 'id')), // by using All or Any comparisons, more than one entry can be used to prepare the condition
         Join::left_anti
     )
-    ->write(To::output());
+    ->write(to_output());
 
 if ($_ENV['FLOW_PHAR_APP'] ?? false) {
     return $flow;

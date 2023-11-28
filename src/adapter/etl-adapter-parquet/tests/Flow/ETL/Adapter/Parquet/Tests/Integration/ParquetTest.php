@@ -2,9 +2,10 @@
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Integration;
 
+use function Flow\ETL\DSL\from_rows;
+use function Flow\ETL\DSL\read;
 use function Flow\ETL\DSL\ref;
 use Flow\ETL\DSL\Entry;
-use Flow\ETL\DSL\From;
 use Flow\ETL\DSL\Parquet;
 use Flow\ETL\Flow;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
@@ -23,8 +24,7 @@ final class ParquetTest extends TestCase
         $path = \sys_get_temp_dir() . '/file.snappy.parquet';
         $this->removeFile($path);
 
-        (new Flow())
-            ->read(From::rows($rows = $this->createRows(10)))
+        read(from_rows($rows = $this->createRows(10)))
             ->write(Parquet::to($path))
             ->run();
 
@@ -51,14 +51,13 @@ final class ParquetTest extends TestCase
         $path = \sys_get_temp_dir() . '/partitioned';
         $this->cleanDirectory($path);
 
-        (new Flow())
-            ->read(From::rows($rows = new Rows(
-                $this->createRow(1, new \DateTimeImmutable('2020-01-01 00:01:00')),
-                $this->createRow(1, new \DateTimeImmutable('2020-01-01 00:02:00')),
-                $this->createRow(1, new \DateTimeImmutable('2020-01-02 00:01:00')),
-                $this->createRow(1, new \DateTimeImmutable('2020-01-02 00:02:00')),
-                $this->createRow(1, new \DateTimeImmutable('2020-01-03 00:01:00')),
-            )))
+        read(from_rows($rows = new Rows(
+            $this->createRow(1, new \DateTimeImmutable('2020-01-01 00:01:00')),
+            $this->createRow(1, new \DateTimeImmutable('2020-01-01 00:02:00')),
+            $this->createRow(1, new \DateTimeImmutable('2020-01-02 00:01:00')),
+            $this->createRow(1, new \DateTimeImmutable('2020-01-02 00:02:00')),
+            $this->createRow(1, new \DateTimeImmutable('2020-01-03 00:01:00')),
+        )))
             ->withEntry('date', ref('datetime')->toDate()->dateFormat())
             ->partitionBy(ref('date'))
             ->write(Parquet::to($path))

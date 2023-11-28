@@ -2,8 +2,8 @@
 
 namespace Flow\ETL\Tests\Integration\Pipeline;
 
+use function Flow\ETL\DSL\from_array;
 use Flow\ETL\DSL\CSV;
-use Flow\ETL\DSL\From;
 use Flow\ETL\Flow;
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
 use Flow\ETL\Transformer\LimitTransformer;
@@ -19,7 +19,7 @@ final class SynchronousPipelineTest extends IntegrationTestCase
         }
 
         (new Flow())
-            ->read(From::array([
+            ->read(from_array([
                 ['id' => 1],
                 ['id' => 2],
                 ['id' => 3],

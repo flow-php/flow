@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine\Tests\Integration;
 
+use function Flow\ETL\DSL\from_array;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;
@@ -11,7 +12,6 @@ use Doctrine\DBAL\Types\Types;
 use Flow\ETL\Adapter\Doctrine\DbalLoader;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
 use Flow\ETL\DSL\Dbal;
-use Flow\ETL\DSL\From;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Flow;
 use Flow\Serializer\CompressingSerializer;
@@ -75,7 +75,7 @@ final class DbalLoaderTest extends IntegrationTestCase
 
         (new Flow())
             ->read(
-                From::array([
+                from_array([
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
                 ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
@@ -106,7 +106,7 @@ final class DbalLoaderTest extends IntegrationTestCase
 
         (new Flow())
             ->read(
-                From::array([
+                from_array([
                     ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
                     ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
                     ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
@@ -136,7 +136,7 @@ final class DbalLoaderTest extends IntegrationTestCase
 
         (new Flow())
             ->read(
-                From::array([
+                from_array([
                     ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
                     ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
                     ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
@@ -163,7 +163,7 @@ final class DbalLoaderTest extends IntegrationTestCase
 
         (new Flow())
             ->read(
-                From::array([
+                from_array([
                     ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
                     ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
                     ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
@@ -188,7 +188,7 @@ final class DbalLoaderTest extends IntegrationTestCase
             ->setPrimaryKey(['id']));
         (new Flow())
             ->read(
-                From::array([
+                from_array([
                     ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
                     ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
                     ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
@@ -199,7 +199,7 @@ final class DbalLoaderTest extends IntegrationTestCase
 
         (new Flow())
             ->read(
-                From::array([
+                from_array([
                     ['id' => 2, 'name' => 'New Name Two', 'description' => 'New Description Two'],
                     ['id' => 3, 'name' => 'New Name Three', 'description' => 'New Description Three'],
                     ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Three'],
@@ -236,7 +236,7 @@ final class DbalLoaderTest extends IntegrationTestCase
 
         (new Flow())
             ->read(
-                From::array([
+                from_array([
                     ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
                     ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
                     ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
@@ -246,7 +246,7 @@ final class DbalLoaderTest extends IntegrationTestCase
             ->run();
 
         (new Flow())->extract(
-            From::array([
+            from_array([
                     ['id' => 2, 'name' => 'New Name Two', 'description' => 'New Description Two'],
                     ['id' => 3, 'name' => 'New Name Three', 'description' => 'New Description Three'],
                     ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Three'],
@@ -321,7 +321,7 @@ final class DbalLoaderTest extends IntegrationTestCase
         $updateLoader = Dbal::to_table_update($this->connectionParams(), $table, ['primary_key_columns' => ['id'], ['update_columns' => ['name']]]);
 
         (new Flow())->extract(
-            From::array([
+            from_array([
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
                 ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
@@ -332,7 +332,7 @@ final class DbalLoaderTest extends IntegrationTestCase
 
         (new Flow())
             ->read(
-                From::array([
+                from_array([
                     ['id' => 1, 'name' => 'Changed Name One', 'description' => 'Description One'],
                     ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
                     ['id' => 3, 'name' => 'Changed Name Three', 'description' => 'Description Three'],

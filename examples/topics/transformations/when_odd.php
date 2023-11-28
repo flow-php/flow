@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
+use function Flow\ETL\DSL\from_sequence_number;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\to_output;
 use function Flow\ETL\DSL\when;
-use Flow\ETL\DSL\From;
-use Flow\ETL\DSL\To;
 use Flow\ETL\Flow;
 
 require __DIR__ . '/../../bootstrap.php';
 
 $flow = (new Flow())
-    ->read(From::sequence_number('number', 1, 100))
+    ->read(from_sequence_number('number', 1, 100))
     ->collect()
     ->withEntry(
         'type',
@@ -22,7 +22,7 @@ $flow = (new Flow())
             else: lit('even')
         )
     )
-    ->write(To::output(false));
+    ->write(to_output(false));
 
 if ($_ENV['FLOW_PHAR_APP'] ?? false) {
     return $flow;

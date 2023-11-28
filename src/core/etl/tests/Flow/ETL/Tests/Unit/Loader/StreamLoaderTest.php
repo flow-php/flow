@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Loader;
 
+use function Flow\ETL\DSL\to_output;
+use function Flow\ETL\DSL\to_stream;
 use Flow\ETL\Config;
 use Flow\ETL\DSL\Entry;
-use Flow\ETL\DSL\To;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
@@ -22,7 +23,7 @@ final class StreamLoaderTest extends TestCase
         $this->expectExceptionMessage("Can't open stream for url: php://qweqweqw in mode: w");
         $this->expectException(RuntimeException::class);
 
-        $loader = To::stream('php://qweqweqw', 0);
+        $loader = to_stream('php://qweqweqw', 0);
 
         $loader->load(
             new Rows(
@@ -36,7 +37,7 @@ final class StreamLoaderTest extends TestCase
 
     public function test_loading_rows_and_schema_into_php_memory_stream() : void
     {
-        $loader = To::output(false, StreamLoader\Output::rows_and_schema);
+        $loader = to_output(false, StreamLoader\Output::rows_and_schema);
 
         \ob_start();
 

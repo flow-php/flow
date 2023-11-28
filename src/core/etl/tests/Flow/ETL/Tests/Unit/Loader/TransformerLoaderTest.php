@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Loader;
 
+use function Flow\ETL\DSL\to_transformation;
 use Flow\ETL\Config;
-use Flow\ETL\DSL\To;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Rows;
@@ -26,7 +26,7 @@ final class TransformerLoaderTest extends TestCase
         $loaderMock->expects($this->once())
             ->method('load');
 
-        $transformer = To::transform_to(
+        $transformer = to_transformation(
             $transformerMock,
             $loaderMock
         );
@@ -40,7 +40,7 @@ final class TransformerLoaderTest extends TestCase
 
         $loaderMock = $this->createMock(Loader::class);
 
-        $transformer = To::transform_to(
+        $transformer = to_transformation(
             $transformerMock,
             $loaderMock
         );

@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Function;
 
 use function Flow\ETL\DSL\array_expand;
+use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\ref;
-use Flow\ETL\DSL\From;
-use Flow\ETL\DSL\To;
+use function Flow\ETL\DSL\to_memory;
 use Flow\ETL\Flow;
 use Flow\ETL\Function\ArrayExpand\ArrayExpand;
 use Flow\ETL\Memory\ArrayMemory;
@@ -19,7 +19,7 @@ final class ArrayExpandTest extends TestCase
     {
         (new Flow())
             ->read(
-                From::array(
+                from_array(
                     [
                         ['id' => 1, 'array' => ['a' => 1, 'b' => 2, 'c' => 3]],
                     ]
@@ -27,7 +27,7 @@ final class ArrayExpandTest extends TestCase
             )
             ->withEntry('expanded', array_expand(ref('array'), ArrayExpand::BOTH))
             ->drop('array')
-            ->write(To::memory($memory = new ArrayMemory()))
+            ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
         $this->assertSame(
@@ -44,7 +44,7 @@ final class ArrayExpandTest extends TestCase
     {
         (new Flow())
             ->read(
-                From::array(
+                from_array(
                     [
                         ['id' => 1, 'array' => ['a' => 1, 'b' => 2, 'c' => 3]],
                     ]
@@ -52,7 +52,7 @@ final class ArrayExpandTest extends TestCase
             )
             ->withEntry('expanded', array_expand(ref('array'), ArrayExpand::KEYS))
             ->drop('array')
-            ->write(To::memory($memory = new ArrayMemory()))
+            ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
         $this->assertSame(
@@ -69,7 +69,7 @@ final class ArrayExpandTest extends TestCase
     {
         (new Flow())
             ->read(
-                From::array(
+                from_array(
                     [
                         ['id' => 1, 'array' => ['a' => 1, 'b' => 2, 'c' => 3]],
                     ]
@@ -77,7 +77,7 @@ final class ArrayExpandTest extends TestCase
             )
             ->withEntry('expanded', array_expand(ref('array')))
             ->drop('array')
-            ->write(To::memory($memory = new ArrayMemory()))
+            ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
         $this->assertSame(

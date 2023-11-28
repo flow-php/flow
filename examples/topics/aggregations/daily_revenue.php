@@ -5,8 +5,8 @@ declare(strict_types=1);
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\sum;
+use function Flow\ETL\DSL\to_output;
 use Flow\ETL\DSL\Parquet;
-use Flow\ETL\DSL\To;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Flow;
 
@@ -23,7 +23,7 @@ $flow = (new Flow())
     ->sortBy(ref('created_at')->desc())
     ->withEntry('daily_revenue', ref('revenue_sum')->round(lit(2))->numberFormat(lit(2)))
     ->drop('revenue_sum')
-    ->write(To::output(truncate: false))
+    ->write(to_output(truncate: false))
     ->withEntry('created_at', ref('created_at')->toDate('Y/m'))
     ->mode(SaveMode::Overwrite)
     ->write(Parquet::to(__FLOW_OUTPUT__ . '/daily_revenue.parquet'));

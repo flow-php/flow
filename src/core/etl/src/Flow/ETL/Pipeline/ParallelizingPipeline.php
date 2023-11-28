@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Pipeline;
 
-use Flow\ETL\DSL\From;
+use function Flow\ETL\DSL\chunks_from;
+use function Flow\ETL\DSL\from_pipeline;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
@@ -75,8 +76,8 @@ final class ParallelizingPipeline implements OverridingPipeline, Pipeline
     public function process(FlowContext $context) : \Generator
     {
         $this->nextPipeline->setSource(
-            From::chunks_from(
-                From::pipeline($this->pipeline),
+            chunks_from(
+                from_pipeline($this->pipeline),
                 $this->parallel
             )
         );

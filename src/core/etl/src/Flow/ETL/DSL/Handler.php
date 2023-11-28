@@ -7,6 +7,8 @@ namespace Flow\ETL\DSL;
 use Flow\ETL\ErrorHandler;
 
 /**
+ * @deprecated please use functions defined in Flow\ETL\DSL\functions.php
+ *
  * @infection-ignore-all
  */
 class Handler

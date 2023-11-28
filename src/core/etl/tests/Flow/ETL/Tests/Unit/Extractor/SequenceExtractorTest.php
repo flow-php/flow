@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Extractor;
 
+use function Flow\ETL\DSL\from_sequence_date_period;
+use function Flow\ETL\DSL\from_sequence_date_period_recurrences;
+use function Flow\ETL\DSL\from_sequence_number;
 use Flow\ETL\Config;
 use Flow\ETL\DSL\Entry;
-use Flow\ETL\DSL\From;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -16,7 +18,7 @@ final class SequenceExtractorTest extends TestCase
 {
     public function test_extracting_from_date_period() : void
     {
-        $extractor = From::sequence_date_period('day', new \DateTimeImmutable('2023-01-01'), new \DateInterval('P1D'), new \DateTimeImmutable('2023-01-11'), \DatePeriod::EXCLUDE_START_DATE);
+        $extractor = from_sequence_date_period('day', new \DateTimeImmutable('2023-01-01'), new \DateInterval('P1D'), new \DateTimeImmutable('2023-01-11'), \DatePeriod::EXCLUDE_START_DATE);
 
         $this->assertEquals(
             [
@@ -36,7 +38,7 @@ final class SequenceExtractorTest extends TestCase
 
     public function test_extracting_from_date_period_recurrences() : void
     {
-        $extractor = From::sequence_date_period_recurrences('day', new \DateTimeImmutable('2023-01-01'), new \DateInterval('P1D'), 10, \DatePeriod::EXCLUDE_START_DATE);
+        $extractor = from_sequence_date_period_recurrences('day', new \DateTimeImmutable('2023-01-01'), new \DateInterval('P1D'), 10, \DatePeriod::EXCLUDE_START_DATE);
 
         $this->assertEquals(
             [
@@ -57,7 +59,7 @@ final class SequenceExtractorTest extends TestCase
 
     public function test_extracting_from_numbers_range() : void
     {
-        $extractor = From::sequence_number('num', 0, 10, 1.5);
+        $extractor = from_sequence_number('num', 0, 10, 1.5);
 
         $this->assertEquals(
             [

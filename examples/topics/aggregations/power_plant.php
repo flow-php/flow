@@ -9,8 +9,8 @@ use function Flow\ETL\DSL\max;
 use function Flow\ETL\DSL\min;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\sum;
+use function Flow\ETL\DSL\to_output;
 use Flow\ETL\DSL\CSV;
-use Flow\ETL\DSL\To;
 use Flow\ETL\Flow;
 
 require __DIR__ . '/../../bootstrap.php';
@@ -44,7 +44,7 @@ $flow = (new Flow())
     ->withEntry('consumption', ref('consumption_kwh_sum')->divide(ref('production_kwh_sum')))
     ->withEntry('consumption', ref('consumption')->multiply(lit(100))->round(lit(2)))
     ->withEntry('consumption', concat(ref('consumption'), lit('%')))
-    ->write(To::output(truncate: false));
+    ->write(to_output(truncate: false));
 
 if ($_ENV['FLOW_PHAR_APP'] ?? false) {
     return $flow;

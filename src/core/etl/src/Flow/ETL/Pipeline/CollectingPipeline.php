@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Pipeline;
 
-use Flow\ETL\DSL\From;
+use function Flow\ETL\DSL\from_rows;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
@@ -74,7 +74,7 @@ final class CollectingPipeline implements OverridingPipeline, Pipeline
 
     public function process(FlowContext $context) : \Generator
     {
-        $this->nextPipeline->setSource(From::rows(
+        $this->nextPipeline->setSource(from_rows(
             (new Rows())->merge(...\iterator_to_array($this->pipeline->process($context)))
         ));
 

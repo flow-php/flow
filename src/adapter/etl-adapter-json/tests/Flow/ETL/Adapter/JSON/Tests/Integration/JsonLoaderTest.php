@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON\Tests\Integration;
 
+use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\read;
 use function Flow\ETL\DSL\ref;
 use Flow\ETL\Adapter\JSON\JsonLoader;
 use Flow\ETL\Config;
-use Flow\ETL\DSL\From;
 use Flow\ETL\DSL\Json;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\SaveMode;
@@ -153,8 +154,7 @@ JSON,
             \unlink($path);
         }
 
-        (new Flow)
-            ->read(From::array([
+        read(from_array([
                 ['id' => 1, 'partition' => 'a'],
                 ['id' => 2, 'partition' => 'a'],
                 ['id' => 3, 'partition' => 'a'],
@@ -166,8 +166,7 @@ JSON,
             ->write(Json::to($path))
             ->run();
 
-        (new Flow)
-            ->read(From::array([
+        read(from_array([
                 ['id' => 8, 'partition' => 'b'],
                 ['id' => 10, 'partition' => 'b'],
             ]))
@@ -184,8 +183,7 @@ JSON,
                 ['id' => 4, 'partition' => 'b'],
                 ['id' => 5, 'partition' => 'b'],
             ],
-            (new Flow())
-                ->read(Json::from($path))
+            read(Json::from($path))
                 ->fetch()
                 ->toArray()
         );
@@ -200,7 +198,7 @@ JSON,
         }
 
         (new Flow)
-            ->read(From::array([
+            ->read(from_array([
                 ['id' => 1, 'partition' => 'a'],
                 ['id' => 2, 'partition' => 'a'],
                 ['id' => 3, 'partition' => 'a'],
@@ -213,7 +211,7 @@ JSON,
             ->run();
 
         (new Flow)
-            ->read(From::array([
+            ->read(from_array([
                 ['id' => 8, 'partition' => 'b'],
                 ['id' => 10, 'partition' => 'b'],
             ]))
@@ -246,7 +244,7 @@ JSON,
         }
 
         (new Flow)
-            ->read(From::array([
+            ->read(from_array([
                 ['id' => 1, 'partition' => 'a'],
                 ['id' => 2, 'partition' => 'a'],
                 ['id' => 3, 'partition' => 'a'],
@@ -261,7 +259,7 @@ JSON,
         $this->expectExceptionMessage('Destination path "file:/' . $path . '/partition=b" already exists, please change path to different or set different SaveMode');
 
         (new Flow)
-            ->read(From::array([
+            ->read(from_array([
                 ['id' => 8, 'partition' => 'b'],
                 ['id' => 10, 'partition' => 'b'],
             ]))
@@ -281,7 +279,7 @@ JSON,
         }
 
         (new Flow)
-            ->read(From::array([
+            ->read(from_array([
                 ['id' => 1],
                 ['id' => 2],
                 ['id' => 3],
@@ -291,7 +289,7 @@ JSON,
             ->run();
 
         (new Flow)
-            ->read(From::array([
+            ->read(from_array([
                 ['id' => 4],
                 ['id' => 5],
                 ['id' => 6],

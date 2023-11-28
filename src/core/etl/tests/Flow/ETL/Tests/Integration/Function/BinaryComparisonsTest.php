@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Function;
 
+use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\to_memory;
 use function Flow\ETL\DSL\when;
-use Flow\ETL\DSL\From;
-use Flow\ETL\DSL\To;
 use Flow\ETL\Flow;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Row\Entry\StringEntry;
@@ -20,7 +20,7 @@ final class BinaryComparisonsTest extends TestCase
     {
         (new Flow())
             ->read(
-                From::array(
+                from_array(
                     [
                         ['a' => 100, 'b' => 100, 'c' => 10, 'd' => 'value', 'array' => ['a' => 10, 'b' => 20, 'c' => 30]],
                     ]
@@ -83,7 +83,7 @@ final class BinaryComparisonsTest extends TestCase
                 when(ref('a')->isType(StringEntry::class), lit(true), lit(false))
             )
             ->drop('array')
-            ->write(To::memory($memory = new ArrayMemory()))
+            ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
         $this->assertSame(

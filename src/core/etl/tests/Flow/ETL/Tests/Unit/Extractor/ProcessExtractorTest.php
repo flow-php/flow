@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Extractor;
 
+use function Flow\ETL\DSL\from_rows;
 use Flow\ETL\Config;
 use Flow\ETL\DSL\Entry;
-use Flow\ETL\DSL\From;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -24,7 +24,7 @@ final class ProcessExtractorTest extends TestCase
             Row::create(Entry::integer('number', 5), Entry::string('name', 'five')),
         );
 
-        $extractor = From::rows($rows);
+        $extractor = from_rows($rows);
 
         $data = [];
 

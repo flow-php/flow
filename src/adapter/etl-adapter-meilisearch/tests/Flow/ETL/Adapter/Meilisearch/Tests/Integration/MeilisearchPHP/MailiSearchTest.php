@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Meilisearch\Tests\Integration\MeilisearchPHP;
 
+use function Flow\ETL\DSL\from_array;
 use Flow\ETL\Adapter\Meilisearch\Tests\Context\MeilisearchContext;
 use Flow\ETL\Adapter\Meilisearch\Tests\Double\Spy\HttpClientSpy;
-use Flow\ETL\DSL\From;
 use Flow\ETL\DSL\Meilisearch;
 use Flow\ETL\Flow;
 use Flow\ETL\Row;
@@ -41,7 +41,7 @@ final class MailiSearchTest extends TestCase
     public function test_batch_size_when_its_not_explicitly_set() : void
     {
         (new Flow())
-            ->read(From::array([
+            ->read(from_array([
                 ['id' => 1, 'text' => 'lorem ipsum'],
                 ['id' => 2, 'text' => 'lorem ipsum'],
                 ['id' => 3, 'text' => 'lorem ipsum'],

@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Avro\Tests\Integration;
 
+use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\from_rows;
+use function Flow\ETL\DSL\read;
 use Flow\ETL\Adapter\Avro\FlixTech\AvroExtractor;
 use Flow\ETL\Config;
 use Flow\ETL\DSL\Avro;
 use Flow\ETL\DSL\Entry;
-use Flow\ETL\DSL\From;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\SaveMode;
@@ -31,7 +33,7 @@ final class AvroTest extends TestCase
             \unlink($path);
         }
 
-        (new Flow())->read(From::array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
+        (new Flow())->read(from_array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
             ->write(Avro::to($path))
             ->run();
 
@@ -50,24 +52,23 @@ final class AvroTest extends TestCase
 
         $this->removeFile($path = \sys_get_temp_dir() . '/file.avro');
 
-        (new Flow)
-            ->read(From::rows(
-                $rows = new Rows(
-                    ...\array_map(function (int $i) : Row {
-                        return Row::create(
-                            Entry::integer('integer', $i),
-                            Entry::float('float', 1.5),
-                            Entry::string('string', 'name_' . $i),
-                            Entry::boolean('boolean', true),
-                            Entry::datetime('datetime', new \DateTimeImmutable()),
-                            Entry::json_object('json_object', ['id' => 1, 'name' => 'test']),
-                            Entry::json('json', [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']]),
-                            Entry::list_of_string('list_of_strings', ['a', 'b', 'c']),
-                            Entry::list_of_datetime('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()])
-                        );
-                    }, \range(1, 100))
-                )
-            ))
+        read(from_rows(
+            $rows = new Rows(
+                ...\array_map(function (int $i) : Row {
+                    return Row::create(
+                        Entry::integer('integer', $i),
+                        Entry::float('float', 1.5),
+                        Entry::string('string', 'name_' . $i),
+                        Entry::boolean('boolean', true),
+                        Entry::datetime('datetime', new \DateTimeImmutable()),
+                        Entry::json_object('json_object', ['id' => 1, 'name' => 'test']),
+                        Entry::json('json', [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']]),
+                        Entry::list_of_string('list_of_strings', ['a', 'b', 'c']),
+                        Entry::list_of_datetime('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()])
+                    );
+                }, \range(1, 100))
+            )
+        ))
             ->partitionBy('integer')
             ->write(Avro::to($path))
             ->run();
@@ -77,24 +78,23 @@ final class AvroTest extends TestCase
     {
         $this->cleanDirectory($path = \sys_get_temp_dir() . '/directory.avro');
 
-        (new Flow)
-            ->read(From::rows(
-                $rows = new Rows(
-                    ...\array_map(function (int $i) : Row {
-                        return Row::create(
-                            Entry::integer('integer', $i),
-                            Entry::float('float', 1.5),
-                            Entry::string('string', 'name_' . $i),
-                            Entry::boolean('boolean', true),
-                            Entry::datetime('datetime', new \DateTimeImmutable()),
-                            Entry::json_object('json_object', ['id' => 1, 'name' => 'test']),
-                            Entry::json('json', [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']]),
-                            Entry::list_of_string('list_of_strings', ['a', 'b', 'c']),
-                            Entry::list_of_datetime('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()])
-                        );
-                    }, \range(1, 100))
-                )
-            ))
+        read(from_rows(
+            $rows = new Rows(
+                ...\array_map(function (int $i) : Row {
+                    return Row::create(
+                        Entry::integer('integer', $i),
+                        Entry::float('float', 1.5),
+                        Entry::string('string', 'name_' . $i),
+                        Entry::boolean('boolean', true),
+                        Entry::datetime('datetime', new \DateTimeImmutable()),
+                        Entry::json_object('json_object', ['id' => 1, 'name' => 'test']),
+                        Entry::json('json', [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']]),
+                        Entry::list_of_string('list_of_strings', ['a', 'b', 'c']),
+                        Entry::list_of_datetime('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()])
+                    );
+                }, \range(1, 100))
+            )
+        ))
             ->appendSafe()
             ->write(Avro::to($path))
             ->run();
@@ -124,7 +124,7 @@ final class AvroTest extends TestCase
             \unlink($path);
         }
 
-        (new Flow())->read(From::array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
+        (new Flow())->read(from_array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
             ->write(Avro::to($path))
             ->run();
 
@@ -155,47 +155,46 @@ final class AvroTest extends TestCase
     {
         $this->removeFile($path = \sys_get_temp_dir() . '/file.avro');
 
-        (new Flow)
-            ->read(From::rows(
-                $rows = new Rows(
-                    ...\array_map(function (int $i) : Row {
-                        return Row::create(
-                            Entry::integer('integer', $i),
-                            Entry::float('float', 1.5),
-                            $i % 10 === 0 ? Entry::null('string') : Entry::string('string', 'name_' . $i),
-                            Entry::boolean('boolean', true),
-                            Entry::datetime('datetime', new \DateTimeImmutable()),
-                            Entry::json_object('json_object', ['id' => 1, 'name' => 'test']),
-                            Entry::json('json', [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']]),
-                            Entry::list_of_string('list_of_strings', ['a', 'b', 'c']),
-                            Entry::list_of_datetime('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()]),
-                            Entry::structure(
-                                'address',
-                                [
-                                    'street' => 'street_' . $i,
-                                    'city' => 'city_' . $i,
-                                    'zip' => 'zip_' . $i,
-                                    'country' => 'country_' . $i,
-                                    'location' => ['lat' => 1.5, 'lon' => 1.5],
-                                ],
-                                new StructureType(
-                                    new StructureElement('street', ScalarType::string()),
-                                    new StructureElement('city', ScalarType::string()),
-                                    new StructureElement('zip', ScalarType::string()),
-                                    new StructureElement('country', ScalarType::string()),
-                                    new StructureElement(
-                                        'location',
-                                        new StructureType(
-                                            new StructureElement('lat', ScalarType::float()),
-                                            new StructureElement('lon', ScalarType::float()),
-                                        )
+        read(from_rows(
+            $rows = new Rows(
+                ...\array_map(function (int $i) : Row {
+                    return Row::create(
+                        Entry::integer('integer', $i),
+                        Entry::float('float', 1.5),
+                        $i % 10 === 0 ? Entry::null('string') : Entry::string('string', 'name_' . $i),
+                        Entry::boolean('boolean', true),
+                        Entry::datetime('datetime', new \DateTimeImmutable()),
+                        Entry::json_object('json_object', ['id' => 1, 'name' => 'test']),
+                        Entry::json('json', [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']]),
+                        Entry::list_of_string('list_of_strings', ['a', 'b', 'c']),
+                        Entry::list_of_datetime('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()]),
+                        Entry::structure(
+                            'address',
+                            [
+                                'street' => 'street_' . $i,
+                                'city' => 'city_' . $i,
+                                'zip' => 'zip_' . $i,
+                                'country' => 'country_' . $i,
+                                'location' => ['lat' => 1.5, 'lon' => 1.5],
+                            ],
+                            new StructureType(
+                                new StructureElement('street', ScalarType::string()),
+                                new StructureElement('city', ScalarType::string()),
+                                new StructureElement('zip', ScalarType::string()),
+                                new StructureElement('country', ScalarType::string()),
+                                new StructureElement(
+                                    'location',
+                                    new StructureType(
+                                        new StructureElement('lat', ScalarType::float()),
+                                        new StructureElement('lon', ScalarType::float()),
                                     )
-                                ),
+                                )
                             ),
-                        );
-                    }, \range(1, 100))
-                )
-            ))
+                        ),
+                    );
+                }, \range(1, 100))
+            )
+        ))
             ->batchSize(10)
             ->write(Avro::to($path))
             ->run();
@@ -219,45 +218,43 @@ final class AvroTest extends TestCase
 
         $this->expectExceptionMessage('please change path to different or set different SaveMode');
 
-        (new Flow)
-            ->read(From::rows(
-                $rows = new Rows(
-                    ...\array_map(function (int $i) : Row {
-                        return Row::create(
-                            Entry::integer('integer', $i),
-                            Entry::float('float', 1.5),
-                            Entry::string('string', 'name_' . $i),
-                            Entry::boolean('boolean', true),
-                            Entry::datetime('datetime', new \DateTimeImmutable()),
-                            Entry::json_object('json_object', ['id' => 1, 'name' => 'test']),
-                            Entry::json('json', [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']]),
-                            Entry::list_of_string('list_of_strings', ['a', 'b', 'c']),
-                            Entry::list_of_datetime('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()])
-                        );
-                    }, \range(1, 100))
-                )
-            ))
+        read(from_rows(
+            $rows = new Rows(
+                ...\array_map(function (int $i) : Row {
+                    return Row::create(
+                        Entry::integer('integer', $i),
+                        Entry::float('float', 1.5),
+                        Entry::string('string', 'name_' . $i),
+                        Entry::boolean('boolean', true),
+                        Entry::datetime('datetime', new \DateTimeImmutable()),
+                        Entry::json_object('json_object', ['id' => 1, 'name' => 'test']),
+                        Entry::json('json', [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']]),
+                        Entry::list_of_string('list_of_strings', ['a', 'b', 'c']),
+                        Entry::list_of_datetime('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()])
+                    );
+                }, \range(1, 100))
+            )
+        ))
             ->write(Avro::to($path))
             ->run();
 
-        (new Flow)
-            ->read(From::rows(
-                $rows = new Rows(
-                    ...\array_map(function (int $i) : Row {
-                        return Row::create(
-                            Entry::integer('integer', $i),
-                            Entry::float('float', 1.5),
-                            Entry::string('string', 'name_' . $i),
-                            Entry::boolean('boolean', true),
-                            Entry::datetime('datetime', new \DateTimeImmutable()),
-                            Entry::json_object('json_object', ['id' => 1, 'name' => 'test']),
-                            Entry::json('json', [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']]),
-                            Entry::list_of_string('list_of_strings', ['a', 'b', 'c']),
-                            Entry::list_of_datetime('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()])
-                        );
-                    }, \range(1, 100))
-                )
-            ))
+        read(from_rows(
+            $rows = new Rows(
+                ...\array_map(function (int $i) : Row {
+                    return Row::create(
+                        Entry::integer('integer', $i),
+                        Entry::float('float', 1.5),
+                        Entry::string('string', 'name_' . $i),
+                        Entry::boolean('boolean', true),
+                        Entry::datetime('datetime', new \DateTimeImmutable()),
+                        Entry::json_object('json_object', ['id' => 1, 'name' => 'test']),
+                        Entry::json('json', [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']]),
+                        Entry::list_of_string('list_of_strings', ['a', 'b', 'c']),
+                        Entry::list_of_datetime('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()])
+                    );
+                }, \range(1, 100))
+            )
+        ))
             ->write(Avro::to($path))
             ->run();
 
@@ -277,45 +274,43 @@ final class AvroTest extends TestCase
     {
         $this->removeFile($path = \sys_get_temp_dir() . '/file.avro');
 
-        (new Flow)
-            ->read(From::rows(
-                $rows = new Rows(
-                    ...\array_map(function (int $i) : Row {
-                        return Row::create(
-                            Entry::integer('integer', $i),
-                            Entry::float('float', 1.5),
-                            Entry::string('string', 'name_' . $i),
-                            Entry::boolean('boolean', true),
-                            Entry::datetime('datetime', new \DateTimeImmutable()),
-                            Entry::json_object('json_object', ['id' => 1, 'name' => 'test']),
-                            Entry::json('json', [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']]),
-                            Entry::list_of_string('list_of_strings', ['a', 'b', 'c']),
-                            Entry::list_of_datetime('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()])
-                        );
-                    }, \range(1, 100))
-                )
-            ))
+        read(from_rows(
+            $rows = new Rows(
+                ...\array_map(function (int $i) : Row {
+                    return Row::create(
+                        Entry::integer('integer', $i),
+                        Entry::float('float', 1.5),
+                        Entry::string('string', 'name_' . $i),
+                        Entry::boolean('boolean', true),
+                        Entry::datetime('datetime', new \DateTimeImmutable()),
+                        Entry::json_object('json_object', ['id' => 1, 'name' => 'test']),
+                        Entry::json('json', [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']]),
+                        Entry::list_of_string('list_of_strings', ['a', 'b', 'c']),
+                        Entry::list_of_datetime('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()])
+                    );
+                }, \range(1, 100))
+            )
+        ))
             ->write(Avro::to($path))
             ->run();
 
-        (new Flow)
-            ->read(From::rows(
-                new Rows(
-                    ...\array_map(function (int $i) : Row {
-                        return Row::create(
-                            Entry::integer('integer', $i),
-                            Entry::float('float', 1.5),
-                            Entry::string('string', 'name_' . $i),
-                            Entry::boolean('boolean', true),
-                            Entry::datetime('datetime', new \DateTimeImmutable()),
-                            Entry::json_object('json_object', ['id' => 1, 'name' => 'test']),
-                            Entry::json('json', [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']]),
-                            Entry::list_of_string('list_of_strings', ['a', 'b', 'c']),
-                            Entry::list_of_datetime('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()])
-                        );
-                    }, \range(1, 100))
-                )
-            ))
+        read(from_rows(
+            new Rows(
+                ...\array_map(function (int $i) : Row {
+                    return Row::create(
+                        Entry::integer('integer', $i),
+                        Entry::float('float', 1.5),
+                        Entry::string('string', 'name_' . $i),
+                        Entry::boolean('boolean', true),
+                        Entry::datetime('datetime', new \DateTimeImmutable()),
+                        Entry::json_object('json_object', ['id' => 1, 'name' => 'test']),
+                        Entry::json('json', [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']]),
+                        Entry::list_of_string('list_of_strings', ['a', 'b', 'c']),
+                        Entry::list_of_datetime('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()])
+                    );
+                }, \range(1, 100))
+            )
+        ))
             ->mode(SaveMode::Ignore)
             ->write(Avro::to($path))
             ->run();
@@ -336,45 +331,43 @@ final class AvroTest extends TestCase
     {
         $this->removeFile($path = \sys_get_temp_dir() . '/file.avro');
 
-        (new Flow)
-            ->read(From::rows(
-                new Rows(
-                    ...\array_map(function (int $i) : Row {
-                        return Row::create(
-                            Entry::integer('integer', $i),
-                            Entry::float('float', 1.5),
-                            Entry::string('string', 'name_' . $i),
-                            Entry::boolean('boolean', true),
-                            Entry::datetime('datetime', new \DateTimeImmutable()),
-                            Entry::json_object('json_object', ['id' => 1, 'name' => 'test']),
-                            Entry::json('json', [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']]),
-                            Entry::list_of_string('list_of_strings', ['a', 'b', 'c']),
-                            Entry::list_of_datetime('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()])
-                        );
-                    }, \range(1, 100))
-                )
-            ))
+        read(from_rows(
+            new Rows(
+                ...\array_map(function (int $i) : Row {
+                    return Row::create(
+                        Entry::integer('integer', $i),
+                        Entry::float('float', 1.5),
+                        Entry::string('string', 'name_' . $i),
+                        Entry::boolean('boolean', true),
+                        Entry::datetime('datetime', new \DateTimeImmutable()),
+                        Entry::json_object('json_object', ['id' => 1, 'name' => 'test']),
+                        Entry::json('json', [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']]),
+                        Entry::list_of_string('list_of_strings', ['a', 'b', 'c']),
+                        Entry::list_of_datetime('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()])
+                    );
+                }, \range(1, 100))
+            )
+        ))
             ->write(Avro::to($path))
             ->run();
 
-        (new Flow)
-            ->read(From::rows(
-                $rows = new Rows(
-                    ...\array_map(function (int $i) : Row {
-                        return Row::create(
-                            Entry::integer('integer', $i),
-                            Entry::float('float', 1.5),
-                            Entry::string('string', 'name_' . $i),
-                            Entry::boolean('boolean', true),
-                            Entry::datetime('datetime', new \DateTimeImmutable()),
-                            Entry::json_object('json_object', ['id' => 1, 'name' => 'test']),
-                            Entry::json('json', [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']]),
-                            Entry::list_of_string('list_of_strings', ['a', 'b', 'c']),
-                            Entry::list_of_datetime('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()])
-                        );
-                    }, \range(1, 100))
-                )
-            ))
+        read(from_rows(
+            $rows = new Rows(
+                ...\array_map(function (int $i) : Row {
+                    return Row::create(
+                        Entry::integer('integer', $i),
+                        Entry::float('float', 1.5),
+                        Entry::string('string', 'name_' . $i),
+                        Entry::boolean('boolean', true),
+                        Entry::datetime('datetime', new \DateTimeImmutable()),
+                        Entry::json_object('json_object', ['id' => 1, 'name' => 'test']),
+                        Entry::json('json', [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']]),
+                        Entry::list_of_string('list_of_strings', ['a', 'b', 'c']),
+                        Entry::list_of_datetime('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()])
+                    );
+                }, \range(1, 100))
+            )
+        ))
             ->mode(SaveMode::Overwrite)
             ->write(Avro::to($path))
             ->run();

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\sum;
-use Flow\ETL\DSL\To;
+use function Flow\ETL\DSL\to_output;
 use Flow\ETL\DSL\XML;
 use Flow\ETL\Flow;
 
@@ -23,7 +23,7 @@ $flow = (new Flow())
     ->groupBy(ref('month_name'))
     ->aggregate(sum(ref('department_salary')))
     ->rename('department_salary_sum', 'total_monthly_salaries')
-    ->write(To::output(false));
+    ->write(to_output(false));
 
 if ($_ENV['FLOW_PHAR_APP'] ?? false) {
     return $flow;

@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit;
 
 use function Flow\ETL\DSL\average;
+use function Flow\ETL\DSL\from_all;
+use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\read;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\refs;
+use function Flow\ETL\DSL\to_callable;
 use Flow\ETL\DataFrame;
 use Flow\ETL\DSL\Entry;
-use Flow\ETL\DSL\From;
-use Flow\ETL\DSL\To;
 use Flow\ETL\DSL\Transform;
 use Flow\ETL\ErrorHandler\IgnoreError;
 use Flow\ETL\Extractor;
@@ -37,7 +40,7 @@ final class DataFrameTest extends TestCase
     public function test_batch_size() : void
     {
         (new Flow())
-            ->read(From::array([
+            ->read(from_array([
                 ['id' => '01', 'elements' => [['sub_id' => '01_01'], ['sub_id' => '01_02']]],
                 ['id' => '02', 'elements' => [['sub_id' => '02_01'], ['sub_id' => '02_02']]],
                 ['id' => '03', 'elements' => [['sub_id' => '03_01'], ['sub_id' => '03_02']]],
@@ -45,7 +48,7 @@ final class DataFrameTest extends TestCase
                 ['id' => '05', 'elements' => [['sub_id' => '05_01'], ['sub_id' => '05_02'], ['sub_id' => '05_03']]],
             ]))
             ->batchSize(1)
-            ->load(To::callback(function (Rows $rows) : void {
+            ->load(to_callable(function (Rows $rows) : void {
                 $this->assertCount(1, $rows);
             }))
             ->withEntry('element', ref('elements')->expand())
@@ -69,9 +72,9 @@ final class DataFrameTest extends TestCase
         ];
 
         (new Flow())
-            ->read(From::chain(
-                From::array($dataset1),
-                From::array($dataset2),
+            ->read(from_all(
+                from_array($dataset1),
+                from_array($dataset2),
             ))
             ->collectRefs($refs = refs())
             ->run();
@@ -85,7 +88,7 @@ final class DataFrameTest extends TestCase
     public function test_count() : void
     {
         $count = (new Flow())
-            ->read(From::array([
+            ->read(from_array([
                 ['id' => 1],
                 ['id' => 2],
                 ['id' => 3],
@@ -239,17 +242,16 @@ final class DataFrameTest extends TestCase
 
     public function test_get() : void
     {
-        $rows = (new Flow())
-            ->extract(From::rows(
-                $extractedRows = new Rows(
-                    Row::create(Entry::integer('id', 1), Entry::string('name', 'foo')),
-                    Row::create(Entry::integer('id', 2), Entry::string('name', 'bar')),
-                    Row::create(Entry::integer('id', 3), Entry::string('name', 'baz')),
-                    Row::create(Entry::integer('id', 4), Entry::string('name', 'foo')),
-                    Row::create(Entry::integer('id', 5), Entry::string('name', 'bar')),
-                    Row::create(Entry::integer('id', 6), Entry::string('name', 'baz')),
-                )
-            ))
+        $rows = read(from_rows(
+            $extractedRows = new Rows(
+                Row::create(Entry::integer('id', 1), Entry::string('name', 'foo')),
+                Row::create(Entry::integer('id', 2), Entry::string('name', 'bar')),
+                Row::create(Entry::integer('id', 3), Entry::string('name', 'baz')),
+                Row::create(Entry::integer('id', 4), Entry::string('name', 'foo')),
+                Row::create(Entry::integer('id', 5), Entry::string('name', 'bar')),
+                Row::create(Entry::integer('id', 6), Entry::string('name', 'baz')),
+            )
+        ))
             ->get();
 
         $this->assertEquals([$extractedRows], \iterator_to_array($rows));
@@ -257,17 +259,16 @@ final class DataFrameTest extends TestCase
 
     public function test_get_as_array() : void
     {
-        $rows = (new Flow())
-            ->extract(From::rows(
-                $extractedRows = new Rows(
-                    Row::create(Entry::integer('id', 1), Entry::string('name', 'foo')),
-                    Row::create(Entry::integer('id', 2), Entry::string('name', 'bar')),
-                    Row::create(Entry::integer('id', 3), Entry::string('name', 'baz')),
-                    Row::create(Entry::integer('id', 4), Entry::string('name', 'foo')),
-                    Row::create(Entry::integer('id', 5), Entry::string('name', 'bar')),
-                    Row::create(Entry::integer('id', 6), Entry::string('name', 'baz')),
-                )
-            ))
+        $rows = read(from_rows(
+            $extractedRows = new Rows(
+                Row::create(Entry::integer('id', 1), Entry::string('name', 'foo')),
+                Row::create(Entry::integer('id', 2), Entry::string('name', 'bar')),
+                Row::create(Entry::integer('id', 3), Entry::string('name', 'baz')),
+                Row::create(Entry::integer('id', 4), Entry::string('name', 'foo')),
+                Row::create(Entry::integer('id', 5), Entry::string('name', 'bar')),
+                Row::create(Entry::integer('id', 6), Entry::string('name', 'baz')),
+            )
+        ))
             ->getAsArray();
 
         $this->assertEquals([
@@ -277,17 +278,16 @@ final class DataFrameTest extends TestCase
 
     public function test_get_each() : void
     {
-        $rows = (new Flow())
-            ->extract(From::rows(
-                $extractedRows = new Rows(
-                    Row::create(Entry::integer('id', 1), Entry::string('name', 'foo')),
-                    Row::create(Entry::integer('id', 2), Entry::string('name', 'bar')),
-                    Row::create(Entry::integer('id', 3), Entry::string('name', 'baz')),
-                    Row::create(Entry::integer('id', 4), Entry::string('name', 'foo')),
-                    Row::create(Entry::integer('id', 5), Entry::string('name', 'bar')),
-                    Row::create(Entry::integer('id', 6), Entry::string('name', 'baz')),
-                )
-            ))
+        $rows = read(from_rows(
+            $extractedRows = new Rows(
+                Row::create(Entry::integer('id', 1), Entry::string('name', 'foo')),
+                Row::create(Entry::integer('id', 2), Entry::string('name', 'bar')),
+                Row::create(Entry::integer('id', 3), Entry::string('name', 'baz')),
+                Row::create(Entry::integer('id', 4), Entry::string('name', 'foo')),
+                Row::create(Entry::integer('id', 5), Entry::string('name', 'bar')),
+                Row::create(Entry::integer('id', 6), Entry::string('name', 'baz')),
+            )
+        ))
             ->getEach();
 
         $this->assertEquals([
@@ -302,17 +302,16 @@ final class DataFrameTest extends TestCase
 
     public function test_get_each_as_array() : void
     {
-        $rows = (new Flow())
-            ->extract(From::rows(
-                $extractedRows = new Rows(
-                    Row::create(Entry::integer('id', 1), Entry::string('name', 'foo')),
-                    Row::create(Entry::integer('id', 2), Entry::string('name', 'bar')),
-                    Row::create(Entry::integer('id', 3), Entry::string('name', 'baz')),
-                    Row::create(Entry::integer('id', 4), Entry::string('name', 'foo')),
-                    Row::create(Entry::integer('id', 5), Entry::string('name', 'bar')),
-                    Row::create(Entry::integer('id', 6), Entry::string('name', 'baz')),
-                )
-            ))
+        $rows = read(from_rows(
+            $extractedRows = new Rows(
+                Row::create(Entry::integer('id', 1), Entry::string('name', 'foo')),
+                Row::create(Entry::integer('id', 2), Entry::string('name', 'bar')),
+                Row::create(Entry::integer('id', 3), Entry::string('name', 'baz')),
+                Row::create(Entry::integer('id', 4), Entry::string('name', 'foo')),
+                Row::create(Entry::integer('id', 5), Entry::string('name', 'bar')),
+                Row::create(Entry::integer('id', 6), Entry::string('name', 'baz')),
+            )
+        ))
             ->getEachAsArray();
 
         $this->assertEquals(
@@ -570,15 +569,15 @@ final class DataFrameTest extends TestCase
     public function test_until() : void
     {
         $rows = (new Flow())
-            ->read(From::chain(
-                From::array([
+            ->read(from_all(
+                from_array([
                     ['id' => 1],
                     ['id' => 2],
                     ['id' => 3],
                     ['id' => 4],
                     ['id' => 5],
                 ]),
-                From::array([
+                from_array([
                     ['id' => 6],
                     ['id' => 7],
                     ['id' => 8],

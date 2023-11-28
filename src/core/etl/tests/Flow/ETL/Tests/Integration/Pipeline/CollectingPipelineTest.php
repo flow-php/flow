@@ -2,8 +2,9 @@
 
 namespace Flow\ETL\Tests\Integration\Pipeline;
 
+use function Flow\ETL\DSL\from_all;
+use function Flow\ETL\DSL\from_array;
 use Flow\ETL\Config;
-use Flow\ETL\DSL\From;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Pipeline\CollectingPipeline;
 use Flow\ETL\Pipeline\SynchronousPipeline;
@@ -14,22 +15,22 @@ final class CollectingPipelineTest extends TestCase
     public function test_collecting() : void
     {
         $pipeline = new CollectingPipeline(new SynchronousPipeline());
-        $pipeline->setSource(From::chain(
-            From::array([
+        $pipeline->setSource(from_all(
+            from_array([
                 ['id' => 1],
                 ['id' => 2],
                 ['id' => 3],
                 ['id' => 4],
                 ['id' => 5],
             ]),
-            From::array([
+            from_array([
                 ['id' => 6],
                 ['id' => 7],
                 ['id' => 8],
                 ['id' => 9],
                 ['id' => 10],
             ]),
-            From::array([
+            from_array([
                 ['id' => 11],
                 ['id' => 12],
                 ['id' => 13],

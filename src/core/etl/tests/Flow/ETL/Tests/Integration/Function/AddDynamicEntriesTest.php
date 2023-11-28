@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Function;
 
+use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\lit;
-use Flow\ETL\DSL\From;
-use Flow\ETL\DSL\To;
+use function Flow\ETL\DSL\to_memory;
 use Flow\ETL\Flow;
 use Flow\ETL\Memory\ArrayMemory;
 use PHPUnit\Framework\TestCase;
@@ -17,7 +17,7 @@ final class AddDynamicEntriesTest extends TestCase
     {
         (new Flow())
             ->read(
-                From::array(
+                from_array(
                     [
                         ['id' => 1],
                         ['id' => 2],
@@ -25,7 +25,7 @@ final class AddDynamicEntriesTest extends TestCase
                 )
             )
             ->withEntry('updated_at', lit(new \DateTimeImmutable('2020-01-01 00:00:00 UTC')))
-            ->write(To::memory($memory = new ArrayMemory()))
+            ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
         $this->assertEquals(

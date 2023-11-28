@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
+use function Flow\ETL\DSL\from_rows;
 use Flow\ETL\DSL\Entry;
-use Flow\ETL\DSL\From;
 use Flow\ETL\Flow;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -12,7 +12,7 @@ require __DIR__ . '/../../bootstrap.php';
 
 $etl = (new Flow())
     ->read(
-        From::rows(
+        from_rows(
             new Rows(
                 Row::create(Entry::integer('id', 1), Entry::string('name', 'foo')),
                 Row::create(Entry::integer('id', 2), Entry::string('name', 'bar')),

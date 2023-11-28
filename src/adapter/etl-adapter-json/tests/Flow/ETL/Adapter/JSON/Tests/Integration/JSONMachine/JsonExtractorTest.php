@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON\Tests\Integration\JSONMachine;
 
+use function Flow\ETL\DSL\from_array;
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonExtractor;
 use Flow\ETL\Config;
-use Flow\ETL\DSL\From;
 use Flow\ETL\DSL\Json;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Filesystem\Path;
@@ -99,7 +99,7 @@ final class JsonExtractorTest extends TestCase
             \unlink($path);
         }
 
-        (new Flow())->read(From::array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
+        (new Flow())->read(from_array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
             ->write(Json::to($path))
             ->run();
 
@@ -120,7 +120,7 @@ final class JsonExtractorTest extends TestCase
             \unlink($path);
         }
 
-        (new Flow())->read(From::array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
+        (new Flow())->read(from_array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
             ->write(Json::to($path))
             ->run();
 

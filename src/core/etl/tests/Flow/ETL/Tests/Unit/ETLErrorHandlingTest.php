@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
-use Flow\ETL\DSL\Handler;
+use function Flow\ETL\DSL\ignore_error_handler;
+use function Flow\ETL\DSL\skip_rows_handler;
+use function Flow\ETL\DSL\throw_error_handler;
 use Flow\ETL\Extractor;
 use Flow\ETL\Flow;
 use Flow\ETL\FlowContext;
@@ -89,7 +91,7 @@ final class ETLErrorHandlingTest extends TestCase
 
         (new Flow())
             ->extract($extractor)
-            ->onError(Handler::throw_error())
+            ->onError(throw_error_handler())
             ->transform($brokenTransformer)
             ->load($loader)
             ->run();
@@ -162,7 +164,7 @@ final class ETLErrorHandlingTest extends TestCase
 
         (new Flow())
             ->extract($extractor)
-            ->onError(Handler::ignore_error())
+            ->onError(ignore_error_handler())
             ->transform($brokenTransformer)
             ->load($loader)
             ->run();
@@ -256,7 +258,7 @@ final class ETLErrorHandlingTest extends TestCase
 
         (new Flow())
             ->extract($extractor)
-            ->onError(Handler::skip_rows())
+            ->onError(skip_rows_handler())
             ->transform($brokenTransformer)
             ->load($loader)
             ->run();

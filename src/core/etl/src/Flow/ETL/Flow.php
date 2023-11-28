@@ -33,6 +33,11 @@ final class Flow
         );
     }
 
+    public function from(Extractor $extractor) : DataFrame
+    {
+        return $this->read($extractor);
+    }
+
     public function process(Rows ...$rows) : DataFrame
     {
         return new DataFrame(
