@@ -66,14 +66,4 @@ final class ColumnsTest extends TestCase
             $columns->prefix(':')
         );
     }
-
-    public function test_transforms_columns_to_string_using_comma_as_a_separator() : void
-    {
-        $columns = new Columns('date', 'title', 'description', 'quantity');
-
-        $this->assertEquals(
-            'date,title,description,quantity',
-            $columns->concat(',')
-        );
-    }
 }

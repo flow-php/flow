@@ -23,7 +23,7 @@ final class BulkData
      */
     public function __construct(array $rows)
     {
-        if (empty($rows)) {
+        if (0 === \count($rows)) {
             throw new RuntimeException('Bulk data cannot be empty');
         }
 
