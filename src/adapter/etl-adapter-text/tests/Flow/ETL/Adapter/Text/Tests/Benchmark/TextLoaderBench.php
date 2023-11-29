@@ -2,12 +2,12 @@
 
 namespace Flow\ETL\Adapter\Text\Tests\Benchmark;
 
+use function Flow\ETL\Adapter\Text\from_text;
+use function Flow\ETL\Adapter\Text\to_text;
 use Flow\ETL\Config;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use PhpBench\Attributes\Groups;
-use function Flow\ETL\Adapter\Text\from_text;
-use function Flow\ETL\Adapter\Text\to_text;
 
 #[Groups(['loader'])]
 final class TextLoaderBench

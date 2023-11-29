@@ -2,10 +2,10 @@
 
 namespace Flow\ETL\Adapter\JSON\Tests\Benchmark;
 
+use function Flow\ETL\Adapter\JSON\from_json;
 use Flow\ETL\Config;
 use Flow\ETL\FlowContext;
 use PhpBench\Attributes\Groups;
-use function Flow\ETL\Adapter\JSON\from_json;
 
 #[Groups(['extractor'])]
 final class JsonExtractorBench
