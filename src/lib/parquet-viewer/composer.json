@@ -15,7 +15,7 @@
         "coduo/php-humanizer": "^4.0",
         "flow-php/etl": "^0.4 || 1.x-dev",
         "flow-php/parquet": "^0.4 || 1.x-dev",
-        "symfony/console": "^6.3"
+        "symfony/console": "^6.3 || ^7.0"
     },
     "config": {
         "optimize-autoloader": true,

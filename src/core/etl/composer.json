@@ -21,7 +21,7 @@
         "laravel/serializable-closure": "^1.1",
         "moneyphp/money": "^4",
         "ramsey/uuid": "^4.5",
-        "symfony/uid": "^6.3"
+        "symfony/uid": "^6.3 || ^7.0"
     },
     "config": {
         "optimize-autoloader": true,
