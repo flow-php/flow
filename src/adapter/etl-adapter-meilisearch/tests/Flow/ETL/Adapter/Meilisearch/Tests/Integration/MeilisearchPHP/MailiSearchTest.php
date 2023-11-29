@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Meilisearch\Tests\Integration\MeilisearchPHP;
 
+use function Flow\ETL\Adapter\Meilisearch\from_meilisearch;
+use function Flow\ETL\Adapter\Meilisearch\meilisearch_hits_to_rows;
+use function Flow\ETL\Adapter\Meilisearch\to_meilisearch_bulk_index;
 use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\from_meilisearch;
-use function Flow\ETL\DSL\meilisearch_hits_to_rows;
-use function Flow\ETL\DSL\to_meilisearch_bulk_index;
 use Flow\ETL\Adapter\Meilisearch\Tests\Context\MeilisearchContext;
 use Flow\ETL\Adapter\Meilisearch\Tests\Double\Spy\HttpClientSpy;
 use Flow\ETL\Flow;

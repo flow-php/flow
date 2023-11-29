@@ -26,7 +26,10 @@
             "Flow\\": [
                 "src/Flow"
             ]
-        }
+        },
+        "files": [
+            "src/Flow/ETL/Adapter/Avro/functions.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

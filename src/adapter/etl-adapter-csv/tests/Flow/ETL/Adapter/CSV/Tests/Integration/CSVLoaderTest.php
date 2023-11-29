@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV\Tests\Integration;
 
+use function Flow\ETL\Adapter\CSV\to_csv;
 use function Flow\ETL\DSL\array_entry;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\str_entry;
-use function Flow\ETL\DSL\to_csv;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Flow;

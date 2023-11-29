@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Elasticsearch\Tests\Integration\ElasticsearchPHP;
 
-use function Flow\ETL\DSL\to_es_bulk_index;
-use function Flow\ETL\DSL\to_es_bulk_update;
+use function Flow\ETL\Adapter\Elasticsearch\to_es_bulk_index;
+use function Flow\ETL\Adapter\Elasticsearch\to_es_bulk_update;
 use Flow\ETL\Adapter\Elasticsearch\EntryIdFactory\EntryIdFactory;
 use Flow\ETL\Adapter\Elasticsearch\EntryIdFactory\HashIdFactory;
 use Flow\ETL\Adapter\Elasticsearch\Tests\Integration\TestCase;

@@ -2,9 +2,9 @@
 
 namespace Flow\ETL\Tests\Integration\Pipeline;
 
+use function Flow\ETL\Adapter\CSV\from_csv;
+use function Flow\ETL\Adapter\CSV\to_csv;
 use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\from_csv;
-use function Flow\ETL\DSL\to_csv;
 use Flow\ETL\Flow;
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
 

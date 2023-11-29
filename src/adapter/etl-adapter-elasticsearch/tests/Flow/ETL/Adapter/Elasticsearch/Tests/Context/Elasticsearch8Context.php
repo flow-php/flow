@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Elasticsearch\Tests\Context;
 
-use function Flow\ETL\DSL\to_es_bulk_index;
+use function Flow\ETL\Adapter\Elasticsearch\to_es_bulk_index;
 use Elastic\Elasticsearch\Client;
 use Elastic\Elasticsearch\ClientBuilder;
 use Elastic\Elasticsearch\Exception\ClientResponseException;

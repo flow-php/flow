@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine;
 
-use function Flow\ETL\DSL\dbal_from_query;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Flow\ETL\DataFrame;

@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\ChartJS\Tests\Integration;
 
-use function Flow\ETL\DSL\bar_chart;
+use function Flow\ETL\Adapter\ChartJS\bar_chart;
+use function Flow\ETL\Adapter\ChartJS\line_chart;
+use function Flow\ETL\Adapter\ChartJS\pie_chart;
+use function Flow\ETL\Adapter\ChartJS\to_chartjs_file;
+use function Flow\ETL\Adapter\ChartJS\to_chartjs_var;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\first;
 use function Flow\ETL\DSL\from_memory;
-use function Flow\ETL\DSL\line_chart;
 use function Flow\ETL\DSL\lit;
-use function Flow\ETL\DSL\pie_chart;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\refs;
 use function Flow\ETL\DSL\sum;
-use function Flow\ETL\DSL\to_chartjs_file;
-use function Flow\ETL\DSL\to_chartjs_var;
 use Flow\ETL\Memory\ArrayMemory;
 use PHPUnit\Framework\TestCase;
 

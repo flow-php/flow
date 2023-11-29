@@ -29,7 +29,10 @@
     "autoload-dev": {
         "psr-4": {
             "Flow\\": "tests/Flow"
-        }
+        },
+        "files": [
+            "src/Flow/ETL/Adapter/CSV/functions.php"
+        ]
     },
     "minimum-stability": "dev",
     "prefer-stable": true

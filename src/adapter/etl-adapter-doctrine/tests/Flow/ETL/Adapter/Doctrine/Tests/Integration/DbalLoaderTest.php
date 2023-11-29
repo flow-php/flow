@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine\Tests\Integration;
 
+use function Flow\ETL\Adapter\Doctrine\to_dbal_table_insert;
+use function Flow\ETL\Adapter\Doctrine\to_dbal_table_update;
 use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\to_dbal_table_insert;
-use function Flow\ETL\DSL\to_dbal_table_update;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;

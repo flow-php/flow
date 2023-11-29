@@ -2,8 +2,8 @@
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Integration;
 
+use function Flow\ETL\Adapter\Parquet\to_parquet;
 use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\to_parquet;
 use Flow\ETL\Adapter\Parquet\ParquetExtractor;
 use Flow\ETL\Config;
 use Flow\ETL\Extractor\Signal;

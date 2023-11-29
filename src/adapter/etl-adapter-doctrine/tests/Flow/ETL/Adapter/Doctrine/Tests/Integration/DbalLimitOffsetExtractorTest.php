@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine\Tests\Integration;
 
+use function Flow\ETL\Adapter\Doctrine\from_dbal_limit_offset;
+use function Flow\ETL\Adapter\Doctrine\from_dbal_limit_offset_qb;
 use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\from_dbal_limit_offset;
-use function Flow\ETL\DSL\from_dbal_limit_offset_qb;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;

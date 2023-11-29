@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Elasticsearch\Tests\Integration\ElasticsearchPHP;
 
+use function Flow\ETL\Adapter\Elasticsearch\es_hits_to_rows;
+use function Flow\ETL\Adapter\Elasticsearch\from_es;
+use function Flow\ETL\Adapter\Elasticsearch\to_es_bulk_index;
 use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\es_hits_to_rows;
-use function Flow\ETL\DSL\from_es;
-use function Flow\ETL\DSL\to_es_bulk_index;
 use Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\DocumentDataSource;
 use Flow\ETL\Adapter\Elasticsearch\EntryIdFactory\EntryIdFactory;
 use Flow\ETL\Adapter\Elasticsearch\Tests\Integration\TestCase;

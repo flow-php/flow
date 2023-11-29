@@ -2,8 +2,8 @@
 
 namespace Flow\ETL\Adapter\CSV\Tests\Benchmark;
 
-use function Flow\ETL\DSL\from_csv;
-use function Flow\ETL\DSL\to_csv;
+use function Flow\ETL\Adapter\CSV\from_csv;
+use function Flow\ETL\Adapter\CSV\to_csv;
 use Flow\ETL\Config;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;

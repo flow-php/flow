@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine\Tests\Integration;
 
-use function Flow\ETL\DSL\dbal_dataframe_factory;
+use function Flow\ETL\Adapter\Doctrine\dbal_dataframe_factory;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\ref;
 use Doctrine\DBAL\Schema\Column;

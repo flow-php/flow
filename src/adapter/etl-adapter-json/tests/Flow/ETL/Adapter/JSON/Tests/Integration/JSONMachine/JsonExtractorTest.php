@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON\Tests\Integration\JSONMachine;
 
+use function Flow\ETL\Adapter\JSON\from_json;
+use function Flow\ETL\Adapter\JSON\to_json;
 use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\from_json;
-use function Flow\ETL\DSL\to_json;
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonExtractor;
 use Flow\ETL\Config;
 use Flow\ETL\Extractor\Signal;

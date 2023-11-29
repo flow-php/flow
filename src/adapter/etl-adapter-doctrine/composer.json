@@ -27,7 +27,10 @@
     "autoload-dev": {
         "psr-4": {
             "Flow\\": "tests/Flow"
-        }
+        },
+        "files": [
+            "src/Flow/ETL/Adapter/Doctrine/functions.php"
+        ]
     },
     "config": {
         "optimize-autoloader": true,

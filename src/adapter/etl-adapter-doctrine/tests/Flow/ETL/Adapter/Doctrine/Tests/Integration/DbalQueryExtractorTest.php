@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine\Tests\Integration;
 
-use function Flow\ETL\DSL\dbal_from_queries;
-use function Flow\ETL\DSL\dbal_from_query;
+use function Flow\ETL\Adapter\Doctrine\dbal_from_queries;
+use function Flow\ETL\Adapter\Doctrine\dbal_from_query;
 use function Flow\ETL\DSL\from_array;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Table;

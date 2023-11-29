@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\XML\Tests\Integration;
 
-use function Flow\ETL\DSL\from_xml;
+use function Flow\ETL\Adapter\XML\from_xml;
 use function Flow\ETL\DSL\xml_entry;
 use Flow\ETL\Adapter\XML\XMLReaderExtractor;
 use Flow\ETL\Config;

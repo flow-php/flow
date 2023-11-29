@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Meilisearch\Tests\Integration\MeilisearchPHP;
 
-use function Flow\ETL\DSL\to_meilisearch_bulk_index;
-use function Flow\ETL\DSL\to_meilisearch_bulk_update;
+use function Flow\ETL\Adapter\Meilisearch\to_meilisearch_bulk_index;
+use function Flow\ETL\Adapter\Meilisearch\to_meilisearch_bulk_update;
 use Flow\ETL\Adapter\Meilisearch\Tests\Context\MeilisearchContext;
 use Flow\ETL\Config;
 use Flow\ETL\FlowContext;

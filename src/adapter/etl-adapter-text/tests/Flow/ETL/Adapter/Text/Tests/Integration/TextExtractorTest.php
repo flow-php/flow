@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Text\Tests\Integration;
 
+use function Flow\ETL\Adapter\Text\from_text;
+use function Flow\ETL\Adapter\Text\to_text;
 use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\from_text;
-use function Flow\ETL\DSL\to_text;
 use Flow\ETL\Adapter\Text\TextExtractor;
 use Flow\ETL\Config;
 use Flow\ETL\Extractor\Signal;

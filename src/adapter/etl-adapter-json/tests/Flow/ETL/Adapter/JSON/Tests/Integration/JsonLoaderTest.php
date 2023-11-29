@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON\Tests\Integration;
 
+use function Flow\ETL\Adapter\Json\from_json;
+use function Flow\ETL\Adapter\Json\to_json;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\from_json;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\to_json;
 use Flow\ETL\Adapter\JSON\JsonLoader;
 use Flow\ETL\Config;
 use Flow\ETL\Filesystem\Path;

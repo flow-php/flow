@@ -27,7 +27,10 @@
             "Flow\\": [
                 "src/Flow"
             ]
-        }
+        },
+        "files": [
+            "src/Flow/ETL/Adapter/Elasticsearch/functions.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

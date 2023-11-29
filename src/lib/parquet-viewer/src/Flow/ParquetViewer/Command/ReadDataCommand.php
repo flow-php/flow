@@ -1,8 +1,10 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ParquetViewer\Command;
 
-use function Flow\ETL\DSL\from_parquet;
+use function Flow\ETL\Adapter\Parquet\from_parquet;
 use function Flow\ETL\DSL\to_output;
 use Flow\ETL\Flow;
 use Flow\Parquet\Exception\InvalidArgumentException;

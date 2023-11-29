@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Avro\Tests\Integration;
 
+use function Flow\ETL\DSL\Adapter\Avro\from_avro;
+use function Flow\ETL\DSL\Adapter\Avro\to_avro;
 use function Flow\ETL\DSL\bool_entry;
 use function Flow\ETL\DSL\datetime_entry;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\float_entry;
 use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\from_avro;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\json_entry;
@@ -20,7 +21,6 @@ use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\struct_element;
 use function Flow\ETL\DSL\struct_entry;
 use function Flow\ETL\DSL\struct_type;
-use function Flow\ETL\DSL\to_avro;
 use function Flow\ETL\DSL\type_float;
 use function Flow\ETL\DSL\type_list;
 use function Flow\ETL\DSL\type_object;
