@@ -22,19 +22,6 @@ final class ObjectType implements NativeType
         }
     }
 
-    public static function fromObject(object $object, bool $nullable = false) : self
-    {
-        return new self($object::class, $nullable);
-    }
-
-    /**
-     * @param class-string $class
-     */
-    public static function of(string $class, bool $nullable = false) : self
-    {
-        return new self($class, $nullable);
-    }
-
     public function __serialize() : array
     {
         return ['class' => $this->class, 'nullable' => $this->nullable];

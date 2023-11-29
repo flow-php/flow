@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
-use Flow\ETL\DSL\Entry;
 use Flow\ETL\Function\Literal;
 use Flow\ETL\Function\When;
 use Flow\ETL\Row;
@@ -22,7 +22,7 @@ final class WhenTest extends TestCase
                 ref('id')->equals(lit(2)),
                 new Literal('then'),
                 ref('id')
-            ))->eval(Row::with(Entry::int('id', 1)))
+            ))->eval(Row::with(int_entry('id', 1)))
         );
     }
 
@@ -34,7 +34,7 @@ final class WhenTest extends TestCase
                 new Literal(false),
                 new Literal('then'),
                 new Literal('else'),
-            ))->eval(Row::with(Entry::int('id', 1)))
+            ))->eval(Row::with(int_entry('id', 1)))
         );
     }
 
@@ -45,7 +45,7 @@ final class WhenTest extends TestCase
             (new When(
                 new Literal(true),
                 new Literal('then')
-            ))->eval(Row::with(Entry::int('id', 1)))
+            ))->eval(Row::with(int_entry('id', 1)))
         );
     }
 }

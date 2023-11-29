@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine\Tests\Integration;
 
+use function Flow\ETL\Adapter\Doctrine\dbal_dataframe_factory;
+use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\ref;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
-use Flow\ETL\Adapter\Doctrine\DbalDataFrameFactory;
 use Flow\ETL\Adapter\Doctrine\LiteralParameter;
 use Flow\ETL\Adapter\Doctrine\Parameter;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
-use Flow\ETL\DSL\Entry;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 
@@ -38,7 +38,7 @@ final class DbalDataFrameFactoryTest extends IntegrationTestCase
         $this->pgsqlDatabaseContext->insert('flow_doctrine_data_factory_test', ['id' => 5, 'name' => 'Name 5', 'description' => 'Some Description 5']);
 
         $rows = (
-            new DbalDataFrameFactory(
+            dbal_dataframe_factory(
                 $this->connectionParams(),
                 'SELECT * FROM flow_doctrine_data_factory_test WHERE id IN (:ids) AND name = :name',
                 Parameter::ints('ids', ref('id')),
@@ -46,10 +46,10 @@ final class DbalDataFrameFactoryTest extends IntegrationTestCase
             )
         )
         ->from(new Rows(
-            Row::with(Entry::int('id', 1)),
-            Row::with(Entry::int('id', 2)),
-            Row::with(Entry::int('id', 3)),
-            Row::with(Entry::int('id', 55)),
+            Row::with(int_entry('id', 1)),
+            Row::with(int_entry('id', 2)),
+            Row::with(int_entry('id', 3)),
+            Row::with(int_entry('id', 55)),
         ))
         ->select('id')
         ->fetch();

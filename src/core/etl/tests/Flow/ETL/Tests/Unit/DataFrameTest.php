@@ -4,14 +4,22 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
+use function Flow\ETL\DSL\array_entry;
 use function Flow\ETL\DSL\average;
+use function Flow\ETL\DSL\bool_entry;
+use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\float_entry;
+use function Flow\ETL\DSL\from_all;
+use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\from_rows;
+use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\null_entry;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\refs;
+use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\to_callable;
 use Flow\ETL\DataFrame;
-use Flow\ETL\DSL\Entry;
-use Flow\ETL\DSL\From;
-use Flow\ETL\DSL\To;
 use Flow\ETL\DSL\Transform;
 use Flow\ETL\ErrorHandler\IgnoreError;
 use Flow\ETL\Extractor;
@@ -36,8 +44,8 @@ final class DataFrameTest extends TestCase
 {
     public function test_batch_size() : void
     {
-        (new Flow())
-            ->read(From::array([
+        df()
+            ->read(from_array([
                 ['id' => '01', 'elements' => [['sub_id' => '01_01'], ['sub_id' => '01_02']]],
                 ['id' => '02', 'elements' => [['sub_id' => '02_01'], ['sub_id' => '02_02']]],
                 ['id' => '03', 'elements' => [['sub_id' => '03_01'], ['sub_id' => '03_02']]],
@@ -45,7 +53,7 @@ final class DataFrameTest extends TestCase
                 ['id' => '05', 'elements' => [['sub_id' => '05_01'], ['sub_id' => '05_02'], ['sub_id' => '05_03']]],
             ]))
             ->batchSize(1)
-            ->load(To::callback(function (Rows $rows) : void {
+            ->load(to_callable(function (Rows $rows) : void {
                 $this->assertCount(1, $rows);
             }))
             ->withEntry('element', ref('elements')->expand())
@@ -68,10 +76,10 @@ final class DataFrameTest extends TestCase
             ['id' => 1, 'name' => 'test', 'active' => false, 'group' => 'A'],
         ];
 
-        (new Flow())
-            ->read(From::chain(
-                From::array($dataset1),
-                From::array($dataset2),
+        df()
+            ->read(from_all(
+                from_array($dataset1),
+                from_array($dataset2),
             ))
             ->collectRefs($refs = refs())
             ->run();
@@ -84,8 +92,8 @@ final class DataFrameTest extends TestCase
 
     public function test_count() : void
     {
-        $count = (new Flow())
-            ->read(From::array([
+        $count = df()
+            ->read(from_array([
                 ['id' => 1],
                 ['id' => 2],
                 ['id' => 3],
@@ -99,11 +107,11 @@ final class DataFrameTest extends TestCase
 
     public function test_drop() : void
     {
-        $rows = (new Flow())->process(
+        $rows = df()->process(
             new Rows(
-                Row::create(Entry::integer('id', 1), Entry::string('name', 'foo'), Entry::boolean('active', true)),
-                Row::create(Entry::integer('id', 2), Entry::null('name'), Entry::boolean('active', false)),
-                Row::create(Entry::integer('id', 2), Entry::string('name', 'bar'), Entry::boolean('active', false)),
+                Row::create(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
+                Row::create(int_entry('id', 2), null_entry('name'), bool_entry('active', false)),
+                Row::create(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
             )
         )
             ->drop('id')
@@ -111,9 +119,9 @@ final class DataFrameTest extends TestCase
 
         $this->assertEquals(
             new Rows(
-                Row::create(Entry::string('name', 'foo'), Entry::boolean('active', true)),
-                Row::create(Entry::null('name'), Entry::boolean('active', false)),
-                Row::create(Entry::string('name', 'bar'), Entry::boolean('active', false)),
+                Row::create(str_entry('name', 'foo'), bool_entry('active', true)),
+                Row::create(null_entry('name'), bool_entry('active', false)),
+                Row::create(str_entry('name', 'bar'), bool_entry('active', false)),
             ),
             $rows
         );
@@ -121,11 +129,11 @@ final class DataFrameTest extends TestCase
 
     public function test_drop_duplicates() : void
     {
-        $rows = (new Flow())->process(
+        $rows = df()->process(
             new Rows(
-                Row::create(Entry::int('id', 1), Entry::str('name', 'foo'), Entry::bool('active', true)),
-                Row::create(Entry::int('id', 2), Entry::str('name', 'bar'), Entry::bool('active', false)),
-                Row::create(Entry::int('id', 2), Entry::str('name', 'bar'), Entry::bool('active', false)),
+                Row::create(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
+                Row::create(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
+                Row::create(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
             )
         )
             ->dropDuplicates(ref('id'))
@@ -133,8 +141,8 @@ final class DataFrameTest extends TestCase
 
         $this->assertEquals(
             new Rows(
-                Row::create(Entry::int('id', 1), Entry::str('name', 'foo'), Entry::bool('active', true)),
-                Row::create(Entry::int('id', 2), Entry::str('name', 'bar'), Entry::bool('active', false)),
+                Row::create(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
+                Row::create(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
             ),
             $rows
         );
@@ -142,16 +150,16 @@ final class DataFrameTest extends TestCase
 
     public function test_encapsulate_transformations() : void
     {
-        $rows = (new Flow())->process(
+        $rows = df()->process(
             new Rows(
-                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20), Entry::string('gender', 'male')),
-                Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20), Entry::string('gender', 'male')),
-                Row::create(Entry::integer('id', 3), Entry::string('country', 'PL'), Entry::integer('age', 25), Entry::string('gender', 'male')),
-                Row::create(Entry::integer('id', 4), Entry::string('country', 'PL'), Entry::integer('age', 30), Entry::string('gender', 'female')),
-                Row::create(Entry::integer('id', 5), Entry::string('country', 'US'), Entry::integer('age', 40), Entry::string('gender', 'female')),
-                Row::create(Entry::integer('id', 6), Entry::string('country', 'US'), Entry::integer('age', 40), Entry::string('gender', 'male')),
-                Row::create(Entry::integer('id', 7), Entry::string('country', 'US'), Entry::integer('age', 45), Entry::string('gender', 'female')),
-                Row::create(Entry::integer('id', 9), Entry::string('country', 'US'), Entry::integer('age', 50), Entry::string('gender', 'male')),
+                Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
+                Row::create(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
+                Row::create(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25), str_entry('gender', 'male')),
+                Row::create(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30), str_entry('gender', 'female')),
+                Row::create(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40), str_entry('gender', 'female')),
+                Row::create(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40), str_entry('gender', 'male')),
+                Row::create(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45), str_entry('gender', 'female')),
+                Row::create(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50), str_entry('gender', 'male')),
             )
         )
             ->rows(new class implements Transformation {
@@ -174,14 +182,14 @@ final class DataFrameTest extends TestCase
 
         $this->assertEquals(
             new Rows(
-                Row::create(Entry::string('country', 'pl'), Entry::integer('age', 2)),
-                Row::create(Entry::string('country', 'pl'), Entry::integer('age', 2)),
-                Row::create(Entry::string('country', 'pl'), Entry::float('age', 2.5)),
-                Row::create(Entry::string('country', 'pl'), Entry::integer('age', 3)),
-                Row::create(Entry::string('country', 'us'), Entry::integer('age', 4)),
-                Row::create(Entry::string('country', 'us'), Entry::integer('age', 4)),
-                Row::create(Entry::string('country', 'us'), Entry::float('age', 4.5)),
-                Row::create(Entry::string('country', 'us'), Entry::integer('age', 5)),
+                Row::create(str_entry('country', 'pl'), int_entry('age', 2)),
+                Row::create(str_entry('country', 'pl'), int_entry('age', 2)),
+                Row::create(str_entry('country', 'pl'), float_entry('age', 2.5)),
+                Row::create(str_entry('country', 'pl'), int_entry('age', 3)),
+                Row::create(str_entry('country', 'us'), int_entry('age', 4)),
+                Row::create(str_entry('country', 'us'), int_entry('age', 4)),
+                Row::create(str_entry('country', 'us'), float_entry('age', 4.5)),
+                Row::create(str_entry('country', 'us'), int_entry('age', 5)),
             ),
             $rows
         );
@@ -189,7 +197,7 @@ final class DataFrameTest extends TestCase
 
     public function test_filter() : void
     {
-        $rows = (new Flow())->extract(
+        $rows = df()->extract(
             new class implements Extractor {
                 /**
                  * @param FlowContext $context
@@ -218,19 +226,19 @@ final class DataFrameTest extends TestCase
 
     public function test_foreach() : void
     {
-        (new Flow())->process(
+        df()->process(
             new Rows(
-                Row::create(Entry::integer('id', 1), Entry::string('name', 'foo'), Entry::boolean('active', true)),
-                Row::create(Entry::integer('id', 2), Entry::null('name'), Entry::boolean('active', false)),
-                Row::create(Entry::integer('id', 2), Entry::string('name', 'bar'), Entry::boolean('active', false)),
+                Row::create(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
+                Row::create(int_entry('id', 2), null_entry('name'), bool_entry('active', false)),
+                Row::create(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
             )
         )
             ->foreach(function (Rows $rows) : void {
                 $this->assertEquals(
                     new Rows(
-                        Row::create(Entry::integer('id', 1), Entry::string('name', 'foo'), Entry::boolean('active', true)),
-                        Row::create(Entry::integer('id', 2), Entry::null('name'), Entry::boolean('active', false)),
-                        Row::create(Entry::integer('id', 2), Entry::string('name', 'bar'), Entry::boolean('active', false)),
+                        Row::create(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
+                        Row::create(int_entry('id', 2), null_entry('name'), bool_entry('active', false)),
+                        Row::create(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
                     ),
                     $rows
                 );
@@ -239,15 +247,15 @@ final class DataFrameTest extends TestCase
 
     public function test_get() : void
     {
-        $rows = (new Flow())
-            ->extract(From::rows(
+        $rows = df()
+            ->read(from_rows(
                 $extractedRows = new Rows(
-                    Row::create(Entry::integer('id', 1), Entry::string('name', 'foo')),
-                    Row::create(Entry::integer('id', 2), Entry::string('name', 'bar')),
-                    Row::create(Entry::integer('id', 3), Entry::string('name', 'baz')),
-                    Row::create(Entry::integer('id', 4), Entry::string('name', 'foo')),
-                    Row::create(Entry::integer('id', 5), Entry::string('name', 'bar')),
-                    Row::create(Entry::integer('id', 6), Entry::string('name', 'baz')),
+                    Row::create(int_entry('id', 1), str_entry('name', 'foo')),
+                    Row::create(int_entry('id', 2), str_entry('name', 'bar')),
+                    Row::create(int_entry('id', 3), str_entry('name', 'baz')),
+                    Row::create(int_entry('id', 4), str_entry('name', 'foo')),
+                    Row::create(int_entry('id', 5), str_entry('name', 'bar')),
+                    Row::create(int_entry('id', 6), str_entry('name', 'baz')),
                 )
             ))
             ->get();
@@ -257,15 +265,15 @@ final class DataFrameTest extends TestCase
 
     public function test_get_as_array() : void
     {
-        $rows = (new Flow())
-            ->extract(From::rows(
+        $rows = df()
+            ->read(from_rows(
                 $extractedRows = new Rows(
-                    Row::create(Entry::integer('id', 1), Entry::string('name', 'foo')),
-                    Row::create(Entry::integer('id', 2), Entry::string('name', 'bar')),
-                    Row::create(Entry::integer('id', 3), Entry::string('name', 'baz')),
-                    Row::create(Entry::integer('id', 4), Entry::string('name', 'foo')),
-                    Row::create(Entry::integer('id', 5), Entry::string('name', 'bar')),
-                    Row::create(Entry::integer('id', 6), Entry::string('name', 'baz')),
+                    Row::create(int_entry('id', 1), str_entry('name', 'foo')),
+                    Row::create(int_entry('id', 2), str_entry('name', 'bar')),
+                    Row::create(int_entry('id', 3), str_entry('name', 'baz')),
+                    Row::create(int_entry('id', 4), str_entry('name', 'foo')),
+                    Row::create(int_entry('id', 5), str_entry('name', 'bar')),
+                    Row::create(int_entry('id', 6), str_entry('name', 'baz')),
                 )
             ))
             ->getAsArray();
@@ -277,40 +285,40 @@ final class DataFrameTest extends TestCase
 
     public function test_get_each() : void
     {
-        $rows = (new Flow())
-            ->extract(From::rows(
+        $rows = df()
+            ->read(from_rows(
                 $extractedRows = new Rows(
-                    Row::create(Entry::integer('id', 1), Entry::string('name', 'foo')),
-                    Row::create(Entry::integer('id', 2), Entry::string('name', 'bar')),
-                    Row::create(Entry::integer('id', 3), Entry::string('name', 'baz')),
-                    Row::create(Entry::integer('id', 4), Entry::string('name', 'foo')),
-                    Row::create(Entry::integer('id', 5), Entry::string('name', 'bar')),
-                    Row::create(Entry::integer('id', 6), Entry::string('name', 'baz')),
+                    Row::create(int_entry('id', 1), str_entry('name', 'foo')),
+                    Row::create(int_entry('id', 2), str_entry('name', 'bar')),
+                    Row::create(int_entry('id', 3), str_entry('name', 'baz')),
+                    Row::create(int_entry('id', 4), str_entry('name', 'foo')),
+                    Row::create(int_entry('id', 5), str_entry('name', 'bar')),
+                    Row::create(int_entry('id', 6), str_entry('name', 'baz')),
                 )
             ))
             ->getEach();
 
         $this->assertEquals([
-            Row::create(Entry::integer('id', 1), Entry::string('name', 'foo')),
-            Row::create(Entry::integer('id', 2), Entry::string('name', 'bar')),
-            Row::create(Entry::integer('id', 3), Entry::string('name', 'baz')),
-            Row::create(Entry::integer('id', 4), Entry::string('name', 'foo')),
-            Row::create(Entry::integer('id', 5), Entry::string('name', 'bar')),
-            Row::create(Entry::integer('id', 6), Entry::string('name', 'baz')),
+            Row::create(int_entry('id', 1), str_entry('name', 'foo')),
+            Row::create(int_entry('id', 2), str_entry('name', 'bar')),
+            Row::create(int_entry('id', 3), str_entry('name', 'baz')),
+            Row::create(int_entry('id', 4), str_entry('name', 'foo')),
+            Row::create(int_entry('id', 5), str_entry('name', 'bar')),
+            Row::create(int_entry('id', 6), str_entry('name', 'baz')),
         ], \iterator_to_array($rows));
     }
 
     public function test_get_each_as_array() : void
     {
-        $rows = (new Flow())
-            ->extract(From::rows(
+        $rows = df()
+            ->read(from_rows(
                 $extractedRows = new Rows(
-                    Row::create(Entry::integer('id', 1), Entry::string('name', 'foo')),
-                    Row::create(Entry::integer('id', 2), Entry::string('name', 'bar')),
-                    Row::create(Entry::integer('id', 3), Entry::string('name', 'baz')),
-                    Row::create(Entry::integer('id', 4), Entry::string('name', 'foo')),
-                    Row::create(Entry::integer('id', 5), Entry::string('name', 'bar')),
-                    Row::create(Entry::integer('id', 6), Entry::string('name', 'baz')),
+                    Row::create(int_entry('id', 1), str_entry('name', 'foo')),
+                    Row::create(int_entry('id', 2), str_entry('name', 'bar')),
+                    Row::create(int_entry('id', 3), str_entry('name', 'baz')),
+                    Row::create(int_entry('id', 4), str_entry('name', 'foo')),
+                    Row::create(int_entry('id', 5), str_entry('name', 'bar')),
+                    Row::create(int_entry('id', 6), str_entry('name', 'baz')),
                 )
             ))
             ->getEachAsArray();
@@ -500,9 +508,9 @@ final class DataFrameTest extends TestCase
     {
         $rows = (new Flow())->process(
             new Rows(
-                Row::create(Entry::integer('id', 1), Entry::string('name', 'foo'), Entry::boolean('active', true)),
-                Row::create(Entry::integer('id', 2), Entry::null('name'), Entry::boolean('active', false)),
-                Row::create(Entry::integer('id', 2), Entry::string('name', 'bar'), Entry::boolean('active', false)),
+                Row::create(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
+                Row::create(int_entry('id', 2), null_entry('name'), bool_entry('active', false)),
+                Row::create(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
             )
         )
             ->select('name', 'id')
@@ -510,9 +518,9 @@ final class DataFrameTest extends TestCase
 
         $this->assertEquals(
             new Rows(
-                Row::create(Entry::string('name', 'foo'), Entry::integer('id', 1)),
-                Row::create(Entry::null('name'), Entry::integer('id', 2)),
-                Row::create(Entry::string('name', 'bar'), Entry::integer('id', 2)),
+                Row::create(str_entry('name', 'foo'), int_entry('id', 1)),
+                Row::create(null_entry('name'), int_entry('id', 2)),
+                Row::create(str_entry('name', 'bar'), int_entry('id', 2)),
             ),
             $rows
         );
@@ -522,9 +530,9 @@ final class DataFrameTest extends TestCase
     {
         $rows = (new Flow())->process(
             new Rows(
-                Row::create(Entry::integer('id', 1), Entry::string('name', 'foo'), Entry::boolean('active', true)),
-                Row::create(Entry::integer('id', 2), Entry::null('name'), Entry::array('tags', ['foo', 'bar'])),
-                Row::create(Entry::integer('id', 2), Entry::string('name', 'bar'), Entry::boolean('active', false)),
+                Row::create(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
+                Row::create(int_entry('id', 2), null_entry('name'), array_entry('tags', ['foo', 'bar'])),
+                Row::create(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
             )
         )->validate(
             new Schema(Schema\Definition::integer('id', $nullable = false)),
@@ -533,9 +541,9 @@ final class DataFrameTest extends TestCase
 
         $this->assertEquals(
             new Rows(
-                Row::create(Entry::integer('id', 1), Entry::string('name', 'foo'), Entry::boolean('active', true)),
-                Row::create(Entry::integer('id', 2), Entry::null('name'), Entry::array('tags', ['foo', 'bar'])),
-                Row::create(Entry::integer('id', 2), Entry::string('name', 'bar'), Entry::boolean('active', false)),
+                Row::create(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
+                Row::create(int_entry('id', 2), null_entry('name'), array_entry('tags', ['foo', 'bar'])),
+                Row::create(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
             ),
             $rows
         );
@@ -545,9 +553,9 @@ final class DataFrameTest extends TestCase
     {
         $rows = (new Flow())->process(
             new Rows(
-                Row::create(Entry::integer('id', 1), Entry::string('name', 'foo'), Entry::boolean('active', true)),
-                Row::create(Entry::integer('id', 2), Entry::null('name'), Entry::boolean('active', false)),
-                Row::create(Entry::integer('id', 2), Entry::string('name', 'bar'), Entry::boolean('active', false)),
+                Row::create(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
+                Row::create(int_entry('id', 2), null_entry('name'), bool_entry('active', false)),
+                Row::create(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
             )
         )->validate(
             new Schema(
@@ -559,9 +567,9 @@ final class DataFrameTest extends TestCase
 
         $this->assertEquals(
             new Rows(
-                Row::create(Entry::integer('id', 1), Entry::string('name', 'foo'), Entry::boolean('active', true)),
-                Row::create(Entry::integer('id', 2), Entry::null('name'), Entry::boolean('active', false)),
-                Row::create(Entry::integer('id', 2), Entry::string('name', 'bar'), Entry::boolean('active', false)),
+                Row::create(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
+                Row::create(int_entry('id', 2), null_entry('name'), bool_entry('active', false)),
+                Row::create(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
             ),
             $rows
         );
@@ -570,15 +578,15 @@ final class DataFrameTest extends TestCase
     public function test_until() : void
     {
         $rows = (new Flow())
-            ->read(From::chain(
-                From::array([
+            ->read(from_all(
+                from_array([
                     ['id' => 1],
                     ['id' => 2],
                     ['id' => 3],
                     ['id' => 4],
                     ['id' => 5],
                 ]),
-                From::array([
+                from_array([
                     ['id' => 6],
                     ['id' => 7],
                     ['id' => 8],
@@ -604,14 +612,14 @@ final class DataFrameTest extends TestCase
     {
         $rows = (new Flow())->process(
             new Rows(
-                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20)),
-                Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20)),
-                Row::create(Entry::integer('id', 3), Entry::string('country', 'PL'), Entry::integer('age', 25)),
-                Row::create(Entry::integer('id', 4), Entry::string('country', 'PL'), Entry::integer('age', 30)),
-                Row::create(Entry::integer('id', 5), Entry::string('country', 'US'), Entry::integer('age', 40)),
-                Row::create(Entry::integer('id', 6), Entry::string('country', 'US'), Entry::integer('age', 40)),
-                Row::create(Entry::integer('id', 7), Entry::string('country', 'US'), Entry::integer('age', 45)),
-                Row::create(Entry::integer('id', 9), Entry::string('country', 'US'), Entry::integer('age', 50)),
+                Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
+                Row::create(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
+                Row::create(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
+                Row::create(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
+                Row::create(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
+                Row::create(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
+                Row::create(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
+                Row::create(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
             )
         )
             ->rename('country', 'country_code')

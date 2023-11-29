@@ -12,6 +12,8 @@ use Flow\ETL\Loader;
 use Flow\ETL\Row\Schema;
 
 /**
+ * @deprecated please use functions defined in Flow\ETL\DSL\functions.php
+ *
  * @infection-ignore-all
  */
 class Avro

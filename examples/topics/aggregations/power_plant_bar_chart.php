@@ -2,21 +2,23 @@
 
 declare(strict_types=1);
 
+use function Flow\ETL\Adapter\ChartJS\bar_chart;
+use function Flow\ETL\Adapter\ChartJS\to_chartjs_file;
+use function Flow\ETL\Adapter\CSV\from_csv;
 use function Flow\ETL\DSL\average;
 use function Flow\ETL\DSL\concat;
+use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\max;
 use function Flow\ETL\DSL\min;
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\refs;
 use function Flow\ETL\DSL\sum;
-use Flow\ETL\DSL\ChartJS;
-use Flow\ETL\DSL\CSV;
-use Flow\ETL\Flow;
 
 require __DIR__ . '/../../bootstrap.php';
 
-$flow = (new Flow)
-    ->read(CSV::from(__FLOW_DATA__ . '/power-plant-daily.csv', delimiter: ';'))
+$df = df()
+    ->read(from_csv(__FLOW_DATA__ . '/power-plant-daily.csv', delimiter: ';'))
     ->withEntry('production_kwh', ref('Produkcja(kWh)'))
     ->withEntry('consumption_kwh', ref('Zużycie(kWh)'))
     ->withEntry('date', ref('Zaktualizowany czas')->toDate('Y/m/d')->dateFormat('Y/m'))
@@ -45,15 +47,15 @@ $flow = (new Flow)
     ->withEntry('consumption', ref('consumption')->multiply(lit(100))->round(lit(2)))
     ->withEntry('consumption', concat(ref('consumption'), lit('%')))
     ->write(
-        ChartJS::to_file(
-            ChartJS::bar(label: ref('date'), datasets: [ref('production_kwh_avg'), ref('consumption_kwh_avg')])
+        to_chartjs_file(
+            bar_chart(label: ref('date'), datasets: refs(ref('production_kwh_avg'), ref('consumption_kwh_avg')))
                 ->setOptions(['indexAxis' => 'y']),
             output: __FLOW_OUTPUT__ . '/power_plant_bar_chart.html'
         )
     );
 
 if ($_ENV['FLOW_PHAR_APP'] ?? false) {
-    return $flow;
+    return $df;
 }
 
-$flow->run();
+$df->run();

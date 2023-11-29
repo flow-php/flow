@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row;
 
-use Flow\ETL\DSL\Entry;
+use function Flow\ETL\DSL\bool_entry;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\type_int;
+use function Flow\ETL\DSL\type_string;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\StructureType;
-use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry\BooleanEntry;
 use Flow\ETL\Row\Entry\DateTimeEntry;
@@ -148,8 +150,8 @@ final class EntriesTest extends TestCase
     public function test_get_all_entries() : void
     {
         $entries = new Entries(
-            Entry::integer('id', 1),
-            Entry::integer('name', 1),
+            int_entry('id', 1),
+            int_entry('name', 1),
         );
 
         $this->assertCount(
@@ -162,8 +164,8 @@ final class EntriesTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $entries = new Entries(
-            Entry::integer('id', 1),
-            Entry::integer('name', 1),
+            int_entry('id', 1),
+            int_entry('name', 1),
         );
 
         $entries->getAll('id', 'name', 'status');
@@ -172,8 +174,8 @@ final class EntriesTest extends TestCase
     public function test_has_when_at_least_one_is_missing() : void
     {
         $entries = new Entries(
-            Entry::integer('id', 1),
-            Entry::integer('name', 1),
+            int_entry('id', 1),
+            int_entry('name', 1),
         );
 
         $this->assertFalse($entries->has('id', 'name', 'status'));
@@ -182,9 +184,9 @@ final class EntriesTest extends TestCase
     public function test_has_when_none_of_many_is_missing() : void
     {
         $entries = new Entries(
-            Entry::integer('id', 1),
-            Entry::integer('name', 1),
-            Entry::boolean('active', true)
+            int_entry('id', 1),
+            int_entry('name', 1),
+            bool_entry('active', true)
         );
 
         $this->assertTrue($entries->has('id', 'name'));
@@ -373,7 +375,7 @@ final class EntriesTest extends TestCase
             $items = new StructureEntry(
                 'items',
                 ['item-id' => 1, 'name' => 'one'],
-                new StructureType(new StructureElement('id', ScalarType::integer()), new StructureElement('name', ScalarType::string()))
+                new StructureType(new StructureElement('id', type_int()), new StructureElement('name', type_string()))
             )
         );
 
@@ -387,7 +389,7 @@ final class EntriesTest extends TestCase
                 $items = new StructureEntry(
                     'items',
                     ['item-id' => 1, 'name' => 'one'],
-                    new StructureType(new StructureElement('id', ScalarType::integer()), new StructureElement('name', ScalarType::string()))
+                    new StructureType(new StructureElement('id', type_int()), new StructureElement('name', type_string()))
                 ),
                 $phase = new NullEntry('phase')
             ),
@@ -405,7 +407,7 @@ final class EntriesTest extends TestCase
             new StructureEntry(
                 'items',
                 ['item-id' => 1, 'name' => 'one'],
-                new StructureType(new StructureElement('id', ScalarType::integer()), new StructureElement('name', ScalarType::string()))
+                new StructureType(new StructureElement('id', type_int()), new StructureElement('name', type_string()))
             ),
             new EnumEntry('enum', BasicEnum::three)
         );

@@ -13,6 +13,8 @@ use Flow\ETL\Transformer\RenameEntryTransformer;
 use Flow\ETL\Transformer\StyleConverter\StringStyles;
 
 /**
+ * @deprecated please use functions defined in Flow\ETL\DSL\functions.php
+ *
  * @infection-ignore-all
  */
 class Transform

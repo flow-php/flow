@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
+use function Flow\ETL\DSL\type_object;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Native\ObjectType;
 use Flow\ETL\PHP\Type\Type;
@@ -29,7 +30,7 @@ final class ObjectEntry implements \Stringable, Entry
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        $this->type = ObjectType::fromObject($value);
+        $this->type = type_object($value::class);
     }
 
     public function __serialize() : array

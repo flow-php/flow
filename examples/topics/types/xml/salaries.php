@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
+use function Flow\ETL\Adapter\XML\from_xml;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\sum;
-use Flow\ETL\DSL\To;
-use Flow\ETL\DSL\XML;
+use function Flow\ETL\DSL\to_output;
 use Flow\ETL\Flow;
 
 require __DIR__ . '/../../../bootstrap.php';
 
 $flow = (new Flow())
-    ->read(XML::from(__FLOW_DATA__ . '/salaries.xml'))
+    ->read(from_xml(__FLOW_DATA__ . '/salaries.xml'))
     ->withEntry('months', ref('node')->xpath('/Salaries/Month'))
     ->withEntry('month', ref('months')->expand())
     ->withEntry('month_name', ref('month')->domNodeAttribute('name'))
@@ -23,7 +23,7 @@ $flow = (new Flow())
     ->groupBy(ref('month_name'))
     ->aggregate(sum(ref('department_salary')))
     ->rename('department_salary_sum', 'total_monthly_salaries')
-    ->write(To::output(false));
+    ->write(to_output(false));
 
 if ($_ENV['FLOW_PHAR_APP'] ?? false) {
     return $flow;

@@ -2,14 +2,27 @@
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Integration;
 
+use function Flow\ETL\Adapter\Parquet\from_parquet;
+use function Flow\ETL\Adapter\Parquet\to_parquet;
+use function Flow\ETL\DSL\bool_entry;
+use function Flow\ETL\DSL\datetime_entry;
+use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\float_entry;
+use function Flow\ETL\DSL\from_rows;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\json_entry;
+use function Flow\ETL\DSL\json_object_entry;
+use function Flow\ETL\DSL\list_entry;
 use function Flow\ETL\DSL\ref;
-use Flow\ETL\DSL\Entry;
-use Flow\ETL\DSL\From;
-use Flow\ETL\DSL\Parquet;
+use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\struct_element;
+use function Flow\ETL\DSL\struct_entry;
+use function Flow\ETL\DSL\struct_type;
+use function Flow\ETL\DSL\type_float;
+use function Flow\ETL\DSL\type_list;
+use function Flow\ETL\DSL\type_object;
+use function Flow\ETL\DSL\type_string;
 use Flow\ETL\Flow;
-use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
-use Flow\ETL\PHP\Type\Logical\StructureType;
-use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\Parquet\ParquetFile\Compressions;
@@ -23,15 +36,15 @@ final class ParquetTest extends TestCase
         $path = \sys_get_temp_dir() . '/file.snappy.parquet';
         $this->removeFile($path);
 
-        (new Flow())
-            ->read(From::rows($rows = $this->createRows(10)))
-            ->write(Parquet::to($path))
+        df()
+            ->read(from_rows($rows = $this->createRows(10)))
+            ->write(to_parquet($path))
             ->run();
 
         $this->assertEquals(
             $rows,
             (new Flow())
-                ->read(Parquet::from($path))
+                ->read(from_parquet($path))
                 ->fetch()
         );
 
@@ -51,8 +64,8 @@ final class ParquetTest extends TestCase
         $path = \sys_get_temp_dir() . '/partitioned';
         $this->cleanDirectory($path);
 
-        (new Flow())
-            ->read(From::rows($rows = new Rows(
+        df()
+            ->read(from_rows($rows = new Rows(
                 $this->createRow(1, new \DateTimeImmutable('2020-01-01 00:01:00')),
                 $this->createRow(1, new \DateTimeImmutable('2020-01-01 00:02:00')),
                 $this->createRow(1, new \DateTimeImmutable('2020-01-02 00:01:00')),
@@ -61,13 +74,13 @@ final class ParquetTest extends TestCase
             )))
             ->withEntry('date', ref('datetime')->toDate()->dateFormat())
             ->partitionBy(ref('date'))
-            ->write(Parquet::to($path))
+            ->write(to_parquet($path))
             ->run();
 
         $this->assertEquals(
             $rows,
             (new Flow())
-                ->read(Parquet::from($path))
+                ->read(from_parquet($path))
                 ->drop('date')
                 ->sortBy(ref('datetime')->asc())
                 ->fetch()
@@ -104,16 +117,16 @@ final class ParquetTest extends TestCase
     private function createRow(int $index, ?\DateTimeImmutable $dateTime = null) : Row
     {
         return Row::create(
-            Entry::integer('integer', $index),
-            Entry::float('float', 1.5),
-            Entry::string('string', 'name_' . $index),
-            Entry::boolean('boolean', true),
-            Entry::datetime('datetime', $dateTime ?: new \DateTimeImmutable()),
-            Entry::json_object('json_object', ['id' => 1, 'name' => 'test']),
-            Entry::json('json', [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']]),
-            Entry::list_of_string('list_of_strings', ['a', 'b', 'c']),
-            Entry::list_of_datetime('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()]),
-            Entry::structure(
+            int_entry('integer', $index),
+            float_entry('float', 1.5),
+            str_entry('string', 'name_' . $index),
+            bool_entry('boolean', true),
+            datetime_entry('datetime', $dateTime ?: new \DateTimeImmutable()),
+            json_object_entry('json_object', ['id' => 1, 'name' => 'test']),
+            json_entry('json', [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']]),
+            list_entry('list_of_strings', ['a', 'b', 'c'], type_list(type_string())),
+            list_entry('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()], type_list(type_object(\DateTimeImmutable::class))),
+            struct_entry(
                 'address',
                 [
                     'street' => 'street_' . $index,
@@ -122,16 +135,16 @@ final class ParquetTest extends TestCase
                     'country' => 'country_' . $index,
                     'location' => ['lat' => 1.5, 'lon' => 1.5],
                 ],
-                new StructureType(
-                    new StructureElement('street', ScalarType::string()),
-                    new StructureElement('city', ScalarType::string()),
-                    new StructureElement('zip', ScalarType::string()),
-                    new StructureElement('country', ScalarType::string()),
-                    new StructureElement(
+                struct_type(
+                    struct_element('street', type_string()),
+                    struct_element('city', type_string()),
+                    struct_element('zip', type_string()),
+                    struct_element('country', type_string()),
+                    struct_element(
                         'location',
-                        new StructureType(
-                            new StructureElement('lat', ScalarType::float()),
-                            new StructureElement('lon', ScalarType::float()),
+                        struct_type(
+                            struct_element('lat', type_float()),
+                            struct_element('lon', type_float()),
                         )
                     )
                 ),

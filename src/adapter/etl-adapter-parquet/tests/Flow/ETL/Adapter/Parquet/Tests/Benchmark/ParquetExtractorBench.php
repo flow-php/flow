@@ -2,8 +2,8 @@
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Benchmark;
 
+use function Flow\ETL\Adapter\Parquet\from_parquet;
 use Flow\ETL\Config;
-use Flow\ETL\DSL\Parquet;
 use Flow\ETL\FlowContext;
 use PhpBench\Attributes\Groups;
 
@@ -19,7 +19,7 @@ final class ParquetExtractorBench
 
     public function bench_extract_10k() : void
     {
-        foreach (Parquet::from(__DIR__ . '/../Fixtures/orders_flow.parquet')->extract($this->context) as $rows) {
+        foreach (from_parquet(__DIR__ . '/../Fixtures/orders_flow.parquet')->extract($this->context) as $rows) {
         }
     }
 }

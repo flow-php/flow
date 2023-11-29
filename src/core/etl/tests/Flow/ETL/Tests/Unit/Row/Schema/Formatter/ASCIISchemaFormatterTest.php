@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Schema\Formatter;
 
+use function Flow\ETL\DSL\type_int;
+use function Flow\ETL\DSL\type_string;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\PHP\Type\Logical\Map\MapKey;
@@ -11,7 +13,6 @@ use Flow\ETL\PHP\Type\Logical\Map\MapValue;
 use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\StructureType;
-use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\Row\Entry\FloatEntry;
 use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Row\Schema;
@@ -27,14 +28,14 @@ final class ASCIISchemaFormatterTest extends TestCase
             Schema\Definition::structure(
                 'user',
                 new StructureType(
-                    new StructureElement('name', ScalarType::string(true)),
-                    new StructureElement('age', ScalarType::integer()),
+                    new StructureElement('name', type_string(true)),
+                    new StructureElement('age', type_int()),
                     new StructureElement(
                         'address',
                         new StructureType(
-                            new StructureElement('street', ScalarType::string(true)),
-                            new StructureElement('city', ScalarType::string(true)),
-                            new StructureElement('country', ScalarType::string(true)),
+                            new StructureElement('street', type_string(true)),
+                            new StructureElement('city', type_string(true)),
+                            new StructureElement('country', type_string(true)),
                         )
                     )
                 ),

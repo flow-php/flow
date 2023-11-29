@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
+use function Flow\ETL\DSL\type_object;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Native\ObjectType;
 use Flow\ETL\PHP\Type\Type;
@@ -43,7 +44,7 @@ final class DateTimeEntry implements \Stringable, Entry
             $this->value = $value;
         }
 
-        $this->type = ObjectType::fromObject($this->value);
+        $this->type = type_object($this->value::class);
     }
 
     public function __serialize() : array

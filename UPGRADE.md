@@ -111,6 +111,29 @@ Class `Sha1IdFactory` was removed, use `HashIdFactory` class:
 (new HashIdFactory('entry_name'))->withAlgorithm('sha1');
 ```
 
+### 15) Deprecate DSL Static classes
+
+DSL static classes were deprecated in favor of using functions defined in `src/core/etl/src/Flow/ETL/DSL/functions.php` file.
+
+Deprecated classes: 
+
+- `src/core/etl/src/Flow/ETL/DSL/From.php`
+- `src/core/etl/src/Flow/ETL/DSL/Handler.php`
+- `src/core/etl/src/Flow/ETL/DSL/To.php`
+- `src/core/etl/src/Flow/ETL/DSL/Transform.php`
+- `src/core/etl/src/Flow/ETL/DSL/Partitions.php`
+- `src/adapter/etl-adapter-avro/src/Flow/ETL/DSL/Avro.php`
+- `src/adapter/etl-adapter-chartjs/src/Flow/ETL/DSL/ChartJS.php`
+- `src/adapter/etl-adapter-csv/src/Flow/ETL/DSL/CSV.php`
+- `src/adapter/etl-adapter-doctrine/src/Flow/ETL/DSL/Dbal.php`
+- `src/adapter/etl-adapter-elasticsearch/src/Flow/ETL/DSL/Elasticsearch.php`
+- `src/adapter/etl-adapter-google-sheet/src/Flow/ETL/DSL/GoogleSheet.php`
+- `src/adapter/etl-adapter-json/src/Flow/ETL/DSL/Json.php`
+- `src/adapter/etl-adapter-meilisearch/src/Flow/ETL/DSL/Meilisearch.php`
+- `src/adapter/etl-adapter-parquet/src/Flow/ETL/DSL/Parquet.php`
+- `src/adapter/etl-adapter-text/src/Flow/ETL/DSL/Text.php`
+- `src/adapter/etl-adapter-xml/src/Flow/ETL/DSL/XML.php`
+
 ---
 
 ## Upgrading from 0.3.x to 0.4.x

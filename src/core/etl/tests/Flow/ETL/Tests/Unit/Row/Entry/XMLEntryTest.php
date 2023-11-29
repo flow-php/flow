@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
-use Flow\ETL\DSL\Entry;
+use function Flow\ETL\DSL\xml_entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry\XMLEntry;
 use PHPUnit\Framework\TestCase;
@@ -95,8 +95,8 @@ final class XMLEntryTest extends TestCase
 XML);
 
         $this->assertNotEquals(
-            Entry::xml('row', $doc),
-            Entry::xml('row', $doc2),
+            xml_entry('row', $doc),
+            xml_entry('row', $doc2),
         );
     }
 

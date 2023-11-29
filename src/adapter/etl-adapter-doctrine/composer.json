@@ -22,7 +22,10 @@
             "Flow\\": [
                 "src/Flow"
             ]
-        }
+        },
+        "files": [
+            "src/Flow/ETL/Adapter/Doctrine/functions.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

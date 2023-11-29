@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Extractor;
 
+use function Flow\ETL\DSL\from_memory;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\to_memory;
 use Flow\ETL\Config;
-use Flow\ETL\DSL\Entry;
-use Flow\ETL\DSL\From;
-use Flow\ETL\DSL\To;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Row;
@@ -16,32 +17,21 @@ use PHPUnit\Framework\TestCase;
 
 final class MemoryExtractorTest extends TestCase
 {
-    public static function chunk_sizes() : \Generator
-    {
-        yield [1];
-        yield [2];
-        yield [3];
-        yield [4];
-    }
-
-    /**
-     * @dataProvider chunk_sizes
-     */
-    public function test_memory_extractor(int $chunkSize) : void
+    public function test_memory_extractor() : void
     {
         $rows = new Rows(
-            Row::create(Entry::integer('number', 1), Entry::string('name', 'one')),
-            Row::create(Entry::integer('number', 2), Entry::string('name', 'two')),
-            Row::create(Entry::integer('number', 3), Entry::string('name', 'tree')),
-            Row::create(Entry::integer('number', 4), Entry::string('name', 'four')),
-            Row::create(Entry::integer('number', 5), Entry::string('name', 'five')),
+            Row::create(int_entry('number', 1), str_entry('name', 'one')),
+            Row::create(int_entry('number', 2), str_entry('name', 'two')),
+            Row::create(int_entry('number', 3), str_entry('name', 'tree')),
+            Row::create(int_entry('number', 4), str_entry('name', 'four')),
+            Row::create(int_entry('number', 5), str_entry('name', 'five')),
         );
 
         $memory = new ArrayMemory();
 
-        (To::memory($memory))->load($rows, new FlowContext(Config::default()));
+        (to_memory($memory))->load($rows, new FlowContext(Config::default()));
 
-        $extractor = From::memory($memory, $chunkSize);
+        $extractor = from_memory($memory);
 
         $data = [];
 

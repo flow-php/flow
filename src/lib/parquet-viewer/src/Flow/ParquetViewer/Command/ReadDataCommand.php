@@ -1,9 +1,11 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ParquetViewer\Command;
 
-use Flow\ETL\DSL\Parquet;
-use Flow\ETL\DSL\To;
+use function Flow\ETL\Adapter\Parquet\from_parquet;
+use function Flow\ETL\DSL\to_output;
 use Flow\ETL\Flow;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Reader;
@@ -64,10 +66,10 @@ final class ReadDataCommand extends Command
         \ob_start();
 
         (new Flow())
-            ->read(Parquet::from($filePath, $columns))
+            ->read(from_parquet($filePath, $columns))
             ->limit($limit)
             ->batchSize($batchSize)
-            ->write(To::output($truncate))
+            ->write(to_output($truncate))
             ->run();
 
         $output->write(\ob_get_clean() ?: '');

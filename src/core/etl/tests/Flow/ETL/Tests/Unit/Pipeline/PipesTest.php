@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Pipeline;
 
 use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\to_memory;
+use function Flow\ETL\DSL\to_output;
 use Flow\ETL\Adapter\Elasticsearch\Tests\Integration\TestCase;
-use Flow\ETL\DSL\To;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Pipeline\Pipes;
 use Flow\ETL\Transformer\DropDuplicatesTransformer;
@@ -18,8 +19,8 @@ final class PipesTest extends TestCase
     {
         $pipes = new Pipes([
             new ScalarFunctionTransformer('string', lit('test')),
-            $outputLoader = To::output(),
-            $memoryLoader = To::memory(new ArrayMemory()),
+            $outputLoader = to_output(),
+            $memoryLoader = to_memory(new ArrayMemory()),
         ]);
 
         $this->assertEquals(
@@ -32,8 +33,8 @@ final class PipesTest extends TestCase
     {
         $pipes = new Pipes([
             new ScalarFunctionTransformer('string', lit('test')),
-            $outputLoader = To::output(),
-            $memoryLoader = To::memory(new ArrayMemory()),
+            $outputLoader = to_output(),
+            $memoryLoader = to_memory(new ArrayMemory()),
         ]);
 
         $this->assertTrue($pipes->has(ScalarFunctionTransformer::class));
@@ -44,8 +45,8 @@ final class PipesTest extends TestCase
     {
         $pipes = new Pipes([
             new ScalarFunctionTransformer('string', lit('test')),
-            $outputLoader = To::output(),
-            $memoryLoader = To::memory(new ArrayMemory()),
+            $outputLoader = to_output(),
+            $memoryLoader = to_memory(new ArrayMemory()),
         ]);
 
         $this->assertFalse($pipes->has('SomeClassThatDoesNotExist'));
@@ -55,8 +56,8 @@ final class PipesTest extends TestCase
     {
         $pipes = new Pipes([
             new ScalarFunctionTransformer('string', lit('test')),
-            $outputLoader = To::output(),
-            $memoryLoader = To::memory(new ArrayMemory()),
+            $outputLoader = to_output(),
+            $memoryLoader = to_memory(new ArrayMemory()),
         ]);
 
         $this->assertFalse($pipes->has(Pipes::class));

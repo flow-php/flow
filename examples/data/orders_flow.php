@@ -1,11 +1,11 @@
 <?php declare(strict_types=1);
 
+use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\ref;
-use Flow\ETL\DSL\Avro;
-use Flow\ETL\DSL\CSV;
-use Flow\ETL\DSL\From;
-use Flow\ETL\DSL\Json;
-use Flow\ETL\DSL\Parquet;
+use function Flow\ETL\DSL\to_avro;
+use function Flow\ETL\DSL\to_csv;
+use function Flow\ETL\DSL\to_json;
+use function Flow\ETL\DSL\to_parquet;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Flow;
 
@@ -42,14 +42,14 @@ $orders = \array_map(
 );
 
 (new Flow())
-    ->read(From::array($orders))
+    ->read(from_array($orders))
     ->mode(SaveMode::Overwrite)
-    ->write(Parquet::to(__DIR__ . '/orders_flow.parquet'))
-    ->write(Json::to(__DIR__ . '/orders_flow.json'))
-    ->write(Avro::to(__DIR__ . '/orders_flow.avro'))
+    ->write(to_parquet(__DIR__ . '/orders_flow.parquet'))
+    ->write(to_json(__DIR__ . '/orders_flow.json'))
+    ->write(to_avro(__DIR__ . '/orders_flow.avro'))
     ->withEntry('order_id', ref('order_id')->cast('string'))
     ->withEntry('customer', ref('customer')->cast('string'))
     ->withEntry('address', ref('customer')->cast('string'))
     ->withEntry('notes', ref('customer')->cast('string'))
-    ->write(CSV::to(__DIR__ . '/orders_flow.csv'))
+    ->write(to_csv(__DIR__ . '/orders_flow.csv'))
     ->run();

@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Function;
 
+use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\from_sequence_number;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\to_memory;
 use function Flow\ETL\DSL\when;
-use Flow\ETL\DSL\From;
-use Flow\ETL\DSL\To;
-use Flow\ETL\Flow;
 use Flow\ETL\Memory\ArrayMemory;
 use PHPUnit\Framework\TestCase;
 
@@ -17,8 +17,8 @@ final class WhenTest extends TestCase
 {
     public function test_when_odd_even() : void
     {
-        (new Flow())
-            ->read(From::sequence_number('id', 1, 10))
+        df()
+            ->read(from_sequence_number('id', 1, 10))
             ->collect()
             ->withEntry(
                 'type',
@@ -28,7 +28,7 @@ final class WhenTest extends TestCase
                     lit('even')
                 )
             )
-            ->write(To::memory($memory = new ArrayMemory()))
+            ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
         $this->assertSame(

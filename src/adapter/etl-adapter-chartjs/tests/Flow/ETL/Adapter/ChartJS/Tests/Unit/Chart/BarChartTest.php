@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\ChartJS\Tests\Unit\Chart;
 
+use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\from_memory;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\refs;
 use Flow\ETL\Adapter\ChartJS\Chart\BarChart;
-use Flow\ETL\DSL\From;
-use Flow\ETL\Flow;
 use Flow\ETL\Memory\ArrayMemory;
 use PHPUnit\Framework\TestCase;
 
@@ -25,8 +25,8 @@ final class BarChartTest extends TestCase
             ['Date' => '2023-02-06', 'Revenue' => 14000.23, 'CM' => 6000.89, 'Ads Spends' => 2800.89, 'Storage Costs' => 1800.89, 'Shipping Costs' => 2300.23, 'Currency' => 'USD'],
         ];
 
-        $rows = (new Flow())
-            ->read(From::memory(new ArrayMemory($data)))
+        $rows = df()
+            ->read(from_memory(new ArrayMemory($data)))
             ->fetch();
 
         $chart = new BarChart(ref('Date'), refs(ref('Revenue'), ref('CM'), ref('Ads Spends'), ref('Storage Costs'), ref('Shipping Costs')));

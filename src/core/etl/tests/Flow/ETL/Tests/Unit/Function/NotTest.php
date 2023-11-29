@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use function Flow\ETL\DSL\array_entry;
+use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\not;
 use function Flow\ETL\DSL\ref;
-use Flow\ETL\DSL\Entry;
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;
 
@@ -30,7 +31,7 @@ final class NotTest extends TestCase
     public function test_not_expression_on_is_in_expression() : void
     {
         $this->assertTrue(
-            not(ref('value')->isIn(ref('array')))->eval(Row::create(Entry::array('array', [1, 2, 3]), Entry::int('value', 10)))
+            not(ref('value')->isIn(ref('array')))->eval(Row::create(array_entry('array', [1, 2, 3]), int_entry('value', 10)))
         );
     }
 }

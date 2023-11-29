@@ -14,6 +14,8 @@ use Flow\ETL\Pipeline;
 use Flow\ETL\Rows;
 
 /**
+ * @deprecated please use functions defined in Flow\ETL\DSL\functions.php
+ *
  * @infection-ignore-all
  */
 class From

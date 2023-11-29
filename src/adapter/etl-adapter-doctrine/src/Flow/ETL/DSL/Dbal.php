@@ -20,6 +20,9 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Loader;
 
+/**
+ * @deprecated please use functions defined in Flow\ETL\DSL\functions.php
+ */
 class Dbal
 {
     /**

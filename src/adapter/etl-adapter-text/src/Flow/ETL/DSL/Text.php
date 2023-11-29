@@ -10,6 +10,9 @@ use Flow\ETL\Extractor;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Loader;
 
+/**
+ * @deprecated please use functions defined in Flow\ETL\DSL\functions.php
+ */
 class Text
 {
     /**

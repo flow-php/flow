@@ -179,7 +179,6 @@ final class FlysystemFS implements Filesystem
         }
 
         $filter = function (FileAttributes|DirectoryAttributes $file) use ($path, $partitionFilter) : bool {
-            //            var_dump($file->path());
             if ($file instanceof DirectoryAttributes) {
                 return false;
             }

@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
-use Flow\ETL\DSL\Entry;
+use function Flow\ETL\DSL\str_entry;
 use Flow\ETL\Function\Cast;
 use Flow\ETL\Function\Equals;
 use Flow\ETL\Function\ScalarFunctions;
@@ -23,7 +24,7 @@ final class ScalarFunctionsTest extends TestCase
                 new Cast(ref('entry'), 'string'),
                 new Equals(ref('entry'), lit(1))
             ))->eval(Row::create(
-                Entry::int('entry', 1),
+                int_entry('entry', 1),
             ))
         );
     }
@@ -44,14 +45,14 @@ final class ScalarFunctionsTest extends TestCase
     {
         $this->assertSame(
             1,
-            (new ScalarFunctions(new Cast(ref('entry'), 'int')))->eval(Row::create(Entry::string('entry', '1')))
+            (new ScalarFunctions(new Cast(ref('entry'), 'int')))->eval(Row::create(str_entry('entry', '1')))
         );
     }
 
     public function test_evaluation_empty_expression() : void
     {
         $this->assertNull(
-            (new ScalarFunctions())->eval(Row::create(Entry::string('entry', 'value')))
+            (new ScalarFunctions())->eval(Row::create(str_entry('entry', 'value')))
         );
     }
 
@@ -59,7 +60,7 @@ final class ScalarFunctionsTest extends TestCase
     {
         $this->assertTrue(
             (new ScalarFunctions(ref('entry')->equals(lit('1'))))
-                ->eval(Row::create(Entry::string('entry', '1')))
+                ->eval(Row::create(str_entry('entry', '1')))
         );
     }
 }

@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\to_output;
 use Flow\ETL\Adapter\Http\DynamicExtractor\NextRequestFactory;
 use Flow\ETL\Adapter\Http\PsrHttpClientDynamicExtractor;
-use Flow\ETL\DSL\To;
 use Flow\ETL\Flow;
 use Http\Client\Curl\Client;
 use Nyholm\Psr7\Factory\Psr17Factory;
@@ -37,7 +37,7 @@ $flow = (new Flow())
     ->withEntry('unpacked', ref('unpacked')->unpack())
     ->renameAll('unpacked.', '')
     ->select('name', 'html_url', 'blog')
-    ->write(To::output(false));
+    ->write(to_output(false));
 
 if ($_ENV['FLOW_PHAR_APP'] ?? false) {
     return $flow;

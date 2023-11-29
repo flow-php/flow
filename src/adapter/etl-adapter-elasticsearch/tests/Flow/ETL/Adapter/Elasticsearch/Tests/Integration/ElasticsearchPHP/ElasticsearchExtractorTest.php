@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Elasticsearch\Tests\Integration\ElasticsearchPHP;
 
+use function Flow\ETL\Adapter\Elasticsearch\es_hits_to_rows;
+use function Flow\ETL\Adapter\Elasticsearch\from_es;
+use function Flow\ETL\Adapter\Elasticsearch\to_es_bulk_index;
+use function Flow\ETL\DSL\df;
 use Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\DocumentDataSource;
 use Flow\ETL\Adapter\Elasticsearch\EntryIdFactory\EntryIdFactory;
 use Flow\ETL\Adapter\Elasticsearch\Tests\Integration\TestCase;
 use Flow\ETL\Config;
-use Flow\ETL\DSL\Elasticsearch;
 use Flow\ETL\Flow;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
@@ -35,7 +38,7 @@ final class ElasticsearchExtractorTest extends TestCase
 
     public function test_empty_extraction() : void
     {
-        $loader = Elasticsearch::bulk_index($this->elasticsearchContext->clientConfig(), self::INDEX_NAME, new EntryIdFactory('id'), ['refresh' => true]);
+        $loader = to_es_bulk_index($this->elasticsearchContext->clientConfig(), self::INDEX_NAME, new EntryIdFactory('id'), ['refresh' => true]);
 
         $loader->load(new Rows(
             ...\array_map(
@@ -66,8 +69,8 @@ final class ElasticsearchExtractorTest extends TestCase
             'keep_alive' => '5m',
         ];
 
-        $results = (new Flow())
-            ->extract(Elasticsearch::search($this->elasticsearchContext->clientConfig(), $params, $pitParams))
+        $results = df()
+            ->read(from_es($this->elasticsearchContext->clientConfig(), $params, $pitParams))
             ->fetch();
 
         $this->assertCount(0, $results);
@@ -75,7 +78,7 @@ final class ElasticsearchExtractorTest extends TestCase
 
     public function test_extraction_index_with_from_and_size() : void
     {
-        $loader = Elasticsearch::bulk_index($this->elasticsearchContext->clientConfig(), self::INDEX_NAME, new EntryIdFactory('id'), ['refresh' => true]);
+        $loader = to_es_bulk_index($this->elasticsearchContext->clientConfig(), self::INDEX_NAME, new EntryIdFactory('id'), ['refresh' => true]);
 
         $loader->load(new Rows(
             ...\array_map(
@@ -105,8 +108,8 @@ final class ElasticsearchExtractorTest extends TestCase
         ];
 
         $results = (new Flow())
-            ->extract(Elasticsearch::search($this->elasticsearchContext->clientConfig(), $params))
-            ->transform(Elasticsearch::hits_to_rows(DocumentDataSource::fields))
+            ->extract(from_es($this->elasticsearchContext->clientConfig(), $params))
+            ->transform(es_hits_to_rows(DocumentDataSource::fields))
             ->fetch();
 
         $this->assertCount(2000, $results);
@@ -118,7 +121,7 @@ final class ElasticsearchExtractorTest extends TestCase
 
     public function test_extraction_index_with_search_after() : void
     {
-        $loader = Elasticsearch::bulk_index($this->elasticsearchContext->clientConfig(), self::INDEX_NAME, new EntryIdFactory('id'), ['refresh' => true]);
+        $loader = to_es_bulk_index($this->elasticsearchContext->clientConfig(), self::INDEX_NAME, new EntryIdFactory('id'), ['refresh' => true]);
 
         $loader->load(new Rows(
             ...\array_map(
@@ -146,7 +149,7 @@ final class ElasticsearchExtractorTest extends TestCase
         ];
 
         $results = (new Flow())
-            ->extract(Elasticsearch::search($this->elasticsearchContext->clientConfig(), $params))
+            ->extract(from_es($this->elasticsearchContext->clientConfig(), $params))
             ->fetch();
 
         $this->assertCount(3, $results);
@@ -154,7 +157,7 @@ final class ElasticsearchExtractorTest extends TestCase
 
     public function test_extraction_index_with_search_after_with_point_in_time() : void
     {
-        $loader = Elasticsearch::bulk_index($this->elasticsearchContext->clientConfig(), self::INDEX_NAME, new EntryIdFactory('id'), ['refresh' => true]);
+        $loader = to_es_bulk_index($this->elasticsearchContext->clientConfig(), self::INDEX_NAME, new EntryIdFactory('id'), ['refresh' => true]);
 
         $loader->load(new Rows(
             ...\array_map(
@@ -187,7 +190,7 @@ final class ElasticsearchExtractorTest extends TestCase
         ];
 
         $results = (new Flow())
-            ->extract(Elasticsearch::search($this->elasticsearchContext->clientConfig(), $params, $pitParams))
+            ->extract(from_es($this->elasticsearchContext->clientConfig(), $params, $pitParams))
             ->fetch();
 
         $this->assertCount(3, $results);
@@ -195,7 +198,7 @@ final class ElasticsearchExtractorTest extends TestCase
 
     public function test_extraction_whole_index_with_point_in_time() : void
     {
-        $loader = Elasticsearch::bulk_index($this->elasticsearchContext->clientConfig(), self::INDEX_NAME, new EntryIdFactory('id'), ['refresh' => true]);
+        $loader = to_es_bulk_index($this->elasticsearchContext->clientConfig(), self::INDEX_NAME, new EntryIdFactory('id'), ['refresh' => true]);
 
         $loader->load(new Rows(
             ...\array_map(
@@ -228,7 +231,7 @@ final class ElasticsearchExtractorTest extends TestCase
         ];
 
         $results = (new Flow())
-            ->extract(Elasticsearch::search($this->elasticsearchContext->clientConfig(), $params, $pitParams))
+            ->extract(from_es($this->elasticsearchContext->clientConfig(), $params, $pitParams))
             ->fetch();
 
         $this->assertCount(3, $results);

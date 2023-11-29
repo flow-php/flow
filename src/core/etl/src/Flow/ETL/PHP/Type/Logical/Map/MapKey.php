@@ -2,11 +2,13 @@
 
 namespace Flow\ETL\PHP\Type\Logical\Map;
 
+use function Flow\ETL\DSL\type_int;
+use function Flow\ETL\DSL\type_string;
 use Flow\ETL\PHP\Type\Native\ScalarType;
 
 final class MapKey
 {
-    private function __construct(private readonly ScalarType $value)
+    public function __construct(private readonly ScalarType $value)
     {
     }
 
@@ -17,12 +19,12 @@ final class MapKey
 
     public static function integer() : self
     {
-        return new self(ScalarType::integer());
+        return new self(type_int(false));
     }
 
     public static function string() : self
     {
-        return new self(ScalarType::string());
+        return new self(type_string(false));
     }
 
     public function isEqual(mixed $value) : bool

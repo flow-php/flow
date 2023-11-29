@@ -2,10 +2,13 @@
 
 namespace Flow\ETL\Tests\Unit\PHP\Type\Native;
 
+use function Flow\ETL\DSL\type_boolean;
+use function Flow\ETL\DSL\type_float;
+use function Flow\ETL\DSL\type_int;
+use function Flow\ETL\DSL\type_string;
 use Flow\ETL\PHP\Type\Logical\Map\MapKey;
 use Flow\ETL\PHP\Type\Logical\Map\MapValue;
 use Flow\ETL\PHP\Type\Logical\MapType;
-use Flow\ETL\PHP\Type\Native\ScalarType;
 use PHPUnit\Framework\TestCase;
 
 final class ScalarTypeTest extends TestCase
@@ -13,23 +16,23 @@ final class ScalarTypeTest extends TestCase
     public function test_equals() : void
     {
         $this->assertTrue(
-            ScalarType::integer()->isEqual(ScalarType::integer())
+            type_int()->isEqual(type_int())
         );
         $this->assertFalse(
-            ScalarType::integer()->isEqual(new MapType(MapKey::string(), MapValue::float()))
+            type_int()->isEqual(new MapType(MapKey::string(), MapValue::float()))
         );
         $this->assertFalse(
-            ScalarType::integer()->isEqual(ScalarType::float())
+            type_int()->isEqual(type_float())
         );
     }
 
     public function test_nullable() : void
     {
         $this->assertFalse(
-            ScalarType::string()->nullable()
+            type_string(false)->nullable()
         );
         $this->assertTrue(
-            ScalarType::boolean(true)->nullable()
+            type_boolean(true)->nullable()
         );
     }
 
@@ -37,36 +40,36 @@ final class ScalarTypeTest extends TestCase
     {
         $this->assertSame(
             'boolean',
-            ScalarType::boolean()->toString()
+            type_boolean()->toString()
         );
         $this->assertSame(
             '?string',
-            ScalarType::string(true)->toString()
+            type_string(true)->toString()
         );
     }
 
     public function test_valid() : void
     {
         $this->assertTrue(
-            ScalarType::boolean()->isValid(true)
+            type_boolean()->isValid(true)
         );
         $this->assertTrue(
-            ScalarType::string()->isValid('one')
+            type_string()->isValid('one')
         );
         $this->assertTrue(
-            ScalarType::integer()->isValid(1)
+            type_int()->isValid(1)
         );
         $this->assertTrue(
-            ScalarType::integer(true)->isValid(null)
+            type_int(true)->isValid(null)
         );
         $this->assertFalse(
-            ScalarType::integer()->isValid('one')
+            type_int()->isValid('one')
         );
         $this->assertFalse(
-            ScalarType::string()->isValid([1, 2])
+            type_string()->isValid([1, 2])
         );
         $this->assertFalse(
-            ScalarType::boolean()->isValid(123)
+            type_boolean()->isValid(123)
         );
     }
 }

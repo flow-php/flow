@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Pipeline;
 
+use function Flow\ETL\DSL\bool_entry;
+use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\lit;
 use Flow\ETL\Config;
-use Flow\ETL\DSL\Entry;
 use Flow\ETL\Extractor\ProcessExtractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Pipeline\NestedPipeline;
@@ -28,18 +29,18 @@ final class NestedPipelineTest extends TestCase
 
         $pipeline->setSource(new ProcessExtractor(
             new Rows(
-                Row::create(Entry::integer('id', 1)),
-                Row::create(Entry::integer('id', 2))
+                Row::create(int_entry('id', 1)),
+                Row::create(int_entry('id', 2))
             )
         ));
 
         $this->assertEquals(
             [
                 new Rows(
-                    Row::create(Entry::integer('id', 1), Entry::boolean('active', true)),
+                    Row::create(int_entry('id', 1), bool_entry('active', true)),
                 ),
                 new Rows(
-                    Row::create(Entry::integer('id', 2), Entry::boolean('active', true))
+                    Row::create(int_entry('id', 2), bool_entry('active', true))
                 ),
             ],
             \iterator_to_array($pipeline->process(new FlowContext(Config::default())))

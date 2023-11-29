@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Cache;
 
+use function Flow\ETL\DSL\int_entry;
 use Flow\ETL\Cache\PSRSimpleCache;
-use Flow\ETL\DSL\Entry;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
@@ -24,9 +24,9 @@ final class PSRSimpleCacheTest extends IntegrationTestCase
 
         $this->assertFalse($cache->has('test'));
 
-        $cache->add('test', new Rows(Row::create(Entry::int('id', 1))));
-        $cache->add('test', new Rows(Row::create(Entry::int('id', 2))));
-        $cache->add('test', new Rows(Row::create(Entry::int('id', 3))));
+        $cache->add('test', new Rows(Row::create(int_entry('id', 1))));
+        $cache->add('test', new Rows(Row::create(int_entry('id', 2))));
+        $cache->add('test', new Rows(Row::create(int_entry('id', 3))));
 
         $this->assertCount(
             3,

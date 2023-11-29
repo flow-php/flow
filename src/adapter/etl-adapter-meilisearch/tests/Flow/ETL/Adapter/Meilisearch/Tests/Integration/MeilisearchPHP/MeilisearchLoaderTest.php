@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Meilisearch\Tests\Integration\MeilisearchPHP;
 
+use function Flow\ETL\Adapter\Meilisearch\to_meilisearch_bulk_index;
+use function Flow\ETL\Adapter\Meilisearch\to_meilisearch_bulk_update;
 use Flow\ETL\Adapter\Meilisearch\Tests\Context\MeilisearchContext;
 use Flow\ETL\Config;
-use Flow\ETL\DSL\Meilisearch;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -34,7 +35,7 @@ final class MeilisearchLoaderTest extends TestCase
 
     public function test_empty_rows() : void
     {
-        $loader = Meilisearch::bulk_index($this->meilisearchContext->clientConfig(), self::INDEX_NAME);
+        $loader = to_meilisearch_bulk_index($this->meilisearchContext->clientConfig(), self::INDEX_NAME);
         $loader->load(new Rows(), new FlowContext(Config::default()));
 
         $response = $this->meilisearchContext->client()->index(self::INDEX_NAME)->search('', ['page' => 1]);
@@ -44,7 +45,7 @@ final class MeilisearchLoaderTest extends TestCase
 
     public function test_integration_with_entry_factory() : void
     {
-        $loader = Meilisearch::bulk_index($this->meilisearchContext->clientConfig(), self::INDEX_NAME);
+        $loader = to_meilisearch_bulk_index($this->meilisearchContext->clientConfig(), self::INDEX_NAME);
         $loader->load(new Rows(
             Row::create(
                 new Row\Entry\StringEntry('id', \sha1(\uniqid('id', true))),
@@ -76,7 +77,7 @@ final class MeilisearchLoaderTest extends TestCase
 
     public function test_integration_with_json_entry() : void
     {
-        $loader = Meilisearch::bulk_index($this->meilisearchContext->clientConfig(), self::INDEX_NAME);
+        $loader = to_meilisearch_bulk_index($this->meilisearchContext->clientConfig(), self::INDEX_NAME);
         $loader->load(new Rows(
             Row::create(
                 new Row\Entry\IntegerEntry('id', 1),
@@ -95,7 +96,7 @@ final class MeilisearchLoaderTest extends TestCase
 
     public function test_integration_with_partial_update_id_factory() : void
     {
-        $insertLoader = Meilisearch::bulk_index($this->meilisearchContext->clientConfig(), self::INDEX_NAME);
+        $insertLoader = to_meilisearch_bulk_index($this->meilisearchContext->clientConfig(), self::INDEX_NAME);
         $insertLoader->load(new Rows(
             Row::create(
                 new Row\Entry\IntegerEntry('id', 1),
@@ -105,7 +106,7 @@ final class MeilisearchLoaderTest extends TestCase
             ),
         ), new FlowContext(Config::default()));
 
-        $updateLoader = Meilisearch::bulk_update($this->meilisearchContext->clientConfig(), self::INDEX_NAME);
+        $updateLoader = to_meilisearch_bulk_update($this->meilisearchContext->clientConfig(), self::INDEX_NAME);
         $updateLoader->load(new Rows(
             Row::create(
                 new Row\Entry\IntegerEntry('id', 1),
@@ -141,7 +142,7 @@ final class MeilisearchLoaderTest extends TestCase
         $serializer = new CompressingSerializer();
 
         $loaderSerialized = $serializer->serialize(
-            Meilisearch::bulk_index($this->meilisearchContext->clientConfig(), self::INDEX_NAME)
+            to_meilisearch_bulk_index($this->meilisearchContext->clientConfig(), self::INDEX_NAME)
         );
 
         $serializer->unserialize($loaderSerialized)->load(new Rows(

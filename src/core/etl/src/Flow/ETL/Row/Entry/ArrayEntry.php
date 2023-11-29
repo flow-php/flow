@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
+use function Flow\ETL\DSL\type_array;
 use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Native\ArrayType;
@@ -34,7 +35,7 @@ final class ArrayEntry implements \Stringable, Entry
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        $this->type = new ArrayType([] === $this->value);
+        $this->type = type_array([] === $this->value);
     }
 
     public function __serialize() : array

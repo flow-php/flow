@@ -2,6 +2,7 @@
 
 namespace Flow\ETL\Row\Entry;
 
+use function Flow\ETL\DSL\type_object;
 use Flow\ETL\PHP\Type\Native\ObjectType;
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Entry;
@@ -19,7 +20,7 @@ final class XMLNodeEntry implements \Stringable, Entry
 
     public function __construct(private readonly string $name, private readonly \DOMNode $value)
     {
-        $this->type = ObjectType::fromObject($this->value);
+        $this->type = type_object($this->value::class);
     }
 
     public function __serialize() : array

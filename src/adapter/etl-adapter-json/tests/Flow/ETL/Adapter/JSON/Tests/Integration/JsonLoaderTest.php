@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON\Tests\Integration;
 
+use function Flow\ETL\Adapter\Json\from_json;
+use function Flow\ETL\Adapter\Json\to_json;
+use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\ref;
 use Flow\ETL\Adapter\JSON\JsonLoader;
 use Flow\ETL\Config;
-use Flow\ETL\DSL\From;
-use Flow\ETL\DSL\Json;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Flow;
@@ -35,7 +37,7 @@ final class JsonLoaderTest extends TestCase
                     )
                 )
             )
-            ->write(Json::to($stream))
+            ->write(to_json($stream))
             ->run();
 
         $this->assertJsonStringEqualsJsonString(
@@ -153,8 +155,8 @@ JSON,
             \unlink($path);
         }
 
-        (new Flow)
-            ->read(From::array([
+        df()
+            ->read(from_array([
                 ['id' => 1, 'partition' => 'a'],
                 ['id' => 2, 'partition' => 'a'],
                 ['id' => 3, 'partition' => 'a'],
@@ -163,17 +165,17 @@ JSON,
             ]))
             ->partitionBy(ref('partition'))
             ->mode(SaveMode::Overwrite)
-            ->write(Json::to($path))
+            ->write(to_json($path))
             ->run();
 
-        (new Flow)
-            ->read(From::array([
+        df()
+            ->read(from_array([
                 ['id' => 8, 'partition' => 'b'],
                 ['id' => 10, 'partition' => 'b'],
             ]))
             ->partitionBy(ref('partition'))
             ->mode(SaveMode::Ignore)
-            ->write(Json::to($path))
+            ->write(to_json($path))
             ->run();
 
         $this->assertSame(
@@ -184,8 +186,8 @@ JSON,
                 ['id' => 4, 'partition' => 'b'],
                 ['id' => 5, 'partition' => 'b'],
             ],
-            (new Flow())
-                ->read(Json::from($path))
+            df()
+                ->read(from_json($path))
                 ->fetch()
                 ->toArray()
         );
@@ -200,7 +202,7 @@ JSON,
         }
 
         (new Flow)
-            ->read(From::array([
+            ->read(from_array([
                 ['id' => 1, 'partition' => 'a'],
                 ['id' => 2, 'partition' => 'a'],
                 ['id' => 3, 'partition' => 'a'],
@@ -209,17 +211,17 @@ JSON,
             ]))
             ->partitionBy(ref('partition'))
             ->mode(SaveMode::Overwrite)
-            ->write(Json::to($path))
+            ->write(to_json($path))
             ->run();
 
         (new Flow)
-            ->read(From::array([
+            ->read(from_array([
                 ['id' => 8, 'partition' => 'b'],
                 ['id' => 10, 'partition' => 'b'],
             ]))
             ->partitionBy(ref('partition'))
             ->mode(SaveMode::Overwrite)
-            ->write(Json::to($path))
+            ->write(to_json($path))
             ->run();
 
         $this->assertSame(
@@ -231,7 +233,7 @@ JSON,
                 ['id' => 10, 'partition' => 'b'],
             ],
             (new Flow())
-                ->read(Json::from($path))
+                ->read(from_json($path))
                 ->fetch()
                 ->toArray()
         );
@@ -246,7 +248,7 @@ JSON,
         }
 
         (new Flow)
-            ->read(From::array([
+            ->read(from_array([
                 ['id' => 1, 'partition' => 'a'],
                 ['id' => 2, 'partition' => 'a'],
                 ['id' => 3, 'partition' => 'a'],
@@ -255,19 +257,19 @@ JSON,
             ]))
             ->partitionBy(ref('partition'))
             ->mode(SaveMode::ExceptionIfExists)
-            ->write(Json::to($path))
+            ->write(to_json($path))
             ->run();
 
         $this->expectExceptionMessage('Destination path "file:/' . $path . '/partition=b" already exists, please change path to different or set different SaveMode');
 
         (new Flow)
-            ->read(From::array([
+            ->read(from_array([
                 ['id' => 8, 'partition' => 'b'],
                 ['id' => 10, 'partition' => 'b'],
             ]))
             ->partitionBy(ref('partition'))
             ->mode(SaveMode::ExceptionIfExists)
-            ->write(Json::to($path))
+            ->write(to_json($path))
             ->run();
 
     }
@@ -281,23 +283,23 @@ JSON,
         }
 
         (new Flow)
-            ->read(From::array([
+            ->read(from_array([
                 ['id' => 1],
                 ['id' => 2],
                 ['id' => 3],
             ]))
             ->mode(SaveMode::Ignore)
-            ->write(Json::to($path))
+            ->write(to_json($path))
             ->run();
 
         (new Flow)
-            ->read(From::array([
+            ->read(from_array([
                 ['id' => 4],
                 ['id' => 5],
                 ['id' => 6],
             ]))
             ->mode(SaveMode::Ignore)
-            ->write(Json::to($path))
+            ->write(to_json($path))
             ->run();
 
         $this->assertSame(
@@ -307,7 +309,7 @@ JSON,
                 ['id' => 3],
             ],
             (new Flow)
-                ->read(Json::from($path))
+                ->read(from_json($path))
                 ->fetch()
                 ->toArray()
         );

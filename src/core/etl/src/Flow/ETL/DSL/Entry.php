@@ -14,6 +14,8 @@ use Flow\ETL\Row\Entry as RowEntry;
 use Flow\ETL\Row\Entry\Type\Uuid;
 
 /**
+ * @deprecated please use functions defined in Flow\ETL\DSL\functions.php
+ *
  * @infection-ignore-all
  */
 class Entry

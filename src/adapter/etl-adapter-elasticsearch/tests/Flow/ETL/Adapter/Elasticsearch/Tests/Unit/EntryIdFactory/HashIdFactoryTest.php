@@ -2,8 +2,8 @@
 
 namespace Flow\ETL\Adapter\Elasticsearch\Tests\Unit;
 
+use function Flow\ETL\DSL\str_entry;
 use Flow\ETL\Adapter\Elasticsearch\EntryIdFactory\HashIdFactory;
-use Flow\ETL\DSL\Entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;
@@ -20,7 +20,7 @@ final class HashIdFactoryTest extends TestCase
                 \hash('xxh128', 'John:Doe')
             ),
             $factory->create(
-                Row::create(Entry::string('first_name', 'John'), Entry::string('last_name', 'Doe'))
+                Row::create(str_entry('first_name', 'John'), str_entry('last_name', 'Doe'))
             )
         );
     }
@@ -35,7 +35,7 @@ final class HashIdFactoryTest extends TestCase
                 \sha1('John:Doe')
             ),
             $factory->create(
-                Row::create(Entry::string('first_name', 'John'), Entry::string('last_name', 'Doe'))
+                Row::create(str_entry('first_name', 'John'), str_entry('last_name', 'Doe'))
             )
         );
     }

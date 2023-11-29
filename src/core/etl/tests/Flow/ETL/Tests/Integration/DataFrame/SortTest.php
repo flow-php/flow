@@ -2,10 +2,10 @@
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
+use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\ref;
 use Flow\ETL\Config;
 use Flow\ETL\ExternalSort\MemorySort;
-use Flow\ETL\Flow;
 use Flow\ETL\Monitoring\Memory\Unit;
 use Flow\ETL\Tests\Double\AllRowTypesFakeExtractor;
 use Flow\ETL\Tests\Double\CacheSpy;
@@ -17,12 +17,13 @@ final class SortTest extends IntegrationTestCase
     {
         \ini_set('memory_limit', '500M');
 
-        Flow::setUp(
-            Config::builder()
-                ->id($id = 'test_etl_sort_by_in_memory')
-                ->cache($cacheSpy = new CacheSpy(Config::default()->cache()))
-                ->externalSort(new MemorySort($id, $cacheSpy, Unit::fromKb(10)))
-        )->extract(new AllRowTypesFakeExtractor($rowsets = 50, $rows = 50))
+        $config = Config::builder()
+            ->id($id = 'test_etl_sort_by_in_memory')
+            ->cache($cacheSpy = new CacheSpy(Config::default()->cache()))
+            ->externalSort(new MemorySort($id, $cacheSpy, Unit::fromKb(10)));
+
+        df($config)
+            ->read(new AllRowTypesFakeExtractor($rowsets = 50, $rows = 50))
             ->sortBy(ref('id'))
             ->run();
 
@@ -44,11 +45,12 @@ final class SortTest extends IntegrationTestCase
     {
         \ini_set('memory_limit', '-1');
 
-        $rows = Flow::setUp(
-            Config::builder()
-                ->id($id = 'test_etl_sort_by_in_memory')
-                ->cache($cacheSpy = new CacheSpy(Config::default()->cache()))
-        )->extract(new AllRowTypesFakeExtractor($rowsets = 20, $rows = 2))
+        $config = Config::builder()
+            ->id($id = 'test_etl_sort_by_in_memory')
+            ->cache($cacheSpy = new CacheSpy(Config::default()->cache()));
+
+        $rows = df($config)
+            ->read(new AllRowTypesFakeExtractor($rowsets = 20, $rows = 2))
             ->sortBy(ref('id'))
             ->fetch();
 

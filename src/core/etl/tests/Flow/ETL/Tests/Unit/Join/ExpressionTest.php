@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Join;
 
 use function Flow\ETL\DSL\col;
-use Flow\ETL\DSL\Entry;
+use function Flow\ETL\DSL\int_entry;
 use Flow\ETL\Join\Comparison\Equal;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Row;
@@ -27,8 +27,8 @@ final class ExpressionTest extends TestCase
         $expression = Expression::on(new Equal('id', 'id'), '_');
 
         $this->assertTrue($expression->meet(
-            Row::create(Entry::integer('id', 1)),
-            Row::create(Entry::integer('id', 1)),
+            Row::create(int_entry('id', 1)),
+            Row::create(int_entry('id', 1)),
         ));
     }
 }

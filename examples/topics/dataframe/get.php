@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-use Flow\ETL\DSL\Entry;
-use Flow\ETL\DSL\From;
+use function Flow\ETL\DSL\from_rows;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\str_entry;
 use Flow\ETL\Flow;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -12,14 +13,14 @@ require __DIR__ . '/../../bootstrap.php';
 
 $etl = (new Flow())
     ->read(
-        From::rows(
+        from_rows(
             new Rows(
-                Row::create(Entry::integer('id', 1), Entry::string('name', 'foo')),
-                Row::create(Entry::integer('id', 2), Entry::string('name', 'bar')),
-                Row::create(Entry::integer('id', 3), Entry::string('name', 'baz')),
-                Row::create(Entry::integer('id', 4), Entry::string('name', 'foo')),
-                Row::create(Entry::integer('id', 5), Entry::string('name', 'bar')),
-                Row::create(Entry::integer('id', 6), Entry::string('name', 'baz')),
+                Row::create(int_entry('id', 1), str_entry('name', 'foo')),
+                Row::create(int_entry('id', 2), str_entry('name', 'bar')),
+                Row::create(int_entry('id', 3), str_entry('name', 'baz')),
+                Row::create(int_entry('id', 4), str_entry('name', 'foo')),
+                Row::create(int_entry('id', 5), str_entry('name', 'bar')),
+                Row::create(int_entry('id', 6), str_entry('name', 'baz')),
             ),
         )
     );

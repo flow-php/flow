@@ -2,8 +2,8 @@
 
 namespace Flow\ETL\Tests\Integration\Pipeline;
 
+use function Flow\ETL\DSL\from_array;
 use Flow\ETL\Config;
-use Flow\ETL\DSL\From;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Pipeline\ParallelizingPipeline;
 use Flow\ETL\Pipeline\SynchronousPipeline;
@@ -17,7 +17,7 @@ final class ParallelizingPipelineTest extends TestCase
             new SynchronousPipeline(),
             5
         );
-        $pipeline->setSource(From::array([
+        $pipeline->setSource(from_array([
             ['id' => 1],
             ['id' => 2],
             ['id' => 3],
@@ -42,7 +42,7 @@ final class ParallelizingPipelineTest extends TestCase
             new SynchronousPipeline(),
             15
         );
-        $pipeline->setSource(From::array([
+        $pipeline->setSource(from_array([
             ['id' => 1],
             ['id' => 2],
             ['id' => 3],

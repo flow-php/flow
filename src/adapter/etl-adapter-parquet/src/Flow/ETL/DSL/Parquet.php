@@ -15,6 +15,8 @@ use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
 
 /**
+ * @deprecated please use functions defined in Flow\ETL\DSL\functions.php
+ *
  * @infection-ignore-all
  */
 class Parquet

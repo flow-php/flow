@@ -2,11 +2,11 @@
 
 namespace Flow\ETL\Tests\Unit\PHP\Type\Native;
 
+use function Flow\ETL\DSL\type_callable;
+use function Flow\ETL\DSL\type_float;
 use Flow\ETL\PHP\Type\Logical\Map\MapKey;
 use Flow\ETL\PHP\Type\Logical\Map\MapValue;
 use Flow\ETL\PHP\Type\Logical\MapType;
-use Flow\ETL\PHP\Type\Native\CallableType;
-use Flow\ETL\PHP\Type\Native\ScalarType;
 use PHPUnit\Framework\TestCase;
 
 final class CallableTypeTest extends TestCase
@@ -14,16 +14,16 @@ final class CallableTypeTest extends TestCase
     public function test_equals() : void
     {
         $this->assertTrue(
-            (new CallableType(false))->isEqual(new CallableType(false))
+            type_callable(false)->isEqual(type_callable(false))
         );
         $this->assertFalse(
-            (new CallableType(false))->isEqual(new MapType(MapKey::string(), MapValue::float()))
+            type_callable(false)->isEqual(new MapType(MapKey::string(), MapValue::float()))
         );
         $this->assertFalse(
-            (new CallableType(false))->isEqual(ScalarType::float())
+            type_callable(false)->isEqual(type_float())
         );
         $this->assertFalse(
-            (new CallableType(false))->isEqual(new CallableType(true))
+            type_callable(false)->isEqual(type_callable(true))
         );
     }
 
@@ -31,27 +31,27 @@ final class CallableTypeTest extends TestCase
     {
         $this->assertSame(
             'callable',
-            (new CallableType(false))->toString()
+            type_callable(false)->toString()
         );
         $this->assertSame(
             '?callable',
-            (new CallableType(true))->toString()
+            type_callable(true)->toString()
         );
     }
 
     public function test_valid() : void
     {
         $this->assertTrue(
-            (new CallableType(false))->isValid('printf')
+            type_callable(false)->isValid('printf')
         );
         $this->assertFalse(
-            (new CallableType(false))->isValid('one')
+            type_callable(false)->isValid('one')
         );
         $this->assertFalse(
-            (new CallableType(false))->isValid([1, 2])
+            type_callable(false)->isValid([1, 2])
         );
         $this->assertFalse(
-            (new CallableType(false))->isValid(123)
+            type_callable(false)->isValid(123)
         );
     }
 }

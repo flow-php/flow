@@ -2,6 +2,9 @@
 
 namespace Flow\ETL\Tests\Unit\PHP\Type;
 
+use function Flow\ETL\DSL\type_int;
+use function Flow\ETL\DSL\type_null;
+use function Flow\ETL\DSL\type_string;
 use Flow\ETL\PHP\Type\ArrayContentDetector;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\ListType;
@@ -11,8 +14,6 @@ use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\PHP\Type\Native\ArrayType;
-use Flow\ETL\PHP\Type\Native\NullType;
-use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\PHP\Type\Types;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -23,30 +24,30 @@ final class ArrayContentDetectorTest extends TestCase
     {
         yield 'simple list' => [
             [
-                ScalarType::integer(),
+                type_int(),
             ],
             [
-                ScalarType::string(),
+                type_string(),
             ],
             true,
         ];
 
         yield 'simple map' => [
             [
-                ScalarType::string(),
+                type_string(),
             ],
             [
-                ScalarType::string(),
+                type_string(),
             ],
             false,
         ];
 
         yield 'simple structure' => [
             [
-                ScalarType::string(),
+                type_string(),
             ],
             [
-                ScalarType::string(),
+                type_string(),
                 new MapType(MapKey::string(), MapValue::string()),
                 new ListType(ListElement::integer()),
             ],
@@ -55,12 +56,12 @@ final class ArrayContentDetectorTest extends TestCase
 
         yield 'list of unique same structures' => [
             [
-                ScalarType::integer(),
+                type_int(),
             ],
             [
                 new StructureType(
-                    new StructureElement('id', ScalarType::integer()),
-                    new StructureElement('name', ScalarType::string())
+                    new StructureElement('id', type_int()),
+                    new StructureElement('name', type_string())
                 ),
             ],
             true,
@@ -68,7 +69,7 @@ final class ArrayContentDetectorTest extends TestCase
 
         yield 'map with string key, of maps string with string' => [
             [
-                ScalarType::string(),
+                type_string(),
             ],
             [
                 new MapType(
@@ -83,12 +84,12 @@ final class ArrayContentDetectorTest extends TestCase
 
         yield 'array of nulls' => [
             [
-                ScalarType::string(),
+                type_string(),
             ],
             [
-                new NullType(),
-                new NullType(),
-                new NullType(),
+                type_null(),
+                type_null(),
+                type_null(),
             ],
             false,
         ];
@@ -98,30 +99,30 @@ final class ArrayContentDetectorTest extends TestCase
     {
         yield 'simple list' => [
             [
-                ScalarType::integer(),
+                type_int(),
             ],
             [
-                ScalarType::string(),
+                type_string(),
             ],
             false,
         ];
 
         yield 'simple map' => [
             [
-                ScalarType::string(),
+                type_string(),
             ],
             [
-                ScalarType::string(),
+                type_string(),
             ],
             true,
         ];
 
         yield 'simple structure' => [
             [
-                ScalarType::string(),
+                type_string(),
             ],
             [
-                ScalarType::string(),
+                type_string(),
                 new MapType(MapKey::string(), MapValue::string()),
                 new ListType(ListElement::integer()),
             ],
@@ -130,12 +131,12 @@ final class ArrayContentDetectorTest extends TestCase
 
         yield 'list of unique same structures' => [
             [
-                ScalarType::integer(),
+                type_int(),
             ],
             [
                 new StructureType(
-                    new StructureElement('id', ScalarType::integer()),
-                    new StructureElement('name', ScalarType::string())
+                    new StructureElement('id', type_int()),
+                    new StructureElement('name', type_string())
                 ),
             ],
             false,
@@ -143,7 +144,7 @@ final class ArrayContentDetectorTest extends TestCase
 
         yield 'map with string key, of maps string with string' => [
             [
-                ScalarType::string(),
+                type_string(),
             ],
             [
                 new MapType(
@@ -158,12 +159,12 @@ final class ArrayContentDetectorTest extends TestCase
 
         yield 'array of nulls' => [
             [
-                ScalarType::string(),
+                type_string(),
             ],
             [
-                new NullType(),
-                new NullType(),
-                new NullType(),
+                type_null(),
+                type_null(),
+                type_null(),
             ],
             false,
         ];
@@ -173,30 +174,30 @@ final class ArrayContentDetectorTest extends TestCase
     {
         yield 'simple list' => [
             [
-                ScalarType::integer(),
+                type_int(),
             ],
             [
-                ScalarType::string(),
+                type_string(),
             ],
             false,
         ];
 
         yield 'simple map' => [
             [
-                ScalarType::string(),
+                type_string(),
             ],
             [
-                ScalarType::string(),
+                type_string(),
             ],
             false,
         ];
 
         yield 'simple structure' => [
             [
-                ScalarType::string(),
+                type_string(),
             ],
             [
-                ScalarType::string(),
+                type_string(),
                 new MapType(MapKey::string(), MapValue::string()),
                 new ListType(ListElement::integer()),
             ],
@@ -205,12 +206,12 @@ final class ArrayContentDetectorTest extends TestCase
 
         yield 'list of unique same structures' => [
             [
-                ScalarType::integer(),
+                type_int(),
             ],
             [
                 new StructureType(
-                    new StructureElement('id', ScalarType::integer()),
-                    new StructureElement('name', ScalarType::string())
+                    new StructureElement('id', type_int()),
+                    new StructureElement('name', type_string())
                 ),
             ],
             false,
@@ -218,7 +219,7 @@ final class ArrayContentDetectorTest extends TestCase
 
         yield 'map with string key, of maps string with string' => [
             [
-                ScalarType::string(),
+                type_string(),
             ],
             [
                 new MapType(
@@ -233,19 +234,19 @@ final class ArrayContentDetectorTest extends TestCase
 
         yield 'array of nulls' => [
             [
-                ScalarType::string(),
+                type_string(),
             ],
             [
-                new NullType(),
-                new NullType(),
-                new NullType(),
+                type_null(),
+                type_null(),
+                type_null(),
             ],
             false,
         ];
 
         yield 'array of empty arrays' => [
             [
-                ScalarType::string(),
+                type_string(),
             ],
             [
                 ArrayType::empty(),

@@ -7,13 +7,13 @@ if ($_ENV['FLOW_PHAR_APP'] ?? false) {
     exit(1);
 }
 
+use function Flow\ETL\Adapter\CSV\from_csv;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
 use Flow\ETL\Adapter\Doctrine\DbalLoader;
-use Flow\ETL\DSL\CSV;
 use Flow\ETL\Flow;
 
 $dbConnectionString = 'postgresql://postgres:postgres@127.0.0.1:5432/postgres?serverVersion=11%26charset=utf8';
@@ -36,7 +36,7 @@ $dbConnection->createSchemaManager()->createTable(
 );
 
 (new Flow())
-    ->read(CSV::from($path = __FLOW_OUTPUT__ . '/dataset.csv', 10_000))
+    ->read(from_csv($path = __FLOW_OUTPUT__ . '/dataset.csv', 10_000))
     ->rename('last name', 'last_name')
     ->limit(1_000_000)
     ->load(DbalLoader::fromConnection($dbConnection, 'source_dataset_table', 1000))

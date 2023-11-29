@@ -8,7 +8,6 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Flow\ETL\DataFrame;
 use Flow\ETL\DataFrameFactory;
-use Flow\ETL\DSL\Dbal;
 use Flow\ETL\Flow;
 use Flow\ETL\Rows;
 
@@ -79,15 +78,7 @@ final class DbalDataFrameFactory implements DataFrameFactory
             }
         }
 
-        return (new Flow())
-            ->extract(
-                Dbal::from_query(
-                    $this->connection(),
-                    $this->query,
-                    $parameters,
-                    $types,
-                )
-            );
+        return (new Flow())->extract(\Flow\ETL\Adapter\Doctrine\dbal_from_query($this->connection(), $this->query, $parameters, $types));
     }
 
     private function connection() : Connection

@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Meilisearch\Tests\Integration\MeilisearchPHP;
 
+use function Flow\ETL\Adapter\Meilisearch\from_meilisearch;
+use function Flow\ETL\Adapter\Meilisearch\meilisearch_hits_to_rows;
+use function Flow\ETL\Adapter\Meilisearch\to_meilisearch_bulk_index;
 use Flow\ETL\Adapter\Meilisearch\Tests\Context\MeilisearchContext;
 use Flow\ETL\Config;
-use Flow\ETL\DSL\Meilisearch;
 use Flow\ETL\Flow;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
@@ -34,7 +36,7 @@ final class MeilisearchExtractorTest extends TestCase
 
     public function test_empty_extraction() : void
     {
-        $loader = Meilisearch::bulk_index($this->meilisearchContext->clientConfig(), self::INDEX_NAME);
+        $loader = to_meilisearch_bulk_index($this->meilisearchContext->clientConfig(), self::INDEX_NAME);
         $loader->load(new Rows(
             ...\array_map(
                 static fn (int $i) : Row => Row::create(
@@ -52,7 +54,7 @@ final class MeilisearchExtractorTest extends TestCase
         ];
 
         $results = (new Flow())
-            ->extract(Meilisearch::search($this->meilisearchContext->clientConfig(), $params, self::INDEX_NAME))
+            ->extract(from_meilisearch($this->meilisearchContext->clientConfig(), $params, self::INDEX_NAME))
             ->fetch();
 
         $this->assertCount(0, $results);
@@ -60,7 +62,7 @@ final class MeilisearchExtractorTest extends TestCase
 
     public function test_extraction_index_with_from_and_size() : void
     {
-        $loader = Meilisearch::bulk_index($this->meilisearchContext->clientConfig(), self::INDEX_NAME);
+        $loader = to_meilisearch_bulk_index($this->meilisearchContext->clientConfig(), self::INDEX_NAME);
         $loader->load(new Rows(
             ...\array_map(
                 static fn (int $i) : Row => Row::create(
@@ -84,8 +86,8 @@ final class MeilisearchExtractorTest extends TestCase
         ];
 
         $results = (new Flow())
-            ->extract(Meilisearch::search($this->meilisearchContext->clientConfig(), $params, self::INDEX_NAME))
-            ->transform(Meilisearch::hits_to_rows())
+            ->extract(from_meilisearch($this->meilisearchContext->clientConfig(), $params, self::INDEX_NAME))
+            ->transform(meilisearch_hits_to_rows())
             ->fetch();
 
         $this->assertCount(999, $results);
@@ -99,7 +101,7 @@ final class MeilisearchExtractorTest extends TestCase
     {
         $this->meilisearchContext->client()->index(self::INDEX_NAME)->updateSettings(['sortableAttributes' => ['position']]);
 
-        $loader = Meilisearch::bulk_index($this->meilisearchContext->clientConfig(), self::INDEX_NAME);
+        $loader = to_meilisearch_bulk_index($this->meilisearchContext->clientConfig(), self::INDEX_NAME);
         $loader->load(new Rows(
             ...\array_map(
                 static fn (int $i) : Row => Row::create(
@@ -119,7 +121,7 @@ final class MeilisearchExtractorTest extends TestCase
         ];
 
         $results = (new Flow())
-            ->extract(Meilisearch::search($this->meilisearchContext->clientConfig(), $params, self::INDEX_NAME))
+            ->extract(from_meilisearch($this->meilisearchContext->clientConfig(), $params, self::INDEX_NAME))
             ->fetch();
 
         $this->assertCount(999, $results);

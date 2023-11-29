@@ -2,7 +2,8 @@
 
 namespace Flow\ETL\Tests\Integration\Filesystem;
 
-use Flow\ETL\DSL\Entry;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\str_entry;
 use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Filesystem\LocalFilesystem;
 use Flow\ETL\Filesystem\Path;
@@ -41,11 +42,11 @@ class FilesystemStreamsTest extends IntegrationTestCase
     public function test_open_partitioned_rows() : void
     {
         $rows = (new Rows(...[
-            Row::create(Entry::integer('id', 1), Entry::string('group', 'a')),
-            Row::create(Entry::integer('id', 2), Entry::string('group', 'a')),
-            Row::create(Entry::integer('id', 3), Entry::string('group', 'b')),
-            Row::create(Entry::integer('id', 4), Entry::string('group', 'b')),
-            Row::create(Entry::integer('id', 5), Entry::string('group', 'b')),
+            Row::create(int_entry('id', 1), str_entry('group', 'a')),
+            Row::create(int_entry('id', 2), str_entry('group', 'a')),
+            Row::create(int_entry('id', 3), str_entry('group', 'b')),
+            Row::create(int_entry('id', 4), str_entry('group', 'b')),
+            Row::create(int_entry('id', 5), str_entry('group', 'b')),
         ]))->partitionBy('group')[0];
 
         $stream = (new FilesystemStreams(new LocalFilesystem()))
@@ -69,11 +70,11 @@ class FilesystemStreamsTest extends IntegrationTestCase
     public function test_open_rows() : void
     {
         (new Rows(...[
-            Row::create(Entry::integer('id', 1), Entry::string('group', 'a')),
-            Row::create(Entry::integer('id', 2), Entry::string('group', 'a')),
-            Row::create(Entry::integer('id', 3), Entry::string('group', 'b')),
-            Row::create(Entry::integer('id', 4), Entry::string('group', 'b')),
-            Row::create(Entry::integer('id', 5), Entry::string('group', 'b')),
+            Row::create(int_entry('id', 1), str_entry('group', 'a')),
+            Row::create(int_entry('id', 2), str_entry('group', 'a')),
+            Row::create(int_entry('id', 3), str_entry('group', 'b')),
+            Row::create(int_entry('id', 4), str_entry('group', 'b')),
+            Row::create(int_entry('id', 5), str_entry('group', 'b')),
         ]));
 
         $stream = (new FilesystemStreams(new LocalFilesystem()))
@@ -224,11 +225,11 @@ class FilesystemStreamsTest extends IntegrationTestCase
     public function test_overwrite_mode_on_processed_partitions() : void
     {
         $partitionedRows = (new Rows(...[
-            Row::create(Entry::integer('id', 1), Entry::string('group', 'a')),
-            Row::create(Entry::integer('id', 2), Entry::string('group', 'a')),
-            Row::create(Entry::integer('id', 3), Entry::string('group', 'b')),
-            Row::create(Entry::integer('id', 4), Entry::string('group', 'b')),
-            Row::create(Entry::integer('id', 5), Entry::string('group', 'b')),
+            Row::create(int_entry('id', 1), str_entry('group', 'a')),
+            Row::create(int_entry('id', 2), str_entry('group', 'a')),
+            Row::create(int_entry('id', 3), str_entry('group', 'b')),
+            Row::create(int_entry('id', 4), str_entry('group', 'b')),
+            Row::create(int_entry('id', 5), str_entry('group', 'b')),
         ]))->partitionBy('group');
 
         $streams = new FilesystemStreams(new LocalFilesystem());

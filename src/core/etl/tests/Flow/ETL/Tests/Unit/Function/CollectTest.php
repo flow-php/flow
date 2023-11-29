@@ -6,7 +6,7 @@ namespace Flow\ETL\Tests\Unit\Function;
 
 use function Flow\ETL\DSL\collect;
 use function Flow\ETL\DSL\ref;
-use Flow\ETL\DSL\Entry;
+use function Flow\ETL\DSL\str_entry;
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;
 
@@ -16,10 +16,10 @@ final class CollectTest extends TestCase
     {
         $aggregator = collect(ref('data'));
 
-        $aggregator->aggregate(Row::create(Entry::string('data', 'a')));
-        $aggregator->aggregate(Row::create(Entry::string('data', 'b')));
-        $aggregator->aggregate(Row::create(Entry::string('data', 'b')));
-        $aggregator->aggregate(Row::create(Entry::string('data', 'c')));
+        $aggregator->aggregate(Row::create(str_entry('data', 'a')));
+        $aggregator->aggregate(Row::create(str_entry('data', 'b')));
+        $aggregator->aggregate(Row::create(str_entry('data', 'b')));
+        $aggregator->aggregate(Row::create(str_entry('data', 'c')));
 
         $this->assertSame(
             [

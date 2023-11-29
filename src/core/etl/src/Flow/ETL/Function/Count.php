@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use function Flow\ETL\DSL\int_entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
@@ -62,7 +63,7 @@ final class Count implements AggregatingFunction, WindowFunction
             $this->ref->as($this->ref->to() . '_count');
         }
 
-        return \Flow\ETL\DSL\Entry::integer($this->ref->name(), $this->count);
+        return int_entry($this->ref->name(), $this->count);
     }
 
     public function toString() : string

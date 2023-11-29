@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
+use function Flow\ETL\DSL\array_entry;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\null_entry;
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\sum;
 use Flow\ETL\Config;
-use Flow\ETL\DSL\Entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\FlowContext;
@@ -26,9 +29,9 @@ final class GroupByTest extends TestCase
         $groupBy = new GroupBy('array');
 
         $groupBy->group(new Rows(
-            Row::create(Entry::array('array', [1, 2, 3])),
-            Row::create(Entry::array('array', [1, 2, 3])),
-            Row::create(Entry::array('array', [4, 5, 6]))
+            Row::create(array_entry('array', [1, 2, 3])),
+            Row::create(array_entry('array', [1, 2, 3])),
+            Row::create(array_entry('array', [4, 5, 6]))
         ));
     }
 
@@ -37,16 +40,16 @@ final class GroupByTest extends TestCase
         $groupBy = new GroupBy('type');
 
         $groupBy->group(new Rows(
-            Row::create(Entry::string('type', 'a')),
-            Row::create(Entry::string('not-type', 'b')),
-            Row::create(Entry::string('type', 'c'))
+            Row::create(str_entry('type', 'a')),
+            Row::create(str_entry('not-type', 'b')),
+            Row::create(str_entry('type', 'c'))
         ));
 
         $this->assertEquals(
             new Rows(
-                Row::create(Entry::string('type', 'a')),
-                Row::create(Entry::null('type')),
-                Row::create(Entry::string('type', 'c'))
+                Row::create(str_entry('type', 'a')),
+                Row::create(null_entry('type')),
+                Row::create(str_entry('type', 'c'))
             ),
             $groupBy->result(new FlowContext(Config::default()))
         );
@@ -58,19 +61,19 @@ final class GroupByTest extends TestCase
 
         $group->aggregate(sum(ref('id')));
         $group->group(new Rows(
-            Row::create(Entry::int('id', 1), Entry::string('type', 'a')),
-            Row::create(Entry::int('id', 2), Entry::string('type', 'b')),
-            Row::create(Entry::int('id', 3), Entry::string('type', 'c')),
-            Row::create(Entry::int('id', 4), Entry::string('type', 'a')),
-            Row::create(Entry::int('id', 5), Entry::string('type', 'd'))
+            Row::create(int_entry('id', 1), str_entry('type', 'a')),
+            Row::create(int_entry('id', 2), str_entry('type', 'b')),
+            Row::create(int_entry('id', 3), str_entry('type', 'c')),
+            Row::create(int_entry('id', 4), str_entry('type', 'a')),
+            Row::create(int_entry('id', 5), str_entry('type', 'd'))
         ));
 
         $this->assertEquals(
             new Rows(
-                Row::create(Entry::int('id_sum', 5), Entry::string('type', 'a')),
-                Row::create(Entry::int('id_sum', 2), Entry::string('type', 'b')),
-                Row::create(Entry::int('id_sum', 3), Entry::string('type', 'c')),
-                Row::create(Entry::int('id_sum', 5), Entry::string('type', 'd')),
+                Row::create(int_entry('id_sum', 5), str_entry('type', 'a')),
+                Row::create(int_entry('id_sum', 2), str_entry('type', 'b')),
+                Row::create(int_entry('id_sum', 3), str_entry('type', 'c')),
+                Row::create(int_entry('id_sum', 5), str_entry('type', 'd')),
             ),
             $group->result(new FlowContext(Config::default()))
         );
@@ -87,18 +90,18 @@ final class GroupByTest extends TestCase
     public function test_group_by_with_pivoting() : void
     {
         $rows = new Rows(
-            Row::create(Entry::string('product', 'Banana'), Entry::int('amount', 1000), Entry::string('country', 'USA')),
-            Row::create(Entry::string('product', 'Carrots'), Entry::int('amount', 1500), Entry::string('country', 'USA')),
-            Row::create(Entry::string('product', 'Beans'), Entry::int('amount', 1600), Entry::string('country', 'USA')),
-            Row::create(Entry::string('product', 'Orange'), Entry::int('amount', 2000), Entry::string('country', 'USA')),
-            Row::create(Entry::string('product', 'Orange'), Entry::int('amount', 2000), Entry::string('country', 'USA')),
-            Row::create(Entry::string('product', 'Banana'), Entry::int('amount', 400), Entry::string('country', 'China')),
-            Row::create(Entry::string('product', 'Carrots'), Entry::int('amount', 1200), Entry::string('country', 'China')),
-            Row::create(Entry::string('product', 'Beans'), Entry::int('amount', 1500), Entry::string('country', 'China')),
-            Row::create(Entry::string('product', 'Orange'), Entry::int('amount', 4000), Entry::string('country', 'China')),
-            Row::create(Entry::string('product', 'Banana'), Entry::int('amount', 2000), Entry::string('country', 'Canada')),
-            Row::create(Entry::string('product', 'Carrots'), Entry::int('amount', 2000), Entry::string('country', 'Canada')),
-            Row::create(Entry::string('product', 'Beans'), Entry::int('amount', 2000), Entry::string('country', 'Mexico')),
+            Row::create(str_entry('product', 'Banana'), int_entry('amount', 1000), str_entry('country', 'USA')),
+            Row::create(str_entry('product', 'Carrots'), int_entry('amount', 1500), str_entry('country', 'USA')),
+            Row::create(str_entry('product', 'Beans'), int_entry('amount', 1600), str_entry('country', 'USA')),
+            Row::create(str_entry('product', 'Orange'), int_entry('amount', 2000), str_entry('country', 'USA')),
+            Row::create(str_entry('product', 'Orange'), int_entry('amount', 2000), str_entry('country', 'USA')),
+            Row::create(str_entry('product', 'Banana'), int_entry('amount', 400), str_entry('country', 'China')),
+            Row::create(str_entry('product', 'Carrots'), int_entry('amount', 1200), str_entry('country', 'China')),
+            Row::create(str_entry('product', 'Beans'), int_entry('amount', 1500), str_entry('country', 'China')),
+            Row::create(str_entry('product', 'Orange'), int_entry('amount', 4000), str_entry('country', 'China')),
+            Row::create(str_entry('product', 'Banana'), int_entry('amount', 2000), str_entry('country', 'Canada')),
+            Row::create(str_entry('product', 'Carrots'), int_entry('amount', 2000), str_entry('country', 'Canada')),
+            Row::create(str_entry('product', 'Beans'), int_entry('amount', 2000), str_entry('country', 'Mexico')),
         );
 
         $group = new GroupBy(ref('product'));
@@ -109,10 +112,10 @@ final class GroupByTest extends TestCase
 
         $this->assertEquals(
             new Rows(
-                Row::create(Entry::string('product', 'Banana'), Entry::int('Canada', 2000), Entry::int('China', 400), Entry::null('Mexico'), Entry::int('USA', 1000)),
-                Row::create(Entry::string('product', 'Beans'), Entry::null('Canada'), Entry::int('China', 1500), Entry::int('Mexico', 2000), Entry::int('USA', 1600)),
-                Row::create(Entry::string('product', 'Carrots'), Entry::int('Canada', 2000), Entry::int('China', 1200), Entry::null('Mexico'), Entry::int('USA', 1500)),
-                Row::create(Entry::string('product', 'Orange'), Entry::null('Canada'), Entry::int('China', 4000), Entry::null('Mexico'), Entry::int('USA', 4000)),
+                Row::create(str_entry('product', 'Banana'), int_entry('Canada', 2000), int_entry('China', 400), null_entry('Mexico'), int_entry('USA', 1000)),
+                Row::create(str_entry('product', 'Beans'), null_entry('Canada'), int_entry('China', 1500), int_entry('Mexico', 2000), int_entry('USA', 1600)),
+                Row::create(str_entry('product', 'Carrots'), int_entry('Canada', 2000), int_entry('China', 1200), null_entry('Mexico'), int_entry('USA', 1500)),
+                Row::create(str_entry('product', 'Orange'), null_entry('Canada'), int_entry('China', 4000), null_entry('Mexico'), int_entry('USA', 4000)),
             ),
             $group->result(new FlowContext(Config::default()))->sortBy(ref('product'))
         );

@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Http;
 
-use Flow\ETL\DSL\Entry;
+use function Flow\ETL\DSL\array_entry;
+use function Flow\ETL\DSL\str_entry;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
@@ -61,9 +62,9 @@ final class PsrHttpClientStaticExtractor implements Extractor
                             $responseFactory->create($response)->all(),
                             $requestFactory->create($request)->all(),
                             [
-                                Entry::string('request_uri', (string) $request->getUri()),
-                                Entry::string('request_method', $request->getMethod()),
-                                Entry::array('request_headers', $request->getHeaders()),
+                                str_entry('request_uri', (string) $request->getUri()),
+                                str_entry('request_method', $request->getMethod()),
+                                array_entry('request_headers', $request->getHeaders()),
                             ]
                         )
                     )

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
+use function Flow\ETL\Adapter\CSV\from_csv;
+use function Flow\ETL\DSL\Adapter\Avro\to_avro;
 use Aeon\Calendar\Stopwatch;
-use Flow\ETL\DSL\Avro;
-use Flow\ETL\DSL\CSV;
 use Flow\ETL\Flow;
 
 require __DIR__ . '/../../../bootstrap.php';
@@ -14,9 +14,9 @@ if (!\file_exists(__FLOW_OUTPUT__ . '/dataset.csv')) {
 }
 
 $flow = (new Flow())
-    ->read(CSV::from(__FLOW_OUTPUT__ . '/dataset.csv'))
+    ->read(from_csv(__FLOW_OUTPUT__ . '/dataset.csv'))
     ->rename('last name', 'last_name')
-    ->write(Avro::to(__FLOW_OUTPUT__ . '/dataset.avro'));
+    ->write(to_avro(__FLOW_OUTPUT__ . '/dataset.avro'));
 
 if ($_ENV['FLOW_PHAR_APP'] ?? false) {
     return $flow;

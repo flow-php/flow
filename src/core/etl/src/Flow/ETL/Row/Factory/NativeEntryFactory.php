@@ -4,7 +4,24 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Factory;
 
-use Flow\ETL\DSL\Entry as EntryDSL;
+use function Flow\ETL\DSL\array_entry;
+use function Flow\ETL\DSL\bool_entry;
+use function Flow\ETL\DSL\datetime_entry;
+use function Flow\ETL\DSL\enum_entry;
+use function Flow\ETL\DSL\float_entry;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\json_entry;
+use function Flow\ETL\DSL\json_object_entry;
+use function Flow\ETL\DSL\list_entry;
+use function Flow\ETL\DSL\map_entry;
+use function Flow\ETL\DSL\null_entry;
+use function Flow\ETL\DSL\obj_entry;
+use function Flow\ETL\DSL\object_entry;
+use function Flow\ETL\DSL\string_entry;
+use function Flow\ETL\DSL\struct_entry;
+use function Flow\ETL\DSL\uuid_entry;
+use function Flow\ETL\DSL\xml_entry;
+use function Flow\ETL\DSL\xml_node_entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\PHP\Type\Logical\ListType;
@@ -19,6 +36,8 @@ use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Schema;
+use Ramsey\Uuid\UuidInterface;
+use Symfony\Component\Uid\Uuid;
 
 /**
  * @implements EntryFactory<array>
@@ -56,64 +75,64 @@ final class NativeEntryFactory implements EntryFactory
 
                 if ('' !== $trimmedValue) {
                     if ($this->isJson($trimmedValue)) {
-                        return new Row\Entry\JsonEntry($entryName, $value);
+                        return json_entry($entryName, $value);
                     }
 
                     if ($this->isUuid($trimmedValue)) {
-                        return new Row\Entry\UuidEntry($entryName, Entry\Type\Uuid::fromString($value));
+                        return uuid_entry($entryName, Entry\Type\Uuid::fromString($value));
                     }
 
                     if ($this->isXML($trimmedValue)) {
-                        return new Entry\XMLEntry($entryName, $value);
+                        return xml_entry($entryName, $value);
                     }
                 }
 
-                return new Row\Entry\StringEntry($entryName, $value);
+                return string_entry($entryName, $value);
             }
 
             if ($valueType->isFloat()) {
-                return new Row\Entry\FloatEntry($entryName, $value);
+                return float_entry($entryName, $value);
             }
 
             if ($valueType->isInteger()) {
-                return new Row\Entry\IntegerEntry($entryName, $value);
+                return int_entry($entryName, $value);
             }
 
             if ($valueType->isBoolean()) {
-                return new Row\Entry\BooleanEntry($entryName, $value);
+                return bool_entry($entryName, $value);
             }
         }
 
         if ($valueType instanceof ObjectType) {
             if ($valueType->class === \DOMDocument::class) {
-                return new Row\Entry\XMLEntry($entryName, $value);
+                return xml_entry($entryName, $value);
             }
 
             if (\in_array($valueType->class, [\DOMElement::class, \DOMNode::class], true)) {
-                return new Row\Entry\XMLNodeEntry($entryName, $value);
+                return xml_node_entry($entryName, $value);
             }
 
             if (\in_array($valueType->class, [\DateTimeImmutable::class, \DateTimeInterface::class, \DateTime::class], true)) {
-                return new Row\Entry\DateTimeEntry($entryName, $value);
+                return datetime_entry($entryName, $value);
             }
 
-            if (\in_array($valueType->class, [Entry\Type\Uuid::class, \Ramsey\Uuid\UuidInterface::class, \Symfony\Component\Uid\Uuid::class], true)) {
-                if (\in_array($valueType->class, [\Ramsey\Uuid\UuidInterface::class, \Symfony\Component\Uid\Uuid::class], true)) {
-                    return new Row\Entry\UuidEntry($entryName, new Entry\Type\Uuid($value));
+            if (\in_array($valueType->class, [Entry\Type\Uuid::class, UuidInterface::class, Uuid::class], true)) {
+                if (\in_array($valueType->class, [UuidInterface::class, Uuid::class], true)) {
+                    return uuid_entry($entryName, new Entry\Type\Uuid($value));
                 }
 
-                return new Row\Entry\UuidEntry($entryName, $value);
+                return uuid_entry($entryName, $value);
             }
 
-            return new Row\Entry\ObjectEntry($entryName, $value);
+            return object_entry($entryName, $value);
         }
 
         if ($valueType instanceof EnumType) {
-            return new Row\Entry\EnumEntry($entryName, $value);
+            return enum_entry($entryName, $value);
         }
 
         if ($valueType instanceof ArrayType) {
-            return new Row\Entry\ArrayEntry($entryName, $value);
+            return array_entry($entryName, $value);
         }
 
         if ($valueType instanceof ListType) {
@@ -134,41 +153,41 @@ final class NativeEntryFactory implements EntryFactory
     private function fromDefinition(Schema\Definition $definition, mixed $value) : Entry
     {
         if ($definition->isNullable() && null === $value) {
-            return EntryDSL::null($definition->entry()->name());
+            return null_entry($definition->entry()->name());
         }
 
         try {
             foreach ($definition->types() as $type) {
                 if ($type === Entry\StringEntry::class) {
-                    return EntryDSL::string($definition->entry()->name(), $value);
+                    return string_entry($definition->entry()->name(), $value);
                 }
 
                 if ($type === Entry\IntegerEntry::class) {
-                    return EntryDSL::integer($definition->entry()->name(), $value);
+                    return int_entry($definition->entry()->name(), $value);
                 }
 
                 if ($type === Entry\FloatEntry::class) {
-                    return EntryDSL::float($definition->entry()->name(), $value);
+                    return float_entry($definition->entry()->name(), $value);
                 }
 
                 if ($type === Entry\BooleanEntry::class) {
-                    return EntryDSL::boolean($definition->entry()->name(), $value);
+                    return bool_entry($definition->entry()->name(), $value);
                 }
 
                 if ($type === Entry\XMLEntry::class) {
-                    return EntryDSL::xml($definition->entry()->name(), $value);
+                    return xml_entry($definition->entry()->name(), $value);
                 }
 
                 if ($type === Entry\UuidEntry::class) {
-                    return EntryDSL::uuid($definition->entry()->name(), $value);
+                    return uuid_entry($definition->entry()->name(), $value);
                 }
 
                 if ($type === Entry\ObjectEntry::class) {
-                    return EntryDSL::object($definition->entry()->name(), $value);
+                    return obj_entry($definition->entry()->name(), $value);
                 }
 
                 if ($type === Entry\DateTimeEntry::class) {
-                    return EntryDSL::datetime($definition->entry()->name(), $value);
+                    return datetime_entry($definition->entry()->name(), $value);
                 }
 
                 if ($type === Entry\EnumEntry::class) {
@@ -179,7 +198,7 @@ final class NativeEntryFactory implements EntryFactory
 
                     foreach ($cases as $case) {
                         if ($case->name === $value) {
-                            return EntryDSL::enum($definition->entry()->name(), $case);
+                            return enum_entry($definition->entry()->name(), $case);
                         }
                     }
 
@@ -188,28 +207,28 @@ final class NativeEntryFactory implements EntryFactory
 
                 if ($type === Entry\JsonEntry::class) {
                     try {
-                        return EntryDSL::json_object($definition->entry()->name(), $value);
+                        return json_object_entry($definition->entry()->name(), $value);
                     } catch (InvalidArgumentException) {
-                        return EntryDSL::json($definition->entry()->name(), $value);
+                        return json_entry($definition->entry()->name(), $value);
                     }
                 }
 
                 if ($type === Entry\ArrayEntry::class) {
-                    return EntryDSL::array($definition->entry()->name(), $value);
+                    return array_entry($definition->entry()->name(), $value);
                 }
 
                 if ($type === Entry\MapEntry::class) {
                     /** @var MapType $entryType */
                     $entryType = $definition->metadata()->get(Schema\FlowMetadata::METADATA_MAP_ENTRY_TYPE);
 
-                    return EntryDSL::map($definition->entry()->name(), $value, $entryType);
+                    return map_entry($definition->entry()->name(), $value, $entryType);
                 }
 
                 if ($type === Entry\StructureEntry::class) {
                     /** @var StructureType $entryType */
                     $entryType = $definition->metadata()->get(Schema\FlowMetadata::METADATA_STRUCTURE_ENTRY_TYPE);
 
-                    return EntryDSL::structure($definition->entry()->name(), $value, $entryType);
+                    return struct_entry($definition->entry()->name(), $value, $entryType);
                 }
 
                 if ($type === Entry\ListEntry::class) {
@@ -223,7 +242,7 @@ final class NativeEntryFactory implements EntryFactory
                         $firstValue = \current($value);
 
                         if (\is_a($elementType->type()->class, \DateTimeInterface::class, true) && \is_string($firstValue)) {
-                            return new Entry\ListEntry(
+                            return list_entry(
                                 $definition->entry()->name(),
                                 \array_map(static fn (string $datetime) : \DateTimeImmutable => new \DateTimeImmutable($datetime), $value),
                                 $entryType,

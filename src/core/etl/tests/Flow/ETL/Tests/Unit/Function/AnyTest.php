@@ -6,8 +6,8 @@ namespace Flow\ETL\Tests\Unit\Function;
 
 use function Flow\ETL\DSL\any;
 use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\null_entry;
 use function Flow\ETL\DSL\ref;
-use Flow\ETL\DSL\Entry;
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;
 
@@ -30,7 +30,7 @@ final class AnyTest extends TestCase
     public function test_any_expression_on_is_null_expression() : void
     {
         $this->assertTrue(
-            any(ref('value')->isNull())->eval(Row::create(Entry::null('value')))
+            any(ref('value')->isNull())->eval(Row::create(null_entry('value')))
         );
     }
 

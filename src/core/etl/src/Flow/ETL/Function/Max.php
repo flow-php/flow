@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use function Flow\ETL\DSL\float_entry;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\null_entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
@@ -45,15 +48,15 @@ final class Max implements AggregatingFunction
         }
 
         if ($this->max === null) {
-            return \Flow\ETL\DSL\Entry::null($this->ref->name());
+            return null_entry($this->ref->name());
         }
 
         $resultInt = (int) $this->max;
 
         if ($this->max - $resultInt === 0.0) {
-            return \Flow\ETL\DSL\Entry::integer($this->ref->name(), (int) $this->max);
+            return int_entry($this->ref->name(), (int) $this->max);
         }
 
-        return \Flow\ETL\DSL\Entry::float($this->ref->name(), $this->max);
+        return float_entry($this->ref->name(), $this->max);
     }
 }

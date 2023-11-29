@@ -2,7 +2,8 @@
 
 namespace Flow\ETL\Pipeline;
 
-use Flow\ETL\DSL\From;
+use function Flow\ETL\DSL\chunks_from;
+use function Flow\ETL\DSL\from_pipeline;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
@@ -80,8 +81,8 @@ final class BatchingPipeline implements OverridingPipeline, Pipeline
     public function process(FlowContext $context) : \Generator
     {
         $this->nextPipeline->setSource(
-            From::chunks_from(
-                From::pipeline($this->pipeline),
+            chunks_from(
+                from_pipeline($this->pipeline),
                 $this->size
             )
         );

@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Schema\Formatter;
 
+use function Flow\ETL\DSL\type_array;
+use function Flow\ETL\DSL\type_boolean;
+use function Flow\ETL\DSL\type_float;
+use function Flow\ETL\DSL\type_int;
+use function Flow\ETL\DSL\type_object;
+use function Flow\ETL\DSL\type_string;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\StructureType;
-use Flow\ETL\PHP\Type\Native\ArrayType;
 use Flow\ETL\PHP\Type\Native\EnumType;
-use Flow\ETL\PHP\Type\Native\ObjectType;
-use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Entry\ArrayEntry;
 use Flow\ETL\Row\Entry\BooleanEntry;
@@ -64,21 +67,21 @@ final class ASCIISchemaFormatter implements SchemaFormatter
         foreach ($types as $type) {
             /** @var Type $definitionType */
             $definitionType = match ($type) {
-                ArrayEntry::class => new ArrayType($nullable),
-                BooleanEntry::class => ScalarType::boolean($nullable),
-                DateTimeEntry::class => ObjectType::of(\DateTimeImmutable::class, $nullable),
+                ArrayEntry::class => type_array($nullable),
+                BooleanEntry::class => type_boolean($nullable),
+                DateTimeEntry::class => type_object(\DateTimeImmutable::class, $nullable),
                 EnumEntry::class => EnumType::of(\UnitEnum::class, $nullable),
-                FloatEntry::class => ScalarType::float($nullable),
-                IntegerEntry::class => ScalarType::integer($nullable),
-                StringEntry::class, JsonEntry::class => ScalarType::string($nullable),
+                FloatEntry::class => type_float($nullable),
+                IntegerEntry::class => type_int($nullable),
+                StringEntry::class, JsonEntry::class => type_string($nullable),
                 ListEntry::class => $metadata->get(FlowMetadata::METADATA_LIST_ENTRY_TYPE),
                 MapEntry::class => $metadata->get(FlowMetadata::METADATA_MAP_ENTRY_TYPE),
                 ObjectEntry::class => $metadata->get(FlowMetadata::METADATA_OBJECT_ENTRY_TYPE),
-                UuidEntry::class => ObjectType::of(Uuid::class, $nullable),
-                XMLEntry::class => ObjectType::of(\DOMDocument::class, $nullable),
-                XMLNodeEntry::class => ObjectType::of(\DOMElement::class, $nullable),
+                UuidEntry::class => type_object(Uuid::class, $nullable),
+                XMLEntry::class => type_object(\DOMDocument::class, $nullable),
+                XMLNodeEntry::class => type_object(\DOMElement::class, $nullable),
                 // Fallback
-                StructureEntry::class => new ArrayType(false),
+                StructureEntry::class => type_array(false),
                 default => throw new InvalidArgumentException('Unknown entry type given: ' . $type)
             };
 

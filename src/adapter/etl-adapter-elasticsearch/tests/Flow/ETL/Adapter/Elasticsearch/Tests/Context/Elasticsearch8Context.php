@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Elasticsearch\Tests\Context;
 
+use function Flow\ETL\Adapter\Elasticsearch\to_es_bulk_index;
 use Elastic\Elasticsearch\Client;
 use Elastic\Elasticsearch\ClientBuilder;
 use Elastic\Elasticsearch\Exception\ClientResponseException;
 use Flow\ETL\Adapter\Elasticsearch\IdFactory;
 use Flow\ETL\Config;
-use Flow\ETL\DSL\Elasticsearch;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 
@@ -68,7 +68,7 @@ final class Elasticsearch8Context implements ElasticsearchContext
 
     public function loadRows(Rows $rows, string $index, IdFactory $idFactory) : void
     {
-        Elasticsearch::bulk_index(
+        to_es_bulk_index(
             $this->clientConfig(),
             $index,
             $idFactory,

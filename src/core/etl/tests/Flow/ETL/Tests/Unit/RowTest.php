@@ -4,7 +4,24 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
-use Flow\ETL\DSL\Entry;
+use function Flow\ETL\DSL\array_entry;
+use function Flow\ETL\DSL\bool_entry;
+use function Flow\ETL\DSL\datetime_entry;
+use function Flow\ETL\DSL\float_entry;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\list_entry;
+use function Flow\ETL\DSL\map_entry;
+use function Flow\ETL\DSL\null_entry;
+use function Flow\ETL\DSL\object_entry;
+use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\struct_element;
+use function Flow\ETL\DSL\struct_entry;
+use function Flow\ETL\DSL\struct_type;
+use function Flow\ETL\DSL\type_int;
+use function Flow\ETL\DSL\type_list;
+use function Flow\ETL\DSL\type_map;
+use function Flow\ETL\DSL\type_object;
+use function Flow\ETL\DSL\type_string;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\PHP\Type\Logical\Map\MapKey;
@@ -12,8 +29,6 @@ use Flow\ETL\PHP\Type\Logical\Map\MapValue;
 use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\StructureType;
-use Flow\ETL\PHP\Type\Native\ObjectType;
-use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry\ArrayEntry;
@@ -96,33 +111,33 @@ final class RowTest extends TestCase
     public function test_getting_schema_from_row() : void
     {
         $row = Row::create(
-            Entry::integer('id', \random_int(100, 100000)),
-            Entry::float('price', \random_int(100, 100000) / 100),
-            Entry::boolean('deleted', false),
-            Entry::datetime('created-at', new \DateTimeImmutable('now')),
-            Entry::null('phase'),
-            Entry::array(
+            int_entry('id', \random_int(100, 100000)),
+            float_entry('price', \random_int(100, 100000) / 100),
+            bool_entry('deleted', false),
+            datetime_entry('created-at', new \DateTimeImmutable('now')),
+            null_entry('phase'),
+            array_entry(
                 'array',
                 [
                     ['id' => 1, 'status' => 'NEW'],
                     ['id' => 2, 'status' => 'PENDING'],
                 ]
             ),
-            Entry::structure(
+            struct_entry(
                 'items',
                 ['item-id' => 1, 'name' => 'one'],
-                new StructureType(
-                    new StructureElement('item-id', ScalarType::integer()),
-                    new StructureElement('name', ScalarType::string())
+                struct_type(
+                    struct_element('item-id', type_int()),
+                    struct_element('name', type_string())
                 )
             ),
-            Entry::list_of_int('list', [1, 2, 3]),
-            Entry::map(
+            list_entry('list', [1, 2, 3], type_list(type_int())),
+            map_entry(
                 'statuses',
                 ['NEW', 'PENDING'],
-                new MapType(MapKey::integer(), MapValue::string())
+                type_map(type_int(), type_string())
             ),
-            Entry::object('object', new \ArrayIterator([1, 2, 3]))
+            object_entry('object', new \ArrayIterator([1, 2, 3]))
         );
 
         $this->assertEquals(
@@ -136,8 +151,8 @@ final class RowTest extends TestCase
                 Row\Schema\Definition::structure(
                     'items',
                     new StructureType(
-                        new StructureElement('item-id', ScalarType::integer()),
-                        new StructureElement('name', ScalarType::string())
+                        new StructureElement('item-id', type_int()),
+                        new StructureElement('name', type_string())
                     )
                 ),
                 Row\Schema\Definition::map(
@@ -145,7 +160,7 @@ final class RowTest extends TestCase
                     new MapType(MapKey::integer(), MapValue::string())
                 ),
                 Row\Schema\Definition::list('list', new ListType(ListElement::integer())),
-                Row\Schema\Definition::object('object', ObjectType::of(\ArrayIterator::class)),
+                Row\Schema\Definition::object('object', type_object(\ArrayIterator::class)),
             ),
             $row->schema()
         );
@@ -162,15 +177,15 @@ final class RowTest extends TestCase
     public function test_keep() : void
     {
         $row = new Row(new Entries(
-            Entry::int('id', 1),
-            Entry::string('name', 'test'),
-            Entry::boolean('active', true)
+            int_entry('id', 1),
+            str_entry('name', 'test'),
+            bool_entry('active', true)
         ));
 
         $this->assertEquals(
             new Row(new Entries(
-                Entry::int('id', 1),
-                Entry::boolean('active', true)
+                int_entry('id', 1),
+                bool_entry('active', true)
             )),
             $row->keep('id', 'active')
         );
@@ -181,9 +196,9 @@ final class RowTest extends TestCase
         $this->expectExceptionMessage('Entry "something" does not exist.');
 
         $row = new Row(new Entries(
-            Entry::int('id', 1),
-            Entry::string('name', 'test'),
-            Entry::boolean('active', true)
+            int_entry('id', 1),
+            str_entry('name', 'test'),
+            bool_entry('active', true)
         ));
 
         $this->assertEquals(
@@ -195,15 +210,15 @@ final class RowTest extends TestCase
     public function test_remove() : void
     {
         $row = new Row(new Entries(
-            Entry::int('id', 1),
-            Entry::string('name', 'test'),
-            Entry::boolean('active', true)
+            int_entry('id', 1),
+            str_entry('name', 'test'),
+            bool_entry('active', true)
         ));
 
         $this->assertEquals(
             new Row(new Entries(
-                Entry::int('id', 1),
-                Entry::string('name', 'test')
+                int_entry('id', 1),
+                str_entry('name', 'test')
             )),
             $row->remove('active')
         );
@@ -212,16 +227,16 @@ final class RowTest extends TestCase
     public function test_remove_non_existing_entry() : void
     {
         $row = new Row(new Entries(
-            Entry::int('id', 1),
-            Entry::string('name', 'test'),
-            Entry::boolean('active', true)
+            int_entry('id', 1),
+            str_entry('name', 'test'),
+            bool_entry('active', true)
         ));
 
         $this->assertEquals(
             new Row(new Entries(
-                Entry::int('id', 1),
-                Entry::string('name', 'test'),
-                Entry::boolean('active', true)
+                int_entry('id', 1),
+                str_entry('name', 'test'),
+                bool_entry('active', true)
             )),
             $row->remove('something')
         );
@@ -254,7 +269,7 @@ final class RowTest extends TestCase
             new StructureEntry(
                 'items',
                 ['item-id' => 1, 'name' => 'one'],
-                new StructureType(new StructureElement('id', ScalarType::integer()), new StructureElement('name', ScalarType::string()))
+                new StructureType(new StructureElement('id', type_int()), new StructureElement('name', type_string()))
             ),
             new Row\Entry\MapEntry(
                 'statuses',

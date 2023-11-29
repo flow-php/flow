@@ -55,6 +55,17 @@
     },
     "autoload": {
         "files": [
+            "src/adapter/etl-adapter-avro/src/Flow/ETL/Adapter/Avro/functions.php",
+            "src/adapter/etl-adapter-chartjs/src/Flow/ETL/Adapter/ChartJS/functions.php",
+            "src/adapter/etl-adapter-csv/src/Flow/ETL/Adapter/CSV/functions.php",
+            "src/adapter/etl-adapter-doctrine/src/Flow/ETL/Adapter/Doctrine/functions.php",
+            "src/adapter/etl-adapter-elasticsearch/src/Flow/ETL/Adapter/Elasticsearch/functions.php",
+            "src/adapter/etl-adapter-google-sheet/src/Flow/ETL/Adapter/GoogleSheet/functions.php",
+            "src/adapter/etl-adapter-json/src/Flow/ETL/Adapter/JSON/functions.php",
+            "src/adapter/etl-adapter-meilisearch/src/Flow/ETL/Adapter/Meilisearch/functions.php",
+            "src/adapter/etl-adapter-parquet/src/Flow/ETL/Adapter/Parquet/functions.php",
+            "src/adapter/etl-adapter-text/src/Flow/ETL/Adapter/Text/functions.php",
+            "src/adapter/etl-adapter-xml/src/Flow/ETL/Adapter/XML/functions.php",
             "src/core/etl/src/Flow/ETL/DSL/functions.php",
             "src/lib/array-dot/src/Flow/ArrayDot/array_dot.php",
             "src/lib/parquet/src/Flow/Parquet/functions.php",

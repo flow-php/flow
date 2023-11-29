@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type;
 
+use function Flow\ETL\DSL\type_array;
+use function Flow\ETL\DSL\type_null;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Native\ArrayType;
-use Flow\ETL\PHP\Type\Native\NullType;
 use Flow\ETL\PHP\Type\Native\ScalarType;
 
 final class ArrayContentDetector
@@ -24,7 +24,7 @@ final class ArrayContentDetector
         $this->firstKeyType = $uniqueKeysType->first();
         $this->firstValueType = $uniqueValuesType->first();
         $this->uniqueKeysCount = $uniqueKeysType->count();
-        $this->uniqueValuesCount = $uniqueValuesType->without(ArrayType::empty(), new NullType())->count();
+        $this->uniqueValuesCount = $uniqueValuesType->without(type_array(true), type_null())->count();
     }
 
     public function firstKeyType() : ?ScalarType

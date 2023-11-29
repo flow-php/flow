@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Loader;
 
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\to_output;
+use function Flow\ETL\DSL\to_stream;
 use Flow\ETL\Config;
-use Flow\ETL\DSL\Entry;
-use Flow\ETL\DSL\To;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
@@ -22,13 +24,13 @@ final class StreamLoaderTest extends TestCase
         $this->expectExceptionMessage("Can't open stream for url: php://qweqweqw in mode: w");
         $this->expectException(RuntimeException::class);
 
-        $loader = To::stream('php://qweqweqw', 0);
+        $loader = to_stream('php://qweqweqw', 0);
 
         $loader->load(
             new Rows(
-                Row::create(Entry::integer('id', 1), Entry::string('name', 'id_1')),
-                Row::create(Entry::integer('id', 2), Entry::string('name', 'id_2')),
-                Row::create(Entry::integer('id', 3), Entry::string('name', 'id_3'))
+                Row::create(int_entry('id', 1), str_entry('name', 'id_1')),
+                Row::create(int_entry('id', 2), str_entry('name', 'id_2')),
+                Row::create(int_entry('id', 3), str_entry('name', 'id_3'))
             ),
             new FlowContext(Config::default())
         );
@@ -36,15 +38,15 @@ final class StreamLoaderTest extends TestCase
 
     public function test_loading_rows_and_schema_into_php_memory_stream() : void
     {
-        $loader = To::output(false, StreamLoader\Output::rows_and_schema);
+        $loader = to_output(false, StreamLoader\Output::rows_and_schema);
 
         \ob_start();
 
         $loader->load(
             new Rows(
-                Row::create(Entry::integer('id', 1), Entry::string('name', 'id_1')),
-                Row::create(Entry::integer('id', 2), Entry::string('name', 'id_2')),
-                Row::create(Entry::integer('id', 3), Entry::string('name', 'id_3'))
+                Row::create(int_entry('id', 1), str_entry('name', 'id_1')),
+                Row::create(int_entry('id', 2), str_entry('name', 'id_2')),
+                Row::create(int_entry('id', 3), str_entry('name', 'id_3'))
             ),
             new FlowContext(Config::default())
         );
@@ -79,9 +81,9 @@ ASCII,
 
         $loader->load(
             new Rows(
-                Row::create(Entry::integer('id', 1), Entry::string('name', 'id_1')),
-                Row::create(Entry::integer('id', 2), Entry::string('name', 'id_2')),
-                Row::create(Entry::integer('id', 3), Entry::string('name', 'id_3'))
+                Row::create(int_entry('id', 1), str_entry('name', 'id_1')),
+                Row::create(int_entry('id', 2), str_entry('name', 'id_2')),
+                Row::create(int_entry('id', 3), str_entry('name', 'id_3'))
             ),
             new FlowContext(Config::default())
         );
@@ -111,9 +113,9 @@ TABLE,
 
         $loader->load(
             new Rows(
-                Row::create(Entry::integer('id', 1), Entry::string('name', 'id_1')),
-                Row::create(Entry::integer('id', 2), Entry::string('name', 'id_2')),
-                Row::create(Entry::integer('id', 3), Entry::string('name', 'id_3'))
+                Row::create(int_entry('id', 1), str_entry('name', 'id_1')),
+                Row::create(int_entry('id', 2), str_entry('name', 'id_2')),
+                Row::create(int_entry('id', 3), str_entry('name', 'id_3'))
             ),
             new FlowContext(Config::default())
         );

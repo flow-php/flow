@@ -6,11 +6,11 @@ namespace Flow\ETL\PHP\Type\Native;
 use Flow\ETL\PHP\Type\Type;
 
 /**
- * @implements NativeType<array{empty: bool}>
+ * @implements NativeType<array{empty: bool, nullable: bool}>
  */
 final class ArrayType implements NativeType
 {
-    public function __construct(private readonly bool $empty = false)
+    public function __construct(private readonly bool $empty = false, private readonly bool $nullable = false)
     {
     }
 
@@ -21,12 +21,16 @@ final class ArrayType implements NativeType
 
     public function __serialize() : array
     {
-        return ['empty' => $this->empty];
+        return [
+            'empty' => $this->empty,
+            'nullable' => $this->nullable,
+        ];
     }
 
     public function __unserialize(array $data) : void
     {
         $this->empty = $data['empty'];
+        $this->nullable = $data['nullable'];
     }
 
     public function isEqual(Type $type) : bool
@@ -41,15 +45,15 @@ final class ArrayType implements NativeType
 
     public function nullable() : bool
     {
-        return false;
+        return $this->nullable;
     }
 
     public function toString() : string
     {
         if ($this->empty) {
-            return 'array<empty, empty>';
+            return ($this->nullable ? '?' : '') . 'array<empty, empty>';
         }
 
-        return 'array<mixed>';
+        return ($this->nullable ? '?' : '') . 'array<mixed>';
     }
 }

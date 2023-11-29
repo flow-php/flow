@@ -4,10 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\Serializer\Tests\Unit;
 
-use Flow\ETL\DSL\Entry;
-use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
-use Flow\ETL\PHP\Type\Logical\StructureType;
-use Flow\ETL\PHP\Type\Native\ScalarType;
+use function Flow\ETL\DSL\bool_entry;
+use function Flow\ETL\DSL\datetime_entry;
+use function Flow\ETL\DSL\float_entry;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\null_entry;
+use function Flow\ETL\DSL\object_entry;
+use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\struct_element;
+use function Flow\ETL\DSL\struct_entry;
+use function Flow\ETL\DSL\struct_type;
+use function Flow\ETL\DSL\type_int;
+use function Flow\ETL\DSL\type_string;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\Serializer\NativePHPSerializer;
@@ -20,19 +28,19 @@ final class NativePHPSerializerTest extends TestCase
         $rows = new Rows(
             ...\array_map(
                 fn () : Row => Row::create(
-                    Entry::integer('integer', 1),
-                    Entry::string('string', 'string'),
-                    Entry::boolean('boolean', true),
-                    Entry::datetime('datetime', new \DateTimeImmutable('2022-01-01 00:00:00')),
-                    Entry::null('null'),
-                    Entry::float('float', 0.12),
-                    Entry::object('object', new \ArrayIterator([1, 2, 3])),
-                    Entry::structure(
+                    int_entry('integer', 1),
+                    str_entry('string', 'string'),
+                    bool_entry('boolean', true),
+                    datetime_entry('datetime', new \DateTimeImmutable('2022-01-01 00:00:00')),
+                    null_entry('null'),
+                    float_entry('float', 0.12),
+                    object_entry('object', new \ArrayIterator([1, 2, 3])),
+                    struct_entry(
                         'struct',
                         ['integer' => 1, 'string' => 'string'],
-                        new StructureType(
-                            new StructureElement('integer', ScalarType::integer()),
-                            new StructureElement('string', ScalarType::string())
+                        struct_type(
+                            struct_element('integer', type_int()),
+                            struct_element('string', type_string())
                         )
                     )
                 ),

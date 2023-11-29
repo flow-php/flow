@@ -12,6 +12,9 @@ use Flow\ETL\Loader;
 use Flow\ETL\Transformer;
 use Psr\Http\Client\ClientInterface;
 
+/**
+ * @deprecated please use functions defined in Flow\ETL\DSL\functions.php
+ */
 class Meilisearch
 {
     /**

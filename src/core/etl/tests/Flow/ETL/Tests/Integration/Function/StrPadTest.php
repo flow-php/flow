@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Function;
 
+use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\ref;
-use Flow\ETL\DSL\From;
-use Flow\ETL\DSL\To;
+use function Flow\ETL\DSL\to_memory;
 use Flow\ETL\Flow;
 use Flow\ETL\Memory\ArrayMemory;
 use PHPUnit\Framework\TestCase;
@@ -17,14 +17,14 @@ final class StrPadTest extends TestCase
     {
         (new Flow())
             ->read(
-                From::array(
+                from_array(
                     [
                         ['key' => 'value'],
                     ]
                 )
             )
             ->withEntry('strpad', ref('key')->strPad(10, '*'))
-            ->write(To::memory($memory = new ArrayMemory()))
+            ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
         $this->assertSame(
@@ -39,14 +39,14 @@ final class StrPadTest extends TestCase
     {
         (new Flow())
             ->read(
-                From::array(
+                from_array(
                     [
                         ['id' => 1],
                     ]
                 )
             )
             ->withEntry('strpad', ref('id')->strPad(10))
-            ->write(To::memory($memory = new ArrayMemory()))
+            ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
         $this->assertSame(

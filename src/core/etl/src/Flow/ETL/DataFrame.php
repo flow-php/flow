@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
-use Flow\ETL\DSL\To;
-use Flow\ETL\DSL\Transform;
+use function Flow\ETL\DSL\to_output;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Filesystem\SaveMode;
@@ -17,6 +16,7 @@ use Flow\ETL\Join\Expression;
 use Flow\ETL\Join\Join;
 use Flow\ETL\Loader\SchemaValidationLoader;
 use Flow\ETL\Loader\StreamLoader\Output;
+use Flow\ETL\Partition\ScalarFunctionFilter;
 use Flow\ETL\Pipeline\BatchingPipeline;
 use Flow\ETL\Pipeline\CachingPipeline;
 use Flow\ETL\Pipeline\CollectingPipeline;
@@ -30,11 +30,15 @@ use Flow\ETL\Row\Schema;
 use Flow\ETL\Transformer\CallbackRowTransformer;
 use Flow\ETL\Transformer\CrossJoinRowsTransformer;
 use Flow\ETL\Transformer\DropDuplicatesTransformer;
+use Flow\ETL\Transformer\EntryNameStyleConverterTransformer;
 use Flow\ETL\Transformer\JoinEachRowsTransformer;
 use Flow\ETL\Transformer\JoinRowsTransformer;
 use Flow\ETL\Transformer\KeepEntriesTransformer;
 use Flow\ETL\Transformer\LimitTransformer;
 use Flow\ETL\Transformer\RemoveEntriesTransformer;
+use Flow\ETL\Transformer\RenameAllCaseTransformer;
+use Flow\ETL\Transformer\RenameEntryTransformer;
+use Flow\ETL\Transformer\RenameStrReplaceAllEntriesTransformer;
 use Flow\ETL\Transformer\ScalarFunctionFilterTransformer;
 use Flow\ETL\Transformer\ScalarFunctionTransformer;
 use Flow\ETL\Transformer\StyleConverter\StringStyles;
@@ -280,9 +284,14 @@ final class DataFrame
     /**
      * @lazy
      */
-    public function filterPartitions(Partition\PartitionFilter $filter) : self
+    public function filterPartitions(Partition\PartitionFilter|ScalarFunction $filter) : self
     {
-        $this->context->filterPartitions($filter);
+        if ($filter instanceof Partition\PartitionFilter) {
+            $this->context->filterPartitions($filter);
+
+            return $this;
+        }
+        $this->context->filterPartitions(new ScalarFunctionFilter($filter, $this->context->entryFactory()));
 
         return $this;
     }
@@ -539,7 +548,7 @@ final class DataFrame
             $clone->limit($limit);
         }
 
-        $clone->load(To::output($truncate, Output::rows, $formatter));
+        $clone->load(to_output($truncate, Output::rows, $formatter));
 
         $clone->run();
     }
@@ -554,7 +563,7 @@ final class DataFrame
         if ($limit !== null) {
             $clone->limit($limit);
         }
-        $clone->load(To::output(false, Output::schema, schemaFormatter: $formatter));
+        $clone->load(to_output(false, Output::schema, schemaFormatter: $formatter));
 
         $clone->run();
     }
@@ -564,7 +573,7 @@ final class DataFrame
      */
     public function rename(string $from, string $to) : self
     {
-        $this->pipeline->add(Transform::rename($from, $to));
+        $this->pipeline->add(new RenameEntryTransformer($from, $to));
 
         return $this;
     }
@@ -575,7 +584,7 @@ final class DataFrame
      */
     public function renameAll(string $search, string $replace) : self
     {
-        $this->pipeline->add(Transform::rename_str_replace_all($search, $replace));
+        $this->pipeline->add(new RenameStrReplaceAllEntriesTransformer($search, $replace));
 
         return $this;
     }
@@ -585,7 +594,7 @@ final class DataFrame
      */
     public function renameAllLowerCase() : self
     {
-        $this->pipeline->add(Transform::rename_all_case(lower: true));
+        $this->pipeline->add(new RenameAllCaseTransformer(lower: true));
 
         return $this;
     }
@@ -597,7 +606,7 @@ final class DataFrame
      */
     public function renameAllStyle(StringStyles|string $style) : self
     {
-        $this->pipeline->add(Transform::convert_name($style));
+        $this->pipeline->add(new EntryNameStyleConverterTransformer(\is_string($style) ? StringStyles::fromString($style) : $style));
 
         return $this;
     }
@@ -607,7 +616,7 @@ final class DataFrame
      */
     public function renameAllUpperCase() : self
     {
-        $this->pipeline->add(Transform::rename_all_case(upper: true));
+        $this->pipeline->add(new RenameAllCaseTransformer(upper: true));
 
         return $this;
     }
@@ -617,7 +626,7 @@ final class DataFrame
      */
     public function renameAllUpperCaseFirst() : self
     {
-        $this->pipeline->add(Transform::rename_all_case(ucfirst: true));
+        $this->pipeline->add(new RenameAllCaseTransformer(ucfirst: true));
 
         return $this;
     }
@@ -627,7 +636,7 @@ final class DataFrame
      */
     public function renameAllUpperCaseWord() : self
     {
-        $this->pipeline->add(Transform::rename_all_case(ucwords: true));
+        $this->pipeline->add(new RenameAllCaseTransformer(ucwords: true));
 
         return $this;
     }

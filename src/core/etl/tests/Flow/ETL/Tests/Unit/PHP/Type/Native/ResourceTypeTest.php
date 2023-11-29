@@ -2,11 +2,11 @@
 
 namespace Flow\ETL\Tests\Unit\PHP\Type\Native;
 
+use function Flow\ETL\DSL\type_float;
+use function Flow\ETL\DSL\type_resource;
 use Flow\ETL\PHP\Type\Logical\Map\MapKey;
 use Flow\ETL\PHP\Type\Logical\Map\MapValue;
 use Flow\ETL\PHP\Type\Logical\MapType;
-use Flow\ETL\PHP\Type\Native\ResourceType;
-use Flow\ETL\PHP\Type\Native\ScalarType;
 use PHPUnit\Framework\TestCase;
 
 final class ResourceTypeTest extends TestCase
@@ -14,16 +14,16 @@ final class ResourceTypeTest extends TestCase
     public function test_equals() : void
     {
         $this->assertTrue(
-            (new ResourceType(false))->isEqual(new ResourceType(false))
+            (type_resource(false))->isEqual(type_resource(false))
         );
         $this->assertFalse(
-            (new ResourceType(false))->isEqual(new MapType(MapKey::string(), MapValue::float()))
+            (type_resource(false))->isEqual(new MapType(MapKey::string(), MapValue::float()))
         );
         $this->assertFalse(
-            (new ResourceType(false))->isEqual(ScalarType::float())
+            (type_resource(false))->isEqual(type_float())
         );
         $this->assertFalse(
-            (new ResourceType(false))->isEqual(new ResourceType(true))
+            (type_resource(false))->isEqual(type_resource())
         );
     }
 
@@ -31,11 +31,11 @@ final class ResourceTypeTest extends TestCase
     {
         $this->assertSame(
             'resource',
-            (new ResourceType(false))->toString()
+            (type_resource(false))->toString()
         );
         $this->assertSame(
             '?resource',
-            (new ResourceType(true))->toString()
+            (type_resource())->toString()
         );
     }
 
@@ -43,17 +43,17 @@ final class ResourceTypeTest extends TestCase
     {
         $handle = \fopen('php://temp/max', 'r+b');
         $this->assertTrue(
-            (new ResourceType(false))->isValid($handle)
+            (type_resource(false))->isValid($handle)
         );
         \fclose($handle);
         $this->assertFalse(
-            (new ResourceType(false))->isValid('one')
+            (type_resource(false))->isValid('one')
         );
         $this->assertFalse(
-            (new ResourceType(false))->isValid([1, 2])
+            (type_resource(false))->isValid([1, 2])
         );
         $this->assertFalse(
-            (new ResourceType(false))->isValid(123)
+            (type_resource(false))->isValid(123)
         );
     }
 }

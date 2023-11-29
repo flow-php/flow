@@ -2,11 +2,11 @@
 
 namespace Flow\ETL\Tests\Unit\PHP\Type\Native;
 
+use function Flow\ETL\DSL\type_float;
+use function Flow\ETL\DSL\type_null;
 use Flow\ETL\PHP\Type\Logical\Map\MapKey;
 use Flow\ETL\PHP\Type\Logical\Map\MapValue;
 use Flow\ETL\PHP\Type\Logical\MapType;
-use Flow\ETL\PHP\Type\Native\NullType;
-use Flow\ETL\PHP\Type\Native\ScalarType;
 use PHPUnit\Framework\TestCase;
 
 final class NullTypeTest extends TestCase
@@ -14,13 +14,13 @@ final class NullTypeTest extends TestCase
     public function test_equals() : void
     {
         $this->assertTrue(
-            (new NullType)->isEqual(new NullType)
+            type_null()->isEqual(type_null())
         );
         $this->assertFalse(
-            (new NullType)->isEqual(new MapType(MapKey::string(), MapValue::float()))
+            type_null()->isEqual(new MapType(MapKey::string(), MapValue::float()))
         );
         $this->assertFalse(
-            (new NullType)->isEqual(ScalarType::float())
+            type_null()->isEqual(type_float())
         );
     }
 
@@ -28,23 +28,23 @@ final class NullTypeTest extends TestCase
     {
         $this->assertSame(
             'null',
-            (new NullType)->toString()
+            type_null()->toString()
         );
     }
 
     public function test_valid() : void
     {
         $this->assertTrue(
-            (new NullType)->isValid(null)
+            type_null()->isValid(null)
         );
         $this->assertFalse(
-            (new NullType)->isValid('one')
+            type_null()->isValid('one')
         );
         $this->assertFalse(
-            (new NullType)->isValid([1, 2])
+            type_null()->isValid([1, 2])
         );
         $this->assertFalse(
-            (new NullType)->isValid(123)
+            type_null()->isValid(123)
         );
     }
 }

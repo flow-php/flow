@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use function Flow\ETL\DSL\float_entry;
+use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
-use Flow\ETL\DSL\Entry;
 use Flow\ETL\Function\Divide;
 use Flow\ETL\Function\Minus;
 use Flow\ETL\Function\Mod;
@@ -21,7 +22,7 @@ final class MathTest extends TestCase
 {
     public function test_divide() : void
     {
-        $row = Row::create(Entry::integer('a', 100), Entry::integer('b', 10));
+        $row = Row::create(int_entry('a', 100), int_entry('b', 10));
 
         $this->assertSame(
             10,
@@ -31,7 +32,7 @@ final class MathTest extends TestCase
 
     public function test_minus() : void
     {
-        $row = Row::create(Entry::integer('a', 100), Entry::integer('b', 100));
+        $row = Row::create(int_entry('a', 100), int_entry('b', 100));
 
         $this->assertSame(
             0,
@@ -41,7 +42,7 @@ final class MathTest extends TestCase
 
     public function test_modulo() : void
     {
-        $row = Row::create(Entry::integer('a', 110), Entry::integer('b', 100));
+        $row = Row::create(int_entry('a', 110), int_entry('b', 100));
 
         $this->assertSame(
             10,
@@ -53,13 +54,13 @@ final class MathTest extends TestCase
     {
         $this->assertSame(
             200,
-            ref('a')->plus(lit(100))->plus(lit(100))->minus(ref('b'))->eval(Row::create(Entry::int('a', 100), Entry::int('b', 100)))
+            ref('a')->plus(lit(100))->plus(lit(100))->minus(ref('b'))->eval(Row::create(int_entry('a', 100), int_entry('b', 100)))
         );
     }
 
     public function test_multiply() : void
     {
-        $row = Row::create(Entry::integer('a', 100), Entry::integer('b', 100));
+        $row = Row::create(int_entry('a', 100), int_entry('b', 100));
 
         $this->assertSame(
             10_000,
@@ -69,7 +70,7 @@ final class MathTest extends TestCase
 
     public function test_plus() : void
     {
-        $row = Row::create(Entry::integer('a', 100), Entry::integer('b', 100));
+        $row = Row::create(int_entry('a', 100), int_entry('b', 100));
 
         $this->assertSame(
             200,
@@ -79,7 +80,7 @@ final class MathTest extends TestCase
 
     public function test_power() : void
     {
-        $row = Row::create(Entry::integer('a', 1), Entry::integer('b', 2));
+        $row = Row::create(int_entry('a', 1), int_entry('b', 2));
 
         $this->assertSame(
             1,
@@ -89,7 +90,7 @@ final class MathTest extends TestCase
 
     public function test_round() : void
     {
-        $row = Row::create(Entry::float('a', 1.009), Entry::integer('b', 2));
+        $row = Row::create(float_entry('a', 1.009), int_entry('b', 2));
 
         $this->assertSame(
             1.01,

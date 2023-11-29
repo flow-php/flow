@@ -24,7 +24,10 @@
             "Flow\\": [
                 "src/Flow"
             ]
-        }
+        },
+        "files": [
+            "src/Flow/ETL/Adapter/CSV/functions.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

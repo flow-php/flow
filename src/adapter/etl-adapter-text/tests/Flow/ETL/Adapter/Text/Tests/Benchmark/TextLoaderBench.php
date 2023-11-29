@@ -2,8 +2,9 @@
 
 namespace Flow\ETL\Adapter\Text\Tests\Benchmark;
 
+use function Flow\ETL\Adapter\Text\from_text;
+use function Flow\ETL\Adapter\Text\to_text;
 use Flow\ETL\Config;
-use Flow\ETL\DSL\Text;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use PhpBench\Attributes\Groups;
@@ -23,7 +24,7 @@ final class TextLoaderBench
         $this->outputPath = \tempnam(\sys_get_temp_dir(), 'etl_txt_loader_bench') . '.txt';
         $this->rows = new Rows();
 
-        foreach (Text::from(__DIR__ . '/../Fixtures/orders_flow.csv')->extract($this->context) as $rows) {
+        foreach (from_text(__DIR__ . '/../Fixtures/orders_flow.csv')->extract($this->context) as $rows) {
             $this->rows = $this->rows->merge($rows);
         }
     }
@@ -39,6 +40,6 @@ final class TextLoaderBench
 
     public function bench_load_10k() : void
     {
-        Text::to($this->outputPath)->load($this->rows, $this->context);
+        to_text($this->outputPath)->load($this->rows, $this->context);
     }
 }

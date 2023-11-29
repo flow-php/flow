@@ -2,6 +2,8 @@
 
 namespace Flow\ETL\Function;
 
+use function Flow\ETL\DSL\float_entry;
+use function Flow\ETL\DSL\int_entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
@@ -68,10 +70,10 @@ final class Sum implements AggregatingFunction, WindowFunction
         $resultInt = (int) $this->sum;
 
         if ($this->sum - $resultInt === 0.0) {
-            return \Flow\ETL\DSL\Entry::integer($this->ref->name(), (int) $this->sum);
+            return int_entry($this->ref->name(), (int) $this->sum);
         }
 
-        return \Flow\ETL\DSL\Entry::float($this->ref->name(), $this->sum);
+        return float_entry($this->ref->name(), $this->sum);
     }
 
     public function toString() : string

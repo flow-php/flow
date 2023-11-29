@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Extractor;
 
+use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\from_data_frame;
+use function Flow\ETL\DSL\from_rows;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\str_entry;
 use Flow\ETL\Config;
-use Flow\ETL\DSL\Entry;
-use Flow\ETL\DSL\From;
-use Flow\ETL\Flow;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
 use PHPUnit\Framework\TestCase;
 
 final class DataFrameExtractorTest extends TestCase
@@ -19,28 +20,27 @@ final class DataFrameExtractorTest extends TestCase
     {
         $this->assertEquals(
             [
-                new Rows(
-                    Row::create(Entry::str('value', 'test')),
-                    Row::create(Entry::str('value', 'test')),
+                rows(
+                    row(str_entry('value', 'test')),
+                    row(str_entry('value', 'test')),
                 ),
-                new Rows(
-                    Row::create(Entry::str('value', 'test')),
-                    Row::create(Entry::str('value', 'test')),
+                rows(
+                    row(str_entry('value', 'test')),
+                    row(str_entry('value', 'test')),
                 ),
             ],
             \iterator_to_array(
-                From::data_frame(
-                    (new Flow())
-                        ->extract(From::rows(
-                            new Rows(
-                                Row::create(Entry::str('value', 'test')),
-                                Row::create(Entry::str('value', 'test')),
-                            ),
-                            new Rows(
-                                Row::create(Entry::str('value', 'test')),
-                                Row::create(Entry::str('value', 'test')),
-                            )
-                        )),
+                from_data_frame(
+                    df()->read(from_rows(
+                        rows(
+                            row(str_entry('value', 'test')),
+                            row(str_entry('value', 'test')),
+                        ),
+                        rows(
+                            row(str_entry('value', 'test')),
+                            row(str_entry('value', 'test')),
+                        )
+                    )),
                 )->extract(new FlowContext(Config::default()))
             ),
         );

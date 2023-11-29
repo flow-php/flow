@@ -6,12 +6,13 @@ if ($_ENV['FLOW_PHAR_APP'] ?? false) {
     exit(1);
 }
 
+use function Flow\ETL\Adapter\JSON\from_json;
+use function Flow\ETL\Adapter\JSON\to_json;
 use function Flow\ETL\DSL\concat;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use Flow\ETL\Adapter\Filesystem\AwsS3Stream;
 use Flow\ETL\Adapter\Filesystem\AzureBlobStream;
-use Flow\ETL\DSL\Json;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Flow;
 use Symfony\Component\Dotenv\Dotenv;
@@ -45,9 +46,9 @@ AwsS3Stream::register();
 AzureBlobStream::register();
 
 (new Flow())
-    ->read(Json::from(new Path('flow-aws-s3://dataset.json', $s3_client_option)))
+    ->read(from_json(new Path('flow-aws-s3://dataset.json', $s3_client_option)))
     ->withEntry('id', ref('id')->cast('integer'))
     ->withEntry('name', concat(ref('name'), lit(' '), ref('last name')))
     ->drop('last name')
-    ->write(Json::to(new Path('flow-azure-blob://dataset_test.json', $azure_blob_connection_string)))
+    ->write(to_json(new Path('flow-azure-blob://dataset_test.json', $azure_blob_connection_string)))
     ->run();
