@@ -3,10 +3,10 @@
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use function Flow\ETL\DSL\from_rows;
+use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\read;
 use function Flow\ETL\DSL\ref;
 use Flow\ETL\DSL\Entry;
-use Flow\ETL\DSL\Partitions;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
@@ -28,7 +28,7 @@ final class PartitioningTest extends IntegrationTestCase
             )
         ))
             ->partitionBy('country')
-            ->filterPartitions(Partitions::chain(Partitions::only('country', 'US')))
+            ->filterPartitions(ref('country')->equals(lit('US')))
             ->fetch();
 
         $this->assertEquals(

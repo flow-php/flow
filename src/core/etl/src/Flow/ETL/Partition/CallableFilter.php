@@ -10,6 +10,8 @@ use Flow\ETL\Serializer\Closure;
 use Laravel\SerializableClosure\SerializableClosure;
 
 /**
+ * @deprecated please use ScalarFunctionFilter instead
+ *
  * @implements PartitionFilter<array{filter: SerializableClosure}>
  */
 final class CallableFilter implements PartitionFilter

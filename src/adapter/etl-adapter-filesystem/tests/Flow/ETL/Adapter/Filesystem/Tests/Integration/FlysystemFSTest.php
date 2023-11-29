@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Filesystem\Tests\Integration;
 
+use function Flow\ETL\DSL\all;
+use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\ref;
 use Flow\ETL\Adapter\Filesystem\FlysystemFS;
-use Flow\ETL\DSL\Partitions;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\Partition\NoopFilter;
+use Flow\ETL\Partition\ScalarFunctionFilter;
+use Flow\ETL\Row\Factory\NativeEntryFactory;
 use PHPUnit\Framework\TestCase;
 
 final class FlysystemFSTest extends TestCase
@@ -81,9 +85,15 @@ STRING,
             (new FlysystemFS())
                 ->scan(
                     new Path(__DIR__ . '/Fixtures/multi_partitions'),
-                    Partitions::chain(
-                        Partitions::only('country', 'pl'),
-                        Partitions::date_between('date', new \DateTimeImmutable('2022-01-02'), new \DateTimeImmutable('2022-01-04'))
+                    new ScalarFunctionFilter(
+                        all(
+                            ref('country')->equals(lit('pl')),
+                            all(
+                                ref('date')->cast('date')->greaterThanEqual(lit(new \DateTimeImmutable('2022-01-02 00:00:00'))),
+                                ref('date')->cast('date')->lessThan(lit(new \DateTimeImmutable('2022-01-04 00:00:00')))
+                            )
+                        ),
+                        new NativeEntryFactory()
                     )
                 )
         );
@@ -122,7 +132,7 @@ STRING,
                 (new FlysystemFS())
                     ->scan(
                         new Path(__DIR__ . '/Fixtures/partitioned'),
-                        Partitions::only('partition_01', 'b')
+                        new ScalarFunctionFilter(ref('partition_01')->equals(lit('b')), new NativeEntryFactory())
                     )
             )
         );

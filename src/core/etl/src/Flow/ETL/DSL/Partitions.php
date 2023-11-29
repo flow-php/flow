@@ -9,6 +9,8 @@ use Flow\ETL\Partition\CallableFilter;
 use Flow\ETL\Partition\PartitionFilter;
 
 /**
+ * @deprecated please pass ScalarFunctions directly to DataFrame::partitionFilter() method
+ *
  * @infection-ignore-all
  */
 class Partitions

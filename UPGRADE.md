@@ -121,6 +121,7 @@ Deprecated classes:
 - `src/core/etl/src/Flow/ETL/DSL/Handler.php`
 - `src/core/etl/src/Flow/ETL/DSL/To.php`
 - `src/core/etl/src/Flow/ETL/DSL/Transform.php`
+- `src/core/etl/src/Flow/ETL/DSL/Partitions.php`
 - `src/adapter/etl-adapter-avro/src/Flow/ETL/DSL/Avro.php`
 - `src/adapter/etl-adapter-chartjs/src/Flow/ETL/DSL/ChartJS.php`
 - `src/adapter/etl-adapter-csv/src/Flow/ETL/DSL/CSV.php`
