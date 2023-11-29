@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-11-28
+## [Unreleased] - 2023-11-29
 
 ### Added
 - [#847](https://github.com/flow-php/flow/pull/847) - **capitalize scalar function** - [@norberttech](https://github.com/norberttech)
@@ -83,6 +83,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#849](https://github.com/flow-php/flow/pull/849) - **Rework Doctrine Bulk tests to not use deprecated code** - [@stloyd](https://github.com/stloyd)
 - [#842](https://github.com/flow-php/flow/pull/842) - **Default cache path** - [@norberttech](https://github.com/norberttech)
 - [#840](https://github.com/flow-php/flow/pull/840) - **reorganized data frame tests** - [@norberttech](https://github.com/norberttech)
 - [#824](https://github.com/flow-php/flow/pull/824) - **Improve performance of `ArrayContentDetector`** - [@stloyd](https://github.com/stloyd)
