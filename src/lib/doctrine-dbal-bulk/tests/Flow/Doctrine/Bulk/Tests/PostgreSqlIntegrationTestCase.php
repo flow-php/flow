@@ -4,21 +4,20 @@ declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk\Tests;
 
+use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\DriverManager;
+use Doctrine\DBAL\Logging\Middleware;
 use Flow\Doctrine\Bulk\Tests\Context\DatabaseContext;
-use PHPUnit\Framework\TestCase;
 
-abstract class PostgreSqlIntegrationTestCase extends TestCase
+abstract class PostgreSqlIntegrationTestCase extends IntegrationTestCase
 {
-    protected DatabaseContext $databaseContext;
-
     protected function setUp() : void
     {
-        $this->databaseContext = new DatabaseContext(DriverManager::getConnection(['url' => \getenv('PGSQL_DATABASE_URL')]));
-    }
-
-    protected function tearDown() : void
-    {
-        $this->databaseContext->dropAllTables();
+        $this->databaseContext = new DatabaseContext(
+            DriverManager::getConnection(
+                ['url' => \getenv('PGSQL_DATABASE_URL')],
+                (new Configuration())->setMiddlewares([new Middleware($this->logger)])
+            )
+        );
     }
 }

@@ -43,7 +43,7 @@ final class SqliteBulkInsertTest extends SqliteIntegrationTestCase
         );
 
         $this->assertEquals(3, $this->databaseContext->tableCount($table));
-        $this->assertEquals(1, $this->databaseContext->numberOfExecutedInsertQueries());
+        $this->assertEquals(1, $this->executedQueriesCount());
 
         $this->assertEquals(
             [
@@ -94,7 +94,7 @@ final class SqliteBulkInsertTest extends SqliteIntegrationTestCase
         );
 
         $this->assertEquals(4, $this->databaseContext->tableCount($table));
-        $this->assertEquals(2, $this->databaseContext->numberOfExecutedInsertQueries());
+        $this->assertEquals(2, $this->executedQueriesCount());
         $this->assertEquals(
             [
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One', 'active' => true],
@@ -144,7 +144,7 @@ final class SqliteBulkInsertTest extends SqliteIntegrationTestCase
         );
 
         $this->assertEquals(4, $this->databaseContext->tableCount($table));
-        $this->assertEquals(2, $this->databaseContext->numberOfExecutedInsertQueries());
+        $this->assertEquals(2, $this->executedQueriesCount());
         $this->assertEquals(
             [
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One', 'active' => true],
@@ -193,7 +193,7 @@ final class SqliteBulkInsertTest extends SqliteIntegrationTestCase
         );
 
         $this->assertEquals(3, $this->databaseContext->tableCount($table));
-        $this->assertEquals(2, $this->databaseContext->numberOfExecutedInsertQueries());
+        $this->assertEquals(2, $this->executedQueriesCount());
         $this->assertEquals(
             [
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One', 'active' => true],
