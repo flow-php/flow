@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON\Tests\Integration;
 
+use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_json;
-use function Flow\ETL\DSL\read;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\to_json;
 use Flow\ETL\Adapter\JSON\JsonLoader;
@@ -155,7 +155,8 @@ JSON,
             \unlink($path);
         }
 
-        read(from_array([
+        df()
+            ->read(from_array([
                 ['id' => 1, 'partition' => 'a'],
                 ['id' => 2, 'partition' => 'a'],
                 ['id' => 3, 'partition' => 'a'],
@@ -167,7 +168,8 @@ JSON,
             ->write(to_json($path))
             ->run();
 
-        read(from_array([
+        df()
+            ->read(from_array([
                 ['id' => 8, 'partition' => 'b'],
                 ['id' => 10, 'partition' => 'b'],
             ]))
@@ -184,7 +186,8 @@ JSON,
                 ['id' => 4, 'partition' => 'b'],
                 ['id' => 5, 'partition' => 'b'],
             ],
-            read(from_json($path))
+            df()
+                ->read(from_json($path))
                 ->fetch()
                 ->toArray()
         );

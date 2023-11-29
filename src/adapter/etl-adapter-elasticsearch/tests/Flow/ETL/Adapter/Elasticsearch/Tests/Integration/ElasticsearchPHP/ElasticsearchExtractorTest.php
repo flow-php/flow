@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Elasticsearch\Tests\Integration\ElasticsearchPHP;
 
+use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\es_hits_to_rows;
 use function Flow\ETL\DSL\from_es;
-use function Flow\ETL\DSL\read;
 use function Flow\ETL\DSL\to_es_bulk_index;
 use Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\DocumentDataSource;
 use Flow\ETL\Adapter\Elasticsearch\EntryIdFactory\EntryIdFactory;
@@ -69,7 +69,8 @@ final class ElasticsearchExtractorTest extends TestCase
             'keep_alive' => '5m',
         ];
 
-        $results = read(from_es($this->elasticsearchContext->clientConfig(), $params, $pitParams))
+        $results = df()
+            ->read(from_es($this->elasticsearchContext->clientConfig(), $params, $pitParams))
             ->fetch();
 
         $this->assertCount(0, $results);

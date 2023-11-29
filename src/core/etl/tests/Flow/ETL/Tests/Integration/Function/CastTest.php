@@ -2,8 +2,8 @@
 
 namespace Flow\ETL\Tests\Integration\Function;
 
+use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\read;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\to_memory;
 use Flow\ETL\Memory\ArrayMemory;
@@ -13,16 +13,15 @@ final class CastTest extends TestCase
 {
     public function test_cast() : void
     {
-        read(
-            from_array(
+        df()
+            ->read(from_array(
                 [
                     ['date' => new \DateTimeImmutable('2023-01-01')],
                 ]
-            )
-        )
-        ->withEntry('date', ref('date')->cast('string'))
-        ->write(to_memory($memory = new ArrayMemory()))
-        ->run();
+            ))
+            ->withEntry('date', ref('date')->cast('string'))
+            ->write(to_memory($memory = new ArrayMemory()))
+            ->run();
 
         $this->assertEquals(
             [

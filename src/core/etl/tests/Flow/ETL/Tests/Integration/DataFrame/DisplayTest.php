@@ -2,11 +2,11 @@
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
+use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\null_entry;
-use function Flow\ETL\DSL\read;
 use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\type_string;
 use Flow\ETL\Extractor;
@@ -36,8 +36,8 @@ final class DisplayTest extends IntegrationTestCase
 {
     public function test_display() : void
     {
-        $etl = read(
-            new class implements Extractor {
+        $etl = df()
+            ->read(new class implements Extractor {
                 /**
                  * @return \Generator<int, Rows, mixed, void>
                  */
@@ -84,8 +84,7 @@ final class DisplayTest extends IntegrationTestCase
                         );
                     }
                 }
-            }
-        );
+            });
 
         $this->assertSame(
             <<<'ASCIITABLE'
@@ -125,46 +124,45 @@ ASCIITABLE,
 
     public function test_display_with_very_long_entry_name() : void
     {
-        $etl = read(
-            from_array([
-                    [
-                        'this is very long entry name that should be longer than items' => [
-                            ['id' => 1, 'status' => 'NEW'],
-                            ['id' => 2, 'status' => 'PENDING'],
-                        ],
+        $etl = df()
+            ->read(from_array([
+                [
+                    'this is very long entry name that should be longer than items' => [
+                        ['id' => 1, 'status' => 'NEW'],
+                        ['id' => 2, 'status' => 'PENDING'],
                     ],
-                    [
-                        'this is very long entry name that should be longer than items' => [
-                            ['id' => 1, 'status' => 'NEW'],
-                            ['id' => 2, 'status' => 'PENDING'],
-                        ],
+                ],
+                [
+                    'this is very long entry name that should be longer than items' => [
+                        ['id' => 1, 'status' => 'NEW'],
+                        ['id' => 2, 'status' => 'PENDING'],
                     ],
-                    [
-                        'this is very long entry name that should be longer than items' => [
-                            ['id' => 1, 'status' => 'NEW'],
-                            ['id' => 2, 'status' => 'PENDING'],
-                        ],
+                ],
+                [
+                    'this is very long entry name that should be longer than items' => [
+                        ['id' => 1, 'status' => 'NEW'],
+                        ['id' => 2, 'status' => 'PENDING'],
                     ],
-                    [
-                        'this is very long entry name that should be longer than items' => [
-                            ['id' => 1, 'status' => 'NEW'],
-                            ['id' => 2, 'status' => 'PENDING'],
-                        ],
+                ],
+                [
+                    'this is very long entry name that should be longer than items' => [
+                        ['id' => 1, 'status' => 'NEW'],
+                        ['id' => 2, 'status' => 'PENDING'],
                     ],
-                    [
-                        'this is very long entry name that should be longer than items' => [
-                            ['id' => 1, 'status' => 'NEW'],
-                            ['id' => 2, 'status' => 'PENDING'],
-                        ],
+                ],
+                [
+                    'this is very long entry name that should be longer than items' => [
+                        ['id' => 1, 'status' => 'NEW'],
+                        ['id' => 2, 'status' => 'PENDING'],
                     ],
-                    [
-                        'this is very long entry name that should be longer than items' => [
-                            ['id' => 1, 'status' => 'NEW'],
-                            ['id' => 2, 'status' => 'PENDING'],
-                        ],
+                ],
+                [
+                    'this is very long entry name that should be longer than items' => [
+                        ['id' => 1, 'status' => 'NEW'],
+                        ['id' => 2, 'status' => 'PENDING'],
                     ],
-                ])
-        );
+                ],
+            ]));
 
         $this->assertStringContainsString(
             <<<'ASCIITABLE'
@@ -202,17 +200,19 @@ ASCIITABLE,
     public function test_print_rows() : void
     {
         \ob_start();
-        read(from_rows(
-            new Rows(
-                Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
-                Row::create(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
-                Row::create(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
-            ),
-            new Rows(
-                Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), int_entry('salary', 5000)),
-                Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), null_entry('salary')),
-            )
-        ))->printRows();
+        df()
+            ->read(from_rows(
+                new Rows(
+                    Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
+                    Row::create(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
+                    Row::create(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
+                ),
+                new Rows(
+                    Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), int_entry('salary', 5000)),
+                    Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), null_entry('salary')),
+                )
+            ))
+            ->printRows();
         $output = \ob_get_clean();
 
         $this->assertStringContainsString(
@@ -240,17 +240,19 @@ ASCII,
     public function test_print_schema() : void
     {
         \ob_start();
-        read(from_rows(
-            new Rows(
-                Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
-                Row::create(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
-                Row::create(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
-            ),
-            new Rows(
-                Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), int_entry('salary', 5000)),
-                Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), null_entry('salary')),
-            )
-        ))->printSchema();
+        df()
+            ->read(from_rows(
+                new Rows(
+                    Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
+                    Row::create(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
+                    Row::create(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
+                ),
+                new Rows(
+                    Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), int_entry('salary', 5000)),
+                    Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), null_entry('salary')),
+                )
+            ))
+            ->printSchema();
         $output = \ob_get_clean();
 
         $this->assertStringContainsString(

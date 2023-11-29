@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Function;
 
+use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_sequence_number;
 use function Flow\ETL\DSL\lit;
-use function Flow\ETL\DSL\read;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\to_memory;
 use function Flow\ETL\DSL\when;
@@ -17,7 +17,8 @@ final class WhenTest extends TestCase
 {
     public function test_when_odd_even() : void
     {
-        read(from_sequence_number('id', 1, 10))
+        df()
+            ->read(from_sequence_number('id', 1, 10))
             ->collect()
             ->withEntry(
                 'type',

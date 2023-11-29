@@ -2,7 +2,7 @@
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use function Flow\ETL\DSL\read;
+use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\ref;
 use Flow\ETL\Config;
 use Flow\ETL\ExternalSort\MemorySort;
@@ -22,7 +22,8 @@ final class SortTest extends IntegrationTestCase
             ->cache($cacheSpy = new CacheSpy(Config::default()->cache()))
             ->externalSort(new MemorySort($id, $cacheSpy, Unit::fromKb(10)));
 
-        read(new AllRowTypesFakeExtractor($rowsets = 50, $rows = 50), $config)
+        df($config)
+            ->read(new AllRowTypesFakeExtractor($rowsets = 50, $rows = 50))
             ->sortBy(ref('id'))
             ->run();
 
@@ -48,7 +49,8 @@ final class SortTest extends IntegrationTestCase
             ->id($id = 'test_etl_sort_by_in_memory')
             ->cache($cacheSpy = new CacheSpy(Config::default()->cache()));
 
-        $rows = read(new AllRowTypesFakeExtractor($rowsets = 20, $rows = 2), $config)
+        $rows = df($config)
+            ->read(new AllRowTypesFakeExtractor($rowsets = 20, $rows = 2))
             ->sortBy(ref('id'))
             ->fetch();
 

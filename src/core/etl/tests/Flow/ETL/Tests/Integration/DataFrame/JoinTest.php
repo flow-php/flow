@@ -3,9 +3,9 @@
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use function Flow\ETL\DSL\bool_entry;
+use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\read;
 use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\string_entry;
 use Flow\ETL\DataFrame;
@@ -25,14 +25,15 @@ final class JoinTest extends IntegrationTestCase
         $loader->expects($this->exactly(2))
             ->method('load');
 
-        $rows = read(from_rows(
-            new Rows(
-                Row::create(int_entry('id', 1), str_entry('country', 'PL')),
-                Row::create(int_entry('id', 2), str_entry('country', 'PL')),
-                Row::create(int_entry('id', 3), str_entry('country', 'PL')),
-                Row::create(int_entry('id', 4), str_entry('country', 'PL')),
-            )
-        ))
+        $rows = df()
+            ->from(from_rows(
+                new Rows(
+                    Row::create(int_entry('id', 1), str_entry('country', 'PL')),
+                    Row::create(int_entry('id', 2), str_entry('country', 'PL')),
+                    Row::create(int_entry('id', 3), str_entry('country', 'PL')),
+                    Row::create(int_entry('id', 4), str_entry('country', 'PL')),
+                )
+            ))
             ->batchSize(2)
             ->crossJoin(
                 (new Flow())->process(
@@ -66,18 +67,19 @@ final class JoinTest extends IntegrationTestCase
         $loader->expects($this->exactly(2))
             ->method('load');
 
-        $rows = read(from_rows(
-            new Rows(
-                Row::create(int_entry('id', 1), str_entry('country', 'PL')),
-                Row::create(int_entry('id', 2), str_entry('country', 'PL')),
-                Row::create(int_entry('id', 3), str_entry('country', 'PL')),
-                Row::create(int_entry('id', 4), str_entry('country', 'PL')),
-                Row::create(int_entry('id', 5), str_entry('country', 'US')),
-                Row::create(int_entry('id', 6), str_entry('country', 'US')),
-                Row::create(int_entry('id', 7), str_entry('country', 'US')),
-                Row::create(int_entry('id', 9), str_entry('country', 'US')),
-            )
-        ))
+        $rows = df()
+            ->from(from_rows(
+                new Rows(
+                    Row::create(int_entry('id', 1), str_entry('country', 'PL')),
+                    Row::create(int_entry('id', 2), str_entry('country', 'PL')),
+                    Row::create(int_entry('id', 3), str_entry('country', 'PL')),
+                    Row::create(int_entry('id', 4), str_entry('country', 'PL')),
+                    Row::create(int_entry('id', 5), str_entry('country', 'US')),
+                    Row::create(int_entry('id', 6), str_entry('country', 'US')),
+                    Row::create(int_entry('id', 7), str_entry('country', 'US')),
+                    Row::create(int_entry('id', 9), str_entry('country', 'US')),
+                )
+            ))
             ->batchSize(4)
             ->join(
                 (new Flow())->process(
@@ -112,18 +114,19 @@ final class JoinTest extends IntegrationTestCase
         $loader->expects($this->exactly(2))
             ->method('load');
 
-        $rows = read(from_rows(
-            new Rows(
-                Row::create(int_entry('id', 1), str_entry('country', 'PL')),
-                Row::create(int_entry('id', 2), str_entry('country', 'PL')),
-                Row::create(int_entry('id', 3), str_entry('country', 'PL')),
-                Row::create(int_entry('id', 4), str_entry('country', 'PL')),
-                Row::create(int_entry('id', 5), str_entry('country', 'US')),
-                Row::create(int_entry('id', 6), str_entry('country', 'US')),
-                Row::create(int_entry('id', 7), str_entry('country', 'US')),
-                Row::create(int_entry('id', 9), str_entry('country', 'US')),
-            )
-        ))
+        $rows = df()
+            ->read(from_rows(
+                new Rows(
+                    Row::create(int_entry('id', 1), str_entry('country', 'PL')),
+                    Row::create(int_entry('id', 2), str_entry('country', 'PL')),
+                    Row::create(int_entry('id', 3), str_entry('country', 'PL')),
+                    Row::create(int_entry('id', 4), str_entry('country', 'PL')),
+                    Row::create(int_entry('id', 5), str_entry('country', 'US')),
+                    Row::create(int_entry('id', 6), str_entry('country', 'US')),
+                    Row::create(int_entry('id', 7), str_entry('country', 'US')),
+                    Row::create(int_entry('id', 9), str_entry('country', 'US')),
+                )
+            ))
             ->batchSize(4)
             ->joinEach(
                 new class implements DataFrameFactory {

@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit;
 use function Flow\ETL\DSL\array_entry;
 use function Flow\ETL\DSL\average;
 use function Flow\ETL\DSL\bool_entry;
+use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\float_entry;
 use function Flow\ETL\DSL\from_all;
 use function Flow\ETL\DSL\from_array;
@@ -14,7 +15,6 @@ use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\null_entry;
-use function Flow\ETL\DSL\read;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\refs;
 use function Flow\ETL\DSL\str_entry;
@@ -44,7 +44,7 @@ final class DataFrameTest extends TestCase
 {
     public function test_batch_size() : void
     {
-        (new Flow())
+        df()
             ->read(from_array([
                 ['id' => '01', 'elements' => [['sub_id' => '01_01'], ['sub_id' => '01_02']]],
                 ['id' => '02', 'elements' => [['sub_id' => '02_01'], ['sub_id' => '02_02']]],
@@ -76,7 +76,7 @@ final class DataFrameTest extends TestCase
             ['id' => 1, 'name' => 'test', 'active' => false, 'group' => 'A'],
         ];
 
-        (new Flow())
+        df()
             ->read(from_all(
                 from_array($dataset1),
                 from_array($dataset2),
@@ -92,7 +92,7 @@ final class DataFrameTest extends TestCase
 
     public function test_count() : void
     {
-        $count = (new Flow())
+        $count = df()
             ->read(from_array([
                 ['id' => 1],
                 ['id' => 2],
@@ -107,7 +107,7 @@ final class DataFrameTest extends TestCase
 
     public function test_drop() : void
     {
-        $rows = (new Flow())->process(
+        $rows = df()->process(
             new Rows(
                 Row::create(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
                 Row::create(int_entry('id', 2), null_entry('name'), bool_entry('active', false)),
@@ -129,7 +129,7 @@ final class DataFrameTest extends TestCase
 
     public function test_drop_duplicates() : void
     {
-        $rows = (new Flow())->process(
+        $rows = df()->process(
             new Rows(
                 Row::create(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
                 Row::create(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
@@ -150,7 +150,7 @@ final class DataFrameTest extends TestCase
 
     public function test_encapsulate_transformations() : void
     {
-        $rows = (new Flow())->process(
+        $rows = df()->process(
             new Rows(
                 Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
                 Row::create(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
@@ -197,7 +197,7 @@ final class DataFrameTest extends TestCase
 
     public function test_filter() : void
     {
-        $rows = (new Flow())->extract(
+        $rows = df()->extract(
             new class implements Extractor {
                 /**
                  * @param FlowContext $context
@@ -226,7 +226,7 @@ final class DataFrameTest extends TestCase
 
     public function test_foreach() : void
     {
-        (new Flow())->process(
+        df()->process(
             new Rows(
                 Row::create(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
                 Row::create(int_entry('id', 2), null_entry('name'), bool_entry('active', false)),
@@ -247,16 +247,17 @@ final class DataFrameTest extends TestCase
 
     public function test_get() : void
     {
-        $rows = read(from_rows(
-            $extractedRows = new Rows(
-                Row::create(int_entry('id', 1), str_entry('name', 'foo')),
-                Row::create(int_entry('id', 2), str_entry('name', 'bar')),
-                Row::create(int_entry('id', 3), str_entry('name', 'baz')),
-                Row::create(int_entry('id', 4), str_entry('name', 'foo')),
-                Row::create(int_entry('id', 5), str_entry('name', 'bar')),
-                Row::create(int_entry('id', 6), str_entry('name', 'baz')),
-            )
-        ))
+        $rows = df()
+            ->read(from_rows(
+                $extractedRows = new Rows(
+                    Row::create(int_entry('id', 1), str_entry('name', 'foo')),
+                    Row::create(int_entry('id', 2), str_entry('name', 'bar')),
+                    Row::create(int_entry('id', 3), str_entry('name', 'baz')),
+                    Row::create(int_entry('id', 4), str_entry('name', 'foo')),
+                    Row::create(int_entry('id', 5), str_entry('name', 'bar')),
+                    Row::create(int_entry('id', 6), str_entry('name', 'baz')),
+                )
+            ))
             ->get();
 
         $this->assertEquals([$extractedRows], \iterator_to_array($rows));
@@ -264,16 +265,17 @@ final class DataFrameTest extends TestCase
 
     public function test_get_as_array() : void
     {
-        $rows = read(from_rows(
-            $extractedRows = new Rows(
-                Row::create(int_entry('id', 1), str_entry('name', 'foo')),
-                Row::create(int_entry('id', 2), str_entry('name', 'bar')),
-                Row::create(int_entry('id', 3), str_entry('name', 'baz')),
-                Row::create(int_entry('id', 4), str_entry('name', 'foo')),
-                Row::create(int_entry('id', 5), str_entry('name', 'bar')),
-                Row::create(int_entry('id', 6), str_entry('name', 'baz')),
-            )
-        ))
+        $rows = df()
+            ->read(from_rows(
+                $extractedRows = new Rows(
+                    Row::create(int_entry('id', 1), str_entry('name', 'foo')),
+                    Row::create(int_entry('id', 2), str_entry('name', 'bar')),
+                    Row::create(int_entry('id', 3), str_entry('name', 'baz')),
+                    Row::create(int_entry('id', 4), str_entry('name', 'foo')),
+                    Row::create(int_entry('id', 5), str_entry('name', 'bar')),
+                    Row::create(int_entry('id', 6), str_entry('name', 'baz')),
+                )
+            ))
             ->getAsArray();
 
         $this->assertEquals([
@@ -283,16 +285,17 @@ final class DataFrameTest extends TestCase
 
     public function test_get_each() : void
     {
-        $rows = read(from_rows(
-            $extractedRows = new Rows(
-                Row::create(int_entry('id', 1), str_entry('name', 'foo')),
-                Row::create(int_entry('id', 2), str_entry('name', 'bar')),
-                Row::create(int_entry('id', 3), str_entry('name', 'baz')),
-                Row::create(int_entry('id', 4), str_entry('name', 'foo')),
-                Row::create(int_entry('id', 5), str_entry('name', 'bar')),
-                Row::create(int_entry('id', 6), str_entry('name', 'baz')),
-            )
-        ))
+        $rows = df()
+            ->read(from_rows(
+                $extractedRows = new Rows(
+                    Row::create(int_entry('id', 1), str_entry('name', 'foo')),
+                    Row::create(int_entry('id', 2), str_entry('name', 'bar')),
+                    Row::create(int_entry('id', 3), str_entry('name', 'baz')),
+                    Row::create(int_entry('id', 4), str_entry('name', 'foo')),
+                    Row::create(int_entry('id', 5), str_entry('name', 'bar')),
+                    Row::create(int_entry('id', 6), str_entry('name', 'baz')),
+                )
+            ))
             ->getEach();
 
         $this->assertEquals([
@@ -307,16 +310,17 @@ final class DataFrameTest extends TestCase
 
     public function test_get_each_as_array() : void
     {
-        $rows = read(from_rows(
-            $extractedRows = new Rows(
-                Row::create(int_entry('id', 1), str_entry('name', 'foo')),
-                Row::create(int_entry('id', 2), str_entry('name', 'bar')),
-                Row::create(int_entry('id', 3), str_entry('name', 'baz')),
-                Row::create(int_entry('id', 4), str_entry('name', 'foo')),
-                Row::create(int_entry('id', 5), str_entry('name', 'bar')),
-                Row::create(int_entry('id', 6), str_entry('name', 'baz')),
-            )
-        ))
+        $rows = df()
+            ->read(from_rows(
+                $extractedRows = new Rows(
+                    Row::create(int_entry('id', 1), str_entry('name', 'foo')),
+                    Row::create(int_entry('id', 2), str_entry('name', 'bar')),
+                    Row::create(int_entry('id', 3), str_entry('name', 'baz')),
+                    Row::create(int_entry('id', 4), str_entry('name', 'foo')),
+                    Row::create(int_entry('id', 5), str_entry('name', 'bar')),
+                    Row::create(int_entry('id', 6), str_entry('name', 'baz')),
+                )
+            ))
             ->getEachAsArray();
 
         $this->assertEquals(

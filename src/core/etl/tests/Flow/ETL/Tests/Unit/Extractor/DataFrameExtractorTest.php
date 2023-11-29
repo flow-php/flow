@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Extractor;
 
+use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_data_frame;
 use function Flow\ETL\DSL\from_rows;
-use function Flow\ETL\DSL\read;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\str_entry;
@@ -31,18 +31,16 @@ final class DataFrameExtractorTest extends TestCase
             ],
             \iterator_to_array(
                 from_data_frame(
-                    read(
-                        from_rows(
-                            rows(
-                                row(str_entry('value', 'test')),
-                                row(str_entry('value', 'test')),
-                            ),
-                            rows(
-                                row(str_entry('value', 'test')),
-                                row(str_entry('value', 'test')),
-                            )
+                    df()->read(from_rows(
+                        rows(
+                            row(str_entry('value', 'test')),
+                            row(str_entry('value', 'test')),
+                        ),
+                        rows(
+                            row(str_entry('value', 'test')),
+                            row(str_entry('value', 'test')),
                         )
-                    ),
+                    )),
                 )->extract(new FlowContext(Config::default()))
             ),
         );

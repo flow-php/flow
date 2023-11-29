@@ -4,6 +4,7 @@ namespace Flow\ETL\Adapter\Parquet\Tests\Integration;
 
 use function Flow\ETL\DSL\bool_entry;
 use function Flow\ETL\DSL\datetime_entry;
+use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\float_entry;
 use function Flow\ETL\DSL\from_parquet;
 use function Flow\ETL\DSL\from_rows;
@@ -11,7 +12,6 @@ use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\json_entry;
 use function Flow\ETL\DSL\json_object_entry;
 use function Flow\ETL\DSL\list_entry;
-use function Flow\ETL\DSL\read;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\struct_element;
@@ -36,7 +36,8 @@ final class ParquetTest extends TestCase
         $path = \sys_get_temp_dir() . '/file.snappy.parquet';
         $this->removeFile($path);
 
-        read(from_rows($rows = $this->createRows(10)))
+        df()
+            ->read(from_rows($rows = $this->createRows(10)))
             ->write(to_parquet($path))
             ->run();
 
@@ -63,13 +64,14 @@ final class ParquetTest extends TestCase
         $path = \sys_get_temp_dir() . '/partitioned';
         $this->cleanDirectory($path);
 
-        read(from_rows($rows = new Rows(
-            $this->createRow(1, new \DateTimeImmutable('2020-01-01 00:01:00')),
-            $this->createRow(1, new \DateTimeImmutable('2020-01-01 00:02:00')),
-            $this->createRow(1, new \DateTimeImmutable('2020-01-02 00:01:00')),
-            $this->createRow(1, new \DateTimeImmutable('2020-01-02 00:02:00')),
-            $this->createRow(1, new \DateTimeImmutable('2020-01-03 00:01:00')),
-        )))
+        df()
+            ->read(from_rows($rows = new Rows(
+                $this->createRow(1, new \DateTimeImmutable('2020-01-01 00:01:00')),
+                $this->createRow(1, new \DateTimeImmutable('2020-01-01 00:02:00')),
+                $this->createRow(1, new \DateTimeImmutable('2020-01-02 00:01:00')),
+                $this->createRow(1, new \DateTimeImmutable('2020-01-02 00:02:00')),
+                $this->createRow(1, new \DateTimeImmutable('2020-01-03 00:01:00')),
+            )))
             ->withEntry('date', ref('datetime')->toDate()->dateFormat())
             ->partitionBy(ref('date'))
             ->write(to_parquet($path))

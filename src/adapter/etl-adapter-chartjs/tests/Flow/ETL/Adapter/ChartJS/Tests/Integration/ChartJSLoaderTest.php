@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\ChartJS\Tests\Integration;
 
 use function Flow\ETL\DSL\bar_chart;
+use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\first;
 use function Flow\ETL\DSL\from_memory;
 use function Flow\ETL\DSL\line_chart;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\pie_chart;
-use function Flow\ETL\DSL\read;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\refs;
 use function Flow\ETL\DSL\sum;
@@ -32,7 +32,8 @@ final class ChartJSLoaderTest extends TestCase
             ['Date' => '2023-02-06', 'Revenue' => 14000.23, 'CM' => 6000.89, 'Ads Spends' => 2800.89, 'Storage Costs' => 1800.89, 'Shipping Costs' => 2300.23, 'Currency' => 'USD'],
         ];
 
-        read(from_memory(new ArrayMemory($data)))
+        df()
+            ->read(from_memory(new ArrayMemory($data)))
             ->withEntry('Profit', ref('Revenue')->minus(ref('CM'))->minus(ref('Ads Spends'))->minus(ref('Storage Costs'))->minus(ref('Shipping Costs'))->round(lit(2)))
             ->write(
                 to_chartjs_file(
@@ -103,7 +104,8 @@ final class ChartJSLoaderTest extends TestCase
 
         $output = [];
 
-        read(from_memory(new ArrayMemory($data)))
+        df()
+            ->read(from_memory(new ArrayMemory($data)))
             ->withEntry('Profit', ref('Revenue')->minus(ref('CM'))->minus(ref('Ads Spends'))->minus(ref('Storage Costs'))->minus(ref('Shipping Costs'))->round(lit(2)))
             ->write(
                 to_chartjs_var(
@@ -171,7 +173,8 @@ final class ChartJSLoaderTest extends TestCase
             ['Date' => '2023-02-06', 'Revenue' => 14000.23, 'CM' => 6000.89, 'Ads Spends' => 2800.89, 'Storage Costs' => 1800.89, 'Shipping Costs' => 2300.23, 'Currency' => 'USD'],
         ];
 
-        read(from_memory(new ArrayMemory($data)))
+        df()
+            ->read(from_memory(new ArrayMemory($data)))
             ->withEntry('Profit', ref('Revenue')->minus(ref('CM'))->minus(ref('Ads Spends'))->minus(ref('Storage Costs'))->minus(ref('Shipping Costs'))->round(lit(2)))
             ->write(
                 to_chartjs_file(
@@ -253,7 +256,8 @@ final class ChartJSLoaderTest extends TestCase
         )
             ->setOptions(['label' => 'PnL']);
 
-        read(from_memory(new ArrayMemory($data)))
+        df()
+            ->read(from_memory(new ArrayMemory($data)))
             ->withEntry('Profit', ref('Revenue')->minus(ref('CM'))->minus(ref('Ads Spends'))->minus(ref('Storage Costs'))->minus(ref('Shipping Costs'))->round(lit(2)))
             ->aggregate(
                 first(ref('Date')->as('Date')),

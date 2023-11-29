@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use function Flow\ETL\DSL\average;
 use function Flow\ETL\DSL\concat;
+use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_csv;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\max;
@@ -11,11 +12,10 @@ use function Flow\ETL\DSL\min;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\sum;
 use function Flow\ETL\DSL\to_output;
-use Flow\ETL\Flow;
 
 require __DIR__ . '/../../bootstrap.php';
 
-$flow = (new Flow())
+$df = df()
     ->read(from_csv(__FLOW_DATA__ . '/power-plant-daily.csv', delimiter: ';'))
     ->withEntry('production_kwh', ref('Produkcja(kWh)'))
     ->withEntry('consumption_kwh', ref('Zużycie(kWh)'))
@@ -32,7 +32,6 @@ $flow = (new Flow())
         sum(ref('production_kwh')),
         sum(ref('consumption_kwh'))
     )
-
     ->withEntry('production_kwh_avg', ref('production_kwh_avg')->round(lit(2)))
     ->withEntry('consumption_kwh_avg', ref('consumption_kwh_avg')->round(lit(2)))
     ->withEntry('production_kwh_min', ref('production_kwh_min')->round(lit(2)))
@@ -47,7 +46,7 @@ $flow = (new Flow())
     ->write(to_output(truncate: false));
 
 if ($_ENV['FLOW_PHAR_APP'] ?? false) {
-    return $flow;
+    return $df;
 }
 
-$flow->run();
+$df->run();

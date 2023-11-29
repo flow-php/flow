@@ -4,10 +4,10 @@ namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use function Flow\ETL\DSL\array_entry;
 use function Flow\ETL\DSL\bool_entry;
+use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\null_entry;
-use function Flow\ETL\DSL\read;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\str_entry;
 use Flow\ETL\Row;
@@ -19,13 +19,14 @@ final class RenameTest extends IntegrationTestCase
 {
     public function test_rename() : void
     {
-        $rows = read(from_rows(
-            new Rows(
-                Row::create(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
-                Row::create(int_entry('id', 2), null_entry('name'), bool_entry('active', false)),
-                Row::create(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
-            )
-        ))
+        $rows = df()
+            ->read(from_rows(
+                new Rows(
+                    Row::create(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
+                    Row::create(int_entry('id', 2), null_entry('name'), bool_entry('active', false)),
+                    Row::create(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
+                )
+            ))
             ->rename('name', 'new_name')
             ->fetch();
 
@@ -46,7 +47,8 @@ final class RenameTest extends IntegrationTestCase
             Row::create(array_entry('array', ['id' => 2, 'name' => 'name', 'active' => false]))
         );
 
-        $ds = read(from_rows($rows))
+        $ds = df()
+            ->read(from_rows($rows))
             ->withEntry('row', ref('array')->unpack())
             ->renameAll('row.', '')
             ->drop('array')
@@ -68,7 +70,7 @@ final class RenameTest extends IntegrationTestCase
             Row::create(int_entry('ID', 2), str_entry('NAME', 'name'), bool_entry('ACTIVE', false)),
         );
 
-        $ds = read(from_rows($rows))->renameAllLowerCase()->getEachAsArray();
+        $ds = df()->read(from_rows($rows))->renameAllLowerCase()->getEachAsArray();
 
         $this->assertEquals(
             [
@@ -86,7 +88,8 @@ final class RenameTest extends IntegrationTestCase
             Row::create(int_entry('id', 2), str_entry('UserName', 'name'), bool_entry('isActive', false)),
         );
 
-        $ds = read(from_rows($rows))
+        $ds = df()
+            ->read(from_rows($rows))
             ->renameAllStyle(StringStyles::SNAKE)
             ->renameAllLowerCase()
             ->getEachAsArray();
@@ -107,7 +110,8 @@ final class RenameTest extends IntegrationTestCase
             Row::create(int_entry('id', 2), str_entry('name', 'name'), bool_entry('active', false)),
         );
 
-        $ds = read(from_rows($rows))
+        $ds = df()
+            ->read(from_rows($rows))
             ->renameAllUpperCase()
             ->getEachAsArray();
 
@@ -127,7 +131,8 @@ final class RenameTest extends IntegrationTestCase
             Row::create(int_entry('id', 2), str_entry('name', 'name'), bool_entry('active', false)),
         );
 
-        $ds = read(from_rows($rows))
+        $ds = df()
+            ->read(from_rows($rows))
             ->renameAllUpperCaseFirst()
             ->getEachAsArray();
 
@@ -147,7 +152,8 @@ final class RenameTest extends IntegrationTestCase
             Row::create(int_entry('id', 2), str_entry('name', 'name'), bool_entry('active', false)),
         );
 
-        $ds = read(from_rows($rows))
+        $ds = df()
+            ->read(from_rows($rows))
             ->renameAllUpperCaseWord()
             ->getEachAsArray();
 

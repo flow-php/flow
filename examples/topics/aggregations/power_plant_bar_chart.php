@@ -5,6 +5,7 @@ declare(strict_types=1);
 use function Flow\ETL\DSL\average;
 use function Flow\ETL\DSL\bar_chart;
 use function Flow\ETL\DSL\concat;
+use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_csv;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\max;
@@ -12,11 +13,10 @@ use function Flow\ETL\DSL\min;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\sum;
 use function Flow\ETL\DSL\to_chartjs_file;
-use Flow\ETL\Flow;
 
 require __DIR__ . '/../../bootstrap.php';
 
-$flow = (new Flow)
+$df = df()
     ->read(from_csv(__FLOW_DATA__ . '/power-plant-daily.csv', delimiter: ';'))
     ->withEntry('production_kwh', ref('Produkcja(kWh)'))
     ->withEntry('consumption_kwh', ref('Zużycie(kWh)'))
@@ -54,7 +54,7 @@ $flow = (new Flow)
     );
 
 if ($_ENV['FLOW_PHAR_APP'] ?? false) {
-    return $flow;
+    return $df;
 }
 
-$flow->run();
+$df->run();

@@ -155,9 +155,9 @@ use Google\Client;
 use Google\Service\Sheets;
 use Psr\Http\Client\ClientInterface;
 
-function read(Extractor $extractor, Config|ConfigBuilder|null $config = null) : DataFrame
+function df(Config|ConfigBuilder|null $config = null) : Flow
 {
-    return (new Flow($config))->from($extractor);
+    return new Flow($config);
 }
 
 function from_rows(Rows ...$rows) : Extractor\ProcessExtractor

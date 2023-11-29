@@ -4,6 +4,7 @@ namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use function Flow\ETL\DSL\average;
 use function Flow\ETL\DSL\count;
+use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\float_entry;
 use function Flow\ETL\DSL\from_all;
 use function Flow\ETL\DSL\from_array;
@@ -14,7 +15,6 @@ use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\max;
 use function Flow\ETL\DSL\null_entry;
 use function Flow\ETL\DSL\rank;
-use function Flow\ETL\DSL\read;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\sum;
@@ -34,18 +34,19 @@ final class GroupByTest extends IntegrationTestCase
         $loader->expects($this->exactly(4))
             ->method('load');
 
-        $rows = read(from_rows(
-            new Rows(
-                Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
-                Row::create(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
-                Row::create(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25), str_entry('gender', 'male')),
-                Row::create(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30), str_entry('gender', 'female')),
-                Row::create(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40), str_entry('gender', 'female')),
-                Row::create(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40), str_entry('gender', 'male')),
-                Row::create(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45), str_entry('gender', 'female')),
-                Row::create(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50), str_entry('gender', 'male')),
-            )
-        ))
+        $rows = df()
+            ->read(from_rows(
+                new Rows(
+                    Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
+                    Row::create(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
+                    Row::create(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25), str_entry('gender', 'male')),
+                    Row::create(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30), str_entry('gender', 'female')),
+                    Row::create(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40), str_entry('gender', 'female')),
+                    Row::create(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40), str_entry('gender', 'male')),
+                    Row::create(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45), str_entry('gender', 'female')),
+                    Row::create(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50), str_entry('gender', 'male')),
+                )
+            ))
             ->groupBy('country', 'gender')
             ->batchSize(1)
             ->write($loader)
@@ -64,18 +65,19 @@ final class GroupByTest extends IntegrationTestCase
 
     public function test_group_by_multiples_columns_with_avg_aggregation() : void
     {
-        $rows = read(from_rows(
-            new Rows(
-                Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
-                Row::create(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
-                Row::create(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25), str_entry('gender', 'male')),
-                Row::create(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30), str_entry('gender', 'female')),
-                Row::create(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40), str_entry('gender', 'female')),
-                Row::create(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40), str_entry('gender', 'male')),
-                Row::create(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45), str_entry('gender', 'female')),
-                Row::create(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50), str_entry('gender', 'male')),
-            )
-        ))
+        $rows = df()
+            ->read(from_rows(
+                new Rows(
+                    Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
+                    Row::create(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
+                    Row::create(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25), str_entry('gender', 'male')),
+                    Row::create(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30), str_entry('gender', 'female')),
+                    Row::create(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40), str_entry('gender', 'female')),
+                    Row::create(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40), str_entry('gender', 'male')),
+                    Row::create(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45), str_entry('gender', 'female')),
+                    Row::create(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50), str_entry('gender', 'male')),
+                )
+            ))
             ->groupBy('country', 'gender')
             ->aggregate(average(ref('age')))
             ->fetch();
@@ -93,18 +95,19 @@ final class GroupByTest extends IntegrationTestCase
 
     public function test_group_by_multiples_columns_with_avg_aggregation_with_null() : void
     {
-        $rows = read(from_rows(
-            new Rows(
-                Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
-                Row::create(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
-                Row::create(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25), str_entry('gender', 'male')),
-                Row::create(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30), str_entry('gender', 'female')),
-                Row::create(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40), str_entry('gender', 'female')),
-                Row::create(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40), str_entry('gender', 'male')),
-                Row::create(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45), null_entry('gender')),
-                Row::create(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50), str_entry('gender', 'male')),
-            )
-        ))
+        $rows = df()
+            ->read(from_rows(
+                new Rows(
+                    Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
+                    Row::create(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
+                    Row::create(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25), str_entry('gender', 'male')),
+                    Row::create(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30), str_entry('gender', 'female')),
+                    Row::create(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40), str_entry('gender', 'female')),
+                    Row::create(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40), str_entry('gender', 'male')),
+                    Row::create(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45), null_entry('gender')),
+                    Row::create(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50), str_entry('gender', 'male')),
+                )
+            ))
             ->groupBy('country', 'gender')
             ->aggregate(average(ref('age')))
             ->fetch();
@@ -123,18 +126,19 @@ final class GroupByTest extends IntegrationTestCase
 
     public function test_group_by_single_column() : void
     {
-        $rows = read(from_rows(
-            new Rows(
-                Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
-                Row::create(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
-                Row::create(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
-                Row::create(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
-                Row::create(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
-                Row::create(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
-                Row::create(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
-                Row::create(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
-            )
-        ))
+        $rows = df()
+            ->read(from_rows(
+                new Rows(
+                    Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
+                    Row::create(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
+                    Row::create(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
+                    Row::create(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
+                    Row::create(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
+                    Row::create(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
+                    Row::create(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
+                    Row::create(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
+                )
+            ))
             ->groupBy('country')
             ->fetch();
 
@@ -149,18 +153,19 @@ final class GroupByTest extends IntegrationTestCase
 
     public function test_group_by_single_column_with_avg_aggregation() : void
     {
-        $rows = read(from_rows(
-            new Rows(
-                Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
-                Row::create(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
-                Row::create(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
-                Row::create(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
-                Row::create(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
-                Row::create(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
-                Row::create(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
-                Row::create(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
-            )
-        ))
+        $rows = df()
+            ->read(from_rows(
+                new Rows(
+                    Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
+                    Row::create(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
+                    Row::create(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
+                    Row::create(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
+                    Row::create(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
+                    Row::create(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
+                    Row::create(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
+                    Row::create(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
+                )
+            ))
             ->groupBy('country')
             ->aggregate(average(ref('age')))
             ->fetch();
@@ -191,7 +196,8 @@ final class GroupByTest extends IntegrationTestCase
             ['date' => '2023-01-03', 'user' => 'user_04'],
         ];
 
-        $rows = read(from_array($dataset))
+        $rows = df()
+            ->read(from_array($dataset))
             ->groupBy(ref('date'), ref('user'))
             ->aggregate(count(ref('user')))
             ->rename('user_count', 'contributions')
@@ -229,7 +235,8 @@ final class GroupByTest extends IntegrationTestCase
             ['date' => '2023-11-05', 'user' => 'stloyd', 'contributions' => 11],
         ];
 
-        $rows = read(from_all(from_array($dataset1), from_array($dataset2)))
+        $rows = df()
+            ->read(from_all(from_array($dataset1), from_array($dataset2)))
             ->groupBy(ref('date'))
             ->pivot(ref('user'))
             ->aggregate(sum(ref('contributions')))
@@ -269,18 +276,19 @@ final class GroupByTest extends IntegrationTestCase
 
     public function test_standalone_avg_aggregation() : void
     {
-        $rows = read(from_rows(
-            new Rows(
-                Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
-                Row::create(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
-                Row::create(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
-                Row::create(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
-                Row::create(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
-                Row::create(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
-                Row::create(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
-                Row::create(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
-            )
-        ))
+        $rows = df()
+            ->read(from_rows(
+                new Rows(
+                    Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
+                    Row::create(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
+                    Row::create(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
+                    Row::create(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
+                    Row::create(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
+                    Row::create(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
+                    Row::create(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
+                    Row::create(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
+                )
+            ))
             ->aggregate(average(ref('age')))
             ->rows(Transform::rename('age_avg', 'average_age'))
             ->fetch();
@@ -295,18 +303,19 @@ final class GroupByTest extends IntegrationTestCase
 
     public function test_standalone_avg_and_max_aggregation() : void
     {
-        read(from_rows(
-            new Rows(
-                Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
-                Row::create(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
-                Row::create(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
-                Row::create(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
-                Row::create(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
-                Row::create(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
-                Row::create(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
-                Row::create(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
-            )
-        ))
+        df()
+            ->read(from_rows(
+                new Rows(
+                    Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
+                    Row::create(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
+                    Row::create(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
+                    Row::create(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
+                    Row::create(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
+                    Row::create(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
+                    Row::create(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
+                    Row::create(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
+                )
+            ))
             ->aggregate(average(ref('age')), max(ref('age')))
             ->run(function (Rows $rows) : void {
                 $this->assertEquals(
@@ -347,7 +356,8 @@ final class GroupByTest extends IntegrationTestCase
                 ['department' => 'Marketing', 'avg_salary' => 2940.0],
                 ['department' => 'Finance', 'avg_salary' => 3550.0],
             ],
-            read(from_all(from_memory($memoryPage1), from_memory($memoryPage2)))
+            df()
+                ->from(from_all(from_memory($memoryPage1), from_memory($memoryPage2)))
                 ->withEntry('avg_salary', average(ref('salary'))->over(window()->partitionBy(ref('department'))))
                 ->select('department', 'avg_salary')
                 ->dropDuplicates(ref('department'), ref('avg_salary'))
@@ -392,7 +402,8 @@ final class GroupByTest extends IntegrationTestCase
                 ['employee_name' => 'Sophia', 'department' => 'Finance', 'salary' => 4200, 'rank' => 1],
                 ['employee_name' => 'Noah', 'department' => 'Marketing', 'salary' => 3400, 'rank' => 1],
             ],
-            read(from_all(from_memory($memoryPage1), from_memory($memoryPage2)))
+            df()
+                ->from(from_all(from_memory($memoryPage1), from_memory($memoryPage2)))
                 ->dropDuplicates(ref('employee_name'), ref('department'))
                 ->withEntry('rank', rank()->over(window()->partitionBy(ref('department'))->orderBy(ref('salary')->desc())))
                 ->filter(ref('rank')->equals(lit(1)))

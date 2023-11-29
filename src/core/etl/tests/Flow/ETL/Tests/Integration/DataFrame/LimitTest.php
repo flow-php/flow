@@ -2,9 +2,9 @@
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
+use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
-use function Flow\ETL\DSL\read;
 use function Flow\ETL\DSL\ref;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
@@ -19,14 +19,13 @@ final class LimitTest extends IntegrationTestCase
 {
     public function test_exceeding_the_limit_in_one_rows_set() : void
     {
-        $rows = read(
-            from_array(
+        $rows = df()
+            ->read(from_array(
                 \array_map(
                     fn (int $id) : array => ['id' => $id],
                     \range(1, 1000)
                 )
-            )
-        )
+            ))
             ->limit(9)
             ->fetch();
 
@@ -35,7 +34,8 @@ final class LimitTest extends IntegrationTestCase
 
     public function test_fetch_with_limit() : void
     {
-        $rows = read(from_array([
+        $rows = df()
+            ->from(from_array([
                 ['id' => 1],
                 ['id' => 2],
                 ['id' => 3],
@@ -57,13 +57,13 @@ final class LimitTest extends IntegrationTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("Limit can't be lower or equal zero, given: -1");
 
-        read(from_rows(new Rows()))->fetch(-1);
+        df()->read(from_rows(new Rows()))->fetch(-1);
     }
 
     public function test_fetch_without_limit() : void
     {
-        $rows = read(
-            new class implements Extractor {
+        $rows = df()
+            ->read(new class implements Extractor {
                 /**
                  * @param FlowContext $context
                  *
@@ -77,8 +77,7 @@ final class LimitTest extends IntegrationTestCase
                         );
                     }
                 }
-            }
-        )
+            })
             ->fetch();
 
         $this->assertCount(20, $rows);
@@ -86,8 +85,8 @@ final class LimitTest extends IntegrationTestCase
 
     public function test_limit() : void
     {
-        $rows = read(
-            new class implements Extractor {
+        $rows = df()
+            ->read(new class implements Extractor {
                 /**
                  * @param FlowContext $context
                  *
@@ -102,8 +101,7 @@ final class LimitTest extends IntegrationTestCase
                         );
                     }
                 }
-            }
-        )
+            })
             ->limit(10)
             ->fetch();
 
@@ -115,13 +113,13 @@ final class LimitTest extends IntegrationTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage("Limit can't be lower or equal zero, given: -1");
 
-        read(from_rows(new Rows()))->limit(-1);
+        df()->read(from_rows(new Rows()))->limit(-1);
     }
 
     public function test_limit_when_transformation_is_expanding_rows_extracted_from_extractor() : void
     {
-        $rows = read(
-            new class implements Extractor {
+        $rows = df()
+            ->read(new class implements Extractor {
                 /**
                  * @param FlowContext $context
                  *
@@ -139,8 +137,7 @@ final class LimitTest extends IntegrationTestCase
                         );
                     }
                 }
-            }
-        )
+            })
             ->withEntries([
                 'expanded' => ref('ids')->expand(),
                 'element' => ref('expanded')->unpack(),
@@ -156,8 +153,8 @@ final class LimitTest extends IntegrationTestCase
 
     public function test_limit_with_batch_size() : void
     {
-        $rows = read(
-            new class implements Extractor {
+        $rows = df()
+            ->read(new class implements Extractor {
                 /**
                  * @param FlowContext $context
                  *
@@ -172,8 +169,7 @@ final class LimitTest extends IntegrationTestCase
                         );
                     }
                 }
-            }
-        )
+            })
             ->batchSize(50)
             ->limit(10)
             ->fetch();
@@ -183,8 +179,8 @@ final class LimitTest extends IntegrationTestCase
 
     public function test_limit_with_collecting() : void
     {
-        $rows = read(
-            new class implements Extractor {
+        $rows = df()
+            ->read(new class implements Extractor {
                 /**
                  * @param FlowContext $context
                  *
@@ -199,8 +195,7 @@ final class LimitTest extends IntegrationTestCase
                         );
                     }
                 }
-            }
-        )
+            })
             ->limit(10)
             ->collect()
             ->fetch();
@@ -210,8 +205,8 @@ final class LimitTest extends IntegrationTestCase
 
     public function test_with_total_rows_below_the_limit() : void
     {
-        $rows = read(
-            new class implements Extractor {
+        $rows = df()
+            ->read(new class implements Extractor {
                 /**
                  * @param FlowContext $context
                  *
@@ -225,8 +220,7 @@ final class LimitTest extends IntegrationTestCase
                         );
                     }
                 }
-            }
-        )
+            })
             ->limit(10)
             ->fetch();
 
