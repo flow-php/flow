@@ -7,7 +7,7 @@ if ($_ENV['FLOW_PHAR_APP'] ?? false) {
     exit(1);
 }
 
-use function Flow\ETL\DSL\from_csv;
+use function Flow\ETL\Adapter\CSV\from_csv;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Table;

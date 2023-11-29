@@ -2,10 +2,10 @@
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Benchmark;
 
-use function Flow\ETL\DSL\from_parquet;
 use Flow\ETL\Config;
 use Flow\ETL\FlowContext;
 use PhpBench\Attributes\Groups;
+use function Flow\ETL\Adapter\Parquet\from_parquet;
 
 #[Groups(['extractor'])]
 final class ParquetExtractorBench

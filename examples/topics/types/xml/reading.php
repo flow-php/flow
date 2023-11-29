@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\from_xml;
+use function Flow\ETL\Adapter\XML\from_xml;
 use function Flow\ETL\DSL\to_output;
 use Flow\ETL\Flow;
 

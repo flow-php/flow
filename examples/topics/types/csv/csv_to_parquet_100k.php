@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\from_csv;
-use function Flow\ETL\DSL\to_parquet;
+use function Flow\ETL\Adapter\CSV\from_csv;
+use function Flow\ETL\Adapter\Parquet\to_parquet;
 use Aeon\Calendar\Stopwatch;
 use Flow\ETL\Flow;
 

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\to_csv;
+use function Flow\ETL\Adapter\CSV\to_csv;
 use Aeon\Calendar\Stopwatch;
 use Flow\ETL\Flow;
 use Flow\ETL\Monitoring\Memory\Consumption;

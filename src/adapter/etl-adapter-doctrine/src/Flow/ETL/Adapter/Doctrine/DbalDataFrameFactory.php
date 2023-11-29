@@ -78,15 +78,7 @@ final class DbalDataFrameFactory implements DataFrameFactory
             }
         }
 
-        return (new Flow())
-            ->extract(
-                dbal_from_query(
-                    $this->connection(),
-                    $this->query,
-                    $parameters,
-                    $types,
-                )
-            );
+        return (new Flow())->extract(\Flow\ETL\Adapter\Doctrine\dbal_from_query($this->connection(), $this->query, $parameters, $types));
     }
 
     private function connection() : Connection

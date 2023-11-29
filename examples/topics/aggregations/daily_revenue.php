@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\from_parquet;
+use function Flow\ETL\Adapter\Parquet\from_parquet;
+use function Flow\ETL\Adapter\Parquet\to_parquet;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\sum;
 use function Flow\ETL\DSL\to_output;
-use function Flow\ETL\DSL\to_parquet;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Flow;
 

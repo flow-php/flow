@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\from_text;
+use function Flow\ETL\Adapter\Text\from_text;
 use Aeon\Calendar\Stopwatch;
 use Flow\ETL\Flow;
 

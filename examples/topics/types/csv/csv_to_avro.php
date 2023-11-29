@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\from_csv;
-use function Flow\ETL\DSL\to_avro;
+use function Flow\ETL\Adapter\CSV\from_csv;
+use function Flow\ETL\DSL\Adapter\Avro\to_avro;
 use Aeon\Calendar\Stopwatch;
 use Flow\ETL\Flow;
 

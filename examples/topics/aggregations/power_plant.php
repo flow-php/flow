@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
+use function Flow\ETL\Adapter\CSV\from_csv;
 use function Flow\ETL\DSL\average;
 use function Flow\ETL\DSL\concat;
-use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\from_csv;
+use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\max;
 use function Flow\ETL\DSL\min;
@@ -15,7 +15,7 @@ use function Flow\ETL\DSL\to_output;
 
 require __DIR__ . '/../../bootstrap.php';
 
-$df = df()
+$df = data_frame()
     ->read(from_csv(__FLOW_DATA__ . '/power-plant-daily.csv', delimiter: ';'))
     ->withEntry('production_kwh', ref('Produkcja(kWh)'))
     ->withEntry('consumption_kwh', ref('Zużycie(kWh)'))

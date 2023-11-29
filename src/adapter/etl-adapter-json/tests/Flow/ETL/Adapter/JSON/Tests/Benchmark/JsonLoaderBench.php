@@ -2,12 +2,12 @@
 
 namespace Flow\ETL\Adapter\JSON\Tests\Benchmark;
 
-use function Flow\ETL\DSL\from_json;
-use function Flow\ETL\DSL\to_json;
 use Flow\ETL\Config;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use PhpBench\Attributes\Groups;
+use function Flow\ETL\Adapter\JSON\from_json;
+use function Flow\ETL\Adapter\JSON\to_json;
 
 #[Groups(['loader'])]
 final class JsonLoaderBench

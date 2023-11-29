@@ -2,9 +2,9 @@
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Benchmark;
 
-use function Flow\ETL\DSL\from_parquet;
+use function Flow\ETL\Adapter\Parquet\from_parquet;
+use function Flow\ETL\Adapter\Parquet\to_parquet;
 use function Flow\ETL\DSL\str_entry;
-use function Flow\ETL\DSL\to_parquet;
 use Flow\ETL\Config;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;

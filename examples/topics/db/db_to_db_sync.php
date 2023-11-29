@@ -6,11 +6,11 @@ if ($_ENV['FLOW_PHAR_APP'] ?? false) {
     exit(1);
 }
 
+use function Flow\ETL\Adapter\Doctrine\from_dbal_limit_offset;
+use function Flow\ETL\Adapter\Doctrine\to_dbal_table_insert;
 use function Flow\ETL\DSL\concat;
-use function Flow\ETL\DSL\from_dbal_limit_offset;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\to_dbal_table_insert;
 use Aeon\Calendar\Stopwatch;
 use Flow\ETL\Adapter\Doctrine\Order;
 use Flow\ETL\Adapter\Doctrine\OrderBy;

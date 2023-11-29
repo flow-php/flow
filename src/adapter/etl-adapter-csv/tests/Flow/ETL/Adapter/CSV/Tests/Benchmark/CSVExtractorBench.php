@@ -2,10 +2,10 @@
 
 namespace Flow\ETL\Adapter\CSV\Tests\Benchmark;
 
-use function Flow\ETL\DSL\from_csv;
 use Flow\ETL\Config;
 use Flow\ETL\FlowContext;
 use PhpBench\Attributes\Groups;
+use function Flow\ETL\Adapter\CSV\from_csv;
 
 #[Groups(['extractor'])]
 final class CSVExtractorBench

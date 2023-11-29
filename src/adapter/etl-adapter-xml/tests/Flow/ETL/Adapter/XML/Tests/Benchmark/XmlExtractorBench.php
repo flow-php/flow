@@ -2,10 +2,10 @@
 
 namespace Flow\ETL\Adapter\XML\Tests\Benchmark;
 
-use function Flow\ETL\DSL\from_xml;
 use Flow\ETL\Config;
 use Flow\ETL\FlowContext;
 use PhpBench\Attributes\Groups;
+use function Flow\ETL\Adapter\XML\from_xml;
 
 #[Groups(['extractor'])]
 final class XmlExtractorBench

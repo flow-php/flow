@@ -2,17 +2,18 @@
 
 declare(strict_types=1);
 
+use function Flow\ETL\Adapter\ChartJS\bar_chart;
+use function Flow\ETL\Adapter\ChartJS\to_chartjs_file;
+use function Flow\ETL\Adapter\CSV\from_csv;
 use function Flow\ETL\DSL\average;
-use function Flow\ETL\DSL\bar_chart;
 use function Flow\ETL\DSL\concat;
 use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\from_csv;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\max;
 use function Flow\ETL\DSL\min;
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\refs;
 use function Flow\ETL\DSL\sum;
-use function Flow\ETL\DSL\to_chartjs_file;
 
 require __DIR__ . '/../../bootstrap.php';
 
@@ -47,7 +48,7 @@ $df = df()
     ->withEntry('consumption', concat(ref('consumption'), lit('%')))
     ->write(
         to_chartjs_file(
-            bar_chart(label: ref('date'), datasets: [ref('production_kwh_avg'), ref('consumption_kwh_avg')])
+            bar_chart(label: ref('date'), datasets: refs(ref('production_kwh_avg'), ref('consumption_kwh_avg')))
                 ->setOptions(['indexAxis' => 'y']),
             output: __FLOW_OUTPUT__ . '/power_plant_bar_chart.html'
         )

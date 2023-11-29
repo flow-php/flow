@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 
+use function Flow\ETL\Adapter\CSV\from_csv;
+use function Flow\ETL\Adapter\JSON\to_json;
 use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\from_csv;
-use function Flow\ETL\DSL\to_json;
 
 require __DIR__ . '/../../../bootstrap.php';
 
