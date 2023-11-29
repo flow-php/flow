@@ -22,15 +22,15 @@
             "Flow\\": [
                 "src/Flow"
             ]
-        }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "Flow\\": "tests/Flow"
         },
         "files": [
             "src/Flow/ETL/Adapter/Doctrine/functions.php"
         ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Flow\\": "tests/Flow"
+        }
     },
     "config": {
         "optimize-autoloader": true,
