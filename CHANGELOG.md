@@ -1,6 +1,8 @@
 ## [Unreleased] - 2023-11-29
 
 ### Added
+- [#852](https://github.com/flow-php/flow/pull/852) - **Possibility to filter partitions using scalar functions** - [@norberttech](https://github.com/norberttech)
+- [#852](https://github.com/flow-php/flow/pull/852) - **DSL functions for maps/structs/list/types** - [@norberttech](https://github.com/norberttech)
 - [#847](https://github.com/flow-php/flow/pull/847) - **capitalize scalar function** - [@norberttech](https://github.com/norberttech)
 - [#844](https://github.com/flow-php/flow/pull/844) - **ref()->isTrue()** - [@norberttech](https://github.com/norberttech)
 - [#844](https://github.com/flow-php/flow/pull/844) - **ref()->isFalse()** - [@norberttech](https://github.com/norberttech)
@@ -83,6 +85,8 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#852](https://github.com/flow-php/flow/pull/852) - **Deprecated all DSL static classes in favor of functions** - [@norberttech](https://github.com/norberttech)
+- [#852](https://github.com/flow-php/flow/pull/852) - **Moved whole DSL to ETL functions.php** - [@norberttech](https://github.com/norberttech)
 - [#851](https://github.com/flow-php/flow/pull/851) - **Allow usage of Symfony 7** - [@stloyd](https://github.com/stloyd)
 - [#849](https://github.com/flow-php/flow/pull/849) - **Rework Doctrine Bulk tests to not use deprecated code** - [@stloyd](https://github.com/stloyd)
 - [#842](https://github.com/flow-php/flow/pull/842) - **Default cache path** - [@norberttech](https://github.com/norberttech)
