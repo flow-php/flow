@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use function Flow\ETL\DSL\average;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\null_entry;
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\window;
-use Flow\ETL\DSL\Entry;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use PHPUnit\Framework\TestCase;
@@ -18,11 +20,11 @@ final class AverageTest extends TestCase
     {
         $aggregator = average(ref('int'));
 
-        $aggregator->aggregate(Row::create(Entry::string('int', '10')));
-        $aggregator->aggregate(Row::create(Entry::string('int', '20')));
-        $aggregator->aggregate(Row::create(Entry::string('int', '30')));
-        $aggregator->aggregate(Row::create(Entry::string('int', '25')));
-        $aggregator->aggregate(Row::create(Entry::null('not_int')));
+        $aggregator->aggregate(Row::create(str_entry('int', '10')));
+        $aggregator->aggregate(Row::create(str_entry('int', '20')));
+        $aggregator->aggregate(Row::create(str_entry('int', '30')));
+        $aggregator->aggregate(Row::create(str_entry('int', '25')));
+        $aggregator->aggregate(Row::create(null_entry('not_int')));
 
         $this->assertSame(
             21.25,
@@ -34,10 +36,10 @@ final class AverageTest extends TestCase
     {
         $aggregator = average(ref('int'));
 
-        $aggregator->aggregate(Row::create(Entry::integer('int', 10)));
-        $aggregator->aggregate(Row::create(Entry::integer('int', 20)));
-        $aggregator->aggregate(Row::create(Entry::integer('int', 30)));
-        $aggregator->aggregate(Row::create(Entry::null('int')));
+        $aggregator->aggregate(Row::create(int_entry('int', 10)));
+        $aggregator->aggregate(Row::create(int_entry('int', 20)));
+        $aggregator->aggregate(Row::create(int_entry('int', 30)));
+        $aggregator->aggregate(Row::create(null_entry('int')));
 
         $this->assertSame(
             20,
@@ -49,10 +51,10 @@ final class AverageTest extends TestCase
     {
         $aggregator = average(ref('int'));
 
-        $aggregator->aggregate(Row::create(Entry::integer('int', 10)));
-        $aggregator->aggregate(Row::create(Entry::integer('int', 20)));
-        $aggregator->aggregate(Row::create(Entry::integer('int', 30)));
-        $aggregator->aggregate(Row::create(Entry::integer('int', 25)));
+        $aggregator->aggregate(Row::create(int_entry('int', 10)));
+        $aggregator->aggregate(Row::create(int_entry('int', 20)));
+        $aggregator->aggregate(Row::create(int_entry('int', 30)));
+        $aggregator->aggregate(Row::create(int_entry('int', 25)));
 
         $this->assertSame(
             21.25,
@@ -64,10 +66,10 @@ final class AverageTest extends TestCase
     {
         $aggregator = average(ref('int'));
 
-        $aggregator->aggregate(Row::create(Entry::integer('int', 10)));
-        $aggregator->aggregate(Row::create(Entry::integer('int', 20)));
-        $aggregator->aggregate(Row::create(Entry::integer('int', 30)));
-        $aggregator->aggregate(Row::create(Entry::integer('int', 40)));
+        $aggregator->aggregate(Row::create(int_entry('int', 10)));
+        $aggregator->aggregate(Row::create(int_entry('int', 20)));
+        $aggregator->aggregate(Row::create(int_entry('int', 30)));
+        $aggregator->aggregate(Row::create(int_entry('int', 40)));
 
         $this->assertSame(
             25,
@@ -88,11 +90,11 @@ final class AverageTest extends TestCase
     public function test_window_function_average_on_partitioned_rows() : void
     {
         $rows = new Rows(
-            $row1 = Row::create(Entry::int('id', 1), Entry::int('value', 1)),
-            Row::create(Entry::int('id', 2), Entry::int('value', 100)),
-            Row::create(Entry::int('id', 3), Entry::int('value', 25)),
-            Row::create(Entry::int('id', 4), Entry::int('value', 64)),
-            Row::create(Entry::int('id', 5), Entry::int('value', 23)),
+            $row1 = Row::create(int_entry('id', 1), int_entry('value', 1)),
+            Row::create(int_entry('id', 2), int_entry('value', 100)),
+            Row::create(int_entry('id', 3), int_entry('value', 25)),
+            Row::create(int_entry('id', 4), int_entry('value', 64)),
+            Row::create(int_entry('id', 5), int_entry('value', 23)),
         );
 
         $avg = average(ref('value'))->over(window()->orderBy(ref('value')));

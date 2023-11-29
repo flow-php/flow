@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use function Flow\ETL\DSL\array_entry;
 use function Flow\ETL\DSL\array_key_rename;
+use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\ref;
 use Flow\ArrayDot\Exception\InvalidPathException;
-use Flow\ETL\DSL\Entry;
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;
 
@@ -16,7 +17,7 @@ final class ArrayKeyRenameTest extends TestCase
     public function test_for_not_array_entry() : void
     {
         $row = Row::create(
-            Entry::integer('integer_entry', 1),
+            int_entry('integer_entry', 1),
         );
 
         $this->assertNull(array_key_rename(ref('integer_entry'), 'invalid_path', 'new_name')->eval($row));
@@ -25,11 +26,11 @@ final class ArrayKeyRenameTest extends TestCase
     public function test_renames_array_entry_keys_in_multiple_array_entry() : void
     {
         $row = Row::create(
-            Entry::array('customer', [
+            array_entry('customer', [
                 'first' => 'John',
                 'last' => 'Snow',
             ]),
-            Entry::array('shipping', [
+            array_entry('shipping', [
                 'address' => [
                     'line' => '3644 Clement Street',
                     'city' => 'Atalanta',
@@ -62,7 +63,7 @@ final class ArrayKeyRenameTest extends TestCase
     public function test_renames_array_entry_keys_in_single_array_entry() : void
     {
         $row = Row::create(
-            Entry::array('array_entry', [
+            array_entry('array_entry', [
                 'id' => 1,
                 'status' => 'PENDING',
                 'enabled' => true,
@@ -84,7 +85,7 @@ final class ArrayKeyRenameTest extends TestCase
     public function test_throws_exception_for_invalid_path() : void
     {
         $row = Row::create(
-            Entry::array('array_entry', [
+            array_entry('array_entry', [
                 'id' => 1,
                 'status' => 'PENDING',
                 'enabled' => true,

@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use function Flow\ETL\DSL\array_entry;
+use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
-use Flow\ETL\DSL\Entry;
 use Flow\ETL\Function\ArrayMerge;
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;
@@ -20,8 +21,8 @@ final class ArrayMergeTest extends TestCase
             ref('a')->arrayMerge(ref('b'))
                 ->eval(
                     Row::create(
-                        Entry::array('a', ['a' => 1]),
-                        Entry::array('b', ['b' => 2]),
+                        array_entry('a', ['a' => 1]),
+                        array_entry('b', ['b' => 2]),
                     ),
                 )
         );
@@ -43,8 +44,8 @@ final class ArrayMergeTest extends TestCase
             ref('a')->arrayMerge(ref('b'))
                 ->eval(
                     Row::create(
-                        Entry::int('a', 1),
-                        Entry::array('b', ['b' => 2]),
+                        int_entry('a', 1),
+                        array_entry('b', ['b' => 2]),
                     ),
                 )
         );
@@ -56,8 +57,8 @@ final class ArrayMergeTest extends TestCase
             ref('a')->arrayMerge(ref('b'))
                 ->eval(
                     Row::create(
-                        Entry::array('a', ['a' => 1]),
-                        Entry::int('b', 2),
+                        array_entry('a', ['a' => 1]),
+                        int_entry('b', 2),
                     ),
                 )
         );

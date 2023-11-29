@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Loader;
 
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\to_callable;
 use Flow\ETL\Config;
-use Flow\ETL\DSL\Entry;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -18,8 +19,8 @@ final class CallbackLoaderTest extends TestCase
     public function test_callback_loader() : void
     {
         $rows = new Rows(
-            Row::create(Entry::integer('number', 1), Entry::string('name', 'one')),
-            Row::create(Entry::integer('number', 2), Entry::string('name', 'two')),
+            Row::create(int_entry('number', 1), str_entry('name', 'one')),
+            Row::create(int_entry('number', 2), str_entry('name', 'two')),
         );
 
         $data = [];
@@ -34,8 +35,8 @@ final class CallbackLoaderTest extends TestCase
     public function test_callback_loader_serialization() : void
     {
         $rows = new Rows(
-            Row::create(Entry::integer('number', 1), Entry::string('name', 'one')),
-            Row::create(Entry::integer('number', 2), Entry::string('name', 'two')),
+            Row::create(int_entry('number', 1), str_entry('name', 'one')),
+            Row::create(int_entry('number', 2), str_entry('name', 'two')),
         );
 
         $path = \sys_get_temp_dir() . DIRECTORY_SEPARATOR . \uniqid('flow_callback_loader') . '.txt';

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Avro\Tests;
 
+use function Flow\ETL\DSL\type_object;
+use function Flow\ETL\DSL\type_string;
 use Flow\ETL\Adapter\Avro\FlixTech\SchemaConverter;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
@@ -13,8 +15,6 @@ use Flow\ETL\PHP\Type\Logical\Map\MapValue;
 use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\StructureType;
-use Flow\ETL\PHP\Type\Native\ObjectType;
-use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\Row\Schema;
 use PHPUnit\Framework\TestCase;
 
@@ -92,7 +92,7 @@ AVRO_JSON
                 Schema\Definition::dateTime('datetime'),
                 Schema\Definition::json('json'),
                 Schema\Definition::list('list', new ListType(ListElement::string())),
-                Schema\Definition::structure('structure', new StructureType(new StructureElement('a', ScalarType::string()))),
+                Schema\Definition::structure('structure', new StructureType(new StructureElement('a', type_string()))),
                 Schema\Definition::map('map', new MapType(MapKey::string(), MapValue::integer()))
             ))
         );
@@ -104,7 +104,7 @@ AVRO_JSON
         $this->expectExceptionMessage("Flow\ETL\Row\Entry\ObjectEntry is not yet supported.");
 
         (new SchemaConverter())->toAvroJsonSchema(new Schema(
-            Schema\Definition::object('object', new ObjectType(\stdClass::class, false))
+            Schema\Definition::object('object', type_object(\stdClass::class, false))
         ));
     }
 }

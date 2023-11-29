@@ -2,6 +2,8 @@
 
 namespace Flow\ETL\Function;
 
+use function Flow\ETL\DSL\float_entry;
+use function Flow\ETL\DSL\integer_entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
@@ -80,10 +82,10 @@ final class Average implements AggregatingFunction, WindowFunction
         }
 
         if ($result - $resultInt === 0.0) {
-            return \Flow\ETL\DSL\Entry::integer($this->ref->name(), (int) $result);
+            return integer_entry($this->ref->name(), (int) $result);
         }
 
-        return \Flow\ETL\DSL\Entry::float($this->ref->name(), $result);
+        return float_entry($this->ref->name(), $result);
     }
 
     public function toString() : string

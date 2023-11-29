@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Http;
 
+use function Flow\ETL\DSL\array_entry;
+use function Flow\ETL\DSL\str_entry;
 use Flow\ETL\Adapter\Http\DynamicExtractor\NextRequestFactory;
-use Flow\ETL\DSL\Entry;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
@@ -67,9 +68,9 @@ final class PsrHttpClientDynamicExtractor implements Extractor
                             $responseFactory->create($response)->all(),
                             $requestFactory->create($nextRequest)->all(),
                             [
-                                Entry::string('request_uri', (string) $nextRequest->getUri()),
-                                Entry::string('request_method', $nextRequest->getMethod()),
-                                Entry::array('request_headers', $nextRequest->getHeaders()),
+                                str_entry('request_uri', (string) $nextRequest->getUri()),
+                                str_entry('request_method', $nextRequest->getMethod()),
+                                array_entry('request_headers', $nextRequest->getHeaders()),
                             ]
                         )
                     )

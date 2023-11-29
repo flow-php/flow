@@ -2,11 +2,12 @@
 
 namespace Flow\ETL\Tests\Unit\PHP\Type\Native;
 
+use function Flow\ETL\DSL\type_array;
+use function Flow\ETL\DSL\type_float;
 use Flow\ETL\PHP\Type\Logical\Map\MapKey;
 use Flow\ETL\PHP\Type\Logical\Map\MapValue;
 use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Native\ArrayType;
-use Flow\ETL\PHP\Type\Native\ScalarType;
 use PHPUnit\Framework\TestCase;
 
 final class ArrayTypeTest extends TestCase
@@ -14,19 +15,19 @@ final class ArrayTypeTest extends TestCase
     public function test_equals() : void
     {
         $this->assertTrue(
-            (new ArrayType())->isEqual(new ArrayType)
+            (type_array())->isEqual(new ArrayType)
         );
         $this->assertTrue(
             ArrayType::empty()->isEqual(ArrayType::empty())
         );
         $this->assertFalse(
-            (new ArrayType())->isEqual(new MapType(MapKey::string(), MapValue::float()))
+            (type_array())->isEqual(new MapType(MapKey::string(), MapValue::float()))
         );
         $this->assertFalse(
-            (new ArrayType())->isEqual(ScalarType::float())
+            (type_array())->isEqual(type_float())
         );
         $this->assertFalse(
-            ArrayType::empty()->isEqual(new ArrayType)
+            ArrayType::empty()->isEqual(type_array())
         );
     }
 
@@ -34,7 +35,7 @@ final class ArrayTypeTest extends TestCase
     {
         $this->assertSame(
             'array<mixed>',
-            (new ArrayType())->toString()
+            type_array()->toString()
         );
         $this->assertSame(
             'array<empty, empty>',
@@ -45,25 +46,25 @@ final class ArrayTypeTest extends TestCase
     public function test_valid() : void
     {
         $this->assertTrue(
-            (new ArrayType())->isValid([])
+            type_array()->isValid([])
         );
         $this->assertTrue(
-            (new ArrayType())->isValid(['one'])
+            type_array()->isValid(['one'])
         );
         $this->assertTrue(
-            (new ArrayType())->isValid([1])
+            type_array()->isValid([1])
         );
         $this->assertFalse(
-            (new ArrayType())->isValid(null)
+            type_array()->isValid(null)
         );
         $this->assertFalse(
-            (new ArrayType())->isValid('one')
+            type_array()->isValid('one')
         );
         $this->assertFalse(
-            (new ArrayType())->isValid(true)
+            type_array()->isValid(true)
         );
         $this->assertFalse(
-            (new ArrayType())->isValid(123)
+            type_array()->isValid(123)
         );
     }
 }

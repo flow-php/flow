@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL;
 
 use function Flow\ETL\DSL\array_to_rows;
-use Flow\ETL\DSL\Entry;
+use function Flow\ETL\DSL\null_entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Join\Expression;
@@ -369,7 +369,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
             $joined[] = $joinedRow ?: $leftRow->merge(
                 Row::create(
                     ...\array_map(
-                        static fn (string $e) : NullEntry => Entry::null($e),
+                        static fn (string $e) : NullEntry => null_entry($e),
                         \array_map(
                             static fn (Reference $r) : string => $r->name(),
                             $rightSchema->entries()
@@ -446,7 +446,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
             if ($joinedRow === null) {
                 $joined[] = $rightRow->merge(
                     Row::create(
-                        ...\array_map(static fn (Reference $e) : NullEntry => Entry::null($e->name()), $leftSchema->entries())
+                        ...\array_map(static fn (Reference $e) : NullEntry => null_entry($e->name()), $leftSchema->entries())
                     ),
                     $expression->prefix()
                 );

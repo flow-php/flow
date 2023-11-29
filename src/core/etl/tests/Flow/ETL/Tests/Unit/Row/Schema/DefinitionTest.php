@@ -4,13 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Schema;
 
-use Flow\ETL\DSL\Entry;
+use function Flow\ETL\DSL\bool_entry;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\null_entry;
+use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\struct_element;
+use function Flow\ETL\DSL\struct_entry;
+use function Flow\ETL\DSL\struct_type;
+use function Flow\ETL\DSL\type_float;
+use function Flow\ETL\DSL\type_string;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\ListType;
-use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\StructureType;
-use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Row\Entry\ListEntry;
 use Flow\ETL\Row\Entry\NullEntry;
@@ -85,21 +91,21 @@ final class DefinitionTest extends TestCase
 
         $def = Definition::integer('test', false, $constraint);
 
-        $this->assertTrue($def->matches(Entry::integer('test', 1)));
+        $this->assertTrue($def->matches(int_entry('test', 1)));
     }
 
     public function test_matches_when_nullable_and_name_matches() : void
     {
         $def = Definition::integer('test', $nullable = true);
 
-        $this->assertTrue($def->matches(Entry::null('test')));
+        $this->assertTrue($def->matches(null_entry('test')));
     }
 
     public function test_matches_when_type_and_name_match() : void
     {
         $def = Definition::integer('test');
 
-        $this->assertTrue($def->matches(Entry::integer('test', 1)));
+        $this->assertTrue($def->matches(int_entry('test', 1)));
     }
 
     public function test_merge_definitions_with_both_side_constraints() : void
@@ -178,28 +184,28 @@ final class DefinitionTest extends TestCase
 
         $def = Definition::integer('test', false, $constraint);
 
-        $this->assertFalse($def->matches(Entry::integer('test', 1)));
+        $this->assertFalse($def->matches(int_entry('test', 1)));
     }
 
     public function test_not_matches_when_not_nullable_name_matches_but_null_given() : void
     {
         $def = Definition::integer('test', $nullable = false);
 
-        $this->assertFalse($def->matches(Entry::null('test')));
+        $this->assertFalse($def->matches(null_entry('test')));
     }
 
     public function test_not_matches_when_type_does_not_match() : void
     {
         $def = Definition::integer('test');
 
-        $this->assertFalse($def->matches(Entry::string('test', 'test')));
+        $this->assertFalse($def->matches(str_entry('test', 'test')));
     }
 
     public function test_not_matches_when_type_name_not_match() : void
     {
         $def = Definition::integer('test');
 
-        $this->assertFalse($def->matches(Entry::integer('not-test', 1)));
+        $this->assertFalse($def->matches(int_entry('not-test', 1)));
     }
 
     public function test_nullable_is_not_union() : void
@@ -209,21 +215,21 @@ final class DefinitionTest extends TestCase
 
     public function test_structure_definition_metadata() : void
     {
-        $address = Entry::structure(
+        $address = struct_entry(
             'address',
             [
                 'street' => 'street',
                 'city' => 'city',
                 'location' => ['lat' => 1.0, 'lng' => 1.0],
             ],
-            new StructureType(
-                new StructureElement('street', ScalarType::string()),
-                new StructureElement('city', ScalarType::string()),
-                new StructureElement(
+            struct_type(
+                struct_element('street', type_string()),
+                struct_element('city', type_string()),
+                struct_element(
                     'location',
-                    new StructureType(
-                        new StructureElement('lat', ScalarType::float()),
-                        new StructureElement('lng', ScalarType::float()),
+                    struct_type(
+                        struct_element('lat', type_float()),
+                        struct_element('lng', type_float()),
                     )
                 )
             ),
@@ -231,13 +237,13 @@ final class DefinitionTest extends TestCase
 
         $this->assertEquals(
             new StructureType(
-                new StructureElement('street', ScalarType::string()),
-                new StructureElement('city', ScalarType::string()),
-                new StructureElement(
+                struct_element('street', type_string()),
+                struct_element('city', type_string()),
+                struct_element(
                     'location',
                     new StructureType(
-                        new StructureElement('lat', ScalarType::float()),
-                        new StructureElement('lng', ScalarType::float()),
+                        struct_element('lat', type_float()),
+                        struct_element('lng', type_float()),
                     )
                 )
             ),
@@ -249,10 +255,10 @@ final class DefinitionTest extends TestCase
     {
         $def = Definition::union('test', [IntegerEntry::class, StringEntry::class]);
 
-        $this->assertFalse($def->matches(Entry::integer('not-test', 1)));
-        $this->assertTrue($def->matches(Entry::integer('test', 1)));
-        $this->assertTrue($def->matches(Entry::string('test', 'test')));
-        $this->assertFalse($def->matches(Entry::boolean('test', false)));
+        $this->assertFalse($def->matches(int_entry('not-test', 1)));
+        $this->assertTrue($def->matches(int_entry('test', 1)));
+        $this->assertTrue($def->matches(str_entry('test', 'test')));
+        $this->assertFalse($def->matches(bool_entry('test', false)));
     }
 
     public function test_union_type_from_non_unique_types() : void

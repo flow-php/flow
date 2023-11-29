@@ -3,9 +3,9 @@
 namespace Flow\ETL\Adapter\Parquet\Tests\Benchmark;
 
 use function Flow\ETL\DSL\from_parquet;
+use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\to_parquet;
 use Flow\ETL\Config;
-use Flow\ETL\DSL\Entry;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -28,7 +28,7 @@ final class ParquetLoaderBench
 
         foreach (from_parquet(__DIR__ . '/../Fixtures/orders_flow.parquet')->extract($this->context) as $rows) {
             $rows = $rows->map(static function (Row $row) : Row {
-                return $row->set(Entry::str('order_id', $row->valueOf('order_id')->toString()));
+                return $row->set(str_entry('order_id', $row->valueOf('order_id')->toString()));
             });
 
             $this->rows = $this->rows->merge($rows);

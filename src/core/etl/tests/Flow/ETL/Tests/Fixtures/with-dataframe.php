@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-use Flow\ETL\DSL\Entry;
+use function Flow\ETL\DSL\str_entry;
 use Flow\ETL\Flow;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 
 return (new Flow())->process(
     new Rows(
-        Row::create(Entry::string('code', 'PL'), Entry::string('name', 'Poland')),
-        Row::create(Entry::string('code', 'US'), Entry::string('name', 'United States')),
-        Row::create(Entry::string('code', 'GB'), Entry::string('name', 'Great Britain')),
+        Row::create(str_entry('code', 'PL'), str_entry('name', 'Poland')),
+        Row::create(str_entry('code', 'US'), str_entry('name', 'United States')),
+        Row::create(str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
     )
 );

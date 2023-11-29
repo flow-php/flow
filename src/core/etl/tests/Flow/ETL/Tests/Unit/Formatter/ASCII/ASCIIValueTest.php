@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Formatter\ASCII;
 
-use Flow\ETL\DSL\Entry;
+use function Flow\ETL\DSL\datetime_entry;
 use Flow\ETL\Formatter\ASCII\ASCIIValue;
 use PHPUnit\Framework\TestCase;
 
@@ -15,7 +15,7 @@ final class ASCIIValueTest extends TestCase
         yield ['string', 'str'];
         yield [false, 'fal'];
         yield [true, 'tru'];
-        yield [Entry::datetime('test', new \DateTimeImmutable('2023-01-01 00:00:00 UTC')), '202'];
+        yield [datetime_entry('test', new \DateTimeImmutable('2023-01-01 00:00:00 UTC')), '202'];
         yield [['a' => 1, 'b' => 2, 'c' => ['test']], '{"a'];
     }
 
@@ -25,7 +25,7 @@ final class ASCIIValueTest extends TestCase
         yield [1, '1'];
         yield [false, 'false'];
         yield [true, 'true'];
-        yield [Entry::datetime('test', new \DateTimeImmutable('2023-01-01 00:00:00 UTC')), '2023-01-01T00:00:00+00:00'];
+        yield [datetime_entry('test', new \DateTimeImmutable('2023-01-01 00:00:00 UTC')), '2023-01-01T00:00:00+00:00'];
         yield [['a' => 1, 'b' => 2, 'c' => ['test']], '{"a":1,"b":2,"c":["test"]}'];
     }
 

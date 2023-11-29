@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Schema;
 
+use function Flow\ETL\DSL\type_int;
+use function Flow\ETL\DSL\type_string;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\Row\Schema\Metadata;
 use PHPUnit\Framework\TestCase;
 
@@ -44,8 +45,8 @@ final class MetadataTest extends TestCase
     public function test_merge_object_metadata() : void
     {
         $this->assertEquals(
-            Metadata::empty()->add('type', ScalarType::integer()),
-            Metadata::empty()->add('type', ScalarType::string())->merge(Metadata::empty()->add('type', ScalarType::integer()))
+            Metadata::empty()->add('type', type_int()),
+            Metadata::empty()->add('type', type_string())->merge(Metadata::empty()->add('type', type_int()))
         );
     }
 

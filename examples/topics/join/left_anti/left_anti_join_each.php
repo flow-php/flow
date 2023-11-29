@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\to_output;
 use Flow\ETL\DataFrame;
 use Flow\ETL\DataFrameFactory;
@@ -22,15 +24,15 @@ $apiExtractor = new class implements Extractor {
     public function extract(FlowContext $context) : Generator
     {
         yield new Rows(
-            Row::create(Entry::integer('id', 1), Entry::string('sku', 'PRODUCT01')),
-            Row::create(Entry::integer('id', 2), Entry::string('sku', 'PRODUCT02')),
-            Row::create(Entry::integer('id', 3), Entry::string('sku', 'PRODUCT03'))
+            Row::create(int_entry('id', 1), str_entry('sku', 'PRODUCT01')),
+            Row::create(int_entry('id', 2), str_entry('sku', 'PRODUCT02')),
+            Row::create(int_entry('id', 3), str_entry('sku', 'PRODUCT03'))
         );
 
         yield new Rows(
-            Row::create(Entry::integer('id', 10_001), Entry::string('sku', 'PRODUCT10_001')),
-            Row::create(Entry::integer('id', 10_002), Entry::string('sku', 'PRODUCT10_002')),
-            Row::create(Entry::integer('id', 10_003), Entry::string('sku', 'PRODUCT10_003'))
+            Row::create(int_entry('id', 10_001), str_entry('sku', 'PRODUCT10_001')),
+            Row::create(int_entry('id', 10_002), str_entry('sku', 'PRODUCT10_002')),
+            Row::create(int_entry('id', 10_003), str_entry('sku', 'PRODUCT10_003'))
         );
     }
 };
@@ -55,7 +57,7 @@ $dbDataFrameFactory = new class implements DataFrameFactory {
     {
         // Lets pretend there are 10k more entries in the DB
         $databaseRows = \array_map(
-            static fn (int $id) : Row => Row::create(Entry::integer('id', $id), Entry::string('sku', 'PRODUCT' . $id)),
+            static fn (int $id) : Row => Row::create(int_entry('id', $id), str_entry('sku', 'PRODUCT' . $id)),
             \range(1, 10_000)
         );
 

@@ -4,18 +4,21 @@ namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use function Flow\ETL\DSL\average;
 use function Flow\ETL\DSL\count;
+use function Flow\ETL\DSL\float_entry;
 use function Flow\ETL\DSL\from_all;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_memory;
 use function Flow\ETL\DSL\from_rows;
+use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\max;
+use function Flow\ETL\DSL\null_entry;
 use function Flow\ETL\DSL\rank;
 use function Flow\ETL\DSL\read;
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\sum;
 use function Flow\ETL\DSL\window;
-use Flow\ETL\DSL\Entry;
 use Flow\ETL\DSL\Transform;
 use Flow\ETL\Loader;
 use Flow\ETL\Memory\ArrayMemory;
@@ -33,14 +36,14 @@ final class GroupByTest extends IntegrationTestCase
 
         $rows = read(from_rows(
             new Rows(
-                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20), Entry::string('gender', 'male')),
-                Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20), Entry::string('gender', 'male')),
-                Row::create(Entry::integer('id', 3), Entry::string('country', 'PL'), Entry::integer('age', 25), Entry::string('gender', 'male')),
-                Row::create(Entry::integer('id', 4), Entry::string('country', 'PL'), Entry::integer('age', 30), Entry::string('gender', 'female')),
-                Row::create(Entry::integer('id', 5), Entry::string('country', 'US'), Entry::integer('age', 40), Entry::string('gender', 'female')),
-                Row::create(Entry::integer('id', 6), Entry::string('country', 'US'), Entry::integer('age', 40), Entry::string('gender', 'male')),
-                Row::create(Entry::integer('id', 7), Entry::string('country', 'US'), Entry::integer('age', 45), Entry::string('gender', 'female')),
-                Row::create(Entry::integer('id', 9), Entry::string('country', 'US'), Entry::integer('age', 50), Entry::string('gender', 'male')),
+                Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
+                Row::create(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
+                Row::create(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25), str_entry('gender', 'male')),
+                Row::create(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30), str_entry('gender', 'female')),
+                Row::create(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40), str_entry('gender', 'female')),
+                Row::create(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40), str_entry('gender', 'male')),
+                Row::create(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45), str_entry('gender', 'female')),
+                Row::create(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50), str_entry('gender', 'male')),
             )
         ))
             ->groupBy('country', 'gender')
@@ -50,10 +53,10 @@ final class GroupByTest extends IntegrationTestCase
 
         $this->assertEquals(
             new Rows(
-                Row::create(Entry::string('country', 'PL'), Entry::string('gender', 'male')),
-                Row::create(Entry::string('country', 'PL'), Entry::string('gender', 'female')),
-                Row::create(Entry::string('country', 'US'), Entry::string('gender', 'female')),
-                Row::create(Entry::string('country', 'US'), Entry::string('gender', 'male')),
+                Row::create(str_entry('country', 'PL'), str_entry('gender', 'male')),
+                Row::create(str_entry('country', 'PL'), str_entry('gender', 'female')),
+                Row::create(str_entry('country', 'US'), str_entry('gender', 'female')),
+                Row::create(str_entry('country', 'US'), str_entry('gender', 'male')),
             ),
             $rows
         );
@@ -63,14 +66,14 @@ final class GroupByTest extends IntegrationTestCase
     {
         $rows = read(from_rows(
             new Rows(
-                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20), Entry::string('gender', 'male')),
-                Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20), Entry::string('gender', 'male')),
-                Row::create(Entry::integer('id', 3), Entry::string('country', 'PL'), Entry::integer('age', 25), Entry::string('gender', 'male')),
-                Row::create(Entry::integer('id', 4), Entry::string('country', 'PL'), Entry::integer('age', 30), Entry::string('gender', 'female')),
-                Row::create(Entry::integer('id', 5), Entry::string('country', 'US'), Entry::integer('age', 40), Entry::string('gender', 'female')),
-                Row::create(Entry::integer('id', 6), Entry::string('country', 'US'), Entry::integer('age', 40), Entry::string('gender', 'male')),
-                Row::create(Entry::integer('id', 7), Entry::string('country', 'US'), Entry::integer('age', 45), Entry::string('gender', 'female')),
-                Row::create(Entry::integer('id', 9), Entry::string('country', 'US'), Entry::integer('age', 50), Entry::string('gender', 'male')),
+                Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
+                Row::create(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
+                Row::create(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25), str_entry('gender', 'male')),
+                Row::create(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30), str_entry('gender', 'female')),
+                Row::create(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40), str_entry('gender', 'female')),
+                Row::create(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40), str_entry('gender', 'male')),
+                Row::create(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45), str_entry('gender', 'female')),
+                Row::create(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50), str_entry('gender', 'male')),
             )
         ))
             ->groupBy('country', 'gender')
@@ -79,10 +82,10 @@ final class GroupByTest extends IntegrationTestCase
 
         $this->assertEquals(
             new Rows(
-                Row::create(Entry::string('country', 'PL'), Entry::string('gender', 'male'), Entry::float('age_avg', 21.666666666666668)),
-                Row::create(Entry::string('country', 'PL'), Entry::string('gender', 'female'), Entry::integer('age_avg', 30)),
-                Row::create(Entry::string('country', 'US'), Entry::string('gender', 'female'), Entry::float('age_avg', 42.5)),
-                Row::create(Entry::string('country', 'US'), Entry::string('gender', 'male'), Entry::integer('age_avg', 45)),
+                Row::create(str_entry('country', 'PL'), str_entry('gender', 'male'), float_entry('age_avg', 21.666666666666668)),
+                Row::create(str_entry('country', 'PL'), str_entry('gender', 'female'), int_entry('age_avg', 30)),
+                Row::create(str_entry('country', 'US'), str_entry('gender', 'female'), float_entry('age_avg', 42.5)),
+                Row::create(str_entry('country', 'US'), str_entry('gender', 'male'), int_entry('age_avg', 45)),
             ),
             $rows
         );
@@ -92,14 +95,14 @@ final class GroupByTest extends IntegrationTestCase
     {
         $rows = read(from_rows(
             new Rows(
-                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20), Entry::string('gender', 'male')),
-                Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20), Entry::string('gender', 'male')),
-                Row::create(Entry::integer('id', 3), Entry::string('country', 'PL'), Entry::integer('age', 25), Entry::string('gender', 'male')),
-                Row::create(Entry::integer('id', 4), Entry::string('country', 'PL'), Entry::integer('age', 30), Entry::string('gender', 'female')),
-                Row::create(Entry::integer('id', 5), Entry::string('country', 'US'), Entry::integer('age', 40), Entry::string('gender', 'female')),
-                Row::create(Entry::integer('id', 6), Entry::string('country', 'US'), Entry::integer('age', 40), Entry::string('gender', 'male')),
-                Row::create(Entry::integer('id', 7), Entry::string('country', 'US'), Entry::integer('age', 45), Entry::null('gender')),
-                Row::create(Entry::integer('id', 9), Entry::string('country', 'US'), Entry::integer('age', 50), Entry::string('gender', 'male')),
+                Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
+                Row::create(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20), str_entry('gender', 'male')),
+                Row::create(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25), str_entry('gender', 'male')),
+                Row::create(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30), str_entry('gender', 'female')),
+                Row::create(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40), str_entry('gender', 'female')),
+                Row::create(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40), str_entry('gender', 'male')),
+                Row::create(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45), null_entry('gender')),
+                Row::create(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50), str_entry('gender', 'male')),
             )
         ))
             ->groupBy('country', 'gender')
@@ -108,11 +111,11 @@ final class GroupByTest extends IntegrationTestCase
 
         $this->assertEquals(
             new Rows(
-                Row::create(Entry::string('country', 'PL'), Entry::string('gender', 'male'), Entry::float('age_avg', 21.666666666666668)),
-                Row::create(Entry::string('country', 'PL'), Entry::string('gender', 'female'), Entry::integer('age_avg', 30)),
-                Row::create(Entry::string('country', 'US'), Entry::string('gender', 'female'), Entry::integer('age_avg', 40)),
-                Row::create(Entry::string('country', 'US'), Entry::string('gender', 'male'), Entry::integer('age_avg', 45)),
-                Row::create(Entry::string('country', 'US'), Entry::null('gender'), Entry::integer('age_avg', 45)),
+                Row::create(str_entry('country', 'PL'), str_entry('gender', 'male'), float_entry('age_avg', 21.666666666666668)),
+                Row::create(str_entry('country', 'PL'), str_entry('gender', 'female'), int_entry('age_avg', 30)),
+                Row::create(str_entry('country', 'US'), str_entry('gender', 'female'), int_entry('age_avg', 40)),
+                Row::create(str_entry('country', 'US'), str_entry('gender', 'male'), int_entry('age_avg', 45)),
+                Row::create(str_entry('country', 'US'), null_entry('gender'), int_entry('age_avg', 45)),
             ),
             $rows
         );
@@ -122,14 +125,14 @@ final class GroupByTest extends IntegrationTestCase
     {
         $rows = read(from_rows(
             new Rows(
-                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20)),
-                Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20)),
-                Row::create(Entry::integer('id', 3), Entry::string('country', 'PL'), Entry::integer('age', 25)),
-                Row::create(Entry::integer('id', 4), Entry::string('country', 'PL'), Entry::integer('age', 30)),
-                Row::create(Entry::integer('id', 5), Entry::string('country', 'US'), Entry::integer('age', 40)),
-                Row::create(Entry::integer('id', 6), Entry::string('country', 'US'), Entry::integer('age', 40)),
-                Row::create(Entry::integer('id', 7), Entry::string('country', 'US'), Entry::integer('age', 45)),
-                Row::create(Entry::integer('id', 9), Entry::string('country', 'US'), Entry::integer('age', 50)),
+                Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
+                Row::create(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
+                Row::create(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
+                Row::create(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
+                Row::create(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
+                Row::create(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
+                Row::create(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
+                Row::create(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
             )
         ))
             ->groupBy('country')
@@ -137,8 +140,8 @@ final class GroupByTest extends IntegrationTestCase
 
         $this->assertEquals(
             new Rows(
-                Row::create(Entry::string('country', 'PL')),
-                Row::create(Entry::string('country', 'US')),
+                Row::create(str_entry('country', 'PL')),
+                Row::create(str_entry('country', 'US')),
             ),
             $rows
         );
@@ -148,14 +151,14 @@ final class GroupByTest extends IntegrationTestCase
     {
         $rows = read(from_rows(
             new Rows(
-                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20)),
-                Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20)),
-                Row::create(Entry::integer('id', 3), Entry::string('country', 'PL'), Entry::integer('age', 25)),
-                Row::create(Entry::integer('id', 4), Entry::string('country', 'PL'), Entry::integer('age', 30)),
-                Row::create(Entry::integer('id', 5), Entry::string('country', 'US'), Entry::integer('age', 40)),
-                Row::create(Entry::integer('id', 6), Entry::string('country', 'US'), Entry::integer('age', 40)),
-                Row::create(Entry::integer('id', 7), Entry::string('country', 'US'), Entry::integer('age', 45)),
-                Row::create(Entry::integer('id', 9), Entry::string('country', 'US'), Entry::integer('age', 50)),
+                Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
+                Row::create(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
+                Row::create(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
+                Row::create(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
+                Row::create(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
+                Row::create(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
+                Row::create(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
+                Row::create(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
             )
         ))
             ->groupBy('country')
@@ -164,8 +167,8 @@ final class GroupByTest extends IntegrationTestCase
 
         $this->assertEquals(
             new Rows(
-                Row::create(Entry::string('country', 'PL'), Entry::float('age_avg', 23.75)),
-                Row::create(Entry::string('country', 'US'), Entry::float('age_avg', 43.75)),
+                Row::create(str_entry('country', 'PL'), float_entry('age_avg', 23.75)),
+                Row::create(str_entry('country', 'US'), float_entry('age_avg', 43.75)),
             ),
             $rows
         );
@@ -268,14 +271,14 @@ final class GroupByTest extends IntegrationTestCase
     {
         $rows = read(from_rows(
             new Rows(
-                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20)),
-                Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20)),
-                Row::create(Entry::integer('id', 3), Entry::string('country', 'PL'), Entry::integer('age', 25)),
-                Row::create(Entry::integer('id', 4), Entry::string('country', 'PL'), Entry::integer('age', 30)),
-                Row::create(Entry::integer('id', 5), Entry::string('country', 'US'), Entry::integer('age', 40)),
-                Row::create(Entry::integer('id', 6), Entry::string('country', 'US'), Entry::integer('age', 40)),
-                Row::create(Entry::integer('id', 7), Entry::string('country', 'US'), Entry::integer('age', 45)),
-                Row::create(Entry::integer('id', 9), Entry::string('country', 'US'), Entry::integer('age', 50)),
+                Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
+                Row::create(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
+                Row::create(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
+                Row::create(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
+                Row::create(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
+                Row::create(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
+                Row::create(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
+                Row::create(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
             )
         ))
             ->aggregate(average(ref('age')))
@@ -284,7 +287,7 @@ final class GroupByTest extends IntegrationTestCase
 
         $this->assertEquals(
             new Rows(
-                Row::create(Entry::float('average_age', 33.75)),
+                Row::create(float_entry('average_age', 33.75)),
             ),
             $rows
         );
@@ -294,14 +297,14 @@ final class GroupByTest extends IntegrationTestCase
     {
         read(from_rows(
             new Rows(
-                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20)),
-                Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20)),
-                Row::create(Entry::integer('id', 3), Entry::string('country', 'PL'), Entry::integer('age', 25)),
-                Row::create(Entry::integer('id', 4), Entry::string('country', 'PL'), Entry::integer('age', 30)),
-                Row::create(Entry::integer('id', 5), Entry::string('country', 'US'), Entry::integer('age', 40)),
-                Row::create(Entry::integer('id', 6), Entry::string('country', 'US'), Entry::integer('age', 40)),
-                Row::create(Entry::integer('id', 7), Entry::string('country', 'US'), Entry::integer('age', 45)),
-                Row::create(Entry::integer('id', 9), Entry::string('country', 'US'), Entry::integer('age', 50)),
+                Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
+                Row::create(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
+                Row::create(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
+                Row::create(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
+                Row::create(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
+                Row::create(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
+                Row::create(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
+                Row::create(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
             )
         ))
             ->aggregate(average(ref('age')), max(ref('age')))
@@ -309,8 +312,8 @@ final class GroupByTest extends IntegrationTestCase
                 $this->assertEquals(
                     new Rows(
                         Row::create(
-                            Entry::float('age_avg', 33.75),
-                            Entry::integer('age_max', 50)
+                            float_entry('age_avg', 33.75),
+                            int_entry('age_max', 50)
                         )
                     ),
                     $rows

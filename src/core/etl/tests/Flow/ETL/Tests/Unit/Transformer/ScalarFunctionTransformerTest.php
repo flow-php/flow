@@ -4,10 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\list_entry;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\type_list;
+use function Flow\ETL\DSL\type_object;
+use function Flow\ETL\DSL\xml_entry;
 use Flow\ETL\Config;
-use Flow\ETL\DSL\Entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
@@ -36,7 +41,7 @@ final class ScalarFunctionTransformerTest extends TestCase
             ],
             (new ScalarFunctionTransformer('number', lit(1)))
                 ->transform(
-                    new Rows(Row::create(Entry::string('name', 'Norbert'))),
+                    new Rows(Row::create(str_entry('name', 'Norbert'))),
                     new FlowContext(Config::default())
                 )
                 ->toArray()
@@ -62,7 +67,7 @@ final class ScalarFunctionTransformerTest extends TestCase
             ],
             (new ScalarFunctionTransformer('c', ref('a')->plus(ref('b'))))
                 ->transform(new Rows(
-                    Row::create(Entry::integer('a', 1), Entry::integer('b', 2))
+                    Row::create(int_entry('a', 1), int_entry('b', 2))
                 ), new FlowContext(Config::default()))
                 ->toArray()
         );
@@ -79,7 +84,7 @@ final class ScalarFunctionTransformerTest extends TestCase
             ],
             (new ScalarFunctionTransformer('number', ref('num')->plus(ref('num1'))))
                 ->transform(
-                    new Rows(Row::create(Entry::integer('a', 1))),
+                    new Rows(Row::create(int_entry('a', 1))),
                     new FlowContext(Config::default())
                 )
                 ->toArray()
@@ -94,13 +99,13 @@ final class ScalarFunctionTransformerTest extends TestCase
         $xpath = new \DOMXPath($document);
 
         $this->assertEquals(
-            Entry::list_of_objects('xpath', \DOMElement::class, [
+            list_entry('xpath', [
                 $xpath->query('/root/foo')->item(0),
                 $xpath->query('/root/foo')->item(1),
-            ]),
+            ], type_list(type_object(\DOMElement::class))),
             (new ScalarFunctionTransformer('xpath', ref('xml')->xpath('/root/foo')))
                 ->transform(
-                    new Rows(Row::create(Entry::xml('xml', $xml))),
+                    new Rows(Row::create(xml_entry('xml', $xml))),
                     new FlowContext(Config::default())
                 )
                 ->first()

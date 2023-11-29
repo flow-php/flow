@@ -4,8 +4,11 @@ namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\null_entry;
 use function Flow\ETL\DSL\read;
-use Flow\ETL\DSL\Entry;
+use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\type_string;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
@@ -15,7 +18,6 @@ use Flow\ETL\PHP\Type\Logical\Map\MapValue;
 use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\StructureType;
-use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\ArrayEntry;
 use Flow\ETL\Row\Entry\BooleanEntry;
@@ -71,8 +73,8 @@ final class DisplayTest extends IntegrationTestCase
                                     'items',
                                     ['item-id' => '1', 'name' => 'one'],
                                     new StructureType(
-                                        new StructureElement('item-id', ScalarType::string()),
-                                        new StructureElement('name', ScalarType::string()),
+                                        new StructureElement('item-id', type_string()),
+                                        new StructureElement('name', type_string()),
                                     )
                                 ),
                                 new Row\Entry\ObjectEntry('object', new \ArrayIterator([1, 2, 3])),
@@ -202,13 +204,13 @@ ASCIITABLE,
         \ob_start();
         read(from_rows(
             new Rows(
-                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20)),
-                Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20)),
-                Row::create(Entry::integer('id', 3), Entry::string('country', 'PL'), Entry::integer('age', 25)),
+                Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
+                Row::create(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
+                Row::create(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
             ),
             new Rows(
-                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20), Entry::integer('salary', 5000)),
-                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20), Entry::null('salary')),
+                Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), int_entry('salary', 5000)),
+                Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), null_entry('salary')),
             )
         ))->printRows();
         $output = \ob_get_clean();
@@ -240,13 +242,13 @@ ASCII,
         \ob_start();
         read(from_rows(
             new Rows(
-                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20)),
-                Row::create(Entry::integer('id', 2), Entry::string('country', 'PL'), Entry::integer('age', 20)),
-                Row::create(Entry::integer('id', 3), Entry::string('country', 'PL'), Entry::integer('age', 25)),
+                Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
+                Row::create(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
+                Row::create(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
             ),
             new Rows(
-                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20), Entry::integer('salary', 5000)),
-                Row::create(Entry::integer('id', 1), Entry::string('country', 'PL'), Entry::integer('age', 20), Entry::null('salary')),
+                Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), int_entry('salary', 5000)),
+                Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), null_entry('salary')),
             )
         ))->printSchema();
         $output = \ob_get_clean();

@@ -6,9 +6,9 @@ namespace Flow\ETL\Tests\Unit\Extractor;
 
 use function Flow\ETL\DSL\from_cache;
 use function Flow\ETL\DSL\from_rows;
+use function Flow\ETL\DSL\int_entry;
 use Flow\ETL\Cache;
 use Flow\ETL\Config;
-use Flow\ETL\DSL\Entry;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -21,9 +21,9 @@ final class CacheExtractorTest extends TestCase
         $cache = $this->createMock(Cache::class);
 
         $generator = function () : \Generator {
-            yield new Rows(Row::create(Entry::integer('id', 1)));
-            yield new Rows(Row::create(Entry::integer('id', 2)));
-            yield new Rows(Row::create(Entry::integer('id', 3)));
+            yield new Rows(Row::create(int_entry('id', 1)));
+            yield new Rows(Row::create(int_entry('id', 2)));
+            yield new Rows(Row::create(int_entry('id', 3)));
         };
 
         $cache->expects($this->any())
@@ -44,9 +44,9 @@ final class CacheExtractorTest extends TestCase
 
         $this->assertEquals(
             [
-                new Rows(Row::create(Entry::integer('id', 1))),
-                new Rows(Row::create(Entry::integer('id', 2))),
-                new Rows(Row::create(Entry::integer('id', 3))),
+                new Rows(Row::create(int_entry('id', 1))),
+                new Rows(Row::create(int_entry('id', 2))),
+                new Rows(Row::create(int_entry('id', 3))),
             ],
             \iterator_to_array($extractor->extract(new FlowContext(Config::builder()->cache($cache)->build())))
         );
@@ -57,9 +57,9 @@ final class CacheExtractorTest extends TestCase
         $cache = $this->createMock(Cache::class);
 
         $generator = function () : \Generator {
-            yield new Rows(Row::create(Entry::integer('id', 1)));
-            yield new Rows(Row::create(Entry::integer('id', 2)));
-            yield new Rows(Row::create(Entry::integer('id', 3)));
+            yield new Rows(Row::create(int_entry('id', 1)));
+            yield new Rows(Row::create(int_entry('id', 2)));
+            yield new Rows(Row::create(int_entry('id', 3)));
         };
 
         $cache->expects($this->any())
@@ -95,9 +95,9 @@ final class CacheExtractorTest extends TestCase
             ->with('id')
             ->willReturn(
                 from_rows($rowsToCache = new Rows(
-                    Row::create(Entry::integer('id', 1)),
-                    Row::create(Entry::integer('id', 2)),
-                    Row::create(Entry::integer('id', 3)),
+                    Row::create(int_entry('id', 1)),
+                    Row::create(int_entry('id', 2)),
+                    Row::create(int_entry('id', 3)),
                 ))->extract(new FlowContext($config))
             );
 

@@ -6,7 +6,7 @@ namespace Flow\ETL\DSL;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
-use Doctrine\DBAL\Types\Type;
+use Doctrine\DBAL\Types\Type as DbalType;
 use Flow\ETL\Adapter\Avro\FlixTech\AvroExtractor;
 use Flow\ETL\Adapter\Avro\FlixTech\AvroLoader;
 use Flow\ETL\Adapter\ChartJS\Chart;
@@ -120,6 +120,21 @@ use Flow\ETL\Loader\TransformerLoader;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Memory\Memory;
 use Flow\ETL\Partition;
+use Flow\ETL\PHP\Type\Logical\List\ListElement;
+use Flow\ETL\PHP\Type\Logical\ListType;
+use Flow\ETL\PHP\Type\Logical\Map\MapKey;
+use Flow\ETL\PHP\Type\Logical\Map\MapValue;
+use Flow\ETL\PHP\Type\Logical\MapType;
+use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
+use Flow\ETL\PHP\Type\Logical\StructureType;
+use Flow\ETL\PHP\Type\Native\ArrayType;
+use Flow\ETL\PHP\Type\Native\CallableType;
+use Flow\ETL\PHP\Type\Native\EnumType;
+use Flow\ETL\PHP\Type\Native\NullType;
+use Flow\ETL\PHP\Type\Native\ObjectType;
+use Flow\ETL\PHP\Type\Native\ResourceType;
+use Flow\ETL\PHP\Type\Native\ScalarType;
+use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Pipeline;
 use Flow\ETL\Row;
 use Flow\ETL\Row\EntryFactory;
@@ -247,6 +262,199 @@ function to_stream(string $uri, int|bool $truncate = 20, Output $output = Output
 function to_transformation(Transformer $transformer, Loader $loader) : TransformerLoader
 {
     return new TransformerLoader($transformer, $loader);
+}
+
+/**
+ * @param array<mixed> $data
+ */
+function array_entry(string $array, array $data) : Row\Entry\ArrayEntry
+{
+    return new Row\Entry\ArrayEntry($array, $data);
+}
+
+function bool_entry(string $name, bool $value) : Row\Entry\BooleanEntry
+{
+    return new Row\Entry\BooleanEntry($name, $value);
+}
+
+function boolean_entry(string $name, bool $value) : Row\Entry\BooleanEntry
+{
+    return bool_entry($name, $value);
+}
+
+function datetime_entry(string $name, \DateTimeInterface|string $value) : Row\Entry\DateTimeEntry
+{
+    return new Row\Entry\DateTimeEntry($name, $value);
+}
+
+function int_entry(string $name, int $value) : Row\Entry\IntegerEntry
+{
+    return new Row\Entry\IntegerEntry($name, $value);
+}
+
+function integer_entry(string $name, int $value) : Row\Entry\IntegerEntry
+{
+    return int_entry($name, $value);
+}
+
+function enum_entry(string $name, \UnitEnum $enum) : Row\Entry\EnumEntry
+{
+    return new Row\Entry\EnumEntry($name, $enum);
+}
+
+function float_entry(string $name, float $value) : Row\Entry\FloatEntry
+{
+    return new Row\Entry\FloatEntry($name, $value);
+}
+
+function json_entry(string $name, array|string $data) : Row\Entry\JsonEntry
+{
+    return new Row\Entry\JsonEntry($name, $data);
+}
+
+function json_object_entry(string $name, array|string $data) : Row\Entry\JsonEntry
+{
+    if (\is_string($data)) {
+        return new Row\Entry\JsonEntry($name, $data);
+    }
+
+    return Row\Entry\JsonEntry::object($name, $data);
+}
+
+function null_entry(string $name) : Row\Entry\NullEntry
+{
+    return new Row\Entry\NullEntry($name);
+}
+
+function object_entry(string $name, object $data) : Row\Entry\ObjectEntry
+{
+    return new Row\Entry\ObjectEntry($name, $data);
+}
+
+function obj_entry(string $name, object $data) : Row\Entry\ObjectEntry
+{
+    return object_entry($name, $data);
+}
+
+function str_entry(string $name, string $value) : Row\Entry\StringEntry
+{
+    return new Row\Entry\StringEntry($name, $value);
+}
+
+function string_entry(string $name, string $value) : Row\Entry\StringEntry
+{
+    return str_entry($name, $value);
+}
+
+function uuid_entry(string $name, Row\Entry\Type\Uuid|string $value) : Row\Entry\UuidEntry
+{
+    return new Row\Entry\UuidEntry($name, $value);
+}
+
+function xml_entry(string $name, \DOMDocument|string $value) : Row\Entry\XMLEntry
+{
+    return new Row\Entry\XMLEntry($name, $value);
+}
+
+function xml_node_entry(string $name, \DOMNode $value) : Row\Entry\XMLNodeEntry
+{
+    return new Row\Entry\XMLNodeEntry($name, $value);
+}
+
+function entries(Row\Entry ...$entries) : Row\Entries
+{
+    return new Row\Entries(...$entries);
+}
+
+function struct_entry(string $name, array $value, StructureType $type) : Row\Entry\StructureEntry
+{
+    return new Row\Entry\StructureEntry($name, $value, $type);
+}
+
+function struct_type(StructureElement ...$element) : StructureType
+{
+    return new StructureType(...$element);
+}
+
+function struct_element(string $name, Type $type) : StructureElement
+{
+    return new StructureElement($name, $type);
+}
+
+function list_entry(string $name, array $value, ListType $type) : Row\Entry\ListEntry
+{
+    return new Row\Entry\ListEntry($name, $value, $type);
+}
+
+function type_list(Type $element) : ListType
+{
+    return new ListType(new ListElement($element));
+}
+
+function type_map(ScalarType $key_type, Type $value_type) : MapType
+{
+    return new MapType(new MapKey($key_type), new MapValue($value_type));
+}
+
+function map_entry(string $name, array $value, MapType $mapType) : Row\Entry\MapEntry
+{
+    return new Row\Entry\MapEntry($name, $value, $mapType);
+}
+
+function type_int(bool $nullable = false) : ScalarType
+{
+    return ScalarType::integer($nullable);
+}
+
+function type_string(bool $nullable = false) : ScalarType
+{
+    return ScalarType::string($nullable);
+}
+
+function type_float(bool $nullable = false) : ScalarType
+{
+    return ScalarType::float($nullable);
+}
+
+function type_boolean(bool $nullable = false) : ScalarType
+{
+    return ScalarType::boolean($nullable);
+}
+
+/**
+ * @param class-string $class
+ */
+function type_object(string $class, bool $nullable = false) : ObjectType
+{
+    return new ObjectType($class, $nullable);
+}
+
+function type_resource(bool $nullable = true) : ResourceType
+{
+    return new ResourceType($nullable);
+}
+
+function type_array(bool $empty = false, bool $nullable = false) : ArrayType
+{
+    return new ArrayType($empty, $nullable);
+}
+
+function type_callable(bool $nullable = true) : CallableType
+{
+    return new CallableType($nullable);
+}
+
+function type_null() : NullType
+{
+    return new NullType();
+}
+
+/**
+ * @param class-string<\UnitEnum> $class
+ */
+function type_enum(string $class, bool $nullable = false) : EnumType
+{
+    return new EnumType($class, $nullable);
 }
 
 function row(Row\Entry ...$entry) : Row
@@ -895,7 +1103,7 @@ if (\class_exists('\Flow\ETL\Adapter\Doctrine\DbalLimitOffsetExtractor')) {
      * @param Connection $connection
      * @param string $query
      * @param null|ParametersSet $parameters_set - each one parameters array will be evaluated as new query
-     * @param array<int, null|int|string|Type>|array<string, null|int|string|Type> $types
+     * @param array<int, null|DbalType|int|string>|array<string, null|DbalType|int|string> $types
      *
      * @return Extractor
      */
@@ -917,7 +1125,7 @@ if (\class_exists('\Flow\ETL\Adapter\Doctrine\DbalLimitOffsetExtractor')) {
      * @param Connection $connection
      * @param string $query
      * @param array<string, mixed>|list<mixed> $parameters
-     * @param array<int, null|int|string|Type>|array<string, null|int|string|Type> $types
+     * @param array<int, null|DbalType|int|string>|array<string, null|DbalType|int|string> $types
      *
      * @return Extractor
      */

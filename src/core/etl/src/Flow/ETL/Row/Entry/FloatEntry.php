@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
+use function Flow\ETL\DSL\type_float;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\PHP\Type\Type;
@@ -29,7 +30,7 @@ final class FloatEntry implements \Stringable, Entry
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        $this->type = ScalarType::float();
+        $this->type = type_float();
     }
 
     public function __serialize() : array

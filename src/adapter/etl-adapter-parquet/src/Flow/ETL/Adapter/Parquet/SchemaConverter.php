@@ -2,13 +2,18 @@
 
 namespace Flow\ETL\Adapter\Parquet;
 
+use function Flow\ETL\DSL\type_boolean;
+use function Flow\ETL\DSL\type_float;
+use function Flow\ETL\DSL\type_int;
+use function Flow\ETL\DSL\type_null;
+use function Flow\ETL\DSL\type_object;
+use function Flow\ETL\DSL\type_string;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\PHP\Type\Logical\Map\MapKey;
 use Flow\ETL\PHP\Type\Logical\Map\MapValue;
 use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Logical\StructureType;
-use Flow\ETL\PHP\Type\Native\NullType;
 use Flow\ETL\PHP\Type\Native\ObjectType;
 use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\PHP\Type\Type;
@@ -266,21 +271,21 @@ final class SchemaConverter
 
         switch ($type) {
             case Entry\IntegerEntry::class:
-                return ScalarType::integer($definition->isNullable());
+                return type_int($definition->isNullable());
             case Entry\BooleanEntry::class:
-                return ScalarType::boolean($definition->isNullable());
+                return type_boolean($definition->isNullable());
             case Entry\FloatEntry::class:
-                return ScalarType::float($definition->isNullable());
+                return type_float($definition->isNullable());
             case Entry\EnumEntry::class:
             case Entry\JsonEntry::class:
             case Entry\StringEntry::class:
-                return ScalarType::string($definition->isNullable());
+                return type_string($definition->isNullable());
             case Entry\NullEntry::class:
-                return new NullType();
+                return type_null();
             case Entry\DateTimeEntry::class:
-                return new ObjectType(\DateTimeInterface::class, $definition->isNullable());
+                return type_object(\DateTimeInterface::class, $definition->isNullable());
             case Entry\UuidEntry::class:
-                return new ObjectType(Entry\Type\Uuid::class, $definition->isNullable());
+                return type_object(Entry\Type\Uuid::class, $definition->isNullable());
         }
 
         throw new RuntimeException($type . ' is not supported.');

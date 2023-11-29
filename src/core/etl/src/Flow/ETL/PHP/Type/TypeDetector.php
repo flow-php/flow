@@ -4,6 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type;
 
+use function Flow\ETL\DSL\type_array;
+use function Flow\ETL\DSL\type_boolean;
+use function Flow\ETL\DSL\type_float;
+use function Flow\ETL\DSL\type_int;
+use function Flow\ETL\DSL\type_null;
+use function Flow\ETL\DSL\type_object;
+use function Flow\ETL\DSL\type_string;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\ListType;
@@ -11,32 +18,29 @@ use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\PHP\Type\Native\ArrayType;
 use Flow\ETL\PHP\Type\Native\EnumType;
-use Flow\ETL\PHP\Type\Native\NullType;
-use Flow\ETL\PHP\Type\Native\ObjectType;
-use Flow\ETL\PHP\Type\Native\ScalarType;
 
 final class TypeDetector
 {
     public function detectType(mixed $value) : Type
     {
         if (null === $value) {
-            return new NullType();
+            return type_null();
         }
 
         if (\is_string($value)) {
-            return ScalarType::string();
+            return type_string();
         }
 
         if (\is_int($value)) {
-            return ScalarType::integer();
+            return type_int();
         }
 
         if (\is_bool($value)) {
-            return ScalarType::boolean();
+            return type_boolean();
         }
 
         if (\is_float($value)) {
-            return ScalarType::float();
+            return type_float();
         }
 
         if (\is_array($value)) {
@@ -65,7 +69,7 @@ final class TypeDetector
                 return new StructureType(...$elements);
             }
 
-            return new ArrayType([] === \array_filter($value, fn ($value) : bool => null !== $value));
+            return type_array([] === \array_filter($value, fn ($value) : bool => null !== $value));
         }
 
         if ($value instanceof \UnitEnum) {
@@ -73,7 +77,7 @@ final class TypeDetector
         }
 
         if (\is_object($value)) {
-            return ObjectType::fromObject($value);
+            return type_object($value::class);
         }
 
         throw InvalidArgumentException::because('Unsupported type given: ' . \gettype($value));

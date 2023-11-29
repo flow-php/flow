@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Schema;
 
-use Flow\ETL\DSL\Entry;
+use function Flow\ETL\DSL\bool_entry;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\str_entry;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Row\Schema\StrictValidator;
@@ -22,7 +24,7 @@ final class StrictValidatorTest extends TestCase
 
         $this->assertFalse(
             (new StrictValidator())->isValid(
-                new Rows(Row::create(Entry::integer('id', 1), Entry::string('name', 'test'), Entry::boolean('active', true))),
+                new Rows(Row::create(int_entry('id', 1), str_entry('name', 'test'), bool_entry('active', true))),
                 $schema
             )
         );
@@ -38,7 +40,7 @@ final class StrictValidatorTest extends TestCase
 
         $this->assertTrue(
             (new StrictValidator())->isValid(
-                new Rows(Row::create(Entry::integer('id', 1), Entry::string('name', 'test'), Entry::boolean('active', true))),
+                new Rows(Row::create(int_entry('id', 1), str_entry('name', 'test'), bool_entry('active', true))),
                 $schema
             )
         );
@@ -55,7 +57,7 @@ final class StrictValidatorTest extends TestCase
 
         $this->assertFalse(
             (new StrictValidator())->isValid(
-                new Rows(Row::create(Entry::integer('id', 1), Entry::string('name', 'test'), Entry::boolean('active', true))),
+                new Rows(Row::create(int_entry('id', 1), str_entry('name', 'test'), bool_entry('active', true))),
                 $schema
             )
         );
@@ -71,7 +73,7 @@ final class StrictValidatorTest extends TestCase
 
         $this->assertFalse(
             (new StrictValidator())->isValid(
-                new Rows(Row::create(Entry::integer('id', 1), Entry::string('name', 'test'), Entry::boolean('active', true))),
+                new Rows(Row::create(int_entry('id', 1), str_entry('name', 'test'), bool_entry('active', true))),
                 $schema
             )
         );
@@ -88,8 +90,8 @@ final class StrictValidatorTest extends TestCase
         $this->assertFalse(
             (new StrictValidator())->isValid(
                 new Rows(
-                    Row::create(Entry::integer('id', 1), Entry::string('name', 'test'), Entry::boolean('active', true)),
-                    Row::create(Entry::integer('id', 1), Entry::boolean('active', true))
+                    Row::create(int_entry('id', 1), str_entry('name', 'test'), bool_entry('active', true)),
+                    Row::create(int_entry('id', 1), bool_entry('active', true))
                 ),
                 $schema
             )

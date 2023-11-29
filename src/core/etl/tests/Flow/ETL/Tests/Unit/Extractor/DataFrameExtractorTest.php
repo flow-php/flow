@@ -9,8 +9,8 @@ use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\read;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\str_entry;
 use Flow\ETL\Config;
-use Flow\ETL\DSL\Entry;
 use Flow\ETL\FlowContext;
 use PHPUnit\Framework\TestCase;
 
@@ -21,12 +21,12 @@ final class DataFrameExtractorTest extends TestCase
         $this->assertEquals(
             [
                 rows(
-                    row(Entry::str('value', 'test')),
-                    row(Entry::str('value', 'test')),
+                    row(str_entry('value', 'test')),
+                    row(str_entry('value', 'test')),
                 ),
                 rows(
-                    row(Entry::str('value', 'test')),
-                    row(Entry::str('value', 'test')),
+                    row(str_entry('value', 'test')),
+                    row(str_entry('value', 'test')),
                 ),
             ],
             \iterator_to_array(
@@ -34,12 +34,12 @@ final class DataFrameExtractorTest extends TestCase
                     read(
                         from_rows(
                             rows(
-                                row(Entry::str('value', 'test')),
-                                row(Entry::str('value', 'test')),
+                                row(str_entry('value', 'test')),
+                                row(str_entry('value', 'test')),
                             ),
                             rows(
-                                row(Entry::str('value', 'test')),
-                                row(Entry::str('value', 'test')),
+                                row(str_entry('value', 'test')),
+                                row(str_entry('value', 'test')),
                             )
                         )
                     ),

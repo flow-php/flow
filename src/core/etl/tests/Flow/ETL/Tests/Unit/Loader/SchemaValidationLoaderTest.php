@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Loader;
 
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\str_entry;
 use Flow\ETL\Config;
-use Flow\ETL\DSL\Entry;
 use Flow\ETL\Exception\SchemaValidationException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader\SchemaValidationLoader;
@@ -40,7 +41,7 @@ EXCEPTION
         );
 
         $loader->load(new Rows(
-            Row::create(Entry::string('id', '1'))
+            Row::create(str_entry('id', '1'))
         ), new FlowContext(Config::default()));
     }
 
@@ -54,7 +55,7 @@ EXCEPTION
         );
 
         $loader->load(new Rows(
-            Row::create(Entry::integer('id', 1))
+            Row::create(int_entry('id', 1))
         ), new FlowContext(Config::default()));
 
         // validate that error wasn't thrown

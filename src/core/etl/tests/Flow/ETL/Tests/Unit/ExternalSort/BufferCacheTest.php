@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\ExternalSort;
 
+use function Flow\ETL\DSL\int_entry;
 use Flow\ETL\Cache;
-use Flow\ETL\DSL\Entry;
 use Flow\ETL\ExternalSort\BufferCache;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -25,8 +25,8 @@ final class BufferCacheTest extends TestCase
             ->method('add')
             ->with('id', new Callback(fn (Rows $rows) => $rows->count() === 2));
 
-        $bufferCache->add('id', new Rows(Row::create(Entry::integer('id', 1))));
-        $bufferCache->add('id', new Rows(Row::create(Entry::integer('id', 2))));
+        $bufferCache->add('id', new Rows(Row::create(int_entry('id', 1))));
+        $bufferCache->add('id', new Rows(Row::create(int_entry('id', 2))));
 
         $bufferCache->close();
     }
@@ -42,8 +42,8 @@ final class BufferCacheTest extends TestCase
             ->method('add')
             ->with('id', new Callback(fn (Rows $rows) => $rows->count() === 2));
 
-        $bufferCache->add('id', new Rows(Row::create(Entry::integer('id', 1))));
-        $bufferCache->add('id', new Rows(Row::create(Entry::integer('id', 2))));
+        $bufferCache->add('id', new Rows(Row::create(int_entry('id', 1))));
+        $bufferCache->add('id', new Rows(Row::create(int_entry('id', 2))));
     }
 
     public function test_buffer_cache_overflow_and_close() : void
@@ -56,9 +56,9 @@ final class BufferCacheTest extends TestCase
         $cacheMock->expects($this->exactly(2))
             ->method('add');
 
-        $bufferCache->add('id', new Rows(Row::create(Entry::integer('id', 1))));
-        $bufferCache->add('id', new Rows(Row::create(Entry::integer('id', 2))));
-        $bufferCache->add('id', new Rows(Row::create(Entry::integer('id', 3))));
+        $bufferCache->add('id', new Rows(Row::create(int_entry('id', 1))));
+        $bufferCache->add('id', new Rows(Row::create(int_entry('id', 2))));
+        $bufferCache->add('id', new Rows(Row::create(int_entry('id', 3))));
 
         $bufferCache->close();
     }

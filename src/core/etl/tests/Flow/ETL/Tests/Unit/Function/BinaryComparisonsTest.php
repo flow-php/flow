@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use function Flow\ETL\DSL\array_entry;
+use function Flow\ETL\DSL\datetime_entry;
+use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\null_entry;
 use function Flow\ETL\DSL\ref;
-use Flow\ETL\DSL\Entry;
+use function Flow\ETL\DSL\str_entry;
 use Flow\ETL\Function\Contains;
 use Flow\ETL\Function\EndsWith;
 use Flow\ETL\Function\Equals;
@@ -33,7 +37,7 @@ final class BinaryComparisonsTest extends TestCase
 {
     public function test_equals() : void
     {
-        $row = Row::create(Entry::integer('a', 100), Entry::integer('b', 100), Entry::integer('c', 10), Entry::datetime('d', '2023-01-01 00:00:00 UTC'), Entry::datetime('e', '2023-01-01 00:00:00 UTC'));
+        $row = Row::create(int_entry('a', 100), int_entry('b', 100), int_entry('c', 10), datetime_entry('d', '2023-01-01 00:00:00 UTC'), datetime_entry('e', '2023-01-01 00:00:00 UTC'));
 
         $this->assertTrue(
             (new Equals(ref('a'), ref('b')))->eval($row)
@@ -49,11 +53,11 @@ final class BinaryComparisonsTest extends TestCase
     public function test_greater_than() : void
     {
         $row = Row::create(
-            Entry::integer('a', 100),
-            Entry::integer('b', 100),
-            Entry::integer('c', 10),
-            Entry::datetime('d', '2023-01-01 00:00:00 UTC'),
-            Entry::datetime('e', '2023-01-02 00:00:00 UTC'),
+            int_entry('a', 100),
+            int_entry('b', 100),
+            int_entry('c', 10),
+            datetime_entry('d', '2023-01-01 00:00:00 UTC'),
+            datetime_entry('e', '2023-01-02 00:00:00 UTC'),
         );
 
         $this->assertTrue((new GreaterThan(ref('a'), ref('c')))->eval($row));
@@ -68,11 +72,11 @@ final class BinaryComparisonsTest extends TestCase
     public function test_is_in() : void
     {
         $row = Row::with(
-            Entry::array('a', [1, 2, 3, 4, 5]),
-            Entry::array('b', ['a', 'b', 'c']),
-            Entry::str('c', 'another'),
-            Entry::int('d', 4),
-            Entry::str('e', 'b'),
+            array_entry('a', [1, 2, 3, 4, 5]),
+            array_entry('b', ['a', 'b', 'c']),
+            str_entry('c', 'another'),
+            int_entry('d', 4),
+            str_entry('e', 'b'),
         );
 
         $this->assertTrue((new IsIn(ref('a'), lit(1)))->eval($row));
@@ -84,8 +88,8 @@ final class BinaryComparisonsTest extends TestCase
     public function test_is_numeric() : void
     {
         $row = Row::create(
-            Entry::integer('a', 100),
-            Entry::null('b'),
+            int_entry('a', 100),
+            null_entry('b'),
         );
         $this->assertTrue((new IsNumeric(ref('a')))->eval($row));
         $this->assertFalse((new IsNumeric(ref('b')))->eval($row));
@@ -98,8 +102,8 @@ final class BinaryComparisonsTest extends TestCase
     public function test_is_type() : void
     {
         $row = Row::create(
-            Entry::integer('a', 100),
-            Entry::null('b'),
+            int_entry('a', 100),
+            null_entry('b'),
         );
 
         $this->assertTrue((new IsType(ref('a'), IntegerEntry::class, StringEntry::class))->eval($row));
@@ -111,8 +115,8 @@ final class BinaryComparisonsTest extends TestCase
         $this->expectExceptionMessage('"aaa" is not valid Entry Type class');
 
         $row = Row::create(
-            Entry::integer('a', 100),
-            Entry::null('b'),
+            int_entry('a', 100),
+            null_entry('b'),
         );
 
         $this->assertFalse((new IsType(ref('a'), 'aaa'))->eval($row));
@@ -120,7 +124,7 @@ final class BinaryComparisonsTest extends TestCase
 
     public function test_less_than() : void
     {
-        $row = Row::create(Entry::integer('a', 100), Entry::integer('b', 100), Entry::integer('c', 10));
+        $row = Row::create(int_entry('a', 100), int_entry('b', 100), int_entry('c', 10));
 
         $this->assertFalse(
             (new LessThan(ref('a'), ref('c')))->eval($row)
@@ -138,7 +142,7 @@ final class BinaryComparisonsTest extends TestCase
 
     public function test_not_equals() : void
     {
-        $row = Row::create(Entry::integer('a', 100), Entry::integer('b', 100), Entry::integer('c', 10));
+        $row = Row::create(int_entry('a', 100), int_entry('b', 100), int_entry('c', 10));
 
         $this->assertFalse(
             (new NotEquals(ref('a'), ref('b')))->eval($row)
@@ -150,7 +154,7 @@ final class BinaryComparisonsTest extends TestCase
 
     public function test_not_same() : void
     {
-        $row = Row::create(Entry::integer('a', 100), Entry::integer('b', 100), Entry::integer('c', 10));
+        $row = Row::create(int_entry('a', 100), int_entry('b', 100), int_entry('c', 10));
 
         $this->assertTrue(
             (new NotSame(ref('a'), ref('c')))->eval($row)
@@ -163,8 +167,8 @@ final class BinaryComparisonsTest extends TestCase
     public function test_null() : void
     {
         $row = Row::create(
-            Entry::integer('a', 100),
-            Entry::null('b'),
+            int_entry('a', 100),
+            null_entry('b'),
         );
 
         $this->assertFalse((new IsNull(ref('a')))->eval($row));
@@ -177,7 +181,7 @@ final class BinaryComparisonsTest extends TestCase
 
     public function test_same() : void
     {
-        $row = Row::create(Entry::integer('a', 100), Entry::integer('b', 100), Entry::integer('c', 10), Entry::datetime('d', '2023-01-01 00:00:00 UTC'), Entry::datetime('e', '2023-01-01 00:00:00 UTC'));
+        $row = Row::create(int_entry('a', 100), int_entry('b', 100), int_entry('c', 10), datetime_entry('d', '2023-01-01 00:00:00 UTC'), datetime_entry('e', '2023-01-01 00:00:00 UTC'));
 
         $this->assertTrue(
             (new Same(ref('a'), ref('b')))->eval($row)
@@ -193,10 +197,10 @@ final class BinaryComparisonsTest extends TestCase
     public function test_starts_ends_with() : void
     {
         $row = Row::with(
-            Entry::str('a', 'some not too long string'),
-            Entry::str('b', 'another not too long text'),
-            Entry::str('c', 'another'),
-            Entry::str('d', 'text')
+            str_entry('a', 'some not too long string'),
+            str_entry('b', 'another not too long text'),
+            str_entry('c', 'another'),
+            str_entry('d', 'text')
         );
 
         $this->assertTrue((new StartsWith(ref('a'), lit('some not')))->eval($row));

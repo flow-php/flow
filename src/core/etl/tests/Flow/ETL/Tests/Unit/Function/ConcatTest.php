@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use function Flow\ETL\DSL\array_entry;
 use function Flow\ETL\DSL\concat;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
-use Flow\ETL\DSL\Entry;
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;
 
@@ -17,7 +17,7 @@ final class ConcatTest extends TestCase
     {
         $this->assertSame(
             '["a"]["b","c"]',
-            concat(ref('array_1'), ref('array_2'))->eval(Row::create(Entry::array('array_1', ['a']), Entry::array('array_2', ['b', 'c']))),
+            concat(ref('array_1'), ref('array_2'))->eval(Row::create(array_entry('array_1', ['a']), array_entry('array_2', ['b', 'c']))),
         );
     }
 

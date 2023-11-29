@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\to_output;
 use Flow\ETL\DSL\Entry;
 use Flow\ETL\DSL\To;
@@ -15,14 +17,14 @@ use Flow\ETL\Rows;
 require __DIR__ . '/../../../bootstrap.php';
 
 $externalProducts = new Rows(
-    Row::create(Entry::integer('id', 1), Entry::string('sku', 'PRODUCT01')),
-    Row::create(Entry::integer('id', 2), Entry::string('sku', 'PRODUCT02')),
-    Row::create(Entry::integer('id', 3), Entry::string('sku', 'PRODUCT03'))
+    Row::create(int_entry('id', 1), str_entry('sku', 'PRODUCT01')),
+    Row::create(int_entry('id', 2), str_entry('sku', 'PRODUCT02')),
+    Row::create(int_entry('id', 3), str_entry('sku', 'PRODUCT03'))
 );
 
 $internalProducts = new Rows(
-    Row::create(Entry::integer('id', 2), Entry::string('sku', 'PRODUCT02')),
-    Row::create(Entry::integer('id', 3), Entry::string('sku', 'PRODUCT03'))
+    Row::create(int_entry('id', 2), str_entry('sku', 'PRODUCT02')),
+    Row::create(int_entry('id', 3), str_entry('sku', 'PRODUCT03'))
 );
 
 /**

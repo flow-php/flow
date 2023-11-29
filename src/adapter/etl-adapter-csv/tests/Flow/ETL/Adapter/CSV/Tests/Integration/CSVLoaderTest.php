@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV\Tests\Integration;
 
+use function Flow\ETL\DSL\array_entry;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\to_csv;
-use Flow\ETL\DSL\Entry;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Flow;
@@ -25,7 +27,7 @@ final class CSVLoaderTest extends TestCase
         (new Flow())
             ->process(
                 new Rows(
-                    Row::create(Entry::integer('id', 1), Entry::array('data', ['foo' => 'bar'])),
+                    Row::create(int_entry('id', 1), array_entry('data', ['foo' => 'bar'])),
                 )
             )
             ->write(to_csv($path))
@@ -78,9 +80,9 @@ CSV,
         (new Flow())
             ->process(
                 new Rows(
-                    Row::create(Entry::integer('id', 1), Entry::string('name', 'Norbert')),
-                    Row::create(Entry::integer('id', 2), Entry::string('name', 'Tomek')),
-                    Row::create(Entry::integer('id', 3), Entry::string('name', 'Dawid')),
+                    Row::create(int_entry('id', 1), str_entry('name', 'Norbert')),
+                    Row::create(int_entry('id', 2), str_entry('name', 'Tomek')),
+                    Row::create(int_entry('id', 3), str_entry('name', 'Dawid')),
                 )
             )
             ->load($serializer->unserialize($serializer->serialize(to_csv($path, $withHeader = true))))
@@ -108,9 +110,9 @@ CSV,
         (new Flow())
             ->process(
                 new Rows(
-                    Row::create(Entry::integer('id', 1), Entry::string('name', 'Norbert')),
-                    Row::create(Entry::integer('id', 2), Entry::string('name', 'Tomek')),
-                    Row::create(Entry::integer('id', 3), Entry::string('name', 'Dawid')),
+                    Row::create(int_entry('id', 1), str_entry('name', 'Norbert')),
+                    Row::create(int_entry('id', 2), str_entry('name', 'Tomek')),
+                    Row::create(int_entry('id', 3), str_entry('name', 'Dawid')),
                 )
             )
             ->load(to_csv($path))
@@ -138,10 +140,10 @@ CSV,
         (new Flow())
             ->process(
                 new Rows(
-                    Row::create(Entry::integer('id', 1), Entry::integer('group', 1)),
-                    Row::create(Entry::integer('id', 2), Entry::integer('group', 1)),
-                    Row::create(Entry::integer('id', 3), Entry::integer('group', 2)),
-                    Row::create(Entry::integer('id', 4), Entry::integer('group', 2)),
+                    Row::create(int_entry('id', 1), int_entry('group', 1)),
+                    Row::create(int_entry('id', 2), int_entry('group', 1)),
+                    Row::create(int_entry('id', 3), int_entry('group', 2)),
+                    Row::create(int_entry('id', 4), int_entry('group', 2)),
                 )
             )
             ->load(to_csv($path))
@@ -189,9 +191,9 @@ CSV,
         (new Flow())
             ->process(
                 new Rows(
-                    Row::create(Entry::integer('id', 1), Entry::string('name', 'Norbert')),
-                    Row::create(Entry::integer('id', 2), Entry::string('name', 'Tomek')),
-                    Row::create(Entry::integer('id', 3), Entry::string('name', 'Dawid')),
+                    Row::create(int_entry('id', 1), str_entry('name', 'Norbert')),
+                    Row::create(int_entry('id', 2), str_entry('name', 'Tomek')),
+                    Row::create(int_entry('id', 3), str_entry('name', 'Dawid')),
                 )
             )
             ->load(to_csv($path))
@@ -200,9 +202,9 @@ CSV,
         (new Flow())
             ->process(
                 new Rows(
-                    Row::create(Entry::integer('id', 1), Entry::string('name', 'Norbert')),
-                    Row::create(Entry::integer('id', 2), Entry::string('name', 'Tomek')),
-                    Row::create(Entry::integer('id', 3), Entry::string('name', 'Dawid')),
+                    Row::create(int_entry('id', 1), str_entry('name', 'Norbert')),
+                    Row::create(int_entry('id', 2), str_entry('name', 'Tomek')),
+                    Row::create(int_entry('id', 3), str_entry('name', 'Dawid')),
                 )
             )
             ->mode(SaveMode::Overwrite)

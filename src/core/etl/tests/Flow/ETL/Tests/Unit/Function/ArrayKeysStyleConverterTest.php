@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use function Flow\ETL\DSL\array_entry;
 use function Flow\ETL\DSL\array_keys_style_convert;
+use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\ref;
-use Flow\ETL\DSL\Entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;
@@ -19,7 +20,7 @@ final class ArrayKeysStyleConverterTest extends TestCase
         $this->expectExceptionMessage('Unrecognized style invalid, please use one of following:');
 
         $row = Row::create(
-            Entry::array('invalid_entry', []),
+            array_entry('invalid_entry', []),
         );
 
         array_keys_style_convert(ref('invalid_entry'), 'invalid')->eval($row);
@@ -28,7 +29,7 @@ final class ArrayKeysStyleConverterTest extends TestCase
     public function test_for_not_array_entry() : void
     {
         $row = Row::create(
-            Entry::integer('invalid_entry', 1),
+            int_entry('invalid_entry', 1),
         );
 
         $this->assertNull(array_keys_style_convert(ref('invalid_entry'), 'snake')->eval($row));

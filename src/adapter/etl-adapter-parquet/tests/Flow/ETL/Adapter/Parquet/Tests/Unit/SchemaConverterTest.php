@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Unit;
 
+use function Flow\ETL\DSL\type_object;
+use function Flow\ETL\DSL\type_string;
 use Flow\ETL\Adapter\Parquet\SchemaConverter;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
@@ -13,8 +15,6 @@ use Flow\ETL\PHP\Type\Logical\Map\MapValue;
 use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\StructureType;
-use Flow\ETL\PHP\Type\Native\ObjectType;
-use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\Row\Schema;
 use Flow\Parquet\ParquetFile\Schema as ParquetSchema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
@@ -56,9 +56,9 @@ final class SchemaConverterTest extends TestCase
                 Schema\Definition::dateTime('datetime'),
                 Schema\Definition::json('json'),
                 Schema\Definition::list('list', new ListType(ListElement::string())),
-                Schema\Definition::structure('structure', new StructureType(new StructureElement('a', ScalarType::string()))),
+                Schema\Definition::structure('structure', new StructureType(new StructureElement('a', type_string()))),
                 Schema\Definition::map('map', new MapType(MapKey::string(), MapValue::integer())),
-                Schema\Definition::object('time', new ObjectType(\DateInterval::class, false))
+                Schema\Definition::object('time', type_object(\DateInterval::class, false))
             ))
         );
     }
@@ -69,7 +69,7 @@ final class SchemaConverterTest extends TestCase
         $this->expectExceptionMessage("stdClass can't be converted to any parquet columns.");
 
         (new SchemaConverter())->toParquet(new Schema(
-            Schema\Definition::object('object', new ObjectType(\stdClass::class, false))
+            Schema\Definition::object('object', type_object(\stdClass::class, false))
         ));
     }
 }

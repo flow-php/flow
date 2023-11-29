@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\XML;
 
-use Flow\ETL\DSL\Entry;
+use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\xml_entry;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Extractor\Limitable;
@@ -78,11 +79,11 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
 
                         if ($shouldPutInputIntoRows) {
                             $row = Row::create(
-                                Entry::xml('node', $node),
-                                Entry::string('_input_file_uri', $filePath->uri())
+                                xml_entry('node', $node),
+                                str_entry('_input_file_uri', $filePath->uri())
                             );
                         } else {
-                            $row = Row::create(Entry::xml('node', $node));
+                            $row = Row::create(xml_entry('node', $node));
                         }
 
                         $signal = yield \count($partitions)

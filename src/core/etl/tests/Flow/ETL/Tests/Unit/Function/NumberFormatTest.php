@@ -2,9 +2,11 @@
 
 namespace Flow\ETL\Tests\Unit\Function;
 
+use function Flow\ETL\DSL\float_entry;
+use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
-use Flow\ETL\DSL\Entry;
+use function Flow\ETL\DSL\str_entry;
 use Flow\ETL\Function\NumberFormat;
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;
@@ -24,10 +26,10 @@ final class NumberFormatTest extends TestCase
             '1,234.57',
             $expression->eval(
                 Row::create(
-                    Entry::float('value', 1234.5678),
-                    Entry::int('decimals', 2),
-                    Entry::string('decimal_separator', '.'),
-                    Entry::string('thousands_separator', ',')
+                    float_entry('value', 1234.5678),
+                    int_entry('decimals', 2),
+                    str_entry('decimal_separator', '.'),
+                    str_entry('thousands_separator', ',')
                 )
             )
         );
@@ -46,7 +48,7 @@ final class NumberFormatTest extends TestCase
             '1,234.57',
             $expression->eval(
                 Row::create(
-                    Entry::float('value', 1234.5678),
+                    float_entry('value', 1234.5678),
                 )
             )
         );
@@ -64,10 +66,10 @@ final class NumberFormatTest extends TestCase
         $this->assertNull(
             $expression->eval(
                 Row::create(
-                    Entry::float('value', 1234.5678),
-                    Entry::float('decimals', 2.5),
-                    Entry::string('decimal_separator', '.'),
-                    Entry::string('thousands_separator', ',')
+                    float_entry('value', 1234.5678),
+                    float_entry('decimals', 2.5),
+                    str_entry('decimal_separator', '.'),
+                    str_entry('thousands_separator', ',')
                 )
             )
         );
@@ -85,10 +87,10 @@ final class NumberFormatTest extends TestCase
         $this->assertNull(
             $expression->eval(
                 Row::create(
-                    Entry::string('value', 'test'),
-                    Entry::int('decimals', 2),
-                    Entry::string('decimal_separator', '.'),
-                    Entry::string('thousands_separator', ',')
+                    str_entry('value', 'test'),
+                    int_entry('decimals', 2),
+                    str_entry('decimal_separator', '.'),
+                    str_entry('thousands_separator', ',')
                 )
             )
         );
@@ -107,10 +109,10 @@ final class NumberFormatTest extends TestCase
             '1,234.57',
             $expression->eval(
                 Row::create(
-                    Entry::string('value', '1234.5678'),
-                    Entry::int('decimals', 2),
-                    Entry::string('decimal_separator', '.'),
-                    Entry::string('thousands_separator', ',')
+                    str_entry('value', '1234.5678'),
+                    int_entry('decimals', 2),
+                    str_entry('decimal_separator', '.'),
+                    str_entry('thousands_separator', ',')
                 )
             )
         );

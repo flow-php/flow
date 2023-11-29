@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
+use function Flow\ETL\DSL\type_string;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\PHP\Type\Type;
@@ -29,7 +30,7 @@ final class StringEntry implements \Stringable, Entry
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        $this->type = ScalarType::string();
+        $this->type = type_string();
     }
 
     /**

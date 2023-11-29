@@ -2,26 +2,29 @@
 
 namespace Flow\ETL\PHP\Type\Logical\List;
 
+use function Flow\ETL\DSL\type_boolean;
+use function Flow\ETL\DSL\type_float;
+use function Flow\ETL\DSL\type_int;
+use function Flow\ETL\DSL\type_object;
+use function Flow\ETL\DSL\type_string;
 use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\PHP\Type\Logical\MapType;
-use Flow\ETL\PHP\Type\Native\ObjectType;
-use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\PHP\Type\Type;
 
 final class ListElement
 {
-    private function __construct(private readonly Type $value)
+    public function __construct(private readonly Type $value)
     {
     }
 
     public static function boolean() : self
     {
-        return new self(ScalarType::boolean());
+        return new self(type_boolean(false));
     }
 
     public static function float() : self
     {
-        return new self(ScalarType::float());
+        return new self(type_float(false));
     }
 
     public static function fromType(Type $type) : self
@@ -31,7 +34,7 @@ final class ListElement
 
     public static function integer() : self
     {
-        return new self(ScalarType::integer());
+        return new self(type_int(false));
     }
 
     public static function list(ListType $type) : self
@@ -49,12 +52,12 @@ final class ListElement
      */
     public static function object(string $class, bool $nullable = false) : self
     {
-        return new self(ObjectType::of($class, $nullable));
+        return new self(type_object($class, $nullable));
     }
 
     public static function string() : self
     {
-        return new self(ScalarType::string());
+        return new self(type_string(false));
     }
 
     public function isEqual(mixed $value) : bool

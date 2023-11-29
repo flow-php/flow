@@ -4,8 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
+use function Flow\ETL\DSL\array_entry;
+use function Flow\ETL\DSL\bool_entry;
+use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\list_entry;
+use function Flow\ETL\DSL\null_entry;
 use function Flow\ETL\DSL\ref;
-use Flow\ETL\DSL\Entry;
+use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\type_int;
+use function Flow\ETL\DSL\type_list;
+use function Flow\ETL\DSL\type_string;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Partition;
@@ -175,14 +183,14 @@ final class RowsTest extends TestCase
         $this->assertEquals(
             new Rows(
                 Row::create(
-                    Entry::integer('id', 1234),
-                    Entry::bool('deleted', false),
-                    Entry::null('phase'),
+                    int_entry('id', 1234),
+                    bool_entry('deleted', false),
+                    null_entry('phase'),
                 ),
                 Row::create(
-                    Entry::integer('id', 4321),
-                    Entry::bool('deleted', true),
-                    Entry::string('phase', 'launch'),
+                    int_entry('id', 4321),
+                    bool_entry('deleted', true),
+                    str_entry('phase', 'launch'),
                 )
             ),
             $rows
@@ -327,7 +335,7 @@ final class RowsTest extends TestCase
     public function test_empty_rows() : void
     {
         $this->assertTrue((new Rows())->empty());
-        $this->assertFalse((new Rows(Row::create(Entry::integer('id', 1))))->empty());
+        $this->assertFalse((new Rows(Row::create(int_entry('id', 1))))->empty());
     }
 
     public function test_filters_out_rows() : void
@@ -512,8 +520,8 @@ final class RowsTest extends TestCase
             [
                 Rows::partitioned(
                     [
-                        Row::create(Entry::integer('num', 1), Entry::string('cat', 'a')),
-                        Row::create(Entry::integer('num', 1), Entry::string('cat', 'a')),
+                        Row::create(int_entry('num', 1), str_entry('cat', 'a')),
+                        Row::create(int_entry('num', 1), str_entry('cat', 'a')),
                     ],
                     [
                         new Partition('num', '1'),
@@ -521,21 +529,21 @@ final class RowsTest extends TestCase
                     ]
                 ),
                 Rows::partitioned(
-                    [Row::create(Entry::integer('num', 1), Entry::string('cat', 'b'))],
+                    [Row::create(int_entry('num', 1), str_entry('cat', 'b'))],
                     [
                         new Partition('num', '1'),
                         new Partition('cat', 'b'),
                     ]
                 ),
                 Rows::partitioned(
-                    [Row::create(Entry::integer('num', 3), Entry::string('cat', 'a'))],
+                    [Row::create(int_entry('num', 3), str_entry('cat', 'a'))],
                     [
                         new Partition('num', '3'),
                         new Partition('cat', 'a'),
                     ]
                 ),
                 Rows::partitioned(
-                    [Row::create(Entry::integer('num', 2), Entry::string('cat', 'b'))],
+                    [Row::create(int_entry('num', 2), str_entry('cat', 'b'))],
                     [
                         new Partition('num', '2'),
                         new Partition('cat', 'b'),
@@ -543,11 +551,11 @@ final class RowsTest extends TestCase
                 ),
             ],
             (new Rows(
-                Row::create(Entry::integer('num', 1), Entry::string('cat', 'a')),
-                Row::create(Entry::integer('num', 3), Entry::string('cat', 'a')),
-                Row::create(Entry::integer('num', 1), Entry::string('cat', 'b')),
-                Row::create(Entry::integer('num', 2), Entry::string('cat', 'b')),
-                Row::create(Entry::integer('num', 1), Entry::string('cat', 'a')),
+                Row::create(int_entry('num', 1), str_entry('cat', 'a')),
+                Row::create(int_entry('num', 3), str_entry('cat', 'a')),
+                Row::create(int_entry('num', 1), str_entry('cat', 'b')),
+                Row::create(int_entry('num', 2), str_entry('cat', 'b')),
+                Row::create(int_entry('num', 1), str_entry('cat', 'a')),
             ))->partitionBy('num', 'num', 'cat')
         );
     }
@@ -558,8 +566,8 @@ final class RowsTest extends TestCase
             [
                 Rows::partitioned(
                     [
-                        Row::create(Entry::integer('num', 1), Entry::string('cat', 'a')),
-                        Row::create(Entry::integer('num', 1), Entry::string('cat', 'a')),
+                        Row::create(int_entry('num', 1), str_entry('cat', 'a')),
+                        Row::create(int_entry('num', 1), str_entry('cat', 'a')),
                     ],
                     [
                         new Partition('num', '1'),
@@ -567,21 +575,21 @@ final class RowsTest extends TestCase
                     ]
                 ),
                 Rows::partitioned(
-                    [Row::create(Entry::integer('num', 1), Entry::string('cat', 'b'))],
+                    [Row::create(int_entry('num', 1), str_entry('cat', 'b'))],
                     [
                         new Partition('num', '1'),
                         new Partition('cat', 'b'),
                     ]
                 ),
                 Rows::partitioned(
-                    [Row::create(Entry::integer('num', 3), Entry::string('cat', 'a'))],
+                    [Row::create(int_entry('num', 3), str_entry('cat', 'a'))],
                     [
                         new Partition('num', '3'),
                         new Partition('cat', 'a'),
                     ]
                 ),
                 Rows::partitioned(
-                    [Row::create(Entry::integer('num', 2), Entry::string('cat', 'b'))],
+                    [Row::create(int_entry('num', 2), str_entry('cat', 'b'))],
                     [
                         new Partition('num', '2'),
                         new Partition('cat', 'b'),
@@ -589,11 +597,11 @@ final class RowsTest extends TestCase
                 ),
             ],
             (new Rows(
-                Row::create(Entry::integer('num', 1), Entry::string('cat', 'a')),
-                Row::create(Entry::integer('num', 3), Entry::string('cat', 'a')),
-                Row::create(Entry::integer('num', 1), Entry::string('cat', 'b')),
-                Row::create(Entry::integer('num', 2), Entry::string('cat', 'b')),
-                Row::create(Entry::integer('num', 1), Entry::string('cat', 'a')),
+                Row::create(int_entry('num', 1), str_entry('cat', 'a')),
+                Row::create(int_entry('num', 3), str_entry('cat', 'a')),
+                Row::create(int_entry('num', 1), str_entry('cat', 'b')),
+                Row::create(int_entry('num', 2), str_entry('cat', 'b')),
+                Row::create(int_entry('num', 1), str_entry('cat', 'a')),
             ))->partitionBy('num', 'cat')
         );
     }
@@ -637,10 +645,10 @@ final class RowsTest extends TestCase
     public function test_partitions() : void
     {
         $rows = (new Rows(
-            Row::create(Entry::integer('number', 1), Entry::string('group', 'a')),
-            Row::create(Entry::integer('number', 2), Entry::string('group', 'a')),
-            Row::create(Entry::integer('number', 3), Entry::string('group', 'a')),
-            Row::create(Entry::integer('number', 4), Entry::string('group', 'a')),
+            Row::create(int_entry('number', 1), str_entry('group', 'a')),
+            Row::create(int_entry('number', 2), str_entry('group', 'a')),
+            Row::create(int_entry('number', 3), str_entry('group', 'a')),
+            Row::create(int_entry('number', 4), str_entry('group', 'a')),
         ))->partitionBy('group');
 
         $this->assertEquals(
@@ -717,10 +725,10 @@ final class RowsTest extends TestCase
     public function test_rows_schema() : void
     {
         $rows = new Rows(
-            Row::create(Entry::integer('id', 1), Entry::string('name', 'foo')),
-            Row::create(Entry::integer('id', 1), Entry::null('name'), Entry::list_of_int('list', [1, 2])),
-            Row::create(Entry::integer('id', 1), Entry::string('name', 'bar'), Entry::array('tags', ['a', 'b'])),
-            Row::create(Entry::integer('id', 1), Entry::integer('name', 25)),
+            Row::create(int_entry('id', 1), str_entry('name', 'foo')),
+            Row::create(int_entry('id', 1), null_entry('name'), list_entry('list', [1, 2], type_list(type_int()))),
+            Row::create(int_entry('id', 1), str_entry('name', 'bar'), array_entry('tags', ['a', 'b'])),
+            Row::create(int_entry('id', 1), int_entry('name', 25)),
         );
 
         $this->assertEquals(
@@ -737,8 +745,8 @@ final class RowsTest extends TestCase
     public function test_rows_schema_when_rows_have_different_list_types() : void
     {
         $rows = new Rows(
-            Row::create(Entry::list_of_string('list', ['one', 'two'])),
-            Row::create(Entry::list_of_int('list', [1, 2])),
+            Row::create(list_entry('list', ['one', 'two'], type_list(type_string()))),
+            Row::create(list_entry('list', [1, 2], type_list(type_int()))),
         );
 
         $this->assertEquals(

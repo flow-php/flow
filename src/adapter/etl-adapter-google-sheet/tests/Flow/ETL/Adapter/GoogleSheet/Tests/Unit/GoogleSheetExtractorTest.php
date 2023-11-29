@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\GoogleSheet\Tests\Unit;
 
 use function Flow\ETL\DSL\from_google_sheet_columns;
+use function Flow\ETL\DSL\str_entry;
 use Flow\ETL\ConfigBuilder;
-use Flow\ETL\DSL\Entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
@@ -50,9 +50,9 @@ final class GoogleSheetExtractorTest extends TestCase
         $rowsArray = \iterator_to_array($extractor->extract(new FlowContext((new ConfigBuilder())->putInputIntoRows()->build())));
         $this->assertCount(2, $rowsArray);
         $this->assertSame(1, $rowsArray[0]->count());
-        $this->assertEquals(Row::create($sheetNameEntry, $spreadSheetIdEntry, Entry::string('header', 'row1')), $rowsArray[0]->first());
+        $this->assertEquals(Row::create($sheetNameEntry, $spreadSheetIdEntry, str_entry('header', 'row1')), $rowsArray[0]->first());
         $this->assertSame(1, $rowsArray[1]->count());
-        $this->assertEquals(Row::create($sheetNameEntry, $spreadSheetIdEntry, Entry::string('header', 'row2')), $rowsArray[1]->first());
+        $this->assertEquals(Row::create($sheetNameEntry, $spreadSheetIdEntry, str_entry('header', 'row2')), $rowsArray[1]->first());
     }
 
     public function test_rows_in_batch_must_be_positive_integer() : void
