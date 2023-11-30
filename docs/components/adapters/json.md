@@ -16,7 +16,7 @@ simplified and efficient task, perfectly aligning with the robust and adaptable 
 ## Installation
 
 ```
-composer require flow-php/etl-adapter-json:1.x@dev
+composer require flow-php/etl-adapter-json
 ```
 
 

@@ -7,7 +7,7 @@ ETL Adapter that provides PSR Logger support for ETL.
 ## Installation
 
 ```
-composer require flow-php/etl-adapter-logger:1.x@dev
+composer require flow-php/etl-adapter-logger
 ```
 
 ## Loader - PsrLogger

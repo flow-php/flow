@@ -17,5 +17,5 @@ the robust and adaptable nature of the Flow PHP ecosystem.
 ## Installation
 
 ```
-composer require flow-php/etl-adapter-parquet:1.x@dev
+composer require flow-php/etl-adapter-parquet
 ```

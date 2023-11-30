@@ -17,7 +17,7 @@ efficient endeavor, harmoniously aligning with the robust and adaptable framewor
 ## Installation
 
 ```
-composer require flow-php/etl-adapter-elasticsearch:1.x@dev
+composer require flow-php/etl-adapter-elasticsearch
 ```
 
 ## Description

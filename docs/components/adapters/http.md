@@ -17,7 +17,7 @@ of the Flow PHP ecosystem.
 ## Installation
 
 ```
-composer require flow-php/etl-adapter-http:1.x@dev
+composer require flow-php/etl-adapter-http
 ```
 
 ## Extractor - PsrHttpClientDynamicExtractor

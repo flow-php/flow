@@ -33,7 +33,7 @@ this will reduce the number of unnecessary dependencies in your project (less ma
 For example, if you want to work with JSON/CSV files here are the dependencies you will need to install:
 
 ```shell
-composer require flow-php/etl:^1.x-dev flow-php/etl-adapter-csv:^1.x-dev flow-php/etl-adapter-json:^1.x-dev
+composer require flow-php/etl flow-php/etl-adapter-csv flow-php/etl-adapter-json
 ```
 
 - [➡️ Docker](installation/docker.md)

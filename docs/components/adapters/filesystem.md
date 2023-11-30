@@ -7,5 +7,5 @@ Filesystem adapter integrates Flow Filesystem with Flysystem library allowing fo
 ## Installation
 
 ```
-composer require flow-php/etl-adapter-filesystem:1.x@dev
+composer require flow-php/etl-adapter-filesystem
 ```

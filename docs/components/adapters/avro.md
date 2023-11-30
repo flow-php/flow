@@ -17,7 +17,7 @@ Flow PHP ecosystem.
 ## Installation
 
 ``` 
-composer require flow-php/etl-adapter-avro:1.x@dev
+composer require flow-php/etl-adapter-avro
 ```
 
 ## Extractor - Flix Tech Avro

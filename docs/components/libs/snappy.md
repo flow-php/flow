@@ -11,7 +11,7 @@ otherwise this lib will register polyfill functions.
 ## Installation
 
 ```
-composer require flow-php/snappy:1.x@dev
+composer require flow-php/snappy
 ```
 
 ## Usage
