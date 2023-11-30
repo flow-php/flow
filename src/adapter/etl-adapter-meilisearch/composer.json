@@ -15,7 +15,7 @@
         "ext-hash": "*",
         "ext-json": "*",
         "meilisearch/meilisearch-php": "^1.1",
-        "flow-php/etl": "^0.4 || 1.x-dev"
+        "flow-php/etl": "^0.5.0 || 1.x-dev"
     },
     "config": {
         "optimize-autoloader": true,

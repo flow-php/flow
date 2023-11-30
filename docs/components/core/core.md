@@ -15,5 +15,5 @@
   - [display](display.md)
   - [limit](limit.md)
   - [group by](group-by.md)
-    - [aggregations](aggregations.md)]
+    - [aggregations](aggregations.md)
   - [window functions](window-functions.md)
