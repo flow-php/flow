@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-11-29
+## [Unreleased] - 2023-11-30
 
 ### Added
 - [#852](https://github.com/flow-php/flow/pull/852) - **Possibility to filter partitions using scalar functions** - [@norberttech](https://github.com/norberttech)
@@ -85,6 +85,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#853](https://github.com/flow-php/flow/pull/853) - **Updated dependencies** - [@norberttech](https://github.com/norberttech)
 - [#852](https://github.com/flow-php/flow/pull/852) - **Deprecated all DSL static classes in favor of functions** - [@norberttech](https://github.com/norberttech)
 - [#852](https://github.com/flow-php/flow/pull/852) - **Moved whole DSL to ETL functions.php** - [@norberttech](https://github.com/norberttech)
 - [#851](https://github.com/flow-php/flow/pull/851) - **Allow usage of Symfony 7** - [@stloyd](https://github.com/stloyd)
