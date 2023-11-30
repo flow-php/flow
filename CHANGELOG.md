@@ -259,6 +259,7 @@
 - [#583](https://github.com/flow-php/flow/pull/583) - **Fix warning when bytes are missing in Parquet `BinaryBufferReader`** - [@stloyd](https://github.com/stloyd)
 
 ### Updated
+- [8216ed](https://github.com/flow-php/flow/commit/8216ede31d49792707354e6582b0dcb84df78147) - **minimum required version of flow components** - [@norberttech](https://github.com/norberttech)
 - [a1db35](https://github.com/flow-php/flow/commit/a1db35d93fec9eac95efcc057a30879677417969) - **README.md** - [@norberttech](https://github.com/norberttech)
 - [6e0dd4](https://github.com/flow-php/flow/commit/6e0dd4b5f4f6487cd86624309bea36520c21bfa0) - **README.md** - [@norberttech](https://github.com/norberttech)
 - [db45c3](https://github.com/flow-php/flow/commit/db45c350fadca2e5fd13f2c427108066672b2c22) - **list of adapter** - [@norberttech](https://github.com/norberttech)
