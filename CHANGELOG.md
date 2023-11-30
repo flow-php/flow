@@ -85,6 +85,7 @@
 - [#587](https://github.com/flow-php/flow/pull/587) - **Metadata to StructureEntry Definition** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#854](https://github.com/flow-php/flow/pull/854) - **All documentation pages are now moved to monorepo** - [@norberttech](https://github.com/norberttech)
 - [#853](https://github.com/flow-php/flow/pull/853) - **Updated dependencies** - [@norberttech](https://github.com/norberttech)
 - [#852](https://github.com/flow-php/flow/pull/852) - **Deprecated all DSL static classes in favor of functions** - [@norberttech](https://github.com/norberttech)
 - [#852](https://github.com/flow-php/flow/pull/852) - **Moved whole DSL to ETL functions.php** - [@norberttech](https://github.com/norberttech)
