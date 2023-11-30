@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 use function Flow\ETL\Adapter\Parquet\from_parquet;
 use function Flow\ETL\Adapter\Parquet\to_parquet;
+use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\sum;
 use function Flow\ETL\DSL\to_output;
 use Flow\ETL\Filesystem\SaveMode;
-use Flow\ETL\Flow;
 
 require __DIR__ . '/../../bootstrap.php';
 
-$flow = (new Flow())
+$df = data_frame()
     ->read(from_parquet(__FLOW_DATA__ . '/orders_flow.parquet'))
     ->select('created_at', 'total_price', 'discount')
     ->withEntry('created_at', ref('created_at')->toDate()->dateFormat('Y/m'))
@@ -30,7 +30,7 @@ $flow = (new Flow())
     ->write(to_parquet(__FLOW_OUTPUT__ . '/daily_revenue.parquet'));
 
 if ($_ENV['FLOW_PHAR_APP'] ?? false) {
-    return $flow;
+    return $df;
 }
 
-$flow->run();
+$df->run();

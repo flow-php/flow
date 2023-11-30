@@ -2,30 +2,24 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\data_frame;
+use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\to_output;
-use Flow\ETL\DSL\Entry;
-use Flow\ETL\DSL\To;
-use Flow\ETL\Flow;
-use Flow\ETL\Join\Comparison\Equal;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Join\Join;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
 
 require __DIR__ . '/../../../bootstrap.php';
 
-$externalProducts = new Rows(
-    Row::create(int_entry('id', 1), str_entry('sku', 'PRODUCT01')),
-    Row::create(int_entry('id', 2), str_entry('sku', 'PRODUCT02')),
-    Row::create(int_entry('id', 3), str_entry('sku', 'PRODUCT03'))
-);
+$externalProducts = [
+    ['id' => 1, 'sku' => 'PRODUCT01'],
+    ['id' => 2, 'sku' => 'PRODUCT02'],
+    ['id' => 3, 'sku' => 'PRODUCT03'],
+];
 
-$internalProducts = new Rows(
-    Row::create(int_entry('id', 2), str_entry('sku', 'PRODUCT02')),
-    Row::create(int_entry('id', 3), str_entry('sku', 'PRODUCT03'))
-);
+$internalProducts = [
+    ['id' => 2, 'sku' => 'PRODUCT02'],
+    ['id' => 3, 'sku' => 'PRODUCT03'],
+];
 
 /**
  * DataFrame::join will perform joining having both dataframes in memory.
@@ -33,20 +27,20 @@ $internalProducts = new Rows(
  * then it might become performance bottleneck.
  * In that case please look at DataFrame::joinEach.
  */
-$flow = (new Flow())
-    ->process($externalProducts)
+$df = data_frame()
+    ->read(from_array($externalProducts))
     ->join(
-        (new Flow())->process($internalProducts),
-        Expression::on(new Equal('id', 'id')), // by using All or Any comparisons, more than one entry can be used to prepare the condition
+        data_frame()->read(from_array($internalProducts)),
+        Expression::on(['id' => 'id']),
         Join::left_anti
     )
     ->write(to_output());
 
 if ($_ENV['FLOW_PHAR_APP'] ?? false) {
-    return $flow;
+    return $df;
 }
 
-$flow->run();
+$df->run();
 
 // Output
 //

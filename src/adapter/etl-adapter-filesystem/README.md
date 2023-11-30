@@ -2,8 +2,6 @@
 
 Filesystem adapter integrates Flow Filesystem with Flysystem library allowing for reading/writing into external filesystems.
 
-## Installation
+- 📜 [Documentation](https://github.com/flow-php/flow/blob/1.x/README.md)
+- 🛠️ [Contributing](https://github.com/flow-php/flow/blob/1.x/CONTRIBUTING.md)
 
-```
-composer require flow-php/etl-adapter-filesystem:1.x@dev
-```

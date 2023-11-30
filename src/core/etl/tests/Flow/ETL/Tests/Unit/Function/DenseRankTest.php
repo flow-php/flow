@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\dens_rank;
+use function Flow\ETL\DSL\dense_rank;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\window;
@@ -12,7 +12,7 @@ use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use PHPUnit\Framework\TestCase;
 
-final class DensRankTest extends TestCase
+final class DenseRankTest extends TestCase
 {
     public function test_rank_function_on_collection_of_rows_sorted_by_id_descending() : void
     {
@@ -24,13 +24,13 @@ final class DensRankTest extends TestCase
             $row5 = Row::create(int_entry('id', 5), int_entry('value', 1), int_entry('salary', 4000)),
         );
 
-        $densRank = dens_rank()->over(window()->orderBy(ref('salary')->desc()));
+        $denseRank = dense_rank()->over(window()->orderBy(ref('salary')->desc()));
 
-        $this->assertSame(1, $densRank->apply($row1, $rows));
-        $this->assertSame(1, $densRank->apply($row2, $rows));
-        $this->assertSame(1, $densRank->apply($row3, $rows));
-        $this->assertSame(3, $densRank->apply($row4, $rows));
-        $this->assertSame(2, $densRank->apply($row5, $rows));
+        $this->assertSame(1, $denseRank->apply($row1, $rows));
+        $this->assertSame(1, $denseRank->apply($row2, $rows));
+        $this->assertSame(1, $denseRank->apply($row3, $rows));
+        $this->assertSame(3, $denseRank->apply($row4, $rows));
+        $this->assertSame(2, $denseRank->apply($row5, $rows));
     }
 
     public function test_rank_function_without_more_than_one_order_by_entries() : void
@@ -45,7 +45,7 @@ final class DensRankTest extends TestCase
             Row::create(int_entry('id', 5), int_entry('value', 1), int_entry('salary', 4000)),
         );
 
-        $densRank = dens_rank()->over(window()->orderBy(ref('salary'), ref('id')));
+        $densRank = dense_rank()->over(window()->orderBy(ref('salary'), ref('id')));
 
         $this->assertSame(1, $densRank->apply($row1, $rows));
     }
@@ -61,6 +61,6 @@ final class DensRankTest extends TestCase
             Row::create(int_entry('id', 5), int_entry('value', 1), int_entry('salary', 4000)),
         );
 
-        dens_rank()->apply($row1, $rows);
+        dense_rank()->apply($row1, $rows);
     }
 }

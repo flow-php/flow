@@ -169,6 +169,7 @@
     },
     "scripts": {
         "build": [
+            "@test:docs",
             "@static:analyze",
             "@test",
             "@test:benchmark",
@@ -176,6 +177,9 @@
         ],
         "test": [
             "tools/phpunit/vendor/bin/phpunit"
+        ],
+        "test:docs": [
+            "docker run -t --rm -v $PWD:/app norberttech/md-link-linter --exclude=vendor ."
         ],
         "test:benchmark": [
             "@test:benchmark:building_blocks",

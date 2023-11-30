@@ -7,7 +7,7 @@ use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Window;
 
-final class DensRank implements WindowFunction
+final class DenseRank implements WindowFunction
 {
     private ?Window $window;
 

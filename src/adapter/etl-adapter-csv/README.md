@@ -11,42 +11,5 @@ making it a prime choice for developers dealing with CSV data in large-scale and
 PHP's Adapter CSV, managing CSV data within your ETL workflows becomes a more simplified and efficient task, perfectly
 aligning with the robust and adaptable framework of the Flow PHP ecosystem.
 
-## Installation 
-
-``` 
-composer require flow-php/etl-adapter-csv:1.x@dev
-```
-
-## Extractor 
-
-```php
-<?php
-
-use Flow\ETL\DSL\CSV;
-use Flow\ETL\Flow;
-
-$rows = (new Flow())
-    ->read(CSV::from($path))
-    ->fetch();
-```
-
-## Loader 
-
-```php 
-<?php
-
-use Flow\ETL\DSL\CSV;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
-
-(new Flow())
-    ->process(
-        new Rows(
-            Row::create(new Row\Entry\IntegerEntry('id', 1), new Row\Entry\StringEntry('name', 'Norbert')),
-            Row::create(new Row\Entry\IntegerEntry('id', 2), new Row\Entry\StringEntry('name', 'Tomek')),
-            Row::create(new Row\Entry\IntegerEntry('id', 3), new Row\Entry\StringEntry('name', 'Dawid')),
-        )
-    )
-    ->load(CSV::to($path, true, true))
-    ->run();
-```
+- 📜 [Documentation](https://github.com/flow-php/flow/blob/1.x/README.md)
+- 🛠️ [Contributing](https://github.com/flow-php/flow/blob/1.x/CONTRIBUTING.md)

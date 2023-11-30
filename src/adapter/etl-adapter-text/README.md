@@ -12,44 +12,5 @@ text data in large-scale and data-intensive projects. With Flow PHP's Adapter Te
 workflows becomes a more refined and efficient endeavor, perfectly aligning with the robust and adaptable framework of
 the Flow PHP ecosystem.
 
-## Installation
-
-```
-composer require flow-php/etl-adapter-text:1.x@dev
-```
-
-## Extractor 
-
-```php
-<?php
-
-use Flow\ETL\DSL\Text;
-use Flow\ETL\Flow;
-
-$rows = (new Flow())
-    ->read(Text::from(new LocalFile($path)))
-    ->fetch();
-```
-
-## Loader 
-
-> :warning: Heads up, TextLoader expects rows to have single entry in order to properly write them into file.
-
-```php 
-<?php
-
-use Flow\ETL\DSL\Text;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
-
-(new Flow())
-    ->process(
-        new Rows(
-            Row::create(new Row\Entry\StringEntry('name', 'Norbert')),
-            Row::create(new Row\Entry\StringEntry('name', 'Tomek')),
-            Row::create(new Row\Entry\StringEntry('name', 'Dawid')),
-        )
-    )
-    ->load(Text::to($path))
-    ->run();
-```
+- 📜 [Documentation](https://github.com/flow-php/flow/blob/1.x/README.md)
+- 🛠️ [Contributing](https://github.com/flow-php/flow/blob/1.x/CONTRIBUTING.md)
