@@ -38,18 +38,16 @@ Supported PHP versions: [![PHP 8.1](https://img.shields.io/badge/php-~8.1-8892BF
 
 declare(strict_types=1);
 
-use Flow\ETL\DSL\Parquet;
+use function Flow\ETL\Adapter\Parquet\{from_parquet, to_parquet};
+use function Flow\ETL\DSL\{data_frame, lit, ref, sum, to_output};
 use Flow\ETL\Filesystem\SaveMode;
-use function Flow\ETL\DSL\{lit, ref, sum};
-use Flow\ETL\DSL\To;
-use Flow\ETL\Flow;
 
 require __DIR__ . '/vendor/autoload.php';
 
-(new Flow())
-    ->read(Parquet::from(__FLOW_DATA__ . '/orders_flow.parquet'))
+data_frame()
+    ->read(from_parquet(__FLOW_DATA__ . '/orders_flow.parquet'))
     ->select('created_at', 'total_price', 'discount')
-    ->withEntry('created_at', ref('created_at')->toDate(\DateTime::RFC3339)->dateFormat('Y/m'))
+    ->withEntry('created_at', ref('created_at')->cast('date')->dateFormat('Y/m'))
     ->withEntry('revenue', ref('total_price')->minus(ref('discount')))
     ->select('created_at', 'revenue')
     ->groupBy('created_at')
@@ -57,10 +55,10 @@ require __DIR__ . '/vendor/autoload.php';
     ->sortBy(ref('created_at')->desc())
     ->withEntry('daily_revenue', ref('revenue_sum')->round(lit(2))->numberFormat(lit(2)))
     ->drop('revenue_sum')
-    ->write(To::output(truncate: false))
-    ->mode(SaveMode::Overwrite)
+    ->write(to_output(truncate: false))
     ->withEntry('created_at', ref('created_at')->toDate('Y/m'))
-    ->write(Parquet::to(__FLOW_OUTPUT__ . '/daily_revenue.parquet'))
+    ->mode(SaveMode::Overwrite)
+    ->write(to_parquet(__FLOW_OUTPUT__ . '/daily_revenue.parquet'))
     ->run();
 ```
 
