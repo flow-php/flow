@@ -269,6 +269,7 @@
 - [c9fb26](https://github.com/flow-php/flow/commit/c9fb26dc2e0558c0f33b6097286e4dc6e2799d3f) - **test-benchmark.yml** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [749bb1](https://github.com/flow-php/flow/commit/749bb194e5679f2f14971d8c183dda15a6e8cac0) - **specific version from composer require instructions** - [@norberttech](https://github.com/norberttech)
 - [#841](https://github.com/flow-php/flow/pull/841) - **removed class reference not available in the scope from README example in CSV adapter** - [@rzarno](https://github.com/rzarno)
 - [#832](https://github.com/flow-php/flow/pull/832) - **Remove `Sha1IdFactory`** - [@stloyd](https://github.com/stloyd)
 - [#810](https://github.com/flow-php/flow/pull/810) - **Execution Plan and Processors** - [@norberttech](https://github.com/norberttech)
