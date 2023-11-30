@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-11-30
+## [0.5.0] - 2023-11-30
 
 ### Added
 - [#852](https://github.com/flow-php/flow/pull/852) - **Possibility to filter partitions using scalar functions** - [@norberttech](https://github.com/norberttech)
