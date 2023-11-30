@@ -12,8 +12,5 @@ data visualization in large-scale and data-intensive environments. With Flow PHP
 rendering and interaction within your ETL workflows becomes a more refined and efficient endeavor, harmoniously aligning
 with the robust and adaptable framework of the Flow PHP ecosystem.
 
-## Installation 
-
-``` 
-composer require flow-php/etl-adapter-chartjs:1.x@dev
-```
+- 📜 [Documentation](https://github.com/flow-php/flow/blob/1.x/README.md)
+- 🛠️ [Contributing](https://github.com/flow-php/flow/blob/1.x/CONTRIBUTING.md)

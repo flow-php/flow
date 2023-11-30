@@ -12,8 +12,5 @@ for developers dealing with Parquet data in large-scale and data-intensive scena
 managing Parquet data within your ETL workflows becomes a more simplified and efficient task, perfectly aligning with
 the robust and adaptable nature of the Flow PHP ecosystem.
 
-## Installation
-
-```
-composer require flow-php/etl-adapter-parquet:1.x@dev
-```
+- 📜 [Documentation](https://github.com/flow-php/flow/blob/1.x/README.md)
+- 🛠️ [Contributing](https://github.com/flow-php/flow/blob/1.x/CONTRIBUTING.md)

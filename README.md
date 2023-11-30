@@ -1,11 +1,16 @@
-![img](docs/flow_php_banner_02_2022.png)
+![img](docs/assets/img/flow_php_banner_02_2022.png)
 
-Flow is a PHP-based, strongly typed ETL (Extract Transform Load), asynchronous data processing library with constant memory consumption.
+Flow is a PHP-based, strongly typed data processing framework with constant memory consumption.
 
 [![Latest Stable Version](https://poser.pugx.org/flow-php/flow/v)](https://packagist.org/packages/flow-php/flow)
 [![Latest Unstable Version](https://poser.pugx.org/flow-php/flow/v/unstable)](https://packagist.org/packages/flow-php/flow)
 [![License](https://poser.pugx.org/flow-php/flow/license)](https://packagist.org/packages/flow-php/flow)
 [![Test Suite](https://github.com/flow-php/flow/actions/workflows/test-suite.yml/badge.svg?branch=1.x)](https://github.com/flow-php/flow/actions/workflows/test-suite.yml)
+
+- 📈 [Project Roadmap](https://github.com/orgs/flow-php/projects/1)
+- 📜 [Documentation](docs/introduction.md)
+- 🛠️ [Contributing](CONTRIBUTING.md)
+- 🚧 [Upgrading](UPGRADE.md)
 
 Supported PHP versions: [![PHP 8.1](https://img.shields.io/badge/php-~8.1-8892BF.svg)](https://php.net/) [![PHP 8.2](https://img.shields.io/badge/php-~8.2-8892BF.svg)](https://php.net/) [![PHP 8.3](https://img.shields.io/badge/php-~8.3-8892BF.svg)](https://php.net/)
 
@@ -30,9 +35,56 @@ Supported PHP versions: [![PHP 8.1](https://img.shields.io/badge/php-~8.1-8892BF
 
 > On Oct. 7, 2023, the national holiday of Simchat Torah, Hamas terrorists initiated an attack on Israel in the early hours, targeting civilians. They unleashed violence that resulted in at least 1,400 casualties and abducted at least 200 individuals, not limited to Israelis.
 
---- 
+---
 
-## Usage
+## Introduction
+
+Flow is a first and the most advanced PHP ETL framework. 
+
+📜 [Documentation](docs/introduction.md)
+
+#### What is ETL?
+
+ETL stands for **Extract, Transform, Load** – a process used in database usage and data warehousing. It involves three critical steps:
+
+1. **Extract**: The first step is to extract data from various sources. These sources could be databases, CSV files, online services, or other formats. During extraction, the goal is to retrieve all the necessary data efficiently and accurately.
+2. **Transform**: Once the data is extracted, it needs to be transformed. This transformation process involves cleaning the data (removing duplicates, fixing errors), converting it into a suitable format or structure for the purposes of querying and analysis, and applying any business rules or calculations that are needed.
+3. **Load**: Finally, the transformed data is loaded into a target database, data warehouse, or a data mart where it can be accessed, queried, and used for business analysis or decision-making processes.
+
+#### Main Use Cases
+
+ETL frameworks are essential in various scenarios, especially in data-driven environments. Some of the key use cases include:
+1. **Data Integration**: ETL is fundamental in integrating data from multiple, often disparate, sources. This is crucial for businesses that gather data from various systems and need a unified view.
+2. **Business Intelligence (BI)**: For BI processes, ETL is used to collect data from different sources and bring it into a data warehouse, where it can be analyzed to provide business insights.
+3. **Data Warehousing**: ETL plays a pivotal role in building and maintaining data warehouses. It helps in structuring large amounts of data into a format that is easy to analyze.
+4. **Data Migration**: When organizations change systems or upgrade databases, ETL processes are necessary to migrate data effectively from the old system to the new one.
+5. **Data Cleaning and Transformation**: Ensuring data quality is paramount. ETL frameworks are used to clean, standardize, and transform data, thus ensuring high-quality data for analysis.
+6. **Historical Data Storage**: ETL is used to extract large volumes of historical data from operational systems and load it into data warehouses for long-term storage, analysis, and reporting.
+7. **Reporting and Analysis**: By consolidating data from various sources, ETL frameworks simplify the reporting and analysis process, providing businesses with actionable insights.
+8. **Regulatory Compliance**: For compliance with various regulations, organizations use ETL processes to gather, standardize, and store data in a manner that meets regulatory requirements.
+
+## Features of Flow PHP
+
+Flow PHP is a powerful and versatile ETL framework designed to cater to a variety of data processing needs. Below are some of its standout features:
+
+- **Low and Constant Memory Consumption**: Optimized for efficiency, Flow PHP ensures minimal memory usage, maintaining low and constant consumption regardless of data size. This makes it ideal for handling large datasets without compromising performance.
+- **Versatile Data Source Interaction**: Whether your data resides in databases, spreadsheets, or online platforms, Flow PHP can seamlessly read from and write to any data source.
+- **Rich Collection of Data Transformation Functions**: Transform your data with ease using a wide array of built-in functions. From simple mapping to complex manipulations, the framework covers all your data transformation needs.
+- **Direct Access to Remote Filesystems**: Flow PHP provides the ability to interact directly with remote filesystems, facilitating efficient data handling and processing without the need for local storage.
+- **Advanced Data Partitioning**: Efficiently partition your data for improved manageability and processing. This feature is crucial for handling large datasets or for processing data in distributed systems.
+- **Grouping & Aggregating**: Easily group and aggregate data to extract meaningful insights. This feature is particularly useful for summarizing datasets and performing statistical analysis.
+- **Remote File Processing**: Process files stored remotely with the same ease as local files, enabling powerful and flexible data integration from various sources.
+- **Join Operations**: Perform join operations between different datasets. This is essential for combining data from multiple sources, providing a more comprehensive view.
+- **Efficient Sorting**: Sort your data based on specific criteria or conditions, ensuring that your datasets are organized precisely as needed.
+- **ASCII Table Display**: Visualize your datasets as neatly formatted ASCII tables, making it easier to read and analyze data directly from the console.
+- **Schema Validation**: Ensure data quality and consistency by validating your datasets against predefined schemas.
+- **Window Functions**: Utilize window functions for advanced data analysis, allowing you to perform calculations across sets of rows that are related to the current row.
+- **Built-In Caching Mechanism**: Improve performance with built-in caching, reducing processing time and enhancing overall efficiency, especially in repetitive data processing tasks.
+
+Flow PHP’s comprehensive set of features makes it an ideal choice for developers and organizations looking to harness the power of ETL for efficient and effective data processing.
+
+## Usage Example
+
 ```php
 <?php
 
@@ -81,131 +133,31 @@ $ php daily_revenue.php
 10 rows
 ```
 
+## Community Contributions
 
-## Features
+Flow PHP is not just a tool, but a growing community of developers passionate about data processing and PHP. We strongly believe in the power of collaboration and welcome contributions of all forms. Whether you're fixing a bug, proposing a new feature, or improving our documentation, your input is invaluable to the growth of Flow PHP.
 
-* low and constant memory consumption
-* reading from any data source
-* writing to any data source
-* rich collection of data transformation functions
-* direct access to remote filesystems
-* partitioning 
-* grouping & aggregating
-* remote file processing
-* joins
-* sorting
-* displaying datasets as ASCII table
-* validation against the schema
-* window functions
-* caching
+### How You Can Contribute
 
-📈[Project Roadmap](https://github.com/orgs/flow-php/projects/1)
+- **Submitting Bug Reports and Feature Requests**: Encounter an issue or have an idea for an enhancement? Submit an issue on our GitHub repository. Please provide a clear description and, if possible, steps to reproduce the bug or details of the feature request.
+- **Code Contributions**: Interested in directly impacting the development of Flow PHP? Check out our issue tracker for areas where you can contribute. From simple fixes to substantial feature additions, every bit of help is appreciated.
+- **Improving Documentation**: Good documentation is key to any project's success. If you notice gaps, inaccuracies, or areas that could use better explanations, we encourage you to submit updates.
+- **Community Support**: Help out fellow users by answering questions on our community channels, Stack Overflow, or other forums where Flow PHP users gather.
+- **Spread the Word**: Share your experiences using Flow PHP, write blog posts, tutorials, or speak at meetups and conferences. Let others know how Flow PHP has helped in your projects!
+- **Leave a GitHub Star**: If you find Flow PHP useful, consider giving it a star on GitHub. Your star is a simple yet powerful way to show support and helps others discover our project.
 
-## Installation 
+### Contribution Guidelines
 
-This package is a [monorepo](https://tomasvotruba.com/blog/2019/10/28/all-you-always-wanted-to-know-about-monorepo-but-were-afraid-to-ask/).
-Please check the below packages and select only those that you are going to use, 
-this will reduce the number of unnecessary dependencies in your project (less maintenance).
+To ensure a smooth collaboration process, we've put together guidelines for contributing. 
+Please take a moment to read our [Contribution Guidelines](CONTRIBUTING.md) before starting your work. This will help you understand our process and make contributing a breeze.
 
-- [ETL](src/core/etl/README.md) 
-- Adapters
-  - [avro](src/adapter/etl-adapter-avro/README.md)
-  - [chartjs](src/adapter/etl-adapter-chartjs/README.md)
-  - [csv](src/adapter/etl-adapter-csv/README.md)
-  - [doctrine](src/adapter/etl-adapter-doctrine/README.md)
-  - [elasticsearch](src/adapter/etl-adapter-elasticsearch/README.md)
-  - [filesystem](src/adapter/etl-adapter-filesystem/README.md)
-  - [google sheet](src/adapter/etl-adapter-google-sheet/README.md)
-  - [http](src/adapter/etl-adapter-http/README.md)
-  - [json](src/adapter/etl-adapter-json/README.md)
-  - [logger](src/adapter/etl-adapter-logger/README.md)
-  - [meilisearch](src/adapter/etl-adapter-meilisearch/README.md)
-  - [parquet](src/adapter/etl-adapter-parquet/README.md)
-  - [text](src/adapter/etl-adapter-text/README.md)
-  - [xml](src/adapter/etl-adapter-xml/README.md) 
-- Libraries
-  - [array-dot](src/lib/array-dot/README.md)
-  - [doctrine-dbal-bulk](src/lib/doctrine-dbal-bulk/README.md)
-  - [dremel](src/lib/dremel/README.md)
-  - [parquet](src/lib/parquet/README.md)
-  - [parquet-viewer](src/lib/parquet-viewer/README.md)
-  - [snappy](src/lib/snappy/README.md)
+### Questions?
 
-For example, if you want to work with JSON/CSV files here are the dependencies you will need to install: 
+If you have any questions about contributing, please feel free to reach out to us. We're more than happy to provide guidance and support.
 
-```shell
-composer require flow-php/etl:^0.1 flow-php/etl-adapter-csv:^0.1 flow-php/etl-adapter-json:^0.1
-```
+Join us in shaping the future of data processing in PHP — every contribution, big or small, makes a significant difference!
 
-## Docker
-
-Since some of the Flow adapters require additional PHP extensions, we have prepared a Docker image with all the necessary dependencies.
-
-```shell
-$ docker pull ghcr.io/flow-php/flow:latest
-$ docker run -v $(pwd):/flow-workspace --rm -it ghcr.io/flow-php/flow:latest
-Flow-PHP - Extract Transform Load - Data processing framework 0.4.0-325-g6c3e4404
-
-Usage:
-  command [options] [arguments]
-
-Options:
-  -h, --help            Display help for the given command. When no command is given display help for the list command
-  -q, --quiet           Do not output any message
-  -V, --version         Display this application version
-      --ansi|--no-ansi  Force (or disable --no-ansi) ANSI output
-  -n, --no-interaction  Do not ask any interactive question
-  -v|vv|vvv, --verbose  Increase the verbosity of messages: 1 for normal output, 2 for more verbose output and 3 for debug
-
-Available commands:
-  completion             Dump the shell completion script
-  help                   Display help for a command
-  list                   List commands
-  run                    Run ETL pipeline
- parquet
-  parquet:read:data      Read data from parquet file
-  parquet:read:metadata  Read metadata from parquet file
-```
-
-To simplify the usage of Flow CLI, you can create an command alias for it:
-
-```
-alias flow='docker run -v $(pwd):/flow-workspace --rm -it ghcr.io/flow-php/flow:latest'
-```
-
-Now you can use Flow CLI as follows:
-
-```shell
-flow --help
-```
-
-If you would like to try Flow, fork this repository, navigate to it through command line interface and execute following command:
-
-```shell
-$ docker run -v $(pwd):/flow-workspace --rm -it flow-php/flow:latest run /flow-workspace/examples/topics/aggregations/daily_revenue.php
-```
-
-Flow CLI will grab the pipeline definition from `examples/topics/aggregations/daily_revenue.php` file and execute it.
-
-## Usage
-
-In order to understand how Flow works, please read [documentation](src/core/etl/README.md)
-
-### [Usage Examples](examples/README.md)
-
-## Building blocks
-
-* DataFrame - Lazy data processing frame.
-* Rows - Immutable collection of `Row` objects.
-* Row - Immutable, strongly typed collection of `Entry` objects.
-* Entry - Immutable, strongly typed object representing a cell in a row.
-* **E**xtractor (Reader) - Memory safe, Data Source returning \Generator, yielding `Rows` to the `Pipeline`
-* **T**ransformer - Data transformer receiving and returning `Rows` (in most cases transformer), one instance of `Rows` at once.
-* **L**oader (Writer) - Memory safe representation of Data Sink, the responsibility of Loader is to write `Rows` into destination storage, one at time.
-* Pipeline - Interface representing ETL process, each received `Rows` instanced is passed through all `Pipes`, also responsible for error handling.
-* Pipe - Loader of Transformer instance existing in the `Pipes` collection.
-
-### GitHub Stars
+## GitHub Stars
 
 [![Star History Chart](https://api.star-history.com/svg?repos=flow-php/flow&type=Date)](https://star-history.com/#flow-php/flow&Date)
 

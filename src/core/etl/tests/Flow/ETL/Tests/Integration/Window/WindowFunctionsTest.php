@@ -2,7 +2,7 @@
 
 namespace Flow\ETL\Tests\Integration\Window;
 
-use function Flow\ETL\DSL\dens_rank;
+use function Flow\ETL\DSL\dense_rank;
 use function Flow\ETL\DSL\from_all;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\rank;
@@ -31,7 +31,7 @@ final class WindowFunctionsTest extends TestCase
                     ])
                 )
             )
-            ->withEntry('rank', dens_rank()->over(window()->partitionBy(ref('department'))->orderBy(ref('salary')->desc())))
+            ->withEntry('rank', dense_rank()->over(window()->partitionBy(ref('department'))->orderBy(ref('salary')->desc())))
             ->sortBy(ref('department'), ref('rank'))
             ->get();
 

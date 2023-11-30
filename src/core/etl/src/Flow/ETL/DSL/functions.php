@@ -38,7 +38,7 @@ use Flow\ETL\Function\Combine;
 use Flow\ETL\Function\Concat;
 use Flow\ETL\Function\Count;
 use Flow\ETL\Function\DateTimeFormat;
-use Flow\ETL\Function\DensRank;
+use Flow\ETL\Function\DenseRank;
 use Flow\ETL\Function\Exists;
 use Flow\ETL\Function\First;
 use Flow\ETL\Function\Hash;
@@ -103,6 +103,8 @@ use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
+use Flow\ETL\Row\Schema;
+use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\Schema\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Row\Schema\SchemaFormatter;
 use Flow\ETL\Rows;
@@ -809,9 +811,14 @@ function rank() : Rank
     return new Rank();
 }
 
-function dens_rank() : DensRank
+function dens_rank() : DenseRank
 {
-    return new DensRank();
+    return dense_rank();
+}
+
+function dense_rank() : DenseRank
+{
+    return new DenseRank();
 }
 
 function average(Reference $ref) : Average
@@ -862,4 +869,92 @@ function min(Reference $ref) : Min
 function row_number() : RowNumber
 {
     return new RowNumber();
+}
+
+function schema(Definition ...$definitions) : Schema
+{
+    return new Schema(...$definitions);
+}
+
+function int_schema(string $name, bool $nullable = false, ?Schema\Constraint $constraint = null, ?Schema\Metadata $metadata = null) : Definition
+{
+    return Definition::integer($name, $nullable, $constraint, $metadata);
+}
+
+function str_schema(string $name, bool $nullable = false, ?Schema\Constraint $constraint = null, ?Schema\Metadata $metadata = null) : Definition
+{
+    return Definition::string($name, $nullable, $constraint, $metadata);
+}
+
+function bool_schema(string $name, bool $nullable = false, ?Schema\Constraint $constraint = null, ?Schema\Metadata $metadata = null) : Definition
+{
+    return Definition::boolean($name, $nullable, $constraint, $metadata);
+}
+
+function float_schema(string $name, bool $nullable = false, ?Schema\Constraint $constraint = null, ?Schema\Metadata $metadata = null) : Definition
+{
+    return Definition::float($name, $nullable, $constraint, $metadata);
+}
+
+function array_schema(string $name, bool $nullable = false, ?Schema\Constraint $constraint = null, ?Schema\Metadata $metadata = null) : Definition
+{
+    return Definition::array($name, $nullable, $constraint, $metadata);
+}
+
+function object_schema(string $name, ObjectType $type, bool $nullable = false, ?Schema\Constraint $constraint = null, ?Schema\Metadata $metadata = null) : Definition
+{
+    return Definition::object($name, $type, $nullable, $constraint, $metadata);
+}
+
+function map_schema(string $name, MapType $type, bool $nullable = false, ?Schema\Constraint $constraint = null, ?Schema\Metadata $metadata = null) : Definition
+{
+    return Definition::map($name, $type, $nullable, $constraint, $metadata);
+}
+
+function list_schema(string $name, ListType $type, bool $nullable = false, ?Schema\Constraint $constraint = null, ?Schema\Metadata $metadata = null) : Definition
+{
+    return Definition::list($name, $type, $nullable, $constraint, $metadata);
+}
+
+/**
+ * @param class-string<\UnitEnum> $type
+ */
+function enum_schema(string $name, string $type, bool $nullable = false, ?Schema\Constraint $constraint = null, ?Schema\Metadata $metadata = null) : Definition
+{
+    return Definition::enum($name, $type, $nullable, $constraint, $metadata);
+}
+
+function null_schema(string $name, ?Schema\Metadata $metadata = null) : Definition
+{
+    return Definition::null($name, $metadata);
+}
+
+function datetime_schema(string $name, bool $nullable = false, ?Schema\Constraint $constraint = null, ?Schema\Metadata $metadata = null) : Definition
+{
+    return Definition::datetime($name, $nullable, $constraint, $metadata);
+}
+
+function json_schema(string $name, bool $nullable = false, ?Schema\Constraint $constraint = null, ?Schema\Metadata $metadata = null) : Definition
+{
+    return Definition::json($name, $nullable, $constraint, $metadata);
+}
+
+function xml_schema(string $name, bool $nullable = false, ?Schema\Constraint $constraint = null, ?Schema\Metadata $metadata = null) : Definition
+{
+    return Definition::xml($name, $nullable, $constraint, $metadata);
+}
+
+function xml_node_schema(string $name, bool $nullable = false, ?Schema\Constraint $constraint = null, ?Schema\Metadata $metadata = null) : Definition
+{
+    return Definition::xml_node($name, $nullable, $constraint, $metadata);
+}
+
+function struct_schema(string $name, StructureType $type, bool $nullable = false, ?Schema\Constraint $constraint = null, ?Schema\Metadata $metadata = null) : Definition
+{
+    return Definition::structure($name, $type, $nullable, $constraint, $metadata);
+}
+
+function uuid_schema(string $name, ?Schema\Constraint $constraint = null, ?Schema\Metadata $metadata = null) : Definition
+{
+    return Definition::uuid($name, $constraint, $metadata);
 }

@@ -2,6 +2,5 @@
 
 ## Installation
 
-```
-composer require flow-php/dremel:1.x@dev
-```
+- 📜 [Documentation](https://github.com/flow-php/flow/blob/1.x/README.md)
+- 🛠️ [Contributing](https://github.com/flow-php/flow/blob/1.x/CONTRIBUTING.md)

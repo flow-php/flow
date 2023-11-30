@@ -12,46 +12,5 @@ data in large-scale and data-intensive projects. With Flow PHP's Adapter Avro, m
 workflows becomes a more simplified and efficient task, perfectly aligning with the robust and adaptable nature of the
 Flow PHP ecosystem.
 
-## Installation 
-
-``` 
-composer require flow-php/etl-adapter-avro:1.x@dev
-```
-
-## Extractor - Flix Tech Avro
-
-```php
-<?php
-
-(new Flow())
-    ->read(Avro::from($path))
-    ->fetch()
-
-```
-
-## Loader - Flix Tech Avro
-
-```php 
-<?php
-
-(new Flow)
-    ->read(From::rows(
-        $rows = new Rows(
-            ...\array_map(function (int $i) : Row {
-                return Row::create(
-                    Entry::integer('integer', $i),
-                    Entry::float('float', 1.5),
-                    Entry::string('string', 'name_' . $i),
-                    Entry::boolean('boolean', true),
-                    Entry::datetime('datetime', new \DateTimeImmutable()),
-                    Entry::json_object('json_object', ['id' => 1, 'name' => 'test']),
-                    Entry::json('json', [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']]),
-                    Entry::list_of_string('list_of_strings', ['a', 'b', 'c']),
-                    Entry::list_of_datetime('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()])
-                );
-            }, \range(1, 100))
-        )
-    ))
-    ->write(Avro::to($path))
-    ->run();
-```
+- 📜 [Documentation](https://github.com/flow-php/flow/blob/1.x/README.md)
+- 🛠️ [Contributing](https://github.com/flow-php/flow/blob/1.x/CONTRIBUTING.md)
