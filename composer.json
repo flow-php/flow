@@ -69,7 +69,7 @@
             "src/core/etl/src/Flow/ETL/DSL/functions.php",
             "src/lib/array-dot/src/Flow/ArrayDot/array_dot.php",
             "src/lib/parquet/src/Flow/Parquet/functions.php",
-            "src/lib/snappy/polifil.php"
+            "src/lib/snappy/polyfill.php"
         ],
         "psr-4": {
             "Flow\\": [
