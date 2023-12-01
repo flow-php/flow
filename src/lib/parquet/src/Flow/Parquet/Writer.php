@@ -38,6 +38,9 @@ final class Writer
             case Compressions::UNCOMPRESSED:
             case Compressions::SNAPPY:
             case Compressions::GZIP:
+            case Compressions::BROTLI:
+            case Compressions::LZ4:
+            case Compressions::ZSTD:
                 break;
 
             default:

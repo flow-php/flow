@@ -31,7 +31,8 @@
             ]
         },
         "files": [
-            "src/Flow/Parquet/functions.php"
+            "src/Flow/Parquet/functions.php",
+            "src/Flow/Parquet/polyfill.php"
         ]
     },
     "autoload-dev": {
