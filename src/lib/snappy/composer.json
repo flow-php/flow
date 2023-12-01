@@ -27,7 +27,7 @@
             ]
         },
         "files": [
-            "polifil.php"
+            "polyfill.php"
         ]
     },
     "autoload-dev": {
