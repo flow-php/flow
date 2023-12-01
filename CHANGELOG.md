@@ -1,3 +1,9 @@
+## [Unreleased] - 2023-12-01
+
+### Fixed
+- [#855](https://github.com/flow-php/flow/pull/855) - **Fix typo in Snappy polyfill filename** - [@stloyd](https://github.com/stloyd)
+- [#856](https://github.com/flow-php/flow/pull/856) - **Fix wrong namespace of `HashIdFactoryTest` test** - [@stloyd](https://github.com/stloyd)
+
 ## [0.5.0] - 2023-11-30
 
 ### Added
