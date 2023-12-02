@@ -42,7 +42,7 @@ Alternatively you can use `DataFrame::write` function to display data frame:
 $output = data_frame()
     ->read(from_())
     ->withEntry('...', ref()->doSomething())
-    ->write(to_otuput(truncate: false))
+    ->write(to_output(truncate: false))
     ->run();
 ```
 `
