@@ -4,8 +4,9 @@ Flow is a PHP based, strongly typed data processing framework with constant memo
 
 Supported PHP versions: [![PHP 8.1](https://img.shields.io/badge/php-~8.1-8892BF.svg)](https://php.net/) [![PHP 8.2](https://img.shields.io/badge/php-~8.2-8892BF.svg)](https://php.net/) [![PHP 8.3](https://img.shields.io/badge/php-~8.3-8892BF.svg)](https://php.net/)
 
-- 📈 [Project Roadmap](https://github.com/orgs/flow-php/projects/1)
+- ➡️ [Installation](installation.md)
 - 📜 [Documentation](introduction.md)
+- 📈 [Project Roadmap](https://github.com/orgs/flow-php/projects/1)
 - 🛠️ [Contributing](../CONTRIBUTING.md)
 
 # Key Features
@@ -24,5 +25,4 @@ Supported PHP versions: [![PHP 8.1](https://img.shields.io/badge/php-~8.1-8892BF
 - **Window Functions**: Utilize window functions for advanced data analysis, allowing you to perform calculations across sets of rows that are related to the current row.
 - **Built-In Caching Mechanism**: Improve performance with built-in caching, reducing processing time and enhancing overall efficiency, especially in repetitive data processing tasks.
 
-- [⬅️️ Back](../README.md)
-- [➡️ Installation](installation.md)
+[⬅️️ Back](../README.md)
