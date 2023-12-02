@@ -1,5 +1,8 @@
 ## [Unreleased] - 2023-12-02
 
+### Added
+- [#859](https://github.com/flow-php/flow/pull/859) - **Add documentation about installation using PHIVE** - [@stloyd](https://github.com/stloyd)
+
 ### Fixed
 - [#858](https://github.com/flow-php/flow/pull/858) - **Spelling mistake in documentation** - [@xaviermarchegay](https://github.com/xaviermarchegay)
 - [#855](https://github.com/flow-php/flow/pull/855) - **Fix typo in Snappy polyfill filename** - [@stloyd](https://github.com/stloyd)
