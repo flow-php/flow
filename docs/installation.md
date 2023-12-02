@@ -39,4 +39,5 @@ composer require flow-php/etl flow-php/etl-adapter-csv flow-php/etl-adapter-json
 
 - [➡️ Docker](installation/docker.md)
 - [➡️ PHAR with PHIVE](installation/phive.md)
+- [➡️ Homebrew](installation/homebrew.md)
 - [➡️ Quick Start](quick-start.md)
