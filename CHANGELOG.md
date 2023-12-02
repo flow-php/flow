@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-12-02
 
 ### Added
+- [#860](https://github.com/flow-php/flow/pull/860) - **Added ArrayExtractor** - [@norberttech](https://github.com/norberttech)
 - [#859](https://github.com/flow-php/flow/pull/859) - **Add documentation about installation using PHIVE** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
