@@ -32,9 +32,11 @@ this will reduce the number of unnecessary dependencies in your project (less ma
 
 For example, if you want to work with JSON/CSV files here are the dependencies you will need to install:
 
-```shell
+- ➡️ Composer
+```bash
 composer require flow-php/etl flow-php/etl-adapter-csv flow-php/etl-adapter-json
 ```
 
 - [➡️ Docker](installation/docker.md)
+- [➡️ PHAR with PHIVE](installation/phive.md)
 - [➡️ Quick Start](quick-start.md)
