@@ -13,6 +13,7 @@ use Flow\ETL\ErrorHandler\ThrowError;
 use Flow\ETL\Extractor;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\Flow;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Formatter;
 use Flow\ETL\Function\All;
 use Flow\ETL\Function\Any;
@@ -78,7 +79,6 @@ use Flow\ETL\Loader\MemoryLoader;
 use Flow\ETL\Loader\StreamLoader;
 use Flow\ETL\Loader\StreamLoader\Output;
 use Flow\ETL\Loader\TransformerLoader;
-use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Memory\Memory;
 use Flow\ETL\Partition;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
@@ -129,9 +129,9 @@ function from_rows(Rows ...$rows) : Extractor\ProcessExtractor
     return new Extractor\ProcessExtractor(...$rows);
 }
 
-function from_array(array $array) : Extractor\MemoryExtractor
+function from_array(iterable $array) : Extractor\ArrayExtractor
 {
-    return new Extractor\MemoryExtractor(new ArrayMemory($array));
+    return new Extractor\ArrayExtractor($array);
 }
 
 function from_cache(string $id, ?Extractor $fallback_extractor = null, bool $clear = false) : Extractor\CacheExtractor
@@ -957,4 +957,9 @@ function struct_schema(string $name, StructureType $type, bool $nullable = false
 function uuid_schema(string $name, ?Schema\Constraint $constraint = null, ?Schema\Metadata $metadata = null) : Definition
 {
     return Definition::uuid($name, $constraint, $metadata);
+}
+
+function execution_context(?Config $config = null) : FlowContext
+{
+    return new FlowContext($config ?? Config::default());
 }
