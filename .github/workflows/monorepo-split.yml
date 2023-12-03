@@ -64,8 +64,11 @@ jobs:
           - local_path: 'src/adapter/etl-adapter-xml'
             split_repository: 'etl-adapter-xml'
 
+          - local_path: 'src/tools/homebrew'
+            split_repository: 'homebrew-flow'
+
     steps:
-      -   uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       # no tag
       -

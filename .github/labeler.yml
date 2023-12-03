@@ -49,4 +49,5 @@ adapter-text:
 adapter-xml:
   - any: ["src/adapter/etl-adapter-xml/**/*"]
 
-
+tools-homebrew:
+  - any: ["src/tools/homebrew/**/*"]
