@@ -28,11 +28,10 @@ composer require flow-php/etl-adapter-json
 ```php
 <?php
 
-use Flow\ETL\Stream\LocalFile;
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonExtractor;
 
 $rows = (new Flow())
-    ->read(Json::from(new LocalFile(__DIR__ . '/../Fixtures/timezones.json'), 5))
+    ->read(Json::from(__DIR__ . '/../Fixtures/timezones.json', 5))
     ->fetch()
 ```
 
@@ -45,7 +44,6 @@ use Flow\ETL\Adapter\JSON\JsonLoader;
 use Flow\ETL\Flow;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
-use Flow\ETL\Stream\LocalFile;
 
 (new Flow())
     ->process(
@@ -59,6 +57,6 @@ use Flow\ETL\Stream\LocalFile;
             )
         )
     )
-    ->write(Json::to(new LocalFile(\sys_get_temp_dir() . '/file.json')))
+    ->write(Json::to(\sys_get_temp_dir() . '/file.json'))
     ->run();
 ```
