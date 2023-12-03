@@ -1,10 +1,11 @@
-## [Unreleased] - 2023-12-02
+## [Unreleased] - 2023-12-03
 
 ### Added
 - [#860](https://github.com/flow-php/flow/pull/860) - **Added ArrayExtractor** - [@norberttech](https://github.com/norberttech)
 - [#859](https://github.com/flow-php/flow/pull/859) - **Add documentation about installation using PHIVE** - [@stloyd](https://github.com/stloyd)
 
 ### Fixed
+- [#862](https://github.com/flow-php/flow/pull/862) - **Dremel & Parquet performance improvements** - [@norberttech](https://github.com/norberttech)
 - [#858](https://github.com/flow-php/flow/pull/858) - **Spelling mistake in documentation** - [@xaviermarchegay](https://github.com/xaviermarchegay)
 - [#855](https://github.com/flow-php/flow/pull/855) - **Fix typo in Snappy polyfill filename** - [@stloyd](https://github.com/stloyd)
 - [#856](https://github.com/flow-php/flow/pull/856) - **Fix wrong namespace of `HashIdFactoryTest` test** - [@stloyd](https://github.com/stloyd)
