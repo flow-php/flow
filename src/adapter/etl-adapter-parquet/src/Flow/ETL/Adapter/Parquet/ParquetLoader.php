@@ -72,7 +72,7 @@ final class ParquetLoader implements Closure, Loader, Loader\FileLoader
 
     public function load(Rows $rows, FlowContext $context) : void
     {
-        if ($this->schema === null) {
+        if ($this->schema === null && $this->inferredSchema === null) {
             $this->inferSchema($rows);
         }
 
