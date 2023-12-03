@@ -1,3 +1,8 @@
+## [Unreleased] - 2023-12-03
+
+### Removed
+- [#863](https://github.com/flow-php/flow/pull/863) - **removed LocalFile references in readme and dockblock** - [@rzarno](https://github.com/rzarno)
+
 ## [0.5.1] - 2023-12-03
 
 ### Added
