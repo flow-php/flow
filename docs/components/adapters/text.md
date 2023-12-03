@@ -29,7 +29,7 @@ use Flow\ETL\DSL\Text;
 use Flow\ETL\Flow;
 
 $rows = (new Flow())
-    ->read(Text::from(new LocalFile($path)))
+    ->read(Text::from(path))
     ->fetch();
 ```
 
