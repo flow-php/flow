@@ -16,7 +16,7 @@ use Flow\ETL\Loader;
 class Json
 {
     /**
-     * @param array<Path|string>|Path|string $path - string is internally turned into LocalFile stream
+     * @param array<Path|string>|Path|string $path - string is internally turned into stream
      * @param ?string $pointer - if you want to iterate only results of a subtree, use a pointer, read more at https://github.com/halaxa/json-machine#parsing-a-subtree
      *
      * @return Extractor

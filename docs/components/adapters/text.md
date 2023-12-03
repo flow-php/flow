@@ -29,7 +29,7 @@ use Flow\ETL\DSL\Text;
 use Flow\ETL\Flow;
 
 $rows = (new Flow())
-    ->read(Text::from(new LocalFile($path)))
+    ->read(from_text(path))
     ->fetch();
 ```
 
@@ -52,6 +52,6 @@ use Flow\ETL\Rows;
             Row::create(new Row\Entry\StringEntry('name', 'Dawid')),
         )
     )
-    ->load(Text::to($path))
+    ->load(to_text($path))
     ->run();
 ```
