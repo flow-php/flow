@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-12-03
+## [0.5.1] - 2023-12-03
 
 ### Added
 - [#860](https://github.com/flow-php/flow/pull/860) - **Added ArrayExtractor** - [@norberttech](https://github.com/norberttech)
