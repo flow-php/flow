@@ -75,7 +75,12 @@ final class Dremel
     {
         $definitions = [];
         $this->buildDefinitions($data, $definitions, $maxDefinitionLevel);
-        $repetitions = $this->buildRepetitions($data);
+        $repetitions = [];
+        $this->buildRepetitions($data, 0, 0, $repetitions);
+
+        if (!\count($repetitions) || \max($repetitions) === 0) {
+            $repetitions = [];
+        }
 
         return new DataShredded(
             $repetitions,
@@ -126,10 +131,8 @@ final class Dremel
         }
     }
 
-    private function buildRepetitions(array $data, int $currentLevel = 0, int $topIndex = 0) : array
+    private function buildRepetitions(array $data, int $currentLevel, int $topIndex, array &$output) : void
     {
-        $output = [];
-
         foreach ($data as $index => $item) {
             if (\is_array($item)) {
 
@@ -139,7 +142,12 @@ final class Dremel
                     continue;
                 }
 
-                $output = \array_merge($output, $this->buildRepetitions($item, $currentLevel + 1, $index));
+                $childRepetitions = [];
+                $this->buildRepetitions($item, $currentLevel + 1, $index, $childRepetitions);
+
+                foreach ($childRepetitions as $repetition) {
+                    $output[] = $repetition;
+                }
             } else {
                 if (!\count($output)) {
                     $output[] = $topIndex === 0 ? 0 : $currentLevel - 1;
@@ -148,12 +156,6 @@ final class Dremel
                 }
             }
         }
-
-        if (!\count($output) || \max($output) === 0) {
-            return [];
-        }
-
-        return $output;
     }
 
     private function value(int $definition, int $maxDefinitionLevel, array $values, int &$valueIndex) : mixed
