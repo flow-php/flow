@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-12-05
+## [0.5.2] - 2023-12-05
 
 ### Added
 - [#861](https://github.com/flow-php/flow/pull/861) - **Add documentation about installation using Homebrew** - [@stloyd](https://github.com/stloyd)
