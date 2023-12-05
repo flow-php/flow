@@ -1,4 +1,8 @@
-## [Unreleased] - 2023-12-03
+## [Unreleased] - 2023-12-05
+
+### Added
+- [#861](https://github.com/flow-php/flow/pull/861) - **Add documentation about installation using Homebrew** - [@stloyd](https://github.com/stloyd)
+- [#861](https://github.com/flow-php/flow/pull/861) - **Add Homebrew formula into monorepo** - [@stloyd](https://github.com/stloyd)
 
 ### Removed
 - [#863](https://github.com/flow-php/flow/pull/863) - **removed LocalFile references in readme and dockblock** - [@rzarno](https://github.com/rzarno)
