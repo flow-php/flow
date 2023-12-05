@@ -121,6 +121,17 @@ jobs:
           commit-message: |
             Update Homebrew TAP formula: {{formulaName}} to version: {{version}}
 
+            <h2>Change Log</h2>
+            <div id="change-log">
+              <h4>Changed</h4>
+              <ul id="changed">
+                <li>Update Homebrew TAP formula: {{formulaName}} to version: {{version}}</li>
+              </ul>
+            </div>
+            <hr/>
+
+            <h2>Description</h2>
+
             Created by https://github.com/mislav/bump-homebrew-formula-action
         env:
           COMMITTER_TOKEN: ${{ secrets.ACCESS_TOKEN }}
