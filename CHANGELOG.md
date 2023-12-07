@@ -1,6 +1,8 @@
 ## [Unreleased] - 2023-12-07
 
 ### Added
+- [#871](https://github.com/flow-php/flow/pull/871) - **DataFrame::fromJson()** - [@norberttech](https://github.com/norberttech)
+- [#871](https://github.com/flow-php/flow/pull/871) - **support for running dataframes from json through flow CLI** - [@norberttech](https://github.com/norberttech)
 - [#869](https://github.com/flow-php/flow/pull/869) - **RDSL library** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
@@ -8,6 +10,7 @@
 - [#867](https://github.com/flow-php/flow/pull/867) - **Update Homebrew TAP formula: flow-php to version: 0.5.2** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#871](https://github.com/flow-php/flow/pull/871) - **phar file** - [@norberttech](https://github.com/norberttech)
 - [#870](https://github.com/flow-php/flow/pull/870) - **Reduced number of files in phar** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
