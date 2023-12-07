@@ -37,6 +37,7 @@ final class JsonLoaderTest extends TestCase
                     )
                 )
             )
+            ->sortBy(ref('id')->asc())
             ->write(to_json($stream))
             ->run();
 
@@ -235,6 +236,7 @@ JSON,
             ],
             (new Flow())
                 ->read(from_json($path))
+                ->sortBy(ref('id')->asc())
                 ->fetch()
                 ->toArray()
         );
@@ -311,6 +313,7 @@ JSON,
             ],
             (new Flow)
                 ->read(from_json($path))
+                ->sortBy(ref('id')->asc())
                 ->fetch()
                 ->toArray()
         );
