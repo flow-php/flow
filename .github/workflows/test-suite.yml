@@ -47,6 +47,12 @@ jobs:
           php-version: "${{ matrix.php-version }}"
           ini-values: memory_limit=-1
 
+      - name: "List PHP Extensions"
+        run: php -m
+
+      - name: "List PHP configuration"
+        run: php -i
+
       - name: "Create cache directories"
         run: |
           mkdir -p var/cs-fixer
