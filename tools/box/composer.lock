@@ -909,31 +909,29 @@
         },
         {
             "name": "fidry/filesystem",
-            "version": "1.1.0",
+            "version": "1.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/theofidry/filesystem.git",
-                "reference": "1dd372ab3eb8b84ffe9578bff576b00c9a44ee46"
+                "reference": "dc03299a795931cd790a91d0896670162a762ebb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/theofidry/filesystem/zipball/1dd372ab3eb8b84ffe9578bff576b00c9a44ee46",
-                "reference": "1dd372ab3eb8b84ffe9578bff576b00c9a44ee46",
+                "url": "https://api.github.com/repos/theofidry/filesystem/zipball/dc03299a795931cd790a91d0896670162a762ebb",
+                "reference": "dc03299a795931cd790a91d0896670162a762ebb",
                 "shasum": ""
             },
             "require": {
                 "php": "^8.1",
-                "symfony/filesystem": "^6.3",
+                "symfony/filesystem": "^6.4 || ^7.0",
                 "thecodingmachine/safe": "^2.0"
             },
             "require-dev": {
                 "bamarni/composer-bin-plugin": "^1.4",
                 "ergebnis/composer-normalize": "^2.28",
-                "infection/infection": "^0.26",
-                "phpspec/prophecy-phpunit": "^2.0",
+                "infection/infection": ">=0.26",
                 "phpunit/phpunit": "^10.3",
-                "symfony/finder": "^6.3",
-                "symfony/phpunit-bridge": "^6.2"
+                "symfony/finder": "^6.4 || ^7.0"
             },
             "type": "library",
             "extra": {
@@ -966,7 +964,7 @@
             ],
             "support": {
                 "issues": "https://github.com/theofidry/filesystem/issues",
-                "source": "https://github.com/theofidry/filesystem/tree/1.1.0"
+                "source": "https://github.com/theofidry/filesystem/tree/1.2.0"
             },
             "funding": [
                 {
@@ -974,7 +972,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2023-10-07T07:32:54+00:00"
+            "time": "2023-12-05T08:57:30+00:00"
         },
         {
             "name": "humbug/box",
@@ -2029,16 +2027,16 @@
         },
         {
             "name": "symfony/console",
-            "version": "v6.4.0",
+            "version": "v6.4.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/console.git",
-                "reference": "cd9864b47c367450e14ab32f78fdbf98c44c26b6"
+                "reference": "a550a7c99daeedef3f9d23fb82e3531525ff11fd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/console/zipball/cd9864b47c367450e14ab32f78fdbf98c44c26b6",
-                "reference": "cd9864b47c367450e14ab32f78fdbf98c44c26b6",
+                "url": "https://api.github.com/repos/symfony/console/zipball/a550a7c99daeedef3f9d23fb82e3531525ff11fd",
+                "reference": "a550a7c99daeedef3f9d23fb82e3531525ff11fd",
                 "shasum": ""
             },
             "require": {
@@ -2103,7 +2101,7 @@
                 "terminal"
             ],
             "support": {
-                "source": "https://github.com/symfony/console/tree/v6.4.0"
+                "source": "https://github.com/symfony/console/tree/v6.4.1"
             },
             "funding": [
                 {
@@ -2119,7 +2117,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2023-11-20T16:41:16+00:00"
+            "time": "2023-11-30T10:54:28+00:00"
         },
         {
             "name": "symfony/deprecation-contracts",

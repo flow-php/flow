@@ -10,6 +10,10 @@ final class XPath implements ScalarFunction
     {
     }
 
+    /**
+     * @psalm-suppress InvalidReturnStatement
+     * @psalm-suppress InvalidReturnType
+     */
     public function eval(Row $row) : null|\DOMNode|array
     {
         /** @var mixed $value */
