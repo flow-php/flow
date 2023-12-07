@@ -170,7 +170,7 @@ jobs:
           tools: composer:v2
           php-version: "${{ matrix.php-version }}"
           ini-values: memory_limit=-1
-          extensions: none, bcmath, dom, hash, json, mbstring, xmlreader, zlib, intl, yaml, sodium, curl
+          extensions: none, bcmath, curl, dom, fileinfo, filter, hash, json, mbstring, pcre, simplexml, xmlreader, zlib
 
       - name: "List PHP Extensions"
         run: php -m
