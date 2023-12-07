@@ -1,4 +1,7 @@
-## [Unreleased] - 2023-12-05
+## [Unreleased] - 2023-12-07
+
+### Added
+- [#869](https://github.com/flow-php/flow/pull/869) - **RDSL library** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
 - [#868](https://github.com/flow-php/flow/pull/868) - **Adjust Homebrew commit message to match Flow CS** - [@stloyd](https://github.com/stloyd)
