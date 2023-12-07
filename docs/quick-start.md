@@ -165,4 +165,5 @@ To find out more about please continue reading about components and the ETL itse
   - [➡️ dremel.md](components/libs/dremel.md)
   - [➡️ parquet.md](components/libs/parquet.md)
   - [➡️ parquet-viewer.md](components/libs/parquet-viewer.md)
+  - [➡️ rdsl.md](components/libs/rdsl.md)
   - [➡️ snappy.md](components/libs/snappy.md)

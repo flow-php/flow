@@ -92,6 +92,7 @@
                 "src/lib/doctrine-dbal-bulk/src/Flow",
                 "src/lib/dremel/src/Flow",
                 "src/lib/parquet-viewer/src/Flow",
+                "src/lib/rdsl/src/Flow",
                 "src/lib/parquet/src/Flow",
                 "src/lib/snappy/src/Flow"
             ],
@@ -125,6 +126,7 @@
                 "src/lib/doctrine-dbal-bulk/tests/Flow",
                 "src/lib/dremel/tests/Flow",
                 "src/lib/parquet-viewer/tests/Flow",
+                "src/lib/rdsl/tests/Flow",
                 "src/lib/parquet/tests/Flow",
                 "src/lib/snappy/tests/Flow"
             ],
@@ -134,7 +136,10 @@
             "Flow\\ETL\\Adapter\\Doctrine\\Tests\\": [
                 "src/adapter/etl-adapter-doctrine/tests/Flow/ETL/Adapter/Doctrine/Tests"
             ]
-        }
+        },
+        "files": [
+            "src/lib/rdsl/tests/Flow/RDSL/Tests/Fixtures/functions.php"
+        ]
     },
     "config": {
         "optimize-autoloader": true,
