@@ -6,6 +6,7 @@ namespace Flow\ETL;
 
 use function Flow\ETL\DSL\to_output;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\InvalidFileFormatException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Formatter\AsciiTableFormatter;
@@ -44,6 +45,13 @@ use Flow\ETL\Transformer\ScalarFunctionTransformer;
 use Flow\ETL\Transformer\StyleConverter\StringStyles;
 use Flow\ETL\Transformer\UntilTransformer;
 use Flow\ETL\Transformer\WindowFunctionTransformer;
+use Flow\RDSL\AccessControl\AllowAll;
+use Flow\RDSL\AccessControl\AllowList;
+use Flow\RDSL\AccessControl\DenyAll;
+use Flow\RDSL\Builder;
+use Flow\RDSL\DSLNamespace;
+use Flow\RDSL\Executor;
+use Flow\RDSL\Finder;
 
 final class DataFrame
 {
@@ -52,6 +60,52 @@ final class DataFrame
     public function __construct(private Pipeline $pipeline, Config $configuration)
     {
         $this->context = new FlowContext($configuration);
+    }
+
+    /**
+     * @throws \JsonException
+     * @throws RuntimeException
+     */
+    public static function fromJson(string $json) : self
+    {
+        $namespaces = [
+            DSLNamespace::global(new DenyAll()),
+            new DSLNamespace('\Flow\ETL\DSL\Adapter\Avro', new AllowAll()),
+            new DSLNamespace('\Flow\ETL\Adapter\ChartJS', new AllowAll()),
+            new DSLNamespace('\Flow\ETL\Adapter\CSV', new AllowAll()),
+            new DSLNamespace('\Flow\ETL\Adapter\Doctrine', new AllowAll()),
+            new DSLNamespace('\Flow\ETL\Adapter\Elasticsearch', new AllowAll()),
+            new DSLNamespace('\Flow\ETL\Adapter\GoogleSheet', new AllowAll()),
+            new DSLNamespace('\Flow\ETL\Adapter\JSON', new AllowAll()),
+            new DSLNamespace('\Flow\ETL\Adapter\Meilisearch', new AllowAll()),
+            new DSLNamespace('\Flow\ETL\Adapter\Parquet', new AllowAll()),
+            new DSLNamespace('\Flow\ETL\Adapter\Text', new AllowAll()),
+            new DSLNamespace('\Flow\ETL\Adapter\XML', new AllowAll()),
+            new DSLNamespace('\Flow\ETL\DSL', new AllowAll()),
+        ];
+
+        try {
+            $builder = new Builder(new Finder($namespaces, new AllowList(['data_frame', 'df'])));
+
+            try {
+                $results = (new Executor())
+                    ->execute($builder->parse(\json_decode($json, true, 512, JSON_THROW_ON_ERROR)));
+            } catch (\JsonException $exception) {
+                throw new InvalidFileFormatException('json', 'unknown');
+            }
+
+            if (\count($results) !== 1) {
+                throw new InvalidArgumentException('Invalid JSON, please make sure that there is only one data_frame function');
+            }
+
+            if (!$results[0] instanceof self) {
+                throw new InvalidArgumentException('Invalid JSON, expected DataFrame instance but got ' . \get_class($results[0]));
+            }
+
+            return $results[0];
+        } catch (\Flow\RDSL\Exception\InvalidArgumentException $e) {
+            throw new InvalidArgumentException($e->getMessage(), $e->getCode(), $e);
+        }
     }
 
     /**

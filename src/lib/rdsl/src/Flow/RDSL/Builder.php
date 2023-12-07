@@ -44,7 +44,7 @@ final class Builder
             throw new InvalidArgumentException('Method are allowed only in calls, if you want to pass a method as argument, use a function instead');
         }
 
-        return $this->parseArg($definition);
+        return $definition;
     }
 
     public function parseArgs(array $definition) : Arguments
@@ -85,23 +85,31 @@ final class Builder
         if ($callDefinition === null) {
             return new DSLFunction(
                 $functionReflection->name,
-                new Arguments($args)
+                $this->parseArgs($args)
             );
         }
 
-        $functionReturnType = $functionReflection->getReturnType();
-
-        if (!$functionReturnType instanceof \ReflectionNamedType) {
-            throw new InvalidArgumentException(\sprintf('Function "%s" must have return type', $functionReflection->name));
-        }
-
         return (new DSLFunction($functionReflection->name, $this->parseArgs($args)))
-            ->addMethodCall($this->parseMethod($functionReturnType, $callDefinition));
+            ->addMethodCall($this->parseMethod($functionReflection, $callDefinition));
     }
 
-    public function parseMethod(\ReflectionNamedType $object, array $definition) : Method
+    public function parseMethod(\ReflectionFunction|\ReflectionMethod $context, array $definition) : Method
     {
-        $objectClass = $this->finder->findClass($object->getName());
+        if (!$context->getReturnType() instanceof \ReflectionNamedType) {
+            throw new InvalidArgumentException('Method call is allowed only on function that return objects.');
+        }
+
+        $class = $context->getReturnType()->getName();
+
+        if ($context instanceof \ReflectionMethod && \mb_strtolower($class) === 'self') {
+            $class = $context->class;
+        }
+
+        if (\mb_strtolower($class) === 'static') {
+            throw new InvalidArgumentException('Method call is allowed only on function that return objects.');
+        }
+
+        $objectClass = $this->finder->findClass($class);
 
         if (!\array_key_exists('method', $definition)) {
             throw new InvalidArgumentException('Method definition must start with a method: {"method":"name","args":[]}');
@@ -129,13 +137,7 @@ final class Builder
             return new Method($methodReflection->name, $this->parseArgs($args));
         }
 
-        $returnType = $methodReflection->getReturnType();
-
-        if (!$returnType instanceof \ReflectionNamedType) {
-            throw new InvalidArgumentException(\sprintf('Method "%s::%s" must have return type', $objectClass->getName(), $methodReflection->name));
-        }
-
-        return (new Method($methodReflection->name, new Arguments($args)))
-            ->addMethodCall($this->parseMethod($returnType, $callDefinition));
+        return (new Method($methodReflection->name, $this->parseArgs($args)))
+            ->addMethodCall($this->parseMethod($methodReflection, $callDefinition));
     }
 }
