@@ -188,6 +188,7 @@ JSON,
             ],
             df()
                 ->read(from_json($path))
+                ->sortBy(ref('id'))
                 ->fetch()
                 ->toArray()
         );

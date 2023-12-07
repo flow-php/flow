@@ -44,7 +44,7 @@ final class Builder
             throw new InvalidArgumentException('Method are allowed only in calls, if you want to pass a method as argument, use a function instead');
         }
 
-        return $this->parseArg($definition);
+        return $definition;
     }
 
     public function parseArgs(array $definition) : Arguments
@@ -85,7 +85,7 @@ final class Builder
         if ($callDefinition === null) {
             return new DSLFunction(
                 $functionReflection->name,
-                new Arguments($args)
+                $this->parseArgs($args)
             );
         }
 
@@ -135,7 +135,7 @@ final class Builder
             throw new InvalidArgumentException(\sprintf('Method "%s::%s" must have return type', $objectClass->getName(), $methodReflection->name));
         }
 
-        return (new Method($methodReflection->name, new Arguments($args)))
+        return (new Method($methodReflection->name, $this->parseArgs($args)))
             ->addMethodCall($this->parseMethod($returnType, $callDefinition));
     }
 }
