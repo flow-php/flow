@@ -963,3 +963,13 @@ function execution_context(?Config $config = null) : FlowContext
 {
     return new FlowContext($config ?? Config::default());
 }
+
+function config() : Config
+{
+    return Config::default();
+}
+
+function config_builder() : ConfigBuilder
+{
+    return new ConfigBuilder();
+}

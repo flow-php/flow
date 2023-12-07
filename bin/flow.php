@@ -3,6 +3,8 @@
 
 declare(strict_types=1);
 
+use Flow\ETL\DataFrame;
+use Flow\ETL\Exception\InvalidFileFormatException;
 use Flow\ETL\FlowVersion;
 use Flow\ETL\PipelineFactory;
 use Flow\ParquetViewer\Command\ReadDataCommand;
@@ -39,16 +41,22 @@ $application->add(new class extends Command {
     {
         $this
             ->setName('run')
-            ->setDescription('Run ETL pipeline')
-            ->addArgument('input-file', InputArgument::REQUIRED, 'Path to a php file that returns instance of Flow\ETL\DataFrame');
+            ->setDescription('Execute ETL pipeline from a php/json file.')
+            ->addArgument('input-file', InputArgument::REQUIRED, 'Path to a php/json with DataFrame definition.');
     }
 
     public function execute(InputInterface $input, OutputInterface $output) : int
     {
         try {
-            /** @phpstan-ignore-next-line */
-            $loader = new PipelineFactory((string) $input->getArgument('input-file'));
-            $loader->run();
+            try {
+                /** @phpstan-ignore-next-line */
+                $dataFrame = new PipelineFactory((string) $input->getArgument('input-file'));
+                $dataFrame->run();
+            } catch (InvalidFileFormatException $notPhpFileException) {
+                $dataFrame = DataFrame::fromJson(\file_get_contents((string) $input->getArgument('input-file')));
+                $dataFrame->run();
+            }
+
         } catch (\Exception $exception) {
             $style = new SymfonyStyle($input, $output);
             $style->error($exception->getMessage());

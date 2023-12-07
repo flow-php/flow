@@ -1,0 +1,32 @@
+[
+  {
+    "function" : "data_frame",
+    "call": {
+      "method": "read",
+      "args": [
+        {
+          "function": "from_array",
+          "args": [
+            [{"id": 1, "name": "user_01"},{"id": 2, "name": "user_02"},{"id": 3, "name": "user_03"}]
+          ]
+        }
+      ],
+      "call": {
+        "method": "collect",
+        "call": {
+          "method": "withEntry",
+          "args": ["active", {"function": "lit", "args":  [true]}],
+          "call": {
+            "method": "write",
+            "args": [
+              {
+                "function": "to_output",
+                "args": [false]
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+]

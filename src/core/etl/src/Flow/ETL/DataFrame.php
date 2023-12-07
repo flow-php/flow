@@ -6,6 +6,7 @@ namespace Flow\ETL;
 
 use function Flow\ETL\DSL\to_output;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\InvalidFileFormatException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Formatter\AsciiTableFormatter;
@@ -86,8 +87,12 @@ final class DataFrame
         try {
             $builder = new Builder(new Finder($namespaces, new AllowList(['data_frame', 'df'])));
 
-            $results = (new Executor())
-                ->execute($builder->parse(\json_decode($json, true, 512, JSON_THROW_ON_ERROR)));
+            try {
+                $results = (new Executor())
+                    ->execute($builder->parse(\json_decode($json, true, 512, JSON_THROW_ON_ERROR)));
+            } catch (\JsonException $exception) {
+                throw new InvalidFileFormatException('json', 'unknown');
+            }
 
             if (\count($results) !== 1) {
                 throw new InvalidArgumentException('Invalid JSON, please make sure that there is only one data_frame function');

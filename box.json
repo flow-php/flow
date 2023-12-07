@@ -9,7 +9,6 @@
     "tools",
     "var",
     "fakerphp",
-    "fig",
     "mock-client",
     "dotenv",
     "var-exporter"
