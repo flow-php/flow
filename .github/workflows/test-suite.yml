@@ -46,6 +46,7 @@ jobs:
           tools: composer:v2
           php-version: "${{ matrix.php-version }}"
           ini-values: memory_limit=-1
+          extensions: :psr
 
       - name: "Create cache directories"
         run: |
@@ -170,7 +171,7 @@ jobs:
           tools: composer:v2
           php-version: "${{ matrix.php-version }}"
           ini-values: memory_limit=-1
-          extensions: none, bcmath, curl, dom, fileinfo, filter, hash, json, mbstring, pcre, simplexml, xmlreader, zlib
+          extensions: :psr
 
       - name: "List PHP Extensions"
         run: php -m
