@@ -10,6 +10,8 @@ use Flow\RDSL\Finder;
 use Flow\RDSL\Tests\Fixtures\IntObject;
 use PHPUnit\Framework\TestCase;
 
+require_once __DIR__ . '/../Fixtures/functions.php';
+
 final class ExecutorTest extends TestCase
 {
     public function test_build_and_execute_dsl() : void

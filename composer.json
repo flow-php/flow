@@ -136,10 +136,7 @@
             "Flow\\ETL\\Adapter\\Doctrine\\Tests\\": [
                 "src/adapter/etl-adapter-doctrine/tests/Flow/ETL/Adapter/Doctrine/Tests"
             ]
-        },
-        "files": [
-            "src/lib/rdsl/tests/Flow/RDSL/Tests/Fixtures/functions.php"
-        ]
+        }
     },
     "config": {
         "optimize-autoloader": true,

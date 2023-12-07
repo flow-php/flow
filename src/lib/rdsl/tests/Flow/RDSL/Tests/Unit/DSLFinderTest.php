@@ -9,6 +9,8 @@ use Flow\RDSL\Exception\InvalidArgumentException;
 use Flow\RDSL\Finder;
 use PHPUnit\Framework\TestCase;
 
+require_once __DIR__ . '/../Fixtures/functions.php';
+
 final class DSLFinderTest extends TestCase
 {
     public function test_not_allowed_function_from_global_namespace_by_default() : void
