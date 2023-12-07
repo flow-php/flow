@@ -47,12 +47,6 @@ jobs:
           php-version: "${{ matrix.php-version }}"
           ini-values: memory_limit=-1
 
-      - name: "List PHP Extensions"
-        run: php -m
-
-      - name: "List PHP configuration"
-        run: php -i
-
       - name: "Create cache directories"
         run: |
           mkdir -p var/cs-fixer
@@ -176,6 +170,13 @@ jobs:
           tools: composer:v2
           php-version: "${{ matrix.php-version }}"
           ini-values: memory_limit=-1
+          extensions: none, bcmath, dom, hash, json, mbstring, xmlreader, zlib, intl, yaml, sodium, curl
+
+      - name: "List PHP Extensions"
+        run: php -m
+
+      - name: "List PHP configuration"
+        run: php -i
 
       - name: "Get Composer Cache Directory"
         id: composer-cache
