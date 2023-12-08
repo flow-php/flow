@@ -47,7 +47,7 @@ JSON
     public function test_building_data_frame_from_json_with_forbidden_method_call() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("Method \"Flow\ETL\DataFrame::run\" is not allowed to be executed.");
+        $this->expectExceptionMessage("Method \"run\" from class \"Flow\ETL\DataFrame\" is excluded from DSL.");
 
         DataFrame::fromJson(
             <<<'JSON'
