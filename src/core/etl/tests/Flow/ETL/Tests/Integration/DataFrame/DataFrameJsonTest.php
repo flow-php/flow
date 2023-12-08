@@ -44,6 +44,40 @@ JSON
         );
     }
 
+    public function test_building_data_frame_from_json_with_forbidden_method_call() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Method \"Flow\ETL\DataFrame::run\" is not allowed to be executed.");
+
+        DataFrame::fromJson(
+            <<<'JSON'
+[
+  {
+    "function" : "data_frame",
+    "call": {
+      "method": "read",
+      "args": [
+        {
+          "function": "from_array",
+          "args": [
+            [{"id": 1, "name": "Norbert"},{"id": 2, "name": "Michal"}]
+          ]
+        }
+      ],
+      "call": {
+        "method": "withEntry",
+        "args": ["active", {"function": "lit", "args":  [true]}],
+        "call": {
+          "method": "run"
+        }
+      }
+    }
+  }
+]
+JSON
+        );
+    }
+
     public function test_building_dataframe_with_two_entry_points() : void
     {
         $this->expectException(InvalidArgumentException::class);

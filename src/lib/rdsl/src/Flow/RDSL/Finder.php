@@ -17,7 +17,8 @@ final class Finder
      */
     public function __construct(
         array $namespaces,
-        private readonly AccessControl $entryPointACL
+        private readonly AccessControl $entryPointACL,
+        private readonly AccessControl $methodACL
     ) {
         $namespaces = \array_map(static fn (DSLNamespace $n) : DSLNamespace => $n, $namespaces);
 
@@ -34,29 +35,6 @@ final class Finder
         }
 
         $this->namespaces = $namespaces;
-    }
-
-    public function findClass(string $name) : \ReflectionClass
-    {
-        if (\class_exists($name)) {
-            return new \ReflectionClass($name);
-        }
-
-        $simpleName = \ltrim($name, '\\');
-
-        foreach ($this->namespaces as $namespace) {
-            $function = $namespace->name . '\\' . $simpleName;
-
-            if (\class_exists($function)) {
-                return new \ReflectionClass($function);
-            }
-        }
-
-        if (\count($this->namespaces)) {
-            throw new InvalidArgumentException(\sprintf('Class "%s" does not exists in namespaces: "%s"', $name, \implode('", "', \array_map(static fn (DSLNamespace $n) => $n->name, $this->namespaces))));
-        }
-
-        throw new InvalidArgumentException(\sprintf('Class "%s" does not exists', $name));
     }
 
     public function findFunction(string $name, bool $entryPoint) : \ReflectionFunction
@@ -118,5 +96,28 @@ final class Finder
         }
 
         throw new InvalidArgumentException(\sprintf('Function "%s" does not exists', $name));
+    }
+
+    public function findMethod(string $class, string $method) : \ReflectionMethod
+    {
+        if (!\class_exists($class)) {
+            throw new InvalidArgumentException(\sprintf('Class "%s" does not exists', $class));
+        }
+
+        $classReflection = new \ReflectionClass($class);
+
+        if ($classReflection->hasMethod($method) === false) {
+            throw new InvalidArgumentException(\sprintf('Method "%s" does not exists in class "%s"', $method, $class));
+        }
+
+        $methodReflection = $classReflection->getMethod($method);
+
+        $methodName = $classReflection->getName() . '::' . $method;
+
+        if ($this->methodACL->isAllowed($methodName) === false) {
+            throw new InvalidArgumentException(\sprintf('Method "%s" is not allowed to be executed.', $methodName));
+        }
+
+        return $methodReflection;
     }
 }

@@ -18,7 +18,7 @@ final class BuilderTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Definition must start with a function: {"function":"name","args":[]}');
 
-        $builder = new Builder(new Finder([], new AllowAll()));
+        $builder = new Builder(new Finder([], new AllowAll(), new AllowAll()));
 
         $builder->parse(['function' => []]);
     }
@@ -27,6 +27,7 @@ final class BuilderTest extends TestCase
     {
         $builder = new Builder(new Finder(
             [DSLNamespace::global(new AllowList(['strlen']))],
+            new AllowAll(),
             new AllowAll()
         ));
 
@@ -42,7 +43,7 @@ final class BuilderTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Function "non_existing_function" does not exist');
 
-        $builder = new Builder(new Finder([], new AllowAll()));
+        $builder = new Builder(new Finder([], new AllowAll(), new AllowAll()));
 
         $builder->parse([['function' => 'non_existing_function', 'args' => ['string']]]);
     }
@@ -52,7 +53,7 @@ final class BuilderTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Definition must have at least one function: [{"function":"name","args":[]}]');
 
-        $builder = new Builder(new Finder([], new AllowAll()));
+        $builder = new Builder(new Finder([], new AllowAll(), new AllowAll()));
 
         $builder->parse([]);
     }

@@ -109,8 +109,6 @@ final class Builder
             throw new InvalidArgumentException('Method call is allowed only on function that return objects.');
         }
 
-        $objectClass = $this->finder->findClass($class);
-
         if (!\array_key_exists('method', $definition)) {
             throw new InvalidArgumentException('Method definition must start with a method: {"method":"name","args":[]}');
         }
@@ -119,9 +117,7 @@ final class Builder
             throw new InvalidArgumentException('Method definition must start with a method: {"method":"name","args":[]}');
         }
 
-        if (!$objectClass->hasMethod($definition['method'])) {
-            throw new InvalidArgumentException(\sprintf('Method "%s" does not exists in class "%s"', $definition['method'], $objectClass->getName()));
-        }
+        $methodReflection = $this->finder->findMethod($class, $definition['method']);
 
         $args = $definition['args'] ?? [];
 
@@ -130,8 +126,6 @@ final class Builder
         }
 
         $callDefinition = $definition['call'] ?? null;
-
-        $methodReflection = $objectClass->getMethod($definition['method']);
 
         if ($callDefinition === null) {
             return new Method($methodReflection->name, $this->parseArgs($args));
