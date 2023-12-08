@@ -48,7 +48,7 @@ use Flow\ETL\Transformer\WindowFunctionTransformer;
 use Flow\RDSL\AccessControl\AllowAll;
 use Flow\RDSL\AccessControl\AllowList;
 use Flow\RDSL\AccessControl\DenyAll;
-use Flow\RDSL\AccessControl\Except;
+use Flow\RDSL\Attribute\DSLMethod;
 use Flow\RDSL\Builder;
 use Flow\RDSL\DSLNamespace;
 use Flow\RDSL\Executor;
@@ -90,10 +90,7 @@ final class DataFrame
                 new Finder(
                     $namespaces,
                     entryPointACL: new AllowList(['data_frame', 'df']),
-                    methodACL: new Except(new AllowAll(), [
-                        self::class . '::run',
-                        self::class . '::fetch',
-                    ])
+                    methodACL: new AllowAll()
                 )
             );
 
@@ -208,6 +205,7 @@ final class DataFrame
      *
      * @lazy
      */
+    #[DSLMethod(exclude: true)]
     public function collectRefs(References $references) : self
     {
         $this->transform(new CallbackRowTransformer(function (Row $row) use ($references) : Row {
@@ -225,6 +223,7 @@ final class DataFrame
      * @trigger
      * Return total count of rows processed by this pipeline.
      */
+    #[DSLMethod(exclude: true)]
     public function count() : int
     {
         $clone = clone $this;
@@ -257,6 +256,7 @@ final class DataFrame
      *
      * @throws InvalidArgumentException
      */
+    #[DSLMethod(exclude: true)]
     public function display(int $limit = 20, int|bool $truncate = 20, Formatter $formatter = new AsciiTableFormatter()) : string
     {
         return $formatter->format($this->fetch($limit), $truncate);
@@ -301,6 +301,7 @@ final class DataFrame
      *
      * @throws InvalidArgumentException
      */
+    #[DSLMethod(exclude: true)]
     public function fetch(?int $limit = null) : Rows
     {
         $clone = clone $this;
@@ -365,6 +366,7 @@ final class DataFrame
      *
      * @param null|callable(Rows $rows) : void $callback
      */
+    #[DSLMethod(exclude: true)]
     public function forEach(?callable $callback = null) : void
     {
         $clone = clone $this;
@@ -378,6 +380,7 @@ final class DataFrame
      *
      * @return \Generator<Rows>
      */
+    #[DSLMethod(exclude: true)]
     public function get() : \Generator
     {
         $clone = clone $this;
@@ -392,6 +395,7 @@ final class DataFrame
      *
      * @return \Generator<array<array>>
      */
+    #[DSLMethod(exclude: true)]
     public function getAsArray() : \Generator
     {
         $clone = clone $this;
@@ -408,6 +412,7 @@ final class DataFrame
      *
      * @return \Generator<Row>
      */
+    #[DSLMethod(exclude: true)]
     public function getEach() : \Generator
     {
         $clone = clone $this;
@@ -426,6 +431,7 @@ final class DataFrame
      *
      * @return \Generator<array>
      */
+    #[DSLMethod(exclude: true)]
     public function getEachAsArray() : \Generator
     {
         $clone = clone $this;
@@ -521,6 +527,7 @@ final class DataFrame
      *
      * @param callable(Row $row) : Row $callback
      */
+    #[DSLMethod(exclude: true)]
     public function map(callable $callback) : self
     {
         $this->pipeline->add(new CallbackRowTransformer($callback));
@@ -604,6 +611,7 @@ final class DataFrame
     /**
      * @trigger
      */
+    #[DSLMethod(exclude: true)]
     public function printRows(int|null $limit = 20, int|bool $truncate = 20, Formatter $formatter = new AsciiTableFormatter()) : void
     {
         $clone = clone $this;
@@ -620,6 +628,7 @@ final class DataFrame
     /**
      * @trigger
      */
+    #[DSLMethod(exclude: true)]
     public function printSchema(int|null $limit = 20, Schema\SchemaFormatter $formatter = new Schema\Formatter\ASCIISchemaFormatter()) : void
     {
         $clone = clone $this;
@@ -719,6 +728,7 @@ final class DataFrame
      *
      * @param null|callable(Rows $rows): void $callback
      */
+    #[DSLMethod(exclude: true)]
     public function run(?callable $callback = null) : void
     {
         $clone = clone $this;

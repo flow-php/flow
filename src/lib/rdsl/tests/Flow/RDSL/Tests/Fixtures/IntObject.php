@@ -2,6 +2,8 @@
 
 namespace Flow\RDSL\Tests\Fixtures;
 
+use Flow\RDSL\Attribute\DSLMethod;
+
 final class IntObject
 {
     private int $value = 0;
@@ -15,6 +17,11 @@ final class IntObject
         $this->value += ($a instanceof Literal) ? $a->value : $a;
 
         return $this;
+    }
+
+    #[DSLMethod(exclude: true)]
+    public function excluded() : void
+    {
     }
 
     public function set(int|Literal $a) : self

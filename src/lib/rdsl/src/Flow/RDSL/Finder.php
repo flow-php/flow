@@ -3,6 +3,8 @@
 namespace Flow\RDSL;
 
 use Flow\RDSL\AccessControl\DenyAll;
+use Flow\RDSL\Attribute\DSL;
+use Flow\RDSL\Attribute\DSLMethod;
 use Flow\RDSL\Exception\InvalidArgumentException;
 
 final class Finder
@@ -40,7 +42,7 @@ final class Finder
     public function findFunction(string $name, bool $entryPoint) : \ReflectionFunction
     {
         if (\function_exists($name)) {
-            $reflection = new \ReflectionFunction($name);
+            $reflection = $this->validateFunctionAttribute(new \ReflectionFunction($name));
 
             if ($reflection->getNamespaceName() === '') {
                 foreach ($this->namespaces as $namespace) {
@@ -87,7 +89,7 @@ final class Finder
                     throw new InvalidArgumentException(\sprintf('Function "%s" from namespace "%s" is not allowed to be executed as an entry point.', $name, $namespace->name));
                 }
 
-                return new \ReflectionFunction($function);
+                return $this->validateFunctionAttribute(new \ReflectionFunction($function));
             }
         }
 
@@ -110,7 +112,7 @@ final class Finder
             throw new InvalidArgumentException(\sprintf('Method "%s" does not exists in class "%s"', $method, $class));
         }
 
-        $methodReflection = $classReflection->getMethod($method);
+        $methodReflection = $this->validateMethodAttribute($classReflection->getMethod($method));
 
         $methodName = $classReflection->getName() . '::' . $method;
 
@@ -119,5 +121,35 @@ final class Finder
         }
 
         return $methodReflection;
+    }
+
+    private function validateFunctionAttribute(\ReflectionFunction $reflection) : \ReflectionFunction
+    {
+        $dslAttribute = $reflection->getAttributes(DSL::class);
+
+        if (\count($dslAttribute)) {
+            $dslAttribute = $dslAttribute[0]->newInstance();
+
+            if ($dslAttribute->exclude) {
+                throw new InvalidArgumentException(\sprintf('Function "%s" from namespace "%s" is excluded from DSL.', $reflection->getShortName(), $reflection->getNamespaceName()));
+            }
+        }
+
+        return $reflection;
+    }
+
+    private function validateMethodAttribute(\ReflectionMethod $reflection) : \ReflectionMethod
+    {
+        $dslAttribute = $reflection->getAttributes(DSLMethod::class);
+
+        if (\count($dslAttribute)) {
+            $dslAttribute = $dslAttribute[0]->newInstance();
+
+            if ($dslAttribute->exclude) {
+                throw new InvalidArgumentException(\sprintf('Method "%s" from class "%s" is excluded from DSL.', $reflection->getShortName(), $reflection->class));
+            }
+        }
+
+        return $reflection;
     }
 }
