@@ -48,6 +48,7 @@ use Flow\ETL\Transformer\WindowFunctionTransformer;
 use Flow\RDSL\AccessControl\AllowAll;
 use Flow\RDSL\AccessControl\AllowList;
 use Flow\RDSL\AccessControl\DenyAll;
+use Flow\RDSL\AccessControl\Except;
 use Flow\RDSL\Builder;
 use Flow\RDSL\DSLNamespace;
 use Flow\RDSL\Executor;
@@ -85,7 +86,16 @@ final class DataFrame
         ];
 
         try {
-            $builder = new Builder(new Finder($namespaces, new AllowList(['data_frame', 'df'])));
+            $builder = new Builder(
+                new Finder(
+                    $namespaces,
+                    entryPointACL: new AllowList(['data_frame', 'df']),
+                    methodACL: new Except(new AllowAll(), [
+                        self::class . '::run',
+                        self::class . '::fetch',
+                    ])
+                )
+            );
 
             try {
                 $results = (new Executor())

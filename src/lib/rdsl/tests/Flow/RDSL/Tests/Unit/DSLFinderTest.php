@@ -18,7 +18,7 @@ final class DSLFinderTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Function "exec" from global namespace is not allowed to be executed.');
 
-        (new Finder([], new AllowAll()))->findFunction('exec', false);
+        (new Finder([], new AllowAll(), new AllowAll()))->findFunction('exec', false);
     }
 
     public function test_not_allowing_functions_from_namespaces_when_disallowed() : void
@@ -26,7 +26,11 @@ final class DSLFinderTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Function "int" from namespace "\Flow\RDSL\Tests\Fixtures" is not allowed to be executed.');
 
-        (new Finder([new DSLNamespace('\Flow\RDSL\Tests\Fixtures', new DenyAll())], new AllowAll()))
+        (new Finder(
+            [new DSLNamespace('\Flow\RDSL\Tests\Fixtures', new DenyAll())],
+            new AllowAll(),
+            new AllowAll()
+        ))
             ->findFunction('int', false);
     }
 }
