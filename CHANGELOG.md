@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-12-08
 
 ### Added
+- [#873](https://github.com/flow-php/flow/pull/873) - **exclude DSL methods/functions through attributes** - [@norberttech](https://github.com/norberttech)
 - [#871](https://github.com/flow-php/flow/pull/871) - **DataFrame::fromJson()** - [@norberttech](https://github.com/norberttech)
 - [#871](https://github.com/flow-php/flow/pull/871) - **support for running dataframes from json through flow CLI** - [@norberttech](https://github.com/norberttech)
 - [#869](https://github.com/flow-php/flow/pull/869) - **RDSL library** - [@norberttech](https://github.com/norberttech)
