@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-12-07
+## [Unreleased] - 2023-12-08
 
 ### Added
 - [#871](https://github.com/flow-php/flow/pull/871) - **DataFrame::fromJson()** - [@norberttech](https://github.com/norberttech)
@@ -6,6 +6,7 @@
 - [#869](https://github.com/flow-php/flow/pull/869) - **RDSL library** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#872](https://github.com/flow-php/flow/pull/872) - **Exclude certain methods from being executed through rdsl access control configuration** - [@norberttech](https://github.com/norberttech)
 - [#868](https://github.com/flow-php/flow/pull/868) - **Adjust Homebrew commit message to match Flow CS** - [@stloyd](https://github.com/stloyd)
 - [#867](https://github.com/flow-php/flow/pull/867) - **Update Homebrew TAP formula: flow-php to version: 0.5.2** - [@norberttech](https://github.com/norberttech)
 
