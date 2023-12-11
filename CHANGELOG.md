@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-12-08
+## [Unreleased] - 2023-12-11
 
 ### Added
 - [#873](https://github.com/flow-php/flow/pull/873) - **exclude DSL methods/functions through attributes** - [@norberttech](https://github.com/norberttech)
