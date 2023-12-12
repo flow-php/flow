@@ -11,6 +11,7 @@ use Flow\ETL\ErrorHandler\IgnoreError;
 use Flow\ETL\ErrorHandler\SkipRows;
 use Flow\ETL\ErrorHandler\ThrowError;
 use Flow\ETL\Extractor;
+use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\Flow;
 use Flow\ETL\FlowContext;
@@ -987,4 +988,24 @@ function config() : Config
 function config_builder() : ConfigBuilder
 {
     return new ConfigBuilder();
+}
+
+function overwrite() : SaveMode
+{
+    return SaveMode::Overwrite;
+}
+
+function ignore() : SaveMode
+{
+    return SaveMode::Ignore;
+}
+
+function exception_if_exists() : SaveMode
+{
+    return SaveMode::ExceptionIfExists;
+}
+
+function append() : SaveMode
+{
+    return SaveMode::Append;
 }

@@ -745,6 +745,16 @@ final class DataFrame
     }
 
     /**
+     * Alias for DataFrame::mode.
+     *
+     * @lazy
+     */
+    public function saveMode(SaveMode $mode) : self
+    {
+        return $this->mode($mode);
+    }
+
+    /**
      * @lazy
      * Keep only given entries.
      */
