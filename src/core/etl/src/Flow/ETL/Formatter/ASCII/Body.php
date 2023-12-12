@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Formatter\ASCII;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Partition;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 
@@ -30,6 +31,14 @@ final class Body
         }
 
         return $max;
+    }
+
+    /**
+     * @return Partition[]
+     */
+    public function partitions() : array
+    {
+        return $this->rows->partitions()->toArray();
     }
 
     /**

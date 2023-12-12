@@ -5,6 +5,24 @@ Please follow the instructions for your specific version to ensure a smooth upgr
 
 ---
 
+## Upgrading from 0.5.x to 0.6.x
+
+### 1) Rows::merge() accepts single instance of Rows
+
+Before: 
+
+```php
+Rows::merge(Rows ...$rows) : Rows
+```
+
+After:
+
+```php
+Rows::merge(Rows $rows) : Rows
+```
+
+---
+
 ## Upgrading from 0.4.x to 0.5.x
 
 ### 1) Entry factory moved from extractors to `FlowContext`

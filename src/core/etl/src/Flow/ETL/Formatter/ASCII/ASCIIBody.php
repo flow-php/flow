@@ -46,6 +46,15 @@ final class ASCIIBody
             $buffer .= '-' . \str_repeat('-', $length) . '-+';
         }
 
+        if (\count($this->body->partitions())) {
+            $buffer .= PHP_EOL;
+            $buffer .= 'Partitions:';
+
+            foreach ($this->body->partitions() as $partition) {
+                $buffer .= PHP_EOL . ' - ' . $partition->name . '=' . $partition->value;
+            }
+        }
+
         return $buffer;
     }
 }

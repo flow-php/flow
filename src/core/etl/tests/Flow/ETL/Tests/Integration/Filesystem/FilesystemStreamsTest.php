@@ -51,7 +51,7 @@ class FilesystemStreamsTest extends IntegrationTestCase
 
         $stream = (new FilesystemStreams(new LocalFilesystem()))
             ->setSaveMode(SaveMode::Overwrite)
-            ->open(Path::realpath($dir = \rtrim(\sys_get_temp_dir(), '/')), 'csv', false, $rows->partitions())
+            ->open(Path::realpath($dir = \rtrim(\sys_get_temp_dir(), '/')), 'csv', false, $rows->partitions()->toArray())
             ->path();
         $this->assertStringStartsWith(
             $dir . '/group=a/',
@@ -236,14 +236,14 @@ class FilesystemStreamsTest extends IntegrationTestCase
         $streams->setSaveMode(SaveMode::Overwrite);
 
         $groupAStream = $streams
-            ->open(Path::realpath($dir = \rtrim(\sys_get_temp_dir(), '/')), 'csv', false, $partitionedRows[0]->partitions())
+            ->open(Path::realpath($dir = \rtrim(\sys_get_temp_dir(), '/')), 'csv', false, $partitionedRows[0]->partitions()->toArray())
             ->path();
         $this->assertStringStartsWith(
             $dir . '/group=a/',
             $groupAStream->path()
         );
         $groupBStream = $streams
-            ->open(Path::realpath($dir), 'csv', false, $partitionedRows[1]->partitions())
+            ->open(Path::realpath($dir), 'csv', false, $partitionedRows[1]->partitions()->toArray())
             ->path();
         $this->assertStringStartsWith(
             $dir . '/group=b/',
@@ -257,7 +257,7 @@ class FilesystemStreamsTest extends IntegrationTestCase
 
         // Open stream again, but just touched partition
         $groupAStream = $streams
-            ->open(Path::realpath($dir), 'csv', false, $partitionedRows[0]->partitions())
+            ->open(Path::realpath($dir), 'csv', false, $partitionedRows[0]->partitions()->toArray())
             ->path();
 
         $this->assertEquals('', \file_get_contents($groupAStream->path()));

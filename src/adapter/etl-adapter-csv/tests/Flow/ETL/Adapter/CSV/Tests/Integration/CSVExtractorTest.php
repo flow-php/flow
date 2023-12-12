@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\CSV\Tests\Integration;
 
 use function Flow\ETL\Adapter\CSV\from_csv;
 use function Flow\ETL\Adapter\CSV\to_csv;
+use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\ref;
 use Flow\ETL\Adapter\CSV\CSVExtractor;
@@ -115,7 +116,7 @@ final class CSVExtractorTest extends TestCase
     {
         $path = __DIR__ . '/../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv';
 
-        $rows = (new Flow())
+        $rows = df()
             ->read(from_csv($path))
             ->fetch();
 
@@ -166,7 +167,7 @@ final class CSVExtractorTest extends TestCase
 
     public function test_extracting_csv_with_corrupted_row() : void
     {
-        $rows = (new Flow())
+        $rows = df()
             ->extract(from_csv(__DIR__ . '/../Fixtures/corrupted_row.csv'))
             ->fetch();
 
@@ -221,7 +222,7 @@ final class CSVExtractorTest extends TestCase
     {
         $this->assertCount(
             2,
-            (new Flow())
+            df()
                 ->read(from_csv(__DIR__ . '/../Fixtures/more_than_1000_characters_per_line.csv'))
                 ->fetch()
                 ->toArray(),
@@ -233,7 +234,7 @@ final class CSVExtractorTest extends TestCase
     {
         $this->assertCount(
             1,
-            (new Flow())
+            df()
                 ->read(from_csv(__DIR__ . '/../Fixtures/more_than_1000_characters_per_line.csv', characters_read_in_line: 2000))
                 ->fetch()
                 ->toArray(),
@@ -249,7 +250,7 @@ final class CSVExtractorTest extends TestCase
             \unlink($path);
         }
 
-        (new Flow())->read(from_array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
+        df()->read(from_array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
             ->write(to_csv($path))
             ->run();
 
@@ -275,7 +276,7 @@ final class CSVExtractorTest extends TestCase
                 ['group' => '2', 'id' => 7, 'value' => 'g'],
                 ['group' => '2', 'id' => 8, 'value' => 'h'],
             ],
-            (new Flow())
+            df()
                 ->read(from_csv(__DIR__ . '/../Fixtures/partitioned/group=*/*.csv'))
                 ->withEntry('id', ref('id')->cast('int'))
                 ->sortBy(ref('id'))
@@ -314,7 +315,7 @@ final class CSVExtractorTest extends TestCase
             \unlink($path);
         }
 
-        (new Flow())->read(from_array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
+        df()->read(from_array([['id' => 1], ['id' => 2], ['id' => 3], ['id' => 4], ['id' => 5]]))
             ->write(to_csv($path))
             ->run();
 

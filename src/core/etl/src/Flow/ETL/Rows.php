@@ -24,14 +24,11 @@ use Flow\Serializer\Serializable;
 /**
  * @implements \ArrayAccess<int, Row>
  * @implements \IteratorAggregate<int, Row>
- * @implements Serializable<array{rows: array<int, Row>, partitions: array<Partition>}>
+ * @implements Serializable<array{rows: array<int, Row>, partitions: Partitions}>
  */
 final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serializable
 {
-    /**
-     * @var array<Partition>
-     */
-    private array $partitions;
+    private Partitions $partitions;
 
     /**
      * @var array<int, Row>
@@ -41,7 +38,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
     public function __construct(Row ...$rows)
     {
         $this->rows = \array_values($rows);
-        $this->partitions = [];
+        $this->partitions = new Partitions();
     }
 
     public static function fromArray(array $data, EntryFactory $entryFactory = new NativeEntryFactory()) : self
@@ -52,11 +49,13 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
     /**
      * @param array<int, Row>|array<Row> $rows
      */
-    public static function partitioned(array $rows, array $partitions) : self
+    public static function partitioned(array $rows, array|Partitions $partitions) : self
     {
         if (!\count($rows)) {
             return new self();
         }
+
+        $partitions = \is_array($partitions) ? new Partitions(...$partitions) : $partitions;
 
         $rows = new self(...$rows);
         $rows->partitions = $partitions;
@@ -470,17 +469,24 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
         return new self(...$rows);
     }
 
-    public function merge(self ...$rows) : self
+    public function merge(self $rows) : self
     {
-        $rowsOfRows = [];
-
-        foreach ($rows as $nextRows) {
-            $rowsOfRows[] = $nextRows->rows;
+        if ($this->empty()) {
+            return $rows;
         }
 
-        return new self(
-            ...\array_merge($this->rows, ...$rowsOfRows)
-        );
+        if ($rows->empty()) {
+            return $this;
+        }
+
+        if ($this->partitions->id() === $rows->partitions()->id()) {
+            $mergedRows = new self(...$this->rows, ...$rows->rows);
+            $mergedRows->partitions = $this->partitions;
+
+            return $mergedRows;
+        }
+
+        return new self(...$this->rows, ...$rows->rows);
     }
 
     /**
@@ -543,13 +549,11 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
         $partitions = [];
 
         foreach ($refs as $ref) {
-            $partitionEntryValues = [];
-
             foreach ($this->rows as $row) {
-                $partitionEntryValues[$row->get($ref)->value()] = true;
+                $partitions[$ref->name()][] = $row->get($ref)->value();
             }
 
-            $partitions[$ref->name()] = \array_keys($partitionEntryValues);
+            $partitions[$ref->name()] = \array_values(\array_unique($partitions[$ref->name()]));
         }
 
         /**
@@ -606,7 +610,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
         return $partitionedRows;
     }
 
-    public function partitions() : array
+    public function partitions() : Partitions
     {
         return $this->partitions;
     }

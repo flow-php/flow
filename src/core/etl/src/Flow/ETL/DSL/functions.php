@@ -431,6 +431,21 @@ function rows(Row ...$row) : Rows
     return new Rows(...$row);
 }
 
+function partition(string $name, string $value) : Partition
+{
+    return new Partition($name, $value);
+}
+
+function partitions(Partition ...$partition) : \Flow\ETL\Partitions
+{
+    return new \Flow\ETL\Partitions(...$partition);
+}
+
+function rows_partitioned(array $rows, array $partitions) : Rows
+{
+    return Rows::partitioned($rows, new \Flow\ETL\Partitions(...$partitions));
+}
+
 function col(string $entry) : EntryReference
 {
     return new EntryReference($entry);

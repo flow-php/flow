@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Pipeline;
 
+use function Flow\ETL\DSL\from_all;
+use function Flow\ETL\DSL\from_cache;
 use Flow\ETL\Extractor;
-use Flow\ETL\Extractor\CacheExtractor;
-use Flow\ETL\Extractor\ChainExtractor;
 use Flow\ETL\Extractor\CollectingExtractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
@@ -86,7 +86,7 @@ final class PartitioningPipeline implements OverridingPipeline, Pipeline
 
                 $partitionId = \hash('xxh128', $context->config->id() . '_' . \implode('_', \array_map(
                     static fn (Partition $partition) : string => $partition->id(),
-                    $partitionedRows->partitions()
+                    $partitionedRows->partitions()->toArray()
                 )));
 
                 $partitionIds[] = $partitionId;
@@ -94,8 +94,8 @@ final class PartitioningPipeline implements OverridingPipeline, Pipeline
             }
         }
 
-        $this->nextPipeline->setSource(new ChainExtractor(...\array_map(
-            static fn (string $id) : Extractor => new CollectingExtractor(new CacheExtractor($id, null, true)),
+        $this->nextPipeline->setSource(from_all(...\array_map(
+            static fn (string $id) : Extractor => new CollectingExtractor(from_cache($id, null, true)),
             \array_unique($partitionIds)
         )));
 
