@@ -1,17 +1,23 @@
-## [Unreleased] - 2023-12-11
+## [Unreleased] - 2023-12-13
 
 ### Added
+- [#877](https://github.com/flow-php/flow/pull/877) - **Displaying partitions under data when using to_output or DataFrame::display** - [@norberttech](https://github.com/norberttech)
+- [#877](https://github.com/flow-php/flow/pull/877) - **dsl functions for save modes** - [@norberttech](https://github.com/norberttech)
+- [#877](https://github.com/flow-php/flow/pull/877) - **DataFrame::saveMode as an aliast for DataFrame::mode** - [@norberttech](https://github.com/norberttech)
 - [#873](https://github.com/flow-php/flow/pull/873) - **exclude DSL methods/functions through attributes** - [@norberttech](https://github.com/norberttech)
 - [#871](https://github.com/flow-php/flow/pull/871) - **DataFrame::fromJson()** - [@norberttech](https://github.com/norberttech)
 - [#871](https://github.com/flow-php/flow/pull/871) - **support for running dataframes from json through flow CLI** - [@norberttech](https://github.com/norberttech)
 - [#869](https://github.com/flow-php/flow/pull/869) - **RDSL library** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#877](https://github.com/flow-php/flow/pull/877) - **Rows::merge accepts only one instance of Rows instead of many** - [@norberttech](https://github.com/norberttech)
 - [#872](https://github.com/flow-php/flow/pull/872) - **Exclude certain methods from being executed through rdsl access control configuration** - [@norberttech](https://github.com/norberttech)
 - [#868](https://github.com/flow-php/flow/pull/868) - **Adjust Homebrew commit message to match Flow CS** - [@stloyd](https://github.com/stloyd)
 - [#867](https://github.com/flow-php/flow/pull/867) - **Update Homebrew TAP formula: flow-php to version: 0.5.2** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#877](https://github.com/flow-php/flow/pull/877) - **Inconsistent behavior of DataFrame::fetch for partitioned rows** - [@norberttech](https://github.com/norberttech)
+- [#877](https://github.com/flow-php/flow/pull/877) - **Merging rows from the same partition makes new rows keep that partition** - [@norberttech](https://github.com/norberttech)
 - [#871](https://github.com/flow-php/flow/pull/871) - **phar file** - [@norberttech](https://github.com/norberttech)
 - [#870](https://github.com/flow-php/flow/pull/870) - **Reduced number of files in phar** - [@norberttech](https://github.com/norberttech)
 
