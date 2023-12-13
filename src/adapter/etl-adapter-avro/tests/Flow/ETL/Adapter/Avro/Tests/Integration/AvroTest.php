@@ -12,6 +12,7 @@ use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\float_entry;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
+use function Flow\ETL\DSL\ignore;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\json_entry;
 use function Flow\ETL\DSL\json_object_entry;
@@ -331,7 +332,7 @@ final class AvroTest extends TestCase
                     }, \range(1, 100))
                 )
             ))
-            ->mode(SaveMode::Ignore)
+            ->saveMode(ignore())
             ->write(to_avro($path))
             ->run();
 

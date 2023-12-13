@@ -81,7 +81,7 @@ final class CSVLoader implements Closure, Loader, Loader\FileLoader
 
         if ($context->partitionEntries()->count()) {
             foreach ($rows->partitionBy(...$context->partitionEntries()->all()) as $partitionedRows) {
-                $this->write($partitionedRows, $headers, $context, $partitionedRows->partitions());
+                $this->write($partitionedRows, $headers, $context, $partitionedRows->partitions()->toArray());
             }
         } else {
             $this->write($rows, $headers, $context, []);

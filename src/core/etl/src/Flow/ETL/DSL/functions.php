@@ -11,6 +11,7 @@ use Flow\ETL\ErrorHandler\IgnoreError;
 use Flow\ETL\ErrorHandler\SkipRows;
 use Flow\ETL\ErrorHandler\ThrowError;
 use Flow\ETL\Extractor;
+use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\Flow;
 use Flow\ETL\FlowContext;
@@ -429,6 +430,21 @@ function row(Row\Entry ...$entry) : Row
 function rows(Row ...$row) : Rows
 {
     return new Rows(...$row);
+}
+
+function partition(string $name, string $value) : Partition
+{
+    return new Partition($name, $value);
+}
+
+function partitions(Partition ...$partition) : \Flow\ETL\Partitions
+{
+    return new \Flow\ETL\Partitions(...$partition);
+}
+
+function rows_partitioned(array $rows, array $partitions) : Rows
+{
+    return Rows::partitioned($rows, new \Flow\ETL\Partitions(...$partitions));
 }
 
 function col(string $entry) : EntryReference
@@ -972,4 +988,24 @@ function config() : Config
 function config_builder() : ConfigBuilder
 {
     return new ConfigBuilder();
+}
+
+function overwrite() : SaveMode
+{
+    return SaveMode::Overwrite;
+}
+
+function ignore() : SaveMode
+{
+    return SaveMode::Ignore;
+}
+
+function exception_if_exists() : SaveMode
+{
+    return SaveMode::ExceptionIfExists;
+}
+
+function append() : SaveMode
+{
+    return SaveMode::Append;
 }

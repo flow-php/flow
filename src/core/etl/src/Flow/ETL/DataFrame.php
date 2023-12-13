@@ -259,7 +259,16 @@ final class DataFrame
     #[DSLMethod(exclude: true)]
     public function display(int $limit = 20, int|bool $truncate = 20, Formatter $formatter = new AsciiTableFormatter()) : string
     {
-        return $formatter->format($this->fetch($limit), $truncate);
+        $clone = clone $this;
+        $clone->limit($limit);
+
+        $output = '';
+
+        foreach ($clone->pipeline->process($clone->context) as $rows) {
+            $output .= $formatter->format($rows, $truncate);
+        }
+
+        return $output;
     }
 
     /**
@@ -305,35 +314,30 @@ final class DataFrame
     public function fetch(?int $limit = null) : Rows
     {
         $clone = clone $this;
-        $clone->collect();
 
         if ($limit !== null) {
             $clone->limit($limit);
         }
 
         if ($clone->context->partitionEntries()->count()) {
-            $rows = (new Rows())->merge(
-                ...\iterator_to_array($clone->pipeline->process($clone->context))
-            );
+            $rows = new Rows();
 
-            $fetchedRows = (new Rows());
-
-            foreach ($rows->partitionBy(...$clone->context->partitionEntries()->all()) as $partitionedRows) {
-                if ($clone->context->partitionFilter()->keep(...$partitionedRows->partitions())) {
-                    $fetchedRows = $fetchedRows->merge($partitionedRows);
+            foreach ($clone->pipeline->process($clone->context) as $nextRows) {
+                if ($clone->context->partitionFilter()->keep(...$nextRows->partitions()->toArray())) {
+                    $rows = $rows->merge($nextRows);
                 }
             }
 
-            return $fetchedRows;
+            return $rows;
         }
 
-        $rows = \iterator_to_array($clone->pipeline->process($clone->context));
+        $rows = new Rows();
 
-        if (!\count($rows)) {
-            return new Rows();
+        foreach ($clone->pipeline->process($clone->context) as $nextRows) {
+            $rows = $rows->merge($nextRows);
         }
 
-        return $rows[0];
+        return $rows;
     }
 
     /**
@@ -738,6 +742,16 @@ final class DataFrame
                 $callback($rows);
             }
         }
+    }
+
+    /**
+     * Alias for DataFrame::mode.
+     *
+     * @lazy
+     */
+    public function saveMode(SaveMode $mode) : self
+    {
+        return $this->mode($mode);
     }
 
     /**

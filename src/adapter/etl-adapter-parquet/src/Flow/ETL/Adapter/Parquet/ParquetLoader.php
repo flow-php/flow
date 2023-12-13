@@ -81,7 +81,7 @@ final class ParquetLoader implements Closure, Loader, Loader\FileLoader
         if ($context->partitionEntries()->count()) {
             foreach ($rows->partitionBy(...$context->partitionEntries()->all()) as $partitionedRows) {
 
-                $stream = $streams->open($this->path, 'parquet', $context->appendSafe(), $partitionedRows->partitions());
+                $stream = $streams->open($this->path, 'parquet', $context->appendSafe(), $partitionedRows->partitions()->toArray());
 
                 if (!\array_key_exists($stream->path()->uri(), $this->writers)) {
                     $this->writers[$stream->path()->uri()] = new Writer(

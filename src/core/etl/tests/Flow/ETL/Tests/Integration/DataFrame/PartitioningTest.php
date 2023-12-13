@@ -6,10 +6,12 @@ use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\lit;
+use function Flow\ETL\DSL\partition;
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\rows_partitioned;
 use function Flow\ETL\DSL\str_entry;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
 
 final class PartitioningTest extends IntegrationTestCase
@@ -18,15 +20,15 @@ final class PartitioningTest extends IntegrationTestCase
     {
         $partitionedRows = df()
             ->read(from_rows(
-                new Rows(
-                    Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
-                    Row::create(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
-                    Row::create(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
-                    Row::create(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
-                    Row::create(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
-                    Row::create(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
-                    Row::create(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
-                    Row::create(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
+                rows(
+                    row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
+                    row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
+                    row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
+                    row(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
+                    row(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
+                    row(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
+                    row(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
+                    row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
                 )
             ))
             ->partitionBy('country')
@@ -34,11 +36,16 @@ final class PartitioningTest extends IntegrationTestCase
             ->fetch();
 
         $this->assertEquals(
-            new Rows(
-                Row::create(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
-                Row::create(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
-                Row::create(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
-                Row::create(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
+            rows_partitioned(
+                [
+                    row(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
+                    row(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
+                    row(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
+                    row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
+                ],
+                [
+                    partition('country', 'US'),
+                ]
             ),
             $partitionedRows
         );
@@ -48,15 +55,15 @@ final class PartitioningTest extends IntegrationTestCase
     {
         $rows = df()
             ->read(from_rows(
-                new Rows(
-                    Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
-                    Row::create(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
-                    Row::create(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
-                    Row::create(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
-                    Row::create(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
-                    Row::create(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
-                    Row::create(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
-                    Row::create(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
+                rows(
+                    row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
+                    row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
+                    row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
+                    row(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
+                    row(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
+                    row(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
+                    row(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
+                    row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
                 )
             ))
             ->partitionBy(ref('country'))
@@ -65,21 +72,41 @@ final class PartitioningTest extends IntegrationTestCase
 
         $this->assertEquals(
             [
-                new Rows(
-                    Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
-                    Row::create(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20))
+                rows_partitioned(
+                    [
+                        row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
+                        row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
+                    ],
+                    [
+                        partition('country', 'PL'),
+                    ]
                 ),
-                new Rows(
-                    Row::create(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
-                    Row::create(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
+                rows_partitioned(
+                    [
+                        row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
+                        row(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
+                    ],
+                    [
+                        partition('country', 'PL'),
+                    ]
                 ),
-                new Rows(
-                    Row::create(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
-                    Row::create(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40))
+                rows_partitioned(
+                    [
+                        row(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
+                        row(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
+                    ],
+                    [
+                        partition('country', 'US'),
+                    ]
                 ),
-                new Rows(
-                    Row::create(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
-                    Row::create(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
+                rows_partitioned(
+                    [
+                        row(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
+                        row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
+                    ],
+                    [
+                        partition('country', 'US'),
+                    ]
                 ),
             ],
             \iterator_to_array($rows)

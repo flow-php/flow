@@ -7,9 +7,9 @@ namespace Flow\ETL\Adapter\CSV\Tests\Integration;
 use function Flow\ETL\Adapter\CSV\to_csv;
 use function Flow\ETL\DSL\array_entry;
 use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\overwrite;
 use function Flow\ETL\DSL\str_entry;
 use Flow\ETL\Filesystem\Path;
-use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Flow;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -207,7 +207,7 @@ CSV,
                     Row::create(int_entry('id', 3), str_entry('name', 'Dawid')),
                 )
             )
-            ->mode(SaveMode::Overwrite)
+            ->saveMode(overwrite())
             ->load(to_csv($path))
             ->run();
 
