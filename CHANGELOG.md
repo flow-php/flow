@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-12-13
+## [Unreleased] - 2023-12-18
 
 ### Added
 - [#877](https://github.com/flow-php/flow/pull/877) - **Displaying partitions under data when using to_output or DataFrame::display** - [@norberttech](https://github.com/norberttech)
