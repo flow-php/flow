@@ -349,14 +349,16 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Ser
     }
 
     /**
-     * @return array<string, mixed>
+     * @return array<array-key, mixed>
      */
-    public function toArray() : array
+    public function toArray(bool $withKeys = true) : array
     {
         $data = [];
 
         foreach ($this->entries as $entry) {
-            $data[$entry->name()] = $entry->value();
+            $withKeys
+                ? $data[$entry->name()] = $entry->value()
+                : $data[] = $entry->value();
         }
 
         return $data;

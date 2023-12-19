@@ -427,4 +427,35 @@ final class EntriesTest extends TestCase
             $entries->toArray()
         );
     }
+
+    public function test_transforms_collection_to_array_without_keys() : void
+    {
+        $entries = new Entries(
+            new IntegerEntry('id', 1234),
+            new BooleanEntry('deleted', false),
+            new DateTimeEntry('created-at', $createdAt = new \DateTimeImmutable('2020-07-13 15:00')),
+            new NullEntry('phase'),
+            new StructureEntry(
+                'items',
+                ['item-id' => 1, 'name' => 'one'],
+                new StructureType(new StructureElement('id', type_int()), new StructureElement('name', type_string()))
+            ),
+            new EnumEntry('enum', BasicEnum::three)
+        );
+
+        $this->assertEquals(
+            [
+                1234,
+                false,
+                $createdAt,
+                null,
+                [
+                    'item-id' => 1,
+                    'name' => 'one',
+                ],
+                BasicEnum::three,
+            ],
+            $entries->toArray(withKeys: false)
+        );
+    }
 }

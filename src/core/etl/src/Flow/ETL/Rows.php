@@ -748,14 +748,14 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
     }
 
     /**
-     * @return array<int, array<string, mixed>>
+     * @return array<int, array<array-key, mixed>>
      */
-    public function toArray() : array
+    public function toArray(bool $withKeys = true) : array
     {
         $array = [];
 
         foreach ($this->rows as $row) {
-            $array[] = $row->toArray();
+            $array[] = $row->toArray($withKeys);
         }
 
         return $array;
