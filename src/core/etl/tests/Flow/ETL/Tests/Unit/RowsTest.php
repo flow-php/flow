@@ -1059,4 +1059,28 @@ final class RowsTest extends TestCase
             $rows->toArray()
         );
     }
+
+    public function test_transforms_rows_to_array_without_keys() : void
+    {
+        $rows = rows(
+            row(
+                int_entry('id', 1234),
+                new BooleanEntry('deleted', false),
+                new NullEntry('phase'),
+            ),
+            row(
+                int_entry('id', 4321),
+                new BooleanEntry('deleted', true),
+                new StringEntry('phase', 'launch'),
+            )
+        );
+
+        $this->assertEquals(
+            [
+                [1234, false, null],
+                [4321, true, 'launch'],
+            ],
+            $rows->toArray(withKeys: false)
+        );
+    }
 }

@@ -94,6 +94,9 @@ jobs:
           restore-keys: |
             php-${{ matrix.php-version }}-cache-psalm-
 
+      - name: "Monorepo Validate"
+        run: "composer test:monorepo"
+
       - name: "Static Analyze - CS Fixer"
         run: "composer static:analyze:cs-fixer"
 
