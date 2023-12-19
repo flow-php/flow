@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f952577c56d584303ee5371ce34ca359",
+    "content-hash": "bb4cc755a787ffc3bde1e2aa8132a21c",
     "packages": [
         {
             "name": "aeon-php/calendar",
@@ -804,16 +804,16 @@
         },
         {
             "name": "google/apiclient-services",
-            "version": "v0.326.1",
+            "version": "v0.328.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/googleapis/google-api-php-client-services.git",
-                "reference": "4e89c28c499f87eb517679e13356469896a119c6"
+                "reference": "211ba786d30a4ab21e012d2b7dbefc49b4fc6a3d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/googleapis/google-api-php-client-services/zipball/4e89c28c499f87eb517679e13356469896a119c6",
-                "reference": "4e89c28c499f87eb517679e13356469896a119c6",
+                "url": "https://api.github.com/repos/googleapis/google-api-php-client-services/zipball/211ba786d30a4ab21e012d2b7dbefc49b4fc6a3d",
+                "reference": "211ba786d30a4ab21e012d2b7dbefc49b4fc6a3d",
                 "shasum": ""
             },
             "require": {
@@ -842,9 +842,9 @@
             ],
             "support": {
                 "issues": "https://github.com/googleapis/google-api-php-client-services/issues",
-                "source": "https://github.com/googleapis/google-api-php-client-services/tree/v0.326.1"
+                "source": "https://github.com/googleapis/google-api-php-client-services/tree/v0.328.0"
             },
-            "time": "2023-12-04T01:18:18+00:00"
+            "time": "2023-12-18T01:00:18+00:00"
         },
         {
             "name": "google/auth",
@@ -3822,16 +3822,16 @@
         },
         {
             "name": "aws/aws-sdk-php",
-            "version": "3.293.5",
+            "version": "3.294.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aws/aws-sdk-php.git",
-                "reference": "f2002e52b382b45231da3f9552033f769acfebd8"
+                "reference": "e6a63e39fed0fd9fb553af42e99aaf8d7c104c88"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/f2002e52b382b45231da3f9552033f769acfebd8",
-                "reference": "f2002e52b382b45231da3f9552033f769acfebd8",
+                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/e6a63e39fed0fd9fb553af42e99aaf8d7c104c88",
+                "reference": "e6a63e39fed0fd9fb553af42e99aaf8d7c104c88",
                 "shasum": ""
             },
             "require": {
@@ -3911,9 +3911,9 @@
             "support": {
                 "forum": "https://forums.aws.amazon.com/forum.jspa?forumID=80",
                 "issues": "https://github.com/aws/aws-sdk-php/issues",
-                "source": "https://github.com/aws/aws-sdk-php/tree/3.293.5"
+                "source": "https://github.com/aws/aws-sdk-php/tree/3.294.2"
             },
-            "time": "2023-12-06T19:09:15+00:00"
+            "time": "2023-12-18T19:11:16+00:00"
         },
         {
             "name": "brick/math",
@@ -5512,7 +5512,7 @@
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": "~8.1 || ~8.2 || ~8.3",
+        "php": "~8.1.0 || ~8.2.0 || ~8.3.0",
         "ext-bcmath": "*",
         "ext-dom": "*",
         "ext-hash": "*",

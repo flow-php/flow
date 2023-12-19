@@ -909,16 +909,16 @@
         },
         {
             "name": "fidry/filesystem",
-            "version": "1.2.0",
+            "version": "1.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/theofidry/filesystem.git",
-                "reference": "dc03299a795931cd790a91d0896670162a762ebb"
+                "reference": "8303225d289da1c434f6009743fbe9aad852de0c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/theofidry/filesystem/zipball/dc03299a795931cd790a91d0896670162a762ebb",
-                "reference": "dc03299a795931cd790a91d0896670162a762ebb",
+                "url": "https://api.github.com/repos/theofidry/filesystem/zipball/8303225d289da1c434f6009743fbe9aad852de0c",
+                "reference": "8303225d289da1c434f6009743fbe9aad852de0c",
                 "shasum": ""
             },
             "require": {
@@ -964,7 +964,7 @@
             ],
             "support": {
                 "issues": "https://github.com/theofidry/filesystem/issues",
-                "source": "https://github.com/theofidry/filesystem/tree/1.2.0"
+                "source": "https://github.com/theofidry/filesystem/tree/1.2.1"
             },
             "funding": [
                 {
@@ -972,7 +972,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2023-12-05T08:57:30+00:00"
+            "time": "2023-12-10T13:29:09+00:00"
         },
         {
             "name": "humbug/box",
@@ -1354,16 +1354,16 @@
         },
         {
             "name": "nikic/iter",
-            "version": "v2.3.0",
+            "version": "v2.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nikic/iter.git",
-                "reference": "d9f88bc04b5b453914373e70c041353d8e67c3f5"
+                "reference": "09cd930fa9ff55747f34c7184532a5a1bd2385b1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nikic/iter/zipball/d9f88bc04b5b453914373e70c041353d8e67c3f5",
-                "reference": "d9f88bc04b5b453914373e70c041353d8e67c3f5",
+                "url": "https://api.github.com/repos/nikic/iter/zipball/09cd930fa9ff55747f34c7184532a5a1bd2385b1",
+                "reference": "09cd930fa9ff55747f34c7184532a5a1bd2385b1",
                 "shasum": ""
             },
             "require": {
@@ -1400,22 +1400,22 @@
             ],
             "support": {
                 "issues": "https://github.com/nikic/iter/issues",
-                "source": "https://github.com/nikic/iter/tree/v2.3.0"
+                "source": "https://github.com/nikic/iter/tree/v2.4.0"
             },
-            "time": "2023-07-25T19:55:40+00:00"
+            "time": "2023-12-10T20:43:19+00:00"
         },
         {
             "name": "nikic/php-parser",
-            "version": "v4.17.1",
+            "version": "v4.18.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nikic/PHP-Parser.git",
-                "reference": "a6303e50c90c355c7eeee2c4a8b27fe8dc8fef1d"
+                "reference": "1bcbb2179f97633e98bbbc87044ee2611c7d7999"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/a6303e50c90c355c7eeee2c4a8b27fe8dc8fef1d",
-                "reference": "a6303e50c90c355c7eeee2c4a8b27fe8dc8fef1d",
+                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/1bcbb2179f97633e98bbbc87044ee2611c7d7999",
+                "reference": "1bcbb2179f97633e98bbbc87044ee2611c7d7999",
                 "shasum": ""
             },
             "require": {
@@ -1456,9 +1456,9 @@
             ],
             "support": {
                 "issues": "https://github.com/nikic/PHP-Parser/issues",
-                "source": "https://github.com/nikic/PHP-Parser/tree/v4.17.1"
+                "source": "https://github.com/nikic/PHP-Parser/tree/v4.18.0"
             },
-            "time": "2023-08-13T19:53:39+00:00"
+            "time": "2023-12-10T21:03:43+00:00"
         },
         {
             "name": "paragonie/constant_time_encoding",
@@ -1697,16 +1697,16 @@
         },
         {
             "name": "phpstan/phpdoc-parser",
-            "version": "1.24.4",
+            "version": "1.24.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpdoc-parser.git",
-                "reference": "6bd0c26f3786cd9b7c359675cb789e35a8e07496"
+                "reference": "fedf211ff14ec8381c9bf5714e33a7a552dd1acc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/6bd0c26f3786cd9b7c359675cb789e35a8e07496",
-                "reference": "6bd0c26f3786cd9b7c359675cb789e35a8e07496",
+                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/fedf211ff14ec8381c9bf5714e33a7a552dd1acc",
+                "reference": "fedf211ff14ec8381c9bf5714e33a7a552dd1acc",
                 "shasum": ""
             },
             "require": {
@@ -1738,9 +1738,9 @@
             "description": "PHPDoc parser with support for nullable, intersection and generic types",
             "support": {
                 "issues": "https://github.com/phpstan/phpdoc-parser/issues",
-                "source": "https://github.com/phpstan/phpdoc-parser/tree/1.24.4"
+                "source": "https://github.com/phpstan/phpdoc-parser/tree/1.24.5"
             },
-            "time": "2023-11-26T18:29:22+00:00"
+            "time": "2023-12-16T09:33:33+00:00"
         },
         {
             "name": "psr/container",
@@ -1963,16 +1963,16 @@
         },
         {
             "name": "seld/jsonlint",
-            "version": "1.10.0",
+            "version": "1.10.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Seldaek/jsonlint.git",
-                "reference": "594fd6462aad8ecee0b45ca5045acea4776667f1"
+                "reference": "76d449a358ece77d6f1d6331c68453e657172202"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Seldaek/jsonlint/zipball/594fd6462aad8ecee0b45ca5045acea4776667f1",
-                "reference": "594fd6462aad8ecee0b45ca5045acea4776667f1",
+                "url": "https://api.github.com/repos/Seldaek/jsonlint/zipball/76d449a358ece77d6f1d6331c68453e657172202",
+                "reference": "76d449a358ece77d6f1d6331c68453e657172202",
                 "shasum": ""
             },
             "require": {
@@ -1999,7 +1999,7 @@
                 {
                     "name": "Jordi Boggiano",
                     "email": "j.boggiano@seld.be",
-                    "homepage": "http://seld.be"
+                    "homepage": "https://seld.be"
                 }
             ],
             "description": "JSON Linter",
@@ -2011,7 +2011,7 @@
             ],
             "support": {
                 "issues": "https://github.com/Seldaek/jsonlint/issues",
-                "source": "https://github.com/Seldaek/jsonlint/tree/1.10.0"
+                "source": "https://github.com/Seldaek/jsonlint/tree/1.10.1"
             },
             "funding": [
                 {
@@ -2023,7 +2023,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2023-05-11T13:16:46+00:00"
+            "time": "2023-12-18T13:03:25+00:00"
         },
         {
             "name": "symfony/console",
