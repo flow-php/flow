@@ -11,7 +11,7 @@ use Flow\ETL\ErrorHandler\IgnoreError;
 use Flow\ETL\ErrorHandler\SkipRows;
 use Flow\ETL\ErrorHandler\ThrowError;
 use Flow\ETL\Extractor;
-use Flow\ETL\Extractor\FileListExtractor;
+use Flow\ETL\Extractor\LocalFileListExtractor;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Filesystem\Stream\Mode;
@@ -152,9 +152,9 @@ function from_memory(Memory $memory) : Extractor\MemoryExtractor
     return new Extractor\MemoryExtractor($memory);
 }
 
-function files(string|Path $directory, bool $recursive = false) : Extractor\FileListExtractor
+function local_files(string|Path $directory, bool $recursive = false) : Extractor\LocalFileListExtractor
 {
-    return new FileListExtractor(\is_string($directory) ? Path::realpath($directory) : $directory, $recursive);
+    return new LocalFileListExtractor(\is_string($directory) ? Path::realpath($directory) : $directory, $recursive);
 }
 
 /**

@@ -8,7 +8,7 @@ use Flow\ETL\Extractor;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\FlowContext;
 
-final class FileListExtractor implements Extractor, FileExtractor, LimitableExtractor
+final class LocalFileListExtractor implements Extractor, FileExtractor, LimitableExtractor
 {
     use Limitable;
 

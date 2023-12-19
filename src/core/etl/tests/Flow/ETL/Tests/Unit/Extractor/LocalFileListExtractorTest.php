@@ -2,16 +2,16 @@
 
 namespace Flow\ETL\Tests\Unit\Extractor;
 
-use function Flow\ETL\DSL\files;
 use function Flow\ETL\DSL\flow_context;
+use function Flow\ETL\DSL\local_files;
 use Flow\ETL\Extractor\Signal;
 use PHPUnit\Framework\TestCase;
 
-final class FileListExtractorTest extends TestCase
+final class LocalFileListExtractorTest extends TestCase
 {
     public function test_extracting_files_from_directory() : void
     {
-        $extractor = files(__DIR__ . '/Fixtures/FileListExtractor');
+        $extractor = local_files(__DIR__ . '/Fixtures/FileListExtractor');
 
         $totalRows = 0;
 
@@ -25,7 +25,7 @@ final class FileListExtractorTest extends TestCase
 
     public function test_extracting_files_from_directory_after_getting_stop_signal() : void
     {
-        $extractor = files(__DIR__ . '/Fixtures/FileListExtractor', true);
+        $extractor = local_files(__DIR__ . '/Fixtures/FileListExtractor', true);
         $generator = $extractor->extract(flow_context());
         $totalRows = 0;
 
@@ -40,7 +40,7 @@ final class FileListExtractorTest extends TestCase
 
     public function test_extracting_files_from_directory_recursive() : void
     {
-        $extractor = files(__DIR__ . '/Fixtures/FileListExtractor', true);
+        $extractor = local_files(__DIR__ . '/Fixtures/FileListExtractor', true);
 
         $totalRows = 0;
 
@@ -54,7 +54,7 @@ final class FileListExtractorTest extends TestCase
 
     public function test_extracting_files_from_directory_with_limit() : void
     {
-        $extractor = files(__DIR__ . '/Fixtures/FileListExtractor', true);
+        $extractor = local_files(__DIR__ . '/Fixtures/FileListExtractor', true);
         $extractor->changeLimit(2);
 
         $totalRows = 0;
