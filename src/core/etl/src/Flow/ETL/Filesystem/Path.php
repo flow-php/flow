@@ -15,7 +15,11 @@ use Flow\Serializer\Serializable;
  */
 final class Path implements Serializable
 {
+    private string $basename;
+
     private string|false $extension;
+
+    private string $filename;
 
     private string $path;
 
@@ -55,8 +59,11 @@ final class Path implements Serializable
         }
 
         $this->path = $path;
+        $pathInfo = \pathinfo($this->path);
         $this->scheme = \array_key_exists('scheme', $urlParts) ? $urlParts['scheme'] : 'file';
-        $this->extension = \pathinfo($this->path)['extension'] ?? false;
+        $this->extension = \array_key_exists('extension', $pathInfo) ? $pathInfo['extension'] : false;
+        $this->filename = $pathInfo['filename'];
+        $this->basename = $pathInfo['basename'];
     }
 
     /**
@@ -171,6 +178,11 @@ final class Path implements Serializable
         return new self($this->uri() . $partitionsPath, $this->options);
     }
 
+    public function basename() : bool|string
+    {
+        return $this->basename;
+    }
+
     public function context() : ResourceContext
     {
         return ResourceContext::from($this);
@@ -179,6 +191,11 @@ final class Path implements Serializable
     public function extension() : string|false
     {
         return $this->extension;
+    }
+
+    public function filename() : bool|string
+    {
+        return $this->filename;
     }
 
     public function isEqual(self $path) : bool

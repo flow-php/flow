@@ -60,6 +60,7 @@
             "src/adapter/etl-adapter-csv/src/Flow/ETL/Adapter/CSV/functions.php",
             "src/adapter/etl-adapter-doctrine/src/Flow/ETL/Adapter/Doctrine/functions.php",
             "src/adapter/etl-adapter-elasticsearch/src/Flow/ETL/Adapter/Elasticsearch/functions.php",
+            "src/adapter/etl-adapter-filesystem/src/Flow/ETL/Adapter/Filesystem/functions.php",
             "src/adapter/etl-adapter-google-sheet/src/Flow/ETL/Adapter/GoogleSheet/functions.php",
             "src/adapter/etl-adapter-json/src/Flow/ETL/Adapter/JSON/functions.php",
             "src/adapter/etl-adapter-meilisearch/src/Flow/ETL/Adapter/Meilisearch/functions.php",
@@ -92,8 +93,8 @@
                 "src/lib/doctrine-dbal-bulk/src/Flow",
                 "src/lib/dremel/src/Flow",
                 "src/lib/parquet-viewer/src/Flow",
-                "src/lib/rdsl/src/Flow",
                 "src/lib/parquet/src/Flow",
+                "src/lib/rdsl/src/Flow",
                 "src/lib/snappy/src/Flow"
             ],
             "Flow\\Doctrine\\Bulk\\": [
@@ -126,8 +127,8 @@
                 "src/lib/doctrine-dbal-bulk/tests/Flow",
                 "src/lib/dremel/tests/Flow",
                 "src/lib/parquet-viewer/tests/Flow",
-                "src/lib/rdsl/tests/Flow",
                 "src/lib/parquet/tests/Flow",
+                "src/lib/rdsl/tests/Flow",
                 "src/lib/snappy/tests/Flow"
             ],
             "Flow\\Doctrine\\Bulk\\Tests\\": [
@@ -167,6 +168,7 @@
         "flow-php/etl-adapter-xml": "self.version",
         "flow-php/parquet": "self.version",
         "flow-php/parquet-viewer": "self.version",
+        "flow-php/rdsl": "self.version",
         "flow-php/snappy": "self.version"
     },
     "scripts": {
