@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-12-19
 
 ### Added
+- [#882](https://github.com/flow-php/flow/pull/882) - **FileListExtractor** - [@norberttech](https://github.com/norberttech)
 - [#880](https://github.com/flow-php/flow/pull/880) - **Added possibility to convert rows into array without keys** - [@norberttech](https://github.com/norberttech)
 - [#880](https://github.com/flow-php/flow/pull/880) - **Monorepo test command** - [@norberttech](https://github.com/norberttech)
 - [#877](https://github.com/flow-php/flow/pull/877) - **Displaying partitions under data when using to_output or DataFrame::display** - [@norberttech](https://github.com/norberttech)
