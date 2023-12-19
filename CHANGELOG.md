@@ -1,6 +1,8 @@
-## [Unreleased] - 2023-12-18
+## [Unreleased] - 2023-12-19
 
 ### Added
+- [#880](https://github.com/flow-php/flow/pull/880) - **Added possibility to convert rows into array without keys** - [@norberttech](https://github.com/norberttech)
+- [#880](https://github.com/flow-php/flow/pull/880) - **Monorepo test command** - [@norberttech](https://github.com/norberttech)
 - [#877](https://github.com/flow-php/flow/pull/877) - **Displaying partitions under data when using to_output or DataFrame::display** - [@norberttech](https://github.com/norberttech)
 - [#877](https://github.com/flow-php/flow/pull/877) - **dsl functions for save modes** - [@norberttech](https://github.com/norberttech)
 - [#877](https://github.com/flow-php/flow/pull/877) - **DataFrame::saveMode as an aliast for DataFrame::mode** - [@norberttech](https://github.com/norberttech)
@@ -10,6 +12,7 @@
 - [#869](https://github.com/flow-php/flow/pull/869) - **RDSL library** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#880](https://github.com/flow-php/flow/pull/880) - **Updated dependencies** - [@norberttech](https://github.com/norberttech)
 - [#877](https://github.com/flow-php/flow/pull/877) - **Rows::merge accepts only one instance of Rows instead of many** - [@norberttech](https://github.com/norberttech)
 - [#872](https://github.com/flow-php/flow/pull/872) - **Exclude certain methods from being executed through rdsl access control configuration** - [@norberttech](https://github.com/norberttech)
 - [#868](https://github.com/flow-php/flow/pull/868) - **Adjust Homebrew commit message to match Flow CS** - [@stloyd](https://github.com/stloyd)
