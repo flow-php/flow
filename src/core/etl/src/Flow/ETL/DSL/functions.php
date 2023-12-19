@@ -11,6 +11,8 @@ use Flow\ETL\ErrorHandler\IgnoreError;
 use Flow\ETL\ErrorHandler\SkipRows;
 use Flow\ETL\ErrorHandler\ThrowError;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\FileListExtractor;
+use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\Flow;
@@ -148,6 +150,11 @@ function from_all(Extractor ...$extractors) : Extractor\ChainExtractor
 function from_memory(Memory $memory) : Extractor\MemoryExtractor
 {
     return new Extractor\MemoryExtractor($memory);
+}
+
+function files(string|Path $directory, bool $recursive = false) : Extractor\FileListExtractor
+{
+    return new FileListExtractor(\is_string($directory) ? Path::realpath($directory) : $directory, $recursive);
 }
 
 /**
@@ -978,6 +985,11 @@ function uuid_schema(string $name, ?Schema\Constraint $constraint = null, ?Schem
 function execution_context(?Config $config = null) : FlowContext
 {
     return new FlowContext($config ?? Config::default());
+}
+
+function flow_context(?Config $config = null) : FlowContext
+{
+    return execution_context($config);
 }
 
 function config() : Config
