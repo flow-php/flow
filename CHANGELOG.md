@@ -21,6 +21,7 @@
 - [#867](https://github.com/flow-php/flow/pull/867) - **Update Homebrew TAP formula: flow-php to version: 0.5.2** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#884](https://github.com/flow-php/flow/pull/884) - **printing null type entries in schema formatted** - [@norberttech](https://github.com/norberttech)
 - [#877](https://github.com/flow-php/flow/pull/877) - **Inconsistent behavior of DataFrame::fetch for partitioned rows** - [@norberttech](https://github.com/norberttech)
 - [#877](https://github.com/flow-php/flow/pull/877) - **Merging rows from the same partition makes new rows keep that partition** - [@norberttech](https://github.com/norberttech)
 - [#871](https://github.com/flow-php/flow/pull/871) - **phar file** - [@norberttech](https://github.com/norberttech)
