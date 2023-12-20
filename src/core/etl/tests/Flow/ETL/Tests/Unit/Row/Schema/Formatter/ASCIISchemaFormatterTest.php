@@ -43,7 +43,8 @@ final class ASCIISchemaFormatterTest extends TestCase
             Schema\Definition::string('name', nullable: true),
             Schema\Definition::array('tags'),
             Schema\Definition::boolean('active'),
-            Schema\Definition::xml('xml')
+            Schema\Definition::xml('xml'),
+            Schema\Definition::null('null')
         );
 
         $this->assertSame(
@@ -61,6 +62,7 @@ schema
 |-- tags: array<mixed>
 |-- active: boolean
 |-- xml: object<DOMDocument>
+|-- null: null
 
 SCHEMA,
             (new ASCIISchemaFormatter())->format($schema)
