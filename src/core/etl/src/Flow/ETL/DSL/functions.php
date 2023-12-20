@@ -449,6 +449,19 @@ function partitions(Partition ...$partition) : \Flow\ETL\Partitions
     return new \Flow\ETL\Partitions(...$partition);
 }
 
+/**
+ * @param array<string, mixed> $options
+ */
+function path(string $path, array $options = []) : Path
+{
+    return new Path($path, $options);
+}
+
+function path_real(string $path, array $options = []) : Path
+{
+    return Path::realpath($path, $options);
+}
+
 function rows_partitioned(array $rows, array $partitions) : Rows
 {
     return Rows::partitioned($rows, new \Flow\ETL\Partitions(...$partitions));

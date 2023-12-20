@@ -30,7 +30,10 @@
             "Flow\\": [
                 "src/Flow"
             ]
-        }
+        },
+        "files": [
+            "src/Flow/ETL/Adapter/Filesystem/functions.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

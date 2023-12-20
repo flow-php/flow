@@ -3,7 +3,7 @@
 namespace Flow\ETL\Extractor;
 
 use function Flow\ETL\DSL\array_to_rows;
-use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\FlowContext;
@@ -16,14 +16,17 @@ final class LocalFileListExtractor implements Extractor, FileExtractor, Limitabl
         private readonly Path $directory,
         private readonly bool $recursive = false
     ) {
+        if (!$this->directory->isLocal()) {
+            throw new InvalidArgumentException('Path must point to a local directory, got ' . $this->directory->uri() . ' instead');
+        }
+
+        if ($this->directory->isPattern()) {
+            throw new InvalidArgumentException('LocalFileListExtractor does not support glob paths, got ' . $this->directory->path());
+        }
     }
 
     public function extract(FlowContext $context) : \Generator
     {
-        if ($context->streams()->fs()->directoryExists($this->directory) === false) {
-            throw new RuntimeException(\sprintf('Directory "%s" does not exists', $this->directory->path()));
-        }
-
         if ($this->recursive) {
             $files = new \RecursiveIteratorIterator(
                 new \RecursiveDirectoryIterator(
@@ -38,10 +41,6 @@ final class LocalFileListExtractor implements Extractor, FileExtractor, Limitabl
 
         /** @var \SplFileInfo $file */
         foreach ($files as $file) {
-            if ($file->isDir()) {
-                continue;
-            }
-
             $signal = yield array_to_rows([
                 'path' => $file->getPath(),
                 'real_path' => $file->getRealPath(),
