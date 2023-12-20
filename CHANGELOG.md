@@ -1,6 +1,7 @@
-## [Unreleased] - 2023-12-19
+## [Unreleased] - 2023-12-20
 
 ### Added
+- [#883](https://github.com/flow-php/flow/pull/883) - **RemoteFileListExtractor** - [@norberttech](https://github.com/norberttech)
 - [#882](https://github.com/flow-php/flow/pull/882) - **FileListExtractor** - [@norberttech](https://github.com/norberttech)
 - [#880](https://github.com/flow-php/flow/pull/880) - **Added possibility to convert rows into array without keys** - [@norberttech](https://github.com/norberttech)
 - [#880](https://github.com/flow-php/flow/pull/880) - **Monorepo test command** - [@norberttech](https://github.com/norberttech)
