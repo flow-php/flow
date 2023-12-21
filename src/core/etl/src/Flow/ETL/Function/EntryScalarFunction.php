@@ -11,11 +11,10 @@ use Flow\ETL\Function\ArrayExpand\ArrayExpand;
 use Flow\ETL\Function\ArraySort\Sort;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\EntryReference;
-use Flow\ETL\Row\Reference;
 
 trait EntryScalarFunction
 {
-    public function arrayGet(string $path) : ScalarFunction|Reference
+    public function arrayGet(string $path) : ScalarFunction|EntryReference
     {
         return new ScalarFunctions(new Function\ArrayGet($this, $path));
     }
@@ -58,6 +57,11 @@ trait EntryScalarFunction
     public function cast(string $type) : ScalarFunction|EntryReference
     {
         return new ScalarFunctions(new Cast($this, $type));
+    }
+
+    public function concat(ScalarFunction ...$params) : ScalarFunction|self
+    {
+        return new ScalarFunctions(new Function\Concat($this, ...$params));
     }
 
     public function contains(ScalarFunction $needle) : ScalarFunction|EntryReference
@@ -343,6 +347,21 @@ trait EntryScalarFunction
     public function strPad(int $length, string $pad_string = ' ', int $type = STR_PAD_RIGHT) : ScalarFunction|EntryReference
     {
         return new ScalarFunctions((new Function\StrPad($this, $length, $pad_string, $type)));
+    }
+
+    public function strPadBoth(int $length, string $pad_string = ' ') : ScalarFunction|EntryReference
+    {
+        return new ScalarFunctions((new Function\StrPad($this, $length, $pad_string, STR_PAD_BOTH)));
+    }
+
+    public function strPadLeft(int $length, string $pad_string = ' ') : ScalarFunction|EntryReference
+    {
+        return new ScalarFunctions((new Function\StrPad($this, $length, $pad_string, STR_PAD_LEFT)));
+    }
+
+    public function strPadRight(int $length, string $pad_string = ' ') : ScalarFunction|EntryReference
+    {
+        return new ScalarFunctions((new Function\StrPad($this, $length, $pad_string, STR_PAD_RIGHT)));
     }
 
     /**

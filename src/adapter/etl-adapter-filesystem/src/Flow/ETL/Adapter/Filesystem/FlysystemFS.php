@@ -163,7 +163,7 @@ final class FlysystemFS implements Filesystem
                 }
             }
 
-            return $partitionFilter->keep(...(new Path(DIRECTORY_SEPARATOR . $file->path()))->partitions());
+            return $partitionFilter->keep(...(new Path(DIRECTORY_SEPARATOR . $file->path()))->partitions()->toArray());
         };
 
         /**

@@ -45,7 +45,7 @@ final class PartitionTest extends TestCase
                 new Partition('country', 'US'),
                 new Partition('age-range', '20-45'),
             ],
-            $partitions
+            $partitions->toArray()
         );
     }
 

@@ -32,7 +32,6 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
         foreach ($context->streams()->fs()->scan($this->path, $context->partitionFilter()) as $filePath) {
-            $partitions = $filePath->partitions();
 
             /**
              * @var array|object $rowData
@@ -44,7 +43,7 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
                     $row['_input_file_uri'] = $filePath->uri();
                 }
 
-                $signal = yield array_to_rows($row, $context->entryFactory(), $partitions);
+                $signal = yield array_to_rows($row, $context->entryFactory(), $filePath->partitions());
                 $this->countRow();
 
                 if ($signal === Signal::STOP || $this->reachedLimit()) {

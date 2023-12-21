@@ -319,18 +319,6 @@ final class DataFrame
             $clone->limit($limit);
         }
 
-        if ($clone->context->partitionEntries()->count()) {
-            $rows = new Rows();
-
-            foreach ($clone->pipeline->process($clone->context) as $nextRows) {
-                if ($clone->context->partitionFilter()->keep(...$nextRows->partitions()->toArray())) {
-                    $rows = $rows->merge($nextRows);
-                }
-            }
-
-            return $rows;
-        }
-
         $rows = new Rows();
 
         foreach ($clone->pipeline->process($clone->context) as $nextRows) {

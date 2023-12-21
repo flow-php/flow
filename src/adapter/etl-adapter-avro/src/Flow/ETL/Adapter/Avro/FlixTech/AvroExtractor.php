@@ -28,8 +28,6 @@ final class AvroExtractor implements Extractor, Extractor\FileExtractor, Limitab
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
         foreach ($context->streams()->fs()->scan($this->path, $context->partitionFilter()) as $filePath) {
-            $partitions = $filePath->partitions();
-
             $reader = new \AvroDataIOReader(
                 new AvroResource(
                     $context->streams()->fs()->open(
@@ -49,7 +47,7 @@ final class AvroExtractor implements Extractor, Extractor\FileExtractor, Limitab
                     $row['_input_file_uri'] = $filePath->uri();
                 }
 
-                $signal = yield array_to_rows($row, $context->entryFactory(), $partitions);
+                $signal = yield array_to_rows($row, $context->entryFactory(), $filePath->partitions());
                 $this->countRow();
 
                 if ($signal === Signal::STOP || $this->reachedLimit()) {

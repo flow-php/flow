@@ -38,7 +38,6 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
         foreach ($context->streams()->fs()->scan($this->path, $context->partitionFilter()) as $path) {
-            $partitions = $path->partitions();
             $stream = $context->streams()->fs()->open($path, Mode::READ);
 
             $headers = [];
@@ -90,7 +89,7 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
                     $row['_input_file_uri'] = $stream->path()->uri();
                 }
 
-                $signal = yield array_to_rows($row, $context->entryFactory(), $partitions);
+                $signal = yield array_to_rows($row, $context->entryFactory(), $path->partitions());
                 $this->countRow();
 
                 if ($signal === Signal::STOP || $this->reachedLimit()) {

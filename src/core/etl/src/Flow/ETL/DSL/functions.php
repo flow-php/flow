@@ -803,8 +803,10 @@ function number_format(ScalarFunction $function, ?ScalarFunction $decimals = nul
  * @param array<array<mixed>>|array<mixed|string> $data
  * @param array<Partition> $partitions
  */
-function array_to_rows(array $data, EntryFactory $entryFactory = new NativeEntryFactory(), array $partitions = []) : Rows
+function array_to_rows(array $data, EntryFactory $entryFactory = new NativeEntryFactory(), array|\Flow\ETL\Partitions $partitions = []) : Rows
 {
+    $partitions = \is_array($partitions) ? new \Flow\ETL\Partitions(...$partitions) : $partitions;
+
     $isRows = true;
 
     foreach ($data as $v) {
@@ -819,27 +821,40 @@ function array_to_rows(array $data, EntryFactory $entryFactory = new NativeEntry
         $entries = [];
 
         foreach ($data as $key => $value) {
-            $entries[] = $entryFactory->create(\is_int($key) ? 'e' . \str_pad((string) $key, 2, '0', STR_PAD_LEFT) : $key, $value);
+            $name = \is_int($key) ? 'e' . \str_pad((string) $key, 2, '0', STR_PAD_LEFT) : $key;
+
+            $entries[$name] = $entryFactory->create($name, $value);
         }
 
-        return \count($partitions)
-            ? Rows::partitioned([Row::create(...$entries)], $partitions)
-            : new Rows(Row::create(...$entries));
+        foreach ($partitions as $partition) {
+            if (!\array_key_exists($partition->name, $entries)) {
+                $entries[$partition->name] = $entryFactory->create($partition->name, $partition->value);
+            }
+        }
+
+        return Rows::partitioned([Row::create(...\array_values($entries))], $partitions);
     }
+
     $rows = [];
 
     foreach ($data as $row) {
         $entries = [];
 
         foreach ($row as $column => $value) {
-            $entries[] = $entryFactory->create(\is_int($column) ? 'e' . \str_pad((string) $column, 2, '0', STR_PAD_LEFT) : $column, $value);
+            $name = \is_int($column) ? 'e' . \str_pad((string) $column, 2, '0', STR_PAD_LEFT) : $column;
+            $entries[$name] = $entryFactory->create(\is_int($column) ? 'e' . \str_pad((string) $column, 2, '0', STR_PAD_LEFT) : $column, $value);
         }
-        $rows[] = Row::create(...$entries);
+
+        foreach ($partitions as $partition) {
+            if (!\array_key_exists($partition->name, $entries)) {
+                $entries[$partition->name] = $entryFactory->create($partition->name, $partition->value);
+            }
+        }
+
+        $rows[] = Row::create(...\array_values($entries));
     }
 
-    return \count($partitions)
-        ? Rows::partitioned($rows, $partitions)
-        : new Rows(...$rows);
+    return Rows::partitioned($rows, $partitions);
 }
 
 function rank() : Rank

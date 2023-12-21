@@ -12,8 +12,8 @@ require __DIR__ . '/../../../bootstrap.php';
 
 $flow = (new Flow())
     ->read(from_csv(__FLOW_DATA__ . '/partitioned'))
-    ->collect()
-    ->sortBy(ref('id'))
+//    ->collect()
+//    ->sortBy(ref('id'))
     ->write(to_output());
 
 if ($_ENV['FLOW_PHAR_APP'] ?? false) {

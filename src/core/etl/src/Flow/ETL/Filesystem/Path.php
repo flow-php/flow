@@ -8,6 +8,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Filesystem\Stream\ResourceContext;
 use Flow\ETL\Partition;
+use Flow\ETL\Partitions;
 use Flow\Serializer\Serializable;
 
 /**
@@ -252,13 +253,10 @@ final class Path implements Serializable
         );
     }
 
-    /**
-     * @return array<Partition>
-     */
-    public function partitions() : array
+    public function partitions() : Partitions
     {
         if ($this->isPathPattern($this->path)) {
-            return [];
+            return new Partitions();
         }
 
         return Partition::fromUri($this->path);

@@ -139,7 +139,7 @@ final class LocalFilesystem implements Filesystem
                     continue;
                 }
 
-                if ($partitionFilter->keep(...(Path::realpath($filePath, $path->options()))->partitions())) {
+                if ($partitionFilter->keep(...(Path::realpath($filePath, $path->options()))->partitions()->toArray())) {
                     yield Path::realpath($filePath, $path->options());
                 }
             }
@@ -152,7 +152,7 @@ final class LocalFilesystem implements Filesystem
                 continue;
             }
 
-            if ($partitionFilter->keep(...(Path::realpath($filePath, $path->options()))->partitions())) {
+            if ($partitionFilter->keep(...(Path::realpath($filePath, $path->options()))->partitions()->toArray())) {
                 yield Path::realpath($filePath, $path->options());
             }
         }
