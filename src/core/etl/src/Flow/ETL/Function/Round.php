@@ -8,6 +8,8 @@ use Flow\ETL\Row;
 
 final class Round implements ScalarFunction
 {
+    use EntryScalarFunction;
+
     /**
      * @param ScalarFunction $entry
      * @param ScalarFunction $precision

@@ -11,6 +11,8 @@ use Flow\ETL\Row;
  */
 final class ArrayMerge implements ScalarFunction
 {
+    use EntryScalarFunction;
+
     public function __construct(private readonly ScalarFunction $left, private readonly ScalarFunction $right)
     {
     }

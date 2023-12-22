@@ -801,7 +801,7 @@ function number_format(ScalarFunction $function, ?ScalarFunction $decimals = nul
  * @psalm-suppress PossiblyInvalidIterator
  *
  * @param array<array<mixed>>|array<mixed|string> $data
- * @param array<Partition> $partitions
+ * @param array<Partition>|\Flow\ETL\Partitions $partitions
  */
 function array_to_rows(array $data, EntryFactory $entryFactory = new NativeEntryFactory(), array|\Flow\ETL\Partitions $partitions = []) : Rows
 {

@@ -8,6 +8,8 @@ use Flow\ETL\Row;
 
 final class Concat implements ScalarFunction
 {
+    use EntryScalarFunction;
+
     /**
      * @var array<ScalarFunction>
      */
@@ -22,9 +24,7 @@ final class Concat implements ScalarFunction
     public function eval(Row $row) : mixed
     {
         $values = \array_map(function (ScalarFunction $ref) use ($row) : mixed {
-            $ref = new ScalarFunctions(new Cast($ref, 'string'));
-
-            return $ref->eval($row);
+            return (new Cast($ref, 'string'))->eval($row);
         }, $this->refs);
 
         foreach ($values as $value) {

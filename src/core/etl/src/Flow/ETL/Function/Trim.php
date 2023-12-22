@@ -9,6 +9,8 @@ use Flow\ETL\Row;
 
 final class Trim implements ScalarFunction
 {
+    use EntryScalarFunction;
+
     public function __construct(
         private readonly ScalarFunction $ref,
         private readonly Type $type = Type::BOTH,

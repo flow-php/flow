@@ -8,6 +8,8 @@ use Flow\ETL\Row;
 
 final class ArrayReverse implements ScalarFunction
 {
+    use EntryScalarFunction;
+
     public function __construct(private readonly ScalarFunction $left, private readonly bool $preserveKeys)
     {
     }

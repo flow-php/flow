@@ -8,6 +8,8 @@ use Flow\ETL\Row;
 
 final class StrReplace implements ScalarFunction
 {
+    use EntryScalarFunction;
+
     /**
      * @param string|string[] $search
      * @param string|string[] $replace

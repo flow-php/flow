@@ -8,6 +8,8 @@ use Flow\ETL\Row;
 
 final class ToLower implements ScalarFunction
 {
+    use EntryScalarFunction;
+
     public function __construct(private ScalarFunction $ref)
     {
     }

@@ -16,97 +16,97 @@ trait EntryScalarFunction
 {
     public function arrayGet(string $path) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Function\ArrayGet($this, $path));
+        return new Function\ArrayGet($this, $path);
     }
 
     public function arrayGetCollection(string ...$keys) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Function\ArrayGetCollection($this, $keys));
+        return new Function\ArrayGetCollection($this, $keys);
     }
 
     public function arrayGetCollectionFirst(string ...$keys) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(Function\ArrayGetCollection::fromFirst($this, $keys));
+        return Function\ArrayGetCollection::fromFirst($this, $keys);
     }
 
     public function arrayMerge(ScalarFunction $ref) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Function\ArrayMerge($this, $ref));
+        return new Function\ArrayMerge($this, $ref);
     }
 
     public function arrayMergeCollection() : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Function\ArrayMergeCollection($this));
+        return new Function\ArrayMergeCollection($this);
     }
 
     public function arrayReverse(bool $preserveKeys = false) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Function\ArrayReverse($this, $preserveKeys));
+        return new Function\ArrayReverse($this, $preserveKeys);
     }
 
     public function arraySort(?string $function = null, ?int $flags = null, bool $recursive = true) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Function\ArraySort($this, $function ? Sort::fromString($function) : Sort::sort, $flags, $recursive));
+        return new Function\ArraySort($this, $function ? Sort::fromString($function) : Sort::sort, $flags, $recursive);
     }
 
     public function capitalize() : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Function\Capitalize($this));
+        return new Function\Capitalize($this);
     }
 
     public function cast(string $type) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Cast($this, $type));
+        return new Cast($this, $type);
     }
 
-    public function concat(ScalarFunction ...$params) : ScalarFunction|self
+    public function concat(ScalarFunction ...$params) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Function\Concat($this, ...$params));
+        return new Function\Concat($this, ...$params);
     }
 
     public function contains(ScalarFunction $needle) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Contains($this, $needle));
+        return new Contains($this, $needle);
     }
 
     public function dateFormat(string $format = 'Y-m-d') : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Function\DateTimeFormat($this, $format));
+        return new Function\DateTimeFormat($this, $format);
     }
 
     public function dateTimeFormat(string $format = 'Y-m-d H:i:s') : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Function\DateTimeFormat($this, $format));
+        return new Function\DateTimeFormat($this, $format);
     }
 
     public function divide(ScalarFunction $ref) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Divide($this, $ref));
+        return new Divide($this, $ref);
     }
 
     public function domNodeAttribute(string $attribute) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Function\DOMNodeAttribute($this, $attribute));
+        return new Function\DOMNodeAttribute($this, $attribute);
     }
 
     public function domNodeValue() : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Function\DOMNodeValue($this));
+        return new Function\DOMNodeValue($this);
     }
 
     public function endsWith(ScalarFunction $needle) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new EndsWith($this, $needle));
+        return new EndsWith($this, $needle);
     }
 
     public function equals(ScalarFunction $ref) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Equals($this, $ref));
+        return new Equals($this, $ref);
     }
 
     public function exists() : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Function\Exists($this));
+        return new Function\Exists($this);
     }
 
     /**
@@ -131,22 +131,22 @@ trait EntryScalarFunction
      */
     public function expand(string $expandEntryName = 'element', ArrayExpand $expand = ArrayExpand::VALUES) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Function\ArrayExpand($this, $expand));
+        return new Function\ArrayExpand($this, $expand);
     }
 
     public function greaterThan(ScalarFunction $ref) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new GreaterThan($this, $ref));
+        return new GreaterThan($this, $ref);
     }
 
     public function greaterThanEqual(ScalarFunction $ref) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new GreaterThanEqual($this, $ref));
+        return new GreaterThanEqual($this, $ref);
     }
 
     public function hash(string $algorithm = 'xxh128', bool $binary = false, array $options = []) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Function\Hash($this, $algorithm, $binary, $options));
+        return new Function\Hash($this, $algorithm, $binary, $options);
     }
 
     public function isEven() : ScalarFunction|EntryReference
@@ -156,32 +156,32 @@ trait EntryScalarFunction
 
     public function isFalse() : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Same($this, lit(false)));
+        return new Same($this, lit(false));
     }
 
     public function isIn(ScalarFunction $haystack) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new IsIn($haystack, $this));
+        return new IsIn($haystack, $this);
     }
 
     public function isNotNull() : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new IsNotNull($this));
+        return new IsNotNull($this);
     }
 
     public function isNotNumeric() : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new IsNotNumeric($this));
+        return new IsNotNumeric($this);
     }
 
     public function isNull() : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new IsNull($this));
+        return new IsNull($this);
     }
 
     public function isNumeric() : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new IsNumeric($this));
+        return new IsNumeric($this);
     }
 
     public function isOdd() : ScalarFunction|EntryReference
@@ -191,7 +191,7 @@ trait EntryScalarFunction
 
     public function isTrue() : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Same($this, lit(true)));
+        return new Same($this, lit(true));
     }
 
     /**
@@ -203,67 +203,67 @@ trait EntryScalarFunction
             throw new InvalidArgumentException('isType expression requires at least one entryClass');
         }
 
-        return new ScalarFunctions(new IsType($this, ...$entryClass));
+        return new IsType($this, ...$entryClass);
     }
 
     public function jsonDecode(int $flags = JSON_THROW_ON_ERROR) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Function\JsonDecode($this, $flags));
+        return new Function\JsonDecode($this, $flags);
     }
 
     public function jsonEncode(int $flags = JSON_THROW_ON_ERROR) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Function\JsonEncode($this, $flags));
+        return new Function\JsonEncode($this, $flags);
     }
 
     public function lessThan(ScalarFunction $ref) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new LessThan($this, $ref));
+        return new LessThan($this, $ref);
     }
 
     public function lessThanEqual(ScalarFunction $ref) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new LessThanEqual($this, $ref));
+        return new LessThanEqual($this, $ref);
     }
 
     public function literal(mixed $value) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Literal($value));
+        return new Literal($value);
     }
 
     public function lower() : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Function\ToLower($this));
+        return new Function\ToLower($this);
     }
 
     public function method(ScalarFunction $method, ScalarFunction ...$params) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Function\CallMethod($this, $method, ...$params));
+        return new Function\CallMethod($this, $method, ...$params);
     }
 
     public function minus(ScalarFunction $ref) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Minus($this, $ref));
+        return new Minus($this, $ref);
     }
 
     public function mod(ScalarFunction $ref) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Mod($this, $ref));
+        return new Mod($this, $ref);
     }
 
     public function multiply(ScalarFunction $ref) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Multiply($this, $ref));
+        return new Multiply($this, $ref);
     }
 
     public function notEquals(ScalarFunction $ref) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new NotEquals($this, $ref));
+        return new NotEquals($this, $ref);
     }
 
     public function notSame(ScalarFunction $ref) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new NotSame($this, $ref));
+        return new NotSame($this, $ref);
     }
 
     public function numberFormat(?ScalarFunction $decimals = null, ?ScalarFunction $decimalSeparator = null, ?ScalarFunction $thousandsSeparator = null) : ScalarFunction|EntryReference
@@ -280,32 +280,32 @@ trait EntryScalarFunction
             $thousandsSeparator = lit(',');
         }
 
-        return new ScalarFunctions(new Function\NumberFormat($this, $decimals, $decimalSeparator, $thousandsSeparator));
+        return new Function\NumberFormat($this, $decimals, $decimalSeparator, $thousandsSeparator);
     }
 
     public function plus(ScalarFunction $ref) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Plus($this, $ref));
+        return new Plus($this, $ref);
     }
 
     public function power(ScalarFunction $ref) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Power($this, $ref));
+        return new Power($this, $ref);
     }
 
     public function regexMatch(ScalarFunction $pattern) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Function\PregMatch($pattern, $this));
+        return new Function\PregMatch($pattern, $this);
     }
 
     public function regexMatchAll(ScalarFunction $pattern, ?ScalarFunction $flags = null) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Function\PregMatchAll($pattern, $this, $flags));
+        return new Function\PregMatchAll($pattern, $this, $flags);
     }
 
     public function regexReplace(ScalarFunction $pattern, ScalarFunction $replacement) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Function\PregReplace($pattern, $replacement, $this));
+        return new Function\PregReplace($pattern, $replacement, $this);
     }
 
     /**
@@ -316,52 +316,52 @@ trait EntryScalarFunction
      */
     public function round(ScalarFunction $precision, int $mode = PHP_ROUND_HALF_UP) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Function\Round($this, $precision, $mode));
+        return new Function\Round($this, $precision, $mode);
     }
 
     public function same(ScalarFunction $ref) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Same($this, $ref));
+        return new Same($this, $ref);
     }
 
     public function sanitize(?ScalarFunction $placeholder = null, ?ScalarFunction $skipCharacters = null) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Function\Sanitize($this, $placeholder ?: new Function\Literal('*'), $skipCharacters ?: new Function\Literal(0)));
+        return new Function\Sanitize($this, $placeholder ?: new Function\Literal('*'), $skipCharacters ?: new Function\Literal(0));
     }
 
     public function size() : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Function\Size($this));
+        return new Function\Size($this);
     }
 
     public function sprintf(ScalarFunction ...$params) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Function\Sprintf($this, ...$params));
+        return new Function\Sprintf($this, ...$params);
     }
 
     public function startsWith(ScalarFunction $needle) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new StartsWith($this, $needle));
+        return new StartsWith($this, $needle);
     }
 
     public function strPad(int $length, string $pad_string = ' ', int $type = STR_PAD_RIGHT) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions((new Function\StrPad($this, $length, $pad_string, $type)));
+        return new Function\StrPad($this, $length, $pad_string, $type);
     }
 
     public function strPadBoth(int $length, string $pad_string = ' ') : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions((new Function\StrPad($this, $length, $pad_string, STR_PAD_BOTH)));
+        return new Function\StrPad($this, $length, $pad_string, STR_PAD_BOTH);
     }
 
     public function strPadLeft(int $length, string $pad_string = ' ') : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions((new Function\StrPad($this, $length, $pad_string, STR_PAD_LEFT)));
+        return new Function\StrPad($this, $length, $pad_string, STR_PAD_LEFT);
     }
 
     public function strPadRight(int $length, string $pad_string = ' ') : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions((new Function\StrPad($this, $length, $pad_string, STR_PAD_RIGHT)));
+        return new Function\StrPad($this, $length, $pad_string, STR_PAD_RIGHT);
     }
 
     /**
@@ -370,7 +370,7 @@ trait EntryScalarFunction
      */
     public function strReplace(string|array $search, string|array $replace) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Function\StrReplace($this, $search, $replace));
+        return new Function\StrReplace($this, $search, $replace);
     }
 
     /**
@@ -381,7 +381,7 @@ trait EntryScalarFunction
      */
     public function toDate(string $format = \DateTimeInterface::RFC3339, \DateTimeZone $timeZone = new \DateTimeZone('UTC')) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Function\ToDate($this, $format, $timeZone));
+        return new Function\ToDate($this, $format, $timeZone);
     }
 
     /**
@@ -392,12 +392,12 @@ trait EntryScalarFunction
      */
     public function toDateTime(string $format = 'Y-m-d H:i:s', \DateTimeZone $timeZone = new \DateTimeZone('UTC')) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Function\ToDateTime($this, $format, $timeZone));
+        return new Function\ToDateTime($this, $format, $timeZone);
     }
 
     public function trim(Trim\Type $type = Trim\Type::BOTH, string $characters = " \t\n\r\0\x0B") : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Function\Trim($this, $type, $characters));
+        return new Function\Trim($this, $type, $characters);
     }
 
     /**
@@ -421,16 +421,16 @@ trait EntryScalarFunction
      */
     public function unpack(array $skipKeys = [], ?string $entryPrefix = null) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Function\ArrayUnpack($this, $skipKeys, $entryPrefix));
+        return new Function\ArrayUnpack($this, $skipKeys, $entryPrefix);
     }
 
     public function upper() : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Function\ToUpper($this));
+        return new Function\ToUpper($this);
     }
 
     public function xpath(string $string) : ScalarFunction|EntryReference
     {
-        return new ScalarFunctions(new Function\XPath($this, $string));
+        return new Function\XPath($this, $string);
     }
 }

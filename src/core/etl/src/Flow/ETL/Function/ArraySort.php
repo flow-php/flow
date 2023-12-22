@@ -9,6 +9,8 @@ use Flow\ETL\Row;
 
 final class ArraySort implements ScalarFunction
 {
+    use EntryScalarFunction;
+
     public function __construct(
         private readonly ScalarFunction $ref,
         private readonly Sort $function,

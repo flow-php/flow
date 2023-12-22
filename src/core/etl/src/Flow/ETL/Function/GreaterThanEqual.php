@@ -8,6 +8,8 @@ use Flow\ETL\Row;
 
 final class GreaterThanEqual implements ScalarFunction
 {
+    use EntryScalarFunction;
+
     public function __construct(
         private readonly ScalarFunction $base,
         private readonly ScalarFunction $next

@@ -8,6 +8,8 @@ use Flow\ETL\Row;
 
 final class All implements ScalarFunction
 {
+    use EntryScalarFunction;
+
     /**
      * @var array<ScalarFunction>
      */

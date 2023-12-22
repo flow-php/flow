@@ -9,6 +9,8 @@ use Flow\ETL\Row;
 
 final class Cast implements ScalarFunction
 {
+    use EntryScalarFunction;
+
     public function __construct(
         private readonly ScalarFunction $ref,
         private readonly string $type

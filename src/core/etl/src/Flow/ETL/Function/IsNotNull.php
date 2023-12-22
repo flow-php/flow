@@ -8,6 +8,8 @@ use Flow\ETL\Row;
 
 final class IsNotNull implements ScalarFunction
 {
+    use EntryScalarFunction;
+
     public function __construct(
         private readonly ScalarFunction $ref
     ) {

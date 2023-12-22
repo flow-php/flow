@@ -9,6 +9,8 @@ use Flow\ETL\Row\Reference;
 
 final class Exists implements ScalarFunction
 {
+    use EntryScalarFunction;
+
     public function __construct(private readonly ScalarFunction $ref)
     {
     }

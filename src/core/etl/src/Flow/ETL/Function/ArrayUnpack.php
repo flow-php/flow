@@ -8,6 +8,8 @@ use Flow\ETL\Row;
 
 final class ArrayUnpack implements ScalarFunction, ScalarFunction\UnpackResults
 {
+    use EntryScalarFunction;
+
     public function __construct(
         private readonly ScalarFunction $ref,
         private readonly array $skipKeys = [],

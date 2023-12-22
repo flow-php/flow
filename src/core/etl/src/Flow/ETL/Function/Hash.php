@@ -8,6 +8,8 @@ use Flow\ETL\Row;
 
 final class Hash implements ScalarFunction
 {
+    use EntryScalarFunction;
+
     public function __construct(
         private readonly ScalarFunction $ref,
         private readonly string $algorithm = 'xxh128',

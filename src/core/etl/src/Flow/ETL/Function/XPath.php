@@ -6,6 +6,8 @@ use Flow\ETL\Row;
 
 final class XPath implements ScalarFunction
 {
+    use EntryScalarFunction;
+
     public function __construct(private readonly ScalarFunction $ref, private readonly string $path)
     {
     }

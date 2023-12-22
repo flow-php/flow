@@ -8,6 +8,8 @@ use Flow\ETL\Row;
 
 final class JsonDecode implements ScalarFunction
 {
+    use EntryScalarFunction;
+
     public function __construct(private readonly ScalarFunction $ref, private readonly int $flags = JSON_THROW_ON_ERROR)
     {
     }

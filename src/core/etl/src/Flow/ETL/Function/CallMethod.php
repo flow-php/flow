@@ -8,6 +8,8 @@ use Flow\ETL\Row;
 
 final class CallMethod implements ScalarFunction
 {
+    use EntryScalarFunction;
+
     /**
      * @var ScalarFunction[]
      */

@@ -8,6 +8,8 @@ use Flow\ETL\Row;
 
 final class PregReplace implements ScalarFunction
 {
+    use EntryScalarFunction;
+
     public function __construct(
         private readonly ScalarFunction $pattern,
         private readonly ScalarFunction $replacement,

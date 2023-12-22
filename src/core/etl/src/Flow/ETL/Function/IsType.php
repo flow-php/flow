@@ -11,6 +11,8 @@ use Flow\ETL\Row\Reference;
 
 final class IsType implements ScalarFunction
 {
+    use EntryScalarFunction;
+
     /**
      * @var array<class-string<Entry>>
      */
