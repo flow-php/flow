@@ -34,7 +34,7 @@ $flow = (new Flow())
     ->read($extractor)
     ->withEntry('unpacked', ref('response_body')->jsonDecode())
     ->select('unpacked')
-    ->withEntry('unpacked', ref('unpacked')->unpack())
+    ->withEntry('unpacked', ref('unpacked')->unpackResults())
     ->renameAll('unpacked.', '')
     ->select('name', 'html_url', 'blog')
     ->write(to_output(false));

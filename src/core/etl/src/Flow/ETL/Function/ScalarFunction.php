@@ -6,7 +6,7 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-interface ScalarFunction
+interface ScalarFunction extends FunctionChain
 {
     public function eval(Row $row) : mixed;
 }

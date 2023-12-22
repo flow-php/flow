@@ -11,6 +11,8 @@ use Jawira\CaseConverter\Convert;
 
 final class ArrayKeysStyleConvert implements ScalarFunction
 {
+    use EntryScalarFunction;
+
     public function __construct(
         private readonly ScalarFunction $ref,
         private readonly StringStyles $style

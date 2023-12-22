@@ -13,6 +13,8 @@ if (!\class_exists(\Ramsey\Uuid\Uuid::class) && !\class_exists(\Symfony\Componen
 
 final class Uuid implements ScalarFunction
 {
+    use EntryScalarFunction;
+
     private function __construct(private readonly string $uuidVersion, private readonly ?ScalarFunction $ref = null)
     {
     }

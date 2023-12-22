@@ -13,6 +13,8 @@ if (!\class_exists(\Symfony\Component\Uid\Ulid::class)) {
 
 final class Ulid implements ScalarFunction
 {
+    use EntryScalarFunction;
+
     public function __construct(private readonly ?ScalarFunction $ref = null)
     {
     }

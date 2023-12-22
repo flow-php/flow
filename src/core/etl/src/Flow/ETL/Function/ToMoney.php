@@ -16,6 +16,8 @@ if (!\interface_exists(\Money\MoneyParser::class)) {
 
 final class ToMoney implements ScalarFunction
 {
+    use EntryScalarFunction;
+
     public function __construct(
         private readonly ScalarFunction $amountRef,
         private readonly ScalarFunction $currencyRef,

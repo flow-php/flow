@@ -34,7 +34,7 @@ final class ArrayExpand implements ExpandResults, ScalarFunction
         return $array;
     }
 
-    public function expand() : bool
+    public function expandResults() : bool
     {
         return true;
     }

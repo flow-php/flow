@@ -8,6 +8,8 @@ use Flow\ETL\Row;
 
 final class Split implements ScalarFunction
 {
+    use EntryScalarFunction;
+
     /**
      * @param non-empty-string $separator
      */

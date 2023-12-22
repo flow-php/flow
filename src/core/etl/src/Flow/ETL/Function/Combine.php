@@ -8,6 +8,8 @@ use Flow\ETL\Row;
 
 final class Combine implements ScalarFunction
 {
+    use EntryScalarFunction;
+
     public function __construct(
         private readonly ScalarFunction $keys,
         private readonly ScalarFunction $values,

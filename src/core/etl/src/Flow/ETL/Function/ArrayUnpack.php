@@ -48,7 +48,7 @@ final class ArrayUnpack implements ScalarFunction, ScalarFunction\UnpackResults
         return $values;
     }
 
-    public function unpack() : bool
+    public function unpackResults() : bool
     {
         return true;
     }
