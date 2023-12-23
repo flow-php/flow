@@ -4,10 +4,8 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class Capitalize implements ScalarFunction
+final class Capitalize extends ScalarFunctionChain
 {
-    use EntryScalarFunction;
-
     public function __construct(private readonly ScalarFunction $ref)
     {
     }

@@ -6,10 +6,8 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class StrReplace implements ScalarFunction
+final class StrReplace extends ScalarFunctionChain
 {
-    use EntryScalarFunction;
-
     /**
      * @param string|string[] $search
      * @param string|string[] $replace

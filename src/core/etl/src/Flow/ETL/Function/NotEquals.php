@@ -6,10 +6,8 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class NotEquals implements ScalarFunction
+final class NotEquals extends ScalarFunctionChain
 {
-    use EntryScalarFunction;
-
     public function __construct(
         private readonly ScalarFunction $base,
         private readonly ScalarFunction $next

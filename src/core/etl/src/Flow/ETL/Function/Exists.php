@@ -7,10 +7,8 @@ namespace Flow\ETL\Function;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 
-final class Exists implements ScalarFunction
+final class Exists extends ScalarFunctionChain
 {
-    use EntryScalarFunction;
-
     public function __construct(private readonly ScalarFunction $ref)
     {
     }

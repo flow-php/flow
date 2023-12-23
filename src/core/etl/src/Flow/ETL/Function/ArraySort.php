@@ -7,10 +7,8 @@ namespace Flow\ETL\Function;
 use Flow\ETL\Function\ArraySort\Sort;
 use Flow\ETL\Row;
 
-final class ArraySort implements ScalarFunction
+final class ArraySort extends ScalarFunctionChain
 {
-    use EntryScalarFunction;
-
     public function __construct(
         private readonly ScalarFunction $ref,
         private readonly Sort $function,

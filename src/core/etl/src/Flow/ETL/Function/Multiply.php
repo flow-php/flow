@@ -6,10 +6,8 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class Multiply implements ScalarFunction
+final class Multiply extends ScalarFunctionChain
 {
-    use EntryScalarFunction;
-
     public function __construct(
         private readonly ScalarFunction $leftRef,
         private readonly ScalarFunction $rightRef

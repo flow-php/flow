@@ -6,10 +6,8 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class ToLower implements ScalarFunction
+final class ToLower extends ScalarFunctionChain
 {
-    use EntryScalarFunction;
-
     public function __construct(private ScalarFunction $ref)
     {
     }

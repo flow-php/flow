@@ -836,7 +836,7 @@ final class DataFrame
     /**
      * @lazy
      *
-     * @param array<string, \Flow\ETL\Function\ScalarFunction> $refs
+     * @param array<string, ScalarFunction> $refs
      */
     public function withEntries(array $refs) : self
     {
@@ -850,7 +850,7 @@ final class DataFrame
     /**
      * @lazy
      */
-    public function withEntry(string $entryName, Function\ScalarFunction|WindowFunction $ref) : self
+    public function withEntry(string $entryName, ScalarFunction|WindowFunction $ref) : self
     {
         if ($ref instanceof WindowFunction) {
             if (\count($ref->window()->partitions())) {

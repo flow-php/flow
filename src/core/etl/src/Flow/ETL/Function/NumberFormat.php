@@ -4,10 +4,8 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class NumberFormat implements ScalarFunction
+final class NumberFormat extends ScalarFunctionChain
 {
-    use EntryScalarFunction;
-
     public function __construct(
         private readonly ScalarFunction $ref,
         private readonly ScalarFunction $decimals,

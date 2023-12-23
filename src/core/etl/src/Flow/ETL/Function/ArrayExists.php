@@ -8,10 +8,8 @@ use function Flow\ArrayDot\array_dot_exists;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 
-final class ArrayExists implements ScalarFunction
+final class ArrayExists extends ScalarFunctionChain
 {
-    use EntryScalarFunction;
-
     public function __construct(
         private readonly ScalarFunction $ref,
         private readonly string $path

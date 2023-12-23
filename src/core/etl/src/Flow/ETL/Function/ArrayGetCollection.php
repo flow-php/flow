@@ -9,10 +9,8 @@ use Flow\ArrayDot\Exception\InvalidPathException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 
-final class ArrayGetCollection implements ScalarFunction
+final class ArrayGetCollection extends ScalarFunctionChain
 {
-    use EntryScalarFunction;
-
     public function __construct(
         private readonly ScalarFunction $ref,
         private readonly array $keys,

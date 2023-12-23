@@ -6,10 +6,8 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class GreaterThanEqual implements ScalarFunction
+final class GreaterThanEqual extends ScalarFunctionChain
 {
-    use EntryScalarFunction;
-
     public function __construct(
         private readonly ScalarFunction $base,
         private readonly ScalarFunction $next

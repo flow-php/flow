@@ -6,10 +6,8 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class Concat implements ScalarFunction
+final class Concat extends ScalarFunctionChain
 {
-    use EntryScalarFunction;
-
     /**
      * @var array<ScalarFunction>
      */

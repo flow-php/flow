@@ -7,10 +7,8 @@ namespace Flow\ETL\Function;
 use function Flow\ArrayDot\array_dot_rename;
 use Flow\ETL\Row;
 
-final class ArrayKeyRename implements ScalarFunction
+final class ArrayKeyRename extends ScalarFunctionChain
 {
-    use EntryScalarFunction;
-
     public function __construct(
         private readonly ScalarFunction $ref,
         private readonly string $path,

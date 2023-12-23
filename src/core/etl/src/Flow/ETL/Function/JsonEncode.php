@@ -6,10 +6,8 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class JsonEncode implements ScalarFunction
+final class JsonEncode extends ScalarFunctionChain
 {
-    use EntryScalarFunction;
-
     public function __construct(private readonly ScalarFunction $ref, private readonly int $flags = JSON_THROW_ON_ERROR)
     {
     }

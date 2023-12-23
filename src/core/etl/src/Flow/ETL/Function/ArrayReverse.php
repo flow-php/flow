@@ -6,10 +6,8 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class ArrayReverse implements ScalarFunction
+final class ArrayReverse extends ScalarFunctionChain
 {
-    use EntryScalarFunction;
-
     public function __construct(private readonly ScalarFunction $left, private readonly bool $preserveKeys)
     {
     }

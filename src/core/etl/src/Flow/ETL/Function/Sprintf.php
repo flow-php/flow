@@ -6,10 +6,8 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class Sprintf implements ScalarFunction
+final class Sprintf extends ScalarFunctionChain
 {
-    use EntryScalarFunction;
-
     /**
      * @var array<ScalarFunction>
      */

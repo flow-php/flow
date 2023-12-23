@@ -7,10 +7,8 @@ namespace Flow\ETL\Function;
 use Flow\ETL\Function\Trim\Type;
 use Flow\ETL\Row;
 
-final class Trim implements ScalarFunction
+final class Trim extends ScalarFunctionChain
 {
-    use EntryScalarFunction;
-
     public function __construct(
         private readonly ScalarFunction $ref,
         private readonly Type $type = Type::BOTH,

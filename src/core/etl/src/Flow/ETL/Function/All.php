@@ -6,10 +6,8 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class All implements ScalarFunction
+final class All extends ScalarFunctionChain
 {
-    use EntryScalarFunction;
-
     /**
      * @var array<ScalarFunction>
      */

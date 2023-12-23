@@ -9,10 +9,8 @@ use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
 
-final class IsType implements ScalarFunction
+final class IsType extends ScalarFunctionChain
 {
-    use EntryScalarFunction;
-
     /**
      * @var array<class-string<Entry>>
      */
