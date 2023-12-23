@@ -9,13 +9,16 @@ use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Extractor\Limitable;
 use Flow\ETL\Extractor\LimitableExtractor;
+use Flow\ETL\Extractor\PartitionFiltering;
+use Flow\ETL\Extractor\PartitionsExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\FlowContext;
 
-final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExtractor
+final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExtractor, PartitionsExtractor
 {
     use Limitable;
+    use PartitionFiltering;
 
     /**
      * In order to iterate only over <element> nodes us root/elements/element.
@@ -43,7 +46,7 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
-        foreach ($context->streams()->fs()->scan($this->path, $context->partitionFilter()) as $filePath) {
+        foreach ($context->streams()->fs()->scan($this->path, $this->partitionFilter()) as $filePath) {
             $xmlReader = new \XMLReader();
             $xmlReader->open($filePath->path());
 

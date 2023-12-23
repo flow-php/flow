@@ -8,6 +8,7 @@ use function Flow\ETL\DSL\to_output;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\InvalidFileFormatException;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Extractor\PartitionsExtractor;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Formatter\AsciiTableFormatter;
 use Flow\ETL\Function\AggregatingFunction;
@@ -343,12 +344,19 @@ final class DataFrame
      */
     public function filterPartitions(Partition\PartitionFilter|ScalarFunction $filter) : self
     {
+        $extractor = $this->pipeline->source();
+
+        if (!$extractor instanceof PartitionsExtractor) {
+            throw new RuntimeException('filterPartitions can be used only with extractors that implement PartitionsExtractor interface');
+        }
+
         if ($filter instanceof Partition\PartitionFilter) {
-            $this->context->filterPartitions($filter);
+            $extractor->setPartitionFilter($filter);
 
             return $this;
         }
-        $this->context->filterPartitions(new ScalarFunctionFilter($filter, $this->context->entryFactory()));
+
+        $extractor->setPartitionFilter(new ScalarFunctionFilter($filter, $this->context->entryFactory()));
 
         return $this;
     }

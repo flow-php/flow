@@ -82,8 +82,6 @@ final class PartitioningTest extends IntegrationTestCase
 
     public function test_pruning_multiple_partitions() : void
     {
-        $this->markTestSkipped();
-
         df()
             ->read(from_text(__DIR__ . '/Fixtures/Partitioning/multi_partition_pruning_test/year=*/month=*/day=*/*.txt'))
             ->withEntry('test', ref('year')->concat(lit('-'), ref('month')->strPadLeft(2, '0'), lit('-'), ref('day')->strPadLeft(2, '0')))
