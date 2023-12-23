@@ -46,7 +46,7 @@ final class JsonLoader implements Closure, Loader, Loader\FileLoader
     {
         foreach ($context->streams() as $stream) {
             if ($stream->path()->extension() === 'json') {
-                $this->close($stream);
+                \fwrite($stream->resource(), ']');
             }
         }
 
@@ -60,10 +60,8 @@ final class JsonLoader implements Closure, Loader, Loader\FileLoader
 
     public function load(Rows $rows, FlowContext $context) : void
     {
-        if ($context->partitionEntries()->count()) {
-            foreach ($rows->partitionBy(...$context->partitionEntries()->all()) as $partitionedRows) {
-                $this->write($partitionedRows, $partitionedRows->partitions()->toArray(), $context);
-            }
+        if ($rows->partitions()->count()) {
+            $this->write($rows, $rows->partitions()->toArray(), $context);
         } else {
             $this->write($rows, [], $context);
         }
@@ -79,7 +77,11 @@ final class JsonLoader implements Closure, Loader, Loader\FileLoader
         if (!$streams->isOpen($this->path, $partitions)) {
             $stream = $streams->open($this->path, 'json', $context->appendSafe(), $partitions);
 
-            $this->init($stream);
+            if (!\array_key_exists($stream->path()->path(), $this->writes)) {
+                $this->writes[$stream->path()->path()] = 0;
+            }
+
+            \fwrite($stream->resource(), '[');
         } else {
             $stream = $streams->open($this->path, 'json', $context->appendSafe(), $partitions);
         }
@@ -106,24 +108,5 @@ final class JsonLoader implements Closure, Loader, Loader\FileLoader
         \fwrite($stream->resource(), $json);
 
         $this->writes[$stream->path()->path()]++;
-    }
-
-    private function close(FileStream $stream) : void
-    {
-        \fwrite($stream->resource(), ']');
-    }
-
-    /**
-     * @param FileStream $stream
-     *
-     * @throws RuntimeException
-     */
-    private function init(FileStream $stream) : void
-    {
-        if (!\array_key_exists($stream->path()->path(), $this->writes)) {
-            $this->writes[$stream->path()->path()] = 0;
-        }
-
-        \fwrite($stream->resource(), '[');
     }
 }

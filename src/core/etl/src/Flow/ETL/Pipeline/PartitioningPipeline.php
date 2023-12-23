@@ -6,6 +6,7 @@ namespace Flow\ETL\Pipeline;
 
 use function Flow\ETL\DSL\from_all;
 use function Flow\ETL\DSL\from_cache;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\CollectingExtractor;
 use Flow\ETL\FlowContext;
@@ -21,10 +22,20 @@ final class PartitioningPipeline implements OverridingPipeline, Pipeline
 
     /**
      * @param Pipeline $pipeline
+     * @param array<Reference> $partitionBy
      * @param array<Reference> $orderBy
+     *
+     * @throws InvalidArgumentException
      */
-    public function __construct(private readonly Pipeline $pipeline, private readonly array $orderBy = [])
-    {
+    public function __construct(
+        private readonly Pipeline $pipeline,
+        private readonly array $partitionBy = [],
+        private readonly array $orderBy = []
+    ) {
+        if (!\count($this->partitionBy)) {
+            throw new InvalidArgumentException('PartitioningPipeline requires at least one partitionBy entry');
+        }
+
         $this->nextPipeline = $this->pipeline->cleanCopy();
     }
 
@@ -80,7 +91,7 @@ final class PartitioningPipeline implements OverridingPipeline, Pipeline
         $partitionIds = [];
 
         foreach ($this->pipeline->process($context) as $rows) {
-            foreach ($rows->partitionBy(...$context->partitionEntries()->all()) as $partitionedRows) {
+            foreach ($rows->partitionBy(...$this->partitionBy) as $partitionedRows) {
 
                 $rows = $partitionedRows->sortBy(...$this->orderBy);
 

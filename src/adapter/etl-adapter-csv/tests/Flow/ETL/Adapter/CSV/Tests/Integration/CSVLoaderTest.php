@@ -146,8 +146,8 @@ CSV,
                     Row::create(int_entry('id', 4), int_entry('group', 2)),
                 )
             )
-            ->load(to_csv($path))
             ->partitionBy('group')
+            ->load(to_csv($path))
             ->run();
 
         $partitions = \array_values(\array_diff(\scandir($path), ['..', '.']));

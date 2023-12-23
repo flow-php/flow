@@ -591,8 +591,7 @@ final class DataFrame
     {
         \array_unshift($entries, $entry);
 
-        $this->context->partitionBy(...References::init(...$entries)->all());
-        $this->pipeline = new PartitioningPipeline($this->pipeline);
+        $this->pipeline = new PartitioningPipeline($this->pipeline, References::init(...$entries)->all());
 
         return $this;
     }
@@ -862,8 +861,7 @@ final class DataFrame
     {
         if ($ref instanceof WindowFunction) {
             if (\count($ref->window()->partitions())) {
-                $this->context->partitionBy(...$ref->window()->partitions());
-                $this->pipeline = new PartitioningPipeline($this->pipeline, $ref->window()->order());
+                $this->pipeline = new PartitioningPipeline($this->pipeline, $ref->window()->partitions(), $ref->window()->order());
             } else {
                 $this->collect();
 

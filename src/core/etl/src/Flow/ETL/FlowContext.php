@@ -7,8 +7,6 @@ namespace Flow\ETL;
 use Flow\ETL\ErrorHandler\ThrowError;
 use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Row\EntryFactory;
-use Flow\ETL\Row\Reference;
-use Flow\ETL\Row\References;
 use Flow\Serializer\Serializer;
 
 /**
@@ -21,12 +19,9 @@ final class FlowContext
 
     private ErrorHandler $errorHandler;
 
-    private References $partitions;
-
     public function __construct(public readonly Config $config)
     {
         $this->errorHandler = new ThrowError();
-        $this->partitions = new References();
     }
 
     public function appendSafe() : bool
@@ -47,18 +42,6 @@ final class FlowContext
     public function errorHandler() : ErrorHandler
     {
         return $this->errorHandler;
-    }
-
-    public function partitionBy(string|Reference ...$entry) : self
-    {
-        $this->partitions = References::init(...$entry);
-
-        return $this;
-    }
-
-    public function partitionEntries() : References
-    {
-        return $this->partitions;
     }
 
     public function serializer() : Serializer
