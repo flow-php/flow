@@ -14,7 +14,7 @@ require __DIR__ . '/../../../bootstrap.php';
 $flow = (new Flow())
     ->read(from_csv(__FLOW_DATA__ . '/partitioned'))
     ->collect()
-    ->filterPartitions(ref('t_shirt_color')->equals(lit('green')))
+    ->filter(ref('t_shirt_color')->equals(lit('green')))
     ->sortBy(ref('id'))
     ->write(to_output());
 

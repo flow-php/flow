@@ -6,7 +6,7 @@ use Flow\ETL\Partition\PartitionFilter;
 
 interface PartitionsExtractor
 {
-    public function partitionFilter() : ?PartitionFilter;
+    public function addPartitionFilter(PartitionFilter $filter) : void;
 
-    public function setPartitionFilter(PartitionFilter $filter) : void;
+    public function partitionFilter() : ?PartitionFilter;
 }

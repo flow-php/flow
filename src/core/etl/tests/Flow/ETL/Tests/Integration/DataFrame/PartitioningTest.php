@@ -3,7 +3,6 @@
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use function Flow\ETL\Adapter\Text\from_text;
-use function Flow\ETL\DSL\all;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_entry;
@@ -14,7 +13,6 @@ use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\rows_partitioned;
 use function Flow\ETL\DSL\str_entry;
-use function Flow\ETL\DSL\to_output;
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
 
 final class PartitioningTest extends IntegrationTestCase
@@ -68,21 +66,22 @@ final class PartitioningTest extends IntegrationTestCase
 
     public function test_pruning_multiple_partitions() : void
     {
-        df()
+        $rows = df()
             ->read(from_text(__DIR__ . '/Fixtures/Partitioning/multi_partition_pruning_test/year=*/month=*/day=*/*.txt'))
-            ->filter(all(
-                ref('year')->cast('int')->greaterThanEqual(lit(2023)),
-                ref('month')->cast('int')->greaterThanEqual(lit(1)),
-            ))
+            ->filter(ref('year')->cast('int')->greaterThanEqual(lit(2023)))
+            ->filter(ref('month')->cast('int')->greaterThanEqual(lit(1)))
+            ->filter(ref('day')->cast('int')->lessThan(lit(3)))
+            ->filter(ref('text')->notEquals(lit('dupa')))
+            ->withEntry('day', ref('day')->cast('int'))
             ->collect()
-            ->write(to_output())
-            ->run();
+            ->fetch();
+
+        $this->assertCount(2, $rows);
+        $this->assertSame([1, 2], $rows->reduceToArray('day'));
     }
 
     public function test_pruning_single_partition() : void
     {
-        $this->markTestSkipped('Partition pruning is not supported yet');
-
         $rows = df()
             ->read(from_text(__DIR__ . '/Fixtures/Partitioning/multi_partition_pruning_test/year=*/month=*/day=*/*.txt'))
             ->filter(ref('year')->concat(lit('-'), ref('month')->strPadLeft(2, '0'), lit('-'), ref('day')->strPadLeft(2, '0'))->cast('date')->greaterThanEqual(lit(new \DateTimeImmutable('2023-01-01'))))
@@ -90,7 +89,6 @@ final class PartitioningTest extends IntegrationTestCase
             ->select('year')
             ->withEntry('year', ref('year')->cast('int'))
             ->groupBy(ref('year'))
-            ->write(to_output())
             ->fetch();
 
         $this->assertCount(1, $rows);

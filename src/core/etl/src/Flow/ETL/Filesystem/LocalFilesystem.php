@@ -7,6 +7,7 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Filesystem;
 use Flow\ETL\Filesystem\Stream\FileStream;
 use Flow\ETL\Filesystem\Stream\Mode;
+use Flow\ETL\Partition\NoopFilter;
 use Flow\ETL\Partition\PartitionFilter;
 use Webmozart\Glob\Glob;
 
@@ -121,7 +122,7 @@ final class LocalFilesystem implements Filesystem
         }
     }
 
-    public function scan(Path $path, PartitionFilter $partitionFilter) : \Generator
+    public function scan(Path $path, PartitionFilter $partitionFilter = new NoopFilter()) : \Generator
     {
         if (!$path->isLocal()) {
             throw new RuntimeException(\sprintf('Path "%s" is not local', $path->uri()));

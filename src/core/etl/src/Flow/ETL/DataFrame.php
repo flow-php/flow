@@ -342,6 +342,8 @@ final class DataFrame
     }
 
     /**
+     * @deprecated please use DataFrame::filter instead, this method will be removed in next major release
+     *
      * @lazy
      */
     public function filterPartitions(Partition\PartitionFilter|ScalarFunction $filter) : self
@@ -353,12 +355,12 @@ final class DataFrame
         }
 
         if ($filter instanceof Partition\PartitionFilter) {
-            $extractor->setPartitionFilter($filter);
+            $extractor->addPartitionFilter($filter);
 
             return $this;
         }
 
-        $extractor->setPartitionFilter(new ScalarFunctionFilter($filter, $this->context->entryFactory()));
+        $extractor->addPartitionFilter(new ScalarFunctionFilter($filter, $this->context->entryFactory()));
 
         return $this;
     }
