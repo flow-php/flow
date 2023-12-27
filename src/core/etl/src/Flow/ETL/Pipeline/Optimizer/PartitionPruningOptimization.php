@@ -4,6 +4,7 @@ namespace Flow\ETL\Pipeline\Optimizer;
 
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Extractor\PartitionsExtractor;
+use Flow\ETL\Filesystem;
 use Flow\ETL\Function\All;
 use Flow\ETL\Function\Any;
 use Flow\ETL\Function\CompositeScalarFunction;
@@ -11,6 +12,7 @@ use Flow\ETL\Function\CompositeScalarFunction\CompositeScalarFunctionIterator;
 use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Function\ScalarFunctionChain;
 use Flow\ETL\Loader;
+use Flow\ETL\Partition\NoopFilter;
 use Flow\ETL\Partition\ScalarFunctionFilter;
 use Flow\ETL\Pipeline;
 use Flow\ETL\Row\EntryFactory;
@@ -21,8 +23,10 @@ use Flow\ETL\Transformer\ScalarFunctionFilterTransformer;
 
 final class PartitionPruningOptimization implements Optimization
 {
-    public function __construct(private readonly EntryFactory $entryFactory = new NativeEntryFactory())
-    {
+    public function __construct(
+        private readonly Filesystem $filesystem,
+        private readonly EntryFactory $entryFactory = new NativeEntryFactory()
+    ) {
     }
 
     public function isFor(Loader|Transformer $element, Pipeline $pipeline) : bool

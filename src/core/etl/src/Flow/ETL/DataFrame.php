@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL;
 
 use function Flow\ETL\DSL\to_output;
+use Flow\ETL\DataFrame\GroupedDataFrame;
+use Flow\ETL\DataFrame\PartitionedDataFrame;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\InvalidFileFormatException;
 use Flow\ETL\Exception\RuntimeException;
@@ -121,7 +123,7 @@ final class DataFrame
      *
      * @throws InvalidArgumentException
      */
-    public function aggregate(AggregatingFunction ...$aggregations) : self
+    public function aggregate(AggregatingFunction ...$aggregations) : GroupedDataFrame
     {
         if (!$this->pipeline instanceof GroupByPipeline) {
             $this->pipeline = new GroupByPipeline(new GroupBy(), $this->pipeline);
@@ -129,7 +131,7 @@ final class DataFrame
 
         $this->pipeline->groupBy->aggregate(...$aggregations);
 
-        return $this;
+        return new GroupedDataFrame($this);
     }
 
     /**
@@ -446,11 +448,11 @@ final class DataFrame
     /**
      * @lazy
      */
-    public function groupBy(string|Reference ...$entries) : self
+    public function groupBy(string|Reference ...$entries) : GroupedDataFrame
     {
         $this->pipeline = new GroupByPipeline(new GroupBy(...$entries), $this->pipeline);
 
-        return $this;
+        return new GroupedDataFrame($this);
     }
 
     /**
@@ -587,13 +589,13 @@ final class DataFrame
     /**
      * @lazy
      */
-    public function partitionBy(string|Reference $entry, string|Reference ...$entries) : self
+    public function partitionBy(string|Reference $entry, string|Reference ...$entries) : PartitionedDataFrame
     {
         \array_unshift($entries, $entry);
 
         $this->pipeline = new PartitioningPipeline($this->pipeline, References::init(...$entries)->all());
 
-        return $this;
+        return new PartitionedDataFrame($this);
     }
 
     public function pivot(Reference $ref) : self

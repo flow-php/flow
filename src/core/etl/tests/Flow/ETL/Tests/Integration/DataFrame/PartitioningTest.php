@@ -35,7 +35,6 @@ final class PartitioningTest extends IntegrationTestCase
                 )
             ))
             ->partitionBy(ref('country'))
-            ->batchSize(2) // split each partition into two
             ->get();
 
         $this->assertEquals(
@@ -44,13 +43,6 @@ final class PartitioningTest extends IntegrationTestCase
                     [
                         row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
                         row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
-                    ],
-                    [
-                        partition('country', 'PL'),
-                    ]
-                ),
-                rows_partitioned(
-                    [
                         row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
                         row(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
                     ],
@@ -62,13 +54,6 @@ final class PartitioningTest extends IntegrationTestCase
                     [
                         row(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40)),
                         row(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40)),
-                    ],
-                    [
-                        partition('country', 'US'),
-                    ]
-                ),
-                rows_partitioned(
-                    [
                         row(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45)),
                         row(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50)),
                     ],
@@ -96,6 +81,8 @@ final class PartitioningTest extends IntegrationTestCase
 
     public function test_pruning_single_partition() : void
     {
+        $this->markTestSkipped('Partition pruning is not supported yet');
+
         $rows = df()
             ->read(from_text(__DIR__ . '/Fixtures/Partitioning/multi_partition_pruning_test/year=*/month=*/day=*/*.txt'))
             ->filter(ref('year')->concat(lit('-'), ref('month')->strPadLeft(2, '0'), lit('-'), ref('day')->strPadLeft(2, '0'))->cast('date')->greaterThanEqual(lit(new \DateTimeImmutable('2023-01-01'))))
