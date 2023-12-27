@@ -334,7 +334,7 @@ final class DataFrame
      */
     public function filter(ScalarFunction $function) : self
     {
-        $this->pipeline->add(new ScalarFunctionFilterTransformer($function));
+        $this->pipeline = $this->context->config->optimizer()->optimize(new ScalarFunctionFilterTransformer($function), $this->pipeline);
 
         return $this;
     }

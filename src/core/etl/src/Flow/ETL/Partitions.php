@@ -43,6 +43,17 @@ final class Partitions implements \ArrayAccess, \Countable, \IteratorAggregate, 
         return new \ArrayIterator($this->partitions);
     }
 
+    public function has(string $name) : bool
+    {
+        foreach ($this->partitions as $partition) {
+            if ($partition->name === $name) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function id() : string
     {
         $id = '|';

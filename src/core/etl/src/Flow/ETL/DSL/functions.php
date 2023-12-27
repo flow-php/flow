@@ -699,12 +699,12 @@ function call_method(ScalarFunction $object, ScalarFunction $method, ScalarFunct
     return new CallMethod($object, $method, ...$params);
 }
 
-function all(ScalarFunction ...$functions) : ScalarFunction
+function all(ScalarFunction ...$functions) : All
 {
     return new All(...$functions);
 }
 
-function any(ScalarFunction ...$functions) : ScalarFunction
+function any(ScalarFunction ...$functions) : Any
 {
     return new Any(...$functions);
 }

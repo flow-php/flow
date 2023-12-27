@@ -16,7 +16,7 @@ use Flow\ETL\Transformer;
 final class ScalarFunctionFilterTransformer implements Transformer
 {
     public function __construct(
-        private readonly ScalarFunction $function
+        public readonly ScalarFunction $function
     ) {
     }
 

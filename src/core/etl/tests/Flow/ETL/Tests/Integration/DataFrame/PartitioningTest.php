@@ -3,6 +3,7 @@
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use function Flow\ETL\Adapter\Text\from_text;
+use function Flow\ETL\DSL\all;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_entry;
@@ -84,9 +85,28 @@ final class PartitioningTest extends IntegrationTestCase
     {
         df()
             ->read(from_text(__DIR__ . '/Fixtures/Partitioning/multi_partition_pruning_test/year=*/month=*/day=*/*.txt'))
-            ->withEntry('test', ref('year')->concat(lit('-'), ref('month')->strPadLeft(2, '0'), lit('-'), ref('day')->strPadLeft(2, '0')))
-//            ->collect()
+            ->filter(all(
+                ref('year')->cast('int')->greaterThanEqual(lit(2023)),
+                ref('month')->cast('int')->greaterThanEqual(lit(1)),
+            ))
+            ->collect()
             ->write(to_output())
             ->run();
+    }
+
+    public function test_pruning_single_partition() : void
+    {
+        $rows = df()
+            ->read(from_text(__DIR__ . '/Fixtures/Partitioning/multi_partition_pruning_test/year=*/month=*/day=*/*.txt'))
+            ->filter(ref('year')->concat(lit('-'), ref('month')->strPadLeft(2, '0'), lit('-'), ref('day')->strPadLeft(2, '0'))->cast('date')->greaterThanEqual(lit(new \DateTimeImmutable('2023-01-01'))))
+            ->collect()
+            ->select('year')
+            ->withEntry('year', ref('year')->cast('int'))
+            ->groupBy(ref('year'))
+            ->write(to_output())
+            ->fetch();
+
+        $this->assertCount(1, $rows);
+        $this->assertSame(2023, $rows->first()->valueOf('year'));
     }
 }

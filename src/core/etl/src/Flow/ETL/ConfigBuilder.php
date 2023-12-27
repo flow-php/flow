@@ -48,6 +48,7 @@ final class ConfigBuilder
     {
         $this->id ??= \uniqid('flow_php', true);
         $this->serializer ??= new CompressingSerializer();
+        $entryFactory = new NativeEntryFactory();
         $cachePath = \is_string(\getenv(Config::CACHE_DIR_ENV)) && \realpath(\getenv(Config::CACHE_DIR_ENV))
             ? \getenv(Config::CACHE_DIR_ENV)
             : \sys_get_temp_dir() . '/flow_php/';
@@ -85,6 +86,7 @@ final class ConfigBuilder
         $this->optimizer ??= new Optimizer(
             new Optimizer\LimitOptimization(),
             new Optimizer\BatchSizeOptimization(batchSize: 1000),
+            new Optimizer\PartitionPruningOptimization($entryFactory)
         );
 
         return new Config(
@@ -95,7 +97,7 @@ final class ConfigBuilder
             new FilesystemStreams($this->filesystem),
             $this->optimizer,
             $this->putInputIntoRows,
-            new NativeEntryFactory()
+            $entryFactory
         );
     }
 
