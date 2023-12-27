@@ -19,7 +19,7 @@ $df = df()
         Row::with(int_entry('id', 2), array_entry('array', ['d' => 4, 'e' => 5, 'f' => 6])),
     )))
     ->write(to_output(false))
-    ->withEntry('unpacked', ref('array')->unpackResults())
+    ->withEntry('unpacked', ref('array')->unpack())
     ->write(to_output(false));
 
 if ($_ENV['FLOW_PHAR_APP'] ?? false) {
