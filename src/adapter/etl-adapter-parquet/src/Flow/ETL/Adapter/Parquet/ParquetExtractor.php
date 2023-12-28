@@ -7,19 +7,22 @@ use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Extractor\Limitable;
 use Flow\ETL\Extractor\LimitableExtractor;
+use Flow\ETL\Extractor\PartitionFiltering;
+use Flow\ETL\Extractor\PartitionsExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Partition;
+use Flow\ETL\Partitions;
 use Flow\Parquet\ByteOrder;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile;
 use Flow\Parquet\Reader;
 
-final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtractor
+final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtractor, PartitionsExtractor
 {
     use Limitable;
+    use PartitionFiltering;
 
     /**
      * @param Path $path
@@ -65,11 +68,11 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
     }
 
     /**
-     * @return \Generator<int, array{file: ParquetFile, uri: string, partitions: array<Partition>}>
+     * @return \Generator<int, array{file: ParquetFile, uri: string, partitions: Partitions}>
      */
     private function readers(FlowContext $context) : \Generator
     {
-        foreach ($context->streams()->fs()->scan($this->path, $context->partitionFilter()) as $filePath) {
+        foreach ($context->streams()->fs()->scan($this->path, $this->partitionFilter()) as $filePath) {
             yield [
                 'file' => (new Reader(
                     byteOrder: $this->byteOrder,

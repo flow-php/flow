@@ -6,7 +6,7 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class Sanitize implements ScalarFunction
+final class Sanitize extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction $ref,

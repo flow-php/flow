@@ -6,7 +6,7 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class PregReplace implements ScalarFunction
+final class PregReplace extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction $pattern,

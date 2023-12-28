@@ -6,7 +6,7 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class DateTimeFormat implements ScalarFunction
+final class DateTimeFormat extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction $ref,

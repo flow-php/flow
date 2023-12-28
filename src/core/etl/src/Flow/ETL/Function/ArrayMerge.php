@@ -9,7 +9,7 @@ use Flow\ETL\Row;
 /**
  * Scalar function that takes two other functions, checks if both of them are arrays and merges them.
  */
-final class ArrayMerge implements ScalarFunction
+final class ArrayMerge extends ScalarFunctionChain
 {
     public function __construct(private readonly ScalarFunction $left, private readonly ScalarFunction $right)
     {

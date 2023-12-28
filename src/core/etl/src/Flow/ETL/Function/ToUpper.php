@@ -6,7 +6,7 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class ToUpper implements ScalarFunction
+final class ToUpper extends ScalarFunctionChain
 {
     public function __construct(private ScalarFunction $ref)
     {

@@ -142,7 +142,7 @@ final class FlysystemFS implements Filesystem
      *
      * @return \Generator<Path>
      */
-    public function scan(Path $path, PartitionFilter $partitionFilter) : \Generator
+    public function scan(Path $path, PartitionFilter $partitionFilter = new NoopFilter()) : \Generator
     {
         $fs = $this->factory->create($path);
 
@@ -163,7 +163,7 @@ final class FlysystemFS implements Filesystem
                 }
             }
 
-            return $partitionFilter->keep(...(new Path(DIRECTORY_SEPARATOR . $file->path()))->partitions());
+            return $partitionFilter->keep(...(new Path(DIRECTORY_SEPARATOR . $file->path()))->partitions()->toArray());
         };
 
         /**

@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL;
 
 use function Flow\ETL\DSL\to_output;
+use Flow\ETL\DataFrame\GroupedDataFrame;
+use Flow\ETL\DataFrame\PartitionedDataFrame;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\InvalidFileFormatException;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Extractor\PartitionsExtractor;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Formatter\AsciiTableFormatter;
 use Flow\ETL\Function\AggregatingFunction;
@@ -120,7 +123,7 @@ final class DataFrame
      *
      * @throws InvalidArgumentException
      */
-    public function aggregate(AggregatingFunction ...$aggregations) : self
+    public function aggregate(AggregatingFunction ...$aggregations) : GroupedDataFrame
     {
         if (!$this->pipeline instanceof GroupByPipeline) {
             $this->pipeline = new GroupByPipeline(new GroupBy(), $this->pipeline);
@@ -128,7 +131,7 @@ final class DataFrame
 
         $this->pipeline->groupBy->aggregate(...$aggregations);
 
-        return $this;
+        return new GroupedDataFrame($this);
     }
 
     /**
@@ -319,18 +322,6 @@ final class DataFrame
             $clone->limit($limit);
         }
 
-        if ($clone->context->partitionEntries()->count()) {
-            $rows = new Rows();
-
-            foreach ($clone->pipeline->process($clone->context) as $nextRows) {
-                if ($clone->context->partitionFilter()->keep(...$nextRows->partitions()->toArray())) {
-                    $rows = $rows->merge($nextRows);
-                }
-            }
-
-            return $rows;
-        }
-
         $rows = new Rows();
 
         foreach ($clone->pipeline->process($clone->context) as $nextRows) {
@@ -352,15 +343,24 @@ final class DataFrame
 
     /**
      * @lazy
+     *
+     * @throws RuntimeException
      */
     public function filterPartitions(Partition\PartitionFilter|ScalarFunction $filter) : self
     {
+        $extractor = $this->pipeline->source();
+
+        if (!$extractor instanceof PartitionsExtractor) {
+            throw new RuntimeException('filterPartitions can be used only with extractors that implement PartitionsExtractor interface');
+        }
+
         if ($filter instanceof Partition\PartitionFilter) {
-            $this->context->filterPartitions($filter);
+            $extractor->addPartitionFilter($filter);
 
             return $this;
         }
-        $this->context->filterPartitions(new ScalarFunctionFilter($filter, $this->context->entryFactory()));
+
+        $extractor->addPartitionFilter(new ScalarFunctionFilter($filter, $this->context->entryFactory()));
 
         return $this;
     }
@@ -450,11 +450,11 @@ final class DataFrame
     /**
      * @lazy
      */
-    public function groupBy(string|Reference ...$entries) : self
+    public function groupBy(string|Reference ...$entries) : GroupedDataFrame
     {
         $this->pipeline = new GroupByPipeline(new GroupBy(...$entries), $this->pipeline);
 
-        return $this;
+        return new GroupedDataFrame($this);
     }
 
     /**
@@ -591,14 +591,13 @@ final class DataFrame
     /**
      * @lazy
      */
-    public function partitionBy(string|Reference $entry, string|Reference ...$entries) : self
+    public function partitionBy(string|Reference $entry, string|Reference ...$entries) : PartitionedDataFrame
     {
         \array_unshift($entries, $entry);
 
-        $this->context->partitionBy(...References::init(...$entries)->all());
-        $this->pipeline = new PartitioningPipeline($this->pipeline);
+        $this->pipeline = new PartitioningPipeline($this->pipeline, References::init(...$entries)->all());
 
-        return $this;
+        return new PartitionedDataFrame($this);
     }
 
     public function pivot(Reference $ref) : self
@@ -848,7 +847,7 @@ final class DataFrame
     /**
      * @lazy
      *
-     * @param array<string, \Flow\ETL\Function\ScalarFunction> $refs
+     * @param array<string, ScalarFunction> $refs
      */
     public function withEntries(array $refs) : self
     {
@@ -862,12 +861,11 @@ final class DataFrame
     /**
      * @lazy
      */
-    public function withEntry(string $entryName, Function\ScalarFunction|WindowFunction $ref) : self
+    public function withEntry(string $entryName, ScalarFunction|WindowFunction $ref) : self
     {
         if ($ref instanceof WindowFunction) {
             if (\count($ref->window()->partitions())) {
-                $this->context->partitionBy(...$ref->window()->partitions());
-                $this->pipeline = new PartitioningPipeline($this->pipeline, $ref->window()->order());
+                $this->pipeline = new PartitioningPipeline($this->pipeline, $ref->window()->partitions(), $ref->window()->order());
             } else {
                 $this->collect();
 

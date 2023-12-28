@@ -261,7 +261,7 @@ JSON,
                 ['id' => 5, 'partition' => 'b'],
             ]))
             ->partitionBy(ref('partition'))
-            ->saveMode(exception_if_exists())
+            ->mode(exception_if_exists())
             ->write(to_json($path))
             ->run();
 

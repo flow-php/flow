@@ -99,7 +99,7 @@ final class ArrayGetCollectionTest extends TestCase
             [
                 'parent_id' => 1,
             ],
-            array_get_collection_first(ref('array_entry'), 'parent_id')->eval($row)
+            ref('array_entry')->arrayGetCollectionFirst('parent_id')->eval($row)
         );
     }
 

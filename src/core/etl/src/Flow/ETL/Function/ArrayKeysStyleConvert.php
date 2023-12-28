@@ -9,7 +9,7 @@ use Flow\ETL\Function\StyleConverter\StringStyles;
 use Flow\ETL\Row;
 use Jawira\CaseConverter\Convert;
 
-final class ArrayKeysStyleConvert implements ScalarFunction
+final class ArrayKeysStyleConvert extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction $ref,

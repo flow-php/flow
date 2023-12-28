@@ -6,7 +6,7 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class Any implements ScalarFunction
+final class Any extends ScalarFunctionChain implements CompositeScalarFunction
 {
     /**
      * @var array<ScalarFunction>
@@ -28,5 +28,13 @@ final class Any implements ScalarFunction
         }
 
         return false;
+    }
+
+    /**
+     * @return array<ScalarFunction>
+     */
+    public function functions() : array
+    {
+        return $this->refs;
     }
 }

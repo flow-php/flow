@@ -4,17 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row;
 
-use Flow\ETL\Function\EntryScalarFunction;
-use Flow\ETL\Function\ScalarFunction;
+use Flow\ETL\Function\ScalarFunctionChain;
 use Flow\ETL\Row;
 
 /**
  * @implements Reference<array{entry: string, alias: ?string}>
  */
-final class EntryReference implements Reference, ScalarFunction
+final class EntryReference extends ScalarFunctionChain implements Reference
 {
-    use EntryScalarFunction;
-
     private ?string $alias = null;
 
     private SortOrder $sort = SortOrder::ASC;

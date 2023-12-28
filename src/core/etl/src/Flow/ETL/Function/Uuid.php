@@ -11,7 +11,7 @@ if (!\class_exists(\Ramsey\Uuid\Uuid::class) && !\class_exists(\Symfony\Componen
     throw new RuntimeException("\Ramsey\Uuid\Uuid nor \Symfony\Component\Uid\Uuid class not found, please add 'ramsey/uuid' or 'symfony/uid' as a dependency to the project first.");
 }
 
-final class Uuid implements ScalarFunction
+final class Uuid extends ScalarFunctionChain
 {
     private function __construct(private readonly string $uuidVersion, private readonly ?ScalarFunction $ref = null)
     {

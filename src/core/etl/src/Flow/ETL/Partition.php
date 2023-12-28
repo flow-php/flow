@@ -54,10 +54,7 @@ final class Partition implements Serializable
         return $partitions;
     }
 
-    /**
-     * @return array<Partition>
-     */
-    public static function fromUri(string $uri) : array
+    public static function fromUri(string $uri) : Partitions
     {
         $regex = '/^([^\/\\\=:><|"?*]+)=([^\/\\\=:><|"?*]+)$/';
 
@@ -69,7 +66,7 @@ final class Partition implements Serializable
             }
         }
 
-        return $partitions;
+        return new Partitions(...$partitions);
     }
 
     public function __serialize() : array

@@ -466,7 +466,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
             $rows[] = $callable($row);
         }
 
-        return new self(...$rows);
+        return self::partitioned($rows, $this->partitions);
     }
 
     public function merge(self $rows) : self

@@ -14,7 +14,7 @@ if (!\interface_exists(\Money\MoneyParser::class)) {
     throw new RuntimeException("Money\MoneyParser class not found, please add moneyphp/money dependency to the project first.");
 }
 
-final class ToMoney implements ScalarFunction
+final class ToMoney extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction $amountRef,

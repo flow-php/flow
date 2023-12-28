@@ -4,7 +4,7 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class XPath implements ScalarFunction
+final class XPath extends ScalarFunctionChain
 {
     public function __construct(private readonly ScalarFunction $ref, private readonly string $path)
     {
@@ -12,7 +12,6 @@ final class XPath implements ScalarFunction
 
     /**
      * @psalm-suppress InvalidReturnStatement
-     * @psalm-suppress InvalidReturnType
      */
     public function eval(Row $row) : null|\DOMNode|array
     {

@@ -6,7 +6,7 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class EndsWith implements ScalarFunction
+final class EndsWith extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction $haystack,

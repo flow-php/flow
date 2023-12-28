@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\Stream;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Partition;
+use Flow\ETL\Partitions;
 use PHPUnit\Framework\TestCase;
 
 final class PathTest extends TestCase
@@ -42,11 +43,11 @@ final class PathTest extends TestCase
 
     public static function paths_with_partitions() : \Generator
     {
-        yield '/' => ['/', []];
-        yield 'file://path/without/partitions/file.csv' => ['file://path/without/partitions/file.csv', []];
-        yield 'file://path/country=US/file.csv' => ['file://path/country=US/file.csv', [new Partition('country', 'US')]];
-        yield 'file://path/country=US/region=america/file.csv' => ['file://path/country=US/region=america/file.csv', [new Partition('country', 'US'), new Partition('region', 'america')]];
-        yield 'file://path/country=*/file.csv' => ['file://path/country=*/file.csv', []];
+        yield '/' => ['/', new Partitions()];
+        yield 'file://path/without/partitions/file.csv' => ['file://path/without/partitions/file.csv', new Partitions()];
+        yield 'file://path/country=US/file.csv' => ['file://path/country=US/file.csv', new Partitions(new Partition('country', 'US'))];
+        yield 'file://path/country=US/region=america/file.csv' => ['file://path/country=US/region=america/file.csv', new Partitions(new Partition('country', 'US'), new Partition('region', 'america'))];
+        yield 'file://path/country=*/file.csv' => ['file://path/country=*/file.csv', new Partitions()];
     }
 
     public static function paths_with_static_parts() : \Generator
@@ -145,7 +146,7 @@ final class PathTest extends TestCase
     /**
      * @dataProvider paths_with_partitions
      */
-    public function test_partitions_in_path(string $uri, array $partitions) : void
+    public function test_partitions_in_path(string $uri, Partitions $partitions) : void
     {
         $this->assertEquals($partitions, (new Path($uri))->partitions());
     }

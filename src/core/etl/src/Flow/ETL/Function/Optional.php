@@ -4,10 +4,8 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class Optional implements ScalarFunction
+final class Optional extends ScalarFunctionChain
 {
-    use EntryScalarFunction;
-
     public function __construct(private readonly ScalarFunction $function)
     {
     }

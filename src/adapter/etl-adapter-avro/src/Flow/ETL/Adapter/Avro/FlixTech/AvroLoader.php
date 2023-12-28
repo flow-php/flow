@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Avro\FlixTech;
 
-use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
@@ -65,10 +64,6 @@ final class AvroLoader implements Closure, Loader, Loader\FileLoader
 
     public function load(Rows $rows, FlowContext $context) : void
     {
-        if ($context->partitionEntries()->count()) {
-            throw new RuntimeException('Partitioning is not supported yet');
-        }
-
         if ($this->schema === null) {
             if ($this->inferredSchema === null) {
                 $this->inferredSchema = $rows->schema();

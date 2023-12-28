@@ -6,7 +6,7 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class Power implements ScalarFunction
+final class Power extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction $leftRef,

@@ -26,7 +26,7 @@ final class LimitOptimizationTest extends TestCase
             (new LimitOptimization())->isFor(new LimitTransformer(10), new GroupByPipeline(new GroupBy(), new SynchronousPipeline()))
         );
         $this->assertFalse(
-            (new LimitOptimization())->isFor(new LimitTransformer(10), new PartitioningPipeline(new SynchronousPipeline()))
+            (new LimitOptimization())->isFor(new LimitTransformer(10), new PartitioningPipeline(new SynchronousPipeline(), [ref('group')]))
         );
         // Pipeline without extractor
         $this->assertFalse(
