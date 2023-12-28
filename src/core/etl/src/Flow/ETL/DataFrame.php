@@ -336,15 +336,15 @@ final class DataFrame
      */
     public function filter(ScalarFunction $function) : self
     {
-        $this->pipeline = $this->context->config->optimizer()->optimize(new ScalarFunctionFilterTransformer($function), $this->pipeline);
+        $this->pipeline->add(new ScalarFunctionFilterTransformer($function));
 
         return $this;
     }
 
     /**
-     * @deprecated please use DataFrame::filter instead, this method will be removed in next major release
-     *
      * @lazy
+     *
+     * @throws RuntimeException
      */
     public function filterPartitions(Partition\PartitionFilter|ScalarFunction $filter) : self
     {

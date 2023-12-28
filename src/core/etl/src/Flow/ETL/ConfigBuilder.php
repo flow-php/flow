@@ -85,8 +85,7 @@ final class ConfigBuilder
 
         $this->optimizer ??= new Optimizer(
             new Optimizer\LimitOptimization(),
-            new Optimizer\BatchSizeOptimization(batchSize: 1000),
-            new Optimizer\PartitionPruningOptimization($this->filesystem, $entryFactory)
+            new Optimizer\BatchSizeOptimization(batchSize: 1000)
         );
 
         return new Config(

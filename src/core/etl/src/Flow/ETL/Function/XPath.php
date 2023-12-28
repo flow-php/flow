@@ -12,7 +12,6 @@ final class XPath extends ScalarFunctionChain
 
     /**
      * @psalm-suppress InvalidReturnStatement
-     * @psalm-suppress InvalidReturnType
      */
     public function eval(Row $row) : null|\DOMNode|array
     {
