@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Function;
 
-use function Flow\ETL\DSL\array_get;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\to_memory;
@@ -25,7 +24,7 @@ final class ArrayGetTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('result', array_get(ref('array'), 'b'))
+            ->withEntry('result', ref('array')->arrayGet('b'))
             ->drop('array')
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();

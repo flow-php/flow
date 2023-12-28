@@ -13,22 +13,14 @@ use Flow\ETL\Row\Entry;
 
 abstract class ScalarFunctionChain implements ScalarFunction
 {
-    private null|ScalarFunctionChain $parentFunction = null;
-
     public function arrayGet(string $path) : self
     {
-        $function = new Function\ArrayGet($this, $path);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Function\ArrayGet($this, $path);
     }
 
     public function arrayGetCollection(string ...$keys) : self
     {
-        $function = new Function\ArrayGetCollection($this, $keys);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Function\ArrayGetCollection($this, $keys);
     }
 
     public function arrayGetCollectionFirst(string ...$keys) : self
@@ -38,130 +30,82 @@ abstract class ScalarFunctionChain implements ScalarFunction
 
     public function arrayMerge(ScalarFunction $ref) : self
     {
-        $function = new Function\ArrayMerge($this, $ref);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Function\ArrayMerge($this, $ref);
     }
 
     public function arrayMergeCollection() : self
     {
-        $function = new Function\ArrayMergeCollection($this);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Function\ArrayMergeCollection($this);
     }
 
     public function arrayReverse(bool $preserveKeys = false) : self
     {
-        $function = new Function\ArrayReverse($this, $preserveKeys);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Function\ArrayReverse($this, $preserveKeys);
     }
 
     public function arraySort(?string $algorithm = null, ?int $flags = null, bool $recursive = true) : self
     {
-        $function = new Function\ArraySort($this, $algorithm ? Sort::fromString($algorithm) : Sort::sort, $flags, $recursive);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Function\ArraySort($this, $algorithm ? Sort::fromString($algorithm) : Sort::sort, $flags, $recursive);
     }
 
     public function capitalize() : self
     {
-        $function = new Function\Capitalize($this);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Function\Capitalize($this);
     }
 
     public function cast(string $type) : self
     {
-        $function = new Cast($this, $type);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Cast($this, $type);
     }
 
     public function concat(ScalarFunction ...$params) : self
     {
-        $function = new Function\Concat($this, ...$params);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Function\Concat($this, ...$params);
     }
 
     public function contains(ScalarFunction $needle) : self
     {
-        $function = new Contains($this, $needle);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Contains($this, $needle);
     }
 
     public function dateFormat(string $format = 'Y-m-d') : self
     {
-        $function = new Function\DateTimeFormat($this, $format);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Function\DateTimeFormat($this, $format);
     }
 
     public function dateTimeFormat(string $format = 'Y-m-d H:i:s') : self
     {
-        $function = new Function\DateTimeFormat($this, $format);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Function\DateTimeFormat($this, $format);
     }
 
     public function divide(ScalarFunction $ref) : self
     {
-        $function = new Divide($this, $ref);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Divide($this, $ref);
     }
 
     public function domNodeAttribute(string $attribute) : self
     {
-        $function = new Function\DOMNodeAttribute($this, $attribute);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Function\DOMNodeAttribute($this, $attribute);
     }
 
     public function domNodeValue() : self
     {
-        $function = new Function\DOMNodeValue($this);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Function\DOMNodeValue($this);
     }
 
     public function endsWith(ScalarFunction $needle) : self
     {
-        $function = new EndsWith($this, $needle);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new EndsWith($this, $needle);
     }
 
     public function equals(ScalarFunction $ref) : self
     {
-        $function = new Equals($this, $ref);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Equals($this, $ref);
     }
 
     public function exists() : self
     {
-        $function = new Function\Exists($this);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Function\Exists($this);
     }
 
     /**
@@ -186,121 +130,67 @@ abstract class ScalarFunctionChain implements ScalarFunction
      */
     public function expand(string $expandEntryName = 'element', ArrayExpand $expand = ArrayExpand::VALUES) : self
     {
-        $function = new Function\ArrayExpand($this, $expand);
-        $function->setParentFunction($this);
-
-        return $function;
-    }
-
-    public function getRootFunction() : ?ScalarFunction
-    {
-        $parentFunction = $this->parentFunction;
-
-        if ($parentFunction === null) {
-            return $this;
-        }
-
-        while ($parentFunction->parentFunction !== null) {
-            $parentFunction = $parentFunction->parentFunction;
-        }
-
-        return $parentFunction;
+        return new Function\ArrayExpand($this, $expand);
     }
 
     public function greaterThan(ScalarFunction $ref) : self
     {
-        $function = new GreaterThan($this, $ref);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new GreaterThan($this, $ref);
     }
 
     public function greaterThanEqual(ScalarFunction $ref) : self
     {
-        $function = new GreaterThanEqual($this, $ref);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new GreaterThanEqual($this, $ref);
     }
 
     public function hash(string $algorithm = 'xxh128', bool $binary = false, array $options = []) : self
     {
-        $function = new Function\Hash($this, $algorithm, $binary, $options);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Function\Hash($this, $algorithm, $binary, $options);
     }
 
     public function isEven() : self
     {
-        $function = new Equals(new Mod($this, lit(2)), lit(0));
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Equals(new Mod($this, lit(2)), lit(0));
     }
 
     public function isFalse() : self
     {
-        $function = new Same($this, lit(false));
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Same($this, lit(false));
     }
 
     public function isIn(ScalarFunction $haystack) : self
     {
-        $function = new IsIn($haystack, $this);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new IsIn($haystack, $this);
     }
 
     public function isNotNull() : self
     {
-        $function = new IsNotNull($this);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new IsNotNull($this);
     }
 
     public function isNotNumeric() : self
     {
-        $function = new IsNotNumeric($this);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new IsNotNumeric($this);
     }
 
     public function isNull() : self
     {
-        $function = new IsNull($this);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new IsNull($this);
     }
 
     public function isNumeric() : self
     {
-        $function = new IsNumeric($this);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new IsNumeric($this);
     }
 
     public function isOdd() : self
     {
-        $function = new NotEquals(new Mod($this, lit(2)), lit(0));
-        $function->setParentFunction($this);
-
-        return $function;
+        return new NotEquals(new Mod($this, lit(2)), lit(0));
     }
 
     public function isTrue() : self
     {
-        $function = new Same($this, lit(true));
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Same($this, lit(true));
     }
 
     /**
@@ -312,106 +202,67 @@ abstract class ScalarFunctionChain implements ScalarFunction
             throw new InvalidArgumentException('isType expression requires at least one entryClass');
         }
 
-        $function = new IsType($this, ...$entryClass);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new IsType($this, ...$entryClass);
     }
 
     public function jsonDecode(int $flags = JSON_THROW_ON_ERROR) : self
     {
-        $function = new Function\JsonDecode($this, $flags);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Function\JsonDecode($this, $flags);
     }
 
     public function jsonEncode(int $flags = JSON_THROW_ON_ERROR) : self
     {
-        $function = new Function\JsonEncode($this, $flags);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Function\JsonEncode($this, $flags);
     }
 
     public function lessThan(ScalarFunction $ref) : self
     {
-        $function = new LessThan($this, $ref);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new LessThan($this, $ref);
     }
 
     public function lessThanEqual(ScalarFunction $ref) : self
     {
-        $function = new LessThanEqual($this, $ref);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new LessThanEqual($this, $ref);
     }
 
     public function literal(mixed $value) : self
     {
-        $function = new Literal($value);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Literal($value);
     }
 
     public function lower() : self
     {
-        $function = new Function\ToLower($this);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Function\ToLower($this);
     }
 
     public function method(ScalarFunction $method, ScalarFunction ...$params) : self
     {
-        $function = new Function\CallMethod($this, $method, ...$params);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Function\CallMethod($this, $method, ...$params);
     }
 
     public function minus(ScalarFunction $ref) : self
     {
-        $function = new Minus($this, $ref);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Minus($this, $ref);
     }
 
     public function mod(ScalarFunction $ref) : self
     {
-        $function = new Mod($this, $ref);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Mod($this, $ref);
     }
 
     public function multiply(ScalarFunction $ref) : self
     {
-        $function = new Multiply($this, $ref);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Multiply($this, $ref);
     }
 
     public function notEquals(ScalarFunction $ref) : self
     {
-        $function = new NotEquals($this, $ref);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new NotEquals($this, $ref);
     }
 
     public function notSame(ScalarFunction $ref) : self
     {
-        $function = new NotSame($this, $ref);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new NotSame($this, $ref);
     }
 
     public function numberFormat(?ScalarFunction $decimals = null, ?ScalarFunction $decimalSeparator = null, ?ScalarFunction $thousandsSeparator = null) : self
@@ -428,50 +279,32 @@ abstract class ScalarFunctionChain implements ScalarFunction
             $thousandsSeparator = lit(',');
         }
 
-        $function = new Function\NumberFormat($this, $decimals, $decimalSeparator, $thousandsSeparator);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Function\NumberFormat($this, $decimals, $decimalSeparator, $thousandsSeparator);
     }
 
     public function plus(ScalarFunction $ref) : self
     {
-        $function = new Plus($this, $ref);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Plus($this, $ref);
     }
 
     public function power(ScalarFunction $ref) : self
     {
-        $function = new Power($this, $ref);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Power($this, $ref);
     }
 
     public function regexMatch(ScalarFunction $pattern) : self
     {
-        $function = new Function\PregMatch($pattern, $this);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Function\PregMatch($pattern, $this);
     }
 
     public function regexMatchAll(ScalarFunction $pattern, ?ScalarFunction $flags = null) : self
     {
-        $function = new Function\PregMatchAll($pattern, $this, $flags);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Function\PregMatchAll($pattern, $this, $flags);
     }
 
     public function regexReplace(ScalarFunction $pattern, ScalarFunction $replacement) : self
     {
-        $function = new Function\PregReplace($pattern, $replacement, $this);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Function\PregReplace($pattern, $replacement, $this);
     }
 
     /**
@@ -480,87 +313,52 @@ abstract class ScalarFunctionChain implements ScalarFunction
      */
     public function round(ScalarFunction $precision, int $mode = PHP_ROUND_HALF_UP) : self
     {
-        $function = new Function\Round($this, $precision, $mode);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Function\Round($this, $precision, $mode);
     }
 
     public function same(ScalarFunction $ref) : self
     {
-        $function = new Same($this, $ref);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Same($this, $ref);
     }
 
     public function sanitize(?ScalarFunction $placeholder = null, ?ScalarFunction $skipCharacters = null) : self
     {
-        $function = new Function\Sanitize($this, $placeholder ?: new Function\Literal('*'), $skipCharacters ?: new Function\Literal(0));
-        $function->setParentFunction($this);
-
-        return $function;
-    }
-
-    public function setParentFunction(self $parentFunction) : void
-    {
-        $this->parentFunction = $parentFunction;
+        return new Function\Sanitize($this, $placeholder ?: new Function\Literal('*'), $skipCharacters ?: new Function\Literal(0));
     }
 
     public function size() : self
     {
-        $function = new Function\Size($this);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Function\Size($this);
     }
 
     public function sprintf(ScalarFunction ...$params) : self
     {
-        $function = new Function\Sprintf($this, ...$params);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Function\Sprintf($this, ...$params);
     }
 
     public function startsWith(ScalarFunction $needle) : self
     {
-        $function = new StartsWith($this, $needle);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new StartsWith($this, $needle);
     }
 
     public function strPad(int $length, string $pad_string = ' ', int $type = STR_PAD_RIGHT) : self
     {
-        $function = new Function\StrPad($this, $length, $pad_string, $type);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Function\StrPad($this, $length, $pad_string, $type);
     }
 
     public function strPadBoth(int $length, string $pad_string = ' ') : self
     {
-        $function = new Function\StrPad($this, $length, $pad_string, STR_PAD_BOTH);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Function\StrPad($this, $length, $pad_string, STR_PAD_BOTH);
     }
 
     public function strPadLeft(int $length, string $pad_string = ' ') : self
     {
-        $function = new Function\StrPad($this, $length, $pad_string, STR_PAD_LEFT);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Function\StrPad($this, $length, $pad_string, STR_PAD_LEFT);
     }
 
     public function strPadRight(int $length, string $pad_string = ' ') : self
     {
-        $function = new Function\StrPad($this, $length, $pad_string, STR_PAD_RIGHT);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Function\StrPad($this, $length, $pad_string, STR_PAD_RIGHT);
     }
 
     /**
@@ -569,10 +367,7 @@ abstract class ScalarFunctionChain implements ScalarFunction
      */
     public function strReplace(string|array $search, string|array $replace) : self
     {
-        $function = new Function\StrReplace($this, $search, $replace);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Function\StrReplace($this, $search, $replace);
     }
 
     /**
@@ -581,10 +376,7 @@ abstract class ScalarFunctionChain implements ScalarFunction
      */
     public function toDate(string $format = \DateTimeInterface::RFC3339, \DateTimeZone $timeZone = new \DateTimeZone('UTC')) : self
     {
-        $function = new Function\ToDate($this, $format, $timeZone);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Function\ToDate($this, $format, $timeZone);
     }
 
     /**
@@ -593,18 +385,12 @@ abstract class ScalarFunctionChain implements ScalarFunction
      */
     public function toDateTime(string $format = 'Y-m-d H:i:s', \DateTimeZone $timeZone = new \DateTimeZone('UTC')) : self
     {
-        $function = new Function\ToDateTime($this, $format, $timeZone);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Function\ToDateTime($this, $format, $timeZone);
     }
 
     public function trim(Trim\Type $type = Trim\Type::BOTH, string $characters = " \t\n\r\0\x0B") : self
     {
-        $function = new Function\Trim($this, $type, $characters);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Function\Trim($this, $type, $characters);
     }
 
     /**
@@ -628,25 +414,16 @@ abstract class ScalarFunctionChain implements ScalarFunction
      */
     public function unpack(array $skipKeys = [], ?string $entryPrefix = null) : self
     {
-        $function = new Function\ArrayUnpack($this, $skipKeys, $entryPrefix);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Function\ArrayUnpack($this, $skipKeys, $entryPrefix);
     }
 
     public function upper() : self
     {
-        $function = new Function\ToUpper($this);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Function\ToUpper($this);
     }
 
     public function xpath(string $string) : self
     {
-        $function = new Function\XPath($this, $string);
-        $function->setParentFunction($this);
-
-        return $function;
+        return new Function\XPath($this, $string);
     }
 }
