@@ -9,6 +9,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Function;
 use Flow\ETL\Function\ArrayExpand\ArrayExpand;
 use Flow\ETL\Function\ArraySort\Sort;
+use Flow\ETL\Function\Between\Boundary;
 use Flow\ETL\Row\Entry;
 
 abstract class ScalarFunctionChain implements ScalarFunction
@@ -46,6 +47,11 @@ abstract class ScalarFunctionChain implements ScalarFunction
     public function arraySort(?string $algorithm = null, ?int $flags = null, bool $recursive = true) : self
     {
         return new Function\ArraySort($this, $algorithm ? Sort::fromString($algorithm) : Sort::sort, $flags, $recursive);
+    }
+
+    public function between(ScalarFunction $lowerBoundRef, ScalarFunction $upperBoundRef, Boundary $boundary = Boundary::LEFT_INCLUSIVE) : self
+    {
+        return new Between($this, $lowerBoundRef, $upperBoundRef, $boundary);
     }
 
     public function capitalize() : self
