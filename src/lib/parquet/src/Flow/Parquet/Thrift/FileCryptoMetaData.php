@@ -37,7 +37,7 @@ class FileCryptoMetaData extends TBase
      * with encrypted footer. Files with plaintext footer store algorithm id
      * inside footer (FileMetaData structure).
      *
-     * @var \Flow\Parquet\Thrift\EncryptionAlgorithm
+     * @var EncryptionAlgorithm
      */
     public $encryption_algorithm;
 

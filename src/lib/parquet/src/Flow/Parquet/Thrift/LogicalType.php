@@ -104,67 +104,67 @@ class LogicalType extends TBase
     public static $isValidate = false;
 
     /**
-     * @var \Flow\Parquet\Thrift\BsonType
+     * @var BsonType
      */
     public $BSON;
 
     /**
-     * @var \Flow\Parquet\Thrift\DateType
+     * @var DateType
      */
     public $DATE;
 
     /**
-     * @var \Flow\Parquet\Thrift\DecimalType
+     * @var DecimalType
      */
     public $DECIMAL;
 
     /**
-     * @var \Flow\Parquet\Thrift\EnumType
+     * @var EnumType
      */
     public $ENUM;
 
     /**
-     * @var \Flow\Parquet\Thrift\IntType
+     * @var IntType
      */
     public $INTEGER;
 
     /**
-     * @var \Flow\Parquet\Thrift\JsonType
+     * @var JsonType
      */
     public $JSON;
 
     /**
-     * @var \Flow\Parquet\Thrift\ListType
+     * @var ListType
      */
     public $LIST;
 
     /**
-     * @var \Flow\Parquet\Thrift\MapType
+     * @var MapType
      */
     public $MAP;
 
     /**
-     * @var \Flow\Parquet\Thrift\StringType
+     * @var StringType
      */
     public $STRING;
 
     /**
-     * @var \Flow\Parquet\Thrift\TimeType
+     * @var TimeType
      */
     public $TIME;
 
     /**
-     * @var \Flow\Parquet\Thrift\TimestampType
+     * @var TimestampType
      */
     public $TIMESTAMP;
 
     /**
-     * @var \Flow\Parquet\Thrift\NullType
+     * @var NullType
      */
     public $UNKNOWN;
 
     /**
-     * @var \Flow\Parquet\Thrift\UUIDType
+     * @var UUIDType
      */
     public $UUID;
 

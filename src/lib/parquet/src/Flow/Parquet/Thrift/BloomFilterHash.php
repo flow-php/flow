@@ -31,7 +31,7 @@ class BloomFilterHash extends TBase
     /**
      * xxHash Strategy. *.
      *
-     * @var \Flow\Parquet\Thrift\XxHash
+     * @var XxHash
      */
     public $XXHASH;
 

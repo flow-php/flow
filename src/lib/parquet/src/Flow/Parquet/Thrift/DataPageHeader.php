@@ -81,7 +81,7 @@ class DataPageHeader extends TBase
     /**
      * Optional statistics for the data in this page*.
      *
-     * @var \Flow\Parquet\Thrift\Statistics
+     * @var Statistics
      */
     public $statistics;
 

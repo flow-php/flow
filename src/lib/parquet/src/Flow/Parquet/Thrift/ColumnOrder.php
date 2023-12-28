@@ -86,7 +86,7 @@ class ColumnOrder extends TBase
      *     - If the computed min value is zero (whether negative or positive),
      *       `-0.0` should be written into the min statistics field.
      *
-     * @var \Flow\Parquet\Thrift\TypeDefinedOrder
+     * @var TypeDefinedOrder
      */
     public $TYPE_ORDER;
 
