@@ -13,8 +13,8 @@ require __DIR__ . '/../../../bootstrap.php';
 
 $flow = (new Flow())
     ->read(from_csv(__FLOW_DATA__ . '/partitioned'))
-    ->filter(ref('country')->equals(lit('pl')))
-    ->filter(ref('t_shirt_color')->equals(lit('green')))
+    ->filterPartitions(ref('country')->equals(lit('pl')))
+    ->filterPartitions(ref('t_shirt_color')->equals(lit('green')))
     ->collect()
     ->sortBy(ref('id'))
     ->write(to_output());
