@@ -2,12 +2,12 @@
 
 namespace Flow\ETL\Function\Between;
 
-enum Boundary : string
+enum Boundary
 {
-    case EXCLUSIVE = 'exclusive';
-    case INCLUSIVE = 'inclusive';
-    case LEFT_INCLUSIVE = 'leftInclusive';
-    case RIGHT_INCLUSIVE = 'rightInclusive';
+    case EXCLUSIVE;
+    case INCLUSIVE;
+    case LEFT_INCLUSIVE;
+    case RIGHT_INCLUSIVE;
 
     public function compare(mixed $value, mixed $lowerBound, mixed $upperbound) : bool
     {
