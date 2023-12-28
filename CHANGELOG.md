@@ -1,6 +1,8 @@
-## [Unreleased] - 2023-12-20
+## [Unreleased] - 2023-12-28
 
 ### Added
+- [#887](https://github.com/flow-php/flow/pull/887) - **After partitionBy only write or fetch actions are available** - [@norberttech](https://github.com/norberttech)
+- [#887](https://github.com/flow-php/flow/pull/887) - **Moved all scalar functions to ScalarFunctionChain abstract factory implemented by all scalar functions** - [@norberttech](https://github.com/norberttech)
 - [#883](https://github.com/flow-php/flow/pull/883) - **RemoteFileListExtractor** - [@norberttech](https://github.com/norberttech)
 - [#882](https://github.com/flow-php/flow/pull/882) - **FileListExtractor** - [@norberttech](https://github.com/norberttech)
 - [#880](https://github.com/flow-php/flow/pull/880) - **Added possibility to convert rows into array without keys** - [@norberttech](https://github.com/norberttech)
@@ -21,6 +23,7 @@
 - [#867](https://github.com/flow-php/flow/pull/867) - **Update Homebrew TAP formula: flow-php to version: 0.5.2** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#887](https://github.com/flow-php/flow/pull/887) - **Double partitioning** - [@norberttech](https://github.com/norberttech)
 - [#884](https://github.com/flow-php/flow/pull/884) - **printing null type entries in schema formatted** - [@norberttech](https://github.com/norberttech)
 - [#877](https://github.com/flow-php/flow/pull/877) - **Inconsistent behavior of DataFrame::fetch for partitioned rows** - [@norberttech](https://github.com/norberttech)
 - [#877](https://github.com/flow-php/flow/pull/877) - **Merging rows from the same partition makes new rows keep that partition** - [@norberttech](https://github.com/norberttech)
@@ -28,6 +31,7 @@
 - [#870](https://github.com/flow-php/flow/pull/870) - **Reduced number of files in phar** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#887](https://github.com/flow-php/flow/pull/887) - **Partitioning related configuration from Flow Execution Context** - [@norberttech](https://github.com/norberttech)
 - [b9a1fb](https://github.com/flow-php/flow/commit/b9a1fbb1e904ae14ee6247b0357c9ea2be9e68e9) - **test DSL from composer.json in order to fix phar build** - [@norberttech](https://github.com/norberttech)
 
 ## [0.5.2] - 2023-12-05
