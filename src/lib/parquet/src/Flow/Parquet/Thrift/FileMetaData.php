@@ -103,7 +103,7 @@ class FileMetaData extends TBase
      * The obsolete min and max fields in the Statistics object are always sorted
      * by signed comparison regardless of column_orders.
      *
-     * @var \Flow\Parquet\Thrift\ColumnOrder[]
+     * @var ColumnOrder[]
      */
     public $column_orders;
 
@@ -121,7 +121,7 @@ class FileMetaData extends TBase
      * with plaintext footer. Files with encrypted footer store algorithm id
      * in FileCryptoMetaData structure.
      *
-     * @var \Flow\Parquet\Thrift\EncryptionAlgorithm
+     * @var EncryptionAlgorithm
      */
     public $encryption_algorithm;
 
@@ -136,7 +136,7 @@ class FileMetaData extends TBase
     /**
      * Optional key/value metadata *.
      *
-     * @var \Flow\Parquet\Thrift\KeyValue[]
+     * @var KeyValue[]
      */
     public $key_value_metadata;
 
@@ -150,7 +150,7 @@ class FileMetaData extends TBase
     /**
      * Row groups in this file *.
      *
-     * @var \Flow\Parquet\Thrift\RowGroup[]
+     * @var RowGroup[]
      */
     public $row_groups;
 
@@ -162,7 +162,7 @@ class FileMetaData extends TBase
      * used to map columns to nodes in the schema.
      * The first element is the root *.
      *
-     * @var \Flow\Parquet\Thrift\SchemaElement[]
+     * @var SchemaElement[]
      */
     public $schema;
 

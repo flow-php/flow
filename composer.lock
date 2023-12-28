@@ -804,16 +804,16 @@
         },
         {
             "name": "google/apiclient-services",
-            "version": "v0.328.0",
+            "version": "v0.329.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/googleapis/google-api-php-client-services.git",
-                "reference": "211ba786d30a4ab21e012d2b7dbefc49b4fc6a3d"
+                "reference": "3216fd1b6ba33c5f6658c3581e9723ff21d9acb7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/googleapis/google-api-php-client-services/zipball/211ba786d30a4ab21e012d2b7dbefc49b4fc6a3d",
-                "reference": "211ba786d30a4ab21e012d2b7dbefc49b4fc6a3d",
+                "url": "https://api.github.com/repos/googleapis/google-api-php-client-services/zipball/3216fd1b6ba33c5f6658c3581e9723ff21d9acb7",
+                "reference": "3216fd1b6ba33c5f6658c3581e9723ff21d9acb7",
                 "shasum": ""
             },
             "require": {
@@ -842,9 +842,9 @@
             ],
             "support": {
                 "issues": "https://github.com/googleapis/google-api-php-client-services/issues",
-                "source": "https://github.com/googleapis/google-api-php-client-services/tree/v0.328.0"
+                "source": "https://github.com/googleapis/google-api-php-client-services/tree/v0.329.0"
             },
-            "time": "2023-12-18T01:00:18+00:00"
+            "time": "2023-12-24T01:02:15+00:00"
         },
         {
             "name": "google/auth",
@@ -3304,21 +3304,21 @@
         },
         {
             "name": "symfony/service-contracts",
-            "version": "v3.4.0",
+            "version": "v3.4.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/service-contracts.git",
-                "reference": "b3313c2dbffaf71c8de2934e2ea56ed2291a3838"
+                "reference": "fe07cbc8d837f60caf7018068e350cc5163681a0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/service-contracts/zipball/b3313c2dbffaf71c8de2934e2ea56ed2291a3838",
-                "reference": "b3313c2dbffaf71c8de2934e2ea56ed2291a3838",
+                "url": "https://api.github.com/repos/symfony/service-contracts/zipball/fe07cbc8d837f60caf7018068e350cc5163681a0",
+                "reference": "fe07cbc8d837f60caf7018068e350cc5163681a0",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.1",
-                "psr/container": "^2.0"
+                "psr/container": "^1.1|^2.0"
             },
             "conflict": {
                 "ext-psr": "<1.1|>=2"
@@ -3366,7 +3366,7 @@
                 "standards"
             ],
             "support": {
-                "source": "https://github.com/symfony/service-contracts/tree/v3.4.0"
+                "source": "https://github.com/symfony/service-contracts/tree/v3.4.1"
             },
             "funding": [
                 {
@@ -3382,7 +3382,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2023-07-30T20:28:31+00:00"
+            "time": "2023-12-26T14:02:43+00:00"
         },
         {
             "name": "symfony/string",
@@ -3567,16 +3567,16 @@
         },
         {
             "name": "symfony/translation-contracts",
-            "version": "v3.4.0",
+            "version": "v3.4.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/translation-contracts.git",
-                "reference": "dee0c6e5b4c07ce851b462530088e64b255ac9c5"
+                "reference": "06450585bf65e978026bda220cdebca3f867fde7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/translation-contracts/zipball/dee0c6e5b4c07ce851b462530088e64b255ac9c5",
-                "reference": "dee0c6e5b4c07ce851b462530088e64b255ac9c5",
+                "url": "https://api.github.com/repos/symfony/translation-contracts/zipball/06450585bf65e978026bda220cdebca3f867fde7",
+                "reference": "06450585bf65e978026bda220cdebca3f867fde7",
                 "shasum": ""
             },
             "require": {
@@ -3625,7 +3625,7 @@
                 "standards"
             ],
             "support": {
-                "source": "https://github.com/symfony/translation-contracts/tree/v3.4.0"
+                "source": "https://github.com/symfony/translation-contracts/tree/v3.4.1"
             },
             "funding": [
                 {
@@ -3641,7 +3641,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2023-07-25T15:08:44+00:00"
+            "time": "2023-12-26T14:02:43+00:00"
         },
         {
             "name": "symfony/yaml",
@@ -3822,16 +3822,16 @@
         },
         {
             "name": "aws/aws-sdk-php",
-            "version": "3.294.4",
+            "version": "3.295.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aws/aws-sdk-php.git",
-                "reference": "4f59bf50aa445fc3ec0b10648b205dd2465e9bec"
+                "reference": "7e8f68580954a01cf9c8f2abd4f4db52ebcb7b73"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/4f59bf50aa445fc3ec0b10648b205dd2465e9bec",
-                "reference": "4f59bf50aa445fc3ec0b10648b205dd2465e9bec",
+                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/7e8f68580954a01cf9c8f2abd4f4db52ebcb7b73",
+                "reference": "7e8f68580954a01cf9c8f2abd4f4db52ebcb7b73",
                 "shasum": ""
             },
             "require": {
@@ -3911,9 +3911,9 @@
             "support": {
                 "forum": "https://forums.aws.amazon.com/forum.jspa?forumID=80",
                 "issues": "https://github.com/aws/aws-sdk-php/issues",
-                "source": "https://github.com/aws/aws-sdk-php/tree/3.294.4"
+                "source": "https://github.com/aws/aws-sdk-php/tree/3.295.2"
             },
-            "time": "2023-12-20T19:21:19+00:00"
+            "time": "2023-12-27T19:06:10+00:00"
         },
         {
             "name": "brick/math",

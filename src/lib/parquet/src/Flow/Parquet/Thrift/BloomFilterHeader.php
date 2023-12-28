@@ -48,21 +48,21 @@ class BloomFilterHeader extends TBase
     /**
      * The algorithm for setting bits. *.
      *
-     * @var \Flow\Parquet\Thrift\BloomFilterAlgorithm
+     * @var BloomFilterAlgorithm
      */
     public $algorithm;
 
     /**
      * The compression used in the Bloom filter *.
      *
-     * @var \Flow\Parquet\Thrift\BloomFilterCompression
+     * @var BloomFilterCompression
      */
     public $compression;
 
     /**
      * The hash function used for Bloom filter. *.
      *
-     * @var \Flow\Parquet\Thrift\BloomFilterHash
+     * @var BloomFilterHash
      */
     public $hash;
 

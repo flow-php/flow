@@ -67,7 +67,7 @@ class RowGroup extends TBase
      * Metadata for each column chunk in this row group.
      * This list must have the same order as the SchemaElement list in FileMetaData.
      *
-     * @var \Flow\Parquet\Thrift\ColumnChunk[]
+     * @var ColumnChunk[]
      */
     public $columns;
 
@@ -97,7 +97,7 @@ class RowGroup extends TBase
      * If set, specifies a sort ordering of the rows in this RowGroup.
      * The sorting columns can be a subset of all the columns.
      *
-     * @var \Flow\Parquet\Thrift\SortingColumn[]
+     * @var SortingColumn[]
      */
     public $sorting_columns;
 

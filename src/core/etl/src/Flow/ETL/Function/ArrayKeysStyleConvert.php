@@ -15,7 +15,7 @@ final class ArrayKeysStyleConvert extends ScalarFunctionChain
         private readonly ScalarFunction $ref,
         private readonly StringStyles $style
     ) {
-        if (!\class_exists(\Jawira\CaseConverter\Convert::class)) {
+        if (!\class_exists(Convert::class)) {
             throw new RuntimeException("Jawira\CaseConverter\Convert class not found, please add jawira/case-converter dependency to the project first.");
         }
     }

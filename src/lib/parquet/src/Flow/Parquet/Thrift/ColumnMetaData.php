@@ -162,7 +162,7 @@ class ColumnMetaData extends TBase
      * This information can be used to determine if all data pages are
      * dictionary encoded for example *.
      *
-     * @var \Flow\Parquet\Thrift\PageEncodingStats[]
+     * @var PageEncodingStats[]
      */
     public $encoding_stats;
 
@@ -184,7 +184,7 @@ class ColumnMetaData extends TBase
     /**
      * Optional key/value metadata *.
      *
-     * @var \Flow\Parquet\Thrift\KeyValue[]
+     * @var KeyValue[]
      */
     public $key_value_metadata;
 
@@ -205,7 +205,7 @@ class ColumnMetaData extends TBase
     /**
      * optional statistics for this column chunk.
      *
-     * @var \Flow\Parquet\Thrift\Statistics
+     * @var Statistics
      */
     public $statistics;
 
