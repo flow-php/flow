@@ -33,6 +33,8 @@ use Flow\ETL\Function\ArraySort;
 use Flow\ETL\Function\ArraySort\Sort;
 use Flow\ETL\Function\ArrayUnpack;
 use Flow\ETL\Function\Average;
+use Flow\ETL\Function\Between;
+use Flow\ETL\Function\Between\Boundary;
 use Flow\ETL\Function\CallMethod;
 use Flow\ETL\Function\Capitalize;
 use Flow\ETL\Function\Cast;
@@ -560,6 +562,11 @@ function array_reverse(ScalarFunction $function, bool $preserveKeys = false) : S
 function now(\DateTimeZone $time_zone = new \DateTimeZone('UTC')) : ScalarFunction
 {
     return new Now($time_zone);
+}
+
+function between(ScalarFunction $ref, ScalarFunction $lowerBound, ScalarFunction $upperBound, Boundary $boundary = Boundary::LEFT_INCLUSIVE) : ScalarFunction
+{
+    return new Between($ref, $lowerBound, $upperBound, $boundary);
 }
 
 function to_date_time(ScalarFunction $ref, string $format = 'Y-m-d H:i:s', \DateTimeZone $timeZone = new \DateTimeZone('UTC')) : ScalarFunction
