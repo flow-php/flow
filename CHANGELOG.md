@@ -16,6 +16,7 @@
 - [#869](https://github.com/flow-php/flow/pull/869) - **RDSL library** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#888](https://github.com/flow-php/flow/pull/888) - **Updated dependencies** - [@norberttech](https://github.com/norberttech)
 - [#880](https://github.com/flow-php/flow/pull/880) - **Updated dependencies** - [@norberttech](https://github.com/norberttech)
 - [#877](https://github.com/flow-php/flow/pull/877) - **Rows::merge accepts only one instance of Rows instead of many** - [@norberttech](https://github.com/norberttech)
 - [#872](https://github.com/flow-php/flow/pull/872) - **Exclude certain methods from being executed through rdsl access control configuration** - [@norberttech](https://github.com/norberttech)
