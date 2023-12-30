@@ -114,7 +114,7 @@ XML);
         $entry = new XMLEntry('name', '<root><foo>1</foo><bar>2</bar><baz>3</baz></root>');
 
         self::assertSame('name', $entry->name());
-        self::assertSame("<?xml version=\"1.0\"?>\n<root><foo>1</foo><bar>2</bar><baz>3</baz></root>\n", $entry->__toString());
+        self::assertSame('<root><foo>1</foo><bar>2</bar><baz>3</baz></root>', $entry->__toString());
     }
 
     public function test_creating_xml_entry_with_empty_dom_document() : void

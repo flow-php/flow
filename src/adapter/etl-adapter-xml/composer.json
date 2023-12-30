@@ -16,6 +16,9 @@
         "ext-xmlreader": "*",
         "flow-php/etl": "^0.8 || 1.x-dev"
     },
+    "require-dev": {
+        "ext-xmlwriter": "*"
+    },
     "config": {
         "optimize-autoloader": true,
         "sort-packages": true
