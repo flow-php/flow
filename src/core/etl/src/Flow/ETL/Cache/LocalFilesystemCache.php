@@ -6,6 +6,7 @@ namespace Flow\ETL\Cache;
 
 use Flow\ETL\Cache;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Rows;
 use Flow\Serializer\NativePHPSerializer;
 use Flow\Serializer\Serializer;
@@ -66,7 +67,7 @@ final class LocalFilesystemCache implements Cache
     }
 
     /**
-     * @throws \Flow\ETL\Exception\RuntimeException
+     * @throws RuntimeException
      *
      * @return \Generator<Rows>
      */

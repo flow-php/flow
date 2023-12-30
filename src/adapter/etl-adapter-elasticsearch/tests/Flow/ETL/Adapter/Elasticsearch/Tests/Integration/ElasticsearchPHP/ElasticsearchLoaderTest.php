@@ -13,7 +13,6 @@ use Flow\ETL\Config;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
-use Flow\Serializer\CompressingSerializer;
 
 final class ElasticsearchLoaderTest extends TestCase
 {
@@ -176,39 +175,6 @@ final class ElasticsearchLoaderTest extends TestCase
             ],
             $data
         );
-    }
-
-    public function test_integration_with_serialization() : void
-    {
-        $serializer = new CompressingSerializer();
-
-        $loaderSerialized = $serializer->serialize(
-            to_es_bulk_index($this->elasticsearchContext->clientConfig(), self::INDEX_NAME, new HashIdFactory('id'), ['refresh' => true])
-        );
-
-        $serializer->unserialize($loaderSerialized)->load(new Rows(
-            Row::create(
-                new Row\Entry\IntegerEntry('id', 1),
-                Row\Entry\JsonEntry::object('json', ['foo' => 'bar'])
-            ),
-        ), new FlowContext(Config::default()));
-
-        $params = [
-            'index' => self::INDEX_NAME,
-            'body' => [
-                'query' => [
-                    'match_all' => ['boost' => 1.0],
-                ],
-            ],
-        ];
-
-        $response = $this->elasticsearchContext->client()->search($params);
-
-        $this->assertSame(1, $response['hits']['total']['value']);
-
-        $json = \array_map(fn (array $hit) : array => $hit['_source']['json'], $response['hits']['hits']);
-
-        $this->assertSame([['foo' => 'bar']], $json);
     }
 
     public function test_integration_with_sha1_id_factory() : void
