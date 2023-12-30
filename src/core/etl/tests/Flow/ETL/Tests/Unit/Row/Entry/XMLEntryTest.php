@@ -113,7 +113,7 @@ XML);
         $entry = new XMLEntry('name', '<root><foo>1</foo><bar>2</bar><baz>3</baz></root>');
 
         $this->assertSame('name', $entry->name());
-        $this->assertSame("<?xml version=\"1.0\"?>\n<root><foo>1</foo><bar>2</bar><baz>3</baz></root>\n", $entry->__toString());
+        $this->assertSame('<root><foo>1</foo><bar>2</bar><baz>3</baz></root>', $entry->__toString());
     }
 
     public function test_creating_xml_entry_with_empty_dom_document() : void

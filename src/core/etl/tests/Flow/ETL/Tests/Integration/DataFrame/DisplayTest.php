@@ -94,11 +94,11 @@ final class DisplayTest extends IntegrationTestCase
 +------+--------+-----+---------+----------------------+-------+----------------------+---------+-------------------+----------------------+----------------------+-------+----------------------+
 |   id |  price | 100 | deleted |           created-at | phase |                array |    list |               map |                items |               object |  enum |                  xml |
 +------+--------+-----+---------+----------------------+-------+----------------------+---------+-------------------+----------------------+----------------------+-------+----------------------+
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | ArrayIterator Object | three | <?xml version="1.0"? |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | ArrayIterator Object | three | <?xml version="1.0"? |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | ArrayIterator Object | three | <?xml version="1.0"? |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | ArrayIterator Object | three | <?xml version="1.0"? |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | ArrayIterator Object | three | <?xml version="1.0"? |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | ArrayIterator Object | three | <xml><node id="123"> |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | ArrayIterator Object | three | <xml><node id="123"> |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | ArrayIterator Object | three | <xml><node id="123"> |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | ArrayIterator Object | three | <xml><node id="123"> |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | ArrayIterator Object | three | <xml><node id="123"> |
 +------+--------+-----+---------+----------------------+-------+----------------------+---------+-------------------+----------------------+----------------------+-------+----------------------+
 5 rows
 

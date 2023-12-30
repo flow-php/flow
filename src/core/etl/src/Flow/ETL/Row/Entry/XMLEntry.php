@@ -43,15 +43,14 @@ final class XMLEntry implements Entry
         return [
             'name' => $this->name,
             /** @phpstan-ignore-next-line  */
-            'value' => \base64_encode(\gzcompress($this->value->saveXML())),
+            'value' => \base64_encode(\gzcompress($this->toString())),
             'type' => $this->type,
         ];
     }
 
     public function __toString() : string
     {
-        /** @phpstan-ignore-next-line  */
-        return $this->value->saveXML();
+        return $this->toString();
     }
 
     public function __unserialize(array $data) : void
@@ -119,7 +118,7 @@ final class XMLEntry implements Entry
     public function toString() : string
     {
         /** @phpstan-ignore-next-line */
-        return $this->value->saveXML();
+        return $this->value->saveXML($this->value->documentElement);
     }
 
     public function type() : Type

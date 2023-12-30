@@ -64,6 +64,7 @@ final class AvroLoader implements Closure, Loader, Loader\FileLoader
                     Row\Entry\DateTimeEntry::class => (int) $entry->value()->format('Uu'),
                     Row\Entry\UuidEntry::class => $entry->value()->toString(),
                     Row\Entry\EnumEntry::class => $entry->value()->name,
+                    Row\Entry\XMLEntry::class => $entry->toString(),
                     default => $entry->value(),
                 };
             }

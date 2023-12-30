@@ -3,6 +3,7 @@
 namespace Flow\ETL\Adapter\Parquet;
 
 use Flow\ETL\Row\Entry\UuidEntry;
+use Flow\ETL\Row\Entry\XMLEntry;
 use Flow\ETL\Rows;
 
 final class RowsNormalizer
@@ -20,6 +21,7 @@ final class RowsNormalizer
             foreach ($row->entries() as $entry) {
                 $columns[$entry->name()] = match ($entry::class) {
                     UuidEntry::class => $entry->value()->toString(),
+                    XMLEntry::class => $entry->toString(),
                     default => $entry->value(),
                 };
             }
