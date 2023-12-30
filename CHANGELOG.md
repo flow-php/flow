@@ -1,6 +1,7 @@
-## [Unreleased] - 2023-12-28
+## [Unreleased] - 2023-12-30
 
 ### Added
+- [#890](https://github.com/flow-php/flow/pull/890) - **Structure Select function** - [@norberttech](https://github.com/norberttech)
 - [#889](https://github.com/flow-php/flow/pull/889) - **between scalar function** - [@norberttech](https://github.com/norberttech)
 - [#887](https://github.com/flow-php/flow/pull/887) - **After partitionBy only write or fetch actions are available** - [@norberttech](https://github.com/norberttech)
 - [#887](https://github.com/flow-php/flow/pull/887) - **Moved all scalar functions to ScalarFunctionChain abstract factory implemented by all scalar functions** - [@norberttech](https://github.com/norberttech)
