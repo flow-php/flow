@@ -4,7 +4,7 @@ namespace Flow\ETL\Tests\Integration\Function\Structure;
 
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\structure;
 use PHPUnit\Framework\TestCase;
 
 final class StructureSelectTest extends TestCase
@@ -30,7 +30,7 @@ final class StructureSelectTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('user', ref('user')->structure()->select('id', 'email', 'tags'))
+            ->withEntry('user', structure('user')->select('id', 'email', 'tags'))
             ->fetch();
 
         $this->assertEquals(

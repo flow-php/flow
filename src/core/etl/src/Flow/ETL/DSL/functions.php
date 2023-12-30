@@ -67,6 +67,7 @@ use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Function\Size;
 use Flow\ETL\Function\Split;
 use Flow\ETL\Function\Sprintf;
+use Flow\ETL\Function\StructureFunctions;
 use Flow\ETL\Function\StyleConverter\StringStyles;
 use Flow\ETL\Function\Sum;
 use Flow\ETL\Function\ToDate;
@@ -482,6 +483,11 @@ function entry(string $entry) : EntryReference
 function ref(string $entry) : EntryReference
 {
     return new EntryReference($entry);
+}
+
+function structure(string $entry) : StructureFunctions
+{
+    return ref($entry)->structure();
 }
 
 function refs(string|Reference ...$entries) : References
