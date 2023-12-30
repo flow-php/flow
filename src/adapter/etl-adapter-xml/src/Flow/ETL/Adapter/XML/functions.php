@@ -5,14 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\XML;
 
 use function Flow\ETL\DSL\from_all;
-use Flow\ETL\Extractor;
+use Flow\ETL\Adapter\XML\Loader\{DomDocumentLoader, XMLWriterLoader};
+use Flow\ETL\{Extractor, Loader};
 use Flow\Filesystem\Path;
 
 /**
  * @param array<Path|string>|Path|string $path
- * @param string $xml_node_path
- *
- * @return Extractor
  */
 function from_xml(
     string|Path|array $path,
@@ -36,4 +34,16 @@ function from_xml(
         \is_string($path) ? Path::realpath($path) : $path,
         $xml_node_path
     );
+}
+
+function to_xml(
+    string|Path $path,
+    string $collectionName = 'rows',
+    string $collectionElementName = 'row'
+) : Loader {
+    if (\class_exists(\XMLWriter::class)) {
+        return new XMLWriterLoader(\is_string($path) ? Path::realpath($path) : $path, $collectionName, $collectionElementName);
+    }
+
+    return new DomDocumentLoader(\is_string($path) ? Path::realpath($path) : $path, $collectionName, $collectionElementName);
 }

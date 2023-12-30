@@ -36,6 +36,7 @@
         "webmozart/glob": "^3.0 || ^4.0"
     },
     "require-dev": {
+        "ext-xmlwriter": "*",
         "aeon-php/calendar": "^1.0",
         "fakerphp/faker": "^1.23",
         "fig/log-test": "^1.1",
@@ -240,7 +241,6 @@
             "tools/box/vendor/bin/box compile"
         ],
         "pre-autoload-dump": [
-            "Aws\\Script\\Composer\\Composer::removeUnusedServices",
             "Google\\Task\\Composer::cleanup"
         ],
         "post-install-cmd": [
@@ -273,9 +273,6 @@
         ]
     },
     "extra": {
-        "aws/aws-sdk-php": [
-            "S3"
-        ],
         "google/apiclient-services": [
             "Sheets"
         ]
