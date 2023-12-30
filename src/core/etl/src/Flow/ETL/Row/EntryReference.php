@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Row;
 
 use Flow\ETL\Function\ScalarFunctionChain;
+use Flow\ETL\Function\StructureFunctions;
 use Flow\ETL\Row;
 
 /**
@@ -92,6 +93,11 @@ final class EntryReference extends ScalarFunctionChain implements Reference
     public function sort() : SortOrder
     {
         return $this->sort;
+    }
+
+    public function structure() : StructureFunctions
+    {
+        return new StructureFunctions($this);
     }
 
     public function to() : string
