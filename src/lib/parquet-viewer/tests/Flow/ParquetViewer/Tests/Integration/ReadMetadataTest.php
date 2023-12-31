@@ -47,11 +47,11 @@ final class ReadMetadataTest extends TestCase
             '--statistics' => 1,
         ]);
 
-        $this->assertStringContainsString("Metadata", $tester->getDisplay());
-        $this->assertStringContainsString("Row Groups", $tester->getDisplay());
-        $this->assertStringContainsString("Column Chunks", $tester->getDisplay());
-        $this->assertStringContainsString("Column Chunks Statistics", $tester->getDisplay());
-        $this->assertStringContainsString("Page Headers", $tester->getDisplay());
+        $this->assertStringContainsString('Metadata', $tester->getDisplay());
+        $this->assertStringContainsString('Row Groups', $tester->getDisplay());
+        $this->assertStringContainsString('Column Chunks', $tester->getDisplay());
+        $this->assertStringContainsString('Column Chunks Statistics', $tester->getDisplay());
+        $this->assertStringContainsString('Page Headers', $tester->getDisplay());
         $this->assertSame(0, $tester->getStatusCode());
     }
 }
