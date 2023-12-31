@@ -6,7 +6,7 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class Split implements ScalarFunction
+final class Split extends ScalarFunctionChain
 {
     /**
      * @param non-empty-string $separator

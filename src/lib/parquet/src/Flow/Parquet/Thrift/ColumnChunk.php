@@ -82,7 +82,7 @@ class ColumnChunk extends TBase
     /**
      * Crypto metadata of encrypted columns *.
      *
-     * @var \Flow\Parquet\Thrift\ColumnCryptoMetaData
+     * @var ColumnCryptoMetaData
      */
     public $crypto_metadata;
 
@@ -113,7 +113,7 @@ class ColumnChunk extends TBase
      * file_path/file_offset.  Having it here has it replicated in the file
      * metadata.
      *
-     * @var \Flow\Parquet\Thrift\ColumnMetaData
+     * @var ColumnMetaData
      */
     public $meta_data;
 

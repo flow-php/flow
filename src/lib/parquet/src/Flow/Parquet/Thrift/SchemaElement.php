@@ -102,7 +102,7 @@ class SchemaElement extends TBase
      * LogicalType replaces ConvertedType, but ConvertedType is still required
      * for some logical types to ensure forward-compatibility in format v1.
      *
-     * @var \Flow\Parquet\Thrift\LogicalType
+     * @var LogicalType
      */
     public $logicalType;
 

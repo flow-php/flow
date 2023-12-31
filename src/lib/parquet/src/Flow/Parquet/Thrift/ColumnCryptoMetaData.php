@@ -31,12 +31,12 @@ class ColumnCryptoMetaData extends TBase
     public static $isValidate = false;
 
     /**
-     * @var \Flow\Parquet\Thrift\EncryptionWithColumnKey
+     * @var EncryptionWithColumnKey
      */
     public $ENCRYPTION_WITH_COLUMN_KEY;
 
     /**
-     * @var \Flow\Parquet\Thrift\EncryptionWithFooterKey
+     * @var EncryptionWithFooterKey
      */
     public $ENCRYPTION_WITH_FOOTER_KEY;
 

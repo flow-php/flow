@@ -30,7 +30,7 @@ class BloomFilterAlgorithm extends TBase
     /**
      * Block-based Bloom filter. *.
      *
-     * @var \Flow\Parquet\Thrift\SplitBlockAlgorithm
+     * @var SplitBlockAlgorithm
      */
     public $BLOCK;
 

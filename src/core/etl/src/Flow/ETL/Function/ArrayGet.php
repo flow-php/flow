@@ -8,7 +8,7 @@ use function Flow\ArrayDot\array_dot_get;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 
-final class ArrayGet implements ScalarFunction
+final class ArrayGet extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction $ref,

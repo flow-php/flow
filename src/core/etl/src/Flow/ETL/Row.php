@@ -148,11 +148,11 @@ final class Row implements Serializable
     }
 
     /**
-     * @return array<string, mixed>
+     * @return array<array-key, mixed>
      */
-    public function toArray() : array
+    public function toArray(bool $withKeys = true) : array
     {
-        return $this->entries->toArray();
+        return $this->entries->toArray($withKeys);
     }
 
     /**

@@ -5,6 +5,24 @@ Please follow the instructions for your specific version to ensure a smooth upgr
 
 ---
 
+## Upgrading from 0.5.x to 0.6.x
+
+### 1) Rows::merge() accepts single instance of Rows
+
+Before: 
+
+```php
+Rows::merge(Rows ...$rows) : Rows
+```
+
+After:
+
+```php
+Rows::merge(Rows $rows) : Rows
+```
+
+---
+
 ## Upgrading from 0.4.x to 0.5.x
 
 ### 1) Entry factory moved from extractors to `FlowContext`
@@ -144,7 +162,7 @@ Transformers are a really powerful tool that was used in Flow since the beginnin
 
 We reworked most of the internal transformers to new scalar functions and entry scalar functions (based on the built-in functions), and we still internally use that powerful tool, but we don't expose it to end users, instead, we provide easy-to-use, covering all user needs functions.
 
-All available functions can be found in [`ETL\Row\Function` folder](src/core/etl/src/Flow/ETL/Function) or in [`ETL\DSL\functions` file](src/core/etl/src/Flow/ETL/DSL/functions.php), and entry scalar functions are defined in [`EntryScalarFunction` trait](src/core/etl/src/Flow/ETL/Function/EntryScalarFunction.php).
+All available functions can be found in [`ETL\Row\Function` folder](src/core/etl/src/Flow/ETL/Function) or in [`ETL\DSL\functions` file](src/core/etl/src/Flow/ETL/DSL/functions.php), and entry scalar functions are defined in `EntryScalarFunction`.
 
 To see what transformers are available see [`ETL\DSL\Transform` class](src/core/etl/src/Flow/ETL/DSL/Transform.php).
 

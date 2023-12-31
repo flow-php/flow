@@ -11,7 +11,7 @@ if (!\class_exists(\Symfony\Component\Uid\Ulid::class)) {
     throw new RuntimeException("\Symfony\Component\Uid\Ulid class not found, please add 'symfony/uid' as a dependency to the project first.");
 }
 
-final class Ulid implements ScalarFunction
+final class Ulid extends ScalarFunctionChain
 {
     public function __construct(private readonly ?ScalarFunction $ref = null)
     {

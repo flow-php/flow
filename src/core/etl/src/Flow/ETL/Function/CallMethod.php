@@ -6,7 +6,7 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class CallMethod implements ScalarFunction
+final class CallMethod extends ScalarFunctionChain
 {
     /**
      * @var ScalarFunction[]

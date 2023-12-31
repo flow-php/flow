@@ -6,7 +6,7 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class IsIn implements ScalarFunction
+final class IsIn extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction $haystack,

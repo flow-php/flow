@@ -7,7 +7,7 @@ namespace Flow\ETL\Function;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 
-final class Cast implements ScalarFunction
+final class Cast extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction $ref,

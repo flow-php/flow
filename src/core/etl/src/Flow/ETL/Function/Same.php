@@ -6,7 +6,7 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class Same implements ScalarFunction
+final class Same extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction $base,

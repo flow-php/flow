@@ -207,6 +207,19 @@ final class RowTest extends TestCase
         );
     }
 
+    public function test_merge_row_with_another_row_using_prefix() : void
+    {
+        $this->assertSame(
+            [
+                'id' => 1,
+                '_id' => 2,
+            ],
+            Row::create(new IntegerEntry('id', 1))
+                ->merge(Row::create(new IntegerEntry('id', 2)), $prefix = '_')
+                ->toArray()
+        );
+    }
+
     public function test_remove() : void
     {
         $row = new Row(new Entries(

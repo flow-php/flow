@@ -6,7 +6,7 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class ArrayUnpack implements ScalarFunction, ScalarFunction\UnpackResults
+final class ArrayUnpack extends ScalarFunctionChain implements ScalarFunction\UnpackResults
 {
     public function __construct(
         private readonly ScalarFunction $ref,
@@ -46,7 +46,7 @@ final class ArrayUnpack implements ScalarFunction, ScalarFunction\UnpackResults
         return $values;
     }
 
-    public function unpack() : bool
+    public function unpackResults() : bool
     {
         return true;
     }

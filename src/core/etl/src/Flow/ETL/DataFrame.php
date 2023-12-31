@@ -5,8 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL;
 
 use function Flow\ETL\DSL\to_output;
+use Flow\ETL\DataFrame\GroupedDataFrame;
+use Flow\ETL\DataFrame\PartitionedDataFrame;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\InvalidFileFormatException;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Extractor\PartitionsExtractor;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Formatter\AsciiTableFormatter;
 use Flow\ETL\Function\AggregatingFunction;
@@ -44,6 +48,14 @@ use Flow\ETL\Transformer\ScalarFunctionTransformer;
 use Flow\ETL\Transformer\StyleConverter\StringStyles;
 use Flow\ETL\Transformer\UntilTransformer;
 use Flow\ETL\Transformer\WindowFunctionTransformer;
+use Flow\RDSL\AccessControl\AllowAll;
+use Flow\RDSL\AccessControl\AllowList;
+use Flow\RDSL\AccessControl\DenyAll;
+use Flow\RDSL\Attribute\DSLMethod;
+use Flow\RDSL\Builder;
+use Flow\RDSL\DSLNamespace;
+use Flow\RDSL\Executor;
+use Flow\RDSL\Finder;
 
 final class DataFrame
 {
@@ -55,11 +67,63 @@ final class DataFrame
     }
 
     /**
+     * @throws \JsonException
+     * @throws RuntimeException
+     */
+    public static function fromJson(string $json) : self
+    {
+        $namespaces = [
+            DSLNamespace::global(new DenyAll()),
+            new DSLNamespace('\Flow\ETL\DSL\Adapter\Avro', new AllowAll()),
+            new DSLNamespace('\Flow\ETL\Adapter\ChartJS', new AllowAll()),
+            new DSLNamespace('\Flow\ETL\Adapter\CSV', new AllowAll()),
+            new DSLNamespace('\Flow\ETL\Adapter\Doctrine', new AllowAll()),
+            new DSLNamespace('\Flow\ETL\Adapter\Elasticsearch', new AllowAll()),
+            new DSLNamespace('\Flow\ETL\Adapter\GoogleSheet', new AllowAll()),
+            new DSLNamespace('\Flow\ETL\Adapter\JSON', new AllowAll()),
+            new DSLNamespace('\Flow\ETL\Adapter\Meilisearch', new AllowAll()),
+            new DSLNamespace('\Flow\ETL\Adapter\Parquet', new AllowAll()),
+            new DSLNamespace('\Flow\ETL\Adapter\Text', new AllowAll()),
+            new DSLNamespace('\Flow\ETL\Adapter\XML', new AllowAll()),
+            new DSLNamespace('\Flow\ETL\DSL', new AllowAll()),
+        ];
+
+        try {
+            $builder = new Builder(
+                new Finder(
+                    $namespaces,
+                    entryPointACL: new AllowList(['data_frame', 'df']),
+                    methodACL: new AllowAll()
+                )
+            );
+
+            try {
+                $results = (new Executor())
+                    ->execute($builder->parse(\json_decode($json, true, 512, JSON_THROW_ON_ERROR)));
+            } catch (\JsonException $exception) {
+                throw new InvalidFileFormatException('json', 'unknown');
+            }
+
+            if (\count($results) !== 1) {
+                throw new InvalidArgumentException('Invalid JSON, please make sure that there is only one data_frame function');
+            }
+
+            if (!$results[0] instanceof self) {
+                throw new InvalidArgumentException('Invalid JSON, expected DataFrame instance but got ' . \get_class($results[0]));
+            }
+
+            return $results[0];
+        } catch (\Flow\RDSL\Exception\InvalidArgumentException $e) {
+            throw new InvalidArgumentException($e->getMessage(), $e->getCode(), $e);
+        }
+    }
+
+    /**
      * @lazy
      *
      * @throws InvalidArgumentException
      */
-    public function aggregate(AggregatingFunction ...$aggregations) : self
+    public function aggregate(AggregatingFunction ...$aggregations) : GroupedDataFrame
     {
         if (!$this->pipeline instanceof GroupByPipeline) {
             $this->pipeline = new GroupByPipeline(new GroupBy(), $this->pipeline);
@@ -67,7 +131,7 @@ final class DataFrame
 
         $this->pipeline->groupBy->aggregate(...$aggregations);
 
-        return $this;
+        return new GroupedDataFrame($this);
     }
 
     /**
@@ -144,6 +208,7 @@ final class DataFrame
      *
      * @lazy
      */
+    #[DSLMethod(exclude: true)]
     public function collectRefs(References $references) : self
     {
         $this->transform(new CallbackRowTransformer(function (Row $row) use ($references) : Row {
@@ -161,6 +226,7 @@ final class DataFrame
      * @trigger
      * Return total count of rows processed by this pipeline.
      */
+    #[DSLMethod(exclude: true)]
     public function count() : int
     {
         $clone = clone $this;
@@ -193,9 +259,19 @@ final class DataFrame
      *
      * @throws InvalidArgumentException
      */
+    #[DSLMethod(exclude: true)]
     public function display(int $limit = 20, int|bool $truncate = 20, Formatter $formatter = new AsciiTableFormatter()) : string
     {
-        return $formatter->format($this->fetch($limit), $truncate);
+        $clone = clone $this;
+        $clone->limit($limit);
+
+        $output = '';
+
+        foreach ($clone->pipeline->process($clone->context) as $rows) {
+            $output .= $formatter->format($rows, $truncate);
+        }
+
+        return $output;
     }
 
     /**
@@ -237,38 +313,22 @@ final class DataFrame
      *
      * @throws InvalidArgumentException
      */
+    #[DSLMethod(exclude: true)]
     public function fetch(?int $limit = null) : Rows
     {
         $clone = clone $this;
-        $clone->collect();
 
         if ($limit !== null) {
             $clone->limit($limit);
         }
 
-        if ($clone->context->partitionEntries()->count()) {
-            $rows = (new Rows())->merge(
-                ...\iterator_to_array($clone->pipeline->process($clone->context))
-            );
+        $rows = new Rows();
 
-            $fetchedRows = (new Rows());
-
-            foreach ($rows->partitionBy(...$clone->context->partitionEntries()->all()) as $partitionedRows) {
-                if ($clone->context->partitionFilter()->keep(...$partitionedRows->partitions())) {
-                    $fetchedRows = $fetchedRows->merge($partitionedRows);
-                }
-            }
-
-            return $fetchedRows;
+        foreach ($clone->pipeline->process($clone->context) as $nextRows) {
+            $rows = $rows->merge($nextRows);
         }
 
-        $rows = \iterator_to_array($clone->pipeline->process($clone->context));
-
-        if (!\count($rows)) {
-            return new Rows();
-        }
-
-        return $rows[0];
+        return $rows;
     }
 
     /**
@@ -283,15 +343,24 @@ final class DataFrame
 
     /**
      * @lazy
+     *
+     * @throws RuntimeException
      */
     public function filterPartitions(Partition\PartitionFilter|ScalarFunction $filter) : self
     {
+        $extractor = $this->pipeline->source();
+
+        if (!$extractor instanceof PartitionsExtractor) {
+            throw new RuntimeException('filterPartitions can be used only with extractors that implement PartitionsExtractor interface');
+        }
+
         if ($filter instanceof Partition\PartitionFilter) {
-            $this->context->filterPartitions($filter);
+            $extractor->addPartitionFilter($filter);
 
             return $this;
         }
-        $this->context->filterPartitions(new ScalarFunctionFilter($filter, $this->context->entryFactory()));
+
+        $extractor->addPartitionFilter(new ScalarFunctionFilter($filter, $this->context->entryFactory()));
 
         return $this;
     }
@@ -301,6 +370,7 @@ final class DataFrame
      *
      * @param null|callable(Rows $rows) : void $callback
      */
+    #[DSLMethod(exclude: true)]
     public function forEach(?callable $callback = null) : void
     {
         $clone = clone $this;
@@ -314,6 +384,7 @@ final class DataFrame
      *
      * @return \Generator<Rows>
      */
+    #[DSLMethod(exclude: true)]
     public function get() : \Generator
     {
         $clone = clone $this;
@@ -328,6 +399,7 @@ final class DataFrame
      *
      * @return \Generator<array<array>>
      */
+    #[DSLMethod(exclude: true)]
     public function getAsArray() : \Generator
     {
         $clone = clone $this;
@@ -344,6 +416,7 @@ final class DataFrame
      *
      * @return \Generator<Row>
      */
+    #[DSLMethod(exclude: true)]
     public function getEach() : \Generator
     {
         $clone = clone $this;
@@ -362,6 +435,7 @@ final class DataFrame
      *
      * @return \Generator<array>
      */
+    #[DSLMethod(exclude: true)]
     public function getEachAsArray() : \Generator
     {
         $clone = clone $this;
@@ -376,11 +450,11 @@ final class DataFrame
     /**
      * @lazy
      */
-    public function groupBy(string|Reference ...$entries) : self
+    public function groupBy(string|Reference ...$entries) : GroupedDataFrame
     {
         $this->pipeline = new GroupByPipeline(new GroupBy(...$entries), $this->pipeline);
 
-        return $this;
+        return new GroupedDataFrame($this);
     }
 
     /**
@@ -457,6 +531,7 @@ final class DataFrame
      *
      * @param callable(Row $row) : Row $callback
      */
+    #[DSLMethod(exclude: true)]
     public function map(callable $callback) : self
     {
         $this->pipeline->add(new CallbackRowTransformer($callback));
@@ -516,14 +591,13 @@ final class DataFrame
     /**
      * @lazy
      */
-    public function partitionBy(string|Reference $entry, string|Reference ...$entries) : self
+    public function partitionBy(string|Reference $entry, string|Reference ...$entries) : PartitionedDataFrame
     {
         \array_unshift($entries, $entry);
 
-        $this->context->partitionBy(...References::init(...$entries)->all());
-        $this->pipeline = new PartitioningPipeline($this->pipeline);
+        $this->pipeline = new PartitioningPipeline($this->pipeline, References::init(...$entries)->all());
 
-        return $this;
+        return new PartitionedDataFrame($this);
     }
 
     public function pivot(Reference $ref) : self
@@ -540,6 +614,7 @@ final class DataFrame
     /**
      * @trigger
      */
+    #[DSLMethod(exclude: true)]
     public function printRows(int|null $limit = 20, int|bool $truncate = 20, Formatter $formatter = new AsciiTableFormatter()) : void
     {
         $clone = clone $this;
@@ -556,6 +631,7 @@ final class DataFrame
     /**
      * @trigger
      */
+    #[DSLMethod(exclude: true)]
     public function printSchema(int|null $limit = 20, Schema\SchemaFormatter $formatter = new Schema\Formatter\ASCIISchemaFormatter()) : void
     {
         $clone = clone $this;
@@ -655,6 +731,7 @@ final class DataFrame
      *
      * @param null|callable(Rows $rows): void $callback
      */
+    #[DSLMethod(exclude: true)]
     public function run(?callable $callback = null) : void
     {
         $clone = clone $this;
@@ -664,6 +741,16 @@ final class DataFrame
                 $callback($rows);
             }
         }
+    }
+
+    /**
+     * Alias for DataFrame::mode.
+     *
+     * @lazy
+     */
+    public function saveMode(SaveMode $mode) : self
+    {
+        return $this->mode($mode);
     }
 
     /**
@@ -760,7 +847,7 @@ final class DataFrame
     /**
      * @lazy
      *
-     * @param array<string, \Flow\ETL\Function\ScalarFunction> $refs
+     * @param array<string, ScalarFunction> $refs
      */
     public function withEntries(array $refs) : self
     {
@@ -774,12 +861,11 @@ final class DataFrame
     /**
      * @lazy
      */
-    public function withEntry(string $entryName, Function\ScalarFunction|WindowFunction $ref) : self
+    public function withEntry(string $entryName, ScalarFunction|WindowFunction $ref) : self
     {
         if ($ref instanceof WindowFunction) {
             if (\count($ref->window()->partitions())) {
-                $this->context->partitionBy(...$ref->window()->partitions());
-                $this->pipeline = new PartitioningPipeline($this->pipeline, $ref->window()->order());
+                $this->pipeline = new PartitioningPipeline($this->pipeline, $ref->window()->partitions(), $ref->window()->order());
             } else {
                 $this->collect();
 

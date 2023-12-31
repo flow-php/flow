@@ -1,6 +1,60 @@
-## [Unreleased] - 2023-12-01
+## [Unreleased] - 2023-12-30
+
+### Added
+- [#890](https://github.com/flow-php/flow/pull/890) - **Structure Select function** - [@norberttech](https://github.com/norberttech)
+- [#889](https://github.com/flow-php/flow/pull/889) - **between scalar function** - [@norberttech](https://github.com/norberttech)
+- [#887](https://github.com/flow-php/flow/pull/887) - **After partitionBy only write or fetch actions are available** - [@norberttech](https://github.com/norberttech)
+- [#887](https://github.com/flow-php/flow/pull/887) - **Moved all scalar functions to ScalarFunctionChain abstract factory implemented by all scalar functions** - [@norberttech](https://github.com/norberttech)
+- [#883](https://github.com/flow-php/flow/pull/883) - **RemoteFileListExtractor** - [@norberttech](https://github.com/norberttech)
+- [#882](https://github.com/flow-php/flow/pull/882) - **FileListExtractor** - [@norberttech](https://github.com/norberttech)
+- [#880](https://github.com/flow-php/flow/pull/880) - **Added possibility to convert rows into array without keys** - [@norberttech](https://github.com/norberttech)
+- [#880](https://github.com/flow-php/flow/pull/880) - **Monorepo test command** - [@norberttech](https://github.com/norberttech)
+- [#877](https://github.com/flow-php/flow/pull/877) - **Displaying partitions under data when using to_output or DataFrame::display** - [@norberttech](https://github.com/norberttech)
+- [#877](https://github.com/flow-php/flow/pull/877) - **dsl functions for save modes** - [@norberttech](https://github.com/norberttech)
+- [#877](https://github.com/flow-php/flow/pull/877) - **DataFrame::saveMode as an aliast for DataFrame::mode** - [@norberttech](https://github.com/norberttech)
+- [#873](https://github.com/flow-php/flow/pull/873) - **exclude DSL methods/functions through attributes** - [@norberttech](https://github.com/norberttech)
+- [#871](https://github.com/flow-php/flow/pull/871) - **DataFrame::fromJson()** - [@norberttech](https://github.com/norberttech)
+- [#871](https://github.com/flow-php/flow/pull/871) - **support for running dataframes from json through flow CLI** - [@norberttech](https://github.com/norberttech)
+- [#869](https://github.com/flow-php/flow/pull/869) - **RDSL library** - [@norberttech](https://github.com/norberttech)
+
+### Changed
+- [#888](https://github.com/flow-php/flow/pull/888) - **Updated dependencies** - [@norberttech](https://github.com/norberttech)
+- [#880](https://github.com/flow-php/flow/pull/880) - **Updated dependencies** - [@norberttech](https://github.com/norberttech)
+- [#877](https://github.com/flow-php/flow/pull/877) - **Rows::merge accepts only one instance of Rows instead of many** - [@norberttech](https://github.com/norberttech)
+- [#872](https://github.com/flow-php/flow/pull/872) - **Exclude certain methods from being executed through rdsl access control configuration** - [@norberttech](https://github.com/norberttech)
+- [#868](https://github.com/flow-php/flow/pull/868) - **Adjust Homebrew commit message to match Flow CS** - [@stloyd](https://github.com/stloyd)
+- [#867](https://github.com/flow-php/flow/pull/867) - **Update Homebrew TAP formula: flow-php to version: 0.5.2** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#887](https://github.com/flow-php/flow/pull/887) - **Double partitioning** - [@norberttech](https://github.com/norberttech)
+- [#884](https://github.com/flow-php/flow/pull/884) - **printing null type entries in schema formatted** - [@norberttech](https://github.com/norberttech)
+- [#877](https://github.com/flow-php/flow/pull/877) - **Inconsistent behavior of DataFrame::fetch for partitioned rows** - [@norberttech](https://github.com/norberttech)
+- [#877](https://github.com/flow-php/flow/pull/877) - **Merging rows from the same partition makes new rows keep that partition** - [@norberttech](https://github.com/norberttech)
+- [#871](https://github.com/flow-php/flow/pull/871) - **phar file** - [@norberttech](https://github.com/norberttech)
+- [#870](https://github.com/flow-php/flow/pull/870) - **Reduced number of files in phar** - [@norberttech](https://github.com/norberttech)
+
+### Removed
+- [#887](https://github.com/flow-php/flow/pull/887) - **Partitioning related configuration from Flow Execution Context** - [@norberttech](https://github.com/norberttech)
+- [b9a1fb](https://github.com/flow-php/flow/commit/b9a1fbb1e904ae14ee6247b0357c9ea2be9e68e9) - **test DSL from composer.json in order to fix phar build** - [@norberttech](https://github.com/norberttech)
+
+## [0.5.2] - 2023-12-05
+
+### Added
+- [#861](https://github.com/flow-php/flow/pull/861) - **Add documentation about installation using Homebrew** - [@stloyd](https://github.com/stloyd)
+- [#861](https://github.com/flow-php/flow/pull/861) - **Add Homebrew formula into monorepo** - [@stloyd](https://github.com/stloyd)
+
+### Removed
+- [#863](https://github.com/flow-php/flow/pull/863) - **removed LocalFile references in readme and dockblock** - [@rzarno](https://github.com/rzarno)
+
+## [0.5.1] - 2023-12-03
+
+### Added
+- [#860](https://github.com/flow-php/flow/pull/860) - **Added ArrayExtractor** - [@norberttech](https://github.com/norberttech)
+- [#859](https://github.com/flow-php/flow/pull/859) - **Add documentation about installation using PHIVE** - [@stloyd](https://github.com/stloyd)
+
+### Fixed
+- [#862](https://github.com/flow-php/flow/pull/862) - **Dremel & Parquet performance improvements** - [@norberttech](https://github.com/norberttech)
+- [#858](https://github.com/flow-php/flow/pull/858) - **Spelling mistake in documentation** - [@xaviermarchegay](https://github.com/xaviermarchegay)
 - [#855](https://github.com/flow-php/flow/pull/855) - **Fix typo in Snappy polyfill filename** - [@stloyd](https://github.com/stloyd)
 - [#856](https://github.com/flow-php/flow/pull/856) - **Fix wrong namespace of `HashIdFactoryTest` test** - [@stloyd](https://github.com/stloyd)
 
@@ -1426,5 +1480,6 @@
 - @voku
 - @Wiktor6
 - @Wirone
+- @xaviermarchegay
 
 Generated by [Automation](https://github.com/aeon-php/automation)

@@ -1,0 +1,43 @@
+[
+  {
+    "function": "data_frame",
+    "args": [],
+    "call": {
+      "method": "read",
+      "args": [
+        {
+          "function": "from_file",
+          "args": ["./file.csv"]
+        }
+      ],
+      "call": {
+        "method": "withEntry",
+        "args": [
+          "age",
+          {
+            "function": "ref",
+            "args": ["id"],
+            "call": {
+              "method": "multiply",
+              "args": [
+                {
+                  "function": "lit",
+                  "args": [10]
+                }
+              ]
+            }
+          }
+        ],
+        "call": {
+          "method": "write",
+          "args": [
+            {
+              "function": "to_output",
+              "args": [false]
+            }
+          ]
+        }
+      }
+    }
+  }
+]

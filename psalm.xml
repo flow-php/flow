@@ -34,6 +34,7 @@
             <directory name="src/lib/parquet/src/Flow/Parquet/ThriftStream/" />
             <directory name="src/lib/parquet/src/Flow/Parquet/Thrift/" />
             <directory name="src/lib/parquet/src/Flow/Parquet/BinaryReader/" />
+            <directory name="src/lib/rdsl/src/Flow/RDSL/" />
         </ignoreFiles>
     </projectFiles>
 </psalm>

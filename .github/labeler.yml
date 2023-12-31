@@ -17,6 +17,8 @@ lib-parquet:
   - any: ["src/lib/parquet/**/*"]
 lib-dremel:
   - any: ["src/lib/dremel/**/*"]
+lib-rdsl:
+  - any: ["src/lib/rdsl/**/*"]
 lib-snappy:
   - any: ["src/lib/snappy/**/*"]
 
@@ -49,4 +51,5 @@ adapter-text:
 adapter-xml:
   - any: ["src/adapter/etl-adapter-xml/**/*"]
 
-
+tools-homebrew:
+  - any: ["src/tools/homebrew/**/*"]

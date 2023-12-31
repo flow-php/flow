@@ -9,14 +9,17 @@ use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Extractor\Limitable;
 use Flow\ETL\Extractor\LimitableExtractor;
+use Flow\ETL\Extractor\PartitionFiltering;
+use Flow\ETL\Extractor\PartitionsExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
 
-final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
+final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor, PartitionsExtractor
 {
     use Limitable;
+    use PartitionFiltering;
 
     /**
      * @param int<0, max> $charactersReadInLine
@@ -37,8 +40,7 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
-        foreach ($context->streams()->fs()->scan($this->path, $context->partitionFilter()) as $path) {
-            $partitions = $path->partitions();
+        foreach ($context->streams()->fs()->scan($this->path, $this->partitionFilter()) as $path) {
             $stream = $context->streams()->fs()->open($path, Mode::READ);
 
             $headers = [];
@@ -90,7 +92,7 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
                     $row['_input_file_uri'] = $stream->path()->uri();
                 }
 
-                $signal = yield array_to_rows($row, $context->entryFactory(), $partitions);
+                $signal = yield array_to_rows($row, $context->entryFactory(), $path->partitions());
                 $this->countRow();
 
                 if ($signal === Signal::STOP || $this->reachedLimit()) {

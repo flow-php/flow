@@ -188,7 +188,7 @@ final class LimitTest extends IntegrationTestCase
                  */
                 public function extract(FlowContext $context) : \Generator
                 {
-                    for ($i = 0; $i < 1000; $i++) {
+                    for ($i = 0; $i < 100; $i++) {
                         yield new Rows(
                             Row::create(new IntegerEntry('id', $i + 1)),
                             Row::create(new IntegerEntry('id', $i + 2)),

@@ -72,29 +72,27 @@ final class ParquetLoader implements Closure, Loader, Loader\FileLoader
 
     public function load(Rows $rows, FlowContext $context) : void
     {
-        if ($this->schema === null) {
+        if ($this->schema === null && $this->inferredSchema === null) {
             $this->inferSchema($rows);
         }
 
         $streams = $context->streams();
 
-        if ($context->partitionEntries()->count()) {
-            foreach ($rows->partitionBy(...$context->partitionEntries()->all()) as $partitionedRows) {
+        if ($rows->partitions()->count()) {
 
-                $stream = $streams->open($this->path, 'parquet', $context->appendSafe(), $partitionedRows->partitions());
+            $stream = $streams->open($this->path, 'parquet', $context->appendSafe(), $rows->partitions()->toArray());
 
-                if (!\array_key_exists($stream->path()->uri(), $this->writers)) {
-                    $this->writers[$stream->path()->uri()] = new Writer(
-                        compression: $this->compressions,
-                        options: $this->options
-                    );
+            if (!\array_key_exists($stream->path()->uri(), $this->writers)) {
+                $this->writers[$stream->path()->uri()] = new Writer(
+                    compression: $this->compressions,
+                    options: $this->options
+                );
 
-                    $this->writers[$stream->path()->uri()]->openForStream($stream->resource(), $this->converter->toParquet($this->schema()));
-                }
+                $this->writers[$stream->path()->uri()]->openForStream($stream->resource(), $this->converter->toParquet($this->schema()));
+            }
 
-                foreach ($partitionedRows as $row) {
-                    $this->writers[$stream->path()->uri()]->writeRow($row->toArray());
-                }
+            foreach ($rows as $row) {
+                $this->writers[$stream->path()->uri()]->writeRow($row->toArray());
             }
         } else {
             $stream = $streams->open($this->path, 'parquet', $context->appendSafe());

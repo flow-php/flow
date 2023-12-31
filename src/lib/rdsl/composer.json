@@ -1,0 +1,37 @@
+{
+    "name": "flow-php/rdsl",
+    "type": "library",
+    "description": "PHP ETL - Remote DSL",
+    "keywords": [
+        "etl",
+        "extract",
+        "transform",
+        "load",
+        "filter",
+        "snappy",
+        "algorithm",
+        "compression"
+    ],
+    "require": {
+        "php": "~8.1.0 || ~8.2.0 || ~8.3.0"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Flow\\": [
+                "src/Flow"
+            ]
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Flow\\": "tests/Flow"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

@@ -8,8 +8,10 @@
     "tests",
     "tools",
     "var",
-    "vendor/fig",
-    "vendor/php-http/mock-client"
+    "fakerphp",
+    "mock-client",
+    "dotenv",
+    "var-exporter"
   ],
   "compression": "GZ",
   "directories": [

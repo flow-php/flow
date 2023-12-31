@@ -12,7 +12,7 @@
         "adapter"
     ],
     "require": {
-        "php": "~8.1 || ~8.2 || ~8.3",
+        "php": "~8.1.0 || ~8.2.0 || ~8.3.0",
         "flow-php/etl": "^0.5.0 || 1.x-dev",
         "google/apiclient": "^2.13"
     },

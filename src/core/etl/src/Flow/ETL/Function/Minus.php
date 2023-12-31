@@ -6,7 +6,7 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class Minus implements ScalarFunction
+final class Minus extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction $leftRef,

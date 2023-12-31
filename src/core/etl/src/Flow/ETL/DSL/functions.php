@@ -11,8 +11,12 @@ use Flow\ETL\ErrorHandler\IgnoreError;
 use Flow\ETL\ErrorHandler\SkipRows;
 use Flow\ETL\ErrorHandler\ThrowError;
 use Flow\ETL\Extractor;
+use Flow\ETL\Extractor\LocalFileListExtractor;
+use Flow\ETL\Filesystem\Path;
+use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\Flow;
+use Flow\ETL\FlowContext;
 use Flow\ETL\Formatter;
 use Flow\ETL\Function\All;
 use Flow\ETL\Function\Any;
@@ -29,6 +33,8 @@ use Flow\ETL\Function\ArraySort;
 use Flow\ETL\Function\ArraySort\Sort;
 use Flow\ETL\Function\ArrayUnpack;
 use Flow\ETL\Function\Average;
+use Flow\ETL\Function\Between;
+use Flow\ETL\Function\Between\Boundary;
 use Flow\ETL\Function\CallMethod;
 use Flow\ETL\Function\Capitalize;
 use Flow\ETL\Function\Cast;
@@ -61,6 +67,7 @@ use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Function\Size;
 use Flow\ETL\Function\Split;
 use Flow\ETL\Function\Sprintf;
+use Flow\ETL\Function\StructureFunctions;
 use Flow\ETL\Function\StyleConverter\StringStyles;
 use Flow\ETL\Function\Sum;
 use Flow\ETL\Function\ToDate;
@@ -78,7 +85,6 @@ use Flow\ETL\Loader\MemoryLoader;
 use Flow\ETL\Loader\StreamLoader;
 use Flow\ETL\Loader\StreamLoader\Output;
 use Flow\ETL\Loader\TransformerLoader;
-use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Memory\Memory;
 use Flow\ETL\Partition;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
@@ -129,9 +135,9 @@ function from_rows(Rows ...$rows) : Extractor\ProcessExtractor
     return new Extractor\ProcessExtractor(...$rows);
 }
 
-function from_array(array $array) : Extractor\MemoryExtractor
+function from_array(iterable $array) : Extractor\ArrayExtractor
 {
-    return new Extractor\MemoryExtractor(new ArrayMemory($array));
+    return new Extractor\ArrayExtractor($array);
 }
 
 function from_cache(string $id, ?Extractor $fallback_extractor = null, bool $clear = false) : Extractor\CacheExtractor
@@ -147,6 +153,11 @@ function from_all(Extractor ...$extractors) : Extractor\ChainExtractor
 function from_memory(Memory $memory) : Extractor\MemoryExtractor
 {
     return new Extractor\MemoryExtractor($memory);
+}
+
+function local_files(string|Path $directory, bool $recursive = false) : Extractor\LocalFileListExtractor
+{
+    return new LocalFileListExtractor(\is_string($directory) ? Path::realpath($directory) : $directory, $recursive);
 }
 
 /**
@@ -431,6 +442,34 @@ function rows(Row ...$row) : Rows
     return new Rows(...$row);
 }
 
+function partition(string $name, string $value) : Partition
+{
+    return new Partition($name, $value);
+}
+
+function partitions(Partition ...$partition) : \Flow\ETL\Partitions
+{
+    return new \Flow\ETL\Partitions(...$partition);
+}
+
+/**
+ * @param array<string, mixed> $options
+ */
+function path(string $path, array $options = []) : Path
+{
+    return new Path($path, $options);
+}
+
+function path_real(string $path, array $options = []) : Path
+{
+    return Path::realpath($path, $options);
+}
+
+function rows_partitioned(array $rows, array $partitions) : Rows
+{
+    return Rows::partitioned($rows, new \Flow\ETL\Partitions(...$partitions));
+}
+
 function col(string $entry) : EntryReference
 {
     return new EntryReference($entry);
@@ -444,6 +483,11 @@ function entry(string $entry) : EntryReference
 function ref(string $entry) : EntryReference
 {
     return new EntryReference($entry);
+}
+
+function structure(string $entry) : StructureFunctions
+{
+    return ref($entry)->structure();
 }
 
 function refs(string|Reference ...$entries) : References
@@ -524,6 +568,11 @@ function array_reverse(ScalarFunction $function, bool $preserveKeys = false) : S
 function now(\DateTimeZone $time_zone = new \DateTimeZone('UTC')) : ScalarFunction
 {
     return new Now($time_zone);
+}
+
+function between(ScalarFunction $ref, ScalarFunction $lowerBound, ScalarFunction $upperBound, Boundary $boundary = Boundary::LEFT_INCLUSIVE) : ScalarFunction
+{
+    return new Between($ref, $lowerBound, $upperBound, $boundary);
 }
 
 function to_date_time(ScalarFunction $ref, string $format = 'Y-m-d H:i:s', \DateTimeZone $timeZone = new \DateTimeZone('UTC')) : ScalarFunction
@@ -663,12 +712,12 @@ function call_method(ScalarFunction $object, ScalarFunction $method, ScalarFunct
     return new CallMethod($object, $method, ...$params);
 }
 
-function all(ScalarFunction ...$functions) : ScalarFunction
+function all(ScalarFunction ...$functions) : All
 {
     return new All(...$functions);
 }
 
-function any(ScalarFunction ...$functions) : ScalarFunction
+function any(ScalarFunction ...$functions) : Any
 {
     return new Any(...$functions);
 }
@@ -765,10 +814,12 @@ function number_format(ScalarFunction $function, ?ScalarFunction $decimals = nul
  * @psalm-suppress PossiblyInvalidIterator
  *
  * @param array<array<mixed>>|array<mixed|string> $data
- * @param array<Partition> $partitions
+ * @param array<Partition>|\Flow\ETL\Partitions $partitions
  */
-function array_to_rows(array $data, EntryFactory $entryFactory = new NativeEntryFactory(), array $partitions = []) : Rows
+function array_to_rows(array $data, EntryFactory $entryFactory = new NativeEntryFactory(), array|\Flow\ETL\Partitions $partitions = []) : Rows
 {
+    $partitions = \is_array($partitions) ? new \Flow\ETL\Partitions(...$partitions) : $partitions;
+
     $isRows = true;
 
     foreach ($data as $v) {
@@ -783,27 +834,40 @@ function array_to_rows(array $data, EntryFactory $entryFactory = new NativeEntry
         $entries = [];
 
         foreach ($data as $key => $value) {
-            $entries[] = $entryFactory->create(\is_int($key) ? 'e' . \str_pad((string) $key, 2, '0', STR_PAD_LEFT) : $key, $value);
+            $name = \is_int($key) ? 'e' . \str_pad((string) $key, 2, '0', STR_PAD_LEFT) : $key;
+
+            $entries[$name] = $entryFactory->create($name, $value);
         }
 
-        return \count($partitions)
-            ? Rows::partitioned([Row::create(...$entries)], $partitions)
-            : new Rows(Row::create(...$entries));
+        foreach ($partitions as $partition) {
+            if (!\array_key_exists($partition->name, $entries)) {
+                $entries[$partition->name] = $entryFactory->create($partition->name, $partition->value);
+            }
+        }
+
+        return Rows::partitioned([Row::create(...\array_values($entries))], $partitions);
     }
+
     $rows = [];
 
     foreach ($data as $row) {
         $entries = [];
 
         foreach ($row as $column => $value) {
-            $entries[] = $entryFactory->create(\is_int($column) ? 'e' . \str_pad((string) $column, 2, '0', STR_PAD_LEFT) : $column, $value);
+            $name = \is_int($column) ? 'e' . \str_pad((string) $column, 2, '0', STR_PAD_LEFT) : $column;
+            $entries[$name] = $entryFactory->create(\is_int($column) ? 'e' . \str_pad((string) $column, 2, '0', STR_PAD_LEFT) : $column, $value);
         }
-        $rows[] = Row::create(...$entries);
+
+        foreach ($partitions as $partition) {
+            if (!\array_key_exists($partition->name, $entries)) {
+                $entries[$partition->name] = $entryFactory->create($partition->name, $partition->value);
+            }
+        }
+
+        $rows[] = Row::create(...\array_values($entries));
     }
 
-    return \count($partitions)
-        ? Rows::partitioned($rows, $partitions)
-        : new Rows(...$rows);
+    return Rows::partitioned($rows, $partitions);
 }
 
 function rank() : Rank
@@ -957,4 +1021,44 @@ function struct_schema(string $name, StructureType $type, bool $nullable = false
 function uuid_schema(string $name, ?Schema\Constraint $constraint = null, ?Schema\Metadata $metadata = null) : Definition
 {
     return Definition::uuid($name, $constraint, $metadata);
+}
+
+function execution_context(?Config $config = null) : FlowContext
+{
+    return new FlowContext($config ?? Config::default());
+}
+
+function flow_context(?Config $config = null) : FlowContext
+{
+    return execution_context($config);
+}
+
+function config() : Config
+{
+    return Config::default();
+}
+
+function config_builder() : ConfigBuilder
+{
+    return new ConfigBuilder();
+}
+
+function overwrite() : SaveMode
+{
+    return SaveMode::Overwrite;
+}
+
+function ignore() : SaveMode
+{
+    return SaveMode::Ignore;
+}
+
+function exception_if_exists() : SaveMode
+{
+    return SaveMode::ExceptionIfExists;
+}
+
+function append() : SaveMode
+{
+    return SaveMode::Append;
 }

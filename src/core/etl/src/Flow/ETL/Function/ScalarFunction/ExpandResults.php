@@ -6,5 +6,5 @@ namespace Flow\ETL\Function\ScalarFunction;
 
 interface ExpandResults
 {
-    public function expand() : bool;
+    public function expandResults() : bool;
 }

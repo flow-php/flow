@@ -20,7 +20,7 @@ use Symfony\Component\Dotenv\Dotenv;
 require __DIR__ . '/../../../bootstrap.php';
 
 $dotenv = new Dotenv();
-$dotenv->load(__DIR__ . '/../../.env');
+$dotenv->load(__DIR__ . '/../../../.env');
 
 $s3_client_option = [
     'client' => [

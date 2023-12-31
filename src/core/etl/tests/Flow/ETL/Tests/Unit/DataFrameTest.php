@@ -20,7 +20,6 @@ use function Flow\ETL\DSL\refs;
 use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\to_callable;
 use Flow\ETL\DataFrame;
-use Flow\ETL\DSL\Transform;
 use Flow\ETL\ErrorHandler\IgnoreError;
 use Flow\ETL\Extractor;
 use Flow\ETL\Flow;
@@ -625,7 +624,7 @@ final class DataFrameTest extends TestCase
             ->rename('country', 'country_code')
             ->void()
             ->aggregate(average(ref('age')))
-            ->rows(Transform::rename('age_avg', 'average_age'))
+            ->rename('age_avg', 'average_age')
             ->fetch();
 
         $this->assertEquals(
