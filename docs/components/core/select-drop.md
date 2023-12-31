@@ -12,7 +12,7 @@ To quickly select only relevant entries use Rows `DataFrame::select`
 data_frame()
     ->read(from_array(...))
     ->select("id", "name")
-    ->write(to_otuput())
+    ->write(to_output())
     ->run();
 ```
 
@@ -26,6 +26,6 @@ To quickly drop irrelevant entries use Rows `DataFrame::drop`
 data_frame()
     ->read(from_array(...))
     ->drop("_tags")
-    ->write(to_otuput())
+    ->write(to_output())
     ->run();
 ```
