@@ -36,6 +36,7 @@
 - [#870](https://github.com/flow-php/flow/pull/870) - **Reduced number of files in phar** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#891](https://github.com/flow-php/flow/pull/891) - **Remove compression serializer** - [@stloyd](https://github.com/stloyd)
 - [#887](https://github.com/flow-php/flow/pull/887) - **Partitioning related configuration from Flow Execution Context** - [@norberttech](https://github.com/norberttech)
 - [b9a1fb](https://github.com/flow-php/flow/commit/b9a1fbb1e904ae14ee6247b0357c9ea2be9e68e9) - **test DSL from composer.json in order to fix phar build** - [@norberttech](https://github.com/norberttech)
 
