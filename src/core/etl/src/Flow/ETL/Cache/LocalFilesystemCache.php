@@ -82,7 +82,8 @@ final class LocalFilesystemCache implements Cache
 
         while (($serializedRow = \fgets($cacheStream)) !== false) {
             /** @var Rows $rows */
-            $rows = $this->serializer->unserialize($serializedRow);
+            $rows = $this->serializer->unserialize($serializedRow, Rows::class);
+
             yield $rows;
         }
 
