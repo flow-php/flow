@@ -63,7 +63,7 @@ final class PSRSimpleCache implements Cache
                 /**
                  * @var Rows $rows
                  */
-                $rows = $this->serializer->unserialize((string) $this->cache->get($entry));
+                $rows = $this->serializer->unserialize((string) $this->cache->get($entry), Rows::class);
 
                 yield $rows;
             }

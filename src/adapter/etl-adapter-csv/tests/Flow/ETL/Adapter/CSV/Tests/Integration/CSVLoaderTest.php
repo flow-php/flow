@@ -13,7 +13,6 @@ use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Flow;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
-use Flow\Serializer\CompressingSerializer;
 use PHPUnit\Framework\TestCase;
 
 final class CSVLoaderTest extends TestCase
@@ -68,38 +67,6 @@ CSV,
 
         if (\file_exists($path . DIRECTORY_SEPARATOR . $files[0])) {
             \unlink($path . DIRECTORY_SEPARATOR . $files[0]);
-        }
-    }
-
-    public function test_loading_csv_files_without_thread_safe_and_with_serialization() : void
-    {
-        $path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.csv';
-
-        $serializer = new CompressingSerializer();
-
-        (new Flow())
-            ->process(
-                new Rows(
-                    Row::create(int_entry('id', 1), str_entry('name', 'Norbert')),
-                    Row::create(int_entry('id', 2), str_entry('name', 'Tomek')),
-                    Row::create(int_entry('id', 3), str_entry('name', 'Dawid')),
-                )
-            )
-            ->load($serializer->unserialize($serializer->serialize(to_csv($path, $withHeader = true))))
-            ->run();
-
-        $this->assertStringContainsString(
-            <<<'CSV'
-id,name
-1,Norbert
-2,Tomek
-3,Dawid
-CSV,
-            \file_get_contents($path)
-        );
-
-        if (\file_exists($path)) {
-            \unlink($path);
         }
     }
 

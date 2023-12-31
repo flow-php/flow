@@ -7,7 +7,6 @@ namespace Flow\ETL;
 use Flow\ETL\ErrorHandler\ThrowError;
 use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Row\EntryFactory;
-use Flow\Serializer\Serializer;
 
 /**
  * Mutable Flow execution context.
@@ -42,11 +41,6 @@ final class FlowContext
     public function errorHandler() : ErrorHandler
     {
         return $this->errorHandler;
-    }
-
-    public function serializer() : Serializer
-    {
-        return $this->config->serializer();
     }
 
     public function setAppendSafe(bool $appendSafe = true) : self

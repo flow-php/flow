@@ -15,7 +15,9 @@ interface Serializer
     public function serialize(Serializable $serializable) : string;
 
     /**
+     * @param class-string $class
+     *
      * @throw RuntimeException
      */
-    public function unserialize(string $serialized) : Serializable;
+    public function unserialize(string $serialized, string $class) : Serializable;
 }

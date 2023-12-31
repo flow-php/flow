@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Cache;
 
 use Flow\ETL\Cache\LocalFilesystemCache;
-use Flow\ETL\Config;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Rows;
@@ -15,7 +14,7 @@ final class LocalFilesystemCacheTest extends IntegrationTestCase
 {
     public function test_cleaning_cache() : void
     {
-        $cache = new LocalFilesystemCache($this->cacheDir, Config::default()->serializer());
+        $cache = new LocalFilesystemCache($this->cacheDir);
 
         $this->assertFalse($cache->has('test'));
 
@@ -35,7 +34,7 @@ final class LocalFilesystemCacheTest extends IntegrationTestCase
 
     public function test_cleaning_different_cache_id() : void
     {
-        $cache = new LocalFilesystemCache($this->cacheDir, Config::default()->serializer());
+        $cache = new LocalFilesystemCache($this->cacheDir);
 
         $cache->add('test', new Rows(Row::create(new IntegerEntry('id', 1))));
         $cache->add('other-test', new Rows(Row::create(new IntegerEntry('id', 2))));
@@ -50,7 +49,7 @@ final class LocalFilesystemCacheTest extends IntegrationTestCase
 
     public function test_reading_empty_cache() : void
     {
-        $cache = new LocalFilesystemCache($this->cacheDir, Config::default()->serializer());
+        $cache = new LocalFilesystemCache($this->cacheDir);
 
         $this->assertCount(
             0,
@@ -60,7 +59,7 @@ final class LocalFilesystemCacheTest extends IntegrationTestCase
 
     public function test_writing_to_cache() : void
     {
-        $cache = new LocalFilesystemCache($this->cacheDir, Config::default()->serializer());
+        $cache = new LocalFilesystemCache($this->cacheDir);
 
         $cache->add('test', new Rows(Row::create(new IntegerEntry('id', 1))));
         $cache->add('test', new Rows(Row::create(new IntegerEntry('id', 2))));
@@ -73,7 +72,7 @@ final class LocalFilesystemCacheTest extends IntegrationTestCase
 
     public function test_writing_to_cache_with_different_ids() : void
     {
-        $cache = new LocalFilesystemCache($this->cacheDir, Config::default()->serializer());
+        $cache = new LocalFilesystemCache($this->cacheDir);
 
         $cache->add('test', new Rows(Row::create(new IntegerEntry('id', 1))));
         $cache->add('other-test', new Rows(Row::create(new IntegerEntry('id', 2))));

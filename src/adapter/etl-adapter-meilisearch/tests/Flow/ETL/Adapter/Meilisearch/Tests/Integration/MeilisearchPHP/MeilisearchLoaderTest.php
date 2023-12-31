@@ -11,7 +11,6 @@ use Flow\ETL\Config;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
-use Flow\Serializer\CompressingSerializer;
 use PHPUnit\Framework\TestCase;
 
 final class MeilisearchLoaderTest extends TestCase
@@ -135,29 +134,5 @@ final class MeilisearchLoaderTest extends TestCase
             ],
             $data
         );
-    }
-
-    public function test_integration_with_serialization() : void
-    {
-        $serializer = new CompressingSerializer();
-
-        $loaderSerialized = $serializer->serialize(
-            to_meilisearch_bulk_index($this->meilisearchContext->clientConfig(), self::INDEX_NAME)
-        );
-
-        $serializer->unserialize($loaderSerialized)->load(new Rows(
-            Row::create(
-                new Row\Entry\IntegerEntry('id', 1),
-                Row\Entry\JsonEntry::object('json', ['foo' => 'bar'])
-            ),
-        ), new FlowContext(Config::default()));
-
-        $response = $this->meilisearchContext->client()->index(self::INDEX_NAME)->search('');
-
-        $this->assertSame(1, $response->getEstimatedTotalHits());
-
-        $json = \array_map(static fn (array $hit) : array => $hit['json'], $response->getHits());
-
-        $this->assertSame([['foo' => 'bar']], $json);
     }
 }
