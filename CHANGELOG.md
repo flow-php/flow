@@ -1,4 +1,4 @@
-## [Unreleased] - 2023-12-30
+## [Unreleased] - 2023-12-31
 
 ### Added
 - [#890](https://github.com/flow-php/flow/pull/890) - **Structure Select function** - [@norberttech](https://github.com/norberttech)
@@ -26,6 +26,7 @@
 - [#867](https://github.com/flow-php/flow/pull/867) - **Update Homebrew TAP formula: flow-php to version: 0.5.2** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#892](https://github.com/flow-php/flow/pull/892) - **2 small typos** - [@xaviermarchegay](https://github.com/xaviermarchegay)
 - [#887](https://github.com/flow-php/flow/pull/887) - **Double partitioning** - [@norberttech](https://github.com/norberttech)
 - [#884](https://github.com/flow-php/flow/pull/884) - **printing null type entries in schema formatted** - [@norberttech](https://github.com/norberttech)
 - [#877](https://github.com/flow-php/flow/pull/877) - **Inconsistent behavior of DataFrame::fetch for partitioned rows** - [@norberttech](https://github.com/norberttech)
