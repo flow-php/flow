@@ -12,29 +12,12 @@ use Flow\ETL\Row\Entries;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
-/**
- * @implements Transformer<array{entry: string, function: ScalarFunction}>
- */
 final class ScalarFunctionTransformer implements Transformer
 {
     public function __construct(
         private readonly string $entryName,
         public readonly ScalarFunction $function,
     ) {
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'entry' => $this->entryName,
-            'function' => $this->function,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->entryName = $data['entry'];
-        $this->function = $data['function'];
     }
 
     public function transform(Rows $rows, FlowContext $context) : Rows

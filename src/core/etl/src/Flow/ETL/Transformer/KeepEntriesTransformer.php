@@ -13,9 +13,6 @@ use Flow\ETL\Row\References;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
-/**
- * @implements Transformer<array{refs: References}>
- */
 final class KeepEntriesTransformer implements Transformer
 {
     private readonly References $refs;
@@ -23,18 +20,6 @@ final class KeepEntriesTransformer implements Transformer
     public function __construct(string|Reference ...$refs)
     {
         $this->refs = References::init(...$refs);
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'refs' => $this->refs,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->refs = $data['refs'];
     }
 
     public function transform(Rows $rows, FlowContext $context) : Rows

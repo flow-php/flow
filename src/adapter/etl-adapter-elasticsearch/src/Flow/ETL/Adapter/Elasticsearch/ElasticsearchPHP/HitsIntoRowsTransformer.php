@@ -9,26 +9,11 @@ use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
-/**
- * @implements Transformer<array{source: DocumentDataSource}>
- */
 final class HitsIntoRowsTransformer implements Transformer
 {
     public function __construct(
         private readonly DocumentDataSource $source = DocumentDataSource::source,
     ) {
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'source' => $this->source,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->source = $data['source'];
     }
 
     public function transform(Rows $rows, FlowContext $context) : Rows

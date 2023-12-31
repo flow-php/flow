@@ -18,7 +18,7 @@ use Flow\ETL\Row\Schema\Metadata;
 /**
  * @template T
  *
- * @implements Entry<array<T>, array{name: string, type: MapType, value: array<T>}>
+ * @implements Entry<array<T>>
  */
 final class MapEntry implements Entry
 {
@@ -43,21 +43,9 @@ final class MapEntry implements Entry
         }
     }
 
-    public function __serialize() : array
-    {
-        return ['name' => $this->name, 'type' => $this->type, 'value' => $this->value];
-    }
-
     public function __toString() : string
     {
         return $this->toString();
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->name = $data['name'];
-        $this->type = $data['type'];
-        $this->value = $data['value'];
     }
 
     public function definition() : Definition

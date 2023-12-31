@@ -8,9 +8,6 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
-/**
- * @implements Transformer<array{limit: int}>
- */
 final class LimitTransformer implements Transformer
 {
     private int $rowsCount = 0;
@@ -20,18 +17,6 @@ final class LimitTransformer implements Transformer
         if ($this->limit <= 0) {
             throw new InvalidArgumentException("Limit can't be lower or equal zero, given: " . $this->limit);
         }
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'limit' => $this->limit,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->limit = $data['limit'];
     }
 
     public function transform(Rows $rows, FlowContext $context) : Rows

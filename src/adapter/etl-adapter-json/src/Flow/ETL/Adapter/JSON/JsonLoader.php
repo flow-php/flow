@@ -13,9 +13,6 @@ use Flow\ETL\Loader\Closure;
 use Flow\ETL\Partition;
 use Flow\ETL\Rows;
 
-/**
- * @implements Loader<array{path: Path}>
- */
 final class JsonLoader implements Closure, Loader, Loader\FileLoader
 {
     /**
@@ -28,18 +25,6 @@ final class JsonLoader implements Closure, Loader, Loader\FileLoader
         if ($this->path->isPattern()) {
             throw new \InvalidArgumentException("JsonLoader path can't be pattern, given: " . $this->path->path());
         }
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'path' => $this->path,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->path = $data['path'];
     }
 
     public function closure(FlowContext $context) : void

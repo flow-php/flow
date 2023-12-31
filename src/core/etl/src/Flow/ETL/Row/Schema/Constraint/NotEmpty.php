@@ -7,21 +7,9 @@ namespace Flow\ETL\Row\Schema\Constraint;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Schema\Constraint;
 
-/**
- * @implements Constraint<array<mixed>>
- */
 final class NotEmpty implements Constraint
 {
     public function __construct()
-    {
-    }
-
-    public function __serialize() : array
-    {
-        return [];
-    }
-
-    public function __unserialize(array $data) : void
     {
     }
 

@@ -6,24 +6,10 @@ use Flow\ETL\PHP\Type\Logical\Map\MapKey;
 use Flow\ETL\PHP\Type\Logical\Map\MapValue;
 use Flow\ETL\PHP\Type\Type;
 
-/**
- * @implements LogicalType<array{key: MapKey, value: MapValue}>
- */
 final class MapType implements LogicalType
 {
     public function __construct(private readonly Map\MapKey $key, private readonly Map\MapValue $value)
     {
-    }
-
-    public function __serialize() : array
-    {
-        return ['key' => $this->key, 'value' => $this->value];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->key = $data['key'];
-        $this->value = $data['value'];
     }
 
     public function isEqual(Type $type) : bool

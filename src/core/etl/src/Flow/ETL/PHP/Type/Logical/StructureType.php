@@ -6,9 +6,6 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Type;
 
-/**
- * @implements LogicalType<array{elements: array<StructureElement>}>
- */
 final class StructureType implements LogicalType
 {
     /**
@@ -27,16 +24,6 @@ final class StructureType implements LogicalType
         }
 
         $this->elements = $elements;
-    }
-
-    public function __serialize() : array
-    {
-        return ['elements' => $this->elements];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->elements = $data['elements'];
     }
 
     public function elements() : array

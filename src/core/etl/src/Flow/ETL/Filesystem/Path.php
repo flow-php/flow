@@ -9,12 +9,8 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Filesystem\Stream\ResourceContext;
 use Flow\ETL\Partition;
 use Flow\ETL\Partitions;
-use Flow\Serializer\Serializable;
 
-/**
- * @implements Serializable<array{path: string, scheme: string, options: array<string, mixed>, extension: string|false}>
- */
-final class Path implements Serializable
+final class Path
 {
     private string $basename;
 
@@ -146,24 +142,6 @@ final class Path implements Serializable
     public static function tmpFile(string $extension) : self
     {
         return new self(\sys_get_temp_dir() . DIRECTORY_SEPARATOR . \str_replace('.', '', \uniqid('', true)) . '.' . $extension);
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'scheme' => $this->scheme,
-            'path' => $this->path,
-            'options' => $this->options,
-            'extension' => $this->extension,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->path = $data['path'];
-        $this->scheme = $data['scheme'];
-        $this->options = $data['options'];
-        $this->extension = $data['extension'];
     }
 
     public function addPartitions(Partition $partition, Partition ...$partitions) : self

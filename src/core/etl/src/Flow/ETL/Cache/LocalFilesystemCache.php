@@ -12,8 +12,6 @@ use Flow\Serializer\NativePHPSerializer;
 use Flow\Serializer\Serializer;
 
 /**
- * @implements Cache<array{path: string, serializer: Serializer}>
- *
  * @infection-ignore-all
  */
 final class LocalFilesystemCache implements Cache
@@ -25,20 +23,6 @@ final class LocalFilesystemCache implements Cache
         if (!\file_exists($path) || !\is_dir($path)) {
             throw new InvalidArgumentException("Given cache path does not exists or it's not a directory: {$path}");
         }
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'path' => $this->path,
-            'serializer' => $this->serializer,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->path = $data['path'];
-        $this->serializer = $data['serializer'];
     }
 
     public function add(string $id, Rows $rows) : void

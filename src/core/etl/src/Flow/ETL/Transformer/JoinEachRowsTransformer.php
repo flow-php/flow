@@ -11,9 +11,6 @@ use Flow\ETL\Join\Join;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
-/**
- * @implements Transformer<array{factory: DataFrameFactory, condition: Expression, type: Join}>
- */
 final class JoinEachRowsTransformer implements Transformer
 {
     private function __construct(
@@ -41,22 +38,6 @@ final class JoinEachRowsTransformer implements Transformer
     public static function right(DataFrameFactory $right, Expression $condition) : self
     {
         return new self($right, $condition, Join::right);
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'factory' => $this->factory,
-            'condition' => $this->condition,
-            'type' => $this->type,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->factory = $data['factory'];
-        $this->condition = $data['condition'];
-        $this->type = $data['type'];
     }
 
     /**

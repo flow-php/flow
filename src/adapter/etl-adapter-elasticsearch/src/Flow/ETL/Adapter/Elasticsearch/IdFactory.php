@@ -6,14 +6,8 @@ namespace Flow\ETL\Adapter\Elasticsearch;
 
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
-use Flow\Serializer\Serializable;
 
-/**
- * @template TValue
- *
- * @extends Serializable<TValue>
- */
-interface IdFactory extends Serializable
+interface IdFactory
 {
     public function create(Row $row) : Entry;
 }

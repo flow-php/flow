@@ -14,7 +14,7 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @implements Entry<string, array{name: string, value: array, object: boolean, type: ScalarType}>
+ * @implements Entry<string>
  */
 final class JsonEntry implements \Stringable, Entry
 {
@@ -67,27 +67,9 @@ final class JsonEntry implements \Stringable, Entry
         return $entry;
     }
 
-    public function __serialize() : array
-    {
-        return [
-            'name' => $this->name,
-            'value' => $this->value,
-            'object' => $this->object,
-            'type' => $this->type,
-        ];
-    }
-
     public function __toString() : string
     {
         return $this->toString();
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->name = $data['name'];
-        $this->value = $data['value'];
-        $this->object = $data['object'];
-        $this->type = $data['type'];
     }
 
     public function definition() : Definition

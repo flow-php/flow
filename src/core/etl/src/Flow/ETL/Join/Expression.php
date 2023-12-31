@@ -9,12 +9,8 @@ use Flow\ETL\Join\Comparison\All;
 use Flow\ETL\Join\Comparison\Identical;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
-use Flow\Serializer\Serializable;
 
-/**
- * @implements Serializable<array{comparison: Comparison, prefix: string}>
- */
-final class Expression implements Serializable
+final class Expression
 {
     public function __construct(
         private readonly Comparison $comparison,
@@ -49,20 +45,6 @@ final class Expression implements Serializable
         }
 
         return new self($comparison, $joinPrefix);
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'comparison' => $this->comparison,
-            'prefix' => $this->joinPrefix,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->comparison = $data['comparison'];
-        $this->joinPrefix = $data['prefix'];
     }
 
     /**

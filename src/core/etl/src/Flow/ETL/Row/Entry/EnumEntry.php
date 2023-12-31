@@ -11,7 +11,7 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @implements Entry<\UnitEnum, array{name: string, value: \UnitEnum, type: EnumType}>
+ * @implements Entry<\UnitEnum>
  */
 final class EnumEntry implements Entry
 {
@@ -26,25 +26,9 @@ final class EnumEntry implements Entry
         $this->type = EnumType::of($value::class);
     }
 
-    public function __serialize() : array
-    {
-        return [
-            'name' => $this->name,
-            'value' => $this->value,
-            'type' => $this->type,
-        ];
-    }
-
     public function __toString() : string
     {
         return $this->value->name;
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->name = $data['name'];
-        $this->value = $data['value'];
-        $this->type = $data['type'];
     }
 
     public function definition() : Definition

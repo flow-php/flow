@@ -9,9 +9,6 @@ use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
-/**
- * @implements Transformer<array{upper: bool, lower: bool, ucfirst: bool, ucwords: bool}>
- */
 final class RenameAllCaseTransformer implements Transformer
 {
     public function __construct(
@@ -20,24 +17,6 @@ final class RenameAllCaseTransformer implements Transformer
         private readonly bool $ucfirst = false,
         private readonly bool $ucwords = false
     ) {
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'upper' => $this->upper,
-            'lower' => $this->lower,
-            'ucfirst' => $this->ucfirst,
-            'ucwords' => $this->ucwords,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->upper = $data['upper'];
-        $this->lower = $data['lower'];
-        $this->ucfirst = $data['ucfirst'];
-        $this->ucwords = $data['ucwords'];
     }
 
     public function transform(Rows $rows, FlowContext $context) : Rows

@@ -17,12 +17,8 @@ use Flow\ETL\Row\Entry\XMLEntry;
 use Flow\ETL\Row\Entry\XMLNodeEntry;
 use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
-use Flow\Serializer\Serializable;
 
-/**
- * @implements Serializable<array{name: string, value: string}>
- */
-final class Partition implements Serializable
+final class Partition
 {
     /**
      * @var array<string>
@@ -90,20 +86,6 @@ final class Partition implements Serializable
             XMLEntry::class, XMLNodeEntry::class, JsonEntry::class, ObjectEntry::class, ListEntry::class, StructureEntry::class, MapEntry::class, NullEntry::class, ArrayEntry::class => throw new InvalidArgumentException($entry::class . ' can\'t be used as a partition'),
             default => $entry->toString(),
         };
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'name' => $this->name,
-            'value' => $this->value,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->name = $data['name'];
-        $this->value = $data['value'];
     }
 
     public function id() : string

@@ -8,9 +8,6 @@ use Flow\ETL\Join\Comparison;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 
-/**
- * @implements Comparison<array{comparisons: array<Comparison>}>
- */
 final class All implements Comparison
 {
     /**
@@ -21,18 +18,6 @@ final class All implements Comparison
     public function __construct(Comparison $comparison, Comparison ...$comparisons)
     {
         $this->comparisons = \array_merge([$comparison], $comparisons);
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'comparisons' => $this->comparisons,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->comparisons = $data['comparisons'];
     }
 
     public function compare(Row $left, Row $right) : bool

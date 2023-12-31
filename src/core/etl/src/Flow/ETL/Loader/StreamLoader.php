@@ -14,9 +14,6 @@ use Flow\ETL\Row\Schema\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Row\Schema\SchemaFormatter;
 use Flow\ETL\Rows;
 
-/**
- * @implements Loader<array{url: string, mode: Mode, truncate: int|bool, output: Output, formatter: Formatter, schema_formatter: SchemaFormatter}>
- */
 final class StreamLoader implements Loader
 {
     /**
@@ -48,28 +45,6 @@ final class StreamLoader implements Loader
     public static function stdout(int|bool $truncate = 20, Output $output = Output::rows, Formatter $formatter = new Formatter\AsciiTableFormatter(), SchemaFormatter $schemaFormatter = new ASCIISchemaFormatter()) : self
     {
         return new self('php://stdout', Mode::WRITE, $truncate, $output, $formatter, $schemaFormatter);
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'url' => $this->url,
-            'mode' => $this->mode,
-            'truncate' => $this->truncate,
-            'output' => $this->output,
-            'formatter' => $this->formatter,
-            'schema_formatter' => $this->schemaFormatter,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->url = $data['url'];
-        $this->mode = $data['mode'];
-        $this->truncate = $data['truncate'];
-        $this->output = $data['output'];
-        $this->formatter = $data['formatter'];
-        $this->schemaFormatter = $data['schema_formatter'];
     }
 
     public function load(Rows $rows, FlowContext $context) : void

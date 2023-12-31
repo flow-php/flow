@@ -6,12 +6,8 @@ namespace Flow\ETL\Row;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Schema\Definition;
-use Flow\Serializer\Serializable;
 
-/**
- * @implements Serializable<array{definitions: array<string, Definition>}>
- */
-final class Schema implements \Countable, Serializable
+final class Schema implements \Countable
 {
     /**
      * @var array<string, Definition>
@@ -31,18 +27,6 @@ final class Schema implements \Countable, Serializable
         }
 
         $this->definitions = $uniqueDefinitions;
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'definitions' => $this->definitions,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->definitions = $data['definitions'];
     }
 
     public function count() : int

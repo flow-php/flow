@@ -412,15 +412,6 @@ final class DataFrameTest extends TestCase
                     fn (Row $row) : Row => $row->set(new StringEntry('stamp', 'zero'))
                 );
             }
-
-            public function __serialize() : array
-            {
-                return [];
-            }
-
-            public function __unserialize(array $data) : void
-            {
-            }
         };
 
         $loader = new class implements Loader {
@@ -429,15 +420,6 @@ final class DataFrameTest extends TestCase
             public function load(Rows $rows, FlowContext $context) : void
             {
                 $this->result = \array_merge($this->result, $rows->toArray());
-            }
-
-            public function __serialize() : array
-            {
-                return [];
-            }
-
-            public function __unserialize(array $data) : void
-            {
             }
         };
 
@@ -448,15 +430,6 @@ final class DataFrameTest extends TestCase
                 public function transform(Rows $rows, FlowContext $context) : Rows
                 {
                     throw new \RuntimeException('Unexpected exception');
-                }
-
-                public function __serialize() : array
-                {
-                    return [];
-                }
-
-                public function __unserialize(array $data) : void
-                {
                 }
             })
             ->rows(AddStampToStringEntryTransformer::divideBySemicolon('stamp', 'one'))
@@ -665,15 +638,6 @@ final class DataFrameTest extends TestCase
                     {
                         return $rows->map(fn (Row $row) => $row->rename('id', 'new_id'));
                     }
-
-                    public function __serialize() : array
-                    {
-                        return [];
-                    }
-
-                    public function __unserialize(array $data) : void
-                    {
-                    }
                 }
             )
             ->batchSize(2)
@@ -682,15 +646,6 @@ final class DataFrameTest extends TestCase
                     public function load(Rows $rows, FlowContext $context) : void
                     {
                         Assert::assertCount(2, $rows);
-                    }
-
-                    public function __serialize() : array
-                    {
-                        return [];
-                    }
-
-                    public function __unserialize(array $data) : void
-                    {
                     }
                 }
             )
@@ -720,15 +675,6 @@ final class DataFrameTest extends TestCase
                     {
                         return $rows->map(fn (Row $row) => $row->rename('id', 'new_id'));
                     }
-
-                    public function __serialize() : array
-                    {
-                        return [];
-                    }
-
-                    public function __unserialize(array $data) : void
-                    {
-                    }
                 }
             )
             ->collect()
@@ -737,15 +683,6 @@ final class DataFrameTest extends TestCase
                     public function load(Rows $rows, FlowContext $context) : void
                     {
                         Assert::assertCount(3, $rows);
-                    }
-
-                    public function __serialize() : array
-                    {
-                        return [];
-                    }
-
-                    public function __unserialize(array $data) : void
-                    {
                     }
                 }
             )

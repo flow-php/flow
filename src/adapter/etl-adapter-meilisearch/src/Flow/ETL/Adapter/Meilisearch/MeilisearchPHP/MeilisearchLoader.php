@@ -11,22 +11,9 @@ use Flow\ETL\Rows;
 use Meilisearch\Client;
 use Psr\Http\Client\ClientInterface;
 
-/**
- * @implements Loader<array{
- *  config: array{
- *     url: string,
- *     apiKey: string,
- *     httpClient: ?ClientInterface
- *  },
- *  index: string,
- *  method: string
- * }>
- */
 final class MeilisearchLoader implements Loader
 {
     private Client|null $client = null;
-
-    private string $method;
 
     /**
      * @param array{url: string, apiKey: string, httpClient: ?ClientInterface} $config
@@ -35,7 +22,6 @@ final class MeilisearchLoader implements Loader
         private array $config,
         private string $index,
     ) {
-        $this->method = 'index';
     }
 
     /**
@@ -43,27 +29,7 @@ final class MeilisearchLoader implements Loader
      */
     public static function update(array $config, string $index) : self
     {
-        $loader = new self($config, $index);
-        $loader->method = 'update';
-
-        return $loader;
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'config' => $this->config,
-            'index' => $this->index,
-            'method' => $this->method,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->config = $data['config'];
-        $this->index = $data['index'];
-        $this->method = $data['method'];
-        $this->client = null;
+        return new self($config, $index);
     }
 
     public function load(Rows $rows, FlowContext $context) : void

@@ -13,7 +13,7 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @implements Entry<float, array{name: string, value: float, precision: int, type: ScalarType}>
+ * @implements Entry<float>
  */
 final class FloatEntry implements \Stringable, Entry
 {
@@ -33,22 +33,9 @@ final class FloatEntry implements \Stringable, Entry
         $this->type = type_float();
     }
 
-    public function __serialize() : array
-    {
-        return ['name' => $this->name, 'value' => $this->value, 'precision' => $this->precision, 'type' => $this->type];
-    }
-
     public function __toString() : string
     {
         return $this->toString();
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->name = $data['name'];
-        $this->value = $data['value'];
-        $this->precision = $data['precision'];
-        $this->type = $data['type'];
     }
 
     public function definition() : Definition

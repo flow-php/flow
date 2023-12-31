@@ -2,14 +2,7 @@
 
 namespace Flow\ETL;
 
-use Flow\Serializer\Serializable;
-
-/**
- * @template T
- *
- * @extends Serializable<T>
- */
-interface DataFrameFactory extends Serializable
+interface DataFrameFactory
 {
     public function from(Rows $rows) : DataFrame;
 }

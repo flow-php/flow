@@ -10,9 +10,6 @@ use Flow\Serializer\NativePHPSerializer;
 use Flow\Serializer\Serializer;
 use Psr\SimpleCache\CacheInterface;
 
-/**
- * @implements Cache<array{cache: CacheInterface, serializer: Serializer}>
- */
 final class PSRSimpleCache implements Cache
 {
     public function __construct(
@@ -20,20 +17,6 @@ final class PSRSimpleCache implements Cache
         private readonly null|int|\DateInterval $ttl = null,
         private readonly Serializer $serializer = new NativePHPSerializer()
     ) {
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'cache' => $this->cache,
-            'serializer' => $this->serializer,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->cache = $data['cache'];
-        $this->serializer = $data['serializer'];
     }
 
     public function add(string $id, Rows $rows) : void
