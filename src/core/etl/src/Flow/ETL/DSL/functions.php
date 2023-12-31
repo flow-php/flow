@@ -466,9 +466,9 @@ function path_real(string $path, array $options = []) : Path
     return Path::realpath($path, $options);
 }
 
-function rows_partitioned(array $rows, array $partitions) : Rows
+function rows_partitioned(array $rows, array|\Flow\ETL\Partitions $partitions) : Rows
 {
-    return Rows::partitioned($rows, new \Flow\ETL\Partitions(...$partitions));
+    return Rows::partitioned($rows, $partitions);
 }
 
 function col(string $entry) : EntryReference

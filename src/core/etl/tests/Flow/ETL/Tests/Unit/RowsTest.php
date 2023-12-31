@@ -7,10 +7,12 @@ namespace Flow\ETL\Tests\Unit;
 use function Flow\ETL\DSL\array_entry;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\bool_entry;
+use function Flow\ETL\DSL\datetime_entry;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\list_entry;
 use function Flow\ETL\DSL\null_entry;
 use function Flow\ETL\DSL\partition;
+use function Flow\ETL\DSL\partitions;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
@@ -21,7 +23,6 @@ use function Flow\ETL\DSL\type_list;
 use function Flow\ETL\DSL\type_string;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Partitions;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\Row;
@@ -458,7 +459,7 @@ final class RowsTest extends TestCase
         $rows2 = rows();
 
         $this->assertEquals(
-            \Flow\ETL\DSL\partitions(partition('group', 'a')),
+            partitions(partition('group', 'a')),
             $rows1->merge($rows2)->partitions()
         );
         $this->assertCount(1, $rows1->merge($rows2));
@@ -479,7 +480,7 @@ final class RowsTest extends TestCase
         $rows2 = rows(row(int_entry('id', 2), str_entry('group', 'b')))->partitionBy(ref('group'))[0];
 
         $this->assertEquals(
-            \Flow\ETL\DSL\partitions(),
+            partitions(),
             $rows1->merge($rows2)->partitions()
         );
         $this->assertCount(2, $rows1->merge($rows2));
@@ -491,7 +492,7 @@ final class RowsTest extends TestCase
         $rows2 = rows(row(int_entry('id', 2), str_entry('group', 'a')))->partitionBy(ref('group'))[0];
 
         $this->assertEquals(
-            \Flow\ETL\DSL\partitions(partition('group', 'a')),
+            partitions(partition('group', 'a')),
             $rows1->merge($rows2)->partitions()
         );
         $this->assertCount(2, $rows1->merge($rows2));
@@ -506,7 +507,7 @@ final class RowsTest extends TestCase
             ->partitionBy(ref('sub_group'), ref('group'))[0];
 
         $this->assertEquals(
-            \Flow\ETL\DSL\partitions(partition('group', 'a'), partition('sub_group', '1')),
+            partitions(partition('group', 'a'), partition('sub_group', '1')),
             $rows1->merge($rows2)->partitions()
         );
         $this->assertCount(2, $rows1->merge($rows2));
@@ -687,6 +688,34 @@ final class RowsTest extends TestCase
         );
     }
 
+    public function test_partition_rows_date_entry() : void
+    {
+        $this->assertEquals(
+            [
+                rows_partitioned(
+                    [row(datetime_entry('date', '2023-01-01 00:00:00 UTC'))],
+                    partitions(
+                        partition('date', '2023-01-01')
+                    )
+                ),
+                rows_partitioned(
+                    [
+                        row(datetime_entry('date', '2023-01-02 00:00:00 UTC')),
+                        row(datetime_entry('date', '2023-01-02 00:00:00 UTC')),
+                    ],
+                    partitions(
+                        partition('date', '2023-01-02')
+                    )
+                ),
+            ],
+            rows(
+                row(datetime_entry('date', '2023-01-01 00:00:00 UTC')),
+                row(datetime_entry('date', '2023-01-02 00:00:00 UTC')),
+                row(datetime_entry('date', '2023-01-02 00:00:00 UTC'))
+            )->partitionBy(ref('date'))
+        );
+    }
+
     public function test_partitions() : void
     {
         $rows = (rows(
@@ -697,7 +726,7 @@ final class RowsTest extends TestCase
         ))->partitionBy('group');
 
         $this->assertEquals(
-            new Partitions(partition('group', 'a')),
+            partitions(partition('group', 'a')),
             $rows[0]->partitions()
         );
     }
