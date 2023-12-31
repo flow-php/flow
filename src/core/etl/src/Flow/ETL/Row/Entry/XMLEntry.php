@@ -38,10 +38,36 @@ final class XMLEntry implements \Stringable, Entry
         $this->type = type_object($this->value::class);
     }
 
+    public function __serialize() : array
+    {
+        return [
+            'name' => $this->name,
+            /** @phpstan-ignore-next-line  */
+            'value' => \base64_encode(\gzcompress($this->value->saveXML())),
+            'type' => $this->type,
+        ];
+    }
+
     public function __toString() : string
     {
         /** @phpstan-ignore-next-line  */
         return $this->value->saveXML();
+    }
+
+    public function __unserialize(array $data) : void
+    {
+        $this->name = $data['name'];
+        $this->type = $data['type'];
+        /** @phpstan-ignore-next-line  */
+        $xmlString = \gzuncompress(\base64_decode($data['value'], true));
+        $doc = new \DOMDocument();
+
+        /** @phpstan-ignore-next-line  */
+        if (!@$doc->loadXML($xmlString)) {
+            throw new InvalidArgumentException(\sprintf('Given string "%s" is not valid XML', $xmlString));
+        }
+
+        $this->value = $doc;
     }
 
     public function definition() : Definition

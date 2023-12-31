@@ -23,6 +23,16 @@ final class XMLNodeEntry implements \Stringable, Entry
         $this->type = type_object($this->value::class);
     }
 
+    public function __serialize() : array
+    {
+        return [
+            'name' => $this->name,
+            /* @phpstan-ignore-next-line */
+            'value' => \base64_encode(\gzcompress($this->toString())),
+            'type' => $this->type,
+        ];
+    }
+
     public function __toString() : string
     {
         /**
@@ -31,6 +41,21 @@ final class XMLNodeEntry implements \Stringable, Entry
          * @phpstan-ignore-next-line
          */
         return $this->value->ownerDocument->saveXML($this->value);
+    }
+
+    public function __unserialize(array $data) : void
+    {
+        $this->name = $data['name'];
+        $this->type = $data['type'];
+
+        /* @phpstan-ignore-next-line */
+        $nodeString = \gzuncompress(\base64_decode($data['value'], true));
+        $domDocument = new \DOMDocument();
+        /* @phpstan-ignore-next-line */
+        @$domDocument->loadXML($nodeString);
+
+        /* @phpstan-ignore-next-line */
+        $this->value = (new \DOMDocument())->importNode($domDocument->documentElement, true);
     }
 
     public function definition() : Definition

@@ -177,4 +177,24 @@ final class JsonEntryTest extends TestCase
 
         $this->assertEquals(\json_encode($items), $entry->value());
     }
+
+    public function test_serialization() : void
+    {
+        $entry = new JsonEntry('name', ['foo' => 1, 'bar' => ['foo' => 'foo', 'bar' => 'bar'], 'baz']);
+
+        $serialized = \serialize($entry);
+        $unserialized = \unserialize($serialized);
+
+        $this->assertTrue($entry->isEqual($unserialized));
+    }
+
+    public function test_serialization_of_json_objects() : void
+    {
+        $entry = JsonEntry::object('entry-name', ['id' => 1, 'name' => 'one']);
+
+        $serialized = \serialize($entry);
+        $unserialized = \unserialize($serialized);
+
+        $this->assertTrue($entry->isEqual($unserialized));
+    }
 }

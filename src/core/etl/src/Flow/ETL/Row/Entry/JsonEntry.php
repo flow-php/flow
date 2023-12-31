@@ -67,9 +67,29 @@ final class JsonEntry implements \Stringable, Entry
         return $entry;
     }
 
+    public function __serialize() : array
+    {
+        return [
+            'name' => $this->name,
+            /** @phpstan-ignore-next-line  */
+            'value' => \base64_encode(\gzcompress($this->value())),
+            'object' => $this->object,
+            'type' => $this->type,
+        ];
+    }
+
     public function __toString() : string
     {
         return $this->toString();
+    }
+
+    public function __unserialize(array $data) : void
+    {
+        $this->name = $data['name'];
+        /** @phpstan-ignore-next-line  */
+        $this->value = (array) \json_decode(\gzuncompress(\base64_decode($data['value'], true)), true, flags: \JSON_THROW_ON_ERROR);
+        $this->object = $data['object'];
+        $this->type = $data['type'];
     }
 
     public function definition() : Definition
