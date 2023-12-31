@@ -1,6 +1,7 @@
 ## [Unreleased] - 2023-12-31
 
 ### Added
+- [#893](https://github.com/flow-php/flow/pull/893) - **list select function** - [@norberttech](https://github.com/norberttech)
 - [#890](https://github.com/flow-php/flow/pull/890) - **Structure Select function** - [@norberttech](https://github.com/norberttech)
 - [#889](https://github.com/flow-php/flow/pull/889) - **between scalar function** - [@norberttech](https://github.com/norberttech)
 - [#887](https://github.com/flow-php/flow/pull/887) - **After partitionBy only write or fetch actions are available** - [@norberttech](https://github.com/norberttech)
