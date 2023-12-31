@@ -68,10 +68,13 @@ final class StringEntryTest extends TestCase
 
     public function test_serialization() : void
     {
-        $string = new StringEntry('name', 'some string');
+        $string = new StringEntry('name', <<<'TXT'
+This is some very long
+multi-line string, including different values like: ąćżźą
+
+TXT);
 
         $serialized = \serialize($string);
-        /** @var StringEntry $unserialized */
         $unserialized = \unserialize($serialized);
 
         $this->assertTrue($string->isEqual($unserialized));

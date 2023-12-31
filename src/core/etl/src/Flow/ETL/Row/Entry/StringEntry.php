@@ -49,9 +49,27 @@ final class StringEntry implements \Stringable, Entry
         return new self($name, \mb_strtoupper($value));
     }
 
+    public function __serialize() : array
+    {
+        return [
+            'name' => $this->name,
+            /** @phpstan-ignore-next-line  */
+            'value' => \base64_encode(\gzcompress($this->value)),
+            'type' => $this->type,
+        ];
+    }
+
     public function __toString() : string
     {
         return $this->toString();
+    }
+
+    public function __unserialize(array $data) : void
+    {
+        $this->name = $data['name'];
+        /** @phpstan-ignore-next-line  */
+        $this->value = \gzuncompress(\base64_decode($data['value'], true));
+        $this->type = $data['type'];
     }
 
     public function definition() : Definition
