@@ -27,17 +27,8 @@ use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Constraint\Any;
 use Flow\ETL\Row\Schema\Constraint\VoidConstraint;
-use Flow\Serializer\Serializable;
 
-/**
- * @implements Serializable<array{
- *     ref: Reference,
- *     classes:array<class-string<Entry>>,
- *     constraint: Constraint,
- *     metadata: Metadata
- * }>
- */
-final class Definition implements Serializable
+final class Definition
 {
     private Constraint $constraint;
 

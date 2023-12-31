@@ -11,9 +11,6 @@ use Flow\ETL\Function\WindowFunction;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
-/**
- * @implements Transformer<array{entry_name: string, expr: WindowFunction}>
- */
 final class WindowFunctionTransformer implements Transformer
 {
     public function __construct(

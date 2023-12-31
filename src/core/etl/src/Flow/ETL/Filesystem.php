@@ -9,14 +9,8 @@ use Flow\ETL\Filesystem\Stream\FileStream;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\Partition\NoopFilter;
 use Flow\ETL\Partition\PartitionFilter;
-use Flow\Serializer\Serializable;
 
-/**
- * @template T
- *
- * @extends Serializable<T>
- */
-interface Filesystem extends Serializable
+interface Filesystem
 {
     public function directoryExists(Path $path) : bool;
 

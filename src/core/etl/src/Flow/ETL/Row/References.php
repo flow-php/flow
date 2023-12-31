@@ -5,14 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\Row;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\Serializer\Serializable;
 
 /**
  * @implements \ArrayAccess<string, Reference>
  * @implements \IteratorAggregate<string, Reference>
- * @implements Serializable<array{refs: array<string, Reference>}>
  */
-final class References implements \ArrayAccess, \Countable, \IteratorAggregate, Serializable
+final class References implements \ArrayAccess, \Countable, \IteratorAggregate
 {
     /**
      * @var array<string, Reference>

@@ -8,9 +8,6 @@ use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
-/**
- * @implements Transformer<array{function: ScalarFunction}>
- */
 final class UntilTransformer implements Transformer
 {
     private bool $limitReached = false;

@@ -13,9 +13,6 @@ use Flow\ETL\Transformer;
 use Flow\ETL\Transformer\StyleConverter\StringStyles;
 use Jawira\CaseConverter\Convert;
 
-/**
- * @implements Transformer<array{style: string}>
- */
 final class EntryNameStyleConverterTransformer implements Transformer
 {
     public function __construct(private readonly StringStyles $style)

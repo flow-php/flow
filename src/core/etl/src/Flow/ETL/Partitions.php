@@ -3,14 +3,12 @@
 namespace Flow\ETL;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\Serializer\Serializable;
 
 /**
  * @implements \ArrayAccess<int, Partition>
  * @implements \IteratorAggregate<int, Partition>
- * @implements Serializable<array{partitions: array<Partition>}>
  */
-final class Partitions implements \ArrayAccess, \Countable, \IteratorAggregate, Serializable
+final class Partitions implements \ArrayAccess, \Countable, \IteratorAggregate
 {
     private readonly array $partitions;
 

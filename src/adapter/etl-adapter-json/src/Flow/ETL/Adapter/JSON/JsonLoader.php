@@ -13,9 +13,6 @@ use Flow\ETL\Loader\Closure;
 use Flow\ETL\Partition;
 use Flow\ETL\Rows;
 
-/**
- * @implements Loader<array{path: Path}>
- */
 final class JsonLoader implements Closure, Loader, Loader\FileLoader
 {
     /**

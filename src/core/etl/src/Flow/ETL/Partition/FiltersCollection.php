@@ -4,9 +4,6 @@ namespace Flow\ETL\Partition;
 
 use Flow\ETL\Partition;
 
-/**
- * @implements PartitionFilter<array{filters: array<PartitionFilter>}>
- */
 final class FiltersCollection implements PartitionFilter
 {
     /**

@@ -9,9 +9,6 @@ use Flow\ETL\Loader;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
-/**
- * @implements Loader<array{transformer: Transformer, loader: Loader}>
- */
 final class TransformerLoader implements Loader, OverridingLoader
 {
     public function __construct(

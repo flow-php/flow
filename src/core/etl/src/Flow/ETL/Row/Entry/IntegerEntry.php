@@ -13,7 +13,7 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @implements Entry<int, array{name: string, value: integer, type: ScalarType}>
+ * @implements Entry<int>
  */
 final class IntegerEntry implements \Stringable, Entry
 {

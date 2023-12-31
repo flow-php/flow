@@ -7,9 +7,6 @@ namespace Flow\ETL\Tests\Double;
 use Flow\ETL\Cache;
 use Flow\ETL\Rows;
 
-/**
- * @implements Cache<array<mixed>>
- */
 final class CacheSpy implements Cache
 {
     private int $clearsCount = 0;

@@ -12,24 +12,6 @@ use Flow\ETL\Rows;
 
 /**
  * @psalm-suppress UndefinedClass
- *
- * @implements Loader<array{
- *  config: array{
- *    hosts?: array<string>,
- *    connectionParams?: array<mixed>,
- *    retries?: int,
- *    sniffOnStart?: boolean,
- *    sslCert?: array<string>,
- *    sslKey?: array<string>,
- *    sslVerification?: boolean|string,
- *    elasticMetaHeader?: boolean,
- *    includePortInHostHeader?: boolean
- *  },
- *  index: string,
- *  id_factory: IdFactory,
- *  parameters: array<mixed>,
- *  method: string
- * }>
  */
 final class ElasticsearchLoader implements Loader
 {

@@ -11,7 +11,7 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @implements Entry<\DOMDocument, array{name: string, value: \DOMDocument, type: ObjectType}>
+ * @implements Entry<\DOMDocument>
  */
 final class XMLEntry implements \Stringable, Entry
 {

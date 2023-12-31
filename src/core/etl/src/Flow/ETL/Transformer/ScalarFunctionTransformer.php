@@ -12,9 +12,6 @@ use Flow\ETL\Row\Entries;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
-/**
- * @implements Transformer<array{entry: string, function: ScalarFunction}>
- */
 final class ScalarFunctionTransformer implements Transformer
 {
     public function __construct(

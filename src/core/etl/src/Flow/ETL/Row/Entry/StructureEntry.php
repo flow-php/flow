@@ -14,7 +14,7 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @implements Entry<array<array-key, mixed>, array{name: string, value: array<array-key, mixed>, type: StructureType}>
+ * @implements Entry<array<array-key, mixed>>
  */
 final class StructureEntry implements \Stringable, Entry
 {

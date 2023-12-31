@@ -9,9 +9,6 @@ use Flow\ETL\Loader;
 use Flow\ETL\Memory\Memory;
 use Flow\ETL\Rows;
 
-/**
- * @implements Loader<array{memory: Memory}>
- */
 final class MemoryLoader implements Loader
 {
     public function __construct(private readonly Memory $memory)

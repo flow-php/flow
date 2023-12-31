@@ -9,9 +9,6 @@ use Flow\ETL\Row;
 use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
 
-/**
- * @implements Comparison<array{entry_left: string|Reference, entry_right: string|Reference}>
- */
 final class Equal implements Comparison
 {
     public function __construct(

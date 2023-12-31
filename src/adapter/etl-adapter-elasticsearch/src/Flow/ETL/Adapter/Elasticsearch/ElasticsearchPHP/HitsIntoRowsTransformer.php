@@ -9,9 +9,6 @@ use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
-/**
- * @implements Transformer<array{source: DocumentDataSource}>
- */
 final class HitsIntoRowsTransformer implements Transformer
 {
     public function __construct(

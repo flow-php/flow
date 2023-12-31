@@ -6,12 +6,8 @@ namespace Flow\ETL\Row;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Schema\Definition;
-use Flow\Serializer\Serializable;
 
-/**
- * @implements Serializable<array{definitions: array<string, Definition>}>
- */
-final class Schema implements \Countable, Serializable
+final class Schema implements \Countable
 {
     /**
      * @var array<string, Definition>

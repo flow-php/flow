@@ -11,8 +11,6 @@ use Flow\Serializer\NativePHPSerializer;
 use Flow\Serializer\Serializer;
 
 /**
- * @implements Cache<array{path: string, serializer: Serializer}>
- *
  * @infection-ignore-all
  */
 final class LocalFilesystemCache implements Cache

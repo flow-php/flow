@@ -8,9 +8,6 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
-/**
- * @implements Transformer<array{limit: int}>
- */
 final class LimitTransformer implements Transformer
 {
     private int $rowsCount = 0;

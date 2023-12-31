@@ -7,14 +7,12 @@ namespace Flow\ETL\Row;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Exception\RuntimeException;
-use Flow\Serializer\Serializable;
 
 /**
  * @implements \ArrayAccess<string, Entry>
  * @implements \IteratorAggregate<string, Entry>
- * @implements Serializable<array{entries: array<string, Entry>}>
  */
-final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate, Serializable
+final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
 {
     /**
      * @var array<string, Entry>

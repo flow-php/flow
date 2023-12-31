@@ -11,9 +11,6 @@ use Flow\ETL\Rows;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 
-/**
- * @implements Loader<array{logger: LoggerInterface, log_level: string, message: string}>
- */
 final class PsrLoggerLoader implements Loader
 {
     public function __construct(private LoggerInterface $logger, private string $message, private string $logLevel = LogLevel::DEBUG)

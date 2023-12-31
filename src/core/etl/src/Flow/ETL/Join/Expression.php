@@ -9,12 +9,8 @@ use Flow\ETL\Join\Comparison\All;
 use Flow\ETL\Join\Comparison\Identical;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
-use Flow\Serializer\Serializable;
 
-/**
- * @implements Serializable<array{comparison: Comparison, prefix: string}>
- */
-final class Expression implements Serializable
+final class Expression
 {
     public function __construct(
         private readonly Comparison $comparison,

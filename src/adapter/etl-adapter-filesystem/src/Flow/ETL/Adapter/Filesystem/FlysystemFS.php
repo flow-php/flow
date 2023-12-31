@@ -18,9 +18,6 @@ use League\Flysystem\FileAttributes;
 use League\Flysystem\Filesystem as Flysystem;
 use League\Flysystem\FilesystemException;
 
-/**
- * @implements Filesystem<array<mixed>>
- */
 final class FlysystemFS implements Filesystem
 {
     public function __construct(private readonly FlysystemFactory $factory = new FlysystemFactory())

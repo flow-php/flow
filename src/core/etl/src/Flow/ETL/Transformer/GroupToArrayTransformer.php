@@ -10,9 +10,6 @@ use Flow\ETL\Row\Entry;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
-/**
- * @implements Transformer<array{group_by_entry: string, new_entry_name: string}>
- */
 final class GroupToArrayTransformer implements Transformer
 {
     public function __construct(private readonly string $groupByEntry, private readonly string $newEntryName)

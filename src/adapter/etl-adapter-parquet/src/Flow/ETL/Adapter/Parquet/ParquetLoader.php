@@ -12,11 +12,6 @@ use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\Writer;
 
-/**
- * @implements Loader<array{
- *   path: Path
- * }>
- */
 final class ParquetLoader implements Closure, Loader, Loader\FileLoader
 {
     private readonly SchemaConverter $converter;

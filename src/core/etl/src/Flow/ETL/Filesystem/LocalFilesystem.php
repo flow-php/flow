@@ -11,9 +11,6 @@ use Flow\ETL\Partition\NoopFilter;
 use Flow\ETL\Partition\PartitionFilter;
 use Webmozart\Glob\Glob;
 
-/**
- * @implements Filesystem<array<mixed>>
- */
 final class LocalFilesystem implements Filesystem
 {
     public function __serialize() : array

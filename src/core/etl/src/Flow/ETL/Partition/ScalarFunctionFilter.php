@@ -7,9 +7,6 @@ use Flow\ETL\Function\ScalarFunction;
 use Flow\ETL\Partition;
 use Flow\ETL\Row\EntryFactory;
 
-/**
- * @implements PartitionFilter<array{function: ScalarFunction, entry_factory: EntryFactory}>
- */
 final class ScalarFunctionFilter implements PartitionFilter
 {
     public function __construct(

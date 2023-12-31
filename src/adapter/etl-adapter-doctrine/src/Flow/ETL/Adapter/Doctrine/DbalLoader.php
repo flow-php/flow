@@ -13,20 +13,6 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Rows;
 
-/**
- * @implements Loader<array{
- *  table_name: string,
- *  connection_params: array<string, mixed>,
- *  operation: string,
- *  operation_options: array{
- *    skip_conflicts?: boolean,
- *    constraint?: string,
- *    conflict_columns?: array<string>,
- *    update_columns?: array<string>,
- *    primary_key_columns?: array<string>
- *  }
- * }>
- */
 final class DbalLoader implements Loader
 {
     private ?Connection $connection = null;

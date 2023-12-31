@@ -13,7 +13,7 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @implements Entry<string, array{name: string, value: string, type: ScalarType}>
+ * @implements Entry<string>
  */
 final class StringEntry implements \Stringable, Entry
 {

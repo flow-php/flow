@@ -10,7 +10,7 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @implements Entry<\DOMNode, array{name: string, value: \DOMNode, type: ObjectType}>
+ * @implements Entry<\DOMNode>
  */
 final class XMLNodeEntry implements \Stringable, Entry
 {

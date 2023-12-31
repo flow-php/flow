@@ -10,9 +10,6 @@ use Flow\Serializer\NativePHPSerializer;
 use Flow\Serializer\Serializer;
 use Psr\SimpleCache\CacheInterface;
 
-/**
- * @implements Cache<array{cache: CacheInterface, serializer: Serializer}>
- */
 final class PSRSimpleCache implements Cache
 {
     public function __construct(

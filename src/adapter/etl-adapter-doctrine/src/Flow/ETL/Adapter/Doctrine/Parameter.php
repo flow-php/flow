@@ -7,12 +7,8 @@ namespace Flow\ETL\Adapter\Doctrine;
 use Doctrine\DBAL\ArrayParameterType;
 use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Rows;
-use Flow\Serializer\Serializable;
 
-/**
- * @implements Serializable<array{query_param_name: string, ref: EntryReference, type: int}>
- */
-final class Parameter implements QueryParameter, Serializable
+final class Parameter implements QueryParameter
 {
     public function __construct(
         public readonly string $queryParamName,

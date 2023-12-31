@@ -14,16 +14,6 @@ use Flow\ETL\Partition;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Rows;
 
-/**
- * @implements Loader<array{
- *     path: Path,
- *     header: boolean,
- *     separator: string,
- *     enclosure: string,
- *     escape: string,
- *     new_line_separator: string
- *  }>
- */
 final class CSVLoader implements Closure, Loader, Loader\FileLoader
 {
     public function __construct(

@@ -10,12 +10,8 @@ use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Row\Schema;
-use Flow\Serializer\Serializable;
 
-/**
- * @implements Serializable<array{entries: Entries}>
- */
-final class Row implements Serializable
+final class Row
 {
     public function __construct(private readonly Entries $entries)
     {

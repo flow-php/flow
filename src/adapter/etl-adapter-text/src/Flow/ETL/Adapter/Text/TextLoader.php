@@ -11,12 +11,6 @@ use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
 use Flow\ETL\Rows;
 
-/**
- * @implements Loader<array{
- *     path: Path,
- *     new_line_separator: string
- *  }>
- */
 final class TextLoader implements Closure, Loader, Loader\FileLoader
 {
     public function __construct(

@@ -9,9 +9,6 @@ use Flow\ETL\Function\ScalarFunctionChain;
 use Flow\ETL\Function\StructureFunctions;
 use Flow\ETL\Row;
 
-/**
- * @implements Reference<array{entry: string, alias: ?string}>
- */
 final class EntryReference extends ScalarFunctionChain implements Reference
 {
     private ?string $alias = null;

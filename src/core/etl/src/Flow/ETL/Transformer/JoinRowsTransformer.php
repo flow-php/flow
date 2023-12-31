@@ -12,9 +12,6 @@ use Flow\ETL\Join\Join;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
-/**
- * @implements Transformer<array{data_frame: ?DataFrame, condition: Expression, type: Join, rows: ?Rows}>
- */
 final class JoinRowsTransformer implements Transformer
 {
     private ?Rows $rows = null;

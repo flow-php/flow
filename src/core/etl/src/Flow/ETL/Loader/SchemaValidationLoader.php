@@ -11,9 +11,6 @@ use Flow\ETL\Row\Schema;
 use Flow\ETL\Rows;
 use Flow\ETL\SchemaValidator;
 
-/**
- * @implements Loader<array{schema: Schema, validator: SchemaValidator}>
- */
 final class SchemaValidationLoader implements Loader
 {
     public function __construct(

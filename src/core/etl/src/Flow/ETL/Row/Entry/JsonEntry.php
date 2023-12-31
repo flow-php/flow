@@ -14,7 +14,7 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @implements Entry<string, array{name: string, value: array, object: boolean, type: ScalarType}>
+ * @implements Entry<string>
  */
 final class JsonEntry implements \Stringable, Entry
 {

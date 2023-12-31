@@ -11,9 +11,6 @@ use Flow\ETL\Join\Join;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
-/**
- * @implements Transformer<array{factory: DataFrameFactory, condition: Expression, type: Join}>
- */
 final class JoinEachRowsTransformer implements Transformer
 {
     private function __construct(

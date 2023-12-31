@@ -14,9 +14,6 @@ use Flow\ETL\Row\Schema\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Row\Schema\SchemaFormatter;
 use Flow\ETL\Rows;
 
-/**
- * @implements Loader<array{url: string, mode: Mode, truncate: int|bool, output: Output, formatter: Formatter, schema_formatter: SchemaFormatter}>
- */
 final class StreamLoader implements Loader
 {
     /**

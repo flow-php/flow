@@ -9,7 +9,6 @@ use Flow\ETL\Rows;
 use Flow\ETL\SchemaValidator;
 
 /**
- * @implements SchemaValidator<array<mixed>>
  * Matches all entries in the schema, if row comes with any extra entry it will fail validation.
  */
 final class StrictValidator implements SchemaValidator

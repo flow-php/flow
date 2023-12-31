@@ -5,12 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\Serializer\Serializable;
 
-/**
- * @implements Serializable<array{name: string, value: string}>
- */
-final class Partition implements Serializable
+final class Partition
 {
     /**
      * @var array<string>

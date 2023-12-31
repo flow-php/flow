@@ -19,14 +19,12 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Row\SortOrder;
-use Flow\Serializer\Serializable;
 
 /**
  * @implements \ArrayAccess<int, Row>
  * @implements \IteratorAggregate<int, Row>
- * @implements Serializable<array{rows: array<int, Row>, partitions: Partitions}>
  */
-final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serializable
+final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
 {
     private Partitions $partitions;
 

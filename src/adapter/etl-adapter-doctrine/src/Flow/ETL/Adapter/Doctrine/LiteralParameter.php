@@ -5,12 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Doctrine;
 
 use Flow\ETL\Rows;
-use Flow\Serializer\Serializable;
 
-/**
- * @implements Serializable<array{query_param_name: string, value: mixed, type: ?int}>
- */
-final class LiteralParameter implements QueryParameter, Serializable
+final class LiteralParameter implements QueryParameter
 {
     public function __construct(
         public readonly string $queryParamName,

@@ -12,10 +12,10 @@ interface Serializer
     /**
      * @throw RuntimeException
      */
-    public function serialize(Serializable $serializable) : string;
+    public function serialize(object $serializable) : string;
 
     /**
      * @throw RuntimeException
      */
-    public function unserialize(string $serialized) : Serializable;
+    public function unserialize(string $serialized) : object;
 }

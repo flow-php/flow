@@ -9,9 +9,6 @@ use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
-/**
- * @implements Transformer<array{search: string, replace: string}>
- */
 final class RenameStrReplaceAllEntriesTransformer implements Transformer
 {
     public function __construct(

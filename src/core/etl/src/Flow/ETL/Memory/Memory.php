@@ -4,14 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Memory;
 
-use Flow\Serializer\Serializable;
-
-/**
- * @template T
- *
- * @extends Serializable<T>
- */
-interface Memory extends Serializable
+interface Memory
 {
     /**
      * @return array<self>

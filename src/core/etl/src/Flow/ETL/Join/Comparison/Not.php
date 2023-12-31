@@ -8,9 +8,6 @@ use Flow\ETL\Join\Comparison;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 
-/**
- * @implements Comparison<array{comparison: Comparison}>
- */
 final class Not implements Comparison
 {
     public function __construct(private readonly Comparison $comparison)

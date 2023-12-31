@@ -2,14 +2,7 @@
 
 namespace Flow\ETL;
 
-use Flow\Serializer\Serializable;
-
-/**
- * @template T
- *
- * @extends Serializable<T>
- */
-interface Cache extends Serializable
+interface Cache
 {
     public function add(string $id, Rows $rows) : void;
 

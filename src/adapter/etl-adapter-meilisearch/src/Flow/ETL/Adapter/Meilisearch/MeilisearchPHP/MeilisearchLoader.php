@@ -11,17 +11,6 @@ use Flow\ETL\Rows;
 use Meilisearch\Client;
 use Psr\Http\Client\ClientInterface;
 
-/**
- * @implements Loader<array{
- *  config: array{
- *     url: string,
- *     apiKey: string,
- *     httpClient: ?ClientInterface
- *  },
- *  index: string,
- *  method: string
- * }>
- */
 final class MeilisearchLoader implements Loader
 {
     private Client|null $client = null;

@@ -11,13 +11,6 @@ use Flow\ETL\DataFrameFactory;
 use Flow\ETL\Flow;
 use Flow\ETL\Rows;
 
-/**
- * @implements DataFrameFactory<array{
- *  connection_params: array<string, mixed>,
- *  query: string,
- *  parameters: array<QueryParameter>
- * }>
- */
 final class DbalDataFrameFactory implements DataFrameFactory
 {
     private ?Connection $connection = null;

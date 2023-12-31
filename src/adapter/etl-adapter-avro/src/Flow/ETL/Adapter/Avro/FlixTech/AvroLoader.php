@@ -14,9 +14,6 @@ use Flow\ETL\Row;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Rows;
 
-/**
- * @implements Loader<array{path: Path, schema: ?Schema}>
- */
 final class AvroLoader implements Closure, Loader, Loader\FileLoader
 {
     private ?Schema $inferredSchema = null;

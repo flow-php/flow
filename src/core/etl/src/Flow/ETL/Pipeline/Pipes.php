@@ -6,12 +6,8 @@ namespace Flow\ETL\Pipeline;
 
 use Flow\ETL\Loader;
 use Flow\ETL\Transformer;
-use Flow\Serializer\Serializable;
 
-/**
- * @implements Serializable<array{pipes: array<int, Loader|Transformer>}>
- */
-final class Pipes implements Serializable
+final class Pipes
 {
     /**
      * @param array<int, Loader|Transformer> $pipes

@@ -4,14 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type;
 
-use Flow\Serializer\Serializable;
-
 /**
  * @template T
- *
- * @extends Serializable<T>
  */
-interface Type extends Serializable
+interface Type
 {
     public function isEqual(self $type) : bool;
 

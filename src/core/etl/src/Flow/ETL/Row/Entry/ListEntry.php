@@ -16,7 +16,7 @@ use Flow\ETL\Row\Schema\Definition;
 /**
  * @template T
  *
- * @implements Entry<array<T>, array{name: string, type: ListType, value: array<T>}>
+ * @implements Entry<array<T>>
  */
 final class ListEntry implements Entry
 {

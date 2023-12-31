@@ -12,9 +12,6 @@ use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 use Flow\ETL\Transformer\DropDuplicates\Hashes;
 
-/**
- * @implements Transformer<array>
- */
 final class DropDuplicatesTransformer implements Transformer
 {
     private Hashes $deduplication;

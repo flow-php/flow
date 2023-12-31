@@ -12,9 +12,6 @@ use Flow\ETL\Serializer\Closure;
 use Flow\ETL\Transformer;
 use Laravel\SerializableClosure\SerializableClosure;
 
-/**
- * @implements Transformer<array{callable: SerializableClosure}>
- */
 final class CallbackRowTransformer implements Transformer
 {
     /**

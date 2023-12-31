@@ -12,7 +12,7 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @implements Entry<null, array{name: string}>
+ * @implements Entry<null>
  */
 final class NullEntry implements \Stringable, Entry
 {

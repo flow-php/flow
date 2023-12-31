@@ -10,9 +10,6 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
-/**
- * @implements Transformer<array{data_frame: ?DataFrame, prefix: string, rows: ?Rows}>
- */
 final class CrossJoinRowsTransformer implements Transformer
 {
     private ?Rows $rows = null;

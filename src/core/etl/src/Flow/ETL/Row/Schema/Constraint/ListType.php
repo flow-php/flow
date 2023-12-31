@@ -9,9 +9,6 @@ use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Schema\Constraint;
 
-/**
- * @implements Constraint<array{type: Type}>
- */
 final class ListType implements Constraint
 {
     public function __construct(private readonly Type $type)

@@ -11,7 +11,7 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @implements Entry<\UnitEnum, array{name: string, value: \UnitEnum, type: EnumType}>
+ * @implements Entry<\UnitEnum>
  */
 final class EnumEntry implements Entry
 {

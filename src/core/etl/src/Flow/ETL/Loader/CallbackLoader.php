@@ -11,9 +11,6 @@ use Flow\ETL\Rows;
 use Flow\ETL\Serializer\Closure;
 use Laravel\SerializableClosure\SerializableClosure;
 
-/**
- * @implements Loader<array{callback: SerializableClosure}>
- */
 final class CallbackLoader implements Loader
 {
     /**

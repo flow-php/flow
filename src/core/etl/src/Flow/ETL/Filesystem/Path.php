@@ -9,12 +9,8 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Filesystem\Stream\ResourceContext;
 use Flow\ETL\Partition;
 use Flow\ETL\Partitions;
-use Flow\Serializer\Serializable;
 
-/**
- * @implements Serializable<array{path: string, scheme: string, options: array<string, mixed>, extension: string|false}>
- */
-final class Path implements Serializable
+final class Path
 {
     private string $basename;
 

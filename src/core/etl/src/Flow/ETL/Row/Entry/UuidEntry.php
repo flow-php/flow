@@ -13,7 +13,7 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @implements Entry<Entry\Type\Uuid, array{name: string, value: string, type: ObjectType}>
+ * @implements Entry<Entry\Type\Uuid>
  */
 final class UuidEntry implements \Stringable, Entry
 {

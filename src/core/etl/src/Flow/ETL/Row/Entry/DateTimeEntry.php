@@ -13,7 +13,7 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @implements Entry<\DateTimeInterface, array{name: string, value: \DateTimeInterface, type: ObjectType}>
+ * @implements Entry<\DateTimeInterface>
  */
 final class DateTimeEntry implements \Stringable, Entry
 {

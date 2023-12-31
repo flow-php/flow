@@ -6,9 +6,6 @@ namespace Flow\ETL\Memory;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 
-/**
- * @implements Memory<array{data: array<array<string, mixed>>}>
- */
 final class ArrayMemory implements \Countable, Memory
 {
     /**

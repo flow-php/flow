@@ -7,9 +7,6 @@ namespace Flow\ETL\Row\Schema\Constraint;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Schema\Constraint;
 
-/**
- * @implements Constraint<array{value: mixed}>
- */
 final class SameAs implements Constraint
 {
     public function __construct(private readonly mixed $value)

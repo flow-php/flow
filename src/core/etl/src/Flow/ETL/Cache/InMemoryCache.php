@@ -7,9 +7,6 @@ namespace Flow\ETL\Cache;
 use Flow\ETL\Cache;
 use Flow\ETL\Rows;
 
-/**
- * @implements Cache<array<mixed>>
- */
 final class InMemoryCache implements Cache
 {
     /**

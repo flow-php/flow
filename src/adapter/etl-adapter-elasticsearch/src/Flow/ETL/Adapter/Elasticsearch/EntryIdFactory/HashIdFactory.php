@@ -9,9 +9,6 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
 
-/**
- * @implements IdFactory<array{hash_name: string, entry_names: array<string>}>
- */
 final class HashIdFactory implements IdFactory
 {
     /**

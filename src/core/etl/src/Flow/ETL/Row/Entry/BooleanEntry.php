@@ -13,7 +13,7 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @implements Entry<bool, array{name: string, value: bool, type: ScalarType}>
+ * @implements Entry<bool>
  */
 final class BooleanEntry implements \Stringable, Entry
 {

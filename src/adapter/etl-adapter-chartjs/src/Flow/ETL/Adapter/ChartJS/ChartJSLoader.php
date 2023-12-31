@@ -11,9 +11,6 @@ use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
 use Flow\ETL\Rows;
 
-/**
- * @implements Loader<array{type: Chart, output: ?Path, template: Path}>
- */
 final class ChartJSLoader implements Closure, Loader
 {
     public function __construct(

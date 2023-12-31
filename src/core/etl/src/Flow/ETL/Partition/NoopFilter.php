@@ -6,9 +6,6 @@ namespace Flow\ETL\Partition;
 
 use Flow\ETL\Partition;
 
-/**
- * @implements PartitionFilter<array>
- */
 final class NoopFilter implements PartitionFilter
 {
     public function __serialize() : array

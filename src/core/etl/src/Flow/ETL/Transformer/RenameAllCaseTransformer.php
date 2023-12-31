@@ -9,9 +9,6 @@ use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
-/**
- * @implements Transformer<array{upper: bool, lower: bool, ucfirst: bool, ucwords: bool}>
- */
 final class RenameAllCaseTransformer implements Transformer
 {
     public function __construct(

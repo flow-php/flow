@@ -8,9 +8,6 @@ use Flow\ETL\Join\Comparison;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 
-/**
- * @implements Comparison<array{comparisons: array<Comparison>}>
- */
 final class All implements Comparison
 {
     /**

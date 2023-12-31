@@ -18,7 +18,7 @@ use Flow\ETL\Row\Schema\Metadata;
 /**
  * @template T
  *
- * @implements Entry<array<T>, array{name: string, type: MapType, value: array<T>}>
+ * @implements Entry<array<T>>
  */
 final class MapEntry implements Entry
 {

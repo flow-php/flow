@@ -13,9 +13,6 @@ use Flow\ETL\Row\References;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
-/**
- * @implements Transformer<array{refs: References}>
- */
 final class KeepEntriesTransformer implements Transformer
 {
     private readonly References $refs;
