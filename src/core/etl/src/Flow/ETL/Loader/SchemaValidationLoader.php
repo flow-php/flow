@@ -11,29 +11,12 @@ use Flow\ETL\Row\Schema;
 use Flow\ETL\Rows;
 use Flow\ETL\SchemaValidator;
 
-/**
- * @implements Loader<array{schema: Schema, validator: SchemaValidator}>
- */
 final class SchemaValidationLoader implements Loader
 {
     public function __construct(
         private readonly Schema $schema,
         private readonly SchemaValidator $validator
     ) {
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'schema' => $this->schema,
-            'validator' => $this->validator,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->schema = $data['schema'];
-        $this->validator = $data['validator'];
     }
 
     public function load(Rows $rows, FlowContext $context) : void

@@ -11,9 +11,6 @@ use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
 use Flow\ETL\Rows;
 
-/**
- * @implements Loader<array{type: Chart, output: ?Path, template: Path}>
- */
 final class ChartJSLoader implements Closure, Loader
 {
     public function __construct(
@@ -22,22 +19,6 @@ final class ChartJSLoader implements Closure, Loader
         private readonly Path $template = new Path(__DIR__ . '/Resources/template/full_page.html'),
         private ?array &$outputVar = null
     ) {
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'type' => $this->type,
-            'output' => $this->output,
-            'template' => $this->template,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->type = $data['type'];
-        $this->output = $data['output'];
-        $this->template = $data['template'];
     }
 
     public function closure(FlowContext $context) : void

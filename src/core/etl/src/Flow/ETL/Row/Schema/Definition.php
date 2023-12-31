@@ -27,17 +27,8 @@ use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Constraint\Any;
 use Flow\ETL\Row\Schema\Constraint\VoidConstraint;
-use Flow\Serializer\Serializable;
 
-/**
- * @implements Serializable<array{
- *     ref: Reference,
- *     classes:array<class-string<Entry>>,
- *     constraint: Constraint,
- *     metadata: Metadata
- * }>
- */
-final class Definition implements Serializable
+final class Definition
 {
     private Constraint $constraint;
 
@@ -193,30 +184,10 @@ final class Definition implements Serializable
         return new self($entry, ($nullable) ? [Entry\XMLNodeEntry::class, NullEntry::class] : [Entry\XMLNodeEntry::class], $constraint, $metadata);
     }
 
-    // @codeCoverageIgnoreStart
-    public function __serialize() : array
-    {
-        return [
-            'ref' => $this->ref,
-            'classes' => $this->classes,
-            'constraint' => $this->constraint,
-            'metadata' => $this->metadata,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->ref = $data['ref'];
-        $this->classes = $data['classes'];
-        $this->constraint = $data['constraint'];
-        $this->metadata = $data['metadata'];
-    }
-
     public function constraint() : Constraint
     {
         return $this->constraint;
     }
-    // @codeCoverageIgnoreEnd
 
     public function entry() : Reference
     {

@@ -40,7 +40,6 @@
         "fakerphp/faker": "^1.23",
         "fig/log-test": "^1.1",
         "jawira/case-converter": "^3.4",
-        "laravel/serializable-closure": "^1.1",
         "league/flysystem-aws-s3-v3": "^3.0",
         "league/flysystem-azure-blob-storage": "^3.0",
         "moneyphp/money": "^4",

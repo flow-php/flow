@@ -12,7 +12,7 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @implements Entry<null, array{name: string}>
+ * @implements Entry<null>
  */
 final class NullEntry implements \Stringable, Entry
 {
@@ -28,19 +28,9 @@ final class NullEntry implements \Stringable, Entry
         }
     }
 
-    public function __serialize() : array
-    {
-        return ['name' => $this->name];
-    }
-
     public function __toString() : string
     {
         return $this->toString();
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->name = $data['name'];
     }
 
     public function definition() : Definition

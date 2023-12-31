@@ -6,15 +6,11 @@ namespace Flow\ETL\Row;
 
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Schema\Definition;
-use Flow\Serializer\Serializable;
 
 /**
  * @template TValue
- * @template TSerialized
- *
- * @extends Serializable<TSerialized>
  */
-interface Entry extends Serializable
+interface Entry
 {
     public function __toString() : string;
 

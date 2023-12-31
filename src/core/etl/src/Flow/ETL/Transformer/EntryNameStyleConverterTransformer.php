@@ -13,9 +13,6 @@ use Flow\ETL\Transformer;
 use Flow\ETL\Transformer\StyleConverter\StringStyles;
 use Jawira\CaseConverter\Convert;
 
-/**
- * @implements Transformer<array{style: string}>
- */
 final class EntryNameStyleConverterTransformer implements Transformer
 {
     public function __construct(private readonly StringStyles $style)
@@ -23,18 +20,6 @@ final class EntryNameStyleConverterTransformer implements Transformer
         if (!\class_exists(Convert::class)) {
             throw new RuntimeException("Jawira\CaseConverter\Convert class not found, please add jawira/case-converter dependency to the project first.");
         }
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'style' => $this->style->value,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->style = StringStyles::fromString($data['style']);
     }
 
     public function transform(Rows $rows, FlowContext $context) : Rows

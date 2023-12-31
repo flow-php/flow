@@ -9,9 +9,6 @@ use Flow\ETL\Function\ScalarFunctionChain;
 use Flow\ETL\Function\StructureFunctions;
 use Flow\ETL\Row;
 
-/**
- * @implements Reference<array{entry: string, alias: ?string}>
- */
 final class EntryReference extends ScalarFunctionChain implements Reference
 {
     private ?string $alias = null;
@@ -31,23 +28,9 @@ final class EntryReference extends ScalarFunctionChain implements Reference
         return $ref;
     }
 
-    public function __serialize() : array
-    {
-        return [
-            'entry' => $this->entry,
-            'alias' => $this->alias,
-        ];
-    }
-
     public function __toString() : string
     {
         return $this->name();
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->entry = $data['entry'];
-        $this->alias = $data['alias'];
     }
 
     public function as(string $alias) : self

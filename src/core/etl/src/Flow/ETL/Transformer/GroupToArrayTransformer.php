@@ -10,27 +10,10 @@ use Flow\ETL\Row\Entry;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
-/**
- * @implements Transformer<array{group_by_entry: string, new_entry_name: string}>
- */
 final class GroupToArrayTransformer implements Transformer
 {
     public function __construct(private readonly string $groupByEntry, private readonly string $newEntryName)
     {
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'group_by_entry' => $this->groupByEntry,
-            'new_entry_name' => $this->newEntryName,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->groupByEntry = $data['group_by_entry'];
-        $this->newEntryName = $data['new_entry_name'];
     }
 
     public function transform(Rows $rows, FlowContext $context) : Rows

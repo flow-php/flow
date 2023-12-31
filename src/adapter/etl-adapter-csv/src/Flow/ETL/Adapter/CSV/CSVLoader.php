@@ -14,16 +14,6 @@ use Flow\ETL\Partition;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Rows;
 
-/**
- * @implements Loader<array{
- *     path: Path,
- *     header: boolean,
- *     separator: string,
- *     enclosure: string,
- *     escape: string,
- *     new_line_separator: string
- *  }>
- */
 final class CSVLoader implements Closure, Loader, Loader\FileLoader
 {
     public function __construct(
@@ -37,28 +27,6 @@ final class CSVLoader implements Closure, Loader, Loader\FileLoader
         if ($this->path->isPattern()) {
             throw new \InvalidArgumentException("CSVLoader path can't be pattern, given: " . $this->path->path());
         }
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'path' => $this->path,
-            'header' => $this->header,
-            'separator' => $this->separator,
-            'enclosure' => $this->enclosure,
-            'escape' => $this->escape,
-            'new_line_separator' => $this->newLineSeparator,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->path = $data['path'];
-        $this->header = $data['header'];
-        $this->separator = $data['separator'];
-        $this->escape = $data['escape'];
-        $this->enclosure = $data['enclosure'];
-        $this->newLineSeparator = $data['new_line_separator'];
     }
 
     public function closure(FlowContext $context) : void

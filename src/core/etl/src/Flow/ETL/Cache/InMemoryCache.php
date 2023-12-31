@@ -7,24 +7,12 @@ namespace Flow\ETL\Cache;
 use Flow\ETL\Cache;
 use Flow\ETL\Rows;
 
-/**
- * @implements Cache<array<mixed>>
- */
 final class InMemoryCache implements Cache
 {
     /**
      * @var array<string, array<Rows>>
      */
     private array $cache = [];
-
-    public function __serialize() : array
-    {
-        return [];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-    }
 
     public function add(string $id, Rows $rows) : void
     {

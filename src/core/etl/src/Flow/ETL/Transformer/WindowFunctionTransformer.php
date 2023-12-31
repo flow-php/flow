@@ -11,29 +11,12 @@ use Flow\ETL\Function\WindowFunction;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
-/**
- * @implements Transformer<array{entry_name: string, expr: WindowFunction}>
- */
 final class WindowFunctionTransformer implements Transformer
 {
     public function __construct(
         private readonly string $entryName,
         private readonly WindowFunction $function,
     ) {
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'entry_name' => $this->entryName,
-            'expr' => $this->function,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->entryName = $data['entry_name'];
-        $this->function = $data['expr'];
     }
 
     /**

@@ -11,29 +11,10 @@ use Flow\ETL\Rows;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 
-/**
- * @implements Loader<array{logger: LoggerInterface, log_level: string, message: string}>
- */
 final class PsrLoggerLoader implements Loader
 {
     public function __construct(private LoggerInterface $logger, private string $message, private string $logLevel = LogLevel::DEBUG)
     {
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'logger' => $this->logger,
-            'log_level' => $this->logLevel,
-            'message' => $this->message,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->logger = $data['logger'];
-        $this->logLevel = $data['log_level'];
-        $this->message = $data['message'];
     }
 
     public function load(Rows $rows, FlowContext $context) : void

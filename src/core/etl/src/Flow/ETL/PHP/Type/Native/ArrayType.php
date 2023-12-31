@@ -5,9 +5,6 @@ namespace Flow\ETL\PHP\Type\Native;
 
 use Flow\ETL\PHP\Type\Type;
 
-/**
- * @implements NativeType<array{empty: bool, nullable: bool}>
- */
 final class ArrayType implements NativeType
 {
     public function __construct(private readonly bool $empty = false, private readonly bool $nullable = false)
@@ -17,20 +14,6 @@ final class ArrayType implements NativeType
     public static function empty() : self
     {
         return new self(true);
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'empty' => $this->empty,
-            'nullable' => $this->nullable,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->empty = $data['empty'];
-        $this->nullable = $data['nullable'];
     }
 
     public function isEqual(Type $type) : bool

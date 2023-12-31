@@ -10,7 +10,7 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @implements Entry<\DOMNode, array{name: string, value: \DOMNode, type: ObjectType}>
+ * @implements Entry<\DOMNode>
  */
 final class XMLNodeEntry implements \Stringable, Entry
 {
@@ -23,15 +23,6 @@ final class XMLNodeEntry implements \Stringable, Entry
         $this->type = type_object($this->value::class);
     }
 
-    public function __serialize() : array
-    {
-        return [
-            'name' => $this->name,
-            'value' => $this->value,
-            'type' => $this->type,
-        ];
-    }
-
     public function __toString() : string
     {
         /**
@@ -40,13 +31,6 @@ final class XMLNodeEntry implements \Stringable, Entry
          * @phpstan-ignore-next-line
          */
         return $this->value->ownerDocument->saveXML($this->value);
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->name = $data['name'];
-        $this->value = $data['value'];
-        $this->type = $data['type'];
     }
 
     public function definition() : Definition

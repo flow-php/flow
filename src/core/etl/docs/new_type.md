@@ -7,4 +7,3 @@ interface, below you can find list of things that must be checked.
   * [Definition](../src/Flow/ETL/Row/Schema/Definition.php)
   * [Constraint](../src/Flow/ETL/Row/Schema/Constraint.php)
 * [EntryFactory](../src/Flow/ETL/Row/EntryFactory.php)
-* [EntryConverter](../src/Flow/ETL/Row/EntryConverter.php)

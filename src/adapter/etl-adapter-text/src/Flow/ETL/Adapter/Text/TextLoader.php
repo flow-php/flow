@@ -11,12 +11,6 @@ use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
 use Flow\ETL\Rows;
 
-/**
- * @implements Loader<array{
- *     path: Path,
- *     new_line_separator: string
- *  }>
- */
 final class TextLoader implements Closure, Loader, Loader\FileLoader
 {
     public function __construct(
@@ -26,20 +20,6 @@ final class TextLoader implements Closure, Loader, Loader\FileLoader
         if ($this->path->isPattern()) {
             throw new \InvalidArgumentException("TextLoader path can't be pattern, given: " . $this->path->path());
         }
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'path' => $this->path,
-            'new_line_separator' => $this->newLineSeparator,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->path = $data['path'];
-        $this->newLineSeparator = $data['new_line_separator'];
     }
 
     public function closure(FlowContext $context) : void

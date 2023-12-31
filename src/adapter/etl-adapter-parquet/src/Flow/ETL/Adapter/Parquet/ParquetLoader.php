@@ -12,11 +12,6 @@ use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\Writer;
 
-/**
- * @implements Loader<array{
- *   path: Path
- * }>
- */
 final class ParquetLoader implements Closure, Loader, Loader\FileLoader
 {
     private readonly SchemaConverter $converter;
@@ -39,18 +34,6 @@ final class ParquetLoader implements Closure, Loader, Loader\FileLoader
         if ($this->path->isPattern()) {
             throw new \InvalidArgumentException("ParquetLoader path can't be pattern, given: " . $this->path->path());
         }
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'path' => $this->path,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->path = $data['path'];
     }
 
     public function closure(FlowContext $context) : void

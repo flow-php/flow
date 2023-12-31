@@ -13,7 +13,7 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @implements Entry<object, array{name: string, value: object, type: ObjectType}>
+ * @implements Entry<object>
  */
 final class ObjectEntry implements \Stringable, Entry
 {
@@ -33,21 +33,9 @@ final class ObjectEntry implements \Stringable, Entry
         $this->type = type_object($value::class);
     }
 
-    public function __serialize() : array
-    {
-        return ['name' => $this->name, 'value' => $this->value, 'type' => $this->type];
-    }
-
     public function __toString() : string
     {
         return $this->toString();
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->name = $data['name'];
-        $this->value = $data['value'];
-        $this->type = $data['type'];
     }
 
     public function definition() : Definition
@@ -69,7 +57,7 @@ final class ObjectEntry implements \Stringable, Entry
         return $this->is($entry->name())
             && $entry instanceof self
             && $this->type->isEqual($entry->type)
-            && \serialize($this->__serialize()['value']) === \serialize($entry->__serialize()['value']);
+            && \serialize($this->value) === \serialize($entry->value);
     }
 
     public function map(callable $mapper) : Entry

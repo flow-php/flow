@@ -6,14 +6,8 @@ namespace Flow\ETL\Join;
 
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
-use Flow\Serializer\Serializable;
 
-/**
- * @template T
- *
- * @extends Serializable<T>
- */
-interface Comparison extends Serializable
+interface Comparison
 {
     public function compare(Row $left, Row $right) : bool;
 

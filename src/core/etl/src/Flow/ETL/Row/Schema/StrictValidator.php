@@ -9,20 +9,10 @@ use Flow\ETL\Rows;
 use Flow\ETL\SchemaValidator;
 
 /**
- * @implements SchemaValidator<array<mixed>>
  * Matches all entries in the schema, if row comes with any extra entry it will fail validation.
  */
 final class StrictValidator implements SchemaValidator
 {
-    public function __serialize() : array
-    {
-        return [];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-    }
-
     public function isValid(Rows $rows, Schema $schema) : bool
     {
         foreach ($rows as $row) {

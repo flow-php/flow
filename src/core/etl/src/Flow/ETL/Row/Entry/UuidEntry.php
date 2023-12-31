@@ -13,7 +13,7 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @implements Entry<Entry\Type\Uuid, array{name: string, value: string, type: ObjectType}>
+ * @implements Entry<Entry\Type\Uuid>
  */
 final class UuidEntry implements \Stringable, Entry
 {
@@ -46,21 +46,9 @@ final class UuidEntry implements \Stringable, Entry
         return new self($name, Entry\Type\Uuid::fromString($value));
     }
 
-    public function __serialize() : array
-    {
-        return ['name' => $this->name, 'value' => $this->value->toString(), 'type' => $this->type];
-    }
-
     public function __toString() : string
     {
         return $this->toString();
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->name = $data['name'];
-        $this->value = new Entry\Type\Uuid($data['value']);
-        $this->type = $data['type'];
     }
 
     public function definition() : Definition

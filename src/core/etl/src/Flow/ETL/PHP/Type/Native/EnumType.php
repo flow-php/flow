@@ -7,9 +7,6 @@ namespace Flow\ETL\PHP\Type\Native;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Type;
 
-/**
- * @implements NativeType<array{class: class-string<\UnitEnum>, nullable: bool}>
- */
 final class EnumType implements NativeType
 {
     /**
@@ -28,17 +25,6 @@ final class EnumType implements NativeType
     public static function of(string $class, bool $nullable = false) : self
     {
         return new self($class, $nullable);
-    }
-
-    public function __serialize() : array
-    {
-        return ['class' => $this->class, 'nullable' => $this->nullable];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->class = $data['class'];
-        $this->nullable = $data['nullable'];
     }
 
     public function isEqual(Type $type) : bool

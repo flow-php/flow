@@ -3,14 +3,12 @@
 namespace Flow\ETL;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\Serializer\Serializable;
 
 /**
  * @implements \ArrayAccess<int, Partition>
  * @implements \IteratorAggregate<int, Partition>
- * @implements Serializable<array{partitions: array<Partition>}>
  */
-final class Partitions implements \ArrayAccess, \Countable, \IteratorAggregate, Serializable
+final class Partitions implements \ArrayAccess, \Countable, \IteratorAggregate
 {
     private readonly array $partitions;
 
@@ -19,18 +17,6 @@ final class Partitions implements \ArrayAccess, \Countable, \IteratorAggregate, 
         \uasort($partitions, static fn (Partition $a, Partition $b) => $a->name <=> $b->name);
 
         $this->partitions = $partitions;
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'partitions' => $this->partitions,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->partitions = $data['partitions'];
     }
 
     public function count() : int

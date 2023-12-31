@@ -6,14 +6,11 @@ namespace Flow\ETL\Row\Schema;
 
 use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\Serializer\Serializable;
 
 /**
  * @psalm-allow-private-mutation
- *
- * @implements Serializable<array{map: array<string, array<mixed>|int|string|bool|float|object>}>
  */
-final class Metadata implements Serializable
+final class Metadata
 {
     /**
      * @var array<string, array<mixed>|bool|float|int|object|string>
@@ -42,18 +39,6 @@ final class Metadata implements Serializable
     public static function with(string $key, int|string|bool|float|object|array $value) : self
     {
         return new self([$key => $value]);
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'map' => $this->map,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->map = $data['map'];
     }
 
     /**

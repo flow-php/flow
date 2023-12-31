@@ -9,29 +9,12 @@ use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
-/**
- * @implements Transformer<array{search: string, replace: string}>
- */
 final class RenameStrReplaceAllEntriesTransformer implements Transformer
 {
     public function __construct(
         private readonly string $search,
         private readonly string $replace
     ) {
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'search' => $this->search,
-            'replace' => $this->replace,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->replace = $data['replace'];
-        $this->search = $data['search'];
     }
 
     public function transform(Rows $rows, FlowContext $context) : Rows

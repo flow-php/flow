@@ -5,14 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\Row;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\Serializer\Serializable;
 
 /**
  * @implements \ArrayAccess<string, Reference>
  * @implements \IteratorAggregate<string, Reference>
- * @implements Serializable<array{refs: array<string, Reference>}>
  */
-final class References implements \ArrayAccess, \Countable, \IteratorAggregate, Serializable
+final class References implements \ArrayAccess, \Countable, \IteratorAggregate
 {
     /**
      * @var array<string, Reference>
@@ -44,18 +42,6 @@ final class References implements \ArrayAccess, \Countable, \IteratorAggregate, 
     public static function init(string|Reference ...$reference) : self
     {
         return new self(...$reference);
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'refs' => $this->refs,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->refs = $data['refs'];
     }
 
     public function add(string|Reference $ref) : self
