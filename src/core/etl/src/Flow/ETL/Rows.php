@@ -9,6 +9,7 @@ use function Flow\ETL\DSL\null_entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Join\Expression;
+use Flow\ETL\Partition\CartesianProduct;
 use Flow\ETL\Row\Comparator;
 use Flow\ETL\Row\Comparator\NativeComparator;
 use Flow\ETL\Row\Entries;
@@ -550,37 +551,11 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
 
         foreach ($refs as $ref) {
             foreach ($this->rows as $row) {
-                $partitions[$ref->name()][] = $row->get($ref)->value();
+                $partitions[$ref->name()][] = Partition::valueFromRow($ref, $row);
             }
 
             $partitions[$ref->name()] = \array_values(\array_unique($partitions[$ref->name()]));
         }
-
-        /**
-         * @source https://stackoverflow.com/a/15973172
-         *
-         * @param array<string, array<mixed>> $input
-         *
-         * @return array<string, array<mixed>>
-         */
-        $cartesianProduct = static function (array $input) : array {
-            $result = [[]];
-
-            foreach ($input as $key => $values) {
-                $append = [];
-
-                foreach ($result as $product) {
-                    foreach ($values as $item) {
-                        $product[$key] = $item;
-                        $append[] = $product;
-                    }
-                }
-
-                $result = $append;
-            }
-
-            return $result;
-        };
 
         /** @var array<Rows> $partitionedRows */
         $partitionedRows = [];
@@ -588,22 +563,22 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
         /**
          * @var array<string, mixed> $partitionsData
          */
-        foreach ($cartesianProduct($partitions) as $partitionsData) {
-            $rows = \array_filter($this->rows, function (Row $row) use ($partitionsData) : bool {
-                /**
-                 * @var mixed $value
-                 */
-                foreach ($partitionsData as $entry => $value) {
-                    if ($row->valueOf($entry) !== $value) {
-                        return false;
+        foreach ((new CartesianProduct())($partitions) as $partitionsData) {
+            $parts = Partition::fromArray($partitionsData);
+            $rows = [];
+
+            foreach ($this->rows as $row) {
+                foreach ($parts as $partition) {
+                    if (Partition::valueFromRow($partition->reference(), $row) !== $partition->value) {
+                        continue 2;
                     }
                 }
 
-                return true;
-            });
+                $rows[] = $row;
+            }
 
             if ($rows) {
-                $partitionedRows[] = self::partitioned($rows, Partition::fromArray($partitionsData));
+                $partitionedRows[] = self::partitioned($rows, $parts);
             }
         }
 
