@@ -49,6 +49,7 @@ use Flow\ETL\Function\Exists;
 use Flow\ETL\Function\First;
 use Flow\ETL\Function\Hash;
 use Flow\ETL\Function\Last;
+use Flow\ETL\Function\ListFunctions;
 use Flow\ETL\Function\Literal;
 use Flow\ETL\Function\Max;
 use Flow\ETL\Function\Min;
@@ -485,9 +486,14 @@ function ref(string $entry) : EntryReference
     return new EntryReference($entry);
 }
 
-function structure(string $entry) : StructureFunctions
+function structure_ref(string $entry) : StructureFunctions
 {
     return ref($entry)->structure();
+}
+
+function list_ref(string $entry) : ListFunctions
+{
+    return ref($entry)->list();
 }
 
 function refs(string|Reference ...$entries) : References
