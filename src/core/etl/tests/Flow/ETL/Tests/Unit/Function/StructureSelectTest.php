@@ -14,7 +14,7 @@ use function Flow\ETL\DSL\type_string;
 use Flow\ETL\Function\StructureSelect;
 use PHPUnit\Framework\TestCase;
 
-final class StructureKeepTest extends TestCase
+final class StructureSelectTest extends TestCase
 {
     public function test_selecting_multiple_values_from_structure() : void
     {

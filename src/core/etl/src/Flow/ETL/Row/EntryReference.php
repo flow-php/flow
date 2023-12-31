@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row;
 
+use Flow\ETL\Function\ListFunctions;
 use Flow\ETL\Function\ScalarFunctionChain;
 use Flow\ETL\Function\StructureFunctions;
 use Flow\ETL\Row;
@@ -83,6 +84,11 @@ final class EntryReference extends ScalarFunctionChain implements Reference
     public function is(Reference $ref) : bool
     {
         return $this->name() === $ref->name();
+    }
+
+    public function list() : ListFunctions
+    {
+        return new ListFunctions($this);
     }
 
     public function name() : string
