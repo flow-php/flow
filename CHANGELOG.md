@@ -1,6 +1,7 @@
-## [Unreleased] - 2023-12-31
+## [Unreleased] - 2024-01-01
 
 ### Added
+- [#898](https://github.com/flow-php/flow/pull/898) - **extra validation for column in parquet rows** - [@norberttech](https://github.com/norberttech)
 - [#893](https://github.com/flow-php/flow/pull/893) - **list select function** - [@norberttech](https://github.com/norberttech)
 - [#890](https://github.com/flow-php/flow/pull/890) - **Structure Select function** - [@norberttech](https://github.com/norberttech)
 - [#889](https://github.com/flow-php/flow/pull/889) - **between scalar function** - [@norberttech](https://github.com/norberttech)
@@ -28,6 +29,7 @@
 - [#867](https://github.com/flow-php/flow/pull/867) - **Update Homebrew TAP formula: flow-php to version: 0.5.2** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#898](https://github.com/flow-php/flow/pull/898) - **parquet bug when writing/reading nullable list of structs** - [@norberttech](https://github.com/norberttech)
 - [#896](https://github.com/flow-php/flow/pull/896) - **Serialization of XMLElement and XMLNodeElement** - [@norberttech](https://github.com/norberttech)
 - [#896](https://github.com/flow-php/flow/pull/896) - **Serialization of multiline strings with special characters** - [@norberttech](https://github.com/norberttech)
 - [#892](https://github.com/flow-php/flow/pull/892) - **2 small typos** - [@xaviermarchegay](https://github.com/xaviermarchegay)
