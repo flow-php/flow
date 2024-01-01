@@ -20,6 +20,7 @@
 - [#869](https://github.com/flow-php/flow/pull/869) - **RDSL library** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#899](https://github.com/flow-php/flow/pull/899) - **Reverted removed copmressing serializer** - [@norberttech](https://github.com/norberttech)
 - [#895](https://github.com/flow-php/flow/pull/895) - **Simplified partitioning datasets by DateTimeEntry** - [@norberttech](https://github.com/norberttech)
 - [#888](https://github.com/flow-php/flow/pull/888) - **Updated dependencies** - [@norberttech](https://github.com/norberttech)
 - [#880](https://github.com/flow-php/flow/pull/880) - **Updated dependencies** - [@norberttech](https://github.com/norberttech)
