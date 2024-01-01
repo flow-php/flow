@@ -58,11 +58,11 @@ final class Flattener
     {
         $listElementColumn = $column->getListElement();
 
-        if ($columnData === null) {
-            return [
-                $listElementColumn->flatPath() => null,
-            ];
-        }
+        //        if ($columnData === null) {
+        //            return [
+        //                $listElementColumn->flatPath() => null,
+        //            ];
+        //        }
 
         if ($listElementColumn instanceof FlatColumn) {
             $this->validator->validate($listElementColumn, $columnData);
@@ -97,9 +97,15 @@ final class Flattener
 
         $data = [];
 
-        foreach ($columnData as $listStructureElementData) {
-            foreach ($this->flattenStructure($listElementColumn, $listStructureElementData) as $key => $value) {
+        if ($columnData === null) {
+            foreach ($this->flattenStructure($listElementColumn, null) as $key => $value) {
                 $data[$key][] = $value;
+            }
+        } else {
+            foreach ($columnData as $listStructureElementData) {
+                foreach ($this->flattenStructure($listElementColumn, $listStructureElementData) as $key => $value) {
+                    $data[$key][] = $value;
+                }
             }
         }
 

@@ -5,6 +5,7 @@ namespace Flow\Parquet\Tests\Integration\IO;
 use Faker\Factory;
 use Flow\Parquet\Consts;
 use Flow\Parquet\ParquetFile\Schema;
+use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\ListElement;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use Flow\Parquet\Reader;
@@ -52,6 +53,40 @@ final class ListsWritingTest extends TestCase
                 ],
             ];
         }, \range(1, 100)));
+
+        $writer->write($path, $schema, $inputData);
+
+        $this->assertSame(
+            $inputData,
+            \iterator_to_array((new Reader())->read($path)->values())
+        );
+    }
+
+    public function test_writing_list_of_structures() : void
+    {
+        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+
+        $writer = new Writer();
+        $schema = Schema::with(
+            NestedColumn::list('list_of_structs', ListElement::structure(
+                [
+                    FlatColumn::int32('id'),
+                    FlatColumn::string('name'),
+                ]
+            ))
+        );
+
+        $faker = Factory::create();
+        $inputData = \array_merge(...\array_map(static function (int $i) use ($faker) : array {
+            return [
+                [
+                    'list_of_structs' => \array_map(static fn ($i) => [
+                        'id' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
+                        'name' => $faker->text(10),
+                    ], \range(1, \random_int(2, 10))),
+                ],
+            ];
+        }, \range(1, 10)));
 
         $writer->write($path, $schema, $inputData);
 
@@ -130,6 +165,45 @@ final class ListsWritingTest extends TestCase
                 ],
             ];
         }, \range(1, 100)));
+
+        $writer->write($path, $schema, $inputData);
+
+        $this->assertSame(
+            $inputData,
+            \iterator_to_array((new Reader())->read($path)->values())
+        );
+    }
+
+    public function test_writing_nullable_list_of_structures() : void
+    {
+        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+
+        $writer = new Writer();
+        $schema = Schema::with(
+            NestedColumn::list(
+                'list_of_structs',
+                ListElement::structure(
+                    [
+                        FlatColumn::int32('id'),
+                        FlatColumn::string('name'),
+                    ],
+                )
+            )
+        );
+
+        $faker = Factory::create();
+        $inputData = \array_merge(...\array_map(static function (int $i) use ($faker) : array {
+            return [
+                [
+                    'list_of_structs' => $i % 2 === 0
+                        ? \array_map(static fn ($i) => [
+                                'id' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
+                                'name' => $faker->text(10),
+                            ], \range(1, \random_int(2, 10)))
+                        : null,
+                ],
+            ];
+        }, \range(1, 10)));
 
         $writer->write($path, $schema, $inputData);
 

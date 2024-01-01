@@ -10,7 +10,7 @@ final class WriterValidatorTest extends TestCase
 {
     public function test_skipping_required_row() : void
     {
-        $this->expectExceptionMessage('Column "string" is required');
+        $this->expectExceptionMessage('Column \'string\' not found in row');
 
         $writer = new Writer();
         $path = \sys_get_temp_dir() . '/test-writer-validator' . \uniqid('parquet-test-', true) . '.parquet';
