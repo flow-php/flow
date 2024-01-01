@@ -8,7 +8,6 @@ use Flow\ETL\Cache;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Rows;
-use Flow\Serializer\NativePHPSerializer;
 use Flow\Serializer\Serializer;
 
 /**
@@ -18,7 +17,7 @@ final class LocalFilesystemCache implements Cache
 {
     public function __construct(
         private readonly string $path,
-        private readonly Serializer $serializer = new NativePHPSerializer()
+        private readonly Serializer $serializer
     ) {
         if (!\file_exists($path) || !\is_dir($path)) {
             throw new InvalidArgumentException("Given cache path does not exists or it's not a directory: {$path}");

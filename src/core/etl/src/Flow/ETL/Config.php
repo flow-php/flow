@@ -7,6 +7,7 @@ namespace Flow\ETL;
 use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Pipeline\Optimizer;
 use Flow\ETL\Row\EntryFactory;
+use Flow\Serializer\Serializer;
 
 /**
  * Immutable configuration that can be used to initialize many contexts.
@@ -20,6 +21,7 @@ final class Config
 
     public function __construct(
         private readonly string $id,
+        private readonly Serializer $serializer,
         private readonly Cache $cache,
         private readonly ExternalSort $externalSort,
         private readonly FilesystemStreams $filesystemStreams,
@@ -67,6 +69,11 @@ final class Config
     public function optimizer() : Optimizer
     {
         return $this->optimizer;
+    }
+
+    public function serializer() : Serializer
+    {
+        return $this->serializer;
     }
 
     public function shouldPutInputIntoRows() : bool

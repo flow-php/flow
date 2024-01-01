@@ -11,6 +11,9 @@ use Flow\ETL\Filesystem\LocalFilesystem;
 use Flow\ETL\Monitoring\Memory\Unit;
 use Flow\ETL\Pipeline\Optimizer;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
+use Flow\Serializer\CompressingSerializer;
+use Flow\Serializer\NativePHPSerializer;
+use Flow\Serializer\Serializer;
 
 final class ConfigBuilder
 {
@@ -26,9 +29,12 @@ final class ConfigBuilder
 
     private bool $putInputIntoRows;
 
+    private ?Serializer $serializer;
+
     public function __construct()
     {
         $this->id = null;
+        $this->serializer = null;
         $this->cache = null;
         $this->externalSort = null;
         $this->filesystem = null;
@@ -43,6 +49,7 @@ final class ConfigBuilder
     {
         $this->id ??= \uniqid('flow_php', true);
         $entryFactory = new NativeEntryFactory();
+        $this->serializer ??= new CompressingSerializer(new NativePHPSerializer());
         $cachePath = \is_string(\getenv(Config::CACHE_DIR_ENV)) && \realpath(\getenv(Config::CACHE_DIR_ENV))
             ? \getenv(Config::CACHE_DIR_ENV)
             : \sys_get_temp_dir() . '/flow_php/';
@@ -52,7 +59,7 @@ final class ConfigBuilder
                 \mkdir($cachePath, 0777, true);
             }
 
-            $this->cache = new LocalFilesystemCache($cachePath);
+            $this->cache = new LocalFilesystemCache($cachePath, $this->serializer);
         }
 
         $this->externalSort ??= new MemorySort(
@@ -81,6 +88,7 @@ final class ConfigBuilder
 
         return new Config(
             $this->id,
+            $this->serializer,
             $this->cache,
             $this->externalSort,
             new FilesystemStreams($this->filesystem),
@@ -146,5 +154,12 @@ final class ConfigBuilder
     public function reset() : self
     {
         return new self();
+    }
+
+    public function serializer(Serializer $serializer) : self
+    {
+        $this->serializer = $serializer;
+
+        return $this;
     }
 }
