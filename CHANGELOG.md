@@ -30,6 +30,7 @@
 - [#867](https://github.com/flow-php/flow/pull/867) - **Update Homebrew TAP formula: flow-php to version: 0.5.2** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#900](https://github.com/flow-php/flow/pull/900) - **converting list of structures to parquet schema** - [@norberttech](https://github.com/norberttech)
 - [#898](https://github.com/flow-php/flow/pull/898) - **parquet bug when writing/reading nullable list of structs** - [@norberttech](https://github.com/norberttech)
 - [#896](https://github.com/flow-php/flow/pull/896) - **Serialization of XMLElement and XMLNodeElement** - [@norberttech](https://github.com/norberttech)
 - [#896](https://github.com/flow-php/flow/pull/896) - **Serialization of multiline strings with special characters** - [@norberttech](https://github.com/norberttech)
