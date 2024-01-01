@@ -124,4 +124,32 @@ final class ListsReadingTest extends TestCase
         $this->assertSame(100, $count);
         $this->assertSame($file->metadata()->rowsNumber(), $count);
     }
+
+    public function test_reading_list_of_structures_nullable_column() : void
+    {
+        $reader = new Reader();
+        $file = $reader->read(__DIR__ . '/../../Fixtures/lists.parquet');
+
+        $this->assertNull($file->metadata()->schema()->get('list_of_structs_nullable')->type());
+        $this->assertEquals('LIST', $file->metadata()->schema()->get('list_of_structs_nullable')->logicalType()->name());
+
+        $count = 0;
+
+        foreach ($file->values(['list_of_structs_nullable']) as $rowIndex => $row) {
+            if ($rowIndex % 2 === 0) {
+                $this->assertIsArray($row['list_of_structs_nullable']);
+
+                foreach ($row['list_of_structs_nullable'] as $rowList) {
+                    $this->assertIsInt($rowList['id']);
+                    $this->assertIsString($rowList['name']);
+                }
+            } else {
+                $this->assertNull($row['list_of_structs_nullable']);
+            }
+            $count++;
+        }
+
+        $this->assertSame(100, $count);
+        $this->assertSame($file->metadata()->rowsNumber(), $count);
+    }
 }
