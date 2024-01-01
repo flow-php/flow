@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Unit;
 
+use function Flow\ETL\DSL\type_boolean;
+use function Flow\ETL\DSL\type_int;
 use function Flow\ETL\DSL\type_object;
 use function Flow\ETL\DSL\type_string;
 use Flow\ETL\Adapter\Parquet\SchemaConverter;
@@ -44,6 +46,12 @@ final class SchemaConverterTest extends TestCase
                 FlatColumn::dateTime('datetime'),
                 FlatColumn::string('json'),
                 NestedColumn::list('list', ParquetSchema\ListElement::string()),
+                NestedColumn::list('list_of_structs', ParquetSchema\ListElement::structure(
+                    [
+                        FlatColumn::int64('integer'),
+                        FlatColumn::boolean('boolean'),
+                    ]
+                )),
                 NestedColumn::struct('structure', [FlatColumn::string('a')]),
                 NestedColumn::map('map', ParquetSchema\MapKey::string(), ParquetSchema\MapValue::int64()),
                 FlatColumn::time('time')
@@ -56,6 +64,12 @@ final class SchemaConverterTest extends TestCase
                 Schema\Definition::dateTime('datetime'),
                 Schema\Definition::json('json'),
                 Schema\Definition::list('list', new ListType(ListElement::string())),
+                Schema\Definition::list('list_of_structs', new ListType(ListElement::structure(
+                    new StructureType(
+                        new StructureElement('integer', type_int()),
+                        new StructureElement('boolean', type_boolean())
+                    ),
+                ))),
                 Schema\Definition::structure('structure', new StructureType(new StructureElement('a', type_string()))),
                 Schema\Definition::map('map', new MapType(MapKey::string(), MapValue::integer())),
                 Schema\Definition::object('time', type_object(\DateInterval::class, false))

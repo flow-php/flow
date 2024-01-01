@@ -9,6 +9,7 @@ use function Flow\ETL\DSL\type_object;
 use function Flow\ETL\DSL\type_string;
 use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\PHP\Type\Logical\MapType;
+use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\PHP\Type\Type;
 
 final class ListElement
@@ -58,6 +59,11 @@ final class ListElement
     public static function string() : self
     {
         return new self(type_string(false));
+    }
+
+    public static function structure(StructureType $structure) : self
+    {
+        return new self($structure);
     }
 
     public function isEqual(mixed $value) : bool
