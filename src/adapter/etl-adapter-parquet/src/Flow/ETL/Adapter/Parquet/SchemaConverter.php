@@ -86,7 +86,7 @@ final class SchemaConverter
                     $this->flowMapValueToParquetMapValue($element->value())
                 );
             case StructureType::class:
-                return ListElement::structure(...$this->flowStructureToParquetStructureElements($element));
+                return ListElement::structure($this->flowStructureToParquetStructureElements($element));
         }
 
         throw new RuntimeException($element::class . ' is not supported.');
