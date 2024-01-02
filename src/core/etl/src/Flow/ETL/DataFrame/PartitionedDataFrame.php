@@ -57,6 +57,14 @@ final class PartitionedDataFrame
         return $this;
     }
 
+    /**
+     * @param null|callable(Rows $rows): void $callback
+     */
+    public function run(?callable $callback = null) : void
+    {
+        $this->df->run($callback);
+    }
+
     public function saveMode(SaveMode $mode) : self
     {
         $this->df->mode($mode);
