@@ -22,12 +22,14 @@ use function Flow\ETL\DSL\type_float;
 use function Flow\ETL\DSL\type_list;
 use function Flow\ETL\DSL\type_object;
 use function Flow\ETL\DSL\type_string;
+use function Flow\ETL\DSL\uuid_entry;
 use Flow\ETL\Flow;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\Reader;
 use PHPUnit\Framework\TestCase;
+use Ramsey\Uuid\Uuid;
 
 final class ParquetTest extends TestCase
 {
@@ -117,6 +119,7 @@ final class ParquetTest extends TestCase
     private function createRow(int $index, ?\DateTimeImmutable $dateTime = null) : Row
     {
         return Row::create(
+            uuid_entry('uuid', Uuid::uuid4()->toString()),
             int_entry('integer', $index),
             float_entry('float', 1.5),
             str_entry('string', 'name_' . $index),

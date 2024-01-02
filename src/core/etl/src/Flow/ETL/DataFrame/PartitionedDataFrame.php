@@ -57,6 +57,13 @@ final class PartitionedDataFrame
         return $this;
     }
 
+    public function saveMode(SaveMode $mode) : self
+    {
+        $this->df->mode($mode);
+
+        return $this;
+    }
+
     public function write(Loader $loader) : DataFrame
     {
         return $this->df->write($loader);
