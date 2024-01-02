@@ -18,6 +18,8 @@ final class ParquetLoader implements Closure, Loader, Loader\FileLoader
 
     private ?Schema $inferredSchema = null;
 
+    private readonly RowsNormalizer $normalizer;
+
     /**
      * @var array<string, Writer>
      */
@@ -30,6 +32,7 @@ final class ParquetLoader implements Closure, Loader, Loader\FileLoader
         private readonly ?Schema $schema = null,
     ) {
         $this->converter = new SchemaConverter();
+        $this->normalizer = new RowsNormalizer();
 
         if ($this->path->isPattern()) {
             throw new \InvalidArgumentException("ParquetLoader path can't be pattern, given: " . $this->path->path());
@@ -74,9 +77,7 @@ final class ParquetLoader implements Closure, Loader, Loader\FileLoader
                 $this->writers[$stream->path()->uri()]->openForStream($stream->resource(), $this->converter->toParquet($this->schema()));
             }
 
-            foreach ($rows as $row) {
-                $this->writers[$stream->path()->uri()]->writeRow($row->toArray());
-            }
+            $this->writers[$stream->path()->uri()]->writeBatch($this->normalizer->normalize($rows));
         } else {
             $stream = $streams->open($this->path, 'parquet', $context->appendSafe());
 
@@ -89,9 +90,7 @@ final class ParquetLoader implements Closure, Loader, Loader\FileLoader
                 $this->writers[$stream->path()->uri()]->openForStream($stream->resource(), $this->converter->toParquet($this->schema()));
             }
 
-            foreach ($rows as $row) {
-                $this->writers[$stream->path()->uri()]->writeRow($row->toArray());
-            }
+            $this->writers[$stream->path()->uri()]->writeBatch($this->normalizer->normalize($rows));
         }
     }
 
