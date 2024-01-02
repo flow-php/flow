@@ -32,6 +32,7 @@
 - [#867](https://github.com/flow-php/flow/pull/867) - **Update Homebrew TAP formula: flow-php to version: 0.5.2** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#902](https://github.com/flow-php/flow/pull/902) - **changing partitions order during partitioning** - [@norberttech](https://github.com/norberttech)
 - [#901](https://github.com/flow-php/flow/pull/901) - **writing uuid entries to parquet files** - [@norberttech](https://github.com/norberttech)
 - [#900](https://github.com/flow-php/flow/pull/900) - **converting list of structures to parquet schema** - [@norberttech](https://github.com/norberttech)
 - [#898](https://github.com/flow-php/flow/pull/898) - **parquet bug when writing/reading nullable list of structs** - [@norberttech](https://github.com/norberttech)
