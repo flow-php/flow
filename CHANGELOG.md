@@ -1,6 +1,7 @@
-## [Unreleased] - 2024-01-01
+## [Unreleased] - 2024-01-02
 
 ### Added
+- [#901](https://github.com/flow-php/flow/pull/901) - **partition_by example** - [@norberttech](https://github.com/norberttech)
 - [#898](https://github.com/flow-php/flow/pull/898) - **extra validation for column in parquet rows** - [@norberttech](https://github.com/norberttech)
 - [#893](https://github.com/flow-php/flow/pull/893) - **list select function** - [@norberttech](https://github.com/norberttech)
 - [#890](https://github.com/flow-php/flow/pull/890) - **Structure Select function** - [@norberttech](https://github.com/norberttech)
@@ -20,6 +21,7 @@
 - [#869](https://github.com/flow-php/flow/pull/869) - **RDSL library** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#901](https://github.com/flow-php/flow/pull/901) - **Return types of functions in DSL** - [@norberttech](https://github.com/norberttech)
 - [#899](https://github.com/flow-php/flow/pull/899) - **Reverted removed copmressing serializer** - [@norberttech](https://github.com/norberttech)
 - [#895](https://github.com/flow-php/flow/pull/895) - **Simplified partitioning datasets by DateTimeEntry** - [@norberttech](https://github.com/norberttech)
 - [#888](https://github.com/flow-php/flow/pull/888) - **Updated dependencies** - [@norberttech](https://github.com/norberttech)
@@ -30,6 +32,7 @@
 - [#867](https://github.com/flow-php/flow/pull/867) - **Update Homebrew TAP formula: flow-php to version: 0.5.2** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#901](https://github.com/flow-php/flow/pull/901) - **writing uuid entries to parquet files** - [@norberttech](https://github.com/norberttech)
 - [#900](https://github.com/flow-php/flow/pull/900) - **converting list of structures to parquet schema** - [@norberttech](https://github.com/norberttech)
 - [#898](https://github.com/flow-php/flow/pull/898) - **parquet bug when writing/reading nullable list of structs** - [@norberttech](https://github.com/norberttech)
 - [#896](https://github.com/flow-php/flow/pull/896) - **Serialization of XMLElement and XMLNodeElement** - [@norberttech](https://github.com/norberttech)
