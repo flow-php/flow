@@ -57,6 +57,14 @@ final class PartitionedDataFrame
         return $this;
     }
 
+    /**
+     * @param null|callable(Rows $rows): void $callback
+     */
+    public function run(?callable $callback = null) : void
+    {
+        $this->df->run($callback);
+    }
+
     public function write(Loader $loader) : DataFrame
     {
         return $this->df->write($loader);
