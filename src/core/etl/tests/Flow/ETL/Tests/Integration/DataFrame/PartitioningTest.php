@@ -4,6 +4,7 @@ namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use function Flow\ETL\Adapter\Text\from_text;
 use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\lit;
@@ -13,6 +14,8 @@ use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\rows_partitioned;
 use function Flow\ETL\DSL\str_entry;
+use Flow\ETL\Partition;
+use Flow\ETL\Rows;
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
 
 final class PartitioningTest extends IntegrationTestCase
@@ -62,6 +65,47 @@ final class PartitioningTest extends IntegrationTestCase
             ],
             \iterator_to_array($rows)
         );
+    }
+
+    public function test_partition_by_partitions_order() : void
+    {
+        df()
+            ->read(from_array(
+                \array_merge(...\array_map(
+                    function (int $i) : array {
+                        $data = [];
+
+                        $maxItems = \random_int(2, 10);
+
+                        for ($d = 0; $d < $maxItems; $d++) {
+                            $data[] = [
+                                'id' => \uniqid('', true),
+                                'created_at' => (new \DateTimeImmutable('2020-01-01'))->add(new \DateInterval('P' . $i . 'D'))->setTime(\random_int(0, 23), \random_int(0, 59), \random_int(0, 59)),
+                                'value' => \random_int(1, 1000),
+                            ];
+                        }
+
+                        return $data;
+                    },
+                    \range(1, 10)
+                ))
+            ))
+            ->withEntry('year', ref('created_at')->dateFormat('Y'))
+            ->withEntry('month', ref('created_at')->dateFormat('m'))
+            ->withEntry('day', ref('created_at')->dateFormat('d'))
+            ->partitionBy(ref('year'), ref('day'), ref('month'))
+            ->run(function (Rows $rows) : void {
+                $this->assertSame(
+                    [
+                        'year', 'day', 'month', // order is changed on purpose
+                    ],
+                    \array_map(
+                        fn (Partition $p) => $p->name,
+                        $rows->partitions()->toArray()
+                    )
+                );
+            });
+
     }
 
     public function test_pruning_multiple_partitions() : void

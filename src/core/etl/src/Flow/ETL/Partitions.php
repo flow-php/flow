@@ -14,8 +14,6 @@ final class Partitions implements \ArrayAccess, \Countable, \IteratorAggregate
 
     public function __construct(Partition ...$partitions)
     {
-        \uasort($partitions, static fn (Partition $a, Partition $b) => $a->name <=> $b->name);
-
         $this->partitions = $partitions;
     }
 
@@ -42,9 +40,12 @@ final class Partitions implements \ArrayAccess, \Countable, \IteratorAggregate
 
     public function id() : string
     {
+        $partitions = $this->partitions;
+        \uasort($partitions, static fn (Partition $a, Partition $b) => $a->name <=> $b->name);
+
         $id = '|';
 
-        foreach ($this->partitions as $partition) {
+        foreach ($partitions as $partition) {
             $id .= $partition->name . '_' . $partition->value . '|';
         }
 
