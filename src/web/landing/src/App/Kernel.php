@@ -52,7 +52,7 @@ class Kernel extends BaseKernel
         ]);
 
         $container->extension('static_content_generator', [
-            'output_directory' => '%kernel.project_dir%/public',
+            'output_directory' => '%kernel.project_dir%/public/',
         ]);
 
         $container->services()

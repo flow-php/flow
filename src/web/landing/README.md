@@ -34,8 +34,8 @@ To generated CSS using Tailwind, execute:
 composer tailwindcss:build
 ```
 
-It'll fetch executable file and create
-or if you want to keep it running in the watch mode, execute:
+It'll fetch executable file and create CSS that will be served from web server.
+Or if you want to keep it running in the watch mode, execute:
 ```shell
 composer tailwindcss:watch
 ```
