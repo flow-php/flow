@@ -1,6 +1,7 @@
-## [Unreleased] - 2024-01-02
+## [Unreleased] - 2024-01-04
 
 ### Added
+- [#905](https://github.com/flow-php/flow/pull/905) - **Base symfony skeleton for a landing page** - [@owsiakl](https://github.com/owsiakl)
 - [#901](https://github.com/flow-php/flow/pull/901) - **partition_by example** - [@norberttech](https://github.com/norberttech)
 - [#898](https://github.com/flow-php/flow/pull/898) - **extra validation for column in parquet rows** - [@norberttech](https://github.com/norberttech)
 - [#893](https://github.com/flow-php/flow/pull/893) - **list select function** - [@norberttech](https://github.com/norberttech)
