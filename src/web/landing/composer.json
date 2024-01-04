@@ -1,0 +1,37 @@
+{
+    "name": "flow-php/web",
+    "description": "Flow PHP ETL - Web",
+    "type": "project",
+    "require": {
+        "symfony/http-kernel": "^6.4",
+        "symfony/http-foundation": "^6.4",
+        "symfony/routing": "^6.4",
+        "symfony/framework-bundle": "^6.4",
+        "symfony/twig-bundle": "^6.4",
+        "symfony/web-profiler-bundle": "^6.4",
+        "symfony/asset-mapper": "^6.4",
+        "symfony/asset": "^6.4",
+        "symfony/runtime": "^6.4",
+        "symfony/console": "^6.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/App"
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "symfony/runtime": true
+        }
+    },
+    "scripts": {
+        "assets:clear": "rm -rf public/assets",
+        "assets:build": [
+            "@assets:clear",
+            "@tailwindcss:build",
+            "bin/console asset-map:compile"
+        ],
+        "tailwindcss:build": "bin/tailwindcss -i assets/styles/app.css -o assets/styles/app.tailwind.css -m",
+        "tailwindcss:watch": "bin/tailwindcss -i assets/styles/app.css -o assets/styles/app.tailwind.css -w"
+    }
+}

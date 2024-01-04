@@ -1,0 +1,4 @@
+vendor/
+var/
+bin/tailwindcss
+public/assets
