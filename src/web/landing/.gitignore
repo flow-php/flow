@@ -1,3 +1,4 @@
+.env.local
 vendor/
 var/
 public/assets
