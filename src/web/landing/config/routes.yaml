@@ -1,5 +1,5 @@
 controllers:
     resource:
-        path: ../src/App/Controller/
-        namespace: App\Controller
+        path: ../src/Flow/Website/Controller/
+        namespace: Flow\Website\Controller
     type: attribute

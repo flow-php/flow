@@ -22,7 +22,7 @@
     },
     "autoload": {
         "psr-4": {
-            "App\\": "src/App"
+            "Flow\\Website\\": "src/Flow/Website/"
         }
     },
     "config": {

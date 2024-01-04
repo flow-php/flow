@@ -6,7 +6,7 @@ services:
         autowire: true
         autoconfigure: true
 
-    App\:
-        resource: '../src/App'
+    Flow\Website\:
+        resource: '../src/Flow/Website/'
         exclude:
-            - '../src/App/Kernel.php'
+            - '../src/Flow/Website/Kernel.php'
