@@ -8,11 +8,15 @@
         "symfony/routing": "^6.4",
         "symfony/framework-bundle": "^6.4",
         "symfony/twig-bundle": "^6.4",
-        "symfony/web-profiler-bundle": "^6.4",
         "symfony/asset-mapper": "^6.4",
         "symfony/asset": "^6.4",
         "symfony/runtime": "^6.4",
         "symfony/console": "^6.4"
+    },
+    "require-dev": {
+        "symfony/web-profiler-bundle": "^6.4",
+        "symfonycasts/tailwind-bundle": "^0.5.0",
+        "norberttech/static-content-generator-bundle": "1.x-dev"
     },
     "autoload": {
         "psr-4": {
@@ -31,7 +35,7 @@
             "@tailwindcss:build",
             "bin/console asset-map:compile"
         ],
-        "tailwindcss:build": "bin/tailwindcss -i assets/styles/app.css -o assets/styles/app.tailwind.css -m",
-        "tailwindcss:watch": "bin/tailwindcss -i assets/styles/app.css -o assets/styles/app.tailwind.css -w"
+        "tailwindcss:build": "bin/console tailwind:build",
+        "tailwindcss:watch": "bin/console tailwind:build --watch"
     }
 }

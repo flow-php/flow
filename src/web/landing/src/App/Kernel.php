@@ -30,6 +30,8 @@ class Kernel extends BaseKernel
 
         if ('dev' === $this->getEnvironment()) {
             $bundles[] = new \Symfony\Bundle\WebProfilerBundle\WebProfilerBundle();
+            $bundles[] = new \Symfonycasts\TailwindBundle\SymfonycastsTailwindBundle();
+            $bundles[] = new \NorbertTech\StaticContentGeneratorBundle\StaticContentGeneratorBundle();
         }
 
         return $bundles;
@@ -44,9 +46,13 @@ class Kernel extends BaseKernel
             ],
             'asset_mapper' => [
                 'paths' => [
-                    'assets/',
+                    '%kernel.project_dir%/assets/',
                 ],
             ],
+        ]);
+
+        $container->extension('static_content_generator', [
+            'output_directory' => '%kernel.project_dir%/public',
         ]);
 
         $container->services()
