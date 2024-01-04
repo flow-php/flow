@@ -1,0 +1,28 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <title>Flow PHP - strongly typed data processing framework</title>
+
+    {% block stylesheets %}
+        <link rel="stylesheet" href="{{ asset('styles/app.css') }}">
+    {% endblock %}
+
+    {% block javascripts %}
+        {{ importmap([]) }}
+    {% endblock %}
+</head>
+<body>
+    <header>
+        <h1 class="text-center mt-10 mb-10">Flow PHP - strongly typed data processing framework</h1>
+    </header>
+
+    <main class="container mx-auto">
+        {% block main %}{% endblock %}
+    </main>
+
+    <footer class="text-center mt-10">
+        &copy; Copyright {{ 'now' | date('Y') }} Flow
+    </footer>
+</body>
+</html>
