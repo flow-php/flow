@@ -15,7 +15,7 @@ use Flow\ETL\Row\Schema\Definition;
 /**
  * @implements Entry<float>
  */
-final class FloatEntry implements \Stringable, Entry
+final class FloatEntry implements Entry
 {
     use EntryRef;
 
