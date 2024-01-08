@@ -20,7 +20,6 @@ use function Flow\ETL\DSL\refs;
 use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\to_callable;
 use Flow\ETL\DataFrame;
-use Flow\ETL\DSL\Transform;
 use Flow\ETL\ErrorHandler\IgnoreError;
 use Flow\ETL\Extractor;
 use Flow\ETL\Flow;
@@ -413,15 +412,6 @@ final class DataFrameTest extends TestCase
                     fn (Row $row) : Row => $row->set(new StringEntry('stamp', 'zero'))
                 );
             }
-
-            public function __serialize() : array
-            {
-                return [];
-            }
-
-            public function __unserialize(array $data) : void
-            {
-            }
         };
 
         $loader = new class implements Loader {
@@ -430,15 +420,6 @@ final class DataFrameTest extends TestCase
             public function load(Rows $rows, FlowContext $context) : void
             {
                 $this->result = \array_merge($this->result, $rows->toArray());
-            }
-
-            public function __serialize() : array
-            {
-                return [];
-            }
-
-            public function __unserialize(array $data) : void
-            {
             }
         };
 
@@ -449,15 +430,6 @@ final class DataFrameTest extends TestCase
                 public function transform(Rows $rows, FlowContext $context) : Rows
                 {
                     throw new \RuntimeException('Unexpected exception');
-                }
-
-                public function __serialize() : array
-                {
-                    return [];
-                }
-
-                public function __unserialize(array $data) : void
-                {
                 }
             })
             ->rows(AddStampToStringEntryTransformer::divideBySemicolon('stamp', 'one'))
@@ -625,7 +597,7 @@ final class DataFrameTest extends TestCase
             ->rename('country', 'country_code')
             ->void()
             ->aggregate(average(ref('age')))
-            ->rows(Transform::rename('age_avg', 'average_age'))
+            ->rename('age_avg', 'average_age')
             ->fetch();
 
         $this->assertEquals(
@@ -666,15 +638,6 @@ final class DataFrameTest extends TestCase
                     {
                         return $rows->map(fn (Row $row) => $row->rename('id', 'new_id'));
                     }
-
-                    public function __serialize() : array
-                    {
-                        return [];
-                    }
-
-                    public function __unserialize(array $data) : void
-                    {
-                    }
                 }
             )
             ->batchSize(2)
@@ -683,15 +646,6 @@ final class DataFrameTest extends TestCase
                     public function load(Rows $rows, FlowContext $context) : void
                     {
                         Assert::assertCount(2, $rows);
-                    }
-
-                    public function __serialize() : array
-                    {
-                        return [];
-                    }
-
-                    public function __unserialize(array $data) : void
-                    {
                     }
                 }
             )
@@ -721,15 +675,6 @@ final class DataFrameTest extends TestCase
                     {
                         return $rows->map(fn (Row $row) => $row->rename('id', 'new_id'));
                     }
-
-                    public function __serialize() : array
-                    {
-                        return [];
-                    }
-
-                    public function __unserialize(array $data) : void
-                    {
-                    }
                 }
             )
             ->collect()
@@ -738,15 +683,6 @@ final class DataFrameTest extends TestCase
                     public function load(Rows $rows, FlowContext $context) : void
                     {
                         Assert::assertCount(3, $rows);
-                    }
-
-                    public function __serialize() : array
-                    {
-                        return [];
-                    }
-
-                    public function __unserialize(array $data) : void
-                    {
                     }
                 }
             )

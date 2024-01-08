@@ -5,23 +5,10 @@ namespace Flow\ETL\PHP\Type\Logical;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Type;
 
-/**
- * @implements LogicalType<array{element: ListElement}>
- */
 final class ListType implements LogicalType
 {
     public function __construct(private readonly List\ListElement $element)
     {
-    }
-
-    public function __serialize() : array
-    {
-        return ['element' => $this->element];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->element = $data['element'];
     }
 
     public function element() : ListElement

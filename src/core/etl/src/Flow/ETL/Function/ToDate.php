@@ -6,7 +6,7 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class ToDate implements ScalarFunction
+final class ToDate extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction $ref,

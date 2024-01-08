@@ -4,7 +4,7 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class DOMNodeValue implements ScalarFunction
+final class DOMNodeValue extends ScalarFunctionChain
 {
     public function __construct(private readonly ScalarFunction $ref)
     {

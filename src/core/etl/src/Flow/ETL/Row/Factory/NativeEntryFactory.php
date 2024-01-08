@@ -39,20 +39,8 @@ use Flow\ETL\Row\Schema;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\Uuid;
 
-/**
- * @implements EntryFactory<array>
- */
 final class NativeEntryFactory implements EntryFactory
 {
-    public function __serialize() : array
-    {
-        return [];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-    }
-
     /**
      * @throws InvalidArgumentException
      * @throws RuntimeException

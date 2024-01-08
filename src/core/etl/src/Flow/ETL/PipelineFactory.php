@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\InvalidFileFormatException;
 
 final class PipelineFactory
 {
@@ -20,7 +21,7 @@ final class PipelineFactory
         }
 
         if (!\str_ends_with($this->filename, '.php')) {
-            throw InvalidArgumentException::because('Input file must be a PHP one!');
+            throw new InvalidFileFormatException('php', \pathinfo($this->filename, \PATHINFO_EXTENSION));
         }
 
         $resource = \fopen($this->filename, 'rb');

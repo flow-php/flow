@@ -6,7 +6,7 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class IsNumeric implements ScalarFunction
+final class IsNumeric extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction $ref

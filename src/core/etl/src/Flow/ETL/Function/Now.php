@@ -6,7 +6,7 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class Now implements ScalarFunction
+final class Now extends ScalarFunctionChain
 {
     public function __construct(private readonly \DateTimeZone $timeZone = new \DateTimeZone('UTC'))
     {

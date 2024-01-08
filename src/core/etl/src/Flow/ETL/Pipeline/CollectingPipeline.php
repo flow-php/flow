@@ -74,9 +74,13 @@ final class CollectingPipeline implements OverridingPipeline, Pipeline
 
     public function process(FlowContext $context) : \Generator
     {
-        $this->nextPipeline->setSource(from_rows(
-            (new Rows())->merge(...\iterator_to_array($this->pipeline->process($context)))
-        ));
+        $rows = new Rows();
+
+        foreach ($this->pipeline->process($context) as $nextRows) {
+            $rows = $rows->merge($nextRows);
+        }
+
+        $this->nextPipeline->setSource(from_rows($rows));
 
         return $this->nextPipeline->process($context);
     }

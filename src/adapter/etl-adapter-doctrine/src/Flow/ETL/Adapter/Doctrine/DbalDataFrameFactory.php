@@ -11,13 +11,6 @@ use Flow\ETL\DataFrameFactory;
 use Flow\ETL\Flow;
 use Flow\ETL\Rows;
 
-/**
- * @implements DataFrameFactory<array{
- *  connection_params: array<string, mixed>,
- *  query: string,
- *  parameters: array<QueryParameter>
- * }>
- */
 final class DbalDataFrameFactory implements DataFrameFactory
 {
     private ?Connection $connection = null;
@@ -47,22 +40,6 @@ final class DbalDataFrameFactory implements DataFrameFactory
         $factory->connection = $connection;
 
         return $factory;
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'connection_params' => $this->connectionParams,
-            'query' => $this->query,
-            'parameters' => $this->parameters,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->connectionParams = $data['connection_params'];
-        $this->query = $data['query'];
-        $this->parameters = $data['parameters'];
     }
 
     public function from(Rows $rows) : DataFrame

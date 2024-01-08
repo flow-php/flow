@@ -139,15 +139,6 @@ final class JoinTest extends IntegrationTestCase
                             )
                         );
                     }
-
-                    public function __serialize() : array
-                    {
-                        return [];
-                    }
-
-                    public function __unserialize(array $data) : void
-                    {
-                    }
                 },
                 Expression::on(['country' => 'code']),
             )

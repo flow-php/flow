@@ -133,4 +133,27 @@ XML);
     {
         $this->assertSame($equals, $entry->isEqual($nextEntry));
     }
+
+    public function test_serialization() : void
+    {
+        $entry = new XMLEntry('xml', <<<'XML'
+<xml>
+    <root>
+        <item>
+            <id>1</id>
+            <name>Foo</name>
+        </item>
+        <item>
+            <id>2</id>
+            <name>Bar</name>
+        </item>
+    </root>
+</xml>
+XML);
+
+        $serialized = \serialize($entry);
+        $unserialized = \unserialize($serialized);
+
+        $this->assertTrue($entry->isEqual($unserialized));
+    }
 }

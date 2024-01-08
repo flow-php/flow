@@ -39,15 +39,6 @@ final class JoinEachRowsTransformerTest extends TestCase
                     )
                 );
             }
-
-            public function __serialize() : array
-            {
-                return [];
-            }
-
-            public function __unserialize(array $data) : void
-            {
-            }
         };
 
         $transformer = JoinEachRowsTransformer::inner($right, Expression::on(['country' => 'code']));
@@ -78,15 +69,6 @@ final class JoinEachRowsTransformerTest extends TestCase
                         Row::create(str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
                     )
                 );
-            }
-
-            public function __serialize() : array
-            {
-                return [];
-            }
-
-            public function __unserialize(array $data) : void
-            {
             }
         };
 
@@ -119,15 +101,6 @@ final class JoinEachRowsTransformerTest extends TestCase
                         Row::create(str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
                     )
                 );
-            }
-
-            public function __serialize() : array
-            {
-                return [];
-            }
-
-            public function __unserialize(array $data) : void
-            {
             }
         };
 

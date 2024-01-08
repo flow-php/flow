@@ -6,9 +6,6 @@ namespace Flow\ETL\Memory;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 
-/**
- * @implements Memory<array{data: array<array<string, mixed>>}>
- */
 final class ArrayMemory implements \Countable, Memory
 {
     /**
@@ -26,18 +23,6 @@ final class ArrayMemory implements \Countable, Memory
         $this->assertMemoryStructure($memory);
         /** @var array<array-key, array<string, mixed>> $memory */
         $this->data = $memory;
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'data' => $this->data,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->data = $data['data'];
     }
 
     /**

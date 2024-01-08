@@ -37,17 +37,17 @@ class TimeUnit extends TBase
     public static $isValidate = false;
 
     /**
-     * @var \Flow\Parquet\Thrift\MicroSeconds
+     * @var MicroSeconds
      */
     public $MICROS;
 
     /**
-     * @var \Flow\Parquet\Thrift\MilliSeconds
+     * @var MilliSeconds
      */
     public $MILLIS;
 
     /**
-     * @var \Flow\Parquet\Thrift\NanoSeconds
+     * @var NanoSeconds
      */
     public $NANOS;
 

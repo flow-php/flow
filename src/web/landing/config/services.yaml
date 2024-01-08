@@ -1,0 +1,12 @@
+# https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
+parameters:
+
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    Flow\Website\:
+        resource: '../src/Flow/Website/'
+        exclude:
+            - '../src/Flow/Website/Kernel.php'

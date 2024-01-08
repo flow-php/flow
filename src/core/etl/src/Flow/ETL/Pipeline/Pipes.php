@@ -6,12 +6,8 @@ namespace Flow\ETL\Pipeline;
 
 use Flow\ETL\Loader;
 use Flow\ETL\Transformer;
-use Flow\Serializer\Serializable;
 
-/**
- * @implements Serializable<array{pipes: array<int, Loader|Transformer>}>
- */
-final class Pipes implements Serializable
+final class Pipes
 {
     /**
      * @param array<int, Loader|Transformer> $pipes
@@ -23,18 +19,6 @@ final class Pipes implements Serializable
     public static function empty() : self
     {
         return new self([]);
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'pipes' => $this->pipes,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->pipes = $data['pipes'];
     }
 
     public function add(Loader|Transformer $pipe) : void

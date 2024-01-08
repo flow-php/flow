@@ -12,6 +12,7 @@ use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\float_entry;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
+use function Flow\ETL\DSL\ignore;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\json_entry;
 use function Flow\ETL\DSL\json_object_entry;
@@ -57,35 +58,6 @@ final class AvroTest extends TestCase
             2,
             \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
         );
-    }
-
-    public function test_partitioning() : void
-    {
-        $this->expectExceptionMessage('Partitioning is not supported yet');
-
-        $this->removeFile($path = \sys_get_temp_dir() . '/file.avro');
-
-        df()
-            ->read(from_rows(
-                $rows = new Rows(
-                    ...\array_map(function (int $i) : Row {
-                        return Row::create(
-                            int_entry('integer', $i),
-                            float_entry('float', 1.5),
-                            str_entry('string', 'name_' . $i),
-                            bool_entry('boolean', true),
-                            datetime_entry('datetime', new \DateTimeImmutable()),
-                            json_object_entry('json_object', ['id' => 1, 'name' => 'test']),
-                            json_entry('json', [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']]),
-                            list_entry('list_of_strings', ['a', 'b', 'c'], type_list(type_string())),
-                            list_entry('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()], type_list(type_object(\DateTimeImmutable::class))),
-                        );
-                    }, \range(1, 100))
-                )
-            ))
-            ->partitionBy('integer')
-            ->write(to_avro($path))
-            ->run();
     }
 
     public function test_safe_writing_and_reading_avro_with_all_supported_types() : void
@@ -331,7 +303,7 @@ final class AvroTest extends TestCase
                     }, \range(1, 100))
                 )
             ))
-            ->mode(SaveMode::Ignore)
+            ->saveMode(ignore())
             ->write(to_avro($path))
             ->run();
 

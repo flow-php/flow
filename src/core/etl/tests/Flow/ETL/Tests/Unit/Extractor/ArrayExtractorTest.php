@@ -2,6 +2,8 @@
 
 namespace Flow\ETL\Tests\Unit\Extractor;
 
+use function Flow\ETL\DSL\config;
+use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\execution_context;
 use function Flow\ETL\DSL\from_array;
 use PHPUnit\Framework\TestCase;
@@ -15,7 +17,7 @@ final class ArrayExtractorTest extends TestCase
             ['id' => 2, 'name' => 'Michal'],
         ]);
 
-        $rows = \iterator_to_array($extractor->extract(execution_context()));
+        $rows = \iterator_to_array($extractor->extract(execution_context(config_builder()->build())));
 
         $this->assertCount(2, $rows);
         $this->assertSame(['id' => 1, 'name' => 'Norbert'], $rows[0]->first()->toArray());
@@ -31,7 +33,7 @@ final class ArrayExtractorTest extends TestCase
 
         $extractor = from_array($generator());
 
-        $rows = \iterator_to_array($extractor->extract(execution_context()));
+        $rows = \iterator_to_array($extractor->extract(execution_context(config())));
 
         $this->assertCount(2, $rows);
         $this->assertSame(['id' => 1, 'name' => 'Norbert'], $rows[0]->first()->toArray());

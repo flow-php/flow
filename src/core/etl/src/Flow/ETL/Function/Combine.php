@@ -6,7 +6,7 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class Combine implements ScalarFunction
+final class Combine extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction $keys,

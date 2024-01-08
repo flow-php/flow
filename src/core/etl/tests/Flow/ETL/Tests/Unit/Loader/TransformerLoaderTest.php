@@ -10,7 +10,6 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
-use Flow\Serializer\NativePHPSerializer;
 use PHPUnit\Framework\TestCase;
 
 final class TransformerLoaderTest extends TestCase
@@ -32,21 +31,5 @@ final class TransformerLoaderTest extends TestCase
         );
 
         $transformer->load(new Rows(), new FlowContext(Config::default()));
-    }
-
-    public function test_transformer_loader_with_serialization() : void
-    {
-        $transformerMock = $this->createMock(Transformer::class);
-
-        $loaderMock = $this->createMock(Loader::class);
-
-        $transformer = to_transformation(
-            $transformerMock,
-            $loaderMock
-        );
-
-        $serializer = new NativePHPSerializer();
-
-        $this->assertEquals($transformer, $serializer->unserialize($serializer->serialize($transformer)));
     }
 }

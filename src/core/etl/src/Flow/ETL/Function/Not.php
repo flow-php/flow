@@ -6,7 +6,7 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class Not implements ScalarFunction
+final class Not extends ScalarFunctionChain
 {
     public function __construct(private readonly ScalarFunction $function)
     {

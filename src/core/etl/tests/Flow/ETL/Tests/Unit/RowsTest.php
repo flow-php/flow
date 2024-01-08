@@ -5,22 +5,30 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit;
 
 use function Flow\ETL\DSL\array_entry;
+use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\bool_entry;
+use function Flow\ETL\DSL\datetime_entry;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\list_entry;
 use function Flow\ETL\DSL\null_entry;
+use function Flow\ETL\DSL\partition;
+use function Flow\ETL\DSL\partitions;
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
+use function Flow\ETL\DSL\rows_partitioned;
 use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\type_int;
 use function Flow\ETL\DSL\type_list;
 use function Flow\ETL\DSL\type_string;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Partition;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\Row;
+use Flow\ETL\Row\Comparator;
 use Flow\ETL\Row\Comparator\NativeComparator;
+use Flow\ETL\Row\Comparator\WeakObjectComparator;
 use Flow\ETL\Row\Entry\BooleanEntry;
 use Flow\ETL\Row\Entry\DateTimeEntry;
 use Flow\ETL\Row\Entry\IntegerEntry;
@@ -37,105 +45,105 @@ final class RowsTest extends TestCase
     public static function rows_diff_left_provider() : \Generator
     {
         yield 'one entry identical row' => [
-            $expected = new Rows(),
-            $left = new Rows(Row::create(new IntegerEntry('number', 1))),
-            $right = new Rows(Row::create(new IntegerEntry('number', 1))),
+            $expected = rows(),
+            $left = rows(row(int_entry('number', 1))),
+            $right = rows(row(int_entry('number', 1))),
         ];
 
         yield 'one entry right different - missing entry' => [
-            $expected = new Rows(Row::create(new IntegerEntry('number', 1))),
-            $left = new Rows(Row::create(new IntegerEntry('number', 1))),
-            $right = new Rows(),
+            $expected = rows(row(int_entry('number', 1))),
+            $left = rows(row(int_entry('number', 1))),
+            $right = rows(),
         ];
 
         yield 'one entry left different - missing entry' => [
-            $expected = new Rows(),
-            $left = new Rows(),
-            $right = new Rows(Row::create(new IntegerEntry('number', 1))),
+            $expected = rows(),
+            $left = rows(),
+            $right = rows(row(int_entry('number', 1))),
         ];
 
         yield 'one entry right different - different entry' => [
-            $expected = new Rows(Row::create(new IntegerEntry('number', 1))),
-            $left = new Rows(Row::create(new IntegerEntry('number', 1))),
-            $right = new Rows(Row::create(new IntegerEntry('number', 2))),
+            $expected = rows(row(int_entry('number', 1))),
+            $left = rows(row(int_entry('number', 1))),
+            $right = rows(row(int_entry('number', 2))),
         ];
 
         yield 'one entry left different - different entry' => [
-            $expected = new Rows(Row::create(new IntegerEntry('number', 2))),
-            $left = new Rows(Row::create(new IntegerEntry('number', 2))),
-            $right = new Rows(Row::create(new IntegerEntry('number', 1))),
+            $expected = rows(row(int_entry('number', 2))),
+            $left = rows(row(int_entry('number', 2))),
+            $right = rows(row(int_entry('number', 1))),
         ];
     }
 
     public static function rows_diff_right_provider() : \Generator
     {
         yield 'one entry identical row' => [
-            $expected = new Rows(),
-            $left = new Rows(Row::create(new IntegerEntry('number', 1))),
-            $right = new Rows(Row::create(new IntegerEntry('number', 1))),
+            $expected = rows(),
+            $left = rows(row(int_entry('number', 1))),
+            $right = rows(row(int_entry('number', 1))),
         ];
 
         yield 'one entry right different - missing entry' => [
-            $expected = new Rows(),
-            $left = new Rows(Row::create(new IntegerEntry('number', 1))),
-            $right = new Rows(),
+            $expected = rows(),
+            $left = rows(row(int_entry('number', 1))),
+            $right = rows(),
         ];
 
         yield 'one entry left different - missing entry' => [
-            $expected = new Rows(Row::create(new IntegerEntry('number', 1))),
-            $left = new Rows(),
-            $right = new Rows(Row::create(new IntegerEntry('number', 1))),
+            $expected = rows(row(int_entry('number', 1))),
+            $left = rows(),
+            $right = rows(row(int_entry('number', 1))),
         ];
 
         yield 'one entry right different - different entry' => [
-            $expected = new Rows(Row::create(new IntegerEntry('number', 2))),
-            $left = new Rows(Row::create(new IntegerEntry('number', 1))),
-            $right = new Rows(Row::create(new IntegerEntry('number', 2))),
+            $expected = rows(row(int_entry('number', 2))),
+            $left = rows(row(int_entry('number', 1))),
+            $right = rows(row(int_entry('number', 2))),
         ];
 
         yield 'one entry left different - different entry' => [
-            $expected = new Rows(Row::create(new IntegerEntry('number', 1))),
-            $left = new Rows(Row::create(new IntegerEntry('number', 2))),
-            $right = new Rows(Row::create(new IntegerEntry('number', 1))),
+            $expected = rows(row(int_entry('number', 1))),
+            $left = rows(row(int_entry('number', 2))),
+            $right = rows(row(int_entry('number', 1))),
         ];
     }
 
     public static function unique_rows_provider() : \Generator
     {
         yield 'simple identical rows' => [
-            $expected = new Rows(Row::create(new IntegerEntry('number', 1))),
-            $notUnique = new Rows(
-                Row::create(new IntegerEntry('number', 1)),
-                Row::create(new IntegerEntry('number', 1))
+            $expected = rows(row(int_entry('number', 1))),
+            $notUnique = rows(
+                row(int_entry('number', 1)),
+                row(int_entry('number', 1))
             ),
             $comparator = new NativeComparator(),
         ];
 
         yield 'simple identical rows with objects' => [
-            $expected = new Rows(Row::create(new ObjectEntry('object', new \stdClass()))),
-            $notUnique = new Rows(
-                Row::create(new ObjectEntry('object', $object = new \stdClass())),
-                Row::create(new ObjectEntry('object', $object = new \stdClass()))
+            $expected = rows(row(new ObjectEntry('object', new \stdClass()))),
+            $notUnique = rows(
+                row(new ObjectEntry('object', $object = new \stdClass())),
+                row(new ObjectEntry('object', $object = new \stdClass()))
             ),
-            $comparator = new Row\Comparator\WeakObjectComparator(),
+            $comparator = new WeakObjectComparator(),
         ];
     }
 
     public function test_adding_multiple_rows() : void
     {
-        $one = Row::create(new IntegerEntry('number', 1), new StringEntry('name', 'one'));
-        $two = Row::create(new IntegerEntry('number', 2), new StringEntry('name', 'two'));
-        $rows = (new Rows())->add($one, $two);
+        $one = row(int_entry('number', 1), new StringEntry('name', 'one'));
+        $two = row(int_entry('number', 2), new StringEntry('name', 'two'));
+        $rows = (rows())->add($one, $two);
 
-        $this->assertEquals(new Rows($one, $two), $rows);
+        $this->assertEquals(rows($one, $two), $rows);
     }
 
     public function test_array_access_exists() : void
     {
-        $rows = new Rows(
-            Row::create(new IntegerEntry('id', 1)),
-            Row::create(new IntegerEntry('id', 2)),
-            Row::create(new IntegerEntry('id', 3)),
+        $rows = rows(
+            row(int_entry('id', 1)),
+            row(int_entry('id', 2)),
+            row(int_entry('id', 3)),
         );
 
         $this->assertTrue(isset($rows[0]));
@@ -144,10 +152,10 @@ final class RowsTest extends TestCase
 
     public function test_array_access_get() : void
     {
-        $rows = new Rows(
-            Row::create(new IntegerEntry('id', 1)),
-            Row::create(new IntegerEntry('id', 2)),
-            Row::create(new IntegerEntry('id', 3)),
+        $rows = rows(
+            row(int_entry('id', 1)),
+            row(int_entry('id', 2)),
+            row(int_entry('id', 3)),
         );
 
         $this->assertSame(1, $rows[0]->valueOf('id'));
@@ -159,21 +167,21 @@ final class RowsTest extends TestCase
     {
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('In order to add new rows use Rows::add(Row $row) : self');
-        $rows = new Rows();
-        $rows[0] = Row::create(new IntegerEntry('id', 1));
+        $rows = rows();
+        $rows[0] = row(int_entry('id', 1));
     }
 
     public function test_array_access_unset() : void
     {
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('In order to remove rows use Rows::remove(int $offset) : self');
-        $rows = new Rows(Row::create(new IntegerEntry('id', 1)));
+        $rows = rows(row(int_entry('id', 1)));
         unset($rows[0]);
     }
 
     public function test_building_rows_from_array() : void
     {
-        $rows = Rows::fromArray(
+        $rows = array_to_rows(
             [
                 ['id' => 1234, 'deleted' => false, 'phase' => null],
                 ['id' => 4321, 'deleted' => true, 'phase' => 'launch'],
@@ -181,13 +189,13 @@ final class RowsTest extends TestCase
         );
 
         $this->assertEquals(
-            new Rows(
-                Row::create(
+            rows(
+                row(
                     int_entry('id', 1234),
                     bool_entry('deleted', false),
                     null_entry('phase'),
                 ),
-                Row::create(
+                row(
                     int_entry('id', 4321),
                     bool_entry('deleted', true),
                     str_entry('phase', 'launch'),
@@ -199,14 +207,14 @@ final class RowsTest extends TestCase
 
     public function test_chunks_with_less() : void
     {
-        $rows = new Rows(
-            Row::create(new IntegerEntry('id', 1)),
-            Row::create(new IntegerEntry('id', 2)),
-            Row::create(new IntegerEntry('id', 3)),
-            Row::create(new IntegerEntry('id', 4)),
-            Row::create(new IntegerEntry('id', 5)),
-            Row::create(new IntegerEntry('id', 6)),
-            Row::create(new IntegerEntry('id', 7)),
+        $rows = rows(
+            row(int_entry('id', 1)),
+            row(int_entry('id', 2)),
+            row(int_entry('id', 3)),
+            row(int_entry('id', 4)),
+            row(int_entry('id', 5)),
+            row(int_entry('id', 6)),
+            row(int_entry('id', 7)),
         );
 
         $chunk = \iterator_to_array($rows->chunks(10));
@@ -217,17 +225,17 @@ final class RowsTest extends TestCase
 
     public function test_chunks_with_more_than_expected_in_chunk_rows() : void
     {
-        $rows = new Rows(
-            Row::create(new IntegerEntry('id', 1)),
-            Row::create(new IntegerEntry('id', 2)),
-            Row::create(new IntegerEntry('id', 3)),
-            Row::create(new IntegerEntry('id', 4)),
-            Row::create(new IntegerEntry('id', 5)),
-            Row::create(new IntegerEntry('id', 6)),
-            Row::create(new IntegerEntry('id', 7)),
-            Row::create(new IntegerEntry('id', 8)),
-            Row::create(new IntegerEntry('id', 9)),
-            Row::create(new IntegerEntry('id', 10)),
+        $rows = rows(
+            row(int_entry('id', 1)),
+            row(int_entry('id', 2)),
+            row(int_entry('id', 3)),
+            row(int_entry('id', 4)),
+            row(int_entry('id', 5)),
+            row(int_entry('id', 6)),
+            row(int_entry('id', 7)),
+            row(int_entry('id', 8)),
+            row(int_entry('id', 9)),
+            row(int_entry('id', 10)),
         );
 
         $chunk = \iterator_to_array($rows->chunks(5));
@@ -239,10 +247,10 @@ final class RowsTest extends TestCase
 
     public function test_drop() : void
     {
-        $rows = new Rows(
-            Row::create(new IntegerEntry('id', 1)),
-            Row::create(new IntegerEntry('id', 2)),
-            Row::create(new IntegerEntry('id', 3)),
+        $rows = rows(
+            row(int_entry('id', 1)),
+            row(int_entry('id', 2)),
+            row(int_entry('id', 3)),
         );
 
         $rows = $rows->drop(1);
@@ -254,10 +262,10 @@ final class RowsTest extends TestCase
 
     public function test_drop_all() : void
     {
-        $rows = new Rows(
-            Row::create(new IntegerEntry('id', 1)),
-            Row::create(new IntegerEntry('id', 2)),
-            Row::create(new IntegerEntry('id', 3)),
+        $rows = rows(
+            row(int_entry('id', 1)),
+            row(int_entry('id', 2)),
+            row(int_entry('id', 3)),
         );
 
         $rows = $rows->drop(3);
@@ -267,10 +275,10 @@ final class RowsTest extends TestCase
 
     public function test_drop_more_than_exists() : void
     {
-        $rows = new Rows(
-            Row::create(new IntegerEntry('id', 1)),
-            Row::create(new IntegerEntry('id', 2)),
-            Row::create(new IntegerEntry('id', 3)),
+        $rows = rows(
+            row(int_entry('id', 1)),
+            row(int_entry('id', 2)),
+            row(int_entry('id', 3)),
         );
 
         $rows = $rows->drop(4);
@@ -280,10 +288,10 @@ final class RowsTest extends TestCase
 
     public function test_drop_right() : void
     {
-        $rows = new Rows(
-            Row::create(new IntegerEntry('id', 1)),
-            Row::create(new IntegerEntry('id', 2)),
-            Row::create(new IntegerEntry('id', 3)),
+        $rows = rows(
+            row(int_entry('id', 1)),
+            row(int_entry('id', 2)),
+            row(int_entry('id', 3)),
         );
 
         $rows = $rows->dropRight(1);
@@ -295,10 +303,10 @@ final class RowsTest extends TestCase
 
     public function test_drop_right_all() : void
     {
-        $rows = new Rows(
-            Row::create(new IntegerEntry('id', 1)),
-            Row::create(new IntegerEntry('id', 2)),
-            Row::create(new IntegerEntry('id', 3)),
+        $rows = rows(
+            row(int_entry('id', 1)),
+            row(int_entry('id', 2)),
+            row(int_entry('id', 3)),
         );
 
         $rows = $rows->dropRight(3);
@@ -308,10 +316,10 @@ final class RowsTest extends TestCase
 
     public function test_drop_right_more_than_available() : void
     {
-        $rows = new Rows(
-            Row::create(new IntegerEntry('id', 1)),
-            Row::create(new IntegerEntry('id', 2)),
-            Row::create(new IntegerEntry('id', 3)),
+        $rows = rows(
+            row(int_entry('id', 1)),
+            row(int_entry('id', 2)),
+            row(int_entry('id', 3)),
         );
 
         $rows = $rows->dropRight(5);
@@ -321,10 +329,10 @@ final class RowsTest extends TestCase
 
     public function test_drop_right_more_than_exists() : void
     {
-        $rows = new Rows(
-            Row::create(new IntegerEntry('id', 1)),
-            Row::create(new IntegerEntry('id', 2)),
-            Row::create(new IntegerEntry('id', 3)),
+        $rows = rows(
+            row(int_entry('id', 1)),
+            row(int_entry('id', 2)),
+            row(int_entry('id', 3)),
         );
 
         $rows = $rows->dropRight(4);
@@ -334,39 +342,39 @@ final class RowsTest extends TestCase
 
     public function test_empty_rows() : void
     {
-        $this->assertTrue((new Rows())->empty());
-        $this->assertFalse((new Rows(Row::create(int_entry('id', 1))))->empty());
+        $this->assertTrue((rows())->empty());
+        $this->assertFalse((rows(row(int_entry('id', 1))))->empty());
     }
 
     public function test_filters_out_rows() : void
     {
-        $rows = new Rows(
-            $one = Row::create(new IntegerEntry('number', 1), new StringEntry('name', 'one')),
-            $two = Row::create(new IntegerEntry('number', 2), new StringEntry('name', 'two')),
-            $three = Row::create(new IntegerEntry('number', 3), new StringEntry('name', 'three')),
-            $four = Row::create(new IntegerEntry('number', 4), new StringEntry('name', 'four')),
-            $five = Row::create(new IntegerEntry('number', 5), new StringEntry('name', 'five'))
+        $rows = rows(
+            $one = row(int_entry('number', 1), new StringEntry('name', 'one')),
+            $two = row(int_entry('number', 2), new StringEntry('name', 'two')),
+            $three = row(int_entry('number', 3), new StringEntry('name', 'three')),
+            $four = row(int_entry('number', 4), new StringEntry('name', 'four')),
+            $five = row(int_entry('number', 5), new StringEntry('name', 'five'))
         );
 
         $evenRows = fn (Row $row) : bool => $row->get('number')->value() % 2 === 0;
         $oddRows = fn (Row $row) : bool => $row->get('number')->value() % 2 === 1;
 
-        $this->assertEquals(new Rows($two, $four), $rows->filter($evenRows));
-        $this->assertEquals(new Rows($one, $three, $five), $rows->filter($oddRows));
+        $this->assertEquals(rows($two, $four), $rows->filter($evenRows));
+        $this->assertEquals(rows($one, $three, $five), $rows->filter($oddRows));
     }
 
     public function test_find() : void
     {
-        $rows = new Rows(
-            $one = Row::create(new IntegerEntry('number', 1), new StringEntry('name', 'one')),
-            $two = Row::create(new IntegerEntry('number', 2), new StringEntry('name', 'two')),
-            $three = Row::create(new IntegerEntry('number', 3), new StringEntry('name', 'one')),
-            $four = Row::create(new IntegerEntry('number', 4), new StringEntry('name', 'four')),
-            $three1 = Row::create(new IntegerEntry('number', 3), new StringEntry('name', 'three')),
+        $rows = rows(
+            $one = row(int_entry('number', 1), new StringEntry('name', 'one')),
+            $two = row(int_entry('number', 2), new StringEntry('name', 'two')),
+            $three = row(int_entry('number', 3), new StringEntry('name', 'one')),
+            $four = row(int_entry('number', 4), new StringEntry('name', 'four')),
+            $three1 = row(int_entry('number', 3), new StringEntry('name', 'three')),
         );
 
         $this->assertEquals(
-            new Rows(
+            rows(
                 $one,
                 $three
             ),
@@ -376,17 +384,17 @@ final class RowsTest extends TestCase
 
     public function test_find_on_empty_rows() : void
     {
-        $this->assertEquals(new Rows(), (new Rows())->find(fn (Row $row) => false));
+        $this->assertEquals(rows(), (rows())->find(fn (Row $row) => false));
     }
 
     public function test_find_one() : void
     {
-        $rows = new Rows(
-            $one = Row::create(new IntegerEntry('number', 1), new StringEntry('name', 'one')),
-            $two = Row::create(new IntegerEntry('number', 2), new StringEntry('name', 'two')),
-            $three = Row::create(new IntegerEntry('number', 3), new StringEntry('name', 'three')),
-            $four = Row::create(new IntegerEntry('number', 4), new StringEntry('name', 'four')),
-            $three1 = Row::create(new IntegerEntry('number', 3), new StringEntry('name', 'three')),
+        $rows = rows(
+            $one = row(int_entry('number', 1), new StringEntry('name', 'one')),
+            $two = row(int_entry('number', 2), new StringEntry('name', 'two')),
+            $three = row(int_entry('number', 3), new StringEntry('name', 'three')),
+            $four = row(int_entry('number', 4), new StringEntry('name', 'four')),
+            $three1 = row(int_entry('number', 3), new StringEntry('name', 'three')),
         );
 
         $this->assertSame($three, $rows->findOne(fn (Row $row) : bool => $row->valueOf('number') === 3));
@@ -395,17 +403,17 @@ final class RowsTest extends TestCase
 
     public function test_find_one_on_empty_rows() : void
     {
-        $this->assertNull((new Rows())->findOne(fn (Row $row) => false));
+        $this->assertNull((rows())->findOne(fn (Row $row) => false));
     }
 
     public function test_find_without_results() : void
     {
-        $rows = new Rows(
-            $one = Row::create(new IntegerEntry('number', 1), new StringEntry('name', 'one')),
-            $two = Row::create(new IntegerEntry('number', 2), new StringEntry('name', 'two')),
-            $three = Row::create(new IntegerEntry('number', 3), new StringEntry('name', 'three')),
-            $four = Row::create(new IntegerEntry('number', 4), new StringEntry('name', 'four')),
-            $three1 = Row::create(new IntegerEntry('number', 3), new StringEntry('name', 'three')),
+        $rows = rows(
+            $one = row(int_entry('number', 1), new StringEntry('name', 'one')),
+            $two = row(int_entry('number', 2), new StringEntry('name', 'two')),
+            $three = row(int_entry('number', 3), new StringEntry('name', 'three')),
+            $four = row(int_entry('number', 4), new StringEntry('name', 'four')),
+            $three1 = row(int_entry('number', 3), new StringEntry('name', 'three')),
         );
 
         $this->assertNull($rows->findOne(fn (Row $row) : bool => $row->valueOf('number') === 5));
@@ -415,17 +423,17 @@ final class RowsTest extends TestCase
     {
         $this->expectException(RuntimeException::class);
 
-        (new Rows())->first();
+        (rows())->first();
     }
 
     public function test_flat_map() : void
     {
-        $rows = new Rows(
-            Row::create(
-                new IntegerEntry('id', 1234),
+        $rows = rows(
+            row(
+                int_entry('id', 1234),
             ),
-            Row::create(
-                new IntegerEntry('id', 4567),
+            row(
+                int_entry('id', 4567),
             )
         );
 
@@ -445,56 +453,94 @@ final class RowsTest extends TestCase
         );
     }
 
+    public function test_merge_empty_rows_with_partitioned_rows() : void
+    {
+        $rows1 = rows(row(int_entry('id', 1), str_entry('group', 'a')))->partitionBy(ref('group'))[0];
+        $rows2 = rows();
+
+        $this->assertEquals(
+            partitions(partition('group', 'a')),
+            $rows1->merge($rows2)->partitions()
+        );
+        $this->assertCount(1, $rows1->merge($rows2));
+    }
+
     public function test_merge_row_with_another_row_that_has_duplicated_entries() : void
     {
         $this->expectExceptionMessage('Merged entries names must be unique, given: [id] + [id]');
         $this->expectException(InvalidArgumentException::class);
 
-        Row::create(new IntegerEntry('id', 1))
-            ->merge(Row::create(new IntegerEntry('id', 2)), $prefix = '');
+        row(int_entry('id', 1))
+            ->merge(row(int_entry('id', 2)), $prefix = '');
     }
 
-    public function test_merge_row_with_another_row_using_prefix() : void
+    public function test_merge_rows_from_different_partition() : void
     {
-        $this->assertSame(
-            [
-                'id' => 1,
-                '_id' => 2,
-            ],
-            Row::create(new IntegerEntry('id', 1))
-                ->merge(Row::create(new IntegerEntry('id', 2)), $prefix = '_')
-                ->toArray()
+        $rows1 = rows(row(int_entry('id', 1), str_entry('group', 'a')))->partitionBy(ref('group'))[0];
+        $rows2 = rows(row(int_entry('id', 2), str_entry('group', 'b')))->partitionBy(ref('group'))[0];
+
+        $this->assertEquals(
+            partitions(),
+            $rows1->merge($rows2)->partitions()
         );
+        $this->assertCount(2, $rows1->merge($rows2));
+    }
+
+    public function test_merge_rows_from_same_partition() : void
+    {
+        $rows1 = rows(row(int_entry('id', 1), str_entry('group', 'a')))->partitionBy(ref('group'))[0];
+        $rows2 = rows(row(int_entry('id', 2), str_entry('group', 'a')))->partitionBy(ref('group'))[0];
+
+        $this->assertEquals(
+            partitions(partition('group', 'a')),
+            $rows1->merge($rows2)->partitions()
+        );
+        $this->assertCount(2, $rows1->merge($rows2));
+    }
+
+    public function test_merge_rows_from_same_partitions() : void
+    {
+        $rows1 = rows(row(int_entry('id', 1), str_entry('group', 'a'), str_entry('sub_group', '1')))
+            ->partitionBy(ref('group'), ref('sub_group'))[0];
+
+        $rows2 = rows(row(int_entry('id', 2), str_entry('group', 'a'), str_entry('sub_group', '1')))
+            ->partitionBy(ref('sub_group'), ref('group'))[0];
+
+        $this->assertEquals(
+            partitions(partition('group', 'a'), partition('sub_group', '1')),
+            $rows1->merge($rows2)->partitions()
+        );
+        $this->assertCount(2, $rows1->merge($rows2));
     }
 
     public function test_merges_collection_together() : void
     {
-        $rowsOne = new Rows(
-            Row::create(new IntegerEntry('id', 1)),
-            Row::create(new IntegerEntry('id', 2)),
+        $rowsOne = rows(
+            row(int_entry('id', 1)),
+            row(int_entry('id', 2)),
         );
-        $rowsTwo = new Rows(
-            Row::create(new IntegerEntry('id', 3)),
-            Row::create(new IntegerEntry('id', 4)),
-            Row::create(new IntegerEntry('id', 5))
-        );
-
-        $rowsThree = new Rows(
-            Row::create(new IntegerEntry('id', 6)),
-            Row::create(new IntegerEntry('id', 7)),
+        $rowsTwo = rows(
+            row(int_entry('id', 3)),
+            row(int_entry('id', 4)),
+            row(int_entry('id', 5))
         );
 
-        $merged = $rowsOne->merge($rowsTwo, $rowsThree);
+        $rowsThree = rows(
+            row(int_entry('id', 6)),
+            row(int_entry('id', 7)),
+        );
+
+        $merged = $rowsOne->merge($rowsTwo)->merge($rowsThree);
 
         $this->assertEquals(
-            new Rows(
-                Row::create(new IntegerEntry('id', 1)),
-                Row::create(new IntegerEntry('id', 2)),
-                Row::create(new IntegerEntry('id', 3)),
-                Row::create(new IntegerEntry('id', 4)),
-                Row::create(new IntegerEntry('id', 5)),
-                Row::create(new IntegerEntry('id', 6)),
-                Row::create(new IntegerEntry('id', 7))
+            rows(
+                row(int_entry('id', 1)),
+                row(int_entry('id', 2)),
+                row(int_entry('id', 3)),
+                row(int_entry('id', 4)),
+                row(int_entry('id', 5)),
+                row(int_entry('id', 6)),
+                row(int_entry('id', 7))
             ),
             $merged
         );
@@ -504,58 +550,58 @@ final class RowsTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        (new Rows())->offsetExists('a');
+        (rows())->offsetExists('a');
     }
 
     public function test_offset_get_on_empty_rows() : void
     {
         $this->expectException(InvalidArgumentException::class);
 
-        (new Rows())[5];
+        (rows())[5];
     }
 
     public function test_partition_rows_by_multiple_duplicated_entries() : void
     {
         $this->assertEquals(
             [
-                Rows::partitioned(
+                rows_partitioned(
                     [
-                        Row::create(int_entry('num', 1), str_entry('cat', 'a')),
-                        Row::create(int_entry('num', 1), str_entry('cat', 'a')),
+                        row(int_entry('num', 1), str_entry('cat', 'a')),
+                        row(int_entry('num', 1), str_entry('cat', 'a')),
                     ],
                     [
-                        new Partition('num', '1'),
-                        new Partition('cat', 'a'),
+                        partition('num', '1'),
+                        partition('cat', 'a'),
                     ]
                 ),
-                Rows::partitioned(
-                    [Row::create(int_entry('num', 1), str_entry('cat', 'b'))],
+                rows_partitioned(
+                    [row(int_entry('num', 1), str_entry('cat', 'b'))],
                     [
-                        new Partition('num', '1'),
-                        new Partition('cat', 'b'),
+                        partition('num', '1'),
+                        partition('cat', 'b'),
                     ]
                 ),
-                Rows::partitioned(
-                    [Row::create(int_entry('num', 3), str_entry('cat', 'a'))],
+                rows_partitioned(
+                    [row(int_entry('num', 3), str_entry('cat', 'a'))],
                     [
-                        new Partition('num', '3'),
-                        new Partition('cat', 'a'),
+                        partition('num', '3'),
+                        partition('cat', 'a'),
                     ]
                 ),
-                Rows::partitioned(
-                    [Row::create(int_entry('num', 2), str_entry('cat', 'b'))],
+                rows_partitioned(
+                    [row(int_entry('num', 2), str_entry('cat', 'b'))],
                     [
-                        new Partition('num', '2'),
-                        new Partition('cat', 'b'),
+                        partition('num', '2'),
+                        partition('cat', 'b'),
                     ]
                 ),
             ],
-            (new Rows(
-                Row::create(int_entry('num', 1), str_entry('cat', 'a')),
-                Row::create(int_entry('num', 3), str_entry('cat', 'a')),
-                Row::create(int_entry('num', 1), str_entry('cat', 'b')),
-                Row::create(int_entry('num', 2), str_entry('cat', 'b')),
-                Row::create(int_entry('num', 1), str_entry('cat', 'a')),
+            (rows(
+                row(int_entry('num', 1), str_entry('cat', 'a')),
+                row(int_entry('num', 3), str_entry('cat', 'a')),
+                row(int_entry('num', 1), str_entry('cat', 'b')),
+                row(int_entry('num', 2), str_entry('cat', 'b')),
+                row(int_entry('num', 1), str_entry('cat', 'a')),
             ))->partitionBy('num', 'num', 'cat')
         );
     }
@@ -564,44 +610,44 @@ final class RowsTest extends TestCase
     {
         $this->assertEquals(
             [
-                Rows::partitioned(
+                rows_partitioned(
                     [
-                        Row::create(int_entry('num', 1), str_entry('cat', 'a')),
-                        Row::create(int_entry('num', 1), str_entry('cat', 'a')),
+                        row(int_entry('num', 1), str_entry('cat', 'a')),
+                        row(int_entry('num', 1), str_entry('cat', 'a')),
                     ],
                     [
-                        new Partition('num', '1'),
-                        new Partition('cat', 'a'),
+                        partition('num', '1'),
+                        partition('cat', 'a'),
                     ]
                 ),
-                Rows::partitioned(
-                    [Row::create(int_entry('num', 1), str_entry('cat', 'b'))],
+                rows_partitioned(
+                    [row(int_entry('num', 1), str_entry('cat', 'b'))],
                     [
-                        new Partition('num', '1'),
-                        new Partition('cat', 'b'),
+                        partition('num', '1'),
+                        partition('cat', 'b'),
                     ]
                 ),
-                Rows::partitioned(
-                    [Row::create(int_entry('num', 3), str_entry('cat', 'a'))],
+                rows_partitioned(
+                    [row(int_entry('num', 3), str_entry('cat', 'a'))],
                     [
-                        new Partition('num', '3'),
-                        new Partition('cat', 'a'),
+                        partition('num', '3'),
+                        partition('cat', 'a'),
                     ]
                 ),
-                Rows::partitioned(
-                    [Row::create(int_entry('num', 2), str_entry('cat', 'b'))],
+                rows_partitioned(
+                    [row(int_entry('num', 2), str_entry('cat', 'b'))],
                     [
-                        new Partition('num', '2'),
-                        new Partition('cat', 'b'),
+                        partition('num', '2'),
+                        partition('cat', 'b'),
                     ]
                 ),
             ],
-            (new Rows(
-                Row::create(int_entry('num', 1), str_entry('cat', 'a')),
-                Row::create(int_entry('num', 3), str_entry('cat', 'a')),
-                Row::create(int_entry('num', 1), str_entry('cat', 'b')),
-                Row::create(int_entry('num', 2), str_entry('cat', 'b')),
-                Row::create(int_entry('num', 1), str_entry('cat', 'a')),
+            (rows(
+                row(int_entry('num', 1), str_entry('cat', 'a')),
+                row(int_entry('num', 3), str_entry('cat', 'a')),
+                row(int_entry('num', 1), str_entry('cat', 'b')),
+                row(int_entry('num', 2), str_entry('cat', 'b')),
+                row(int_entry('num', 1), str_entry('cat', 'a')),
             ))->partitionBy('num', 'cat')
         );
     }
@@ -611,12 +657,12 @@ final class RowsTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Entry "test" does not exist');
 
-        (new Rows(
-            Row::create(new IntegerEntry('number', 1)),
-            Row::create(new IntegerEntry('number', 1)),
-            Row::create(new IntegerEntry('number', 3)),
-            Row::create(new IntegerEntry('number', 2)),
-            Row::create(new IntegerEntry('number', 4)),
+        (rows(
+            row(int_entry('number', 1)),
+            row(int_entry('number', 1)),
+            row(int_entry('number', 3)),
+            row(int_entry('number', 2)),
+            row(int_entry('number', 4)),
         ))->partitionBy('test');
     }
 
@@ -624,45 +670,73 @@ final class RowsTest extends TestCase
     {
         $this->assertEquals(
             [
-                Rows::partitioned(
-                    [Row::create(new IntegerEntry('number', 1)), Row::create(new IntegerEntry('number', 1))],
-                    [new Partition('number', '1')]
+                rows_partitioned(
+                    [row(int_entry('number', 1)), row(int_entry('number', 1))],
+                    [partition('number', '1')]
                 ),
-                Rows::partitioned([Row::create(new IntegerEntry('number', 3))], [new Partition('number', '3')]),
-                Rows::partitioned([Row::create(new IntegerEntry('number', 2))], [new Partition('number', '2')]),
-                Rows::partitioned([Row::create(new IntegerEntry('number', 4))], [new Partition('number', '4')]),
+                rows_partitioned([row(int_entry('number', 3))], [partition('number', '3')]),
+                rows_partitioned([row(int_entry('number', 2))], [partition('number', '2')]),
+                rows_partitioned([row(int_entry('number', 4))], [partition('number', '4')]),
             ],
-            (new Rows(
-                Row::create(new IntegerEntry('number', 1)),
-                Row::create(new IntegerEntry('number', 1)),
-                Row::create(new IntegerEntry('number', 3)),
-                Row::create(new IntegerEntry('number', 2)),
-                Row::create(new IntegerEntry('number', 4)),
+            (rows(
+                row(int_entry('number', 1)),
+                row(int_entry('number', 1)),
+                row(int_entry('number', 3)),
+                row(int_entry('number', 2)),
+                row(int_entry('number', 4)),
             ))->partitionBy('number')
+        );
+    }
+
+    public function test_partition_rows_date_entry() : void
+    {
+        $this->assertEquals(
+            [
+                rows_partitioned(
+                    [row(datetime_entry('date', '2023-01-01 00:00:00 UTC'))],
+                    partitions(
+                        partition('date', '2023-01-01')
+                    )
+                ),
+                rows_partitioned(
+                    [
+                        row(datetime_entry('date', '2023-01-02 00:00:00 UTC')),
+                        row(datetime_entry('date', '2023-01-02 00:00:00 UTC')),
+                    ],
+                    partitions(
+                        partition('date', '2023-01-02')
+                    )
+                ),
+            ],
+            rows(
+                row(datetime_entry('date', '2023-01-01 00:00:00 UTC')),
+                row(datetime_entry('date', '2023-01-02 00:00:00 UTC')),
+                row(datetime_entry('date', '2023-01-02 00:00:00 UTC'))
+            )->partitionBy(ref('date'))
         );
     }
 
     public function test_partitions() : void
     {
-        $rows = (new Rows(
-            Row::create(int_entry('number', 1), str_entry('group', 'a')),
-            Row::create(int_entry('number', 2), str_entry('group', 'a')),
-            Row::create(int_entry('number', 3), str_entry('group', 'a')),
-            Row::create(int_entry('number', 4), str_entry('group', 'a')),
+        $rows = (rows(
+            row(int_entry('number', 1), str_entry('group', 'a')),
+            row(int_entry('number', 2), str_entry('group', 'a')),
+            row(int_entry('number', 3), str_entry('group', 'a')),
+            row(int_entry('number', 4), str_entry('group', 'a')),
         ))->partitionBy('group');
 
         $this->assertEquals(
-            [new Partition('group', 'a')],
+            partitions(partition('group', 'a')),
             $rows[0]->partitions()
         );
     }
 
     public function test_remove() : void
     {
-        $rows = new Rows(
-            Row::create(new IntegerEntry('id', 1)),
-            Row::create(new IntegerEntry('id', 2)),
-            Row::create(new IntegerEntry('id', 3)),
+        $rows = rows(
+            row(int_entry('id', 1)),
+            row(int_entry('id', 2)),
+            row(int_entry('id', 3)),
         );
 
         $rows = $rows->remove(1);
@@ -676,15 +750,15 @@ final class RowsTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        (new Rows())->remove(1);
+        (rows())->remove(1);
     }
 
     public function test_returns_first_row() : void
     {
-        $rows = new Rows(
-            $first = Row::create(new IntegerEntry('number', 3), new StringEntry('name', 'three')),
-            Row::create(new IntegerEntry('number', 1), new StringEntry('name', 'one')),
-            Row::create(new IntegerEntry('number', 2), new StringEntry('name', 'two')),
+        $rows = rows(
+            $first = row(int_entry('number', 3), new StringEntry('name', 'three')),
+            row(int_entry('number', 1), new StringEntry('name', 'one')),
+            row(int_entry('number', 2), new StringEntry('name', 'two')),
         );
 
         $this->assertEquals($first, $rows->first());
@@ -692,10 +766,10 @@ final class RowsTest extends TestCase
 
     public function test_reverse() : void
     {
-        $rows = new Rows(
-            Row::create(new IntegerEntry('id', 1)),
-            Row::create(new IntegerEntry('id', 2)),
-            Row::create(new IntegerEntry('id', 3)),
+        $rows = rows(
+            row(int_entry('id', 1)),
+            row(int_entry('id', 2)),
+            row(int_entry('id', 3)),
         );
 
         $rows = $rows->reverse();
@@ -724,11 +798,11 @@ final class RowsTest extends TestCase
 
     public function test_rows_schema() : void
     {
-        $rows = new Rows(
-            Row::create(int_entry('id', 1), str_entry('name', 'foo')),
-            Row::create(int_entry('id', 1), null_entry('name'), list_entry('list', [1, 2], type_list(type_int()))),
-            Row::create(int_entry('id', 1), str_entry('name', 'bar'), array_entry('tags', ['a', 'b'])),
-            Row::create(int_entry('id', 1), int_entry('name', 25)),
+        $rows = rows(
+            row(int_entry('id', 1), str_entry('name', 'foo')),
+            row(int_entry('id', 1), null_entry('name'), list_entry('list', [1, 2], type_list(type_int()))),
+            row(int_entry('id', 1), str_entry('name', 'bar'), array_entry('tags', ['a', 'b'])),
+            row(int_entry('id', 1), int_entry('name', 25)),
         );
 
         $this->assertEquals(
@@ -744,9 +818,9 @@ final class RowsTest extends TestCase
 
     public function test_rows_schema_when_rows_have_different_list_types() : void
     {
-        $rows = new Rows(
-            Row::create(list_entry('list', ['one', 'two'], type_list(type_string()))),
-            Row::create(list_entry('list', [1, 2], type_list(type_int()))),
+        $rows = rows(
+            row(list_entry('list', ['one', 'two'], type_list(type_string()))),
+            row(list_entry('list', [1, 2], type_list(type_int()))),
         );
 
         $this->assertEquals(
@@ -757,10 +831,10 @@ final class RowsTest extends TestCase
 
     public function test_rows_serialization() : void
     {
-        $rows = new Rows(
-            Row::create(new IntegerEntry('id', 1)),
-            Row::create(new IntegerEntry('id', 2)),
-            Row::create(new IntegerEntry('id', 3)),
+        $rows = rows(
+            row(int_entry('id', 1)),
+            row(int_entry('id', 2)),
+            row(int_entry('id', 3)),
         );
 
         $serialized = \serialize($rows);
@@ -776,24 +850,24 @@ final class RowsTest extends TestCase
     /**
      * @dataProvider unique_rows_provider
      */
-    public function test_rows_unique(Rows $expected, Rows $notUnique, Row\Comparator $comparator = new NativeComparator()) : void
+    public function test_rows_unique(Rows $expected, Rows $notUnique, Comparator $comparator = new NativeComparator()) : void
     {
         $this->assertEquals($expected, $notUnique->unique($comparator));
     }
 
     public function test_sort() : void
     {
-        $rows = new Rows(
-            $three = Row::create(new IntegerEntry('number', 3), new StringEntry('name', 'three')),
-            $one = Row::create(new IntegerEntry('number', 1), new StringEntry('name', 'one')),
-            $five = Row::create(new IntegerEntry('number', 5), new StringEntry('name', 'five')),
-            $two = Row::create(new IntegerEntry('number', 2), new StringEntry('name', 'two')),
-            $four = Row::create(new IntegerEntry('number', 4), new StringEntry('name', 'four')),
+        $rows = rows(
+            $three = row(int_entry('number', 3), new StringEntry('name', 'three')),
+            $one = row(int_entry('number', 1), new StringEntry('name', 'one')),
+            $five = row(int_entry('number', 5), new StringEntry('name', 'five')),
+            $two = row(int_entry('number', 2), new StringEntry('name', 'two')),
+            $four = row(int_entry('number', 4), new StringEntry('name', 'four')),
         );
 
         $sort = $rows->sort(fn (Row $row, Row $nextRow) : int => $row->valueOf('number') <=> $nextRow->valueOf('number'));
 
-        $this->assertEquals(new Rows($one, $two, $three, $four, $five), $sort);
+        $this->assertEquals(rows($one, $two, $three, $four, $five), $sort);
         $this->assertNotEquals($sort, $rows);
     }
 
@@ -802,13 +876,13 @@ final class RowsTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Entry "c" does not exist');
 
-        $rows = new Rows(
-            Row::create(new IntegerEntry('a', 3), new IntegerEntry('b', 2)),
-            Row::create(new IntegerEntry('a', 1), new IntegerEntry('b', 5)),
-            Row::create(new IntegerEntry('a', 1), new IntegerEntry('b', 4)),
-            Row::create(new IntegerEntry('a', 2), new IntegerEntry('b', 7)),
-            Row::create(new IntegerEntry('a', 3), new IntegerEntry('b', 10)),
-            Row::create(new IntegerEntry('a', 2), new IntegerEntry('b', 4)),
+        $rows = rows(
+            row(int_entry('a', 3), int_entry('b', 2)),
+            row(int_entry('a', 1), int_entry('b', 5)),
+            row(int_entry('a', 1), int_entry('b', 4)),
+            row(int_entry('a', 2), int_entry('b', 7)),
+            row(int_entry('a', 3), int_entry('b', 10)),
+            row(int_entry('a', 2), int_entry('b', 4)),
         );
 
         $rows->sortBy(ref('c'), ref('b')->desc());
@@ -816,13 +890,13 @@ final class RowsTest extends TestCase
 
     public function test_sort_rows_by_two_columns() : void
     {
-        $rows = new Rows(
-            Row::create(new IntegerEntry('a', 3), new IntegerEntry('b', 2)),
-            Row::create(new IntegerEntry('a', 1), new IntegerEntry('b', 5)),
-            Row::create(new IntegerEntry('a', 1), new IntegerEntry('b', 4)),
-            Row::create(new IntegerEntry('a', 2), new IntegerEntry('b', 7)),
-            Row::create(new IntegerEntry('a', 3), new IntegerEntry('b', 10)),
-            Row::create(new IntegerEntry('a', 2), new IntegerEntry('b', 4)),
+        $rows = rows(
+            row(int_entry('a', 3), int_entry('b', 2)),
+            row(int_entry('a', 1), int_entry('b', 5)),
+            row(int_entry('a', 1), int_entry('b', 4)),
+            row(int_entry('a', 2), int_entry('b', 7)),
+            row(int_entry('a', 3), int_entry('b', 10)),
+            row(int_entry('a', 2), int_entry('b', 4)),
         );
 
         $ascending = $rows->sortBy(ref('a'), ref('b')->desc());
@@ -844,36 +918,36 @@ final class RowsTest extends TestCase
 
     public function test_sort_rows_without_changing_original_collection() : void
     {
-        $rows = new Rows(
-            $three = Row::create(new IntegerEntry('number', 3), new StringEntry('name', 'three')),
-            $one = Row::create(new IntegerEntry('number', 1), new StringEntry('name', 'one')),
-            $five = Row::create(new IntegerEntry('number', 5), new StringEntry('name', 'five')),
-            $two = Row::create(new IntegerEntry('number', 2), new StringEntry('name', 'two')),
-            $four = Row::create(new IntegerEntry('number', 4), new StringEntry('name', 'four')),
+        $rows = rows(
+            $three = row(int_entry('number', 3), new StringEntry('name', 'three')),
+            $one = row(int_entry('number', 1), new StringEntry('name', 'one')),
+            $five = row(int_entry('number', 5), new StringEntry('name', 'five')),
+            $two = row(int_entry('number', 2), new StringEntry('name', 'two')),
+            $four = row(int_entry('number', 4), new StringEntry('name', 'four')),
         );
 
         $ascending = $rows->sortAscending(ref('number'));
         $descending = $rows->sortDescending(ref('number'));
 
-        $this->assertEquals(new Rows($one, $two, $three, $four, $five), $ascending);
-        $this->assertEquals(new Rows($five, $four, $three, $two, $one), $descending);
+        $this->assertEquals(rows($one, $two, $three, $four, $five), $ascending);
+        $this->assertEquals(rows($five, $four, $three, $two, $one), $descending);
         $this->assertNotEquals($ascending, $rows);
         $this->assertNotEquals($descending, $rows);
     }
 
     public function test_sorts_entries_in_all_rows() : void
     {
-        $rows = new Rows(
-            Row::create(
-                $rowOneId = new IntegerEntry('id', 1),
+        $rows = rows(
+            row(
+                $rowOneId = int_entry('id', 1),
                 $rowOneDeleted = new BooleanEntry('deleted', true),
                 $rowOnePhase = new NullEntry('phase'),
                 $rowOneCreatedAt = new DateTimeEntry('created-at', new \DateTimeImmutable('2020-08-13 15:00')),
             ),
-            Row::create(
+            row(
                 $rowTwoDeleted = new BooleanEntry('deleted', true),
                 $rowTwoCreatedAt = new DateTimeEntry('created-at', new \DateTimeImmutable('2020-08-13 15:00')),
-                $rowTwoId = new IntegerEntry('id', 1),
+                $rowTwoId = int_entry('id', 1),
                 $rowTwoPhase = new NullEntry('phase'),
             ),
         );
@@ -881,17 +955,17 @@ final class RowsTest extends TestCase
         $sorted = $rows->sortEntries();
 
         $this->assertEquals(
-            new Rows(
-                Row::create(
+            rows(
+                row(
                     $rowOneCreatedAt = new DateTimeEntry('created-at', new \DateTimeImmutable('2020-08-13 15:00')),
                     $rowOneDeleted = new BooleanEntry('deleted', true),
-                    $rowOneId = new IntegerEntry('id', 1),
+                    $rowOneId = int_entry('id', 1),
                     $rowOnePhase = new NullEntry('phase'),
                 ),
-                Row::create(
+                row(
                     $rowTwoCreatedAt = new DateTimeEntry('created-at', new \DateTimeImmutable('2020-08-13 15:00')),
                     $rowTwoDeleted = new BooleanEntry('deleted', true),
-                    $rowTwoId = new IntegerEntry('id', 1),
+                    $rowTwoId = int_entry('id', 1),
                     $rowTwoPhase = new NullEntry('phase'),
                 )
             ),
@@ -901,10 +975,10 @@ final class RowsTest extends TestCase
 
     public function test_take() : void
     {
-        $rows = new Rows(
-            Row::create(new IntegerEntry('id', 1)),
-            Row::create(new IntegerEntry('id', 2)),
-            Row::create(new IntegerEntry('id', 3)),
+        $rows = rows(
+            row(int_entry('id', 1)),
+            row(int_entry('id', 2)),
+            row(int_entry('id', 3)),
         );
 
         $rows = $rows->take(1);
@@ -915,10 +989,10 @@ final class RowsTest extends TestCase
 
     public function test_take_all() : void
     {
-        $rows = new Rows(
-            Row::create(new IntegerEntry('id', 1)),
-            Row::create(new IntegerEntry('id', 2)),
-            Row::create(new IntegerEntry('id', 3)),
+        $rows = rows(
+            row(int_entry('id', 1)),
+            row(int_entry('id', 2)),
+            row(int_entry('id', 3)),
         );
 
         $rows = $rows->take(3);
@@ -931,10 +1005,10 @@ final class RowsTest extends TestCase
 
     public function test_take_more_than_exists() : void
     {
-        $rows = new Rows(
-            Row::create(new IntegerEntry('id', 1)),
-            Row::create(new IntegerEntry('id', 2)),
-            Row::create(new IntegerEntry('id', 3)),
+        $rows = rows(
+            row(int_entry('id', 1)),
+            row(int_entry('id', 2)),
+            row(int_entry('id', 3)),
         );
 
         $rows = $rows->take(4);
@@ -947,10 +1021,10 @@ final class RowsTest extends TestCase
 
     public function test_take_right() : void
     {
-        $rows = new Rows(
-            Row::create(new IntegerEntry('id', 1)),
-            Row::create(new IntegerEntry('id', 2)),
-            Row::create(new IntegerEntry('id', 3)),
+        $rows = rows(
+            row(int_entry('id', 1)),
+            row(int_entry('id', 2)),
+            row(int_entry('id', 3)),
         );
 
         $rows = $rows->takeRight(1);
@@ -961,10 +1035,10 @@ final class RowsTest extends TestCase
 
     public function test_take_right_all() : void
     {
-        $rows = new Rows(
-            Row::create(new IntegerEntry('id', 1)),
-            Row::create(new IntegerEntry('id', 2)),
-            Row::create(new IntegerEntry('id', 3)),
+        $rows = rows(
+            row(int_entry('id', 1)),
+            row(int_entry('id', 2)),
+            row(int_entry('id', 3)),
         );
 
         $rows = $rows->takeRight(3);
@@ -977,10 +1051,10 @@ final class RowsTest extends TestCase
 
     public function test_take_right_more_than_exists() : void
     {
-        $rows = new Rows(
-            Row::create(new IntegerEntry('id', 1)),
-            Row::create(new IntegerEntry('id', 2)),
-            Row::create(new IntegerEntry('id', 3)),
+        $rows = rows(
+            row(int_entry('id', 1)),
+            row(int_entry('id', 2)),
+            row(int_entry('id', 3)),
         );
 
         $rows = $rows->takeRight(4);
@@ -993,14 +1067,14 @@ final class RowsTest extends TestCase
 
     public function test_transforms_rows_to_array() : void
     {
-        $rows = new Rows(
-            Row::create(
-                new IntegerEntry('id', 1234),
+        $rows = rows(
+            row(
+                int_entry('id', 1234),
                 new BooleanEntry('deleted', false),
                 new NullEntry('phase'),
             ),
-            Row::create(
-                new IntegerEntry('id', 4321),
+            row(
+                int_entry('id', 4321),
                 new BooleanEntry('deleted', true),
                 new StringEntry('phase', 'launch'),
             )
@@ -1012,6 +1086,30 @@ final class RowsTest extends TestCase
                 ['id' => 4321, 'deleted' => true, 'phase' => 'launch'],
             ],
             $rows->toArray()
+        );
+    }
+
+    public function test_transforms_rows_to_array_without_keys() : void
+    {
+        $rows = rows(
+            row(
+                int_entry('id', 1234),
+                new BooleanEntry('deleted', false),
+                new NullEntry('phase'),
+            ),
+            row(
+                int_entry('id', 4321),
+                new BooleanEntry('deleted', true),
+                new StringEntry('phase', 'launch'),
+            )
+        );
+
+        $this->assertEquals(
+            [
+                [1234, false, null],
+                [4321, true, 'launch'],
+            ],
+            $rows->toArray(withKeys: false)
         );
     }
 }

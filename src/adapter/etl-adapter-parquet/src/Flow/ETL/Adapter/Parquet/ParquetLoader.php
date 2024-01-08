@@ -12,16 +12,13 @@ use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\Writer;
 
-/**
- * @implements Loader<array{
- *   path: Path
- * }>
- */
 final class ParquetLoader implements Closure, Loader, Loader\FileLoader
 {
     private readonly SchemaConverter $converter;
 
     private ?Schema $inferredSchema = null;
+
+    private readonly RowsNormalizer $normalizer;
 
     /**
      * @var array<string, Writer>
@@ -35,22 +32,11 @@ final class ParquetLoader implements Closure, Loader, Loader\FileLoader
         private readonly ?Schema $schema = null,
     ) {
         $this->converter = new SchemaConverter();
+        $this->normalizer = new RowsNormalizer();
 
         if ($this->path->isPattern()) {
             throw new \InvalidArgumentException("ParquetLoader path can't be pattern, given: " . $this->path->path());
         }
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'path' => $this->path,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->path = $data['path'];
     }
 
     public function closure(FlowContext $context) : void
@@ -78,24 +64,20 @@ final class ParquetLoader implements Closure, Loader, Loader\FileLoader
 
         $streams = $context->streams();
 
-        if ($context->partitionEntries()->count()) {
-            foreach ($rows->partitionBy(...$context->partitionEntries()->all()) as $partitionedRows) {
+        if ($rows->partitions()->count()) {
 
-                $stream = $streams->open($this->path, 'parquet', $context->appendSafe(), $partitionedRows->partitions());
+            $stream = $streams->open($this->path, 'parquet', $context->appendSafe(), $rows->partitions()->toArray());
 
-                if (!\array_key_exists($stream->path()->uri(), $this->writers)) {
-                    $this->writers[$stream->path()->uri()] = new Writer(
-                        compression: $this->compressions,
-                        options: $this->options
-                    );
+            if (!\array_key_exists($stream->path()->uri(), $this->writers)) {
+                $this->writers[$stream->path()->uri()] = new Writer(
+                    compression: $this->compressions,
+                    options: $this->options
+                );
 
-                    $this->writers[$stream->path()->uri()]->openForStream($stream->resource(), $this->converter->toParquet($this->schema()));
-                }
-
-                foreach ($partitionedRows as $row) {
-                    $this->writers[$stream->path()->uri()]->writeRow($row->toArray());
-                }
+                $this->writers[$stream->path()->uri()]->openForStream($stream->resource(), $this->converter->toParquet($this->schema()));
             }
+
+            $this->writers[$stream->path()->uri()]->writeBatch($this->normalizer->normalize($rows));
         } else {
             $stream = $streams->open($this->path, 'parquet', $context->appendSafe());
 
@@ -108,9 +90,7 @@ final class ParquetLoader implements Closure, Loader, Loader\FileLoader
                 $this->writers[$stream->path()->uri()]->openForStream($stream->resource(), $this->converter->toParquet($this->schema()));
             }
 
-            foreach ($rows as $row) {
-                $this->writers[$stream->path()->uri()]->writeRow($row->toArray());
-            }
+            $this->writers[$stream->path()->uri()]->writeBatch($this->normalizer->normalize($rows));
         }
     }
 

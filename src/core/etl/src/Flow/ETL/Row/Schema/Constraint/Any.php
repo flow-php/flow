@@ -7,9 +7,6 @@ namespace Flow\ETL\Row\Schema\Constraint;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Schema\Constraint;
 
-/**
- * @implements Constraint<array{constraints: array<Constraint>}>
- */
 final class Any implements Constraint
 {
     /**
@@ -20,18 +17,6 @@ final class Any implements Constraint
     public function __construct(Constraint ...$constraints)
     {
         $this->constraints = $constraints;
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'constraints' => $this->constraints,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->constraints = $data['constraints'];
     }
 
     public function isSatisfiedBy(Entry $entry) : bool

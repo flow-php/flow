@@ -25,7 +25,7 @@ class BloomFilterCompression extends TBase
     public static $isValidate = false;
 
     /**
-     * @var \Flow\Parquet\Thrift\Uncompressed
+     * @var Uncompressed
      */
     public $UNCOMPRESSED;
 

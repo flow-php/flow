@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Pipeline;
 
+use function Flow\ETL\DSL\from_all;
+use function Flow\ETL\DSL\from_cache;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
-use Flow\ETL\Extractor\CacheExtractor;
-use Flow\ETL\Extractor\ChainExtractor;
 use Flow\ETL\Extractor\CollectingExtractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
@@ -21,10 +22,20 @@ final class PartitioningPipeline implements OverridingPipeline, Pipeline
 
     /**
      * @param Pipeline $pipeline
+     * @param array<Reference> $partitionBy
      * @param array<Reference> $orderBy
+     *
+     * @throws InvalidArgumentException
      */
-    public function __construct(private readonly Pipeline $pipeline, private readonly array $orderBy = [])
-    {
+    public function __construct(
+        private readonly Pipeline $pipeline,
+        private readonly array $partitionBy = [],
+        private readonly array $orderBy = []
+    ) {
+        if (!\count($this->partitionBy)) {
+            throw new InvalidArgumentException('PartitioningPipeline requires at least one partitionBy entry');
+        }
+
         $this->nextPipeline = $this->pipeline->cleanCopy();
     }
 
@@ -80,13 +91,13 @@ final class PartitioningPipeline implements OverridingPipeline, Pipeline
         $partitionIds = [];
 
         foreach ($this->pipeline->process($context) as $rows) {
-            foreach ($rows->partitionBy(...$context->partitionEntries()->all()) as $partitionedRows) {
+            foreach ($rows->partitionBy(...$this->partitionBy) as $partitionedRows) {
 
                 $rows = $partitionedRows->sortBy(...$this->orderBy);
 
                 $partitionId = \hash('xxh128', $context->config->id() . '_' . \implode('_', \array_map(
                     static fn (Partition $partition) : string => $partition->id(),
-                    $partitionedRows->partitions()
+                    $partitionedRows->partitions()->toArray()
                 )));
 
                 $partitionIds[] = $partitionId;
@@ -94,8 +105,8 @@ final class PartitioningPipeline implements OverridingPipeline, Pipeline
             }
         }
 
-        $this->nextPipeline->setSource(new ChainExtractor(...\array_map(
-            static fn (string $id) : Extractor => new CollectingExtractor(new CacheExtractor($id, null, true)),
+        $this->nextPipeline->setSource(from_all(...\array_map(
+            static fn (string $id) : Extractor => new CollectingExtractor(from_cache($id, null, true)),
             \array_unique($partitionIds)
         )));
 

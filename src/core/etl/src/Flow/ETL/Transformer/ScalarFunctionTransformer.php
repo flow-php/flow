@@ -12,9 +12,6 @@ use Flow\ETL\Row\Entries;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
-/**
- * @implements Transformer<array{entry: string, function: ScalarFunction}>
- */
 final class ScalarFunctionTransformer implements Transformer
 {
     public function __construct(
@@ -23,23 +20,9 @@ final class ScalarFunctionTransformer implements Transformer
     ) {
     }
 
-    public function __serialize() : array
-    {
-        return [
-            'entry' => $this->entryName,
-            'function' => $this->function,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->entryName = $data['entry'];
-        $this->function = $data['function'];
-    }
-
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
-        if ($this->function instanceof ExpandResults && $this->function->expand()) {
+        if ($this->function instanceof ExpandResults && $this->function->expandResults()) {
             return $rows->flatMap(
                 fn (Row $r) : array => \array_map(
                     fn ($val) : Row => new Row(
@@ -57,7 +40,7 @@ final class ScalarFunctionTransformer implements Transformer
                 $value = $this->function->eval($r);
 
                 if (\is_array($value)) {
-                    if ($this->function instanceof ScalarFunction\UnpackResults && $this->function->unpack()) {
+                    if ($this->function instanceof ScalarFunction\UnpackResults && $this->function->unpackResults()) {
                         /**
                          * @var array-key $key
                          * @var mixed $val

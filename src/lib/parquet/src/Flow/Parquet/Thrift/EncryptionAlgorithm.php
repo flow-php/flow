@@ -31,12 +31,12 @@ class EncryptionAlgorithm extends TBase
     public static $isValidate = false;
 
     /**
-     * @var \Flow\Parquet\Thrift\AesGcmCtrV1
+     * @var AesGcmCtrV1
      */
     public $AES_GCM_CTR_V1;
 
     /**
-     * @var \Flow\Parquet\Thrift\AesGcmV1
+     * @var AesGcmV1
      */
     public $AES_GCM_V1;
 

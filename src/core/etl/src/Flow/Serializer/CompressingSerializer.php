@@ -8,16 +8,11 @@ use Flow\ETL\Exception\RuntimeException;
 
 final class CompressingSerializer implements Serializer
 {
-    private int $compressionLevel = 9;
-
-    private readonly Serializer $serializer;
-
-    public function __construct()
+    public function __construct(private readonly Serializer $serializer, private readonly int $compressionLevel = 9)
     {
-        $this->serializer = new NativePHPSerializer();
     }
 
-    public function serialize(Serializable $serializable) : string
+    public function serialize(object $serializable) : string
     {
         if (!\function_exists('gzcompress')) {
             // @codeCoverageIgnoreStart
@@ -36,7 +31,7 @@ final class CompressingSerializer implements Serializer
         return \base64_encode($content);
     }
 
-    public function unserialize(string $serialized) : Serializable
+    public function unserialize(string $serialized, string $class) : object
     {
         if (!\function_exists('gzcompress')) {
             // @codeCoverageIgnoreStart
@@ -60,6 +55,6 @@ final class CompressingSerializer implements Serializer
             // @codeCoverageIgnoreEnd
         }
 
-        return $this->serializer->unserialize($content);
+        return $this->serializer->unserialize($content, $class);
     }
 }

@@ -32,15 +32,6 @@ final class ClosureTest extends TestCase
                 {
                     $this->closureCalled = true;
                 }
-
-                public function __serialize() : array
-                {
-                    return [];
-                }
-
-                public function __unserialize(array $data) : void
-                {
-                }
             })
             ->run();
 

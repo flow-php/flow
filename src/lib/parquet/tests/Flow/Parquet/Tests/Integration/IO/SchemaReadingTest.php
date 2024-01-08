@@ -28,6 +28,14 @@ final class SchemaReadingTest extends TestCase
                     FlatColumn::boolean('bool'),
                 ])),
                 NestedColumn::list('list_nested', ListElement::list(ListElement::list(ListElement::int32()))),
+                NestedColumn::list('list_of_structs', ListElement::structure([
+                    FlatColumn::int32('id'),
+                    FlatColumn::string('name'),
+                ])),
+                NestedColumn::list('list_of_structs_nullable', ListElement::structure([
+                    FlatColumn::int32('id'),
+                    FlatColumn::string('name'),
+                ])),
             ])
         );
 

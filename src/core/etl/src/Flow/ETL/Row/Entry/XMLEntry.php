@@ -11,7 +11,7 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @implements Entry<\DOMDocument, array{name: string, value: \DOMDocument, type: ObjectType}>
+ * @implements Entry<\DOMDocument>
  */
 final class XMLEntry implements \Stringable, Entry
 {
@@ -42,7 +42,8 @@ final class XMLEntry implements \Stringable, Entry
     {
         return [
             'name' => $this->name,
-            'value' => $this->value,
+            /** @phpstan-ignore-next-line  */
+            'value' => \base64_encode(\gzcompress($this->value->saveXML())),
             'type' => $this->type,
         ];
     }
@@ -56,8 +57,17 @@ final class XMLEntry implements \Stringable, Entry
     public function __unserialize(array $data) : void
     {
         $this->name = $data['name'];
-        $this->value = $data['value'];
         $this->type = $data['type'];
+        /** @phpstan-ignore-next-line  */
+        $xmlString = \gzuncompress(\base64_decode($data['value'], true));
+        $doc = new \DOMDocument();
+
+        /** @phpstan-ignore-next-line  */
+        if (!@$doc->loadXML($xmlString)) {
+            throw new InvalidArgumentException(\sprintf('Given string "%s" is not valid XML', $xmlString));
+        }
+
+        $this->value = $doc;
     }
 
     public function definition() : Definition

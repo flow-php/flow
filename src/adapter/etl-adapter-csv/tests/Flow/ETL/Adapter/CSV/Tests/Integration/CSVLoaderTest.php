@@ -7,13 +7,12 @@ namespace Flow\ETL\Adapter\CSV\Tests\Integration;
 use function Flow\ETL\Adapter\CSV\to_csv;
 use function Flow\ETL\DSL\array_entry;
 use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\overwrite;
 use function Flow\ETL\DSL\str_entry;
 use Flow\ETL\Filesystem\Path;
-use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Flow;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
-use Flow\Serializer\CompressingSerializer;
 use PHPUnit\Framework\TestCase;
 
 final class CSVLoaderTest extends TestCase
@@ -71,38 +70,6 @@ CSV,
         }
     }
 
-    public function test_loading_csv_files_without_thread_safe_and_with_serialization() : void
-    {
-        $path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.csv';
-
-        $serializer = new CompressingSerializer();
-
-        (new Flow())
-            ->process(
-                new Rows(
-                    Row::create(int_entry('id', 1), str_entry('name', 'Norbert')),
-                    Row::create(int_entry('id', 2), str_entry('name', 'Tomek')),
-                    Row::create(int_entry('id', 3), str_entry('name', 'Dawid')),
-                )
-            )
-            ->load($serializer->unserialize($serializer->serialize(to_csv($path, $withHeader = true))))
-            ->run();
-
-        $this->assertStringContainsString(
-            <<<'CSV'
-id,name
-1,Norbert
-2,Tomek
-3,Dawid
-CSV,
-            \file_get_contents($path)
-        );
-
-        if (\file_exists($path)) {
-            \unlink($path);
-        }
-    }
-
     public function test_loading_csv_files_without_threadsafe() : void
     {
         $path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.csv';
@@ -146,8 +113,8 @@ CSV,
                     Row::create(int_entry('id', 4), int_entry('group', 2)),
                 )
             )
-            ->load(to_csv($path))
             ->partitionBy('group')
+            ->load(to_csv($path))
             ->run();
 
         $partitions = \array_values(\array_diff(\scandir($path), ['..', '.']));
@@ -207,7 +174,7 @@ CSV,
                     Row::create(int_entry('id', 3), str_entry('name', 'Dawid')),
                 )
             )
-            ->mode(SaveMode::Overwrite)
+            ->saveMode(overwrite())
             ->load(to_csv($path))
             ->run();
 

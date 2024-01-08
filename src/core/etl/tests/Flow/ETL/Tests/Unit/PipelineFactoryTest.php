@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\InvalidFileFormatException;
 use Flow\ETL\PipelineFactory;
 use PHPUnit\Framework\TestCase;
 
@@ -30,8 +31,8 @@ final class PipelineFactoryTest extends TestCase
 
     public function test_non_php_file() : void
     {
-        $this->expectExceptionMessage('Input file must be a PHP one!');
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Expected "php" file format, "txt" given.');
+        $this->expectException(InvalidFileFormatException::class);
 
         $factory = new PipelineFactory(__DIR__ . '/../Fixtures/empty.txt');
         $factory->run();

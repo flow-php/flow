@@ -93,22 +93,22 @@ class PageHeader extends TBase
     public $crc;
 
     /**
-     * @var \Flow\Parquet\Thrift\DataPageHeader
+     * @var DataPageHeader
      */
     public $data_page_header;
 
     /**
-     * @var \Flow\Parquet\Thrift\DataPageHeaderV2
+     * @var DataPageHeaderV2
      */
     public $data_page_header_v2;
 
     /**
-     * @var \Flow\Parquet\Thrift\DictionaryPageHeader
+     * @var DictionaryPageHeader
      */
     public $dictionary_page_header;
 
     /**
-     * @var \Flow\Parquet\Thrift\IndexPageHeader
+     * @var IndexPageHeader
      */
     public $index_page_header;
 

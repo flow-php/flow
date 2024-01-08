@@ -32,7 +32,7 @@ class OffsetIndex extends TBase
      * PageLocations, ordered by increasing PageLocation.offset. It is required
      * that page_locations[i].first_row_index < page_locations[i+1].first_row_index.
      *
-     * @var \Flow\Parquet\Thrift\PageLocation[]
+     * @var PageLocation[]
      */
     public $page_locations;
 

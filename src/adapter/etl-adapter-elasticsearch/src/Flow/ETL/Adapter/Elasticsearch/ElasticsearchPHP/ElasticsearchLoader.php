@@ -12,24 +12,6 @@ use Flow\ETL\Rows;
 
 /**
  * @psalm-suppress UndefinedClass
- *
- * @implements Loader<array{
- *  config: array{
- *    hosts?: array<string>,
- *    connectionParams?: array<mixed>,
- *    retries?: int,
- *    sniffOnStart?: boolean,
- *    sslCert?: array<string>,
- *    sslKey?: array<string>,
- *    sslVerification?: boolean|string,
- *    elasticMetaHeader?: boolean,
- *    includePortInHostHeader?: boolean
- *  },
- *  index: string,
- *  id_factory: IdFactory,
- *  parameters: array<mixed>,
- *  method: string
- * }>
  */
 final class ElasticsearchLoader implements Loader
 {
@@ -72,27 +54,6 @@ final class ElasticsearchLoader implements Loader
         $loader->method = 'update';
 
         return $loader;
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'config' => $this->config,
-            'index' => $this->index,
-            'id_factory' => $this->idFactory,
-            'parameters' => $this->parameters,
-            'method' => $this->method,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->config = $data['config'];
-        $this->index = $data['index'];
-        $this->idFactory = $data['id_factory'];
-        $this->parameters = $data['parameters'];
-        $this->method = $data['method'];
-        $this->client = null;
     }
 
     public function load(Rows $rows, FlowContext $context) : void

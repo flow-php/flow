@@ -292,13 +292,15 @@ final class ParquetFile
             if ($isCollection) {
                 $structsCollection = new \MultipleIterator(\MultipleIterator::MIT_KEYS_ASSOC);
 
-                /** @var array<array-key, mixed> $childColumnValue */
+                /** @var null|array<array-key, mixed> $childColumnValue */
                 foreach ($childrenRowData as $childColumnPath => $childColumnValue) {
-                    $childColumn = $this->schema()->get($childColumnPath);
-                    $structsCollection->attachIterator(new \ArrayIterator($childColumnValue), $childColumn->name());
+                    if ($childColumnValue !== null) {
+                        $childColumn = $this->schema()->get($childColumnPath);
+                        $structsCollection->attachIterator(new \ArrayIterator($childColumnValue), $childColumn->name());
+                    }
                 }
 
-                $structs = [];
+                $structs = null;
 
                 foreach ($structsCollection as $structData) {
                     $structs[] = $structData;

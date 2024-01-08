@@ -9,9 +9,6 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
 
-/**
- * @implements IdFactory<array{hash_name: string, entry_names: array<string>}>
- */
 final class HashIdFactory implements IdFactory
 {
     /**
@@ -24,20 +21,6 @@ final class HashIdFactory implements IdFactory
     public function __construct(string ...$entryNames)
     {
         $this->entryNames = $entryNames;
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'entry_names' => $this->entryNames,
-            'hash_name' => $this->hashName,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->entryNames = $data['entry_names'];
-        $this->hashName = $data['hash_name'];
     }
 
     public function create(Row $row) : Entry

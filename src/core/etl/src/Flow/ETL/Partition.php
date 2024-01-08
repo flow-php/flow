@@ -5,12 +5,20 @@ declare(strict_types=1);
 namespace Flow\ETL;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\Serializer\Serializable;
+use Flow\ETL\Row\Entry\ArrayEntry;
+use Flow\ETL\Row\Entry\DateTimeEntry;
+use Flow\ETL\Row\Entry\JsonEntry;
+use Flow\ETL\Row\Entry\ListEntry;
+use Flow\ETL\Row\Entry\MapEntry;
+use Flow\ETL\Row\Entry\NullEntry;
+use Flow\ETL\Row\Entry\ObjectEntry;
+use Flow\ETL\Row\Entry\StructureEntry;
+use Flow\ETL\Row\Entry\XMLEntry;
+use Flow\ETL\Row\Entry\XMLNodeEntry;
+use Flow\ETL\Row\EntryReference;
+use Flow\ETL\Row\Reference;
 
-/**
- * @implements Serializable<array{name: string, value: string}>
- */
-final class Partition implements Serializable
+final class Partition
 {
     /**
      * @var array<string>
@@ -54,10 +62,7 @@ final class Partition implements Serializable
         return $partitions;
     }
 
-    /**
-     * @return array<Partition>
-     */
-    public static function fromUri(string $uri) : array
+    public static function fromUri(string $uri) : Partitions
     {
         $regex = '/^([^\/\\\=:><|"?*]+)=([^\/\\\=:><|"?*]+)$/';
 
@@ -69,25 +74,27 @@ final class Partition implements Serializable
             }
         }
 
-        return $partitions;
+        return new Partitions(...$partitions);
     }
 
-    public function __serialize() : array
+    public static function valueFromRow(Reference $ref, Row $row) : mixed
     {
-        return [
-            'name' => $this->name,
-            'value' => $this->value,
-        ];
-    }
+        $entry = $row->get($ref);
 
-    public function __unserialize(array $data) : void
-    {
-        $this->name = $data['name'];
-        $this->value = $data['value'];
+        return match ($entry::class) {
+            DateTimeEntry::class => $entry->value()->format('Y-m-d'),
+            XMLEntry::class, XMLNodeEntry::class, JsonEntry::class, ObjectEntry::class, ListEntry::class, StructureEntry::class, MapEntry::class, NullEntry::class, ArrayEntry::class => throw new InvalidArgumentException($entry::class . ' can\'t be used as a partition'),
+            default => $entry->toString(),
+        };
     }
 
     public function id() : string
     {
         return $this->name . '|' . $this->value;
+    }
+
+    public function reference() : Reference
+    {
+        return new EntryReference($this->name);
     }
 }

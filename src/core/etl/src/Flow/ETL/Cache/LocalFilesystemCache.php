@@ -6,38 +6,22 @@ namespace Flow\ETL\Cache;
 
 use Flow\ETL\Cache;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Rows;
-use Flow\Serializer\NativePHPSerializer;
 use Flow\Serializer\Serializer;
 
 /**
- * @implements Cache<array{path: string, serializer: Serializer}>
- *
  * @infection-ignore-all
  */
 final class LocalFilesystemCache implements Cache
 {
     public function __construct(
         private readonly string $path,
-        private readonly Serializer $serializer = new NativePHPSerializer()
+        private readonly Serializer $serializer
     ) {
         if (!\file_exists($path) || !\is_dir($path)) {
             throw new InvalidArgumentException("Given cache path does not exists or it's not a directory: {$path}");
         }
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'path' => $this->path,
-            'serializer' => $this->serializer,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->path = $data['path'];
-        $this->serializer = $data['serializer'];
     }
 
     public function add(string $id, Rows $rows) : void
@@ -66,7 +50,7 @@ final class LocalFilesystemCache implements Cache
     }
 
     /**
-     * @throws \Flow\ETL\Exception\RuntimeException
+     * @throws RuntimeException
      *
      * @return \Generator<Rows>
      */
@@ -81,7 +65,8 @@ final class LocalFilesystemCache implements Cache
 
         while (($serializedRow = \fgets($cacheStream)) !== false) {
             /** @var Rows $rows */
-            $rows = $this->serializer->unserialize($serializedRow);
+            $rows = $this->serializer->unserialize($serializedRow, Rows::class);
+
             yield $rows;
         }
 

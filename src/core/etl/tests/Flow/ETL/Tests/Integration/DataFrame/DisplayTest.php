@@ -2,32 +2,34 @@
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
+use function Flow\ETL\DSL\array_entry;
+use function Flow\ETL\DSL\bool_entry;
+use function Flow\ETL\DSL\datetime_entry;
 use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\enum_entry;
+use function Flow\ETL\DSL\float_entry;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\list_entry;
+use function Flow\ETL\DSL\map_entry;
 use function Flow\ETL\DSL\null_entry;
+use function Flow\ETL\DSL\object_entry;
+use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\row;
+use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\string_entry;
+use function Flow\ETL\DSL\struct_element;
+use function Flow\ETL\DSL\struct_entry;
+use function Flow\ETL\DSL\struct_type;
+use function Flow\ETL\DSL\type_int;
+use function Flow\ETL\DSL\type_list;
+use function Flow\ETL\DSL\type_map;
 use function Flow\ETL\DSL\type_string;
+use function Flow\ETL\DSL\xml_entry;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
-use Flow\ETL\PHP\Type\Logical\List\ListElement;
-use Flow\ETL\PHP\Type\Logical\ListType;
-use Flow\ETL\PHP\Type\Logical\Map\MapKey;
-use Flow\ETL\PHP\Type\Logical\Map\MapValue;
-use Flow\ETL\PHP\Type\Logical\MapType;
-use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
-use Flow\ETL\PHP\Type\Logical\StructureType;
-use Flow\ETL\Row;
-use Flow\ETL\Row\Entry\ArrayEntry;
-use Flow\ETL\Row\Entry\BooleanEntry;
-use Flow\ETL\Row\Entry\DateTimeEntry;
-use Flow\ETL\Row\Entry\FloatEntry;
-use Flow\ETL\Row\Entry\IntegerEntry;
-use Flow\ETL\Row\Entry\ListEntry;
-use Flow\ETL\Row\Entry\MapEntry;
-use Flow\ETL\Row\Entry\NullEntry;
-use Flow\ETL\Row\Entry\StructureEntry;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
@@ -44,47 +46,48 @@ final class DisplayTest extends IntegrationTestCase
                 public function extract(FlowContext $context) : \Generator
                 {
                     for ($i = 0; $i < 20; $i++) {
-                        yield new Rows(
-                            Row::create(
-                                new IntegerEntry('id', 1234),
-                                new FloatEntry('price', 123.45),
-                                new IntegerEntry('100', 100),
-                                new BooleanEntry('deleted', false),
-                                new DateTimeEntry('created-at', new \DateTimeImmutable('2020-07-13 15:00')),
-                                new NullEntry('phase'),
-                                new ArrayEntry(
+                        yield rows(
+                            row(
+                                int_entry('id', 1234),
+                                float_entry('price', 123.45),
+                                int_entry('100', 100),
+                                bool_entry('deleted', false),
+                                datetime_entry('created-at', new \DateTimeImmutable('2020-07-13 15:00')),
+                                null_entry('phase'),
+                                array_entry(
                                     'array',
                                     [
                                         ['id' => 1, 'status' => 'NEW'],
                                         ['id' => 2, 'status' => 'PENDING'],
                                     ]
                                 ),
-                                new ListEntry(
+                                list_entry(
                                     'list',
                                     [1, 2, 3],
-                                    new ListType(ListElement::integer())
+                                    type_list(type_int())
                                 ),
-                                new MapEntry(
+                                map_entry(
                                     'map',
                                     ['NEW', 'PENDING'],
-                                    new MapType(MapKey::integer(), MapValue::string())
+                                    type_map(type_int(), type_string())
                                 ),
-                                new StructureEntry(
+                                struct_entry(
                                     'items',
                                     ['item-id' => '1', 'name' => 'one'],
-                                    new StructureType(
-                                        new StructureElement('item-id', type_string()),
-                                        new StructureElement('name', type_string()),
+                                    struct_type(
+                                        struct_element('item-id', type_string()),
+                                        struct_element('name', type_string()),
                                     )
                                 ),
-                                new Row\Entry\ObjectEntry('object', new \ArrayIterator([1, 2, 3])),
-                                new Row\Entry\EnumEntry('enum', BackedStringEnum::three),
-                                new Row\Entry\XMLEntry('xml', '<xml><node id="123">test<foo>bar</foo></node></xml>'),
+                                object_entry('object', new \ArrayIterator([1, 2, 3])),
+                                enum_entry('enum', BackedStringEnum::three),
+                                xml_entry('xml', '<xml><node id="123">test<foo>bar</foo></node></xml>'),
                             ),
                         );
                     }
                 }
-            });
+            })
+            ->collect();
 
         $this->assertSame(
             <<<'ASCIITABLE'
@@ -102,23 +105,76 @@ final class DisplayTest extends IntegrationTestCase
 ASCIITABLE,
             $etl->display(5)
         );
+    }
+
+    public function test_display_partitioned() : void
+    {
+        $etl = df()
+            ->read(new class implements Extractor {
+                /**
+                 * @return \Generator<int, Rows, mixed, void>
+                 */
+                public function extract(FlowContext $context) : \Generator
+                {
+                    for ($i = 0; $i < 5; $i++) {
+                        yield rows(
+                            row(
+                                int_entry('id', 1234),
+                                float_entry('price', 123.45),
+                                int_entry('100', 100),
+                                bool_entry('deleted', false),
+                                datetime_entry('created-at', new \DateTimeImmutable('2020-07-13 15:00')),
+                                string_entry('group', 'A')
+                            )
+                        );
+                    }
+
+                    for ($i = 0; $i < 5; $i++) {
+                        yield rows(
+                            row(
+                                int_entry('id', 1234),
+                                float_entry('price', 123.45),
+                                int_entry('100', 100),
+                                bool_entry('deleted', false),
+                                datetime_entry('created-at', new \DateTimeImmutable('2020-07-13 15:00')),
+                                string_entry('group', 'B')
+                            )
+                        );
+                    }
+                }
+            })
+            ->collect()
+            ->partitionBy(ref('group'));
 
         $this->assertSame(
             <<<'ASCIITABLE'
-+------+--------+-----+---------+---------------------------+-------+-------------------------------------------------------+---------+-------------------+------------------------------+------------------------------------------------------------------------------------------------+-------+--------------------------------------------------------------------------+
-|   id |  price | 100 | deleted |                created-at | phase |                                                 array |    list |               map |                        items |                                                                                         object |  enum |                                                                      xml |
-+------+--------+-----+---------+---------------------------+-------+-------------------------------------------------------+---------+-------------------+------------------------------+------------------------------------------------------------------------------------------------+-------+--------------------------------------------------------------------------+
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name":"one"} | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three | <?xml version="1.0"?><xml><node id="123">test<foo>bar</foo></node></xml> |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name":"one"} | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three | <?xml version="1.0"?><xml><node id="123">test<foo>bar</foo></node></xml> |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name":"one"} | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three | <?xml version="1.0"?><xml><node id="123">test<foo>bar</foo></node></xml> |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name":"one"} | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three | <?xml version="1.0"?><xml><node id="123">test<foo>bar</foo></node></xml> |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name":"one"} | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three | <?xml version="1.0"?><xml><node id="123">test<foo>bar</foo></node></xml> |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+00:00 |  null | [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name":"one"} | ArrayIterator Object( [storage:ArrayIterator:private] => Array ( [0] => 1 [1] => 2 [2] => 3 )) | three | <?xml version="1.0"?><xml><node id="123">test<foo>bar</foo></node></xml> |
-+------+--------+-----+---------+---------------------------+-------+-------------------------------------------------------+---------+-------------------+------------------------------+------------------------------------------------------------------------------------------------+-------+--------------------------------------------------------------------------+
-6 rows
++------+--------+-----+---------+----------------------+-------+
+|   id |  price | 100 | deleted |           created-at | group |
++------+--------+-----+---------+----------------------+-------+
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |     A |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |     A |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |     A |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |     A |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |     A |
++------+--------+-----+---------+----------------------+-------+
+Partitions:
+ - group=A
+5 rows
++------+--------+-----+---------+----------------------+-------+
+|   id |  price | 100 | deleted |           created-at | group |
++------+--------+-----+---------+----------------------+-------+
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |     B |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |     B |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |     B |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |     B |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |     B |
++------+--------+-----+---------+----------------------+-------+
+Partitions:
+ - group=B
+5 rows
 
 ASCIITABLE,
-            $etl->display(6, 0)
+            $etl->display(10)
         );
     }
 
@@ -162,7 +218,8 @@ ASCIITABLE,
                         ['id' => 2, 'status' => 'PENDING'],
                     ],
                 ],
-            ]));
+            ]))
+            ->collect();
 
         $this->assertStringContainsString(
             <<<'ASCIITABLE'
@@ -179,22 +236,6 @@ ASCIITABLE,
 ASCIITABLE,
             $etl->display(5)
         );
-
-        $this->assertStringContainsString(
-            <<<'ASCIITABLE'
-+---------------------------------------------------------------+
-| this is very long entry name that should be longer than items |
-+---------------------------------------------------------------+
-|         [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] |
-|         [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] |
-|         [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] |
-|         [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] |
-|         [{"id":1,"status":"NEW"},{"id":2,"status":"PENDING"}] |
-+---------------------------------------------------------------+
-5 rows
-ASCIITABLE,
-            $etl->display(5, 0)
-        );
     }
 
     public function test_print_rows() : void
@@ -202,14 +243,14 @@ ASCIITABLE,
         \ob_start();
         df()
             ->read(from_rows(
-                new Rows(
-                    Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
-                    Row::create(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
-                    Row::create(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
+                rows(
+                    row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
+                    row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
+                    row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
                 ),
-                new Rows(
-                    Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), int_entry('salary', 5000)),
-                    Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), null_entry('salary')),
+                rows(
+                    row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), int_entry('salary', 5000)),
+                    row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), null_entry('salary')),
                 )
             ))
             ->printRows();
@@ -242,14 +283,14 @@ ASCII,
         \ob_start();
         df()
             ->read(from_rows(
-                new Rows(
-                    Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
-                    Row::create(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
-                    Row::create(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
+                rows(
+                    row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
+                    row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
+                    row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
                 ),
-                new Rows(
-                    Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), int_entry('salary', 5000)),
-                    Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), null_entry('salary')),
+                rows(
+                    row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), int_entry('salary', 5000)),
+                    row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), null_entry('salary')),
                 )
             ))
             ->printSchema();

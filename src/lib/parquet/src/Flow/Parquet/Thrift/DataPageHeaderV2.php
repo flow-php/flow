@@ -122,7 +122,7 @@ class DataPageHeaderV2 extends TBase
     /**
      * optional statistics for the data in this page *.
      *
-     * @var \Flow\Parquet\Thrift\Statistics
+     * @var Statistics
      */
     public $statistics;
 

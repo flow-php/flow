@@ -8,14 +8,15 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Filesystem\Stream\ResourceContext;
 use Flow\ETL\Partition;
-use Flow\Serializer\Serializable;
+use Flow\ETL\Partitions;
 
-/**
- * @implements Serializable<array{path: string, scheme: string, options: array<string, mixed>, extension: string|false}>
- */
-final class Path implements Serializable
+final class Path
 {
+    private string $basename;
+
     private string|false $extension;
+
+    private string $filename;
 
     private string $path;
 
@@ -55,8 +56,11 @@ final class Path implements Serializable
         }
 
         $this->path = $path;
+        $pathInfo = \pathinfo($this->path);
         $this->scheme = \array_key_exists('scheme', $urlParts) ? $urlParts['scheme'] : 'file';
-        $this->extension = \pathinfo($this->path)['extension'] ?? false;
+        $this->extension = \array_key_exists('extension', $pathInfo) ? $pathInfo['extension'] : false;
+        $this->filename = $pathInfo['filename'];
+        $this->basename = $pathInfo['basename'];
     }
 
     /**
@@ -140,24 +144,6 @@ final class Path implements Serializable
         return new self(\sys_get_temp_dir() . DIRECTORY_SEPARATOR . \str_replace('.', '', \uniqid('', true)) . '.' . $extension);
     }
 
-    public function __serialize() : array
-    {
-        return [
-            'scheme' => $this->scheme,
-            'path' => $this->path,
-            'options' => $this->options,
-            'extension' => $this->extension,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->path = $data['path'];
-        $this->scheme = $data['scheme'];
-        $this->options = $data['options'];
-        $this->extension = $data['extension'];
-    }
-
     public function addPartitions(Partition $partition, Partition ...$partitions) : self
     {
         \array_unshift($partitions, $partition);
@@ -171,6 +157,11 @@ final class Path implements Serializable
         return new self($this->uri() . $partitionsPath, $this->options);
     }
 
+    public function basename() : bool|string
+    {
+        return $this->basename;
+    }
+
     public function context() : ResourceContext
     {
         return ResourceContext::from($this);
@@ -179,6 +170,11 @@ final class Path implements Serializable
     public function extension() : string|false
     {
         return $this->extension;
+    }
+
+    public function filename() : bool|string
+    {
+        return $this->filename;
     }
 
     public function isEqual(self $path) : bool
@@ -235,13 +231,10 @@ final class Path implements Serializable
         );
     }
 
-    /**
-     * @return array<Partition>
-     */
-    public function partitions() : array
+    public function partitions() : Partitions
     {
         if ($this->isPathPattern($this->path)) {
-            return [];
+            return new Partitions();
         }
 
         return Partition::fromUri($this->path);

@@ -8,9 +8,6 @@ use Flow\ETL\Adapter\Elasticsearch\IdFactory;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
 
-/**
- * @implements IdFactory<array{entry_name: string}>
- */
 final class EntryIdFactory implements IdFactory
 {
     public function __construct(private string $entryName)

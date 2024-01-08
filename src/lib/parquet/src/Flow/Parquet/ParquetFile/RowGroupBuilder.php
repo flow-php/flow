@@ -3,6 +3,7 @@
 namespace Flow\Parquet\ParquetFile;
 
 use Flow\Parquet\Data\DataConverter;
+use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnChunkBuilder;
@@ -52,6 +53,9 @@ final class RowGroupBuilder
         $flatRow = [];
 
         foreach ($this->schema->columns() as $column) {
+            if (!\array_key_exists($column->name(), $row)) {
+                throw new InvalidArgumentException(\sprintf("Column '%s' not found in row", $column->name()));
+            }
             $flatRow[] = $this->flattener->flattenColumn($column, $row);
         }
 

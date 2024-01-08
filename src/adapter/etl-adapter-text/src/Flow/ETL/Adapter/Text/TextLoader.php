@@ -11,12 +11,6 @@ use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
 use Flow\ETL\Rows;
 
-/**
- * @implements Loader<array{
- *     path: Path,
- *     new_line_separator: string
- *  }>
- */
 final class TextLoader implements Closure, Loader, Loader\FileLoader
 {
     public function __construct(
@@ -26,20 +20,6 @@ final class TextLoader implements Closure, Loader, Loader\FileLoader
         if ($this->path->isPattern()) {
             throw new \InvalidArgumentException("TextLoader path can't be pattern, given: " . $this->path->path());
         }
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'path' => $this->path,
-            'new_line_separator' => $this->newLineSeparator,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->path = $data['path'];
-        $this->newLineSeparator = $data['new_line_separator'];
     }
 
     public function closure(FlowContext $context) : void
@@ -54,18 +34,16 @@ final class TextLoader implements Closure, Loader, Loader\FileLoader
 
     public function load(Rows $rows, FlowContext $context) : void
     {
-        if ($context->partitionEntries()->count()) {
-            foreach ($rows->partitionBy(...$context->partitionEntries()->all()) as $partitionedRows) {
-                foreach ($partitionedRows as $row) {
-                    if ($row->entries()->count() > 1) {
-                        throw new RuntimeException(\sprintf('Text data loader supports only a single entry rows, and you have %d rows.', $row->entries()->count()));
-                    }
-
-                    \fwrite(
-                        $context->streams()->open($this->path, 'text', $context->appendSafe(), $partitionedRows->partitions())->resource(),
-                        $row->entries()->all()[0]->toString() . $this->newLineSeparator
-                    );
+        if ($rows->partitions()->count()) {
+            foreach ($rows as $row) {
+                if ($row->entries()->count() > 1) {
+                    throw new RuntimeException(\sprintf('Text data loader supports only a single entry rows, and you have %d rows.', $row->entries()->count()));
                 }
+
+                \fwrite(
+                    $context->streams()->open($this->path, 'text', $context->appendSafe(), $rows->partitions()->toArray())->resource(),
+                    $row->entries()->all()[0]->toString() . $this->newLineSeparator
+                );
             }
         } else {
             foreach ($rows as $row) {

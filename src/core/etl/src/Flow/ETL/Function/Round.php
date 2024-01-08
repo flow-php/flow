@@ -6,7 +6,7 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class Round implements ScalarFunction
+final class Round extends ScalarFunctionChain
 {
     /**
      * @param ScalarFunction $entry

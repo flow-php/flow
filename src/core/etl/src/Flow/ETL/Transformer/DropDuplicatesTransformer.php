@@ -5,16 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\Transformer;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 use Flow\ETL\Transformer\DropDuplicates\Hashes;
 
-/**
- * @implements Transformer<array>
- */
 final class DropDuplicatesTransformer implements Transformer
 {
     private Hashes $deduplication;
@@ -32,22 +28,6 @@ final class DropDuplicatesTransformer implements Transformer
 
         $this->entries = $entries;
         $this->deduplication = new Hashes();
-    }
-
-    /**
-     * @throws RuntimeException
-     */
-    public function __serialize() : array
-    {
-        throw new RuntimeException('DropDuplicates is not serializable');
-    }
-
-    /**
-     * @throws RuntimeException
-     */
-    public function __unserialize(array $data) : void
-    {
-        throw new RuntimeException('DropDuplicates is not serializable');
     }
 
     public function transform(Rows $rows, FlowContext $context) : Rows

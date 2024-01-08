@@ -19,6 +19,7 @@ use function Flow\ETL\DSL\type_string;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\Serializer\CompressingSerializer;
+use Flow\Serializer\NativePHPSerializer;
 use PHPUnit\Framework\TestCase;
 
 final class CompressingSerializerTest extends TestCase
@@ -55,11 +56,11 @@ final class CompressingSerializerTest extends TestCase
             )
         );
 
-        $serializer = new CompressingSerializer();
+        $serializer = new CompressingSerializer(new NativePHPSerializer());
 
         $serialized = $serializer->serialize($rows);
 
-        $unserialized = $serializer->unserialize($serialized);
+        $unserialized = $serializer->unserialize($serialized, Rows::class);
 
         $this->assertEquals(
             $rows,

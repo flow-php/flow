@@ -13,7 +13,7 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @implements Entry<bool, array{name: string, value: bool, type: ScalarType}>
+ * @implements Entry<bool>
  */
 final class BooleanEntry implements \Stringable, Entry
 {
@@ -33,21 +33,9 @@ final class BooleanEntry implements \Stringable, Entry
         $this->type = type_boolean();
     }
 
-    public function __serialize() : array
-    {
-        return ['name' => $this->name, 'value' => $this->value, 'type' => $this->type];
-    }
-
     public function __toString() : string
     {
         return $this->toString();
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->name = $data['name'];
-        $this->value = $data['value'];
-        $this->type = $data['type'];
     }
 
     public function definition() : Definition

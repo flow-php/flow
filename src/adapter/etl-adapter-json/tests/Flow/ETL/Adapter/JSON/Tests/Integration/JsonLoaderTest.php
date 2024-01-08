@@ -7,7 +7,9 @@ namespace Flow\ETL\Adapter\JSON\Tests\Integration;
 use function Flow\ETL\Adapter\Json\from_json;
 use function Flow\ETL\Adapter\Json\to_json;
 use function Flow\ETL\DSL\df;
+use function Flow\ETL\DSL\exception_if_exists;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\ignore;
 use function Flow\ETL\DSL\ref;
 use Flow\ETL\Adapter\JSON\JsonLoader;
 use Flow\ETL\Config;
@@ -37,6 +39,7 @@ final class JsonLoaderTest extends TestCase
                     )
                 )
             )
+            ->sortBy(ref('id')->asc())
             ->write(to_json($stream))
             ->run();
 
@@ -188,6 +191,7 @@ JSON,
             ],
             df()
                 ->read(from_json($path))
+                ->sortBy(ref('id'))
                 ->fetch()
                 ->toArray()
         );
@@ -234,6 +238,7 @@ JSON,
             ],
             (new Flow())
                 ->read(from_json($path))
+                ->sortBy(ref('id')->asc())
                 ->fetch()
                 ->toArray()
         );
@@ -256,7 +261,7 @@ JSON,
                 ['id' => 5, 'partition' => 'b'],
             ]))
             ->partitionBy(ref('partition'))
-            ->mode(SaveMode::ExceptionIfExists)
+            ->mode(exception_if_exists())
             ->write(to_json($path))
             ->run();
 
@@ -288,7 +293,7 @@ JSON,
                 ['id' => 2],
                 ['id' => 3],
             ]))
-            ->mode(SaveMode::Ignore)
+            ->saveMode(ignore())
             ->write(to_json($path))
             ->run();
 
@@ -310,6 +315,7 @@ JSON,
             ],
             (new Flow)
                 ->read(from_json($path))
+                ->sortBy(ref('id')->asc())
                 ->fetch()
                 ->toArray()
         );

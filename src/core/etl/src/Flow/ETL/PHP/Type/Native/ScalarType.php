@@ -6,9 +6,6 @@ namespace Flow\ETL\PHP\Type\Native;
 
 use Flow\ETL\PHP\Type\Type;
 
-/**
- * @implements NativeType<array{value: ScalarType::*, nullable: bool}>
- */
 final class ScalarType implements NativeType
 {
     public const BOOLEAN = 'boolean';
@@ -44,17 +41,6 @@ final class ScalarType implements NativeType
     public static function string(bool $nullable = false) : self
     {
         return new self(self::STRING, $nullable);
-    }
-
-    public function __serialize() : array
-    {
-        return ['value' => $this->value, 'nullable' => $this->nullable];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->value = $data['value'];
-        $this->nullable = $data['nullable'];
     }
 
     public function isBoolean() : bool

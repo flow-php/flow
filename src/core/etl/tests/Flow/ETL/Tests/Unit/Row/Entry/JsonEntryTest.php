@@ -7,7 +7,6 @@ namespace Flow\ETL\Tests\Unit\Row\Entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Row\Entry\JsonEntry;
-use Flow\Serializer\NativePHPSerializer;
 use PHPUnit\Framework\TestCase;
 
 final class JsonEntryTest extends TestCase
@@ -181,14 +180,21 @@ final class JsonEntryTest extends TestCase
 
     public function test_serialization() : void
     {
-        $serializer = new NativePHPSerializer();
-        $items = [
-            ['item-id' => 1, 'name' => 'one'],
-            ['item-id' => 2, 'name' => 'two'],
-            ['item-id' => 3, 'name' => 'three'],
-        ];
-        $entrySerialized = $serializer->serialize($entry = new JsonEntry('items', $items));
+        $entry = new JsonEntry('name', ['foo' => 1, 'bar' => ['foo' => 'foo', 'bar' => 'bar'], 'baz']);
 
-        $this->assertEquals($entry, $serializer->unserialize($entrySerialized));
+        $serialized = \serialize($entry);
+        $unserialized = \unserialize($serialized);
+
+        $this->assertTrue($entry->isEqual($unserialized));
+    }
+
+    public function test_serialization_of_json_objects() : void
+    {
+        $entry = JsonEntry::object('entry-name', ['id' => 1, 'name' => 'one']);
+
+        $serialized = \serialize($entry);
+        $unserialized = \unserialize($serialized);
+
+        $this->assertTrue($entry->isEqual($unserialized));
     }
 }

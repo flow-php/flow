@@ -46,6 +46,7 @@ jobs:
           tools: composer:v2
           php-version: "${{ matrix.php-version }}"
           ini-values: memory_limit=-1
+          extensions: :psr
 
       - name: "Create cache directories"
         run: |
@@ -92,6 +93,9 @@ jobs:
           key: "php-${{ matrix.php-version }}-cache-psalm-${{ github.run_id }}"
           restore-keys: |
             php-${{ matrix.php-version }}-cache-psalm-
+
+      - name: "Monorepo Validate"
+        run: "composer test:monorepo"
 
       - name: "Static Analyze - CS Fixer"
         run: "composer static:analyze:cs-fixer"
@@ -170,6 +174,13 @@ jobs:
           tools: composer:v2
           php-version: "${{ matrix.php-version }}"
           ini-values: memory_limit=-1
+          extensions: :psr
+
+      - name: "List PHP Extensions"
+        run: php -m
+
+      - name: "List PHP configuration"
+        run: php -i
 
       - name: "Get Composer Cache Directory"
         id: composer-cache

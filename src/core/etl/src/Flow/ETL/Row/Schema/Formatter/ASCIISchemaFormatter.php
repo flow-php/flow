@@ -88,6 +88,10 @@ final class ASCIISchemaFormatter implements SchemaFormatter
             $definitionTypes[] = $definitionType->toString();
         }
 
+        if ($nullable && !\count($definitionTypes)) {
+            return ['null'];
+        }
+
         return $definitionTypes;
     }
 

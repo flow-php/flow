@@ -6,7 +6,7 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class ToTimeZone implements ScalarFunction
+final class ToTimeZone extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction $function,

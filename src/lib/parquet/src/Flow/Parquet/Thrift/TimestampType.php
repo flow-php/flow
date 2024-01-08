@@ -40,7 +40,7 @@ class TimestampType extends TBase
     public $isAdjustedToUTC;
 
     /**
-     * @var \Flow\Parquet\Thrift\TimeUnit
+     * @var TimeUnit
      */
     public $unit;
 

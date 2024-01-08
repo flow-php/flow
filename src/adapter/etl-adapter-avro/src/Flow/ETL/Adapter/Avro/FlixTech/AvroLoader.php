@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Avro\FlixTech;
 
-use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
@@ -15,9 +14,6 @@ use Flow\ETL\Row;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Rows;
 
-/**
- * @implements Loader<array{path: Path, schema: ?Schema}>
- */
 final class AvroLoader implements Closure, Loader, Loader\FileLoader
 {
     private ?Schema $inferredSchema = null;
@@ -31,21 +27,6 @@ final class AvroLoader implements Closure, Loader, Loader\FileLoader
         if ($this->path->isPattern()) {
             throw new \InvalidArgumentException("AvroLoader path can't be pattern, given: " . $this->path->path());
         }
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'path' => $this->path,
-            'schema' => $this->schema,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->path = $data['path'];
-        $this->schema = $data['schema'];
-        $this->writer = null;
     }
 
     public function closure(FlowContext $context) : void
@@ -65,10 +46,6 @@ final class AvroLoader implements Closure, Loader, Loader\FileLoader
 
     public function load(Rows $rows, FlowContext $context) : void
     {
-        if ($context->partitionEntries()->count()) {
-            throw new RuntimeException('Partitioning is not supported yet');
-        }
-
         if ($this->schema === null) {
             if ($this->inferredSchema === null) {
                 $this->inferredSchema = $rows->schema();

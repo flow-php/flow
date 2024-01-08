@@ -10,7 +10,7 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
 
 /**
- * @implements Entry<\DOMNode, array{name: string, value: \DOMNode, type: ObjectType}>
+ * @implements Entry<\DOMNode>
  */
 final class XMLNodeEntry implements \Stringable, Entry
 {
@@ -27,7 +27,8 @@ final class XMLNodeEntry implements \Stringable, Entry
     {
         return [
             'name' => $this->name,
-            'value' => $this->value,
+            /* @phpstan-ignore-next-line */
+            'value' => \base64_encode(\gzcompress($this->toString())),
             'type' => $this->type,
         ];
     }
@@ -45,8 +46,16 @@ final class XMLNodeEntry implements \Stringable, Entry
     public function __unserialize(array $data) : void
     {
         $this->name = $data['name'];
-        $this->value = $data['value'];
         $this->type = $data['type'];
+
+        /* @phpstan-ignore-next-line */
+        $nodeString = \gzuncompress(\base64_decode($data['value'], true));
+        $domDocument = new \DOMDocument();
+        /* @phpstan-ignore-next-line */
+        @$domDocument->loadXML($nodeString);
+
+        /* @phpstan-ignore-next-line */
+        $this->value = (new \DOMDocument())->importNode($domDocument->documentElement, true);
     }
 
     public function definition() : Definition

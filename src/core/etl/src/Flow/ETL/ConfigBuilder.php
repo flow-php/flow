@@ -12,6 +12,7 @@ use Flow\ETL\Monitoring\Memory\Unit;
 use Flow\ETL\Pipeline\Optimizer;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\Serializer\CompressingSerializer;
+use Flow\Serializer\NativePHPSerializer;
 use Flow\Serializer\Serializer;
 
 final class ConfigBuilder
@@ -33,9 +34,9 @@ final class ConfigBuilder
     public function __construct()
     {
         $this->id = null;
+        $this->serializer = null;
         $this->cache = null;
         $this->externalSort = null;
-        $this->serializer = null;
         $this->filesystem = null;
         $this->putInputIntoRows = false;
         $this->optimizer = null;
@@ -47,7 +48,8 @@ final class ConfigBuilder
     public function build() : Config
     {
         $this->id ??= \uniqid('flow_php', true);
-        $this->serializer ??= new CompressingSerializer();
+        $entryFactory = new NativeEntryFactory();
+        $this->serializer ??= new CompressingSerializer(new NativePHPSerializer());
         $cachePath = \is_string(\getenv(Config::CACHE_DIR_ENV)) && \realpath(\getenv(Config::CACHE_DIR_ENV))
             ? \getenv(Config::CACHE_DIR_ENV)
             : \sys_get_temp_dir() . '/flow_php/';
@@ -57,10 +59,7 @@ final class ConfigBuilder
                 \mkdir($cachePath, 0777, true);
             }
 
-            $this->cache = new LocalFilesystemCache(
-                $cachePath,
-                $this->serializer
-            );
+            $this->cache = new LocalFilesystemCache($cachePath, $this->serializer);
         }
 
         $this->externalSort ??= new MemorySort(
@@ -84,18 +83,18 @@ final class ConfigBuilder
 
         $this->optimizer ??= new Optimizer(
             new Optimizer\LimitOptimization(),
-            new Optimizer\BatchSizeOptimization(batchSize: 1000),
+            new Optimizer\BatchSizeOptimization(batchSize: 1000)
         );
 
         return new Config(
             $this->id,
+            $this->serializer,
             $this->cache,
             $this->externalSort,
-            $this->serializer,
             new FilesystemStreams($this->filesystem),
             $this->optimizer,
             $this->putInputIntoRows,
-            new NativeEntryFactory()
+            $entryFactory
         );
     }
 

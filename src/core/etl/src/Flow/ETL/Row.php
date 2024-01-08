@@ -10,12 +10,8 @@ use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Row\Schema;
-use Flow\Serializer\Serializable;
 
-/**
- * @implements Serializable<array{entries: Entries}>
- */
-final class Row implements Serializable
+final class Row
 {
     public function __construct(private readonly Entries $entries)
     {
@@ -32,16 +28,6 @@ final class Row implements Serializable
     public static function with(Entry ...$entries) : self
     {
         return self::create(...$entries);
-    }
-
-    public function __serialize() : array
-    {
-        return ['entries' => $this->entries];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->entries = $data['entries'];
     }
 
     /**
@@ -148,11 +134,11 @@ final class Row implements Serializable
     }
 
     /**
-     * @return array<string, mixed>
+     * @return array<array-key, mixed>
      */
-    public function toArray() : array
+    public function toArray(bool $withKeys = true) : array
     {
-        return $this->entries->toArray();
+        return $this->entries->toArray($withKeys);
     }
 
     /**

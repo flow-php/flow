@@ -7,7 +7,7 @@ namespace Flow\ETL\Function;
 use Flow\ETL\Function\ScalarFunction\ExpandResults;
 use Flow\ETL\Row;
 
-final class ArrayExpand implements ExpandResults, ScalarFunction
+final class ArrayExpand extends ScalarFunctionChain implements ExpandResults
 {
     public function __construct(private readonly ScalarFunction $ref, private readonly ArrayExpand\ArrayExpand $expand)
     {
@@ -32,7 +32,7 @@ final class ArrayExpand implements ExpandResults, ScalarFunction
         return $array;
     }
 
-    public function expand() : bool
+    public function expandResults() : bool
     {
         return true;
     }

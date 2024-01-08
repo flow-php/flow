@@ -16,7 +16,7 @@ use Flow\ETL\Row\Schema\Definition;
 /**
  * @template T
  *
- * @implements Entry<array<T>, array{name: string, type: ListType, value: array<T>}>
+ * @implements Entry<array<T>>
  */
 final class ListEntry implements Entry
 {
@@ -41,21 +41,9 @@ final class ListEntry implements Entry
         }
     }
 
-    public function __serialize() : array
-    {
-        return ['name' => $this->name, 'type' => $this->type, 'value' => $this->value];
-    }
-
     public function __toString() : string
     {
         return $this->toString();
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->name = $data['name'];
-        $this->type = $data['type'];
-        $this->value = $data['value'];
     }
 
     public function definition() : Definition

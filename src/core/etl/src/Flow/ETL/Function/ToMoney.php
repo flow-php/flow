@@ -10,11 +10,11 @@ use Money\Money;
 use Money\MoneyParser;
 use Money\Parser\DecimalMoneyParser;
 
-if (!\interface_exists(\Money\MoneyParser::class)) {
+if (!\interface_exists(MoneyParser::class)) {
     throw new RuntimeException("Money\MoneyParser class not found, please add moneyphp/money dependency to the project first.");
 }
 
-final class ToMoney implements ScalarFunction
+final class ToMoney extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction $amountRef,

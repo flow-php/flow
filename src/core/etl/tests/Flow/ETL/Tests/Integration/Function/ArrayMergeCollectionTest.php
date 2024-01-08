@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Function;
 
-use function Flow\ETL\DSL\array_merge_collection;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\optional;
 use function Flow\ETL\DSL\ref;
@@ -30,7 +29,7 @@ final class ArrayMergeCollectionTest extends TestCase
                     ]
                 )
             )
-            ->withEntry('result', optional(array_merge_collection(ref('array'))))
+            ->withEntry('result', optional(ref('array')->arrayMergeCollection()))
             ->drop('array')
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();

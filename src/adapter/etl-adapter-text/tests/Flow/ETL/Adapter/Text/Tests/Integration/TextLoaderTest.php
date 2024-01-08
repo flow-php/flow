@@ -9,7 +9,6 @@ use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Flow;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
-use Flow\Serializer\CompressingSerializer;
 use PHPUnit\Framework\TestCase;
 
 final class TextLoaderTest extends TestCase
@@ -59,37 +58,6 @@ TEXT,
                 )
             )
             ->write(to_text($path))
-            ->run();
-
-        $this->assertStringContainsString(
-            <<<'TEXT'
-Norbert
-Tomek
-Dawid
-TEXT,
-            \file_get_contents($path)
-        );
-
-        if (\file_exists($path)) {
-            \unlink($path);
-        }
-    }
-
-    public function test_loading_text_files_without_safe_mode_and_with_serialization() : void
-    {
-        $path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.csv';
-
-        $serializer = new CompressingSerializer();
-
-        (new Flow())
-            ->process(
-                new Rows(
-                    Row::create(new Row\Entry\StringEntry('name', 'Norbert')),
-                    Row::create(new Row\Entry\StringEntry('name', 'Tomek')),
-                    Row::create(new Row\Entry\StringEntry('name', 'Dawid')),
-                )
-            )
-            ->write($serializer->unserialize($serializer->serialize(to_text($path))))
             ->run();
 
         $this->assertStringContainsString(

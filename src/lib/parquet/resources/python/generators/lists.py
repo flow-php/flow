@@ -17,6 +17,13 @@ def generate_list_nested():
         ] for _ in range(random.randint(1, 3))
     ]
 
+def generate_struct():
+    return {'id': random.randint(1, 100), 'name': 'name_' + str(random.randint(1, 100))}
+
+def generate_list_of_structs():
+    return [generate_struct() for _ in range(random.randint(1, 5))]
+
+
 # Columns
 list_col = pd.Series([[random.randint(1, 10) for _ in range(3)] for _ in range(n_rows)], dtype='object')
 list_nullable_col = pd.Series([[random.randint(1, 10) for _ in range(3)] if i % 2 == 0 else None for i in range(n_rows)], dtype='object')
@@ -29,16 +36,25 @@ list_mixed_types_col = pd.Series([
     ] for i in range(n_rows)
 ], dtype='object')
 list_nested_col = pd.Series([generate_list_nested() for _ in range(n_rows)], dtype='object')
+list_of_structs_col = pd.Series([generate_list_of_structs() for _ in range(n_rows)], dtype='object')
+list_of_structs_nullable_col = pd.Series([generate_list_of_structs() if i % 2 == 0 else None for i in range(n_rows)], dtype='object')
 
 # Creating the DataFrame with only the new column
 df_nested_list = pd.DataFrame({
     'list': list_col,
     'list_nullable': list_nullable_col,
     'list_mixed_types': list_mixed_types_col,
-    'list_nested': list_nested_col
+    'list_nested': list_nested_col,
+    'list_of_structs': list_of_structs_col,
+    'list_of_structs_nullable': list_of_structs_nullable_col
 })
 
 # Types
+struct_type = pa.struct([
+    pa.field('id', pa.int32()),
+    pa.field('name', pa.string())
+])
+
 list_type = pa.list_(pa.int32())
 list_mixed_type = pa.list_(
     pa.struct([
@@ -48,6 +64,7 @@ list_mixed_type = pa.list_(
     ])
 )
 list_nested_type = pa.list_(pa.list_(pa.list_(pa.int32())))
+list_of_structs_type = pa.list_(struct_type)
 
 # Define the schema
 schema = pa.schema([
@@ -55,6 +72,8 @@ schema = pa.schema([
     ('list_nullable', list_type),
     ('list_mixed_types', list_mixed_type),
     ('list_nested', list_nested_type),
+    ('list_of_structs', list_of_structs_type),
+    ('list_of_structs_nullable', list_of_structs_type)
 ])
 
 parquet_file = 'output/lists.parquet'

@@ -9,6 +9,7 @@ use function Flow\ETL\DSL\null_entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Join\Expression;
+use Flow\ETL\Partition\CartesianProduct;
 use Flow\ETL\Row\Comparator;
 use Flow\ETL\Row\Comparator\NativeComparator;
 use Flow\ETL\Row\Entries;
@@ -19,19 +20,14 @@ use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Row\SortOrder;
-use Flow\Serializer\Serializable;
 
 /**
  * @implements \ArrayAccess<int, Row>
  * @implements \IteratorAggregate<int, Row>
- * @implements Serializable<array{rows: array<int, Row>, partitions: array<Partition>}>
  */
-final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serializable
+final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
 {
-    /**
-     * @var array<Partition>
-     */
-    private array $partitions;
+    private Partitions $partitions;
 
     /**
      * @var array<int, Row>
@@ -41,7 +37,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
     public function __construct(Row ...$rows)
     {
         $this->rows = \array_values($rows);
-        $this->partitions = [];
+        $this->partitions = new Partitions();
     }
 
     public static function fromArray(array $data, EntryFactory $entryFactory = new NativeEntryFactory()) : self
@@ -52,30 +48,18 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
     /**
      * @param array<int, Row>|array<Row> $rows
      */
-    public static function partitioned(array $rows, array $partitions) : self
+    public static function partitioned(array $rows, array|Partitions $partitions) : self
     {
         if (!\count($rows)) {
             return new self();
         }
 
+        $partitions = \is_array($partitions) ? new Partitions(...$partitions) : $partitions;
+
         $rows = new self(...$rows);
         $rows->partitions = $partitions;
 
         return $rows;
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'rows' => $this->rows,
-            'partitions' => $this->partitions,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->rows = $data['rows'];
-        $this->partitions = $data['partitions'];
     }
 
     public function add(Row ...$rows) : self
@@ -467,20 +451,27 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
             $rows[] = $callable($row);
         }
 
-        return new self(...$rows);
+        return self::partitioned($rows, $this->partitions);
     }
 
-    public function merge(self ...$rows) : self
+    public function merge(self $rows) : self
     {
-        $rowsOfRows = [];
-
-        foreach ($rows as $nextRows) {
-            $rowsOfRows[] = $nextRows->rows;
+        if ($this->empty()) {
+            return $rows;
         }
 
-        return new self(
-            ...\array_merge($this->rows, ...$rowsOfRows)
-        );
+        if ($rows->empty()) {
+            return $this;
+        }
+
+        if ($this->partitions->id() === $rows->partitions()->id()) {
+            $mergedRows = new self(...$this->rows, ...$rows->rows);
+            $mergedRows->partitions = $this->partitions;
+
+            return $mergedRows;
+        }
+
+        return new self(...$this->rows, ...$rows->rows);
     }
 
     /**
@@ -543,40 +534,12 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
         $partitions = [];
 
         foreach ($refs as $ref) {
-            $partitionEntryValues = [];
-
             foreach ($this->rows as $row) {
-                $partitionEntryValues[$row->get($ref)->value()] = true;
+                $partitions[$ref->name()][] = Partition::valueFromRow($ref, $row);
             }
 
-            $partitions[$ref->name()] = \array_keys($partitionEntryValues);
+            $partitions[$ref->name()] = \array_values(\array_unique($partitions[$ref->name()]));
         }
-
-        /**
-         * @source https://stackoverflow.com/a/15973172
-         *
-         * @param array<string, array<mixed>> $input
-         *
-         * @return array<string, array<mixed>>
-         */
-        $cartesianProduct = static function (array $input) : array {
-            $result = [[]];
-
-            foreach ($input as $key => $values) {
-                $append = [];
-
-                foreach ($result as $product) {
-                    foreach ($values as $item) {
-                        $product[$key] = $item;
-                        $append[] = $product;
-                    }
-                }
-
-                $result = $append;
-            }
-
-            return $result;
-        };
 
         /** @var array<Rows> $partitionedRows */
         $partitionedRows = [];
@@ -584,29 +547,29 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
         /**
          * @var array<string, mixed> $partitionsData
          */
-        foreach ($cartesianProduct($partitions) as $partitionsData) {
-            $rows = \array_filter($this->rows, function (Row $row) use ($partitionsData) : bool {
-                /**
-                 * @var mixed $value
-                 */
-                foreach ($partitionsData as $entry => $value) {
-                    if ($row->valueOf($entry) !== $value) {
-                        return false;
+        foreach ((new CartesianProduct())($partitions) as $partitionsData) {
+            $parts = Partition::fromArray($partitionsData);
+            $rows = [];
+
+            foreach ($this->rows as $row) {
+                foreach ($parts as $partition) {
+                    if (Partition::valueFromRow($partition->reference(), $row) !== $partition->value) {
+                        continue 2;
                     }
                 }
 
-                return true;
-            });
+                $rows[] = $row;
+            }
 
             if ($rows) {
-                $partitionedRows[] = self::partitioned($rows, Partition::fromArray($partitionsData));
+                $partitionedRows[] = self::partitioned($rows, $parts);
             }
         }
 
         return $partitionedRows;
     }
 
-    public function partitions() : array
+    public function partitions() : Partitions
     {
         return $this->partitions;
     }
@@ -744,14 +707,14 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate, Serial
     }
 
     /**
-     * @return array<int, array<string, mixed>>
+     * @return array<int, array<array-key, mixed>>
      */
-    public function toArray() : array
+    public function toArray(bool $withKeys = true) : array
     {
         $array = [];
 
         foreach ($this->rows as $row) {
-            $array[] = $row->toArray();
+            $array[] = $row->toArray($withKeys);
         }
 
         return $array;

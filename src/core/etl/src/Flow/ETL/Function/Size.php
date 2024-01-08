@@ -6,7 +6,7 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class Size implements ScalarFunction
+final class Size extends ScalarFunctionChain
 {
     public function __construct(private readonly ScalarFunction $ref)
     {

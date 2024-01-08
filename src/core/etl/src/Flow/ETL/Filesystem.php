@@ -7,15 +7,10 @@ namespace Flow\ETL;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\Stream\FileStream;
 use Flow\ETL\Filesystem\Stream\Mode;
+use Flow\ETL\Partition\NoopFilter;
 use Flow\ETL\Partition\PartitionFilter;
-use Flow\Serializer\Serializable;
 
-/**
- * @template T
- *
- * @extends Serializable<T>
- */
-interface Filesystem extends Serializable
+interface Filesystem
 {
     public function directoryExists(Path $path) : bool;
 
@@ -30,5 +25,5 @@ interface Filesystem extends Serializable
     /**
      * @return \Generator<Path>
      */
-    public function scan(Path $path, PartitionFilter $partitionFilter) : \Generator;
+    public function scan(Path $path, PartitionFilter $partitionFilter = new NoopFilter()) : \Generator;
 }

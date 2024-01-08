@@ -5,24 +5,11 @@ namespace Flow\ETL\PHP\Type\Native;
 
 use Flow\ETL\PHP\Type\Type;
 
-/**
- * @implements NativeType<array{nullable: bool}>
- */
 final class ResourceType implements NativeType
 {
     public function __construct(private readonly bool $nullable)
     {
 
-    }
-
-    public function __serialize() : array
-    {
-        return ['nullable' => $this->nullable];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->nullable = $data['nullable'];
     }
 
     public function isEqual(Type $type) : bool

@@ -1,0 +1,41 @@
+{
+    "name": "flow-php/web",
+    "description": "Flow PHP ETL - Web",
+    "type": "project",
+    "require": {
+        "symfony/http-kernel": "^6.4",
+        "symfony/http-foundation": "^6.4",
+        "symfony/routing": "^6.4",
+        "symfony/framework-bundle": "^6.4",
+        "symfony/twig-bundle": "^6.4",
+        "symfony/asset-mapper": "^6.4",
+        "symfony/asset": "^6.4",
+        "symfony/runtime": "^6.4",
+        "symfony/console": "^6.4",
+        "symfony/yaml": "^6.4",
+        "symfony/dotenv": "^6.4"
+    },
+    "require-dev": {
+        "symfony/web-profiler-bundle": "^6.4",
+        "symfonycasts/tailwind-bundle": "^0.5.0",
+        "norberttech/static-content-generator-bundle": "1.x-dev"
+    },
+    "autoload": {
+        "psr-4": {
+            "Flow\\Website\\": "src/Flow/Website/"
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "symfony/runtime": true
+        }
+    },
+    "scripts": {
+        "assets:clear": "rm -rf public/assets",
+        "assets:build": [
+            "@assets:clear",
+            "bin/console tailwind:build",
+            "bin/console asset-map:compile"
+        ]
+    }
+}

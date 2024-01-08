@@ -6,7 +6,7 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class PregMatch implements ScalarFunction
+final class PregMatch extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction $pattern,

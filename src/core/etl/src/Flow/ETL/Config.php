@@ -21,9 +21,9 @@ final class Config
 
     public function __construct(
         private readonly string $id,
+        private readonly Serializer $serializer,
         private readonly Cache $cache,
         private readonly ExternalSort $externalSort,
-        private readonly Serializer $serializer,
         private readonly FilesystemStreams $filesystemStreams,
         private readonly Optimizer $optimizer,
         private readonly bool $putInputIntoRows,

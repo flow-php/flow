@@ -10,26 +10,11 @@ use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
-/**
- * @implements Transformer<array{function: ScalarFunction}>
- */
 final class ScalarFunctionFilterTransformer implements Transformer
 {
     public function __construct(
-        private readonly ScalarFunction $function
+        public readonly ScalarFunction $function
     ) {
-    }
-
-    public function __serialize() : array
-    {
-        return [
-            'function' => $this->function,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->function = $data['function'];
     }
 
     public function transform(Rows $rows, FlowContext $context) : Rows
