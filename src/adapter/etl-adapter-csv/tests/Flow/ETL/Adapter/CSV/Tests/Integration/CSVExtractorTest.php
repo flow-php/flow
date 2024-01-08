@@ -23,14 +23,6 @@ use PHPUnit\Framework\TestCase;
 
 final class CSVExtractorTest extends TestCase
 {
-    public function test_load_json_file_as_csv_gives_empty_rows_list() : void
-    {
-        $extractor = from_csv(Path::realpath(__DIR__ . '/../Fixtures/not_csv.csv'));
-        $generator = $extractor->extract(new FlowContext(Config::default()));
-
-        $this->assertEmpty(\iterator_to_array($generator));
-    }
-
     public function test_extracting_csv_empty_columns_as_empty_strings() : void
     {
         $extractor = from_csv(
@@ -269,6 +261,14 @@ final class CSVExtractorTest extends TestCase
             2,
             \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
         );
+    }
+
+    public function test_load_json_file_as_csv_gives_empty_rows_list() : void
+    {
+        $extractor = from_csv(Path::realpath(__DIR__ . '/../Fixtures/not_csv.csv'));
+        $generator = $extractor->extract(new FlowContext(Config::default()));
+
+        $this->assertEmpty(\iterator_to_array($generator));
     }
 
     public function test_loading_data_from_all_partitions() : void
