@@ -23,6 +23,14 @@ use PHPUnit\Framework\TestCase;
 
 final class CSVExtractorTest extends TestCase
 {
+    public function test_load_json_file_as_csv_gives_null_for_first_row() : void
+    {
+        $extractor = from_csv(Path::realpath(__DIR__ . '/../Fixtures/not_csv.csv'));
+        $generator = $extractor->extract(new FlowContext(Config::default()));
+
+        $this->assertNull($generator->next());
+    }
+
     public function test_extracting_csv_empty_columns_as_empty_strings() : void
     {
         $extractor = from_csv(
