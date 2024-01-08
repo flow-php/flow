@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-01-04
+## [Unreleased] - 2024-01-08
 
 ### Added
 - [#905](https://github.com/flow-php/flow/pull/905) - **Base symfony skeleton for a landing page** - [@owsiakl](https://github.com/owsiakl)
@@ -33,6 +33,7 @@
 - [#867](https://github.com/flow-php/flow/pull/867) - **Update Homebrew TAP formula: flow-php to version: 0.5.2** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#909](https://github.com/flow-php/flow/pull/909) - **fixed unit testing csv load overwrite mode** - [@rzarno](https://github.com/rzarno)
 - [#902](https://github.com/flow-php/flow/pull/902) - **changing partitions order during partitioning** - [@norberttech](https://github.com/norberttech)
 - [#901](https://github.com/flow-php/flow/pull/901) - **writing uuid entries to parquet files** - [@norberttech](https://github.com/norberttech)
 - [#900](https://github.com/flow-php/flow/pull/900) - **converting list of structures to parquet schema** - [@norberttech](https://github.com/norberttech)
