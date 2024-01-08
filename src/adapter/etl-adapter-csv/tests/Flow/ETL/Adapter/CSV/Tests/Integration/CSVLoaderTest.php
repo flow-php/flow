@@ -158,9 +158,9 @@ CSV,
         (new Flow())
             ->process(
                 new Rows(
-                    Row::create(int_entry('id', 1), str_entry('name', 'Norbert')),
-                    Row::create(int_entry('id', 2), str_entry('name', 'Tomek')),
-                    Row::create(int_entry('id', 3), str_entry('name', 'Dawid')),
+                    Row::create(int_entry('id', 1), str_entry('name', 'Tomek')),
+                    Row::create(int_entry('id', 2), str_entry('name', 'Dawid')),
+                    Row::create(int_entry('id', 3), str_entry('name', 'Norbert')),
                 )
             )
             ->load(to_csv($path))
