@@ -132,6 +132,10 @@ final class FlysystemFS implements Filesystem
      */
     public function scan(Path $path, PartitionFilter $partitionFilter = new NoopFilter()) : \Generator
     {
+        if (!$path->isPattern() && !$this->fileExists($path) && !$this->directoryExists($path)) {
+            throw new RuntimeException(\sprintf('Path "%s" does not exists', $path->uri()));
+        }
+
         $fs = $this->factory->create($path);
 
         if ($fs->fileExists($path->path())) {
@@ -140,17 +144,15 @@ final class FlysystemFS implements Filesystem
             return;
         }
 
-        if (!$path->isPattern()) {
-            throw new RuntimeException(\sprintf('Path "%s" does not exists', $path->uri()));
-        }
-
         $filter = function (FileAttributes|DirectoryAttributes $file) use ($path, $partitionFilter) : bool {
             if ($file instanceof DirectoryAttributes) {
                 return false;
             }
 
-            if (!$path->matches(new Path($path->scheme() . '://' . $file->path(), $path->options()))) {
-                return false;
+            if ($path->isPattern()) {
+                if (!$path->matches(new Path($path->scheme() . '://' . $file->path(), $path->options()))) {
+                    return false;
+                }
             }
 
             return $partitionFilter->keep(...(new Path(DIRECTORY_SEPARATOR . $file->path()))->partitions()->toArray());
