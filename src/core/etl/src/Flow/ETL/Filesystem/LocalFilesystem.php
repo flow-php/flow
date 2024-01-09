@@ -124,21 +124,6 @@ final class LocalFilesystem implements Filesystem
             }
 
             throw new RuntimeException(\sprintf('Path "%s" does not exists', $path->uri()));
-
-        }
-
-        if (!$path->isPattern()) {
-            foreach (Glob::glob(\rtrim($path->path(), '/') . '/**/*') as $filePath) {
-                if (\is_dir($filePath)) {
-                    continue;
-                }
-
-                if ($partitionFilter->keep(...(Path::realpath($filePath, $path->options()))->partitions()->toArray())) {
-                    yield Path::realpath($filePath, $path->options());
-                }
-            }
-
-            return;
         }
 
         foreach (Glob::glob($path->path()) as $filePath) {

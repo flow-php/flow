@@ -149,10 +149,8 @@ final class FlysystemFS implements Filesystem
                 return false;
             }
 
-            if ($path->isPattern()) {
-                if (!$path->matches(new Path($path->scheme() . '://' . $file->path(), $path->options()))) {
-                    return false;
-                }
+            if (!$path->matches(new Path($path->scheme() . '://' . $file->path(), $path->options()))) {
+                return false;
             }
 
             return $partitionFilter->keep(...(new Path(DIRECTORY_SEPARATOR . $file->path()))->partitions()->toArray());
