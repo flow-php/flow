@@ -138,6 +138,8 @@ final class FlysystemFS implements Filesystem
             yield $path;
 
             return;
+        } elseif (!$path->isPattern()){
+            throw new RuntimeException(\sprintf('Path "%s" does not exists', $path->uri()));
         }
 
         $filter = function (FileAttributes|DirectoryAttributes $file) use ($path, $partitionFilter) : bool {

@@ -116,10 +116,14 @@ final class LocalFilesystem implements Filesystem
             throw new RuntimeException(\sprintf('Path "%s" is not local', $path->uri()));
         }
 
-        if (!$path->isPattern() && $this->fileExists($path)) {
-            yield $path;
+        if (!$path->isPattern()) {
+            if ($this->fileExists($path)) {
+                yield $path;
 
-            return;
+                return;
+            } else {
+                throw new RuntimeException(\sprintf('Path "%s" does not exists', $path->uri()));
+            }
         }
 
         if (!$path->isPattern()) {

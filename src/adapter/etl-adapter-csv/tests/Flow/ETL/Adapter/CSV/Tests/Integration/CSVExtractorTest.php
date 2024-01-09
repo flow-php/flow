@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV\Tests\Integration;
 
+use Flow\ETL\Exception\RuntimeException;
 use function Flow\ETL\Adapter\CSV\from_csv;
 use function Flow\ETL\Adapter\CSV\to_csv;
 use function Flow\ETL\DSL\df;
@@ -263,12 +264,12 @@ final class CSVExtractorTest extends TestCase
         );
     }
 
-    public function test_load_json_file_as_csv_gives_empty_rows_list() : void
+    public function test_load_not_existing_file_throws_exception() : void
     {
-        $extractor = from_csv(Path::realpath(__DIR__ . '/../Fixtures/not_csv.csv'));
+        $this->expectException(RuntimeException::class);
+        $extractor = from_csv(Path::realpath('not_existing_file.csv'));
         $generator = $extractor->extract(new FlowContext(Config::default()));
-
-        $this->assertEmpty(\iterator_to_array($generator));
+        \iterator_to_array($generator);
     }
 
     public function test_loading_data_from_all_partitions() : void
