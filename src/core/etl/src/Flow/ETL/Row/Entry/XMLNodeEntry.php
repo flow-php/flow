@@ -12,7 +12,7 @@ use Flow\ETL\Row\Schema\Definition;
 /**
  * @implements Entry<\DOMNode>
  */
-final class XMLNodeEntry implements \Stringable, Entry
+final class XMLNodeEntry implements Entry
 {
     use EntryRef;
 

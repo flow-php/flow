@@ -15,7 +15,7 @@ use Flow\ETL\Row\Schema\Definition;
 /**
  * @implements Entry<\DateTimeInterface>
  */
-final class DateTimeEntry implements \Stringable, Entry
+final class DateTimeEntry implements Entry
 {
     use EntryRef;
 

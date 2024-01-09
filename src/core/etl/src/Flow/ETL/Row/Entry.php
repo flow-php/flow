@@ -10,7 +10,7 @@ use Flow\ETL\Row\Schema\Definition;
 /**
  * @template TValue
  */
-interface Entry
+interface Entry extends \Stringable
 {
     public function __toString() : string;
 
