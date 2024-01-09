@@ -14,7 +14,7 @@ use Flow\ETL\Row\Schema\Definition;
 /**
  * @implements Entry<null>
  */
-final class NullEntry implements \Stringable, Entry
+final class NullEntry implements Entry
 {
     use EntryRef;
 

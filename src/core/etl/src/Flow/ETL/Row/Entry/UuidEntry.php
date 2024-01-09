@@ -15,7 +15,7 @@ use Flow\ETL\Row\Schema\Definition;
 /**
  * @implements Entry<Entry\Type\Uuid>
  */
-final class UuidEntry implements \Stringable, Entry
+final class UuidEntry implements Entry
 {
     use EntryRef;
 

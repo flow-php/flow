@@ -15,7 +15,7 @@ use Flow\ETL\Row\Schema\Definition;
 /**
  * @implements Entry<bool>
  */
-final class BooleanEntry implements \Stringable, Entry
+final class BooleanEntry implements Entry
 {
     use EntryRef;
 

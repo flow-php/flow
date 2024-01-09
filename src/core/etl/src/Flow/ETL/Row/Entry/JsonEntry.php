@@ -16,7 +16,7 @@ use Flow\ETL\Row\Schema\Definition;
 /**
  * @implements Entry<string>
  */
-final class JsonEntry implements \Stringable, Entry
+final class JsonEntry implements Entry
 {
     use EntryRef;
 

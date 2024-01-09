@@ -13,7 +13,7 @@ use Flow\ETL\Row\Schema\Definition;
 /**
  * @implements Entry<\DOMDocument>
  */
-final class XMLEntry implements \Stringable, Entry
+final class XMLEntry implements Entry
 {
     use EntryRef;
 
