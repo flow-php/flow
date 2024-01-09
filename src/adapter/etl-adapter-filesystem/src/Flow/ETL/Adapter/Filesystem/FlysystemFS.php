@@ -138,7 +138,9 @@ final class FlysystemFS implements Filesystem
             yield $path;
 
             return;
-        } elseif (!$path->isPattern()){
+        }
+
+        if (!$path->isPattern()) {
             throw new RuntimeException(\sprintf('Path "%s" does not exists', $path->uri()));
         }
 

@@ -121,9 +121,10 @@ final class LocalFilesystem implements Filesystem
                 yield $path;
 
                 return;
-            } else {
-                throw new RuntimeException(\sprintf('Path "%s" does not exists', $path->uri()));
             }
+
+            throw new RuntimeException(\sprintf('Path "%s" does not exists', $path->uri()));
+
         }
 
         if (!$path->isPattern()) {

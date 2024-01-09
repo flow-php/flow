@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV\Tests\Integration;
 
-use Flow\ETL\Exception\RuntimeException;
 use function Flow\ETL\Adapter\CSV\from_csv;
 use function Flow\ETL\Adapter\CSV\to_csv;
 use function Flow\ETL\DSL\df;
@@ -13,6 +12,7 @@ use function Flow\ETL\DSL\ref;
 use Flow\ETL\Adapter\CSV\CSVExtractor;
 use Flow\ETL\Config;
 use Flow\ETL\ConfigBuilder;
+use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Filesystem\LocalFilesystem;
 use Flow\ETL\Filesystem\Path;
