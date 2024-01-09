@@ -308,7 +308,7 @@ XML,
                 )
             )
             ->partitionBy('group')
-            ->load(new DomDocumentLoader(Path::realpath($path), collectionName: 'items', collectionElementName: 'item'))
+            ->load(new DomDocumentLoader(Path::realpath($path), 'items', 'item'))
             ->run();
 
         $partitions = \array_values(\array_diff(\scandir($path), ['..', '.']));

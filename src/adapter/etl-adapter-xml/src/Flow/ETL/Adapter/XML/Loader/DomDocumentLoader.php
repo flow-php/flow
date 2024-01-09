@@ -17,9 +17,9 @@ final class DomDocumentLoader implements Closure, Loader, Loader\FileLoader
 {
     public function __construct(
         private readonly Path $path,
-        private readonly RowsNormalizer $normalizer = new RowsNormalizer(),
         private readonly string $collectionName = 'rows',
         private readonly string $collectionElementName = 'row',
+        private readonly RowsNormalizer $normalizer = new RowsNormalizer(),
     ) {
         if ($this->path->isPattern()) {
             throw new \InvalidArgumentException("XMLLoader path can't be pattern, given: " . $this->path->path());

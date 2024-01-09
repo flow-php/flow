@@ -38,11 +38,14 @@ function from_xml(
     );
 }
 
-function to_xml(string|Path $path) : Loader
-{
+function to_xml(
+    string|Path $path,
+    string $collectionName = 'rows',
+    string $collectionElementName = 'row'
+) : Loader {
     if (\class_exists(\XMLWriter::class)) {
-        return new XMLWriterLoader(\is_string($path) ? Path::realpath($path) : $path);
+        return new XMLWriterLoader(\is_string($path) ? Path::realpath($path) : $path, $collectionName, $collectionElementName);
     }
 
-    return new DomDocumentLoader(\is_string($path) ? Path::realpath($path) : $path);
+    return new DomDocumentLoader(\is_string($path) ? Path::realpath($path) : $path, $collectionName, $collectionElementName);
 }

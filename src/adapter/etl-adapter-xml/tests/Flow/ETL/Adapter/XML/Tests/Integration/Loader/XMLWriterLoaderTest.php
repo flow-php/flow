@@ -333,7 +333,7 @@ XML,
                 )
             )
             ->partitionBy('group')
-            ->load(new XMLWriterLoader(Path::realpath($path), collectionName: 'items', collectionElementName: 'item'))
+            ->load(new XMLWriterLoader(Path::realpath($path), 'items', 'item'))
             ->run();
 
         $partitions = \array_values(\array_diff(\scandir($path), ['..', '.']));
