@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-01-08
+## [Unreleased] - 2024-01-09
 
 ### Added
 - [#905](https://github.com/flow-php/flow/pull/905) - **Base symfony skeleton for a landing page** - [@owsiakl](https://github.com/owsiakl)
@@ -22,6 +22,7 @@
 - [#869](https://github.com/flow-php/flow/pull/869) - **RDSL library** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#907](https://github.com/flow-php/flow/pull/907) - **Make sure that entries are "stringable"** - [@stloyd](https://github.com/stloyd)
 - [#901](https://github.com/flow-php/flow/pull/901) - **Return types of functions in DSL** - [@norberttech](https://github.com/norberttech)
 - [#899](https://github.com/flow-php/flow/pull/899) - **Reverted removed copmressing serializer** - [@norberttech](https://github.com/norberttech)
 - [#895](https://github.com/flow-php/flow/pull/895) - **Simplified partitioning datasets by DateTimeEntry** - [@norberttech](https://github.com/norberttech)

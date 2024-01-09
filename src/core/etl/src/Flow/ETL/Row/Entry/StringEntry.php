@@ -15,7 +15,7 @@ use Flow\ETL\Row\Schema\Definition;
 /**
  * @implements Entry<string>
  */
-final class StringEntry implements \Stringable, Entry
+final class StringEntry implements Entry
 {
     use EntryRef;
 
@@ -24,7 +24,7 @@ final class StringEntry implements \Stringable, Entry
     /**
      * @throws InvalidArgumentException
      */
-    public function __construct(private readonly string $name, private string $value)
+    public function __construct(private readonly string $name, private readonly string $value)
     {
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
