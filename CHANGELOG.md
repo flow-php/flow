@@ -1,6 +1,7 @@
-## [Unreleased] - 2024-01-10
+## [Unreleased] - 2024-01-15
 
 ### Added
+- [#910](https://github.com/flow-php/flow/pull/910) - **add csv adapter unit test for fixture not yet in use** - [@rzarno](https://github.com/rzarno)
 - [#905](https://github.com/flow-php/flow/pull/905) - **Base symfony skeleton for a landing page** - [@owsiakl](https://github.com/owsiakl)
 - [#901](https://github.com/flow-php/flow/pull/901) - **partition_by example** - [@norberttech](https://github.com/norberttech)
 - [#898](https://github.com/flow-php/flow/pull/898) - **extra validation for column in parquet rows** - [@norberttech](https://github.com/norberttech)
