@@ -82,7 +82,7 @@ final class ParquetTest extends TestCase
         $this->assertEquals(
             $rows,
             (new Flow())
-                ->read(from_parquet($path))
+                ->read(from_parquet($path . '/**/*.parquet'))
                 ->drop('date')
                 ->sortBy(ref('datetime')->asc())
                 ->fetch()
