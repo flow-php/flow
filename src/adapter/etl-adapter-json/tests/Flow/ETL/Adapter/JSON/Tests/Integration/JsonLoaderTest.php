@@ -190,7 +190,7 @@ JSON,
                 ['id' => 5, 'partition' => 'b'],
             ],
             df()
-                ->read(from_json($path))
+                ->read(from_json($path . '/**/*.json'))
                 ->sortBy(ref('id'))
                 ->fetch()
                 ->toArray()
@@ -237,7 +237,7 @@ JSON,
                 ['id' => 10, 'partition' => 'b'],
             ],
             (new Flow())
-                ->read(from_json($path))
+                ->read(from_json($path . '/**/*.json'))
                 ->sortBy(ref('id')->asc())
                 ->fetch()
                 ->toArray()

@@ -84,7 +84,7 @@ STRING,
         $paths = \iterator_to_array(
             (new LocalFilesystem())
                 ->scan(
-                    new Path(__DIR__ . '/Fixtures/multi_partitions'),
+                    new Path(__DIR__ . '/Fixtures/multi_partitions/**/*.txt'),
                     new ScalarFunctionFilter(
                         all(
                             ref('country')->equals(lit('pl')),
@@ -110,7 +110,7 @@ STRING,
 
     public function test_reading_partitioned_folder() : void
     {
-        $paths = \iterator_to_array((new LocalFilesystem())->scan(new Path(__DIR__ . '/Fixtures/partitioned'), new NoopFilter()));
+        $paths = \iterator_to_array((new LocalFilesystem())->scan(new Path(__DIR__ . '/Fixtures/partitioned/**/*.txt'), new NoopFilter()));
         \sort($paths);
 
         $this->assertEquals(
@@ -131,7 +131,7 @@ STRING,
             \iterator_to_array(
                 (new LocalFilesystem())
                     ->scan(
-                        new Path(__DIR__ . '/Fixtures/partitioned'),
+                        new Path(__DIR__ . '/Fixtures/partitioned/**/*.txt'),
                         new ScalarFunctionFilter(ref('partition_01')->equals(lit('b')), new NativeEntryFactory())
                     )
             )

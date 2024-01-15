@@ -12,6 +12,7 @@ use function Flow\ETL\DSL\ref;
 use Flow\ETL\Adapter\CSV\CSVExtractor;
 use Flow\ETL\Config;
 use Flow\ETL\ConfigBuilder;
+use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Filesystem\LocalFilesystem;
 use Flow\ETL\Filesystem\Path;
@@ -261,6 +262,14 @@ final class CSVExtractorTest extends TestCase
             2,
             \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
         );
+    }
+
+    public function test_load_not_existing_file_throws_exception() : void
+    {
+        $this->expectException(RuntimeException::class);
+        $extractor = from_csv(Path::realpath('not_existing_file.csv'));
+        $generator = $extractor->extract(new FlowContext(Config::default()));
+        \iterator_to_array($generator);
     }
 
     public function test_loading_data_from_all_partitions() : void
