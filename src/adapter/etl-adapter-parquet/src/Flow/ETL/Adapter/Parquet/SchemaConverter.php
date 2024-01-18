@@ -280,7 +280,7 @@ final class SchemaConverter
             case Entry\JsonEntry::class:
             case Entry\StringEntry::class:
                 return type_string($definition->isNullable());
-            case Entry\NullEntry::class:
+            case NullEntry::class:
                 return type_null();
             case Entry\DateTimeEntry::class:
                 return type_object(\DateTimeInterface::class, $definition->isNullable());

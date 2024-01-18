@@ -735,27 +735,27 @@
         },
         {
             "name": "google/apiclient",
-            "version": "v2.15.1",
+            "version": "v2.15.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/googleapis/google-api-php-client.git",
-                "reference": "7a95ed29e4b6c6859d2d22300c5455a92e2622ad"
+                "reference": "e70273c06d18824de77e114247ae3102f8aec64d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/googleapis/google-api-php-client/zipball/7a95ed29e4b6c6859d2d22300c5455a92e2622ad",
-                "reference": "7a95ed29e4b6c6859d2d22300c5455a92e2622ad",
+                "url": "https://api.github.com/repos/googleapis/google-api-php-client/zipball/e70273c06d18824de77e114247ae3102f8aec64d",
+                "reference": "e70273c06d18824de77e114247ae3102f8aec64d",
                 "shasum": ""
             },
             "require": {
                 "firebase/php-jwt": "~6.0",
                 "google/apiclient-services": "~0.200",
-                "google/auth": "^1.28",
-                "guzzlehttp/guzzle": "~6.5||~7.0",
+                "google/auth": "^1.33",
+                "guzzlehttp/guzzle": "^6.5.8||^7.4.5",
                 "guzzlehttp/psr7": "^1.8.4||^2.2.1",
                 "monolog/monolog": "^2.9||^3.0",
                 "php": "^7.4|^8.0",
-                "phpseclib/phpseclib": "^3.0.19"
+                "phpseclib/phpseclib": "^3.0.34"
             },
             "require-dev": {
                 "cache/filesystem-adapter": "^1.1",
@@ -763,7 +763,7 @@
                 "phpcompatibility/php-compatibility": "^9.2",
                 "phpspec/prophecy-phpunit": "^2.0",
                 "phpunit/phpunit": "^9.5",
-                "squizlabs/php_codesniffer": "^3.0",
+                "squizlabs/php_codesniffer": "^3.8",
                 "symfony/css-selector": "~2.1",
                 "symfony/dom-crawler": "~2.1"
             },
@@ -798,22 +798,22 @@
             ],
             "support": {
                 "issues": "https://github.com/googleapis/google-api-php-client/issues",
-                "source": "https://github.com/googleapis/google-api-php-client/tree/v2.15.1"
+                "source": "https://github.com/googleapis/google-api-php-client/tree/v2.15.3"
             },
-            "time": "2023-09-13T21:46:39+00:00"
+            "time": "2024-01-04T19:15:22+00:00"
         },
         {
             "name": "google/apiclient-services",
-            "version": "v0.329.0",
+            "version": "v0.332.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/googleapis/google-api-php-client-services.git",
-                "reference": "3216fd1b6ba33c5f6658c3581e9723ff21d9acb7"
+                "reference": "027cc7fe60877c2b6ba0f380d419acf65a3755d2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/googleapis/google-api-php-client-services/zipball/3216fd1b6ba33c5f6658c3581e9723ff21d9acb7",
-                "reference": "3216fd1b6ba33c5f6658c3581e9723ff21d9acb7",
+                "url": "https://api.github.com/repos/googleapis/google-api-php-client-services/zipball/027cc7fe60877c2b6ba0f380d419acf65a3755d2",
+                "reference": "027cc7fe60877c2b6ba0f380d419acf65a3755d2",
                 "shasum": ""
             },
             "require": {
@@ -842,22 +842,22 @@
             ],
             "support": {
                 "issues": "https://github.com/googleapis/google-api-php-client-services/issues",
-                "source": "https://github.com/googleapis/google-api-php-client-services/tree/v0.329.0"
+                "source": "https://github.com/googleapis/google-api-php-client-services/tree/v0.332.0"
             },
-            "time": "2023-12-24T01:02:15+00:00"
+            "time": "2024-01-15T00:56:15+00:00"
         },
         {
             "name": "google/auth",
-            "version": "v1.33.0",
+            "version": "v1.34.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/googleapis/google-auth-library-php.git",
-                "reference": "682dc6c30bb509953c9e43bb0960d901582da00b"
+                "reference": "155daeadfd2f09743f611ea493b828d382519575"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/googleapis/google-auth-library-php/zipball/682dc6c30bb509953c9e43bb0960d901582da00b",
-                "reference": "682dc6c30bb509953c9e43bb0960d901582da00b",
+                "url": "https://api.github.com/repos/googleapis/google-auth-library-php/zipball/155daeadfd2f09743f611ea493b828d382519575",
+                "reference": "155daeadfd2f09743f611ea493b828d382519575",
                 "shasum": ""
             },
             "require": {
@@ -900,9 +900,9 @@
             "support": {
                 "docs": "https://googleapis.github.io/google-auth-library-php/main/",
                 "issues": "https://github.com/googleapis/google-auth-library-php/issues",
-                "source": "https://github.com/googleapis/google-auth-library-php/tree/v1.33.0"
+                "source": "https://github.com/googleapis/google-auth-library-php/tree/v1.34.0"
             },
-            "time": "2023-11-30T15:49:27+00:00"
+            "time": "2024-01-03T20:45:15+00:00"
         },
         {
             "name": "guzzlehttp/guzzle",
@@ -1496,16 +1496,16 @@
         },
         {
             "name": "meilisearch/meilisearch-php",
-            "version": "v1.5.0",
+            "version": "v1.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/meilisearch/meilisearch-php.git",
-                "reference": "c5d217c779348a66712505ede5167325bc79d5bc"
+                "reference": "4dbb26d583bd14506784846fb86cbb408007b132"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/meilisearch/meilisearch-php/zipball/c5d217c779348a66712505ede5167325bc79d5bc",
-                "reference": "c5d217c779348a66712505ede5167325bc79d5bc",
+                "url": "https://api.github.com/repos/meilisearch/meilisearch-php/zipball/4dbb26d583bd14506784846fb86cbb408007b132",
+                "reference": "4dbb26d583bd14506784846fb86cbb408007b132",
                 "shasum": ""
             },
             "require": {
@@ -1520,7 +1520,7 @@
                 "guzzlehttp/guzzle": "^7.1",
                 "http-interop/http-factory-guzzle": "^1.0",
                 "phpstan/extension-installer": "^1.1",
-                "phpstan/phpstan": "1.10.40",
+                "phpstan/phpstan": "1.10.50",
                 "phpstan/phpstan-deprecation-rules": "^1.0",
                 "phpstan/phpstan-phpunit": "^1.0",
                 "phpstan/phpstan-strict-rules": "^1.1",
@@ -1558,9 +1558,9 @@
             ],
             "support": {
                 "issues": "https://github.com/meilisearch/meilisearch-php/issues",
-                "source": "https://github.com/meilisearch/meilisearch-php/tree/v1.5.0"
+                "source": "https://github.com/meilisearch/meilisearch-php/tree/v1.6.0"
             },
-            "time": "2023-11-20T13:57:38+00:00"
+            "time": "2024-01-15T13:07:32+00:00"
         },
         {
             "name": "monolog/monolog",
@@ -2094,16 +2094,16 @@
         },
         {
             "name": "php-http/promise",
-            "version": "1.2.1",
+            "version": "1.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/php-http/promise.git",
-                "reference": "44a67cb59f708f826f3bec35f22030b3edb90119"
+                "reference": "2916a606d3b390f4e9e8e2b8dd68581508be0f07"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/php-http/promise/zipball/44a67cb59f708f826f3bec35f22030b3edb90119",
-                "reference": "44a67cb59f708f826f3bec35f22030b3edb90119",
+                "url": "https://api.github.com/repos/php-http/promise/zipball/2916a606d3b390f4e9e8e2b8dd68581508be0f07",
+                "reference": "2916a606d3b390f4e9e8e2b8dd68581508be0f07",
                 "shasum": ""
             },
             "require": {
@@ -2140,9 +2140,9 @@
             ],
             "support": {
                 "issues": "https://github.com/php-http/promise/issues",
-                "source": "https://github.com/php-http/promise/tree/1.2.1"
+                "source": "https://github.com/php-http/promise/tree/1.3.0"
             },
-            "time": "2023-11-08T12:57:08+00:00"
+            "time": "2024-01-04T18:49:48+00:00"
         },
         {
             "name": "phpseclib/phpseclib",
@@ -3822,16 +3822,16 @@
         },
         {
             "name": "aws/aws-sdk-php",
-            "version": "3.295.4",
+            "version": "3.296.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aws/aws-sdk-php.git",
-                "reference": "2372661db989fe4229abd95f4434b37252076d58"
+                "reference": "2efd701a5e5f50560319ffe0669942dc8d3a4a54"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/2372661db989fe4229abd95f4434b37252076d58",
-                "reference": "2372661db989fe4229abd95f4434b37252076d58",
+                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/2efd701a5e5f50560319ffe0669942dc8d3a4a54",
+                "reference": "2efd701a5e5f50560319ffe0669942dc8d3a4a54",
                 "shasum": ""
             },
             "require": {
@@ -3911,9 +3911,9 @@
             "support": {
                 "forum": "https://forums.aws.amazon.com/forum.jspa?forumID=80",
                 "issues": "https://github.com/aws/aws-sdk-php/issues",
-                "source": "https://github.com/aws/aws-sdk-php/tree/3.295.4"
+                "source": "https://github.com/aws/aws-sdk-php/tree/3.296.4"
             },
-            "time": "2023-12-29T19:07:49+00:00"
+            "time": "2024-01-17T23:34:36+00:00"
         },
         {
             "name": "brick/math",
@@ -3972,16 +3972,16 @@
         },
         {
             "name": "fakerphp/faker",
-            "version": "v1.23.0",
+            "version": "v1.23.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/FakerPHP/Faker.git",
-                "reference": "e3daa170d00fde61ea7719ef47bb09bb8f1d9b01"
+                "reference": "bfb4fe148adbf78eff521199619b93a52ae3554b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/FakerPHP/Faker/zipball/e3daa170d00fde61ea7719ef47bb09bb8f1d9b01",
-                "reference": "e3daa170d00fde61ea7719ef47bb09bb8f1d9b01",
+                "url": "https://api.github.com/repos/FakerPHP/Faker/zipball/bfb4fe148adbf78eff521199619b93a52ae3554b",
+                "reference": "bfb4fe148adbf78eff521199619b93a52ae3554b",
                 "shasum": ""
             },
             "require": {
@@ -4007,11 +4007,6 @@
                 "ext-mbstring": "Required for multibyte Unicode string functionality."
             },
             "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-main": "v1.21-dev"
-                }
-            },
             "autoload": {
                 "psr-4": {
                     "Faker\\": "src/Faker/"
@@ -4034,9 +4029,9 @@
             ],
             "support": {
                 "issues": "https://github.com/FakerPHP/Faker/issues",
-                "source": "https://github.com/FakerPHP/Faker/tree/v1.23.0"
+                "source": "https://github.com/FakerPHP/Faker/tree/v1.23.1"
             },
-            "time": "2023-06-12T08:44:38+00:00"
+            "time": "2024-01-02T13:46:09+00:00"
         },
         {
             "name": "fig/log-test",

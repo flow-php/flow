@@ -23,7 +23,7 @@ class CallbackRowTransformerTest extends TestCase
         $rows = $callbackTransformer->transform(
             new Rows(
                 Row::create(
-                    new Row\Entry\IntegerEntry('old-int', 1000),
+                    new Entry\IntegerEntry('old-int', 1000),
                     new Entry\StringEntry('string-entry ', 'String entry')
                 )
             ),

@@ -45,7 +45,7 @@ foreach ($finder as $file) {
 
     try {
         include $file->getRealPath();
-    } catch (\Exception $e) {
+    } catch (Exception $e) {
         print "Example failed: {$e->getMessage()}\n";
     }
 }

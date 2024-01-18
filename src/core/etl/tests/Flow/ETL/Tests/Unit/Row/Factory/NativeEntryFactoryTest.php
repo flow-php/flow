@@ -105,7 +105,7 @@ final class NativeEntryFactoryTest extends TestCase
     public function test_conversion_to_different_type_with_schema() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("Field \"e\" conversion exception. Flow\ETL\DSL\string_entry(): Argument #2 (\$value) must be of type string, int given, called in");
+        $this->expectExceptionMessage("Field \"e\" conversion exception. Flow\ETL\DSL\str_entry(): Argument #2 (\$value) must be of type string, int given, called in");
 
         (new NativeEntryFactory())
             ->create('e', 1, new Schema(Schema\Definition::string('e')));

@@ -18,6 +18,8 @@ final class Path
 
     private string $filename;
 
+    private Partitions|null $partitions = null;
+
     private string $path;
 
     private string $scheme;
@@ -233,11 +235,15 @@ final class Path
 
     public function partitions() : Partitions
     {
-        if ($this->isPathPattern($this->path)) {
-            return new Partitions();
+        if ($this->partitions === null) {
+            if ($this->isPathPattern($this->path)) {
+                $this->partitions = new Partitions();
+            } else {
+                $this->partitions = Partition::fromUri($this->path);
+            }
         }
 
-        return Partition::fromUri($this->path);
+        return $this->partitions;
     }
 
     public function path() : string

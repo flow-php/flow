@@ -48,7 +48,7 @@ final class SchemaConverter
 
         if ($type === ListEntry::class) {
             /** @var ListType $listType */
-            $listType = $definition->metadata()->get(Schema\FlowMetadata::METADATA_LIST_ENTRY_TYPE);
+            $listType = $definition->metadata()->get(FlowMetadata::METADATA_LIST_ENTRY_TYPE);
             $listElement = $listType->element();
 
             if ($listElement->type() instanceof ScalarType) {
@@ -72,7 +72,7 @@ final class SchemaConverter
 
         if ($type === Entry\MapEntry::class) {
             /** @var MapType $mapType */
-            $mapType = $definition->metadata()->get(Schema\FlowMetadata::METADATA_MAP_ENTRY_TYPE);
+            $mapType = $definition->metadata()->get(FlowMetadata::METADATA_MAP_ENTRY_TYPE);
 
             return match ($mapType->value()->type()->toString()) {
                 ScalarType::STRING => ['name' => $definition->entry()->name(), 'type' => ['type' => 'map', 'values' => \AvroSchema::STRING_TYPE]],
@@ -126,7 +126,7 @@ final class SchemaConverter
                     'type' => \AvroSchema::ENUM_SCHEMA,
                     'symbols' => \array_map(
                         fn (\UnitEnum $e) => $e->name,
-                        $definition->metadata()->get(Schema\FlowMetadata::METADATA_ENUM_CASES)
+                        $definition->metadata()->get(FlowMetadata::METADATA_ENUM_CASES)
                     ),
                 ],
             ],
@@ -135,7 +135,7 @@ final class SchemaConverter
             Entry\BooleanEntry::class => ['name' => $definition->entry()->name(), 'type' => \AvroSchema::BOOLEAN_TYPE],
             Entry\ArrayEntry::class => throw new RuntimeException("ArrayEntry entry can't be saved in Avro file, try convert it to ListEntry"),
             Entry\DateTimeEntry::class => ['name' => $definition->entry()->name(), 'type' => 'long', \AvroSchema::LOGICAL_TYPE_ATTR => 'timestamp-micros'],
-            Entry\NullEntry::class => ['name' => $definition->entry()->name(), 'type' => \AvroSchema::NULL_TYPE],
+            NullEntry::class => ['name' => $definition->entry()->name(), 'type' => \AvroSchema::NULL_TYPE],
             default => throw new RuntimeException($type . ' is not yet supported.')
         };
 

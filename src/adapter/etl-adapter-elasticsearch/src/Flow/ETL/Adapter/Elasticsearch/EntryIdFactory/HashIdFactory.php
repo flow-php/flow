@@ -25,7 +25,7 @@ final class HashIdFactory implements IdFactory
 
     public function create(Row $row) : Entry
     {
-        return new Row\Entry\StringEntry(
+        return new Entry\StringEntry(
             'id',
             \hash(
                 $this->hashName,

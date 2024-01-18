@@ -55,7 +55,7 @@ final class CacheExternalSort implements ExternalSort
 
         $minHeap = $cachedParts->createHeap(...$refs);
 
-        $bufferCache = new ExternalSort\BufferCache($this->cache, $maxRowsSize);
+        $bufferCache = new BufferCache($this->cache, $maxRowsSize);
 
         while ($cachedParts->notEmpty() || !$minHeap->isEmpty()) {
             $cachedParts->takeNext($minHeap, $this->id, $bufferCache);

@@ -156,7 +156,7 @@ function from_memory(Memory $memory) : Extractor\MemoryExtractor
     return new Extractor\MemoryExtractor($memory);
 }
 
-function local_files(string|Path $directory, bool $recursive = false) : Extractor\LocalFileListExtractor
+function local_files(string|Path $directory, bool $recursive = false) : LocalFileListExtractor
 {
     return new LocalFileListExtractor(\is_string($directory) ? Path::realpath($directory) : $directory, $recursive);
 }
