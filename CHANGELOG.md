@@ -24,6 +24,8 @@
 - [#869](https://github.com/flow-php/flow/pull/869) - **RDSL library** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#919](https://github.com/flow-php/flow/pull/919) - **optimized Path::partitions method by using mnemonic** - [@norberttech](https://github.com/norberttech)
+- [#919](https://github.com/flow-php/flow/pull/919) - **updated dependencies** - [@norberttech](https://github.com/norberttech)
 - [#907](https://github.com/flow-php/flow/pull/907) - **Make sure that entries are "stringable"** - [@stloyd](https://github.com/stloyd)
 - [#901](https://github.com/flow-php/flow/pull/901) - **Return types of functions in DSL** - [@norberttech](https://github.com/norberttech)
 - [#899](https://github.com/flow-php/flow/pull/899) - **Reverted removed copmressing serializer** - [@norberttech](https://github.com/norberttech)
