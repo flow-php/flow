@@ -31,6 +31,7 @@ use Flow\ETL\Pipeline\VoidPipeline;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 use Flow\ETL\Row\Schema;
+use Flow\ETL\Transformer\AutoCastTransformer;
 use Flow\ETL\Transformer\CallbackRowTransformer;
 use Flow\ETL\Transformer\CrossJoinRowsTransformer;
 use Flow\ETL\Transformer\DropDuplicatesTransformer;
@@ -143,6 +144,13 @@ final class DataFrame
     public function appendSafe(bool $appendSafe = true) : self
     {
         $this->context->setAppendSafe($appendSafe);
+
+        return $this;
+    }
+
+    public function autoCast() : self
+    {
+        $this->pipeline->add(new AutoCastTransformer());
 
         return $this;
     }

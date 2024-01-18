@@ -58,20 +58,18 @@ final class NativeEntryFactory implements EntryFactory
 
         if ($valueType instanceof ScalarType) {
             if ($valueType->isString()) {
-                $trimmedValue = \trim($value);
+                $stringChecker = new StringTypeChecker($value);
 
-                if ('' !== $trimmedValue) {
-                    if ($this->isJson($trimmedValue)) {
-                        return json_entry($entryName, $value);
-                    }
+                if ($stringChecker->isJson()) {
+                    return json_entry($entryName, $value);
+                }
 
-                    if ($this->isUuid($trimmedValue)) {
-                        return uuid_entry($entryName, Entry\Type\Uuid::fromString($value));
-                    }
+                if ($stringChecker->isUuid()) {
+                    return uuid_entry($entryName, Entry\Type\Uuid::fromString($value));
+                }
 
-                    if ($this->isXML($trimmedValue)) {
-                        return xml_entry($entryName, $value);
-                    }
+                if ($stringChecker->isXML()) {
+                    return xml_entry($entryName, $value);
                 }
 
                 return str_entry($entryName, $value);
@@ -245,62 +243,5 @@ final class NativeEntryFactory implements EntryFactory
         }
 
         throw new InvalidArgumentException("Can't convert value into entry \"{$definition->entry()}\"");
-    }
-
-    private function isJson(string $string) : bool
-    {
-        if ('{' !== $string[0] && '[' !== $string[0]) {
-            return false;
-        }
-
-        if (
-            (!\str_starts_with($string, '{') || !\str_ends_with($string, '}'))
-            && (!\str_starts_with($string, '[') || !\str_ends_with($string, ']'))
-        ) {
-            return false;
-        }
-
-        try {
-            return \is_array(\json_decode($string, true, flags: \JSON_THROW_ON_ERROR));
-        } catch (\Exception) {
-            return false;
-        }
-    }
-
-    private function isUuid(string $string) : bool
-    {
-        if (\strlen($string) !== 36) {
-            return false;
-        }
-
-        return 0 !== \preg_match(Entry\Type\Uuid::UUID_REGEXP, $string);
-    }
-
-    private function isXML(string $string) : bool
-    {
-        if ('<' !== $string[0]) {
-            return false;
-        }
-
-        if (\preg_match('/<(.+?)>(.+?)<\/(.+?)>/', $string) === 1) {
-            try {
-                \libxml_use_internal_errors(true);
-
-                $doc = new \DOMDocument();
-                $result = $doc->loadXML($string);
-                \libxml_clear_errors(); // Clear any errors if needed
-                \libxml_use_internal_errors(false); // Restore standard error handling
-
-                /** @psalm-suppress RedundantCastGivenDocblockType */
-                return (bool) $result;
-            } catch (\Exception) {
-                \libxml_clear_errors(); // Clear any errors if needed
-                \libxml_use_internal_errors(false); // Restore standard error handling
-
-                return false;
-            }
-        }
-
-        return false;
     }
 }
