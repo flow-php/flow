@@ -4,26 +4,39 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV;
 
+use Flow\ETL\Adapter\CSV\Detector\Option;
+use Flow\ETL\Adapter\CSV\Detector\Options;
+use Flow\ETL\Adapter\CSV\Exception\CantDetectCSVOptions;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\RuntimeException;
 
 final class CSVDetector
 {
+    private ?Option $fallback;
+
+    private Options $options;
+
+    /**
+     * @var resource
+     */
     private $resource;
 
     private int $startingPosition;
 
     /**
-     * @param $resource
+     * @param resource $resource
      */
-    public function __construct($resource)
+    public function __construct($resource, ?Option $fallback = new Option(',', '"', '\\'), ?Options $options = null)
     {
+        /** @psalm-suppress DocblockTypeContradiction */
         if (!\is_resource($resource)) {
             throw new InvalidArgumentException('Argument must be a valid resource');
         }
 
         $this->resource = $resource;
+        /** @phpstan-ignore-next-line */
         $this->startingPosition = \ftell($resource);
+        $this->options = $options ?? Options::all();
+        $this->fallback = $fallback;
     }
 
     public function __destruct()
@@ -32,69 +45,36 @@ final class CSVDetector
     }
 
     /**
-     * @throws InvalidArgumentException
-     * @throws RuntimeException
+     * @throws CantDetectCSVOptions|InvalidArgumentException
      */
-    public function separator(int $lines = 5) : string
+    public function detect(int $lines = 5) : Option
     {
         if ($lines < 1) {
             throw new InvalidArgumentException('Lines must be greater than 0');
         }
 
-        $delimiters = [
-            ',' => [],
-            "\t" => [],
-            ';' => [],
-            '|' => [],
-            ' ' => [],
-            '_' => [],
-            '-' => [],
-            ':' => [],
-        ];
-
         $readLines = 1;
 
         while ($line = \fgets($this->resource)) {
-            foreach ($delimiters as $delimiter => $count) {
-                $row = \str_getcsv($line, $delimiter);
-                $delimiters[$delimiter][] = \count($row);
-            }
+            $this->options->parse($line);
 
             if ($readLines++ >= $lines) {
                 break;
             }
         }
 
-        foreach ($delimiters as $delimiter => $rows) {
-            $columnsCount = null;
-
-            foreach ($rows as $rowColumns) {
-                if ($columnsCount === null) {
-                    $columnsCount = $rowColumns;
-                }
-
-                if ($columnsCount !== $rowColumns) {
-                    unset($delimiters[$delimiter]);
-
-                    break;
-                }
+        try {
+            $bestOption = $this->options->onlyValid()->best();
+        } catch (CantDetectCSVOptions $e) {
+            if ($this->fallback) {
+                return $this->fallback;
             }
+
+            throw $e;
         }
 
-        $delimiters = \array_map(fn (array $rows) : int => \array_sum($rows), $delimiters);
+        $this->options = $this->options->reset();
 
-        \arsort($delimiters);
-
-        $delimiters = \array_filter($delimiters, fn (int $count) : bool => $count > $lines);
-
-        if (!\count($delimiters)) {
-            \fseek($this->resource, $this->startingPosition);
-
-            throw new RuntimeException('Cannot detect delimiter');
-        }
-
-        \fseek($this->resource, $this->startingPosition);
-
-        return \array_key_first($delimiters);
+        return $bestOption;
     }
 }

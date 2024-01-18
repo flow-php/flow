@@ -5,87 +5,68 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\CSV\Tests\Integration;
 
 use Flow\ETL\Adapter\CSV\CSVDetector;
-use Flow\ETL\Exception\RuntimeException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class CSVDetectorTest extends TestCase
 {
-    public function test_detecting_comma_delimiter() : void
+    public static function enclosure_provider() : \Generator
     {
-        $detector = new CSVDetector($this->createResource(','));
-
-        $this->assertSame(',', $detector->separator());
+        yield ['double_quote' => '"'];
+        yield ['single_quote' => "'"];
     }
 
-    public function test_detecting_comma_with_custom_enclosure() : void
+    public static function separator_provider() : \Generator
     {
-        $detector = new CSVDetector($this->createResource(',', "'"));
-
-        $this->assertSame(',', $detector->separator());
+        yield ['comma' => ','];
+        yield ['tab' => "\t"];
+        yield ['semicolon' => ';'];
+        yield ['pipe' => '|'];
+        yield ['space' => ' '];
+        yield ['underscore' => '_'];
+        yield ['dash' => '-'];
+        yield ['double_dot' => ':'];
+        yield ['tilde' => '~'];
+        yield ['at' => '@'];
+        yield ['hash' => '#'];
+        yield ['dollar' => '$'];
+        yield ['percent' => '%'];
+        yield ['caret' => '^'];
+        yield ['ampersand' => '&'];
+        yield ['asterisk' => '*'];
+        yield ['left_parenthesis' => '('];
+        yield ['right_parenthesis' => ')'];
+        yield ['plus' => '+'];
+        yield ['equal' => '='];
+        yield ['question_mark' => '?'];
+        yield ['exclamation_mark' => '!'];
+        yield ['backslash' => '\\'];
+        yield ['slash' => '/'];
+        yield ['dot' => '.'];
+        yield ['greater_than' => '>'];
+        yield ['less_than' => '<'];
     }
 
-    public function test_detecting_dash() : void
+    #[DataProvider('enclosure_provider')]
+    public function test_detecting_enclosures(string $enclosure) : void
     {
-        $detector = new CSVDetector($this->createResource('-'));
+        $detector = new CSVDetector($this->createResource(',', $enclosure));
 
-        $this->assertSame('-', $detector->separator());
+        $this->assertSame($enclosure, $detector->detect()->enclosure);
     }
 
-    public function test_detecting_double_dot() : void
+    #[DataProvider('separator_provider')]
+    public function test_detecting_separators(string $separator) : void
     {
-        $detector = new CSVDetector($this->createResource(':'));
+        $detector = new CSVDetector($this->createResource($separator));
 
-        $this->assertSame(':', $detector->separator());
-    }
-
-    public function test_detecting_no_delimiter() : void
-    {
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Cannot detect delimiter');
-
-        $detector = new CSVDetector($this->createResource('{'));
-        $detector->separator();
-    }
-
-    public function test_detecting_pipe() : void
-    {
-        $detector = new CSVDetector($this->createResource('|'));
-
-        $this->assertSame('|', $detector->separator());
-    }
-
-    public function test_detecting_semicolon() : void
-    {
-        $detector = new CSVDetector($this->createResource(';'));
-
-        $this->assertSame(';', $detector->separator());
-    }
-
-    public function test_detecting_space() : void
-    {
-        $detector = new CSVDetector($this->createResource(' '));
-
-        $this->assertSame(' ', $detector->separator());
-    }
-
-    public function test_detecting_tab_delimiter() : void
-    {
-        $detector = new CSVDetector($this->createResource("\t"));
-
-        $this->assertSame("\t", $detector->separator());
-    }
-
-    public function test_detecting_underscore() : void
-    {
-        $detector = new CSVDetector($this->createResource('_'));
-
-        $this->assertSame('_', $detector->separator());
+        $this->assertSame($separator, $detector->detect()->separator);
     }
 
     /**
      * @return resource
      */
-    private function createResource(string $separator, string $enclosure = '"')
+    private function createResource(string $separator = ',', string $enclosure = '"')
     {
         $data = [
             ['id', 'name', 'email'],
