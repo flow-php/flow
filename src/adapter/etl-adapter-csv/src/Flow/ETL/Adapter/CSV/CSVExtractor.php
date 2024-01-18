@@ -28,9 +28,9 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
         private readonly Path $path,
         private readonly bool $withHeader = true,
         private readonly bool $emptyToNull = true,
-        private readonly string $separator = ',',
-        private readonly string $enclosure = '"',
-        private readonly string $escape = '\\',
+        private readonly string|null $separator = null,
+        private readonly string|null $enclosure = null,
+        private readonly string|null $escape = null,
         private readonly int $charactersReadInLine = 1000
     ) {
         $this->resetLimit();
@@ -43,15 +43,21 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
         foreach ($context->streams()->fs()->scan($this->path, $this->partitionFilter()) as $path) {
             $stream = $context->streams()->fs()->open($path, Mode::READ);
 
+            $option = \Flow\ETL\Adapter\CSV\csv_detect_separator($stream->resource());
+
+            $separator = $this->separator ?? $option->separator;
+            $enclosure = $this->enclosure ?? $option->enclosure;
+            $escape = $this->escape ?? $option->escape;
+
             $headers = [];
 
             if ($this->withHeader && \count($headers) === 0) {
                 /** @var array<string> $headers */
-                $headers = \fgetcsv($stream->resource(), $this->charactersReadInLine, $this->separator, $this->enclosure, $this->escape);
+                $headers = \fgetcsv($stream->resource(), $this->charactersReadInLine, $separator, $enclosure, $escape);
             }
 
             /** @var array<mixed> $rowData */
-            $rowData = \fgetcsv($stream->resource(), $this->charactersReadInLine, $this->separator, $this->enclosure, $this->escape);
+            $rowData = \fgetcsv($stream->resource(), $this->charactersReadInLine, $separator, $enclosure, $escape);
 
             if (!\count($headers)) {
                 $headers = \array_map(fn (int $e) : string => 'e' . \str_pad((string) $e, 2, '0', STR_PAD_LEFT), \range(0, \count($rowData) - 1));
@@ -81,7 +87,7 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
                 }
 
                 if (\count($headers) !== \count($rowData)) {
-                    $rowData = \fgetcsv($stream->resource(), $this->charactersReadInLine, $this->separator, $this->enclosure, $this->escape);
+                    $rowData = \fgetcsv($stream->resource(), $this->charactersReadInLine, $separator, $enclosure, $escape);
 
                     continue;
                 }
@@ -101,7 +107,7 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
                     return;
                 }
 
-                $rowData = \fgetcsv($stream->resource(), $this->charactersReadInLine, $this->separator, $this->enclosure, $this->escape);
+                $rowData = \fgetcsv($stream->resource(), $this->charactersReadInLine, $separator, $enclosure, $escape);
             }
         }
 
