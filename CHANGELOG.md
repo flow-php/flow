@@ -1,6 +1,7 @@
 ## [Unreleased] - 2024-01-18
 
 ### Added
+- [#923](https://github.com/flow-php/flow/pull/923) - **DataFrame::autoCast()** - [@norberttech](https://github.com/norberttech)
 - [#922](https://github.com/flow-php/flow/pull/922) - **DataFrame::dropPartitions() transformation** - [@norberttech](https://github.com/norberttech)
 - [#918](https://github.com/flow-php/flow/pull/918) - **CSV options detection** - [@norberttech](https://github.com/norberttech)
 - [#910](https://github.com/flow-php/flow/pull/910) - **add csv adapter unit test for fixture not yet in use** - [@rzarno](https://github.com/rzarno)
@@ -25,6 +26,7 @@
 - [#869](https://github.com/flow-php/flow/pull/869) - **RDSL library** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#923](https://github.com/flow-php/flow/pull/923) - **Extracted isJson,isXML,isUuif from NativeEntryFactory to StringTypeChecker** - [@norberttech](https://github.com/norberttech)
 - [#919](https://github.com/flow-php/flow/pull/919) - **optimized Path::partitions method by using mnemonic** - [@norberttech](https://github.com/norberttech)
 - [#919](https://github.com/flow-php/flow/pull/919) - **updated dependencies** - [@norberttech](https://github.com/norberttech)
 - [#907](https://github.com/flow-php/flow/pull/907) - **Make sure that entries are "stringable"** - [@stloyd](https://github.com/stloyd)
