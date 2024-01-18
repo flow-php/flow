@@ -142,6 +142,11 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
         return self::partitioned(\array_slice($this->rows, $size), $this->partitions);
     }
 
+    public function dropPartitions() : self
+    {
+        return new self(...$this->rows);
+    }
+
     public function dropRight(int $size) : self
     {
         if ($size === 0) {

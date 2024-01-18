@@ -34,6 +34,7 @@ use Flow\ETL\Row\Schema;
 use Flow\ETL\Transformer\CallbackRowTransformer;
 use Flow\ETL\Transformer\CrossJoinRowsTransformer;
 use Flow\ETL\Transformer\DropDuplicatesTransformer;
+use Flow\ETL\Transformer\DropPartitionsTransformer;
 use Flow\ETL\Transformer\EntryNameStyleConverterTransformer;
 use Flow\ETL\Transformer\JoinEachRowsTransformer;
 use Flow\ETL\Transformer\JoinRowsTransformer;
@@ -296,6 +297,13 @@ final class DataFrame
     public function dropDuplicates(string|Reference ...$entries) : self
     {
         $this->pipeline->add(new DropDuplicatesTransformer(...$entries));
+
+        return $this;
+    }
+
+    public function dropPartitions() : self
+    {
+        $this->pipeline->add(new DropPartitionsTransformer());
 
         return $this;
     }

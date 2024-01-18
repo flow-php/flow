@@ -20,6 +20,28 @@ use Flow\ETL\Tests\Integration\IntegrationTestCase;
 
 final class PartitioningTest extends IntegrationTestCase
 {
+    public function test_dropping_partitions() : void
+    {
+        $rows = df()
+            ->read(from_rows(
+                rows_partitioned(
+                    [
+                        row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20)),
+                        row(int_entry('id', 2), str_entry('country', 'PL'), int_entry('age', 20)),
+                        row(int_entry('id', 3), str_entry('country', 'PL'), int_entry('age', 25)),
+                        row(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30)),
+                    ],
+                    [
+                        partition('country', 'PL'),
+                    ]
+                )
+            ))
+            ->dropPartitions()
+            ->fetch();
+
+        $this->assertFalse($rows->isPartitioned());
+    }
+
     public function test_partition_by() : void
     {
         $rows = df()
