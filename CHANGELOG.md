@@ -1,6 +1,7 @@
-## [Unreleased] - 2024-01-15
+## [Unreleased] - 2024-01-18
 
 ### Added
+- [#918](https://github.com/flow-php/flow/pull/918) - **CSV options detection** - [@norberttech](https://github.com/norberttech)
 - [#910](https://github.com/flow-php/flow/pull/910) - **add csv adapter unit test for fixture not yet in use** - [@rzarno](https://github.com/rzarno)
 - [#905](https://github.com/flow-php/flow/pull/905) - **Base symfony skeleton for a landing page** - [@owsiakl](https://github.com/owsiakl)
 - [#901](https://github.com/flow-php/flow/pull/901) - **partition_by example** - [@norberttech](https://github.com/norberttech)
