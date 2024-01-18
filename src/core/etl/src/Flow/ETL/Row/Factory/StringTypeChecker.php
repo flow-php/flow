@@ -79,12 +79,12 @@ final class StringTypeChecker
             return false;
         }
 
-        if (\function_exists('json_validate')) {
-            return \json_validate($this->string);
-        }
-
         if ('{' !== $this->string[0] && '[' !== $this->string[0]) {
             return false;
+        }
+
+        if (\function_exists('json_validate')) {
+            return \json_validate($this->string);
         }
 
         if (
