@@ -233,7 +233,7 @@ final class Definition
 
     public function matches(Entry $entry) : bool
     {
-        if ($this->isNullable() && $entry instanceof Entry\NullEntry && $entry->is($this->ref)) {
+        if ($this->isNullable() && $entry instanceof NullEntry && $entry->is($this->ref)) {
             return true;
         }
 

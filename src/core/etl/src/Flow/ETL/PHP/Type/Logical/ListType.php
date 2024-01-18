@@ -7,7 +7,7 @@ use Flow\ETL\PHP\Type\Type;
 
 final class ListType implements LogicalType
 {
-    public function __construct(private readonly List\ListElement $element)
+    public function __construct(private readonly ListElement $element)
     {
     }
 

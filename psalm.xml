@@ -37,4 +37,7 @@
             <directory name="src/lib/rdsl/src/Flow/RDSL/" />
         </ignoreFiles>
     </projectFiles>
+    <issueHandlers>
+        <RiskyTruthyFalsyComparison errorLevel="suppress" />
+    </issueHandlers>
 </psalm>

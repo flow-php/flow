@@ -16,7 +16,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-if ('' !== \Phar::running(false)) {
+if ('' !== Phar::running(false)) {
     require 'phar://flow.phar/vendor/autoload.php';
 } else {
     require __DIR__ . '/../vendor/autoload.php';
@@ -57,7 +57,7 @@ $application->add(new class extends Command {
                 $dataFrame->run();
             }
 
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             $style = new SymfonyStyle($input, $output);
             $style->error($exception->getMessage());
 

@@ -34,7 +34,7 @@ function to_meilisearch_bulk_update(
  */
 function meilisearch_hits_to_rows() : MeilisearchPHP\HitsIntoRowsTransformer
 {
-    return new \Flow\ETL\Adapter\Meilisearch\MeilisearchPHP\HitsIntoRowsTransformer();
+    return new MeilisearchPHP\HitsIntoRowsTransformer();
 }
 
 /**

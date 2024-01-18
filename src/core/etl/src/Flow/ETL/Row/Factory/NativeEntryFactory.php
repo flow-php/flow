@@ -17,7 +17,7 @@ use function Flow\ETL\DSL\map_entry;
 use function Flow\ETL\DSL\null_entry;
 use function Flow\ETL\DSL\obj_entry;
 use function Flow\ETL\DSL\object_entry;
-use function Flow\ETL\DSL\string_entry;
+use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\struct_entry;
 use function Flow\ETL\DSL\uuid_entry;
 use function Flow\ETL\DSL\xml_entry;
@@ -32,7 +32,6 @@ use Flow\ETL\PHP\Type\Native\EnumType;
 use Flow\ETL\PHP\Type\Native\ObjectType;
 use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\PHP\Type\TypeDetector;
-use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Schema;
@@ -52,7 +51,7 @@ final class NativeEntryFactory implements EntryFactory
         }
 
         if (null === $value) {
-            return new Row\Entry\NullEntry($entryName);
+            return new Entry\NullEntry($entryName);
         }
 
         $valueType = (new TypeDetector())->detectType($value);
@@ -75,7 +74,7 @@ final class NativeEntryFactory implements EntryFactory
                     }
                 }
 
-                return string_entry($entryName, $value);
+                return str_entry($entryName, $value);
             }
 
             if ($valueType->isFloat()) {
@@ -128,11 +127,11 @@ final class NativeEntryFactory implements EntryFactory
         }
 
         if ($valueType instanceof MapType) {
-            return new Row\Entry\MapEntry($entryName, $value, $valueType);
+            return new Entry\MapEntry($entryName, $value, $valueType);
         }
 
         if ($valueType instanceof StructureType) {
-            return new Row\Entry\StructureEntry($entryName, $value, $valueType);
+            return new Entry\StructureEntry($entryName, $value, $valueType);
         }
 
         throw new InvalidArgumentException("{$valueType->toString()} can't be converted to any known Entry");
@@ -147,7 +146,7 @@ final class NativeEntryFactory implements EntryFactory
         try {
             foreach ($definition->types() as $type) {
                 if ($type === Entry\StringEntry::class) {
-                    return string_entry($definition->entry()->name(), $value);
+                    return str_entry($definition->entry()->name(), $value);
                 }
 
                 if ($type === Entry\IntegerEntry::class) {

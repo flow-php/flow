@@ -8,7 +8,7 @@ use Flow\ETL\PHP\Type\Type;
 
 final class MapType implements LogicalType
 {
-    public function __construct(private readonly Map\MapKey $key, private readonly Map\MapValue $value)
+    public function __construct(private readonly MapKey $key, private readonly MapValue $value)
     {
     }
 
