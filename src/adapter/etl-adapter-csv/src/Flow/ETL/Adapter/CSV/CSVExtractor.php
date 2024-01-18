@@ -28,7 +28,7 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
         private readonly Path $path,
         private readonly bool $withHeader = true,
         private readonly bool $emptyToNull = true,
-        private readonly string $separator = ',',
+        private readonly string|null $separator = null,
         private readonly string $enclosure = '"',
         private readonly string $escape = '\\',
         private readonly int $charactersReadInLine = 1000

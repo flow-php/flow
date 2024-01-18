@@ -67,3 +67,8 @@ function to_csv(
         $new_line_separator
     );
 }
+
+function csv_detect_separator($resource, int $lines = 5) : string
+{
+    return (new CSVDetector($resource))->separator($lines);
+}
