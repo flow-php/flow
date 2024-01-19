@@ -25,10 +25,10 @@ final class ListSelectTest extends TestCase
                     ['id' => 2, 'name' => 'test2'],
                     ['id' => 3, 'name' => 'test3'],
                 ],
-                type_list(struct_type(
+                type_list(struct_type([
                     struct_element('id', type_int()),
                     struct_element('name', type_string()),
-                ))
+                ]))
             )
         );
 
@@ -52,10 +52,10 @@ final class ListSelectTest extends TestCase
                     ['id' => 2, 'name' => 'test2'],
                     ['id' => 3, 'name' => 'test3'],
                 ],
-                type_list(struct_type(
+                type_list(struct_type([
                     struct_element('id', type_int()),
                     struct_element('name', type_string()),
-                ))
+                ]))
             )
         );
 
@@ -79,10 +79,10 @@ final class ListSelectTest extends TestCase
                     ['id' => 2, 'name' => 'test2'],
                     ['id' => 3, 'name' => 'test3'],
                 ],
-                type_list(struct_type(
+                type_list(struct_type([
                     struct_element('id', type_int()),
                     struct_element('name', type_string()),
-                ))
+                ]))
             )
         );
 

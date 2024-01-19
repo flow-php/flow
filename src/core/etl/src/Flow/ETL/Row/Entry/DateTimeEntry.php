@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\ETL\DSL\type_object;
+use function Flow\ETL\DSL\type_datetime;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Native\ObjectType;
+use Flow\ETL\PHP\Type\Logical\DateTimeType;
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
@@ -19,7 +19,7 @@ final class DateTimeEntry implements Entry
 {
     use EntryRef;
 
-    private readonly ObjectType $type;
+    private readonly DateTimeType $type;
 
     private readonly \DateTimeInterface $value;
 
@@ -44,7 +44,7 @@ final class DateTimeEntry implements Entry
             $this->value = $value;
         }
 
-        $this->type = type_object($this->value::class);
+        $this->type = type_datetime();
     }
 
     public function __toString() : string

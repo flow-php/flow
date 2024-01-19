@@ -7,7 +7,7 @@ use Flow\ETL\PHP\Type\Type;
 
 final class ListType implements LogicalType
 {
-    public function __construct(private readonly ListElement $element)
+    public function __construct(private readonly ListElement $element, private readonly bool $nullable = false)
     {
     }
 
@@ -46,11 +46,11 @@ final class ListType implements LogicalType
 
     public function nullable() : bool
     {
-        return false;
+        return $this->nullable;
     }
 
     public function toString() : string
     {
-        return 'list<' . $this->element->toString() . '>';
+        return ($this->nullable ? '?' : '') . 'list<' . $this->element->toString() . '>';
     }
 }

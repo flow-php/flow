@@ -59,10 +59,10 @@ final class ArrayContentDetectorTest extends TestCase
                 type_int(),
             ],
             [
-                new StructureType(
+                new StructureType([
                     new StructureElement('id', type_int()),
-                    new StructureElement('name', type_string())
-                ),
+                    new StructureElement('name', type_string()),
+                ]),
             ],
             true,
         ];
@@ -134,10 +134,10 @@ final class ArrayContentDetectorTest extends TestCase
                 type_int(),
             ],
             [
-                new StructureType(
+                new StructureType([
                     new StructureElement('id', type_int()),
-                    new StructureElement('name', type_string())
-                ),
+                    new StructureElement('name', type_string()),
+                ]),
             ],
             false,
         ];
@@ -209,10 +209,10 @@ final class ArrayContentDetectorTest extends TestCase
                 type_int(),
             ],
             [
-                new StructureType(
+                new StructureType([
                     new StructureElement('id', type_int()),
-                    new StructureElement('name', type_string())
-                ),
+                    new StructureElement('name', type_string()),
+                ]),
             ],
             false,
         ];

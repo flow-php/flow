@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\ETL\DSL\type_string;
+use function Flow\ETL\DSL\type_json;
 use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Native\ScalarType;
+use Flow\ETL\PHP\Type\Logical\JsonType;
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
@@ -22,7 +22,7 @@ final class JsonEntry implements Entry
 
     private bool $object = false;
 
-    private readonly ScalarType $type;
+    private readonly JsonType $type;
 
     private readonly array $value;
 
@@ -47,7 +47,7 @@ final class JsonEntry implements Entry
             $this->value = $value;
         }
 
-        $this->type = type_string();
+        $this->type = type_json();
     }
 
     /**
@@ -74,7 +74,7 @@ final class JsonEntry implements Entry
 
     public function definition() : Definition
     {
-        return Definition::json($this->name, $this->type->nullable());
+        return Definition::json($this->name, $this->type()->nullable());
     }
 
     public function is(string|Reference $name) : bool

@@ -55,6 +55,6 @@ final class NotEmptyTest extends TestCase
         $this->assertTrue($constraint->isSatisfiedBy(str_entry('e', 'e')));
         $this->assertTrue($constraint->isSatisfiedBy(list_entry('list', [1, 2, 3], type_list(type_int()))));
         $this->assertTrue($constraint->isSatisfiedBy(map_entry('map', ['NEW', 'PENDING'], type_map(type_int(), type_string()))));
-        $this->assertTrue($constraint->isSatisfiedBy(struct_entry('e', ['id' => 1], struct_type(struct_element('id', type_int())))));
+        $this->assertTrue($constraint->isSatisfiedBy(struct_entry('e', ['id' => 1], struct_type([struct_element('id', type_int())]))));
     }
 }

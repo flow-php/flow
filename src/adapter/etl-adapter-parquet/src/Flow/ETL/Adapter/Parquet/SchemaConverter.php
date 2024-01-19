@@ -3,17 +3,26 @@
 namespace Flow\ETL\Adapter\Parquet;
 
 use function Flow\ETL\DSL\type_boolean;
+use function Flow\ETL\DSL\type_datetime;
 use function Flow\ETL\DSL\type_float;
 use function Flow\ETL\DSL\type_int;
+use function Flow\ETL\DSL\type_json;
 use function Flow\ETL\DSL\type_null;
-use function Flow\ETL\DSL\type_object;
 use function Flow\ETL\DSL\type_string;
+use function Flow\ETL\DSL\type_uuid;
+use function Flow\ETL\DSL\type_xml;
+use function Flow\ETL\DSL\type_xml_node;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\PHP\Type\Logical\DateTimeType;
+use Flow\ETL\PHP\Type\Logical\JsonType;
 use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\PHP\Type\Logical\Map\MapKey;
 use Flow\ETL\PHP\Type\Logical\Map\MapValue;
 use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Logical\StructureType;
+use Flow\ETL\PHP\Type\Logical\UuidType;
+use Flow\ETL\PHP\Type\Logical\XMLNodeType;
+use Flow\ETL\PHP\Type\Logical\XMLType;
 use Flow\ETL\PHP\Type\Native\ObjectType;
 use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\PHP\Type\Type;
@@ -62,16 +71,17 @@ final class SchemaConverter
                 }
 
                 break;
+            case DateTimeType::class:
+                return ListElement::datetime();
+            case UuidType::class:
+                return ListElement::uuid();
+            case JsonType::class:
+                return ListElement::json();
+            case XMLType::class:
+            case XMLNodeType::class:
+                return ListElement::string();
             case ObjectType::class:
                 $class = $element->class;
-
-                if (\is_a($class, \DateTimeInterface::class, true)) {
-                    return ListElement::datetime();
-                }
-
-                if ($class === Entry\Type\Uuid::class) {
-                    return ListElement::string();
-                }
 
                 if ($class === \DateInterval::class) {
                     return ListElement::time();
@@ -94,9 +104,15 @@ final class SchemaConverter
 
     private function flowMapKeyToParquetMapKey(MapKey $mapKey) : ParquetSchema\MapKey
     {
-        switch ($mapKey->type()::class) {
+        $mapKeyType = $mapKey->type();
+
+        switch ($mapKeyType::class) {
+            case UuidType::class:
+                return ParquetSchema\MapKey::uuid();
+            case DateTimeType::class:
+                return ParquetSchema\MapKey::datetime();
             case ScalarType::class:
-                switch ($mapKey->type()->type()) {
+                switch ($mapKeyType->type()) {
                     case ScalarType::FLOAT:
                         return ParquetSchema\MapKey::float();
                     case ScalarType::INTEGER:
@@ -110,7 +126,7 @@ final class SchemaConverter
                 break;
         }
 
-        throw new RuntimeException($mapKey->type()::class . ' is not supported.');
+        throw new RuntimeException($mapKeyType::class . ' is not supported.');
     }
 
     private function flowMapValueToParquetMapValue(MapValue $mapValue) : ParquetSchema\MapValue
@@ -131,6 +147,15 @@ final class SchemaConverter
                 }
 
                 break;
+            case UuidType::class:
+                return ParquetSchema\MapValue::uuid();
+            case DateTimeType::class:
+                return ParquetSchema\MapValue::datetime();
+            case JsonType::class:
+                return ParquetSchema\MapValue::json();
+            case XMLType::class:
+            case XMLNodeType::class:
+                return ParquetSchema\MapValue::string();
             case ObjectType::class:
                 $class = $mapValueType->class;
 
@@ -164,14 +189,6 @@ final class SchemaConverter
     private function flowObjectToParquetFlat(ObjectType $type, string $name) : FlatColumn
     {
         $class = $type->class;
-
-        if (\is_a($class, \DateTimeInterface::class, true)) {
-            return FlatColumn::datetime($name);
-        }
-
-        if ($class === Entry\Type\Uuid::class) {
-            return FlatColumn::string($name);
-        }
 
         if ($class === \DateInterval::class) {
             return FlatColumn::time($name);
@@ -213,6 +230,15 @@ final class SchemaConverter
         switch ($type::class) {
             case ScalarType::class:
                 return $this->flowScalarToParquetFlat($type, $name);
+            case DateTimeType::class:
+                return FlatColumn::datetime($name);
+            case UuidType::class:
+                return FlatColumn::uuid($name);
+            case JsonType::class:
+                return FlatColumn::json($name);
+            case XMLType::class:
+            case XMLNodeType::class:
+                return FlatColumn::string($name);
             case ObjectType::class:
                 return $this->flowObjectToParquetFlat($type, $name);
             case ListType::class:
@@ -245,11 +271,6 @@ final class SchemaConverter
             throw new RuntimeException('Union types are not supported by Parquet file format. Invalid type: ' . $definition->entry()->name());
         }
 
-        if ($type === Entry\ObjectEntry::class) {
-            /** @phpstan-ignore-next-line */
-            return $definition->metadata()->get(FlowMetadata::METADATA_OBJECT_ENTRY_TYPE);
-        }
-
         if ($type === Entry\ListEntry::class) {
             /** @phpstan-ignore-next-line */
             return $definition->metadata()->get(FlowMetadata::METADATA_LIST_ENTRY_TYPE);
@@ -277,15 +298,23 @@ final class SchemaConverter
             case Entry\FloatEntry::class:
                 return type_float($definition->isNullable());
             case Entry\EnumEntry::class:
-            case Entry\JsonEntry::class:
             case Entry\StringEntry::class:
                 return type_string($definition->isNullable());
             case NullEntry::class:
                 return type_null();
             case Entry\DateTimeEntry::class:
-                return type_object(\DateTimeInterface::class, $definition->isNullable());
+                return type_datetime($definition->isNullable());
             case Entry\UuidEntry::class:
-                return type_object(Entry\Type\Uuid::class, $definition->isNullable());
+                return type_uuid($definition->isNullable());
+            case Entry\XMLEntry::class:
+                return type_xml($definition->isNullable());
+            case Entry\XMLNodeEntry::class:
+                return type_xml_node($definition->isNullable());
+            case Entry\JsonEntry::class:
+                return type_json($definition->isNullable());
+            case Entry\ObjectEntry::class:
+                /** @phpstan-ignore-next-line */
+                return $definition->metadata()->get(FlowMetadata::METADATA_OBJECT_ENTRY_TYPE);
         }
 
         throw new RuntimeException($type . ' is not supported.');

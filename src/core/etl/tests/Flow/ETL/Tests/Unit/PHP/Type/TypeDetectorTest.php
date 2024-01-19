@@ -2,26 +2,70 @@
 
 namespace Flow\ETL\Tests\Unit\PHP\Type;
 
+use Flow\ETL\PHP\Type\Logical\DateTimeType;
+use Flow\ETL\PHP\Type\Logical\JsonType;
 use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\PHP\Type\Logical\StructureType;
+use Flow\ETL\PHP\Type\Logical\UuidType;
+use Flow\ETL\PHP\Type\Logical\XMLNodeType;
+use Flow\ETL\PHP\Type\Logical\XMLType;
 use Flow\ETL\PHP\Type\Native\ArrayType;
 use Flow\ETL\PHP\Type\Native\EnumType;
 use Flow\ETL\PHP\Type\Native\NullType;
 use Flow\ETL\PHP\Type\Native\ObjectType;
 use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\PHP\Type\TypeDetector;
+use Flow\ETL\Row\Entry\Type\Uuid;
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class TypeDetectorTest extends TestCase
 {
-    public static function provide_data() : \Generator
+    public static function provide_logical_types_data() : \Generator
     {
         yield 'null' => [
             null,
             NullType::class,
             'null',
+        ];
+
+        yield 'json' => [
+            '{"one": "one", "two": "two", "three": "three"}',
+            JsonType::class,
+            'json',
+        ];
+
+        yield 'datetime' => [
+            new \DateTime(),
+            DateTimeType::class,
+            'datetime',
+        ];
+
+        yield 'uuid_string' => [
+            'f6d6e0e8-4b7e-4b0e-8d7a-ff0a0c9c9a5a',
+            ScalarType::class,
+            'string',
+        ];
+
+        yield 'uuid' => [
+            Uuid::fromString('f6d6e0e8-4b7e-4b0e-8d7a-ff0a0c9c9a5a'),
+            UuidType::class,
+            'uuid',
+        ];
+
+        $dom = new \DOMDocument();
+        $dom->loadXML('<xml><items><item>1</item></items></xml>');
+        yield 'xml' => [
+            $dom,
+            XMLType::class,
+            'xml',
+        ];
+
+        yield 'xml_node' => [
+            $dom->documentElement,
+            XMLNodeType::class,
+            'xml_node',
         ];
 
         yield 'simple list' => [
@@ -250,14 +294,6 @@ final class TypeDetectorTest extends TestCase
         yield 'stdclass' => [
             new \stdClass(),
         ];
-
-        yield 'datetime' => [
-            new \DateTime(),
-        ];
-
-        yield 'datetime immutable' => [
-            new \DateTimeImmutable(),
-        ];
     }
 
     public static function provide_scalar_data() : \Generator
@@ -283,18 +319,18 @@ final class TypeDetectorTest extends TestCase
         ];
     }
 
-    #[DataProvider('provide_data')]
-    public function test_data($data, string $class, string $description) : void
+    public function test_enum_type() : void
+    {
+        $this->assertInstanceOf(EnumType::class, (new TypeDetector())->detectType(BasicEnum::two));
+    }
+
+    #[DataProvider('provide_logical_types_data')]
+    public function test_logical_types($data, string $class, string $description) : void
     {
         $type = (new TypeDetector())->detectType($data);
 
         $this->assertInstanceOf($class, $type);
         $this->assertSame($description, $type->toString());
-    }
-
-    public function test_enum_type() : void
-    {
-        $this->assertInstanceOf(EnumType::class, (new TypeDetector())->detectType(BasicEnum::two));
     }
 
     #[DataProvider('provide_object_data')]

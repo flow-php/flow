@@ -92,7 +92,7 @@ AVRO_JSON
                 Schema\Definition::dateTime('datetime'),
                 Schema\Definition::json('json'),
                 Schema\Definition::list('list', new ListType(ListElement::string())),
-                Schema\Definition::structure('structure', new StructureType(new StructureElement('a', type_string()))),
+                Schema\Definition::structure('structure', new StructureType([new StructureElement('a', type_string())])),
                 Schema\Definition::map('map', new MapType(MapKey::string(), MapValue::integer()))
             ))
         );

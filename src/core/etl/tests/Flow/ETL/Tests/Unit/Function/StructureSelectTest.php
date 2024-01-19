@@ -24,10 +24,10 @@ final class StructureSelectTest extends TestCase
                 'id' => 1,
                 'name' => 'test',
             ],
-            struct_type(
+            struct_type([
                 struct_element('id', type_int()),
                 struct_element('name', type_string()),
-            )
+            ])
         );
 
         $this->assertEquals(
@@ -45,10 +45,10 @@ final class StructureSelectTest extends TestCase
                 'id' => 1,
                 'name' => 'test',
             ],
-            struct_type(
+            struct_type([
                 struct_element('id', type_int()),
                 struct_element('name', type_string()),
-            )
+            ])
         );
 
         $this->assertEquals(
@@ -66,10 +66,10 @@ final class StructureSelectTest extends TestCase
                 'id' => 1,
                 'name' => 'test',
             ],
-            struct_type(
+            struct_type([
                 struct_element('id', type_int()),
                 struct_element('name', type_string()),
-            )
+            ])
         );
 
         $this->assertEquals(
@@ -86,11 +86,11 @@ final class StructureSelectTest extends TestCase
             [
                 'email' => 'email@email.com',
             ],
-            struct_type(
+            struct_type([
                 struct_element('id', type_int(true)),
                 struct_element('email', type_string()),
                 struct_element('name', type_string(true)),
-            )
+            ])
         );
 
         $this->assertEquals(
@@ -109,10 +109,10 @@ final class StructureSelectTest extends TestCase
                 ['id' => 2, 'name' => 'test2'],
             ],
             type_list(
-                struct_type(
+                struct_type([
                     struct_element('id', type_int()),
                     struct_element('name', type_string()),
-                )
+                ])
             )
         );
 

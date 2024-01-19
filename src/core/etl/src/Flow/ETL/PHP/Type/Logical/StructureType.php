@@ -13,7 +13,7 @@ final class StructureType implements LogicalType
      */
     private readonly array $elements;
 
-    public function __construct(StructureElement ...$elements)
+    public function __construct(array $elements, private readonly bool $nullable = false)
     {
         if (0 === \count($elements)) {
             throw InvalidArgumentException::because('Structure must receive at least one element.');
@@ -75,7 +75,7 @@ final class StructureType implements LogicalType
 
     public function nullable() : bool
     {
-        return false;
+        return $this->nullable;
     }
 
     public function toString() : string
@@ -86,6 +86,6 @@ final class StructureType implements LogicalType
             $content[] = $element->toString();
         }
 
-        return 'structure{' . \implode(', ', $content) . '}';
+        return ($this->nullable ? '?' : '') . 'structure{' . \implode(', ', $content) . '}';
     }
 }

@@ -1,0 +1,38 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Flow\ETL\PHP\Type\Logical;
+
+use Flow\ETL\PHP\Type\Type;
+
+final class XMLNodeType implements LogicalType
+{
+    public function __construct(private readonly bool $nullable)
+    {
+    }
+
+    public function isEqual(Type $type) : bool
+    {
+        return $type instanceof self;
+    }
+
+    public function isValid(mixed $value) : bool
+    {
+        if ($value instanceof \DOMNode) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function nullable() : bool
+    {
+        return $this->nullable;
+    }
+
+    public function toString() : string
+    {
+        return ($this->nullable ? '?' : '') . 'xml_node';
+    }
+}

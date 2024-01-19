@@ -10,7 +10,7 @@ use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\type_list;
-use function Flow\ETL\DSL\type_object;
+use function Flow\ETL\DSL\type_xml_node;
 use function Flow\ETL\DSL\xml_entry;
 use Flow\ETL\Config;
 use Flow\ETL\Exception\InvalidArgumentException;
@@ -102,7 +102,7 @@ final class ScalarFunctionTransformerTest extends TestCase
             list_entry('xpath', [
                 $xpath->query('/root/foo')->item(0),
                 $xpath->query('/root/foo')->item(1),
-            ], type_list(type_object(\DOMElement::class))),
+            ], type_list(type_xml_node())),
             (new ScalarFunctionTransformer('xpath', ref('xml')->xpath('/root/foo')))
                 ->transform(
                     new Rows(Row::create(xml_entry('xml', $xml))),

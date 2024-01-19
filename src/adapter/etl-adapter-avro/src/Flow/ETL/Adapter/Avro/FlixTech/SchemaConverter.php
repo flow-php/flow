@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Avro\FlixTech;
 
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\PHP\Type\Logical\DateTimeType;
 use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\StructureType;
+use Flow\ETL\PHP\Type\Logical\UuidType;
 use Flow\ETL\PHP\Type\Native\ArrayType;
 use Flow\ETL\PHP\Type\Native\ObjectType;
 use Flow\ETL\PHP\Type\Native\ScalarType;
@@ -61,10 +63,8 @@ final class SchemaConverter
                 };
             }
 
-            if ($listElement->type() instanceof ObjectType) {
-                if (\is_a($listElement->type()->class, \DateTimeInterface::class, true)) {
-                    return ['name' => $definition->entry()->name(), 'type' => ['type' => 'array', 'items' => 'long', \AvroSchema::LOGICAL_TYPE_ATTR => 'timestamp-micros']];
-                }
+            if ($listElement->type() instanceof DateTimeType) {
+                return ['name' => $definition->entry()->name(), 'type' => ['type' => 'array', 'items' => 'long', \AvroSchema::LOGICAL_TYPE_ATTR => 'timestamp-micros']];
             }
 
             throw new RuntimeException("List of {$listElement->toString()} is not supported yet supported.");
@@ -118,7 +118,7 @@ final class SchemaConverter
         }
 
         $avroType = match ($type) {
-            Entry\StringEntry::class, Entry\JsonEntry::class, Entry\UuidEntry::class => ['name' => $definition->entry()->name(), 'type' => \AvroSchema::STRING_TYPE],
+            Entry\StringEntry::class, Entry\JsonEntry::class, Entry\UuidEntry::class, Entry\XMLEntry::class, Entry\XMLNodeEntry::class => ['name' => $definition->entry()->name(), 'type' => \AvroSchema::STRING_TYPE],
             Entry\EnumEntry::class => [
                 'name' => $definition->entry()->name(),
                 'type' => [
@@ -172,15 +172,15 @@ final class SchemaConverter
             throw new RuntimeException("ArrayEntry entry can't be saved in Avro file, try convert it to ListEntry, MapEntry or StructEntry");
         }
 
+        if ($elementType instanceof DateTimeType) {
+            return ['name' => $element->name(), 'type' => 'long', \AvroSchema::LOGICAL_TYPE_ATTR => 'timestamp-micros'];
+        }
+
+        if ($elementType instanceof UuidType) {
+            return ['name' => $element->name(), 'type' => \AvroSchema::STRING_TYPE];
+        }
+
         if ($elementType instanceof ObjectType) {
-            if (\in_array($elementType->class, [\DateTimeImmutable::class, \DateTimeInterface::class, \DateTime::class], true)) {
-                return ['name' => $element->name(), 'type' => 'long', \AvroSchema::LOGICAL_TYPE_ATTR => 'timestamp-micros'];
-            }
-
-            if ($elementType->class === Entry\Type\Uuid::class) {
-                return ['name' => $element->name(), 'type' => \AvroSchema::STRING_TYPE];
-            }
-
             throw new RuntimeException($elementType->class . ' is not supported.');
         }
 

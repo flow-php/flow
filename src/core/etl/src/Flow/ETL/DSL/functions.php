@@ -10,6 +10,7 @@ use Flow\ETL\DataFrame;
 use Flow\ETL\ErrorHandler\IgnoreError;
 use Flow\ETL\ErrorHandler\SkipRows;
 use Flow\ETL\ErrorHandler\ThrowError;
+use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\LocalFileListExtractor;
 use Flow\ETL\Filesystem\Path;
@@ -88,6 +89,8 @@ use Flow\ETL\Loader\StreamLoader\Output;
 use Flow\ETL\Loader\TransformerLoader;
 use Flow\ETL\Memory\Memory;
 use Flow\ETL\Partition;
+use Flow\ETL\PHP\Type\Logical\DateTimeType;
+use Flow\ETL\PHP\Type\Logical\JsonType;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\PHP\Type\Logical\Map\MapKey;
@@ -95,6 +98,9 @@ use Flow\ETL\PHP\Type\Logical\Map\MapValue;
 use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\StructureType;
+use Flow\ETL\PHP\Type\Logical\UuidType;
+use Flow\ETL\PHP\Type\Logical\XMLNodeType;
+use Flow\ETL\PHP\Type\Logical\XMLType;
 use Flow\ETL\PHP\Type\Native\ArrayType;
 use Flow\ETL\PHP\Type\Native\CallableType;
 use Flow\ETL\PHP\Type\Native\EnumType;
@@ -347,9 +353,12 @@ function struct_entry(string $name, array $value, StructureType $type) : Row\Ent
     return new Row\Entry\StructureEntry($name, $value, $type);
 }
 
-function struct_type(StructureElement ...$element) : StructureType
+/**
+ * @param array<string, StructureElement> $elements
+ */
+function struct_type(array $elements, bool $nullable = false) : StructureType
 {
-    return new StructureType(...$element);
+    return new StructureType($elements, $nullable);
 }
 
 function struct_element(string $name, Type $type) : StructureElement
@@ -367,14 +376,39 @@ function type_list(Type $element) : ListType
     return new ListType(new ListElement($element));
 }
 
-function type_map(ScalarType $key_type, Type $value_type) : MapType
+function type_map(ScalarType $key_type, Type $value_type, bool $nullable = false) : MapType
 {
-    return new MapType(new MapKey($key_type), new MapValue($value_type));
+    return new MapType(new MapKey($key_type), new MapValue($value_type), $nullable);
 }
 
 function map_entry(string $name, array $value, MapType $mapType) : Row\Entry\MapEntry
 {
     return new Row\Entry\MapEntry($name, $value, $mapType);
+}
+
+function type_json(bool $nullable = false) : JsonType
+{
+    return new JsonType($nullable);
+}
+
+function type_datetime(bool $nullable = false) : DateTimeType
+{
+    return new DateTimeType($nullable);
+}
+
+function type_xml(bool $nullable = false) : XMLType
+{
+    return new XMLType($nullable);
+}
+
+function type_xml_node(bool $nullable = false) : XMLNodeType
+{
+    return new XMLNodeType($nullable);
+}
+
+function type_uuid(bool $nullable = false) : UuidType
+{
+    return new UuidType($nullable);
 }
 
 function type_int(bool $nullable = false) : ScalarType
@@ -402,6 +436,10 @@ function type_boolean(bool $nullable = false) : ScalarType
  */
 function type_object(string $class, bool $nullable = false) : ObjectType
 {
+    if (\is_a($class, \DateTimeInterface::class, true)) {
+        throw new InvalidLogicException("Please use type_datetime instead, DateTime is a valid object, but most schema converters are expecting DateTimeType as a logical type rather than ObjectType<DateTime>')");
+    }
+
     return new ObjectType($class, $nullable);
 }
 

@@ -46,10 +46,10 @@ final class CompressingSerializerTest extends TestCase
                     struct_entry(
                         'struct',
                         ['integer' => 1, 'string' => 'string'],
-                        struct_type(
+                        struct_type([
                             struct_element('integer', type_int()),
-                            struct_element('string', type_string())
-                        )
+                            struct_element('string', type_string()),
+                        ])
                     )
                 ),
                 \range(0, 100)

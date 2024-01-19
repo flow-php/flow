@@ -22,9 +22,9 @@ use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\struct_element;
 use function Flow\ETL\DSL\struct_entry;
 use function Flow\ETL\DSL\struct_type;
+use function Flow\ETL\DSL\type_datetime;
 use function Flow\ETL\DSL\type_float;
 use function Flow\ETL\DSL\type_list;
-use function Flow\ETL\DSL\type_object;
 use function Flow\ETL\DSL\type_string;
 use Flow\ETL\Adapter\Avro\FlixTech\AvroExtractor;
 use Flow\ETL\Config;
@@ -77,7 +77,7 @@ final class AvroTest extends TestCase
                             json_object_entry('json_object', ['id' => 1, 'name' => 'test']),
                             json_entry('json', [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']]),
                             list_entry('list_of_strings', ['a', 'b', 'c'], type_list(type_string())),
-                            list_entry('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()], type_list(type_object(\DateTimeImmutable::class)))
+                            list_entry('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()], type_list(type_datetime()))
                         );
                     }, \range(1, 100))
                 )
@@ -155,7 +155,7 @@ final class AvroTest extends TestCase
                             json_object_entry('json_object', ['id' => 1, 'name' => 'test']),
                             json_entry('json', [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']]),
                             list_entry('list_of_strings', ['a', 'b', 'c'], type_list(type_string())),
-                            list_entry('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()], type_list(type_object(\DateTimeImmutable::class))),
+                            list_entry('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()], type_list(type_datetime())),
                             struct_entry(
                                 'address',
                                 [
@@ -165,19 +165,19 @@ final class AvroTest extends TestCase
                                     'country' => 'country_' . $i,
                                     'location' => ['lat' => 1.5, 'lon' => 1.5],
                                 ],
-                                struct_type(
+                                struct_type([
                                     struct_element('street', type_string()),
                                     struct_element('city', type_string()),
                                     struct_element('zip', type_string()),
                                     struct_element('country', type_string()),
                                     struct_element(
                                         'location',
-                                        struct_type(
+                                        struct_type([
                                             struct_element('lat', type_float()),
                                             struct_element('lon', type_float()),
-                                        )
-                                    )
-                                ),
+                                        ])
+                                    ),
+                                ]),
                             ),
                         );
                     }, \range(1, 100))
@@ -219,7 +219,7 @@ final class AvroTest extends TestCase
                             json_object_entry('json_object', ['id' => 1, 'name' => 'test']),
                             json_entry('json', [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']]),
                             list_entry('list_of_strings', ['a', 'b', 'c'], type_list(type_string())),
-                            list_entry('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()], type_list(type_object(\DateTimeImmutable::class)))
+                            list_entry('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()], type_list(type_datetime()))
                         );
                     }, \range(1, 100))
                 )
@@ -240,7 +240,7 @@ final class AvroTest extends TestCase
                             json_object_entry('json_object', ['id' => 1, 'name' => 'test']),
                             json_entry('json', [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']]),
                             list_entry('list_of_strings', ['a', 'b', 'c'], type_list(type_string())),
-                            list_entry('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()], type_list(type_object(\DateTimeImmutable::class)))
+                            list_entry('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()], type_list(type_datetime()))
                         );
                     }, \range(1, 100))
                 )
@@ -277,7 +277,7 @@ final class AvroTest extends TestCase
                             json_object_entry('json_object', ['id' => 1, 'name' => 'test']),
                             json_entry('json', [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']]),
                             list_entry('list_of_strings', ['a', 'b', 'c'], type_list(type_string())),
-                            list_entry('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()], type_list(type_object(\DateTimeImmutable::class)))
+                            list_entry('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()], type_list(type_datetime()))
                         );
                     }, \range(1, 100))
                 )
@@ -298,7 +298,7 @@ final class AvroTest extends TestCase
                             json_object_entry('json_object', ['id' => 1, 'name' => 'test']),
                             json_entry('json', [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']]),
                             list_entry('list_of_strings', ['a', 'b', 'c'], type_list(type_string())),
-                            list_entry('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()], type_list(type_object(\DateTimeImmutable::class)))
+                            list_entry('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()], type_list(type_datetime()))
                         );
                     }, \range(1, 100))
                 )
@@ -336,7 +336,7 @@ final class AvroTest extends TestCase
                             json_object_entry('json_object', ['id' => 1, 'name' => 'test']),
                             json_entry('json', [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']]),
                             list_entry('list_of_strings', ['a', 'b', 'c'], type_list(type_string())),
-                            list_entry('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()], type_list(type_object(\DateTimeImmutable::class)))
+                            list_entry('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()], type_list(type_datetime()))
                         );
                     }, \range(1, 100))
                 )
@@ -357,7 +357,7 @@ final class AvroTest extends TestCase
                             json_object_entry('json_object', ['id' => 1, 'name' => 'test']),
                             json_entry('json', [['id' => 1, 'name' => 'test'], ['id' => 2, 'name' => 'test']]),
                             list_entry('list_of_strings', ['a', 'b', 'c'], type_list(type_string())),
-                            list_entry('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()], type_list(type_object(\DateTimeImmutable::class)))
+                            list_entry('list_of_datetimes', [new \DateTimeImmutable(), new \DateTimeImmutable(), new \DateTimeImmutable()], type_list(type_datetime()))
                         );
                     }, \range(1, 100))
                 )

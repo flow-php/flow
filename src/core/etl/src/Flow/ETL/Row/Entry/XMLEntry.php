@@ -2,9 +2,9 @@
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\ETL\DSL\type_object;
+use function Flow\ETL\DSL\type_xml;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Native\ObjectType;
+use Flow\ETL\PHP\Type\Logical\XMLType;
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
@@ -17,7 +17,7 @@ final class XMLEntry implements Entry
 {
     use EntryRef;
 
-    private readonly ObjectType $type;
+    private readonly XMLType $type;
 
     private readonly \DOMDocument $value;
 
@@ -35,7 +35,7 @@ final class XMLEntry implements Entry
             $this->value = $value;
         }
 
-        $this->type = type_object($this->value::class);
+        $this->type = type_xml();
     }
 
     public function __serialize() : array

@@ -6,9 +6,9 @@ namespace Flow\ETL\Tests\Unit\Row\Entry;
 
 use function Flow\ETL\DSL\list_entry;
 use function Flow\ETL\DSL\type_boolean;
+use function Flow\ETL\DSL\type_datetime;
 use function Flow\ETL\DSL\type_int;
 use function Flow\ETL\DSL\type_list;
-use function Flow\ETL\DSL\type_object;
 use function Flow\ETL\DSL\type_string;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
@@ -38,7 +38,7 @@ final class ListEntryTest extends TestCase
     public function test_creating_datetime_list_from_wrong_value_types() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Expected list<object<DateTimeInterface>> got different types: array<mixed>');
+        $this->expectExceptionMessage('Expected list<datetime> got different types: array<mixed>');
 
         new ListEntry('list', ['string', new \DateTimeImmutable()], new ListType(ListElement::object(\DateTimeInterface::class)));
     }
@@ -127,7 +127,7 @@ final class ListEntryTest extends TestCase
     {
         $this->assertEquals(
             '[{"date":"2021-01-01 00:00:00.000000","timezone_type":3,"timezone":"UTC"}]',
-            list_entry('strings', [new \DateTimeImmutable('2021-01-01 00:00:00')], type_list(type_object(\DateTimeImmutable::class)))->toString()
+            list_entry('strings', [new \DateTimeImmutable('2021-01-01 00:00:00')], type_list(type_datetime()))->toString()
         );
     }
 
