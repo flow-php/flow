@@ -86,6 +86,6 @@ final class StructureType implements LogicalType
             $content[] = $element->toString();
         }
 
-        return  ($this->nullable ? '?' : '') . 'structure{' . \implode(', ', $content) . '}';
+        return ($this->nullable ? '?' : '') . 'structure{' . \implode(', ', $content) . '}';
     }
 }
