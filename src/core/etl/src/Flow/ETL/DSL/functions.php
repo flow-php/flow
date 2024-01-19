@@ -985,6 +985,14 @@ function list_schema(string $name, ListType $type, bool $nullable = false, ?Sche
 }
 
 /**
+ * @param array<class-string<Row\Entry>> $entry_classes
+ */
+function union_schema(string $name, array $entry_classes, ?Schema\Constraint $constraint = null, ?Schema\Metadata $metadata = null) : Definition
+{
+    return Definition::union($name, $entry_classes, $constraint, $metadata);
+}
+
+/**
  * @param class-string<\UnitEnum> $type
  */
 function enum_schema(string $name, string $type, bool $nullable = false, ?Schema\Constraint $constraint = null, ?Schema\Metadata $metadata = null) : Definition

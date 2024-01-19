@@ -6,8 +6,10 @@ namespace Flow\ETL\Tests\Unit\Row\Schema;
 
 use function Flow\ETL\DSL\bool_entry;
 use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\null_entry;
 use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\struct_element;
 use function Flow\ETL\DSL\struct_entry;
 use function Flow\ETL\DSL\struct_type;
@@ -17,6 +19,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\PHP\Type\Logical\StructureType;
+use Flow\ETL\Row\Entry\DateTimeEntry;
 use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Row\Entry\ListEntry;
 use Flow\ETL\Row\Entry\NullEntry;
@@ -173,6 +176,36 @@ final class DefinitionTest extends TestCase
     public function test_multi_types_is_not_union() : void
     {
         $this->assertTrue(Definition::union('id', [IntegerEntry::class, StringEntry::class, NullEntry::class])->isUnion());
+    }
+
+    public function test_narrow_non_union_type() : void
+    {
+        $def = int_schema('int');
+
+        $this->assertSame(
+            $def,
+            $def->narrow()
+        );
+    }
+
+    public function test_narrow_nullable_union_type() : void
+    {
+        $def = Definition::union('test', [IntegerEntry::class, StringEntry::class, DateTimeEntry::class, NullEntry::class]);
+
+        $this->assertEquals(
+            str_schema('test', true),
+            $def->narrow()
+        );
+    }
+
+    public function test_narrow_union_type() : void
+    {
+        $def = Definition::union('test', [IntegerEntry::class, StringEntry::class, DateTimeEntry::class]);
+
+        $this->assertEquals(
+            str_schema('test'),
+            $def->narrow()
+        );
     }
 
     public function test_not_matches_when_constraint_not_satisfied() : void
