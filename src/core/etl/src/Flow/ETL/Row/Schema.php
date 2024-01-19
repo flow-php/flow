@@ -104,6 +104,17 @@ final class Schema implements \Countable
         return new self(...\array_values($newDefinitions));
     }
 
+    public function narrow() : self
+    {
+        $definitions = [];
+
+        foreach ($this->definitions as $definition) {
+            $definitions[] = $definition->narrow();
+        }
+
+        return new self(...$definitions);
+    }
+
     public function nullable() : self
     {
         $definitions = [];

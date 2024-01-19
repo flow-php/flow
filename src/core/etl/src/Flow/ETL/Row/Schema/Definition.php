@@ -283,6 +283,15 @@ final class Definition
         return $this->metadata;
     }
 
+    public function narrow() : self
+    {
+        if (!$this->isUnion()) {
+            return $this;
+        }
+
+        return self::string($this->ref, $this->isNullable(), $this->constraint, $this->metadata);
+    }
+
     public function nullable() : self
     {
         if (!\in_array(NullEntry::class, $this->classes, true)) {

@@ -770,6 +770,20 @@ final class DataFrame
     }
 
     /**
+     * @trigger
+     */
+    public function schema() : Schema
+    {
+        $schema = new Schema();
+
+        foreach ($this->pipeline->process($this->context) as $rows) {
+            $schema = $schema->merge($rows->schema());
+        }
+
+        return $schema;
+    }
+
+    /**
      * @lazy
      * Keep only given entries.
      */
