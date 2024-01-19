@@ -6,10 +6,14 @@ namespace Flow\ETL\Row\Schema\Formatter;
 
 use function Flow\ETL\DSL\type_array;
 use function Flow\ETL\DSL\type_boolean;
+use function Flow\ETL\DSL\type_datetime;
 use function Flow\ETL\DSL\type_float;
 use function Flow\ETL\DSL\type_int;
-use function Flow\ETL\DSL\type_object;
+use function Flow\ETL\DSL\type_json;
 use function Flow\ETL\DSL\type_string;
+use function Flow\ETL\DSL\type_uuid;
+use function Flow\ETL\DSL\type_xml;
+use function Flow\ETL\DSL\type_xml_node;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\StructureType;
@@ -28,7 +32,6 @@ use Flow\ETL\Row\Entry\NullEntry;
 use Flow\ETL\Row\Entry\ObjectEntry;
 use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Row\Entry\StructureEntry;
-use Flow\ETL\Row\Entry\Type\Uuid;
 use Flow\ETL\Row\Entry\UuidEntry;
 use Flow\ETL\Row\Entry\XMLEntry;
 use Flow\ETL\Row\Entry\XMLNodeEntry;
@@ -69,17 +72,18 @@ final class ASCIISchemaFormatter implements SchemaFormatter
             $definitionType = match ($type) {
                 ArrayEntry::class => type_array($nullable),
                 BooleanEntry::class => type_boolean($nullable),
-                DateTimeEntry::class => type_object(\DateTimeImmutable::class, $nullable),
+                DateTimeEntry::class => type_datetime($nullable),
                 EnumEntry::class => EnumType::of(\UnitEnum::class, $nullable),
                 FloatEntry::class => type_float($nullable),
                 IntegerEntry::class => type_int($nullable),
-                StringEntry::class, JsonEntry::class => type_string($nullable),
+                StringEntry::class => type_string($nullable),
+                JsonEntry::class => type_json($nullable),
                 ListEntry::class => $metadata->get(FlowMetadata::METADATA_LIST_ENTRY_TYPE),
                 MapEntry::class => $metadata->get(FlowMetadata::METADATA_MAP_ENTRY_TYPE),
                 ObjectEntry::class => $metadata->get(FlowMetadata::METADATA_OBJECT_ENTRY_TYPE),
-                UuidEntry::class => type_object(Uuid::class, $nullable),
-                XMLEntry::class => type_object(\DOMDocument::class, $nullable),
-                XMLNodeEntry::class => type_object(\DOMElement::class, $nullable),
+                UuidEntry::class => type_uuid($nullable),
+                XMLEntry::class => type_xml($nullable),
+                XMLNodeEntry::class => type_xml_node($nullable),
                 // Fallback
                 StructureEntry::class => type_array(false),
                 default => throw new InvalidArgumentException('Unknown entry type given: ' . $type)

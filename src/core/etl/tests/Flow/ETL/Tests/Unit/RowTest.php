@@ -71,7 +71,7 @@ final class RowTest extends TestCase
                     new StructureEntry(
                         'json',
                         ['json' => [1, 2, 3]],
-                        new StructureType(new StructureElement('json', new ListType(ListElement::integer())))
+                        new StructureType([new StructureElement('json', new ListType(ListElement::integer()))])
                     )
                 )
             ),
@@ -80,7 +80,7 @@ final class RowTest extends TestCase
                     new StructureEntry(
                         'json',
                         ['json' => [1, 2, 3]],
-                        new StructureType(new StructureElement('json', new ListType(ListElement::integer())))
+                        new StructureType([new StructureElement('json', new ListType(ListElement::integer()))])
                     )
                 )
             ),
@@ -92,7 +92,7 @@ final class RowTest extends TestCase
                     new StructureEntry(
                         'json',
                         ['json' => ['5', '2', '1']],
-                        new StructureType(new StructureElement('json', new ListType(ListElement::string())))
+                        new StructureType([new StructureElement('json', new ListType(ListElement::string()))])
                     )
                 )
             ),
@@ -101,7 +101,7 @@ final class RowTest extends TestCase
                     new StructureEntry(
                         'json',
                         ['json' => ['1', '2', '3']],
-                        new StructureType(new StructureElement('json', new ListType(ListElement::string())))
+                        new StructureType([new StructureElement('json', new ListType(ListElement::string()))])
                     )
                 )
             ),
@@ -126,10 +126,10 @@ final class RowTest extends TestCase
             struct_entry(
                 'items',
                 ['item-id' => 1, 'name' => 'one'],
-                struct_type(
+                struct_type([
                     struct_element('item-id', type_int()),
-                    struct_element('name', type_string())
-                )
+                    struct_element('name', type_string()),
+                ])
             ),
             list_entry('list', [1, 2, 3], type_list(type_int())),
             map_entry(
@@ -150,10 +150,10 @@ final class RowTest extends TestCase
                 Row\Schema\Definition::array('array'),
                 Row\Schema\Definition::structure(
                     'items',
-                    new StructureType(
+                    new StructureType([
                         new StructureElement('item-id', type_int()),
-                        new StructureElement('name', type_string())
-                    )
+                        new StructureElement('name', type_string()),
+                    ])
                 ),
                 Row\Schema\Definition::map(
                     'statuses',
@@ -282,7 +282,7 @@ final class RowTest extends TestCase
             new StructureEntry(
                 'items',
                 ['item-id' => 1, 'name' => 'one'],
-                new StructureType(new StructureElement('id', type_int()), new StructureElement('name', type_string()))
+                new StructureType([new StructureElement('id', type_int()), new StructureElement('name', type_string())])
             ),
             new Row\Entry\MapEntry(
                 'statuses',

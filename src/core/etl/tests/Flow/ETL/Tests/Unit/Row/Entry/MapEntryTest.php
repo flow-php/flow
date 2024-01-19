@@ -33,9 +33,9 @@ final class MapEntryTest extends TestCase
     public function test_creating_datetime_map_from_wrong_value_types() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Expected map<integer, object<DateTimeInterface>> got different types: array<mixed>');
+        $this->expectExceptionMessage('Expected map<integer, datetime> got different types: array<mixed>');
 
-        new MapEntry('map', ['string', new \DateTimeImmutable()], new MapType(MapKey::integer(), MapValue::object(\DateTimeInterface::class)));
+        new MapEntry('map', ['string', new \DateTimeImmutable()], new MapType(MapKey::integer(), MapValue::datetime()));
     }
 
     public function test_creating_float_map_from_wrong_value_types() : void

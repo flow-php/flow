@@ -80,6 +80,15 @@ final class ListElement
         return new self(FlatColumn::int64('element'));
     }
 
+    public static function json(bool $required = false) : self
+    {
+        if ($required) {
+            return new self(FlatColumn::json('element')->makeRequired());
+        }
+
+        return new self(FlatColumn::json('element'));
+    }
+
     public static function list(self $element, bool $required = false) : self
     {
         if ($required) {
@@ -126,5 +135,14 @@ final class ListElement
         }
 
         return new self(FlatColumn::time('element'));
+    }
+
+    public static function uuid(bool $required = false) : self
+    {
+        if ($required) {
+            return new self(FlatColumn::uuid('element')->makeRequired());
+        }
+
+        return new self(FlatColumn::uuid('element'));
     }
 }

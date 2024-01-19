@@ -8,8 +8,9 @@ use Flow\ETL\Filesystem\Path;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
+use Flow\ETL\PHP\Type\Logical\DateTimeType;
 use Flow\ETL\PHP\Type\Logical\ListType;
-use Flow\ETL\PHP\Type\Native\ObjectType;
+use Flow\ETL\PHP\Type\Logical\UuidType;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Rows;
@@ -78,28 +79,26 @@ final class AvroLoader implements Closure, Loader, Loader\FileLoader
         $listType = $entry->definition()->metadata()->get(Schema\FlowMetadata::METADATA_LIST_ENTRY_TYPE);
         $listElement = $listType->element();
 
-        if ($listElement->type() instanceof ObjectType) {
-            if (\is_a($listElement->type()->class, Row\Entry\Type\Uuid::class, true)) {
-                /** @var array<string> $data */
-                $data = [];
+        if ($listElement->type() instanceof UuidType) {
+            /** @var array<string> $data */
+            $data = [];
 
-                foreach ($entry->value() as $value) {
-                    $data[] = $value->toString();
-                }
-
-                return $data;
+            foreach ($entry->value() as $value) {
+                $data[] = $value->toString();
             }
 
-            if (\is_a($listElement->type()->class, \DateTimeInterface::class, true)) {
-                /** @var array<int> $data */
-                $data = [];
+            return $data;
+        }
 
-                foreach ($entry->value() as $value) {
-                    $data[] = (int) $value->format('Uu');
-                }
+        if ($listElement->type() instanceof DateTimeType) {
+            /** @var array<int> $data */
+            $data = [];
 
-                return $data;
+            foreach ($entry->value() as $value) {
+                $data[] = (int) $value->format('Uu');
             }
+
+            return $data;
         }
 
         return $entry->value();

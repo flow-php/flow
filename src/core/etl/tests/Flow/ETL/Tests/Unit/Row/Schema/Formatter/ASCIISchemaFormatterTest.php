@@ -27,24 +27,29 @@ final class ASCIISchemaFormatterTest extends TestCase
             Schema\Definition::union('number', [IntegerEntry::class, FloatEntry::class]),
             Schema\Definition::structure(
                 'user',
-                new StructureType(
+                new StructureType([
                     new StructureElement('name', type_string(true)),
                     new StructureElement('age', type_int()),
                     new StructureElement(
                         'address',
-                        new StructureType(
+                        new StructureType([
                             new StructureElement('street', type_string(true)),
                             new StructureElement('city', type_string(true)),
                             new StructureElement('country', type_string(true)),
-                        )
-                    )
-                ),
+                        ])
+                    ),
+                ]),
+                true
             ),
             Schema\Definition::string('name', nullable: true),
             Schema\Definition::array('tags'),
             Schema\Definition::boolean('active'),
             Schema\Definition::xml('xml'),
-            Schema\Definition::null('null')
+            Schema\Definition::xml_node('xml_node'),
+            Schema\Definition::null('null'),
+            Schema\Definition::json('json'),
+            Schema\Definition::uuid('uuid'),
+            Schema\Definition::dateTime('datetime'),
         );
 
         $this->assertSame(
@@ -61,8 +66,12 @@ schema
 |-- name: ?string
 |-- tags: array<mixed>
 |-- active: boolean
-|-- xml: object<DOMDocument>
+|-- xml: xml
+|-- xml_node: xml_node
 |-- null: null
+|-- json: json
+|-- uuid: uuid
+|-- datetime: datetime
 
 SCHEMA,
             (new ASCIISchemaFormatter())->format($schema)
@@ -88,7 +97,7 @@ schema
 |-- name: ?string
 |-- tags: array<mixed>
 |-- active: boolean
-|-- xml: object<DOMDocument>
+|-- xml: xml
 |-- map: map<string, string>
 |-- list: list<map<string, integer>>
 

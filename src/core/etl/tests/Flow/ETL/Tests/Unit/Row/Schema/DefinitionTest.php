@@ -255,31 +255,31 @@ final class DefinitionTest extends TestCase
                 'city' => 'city',
                 'location' => ['lat' => 1.0, 'lng' => 1.0],
             ],
-            struct_type(
+            struct_type([
                 struct_element('street', type_string()),
                 struct_element('city', type_string()),
                 struct_element(
                     'location',
-                    struct_type(
+                    struct_type([
                         struct_element('lat', type_float()),
                         struct_element('lng', type_float()),
-                    )
-                )
-            ),
+                    ])
+                ),
+            ]),
         );
 
         $this->assertEquals(
-            new StructureType(
+            new StructureType([
                 struct_element('street', type_string()),
                 struct_element('city', type_string()),
                 struct_element(
                     'location',
-                    new StructureType(
+                    new StructureType([
                         struct_element('lat', type_float()),
                         struct_element('lng', type_float()),
-                    )
-                )
-            ),
+                    ])
+                ),
+            ]),
             $address->definition()->metadata()->get(FlowMetadata::METADATA_STRUCTURE_ENTRY_TYPE)
         );
     }

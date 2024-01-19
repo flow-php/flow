@@ -2,8 +2,8 @@
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\ETL\DSL\type_object;
-use Flow\ETL\PHP\Type\Native\ObjectType;
+use function Flow\ETL\DSL\type_xml_node;
+use Flow\ETL\PHP\Type\Logical\XMLNodeType;
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
@@ -16,11 +16,11 @@ final class XMLNodeEntry implements Entry
 {
     use EntryRef;
 
-    private readonly ObjectType $type;
+    private readonly XMLNodeType $type;
 
     public function __construct(private readonly string $name, private readonly \DOMNode $value)
     {
-        $this->type = type_object($this->value::class);
+        $this->type = type_xml_node();
     }
 
     public function __serialize() : array

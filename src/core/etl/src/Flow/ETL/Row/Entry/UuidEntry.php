@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\ETL\DSL\type_object;
+use function Flow\ETL\DSL\type_uuid;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Native\ObjectType;
+use Flow\ETL\PHP\Type\Logical\UuidType;
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
@@ -19,7 +19,7 @@ final class UuidEntry implements Entry
 {
     use EntryRef;
 
-    private readonly ObjectType $type;
+    private readonly UuidType $type;
 
     private Entry\Type\Uuid $value;
 
@@ -38,7 +38,7 @@ final class UuidEntry implements Entry
             $this->value = $value;
         }
 
-        $this->type = type_object($this->value::class);
+        $this->type = type_uuid();
     }
 
     public static function from(string $name, string $value) : self

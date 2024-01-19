@@ -375,7 +375,7 @@ final class EntriesTest extends TestCase
             $items = new StructureEntry(
                 'items',
                 ['item-id' => 1, 'name' => 'one'],
-                new StructureType(new StructureElement('id', type_int()), new StructureElement('name', type_string()))
+                new StructureType([new StructureElement('id', type_int()), new StructureElement('name', type_string())])
             )
         );
 
@@ -389,7 +389,7 @@ final class EntriesTest extends TestCase
                 $items = new StructureEntry(
                     'items',
                     ['item-id' => 1, 'name' => 'one'],
-                    new StructureType(new StructureElement('id', type_int()), new StructureElement('name', type_string()))
+                    new StructureType([new StructureElement('id', type_int()), new StructureElement('name', type_string())])
                 ),
                 $phase = new NullEntry('phase')
             ),
@@ -407,7 +407,7 @@ final class EntriesTest extends TestCase
             new StructureEntry(
                 'items',
                 ['item-id' => 1, 'name' => 'one'],
-                new StructureType(new StructureElement('id', type_int()), new StructureElement('name', type_string()))
+                new StructureType([new StructureElement('id', type_int()), new StructureElement('name', type_string())])
             ),
             new EnumEntry('enum', BasicEnum::three)
         );
@@ -438,7 +438,7 @@ final class EntriesTest extends TestCase
             new StructureEntry(
                 'items',
                 ['item-id' => 1, 'name' => 'one'],
-                new StructureType(new StructureElement('id', type_int()), new StructureElement('name', type_string()))
+                new StructureType([new StructureElement('id', type_int()), new StructureElement('name', type_string())])
             ),
             new EnumEntry('enum', BasicEnum::three)
         );

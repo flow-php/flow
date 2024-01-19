@@ -144,7 +144,7 @@ class Entry
      */
     final public static function list_of_datetime(string $name, array $value) : RowEntry
     {
-        return new RowEntry\ListEntry($name, $value, new ListType(ListElement::object(\DateTimeImmutable::class)));
+        return new RowEntry\ListEntry($name, $value, new ListType(ListElement::datetime()));
     }
 
     /**
@@ -181,6 +181,10 @@ class Entry
      */
     final public static function list_of_objects(string $name, string $class, array $value) : RowEntry
     {
+        if (\is_a($class, \DateTimeInterface::class, true)) {
+            return new RowEntry\ListEntry($name, $value, new ListType(ListElement::datetime()));
+        }
+
         return new RowEntry\ListEntry($name, $value, new ListType(ListElement::object($class)));
     }
 

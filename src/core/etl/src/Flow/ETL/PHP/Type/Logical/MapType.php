@@ -8,7 +8,7 @@ use Flow\ETL\PHP\Type\Type;
 
 final class MapType implements LogicalType
 {
-    public function __construct(private readonly MapKey $key, private readonly MapValue $value)
+    public function __construct(private readonly MapKey $key, private readonly MapValue $value, private readonly bool $nullable = false)
     {
     }
 
@@ -47,12 +47,12 @@ final class MapType implements LogicalType
 
     public function nullable() : bool
     {
-        return false;
+        return $this->nullable;
     }
 
     public function toString() : string
     {
-        return 'map<' . $this->key->toString() . ', ' . $this->value->toString() . '>';
+        return ($this->nullable ? '?' : '') . 'map<' . $this->key->toString() . ', ' . $this->value->toString() . '>';
     }
 
     public function value() : MapValue

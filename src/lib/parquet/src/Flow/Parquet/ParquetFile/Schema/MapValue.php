@@ -80,6 +80,15 @@ final class MapValue
         return new self(FlatColumn::int64('value'));
     }
 
+    public static function json(bool $required = false) : self
+    {
+        if ($required) {
+            return new self(FlatColumn::json('value')->makeRequired());
+        }
+
+        return new self(FlatColumn::json('value'));
+    }
+
     public static function list(ListElement $element, bool $required = false) : self
     {
         if ($required) {
@@ -126,5 +135,14 @@ final class MapValue
         }
 
         return new self(FlatColumn::time('value'));
+    }
+
+    public static function uuid(bool $required = false) : self
+    {
+        if ($required) {
+            return new self(FlatColumn::uuid('value')->makeRequired());
+        }
+
+        return new self(FlatColumn::uuid('value'));
     }
 }

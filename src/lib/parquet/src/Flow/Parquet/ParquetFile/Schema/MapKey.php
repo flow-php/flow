@@ -57,4 +57,9 @@ final class MapKey
     {
         return new self(FlatColumn::time('key')->makeRequired());
     }
+
+    public static function uuid() : self
+    {
+        return new self(FlatColumn::uuid('key')->makeRequired());
+    }
 }

@@ -12,7 +12,6 @@ use function Flow\ETL\DSL\float_entry;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\json_entry;
 use function Flow\ETL\DSL\json_object_entry;
-use function Flow\ETL\DSL\list_entry;
 use function Flow\ETL\DSL\map_entry;
 use function Flow\ETL\DSL\null_entry;
 use function Flow\ETL\DSL\obj_entry;
@@ -24,9 +23,14 @@ use function Flow\ETL\DSL\xml_entry;
 use function Flow\ETL\DSL\xml_node_entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\PHP\Type\Logical\DateTimeType;
+use Flow\ETL\PHP\Type\Logical\JsonType;
 use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Logical\StructureType;
+use Flow\ETL\PHP\Type\Logical\UuidType;
+use Flow\ETL\PHP\Type\Logical\XMLNodeType;
+use Flow\ETL\PHP\Type\Logical\XMLType;
 use Flow\ETL\PHP\Type\Native\ArrayType;
 use Flow\ETL\PHP\Type\Native\EnumType;
 use Flow\ETL\PHP\Type\Native\ObjectType;
@@ -86,6 +90,26 @@ final class NativeEntryFactory implements EntryFactory
             if ($valueType->isBoolean()) {
                 return bool_entry($entryName, $value);
             }
+        }
+
+        if ($valueType instanceof JsonType) {
+            return json_entry($entryName, $value);
+        }
+
+        if ($valueType instanceof UuidType) {
+            return uuid_entry($entryName, $value);
+        }
+
+        if ($valueType instanceof DateTimeType) {
+            return datetime_entry($entryName, $value);
+        }
+
+        if ($valueType instanceof XMLType) {
+            return xml_entry($entryName, $value);
+        }
+
+        if ($valueType instanceof XMLNodeType) {
+            return xml_node_entry($entryName, $value);
         }
 
         if ($valueType instanceof ObjectType) {
@@ -219,21 +243,6 @@ final class NativeEntryFactory implements EntryFactory
                 if ($type === Entry\ListEntry::class) {
                     /** @var ListType $entryType */
                     $entryType = $definition->metadata()->get(Schema\FlowMetadata::METADATA_LIST_ENTRY_TYPE);
-
-                    $elementType = $entryType->element();
-
-                    if ($elementType->type() instanceof ObjectType) {
-                        /** @var mixed $firstValue */
-                        $firstValue = \current($value);
-
-                        if (\is_a($elementType->type()->class, \DateTimeInterface::class, true) && \is_string($firstValue)) {
-                            return list_entry(
-                                $definition->entry()->name(),
-                                \array_map(static fn (string $datetime) : \DateTimeImmutable => new \DateTimeImmutable($datetime), $value),
-                                $entryType,
-                            );
-                        }
-                    }
 
                     return new Entry\ListEntry($definition->entry()->name(), $value, $entryType);
                 }

@@ -3,10 +3,13 @@
 namespace Flow\ETL\PHP\Type\Logical\Map;
 
 use function Flow\ETL\DSL\type_boolean;
+use function Flow\ETL\DSL\type_datetime;
 use function Flow\ETL\DSL\type_float;
 use function Flow\ETL\DSL\type_int;
 use function Flow\ETL\DSL\type_object;
 use function Flow\ETL\DSL\type_string;
+use function Flow\ETL\DSL\type_xml;
+use function Flow\ETL\DSL\type_xml_node;
 use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Type;
@@ -20,6 +23,11 @@ final class MapValue
     public static function boolean() : self
     {
         return new self(type_boolean());
+    }
+
+    public static function datetime() : self
+    {
+        return new self(type_datetime());
     }
 
     public static function float() : self
@@ -58,6 +66,21 @@ final class MapValue
     public static function string() : self
     {
         return new self(type_string());
+    }
+
+    public static function uuid() : self
+    {
+        return new self(type_string());
+    }
+
+    public static function xml() : self
+    {
+        return new self(type_xml());
+    }
+
+    public static function xmlNode() : self
+    {
+        return new self(type_xml_node());
     }
 
     public function isEqual(mixed $value) : bool

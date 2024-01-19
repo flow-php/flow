@@ -44,7 +44,7 @@ final class SchemaConverterTest extends TestCase
                 FlatColumn::string('string'),
                 FlatColumn::float('float'),
                 FlatColumn::dateTime('datetime'),
-                FlatColumn::string('json'),
+                FlatColumn::json('json'),
                 NestedColumn::list('list', ParquetSchema\ListElement::string()),
                 NestedColumn::list('list_of_structs', ParquetSchema\ListElement::structure(
                     [
@@ -65,12 +65,12 @@ final class SchemaConverterTest extends TestCase
                 Schema\Definition::json('json'),
                 Schema\Definition::list('list', new ListType(ListElement::string())),
                 Schema\Definition::list('list_of_structs', new ListType(ListElement::structure(
-                    new StructureType(
+                    new StructureType([
                         new StructureElement('integer', type_int()),
-                        new StructureElement('boolean', type_boolean())
-                    ),
+                        new StructureElement('boolean', type_boolean()),
+                    ]),
                 ))),
-                Schema\Definition::structure('structure', new StructureType(new StructureElement('a', type_string()))),
+                Schema\Definition::structure('structure', new StructureType([new StructureElement('a', type_string())])),
                 Schema\Definition::map('map', new MapType(MapKey::string(), MapValue::integer())),
                 Schema\Definition::object('time', type_object(\DateInterval::class, false))
             ))

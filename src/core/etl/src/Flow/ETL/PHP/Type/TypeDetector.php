@@ -6,11 +6,16 @@ namespace Flow\ETL\PHP\Type;
 
 use function Flow\ETL\DSL\type_array;
 use function Flow\ETL\DSL\type_boolean;
+use function Flow\ETL\DSL\type_datetime;
 use function Flow\ETL\DSL\type_float;
 use function Flow\ETL\DSL\type_int;
+use function Flow\ETL\DSL\type_json;
 use function Flow\ETL\DSL\type_null;
 use function Flow\ETL\DSL\type_object;
 use function Flow\ETL\DSL\type_string;
+use function Flow\ETL\DSL\type_uuid;
+use function Flow\ETL\DSL\type_xml;
+use function Flow\ETL\DSL\type_xml_node;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\ListType;
@@ -28,6 +33,10 @@ final class TypeDetector
         }
 
         if (\is_string($value)) {
+            if (type_json()->isValid($value)) {
+                return type_json();
+            }
+
             return type_string();
         }
 
@@ -66,7 +75,7 @@ final class TypeDetector
                     $elements[] = new StructureElement($key, $this->detectType($item));
                 }
 
-                return new StructureType(...$elements);
+                return new StructureType($elements);
             }
 
             return type_array([] === \array_filter($value, fn ($value) : bool => null !== $value));
@@ -77,6 +86,22 @@ final class TypeDetector
         }
 
         if (\is_object($value)) {
+            if (type_uuid()->isValid($value)) {
+                return type_uuid();
+            }
+
+            if (type_datetime()->isValid($value)) {
+                return type_datetime();
+            }
+
+            if (type_xml()->isValid($value)) {
+                return type_xml();
+            }
+
+            if (type_xml_node()->isValid($value)) {
+                return type_xml_node();
+            }
+
             return type_object($value::class);
         }
 

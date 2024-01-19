@@ -69,10 +69,10 @@ final class AllRowTypesFakeExtractor implements Extractor
                     struct_entry(
                         'items',
                         ['item-id' => 1, 'name' => 'one'],
-                        struct_type(
+                        struct_type([
                             struct_element('item-id', type_int()),
-                            struct_element('name', type_string())
-                        )
+                            struct_element('name', type_string()),
+                        ])
                     ),
                     object_entry('object', new \ArrayIterator([1, 2, 3])),
                     enum_entry('enum', BackedStringEnum::three)

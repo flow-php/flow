@@ -21,7 +21,7 @@ final class StructureTypeTest extends TestCase
     public function test_elements() : void
     {
         $this->assertEquals(
-            [$map = new StructureElement('map', new MapType(MapKey::string(), MapValue::float()))],
+            $map = [new StructureElement('map', new MapType(MapKey::string(), MapValue::float()))],
             (new StructureType($map))->elements()
         );
     }
@@ -29,16 +29,16 @@ final class StructureTypeTest extends TestCase
     public function test_equals() : void
     {
         $this->assertTrue(
-            (new StructureType(new StructureElement('map', new MapType(MapKey::string(), MapValue::float()))))
-                ->isEqual(new StructureType(new StructureElement('map', new MapType(MapKey::string(), MapValue::float()))))
+            (new StructureType([new StructureElement('map', new MapType(MapKey::string(), MapValue::float()))]))
+                ->isEqual(new StructureType([new StructureElement('map', new MapType(MapKey::string(), MapValue::float()))]))
         );
         $this->assertFalse(
-            (new StructureType(new StructureElement('string', type_string()), new StructureElement('bool', type_boolean())))
+            (new StructureType([new StructureElement('string', type_string()), new StructureElement('bool', type_boolean())]))
                 ->isEqual(new ListType(ListElement::integer()))
         );
         $this->assertFalse(
-            (new StructureType(new StructureElement('string', type_string()), new StructureElement('bool', type_boolean())))
-                ->isEqual(new StructureType(new StructureElement('bool', type_boolean()), new StructureElement('integer', type_string())))
+            (new StructureType([new StructureElement('string', type_string()), new StructureElement('bool', type_boolean())]))
+                ->isEqual(new StructureType([new StructureElement('bool', type_boolean()), new StructureElement('integer', type_string())]))
         );
     }
 
@@ -55,22 +55,22 @@ final class StructureTypeTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('All structure element names must be unique');
 
-        (new StructureType(
+        (new StructureType([
             new StructureElement('test', type_string()),
-            new StructureElement('test', type_string())
-        ));
+            new StructureElement('test', type_string()),
+        ]));
     }
 
     public function test_to_string() : void
     {
-        $struct = new StructureType(
+        $struct = new StructureType([
             new StructureElement('string', type_string()),
             new StructureElement('float', type_float()),
-            new StructureElement('map', new MapType(MapKey::string(), MapValue::list(new ListType(ListElement::object(\DateTimeInterface::class)))))
-        );
+            new StructureElement('map', new MapType(MapKey::string(), MapValue::list(new ListType(ListElement::datetime())))),
+        ]);
 
         $this->assertSame(
-            'structure{string: string, float: float, map: map<string, list<object<DateTimeInterface>>>}',
+            'structure{string: string, float: float, map: map<string, list<datetime>>}',
             $struct->toString()
         );
     }
@@ -78,11 +78,11 @@ final class StructureTypeTest extends TestCase
     public function test_valid() : void
     {
         $this->assertTrue(
-            (new StructureType(new StructureElement('string', type_string())))->isValid(['one' => 'two'])
+            (new StructureType([new StructureElement('string', type_string())]))->isValid(['one' => 'two'])
         );
         $this->assertTrue(
             (
-                new StructureType(
+                new StructureType([
                     new StructureElement(
                         'map',
                         new MapType(
@@ -91,12 +91,12 @@ final class StructureTypeTest extends TestCase
                         )
                     ),
                     new StructureElement('string', type_string()),
-                    new StructureElement('float', type_float())
-                )
+                    new StructureElement('float', type_float()),
+                ])
             )->isValid(['a' => [0 => ['one' => [1, 2]], 1 => ['two' => [3, 4]]], 'b' => 'c', 'd' => 1.5])
         );
         $this->assertFalse(
-            (new StructureType(new StructureElement('int', type_int())))->isValid([1, 2])
+            (new StructureType([new StructureElement('int', type_int())]))->isValid([1, 2])
         );
     }
 }

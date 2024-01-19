@@ -27,12 +27,12 @@ final class StructureEntryTest extends TestCase
             new StructureEntry(
                 'name',
                 ['1' => 1, '2' => 2, '3' => 3],
-                struct_type(struct_element('1', type_int()), struct_element('2', type_int()), struct_element('3', type_int()))
+                struct_type([struct_element('1', type_int()), struct_element('2', type_int()), struct_element('3', type_int())])
             ),
             new StructureEntry(
                 'name',
                 ['1' => 1, '2' => 2, '3' => 3],
-                struct_type(struct_element('1', type_int()), struct_element('2', type_int()), struct_element('3', type_int()))
+                struct_type([struct_element('1', type_int()), struct_element('2', type_int()), struct_element('3', type_int())])
             ),
         ];
         yield 'equal names and equal simple same integer entries with different number of entries' => [
@@ -40,12 +40,12 @@ final class StructureEntryTest extends TestCase
             new StructureEntry(
                 'name',
                 ['1' => 1, '2' => 2, '3' => 3],
-                struct_type(struct_element('1', type_int()), struct_element('2', type_string()), struct_element('3', type_string()))
+                struct_type([struct_element('1', type_int()), struct_element('2', type_string()), struct_element('3', type_string())])
             ),
             new StructureEntry(
                 'name',
                 ['1' => 1, '2' => 2],
-                struct_type(struct_element('1', type_int()), struct_element('2', type_string()))
+                struct_type([struct_element('1', type_int()), struct_element('2', type_string())])
             ),
         ];
         yield 'equal names and equal simple same integer entries with different number of entries reversed' => [
@@ -53,12 +53,12 @@ final class StructureEntryTest extends TestCase
             new StructureEntry(
                 'name',
                 ['1' => 1, '2' => 2],
-                struct_type(struct_element('1', type_int()), struct_element('2', type_string()))
+                struct_type([struct_element('1', type_int()), struct_element('2', type_string())])
             ),
             new StructureEntry(
                 'name',
                 ['1' => 1, '2' => 2, '3' => 3],
-                struct_type(struct_element('1', type_int()), struct_element('2', type_string()), struct_element('3', type_string()))
+                struct_type([struct_element('1', type_int()), struct_element('2', type_string()), struct_element('3', type_string())])
             ),
         ];
         yield 'equal names and equal simple same array entries' => [
@@ -66,12 +66,12 @@ final class StructureEntryTest extends TestCase
             new StructureEntry(
                 'name',
                 ['json' => ['foo' => ['bar' => 'baz']]],
-                struct_type(struct_element('json', new MapType(MapKey::string(), MapValue::map(new MapType(MapKey::string(), MapValue::string())))))
+                struct_type([struct_element('json', new MapType(MapKey::string(), MapValue::map(new MapType(MapKey::string(), MapValue::string()))))])
             ),
             new StructureEntry(
                 'name',
                 ['json' => ['foo' => ['bar' => 'baz']]],
-                struct_type(struct_element('json', new MapType(MapKey::string(), MapValue::map(new MapType(MapKey::string(), MapValue::string())))))
+                struct_type([struct_element('json', new MapType(MapKey::string(), MapValue::map(new MapType(MapKey::string(), MapValue::string()))))])
             ),
         ];
         yield 'equal names and equal simple same collection entries' => [
@@ -79,12 +79,12 @@ final class StructureEntryTest extends TestCase
             new StructureEntry(
                 'name',
                 ['json' => ['1' => 1, '2' => 2, '3' => 3]],
-                struct_type(struct_element('json', type_array()))
+                struct_type([struct_element('json', type_array())])
             ),
             new StructureEntry(
                 'name',
                 ['json' => ['1' => 1, '2' => 2, '3' => 3]],
-                struct_type(struct_element('json', type_array()))
+                struct_type([struct_element('json', type_array())])
             ),
         ];
         yield 'equal names and equal simple different collection entries' => [
@@ -92,12 +92,12 @@ final class StructureEntryTest extends TestCase
             new StructureEntry(
                 'name',
                 ['json' => ['5' => 5, '2' => 2, '1' => 1]],
-                struct_type(struct_element('json', type_array()))
+                struct_type([struct_element('json', type_array())])
             ),
             new StructureEntry(
                 'name',
                 ['json' => ['1' => 1, '2' => 2, '3' => 3]],
-                struct_type(struct_element('json', type_array()))
+                struct_type([struct_element('json', type_array())])
             ),
         ];
     }
@@ -110,7 +110,7 @@ final class StructureEntryTest extends TestCase
         new StructureEntry(
             'test',
             [1, 2, 3],
-            struct_type(struct_element('id', type_int()), struct_element('name', type_string()))
+            struct_type([struct_element('id', type_int()), struct_element('name', type_string())])
         );
     }
 
@@ -126,33 +126,33 @@ final class StructureEntryTest extends TestCase
                     'city' => 'bar',
                 ],
             ],
-            struct_type(
+            struct_type([
                 struct_element('id', type_int()),
                 struct_element('name', type_string()),
                 struct_element(
                     'address',
-                    struct_type(
+                    struct_type([
                         struct_element('street', type_string()),
                         struct_element('city', type_string()),
-                    )
+                    ])
                 ),
-            ),
+            ]),
         );
 
         $this->assertEquals(
             Definition::structure(
                 'items',
-                struct_type(
+                struct_type([
                     struct_element('id', type_int()),
                     struct_element('name', type_string()),
                     struct_element(
                         'address',
-                        struct_type(
+                        struct_type([
                             struct_element('street', type_string()),
                             struct_element('city', type_string()),
-                        )
-                    )
-                ),
+                        ])
+                    ),
+                ]),
             ),
             $entry->definition()
         );
@@ -166,7 +166,7 @@ final class StructureEntryTest extends TestCase
                 new StructureEntry(
                     '0',
                     ['id' => 1, 'name' => 'one'],
-                    struct_type(struct_element('id', type_int()), struct_element('name', type_string()))
+                    struct_type([struct_element('id', type_int()), struct_element('name', type_string())])
                 )
             )->name()
         );
@@ -185,7 +185,7 @@ final class StructureEntryTest extends TestCase
         $entry = new StructureEntry(
             'entry-name',
             ['id' => 1234],
-            struct_type(struct_element('id', type_int()))
+            struct_type([struct_element('id', type_int())])
         );
 
         $this->assertEquals(
@@ -202,7 +202,7 @@ final class StructureEntryTest extends TestCase
         new StructureEntry(
             '',
             ['id' => 1, 'name' => 'one'],
-            struct_type(struct_element('id', type_int()), struct_element('name', type_string()))
+            struct_type([struct_element('id', type_int()), struct_element('name', type_string())])
         );
     }
 
@@ -211,7 +211,7 @@ final class StructureEntryTest extends TestCase
         $entry = new StructureEntry(
             'entry-name',
             ['id' => 1234],
-            struct_type(struct_element('id', type_int()))
+            struct_type([struct_element('id', type_int())])
         );
         $newEntry = $entry->rename('new-entry-name');
 
@@ -224,7 +224,7 @@ final class StructureEntryTest extends TestCase
         $entry = new StructureEntry(
             'items',
             ['item-id' => 1, 'name' => 'one'],
-            struct_type(struct_element('id', type_int()), struct_element('name', type_string()))
+            struct_type([struct_element('id', type_int()), struct_element('name', type_string())])
         );
 
         $this->assertEquals(
@@ -241,7 +241,7 @@ final class StructureEntryTest extends TestCase
         $string = new StructureEntry(
             'name',
             ['json' => ['5' => 5, '2' => 2, '3' => 3]],
-            struct_type(struct_element('json', type_array()))
+            struct_type([struct_element('json', type_array())])
         );
 
         $serialized = \serialize($string);
