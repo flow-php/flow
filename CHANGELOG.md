@@ -1,6 +1,7 @@
-## [Unreleased] - 2024-01-18
+## [Unreleased] - 2024-01-19
 
 ### Added
+- [#925](https://github.com/flow-php/flow/pull/925) - **DataFrame::schema method to just read schema from dataset** - [@norberttech](https://github.com/norberttech)
 - [#923](https://github.com/flow-php/flow/pull/923) - **DataFrame::autoCast()** - [@norberttech](https://github.com/norberttech)
 - [#922](https://github.com/flow-php/flow/pull/922) - **DataFrame::dropPartitions() transformation** - [@norberttech](https://github.com/norberttech)
 - [#918](https://github.com/flow-php/flow/pull/918) - **CSV options detection** - [@norberttech](https://github.com/norberttech)
