@@ -1,6 +1,11 @@
 ## [Unreleased] - 2024-01-19
 
 ### Added
+- [#926](https://github.com/flow-php/flow/pull/926) - **Uuid Logical Type** - [@norberttech](https://github.com/norberttech)
+- [#926](https://github.com/flow-php/flow/pull/926) - **DateTime Logical Type** - [@norberttech](https://github.com/norberttech)
+- [#926](https://github.com/flow-php/flow/pull/926) - **Json Logical Type** - [@norberttech](https://github.com/norberttech)
+- [#926](https://github.com/flow-php/flow/pull/926) - **XML Logical Type** - [@norberttech](https://github.com/norberttech)
+- [#926](https://github.com/flow-php/flow/pull/926) - **XML Node Logical Type** - [@norberttech](https://github.com/norberttech)
 - [#925](https://github.com/flow-php/flow/pull/925) - **DataFrame::schema method to just read schema from dataset** - [@norberttech](https://github.com/norberttech)
 - [#923](https://github.com/flow-php/flow/pull/923) - **DataFrame::autoCast()** - [@norberttech](https://github.com/norberttech)
 - [#922](https://github.com/flow-php/flow/pull/922) - **DataFrame::dropPartitions() transformation** - [@norberttech](https://github.com/norberttech)
@@ -42,6 +47,7 @@
 - [#867](https://github.com/flow-php/flow/pull/867) - **Update Homebrew TAP formula: flow-php to version: 0.5.2** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#926](https://github.com/flow-php/flow/pull/926) - **Missing nullable property in Map/Struct/List logical types** - [@norberttech](https://github.com/norberttech)
 - [#909](https://github.com/flow-php/flow/pull/909) - **fixed unit testing csv load overwrite mode** - [@rzarno](https://github.com/rzarno)
 - [#902](https://github.com/flow-php/flow/pull/902) - **changing partitions order during partitioning** - [@norberttech](https://github.com/norberttech)
 - [#901](https://github.com/flow-php/flow/pull/901) - **writing uuid entries to parquet files** - [@norberttech](https://github.com/norberttech)
