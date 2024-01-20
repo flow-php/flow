@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type\Native;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Type;
 
 final class ResourceType implements NativeType
@@ -22,6 +23,24 @@ final class ResourceType implements NativeType
         return \is_resource($value);
     }
 
+    public function makeNullable(bool $nullable) : self
+    {
+        return new self($nullable);
+    }
+
+    public function merge(Type $type) : self
+    {
+        if ($type instanceof NullType) {
+            return $this->makeNullable(true);
+        }
+
+        if (!$type instanceof self) {
+            throw new InvalidArgumentException('Cannot merge different types, ' . $this->toString() . ' and ' . $type->toString());
+        }
+
+        return new self($this->nullable || $type->nullable());
+    }
+
     public function nullable() : bool
     {
         return $this->nullable;
@@ -30,10 +49,5 @@ final class ResourceType implements NativeType
     public function toString() : string
     {
         return ($this->nullable ? '?' : '') . 'resource';
-    }
-
-    public function makeNullable(bool $nullable): Type
-    {
-        return new self($nullable);
     }
 }

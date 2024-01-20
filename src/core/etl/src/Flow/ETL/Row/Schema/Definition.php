@@ -11,7 +11,6 @@ use function Flow\ETL\DSL\type_enum;
 use function Flow\ETL\DSL\type_float;
 use function Flow\ETL\DSL\type_int;
 use function Flow\ETL\DSL\type_json;
-use function Flow\ETL\DSL\type_list;
 use function Flow\ETL\DSL\type_null;
 use function Flow\ETL\DSL\type_string;
 use function Flow\ETL\DSL\type_uuid;
@@ -54,7 +53,7 @@ final class Definition
     private readonly Reference $ref;
 
     /**
-     * @param class-string<Entry> $classes
+     * @param class-string<Entry> $entryClass
      */
     public function __construct(
         string|Reference $ref,
@@ -144,7 +143,7 @@ final class Definition
 
     public static function null(string|Reference $entry, ?Metadata $metadata = null) : self
     {
-        return new self($entry, NullEntry::class, type_null(), $metadata);
+        return new self($entry, NullEntry::class, type_null(), null, $metadata);
     }
 
     public static function object(string|Reference $entry, ObjectType $type, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
@@ -266,7 +265,7 @@ final class Definition
             return new self(
                 $this->ref,
                 $this->entryClass,
-                $this->type()->makeNullable($this->isNullable() || $definition->isNullable()),
+                $this->type()->merge($definition->type()),
                 $constraint,
                 $this->metadata->merge($definition->metadata)
             );

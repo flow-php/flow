@@ -93,8 +93,8 @@ final class Schema implements \Countable
             return $this;
         }
 
-//        echo "Before: \n";
-//        dj($this->definitions, $schema->definitions);
+        //        echo "Before: \n";
+        //        dj($this->definitions, $schema->definitions);
 
         foreach ($schema->definitions as $entry => $definition) {
             if (!\array_key_exists($definition->entry()->name(), $newDefinitions)) {
@@ -110,9 +110,8 @@ final class Schema implements \Countable
             }
         }
 
-//        echo "After: \n";
-//        dj($newDefinitions);
-
+        //        echo "After: \n";
+        //        dj($newDefinitions);
 
         return new self(...\array_values($newDefinitions));
     }

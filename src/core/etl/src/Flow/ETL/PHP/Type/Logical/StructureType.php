@@ -4,6 +4,7 @@ namespace Flow\ETL\PHP\Type\Logical;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
+use Flow\ETL\PHP\Type\Native\NullType;
 use Flow\ETL\PHP\Type\Type;
 
 final class StructureType implements LogicalType
@@ -83,6 +84,45 @@ final class StructureType implements LogicalType
     public function makeNullable(bool $nullable) : self
     {
         return new self($this->elements, $nullable);
+    }
+
+    public function merge(Type $type) : self
+    {
+        if ($type instanceof NullType) {
+            return $this->makeNullable(true);
+        }
+
+        if (!$type instanceof self) {
+            throw InvalidArgumentException::because('Cannot merge "%s" with "%s"', $this->toString(), $type->toString());
+        }
+
+        $elements = [];
+
+        foreach ($this->elements as $thisElement) {
+            $elements[$thisElement->name()] = $thisElement;
+        }
+
+        $typeElements = [];
+
+        foreach ($type->elements() as $typeElement) {
+            $typeElements[$typeElement->name()] = $typeElement;
+        }
+
+        foreach ($type->elements as $structElement) {
+            if (\array_key_exists($structElement->name(), $elements)) {
+                $elements[$structElement->name()] = $elements[$structElement->name()]->merge($structElement);
+            } else {
+                $elements[$structElement->name()] = $structElement->makeNullable(true);
+            }
+        }
+
+        foreach ($this->elements as $thisElement) {
+            if (!\array_key_exists($thisElement->name(), $typeElements)) {
+                $elements[$thisElement->name()] = $thisElement->makeNullable(true);
+            }
+        }
+
+        return new self(\array_values($elements), $this->nullable || $type->nullable());
     }
 
     public function nullable() : bool

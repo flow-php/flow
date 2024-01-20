@@ -12,8 +12,6 @@ use Flow\ETL\PHP\Type\TypeDetector;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
-use Flow\ETL\Row\Schema\FlowMetadata;
-use Flow\ETL\Row\Schema\Metadata;
 
 /**
  * @template T

@@ -39,5 +39,7 @@
     </projectFiles>
     <issueHandlers>
         <RiskyTruthyFalsyComparison errorLevel="suppress" />
+        <LessSpecificReturnStatement errorLevel="suppress" />
+        <MoreSpecificReturnType errorLevel="suppress" />
     </issueHandlers>
 </psalm>

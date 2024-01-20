@@ -2,7 +2,9 @@
 
 namespace Flow\ETL\PHP\Type\Logical;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
+use Flow\ETL\PHP\Type\Native\NullType;
 use Flow\ETL\PHP\Type\Type;
 
 final class ListType implements LogicalType
@@ -47,6 +49,19 @@ final class ListType implements LogicalType
     public function makeNullable(bool $nullable) : self
     {
         return new self($this->element, $nullable);
+    }
+
+    public function merge(Type $type) : self
+    {
+        if ($type instanceof NullType) {
+            return $this->makeNullable(true);
+        }
+
+        if (!$type instanceof self) {
+            throw new InvalidArgumentException('Cannot merge different types, ' . $this->toString() . ' and ' . $type->toString());
+        }
+
+        return new self($this->element, $this->nullable || $type->nullable());
     }
 
     public function nullable() : bool

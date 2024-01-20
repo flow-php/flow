@@ -66,6 +66,71 @@ final class StructureTypeTest extends TestCase
         );
     }
 
+    public function test_merging_different_left_structure() : void
+    {
+        $this->assertEquals(
+            struct_type([
+                struct_element('string', type_string(true)),
+                struct_element('float', type_float()),
+                struct_element('map', new MapType(MapKey::string(), MapValue::list(new ListType(ListElement::datetime())), true)),
+            ]),
+            struct_type([
+                struct_element('string', type_string()),
+                struct_element('float', type_float()),
+            ])->merge(struct_type([
+                struct_element('float', type_float()),
+                struct_element('map', new MapType(MapKey::string(), MapValue::list(new ListType(ListElement::datetime())))),
+            ]))
+        );
+    }
+
+    public function test_merging_different_right_structure() : void
+    {
+        $this->assertEquals(
+            struct_type([
+                struct_element('string', type_string(true)),
+                struct_element('float', type_float(true)),
+                struct_element('map', new MapType(MapKey::string(), MapValue::list(new ListType(ListElement::datetime())), true)),
+            ]),
+            struct_type([
+                struct_element('string', type_string()),
+                struct_element('float', type_float()),
+            ])->merge(struct_type([
+                struct_element('map', new MapType(MapKey::string(), MapValue::list(new ListType(ListElement::datetime())))),
+            ]))
+        );
+    }
+
+    public function test_merging_nested_structures() : void
+    {
+        $this->assertEquals(
+            struct_type([
+                struct_element('string', type_string(true)),
+                struct_element('float', type_float(true)),
+                struct_element('structure', struct_type(
+                    [
+                        struct_element('id', type_string()),
+                        struct_element('name', type_float()),
+                    ],
+                    true
+                )),
+            ]),
+            struct_type([
+                struct_element('string', type_string()),
+                struct_element('float', type_float()),
+            ])->merge(
+                struct_type([
+                    struct_element('structure', struct_type(
+                        [
+                            struct_element('id', type_string()),
+                            struct_element('name', type_float()),
+                        ],
+                    )),
+                ])
+            )
+        );
+    }
+
     public function test_structure_element_name_cannot_be_empty() : void
     {
         $this->expectException(InvalidArgumentException::class);

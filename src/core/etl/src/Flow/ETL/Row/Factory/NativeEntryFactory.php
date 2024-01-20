@@ -172,6 +172,7 @@ final class NativeEntryFactory implements EntryFactory
                     ScalarType::INTEGER => int_entry($definition->entry()->name(), $value),
                     ScalarType::FLOAT => float_entry($definition->entry()->name(), $value),
                     ScalarType::BOOLEAN => bool_entry($definition->entry()->name(), $value),
+                    default => throw new InvalidArgumentException("Can't convert value into entry \"{$definition->entry()}\""),
                 };
             }
 

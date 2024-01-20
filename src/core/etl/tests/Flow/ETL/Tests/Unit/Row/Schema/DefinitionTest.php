@@ -22,7 +22,6 @@ use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\Row\Schema\Constraint;
 use Flow\ETL\Row\Schema\Definition;
-use Flow\ETL\Row\Schema\FlowMetadata;
 use PHPUnit\Framework\TestCase;
 
 final class DefinitionTest extends TestCase
