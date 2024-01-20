@@ -39,4 +39,9 @@ final class ArrayType implements NativeType
 
         return ($this->nullable ? '?' : '') . 'array<mixed>';
     }
+
+    public function makeNullable(bool $nullable): Type
+    {
+        return new self($this->empty, $nullable);
+    }
 }

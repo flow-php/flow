@@ -31,4 +31,9 @@ final class ResourceType implements NativeType
     {
         return ($this->nullable ? '?' : '') . 'resource';
     }
+
+    public function makeNullable(bool $nullable): Type
+    {
+        return new self($nullable);
+    }
 }

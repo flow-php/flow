@@ -15,9 +15,9 @@ final class StructureElement
         }
     }
 
-    public function isEqual(mixed $value) : bool
+    public function isEqual(self $element) : bool
     {
-        return $this->type->isEqual($value);
+        return $this->name === $element->name && $this->type->isEqual($element->type());
     }
 
     public function isValid(mixed $value) : bool

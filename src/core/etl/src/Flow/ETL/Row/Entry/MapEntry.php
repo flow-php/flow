@@ -53,7 +53,6 @@ final class MapEntry implements Entry
         return Definition::map(
             $this->name,
             $this->type,
-            metadata: Metadata::with(FlowMetadata::METADATA_MAP_ENTRY_TYPE, $this->type())
         );
     }
 

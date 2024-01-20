@@ -19,7 +19,7 @@ final class CSVExtractorBench
 
     public function bench_extract_10k() : void
     {
-        foreach (from_csv(__DIR__ . '/../Fixtures/orders_flow.csv')->extract($this->context) as $rows) {
+        foreach (from_csv(__DIR__ . '/Fixtures/orders_flow.csv')->extract($this->context) as $rows) {
         }
     }
 }

@@ -31,4 +31,9 @@ final class CallableType implements NativeType
     {
         return ($this->nullable ? '?' : '') . 'callable';
     }
+
+    public function makeNullable(bool $nullable): Type
+    {
+        return new self($nullable);
+    }
 }

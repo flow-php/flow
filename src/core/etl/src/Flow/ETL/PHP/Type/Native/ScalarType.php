@@ -17,9 +17,9 @@ final class ScalarType implements NativeType
     public const STRING = 'string';
 
     /**
-     * @param self::* $value
+     * @param self::* $type
      */
-    private function __construct(private readonly string $value, private readonly bool $nullable)
+    private function __construct(private readonly string $type, private readonly bool $nullable)
     {
     }
 
@@ -45,27 +45,27 @@ final class ScalarType implements NativeType
 
     public function isBoolean() : bool
     {
-        return $this->value === self::BOOLEAN;
+        return $this->type === self::BOOLEAN;
     }
 
     public function isEqual(Type $type) : bool
     {
-        return $type instanceof self && $type->value === $this->value && $this->nullable === $type->nullable;
+        return $type instanceof self && $type->type === $this->type && $this->nullable === $type->nullable;
     }
 
     public function isFloat() : bool
     {
-        return $this->value === self::FLOAT;
+        return $this->type === self::FLOAT;
     }
 
     public function isInteger() : bool
     {
-        return $this->value === self::INTEGER;
+        return $this->type === self::INTEGER;
     }
 
     public function isString() : bool
     {
-        return $this->value === self::STRING;
+        return $this->type === self::STRING;
     }
 
     public function isValid(mixed $value) : bool
@@ -74,7 +74,7 @@ final class ScalarType implements NativeType
             return true;
         }
 
-        return match ($this->value) {
+        return match ($this->type) {
             self::STRING => \is_string($value),
             self::INTEGER => \is_int($value),
             self::FLOAT => \is_float($value),
@@ -89,11 +89,16 @@ final class ScalarType implements NativeType
 
     public function toString() : string
     {
-        return ($this->nullable ? '?' : '') . $this->value;
+        return ($this->nullable ? '?' : '') . $this->type;
     }
 
     public function type() : string
     {
-        return $this->value;
+        return $this->type;
+    }
+
+    public function makeNullable(bool $nullable): Type
+    {
+        return new self($this->type, $nullable);
     }
 }

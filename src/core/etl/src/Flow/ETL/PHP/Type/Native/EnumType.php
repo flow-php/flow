@@ -46,4 +46,9 @@ final class EnumType implements NativeType
     {
         return ($this->nullable ? '?' : '') . 'enum<' . $this->class . '>';
     }
+
+    public function makeNullable(bool $nullable): Type
+    {
+        return new self($this->class, $nullable);
+    }
 }

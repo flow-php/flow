@@ -40,4 +40,9 @@ final class UuidType implements LogicalType
     {
         return ($this->nullable ? '?' : '') . 'uuid';
     }
+
+    public function makeNullable(bool $nullable): Type
+    {
+        return new self($nullable);
+    }
 }

@@ -36,4 +36,9 @@ final class JsonType implements LogicalType
     {
         return ($this->nullable ? '?' : '') . 'json';
     }
+
+    public function makeNullable(bool $nullable): Type
+    {
+        return new self($nullable);
+    }
 }

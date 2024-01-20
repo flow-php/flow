@@ -2,13 +2,7 @@
 
 namespace Flow\Parquet\Tests\Unit\ParquetFile;
 
-use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\str_schema;
-use function Flow\ETL\DSL\union_schema;
 use Flow\ETL\Adapter\Elasticsearch\Tests\Integration\TestCase;
-use Flow\ETL\Row\Entry\IntegerEntry;
-use Flow\ETL\Row\Entry\NullEntry;
-use Flow\ETL\Row\Entry\StringEntry;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\ListElement;
@@ -110,21 +104,5 @@ final class SchemaTest extends TestCase
         foreach ($schema->columnsFlat() as $column) {
             $this->assertInstanceOf(FlatColumn::class, $column);
         }
-    }
-
-    public function test_narrowing_schema_with_union_types() : void
-    {
-        $schema = \Flow\ETL\DSL\schema(
-            int_schema('id'),
-            union_schema('tracking_number', [StringEntry::class, IntegerEntry::class, NullEntry::class]),
-        )->narrow();
-
-        $this->assertEquals(
-            \Flow\ETL\DSL\schema(
-                int_schema('id'),
-                str_schema('tracking_number', true),
-            ),
-            $schema
-        );
     }
 }

@@ -29,6 +29,11 @@ final class ObjectType implements NativeType
         return \is_a($value, $this->class, true);
     }
 
+    public function makeNullable(bool $nullable) : self
+    {
+        return new self($this->class, $nullable);
+    }
+
     public function nullable() : bool
     {
         return $this->nullable;

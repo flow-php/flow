@@ -2,16 +2,6 @@
 
 namespace Flow\ETL\Adapter\Parquet;
 
-use function Flow\ETL\DSL\type_boolean;
-use function Flow\ETL\DSL\type_datetime;
-use function Flow\ETL\DSL\type_float;
-use function Flow\ETL\DSL\type_int;
-use function Flow\ETL\DSL\type_json;
-use function Flow\ETL\DSL\type_null;
-use function Flow\ETL\DSL\type_string;
-use function Flow\ETL\DSL\type_uuid;
-use function Flow\ETL\DSL\type_xml;
-use function Flow\ETL\DSL\type_xml_node;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\PHP\Type\Logical\DateTimeType;
 use Flow\ETL\PHP\Type\Logical\JsonType;
@@ -27,10 +17,7 @@ use Flow\ETL\PHP\Type\Native\ObjectType;
 use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\Entry\NullEntry;
 use Flow\ETL\Row\Schema;
-use Flow\ETL\Row\Schema\Definition;
-use Flow\ETL\Row\Schema\FlowMetadata;
 use Flow\Parquet\ParquetFile\Schema as ParquetSchema;
 use Flow\Parquet\ParquetFile\Schema\Column;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
@@ -46,7 +33,7 @@ final class SchemaConverter
         foreach ($schema->definitions() as $definition) {
             $columns[] = $this->flowTypeToParquetType(
                 $definition->entry()->name(),
-                $this->typeFromDefinition($definition)
+                $definition->type()
             );
         }
 
@@ -254,69 +241,5 @@ final class SchemaConverter
         }
 
         throw new RuntimeException($type::class . ' is not supported.');
-    }
-
-    /**
-     * @psalm-suppress InvalidReturnType
-     * @psalm-suppress InvalidReturnStatement
-     */
-    private function typeFromDefinition(Definition $definition) : Type
-    {
-        if ($definition->isNullable() && \count($definition->types()) === 2) {
-            /** @var class-string<Entry> $type */
-            $type = \current(\array_diff($definition->types(), [NullEntry::class]));
-        } elseif (\count($definition->types()) === 1) {
-            $type = \current($definition->types());
-        } else {
-            throw new RuntimeException('Union types are not supported by Parquet file format. Invalid type: ' . $definition->entry()->name());
-        }
-
-        if ($type === Entry\ListEntry::class) {
-            /** @phpstan-ignore-next-line */
-            return $definition->metadata()->get(FlowMetadata::METADATA_LIST_ENTRY_TYPE);
-        }
-
-        if ($type === Entry\MapEntry::class) {
-            /** @phpstan-ignore-next-line */
-            return $definition->metadata()->get(FlowMetadata::METADATA_MAP_ENTRY_TYPE);
-        }
-
-        if ($type === Entry\StructureEntry::class) {
-            /** @phpstan-ignore-next-line */
-            return $definition->metadata()->get(FlowMetadata::METADATA_STRUCTURE_ENTRY_TYPE);
-        }
-
-        if ($type === Entry\ArrayEntry::class) {
-            throw new RuntimeException('ArrayEntry entry can\'t be saved in Parquet file, try convert it to ListEntry');
-        }
-
-        switch ($type) {
-            case Entry\IntegerEntry::class:
-                return type_int($definition->isNullable());
-            case Entry\BooleanEntry::class:
-                return type_boolean($definition->isNullable());
-            case Entry\FloatEntry::class:
-                return type_float($definition->isNullable());
-            case Entry\EnumEntry::class:
-            case Entry\StringEntry::class:
-                return type_string($definition->isNullable());
-            case NullEntry::class:
-                return type_null();
-            case Entry\DateTimeEntry::class:
-                return type_datetime($definition->isNullable());
-            case Entry\UuidEntry::class:
-                return type_uuid($definition->isNullable());
-            case Entry\XMLEntry::class:
-                return type_xml($definition->isNullable());
-            case Entry\XMLNodeEntry::class:
-                return type_xml_node($definition->isNullable());
-            case Entry\JsonEntry::class:
-                return type_json($definition->isNullable());
-            case Entry\ObjectEntry::class:
-                /** @phpstan-ignore-next-line */
-                return $definition->metadata()->get(FlowMetadata::METADATA_OBJECT_ENTRY_TYPE);
-        }
-
-        throw new RuntimeException($type . ' is not supported.');
     }
 }

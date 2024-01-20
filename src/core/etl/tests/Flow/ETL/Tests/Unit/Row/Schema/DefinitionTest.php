@@ -4,30 +4,25 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Schema;
 
-use function Flow\ETL\DSL\bool_entry;
 use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\null_entry;
 use function Flow\ETL\DSL\str_entry;
-use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\struct_element;
 use function Flow\ETL\DSL\struct_entry;
 use function Flow\ETL\DSL\struct_type;
+use function Flow\ETL\DSL\type_datetime;
 use function Flow\ETL\DSL\type_float;
+use function Flow\ETL\DSL\type_int;
+use function Flow\ETL\DSL\type_list;
+use function Flow\ETL\DSL\type_map;
 use function Flow\ETL\DSL\type_string;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\PHP\Type\Logical\StructureType;
-use Flow\ETL\Row\Entry\DateTimeEntry;
-use Flow\ETL\Row\Entry\IntegerEntry;
-use Flow\ETL\Row\Entry\ListEntry;
-use Flow\ETL\Row\Entry\NullEntry;
-use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Row\Schema\Constraint;
 use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\Schema\FlowMetadata;
-use Flow\ETL\Row\Schema\Metadata;
 use PHPUnit\Framework\TestCase;
 
 final class DefinitionTest extends TestCase
@@ -35,32 +30,9 @@ final class DefinitionTest extends TestCase
     public function test_creating_definition_without_class() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Schema definition must come with at least one entry class');
+        $this->expectExceptionMessage('Entry class "DateTimeInterface" must implement "Flow\ETL\Row\Entry"');
 
-        new Definition('name', []);
-    }
-
-    public function test_equals() : void
-    {
-        $def = Definition::union('test', [IntegerEntry::class, StringEntry::class, NullEntry::class]);
-
-        $this->assertTrue(
-            $def->isEqual(
-                Definition::union('test', [StringEntry::class, IntegerEntry::class, NullEntry::class])
-            )
-        );
-
-        $this->assertTrue(
-            $def->isEqual(
-                Definition::union('test', [NullEntry::class, StringEntry::class, IntegerEntry::class])
-            )
-        );
-
-        $this->assertFalse(
-            $def->isEqual(
-                Definition::boolean('test')
-            )
-        );
+        new Definition('name', \DateTimeInterface::class, type_datetime());
     }
 
     public function test_equals_but_different_constraints() : void
@@ -114,97 +86,154 @@ final class DefinitionTest extends TestCase
     public function test_merge_definitions_with_both_side_constraints() : void
     {
         $this->assertEquals(
-            Definition::union(
+            Definition::integer(
                 'id',
-                [IntegerEntry::class, StringEntry::class],
+                true,
                 new Constraint\Any(
                     new Constraint\SameAs(1),
                     new Constraint\SameAs('one')
                 )
-            )->nullable(),
+            ),
             Definition::integer('id', false, new Constraint\SameAs(1))
-                ->merge(Definition::string('id', true, new Constraint\SameAs('one')))
+                ->merge(Definition::integer('id', true, new Constraint\SameAs('one')))
         );
     }
 
     public function test_merge_definitions_with_left_side_constraints() : void
     {
         $this->assertEquals(
-            Definition::union(
+            Definition::integer(
                 'id',
-                [StringEntry::class, IntegerEntry::class],
+                true,
                 new Constraint\SameAs(1)
-            )->nullable(),
-            Definition::string('id', false, new Constraint\SameAs(1))->merge(Definition::integer('id', true))
+            ),
+            Definition::integer('id', false, new Constraint\SameAs(1))->merge(Definition::integer('id', true))
         );
     }
 
     public function test_merge_definitions_with_right_side_constraints() : void
     {
         $this->assertEquals(
-            Definition::union(
+            Definition::integer(
                 'id',
-                [StringEntry::class, IntegerEntry::class],
+                true,
                 new Constraint\SameAs(2)
             )->nullable(),
-            Definition::string('id')->merge(Definition::integer('id', true, new Constraint\SameAs(2)))
+            Definition::integer('id')->merge(Definition::integer('id', true, new Constraint\SameAs(2)))
         );
     }
 
     public function test_merge_definitions_without_constraints() : void
     {
         $this->assertEquals(
-            Definition::union('id', [StringEntry::class, IntegerEntry::class])->nullable(),
-            Definition::string('id')->merge(Definition::integer('id', true))
+            Definition::integer('id', true)->nullable(),
+            Definition::integer('id')->merge(Definition::integer('id', true))
         );
     }
 
-    public function test_merging_two_different_lists_should_give_an_array() : void
+    public function test_merging_anything_and_string() : void
     {
         $this->assertEquals(
-            new Definition(
-                'list',
-                [ListEntry::class, NullEntry::class],
-                null,
-                Metadata::empty()->add(FlowMetadata::METADATA_LIST_ENTRY_TYPE, new ListType(ListElement::string()))
-            ),
-            Definition::list('list', new ListType(ListElement::integer()))
-                ->merge(Definition::list('list', new ListType(ListElement::string()), true))
+            Definition::string('id', true),
+            Definition::integer('id', false)->merge(Definition::string('id', true))
         );
-    }
-
-    public function test_multi_types_is_not_union() : void
-    {
-        $this->assertTrue(Definition::union('id', [IntegerEntry::class, StringEntry::class, NullEntry::class])->isUnion());
-    }
-
-    public function test_narrow_non_union_type() : void
-    {
-        $def = int_schema('int');
-
-        $this->assertSame(
-            $def,
-            $def->narrow()
-        );
-    }
-
-    public function test_narrow_nullable_union_type() : void
-    {
-        $def = Definition::union('test', [IntegerEntry::class, StringEntry::class, DateTimeEntry::class, NullEntry::class]);
-
         $this->assertEquals(
-            str_schema('test', true),
-            $def->narrow()
+            Definition::string('id', true),
+            Definition::float('id', false)->merge(Definition::string('id', true))
+        );
+        $this->assertEquals(
+            Definition::string('id', true),
+            Definition::boolean('id', false)->merge(Definition::string('id', true))
+        );
+        $this->assertEquals(
+            Definition::string('id', true),
+            Definition::dateTime('id', false)->merge(Definition::string('id', true))
         );
     }
 
-    public function test_narrow_union_type() : void
+    public function test_merging_anything_with_null() : void
     {
-        $def = Definition::union('test', [IntegerEntry::class, StringEntry::class, DateTimeEntry::class]);
-
         $this->assertEquals(
-            str_schema('test'),
-            $def->narrow()
+            Definition::string('id', true),
+            Definition::string('id', false)->merge(Definition::null('id'))
+        );
+        $this->assertEquals(
+            Definition::dateTime('datetime', true),
+            Definition::dateTime('datetime', false)->merge(Definition::null('datetime'))
+        );
+        $this->assertEquals(
+            Definition::integer('id', true),
+            Definition::integer('id', false)->merge(Definition::null('id'))
+        );
+        $this->assertEquals(
+            Definition::float('id', true),
+            Definition::float('id', false)->merge(Definition::null('id'))
+        );
+    }
+
+    public function test_merging_numeric_types() : void
+    {
+        $this->assertEquals(
+            Definition::float('id', true),
+            Definition::integer('id', false)->merge(Definition::float('id', true))
+        );
+        $this->assertEquals(
+            Definition::float('id', true),
+            Definition::float('id', false)->merge(Definition::integer('id', true))
+        );
+    }
+
+    public function test_merging_two_different_lists() : void
+    {
+        $this->assertEquals(
+            Definition::array('list'),
+            Definition::list('list', type_list(type_string()))->merge(Definition::list('list', type_list(type_int())))
+        );
+    }
+
+    public function test_merging_two_different_maps() : void
+    {
+        $this->assertEquals(
+            Definition::array('map'),
+            Definition::map('map', type_map(type_string(), type_string()))->merge(Definition::map('map', type_map(type_string(), type_int())))
+        );
+    }
+
+    public function test_merging_two_different_structures() : void
+    {
+        $this->assertEquals(
+            Definition::array('structure'),
+            Definition::structure(
+                'structure',
+                struct_type([
+                    struct_element('street', type_string()),
+                    struct_element('city', type_string()),
+                ])
+            )->merge(
+                Definition::structure(
+                    'structure',
+                    struct_type([
+                        struct_element('street', type_string()),
+                        struct_element('city', type_int()),
+                    ])
+                )
+            )
+        );
+    }
+
+    public function test_merging_two_same_lists() : void
+    {
+        $this->assertEquals(
+            Definition::list('list', type_list(type_int())),
+            Definition::list('list', type_list(type_int()))->merge(Definition::list('list', type_list(type_int())))
+        );
+    }
+
+    public function test_merging_two_same_maps() : void
+    {
+        $this->assertEquals(
+            Definition::map('map', type_map(type_string(), type_string())),
+            Definition::map('map', type_map(type_string(), type_string()))->merge(Definition::map('map', type_map(type_string(), type_string())))
         );
     }
 
@@ -241,11 +270,6 @@ final class DefinitionTest extends TestCase
         $this->assertFalse($def->matches(int_entry('not-test', 1)));
     }
 
-    public function test_nullable_is_not_union() : void
-    {
-        $this->assertFalse(Definition::string('id', true)->isUnion());
-    }
-
     public function test_structure_definition_metadata() : void
     {
         $address = struct_entry(
@@ -280,24 +304,7 @@ final class DefinitionTest extends TestCase
                     ])
                 ),
             ]),
-            $address->definition()->metadata()->get(FlowMetadata::METADATA_STRUCTURE_ENTRY_TYPE)
+            $address->definition()->type()
         );
-    }
-
-    public function test_union_type_definition() : void
-    {
-        $def = Definition::union('test', [IntegerEntry::class, StringEntry::class]);
-
-        $this->assertFalse($def->matches(int_entry('not-test', 1)));
-        $this->assertTrue($def->matches(int_entry('test', 1)));
-        $this->assertTrue($def->matches(str_entry('test', 'test')));
-        $this->assertFalse($def->matches(bool_entry('test', false)));
-    }
-
-    public function test_union_type_from_non_unique_types() : void
-    {
-        $this->expectException(InvalidArgumentException::class);
-
-        Definition::union('test', [ListEntry::class, ListEntry::class]);
     }
 }

@@ -45,6 +45,11 @@ final class MapType implements LogicalType
         return $this->key;
     }
 
+    public function makeNullable(bool $nullable) : self
+    {
+        return new self($this->key, $this->value, $nullable);
+    }
+
     public function nullable() : bool
     {
         return $this->nullable;

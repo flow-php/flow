@@ -31,4 +31,9 @@ final class DateTimeType implements LogicalType
     {
         return ($this->nullable ? '?' : '') . 'datetime';
     }
+
+    public function makeNullable(bool $nullable): Type
+    {
+        return new self($nullable);
+    }
 }

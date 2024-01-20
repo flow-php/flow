@@ -26,4 +26,9 @@ final class NullType implements NativeType
     {
         return 'null';
     }
+
+    public function makeNullable(bool $nullable): Type
+    {
+        return $this;
+    }
 }

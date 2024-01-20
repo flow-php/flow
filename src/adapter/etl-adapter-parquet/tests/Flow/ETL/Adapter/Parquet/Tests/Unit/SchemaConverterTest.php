@@ -28,7 +28,7 @@ final class SchemaConverterTest extends TestCase
     public function test_convert_array_entry_to_parquet_array() : void
     {
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage("ArrayEntry entry can't be saved in Parquet file, try convert it to ListEntry");
+        $this->expectExceptionMessage("Flow\ETL\PHP\Type\Native\ArrayType is not supported.");
 
         (new SchemaConverter())->toParquet(new Schema(
             Schema\Definition::array('array')

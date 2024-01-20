@@ -10,6 +10,7 @@ use Flow\ETL\DataFrame;
 use Flow\ETL\ErrorHandler\IgnoreError;
 use Flow\ETL\ErrorHandler\SkipRows;
 use Flow\ETL\ErrorHandler\ThrowError;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\LocalFileListExtractor;
@@ -294,6 +295,9 @@ function json_entry(string $name, array|string $data) : Row\Entry\JsonEntry
     return new Row\Entry\JsonEntry($name, $data);
 }
 
+/**
+ * @throws InvalidArgumentException
+ */
 function json_object_entry(string $name, array|string $data) : Row\Entry\JsonEntry
 {
     if (\is_string($data)) {
@@ -371,9 +375,9 @@ function list_entry(string $name, array $value, ListType $type) : Row\Entry\List
     return new Row\Entry\ListEntry($name, $value, $type);
 }
 
-function type_list(Type $element) : ListType
+function type_list(Type $element, bool $nullable = false) : ListType
 {
-    return new ListType(new ListElement($element));
+    return new ListType(new ListElement($element), $nullable);
 }
 
 function type_map(ScalarType $key_type, Type $value_type, bool $nullable = false) : MapType
@@ -1020,14 +1024,6 @@ function map_schema(string $name, MapType $type, bool $nullable = false, ?Schema
 function list_schema(string $name, ListType $type, bool $nullable = false, ?Schema\Constraint $constraint = null, ?Schema\Metadata $metadata = null) : Definition
 {
     return Definition::list($name, $type, $nullable, $constraint, $metadata);
-}
-
-/**
- * @param array<class-string<Row\Entry>> $entry_classes
- */
-function union_schema(string $name, array $entry_classes, ?Schema\Constraint $constraint = null, ?Schema\Metadata $metadata = null) : Definition
-{
-    return Definition::union($name, $entry_classes, $constraint, $metadata);
 }
 
 /**

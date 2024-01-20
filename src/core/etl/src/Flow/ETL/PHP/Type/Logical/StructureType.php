@@ -26,6 +26,9 @@ final class StructureType implements LogicalType
         $this->elements = $elements;
     }
 
+    /**
+     * @return array<StructureElement>
+     */
     public function elements() : array
     {
         return $this->elements;
@@ -37,10 +40,14 @@ final class StructureType implements LogicalType
             return false;
         }
 
+        if (\count($this->elements) !== \count($type->elements())) {
+            return false;
+        }
+
         foreach ($this->elements as $internalElement) {
-            foreach ($type->elements() as $element) {
-                if ($internalElement->name() === $element->name() && $internalElement->isEqual($element->type())) {
-                    return true;
+            foreach ($type->elements as $element) {
+                if ($element->isEqual($internalElement)) {
+                    continue 2;
                 }
             }
 
@@ -71,6 +78,11 @@ final class StructureType implements LogicalType
         }
 
         return true;
+    }
+
+    public function makeNullable(bool $nullable) : self
+    {
+        return new self($this->elements, $nullable);
     }
 
     public function nullable() : bool

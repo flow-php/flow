@@ -44,6 +44,11 @@ final class ListType implements LogicalType
         return true;
     }
 
+    public function makeNullable(bool $nullable) : self
+    {
+        return new self($this->element, $nullable);
+    }
+
     public function nullable() : bool
     {
         return $this->nullable;

@@ -35,4 +35,9 @@ final class XMLNodeType implements LogicalType
     {
         return ($this->nullable ? '?' : '') . 'xml_node';
     }
+
+    public function makeNullable(bool $nullable): Type
+    {
+        return new self($nullable);
+    }
 }

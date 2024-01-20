@@ -13,4 +13,6 @@ interface Type
     public function nullable() : bool;
 
     public function toString() : string;
+
+    public function makeNullable(bool $nullable) : self;
 }

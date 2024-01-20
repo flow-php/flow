@@ -13,8 +13,6 @@ use Flow\ETL\PHP\Type\Logical\Map\MapValue;
 use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\StructureType;
-use Flow\ETL\Row\Entry\FloatEntry;
-use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Row\Schema\Formatter\ASCIISchemaFormatter;
 use PHPUnit\Framework\TestCase;
@@ -24,7 +22,8 @@ final class ASCIISchemaFormatterTest extends TestCase
     public function test_format_nested_schema() : void
     {
         $schema = new Schema(
-            Schema\Definition::union('number', [IntegerEntry::class, FloatEntry::class]),
+            Schema\Definition::integer('integer', true),
+            Schema\Definition::integer('float'),
             Schema\Definition::structure(
                 'user',
                 new StructureType([
@@ -39,7 +38,6 @@ final class ASCIISchemaFormatterTest extends TestCase
                         ])
                     ),
                 ]),
-                true
             ),
             Schema\Definition::string('name', nullable: true),
             Schema\Definition::array('tags'),
@@ -55,7 +53,8 @@ final class ASCIISchemaFormatterTest extends TestCase
         $this->assertSame(
             <<<'SCHEMA'
 schema
-|-- number: integer|float
+|-- integer: ?integer
+|-- float: integer
 |-- user: structure
 |    |-- name: ?string
 |    |-- age: integer
@@ -81,7 +80,6 @@ SCHEMA,
     public function test_format_schema() : void
     {
         $schema = new Schema(
-            Schema\Definition::union('number', [IntegerEntry::class, FloatEntry::class]),
             Schema\Definition::string('name', nullable: true),
             Schema\Definition::array('tags'),
             Schema\Definition::boolean('active'),
@@ -93,7 +91,6 @@ SCHEMA,
         $this->assertSame(
             <<<'SCHEMA'
 schema
-|-- number: integer|float
 |-- name: ?string
 |-- tags: array<mixed>
 |-- active: boolean
