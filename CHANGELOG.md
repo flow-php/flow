@@ -1,6 +1,12 @@
 ## [Unreleased] - 2024-01-21
 
 ### Added
+- [#928](https://github.com/flow-php/flow/pull/928) - **Caster mechanism that works on top of Flow\PHP\Type** - [@norberttech](https://github.com/norberttech)
+- [#928](https://github.com/flow-php/flow/pull/928) - **AutoCaster that works on top of Caster** - [@norberttech](https://github.com/norberttech)
+- [#928](https://github.com/flow-php/flow/pull/928) - **print_schema function** - [@norberttech](https://github.com/norberttech)
+- [#928](https://github.com/flow-php/flow/pull/928) - **print_rows function** - [@norberttech](https://github.com/norberttech)
+- [#928](https://github.com/flow-php/flow/pull/928) - **possibility to pass predefined schema to CSVExtractor** - [@norberttech](https://github.com/norberttech)
+- [#928](https://github.com/flow-php/flow/pull/928) - **possibility to pass predefined schema to JsonExtractor** - [@norberttech](https://github.com/norberttech)
 - [#927](https://github.com/flow-php/flow/pull/927) - **Schema Definition::type() : Type** - [@norberttech](https://github.com/norberttech)
 - [#927](https://github.com/flow-php/flow/pull/927) - **Type::merge() : Type** - [@norberttech](https://github.com/norberttech)
 - [#926](https://github.com/flow-php/flow/pull/926) - **Uuid Logical Type** - [@norberttech](https://github.com/norberttech)
@@ -50,6 +56,7 @@
 - [#867](https://github.com/flow-php/flow/pull/867) - **Update Homebrew TAP formula: flow-php to version: 0.5.2** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#928](https://github.com/flow-php/flow/pull/928) - **NativeEntryFactory fully respecting schema definitions** - [@norberttech](https://github.com/norberttech)
 - [#926](https://github.com/flow-php/flow/pull/926) - **Missing nullable property in Map/Struct/List logical types** - [@norberttech](https://github.com/norberttech)
 - [#909](https://github.com/flow-php/flow/pull/909) - **fixed unit testing csv load overwrite mode** - [@rzarno](https://github.com/rzarno)
 - [#902](https://github.com/flow-php/flow/pull/902) - **changing partitions order during partitioning** - [@norberttech](https://github.com/norberttech)
