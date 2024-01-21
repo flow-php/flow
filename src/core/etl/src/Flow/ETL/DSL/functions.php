@@ -110,6 +110,7 @@ use Flow\ETL\PHP\Type\Native\ObjectType;
 use Flow\ETL\PHP\Type\Native\ResourceType;
 use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\PHP\Type\Type;
+use Flow\ETL\PHP\Type\TypeDetector;
 use Flow\ETL\Pipeline;
 use Flow\ETL\Row;
 use Flow\ETL\Row\EntryFactory;
@@ -666,7 +667,7 @@ function hash(ScalarFunction $function, string $algorithm = 'xxh128', bool $bina
     return new Hash($function, $algorithm, $binary, $options);
 }
 
-function cast(ScalarFunction $function, string $type) : Cast
+function cast(ScalarFunction $function, string|Type $type) : Cast
 {
     return new Cast($function, $type);
 }
@@ -1112,4 +1113,9 @@ function exception_if_exists() : SaveMode
 function append() : SaveMode
 {
     return SaveMode::Append;
+}
+
+function get_type(mixed $value) : Type
+{
+    return (new TypeDetector())->detectType($value);
 }

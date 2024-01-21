@@ -2,7 +2,7 @@
 
 namespace Flow\ETL\Tests\Benchmark;
 
-use Flow\ETL\PHP\Type\TypeDetector;
+use function Flow\ETL\DSL\get_type;
 use PhpBench\Attributes\Groups;
 use PhpBench\Attributes\ParamProviders;
 
@@ -12,7 +12,7 @@ final class TypeDetectorBench
     #[ParamProviders('provideRows')]
     public function bench_type_detector(array $params) : void
     {
-        (new TypeDetector())->detectType($params['data']);
+        get_type($params['data']);
     }
 
     public function provideRows() : \Generator

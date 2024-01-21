@@ -4,14 +4,26 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use function Flow\ETL\DSL\type_array;
+use function Flow\ETL\DSL\type_boolean;
+use function Flow\ETL\DSL\type_datetime;
+use function Flow\ETL\DSL\type_float;
+use function Flow\ETL\DSL\type_integer;
+use function Flow\ETL\DSL\type_json;
+use function Flow\ETL\DSL\type_object;
+use function Flow\ETL\DSL\type_string;
+use function Flow\ETL\DSL\type_xml;
+use Flow\ETL\Exception\CastingException;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\PHP\Type\Caster;
+use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row;
 
 final class Cast extends ScalarFunctionChain
 {
     public function __construct(
         private readonly ScalarFunction $ref,
-        private readonly string $type
+        private readonly string|Type $type
     ) {
     }
 
@@ -27,88 +39,35 @@ final class Cast extends ScalarFunctionChain
             return null;
         }
 
-        return match (\mb_strtolower($this->type)) {
-            'datetime' => match (\gettype($value)) {
-                'string' => new \DateTimeImmutable($value),
-                'integer' => \DateTimeImmutable::createFromFormat('U', (string) $value),
-                default => null,
-            },
-            'date' => match (\gettype($value)) {
-                'string' => (new \DateTimeImmutable($value))->setTime(0, 0, 0, 0),
-                'integer' => \DateTimeImmutable::createFromFormat('U', (string) $value),
-                default => null,
-            },
-            'int', 'integer' => (int) $value,
-            'float', 'double', 'real' => (float) $value,
-            'string' => $this->toString($value),
-            'bool', 'boolean' => (bool) $value,
-            'array' => $this->toArray($value),
-            'object' => (object) $value,
-            'json' => \json_encode($value, JSON_THROW_ON_ERROR),
-            'json_pretty' => \json_encode($value, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT),
-            'xml' => $this->toXML($value),
-            default => null
-        };
-    }
+        $caster = Caster::default();
 
-    private function toArray(mixed $data) : array
-    {
-        if ($data instanceof \DOMDocument) {
-            return (new Cast\XMLConverter())->toArray($data);
+        $type = $this->type;
+
+        if ($type instanceof Type) {
+            return $caster->to($type)->value($value);
         }
 
-        return (array) $data;
-    }
-
-    private function toString(mixed $value) : ?string
-    {
-        if ($value === null) {
+        try {
+            return match (\mb_strtolower($type)) {
+                'datetime' => $caster->to(type_datetime())->value($value),
+                'date' => match (\gettype($value)) {
+                    'string' => (new \DateTimeImmutable($value))->setTime(0, 0, 0, 0),
+                    'integer' => \DateTimeImmutable::createFromFormat('U', (string) $value),
+                    default => null,
+                },
+                'int', 'integer' => $caster->to(type_integer())->value($value),
+                'float', 'double', 'real' => $caster->to(type_float())->value($value),
+                'string' => $caster->to(type_string())->value($value),
+                'bool', 'boolean' => $caster->to(type_boolean())->value($value),
+                'array' => $caster->to(type_array())->value($value),
+                'object' => $caster->to(type_object(\stdClass::class))->value($value),
+                'json' => $caster->to(type_json())->value($value),
+                'json_pretty' => \json_encode($value, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT),
+                'xml' => $caster->to(type_xml())->value($value),
+                default => null
+            };
+        } catch (CastingException $e) {
             return null;
         }
-
-        if (\is_string($value)) {
-            return $value;
-        }
-
-        if (\is_bool($value)) {
-            return $value ? 'true' : 'false';
-        }
-
-        if (\is_array($value)) {
-            return \json_encode($value, JSON_THROW_ON_ERROR);
-        }
-
-        if ($value instanceof \DateTimeInterface) {
-            return $value->format(\DateTimeInterface::RFC3339);
-        }
-
-        if ($value instanceof \Stringable) {
-            return (string) $value;
-        }
-
-        if ($value instanceof \DOMDocument) {
-            return $value->saveXML() ?: null;
-        }
-
-        return (string) $value;
-    }
-
-    private function toXML(mixed $value) : null|\DOMDocument
-    {
-        if (\is_string($value)) {
-            $doc = new \DOMDocument();
-
-            if (!@$doc->load($value)) {
-                return null;
-            }
-
-            return $doc;
-        }
-
-        if ($value instanceof \DOMDocument) {
-            return $value;
-        }
-
-        return null;
     }
 }

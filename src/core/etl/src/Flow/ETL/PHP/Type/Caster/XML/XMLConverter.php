@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Flow\ETL\Function\Cast;
+namespace Flow\ETL\PHP\Type\Caster\XML;
 
 final class XMLConverter
 {

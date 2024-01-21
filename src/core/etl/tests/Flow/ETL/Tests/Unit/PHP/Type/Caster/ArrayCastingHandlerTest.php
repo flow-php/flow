@@ -49,4 +49,15 @@ final class ArrayCastingHandlerTest extends TestCase
             (new ArrayCastingHandler())->value('{"items":{"item":1}}', type_array())
         );
     }
+
+    public function test_casting_xml_document_to_array() : void
+    {
+        $xml = new \DOMDocument();
+        $xml->loadXML($xmlString = '<root><foo baz="buz">bar</foo></root>');
+
+        $this->assertSame(
+            ['root' => ['foo' => ['@attributes' => ['baz' => 'buz'], '@value' => 'bar']]],
+            (new ArrayCastingHandler())->value($xml, type_array())
+        );
+    }
 }
