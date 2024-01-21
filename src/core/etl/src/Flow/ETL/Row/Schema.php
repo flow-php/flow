@@ -93,9 +93,6 @@ final class Schema implements \Countable
             return $this;
         }
 
-        //        echo "Before: \n";
-        //        dj($this->definitions, $schema->definitions);
-
         foreach ($schema->definitions as $entry => $definition) {
             if (!\array_key_exists($definition->entry()->name(), $newDefinitions)) {
                 $newDefinitions[$entry] = $definition->nullable();
@@ -109,9 +106,6 @@ final class Schema implements \Countable
                 $newDefinitions[$entry] = $definition->nullable();
             }
         }
-
-        //        echo "After: \n";
-        //        dj($newDefinitions);
 
         return new self(...\array_values($newDefinitions));
     }
