@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Row\Factory;
+namespace Flow\ETL\PHP\Type\Caster\StringCastingHandler;
 
 use Flow\ETL\Row\Entry\Type\Uuid;
 
@@ -21,7 +21,7 @@ final class StringTypeChecker
             return false;
         }
 
-        return \in_array(\strtolower($this->string), ['true', 'false'], true);
+        return \in_array(\strtolower($this->string), ['true', 'false', 'yes', 'no', 'on', 'off'], true);
     }
 
     public function isDateTime() : bool

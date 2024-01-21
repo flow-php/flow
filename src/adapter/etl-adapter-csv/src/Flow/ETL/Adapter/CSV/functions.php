@@ -10,6 +10,7 @@ use Flow\ETL\Adapter\CSV\Detector\Options;
 use Flow\ETL\Extractor;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Loader;
+use Flow\ETL\Row\Schema;
 
 /**
  * @param int<0, max> $characters_read_in_line
@@ -21,7 +22,8 @@ function from_csv(
     string|null $delimiter = null,
     string|null $enclosure = null,
     string|null $escape = null,
-    int $characters_read_in_line = 1000
+    int $characters_read_in_line = 1000,
+    Schema|null $schema = null
 ) : Extractor {
     if (\is_array($path)) {
         $extractors = [];
@@ -35,6 +37,7 @@ function from_csv(
                 $enclosure,
                 $escape,
                 $characters_read_in_line,
+                $schema
             );
         }
 
@@ -49,6 +52,7 @@ function from_csv(
         $enclosure,
         $escape,
         $characters_read_in_line,
+        $schema
     );
 }
 

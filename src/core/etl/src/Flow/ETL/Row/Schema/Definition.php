@@ -11,6 +11,7 @@ use function Flow\ETL\DSL\type_enum;
 use function Flow\ETL\DSL\type_float;
 use function Flow\ETL\DSL\type_int;
 use function Flow\ETL\DSL\type_json;
+use function Flow\ETL\DSL\type_list;
 use function Flow\ETL\DSL\type_null;
 use function Flow\ETL\DSL\type_string;
 use function Flow\ETL\DSL\type_uuid;
@@ -254,6 +255,21 @@ final class Definition
             $constraint = $this->constraint;
         }
 
+        if ($this->type instanceof ListType && $definition->type instanceof ListType && !$this->type->isEqual($definition->type)) {
+            $thisTypeString = $this->type->element()->toString();
+            $definitionTypeString = $definition->type->element()->toString();
+
+            if (\in_array($thisTypeString, ['integer', 'float', '?integer', '?float'], true) && \in_array($definitionTypeString, ['integer', 'float', '?integer', '?float'], true)) {
+                return new self(
+                    $this->ref,
+                    $this->entryClass,
+                    type_list(type_float($this->type->element()->type()->nullable() || $definition->type->element()->type()->nullable())),
+                    $constraint,
+                    $this->metadata->merge($definition->metadata)
+                );
+            }
+        }
+
         if ($this->entryClass === $definition->entryClass && \in_array($this->entryClass, [ListEntry::class, MapEntry::class, StructureEntry::class], true)) {
             if (!$this->type->isEqual($definition->type)) {
                 return new self(
@@ -312,7 +328,17 @@ final class Definition
             );
         }
 
-        throw new RuntimeException(\sprintf('Cannot merge definitions for entries, "%s" and "%s"', $this->ref->name(), $definition->ref->name()));
+        if (\in_array(ArrayEntry::class, $entryClasses, true)) {
+            return new self(
+                $this->ref,
+                ArrayEntry::class,
+                type_array(false, $this->isNullable() || $definition->isNullable()),
+                $constraint,
+                $this->metadata->merge($definition->metadata)
+            );
+        }
+
+        throw new RuntimeException(\sprintf('Cannot merge definitions for entries, "%s (%s)" and "%s (%s)"', $this->ref->name(), $this->type->toString(), $definition->ref->name(), $definition->type->toString()));
     }
 
     public function metadata() : Metadata

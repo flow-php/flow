@@ -21,6 +21,8 @@ use Flow\ETL\Join\Join;
 use Flow\ETL\Loader\SchemaValidationLoader;
 use Flow\ETL\Loader\StreamLoader\Output;
 use Flow\ETL\Partition\ScalarFunctionFilter;
+use Flow\ETL\PHP\Type\AutoCaster;
+use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\Pipeline\BatchingPipeline;
 use Flow\ETL\Pipeline\CachingPipeline;
 use Flow\ETL\Pipeline\CollectingPipeline;
@@ -151,7 +153,7 @@ final class DataFrame
 
     public function autoCast() : self
     {
-        $this->pipeline->add(new AutoCastTransformer());
+        $this->pipeline->add(new AutoCastTransformer(new AutoCaster(Caster::default())));
 
         return $this;
     }

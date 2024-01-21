@@ -10,6 +10,7 @@ use Flow\ETL\Function;
 use Flow\ETL\Function\ArrayExpand\ArrayExpand;
 use Flow\ETL\Function\ArraySort\Sort;
 use Flow\ETL\Function\Between\Boundary;
+use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Entry;
 
 abstract class ScalarFunctionChain implements ScalarFunction
@@ -59,7 +60,7 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new Capitalize($this);
     }
 
-    public function cast(string $type) : self
+    public function cast(string|Type $type) : self
     {
         return new Cast($this, $type);
     }

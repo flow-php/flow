@@ -15,16 +15,16 @@ final class ArrayContentDetector
 
     private readonly ?Type $firstValueType;
 
-    private readonly int $uniqueKeysCount;
+    private readonly int $uniqueKeysTypeCount;
 
-    private readonly int $uniqueValuesCount;
+    private readonly int $uniqueValuesTypeCount;
 
     public function __construct(Types $uniqueKeysType, Types $uniqueValuesType)
     {
         $this->firstKeyType = $uniqueKeysType->first();
         $this->firstValueType = $uniqueValuesType->first();
-        $this->uniqueKeysCount = $uniqueKeysType->count();
-        $this->uniqueValuesCount = $uniqueValuesType->without(type_array(true), type_null())->count();
+        $this->uniqueKeysTypeCount = $uniqueKeysType->count();
+        $this->uniqueValuesTypeCount = $uniqueValuesType->without(type_array(true), type_null())->count();
     }
 
     public function firstKeyType() : ?ScalarType
@@ -43,12 +43,12 @@ final class ArrayContentDetector
 
     public function isList() : bool
     {
-        return 1 === $this->uniqueValuesCount && $this->firstKeyType()?->isInteger();
+        return 1 === $this->uniqueValuesTypeCount && $this->firstKeyType()?->isInteger();
     }
 
     public function isMap() : bool
     {
-        if (1 === $this->uniqueValuesCount && 1 === $this->uniqueKeysCount) {
+        if (1 === $this->uniqueValuesTypeCount && 1 === $this->uniqueKeysTypeCount) {
             return !$this->firstKeyType()?->isInteger();
         }
 
@@ -61,8 +61,8 @@ final class ArrayContentDetector
             return false;
         }
 
-        return 0 !== $this->uniqueValuesCount
-            && 1 === $this->uniqueKeysCount
+        return 0 !== $this->uniqueValuesTypeCount
+            && 1 === $this->uniqueKeysTypeCount
             && $this->firstKeyType()?->isString();
     }
 }

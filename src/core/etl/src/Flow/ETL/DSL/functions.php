@@ -110,6 +110,7 @@ use Flow\ETL\PHP\Type\Native\ObjectType;
 use Flow\ETL\PHP\Type\Native\ResourceType;
 use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\PHP\Type\Type;
+use Flow\ETL\PHP\Type\TypeDetector;
 use Flow\ETL\Pipeline;
 use Flow\ETL\Row;
 use Flow\ETL\Row\EntryFactory;
@@ -357,6 +358,11 @@ function struct_entry(string $name, array $value, StructureType $type) : Row\Ent
     return new Row\Entry\StructureEntry($name, $value, $type);
 }
 
+function structure_entry(string $name, array $value, StructureType $type) : Row\Entry\StructureEntry
+{
+    return new Row\Entry\StructureEntry($name, $value, $type);
+}
+
 /**
  * @param array<string, StructureElement> $elements
  */
@@ -365,7 +371,17 @@ function struct_type(array $elements, bool $nullable = false) : StructureType
     return new StructureType($elements, $nullable);
 }
 
+function structure_type(array $elements, bool $nullable = false) : StructureType
+{
+    return new StructureType($elements, $nullable);
+}
+
 function struct_element(string $name, Type $type) : StructureElement
+{
+    return new StructureElement($name, $type);
+}
+
+function structure_element(string $name, Type $type) : StructureElement
 {
     return new StructureElement($name, $type);
 }
@@ -416,6 +432,11 @@ function type_uuid(bool $nullable = false) : UuidType
 }
 
 function type_int(bool $nullable = false) : ScalarType
+{
+    return ScalarType::integer($nullable);
+}
+
+function type_integer(bool $nullable = false) : ScalarType
 {
     return ScalarType::integer($nullable);
 }
@@ -661,7 +682,7 @@ function hash(ScalarFunction $function, string $algorithm = 'xxh128', bool $bina
     return new Hash($function, $algorithm, $binary, $options);
 }
 
-function cast(ScalarFunction $function, string $type) : Cast
+function cast(ScalarFunction $function, string|Type $type) : Cast
 {
     return new Cast($function, $type);
 }
@@ -862,7 +883,7 @@ function number_format(ScalarFunction $function, ?ScalarFunction $decimals = nul
  * @param array<array<mixed>>|array<mixed|string> $data
  * @param array<Partition>|\Flow\ETL\Partitions $partitions
  */
-function array_to_rows(array $data, EntryFactory $entryFactory = new NativeEntryFactory(), array|\Flow\ETL\Partitions $partitions = []) : Rows
+function array_to_rows(array $data, EntryFactory $entryFactory = new NativeEntryFactory(), array|\Flow\ETL\Partitions $partitions = [], ?Schema $schema = null) : Rows
 {
     $partitions = \is_array($partitions) ? new \Flow\ETL\Partitions(...$partitions) : $partitions;
 
@@ -882,12 +903,12 @@ function array_to_rows(array $data, EntryFactory $entryFactory = new NativeEntry
         foreach ($data as $key => $value) {
             $name = \is_int($key) ? 'e' . \str_pad((string) $key, 2, '0', STR_PAD_LEFT) : $key;
 
-            $entries[$name] = $entryFactory->create($name, $value);
+            $entries[$name] = $entryFactory->create($name, $value, $schema);
         }
 
         foreach ($partitions as $partition) {
             if (!\array_key_exists($partition->name, $entries)) {
-                $entries[$partition->name] = $entryFactory->create($partition->name, $partition->value);
+                $entries[$partition->name] = $entryFactory->create($partition->name, $partition->value, $schema);
             }
         }
 
@@ -901,12 +922,12 @@ function array_to_rows(array $data, EntryFactory $entryFactory = new NativeEntry
 
         foreach ($row as $column => $value) {
             $name = \is_int($column) ? 'e' . \str_pad((string) $column, 2, '0', STR_PAD_LEFT) : $column;
-            $entries[$name] = $entryFactory->create(\is_int($column) ? 'e' . \str_pad((string) $column, 2, '0', STR_PAD_LEFT) : $column, $value);
+            $entries[$name] = $entryFactory->create(\is_int($column) ? 'e' . \str_pad((string) $column, 2, '0', STR_PAD_LEFT) : $column, $value, $schema);
         }
 
         foreach ($partitions as $partition) {
             if (!\array_key_exists($partition->name, $entries)) {
-                $entries[$partition->name] = $entryFactory->create($partition->name, $partition->value);
+                $entries[$partition->name] = $entryFactory->create($partition->name, $partition->value, $schema);
             }
         }
 
@@ -1107,4 +1128,19 @@ function exception_if_exists() : SaveMode
 function append() : SaveMode
 {
     return SaveMode::Append;
+}
+
+function get_type(mixed $value) : Type
+{
+    return (new TypeDetector())->detectType($value);
+}
+
+function print_schema(Schema $schema, ?SchemaFormatter $formatter = null) : string
+{
+    return ($formatter ?? new ASCIISchemaFormatter())->format($schema);
+}
+
+function print_rows(Rows $rows, int|bool $truncate = false, ?Formatter $formatter = null) : string
+{
+    return ($formatter ?? new Formatter\AsciiTableFormatter())->format($rows, $truncate);
 }
