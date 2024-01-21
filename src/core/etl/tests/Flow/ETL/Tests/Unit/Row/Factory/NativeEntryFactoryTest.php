@@ -24,6 +24,7 @@ use function Flow\ETL\DSL\type_object;
 use function Flow\ETL\DSL\type_string;
 use function Flow\ETL\DSL\uuid_entry;
 use function Flow\ETL\DSL\xml_entry;
+use Flow\ETL\Exception\CastingException;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\ListType;
@@ -103,15 +104,6 @@ final class NativeEntryFactoryTest extends TestCase
         );
     }
 
-    public function test_conversion_to_different_type_with_schema() : void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("Field \"e\" conversion exception. Flow\ETL\DSL\str_entry(): Argument #2 (\$value) must be of type string, int given, called in");
-
-        (new NativeEntryFactory())
-            ->create('e', 1, new Schema(Schema\Definition::string('e')));
-    }
-
     public function test_datetime() : void
     {
         $this->assertEquals(
@@ -152,14 +144,14 @@ final class NativeEntryFactoryTest extends TestCase
         $this->assertEquals(
             enum_entry('e', BackedIntEnum::one),
             (new NativeEntryFactory())
-                ->create('e', 'one', new Schema(Schema\Definition::enum('e', BackedIntEnum::class)))
+                ->create('e', 1, new Schema(Schema\Definition::enum('e', BackedIntEnum::class)))
         );
     }
 
     public function test_enum_invalid_value_with_schema() : void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("Value \"invalid\" can't be converted to " . BackedIntEnum::class . ' enum');
+        $this->expectException(CastingException::class);
+        $this->expectExceptionMessage("Can't cast \"string\" into \"enum<Flow\ETL\Tests\Fixtures\Enum\BackedIntEnum>\" type");
 
         (new NativeEntryFactory())
             ->create('e', 'invalid', new Schema(Schema\Definition::enum('e', BackedIntEnum::class)));

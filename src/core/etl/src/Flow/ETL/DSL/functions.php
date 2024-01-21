@@ -420,6 +420,11 @@ function type_int(bool $nullable = false) : ScalarType
     return ScalarType::integer($nullable);
 }
 
+function type_integer(bool $nullable = false) : ScalarType
+{
+    return ScalarType::integer($nullable);
+}
+
 function type_string(bool $nullable = false) : ScalarType
 {
     return ScalarType::string($nullable);

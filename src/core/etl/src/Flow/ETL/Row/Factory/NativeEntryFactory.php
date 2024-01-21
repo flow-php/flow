@@ -23,6 +23,7 @@ use function Flow\ETL\DSL\xml_entry;
 use function Flow\ETL\DSL\xml_node_entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\PHP\Type\Logical\DateTimeType;
 use Flow\ETL\PHP\Type\Logical\JsonType;
 use Flow\ETL\PHP\Type\Logical\ListType;
@@ -161,74 +162,69 @@ final class NativeEntryFactory implements EntryFactory
 
     private function fromDefinition(Schema\Definition $definition, mixed $value) : Entry
     {
-        if ($definition->isNullable() && null === $value) {
-            return null_entry($definition->entry()->name());
+        if ($definition->isNullable()) {
+            if (null === $value) {
+                return null_entry($definition->entry()->name());
+            }
+
+            throw new InvalidArgumentException("Entry \"{$definition->entry()}\" is not nullable, but null value was given");
         }
+
+        $caster = Caster::default();
 
         try {
             if ($definition->type() instanceof ScalarType) {
                 return match ($definition->type()->type()) {
-                    ScalarType::STRING => str_entry($definition->entry()->name(), $value),
-                    ScalarType::INTEGER => int_entry($definition->entry()->name(), $value),
-                    ScalarType::FLOAT => float_entry($definition->entry()->name(), $value),
-                    ScalarType::BOOLEAN => bool_entry($definition->entry()->name(), $value),
+                    ScalarType::STRING => str_entry($definition->entry()->name(), $caster->to($definition->type())->value($value)),
+                    ScalarType::INTEGER => int_entry($definition->entry()->name(), $caster->to($definition->type())->value($value)),
+                    ScalarType::FLOAT => float_entry($definition->entry()->name(), $caster->to($definition->type())->value($value)),
+                    ScalarType::BOOLEAN => bool_entry($definition->entry()->name(), $caster->to($definition->type())->value($value)),
                     default => throw new InvalidArgumentException("Can't convert value into entry \"{$definition->entry()}\""),
                 };
             }
 
             if ($definition->type() instanceof XMLType) {
-                return xml_entry($definition->entry()->name(), $value);
+                return xml_entry($definition->entry()->name(), $caster->to($definition->type())->value($value));
             }
 
             if ($definition->type() instanceof UuidType) {
-                return uuid_entry($definition->entry()->name(), $value);
+                return uuid_entry($definition->entry()->name(), $caster->to($definition->type())->value($value));
             }
 
             if ($definition->type() instanceof ObjectType) {
-                return obj_entry($definition->entry()->name(), $value);
+                return obj_entry($definition->entry()->name(), $caster->to($definition->type())->value($value));
             }
 
             if ($definition->type() instanceof DateTimeType) {
-                return datetime_entry($definition->entry()->name(), $value);
+                return datetime_entry($definition->entry()->name(), $caster->to($definition->type())->value($value));
             }
 
             if ($definition->type() instanceof EnumType) {
-                /** @var class-string<\UnitEnum> $enumClass */
-                $enumClass = $definition->type()->class;
-                /** @var array<\UnitEnum> $cases */
-                $cases = $definition->type()->class::cases();
-
-                foreach ($cases as $case) {
-                    if ($case->name === $value) {
-                        return enum_entry($definition->entry()->name(), $case);
-                    }
-                }
-
-                throw new InvalidArgumentException("Value \"{$value}\" can't be converted to " . $enumClass . ' enum');
+                return enum_entry($definition->entry()->name(), $caster->to($definition->type())->value($value));
             }
 
             if ($definition->type() instanceof JsonType) {
                 try {
-                    return json_object_entry($definition->entry()->name(), $value);
+                    return json_object_entry($definition->entry()->name(), $caster->to($definition->type())->value($value));
                 } catch (InvalidArgumentException) {
-                    return json_entry($definition->entry()->name(), $value);
+                    return json_entry($definition->entry()->name(), $caster->to($definition->type())->value($value));
                 }
             }
 
             if ($definition->type() instanceof ArrayType) {
-                return array_entry($definition->entry()->name(), $value);
+                return array_entry($definition->entry()->name(), $caster->to($definition->type())->value($value));
             }
 
             if ($definition->type() instanceof MapType) {
-                return map_entry($definition->entry()->name(), $value, $definition->type());
+                return map_entry($definition->entry()->name(), $caster->to($definition->type())->value($value), $definition->type());
             }
 
             if ($definition->type() instanceof StructureType) {
-                return struct_entry($definition->entry()->name(), $value, $definition->type());
+                return struct_entry($definition->entry()->name(), $caster->to($definition->type())->value($value), $definition->type());
             }
 
             if ($definition->type() instanceof ListType) {
-                return new Entry\ListEntry($definition->entry()->name(), $value, $definition->type());
+                return new Entry\ListEntry($definition->entry()->name(), $caster->to($definition->type())->value($value), $definition->type());
             }
         } catch (InvalidArgumentException|\TypeError $e) {
             throw new InvalidArgumentException("Field \"{$definition->entry()}\" conversion exception. {$e->getMessage()}", previous: $e);
