@@ -320,11 +320,6 @@ final class Definition
         return $this->metadata;
     }
 
-    public function narrow() : self
-    {
-        return self::string($this->ref, $this->isNullable(), $this->constraint, $this->metadata);
-    }
-
     public function nullable() : self
     {
         return new self($this->ref, $this->entryClass, $this->type->makeNullable(true), $this->constraint, $this->metadata);
