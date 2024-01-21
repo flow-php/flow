@@ -6,6 +6,8 @@ namespace Flow\ETL\Tests\Unit\Transformer;
 
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\flow_context;
+use Flow\ETL\PHP\Type\AutoCaster;
+use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\Transformer\AutoCastTransformer;
 use PHPUnit\Framework\TestCase;
 
@@ -13,7 +15,7 @@ final class AutoCastTransformerTest extends TestCase
 {
     public function test_transforming_row() : void
     {
-        $transformer = new AutoCastTransformer();
+        $transformer = new AutoCastTransformer(new AutoCaster(Caster::default()));
 
         $rows = array_to_rows([
             [

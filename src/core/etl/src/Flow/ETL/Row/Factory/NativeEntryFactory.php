@@ -24,6 +24,7 @@ use function Flow\ETL\DSL\xml_node_entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\PHP\Type\Caster;
+use Flow\ETL\PHP\Type\Caster\StringTypeChecker;
 use Flow\ETL\PHP\Type\Logical\DateTimeType;
 use Flow\ETL\PHP\Type\Logical\JsonType;
 use Flow\ETL\PHP\Type\Logical\ListType;

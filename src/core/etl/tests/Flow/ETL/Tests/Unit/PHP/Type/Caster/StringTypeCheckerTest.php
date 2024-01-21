@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Tests\Unit\Row\Factory;
+namespace Flow\ETL\Tests\Unit\PHP\Type\Caster;
 
-use Flow\ETL\Row\Factory\StringTypeChecker;
+use Flow\ETL\PHP\Type\Caster\StringTypeChecker;
 use PHPUnit\Framework\TestCase;
 
 final class StringTypeCheckerTest extends TestCase
@@ -13,6 +13,10 @@ final class StringTypeCheckerTest extends TestCase
     {
         $this->assertTrue((new StringTypeChecker('true'))->isBoolean());
         $this->assertTrue((new StringTypeChecker('false'))->isBoolean());
+        $this->assertTrue((new StringTypeChecker('yes'))->isBoolean());
+        $this->assertTrue((new StringTypeChecker('no'))->isBoolean());
+        $this->assertTrue((new StringTypeChecker('on'))->isBoolean());
+        $this->assertTrue((new StringTypeChecker('off'))->isBoolean());
         $this->assertFalse((new StringTypeChecker('0'))->isBoolean());
         $this->assertFalse((new StringTypeChecker('not bool'))->isBoolean());
     }

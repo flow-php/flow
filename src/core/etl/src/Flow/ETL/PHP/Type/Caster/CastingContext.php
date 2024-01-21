@@ -10,7 +10,6 @@ final class CastingContext
 {
     public function __construct(private readonly CastingHandler $handler, private readonly Type $type)
     {
-
     }
 
     public function value(mixed $value) : mixed
