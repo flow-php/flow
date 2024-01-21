@@ -17,6 +17,7 @@ use function Flow\ETL\DSL\type_uuid;
 use function Flow\ETL\DSL\type_xml;
 use function Flow\ETL\DSL\type_xml_node;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Logical\StructureType;
@@ -239,6 +240,10 @@ final class Definition
 
     public function merge(self $definition) : self
     {
+        if (!$this->ref->is($definition->ref)) {
+            throw new RuntimeException(\sprintf('Cannot merge different definitions, %s and %s', $this->ref->name(), $definition->ref->name()));
+        }
+
         $constraint = new Any($this->constraint, $definition->constraint);
 
         if ($this->constraint instanceof VoidConstraint) {

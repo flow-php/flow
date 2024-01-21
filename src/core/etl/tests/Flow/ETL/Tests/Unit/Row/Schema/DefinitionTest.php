@@ -17,6 +17,7 @@ use function Flow\ETL\DSL\type_list;
 use function Flow\ETL\DSL\type_map;
 use function Flow\ETL\DSL\type_string;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\PHP\Type\Logical\StructureType;
@@ -168,6 +169,14 @@ final class DefinitionTest extends TestCase
             Definition::float('id', true),
             Definition::float('id', false)->merge(Definition::null('id'))
         );
+    }
+
+    public function test_merging_different_entries() : void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Cannot merge different definitions, int and string');
+
+        Definition::integer('int')->merge(Definition::string('string'));
     }
 
     public function test_merging_numeric_types() : void
