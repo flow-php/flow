@@ -1,6 +1,8 @@
-## [Unreleased] - 2024-01-19
+## [Unreleased] - 2024-01-21
 
 ### Added
+- [#927](https://github.com/flow-php/flow/pull/927) - **Schema Definition::type() : Type** - [@norberttech](https://github.com/norberttech)
+- [#927](https://github.com/flow-php/flow/pull/927) - **Type::merge() : Type** - [@norberttech](https://github.com/norberttech)
 - [#926](https://github.com/flow-php/flow/pull/926) - **Uuid Logical Type** - [@norberttech](https://github.com/norberttech)
 - [#926](https://github.com/flow-php/flow/pull/926) - **DateTime Logical Type** - [@norberttech](https://github.com/norberttech)
 - [#926](https://github.com/flow-php/flow/pull/926) - **Json Logical Type** - [@norberttech](https://github.com/norberttech)
@@ -32,6 +34,7 @@
 - [#869](https://github.com/flow-php/flow/pull/869) - **RDSL library** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#927](https://github.com/flow-php/flow/pull/927) - **reduced size of csv files to speedup tests** - [@norberttech](https://github.com/norberttech)
 - [#923](https://github.com/flow-php/flow/pull/923) - **Extracted isJson,isXML,isUuif from NativeEntryFactory to StringTypeChecker** - [@norberttech](https://github.com/norberttech)
 - [#919](https://github.com/flow-php/flow/pull/919) - **optimized Path::partitions method by using mnemonic** - [@norberttech](https://github.com/norberttech)
 - [#919](https://github.com/flow-php/flow/pull/919) - **updated dependencies** - [@norberttech](https://github.com/norberttech)
@@ -64,6 +67,8 @@
 - [#870](https://github.com/flow-php/flow/pull/870) - **Reduced number of files in phar** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#927](https://github.com/flow-php/flow/pull/927) - **Schema definition union type** - [@norberttech](https://github.com/norberttech)
+- [#927](https://github.com/flow-php/flow/pull/927) - **Schema narrowing that was replaced by Type::merge** - [@norberttech](https://github.com/norberttech)
 - [#897](https://github.com/flow-php/flow/pull/897) - **Serializable interface** - [@norberttech](https://github.com/norberttech)
 - [#897](https://github.com/flow-php/flow/pull/897) - **laravel/serializable-closure dependency** - [@norberttech](https://github.com/norberttech)
 - [#891](https://github.com/flow-php/flow/pull/891) - **Remove compression serializer** - [@stloyd](https://github.com/stloyd)
