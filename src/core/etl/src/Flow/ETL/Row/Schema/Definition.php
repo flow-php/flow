@@ -312,7 +312,7 @@ final class Definition
             );
         }
 
-        throw new \RuntimeException('implement merging definitions');
+        throw new RuntimeException(\sprintf('Cannot merge definitions for entries, "%s" and "%s"', $this->ref->name(), $definition->ref->name()));
     }
 
     public function metadata() : Metadata
@@ -333,13 +333,5 @@ final class Definition
     public function type() : Type
     {
         return $this->type;
-    }
-
-    /**
-     * @return array<class-string<Entry>>
-     */
-    public function types() : array
-    {
-        throw new \RuntimeException('Definition types are replaced by type');
     }
 }
