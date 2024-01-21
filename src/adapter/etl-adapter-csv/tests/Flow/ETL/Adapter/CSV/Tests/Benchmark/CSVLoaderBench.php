@@ -24,7 +24,7 @@ final class CSVLoaderBench
         $this->outputPath = \tempnam(\sys_get_temp_dir(), 'etl_csv_loader_bench') . '.csv';
         $this->rows = new Rows();
 
-        foreach (from_csv(__DIR__ . '/../Fixtures/orders_flow.csv')->extract($this->context) as $rows) {
+        foreach (from_csv(__DIR__ . '/Fixtures/orders_flow.csv')->extract($this->context) as $rows) {
             $this->rows = $this->rows->merge($rows);
         }
     }

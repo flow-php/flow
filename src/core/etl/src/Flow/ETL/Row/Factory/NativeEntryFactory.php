@@ -166,86 +166,69 @@ final class NativeEntryFactory implements EntryFactory
         }
 
         try {
-            foreach ($definition->types() as $type) {
-                if ($type === Entry\StringEntry::class) {
-                    return str_entry($definition->entry()->name(), $value);
-                }
+            if ($definition->type() instanceof ScalarType) {
+                return match ($definition->type()->type()) {
+                    ScalarType::STRING => str_entry($definition->entry()->name(), $value),
+                    ScalarType::INTEGER => int_entry($definition->entry()->name(), $value),
+                    ScalarType::FLOAT => float_entry($definition->entry()->name(), $value),
+                    ScalarType::BOOLEAN => bool_entry($definition->entry()->name(), $value),
+                    default => throw new InvalidArgumentException("Can't convert value into entry \"{$definition->entry()}\""),
+                };
+            }
 
-                if ($type === Entry\IntegerEntry::class) {
-                    return int_entry($definition->entry()->name(), $value);
-                }
+            if ($definition->type() instanceof XMLType) {
+                return xml_entry($definition->entry()->name(), $value);
+            }
 
-                if ($type === Entry\FloatEntry::class) {
-                    return float_entry($definition->entry()->name(), $value);
-                }
+            if ($definition->type() instanceof UuidType) {
+                return uuid_entry($definition->entry()->name(), $value);
+            }
 
-                if ($type === Entry\BooleanEntry::class) {
-                    return bool_entry($definition->entry()->name(), $value);
-                }
+            if ($definition->type() instanceof ObjectType) {
+                return obj_entry($definition->entry()->name(), $value);
+            }
 
-                if ($type === Entry\XMLEntry::class) {
-                    return xml_entry($definition->entry()->name(), $value);
-                }
+            if ($definition->type() instanceof DateTimeType) {
+                return datetime_entry($definition->entry()->name(), $value);
+            }
 
-                if ($type === Entry\UuidEntry::class) {
-                    return uuid_entry($definition->entry()->name(), $value);
-                }
+            if ($definition->type() instanceof EnumType) {
+                /** @var class-string<\UnitEnum> $enumClass */
+                $enumClass = $definition->type()->class;
+                /** @var array<\UnitEnum> $cases */
+                $cases = $definition->type()->class::cases();
 
-                if ($type === Entry\ObjectEntry::class) {
-                    return obj_entry($definition->entry()->name(), $value);
-                }
-
-                if ($type === Entry\DateTimeEntry::class) {
-                    return datetime_entry($definition->entry()->name(), $value);
-                }
-
-                if ($type === Entry\EnumEntry::class) {
-                    /** @var class-string<\UnitEnum> $enumClass */
-                    $enumClass = $definition->metadata()->get(Schema\FlowMetadata::METADATA_ENUM_CLASS);
-                    /** @var array<\UnitEnum> $cases */
-                    $cases = $definition->metadata()->get(Schema\FlowMetadata::METADATA_ENUM_CASES);
-
-                    foreach ($cases as $case) {
-                        if ($case->name === $value) {
-                            return enum_entry($definition->entry()->name(), $case);
-                        }
-                    }
-
-                    throw new InvalidArgumentException("Value \"{$value}\" can't be converted to " . $enumClass . ' enum');
-                }
-
-                if ($type === Entry\JsonEntry::class) {
-                    try {
-                        return json_object_entry($definition->entry()->name(), $value);
-                    } catch (InvalidArgumentException) {
-                        return json_entry($definition->entry()->name(), $value);
+                foreach ($cases as $case) {
+                    if ($case->name === $value) {
+                        return enum_entry($definition->entry()->name(), $case);
                     }
                 }
 
-                if ($type === Entry\ArrayEntry::class) {
-                    return array_entry($definition->entry()->name(), $value);
+                throw new InvalidArgumentException("Value \"{$value}\" can't be converted to " . $enumClass . ' enum');
+            }
+
+            if ($definition->type() instanceof JsonType) {
+                try {
+                    return json_object_entry($definition->entry()->name(), $value);
+                } catch (InvalidArgumentException) {
+                    return json_entry($definition->entry()->name(), $value);
                 }
+            }
 
-                if ($type === Entry\MapEntry::class) {
-                    /** @var MapType $entryType */
-                    $entryType = $definition->metadata()->get(Schema\FlowMetadata::METADATA_MAP_ENTRY_TYPE);
+            if ($definition->type() instanceof ArrayType) {
+                return array_entry($definition->entry()->name(), $value);
+            }
 
-                    return map_entry($definition->entry()->name(), $value, $entryType);
-                }
+            if ($definition->type() instanceof MapType) {
+                return map_entry($definition->entry()->name(), $value, $definition->type());
+            }
 
-                if ($type === Entry\StructureEntry::class) {
-                    /** @var StructureType $entryType */
-                    $entryType = $definition->metadata()->get(Schema\FlowMetadata::METADATA_STRUCTURE_ENTRY_TYPE);
+            if ($definition->type() instanceof StructureType) {
+                return struct_entry($definition->entry()->name(), $value, $definition->type());
+            }
 
-                    return struct_entry($definition->entry()->name(), $value, $entryType);
-                }
-
-                if ($type === Entry\ListEntry::class) {
-                    /** @var ListType $entryType */
-                    $entryType = $definition->metadata()->get(Schema\FlowMetadata::METADATA_LIST_ENTRY_TYPE);
-
-                    return new Entry\ListEntry($definition->entry()->name(), $value, $entryType);
-                }
+            if ($definition->type() instanceof ListType) {
+                return new Entry\ListEntry($definition->entry()->name(), $value, $definition->type());
             }
         } catch (InvalidArgumentException|\TypeError $e) {
             throw new InvalidArgumentException("Field \"{$definition->entry()}\" conversion exception. {$e->getMessage()}", previous: $e);

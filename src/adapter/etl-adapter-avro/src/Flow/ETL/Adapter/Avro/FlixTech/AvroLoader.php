@@ -76,7 +76,7 @@ final class AvroLoader implements Closure, Loader, Loader\FileLoader
     private function listEntryToValues(Row\Entry\ListEntry $entry) : array
     {
         /** @var ListType $listType */
-        $listType = $entry->definition()->metadata()->get(Schema\FlowMetadata::METADATA_LIST_ENTRY_TYPE);
+        $listType = $entry->definition()->type();
         $listElement = $listType->element();
 
         if ($listElement->type() instanceof UuidType) {

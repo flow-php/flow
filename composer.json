@@ -54,6 +54,7 @@
     },
     "autoload": {
         "files": [
+            "src/functions.php",
             "src/adapter/etl-adapter-avro/src/Flow/ETL/Adapter/Avro/functions.php",
             "src/adapter/etl-adapter-chartjs/src/Flow/ETL/Adapter/ChartJS/functions.php",
             "src/adapter/etl-adapter-csv/src/Flow/ETL/Adapter/CSV/functions.php",

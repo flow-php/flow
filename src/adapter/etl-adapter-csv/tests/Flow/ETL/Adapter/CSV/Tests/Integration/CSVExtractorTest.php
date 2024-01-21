@@ -110,7 +110,7 @@ final class CSVExtractorTest extends TestCase
             $total += $rows->count();
         }
 
-        $this->assertSame(64892, $total);
+        $this->assertSame(1998, $total);
     }
 
     public function test_extracting_csv_files_with_header() : void
@@ -140,7 +140,7 @@ final class CSVExtractorTest extends TestCase
             );
         }
 
-        $this->assertSame(32445, $rows->count());
+        $this->assertSame(998, $rows->count());
     }
 
     public function test_extracting_csv_files_without_header() : void
@@ -163,7 +163,7 @@ final class CSVExtractorTest extends TestCase
             $total += $rows->count();
         }
 
-        $this->assertSame(32446, $total);
+        $this->assertSame(999, $total);
     }
 
     public function test_extracting_csv_with_corrupted_row() : void

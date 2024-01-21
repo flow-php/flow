@@ -6,6 +6,7 @@ use function Flow\ETL\DSL\type_boolean;
 use function Flow\ETL\DSL\type_float;
 use function Flow\ETL\DSL\type_int;
 use function Flow\ETL\DSL\type_string;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\Map\MapKey;
 use Flow\ETL\PHP\Type\Logical\Map\MapValue;
 use Flow\ETL\PHP\Type\Logical\MapType;
@@ -23,6 +24,46 @@ final class ScalarTypeTest extends TestCase
         );
         $this->assertFalse(
             type_int()->isEqual(type_float())
+        );
+    }
+
+    public function test_merge_different_types() : void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Cannot merge different types, string and integer');
+
+        type_string()->merge(type_int());
+    }
+
+    public function test_merge_same_types() : void
+    {
+        $this->assertTrue(
+            type_int()->merge(type_int())->isEqual(type_int())
+        );
+        $this->assertTrue(
+            type_string()->merge(type_string())->isEqual(type_string())
+        );
+        $this->assertTrue(
+            type_boolean()->merge(type_boolean())->isEqual(type_boolean())
+        );
+        $this->assertTrue(
+            type_float()->merge(type_float())->isEqual(type_float())
+        );
+    }
+
+    public function test_merge_with_null() : void
+    {
+        $this->assertTrue(
+            type_int()->merge(type_int(true))->isEqual(type_int(true))
+        );
+        $this->assertTrue(
+            type_string()->merge(type_string(true))->isEqual(type_string(true))
+        );
+        $this->assertTrue(
+            type_boolean()->merge(type_boolean(true))->isEqual(type_boolean(true))
+        );
+        $this->assertTrue(
+            type_float()->merge(type_float(true))->isEqual(type_float(true))
         );
     }
 

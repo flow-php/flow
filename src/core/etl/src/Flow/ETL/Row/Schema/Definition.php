@@ -4,11 +4,25 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Schema;
 
+use function Flow\ETL\DSL\type_array;
+use function Flow\ETL\DSL\type_boolean;
+use function Flow\ETL\DSL\type_datetime;
+use function Flow\ETL\DSL\type_enum;
+use function Flow\ETL\DSL\type_float;
+use function Flow\ETL\DSL\type_int;
+use function Flow\ETL\DSL\type_json;
+use function Flow\ETL\DSL\type_null;
+use function Flow\ETL\DSL\type_string;
+use function Flow\ETL\DSL\type_uuid;
+use function Flow\ETL\DSL\type_xml;
+use function Flow\ETL\DSL\type_xml_node;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\PHP\Type\Native\ObjectType;
+use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\ArrayEntry;
 use Flow\ETL\Row\Entry\BooleanEntry;
@@ -18,11 +32,14 @@ use Flow\ETL\Row\Entry\FloatEntry;
 use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Row\Entry\JsonEntry;
 use Flow\ETL\Row\Entry\ListEntry;
+use Flow\ETL\Row\Entry\MapEntry;
 use Flow\ETL\Row\Entry\NullEntry;
 use Flow\ETL\Row\Entry\ObjectEntry;
 use Flow\ETL\Row\Entry\StringEntry;
+use Flow\ETL\Row\Entry\StructureEntry;
 use Flow\ETL\Row\Entry\UuidEntry;
 use Flow\ETL\Row\Entry\XMLEntry;
+use Flow\ETL\Row\Entry\XMLNodeEntry;
 use Flow\ETL\Row\EntryReference;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Constraint\Any;
@@ -37,16 +54,17 @@ final class Definition
     private readonly Reference $ref;
 
     /**
-     * @param array<class-string<Entry>> $classes
+     * @param class-string<Entry> $entryClass
      */
     public function __construct(
         string|Reference $ref,
-        private readonly array $classes,
+        private readonly string $entryClass,
+        private readonly Type $type,
         ?Constraint $constraint = null,
         ?Metadata $metadata = null
     ) {
-        if (!\count($classes)) {
-            throw new InvalidArgumentException('Schema definition must come with at least one entry class');
+        if (!\is_a($this->entryClass, Entry::class, true)) {
+            throw new InvalidArgumentException(\sprintf('Entry class "%s" must implement "%s"', $this->entryClass, Entry::class));
         }
 
         $this->metadata = $metadata ?? Metadata::empty();
@@ -54,19 +72,19 @@ final class Definition
         $this->ref = EntryReference::init($ref);
     }
 
-    public static function array(string|Reference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function array(string|Reference $entry, bool $empty = false, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
-        return new self($entry, ($nullable) ? [ArrayEntry::class, NullEntry::class] : [ArrayEntry::class], $constraint, $metadata);
+        return new self($entry, ArrayEntry::class, type_array($empty, $nullable), $constraint, $metadata);
     }
 
     public static function boolean(string|Reference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
-        return new self($entry, ($nullable) ? [BooleanEntry::class, NullEntry::class] : [BooleanEntry::class], $constraint, $metadata);
+        return new self($entry, BooleanEntry::class, type_boolean($nullable), $constraint, $metadata);
     }
 
     public static function dateTime(string|Reference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
-        return new self($entry, ($nullable) ? [DateTimeEntry::class, NullEntry::class] : [DateTimeEntry::class], $constraint, $metadata);
+        return new self($entry, DateTimeEntry::class, type_datetime($nullable), $constraint, $metadata);
     }
 
     /**
@@ -80,108 +98,95 @@ final class Definition
 
         return new self(
             $entry,
-            ($nullable) ? [EnumEntry::class, NullEntry::class] : [EnumEntry::class],
+            EnumEntry::class,
+            type_enum($type, $nullable),
             $constraint,
-            Metadata::with(FlowMetadata::METADATA_ENUM_CLASS, $type)
-                ->add(FlowMetadata::METADATA_ENUM_CASES, $type::cases())
-                ->merge($metadata ?? Metadata::empty())
+            $metadata
         );
     }
 
     public static function float(string|Reference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
-        return new self($entry, ($nullable) ? [FloatEntry::class, NullEntry::class] : [FloatEntry::class], $constraint, $metadata);
+        return new self($entry, FloatEntry::class, type_float($nullable), $constraint, $metadata);
     }
 
     public static function integer(string|Reference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
-        return new self($entry, ($nullable) ? [IntegerEntry::class, NullEntry::class] : [IntegerEntry::class], $constraint, $metadata);
+        return new self($entry, IntegerEntry::class, type_int($nullable), $constraint, $metadata);
     }
 
     public static function json(string|Reference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
-        return new self($entry, ($nullable) ? [JsonEntry::class, NullEntry::class] : [JsonEntry::class], $constraint, $metadata);
+        return new self($entry, JsonEntry::class, type_json($nullable), $constraint, $metadata);
     }
 
-    public static function list(string|Reference $entry, ListType $type, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function list(string|Reference $entry, ListType $type, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
         return new self(
             $entry,
-            $nullable ? [ListEntry::class, NullEntry::class] : [ListEntry::class],
+            ListEntry::class,
+            $type,
             $constraint,
-            Metadata::empty()->add(FlowMetadata::METADATA_LIST_ENTRY_TYPE, $type)->merge($metadata ?? Metadata::empty())
+            $metadata
         );
     }
 
-    public static function map(string|Reference $entry, MapType $type, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function map(string|Reference $entry, MapType $type, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
         return new self(
             $entry,
-            $nullable ? [Entry\MapEntry::class, NullEntry::class] : [Entry\MapEntry::class],
+            MapEntry::class,
+            $type,
             $constraint,
-            Metadata::empty()->add(FlowMetadata::METADATA_MAP_ENTRY_TYPE, $type)->merge($metadata ?? Metadata::empty())
+            $metadata
         );
     }
 
     public static function null(string|Reference $entry, ?Metadata $metadata = null) : self
     {
-        return new self($entry, [NullEntry::class], null, $metadata);
+        return new self($entry, NullEntry::class, type_null(), null, $metadata);
     }
 
-    public static function object(string|Reference $entry, ObjectType $type, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function object(string|Reference $entry, ObjectType $type, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
         return new self(
             $entry,
-            ($nullable) ? [ObjectEntry::class, NullEntry::class] : [ObjectEntry::class],
+            ObjectEntry::class,
+            $type,
             $constraint,
-            Metadata::empty()->add(FlowMetadata::METADATA_OBJECT_ENTRY_TYPE, $type)->merge($metadata ?? Metadata::empty())
+            $metadata
         );
     }
 
     public static function string(string|Reference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
-        return new self($entry, ($nullable) ? [StringEntry::class, NullEntry::class] : [StringEntry::class], $constraint, $metadata);
+        return new self($entry, StringEntry::class, type_string($nullable), $constraint, $metadata);
     }
 
-    public static function structure(string|Reference $entry, StructureType $type, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
+    public static function structure(string|Reference $entry, StructureType $type, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
         return new self(
             $entry,
-            $nullable ? [Entry\StructureEntry::class, NullEntry::class] : [Entry\StructureEntry::class],
+            StructureEntry::class,
+            $type,
             $constraint,
-            Metadata::empty()->add(FlowMetadata::METADATA_STRUCTURE_ENTRY_TYPE, $type)->merge($metadata ?? Metadata::empty())
+            $metadata
         );
     }
 
-    /**
-     * @param array<class-string<Entry>> $entryClasses
-     *
-     * @return Definition
-     */
-    public static function union(string|Reference $entry, array $entryClasses, ?Constraint $constraint = null, ?Metadata $metadata = null)
+    public static function uuid(string|Reference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
-        $types = \array_values(\array_unique($entryClasses));
-
-        if (\count($types) <= 1) {
-            throw new InvalidArgumentException('Union type requires at least two unique entry types.');
-        }
-
-        return new self($entry, $types, $constraint, $metadata);
-    }
-
-    public static function uuid(string|Reference $entry, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
-    {
-        return new self($entry, [UuidEntry::class], $constraint, $metadata);
+        return new self($entry, UuidEntry::class, type_uuid($nullable), $constraint, $metadata);
     }
 
     public static function xml(string|Reference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
-        return new self($entry, ($nullable) ? [XMLEntry::class, NullEntry::class] : [XMLEntry::class], $constraint, $metadata);
+        return new self($entry, XMLEntry::class, type_xml($nullable), $constraint, $metadata);
     }
 
     public static function xml_node(string|Reference $entry, bool $nullable = false, ?Constraint $constraint = null, ?Metadata $metadata = null) : self
     {
-        return new self($entry, ($nullable) ? [Entry\XMLNodeEntry::class, NullEntry::class] : [Entry\XMLNodeEntry::class], $constraint, $metadata);
+        return new self($entry, XMLNodeEntry::class, type_xml_node($nullable), $constraint, $metadata);
     }
 
     public function constraint() : Constraint
@@ -196,13 +201,11 @@ final class Definition
 
     public function isEqual(self $definition) : bool
     {
-        $classes = $this->classes;
-        $otherClasses = $definition->classes;
+        if ($this->entryClass !== $definition->entryClass) {
+            return false;
+        }
 
-        \sort($classes);
-        \sort($otherClasses);
-
-        if ($classes !== $otherClasses) {
+        if ($this->type->isEqual($definition->type) === false) {
             return false;
         }
 
@@ -215,20 +218,7 @@ final class Definition
 
     public function isNullable() : bool
     {
-        return \in_array(NullEntry::class, $this->classes, true);
-    }
-
-    public function isUnion() : bool
-    {
-        $types = [];
-
-        foreach ($this->types() as $type) {
-            if ($type !== NullEntry::class) {
-                $types[] = $type;
-            }
-        }
-
-        return \count($types) > 1;
+        return $this->type->nullable();
     }
 
     public function matches(Entry $entry) : bool
@@ -241,17 +231,7 @@ final class Definition
             return false;
         }
 
-        $isTypeValid = false;
-
-        foreach ($this->classes as $entryClass) {
-            if ($entry instanceof $entryClass) {
-                $isTypeValid = true;
-
-                break;
-            }
-        }
-
-        if (!$isTypeValid) {
+        if ($entry::class !== $this->entryClass) {
             return false;
         }
 
@@ -260,6 +240,10 @@ final class Definition
 
     public function merge(self $definition) : self
     {
+        if (!$this->ref->is($definition->ref)) {
+            throw new RuntimeException(\sprintf('Cannot merge different definitions, %s and %s', $this->ref->name(), $definition->ref->name()));
+        }
+
         $constraint = new Any($this->constraint, $definition->constraint);
 
         if ($this->constraint instanceof VoidConstraint) {
@@ -270,12 +254,65 @@ final class Definition
             $constraint = $this->constraint;
         }
 
-        return new self(
-            $this->ref,
-            \array_values(\array_unique(\array_merge($this->types(), $definition->types()))),
-            $constraint,
-            $this->metadata->merge($definition->metadata)
-        );
+        if ($this->entryClass === $definition->entryClass && \in_array($this->entryClass, [ListEntry::class, MapEntry::class, StructureEntry::class], true)) {
+            if (!$this->type->isEqual($definition->type)) {
+                return new self(
+                    $this->ref,
+                    ArrayEntry::class,
+                    type_array(false, $this->isNullable() || $definition->isNullable()),
+                    $constraint,
+                    $this->metadata->merge($definition->metadata)
+                );
+            }
+        }
+
+        if ($this->entryClass === $definition->entryClass) {
+            return new self(
+                $this->ref,
+                $this->entryClass,
+                $this->type()->merge($definition->type()),
+                $constraint,
+                $this->metadata->merge($definition->metadata)
+            );
+        }
+
+        $entryClasses = [$this->entryClass, $definition->entryClass];
+
+        if (\in_array(NullEntry::class, $entryClasses, true)) {
+            $entryClasses = \array_values(\array_diff($entryClasses, [NullEntry::class]));
+
+            $type = $this->entryClass === NullEntry::class ? $definition->type : $this->type();
+
+            return new self(
+                $this->ref,
+                $entryClasses[0],
+                $type->makeNullable(true),
+                $constraint,
+                $this->metadata->merge($definition->metadata)
+            );
+        }
+
+        if (\in_array(StringEntry::class, $entryClasses, true)) {
+            return new self(
+                $this->ref,
+                StringEntry::class,
+                type_string($this->isNullable() || $definition->isNullable()),
+                $constraint,
+                $this->metadata->merge($definition->metadata)
+            );
+        }
+
+        if (\in_array(IntegerEntry::class, $entryClasses, true) && \in_array(FloatEntry::class, $entryClasses, true)) {
+            return new self(
+                $this->ref,
+                FloatEntry::class,
+                type_float($this->isNullable() || $definition->isNullable()),
+                $constraint,
+                $this->metadata->merge($definition->metadata)
+            );
+        }
+
+        throw new RuntimeException(\sprintf('Cannot merge definitions for entries, "%s" and "%s"', $this->ref->name(), $definition->ref->name()));
     }
 
     public function metadata() : Metadata
@@ -283,29 +320,13 @@ final class Definition
         return $this->metadata;
     }
 
-    public function narrow() : self
-    {
-        if (!$this->isUnion()) {
-            return $this;
-        }
-
-        return self::string($this->ref, $this->isNullable(), $this->constraint, $this->metadata);
-    }
-
     public function nullable() : self
     {
-        if (!\in_array(NullEntry::class, $this->classes, true)) {
-            return new self($this->ref, \array_merge($this->classes, [NullEntry::class]), $this->constraint, $this->metadata);
-        }
-
-        return $this;
+        return new self($this->ref, $this->entryClass, $this->type->makeNullable(true), $this->constraint, $this->metadata);
     }
 
-    /**
-     * @return array<class-string<Entry>>
-     */
-    public function types() : array
+    public function type() : Type
     {
-        return $this->classes;
+        return $this->type;
     }
 }

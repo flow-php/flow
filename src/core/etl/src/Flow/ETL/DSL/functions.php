@@ -10,6 +10,7 @@ use Flow\ETL\DataFrame;
 use Flow\ETL\ErrorHandler\IgnoreError;
 use Flow\ETL\ErrorHandler\SkipRows;
 use Flow\ETL\ErrorHandler\ThrowError;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\InvalidLogicException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\LocalFileListExtractor;
@@ -294,6 +295,9 @@ function json_entry(string $name, array|string $data) : Row\Entry\JsonEntry
     return new Row\Entry\JsonEntry($name, $data);
 }
 
+/**
+ * @throws InvalidArgumentException
+ */
 function json_object_entry(string $name, array|string $data) : Row\Entry\JsonEntry
 {
     if (\is_string($data)) {
@@ -371,9 +375,9 @@ function list_entry(string $name, array $value, ListType $type) : Row\Entry\List
     return new Row\Entry\ListEntry($name, $value, $type);
 }
 
-function type_list(Type $element) : ListType
+function type_list(Type $element, bool $nullable = false) : ListType
 {
-    return new ListType(new ListElement($element));
+    return new ListType(new ListElement($element), $nullable);
 }
 
 function type_map(ScalarType $key_type, Type $value_type, bool $nullable = false) : MapType
@@ -1002,32 +1006,24 @@ function float_schema(string $name, bool $nullable = false, ?Schema\Constraint $
     return Definition::float($name, $nullable, $constraint, $metadata);
 }
 
-function array_schema(string $name, bool $nullable = false, ?Schema\Constraint $constraint = null, ?Schema\Metadata $metadata = null) : Definition
+function array_schema(string $name, bool $empty = false, bool $nullable = false, ?Schema\Constraint $constraint = null, ?Schema\Metadata $metadata = null) : Definition
 {
-    return Definition::array($name, $nullable, $constraint, $metadata);
+    return Definition::array($name, $empty, $nullable, $constraint, $metadata);
 }
 
-function object_schema(string $name, ObjectType $type, bool $nullable = false, ?Schema\Constraint $constraint = null, ?Schema\Metadata $metadata = null) : Definition
+function object_schema(string $name, ObjectType $type, ?Schema\Constraint $constraint = null, ?Schema\Metadata $metadata = null) : Definition
 {
-    return Definition::object($name, $type, $nullable, $constraint, $metadata);
+    return Definition::object($name, $type, $constraint, $metadata);
 }
 
-function map_schema(string $name, MapType $type, bool $nullable = false, ?Schema\Constraint $constraint = null, ?Schema\Metadata $metadata = null) : Definition
+function map_schema(string $name, MapType $type, ?Schema\Constraint $constraint = null, ?Schema\Metadata $metadata = null) : Definition
 {
-    return Definition::map($name, $type, $nullable, $constraint, $metadata);
+    return Definition::map($name, $type, $constraint, $metadata);
 }
 
-function list_schema(string $name, ListType $type, bool $nullable = false, ?Schema\Constraint $constraint = null, ?Schema\Metadata $metadata = null) : Definition
+function list_schema(string $name, ListType $type, ?Schema\Constraint $constraint = null, ?Schema\Metadata $metadata = null) : Definition
 {
-    return Definition::list($name, $type, $nullable, $constraint, $metadata);
-}
-
-/**
- * @param array<class-string<Row\Entry>> $entry_classes
- */
-function union_schema(string $name, array $entry_classes, ?Schema\Constraint $constraint = null, ?Schema\Metadata $metadata = null) : Definition
-{
-    return Definition::union($name, $entry_classes, $constraint, $metadata);
+    return Definition::list($name, $type, $constraint, $metadata);
 }
 
 /**
@@ -1063,14 +1059,14 @@ function xml_node_schema(string $name, bool $nullable = false, ?Schema\Constrain
     return Definition::xml_node($name, $nullable, $constraint, $metadata);
 }
 
-function struct_schema(string $name, StructureType $type, bool $nullable = false, ?Schema\Constraint $constraint = null, ?Schema\Metadata $metadata = null) : Definition
+function struct_schema(string $name, StructureType $type, ?Schema\Constraint $constraint = null, ?Schema\Metadata $metadata = null) : Definition
 {
-    return Definition::structure($name, $type, $nullable, $constraint, $metadata);
+    return Definition::structure($name, $type, $constraint, $metadata);
 }
 
-function uuid_schema(string $name, ?Schema\Constraint $constraint = null, ?Schema\Metadata $metadata = null) : Definition
+function uuid_schema(string $name, bool $nullable = false, ?Schema\Constraint $constraint = null, ?Schema\Metadata $metadata = null) : Definition
 {
-    return Definition::uuid($name, $constraint, $metadata);
+    return Definition::uuid($name, \uuid_type($nullable), $constraint, $metadata);
 }
 
 function execution_context(?Config $config = null) : FlowContext

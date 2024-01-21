@@ -29,6 +29,28 @@ final class ObjectType implements NativeType
         return \is_a($value, $this->class, true);
     }
 
+    public function makeNullable(bool $nullable) : self
+    {
+        return new self($this->class, $nullable);
+    }
+
+    public function merge(Type $type) : self
+    {
+        if ($type instanceof NullType) {
+            return $this->makeNullable(true);
+        }
+
+        if (!$type instanceof self) {
+            throw new InvalidArgumentException('Cannot merge different types, ' . $this->toString() . ' and ' . $type->toString());
+        }
+
+        if ($this->class !== $type->class) {
+            throw new InvalidArgumentException('Cannot merge different types, ' . $this->toString() . ' and ' . $type->toString());
+        }
+
+        return new self($this->class, $this->nullable || $type->nullable());
+    }
+
     public function nullable() : bool
     {
         return $this->nullable;

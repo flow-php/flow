@@ -35,9 +35,6 @@
       <directory>src/adapter/**/**/**/**/**/**/Tests/Integration</directory>
       <directory>src/core/etl/tests/Flow/ETL/Tests/Integration</directory>
       <directory>src/lib/**/**/**/**/Tests/Integration</directory>
-    </testsuite>
-    <testsuite name="integration-services">
-      <directory>src/adapter/**/**/**/**/**/**/Tests/Integration</directory>
       <directory>src/lib/doctrine-dbal-bulk/tests/Flow/Doctrine/Bulk/Tests/Integration</directory>
     </testsuite>
   </testsuites>

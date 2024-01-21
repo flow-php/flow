@@ -10,6 +10,10 @@ interface Type
 
     public function isValid(mixed $value) : bool;
 
+    public function makeNullable(bool $nullable) : self;
+
+    public function merge(self $type) : self;
+
     public function nullable() : bool;
 
     public function toString() : string;

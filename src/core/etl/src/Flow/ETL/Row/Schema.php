@@ -101,18 +101,13 @@ final class Schema implements \Countable
             }
         }
 
-        return new self(...\array_values($newDefinitions));
-    }
-
-    public function narrow() : self
-    {
-        $definitions = [];
-
-        foreach ($this->definitions as $definition) {
-            $definitions[] = $definition->narrow();
+        foreach ($schema->definitions as $entry => $definition) {
+            if (!\array_key_exists($definition->entry()->name(), $newDefinitions)) {
+                $newDefinitions[$entry] = $definition->nullable();
+            }
         }
 
-        return new self(...$definitions);
+        return new self(...\array_values($newDefinitions));
     }
 
     public function nullable() : self

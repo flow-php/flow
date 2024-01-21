@@ -11,9 +11,6 @@ use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_schema;
-use function Flow\ETL\DSL\union_schema;
-use Flow\ETL\Row\Entry\IntegerEntry;
-use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
 
 final class SchemaTest extends IntegrationTestCase
@@ -69,34 +66,6 @@ final class SchemaTest extends IntegrationTestCase
                 ->read(from_rows($rows))
                 ->autoCast()
                 ->limit(50)
-                ->schema()
-        );
-    }
-
-    public function test_getting_schema_with_union_type() : void
-    {
-        $rows = array_to_rows(\array_map(
-            function ($i) {
-                return [
-                    'id' => $i,
-                    'name' => 'name_' . $i,
-                    'active' => $i % 2 === 0,
-                    'union' => $i > 50 ? 'string' : 1,
-                ];
-            },
-            \range(1, 100)
-        ));
-
-        $this->assertEquals(
-            schema(
-                int_schema('id'),
-                str_schema('name'),
-                bool_schema('active'),
-                union_schema('union', [IntegerEntry::class, StringEntry::class])
-            ),
-            df()
-                ->read(from_rows($rows))
-                ->autoCast()
                 ->schema()
         );
     }

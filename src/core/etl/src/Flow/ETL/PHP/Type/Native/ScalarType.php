@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type\Native;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Type;
 
 final class ScalarType implements NativeType
@@ -17,9 +18,9 @@ final class ScalarType implements NativeType
     public const STRING = 'string';
 
     /**
-     * @param self::* $value
+     * @param self::* $type
      */
-    private function __construct(private readonly string $value, private readonly bool $nullable)
+    private function __construct(private readonly string $type, private readonly bool $nullable)
     {
     }
 
@@ -45,27 +46,27 @@ final class ScalarType implements NativeType
 
     public function isBoolean() : bool
     {
-        return $this->value === self::BOOLEAN;
+        return $this->type === self::BOOLEAN;
     }
 
     public function isEqual(Type $type) : bool
     {
-        return $type instanceof self && $type->value === $this->value && $this->nullable === $type->nullable;
+        return $type instanceof self && $type->type === $this->type && $this->nullable === $type->nullable;
     }
 
     public function isFloat() : bool
     {
-        return $this->value === self::FLOAT;
+        return $this->type === self::FLOAT;
     }
 
     public function isInteger() : bool
     {
-        return $this->value === self::INTEGER;
+        return $this->type === self::INTEGER;
     }
 
     public function isString() : bool
     {
-        return $this->value === self::STRING;
+        return $this->type === self::STRING;
     }
 
     public function isValid(mixed $value) : bool
@@ -74,12 +75,34 @@ final class ScalarType implements NativeType
             return true;
         }
 
-        return match ($this->value) {
+        return match ($this->type) {
             self::STRING => \is_string($value),
             self::INTEGER => \is_int($value),
             self::FLOAT => \is_float($value),
             self::BOOLEAN => \is_bool($value),
         };
+    }
+
+    public function makeNullable(bool $nullable) : self
+    {
+        return new self($this->type, $nullable);
+    }
+
+    public function merge(Type $type) : self
+    {
+        if ($type instanceof NullType) {
+            return $this->makeNullable(true);
+        }
+
+        if (!$type instanceof self) {
+            throw new InvalidArgumentException('Cannot merge different types, ' . $this->toString() . ' and ' . $type->toString());
+        }
+
+        if ($this->type !== $type->type) {
+            throw new InvalidArgumentException('Cannot merge different types, ' . $this->toString() . ' and ' . $type->toString());
+        }
+
+        return new self($this->type, $this->nullable || $type->nullable());
     }
 
     public function nullable() : bool
@@ -89,11 +112,11 @@ final class ScalarType implements NativeType
 
     public function toString() : string
     {
-        return ($this->nullable ? '?' : '') . $this->value;
+        return ($this->nullable ? '?' : '') . $this->type;
     }
 
     public function type() : string
     {
-        return $this->value;
+        return $this->type;
     }
 }

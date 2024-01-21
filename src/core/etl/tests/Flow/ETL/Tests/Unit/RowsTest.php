@@ -31,7 +31,6 @@ use Flow\ETL\Row\Comparator\NativeComparator;
 use Flow\ETL\Row\Comparator\WeakObjectComparator;
 use Flow\ETL\Row\Entry\BooleanEntry;
 use Flow\ETL\Row\Entry\DateTimeEntry;
-use Flow\ETL\Row\Entry\IntegerEntry;
 use Flow\ETL\Row\Entry\NullEntry;
 use Flow\ETL\Row\Entry\ObjectEntry;
 use Flow\ETL\Row\Entry\StringEntry;
@@ -808,9 +807,9 @@ final class RowsTest extends TestCase
         $this->assertEquals(
             new Schema(
                 Definition::integer('id'),
-                Definition::union('name', [StringEntry::class, NullEntry::class, IntegerEntry::class]),
-                Definition::array('tags', true),
-                Definition::list('list', new ListType(ListElement::integer()), true)
+                Definition::string('name', true),
+                Definition::array('tags', false, true),
+                Definition::list('list', new ListType(ListElement::integer(), true))
             ),
             $rows->schema()
         );
@@ -824,7 +823,7 @@ final class RowsTest extends TestCase
         );
 
         $this->assertEquals(
-            new Schema(Definition::list('list', new ListType(ListElement::integer()))),
+            new Schema(Definition::array('list')),
             $rows->schema()
         );
     }

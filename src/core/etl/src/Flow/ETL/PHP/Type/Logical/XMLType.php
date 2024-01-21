@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type\Logical;
 
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\PHP\Type\Native\NullType;
 use Flow\ETL\PHP\Type\Type;
 
 final class XMLType implements LogicalType
@@ -24,6 +26,24 @@ final class XMLType implements LogicalType
         }
 
         return false;
+    }
+
+    public function makeNullable(bool $nullable) : self
+    {
+        return new self($nullable);
+    }
+
+    public function merge(Type $type) : self
+    {
+        if ($type instanceof NullType) {
+            return $this->makeNullable(true);
+        }
+
+        if (!$type instanceof self) {
+            throw new InvalidArgumentException('Cannot merge different types, ' . $this->toString() . ' and ' . $type->toString());
+        }
+
+        return new self($this->nullable || $type->nullable());
     }
 
     public function nullable() : bool

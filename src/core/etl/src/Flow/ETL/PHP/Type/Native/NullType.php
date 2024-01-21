@@ -17,6 +17,17 @@ final class NullType implements NativeType
         return null === $value;
     }
 
+    public function makeNullable(bool $nullable) : self
+    {
+        return $this;
+    }
+
+    public function merge(Type $type) : self
+    {
+        /** @phpstan-ignore-next-line  */
+        return $type->makeNullable(true);
+    }
+
     public function nullable() : bool
     {
         return true;
