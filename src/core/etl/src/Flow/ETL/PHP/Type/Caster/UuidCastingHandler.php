@@ -19,6 +19,10 @@ final class UuidCastingHandler implements CastingHandler
 
     public function value(mixed $value, Type $type, Caster $caster) : mixed
     {
+        if ($value instanceof Uuid) {
+            return $value;
+        }
+
         if (\is_string($value)) {
             return new Uuid($value);
         }

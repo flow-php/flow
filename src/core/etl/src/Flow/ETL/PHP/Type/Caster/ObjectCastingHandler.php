@@ -19,6 +19,10 @@ final class ObjectCastingHandler implements CastingHandler
 
     public function value(mixed $value, Type $type, Caster $caster) : mixed
     {
+        if (\is_object($value)) {
+            return $value;
+        }
+
         /** @var ObjectType $type */
         try {
             $object = (object) $value;

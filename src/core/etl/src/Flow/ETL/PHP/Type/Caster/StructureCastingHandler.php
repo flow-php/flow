@@ -18,10 +18,6 @@ final class StructureCastingHandler implements CastingHandler
 
     public function value(mixed $value, Type $type, Caster $caster) : mixed
     {
-        if ($value === null && !$type->nullable()) {
-            throw new CastingException($value, $type);
-        }
-
         /** @var StructureType $type */
         try {
             if (\is_string($value) && (\str_starts_with($value, '{') || \str_starts_with($value, '['))) {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type\Caster;
 
+use function Flow\ETL\DSL\type_string;
 use function Flow\ETL\DSL\type_xml;
 use Flow\ETL\Exception\CastingException;
 use Flow\ETL\PHP\Type\Caster;
@@ -19,6 +20,10 @@ final class XMLCastingHandler implements CastingHandler
 
     public function value(mixed $value, Type $type, Caster $caster) : mixed
     {
+        if ($value instanceof \DOMDocument) {
+            return $value;
+        }
+
         if (\is_string($value)) {
             $doc = new \DOMDocument();
 
@@ -29,10 +34,18 @@ final class XMLCastingHandler implements CastingHandler
             return $doc;
         }
 
-        if ($value instanceof \DOMDocument) {
-            return $value;
-        }
+        try {
+            $stringValue = $caster->to(type_string())->value($value);
 
-        throw new CastingException($value, $type);
+            $doc = new \DOMDocument();
+
+            if (!@$doc->loadXML($stringValue)) {
+                throw new CastingException($stringValue, type_xml());
+            }
+
+            return $doc;
+        } catch (CastingException $e) {
+            throw new CastingException($value, type_xml(), $e);
+        }
     }
 }

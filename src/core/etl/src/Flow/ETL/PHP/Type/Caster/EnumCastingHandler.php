@@ -18,6 +18,11 @@ final class EnumCastingHandler implements CastingHandler
 
     public function value(mixed $value, Type $type, Caster $caster) : mixed
     {
+        /** @var EnumType $type */
+        if ($value instanceof $type->class) {
+            return $value;
+        }
+
         try {
             /** @var EnumType $type */
             $enumClass = $type->class;

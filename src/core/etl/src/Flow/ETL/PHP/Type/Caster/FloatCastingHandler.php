@@ -18,6 +18,10 @@ final class FloatCastingHandler implements CastingHandler
 
     public function value(mixed $value, Type $type, Caster $caster) : mixed
     {
+        if (\is_float($value)) {
+            return $value;
+        }
+
         if ($value instanceof \DateTimeImmutable) {
             return (float) $value->format('Uu');
         }

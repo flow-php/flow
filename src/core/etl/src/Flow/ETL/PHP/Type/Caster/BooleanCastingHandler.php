@@ -18,6 +18,10 @@ final class BooleanCastingHandler implements CastingHandler
 
     public function value(mixed $value, Type $type, Caster $caster) : mixed
     {
+        if (\is_bool($value)) {
+            return $value;
+        }
+
         if (\is_string($value)) {
             if (\in_array(\mb_strtolower($value), ['true', '1', 'yes', 'on'], true)) {
                 return true;

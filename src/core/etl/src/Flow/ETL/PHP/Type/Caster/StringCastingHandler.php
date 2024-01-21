@@ -18,10 +18,6 @@ final class StringCastingHandler implements CastingHandler
 
     public function value(mixed $value, Type $type, Caster $caster) : mixed
     {
-        if ($value === null) {
-            return null;
-        }
-
         if (\is_string($value)) {
             return $value;
         }

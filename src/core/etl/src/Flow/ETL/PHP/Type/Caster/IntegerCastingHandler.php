@@ -18,6 +18,10 @@ final class IntegerCastingHandler implements CastingHandler
 
     public function value(mixed $value, Type $type, Caster $caster) : mixed
     {
+        if (\is_int($value)) {
+            return $value;
+        }
+
         if ($value instanceof \DateTimeImmutable) {
             return (int) $value->format('Uu');
         }

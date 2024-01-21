@@ -20,12 +20,12 @@ final class ArrayCastingHandler implements CastingHandler
     public function value(mixed $value, Type $type, Caster $caster) : mixed
     {
         try {
-            if (\is_string($value) && (\str_starts_with($value, '{') || \str_starts_with($value, '['))) {
-                return \json_decode($value, true, 512, \JSON_THROW_ON_ERROR);
-            }
-
             if (\is_array($value)) {
                 return $value;
+            }
+
+            if (\is_string($value) && (\str_starts_with($value, '{') || \str_starts_with($value, '['))) {
+                return \json_decode($value, true, 512, \JSON_THROW_ON_ERROR);
             }
 
             if ($value instanceof \DOMDocument) {
