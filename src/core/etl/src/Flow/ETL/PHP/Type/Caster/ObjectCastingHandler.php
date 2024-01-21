@@ -6,6 +6,7 @@ namespace Flow\ETL\PHP\Type\Caster;
 
 use function Flow\ETL\DSL\type_object;
 use Flow\ETL\Exception\CastingException;
+use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\PHP\Type\Native\ObjectType;
 use Flow\ETL\PHP\Type\Type;
 
@@ -16,7 +17,7 @@ final class ObjectCastingHandler implements CastingHandler
         return $type instanceof ObjectType;
     }
 
-    public function value(mixed $value, Type $type) : mixed
+    public function value(mixed $value, Type $type, Caster $caster) : mixed
     {
         /** @var ObjectType $type */
         try {

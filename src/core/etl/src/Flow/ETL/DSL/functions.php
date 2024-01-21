@@ -358,6 +358,11 @@ function struct_entry(string $name, array $value, StructureType $type) : Row\Ent
     return new Row\Entry\StructureEntry($name, $value, $type);
 }
 
+function structure_entry(string $name, array $value, StructureType $type) : Row\Entry\StructureEntry
+{
+    return new Row\Entry\StructureEntry($name, $value, $type);
+}
+
 /**
  * @param array<string, StructureElement> $elements
  */
@@ -366,7 +371,17 @@ function struct_type(array $elements, bool $nullable = false) : StructureType
     return new StructureType($elements, $nullable);
 }
 
+function structure_type(array $elements, bool $nullable = false) : StructureType
+{
+    return new StructureType($elements, $nullable);
+}
+
 function struct_element(string $name, Type $type) : StructureElement
+{
+    return new StructureElement($name, $type);
+}
+
+function structure_element(string $name, Type $type) : StructureElement
 {
     return new StructureElement($name, $type);
 }

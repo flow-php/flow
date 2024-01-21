@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\PHP\Type\Caster;
 
 use function Flow\ETL\DSL\type_enum;
 use Flow\ETL\Exception\CastingException;
+use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\PHP\Type\Caster\EnumCastingHandler;
 use Flow\ETL\Tests\Unit\PHP\Type\Caster\Fixtures\ColorsEnum;
 use PHPUnit\Framework\TestCase;
@@ -17,14 +18,14 @@ final class EnumCastingHandlerTest extends TestCase
         $this->expectException(CastingException::class);
         $this->expectExceptionMessage('Can\'t cast "integer" into "enum<Flow\ETL\Tests\Unit\PHP\Type\Caster\Fixtures\ColorsEnum>" type');
 
-        (new EnumCastingHandler())->value(1, type_enum(ColorsEnum::class));
+        (new EnumCastingHandler())->value(1, type_enum(ColorsEnum::class), Caster::default());
     }
 
     public function test_casting_string_to_enum() : void
     {
         $this->assertEquals(
             ColorsEnum::RED,
-            (new EnumCastingHandler())->value('red', type_enum(ColorsEnum::class))
+            (new EnumCastingHandler())->value('red', type_enum(ColorsEnum::class), Caster::default())
         );
     }
 }

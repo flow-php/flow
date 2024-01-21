@@ -56,8 +56,8 @@ final class Caster
             type_json()->toString() => new JsonCastingHandler(),
             type_array()->toString() => new ArrayCastingHandler(),
             'list' => new ListCastingHandler(),
-            'map', new MapCastingHandler(),
-            'structure', new StructureCastingHandler(),
+            'map' => new MapCastingHandler(),
+            'structure' => new StructureCastingHandler(),
             type_null()->toString() => new NullCastingHandler(),
             'enum' => new EnumCastingHandler(),
         ]);
@@ -66,12 +66,12 @@ final class Caster
     public function to(Type $type) : CastingContext
     {
         if (\array_key_exists($type->toString(), $this->handlers)) {
-            return new CastingContext($this->handlers[$type->toString()], $type);
+            return new CastingContext($this->handlers[$type->toString()], $type, $this);
         }
 
         foreach ($this->handlers as $handler) {
             if ($handler->supports($type)) {
-                return new CastingContext($handler, $type);
+                return new CastingContext($handler, $type, $this);
             }
         }
 

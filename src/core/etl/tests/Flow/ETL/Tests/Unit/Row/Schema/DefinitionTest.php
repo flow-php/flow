@@ -179,6 +179,14 @@ final class DefinitionTest extends TestCase
         Definition::integer('int')->merge(Definition::string('string'));
     }
 
+    public function test_merging_list_of_ints_and_floats() : void
+    {
+        $this->assertEquals(
+            Definition::list('list', type_list(type_float())),
+            Definition::list('list', type_list(type_int()))->merge(Definition::list('list', type_list(type_float())))
+        );
+    }
+
     public function test_merging_numeric_types() : void
     {
         $this->assertEquals(

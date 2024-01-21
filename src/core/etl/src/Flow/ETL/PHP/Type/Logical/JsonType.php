@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\PHP\Type\Logical;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Caster\StringTypeChecker;
+use Flow\ETL\PHP\Type\Caster\StringCastingHandler\StringTypeChecker;
 use Flow\ETL\PHP\Type\Native\NullType;
 use Flow\ETL\PHP\Type\Type;
 

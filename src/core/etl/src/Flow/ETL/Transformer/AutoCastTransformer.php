@@ -22,9 +22,9 @@ final class AutoCastTransformer implements Transformer
     {
         return $rows->map(function (Row $row) use ($context) {
             return $row->map(function (Entry $entry) use ($context) {
-                if (!$entry instanceof StringEntry) {
-                    return $entry;
-                }
+                //                if (!$entry instanceof StringEntry) {
+                //                    return $entry;
+                //                }
 
                 return $context->entryFactory()->create($entry->name(), $this->caster->cast($entry->value()));
             });

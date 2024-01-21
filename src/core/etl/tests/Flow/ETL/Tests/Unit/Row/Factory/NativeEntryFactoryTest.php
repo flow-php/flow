@@ -247,10 +247,10 @@ final class NativeEntryFactoryTest extends TestCase
 
     public function test_list_int_with_schema_but_string_list() : void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Field "e" conversion exception. Expected list<integer> got different types: list<string>');
-
-        (new NativeEntryFactory())->create('e', ['1', '2', '3'], new Schema(Schema\Definition::list('e', new ListType(ListElement::integer()))));
+        $this->assertEquals(
+            list_entry('e', ['false', 'true', 'true'], type_list(type_string())),
+            (new NativeEntryFactory())->create('e', [false, true, true], new Schema(Schema\Definition::list('e', new ListType(ListElement::string()))))
+        );
     }
 
     public function test_list_of_datetime_with_schema() : void

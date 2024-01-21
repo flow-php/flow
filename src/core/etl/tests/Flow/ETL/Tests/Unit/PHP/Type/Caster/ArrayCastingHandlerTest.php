@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\PHP\Type\Caster;
 
 use function Flow\ETL\DSL\type_array;
+use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\PHP\Type\Caster\ArrayCastingHandler;
 use PHPUnit\Framework\TestCase;
 
@@ -14,7 +15,7 @@ final class ArrayCastingHandlerTest extends TestCase
     {
         $this->assertEquals(
             [true],
-            (new ArrayCastingHandler())->value(true, type_array())
+            (new ArrayCastingHandler())->value(true, type_array(), Caster::default())
         );
     }
 
@@ -22,7 +23,7 @@ final class ArrayCastingHandlerTest extends TestCase
     {
         $this->assertEquals(
             ['date' => '2021-01-01 00:00:00.000000', 'timezone_type' => 3, 'timezone' => 'UTC'],
-            (new ArrayCastingHandler())->value(new \DateTimeImmutable('2021-01-01 00:00:00 UTC'), type_array())
+            (new ArrayCastingHandler())->value(new \DateTimeImmutable('2021-01-01 00:00:00 UTC'), type_array(), Caster::default())
         );
     }
 
@@ -30,7 +31,7 @@ final class ArrayCastingHandlerTest extends TestCase
     {
         $this->assertEquals(
             [1.1],
-            (new ArrayCastingHandler())->value(1.1, type_array())
+            (new ArrayCastingHandler())->value(1.1, type_array(), Caster::default())
         );
     }
 
@@ -38,7 +39,7 @@ final class ArrayCastingHandlerTest extends TestCase
     {
         $this->assertEquals(
             [1],
-            (new ArrayCastingHandler())->value(1, type_array())
+            (new ArrayCastingHandler())->value(1, type_array(), Caster::default())
         );
     }
 
@@ -46,7 +47,7 @@ final class ArrayCastingHandlerTest extends TestCase
     {
         $this->assertSame(
             ['items' => ['item' => 1]],
-            (new ArrayCastingHandler())->value('{"items":{"item":1}}', type_array())
+            (new ArrayCastingHandler())->value('{"items":{"item":1}}', type_array(), Caster::default())
         );
     }
 
@@ -57,7 +58,7 @@ final class ArrayCastingHandlerTest extends TestCase
 
         $this->assertSame(
             ['root' => ['foo' => ['@attributes' => ['baz' => 'buz'], '@value' => 'bar']]],
-            (new ArrayCastingHandler())->value($xml, type_array())
+            (new ArrayCastingHandler())->value($xml, type_array(), Caster::default())
         );
     }
 }

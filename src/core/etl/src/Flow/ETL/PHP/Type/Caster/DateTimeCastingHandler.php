@@ -6,6 +6,7 @@ namespace Flow\ETL\PHP\Type\Caster;
 
 use function Flow\ETL\DSL\type_datetime;
 use Flow\ETL\Exception\CastingException;
+use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\PHP\Type\Logical\DateTimeType;
 use Flow\ETL\PHP\Type\Type;
 
@@ -16,7 +17,7 @@ final class DateTimeCastingHandler implements CastingHandler
         return $type instanceof DateTimeType;
     }
 
-    public function value(mixed $value, Type $type) : mixed
+    public function value(mixed $value, Type $type, Caster $caster) : mixed
     {
         if ($value instanceof \DateTimeImmutable) {
             return $value;

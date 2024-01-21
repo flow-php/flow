@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\PHP\Type\Caster;
 
 use Flow\ETL\Exception\CastingException;
+use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\PHP\Type\Native\ScalarType;
 use Flow\ETL\PHP\Type\Type;
 
@@ -15,7 +16,7 @@ final class StringCastingHandler implements CastingHandler
         return $type instanceof ScalarType && $type->isString();
     }
 
-    public function value(mixed $value, Type $type) : mixed
+    public function value(mixed $value, Type $type, Caster $caster) : mixed
     {
         if ($value === null) {
             return null;

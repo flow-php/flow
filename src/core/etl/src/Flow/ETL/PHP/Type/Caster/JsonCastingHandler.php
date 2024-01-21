@@ -6,6 +6,7 @@ namespace Flow\ETL\PHP\Type\Caster;
 
 use function Flow\ETL\DSL\type_json;
 use Flow\ETL\Exception\CastingException;
+use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\PHP\Type\Logical\JsonType;
 use Flow\ETL\PHP\Type\Type;
 
@@ -16,7 +17,7 @@ final class JsonCastingHandler implements CastingHandler
         return $type instanceof JsonType;
     }
 
-    public function value(mixed $value, Type $type) : mixed
+    public function value(mixed $value, Type $type, Caster $caster) : mixed
     {
         try {
             if (\is_string($value)) {

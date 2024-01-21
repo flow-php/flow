@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\PHP\Type\Caster;
 
 use function Flow\ETL\DSL\type_float;
+use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\PHP\Type\Caster\FloatCastingHandler;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -25,6 +26,6 @@ final class FloatCastingHandlerTest extends TestCase
     #[DataProvider('float_castable_data_provider')]
     public function test_casting_different_data_types_to_float(mixed $value, float $expected) : void
     {
-        $this->assertSame($expected, (new FloatCastingHandler())->value($value, type_float()));
+        $this->assertSame($expected, (new FloatCastingHandler())->value($value, type_float(), Caster::default()));
     }
 }

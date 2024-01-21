@@ -98,7 +98,7 @@ final class JsonExtractorTest extends TestCase
             <<<'SCHEMA'
 schema
 |-- timezones: list<string>
-|-- latlng: array<mixed>
+|-- latlng: list<float>
 |-- name: string
 |-- country_code: string
 |-- capital: ?string
