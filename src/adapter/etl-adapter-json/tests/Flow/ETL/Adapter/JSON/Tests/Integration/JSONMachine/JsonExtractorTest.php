@@ -6,7 +6,9 @@ namespace Flow\ETL\Adapter\JSON\Tests\Integration\JSONMachine;
 
 use function Flow\ETL\Adapter\JSON\from_json;
 use function Flow\ETL\Adapter\JSON\to_json;
+use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\print_schema;
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonExtractor;
 use Flow\ETL\Config;
 use Flow\ETL\Extractor\Signal;
@@ -63,6 +65,48 @@ final class JsonExtractorTest extends TestCase
         }
 
         $this->assertSame(247, $rows->count());
+    }
+
+    public function test_extracting_json_from_local_file_stream_with_schema() : void
+    {
+        $rows = df()
+            ->read(from_json(
+                __DIR__ . '/../../Fixtures/timezones.json',
+                schema: $schema = df()
+                    ->read(from_json(__DIR__ . '/../../Fixtures/timezones.json'))
+                    ->autoCast()
+                    ->schema()
+            ))
+            ->fetch();
+
+        foreach ($rows as $row) {
+            $this->assertSame(
+                [
+                    'timezones',
+                    'latlng',
+                    'name',
+                    'country_code',
+                    'capital',
+                ],
+                \array_keys($row->toArray())
+            );
+        }
+
+        $this->assertSame(247, $rows->count());
+        $this->assertEquals($schema, $rows->schema());
+        $this->assertSame(
+            <<<'SCHEMA'
+schema
+|-- timezones: list<string>
+|-- latlng: array<mixed>
+|-- name: string
+|-- country_code: string
+|-- capital: ?string
+
+SCHEMA
+            ,
+            print_schema($schema)
+        );
     }
 
     public function test_extracting_json_from_local_file_string_uri() : void

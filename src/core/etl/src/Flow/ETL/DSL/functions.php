@@ -868,7 +868,7 @@ function number_format(ScalarFunction $function, ?ScalarFunction $decimals = nul
  * @param array<array<mixed>>|array<mixed|string> $data
  * @param array<Partition>|\Flow\ETL\Partitions $partitions
  */
-function array_to_rows(array $data, EntryFactory $entryFactory = new NativeEntryFactory(), array|\Flow\ETL\Partitions $partitions = []) : Rows
+function array_to_rows(array $data, EntryFactory $entryFactory = new NativeEntryFactory(), array|\Flow\ETL\Partitions $partitions = [], ?Schema $schema = null) : Rows
 {
     $partitions = \is_array($partitions) ? new \Flow\ETL\Partitions(...$partitions) : $partitions;
 
@@ -888,12 +888,12 @@ function array_to_rows(array $data, EntryFactory $entryFactory = new NativeEntry
         foreach ($data as $key => $value) {
             $name = \is_int($key) ? 'e' . \str_pad((string) $key, 2, '0', STR_PAD_LEFT) : $key;
 
-            $entries[$name] = $entryFactory->create($name, $value);
+            $entries[$name] = $entryFactory->create($name, $value, $schema);
         }
 
         foreach ($partitions as $partition) {
             if (!\array_key_exists($partition->name, $entries)) {
-                $entries[$partition->name] = $entryFactory->create($partition->name, $partition->value);
+                $entries[$partition->name] = $entryFactory->create($partition->name, $partition->value, $schema);
             }
         }
 
@@ -907,12 +907,12 @@ function array_to_rows(array $data, EntryFactory $entryFactory = new NativeEntry
 
         foreach ($row as $column => $value) {
             $name = \is_int($column) ? 'e' . \str_pad((string) $column, 2, '0', STR_PAD_LEFT) : $column;
-            $entries[$name] = $entryFactory->create(\is_int($column) ? 'e' . \str_pad((string) $column, 2, '0', STR_PAD_LEFT) : $column, $value);
+            $entries[$name] = $entryFactory->create(\is_int($column) ? 'e' . \str_pad((string) $column, 2, '0', STR_PAD_LEFT) : $column, $value, $schema);
         }
 
         foreach ($partitions as $partition) {
             if (!\array_key_exists($partition->name, $entries)) {
-                $entries[$partition->name] = $entryFactory->create($partition->name, $partition->value);
+                $entries[$partition->name] = $entryFactory->create($partition->name, $partition->value, $schema);
             }
         }
 
@@ -1118,4 +1118,14 @@ function append() : SaveMode
 function get_type(mixed $value) : Type
 {
     return (new TypeDetector())->detectType($value);
+}
+
+function print_schema(Schema $schema, ?SchemaFormatter $formatter = null) : string
+{
+    return ($formatter ?? new ASCIISchemaFormatter())->format($schema);
+}
+
+function print_rows(Rows $rows, int|bool $truncate = false, ?Formatter $formatter = null) : string
+{
+    return ($formatter ?? new Formatter\AsciiTableFormatter())->format($rows, $truncate);
 }

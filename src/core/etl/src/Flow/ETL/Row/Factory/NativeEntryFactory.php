@@ -46,6 +46,13 @@ use Symfony\Component\Uid\Uuid;
 
 final class NativeEntryFactory implements EntryFactory
 {
+    private readonly Caster $caster;
+
+    public function __construct()
+    {
+        $this->caster = Caster::default();
+    }
+
     /**
      * @throws InvalidArgumentException
      * @throws RuntimeException
@@ -163,69 +170,63 @@ final class NativeEntryFactory implements EntryFactory
 
     private function fromDefinition(Schema\Definition $definition, mixed $value) : Entry
     {
-        if ($definition->isNullable()) {
-            if (null === $value) {
-                return null_entry($definition->entry()->name());
-            }
-
-            throw new InvalidArgumentException("Entry \"{$definition->entry()}\" is not nullable, but null value was given");
+        if ($definition->isNullable() && null === $value) {
+            return null_entry($definition->entry()->name());
         }
-
-        $caster = Caster::default();
 
         try {
             if ($definition->type() instanceof ScalarType) {
                 return match ($definition->type()->type()) {
-                    ScalarType::STRING => str_entry($definition->entry()->name(), $caster->to($definition->type())->value($value)),
-                    ScalarType::INTEGER => int_entry($definition->entry()->name(), $caster->to($definition->type())->value($value)),
-                    ScalarType::FLOAT => float_entry($definition->entry()->name(), $caster->to($definition->type())->value($value)),
-                    ScalarType::BOOLEAN => bool_entry($definition->entry()->name(), $caster->to($definition->type())->value($value)),
+                    ScalarType::STRING => str_entry($definition->entry()->name(), $this->caster->to($definition->type())->value($value)),
+                    ScalarType::INTEGER => int_entry($definition->entry()->name(), $this->caster->to($definition->type())->value($value)),
+                    ScalarType::FLOAT => float_entry($definition->entry()->name(), $this->caster->to($definition->type())->value($value)),
+                    ScalarType::BOOLEAN => bool_entry($definition->entry()->name(), $this->caster->to($definition->type())->value($value)),
                     default => throw new InvalidArgumentException("Can't convert value into entry \"{$definition->entry()}\""),
                 };
             }
 
             if ($definition->type() instanceof XMLType) {
-                return xml_entry($definition->entry()->name(), $caster->to($definition->type())->value($value));
+                return xml_entry($definition->entry()->name(), $this->caster->to($definition->type())->value($value));
             }
 
             if ($definition->type() instanceof UuidType) {
-                return uuid_entry($definition->entry()->name(), $caster->to($definition->type())->value($value));
+                return uuid_entry($definition->entry()->name(), $this->caster->to($definition->type())->value($value));
             }
 
             if ($definition->type() instanceof ObjectType) {
-                return obj_entry($definition->entry()->name(), $caster->to($definition->type())->value($value));
+                return obj_entry($definition->entry()->name(), $this->caster->to($definition->type())->value($value));
             }
 
             if ($definition->type() instanceof DateTimeType) {
-                return datetime_entry($definition->entry()->name(), $caster->to($definition->type())->value($value));
+                return datetime_entry($definition->entry()->name(), $this->caster->to($definition->type())->value($value));
             }
 
             if ($definition->type() instanceof EnumType) {
-                return enum_entry($definition->entry()->name(), $caster->to($definition->type())->value($value));
+                return enum_entry($definition->entry()->name(), $this->caster->to($definition->type())->value($value));
             }
 
             if ($definition->type() instanceof JsonType) {
                 try {
-                    return json_object_entry($definition->entry()->name(), $caster->to($definition->type())->value($value));
+                    return json_object_entry($definition->entry()->name(), $this->caster->to($definition->type())->value($value));
                 } catch (InvalidArgumentException) {
-                    return json_entry($definition->entry()->name(), $caster->to($definition->type())->value($value));
+                    return json_entry($definition->entry()->name(), $this->caster->to($definition->type())->value($value));
                 }
             }
 
             if ($definition->type() instanceof ArrayType) {
-                return array_entry($definition->entry()->name(), $caster->to($definition->type())->value($value));
+                return array_entry($definition->entry()->name(), $this->caster->to($definition->type())->value($value));
             }
 
             if ($definition->type() instanceof MapType) {
-                return map_entry($definition->entry()->name(), $caster->to($definition->type())->value($value), $definition->type());
+                return map_entry($definition->entry()->name(), $this->caster->to($definition->type())->value($value), $definition->type());
             }
 
             if ($definition->type() instanceof StructureType) {
-                return struct_entry($definition->entry()->name(), $caster->to($definition->type())->value($value), $definition->type());
+                return struct_entry($definition->entry()->name(), $this->caster->to($definition->type())->value($value), $definition->type());
             }
 
             if ($definition->type() instanceof ListType) {
-                return new Entry\ListEntry($definition->entry()->name(), $caster->to($definition->type())->value($value), $definition->type());
+                return new Entry\ListEntry($definition->entry()->name(), $this->caster->to($definition->type())->value($value), $definition->type());
             }
         } catch (InvalidArgumentException|\TypeError $e) {
             throw new InvalidArgumentException("Field \"{$definition->entry()}\" conversion exception. {$e->getMessage()}", previous: $e);

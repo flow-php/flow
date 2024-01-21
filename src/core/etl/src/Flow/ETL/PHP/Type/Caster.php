@@ -4,6 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type;
 
+use function Flow\ETL\DSL\type_array;
+use function Flow\ETL\DSL\type_boolean;
+use function Flow\ETL\DSL\type_datetime;
+use function Flow\ETL\DSL\type_float;
+use function Flow\ETL\DSL\type_integer;
+use function Flow\ETL\DSL\type_json;
+use function Flow\ETL\DSL\type_null;
+use function Flow\ETL\DSL\type_string;
+use function Flow\ETL\DSL\type_uuid;
+use function Flow\ETL\DSL\type_xml;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\PHP\Type\Caster\ArrayCastingHandler;
 use Flow\ETL\PHP\Type\Caster\BooleanCastingHandler;
@@ -35,26 +45,30 @@ final class Caster
     public static function default() : self
     {
         return new self([
-            new StringCastingHandler(),
-            new IntegerCastingHandler(),
-            new BooleanCastingHandler(),
-            new FloatCastingHandler(),
-            new XMLCastingHandler(),
-            new UuidCastingHandler(),
-            new ObjectCastingHandler(),
-            new DateTimeCastingHandler(),
-            new JsonCastingHandler(),
-            new ArrayCastingHandler(),
-            new ListCastingHandler(),
-            new MapCastingHandler(),
-            new StructureCastingHandler(),
-            new NullCastingHandler(),
-            new EnumCastingHandler(),
+            type_string()->toString() => new StringCastingHandler(),
+            type_integer()->toString() => new IntegerCastingHandler(),
+            type_boolean()->toString() => new BooleanCastingHandler(),
+            type_float()->toString() => new FloatCastingHandler(),
+            type_xml()->toString() => new XMLCastingHandler(),
+            type_uuid()->toString() => new UuidCastingHandler(),
+            'object' => new ObjectCastingHandler(),
+            type_datetime()->toString() => new DateTimeCastingHandler(),
+            type_json()->toString() => new JsonCastingHandler(),
+            type_array()->toString() => new ArrayCastingHandler(),
+            'list' => new ListCastingHandler(),
+            'map', new MapCastingHandler(),
+            'structure', new StructureCastingHandler(),
+            type_null()->toString() => new NullCastingHandler(),
+            'enum' => new EnumCastingHandler(),
         ]);
     }
 
     public function to(Type $type) : CastingContext
     {
+        if (\array_key_exists($type->toString(), $this->handlers)) {
+            return new CastingContext($this->handlers[$type->toString()], $type);
+        }
+
         foreach ($this->handlers as $handler) {
             if ($handler->supports($type)) {
                 return new CastingContext($handler, $type);

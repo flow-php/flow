@@ -312,7 +312,17 @@ final class Definition
             );
         }
 
-        throw new RuntimeException(\sprintf('Cannot merge definitions for entries, "%s" and "%s"', $this->ref->name(), $definition->ref->name()));
+        if (\in_array(ArrayEntry::class, $entryClasses, true)) {
+            return new self(
+                $this->ref,
+                ArrayEntry::class,
+                type_array(false, $this->isNullable() || $definition->isNullable()),
+                $constraint,
+                $this->metadata->merge($definition->metadata)
+            );
+        }
+
+        throw new RuntimeException(\sprintf('Cannot merge definitions for entries, "%s (%s)" and "%s (%s)"', $this->ref->name(), $this->type->toString(), $definition->ref->name(), $definition->type->toString()));
     }
 
     public function metadata() : Metadata

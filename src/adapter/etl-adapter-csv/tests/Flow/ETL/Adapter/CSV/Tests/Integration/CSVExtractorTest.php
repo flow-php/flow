@@ -8,6 +8,7 @@ use function Flow\ETL\Adapter\CSV\from_csv;
 use function Flow\ETL\Adapter\CSV\to_csv;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\print_schema;
 use function Flow\ETL\DSL\ref;
 use Flow\ETL\Adapter\CSV\CSVExtractor;
 use Flow\ETL\Config;
@@ -141,6 +142,61 @@ final class CSVExtractorTest extends TestCase
         }
 
         $this->assertSame(998, $rows->count());
+    }
+
+    public function test_extracting_csv_files_with_schema() : void
+    {
+        $path = __DIR__ . '/../Fixtures/annual-enterprise-survey-2019-financial-year-provisional-csv.csv';
+
+        $rows = df()
+            ->read(
+                from_csv($path, schema: $schema = df()
+                ->read(from_csv($path))
+                ->autoCast()
+                ->schema())
+            )
+            ->fetch();
+
+        foreach ($rows as $row) {
+            $this->assertSame(
+                [
+                    'Year',
+                    'Industry_aggregation_NZSIOC',
+                    'Industry_code_NZSIOC',
+                    'Industry_name_NZSIOC',
+                    'Units',
+                    'Variable_code',
+                    'Variable_name',
+                    'Variable_category',
+                    'Value',
+                    'Industry_code_ANZSIC06',
+
+                ],
+                \array_keys($row->toArray())
+            );
+        }
+
+        $this->assertSame(998, $rows->count());
+        $this->assertEquals($schema, $rows->schema());
+
+        $this->assertSame(
+            <<<'SCHEMA'
+schema
+|-- Year: integer
+|-- Industry_aggregation_NZSIOC: string
+|-- Industry_code_NZSIOC: string
+|-- Industry_name_NZSIOC: string
+|-- Units: string
+|-- Variable_code: string
+|-- Variable_name: string
+|-- Variable_category: string
+|-- Value: string
+|-- Industry_code_ANZSIC06: string
+
+SCHEMA,
+            print_schema($rows->schema())
+        );
+
     }
 
     public function test_extracting_csv_files_without_header() : void

@@ -15,6 +15,7 @@ use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Row\Schema;
 
 final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor, PartitionsExtractor
 {
@@ -31,7 +32,8 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
         private readonly string|null $separator = null,
         private readonly string|null $enclosure = null,
         private readonly string|null $escape = null,
-        private readonly int $charactersReadInLine = 1000
+        private readonly int $charactersReadInLine = 1000,
+        private readonly Schema|null $schema = null
     ) {
         $this->resetLimit();
     }
@@ -98,7 +100,7 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
                     $row['_input_file_uri'] = $stream->path()->uri();
                 }
 
-                $signal = yield array_to_rows($row, $context->entryFactory(), $path->partitions());
+                $signal = yield array_to_rows($row, $context->entryFactory(), $path->partitions(), $this->schema);
                 $this->countRow();
 
                 if ($signal === Signal::STOP || $this->reachedLimit()) {

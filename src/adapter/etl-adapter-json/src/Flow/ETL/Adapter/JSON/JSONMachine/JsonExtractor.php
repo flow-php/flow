@@ -15,6 +15,7 @@ use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Row\Schema;
 use JsonMachine\Items;
 use JsonMachine\JsonDecoder\ExtJsonDecoder;
 
@@ -26,6 +27,7 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
     public function __construct(
         private readonly Path $path,
         private readonly ?string $pointer = null,
+        private readonly Schema|null $schema = null,
     ) {
         $this->resetLimit();
     }
@@ -46,7 +48,7 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
                     $row['_input_file_uri'] = $filePath->uri();
                 }
 
-                $signal = yield array_to_rows($row, $context->entryFactory(), $filePath->partitions());
+                $signal = yield array_to_rows($row, $context->entryFactory(), $filePath->partitions(), $this->schema);
                 $this->countRow();
 
                 if ($signal === Signal::STOP || $this->reachedLimit()) {
