@@ -8,13 +8,17 @@ use function Flow\ETL\DSL\bool_entry;
 use function Flow\ETL\DSL\datetime_entry;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\float_entry;
+use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\json_entry;
 use function Flow\ETL\DSL\json_object_entry;
+use function Flow\ETL\DSL\json_schema;
 use function Flow\ETL\DSL\list_entry;
 use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\schema;
 use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\struct_element;
 use function Flow\ETL\DSL\struct_entry;
 use function Flow\ETL\DSL\struct_type;
@@ -44,10 +48,10 @@ final class ParquetTest extends TestCase
             ->run();
 
         $this->assertEquals(
-            $rows,
+            $rows->toArray(),
             (new Flow())
                 ->read(from_parquet($path))
-                ->fetch()
+                ->fetch()->toArray()
         );
 
         $parquetFile = (new Reader())->read($path);
@@ -94,6 +98,41 @@ final class ParquetTest extends TestCase
         );
         $this->assertDirectoryExists($path);
         $this->cleanDirectory($path);
+    }
+
+    public function test_writing_with_provided_schema() : void
+    {
+        $path = \sys_get_temp_dir() . '/file_schema.snappy.parquet';
+        $this->removeFile($path);
+
+        df()
+            ->read(from_array([
+                ['id' => 1, 'name' => 'test', 'uuid' => Uuid::fromString('26fd21b0-6080-4d6c-bdb4-1214f1feffef'), 'json' => '[{"id":1,"name":"test"},{"id":2,"name":"test"}]'],
+                ['id' => 2, 'name' => 'test', 'uuid' => Uuid::fromString('26fd21b0-6080-4d6c-bdb4-1214f1feffef'), 'json' => '[{"id":1,"name":"test"},{"id":2,"name":"test"}]'],
+            ]))
+            ->write(
+                to_parquet($path, schema: schema(
+                    str_schema('id'),
+                    str_schema('name'),
+                    str_schema('uuid'),
+                    json_schema('json'),
+                ))
+            )
+            ->run();
+
+        $this->assertEquals(
+            [
+                ['id' => '1', 'name' => 'test', 'uuid' => new Row\Entry\Type\Uuid('26fd21b0-6080-4d6c-bdb4-1214f1feffef'), 'json' => '[{"id":1,"name":"test"},{"id":2,"name":"test"}]'],
+                ['id' => '2', 'name' => 'test', 'uuid' => new Row\Entry\Type\Uuid('26fd21b0-6080-4d6c-bdb4-1214f1feffef'), 'json' => '[{"id":1,"name":"test"},{"id":2,"name":"test"}]'],
+            ],
+            df()
+                ->read(from_parquet($path))
+                ->fetch()
+                ->toArray()
+        );
+
+        $this->assertFileExists($path);
+        $this->removeFile($path);
     }
 
     /**

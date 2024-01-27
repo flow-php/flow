@@ -6,6 +6,7 @@ use Flow\ETL\Filesystem\Path;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
+use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Rows;
 use Flow\Parquet\Options;
@@ -32,7 +33,7 @@ final class ParquetLoader implements Closure, Loader, Loader\FileLoader
         private readonly ?Schema $schema = null,
     ) {
         $this->converter = new SchemaConverter();
-        $this->normalizer = new RowsNormalizer();
+        $this->normalizer = new RowsNormalizer(Caster::default());
 
         if ($this->path->isPattern()) {
             throw new \InvalidArgumentException("ParquetLoader path can't be pattern, given: " . $this->path->path());
@@ -77,7 +78,7 @@ final class ParquetLoader implements Closure, Loader, Loader\FileLoader
                 $this->writers[$stream->path()->uri()]->openForStream($stream->resource(), $this->converter->toParquet($this->schema()));
             }
 
-            $this->writers[$stream->path()->uri()]->writeBatch($this->normalizer->normalize($rows));
+            $this->writers[$stream->path()->uri()]->writeBatch($this->normalizer->normalize($rows, $this->schema()));
         } else {
             $stream = $streams->open($this->path, 'parquet', $context->appendSafe());
 
@@ -90,7 +91,7 @@ final class ParquetLoader implements Closure, Loader, Loader\FileLoader
                 $this->writers[$stream->path()->uri()]->openForStream($stream->resource(), $this->converter->toParquet($this->schema()));
             }
 
-            $this->writers[$stream->path()->uri()]->writeBatch($this->normalizer->normalize($rows));
+            $this->writers[$stream->path()->uri()]->writeBatch($this->normalizer->normalize($rows, $this->schema()));
         }
     }
 

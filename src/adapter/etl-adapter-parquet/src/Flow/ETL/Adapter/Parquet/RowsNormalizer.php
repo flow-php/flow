@@ -2,15 +2,22 @@
 
 namespace Flow\ETL\Adapter\Parquet;
 
+use function Flow\ETL\DSL\type_string;
+use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\Row\Entry\UuidEntry;
+use Flow\ETL\Row\Schema;
 use Flow\ETL\Rows;
 
 final class RowsNormalizer
 {
+    public function __construct(private readonly Caster $caster)
+    {
+    }
+
     /**
      * @return array<mixed, array<string, mixed>>
      */
-    public function normalize(Rows $rows) : array
+    public function normalize(Rows $rows, Schema $schema) : array
     {
         $normalizedRows = [];
 
@@ -19,8 +26,8 @@ final class RowsNormalizer
 
             foreach ($row->entries() as $entry) {
                 $columns[$entry->name()] = match ($entry::class) {
-                    UuidEntry::class => $entry->value()->toString(),
-                    default => $entry->value(),
+                    UuidEntry::class => $this->caster->to(type_string())->value($entry->value()),
+                    default => $this->caster->to($schema->getDefinition($entry->ref())->type())->value($entry->value()),
                 };
             }
 

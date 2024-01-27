@@ -106,7 +106,11 @@ final class NativeEntryFactory implements EntryFactory
         }
 
         if ($valueType instanceof UuidType) {
-            return uuid_entry($entryName, $value);
+            if ($value instanceof Entry\Type\Uuid) {
+                return uuid_entry($entryName, $value);
+            }
+
+            return uuid_entry($entryName, (string) $value);
         }
 
         if ($valueType instanceof DateTimeType) {
