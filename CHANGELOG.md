@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-01-22
+## [Unreleased] - 2024-01-27
 
 ### Added
 - [#928](https://github.com/flow-php/flow/pull/928) - **Caster mechanism that works on top of Flow\PHP\Type** - [@norberttech](https://github.com/norberttech)
@@ -56,6 +56,7 @@
 - [#867](https://github.com/flow-php/flow/pull/867) - **Update Homebrew TAP formula: flow-php to version: 0.5.2** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#931](https://github.com/flow-php/flow/pull/931) - **Make parquet rows normalizer to respect given schema** - [@norberttech](https://github.com/norberttech)
 - [#929](https://github.com/flow-php/flow/pull/929) - **Automatically cast datetime bulk entries into DateTime objects** - [@norberttech](https://github.com/norberttech)
 - [#928](https://github.com/flow-php/flow/pull/928) - **NativeEntryFactory fully respecting schema definitions** - [@norberttech](https://github.com/norberttech)
 - [#926](https://github.com/flow-php/flow/pull/926) - **Missing nullable property in Map/Struct/List logical types** - [@norberttech](https://github.com/norberttech)
