@@ -68,7 +68,7 @@ final class Partition
 
         $partitions = [];
 
-        foreach (\array_filter(\explode('/', $uri), 'strlen') as $uriPart) {
+        foreach (\array_filter(\explode('/', $uri), static fn (string $s) : bool => (bool) \strlen($s)) as $uriPart) {
             if (\preg_match($regex, $uriPart, $matches)) {
                 $partitions[] = new self($matches[1], $matches[2]);
             }
