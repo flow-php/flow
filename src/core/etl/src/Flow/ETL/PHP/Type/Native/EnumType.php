@@ -19,6 +19,17 @@ final class EnumType implements NativeType
         }
     }
 
+    public static function fromArray(array $data) : self
+    {
+        if (!\array_key_exists('class', $data)) {
+            throw new InvalidArgumentException("Missing 'class' key in enum type definition");
+        }
+
+        $nullable = $data['nullable'] ?? false;
+
+        return new self($data['class'], $nullable);
+    }
+
     /**
      * @param class-string<\UnitEnum> $class
      */
@@ -53,6 +64,15 @@ final class EnumType implements NativeType
         }
 
         return new self($this->class, $this->nullable || $type->nullable());
+    }
+
+    public function normalize() : array
+    {
+        return [
+            'type' => 'enum',
+            'class' => $this->class,
+            'nullable' => $this->nullable,
+        ];
     }
 
     public function nullable() : bool

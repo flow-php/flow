@@ -17,6 +17,11 @@ final class ArrayType implements NativeType
         return new self(true);
     }
 
+    public static function fromArray(array $data) : self
+    {
+        return new self($data['empty'] ?? false, $data['nullable'] ?? false);
+    }
+
     public function isEqual(Type $type) : bool
     {
         return $type instanceof self && $this->empty === $type->empty;
@@ -43,6 +48,15 @@ final class ArrayType implements NativeType
         }
 
         return new self($this->empty || $type->empty, $this->nullable || $type->nullable());
+    }
+
+    public function normalize() : array
+    {
+        return [
+            'type' => 'array',
+            'empty' => $this->empty,
+            'nullable' => $this->nullable,
+        ];
     }
 
     public function nullable() : bool

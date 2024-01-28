@@ -9,6 +9,7 @@ use function Flow\ETL\DSL\null_entry;
 use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\struct_element;
 use function Flow\ETL\DSL\struct_entry;
+use function Flow\ETL\DSL\struct_schema;
 use function Flow\ETL\DSL\struct_type;
 use function Flow\ETL\DSL\type_datetime;
 use function Flow\ETL\DSL\type_float;
@@ -16,12 +17,14 @@ use function Flow\ETL\DSL\type_int;
 use function Flow\ETL\DSL\type_list;
 use function Flow\ETL\DSL\type_map;
 use function Flow\ETL\DSL\type_string;
+use function Flow\ETL\DSL\type_structure;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\Row\Schema\Definition;
+use Flow\ETL\Row\Schema\Metadata;
 use PHPUnit\Framework\TestCase;
 
 final class DefinitionTest extends TestCase
@@ -186,6 +189,31 @@ final class DefinitionTest extends TestCase
         $this->assertEquals(
             Definition::map('map', type_map(type_string(), type_string())),
             Definition::map('map', type_map(type_string(), type_string()))->merge(Definition::map('map', type_map(type_string(), type_string())))
+        );
+    }
+
+    public function test_normalize_and_from_array() : void
+    {
+        $definition = struct_schema(
+            'structure',
+            type_structure(
+                [
+                    struct_element('street', type_string()),
+                    struct_element('city', type_string()),
+                    struct_element('location', type_structure(
+                        [
+                            struct_element('lat', type_float()),
+                            struct_element('lng', type_float()),
+                        ]
+                    )),
+                ]
+            ),
+            Metadata::with('description', 'some_random_description')->add('priority', 1)
+        );
+
+        $this->assertEquals(
+            $definition,
+            Definition::fromArray($definition->normalize())
         );
     }
 

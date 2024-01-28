@@ -31,8 +31,16 @@ final class Metadata
     }
 
     /**
+     * @param array<string, array<bool|float|int|string>|bool|float|int|string> $map
+     */
+    public static function fromArray(array $map) : self
+    {
+        return new self($map);
+    }
+
+    /**
      * @param string $key
-     * @param array<bool|float|int|string>|bool|float|int|object|string $value
+     * @param array<bool|float|int|string>|bool|float|int|string $value
      *
      * @return $this
      */
@@ -43,7 +51,7 @@ final class Metadata
 
     /**
      * @param string $key
-     * @param array<bool|float|int|string>|bool|float|int|object|string $value
+     * @param array<bool|float|int|string>|bool|float|int|string $value
      *
      * @return $this
      */
@@ -76,6 +84,14 @@ final class Metadata
     public function merge(self $metadata) : self
     {
         return new self(\array_merge($this->map, $metadata->map));
+    }
+
+    /**
+     * @return array<string, array<bool|float|int|string>|bool|float|int|string>
+     */
+    public function normalize() : array
+    {
+        return $this->map;
     }
 
     public function remove(string $key) : self

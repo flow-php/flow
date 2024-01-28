@@ -7,6 +7,11 @@ use Flow\ETL\PHP\Type\Type;
 
 final class NullType implements NativeType
 {
+    public static function fromArray(array $data) : self
+    {
+        return new self();
+    }
+
     public function isEqual(Type $type) : bool
     {
         return $type instanceof self;
@@ -26,6 +31,13 @@ final class NullType implements NativeType
     {
         /** @phpstan-ignore-next-line  */
         return $type->makeNullable(true);
+    }
+
+    public function normalize() : array
+    {
+        return [
+            'type' => 'null',
+        ];
     }
 
     public function nullable() : bool

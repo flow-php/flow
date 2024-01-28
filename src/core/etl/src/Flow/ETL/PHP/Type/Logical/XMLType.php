@@ -14,6 +14,11 @@ final class XMLType implements LogicalType
     {
     }
 
+    public static function fromArray(array $data) : self
+    {
+        return new self($data['nullable'] ?? false);
+    }
+
     public function isEqual(Type $type) : bool
     {
         return $type instanceof self;
@@ -44,6 +49,14 @@ final class XMLType implements LogicalType
         }
 
         return new self($this->nullable || $type->nullable());
+    }
+
+    public function normalize() : array
+    {
+        return [
+            'type' => 'xml',
+            'nullable' => $this->nullable,
+        ];
     }
 
     public function nullable() : bool

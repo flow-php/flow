@@ -376,6 +376,14 @@ function structure_type(array $elements, bool $nullable = false) : StructureType
     return new StructureType($elements, $nullable);
 }
 
+/**
+ * @param array<string, StructureElement> $elements
+ */
+function type_structure(array $elements, bool $nullable = false) : StructureType
+{
+    return new StructureType($elements, $nullable);
+}
+
 function struct_element(string $name, Type $type) : StructureElement
 {
     return new StructureElement($name, $type);
@@ -1007,6 +1015,16 @@ function schema(Definition ...$definitions) : Schema
     return new Schema(...$definitions);
 }
 
+function schema_to_json(Schema $schema) : string
+{
+    return \json_encode($schema->normalize(), JSON_THROW_ON_ERROR);
+}
+
+function schema_from_json(string $schema) : Schema
+{
+    return Schema::fromArray(\json_decode($schema, true, 512, JSON_THROW_ON_ERROR));
+}
+
 function int_schema(string $name, bool $nullable = false, ?Schema\Metadata $metadata = null) : Definition
 {
     return Definition::integer($name, $nullable, $metadata);
@@ -1085,9 +1103,14 @@ function struct_schema(string $name, StructureType $type, ?Schema\Metadata $meta
     return Definition::structure($name, $type, $metadata);
 }
 
+function structure_schema(string $name, StructureType $type, ?Schema\Metadata $metadata = null) : Definition
+{
+    return Definition::structure($name, $type, $metadata);
+}
+
 function uuid_schema(string $name, bool $nullable = false, ?Schema\Metadata $metadata = null) : Definition
 {
-    return Definition::uuid($name, \uuid_type($nullable), $metadata);
+    return Definition::uuid($name, $nullable, $metadata);
 }
 
 function execution_context(?Config $config = null) : FlowContext

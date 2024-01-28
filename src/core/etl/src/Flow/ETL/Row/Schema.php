@@ -29,6 +29,21 @@ final class Schema implements \Countable
         $this->definitions = $uniqueDefinitions;
     }
 
+    public static function fromArray(array $definitions) : self
+    {
+        $schema = [];
+
+        foreach ($definitions as $definition) {
+            if (!\is_array($definition)) {
+                throw new InvalidArgumentException('Schema definition must be an array');
+            }
+
+            $schema[] = Definition::fromArray($definition);
+        }
+
+        return new self(...$schema);
+    }
+
     public function count() : int
     {
         return \count($this->definitions);
@@ -108,6 +123,17 @@ final class Schema implements \Countable
         }
 
         return new self(...\array_values($newDefinitions));
+    }
+
+    public function normalize() : array
+    {
+        $definitions = [];
+
+        foreach ($this->definitions as $definition) {
+            $definitions[] = $definition->normalize();
+        }
+
+        return $definitions;
     }
 
     public function nullable() : self

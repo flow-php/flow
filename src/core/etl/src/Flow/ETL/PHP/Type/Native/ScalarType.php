@@ -34,6 +34,23 @@ final class ScalarType implements NativeType
         return new self(self::FLOAT, $nullable);
     }
 
+    public static function fromArray(array $data) : self
+    {
+        if (!\array_key_exists('scalar_type', $data)) {
+            throw new InvalidArgumentException("Missing 'scalar_type' key in scalar type definition");
+        }
+
+        $nullable = $data['nullable'] ?? false;
+
+        return match ($data['scalar_type']) {
+            'boolean' => self::boolean($nullable),
+            'float' => self::float($nullable),
+            'integer' => self::integer($nullable),
+            'string' => self::string($nullable),
+            default => throw new InvalidArgumentException("Unknown scalar type '{$data['scalar_type']}'"),
+        };
+    }
+
     public static function integer(bool $nullable = false) : self
     {
         return new self(self::INTEGER, $nullable);
@@ -103,6 +120,15 @@ final class ScalarType implements NativeType
         }
 
         return new self($this->type, $this->nullable || $type->nullable());
+    }
+
+    public function normalize() : array
+    {
+        return [
+            'type' => 'scalar',
+            'scalar_type' => $this->type,
+            'nullable' => $this->nullable,
+        ];
     }
 
     public function nullable() : bool

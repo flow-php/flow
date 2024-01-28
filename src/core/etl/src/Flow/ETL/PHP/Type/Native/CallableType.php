@@ -13,6 +13,11 @@ final class CallableType implements NativeType
 
     }
 
+    public static function fromArray(array $data) : self
+    {
+        return new self($data['nullable'] ?? false);
+    }
+
     public function isEqual(Type $type) : bool
     {
         return $type instanceof self && $this->nullable === $type->nullable;
@@ -39,6 +44,14 @@ final class CallableType implements NativeType
         }
 
         return new self($this->nullable || $type->nullable());
+    }
+
+    public function normalize() : array
+    {
+        return [
+            'type' => 'callable',
+            'nullable' => $this->nullable,
+        ];
     }
 
     public function nullable() : bool

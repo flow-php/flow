@@ -24,6 +24,7 @@ use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\PHP\Type\Native\ObjectType;
 use Flow\ETL\PHP\Type\Type;
+use Flow\ETL\PHP\Type\TypeFactory;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Entry\ArrayEntry;
 use Flow\ETL\Row\Entry\BooleanEntry;
@@ -102,6 +103,49 @@ final class Definition
     public static function float(string|Reference $entry, bool $nullable = false, ?Metadata $metadata = null) : self
     {
         return new self($entry, FloatEntry::class, type_float($nullable), $metadata);
+    }
+
+    public static function fromArray(array $definition) : self
+    {
+        if (!\array_key_exists('ref', $definition)) {
+            throw new InvalidArgumentException('Schema definition must contain "ref" key');
+        }
+
+        if (!\array_key_exists('type', $definition)) {
+            throw new InvalidArgumentException('Schema definition must contain "type" key');
+        }
+
+        if (!\is_array($definition['type'])) {
+            throw new InvalidArgumentException('Schema definition "type" must be an array, got: ' . \json_encode($definition['type']));
+        }
+
+        return new self(
+            $definition['ref'],
+            match ($definition['type']['type']) {
+                'array' => ArrayEntry::class,
+                'scalar' => match ($definition['type']['scalar_type']) {
+                    'boolean' => BooleanEntry::class,
+                    'float' => FloatEntry::class,
+                    'integer' => IntegerEntry::class,
+                    'string' => StringEntry::class,
+                    default => throw new InvalidArgumentException(\sprintf('Unknown scalar type "%s"', \json_encode($definition['type']['scalar_type']))),
+                },
+                'datetime' => DateTimeEntry::class,
+                'enum' => EnumEntry::class,
+                'json' => JsonEntry::class,
+                'list' => ListEntry::class,
+                'map' => MapEntry::class,
+                'null' => NullEntry::class,
+                'object' => ObjectEntry::class,
+                'structure' => StructureEntry::class,
+                'uuid' => UuidEntry::class,
+                'xml' => XMLEntry::class,
+                'xml_node' => XMLNodeEntry::class,
+                default => throw new InvalidArgumentException(\sprintf('Unknown entry type "%s"', \json_encode($definition['type']))),
+            },
+            TypeFactory::fromArray($definition['type']),
+            Metadata::fromArray($definition['metadata'] ?? [])
+        );
     }
 
     public static function integer(string|Reference $entry, bool $nullable = false, ?Metadata $metadata = null) : self
@@ -303,6 +347,15 @@ final class Definition
     public function metadata() : Metadata
     {
         return $this->metadata;
+    }
+
+    public function normalize() : array
+    {
+        return [
+            'ref' => $this->ref->name(),
+            'type' => $this->type->normalize(),
+            'metadata' => $this->metadata->normalize(),
+        ];
     }
 
     public function nullable() : self

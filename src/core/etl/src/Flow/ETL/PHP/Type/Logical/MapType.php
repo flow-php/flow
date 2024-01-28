@@ -14,6 +14,11 @@ final class MapType implements LogicalType
     {
     }
 
+    public static function fromArray(array $data) : self
+    {
+        return new self(MapKey::fromArray($data['key']), MapValue::fromArray($data['value']), $data['nullable'] ?? false);
+    }
+
     public function isEqual(Type $type) : bool
     {
         if (!$type instanceof self) {
@@ -67,6 +72,16 @@ final class MapType implements LogicalType
         }
 
         return new self($this->key, $this->value, $this->nullable || $type->nullable());
+    }
+
+    public function normalize() : array
+    {
+        return [
+            'type' => 'map',
+            'key' => $this->key->normalize(),
+            'value' => $this->value->normalize(),
+            'nullable' => $this->nullable,
+        ];
     }
 
     public function nullable() : bool

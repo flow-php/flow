@@ -14,6 +14,11 @@ final class DateTimeType implements LogicalType
     {
     }
 
+    public static function fromArray(array $data) : self
+    {
+        return new self($data['nullable'] ?? false);
+    }
+
     public function isEqual(Type $type) : bool
     {
         return $type instanceof self;
@@ -40,6 +45,14 @@ final class DateTimeType implements LogicalType
         }
 
         return new self($this->nullable || $type->nullable());
+    }
+
+    public function normalize() : array
+    {
+        return [
+            'type' => 'datetime',
+            'nullable' => $this->nullable,
+        ];
     }
 
     public function nullable() : bool

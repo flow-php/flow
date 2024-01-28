@@ -15,6 +15,11 @@ final class UuidType implements LogicalType
     {
     }
 
+    public static function fromArray(array $data) : Type
+    {
+        return new self($data['nullable'] ?? false);
+    }
+
     public function isEqual(Type $type) : bool
     {
         return $type instanceof self;
@@ -49,6 +54,14 @@ final class UuidType implements LogicalType
         }
 
         return new self($this->nullable || $type->nullable());
+    }
+
+    public function normalize() : array
+    {
+        return [
+            'type' => 'uuid',
+            'nullable' => $this->nullable,
+        ];
     }
 
     public function nullable() : bool

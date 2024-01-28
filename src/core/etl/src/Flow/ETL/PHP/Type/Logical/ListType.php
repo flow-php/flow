@@ -13,6 +13,11 @@ final class ListType implements LogicalType
     {
     }
 
+    public static function fromArray(array $data) : self
+    {
+        return new self(ListElement::fromArray($data['element']), $data['nullable'] ?? false);
+    }
+
     public function element() : ListElement
     {
         return $this->element;
@@ -62,6 +67,15 @@ final class ListType implements LogicalType
         }
 
         return new self($this->element, $this->nullable || $type->nullable());
+    }
+
+    public function normalize() : array
+    {
+        return [
+            'type' => 'list',
+            'element' => $this->element->normalize(),
+            'nullable' => $this->nullable,
+        ];
     }
 
     public function nullable() : bool

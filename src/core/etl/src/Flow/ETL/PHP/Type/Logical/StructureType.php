@@ -27,6 +27,21 @@ final class StructureType implements LogicalType
         $this->elements = $elements;
     }
 
+    public static function fromArray(array $data) : self
+    {
+        if (!\array_key_exists('elements', $data)) {
+            throw InvalidArgumentException::because('Structure must receive at least one element.');
+        }
+
+        $elements = [];
+
+        foreach ($data['elements'] as $element) {
+            $elements[] = StructureElement::fromArray($element);
+        }
+
+        return new self($elements, $data['nullable'] ?? false);
+    }
+
     /**
      * @return array<StructureElement>
      */
@@ -123,6 +138,15 @@ final class StructureType implements LogicalType
         }
 
         return new self(\array_values($elements), $this->nullable || $type->nullable());
+    }
+
+    public function normalize() : array
+    {
+        return [
+            'type' => 'structure',
+            'elements' => \array_map(fn (StructureElement $element) => $element->normalize(), $this->elements),
+            'nullable' => $this->nullable,
+        ];
     }
 
     public function nullable() : bool
