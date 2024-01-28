@@ -6,8 +6,10 @@ use function Flow\ETL\DSL\type_datetime;
 use function Flow\ETL\DSL\type_int;
 use function Flow\ETL\DSL\type_string;
 use function Flow\ETL\DSL\type_uuid;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\LogicalType;
 use Flow\ETL\PHP\Type\Native\ScalarType;
+use Flow\ETL\PHP\Type\TypeFactory;
 
 final class MapKey
 {
@@ -18,6 +20,21 @@ final class MapKey
     public static function datetime() : self
     {
         return new self(type_datetime(false));
+    }
+
+    public static function fromArray(array $data) : self
+    {
+        if (!\array_key_exists('type', $data)) {
+            throw new InvalidArgumentException('Missing "type" key in ' . self::class . ' fromArray()');
+        }
+
+        $keyType = TypeFactory::fromArray($data['type']);
+
+        if (!$keyType instanceof ScalarType && !$keyType instanceof LogicalType) {
+            throw new InvalidArgumentException('Invalid "type" key in ' . self::class . ' fromArray()');
+        }
+
+        return new self($keyType);
     }
 
     public static function fromType(ScalarType|LogicalType $type) : self
@@ -48,6 +65,13 @@ final class MapKey
     public function isValid(mixed $value) : bool
     {
         return $this->value->isValid($value);
+    }
+
+    public function normalize() : array
+    {
+        return [
+            'type' => $this->value->normalize(),
+        ];
     }
 
     public function toString() : string

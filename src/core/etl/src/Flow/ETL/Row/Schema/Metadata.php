@@ -13,12 +13,12 @@ use Flow\ETL\Exception\InvalidArgumentException;
 final class Metadata
 {
     /**
-     * @var array<string, array<mixed>|bool|float|int|object|string>
+     * @var array<string, array<bool|float|int|string>|bool|float|int|string>
      */
     private array $map;
 
     /**
-     * @param array<string, array<mixed>|bool|float|int|object|string> $map
+     * @param array<string, array<bool|float|int|string>|bool|float|int|string> $map
      */
     private function __construct(array $map)
     {
@@ -31,23 +31,31 @@ final class Metadata
     }
 
     /**
+     * @param array<string, array<bool|float|int|string>|bool|float|int|string> $map
+     */
+    public static function fromArray(array $map) : self
+    {
+        return new self($map);
+    }
+
+    /**
      * @param string $key
-     * @param array<mixed>|bool|float|int|object|string $value
+     * @param array<bool|float|int|string>|bool|float|int|string $value
      *
      * @return $this
      */
-    public static function with(string $key, int|string|bool|float|object|array $value) : self
+    public static function with(string $key, int|string|bool|float|array $value) : self
     {
         return new self([$key => $value]);
     }
 
     /**
      * @param string $key
-     * @param array<mixed>|bool|float|int|object|string $value
+     * @param array<bool|float|int|string>|bool|float|int|string $value
      *
      * @return $this
      */
-    public function add(string $key, int|string|bool|float|object|array $value) : self
+    public function add(string $key, int|string|bool|float|array $value) : self
     {
         return new self(\array_merge($this->map, [$key => $value]));
     }
@@ -57,9 +65,9 @@ final class Metadata
      *
      * @throws InvalidArgumentException
      *
-     * @return array<mixed>|bool|float|int|object|string
+     * @return array<bool|float|int|string>|bool|float|int|string
      */
-    public function get(string $key) : int|string|bool|float|object|array
+    public function get(string $key) : int|string|bool|float|array
     {
         if (!\array_key_exists($key, $this->map)) {
             throw new InvalidArgumentException("There no is key: {$key}");
@@ -76,6 +84,14 @@ final class Metadata
     public function merge(self $metadata) : self
     {
         return new self(\array_merge($this->map, $metadata->map));
+    }
+
+    /**
+     * @return array<string, array<bool|float|int|string>|bool|float|int|string>
+     */
+    public function normalize() : array
+    {
+        return $this->map;
     }
 
     public function remove(string $key) : self

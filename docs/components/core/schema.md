@@ -21,16 +21,6 @@ There is more than one way to validate the schema, built in strategies are defin
 
 By default, ETL is initializing `StrictValidator`, but it's possible to override it by passing second argument to `DataFrame::validate()` method.
 
-### Schema Constraints
-
-- [all](../../../src/core/etl/src/Flow/ETL/Row/Schema/Constraint/All.php)
-- [any](../../../src/core/etl/src/Flow/ETL/Row/Schema/Constraint/Any.php)
-- [is instance of](../../../src/core/etl/src/Flow/ETL/Row/Schema/Constraint/IsInstanceOf.php)
-- [list type](../../../src/core/etl/src/Flow/ETL/Row/Schema/Constraint/ListType.php)
-- [not empty](../../../src/core/etl/src/Flow/ETL/Row/Schema/Constraint/NotEmpty.php)
-- [same as](../../../src/core/etl/src/Flow/ETL/Row/Schema/Constraint/SameAs.php)
-- [void](../../../src/core/etl/src/Flow/ETL/Row/Schema/Constraint/VoidConstraint.php)
-
 ## Example - schema validation
 
 ```php 
@@ -46,7 +36,7 @@ data_frame()
         schema(
             int_schema('id', $nullable = false),
             str_schema('name', $nullable = true),
-            bool_schema('active', $nullable = false, new SameAs(true), Metadata::empty()->add('key', 'value')),
+            bool_schema('active', $nullable = false, Metadata::empty()->add('key', 'value')),
         )
     )
     ->write(to_output(false, Output::rows_and_schema))

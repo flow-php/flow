@@ -12,14 +12,16 @@ use function Flow\ETL\DSL\type_string;
 use function Flow\ETL\DSL\type_uuid;
 use function Flow\ETL\DSL\type_xml;
 use function Flow\ETL\DSL\type_xml_node;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\PHP\Type\Type;
+use Flow\ETL\PHP\Type\TypeFactory;
 
 final class ListElement
 {
-    public function __construct(private readonly Type $value)
+    public function __construct(private readonly Type $type)
     {
     }
 
@@ -36,6 +38,15 @@ final class ListElement
     public static function float() : self
     {
         return new self(type_float(false));
+    }
+
+    public static function fromArray(array $data) : self
+    {
+        if (!\array_key_exists('type', $data)) {
+            throw new InvalidArgumentException("Missing 'type' key in list element definition");
+        }
+
+        return new self(TypeFactory::fromArray($data['type']));
     }
 
     public static function fromType(Type $type) : self
@@ -102,21 +113,28 @@ final class ListElement
 
     public function isEqual(mixed $value) : bool
     {
-        return $this->value->isEqual($value);
+        return $this->type->isEqual($value);
     }
 
     public function isValid(mixed $value) : bool
     {
-        return $this->value->isValid($value);
+        return $this->type->isValid($value);
+    }
+
+    public function normalize() : array
+    {
+        return [
+            'type' => $this->type->normalize(),
+        ];
     }
 
     public function toString() : string
     {
-        return $this->value->toString();
+        return $this->type->toString();
     }
 
     public function type() : Type
     {
-        return $this->value;
+        return $this->type;
     }
 }

@@ -19,6 +19,17 @@ final class ObjectType implements NativeType
         }
     }
 
+    public static function fromArray(array $data) : self
+    {
+        if (!\array_key_exists('class', $data)) {
+            throw new InvalidArgumentException("Missing 'class' key in object type definition");
+        }
+
+        $nullable = $data['nullable'] ?? false;
+
+        return new self($data['class'], $nullable);
+    }
+
     public function isEqual(Type $type) : bool
     {
         return $type instanceof self && $this->class === $type->class && $this->nullable === $type->nullable;
@@ -49,6 +60,15 @@ final class ObjectType implements NativeType
         }
 
         return new self($this->class, $this->nullable || $type->nullable());
+    }
+
+    public function normalize() : array
+    {
+        return [
+            'type' => 'object',
+            'class' => $this->class,
+            'nullable' => $this->nullable,
+        ];
     }
 
     public function nullable() : bool

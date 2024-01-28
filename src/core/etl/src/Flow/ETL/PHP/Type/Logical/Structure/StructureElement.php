@@ -5,6 +5,7 @@ namespace Flow\ETL\PHP\Type\Logical\Structure;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Type;
+use Flow\ETL\PHP\Type\TypeFactory;
 
 final class StructureElement
 {
@@ -13,6 +14,19 @@ final class StructureElement
         if ('' === $name) {
             throw InvalidArgumentException::because('Structure element name cannot be empty');
         }
+    }
+
+    public static function fromArray(array $element) : self
+    {
+        if (!\array_key_exists('name', $element)) {
+            throw InvalidArgumentException::because('Structure element must have a name');
+        }
+
+        if (!\array_key_exists('type', $element)) {
+            throw InvalidArgumentException::because('Structure element must have a type');
+        }
+
+        return new self($element['name'], TypeFactory::fromArray($element['type']));
     }
 
     public function isEqual(self $element) : bool
@@ -42,6 +56,14 @@ final class StructureElement
     public function name() : string
     {
         return $this->name;
+    }
+
+    public function normalize() : array
+    {
+        return [
+            'name' => $this->name,
+            'type' => $this->type->normalize(),
+        ];
     }
 
     public function toString() : string

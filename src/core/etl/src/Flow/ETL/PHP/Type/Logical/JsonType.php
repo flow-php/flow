@@ -15,6 +15,11 @@ final class JsonType implements LogicalType
     {
     }
 
+    public static function fromArray(array $data) : self
+    {
+        return new self($data['nullable'] ?? false);
+    }
+
     public function isEqual(Type $type) : bool
     {
         return $type instanceof self;
@@ -45,6 +50,14 @@ final class JsonType implements LogicalType
         }
 
         return new self($this->nullable || $type->nullable());
+    }
+
+    public function normalize() : array
+    {
+        return [
+            'type' => 'json',
+            'nullable' => $this->nullable,
+        ];
     }
 
     public function nullable() : bool

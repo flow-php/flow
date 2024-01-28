@@ -10,9 +10,11 @@ use function Flow\ETL\DSL\type_object;
 use function Flow\ETL\DSL\type_string;
 use function Flow\ETL\DSL\type_xml;
 use function Flow\ETL\DSL\type_xml_node;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Type;
+use Flow\ETL\PHP\Type\TypeFactory;
 
 final class MapValue
 {
@@ -33,6 +35,15 @@ final class MapValue
     public static function float() : self
     {
         return new self(type_float());
+    }
+
+    public static function fromArray(array $value) : self
+    {
+        if (!\array_key_exists('type', $value)) {
+            throw new InvalidArgumentException('Missing "type" key in ' . self::class . ' fromArray()');
+        }
+
+        return new self(TypeFactory::fromArray($value['type']));
     }
 
     public static function fromType(Type $type) : self
@@ -91,6 +102,13 @@ final class MapValue
     public function isValid(mixed $value) : bool
     {
         return $this->value->isValid($value);
+    }
+
+    public function normalize() : array
+    {
+        return [
+            'type' => $this->value->normalize(),
+        ];
     }
 
     public function toString() : string
