@@ -1,6 +1,7 @@
 ## [Unreleased] - 2024-01-28
 
 ### Added
+- [#936](https://github.com/flow-php/flow/pull/936) - **DataFrame::run method can now return execution report with Schema and Statistics** - [@norberttech](https://github.com/norberttech)
 - [#935](https://github.com/flow-php/flow/pull/935) - **Schema::normalize() : array** - [@norberttech](https://github.com/norberttech)
 - [#935](https://github.com/flow-php/flow/pull/935) - **Schema::fromArray(array $data) : self** - [@norberttech](https://github.com/norberttech)
 - [#928](https://github.com/flow-php/flow/pull/928) - **Caster mechanism that works on top of Flow\PHP\Type** - [@norberttech](https://github.com/norberttech)
