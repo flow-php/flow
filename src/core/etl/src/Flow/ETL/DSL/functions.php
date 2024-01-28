@@ -248,6 +248,11 @@ function to_transformation(Transformer $transformer, Loader $loader) : Transform
     return new TransformerLoader($transformer, $loader);
 }
 
+function to_branch(ScalarFunction $condition, Loader $loader) : Loader
+{
+    return new Loader\BranchingLoader($condition, $loader);
+}
+
 /**
  * @param array<mixed> $data
  */
