@@ -7,6 +7,8 @@ namespace Flow\ETL;
 use function Flow\ETL\DSL\to_output;
 use Flow\ETL\DataFrame\GroupedDataFrame;
 use Flow\ETL\DataFrame\PartitionedDataFrame;
+use Flow\ETL\Dataset\Report;
+use Flow\ETL\Dataset\Statistics;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\InvalidFileFormatException;
 use Flow\ETL\Exception\RuntimeException;
@@ -748,17 +750,32 @@ final class DataFrame
      * @trigger
      *
      * @param null|callable(Rows $rows): void $callback
+     * @param bool $analyze - when set to true, run will return Report
      */
     #[DSLMethod(exclude: true)]
-    public function run(?callable $callback = null) : void
+    public function run(?callable $callback = null, bool $analyze = false) : null|Report
     {
         $clone = clone $this;
+
+        $totalRows = 0;
+        $schema = new Schema();
 
         foreach ($clone->pipeline->process($clone->context) as $rows) {
             if ($callback !== null) {
                 $callback($rows);
             }
+
+            if ($analyze) {
+                $schema = $schema->merge($rows->schema());
+                $totalRows += $rows->count();
+            }
         }
+
+        if ($analyze) {
+            return new Report($schema, new Statistics($totalRows));
+        }
+
+        return null;
     }
 
     /**
