@@ -21,7 +21,6 @@ use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\PHP\Type\Logical\StructureType;
-use Flow\ETL\Row\Schema\Constraint;
 use Flow\ETL\Row\Schema\Definition;
 use PHPUnit\Framework\TestCase;
 
@@ -35,18 +34,7 @@ final class DefinitionTest extends TestCase
         new Definition('name', \DateTimeInterface::class, type_datetime());
     }
 
-    public function test_equals_but_different_constraints() : void
-    {
-        $def = Definition::list('list', new ListType(ListElement::integer()));
-
-        $this->assertFalse(
-            $def->isEqual(
-                Definition::list('list', new ListType(ListElement::string()))
-            )
-        );
-    }
-
-    public function test_equals_types_and_constraints() : void
+    public function test_equals_types() : void
     {
         $def = Definition::list('list', new ListType(ListElement::integer()));
 
@@ -55,18 +43,6 @@ final class DefinitionTest extends TestCase
                 Definition::list('list', new ListType(ListElement::integer()))
             )
         );
-    }
-
-    public function test_matches_when_constraint_satisfied_and_everything_else_matches() : void
-    {
-        $constraint = $this->createMock(Constraint::class);
-        $constraint->expects($this->any())
-            ->method('isSatisfiedBy')
-            ->willReturn(true);
-
-        $def = Definition::integer('test', false, $constraint);
-
-        $this->assertTrue($def->matches(int_entry('test', 1)));
     }
 
     public function test_matches_when_nullable_and_name_matches() : void
@@ -83,50 +59,10 @@ final class DefinitionTest extends TestCase
         $this->assertTrue($def->matches(int_entry('test', 1)));
     }
 
-    public function test_merge_definitions_with_both_side_constraints() : void
+    public function test_merge_definitions() : void
     {
         $this->assertEquals(
-            Definition::integer(
-                'id',
-                true,
-                new Constraint\Any(
-                    new Constraint\SameAs(1),
-                    new Constraint\SameAs('one')
-                )
-            ),
-            Definition::integer('id', false, new Constraint\SameAs(1))
-                ->merge(Definition::integer('id', true, new Constraint\SameAs('one')))
-        );
-    }
-
-    public function test_merge_definitions_with_left_side_constraints() : void
-    {
-        $this->assertEquals(
-            Definition::integer(
-                'id',
-                true,
-                new Constraint\SameAs(1)
-            ),
-            Definition::integer('id', false, new Constraint\SameAs(1))->merge(Definition::integer('id', true))
-        );
-    }
-
-    public function test_merge_definitions_with_right_side_constraints() : void
-    {
-        $this->assertEquals(
-            Definition::integer(
-                'id',
-                true,
-                new Constraint\SameAs(2)
-            )->nullable(),
-            Definition::integer('id')->merge(Definition::integer('id', true, new Constraint\SameAs(2)))
-        );
-    }
-
-    public function test_merge_definitions_without_constraints() : void
-    {
-        $this->assertEquals(
-            Definition::integer('id', true)->nullable(),
+            Definition::integer('id', true),
             Definition::integer('id')->merge(Definition::integer('id', true))
         );
     }
@@ -251,18 +187,6 @@ final class DefinitionTest extends TestCase
             Definition::map('map', type_map(type_string(), type_string())),
             Definition::map('map', type_map(type_string(), type_string()))->merge(Definition::map('map', type_map(type_string(), type_string())))
         );
-    }
-
-    public function test_not_matches_when_constraint_not_satisfied() : void
-    {
-        $constraint = $this->createMock(Constraint::class);
-        $constraint->expects($this->any())
-            ->method('isSatisfiedBy')
-            ->willReturn(false);
-
-        $def = Definition::integer('test', false, $constraint);
-
-        $this->assertFalse($def->matches(int_entry('test', 1)));
     }
 
     public function test_not_matches_when_not_nullable_name_matches_but_null_given() : void

@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Schema;
 
-use function Flow\ETL\DSL\type_int;
-use function Flow\ETL\DSL\type_string;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Schema\Metadata;
 use PHPUnit\Framework\TestCase;
@@ -39,14 +37,6 @@ final class MetadataTest extends TestCase
         $this->assertEquals(
             Metadata::empty()->add('id', 2),
             Metadata::empty()->add('id', 1)->merge(Metadata::empty()->add('id', 2))
-        );
-    }
-
-    public function test_merge_object_metadata() : void
-    {
-        $this->assertEquals(
-            Metadata::empty()->add('type', type_int()),
-            Metadata::empty()->add('type', type_string())->merge(Metadata::empty()->add('type', type_int()))
         );
     }
 
