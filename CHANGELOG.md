@@ -1,6 +1,8 @@
-## [Unreleased] - 2024-01-27
+## [Unreleased] - 2024-01-28
 
 ### Added
+- [#935](https://github.com/flow-php/flow/pull/935) - **Schema::normalize() : array** - [@norberttech](https://github.com/norberttech)
+- [#935](https://github.com/flow-php/flow/pull/935) - **Schema::fromArray(array $data) : self** - [@norberttech](https://github.com/norberttech)
 - [#928](https://github.com/flow-php/flow/pull/928) - **Caster mechanism that works on top of Flow\PHP\Type** - [@norberttech](https://github.com/norberttech)
 - [#928](https://github.com/flow-php/flow/pull/928) - **AutoCaster that works on top of Caster** - [@norberttech](https://github.com/norberttech)
 - [#928](https://github.com/flow-php/flow/pull/928) - **print_schema function** - [@norberttech](https://github.com/norberttech)
@@ -76,6 +78,8 @@
 - [#870](https://github.com/flow-php/flow/pull/870) - **Reduced number of files in phar** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#935](https://github.com/flow-php/flow/pull/935) - **Schema Definition Constraints** - [@norberttech](https://github.com/norberttech)
+- [#935](https://github.com/flow-php/flow/pull/935) - **Schema Definition Metadata is no longer accepting objects** - [@norberttech](https://github.com/norberttech)
 - [#927](https://github.com/flow-php/flow/pull/927) - **Schema definition union type** - [@norberttech](https://github.com/norberttech)
 - [#927](https://github.com/flow-php/flow/pull/927) - **Schema narrowing that was replaced by Type::merge** - [@norberttech](https://github.com/norberttech)
 - [#897](https://github.com/flow-php/flow/pull/897) - **Serializable interface** - [@norberttech](https://github.com/norberttech)
