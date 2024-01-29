@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Parquet;
 
 use function Flow\ETL\DSL\from_all;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Loader;
@@ -24,9 +25,14 @@ function from_parquet(
     array $columns = [],
     Options $options = new Options(),
     ByteOrder $byte_order = ByteOrder::LITTLE_ENDIAN,
+    ?int $offset = null,
 ) : Extractor {
     if (\is_array($uri)) {
         $extractors = [];
+
+        if ($offset !== null) {
+            throw new InvalidArgumentException('Offset can be used only with single file path, not with pattern');
+        }
 
         foreach ($uri as $filePath) {
             $extractors[] = new ParquetExtractor(
@@ -44,7 +50,8 @@ function from_parquet(
         \is_string($uri) ? Path::realpath($uri) : $uri,
         $options,
         $byte_order,
-        $columns
+        $columns,
+        $offset
     );
 }
 
