@@ -1,6 +1,7 @@
 ## [Unreleased] - 2024-01-29
 
 ### Added
+- [#941](https://github.com/flow-php/flow/pull/941) - **Added missing offset option to from_parquet dsl function** - [@norberttech](https://github.com/norberttech)
 - [#940](https://github.com/flow-php/flow/pull/940) - **Added offset option to parquet extractor** - [@norberttech](https://github.com/norberttech)
 - [#939](https://github.com/flow-php/flow/pull/939) - **Parquet documentation** - [@norberttech](https://github.com/norberttech)
 - [#938](https://github.com/flow-php/flow/pull/938) - **Parquet Pagination** - [@norberttech](https://github.com/norberttech)
