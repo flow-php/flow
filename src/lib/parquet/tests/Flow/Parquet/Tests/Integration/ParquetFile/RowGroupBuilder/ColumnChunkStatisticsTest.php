@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Flow\ETL\Adapter\Parquet\Tests\Unit\ParquetFile\RowGroupBuilder;
+namespace Flow\Parquet\Tests\Integration\ParquetFile\RowGroupBuilder;
 
 use Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnChunkStatistics;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;

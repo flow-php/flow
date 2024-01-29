@@ -11,13 +11,14 @@ use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Flow;
 use Flow\ETL\FlowContext;
 use Flow\Parquet\Options;
+use Flow\Parquet\Reader;
 use PHPUnit\Framework\TestCase;
 
 final class ParquetExtractorTest extends TestCase
 {
     public function test_limit() : void
     {
-        $path = \sys_get_temp_dir() . '/parquet_extractor_signal_stop.csv';
+        $path = \sys_get_temp_dir() . '/parquet_extractor_signal_stop.parquet';
 
         if (\file_exists($path)) {
             \unlink($path);
@@ -36,9 +37,25 @@ final class ParquetExtractorTest extends TestCase
         );
     }
 
+    public function test_reading_file_from_given_offset() : void
+    {
+        $totalRows = (new Reader())->read(__DIR__ . '/../Fixtures/orders_flow.parquet')->metadata()->rowsNumber();
+
+        $extractor = new ParquetExtractor(
+            Path::realpath(__DIR__ . '/../Fixtures/orders_flow.parquet'),
+            Options::default(),
+            offset: $totalRows - 100
+        );
+
+        $this->assertCount(
+            100,
+            \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
+        );
+    }
+
     public function test_signal_stop() : void
     {
-        $path = \sys_get_temp_dir() . '/parquet_extractor_signal_stop.csv';
+        $path = \sys_get_temp_dir() . '/parquet_extractor_signal_stop.parquet';
 
         if (\file_exists($path)) {
             \unlink($path);
