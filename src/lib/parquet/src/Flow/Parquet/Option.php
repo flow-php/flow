@@ -56,7 +56,7 @@ enum Option
      * PageBuilder is not going to make it precisely equal to this value, but it will try to make it as close as possible.
      * This should be considered as a threshold rather than a strict value.
      *
-     * Default value is 128Mb
+     * Default value is 8Kb
      *
      * https://parquet.apache.org/docs/file-format/configurations/#data-page--size
      */
