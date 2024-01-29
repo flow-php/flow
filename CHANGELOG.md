@@ -1,6 +1,7 @@
-## [Unreleased] - 2024-01-28
+## [Unreleased] - 2024-01-29
 
 ### Added
+- [#938](https://github.com/flow-php/flow/pull/938) - **Parquet Pagination** - [@norberttech](https://github.com/norberttech)
 - [#937](https://github.com/flow-php/flow/pull/937) - **BranchingLoader** - [@norberttech](https://github.com/norberttech)
 - [#936](https://github.com/flow-php/flow/pull/936) - **DataFrame::run method can now return execution report with Schema and Statistics** - [@norberttech](https://github.com/norberttech)
 - [#935](https://github.com/flow-php/flow/pull/935) - **Schema::normalize() : array** - [@norberttech](https://github.com/norberttech)
@@ -44,6 +45,7 @@
 - [#869](https://github.com/flow-php/flow/pull/869) - **RDSL library** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#938](https://github.com/flow-php/flow/pull/938) - **Tuned default parquet options** - [@norberttech](https://github.com/norberttech)
 - [#927](https://github.com/flow-php/flow/pull/927) - **reduced size of csv files to speedup tests** - [@norberttech](https://github.com/norberttech)
 - [#923](https://github.com/flow-php/flow/pull/923) - **Extracted isJson,isXML,isUuif from NativeEntryFactory to StringTypeChecker** - [@norberttech](https://github.com/norberttech)
 - [#919](https://github.com/flow-php/flow/pull/919) - **optimized Path::partitions method by using mnemonic** - [@norberttech](https://github.com/norberttech)
