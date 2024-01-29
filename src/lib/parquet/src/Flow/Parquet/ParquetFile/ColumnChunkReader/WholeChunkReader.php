@@ -27,7 +27,7 @@ final class WholeChunkReader implements ColumnChunkReader
      *
      * @return \Generator<array<mixed>>
      */
-    public function read(ColumnChunk $columnChunk, FlatColumn $column, $stream, ?int $limit = null) : \Generator
+    public function read(ColumnChunk $columnChunk, FlatColumn $column, $stream) : \Generator
     {
         $offset = $columnChunk->pageOffset();
 
@@ -54,10 +54,6 @@ final class WholeChunkReader implements ColumnChunkReader
         $columnData = ColumnData::initialize($column);
 
         $rowsToRead = $columnChunk->valuesCount();
-
-        if ($limit !== null && $limit < $rowsToRead) {
-            $rowsToRead = $limit;
-        }
 
         while (true) {
             /** @phpstan-ignore-next-line */

@@ -13,7 +13,7 @@ enum Option
     case BYTE_ARRAY_TO_STRING;
 
     /**
-     * Whenever cardinality ration of the dictionary goes below this value, PagesBuilders is going to fallback to PLAIN encoding.
+     * Whenever cardinality ratio of the dictionary goes below this value, PagesBuilders is going to fallback to PLAIN encoding.
      * Cardinality ration is calculated as distinct values / total values.
      * Please notice that even when cardinality ration is above this value, PageBuilder will still fallback to PLAIN encoding
      * when dictionary size gets above DICTIONARY_PAGE_SIZE.
@@ -74,8 +74,9 @@ enum Option
      * RowGroupBuilder is going to use this value to determine for how long it should keep adding rows to the buffer
      * before flushing it on disk.
      *
-     * Default value is 8Kb
+     * Default value is 8Mb
      *
+     * In order to be more aligned with apache spark and hadoop, this value should be set between 128 and 512Mb.
      * https://parquet.apache.org/docs/file-format/configurations/#row-group-size
      */
     case ROW_GROUP_SIZE_BYTES;

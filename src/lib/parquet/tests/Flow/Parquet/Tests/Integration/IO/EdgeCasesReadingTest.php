@@ -9,7 +9,7 @@ final class EdgeCasesReadingTest extends TestCase
 {
     public function test_nonullable_impala() : void
     {
-        $path = __DIR__ . '/../../Fixtures/EdgeCases/nonnullable.impala.parquet';
+        $path = __DIR__ . '/Fixtures/EdgeCases/nonnullable.impala.parquet';
 
         $reader = (new Reader())->read($path);
 
@@ -88,7 +88,7 @@ final class EdgeCasesReadingTest extends TestCase
     {
         $this->expectExceptionMessage('Encoding DELTA_BINARY_PACKED not supported');
 
-        $path = __DIR__ . '/../../Fixtures/EdgeCases/datapage_v2.snappy.parquet';
+        $path = __DIR__ . '/Fixtures/EdgeCases/datapage_v2.snappy.parquet';
 
         $reader = (new Reader())->read($path);
 
@@ -108,7 +108,7 @@ final class EdgeCasesReadingTest extends TestCase
 
     public function test_read_null_list() : void
     {
-        $path = __DIR__ . '/../../Fixtures/EdgeCases/null_list.parquet';
+        $path = __DIR__ . '/Fixtures/EdgeCases/null_list.parquet';
 
         $reader = (new Reader())->read($path);
 

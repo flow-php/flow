@@ -10,7 +10,7 @@ final class ListsReadingTest extends TestCase
     public function test_reading_list_column() : void
     {
         $reader = new Reader();
-        $file = $reader->read(__DIR__ . '/../../Fixtures/lists.parquet');
+        $file = $reader->read(__DIR__ . '/Fixtures/lists.parquet');
 
         $this->assertNull($file->metadata()->schema()->get('list')->type());
         $this->assertEquals('LIST', $file->metadata()->schema()->get('list')->logicalType()->name());
@@ -30,7 +30,7 @@ final class ListsReadingTest extends TestCase
     public function test_reading_list_column_with_limit() : void
     {
         $reader = new Reader();
-        $file = $reader->read(__DIR__ . '/../../Fixtures/lists.parquet');
+        $file = $reader->read(__DIR__ . '/Fixtures/lists.parquet');
 
         $this->assertNull($file->metadata()->schema()->get('list')->type());
         $this->assertEquals('LIST', $file->metadata()->schema()->get('list')->logicalType()->name());
@@ -49,7 +49,7 @@ final class ListsReadingTest extends TestCase
     public function test_reading_list_nested_column() : void
     {
         $reader = new Reader();
-        $file = $reader->read(__DIR__ . '/../../Fixtures/lists.parquet');
+        $file = $reader->read(__DIR__ . '/Fixtures/lists.parquet');
 
         $this->assertNull($file->metadata()->schema()->get('list_nested')->type());
         $this->assertEquals('LIST', $file->metadata()->schema()->get('list_nested')->logicalType()->name());
@@ -72,7 +72,7 @@ final class ListsReadingTest extends TestCase
     public function test_reading_list_nullable_column() : void
     {
         $reader = new Reader();
-        $file = $reader->read(__DIR__ . '/../../Fixtures/lists.parquet');
+        $file = $reader->read(__DIR__ . '/Fixtures/lists.parquet');
 
         $this->assertNull($file->metadata()->schema()->get('list_nullable')->type());
         $this->assertEquals('LIST', $file->metadata()->schema()->get('list_nullable')->logicalType()->name());
@@ -96,7 +96,7 @@ final class ListsReadingTest extends TestCase
     public function test_reading_list_of_structures_column() : void
     {
         $reader = new Reader();
-        $file = $reader->read(__DIR__ . '/../../Fixtures/lists.parquet');
+        $file = $reader->read(__DIR__ . '/Fixtures/lists.parquet');
 
         $this->assertNull($file->metadata()->schema()->get('list_mixed_types')->type());
         $this->assertEquals('LIST', $file->metadata()->schema()->get('list_mixed_types')->logicalType()->name());
@@ -128,7 +128,7 @@ final class ListsReadingTest extends TestCase
     public function test_reading_list_of_structures_nullable_column() : void
     {
         $reader = new Reader();
-        $file = $reader->read(__DIR__ . '/../../Fixtures/lists.parquet');
+        $file = $reader->read(__DIR__ . '/Fixtures/lists.parquet');
 
         $this->assertNull($file->metadata()->schema()->get('list_of_structs_nullable')->type());
         $this->assertEquals('LIST', $file->metadata()->schema()->get('list_of_structs_nullable')->logicalType()->name());

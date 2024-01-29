@@ -11,7 +11,7 @@ final class SimpleTypesReadingTest extends TestCase
     public function test_reading_bool_column() : void
     {
         $reader = new Reader();
-        $file = $reader->read(__DIR__ . '/../../Fixtures/primitives.parquet');
+        $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
         $this->assertEquals(PhysicalType::BOOLEAN, $file->metadata()->schema()->get('bool')->type());
         $this->assertNull($file->metadata()->schema()->get('bool')->logicalType());
@@ -25,7 +25,7 @@ final class SimpleTypesReadingTest extends TestCase
     public function test_reading_bool_column_with_limit() : void
     {
         $reader = new Reader();
-        $file = $reader->read(__DIR__ . '/../../Fixtures/primitives.parquet');
+        $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
         $this->assertEquals(PhysicalType::BOOLEAN, $file->metadata()->schema()->get('bool')->type());
         $this->assertNull($file->metadata()->schema()->get('bool')->logicalType());
@@ -38,7 +38,7 @@ final class SimpleTypesReadingTest extends TestCase
     public function test_reading_bool_nullable_column() : void
     {
         $reader = new Reader();
-        $file = $reader->read(__DIR__ . '/../../Fixtures/primitives.parquet');
+        $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
         $this->assertEquals(PhysicalType::BOOLEAN, $file->metadata()->schema()->get('bool_nullable')->type());
         $this->assertNull($file->metadata()->schema()->get('bool_nullable')->logicalType());
@@ -53,7 +53,7 @@ final class SimpleTypesReadingTest extends TestCase
     public function test_reading_bool_nullable_column_with_limit() : void
     {
         $reader = new Reader();
-        $file = $reader->read(__DIR__ . '/../../Fixtures/primitives.parquet');
+        $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
         $this->assertEquals(PhysicalType::BOOLEAN, $file->metadata()->schema()->get('bool_nullable')->type());
         $this->assertNull($file->metadata()->schema()->get('bool_nullable')->logicalType());
@@ -67,7 +67,7 @@ final class SimpleTypesReadingTest extends TestCase
     public function test_reading_date_column() : void
     {
         $reader = new Reader();
-        $file = $reader->read(__DIR__ . '/../../Fixtures/primitives.parquet');
+        $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
         $this->assertEquals(PhysicalType::INT32, $file->metadata()->schema()->get('date')->type());
         $this->assertEquals('DATE', $file->metadata()->schema()->get('date')->logicalType()->name());
@@ -85,7 +85,7 @@ final class SimpleTypesReadingTest extends TestCase
     public function test_reading_date_nullable_column() : void
     {
         $reader = new Reader();
-        $file = $reader->read(__DIR__ . '/../../Fixtures/primitives.parquet');
+        $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
         $this->assertEquals(PhysicalType::INT32, $file->metadata()->schema()->get('date_nullable')->type());
         $this->assertEquals('DATE', $file->metadata()->schema()->get('date_nullable')->logicalType()->name());
@@ -107,7 +107,7 @@ final class SimpleTypesReadingTest extends TestCase
     public function test_reading_decimal_column() : void
     {
         $reader = new Reader();
-        $file = $reader->read(__DIR__ . '/../../Fixtures/primitives.parquet');
+        $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
         $this->assertEquals(PhysicalType::FIXED_LEN_BYTE_ARRAY, $file->metadata()->schema()->get('decimal')->type());
 
@@ -124,7 +124,7 @@ final class SimpleTypesReadingTest extends TestCase
     public function test_reading_decimal_nullable_column() : void
     {
         $reader = new Reader();
-        $file = $reader->read(__DIR__ . '/../../Fixtures/primitives.parquet');
+        $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
         $this->assertEquals(PhysicalType::FIXED_LEN_BYTE_ARRAY, $file->metadata()->schema()->get('decimal_nullable')->type());
 
@@ -145,7 +145,7 @@ final class SimpleTypesReadingTest extends TestCase
     public function test_reading_double_column() : void
     {
         $reader = new Reader();
-        $file = $reader->read(__DIR__ . '/../../Fixtures/primitives.parquet');
+        $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
         $this->assertEquals(PhysicalType::DOUBLE, $file->metadata()->schema()->get('double')->type());
 
@@ -162,7 +162,7 @@ final class SimpleTypesReadingTest extends TestCase
     public function test_reading_double_nullable_column() : void
     {
         $reader = new Reader();
-        $file = $reader->read(__DIR__ . '/../../Fixtures/primitives.parquet');
+        $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
         $this->assertEquals(PhysicalType::DOUBLE, $file->metadata()->schema()->get('double_nullable')->type());
 
@@ -183,7 +183,7 @@ final class SimpleTypesReadingTest extends TestCase
     public function test_reading_enum_column() : void
     {
         $reader = new Reader();
-        $file = $reader->read(__DIR__ . '/../../Fixtures/primitives.parquet');
+        $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
         $this->assertEquals(PhysicalType::BYTE_ARRAY, $file->metadata()->schema()->get('enum')->type());
         $this->assertEquals('STRING', $file->metadata()->schema()->get('enum')->logicalType()->name());
@@ -201,7 +201,7 @@ final class SimpleTypesReadingTest extends TestCase
     public function test_reading_float_column() : void
     {
         $reader = new Reader();
-        $file = $reader->read(__DIR__ . '/../../Fixtures/primitives.parquet');
+        $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
         $this->assertEquals(PhysicalType::FLOAT, $file->metadata()->schema()->get('float')->type());
 
@@ -218,7 +218,7 @@ final class SimpleTypesReadingTest extends TestCase
     public function test_reading_float_nullable_column() : void
     {
         $reader = new Reader();
-        $file = $reader->read(__DIR__ . '/../../Fixtures/primitives.parquet');
+        $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
         $this->assertEquals(PhysicalType::FLOAT, $file->metadata()->schema()->get('float_nullable')->type());
 
@@ -239,7 +239,7 @@ final class SimpleTypesReadingTest extends TestCase
     public function test_reading_int32_column() : void
     {
         $reader = new Reader();
-        $file = $reader->read(__DIR__ . '/../../Fixtures/primitives.parquet');
+        $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
         $this->assertEquals(PhysicalType::INT32, $file->metadata()->schema()->get('int32')->type());
         $this->assertNull($file->metadata()->schema()->get('int32')->logicalType());
@@ -257,7 +257,7 @@ final class SimpleTypesReadingTest extends TestCase
     public function test_reading_int32_nullable_column() : void
     {
         $reader = new Reader();
-        $file = $reader->read(__DIR__ . '/../../Fixtures/primitives.parquet');
+        $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
         $this->assertEquals(PhysicalType::INT32, $file->metadata()->schema()->get('int32_nullable')->type());
         $this->assertNull($file->metadata()->schema()->get('int32_nullable')->logicalType());
@@ -279,7 +279,7 @@ final class SimpleTypesReadingTest extends TestCase
     public function test_reading_int64() : void
     {
         $reader = new Reader();
-        $file = $reader->read(__DIR__ . '/../../Fixtures/primitives.parquet');
+        $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
         $this->assertEquals(PhysicalType::INT64, $file->metadata()->schema()->get('int64')->type());
         $this->assertNull($file->metadata()->schema()->get('int64')->logicalType());
@@ -298,7 +298,7 @@ final class SimpleTypesReadingTest extends TestCase
     public function test_reading_int64_nullable_column() : void
     {
         $reader = new Reader();
-        $file = $reader->read(__DIR__ . '/../../Fixtures/primitives.parquet');
+        $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
         $this->assertEquals(PhysicalType::INT64, $file->metadata()->schema()->get('int64_nullable')->type());
         $this->assertNull($file->metadata()->schema()->get('int64_nullable')->logicalType());
@@ -320,7 +320,7 @@ final class SimpleTypesReadingTest extends TestCase
     public function test_reading_json_column() : void
     {
         $reader = new Reader();
-        $file = $reader->read(__DIR__ . '/../../Fixtures/primitives.parquet');
+        $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
         $this->assertEquals(PhysicalType::BYTE_ARRAY, $file->metadata()->schema()->get('json')->type());
         $this->assertEquals('STRING', $file->metadata()->schema()->get('json')->logicalType()->name());
@@ -338,7 +338,7 @@ final class SimpleTypesReadingTest extends TestCase
     public function test_reading_json_nullable_column() : void
     {
         $reader = new Reader();
-        $file = $reader->read(__DIR__ . '/../../Fixtures/primitives.parquet');
+        $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
         $this->assertEquals(PhysicalType::BYTE_ARRAY, $file->metadata()->schema()->get('json_nullable')->type());
         $this->assertEquals('STRING', $file->metadata()->schema()->get('json_nullable')->logicalType()->name());
@@ -360,7 +360,7 @@ final class SimpleTypesReadingTest extends TestCase
     public function test_reading_string_column() : void
     {
         $reader = new Reader();
-        $file = $reader->read(__DIR__ . '/../../Fixtures/primitives.parquet');
+        $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
         $this->assertEquals(PhysicalType::BYTE_ARRAY, $file->metadata()->schema()->get('string')->type());
         $this->assertEquals('STRING', $file->metadata()->schema()->get('string')->logicalType()->name());
@@ -378,7 +378,7 @@ final class SimpleTypesReadingTest extends TestCase
     public function test_reading_string_nullable_column() : void
     {
         $reader = new Reader();
-        $file = $reader->read(__DIR__ . '/../../Fixtures/primitives.parquet');
+        $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
         $this->assertEquals(PhysicalType::BYTE_ARRAY, $file->metadata()->schema()->get('string_nullable')->type());
         $this->assertEquals('STRING', $file->metadata()->schema()->get('string_nullable')->logicalType()->name());
@@ -400,7 +400,7 @@ final class SimpleTypesReadingTest extends TestCase
     public function test_reading_time_column() : void
     {
         $reader = new Reader();
-        $file = $reader->read(__DIR__ . '/../../Fixtures/primitives.parquet');
+        $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
         $this->assertEquals(PhysicalType::INT64, $file->metadata()->schema()->get('time')->type());
         $this->assertEquals('TIME', $file->metadata()->schema()->get('time')->logicalType()->name());
@@ -418,7 +418,7 @@ final class SimpleTypesReadingTest extends TestCase
     public function test_reading_time_nullable_column() : void
     {
         $reader = new Reader();
-        $file = $reader->read(__DIR__ . '/../../Fixtures/primitives.parquet');
+        $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
         $this->assertEquals(PhysicalType::INT64, $file->metadata()->schema()->get('time_nullable')->type());
         $this->assertEquals('TIME', $file->metadata()->schema()->get('time_nullable')->logicalType()->name());
@@ -440,7 +440,7 @@ final class SimpleTypesReadingTest extends TestCase
     public function test_reading_timestamp_column() : void
     {
         $reader = new Reader();
-        $file = $reader->read(__DIR__ . '/../../Fixtures/primitives.parquet');
+        $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
         $this->assertEquals(PhysicalType::INT64, $file->metadata()->schema()->get('timestamp')->type());
         $this->assertEquals('TIMESTAMP', $file->metadata()->schema()->get('timestamp')->logicalType()->name());
@@ -458,7 +458,7 @@ final class SimpleTypesReadingTest extends TestCase
     public function test_reading_timestamp_nullable_column() : void
     {
         $reader = new Reader();
-        $file = $reader->read(__DIR__ . '/../../Fixtures/primitives.parquet');
+        $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
         $this->assertEquals(PhysicalType::INT64, $file->metadata()->schema()->get('timestamp_nullable')->type());
         $this->assertEquals('TIMESTAMP', $file->metadata()->schema()->get('timestamp_nullable')->logicalType()->name());
@@ -480,7 +480,7 @@ final class SimpleTypesReadingTest extends TestCase
     public function test_reading_uuid_column() : void
     {
         $reader = new Reader();
-        $file = $reader->read(__DIR__ . '/../../Fixtures/primitives.parquet');
+        $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
         $this->assertEquals(PhysicalType::BYTE_ARRAY, $file->metadata()->schema()->get('uuid')->type());
         $this->assertEquals('STRING', $file->metadata()->schema()->get('uuid')->logicalType()->name());
@@ -498,7 +498,7 @@ final class SimpleTypesReadingTest extends TestCase
     public function test_reading_uuid_nullable_column() : void
     {
         $reader = new Reader();
-        $file = $reader->read(__DIR__ . '/../../Fixtures/primitives.parquet');
+        $file = $reader->read(__DIR__ . '/Fixtures/primitives.parquet');
 
         $this->assertEquals(PhysicalType::BYTE_ARRAY, $file->metadata()->schema()->get('uuid_nullable')->type());
         $this->assertEquals('STRING', $file->metadata()->schema()->get('uuid_nullable')->logicalType()->name());

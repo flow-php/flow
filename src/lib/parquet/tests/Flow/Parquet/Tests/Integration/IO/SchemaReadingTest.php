@@ -40,7 +40,7 @@ final class SchemaReadingTest extends TestCase
         );
 
         $this->assertSame(
-            ($reader->read(__DIR__ . '/../../Fixtures/lists.parquet'))->metadata()->schema()->toDDL(),
+            ($reader->read(__DIR__ . '/Fixtures/lists.parquet'))->metadata()->schema()->toDDL(),
             $schema->toDDL(),
         );
     }
@@ -75,7 +75,7 @@ final class SchemaReadingTest extends TestCase
         );
 
         $this->assertSame(
-            ($reader->read(__DIR__ . '/../../Fixtures/maps.parquet'))->metadata()->schema()->toDDL(),
+            ($reader->read(__DIR__ . '/Fixtures/maps.parquet'))->metadata()->schema()->toDDL(),
             $schema->toDDL(),
         );
     }
@@ -114,14 +114,14 @@ final class SchemaReadingTest extends TestCase
         );
 
         $this->assertSame(
-            ($reader->read(__DIR__ . '/../../Fixtures/primitives.parquet'))->metadata()->schema()->toDDL(),
+            ($reader->read(__DIR__ . '/Fixtures/primitives.parquet'))->metadata()->schema()->toDDL(),
             $schema->toDDL()
         );
     }
 
     public function test_reading_statistics() : void
     {
-        $metadata = (new Reader())->read(__DIR__ . '/../../Fixtures/primitives.parquet')->metadata();
+        $metadata = (new Reader())->read(__DIR__ . '/Fixtures/primitives.parquet')->metadata();
 
         foreach ($metadata->columnChunks() as $chunk) {
             $this->assertInstanceOf(StatisticsReader::class, $chunk->statistics());
@@ -228,7 +228,7 @@ final class SchemaReadingTest extends TestCase
         );
 
         $this->assertSame(
-            ($reader->read(__DIR__ . '/../../Fixtures/structs.parquet'))->metadata()->schema()->toDDL(),
+            ($reader->read(__DIR__ . '/Fixtures/structs.parquet'))->metadata()->schema()->toDDL(),
             $schema->toDDL()
         );
     }

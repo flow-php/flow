@@ -13,7 +13,7 @@ use Flow\Parquet\ParquetFile\ColumnPageHeader;
 use Flow\Parquet\ParquetFile\Data\DataBuilder;
 use Flow\Parquet\ParquetFile\Metadata;
 use Flow\Parquet\ParquetFile\PageReader;
-use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
+use Flow\Parquet\ParquetFile\RowGroup\FlowColumnChunk;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\Column;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
@@ -84,25 +84,33 @@ final class ParquetFile
         }
     }
 
-    public function readChunks(FlatColumn $column, ?int $limit = null) : \Generator
+    public function readChunks(FlatColumn $column, ?int $limit = null, ?int $offset = null) : \Generator
     {
         $reader = new WholeChunkReader(
             new DataBuilder($this->dataConverter),
             new PageReader($this->byteOrder, $this->options),
         );
 
-        foreach ($this->getColumnChunks($column) as $columnChunks) {
-            foreach ($columnChunks as $columnChunk) {
-                $yieldedRows = 0;
+        $yieldedRows = 0;
+        $skippedRows = 0;
 
-                /** @var array $row */
-                foreach ($reader->read($columnChunk, $column, $this->stream, $limit) as $row) {
-                    yield $row;
-                    $yieldedRows++;
+        /** @var FlowColumnChunk $columnChunk */
+        foreach ($this->getColumnChunks($column, offset: $offset) as $columnChunk) {
+            $skipRows = $offset - $columnChunk->rowsOffset;
 
-                    if ($limit !== null && $yieldedRows >= $limit) {
-                        return;
-                    }
+            /** @var array $row */
+            foreach ($reader->read($columnChunk->chunk, $column, $this->stream) as $row) {
+                if ($skipRows >= 0 && $skipRows > $skippedRows) {
+                    $skippedRows++;
+
+                    continue;
+                }
+
+                yield $row;
+                $yieldedRows++;
+
+                if ($limit !== null && $yieldedRows >= $limit) {
+                    return;
                 }
             }
         }
@@ -118,8 +126,16 @@ final class ParquetFile
      *
      * @return \Generator<int, array<string, mixed>>
      */
-    public function values(array $columns = [], ?int $limit = null) : \Generator
+    public function values(array $columns = [], ?int $limit = null, ?int $offset = null) : \Generator
     {
+        if ($limit !== null && $limit <= 0) {
+            throw new InvalidArgumentException('Limit must be greater than 0');
+        }
+
+        if ($limit !== null && $offset < 0) {
+            throw new InvalidArgumentException('Offset must be greater than or equal to 0');
+        }
+
         if (!\count($columns)) {
             $columns = \array_map(static fn (Column $c) => $c->name(), $this->schema()->columns());
         }
@@ -133,7 +149,7 @@ final class ParquetFile
         $rows = new \MultipleIterator(\MultipleIterator::MIT_KEYS_ASSOC);
 
         foreach ($columns as $columnName) {
-            $rows->attachIterator($this->read($this->schema()->get($columnName), $limit), $columnName);
+            $rows->attachIterator($this->read($this->schema()->get($columnName), $limit, $offset), $columnName);
         }
 
         /** @var array<string, mixed> $row */
@@ -143,93 +159,103 @@ final class ParquetFile
     }
 
     /**
-     * @return \Generator<array<ColumnChunk>>
+     * @return \Generator<FlowColumnChunk>
      */
-    private function getColumnChunks(Column $column) : \Generator
+    private function getColumnChunks(Column $column, ?int $offset = null) : \Generator
     {
-        foreach ($this->metadata()->rowGroups()->all() as $rowGroup) {
-            $chunksInGroup = [];
+        $fetchedRows = 0;
 
-            foreach ($rowGroup->columnChunks() as $columnChunk) {
-                if ($columnChunk->flatPath() === $column->flatPath()) {
-                    $chunksInGroup[] = $columnChunk;
+        foreach ($this->metadata()->rowGroups()->all() as $rowGroup) {
+            if ($offset !== null) {
+
+                if ($fetchedRows + $rowGroup->rowsCount() < $offset) {
+                    $fetchedRows += $rowGroup->rowsCount();
+
+                    continue;
                 }
             }
 
-            yield $chunksInGroup;
+            foreach ($rowGroup->columnChunks() as $columnChunk) {
+                if ($columnChunk->flatPath() === $column->flatPath()) {
+                    yield new FlowColumnChunk($columnChunk, $fetchedRows, $rowGroup->rowsCount());
+                    $fetchedRows += $rowGroup->rowsCount();
+
+                    break;
+                }
+            }
         }
     }
 
-    private function read(Column $column, ?int $limit = null) : \Generator
+    private function read(Column $column, ?int $limit = null, ?int $offset = null) : \Generator
     {
         if ($column instanceof FlatColumn) {
-            return $this->readFlat($column, $limit);
+            return $this->readFlat($column, $limit, $offset);
         }
 
         if ($column instanceof NestedColumn) {
             if ($column->isList()) {
-                return $this->readList($column, $limit);
+                return $this->readList($column, $limit, $offset);
             }
 
             if ($column->isMap()) {
-                return $this->readMap($column, $limit);
+                return $this->readMap($column, $limit, $offset);
             }
 
-            return $this->readStruct($column, limit: $limit);
+            return $this->readStruct($column, limit: $limit, offset: $offset);
         }
 
         throw new RuntimeException('Unknown column type');
     }
 
-    private function readFlat(FlatColumn $column, ?int $limit = null) : \Generator
+    private function readFlat(FlatColumn $column, ?int $limit = null, ?int $offset = null) : \Generator
     {
-        return $this->readChunks($column, $limit);
+        return $this->readChunks($column, $limit, $offset);
     }
 
-    private function readList(NestedColumn $listColumn, ?int $limit = null) : \Generator
+    private function readList(NestedColumn $listColumn, ?int $limit = null, ?int $offset = null) : \Generator
     {
         $elementColumn = $listColumn->getListElement();
 
         if ($elementColumn instanceof FlatColumn) {
-            return $this->readFlat($elementColumn, $limit);
+            return $this->readFlat($elementColumn, $limit, $offset);
         }
 
         /** @var NestedColumn $elementColumn */
         if ($elementColumn->isList()) {
-            return $this->readList($elementColumn, $limit);
+            return $this->readList($elementColumn, $limit, $offset);
         }
 
         if ($elementColumn->isMap()) {
-            return $this->readMap($elementColumn, $limit);
+            return $this->readMap($elementColumn, $limit, $offset);
         }
 
-        return $this->readStruct($elementColumn, isCollection: true, limit: $limit);
+        return $this->readStruct($elementColumn, isCollection: true, limit: $limit, offset: $offset);
     }
 
-    private function readMap(NestedColumn $mapColumn, ?int $limit = null) : \Generator
+    private function readMap(NestedColumn $mapColumn, ?int $limit = null, ?int $offset = null) : \Generator
     {
         $keysColumn = $mapColumn->getMapKeyColumn();
         $valuesColumn = $mapColumn->getMapValueColumn();
 
-        $keys = $this->readFlat($keysColumn, $limit);
+        $keys = $this->readFlat($keysColumn, $limit, $offset);
 
         $values = null;
 
         if ($valuesColumn instanceof FlatColumn) {
-            $values = $this->readFlat($valuesColumn, $limit);
+            $values = $this->readFlat($valuesColumn, $limit, $offset);
         }
 
         /** @var NestedColumn $valuesColumn */
         if ($valuesColumn->isList()) {
-            $values = $this->readList($valuesColumn, $limit);
+            $values = $this->readList($valuesColumn, $limit, $offset);
         }
 
         if ($valuesColumn->isMap()) {
-            $values = $this->readMap($valuesColumn, $limit);
+            $values = $this->readMap($valuesColumn, $limit, $offset);
         }
 
         if ($valuesColumn->isStruct()) {
-            $values = $this->readStruct($valuesColumn, isCollection: true, limit: $limit);
+            $values = $this->readStruct($valuesColumn, isCollection: true, limit: $limit, offset: $offset);
         }
 
         if ($values === null) {
@@ -256,31 +282,31 @@ final class ParquetFile
     /**
      * @param bool $isCollection - when structure is a map or list element, each struct child is a collection for example ['int' => [1, 2, 3]] instead of ['int' => 1]
      */
-    private function readStruct(NestedColumn $structColumn, bool $isCollection = false, ?int $limit = null) : \Generator
+    private function readStruct(NestedColumn $structColumn, bool $isCollection = false, ?int $limit = null, ?int $offset = null) : \Generator
     {
         $childrenRowsData = new \MultipleIterator(\MultipleIterator::MIT_KEYS_ASSOC);
 
         foreach ($structColumn->children() as $child) {
             if ($child instanceof FlatColumn) {
-                $childrenRowsData->attachIterator($this->read($child, $limit), $child->flatPath());
+                $childrenRowsData->attachIterator($this->read($child, $limit, $offset), $child->flatPath());
 
                 continue;
             }
 
             if ($child instanceof NestedColumn) {
                 if ($child->isList()) {
-                    $childrenRowsData->attachIterator($this->readList($child, $limit), $child->flatPath());
+                    $childrenRowsData->attachIterator($this->readList($child, $limit, $offset), $child->flatPath());
 
                     continue;
                 }
 
                 if ($child->isMap()) {
-                    $childrenRowsData->attachIterator($this->readMap($child, $limit), $child->flatPath());
+                    $childrenRowsData->attachIterator($this->readMap($child, $limit, $offset), $child->flatPath());
 
                     continue;
                 }
 
-                $childrenRowsData->attachIterator($this->readStruct($child, isCollection: $isCollection, limit: $limit), $child->flatPath());
+                $childrenRowsData->attachIterator($this->readStruct($child, isCollection: $isCollection, limit: $limit, offset: $offset), $child->flatPath());
 
                 continue;
             }
@@ -338,11 +364,9 @@ final class ParquetFile
     {
         $viewer = new WholeChunkViewer();
 
-        foreach ($this->getColumnChunks($column) as $columnChunks) {
-            foreach ($columnChunks as $columnChunk) {
-                foreach ($viewer->view($columnChunk, $column, $this->stream) as $pageHeader) {
-                    yield new ColumnPageHeader($column, $columnChunk, $pageHeader);
-                }
+        foreach ($this->getColumnChunks($column) as $columnChunk) {
+            foreach ($viewer->view($columnChunk->chunk, $column, $this->stream) as $pageHeader) {
+                yield new ColumnPageHeader($column, $columnChunk->chunk, $pageHeader);
             }
         }
     }
