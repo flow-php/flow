@@ -1,6 +1,7 @@
 ## [Unreleased] - 2024-01-29
 
 ### Added
+- [#939](https://github.com/flow-php/flow/pull/939) - **Parquet documentation** - [@norberttech](https://github.com/norberttech)
 - [#938](https://github.com/flow-php/flow/pull/938) - **Parquet Pagination** - [@norberttech](https://github.com/norberttech)
 - [#937](https://github.com/flow-php/flow/pull/937) - **BranchingLoader** - [@norberttech](https://github.com/norberttech)
 - [#936](https://github.com/flow-php/flow/pull/936) - **DataFrame::run method can now return execution report with Schema and Statistics** - [@norberttech](https://github.com/norberttech)
