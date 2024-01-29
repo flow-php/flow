@@ -3,6 +3,7 @@
 namespace Flow\ETL\Adapter\Parquet;
 
 use function Flow\ETL\DSL\array_to_rows;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\FileExtractor;
 use Flow\ETL\Extractor\Limitable;
@@ -32,9 +33,14 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
         private readonly Path $path,
         private readonly Options $options,
         private readonly ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN,
-        private readonly array $columns = []
+        private readonly array $columns = [],
+        private readonly ?int $offset = null
     ) {
         $this->resetLimit();
+
+        if ($this->path->isPattern() && $this->offset !== null) {
+            throw new InvalidArgumentException('Offset can be used only with single file path, not with pattern');
+        }
     }
 
     public function extract(FlowContext $context) : \Generator
@@ -42,7 +48,7 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
         foreach ($this->readers($context) as $fileData) {
-            foreach ($fileData['file']->values($this->columns, $this->limit()) as $row) {
+            foreach ($fileData['file']->values($this->columns, $this->limit(), $this->offset) as $row) {
                 if ($shouldPutInputIntoRows) {
                     $row['_input_file_uri'] = $fileData['uri'];
                 }
