@@ -12,5 +12,5 @@ interface ColumnChunkReader
      *
      * @return \Generator<array<mixed>>
      */
-    public function read(ColumnChunk $columnChunk, FlatColumn $column, $stream, ?int $limit = null) : \Generator;
+    public function read(ColumnChunk $columnChunk, FlatColumn $column, $stream) : \Generator;
 }
