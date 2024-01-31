@@ -88,6 +88,28 @@ final class CSVExtractorTest extends TestCase
         );
     }
 
+    public function test_extracting_csv_empty_headers() : void
+    {
+        $extractor = from_csv(
+            __DIR__ . '/../Fixtures/file_with_empty_headers.csv'
+        );
+
+        $this->assertSame(
+            [
+                [
+                    ['e00' => null, 'name' => null, 'active' => 'false'],
+                ],
+                [
+                    ['e00' => '1', 'name' => 'Norbert', 'active' => null],
+                ],
+            ],
+            \array_map(
+                fn (Rows $r) => $r->toArray(),
+                \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
+            )
+        );
+    }
+
     public function test_extracting_csv_files_from_directory_recursively() : void
     {
         $extractor = from_csv(

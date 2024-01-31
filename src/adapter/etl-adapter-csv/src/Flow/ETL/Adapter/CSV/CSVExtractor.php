@@ -65,6 +65,9 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
                 $headers = \array_map(fn (int $e) : string => 'e' . \str_pad((string) $e, 2, '0', STR_PAD_LEFT), \range(0, \count($rowData) - 1));
             }
 
+            $headers = \array_map(fn (string $header) : string => \trim($header), $headers);
+            $headers = \array_map(fn (string $header, int $index) : string => $header !== '' ? $header : 'e' . \str_pad((string) $index, 2, '0', STR_PAD_LEFT), $headers, \array_keys($headers));
+
             while (\is_array($rowData)) {
                 if (\count($headers) > \count($rowData)) {
                     \array_push(

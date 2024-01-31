@@ -142,8 +142,10 @@ final class PartitioningTest extends IntegrationTestCase
             ->collect()
             ->fetch();
 
+        $days = $rows->reduceToArray('day');
+        \sort($days);
         $this->assertCount(2, $rows);
-        $this->assertSame([1, 2], $rows->reduceToArray('day'));
+        $this->assertSame([1, 2], $days);
     }
 
     public function test_pruning_single_partition() : void
