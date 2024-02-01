@@ -1,5 +1,86 @@
 {% extends 'base.html.twig' %}
+{% import "main/example.txt.twig" as examples %}
 
 {% block main %}
-    <img src="{{ asset('images/banner.png') }}" alt="flow php main banner">
+    {% set topics = [
+        {id: 'partitioning', name: 'Partitioning'},
+        {id: 'grouping_and_aggregating', name: 'Grouping and Aggregating'},
+        {id: 'join_operations', name: 'Join Operations'},
+        {id: 'sorting', name: 'Sorting'},
+        {id: 'schema_validation', name: 'Schema Validation'},
+        {id: 'window_functions', name: 'Window Functions'},
+        {id: 'caching', name: 'Caching'},
+        {id: 'low_memory_consumption', name: 'Low Memory Consumption'},
+    ] %}
+
+    {% set examples = 1..10 %}
+
+    <div class="mx-auto max-w-screen-xl px-4 relative max-lg:py-10 lg:h-[500px] flex flex-col justify-center">
+        <h1 class="font-bold text-6xl tracking-wide leading-[70px] max-w-[450px] mb-8 z-10">UNIFIED DATA PROCESSING FRAMEWORK</h1>
+        <a href="https://packagist.org/packages/flow-php/etl" target="_blank" class="w-fit py-2 px-3 tracking-widest before:content-['$'] before:mr-2 bg-orange-100 rounded">composer require flow-php/etl</a>
+        <img src="{{ asset('images/elephant.svg') }}" alt="elephant" class="max-lg:hidden max-w-[720px] absolute right-0 top-2">
+    </div>
+
+    <div class="bg-blue-200">
+        <div class="mx-auto max-w-screen-xl flex items-center text-center lg:pr-[550px] xl:pr-[650px]">
+            <div class="p-2.5 my-2.5 rounded">
+                <img src="{{ asset('images/icons/extract.svg') }}" alt="extract" class="inline">
+                <h2 class="my-2.5 text-2xl font-semibold tracking-wide">Extracts</h2>
+                <p>Retrieves and verifies data from various sources.</p>
+            </div>
+
+            <img src="{{ asset('images/icons/arrow-right.svg') }}" alt="arrow right">
+
+            <div class="p-2.5 my-2.5 rounded">
+                <img src="{{ asset('images/icons/transform.svg') }}" alt="transform" class="inline">
+                <h2 class="my-2.5 text-2xl font-semibold tracking-wide">Transforms</h2>
+                <p>Processes and organizes extracted data so it is usable.</p>
+            </div>
+
+            <img src="{{ asset('images/icons/arrow-right.svg') }}" alt="arrow right">
+
+            <div class="p-2.5 my-2.5 rounded">
+                <img src="{{ asset('images/icons/load.svg') }}" alt="load" class="inline">
+                <h2 class="my-2.5 text-2xl font-semibold tracking-wide">Loads</h2>
+                <p>Moves transformed data to a data repository.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="group/topics relative py-10 px-4 mx-auto max-w-screen-xl">
+        <nav class="font-medium text-center bg-orange-100 rounded">
+            <ul class="flex whitespace-nowrap overflow-auto justify-between">
+                {% for topic in topics %}
+                    <li class="group-[:not(:has(:target))]/topics:first:bg-orange-300 grow rounded">
+                        <a href="#{{ topic.id }}" class="inline-block leading-10 px-4 py-2 w-full [&.active]:bg-orange-300 rounded">{{ topic.name }}</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </nav>
+
+        {% for topic in topics %}
+            <div id="{{ topic.id }}" class="group/examples hidden target:block has-[:target]:block group-[:not(:has(:target))]/topics:first-of-type:block pb-4 -mt-20 pt-20">
+                <nav>
+                    <ul class="flex flex-nowrap whitespace-nowrap overflow-auto py-4">
+                        {% for example in examples %}
+                            <li class="group-[:not(:has(:target))]/examples:first:bg-orange-300 rounded">
+                                <a data-topic="#{{ topic.id }}" href="#{{ topic.id }}_example_{{ example }}" class="w-max tracking-wide flex items-center leading-8 px-2 [&.active]:bg-orange-300 rounded">
+                                    <img src="{{ asset('images/favicons/favicon-16x16.png') }}" alt="flow php icon" class="mr-2">
+                                    example_{{ example }}.php
+                                </a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </nav>
+
+                {% for example in examples %}
+                    <div id="{{ topic.id }}_example_{{ example }}" class="-mt-36 pt-36 hidden target:block group-[:not(:has(:target))]/examples:first-of-type:block">
+                        <pre class="rounded p-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2"><code class="language-php">
+                            {{- examples.first() | escape('html') -}}
+                        </code></pre>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    </div>
 {% endblock %}

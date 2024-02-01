@@ -4,6 +4,14 @@
     <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <title>Flow PHP - strongly typed data processing framework</title>
 
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/favicons/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/favicons/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('images/favicons/favicon-16x16.png') }}">
+    <link rel="shortcut icon" href="{{ asset('images/favicons/favicon.ico') }}">
+
+    <link rel="preload" href="https://fonts.googleapis.com/css?family=Cabin" as="style">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Cabin">
+
     {% block stylesheets %}
         <link rel="stylesheet" href="{{ asset('styles/app.css') }}">
     {% endblock %}
@@ -12,17 +20,55 @@
         {{ importmap([]) }}
     {% endblock %}
 </head>
-<body>
-    <header>
-        <h1 class="text-center mt-10 mb-10">Flow PHP - strongly typed data processing framework</h1>
+<body class="scroll-smooth font-['Cabin'] bg-black text-white">
+    <header class="py-2 text-white bg-blue-200">
+        <div class="mx-auto max-w-screen-xl px-4 flex items-center justify-between ">
+            <a href="{{ url('main') }}">
+                <img src="{{ asset('images/logo.svg') }}" alt="flow php" class="w-44 h-12">
+            </a>
+
+            <button popovertarget="main-nav" popovertargetaction="show" class="sm:hidden">
+                <img src="{{ asset('images/icons/menu.svg') }}" alt="menu" class="" >
+            </button>
+
+            <nav popover id="main-nav" class="relative p-0 m-0 max-sm:top-0 max-sm:right-0 sm:block text-white bg-blue-200 unset">
+                <ul class="sm:flex flex-nowrap whitespace-nowrap">
+                    <li class="sm:hidden text-right">
+                        <button popovertarget="main-nav" popovertargetaction="hide" class="sm:hidden h-16 pr-4">
+                            <img src="{{ asset('images/icons/close.svg') }}" alt="menu">
+                        </button>
+                    </li>
+                    <li>
+                        <a class="p-3 flex items-center" href="https://github.com/flow-php/flow" target="_blank">
+                            Repository
+                            <img src="{{ asset('images/icons/external.svg') }}" alt="external resource" class="w-4 ml-0.5">
+                        </a>
+                    </li>
+                    <li>
+                        <a class="p-3 flex items-center" href="https://github.com/orgs/flow-php/projects/1" target="_blank">
+                            Roadmap
+                            <img src="{{ asset('images/icons/external.svg') }}" alt="external resource" class="w-4 ml-0.5">
+                        </a>
+                    </li>
+                    <li>
+                        <a class="p-3 flex items-center" href="https://github.com/orgs/flow-php/discussions" target="_blank">
+                            Discussion
+                            <img src="{{ asset('images/icons/external.svg') }}" alt="external resource" class="w-4 ml-0.5">
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
     </header>
 
-    <main class="container mx-auto">
+    <main>
         {% block main %}{% endblock %}
     </main>
 
-    <footer class="text-center mt-10">
-        &copy; Copyright {{ 'now' | date('Y') }} Flow
+    <footer class="text-center bg-orange-100">
+        <div class="py-4 mx-auto max-w-screen-xl">
+            <a href="https://github.com/flow-php">&copy; Copyright {{ 'now' | date('Y') }} Flow PHP</a>
+        </div>
     </footer>
 </body>
 </html>
