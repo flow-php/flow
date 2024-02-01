@@ -83,4 +83,24 @@
             </div>
         {% endfor %}
     </div>
+
+    <div class="bg-blue-200">
+        <section class="mx-auto max-w-screen-xl sm:flex justify-between items-center py-6 px-4">
+            <div class="max-sm:mb-6 mr-6 whitespace-nowrap">
+                <h2 class="text-2xl font-semibold tracking-wide">Contributors</h2>
+                <a href="https://github.com/flow-php/flow/graphs/contributors" target="_blank" class="flex items-center">
+                    Join us on GitHub
+                    <img src="{{ asset('images/icons/external.svg') }}" alt="external resource" class="w-4 ml-0.5">
+                </a>
+            </div>
+
+            <div class="grid gap-1 sm:gap-2 lg:gap-4 grid-cols-8 lg:grid-cols-12">
+                {% for contributor in contributors %}
+                    <a href="{{ contributor.url }}">
+                        <img src="{{ contributor.avatar }}" alt="{{ contributor.name }}" title="{{ contributor.name }}" class="w-full max-w-14 rounded-full">
+                    </a>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
 {% endblock %}
