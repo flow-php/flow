@@ -1,6 +1,7 @@
 ## [Unreleased] - 2024-02-01
 
 ### Added
+- [#946](https://github.com/flow-php/flow/pull/946) - **Addeding contributors section in a landing page** - [@owsiakl](https://github.com/owsiakl)
 - [#945](https://github.com/flow-php/flow/pull/945) - **Adding html for a landing page** - [@owsiakl](https://github.com/owsiakl)
 - [#941](https://github.com/flow-php/flow/pull/941) - **Added missing offset option to from_parquet dsl function** - [@norberttech](https://github.com/norberttech)
 - [#940](https://github.com/flow-php/flow/pull/940) - **Added offset option to parquet extractor** - [@norberttech](https://github.com/norberttech)
