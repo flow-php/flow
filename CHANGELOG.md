@@ -1,6 +1,7 @@
 ## [Unreleased] - 2024-02-02
 
 ### Added
+- [#951](https://github.com/flow-php/flow/pull/951) - **Add shortcut for building static content for landing page** - [@stloyd](https://github.com/stloyd)
 - [#946](https://github.com/flow-php/flow/pull/946) - **Addeding contributors section in a landing page** - [@owsiakl](https://github.com/owsiakl)
 - [#945](https://github.com/flow-php/flow/pull/945) - **Adding html for a landing page** - [@owsiakl](https://github.com/owsiakl)
 - [#941](https://github.com/flow-php/flow/pull/941) - **Added missing offset option to from_parquet dsl function** - [@norberttech](https://github.com/norberttech)
