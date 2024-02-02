@@ -753,7 +753,7 @@ final class DataFrame
      * @param bool $analyze - when set to true, run will return Report
      */
     #[DSLMethod(exclude: true)]
-    public function run(?callable $callback = null, bool $analyze = false) : null|Report
+    public function run(?callable $callback = null, bool $analyze = false) : Report|null
     {
         $clone = clone $this;
 

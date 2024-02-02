@@ -14,7 +14,7 @@ final class PSRSimpleCache implements Cache
 {
     public function __construct(
         private readonly CacheInterface $cache,
-        private readonly null|int|\DateInterval $ttl = null,
+        private readonly int|\DateInterval|null $ttl = null,
         private readonly Serializer $serializer = new NativePHPSerializer()
     ) {
     }

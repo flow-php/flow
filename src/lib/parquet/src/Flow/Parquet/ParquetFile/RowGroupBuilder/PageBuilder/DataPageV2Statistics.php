@@ -29,7 +29,7 @@ final class DataPageV2Statistics
         $this->comparator = new Comparator();
     }
 
-    public function add(string|int|float|null|array|bool|object $value) : void
+    public function add(string|int|float|array|bool|object|null $value) : void
     {
         if (\is_array($value)) {
             $value = array_flatten($value);
