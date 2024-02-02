@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "638eebe2f3659ede8a2a323ef91873ba",
+    "content-hash": "7b4a530af5f9e27500c6f385ae3ac6f6",
     "packages": [
         {
             "name": "clue/stream-filter",
@@ -318,116 +318,6 @@
                 "source": "https://github.com/flow-php/etl-adapter-http/tree/1.x"
             },
             "time": "2024-01-18T12:52:33+00:00"
-        },
-        {
-            "name": "flow-php/etl-adapter-json",
-            "version": "1.x-dev",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/flow-php/etl-adapter-json.git",
-                "reference": "a6441d23e5a89f317fc97c289f23c9b8149b6862"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/etl-adapter-json/zipball/a6441d23e5a89f317fc97c289f23c9b8149b6862",
-                "reference": "a6441d23e5a89f317fc97c289f23c9b8149b6862",
-                "shasum": ""
-            },
-            "require": {
-                "ext-json": "*",
-                "flow-php/etl": "^0.5.0 || 1.x-dev",
-                "halaxa/json-machine": "^1.0",
-                "php": "~8.1.0 || ~8.2.0 || ~8.3.0"
-            },
-            "default-branch": true,
-            "type": "library",
-            "autoload": {
-                "files": [
-                    "src/Flow/ETL/Adapter/JSON/functions.php"
-                ],
-                "psr-4": {
-                    "Flow\\": [
-                        "src/Flow"
-                    ]
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "PHP ETL - Adapter - JSON",
-            "keywords": [
-                "adapter",
-                "etl",
-                "extract",
-                "json",
-                "load",
-                "transform"
-            ],
-            "support": {
-                "issues": "https://github.com/flow-php/etl-adapter-json/issues",
-                "source": "https://github.com/flow-php/etl-adapter-json/tree/1.x"
-            },
-            "time": "2024-01-21T21:59:40+00:00"
-        },
-        {
-            "name": "halaxa/json-machine",
-            "version": "1.1.4",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/halaxa/json-machine.git",
-                "reference": "5147f38f74d7ab3e27733e3f3bdabbd2fd28e3fa"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/halaxa/json-machine/zipball/5147f38f74d7ab3e27733e3f3bdabbd2fd28e3fa",
-                "reference": "5147f38f74d7ab3e27733e3f3bdabbd2fd28e3fa",
-                "shasum": ""
-            },
-            "require": {
-                "php": "7.0 - 8.3"
-            },
-            "require-dev": {
-                "ext-json": "*",
-                "friendsofphp/php-cs-fixer": "^3.0",
-                "phpstan/phpstan": "^1.10",
-                "phpunit/phpunit": "^8.0"
-            },
-            "suggest": {
-                "ext-json": "To run JSON Machine out of the box without custom decoders.",
-                "guzzlehttp/guzzle": "To run example with GuzzleHttp"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "JsonMachine\\": "src/"
-                },
-                "exclude-from-classmap": [
-                    "src/autoloader.php"
-                ]
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "Apache-2.0"
-            ],
-            "authors": [
-                {
-                    "name": "Filip Halaxa",
-                    "email": "filip@halaxa.cz"
-                }
-            ],
-            "description": "Efficient, easy-to-use and fast JSON pull parser",
-            "support": {
-                "issues": "https://github.com/halaxa/json-machine/issues",
-                "source": "https://github.com/halaxa/json-machine/tree/1.1.4"
-            },
-            "funding": [
-                {
-                    "url": "https://ko-fi.com/G2G57KTE4",
-                    "type": "other"
-                }
-            ],
-            "time": "2023-11-28T21:12:40+00:00"
         },
         {
             "name": "nyholm/psr7",
@@ -4932,7 +4822,6 @@
     "stability-flags": {
         "flow-php/etl": 20,
         "flow-php/etl-adapter-http": 20,
-        "flow-php/etl-adapter-json": 20,
         "norberttech/static-content-generator-bundle": 20
     },
     "prefer-stable": false,
