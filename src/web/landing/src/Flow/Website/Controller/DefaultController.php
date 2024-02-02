@@ -13,6 +13,7 @@ use Flow\Website\Factory\Github\ContributorsUrlFactory;
 use Http\Client\Curl\Client;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -21,13 +22,14 @@ final class DefaultController extends AbstractController
     private readonly string $path;
 
     public function __construct(
+        ContainerBagInterface $parameters,
         private readonly ContributorsUrlFactory $contributorsUrlFactory
     ) {
-        $this->path = __DIR__ . '/../../../../var/data/latest_contributors.json';
+        $this->path = $parameters->get('kernel.cache_dir') . '/data/latest_contributors.json';
     }
 
     #[Route('/', name: 'main')]
-    public function __invoke() : Response
+    public function main() : Response
     {
         $factory = new Psr17Factory();
         $client = new Client($factory, $factory);
