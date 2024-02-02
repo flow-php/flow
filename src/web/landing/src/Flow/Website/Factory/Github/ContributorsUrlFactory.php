@@ -23,7 +23,7 @@ final class ContributorsUrlFactory implements NextRequestFactory
         }
 
         return $this->factory
-            ->createRequest('GET', 'https://api.github.com/repos/flow-php/flow/contributors?per_page=50')
+            ->createRequest('GET', 'https://api.github.com/repos/flow-php/flow/contributors?q=contributions&order=desc&per_page=50')
             ->withHeader('Accept', 'application/vnd.github+json')
             ->withHeader('Authorization', 'Bearer ' . $this->githubToken)
             ->withHeader('X-GitHub-Api-Version', '2022-11-28')
