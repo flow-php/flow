@@ -47,7 +47,7 @@
         </div>
     </div>
 
-    <div class="group/topics relative py-10 px-4 mx-auto max-w-screen-xl">
+    <div class="group/topics relative py-10 px-4 mx-auto max-w-screen-xl" {{ stimulus_controller('tabs') }} {{ stimulus_action('tabs', 'connect', 'load@window') }}>
         <nav class="font-medium text-center bg-orange-100 rounded">
             <ul class="flex whitespace-nowrap overflow-auto justify-between">
                 {% for topic in topics %}
@@ -75,9 +75,13 @@
 
                 {% for example in examples %}
                     <div id="{{ topic.id }}_example_{{ example }}" class="-mt-36 pt-36 hidden target:block group-[:not(:has(:target))]/examples:first-of-type:block">
-                        <pre class="rounded p-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2"><code class="language-php">
-                            {{- examples.first() | escape('html') -}}
-                        </code></pre>
+                        {% apply spaceless %}
+                            <pre class="rounded p-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2">
+                                <code class="language-php !p-0 !bg-transparent" {{ stimulus_controller('syntax_highlight') }}>
+                                    {{- examples.first() | escape('html') -}}
+                                </code>
+                            </pre>
+                        {% endapply %}
                     </div>
                 {% endfor %}
             </div>
