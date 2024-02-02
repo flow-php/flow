@@ -75,9 +75,13 @@
 
                 {% for example in examples %}
                     <div id="{{ topic.id }}_example_{{ example }}" class="-mt-36 pt-36 hidden target:block group-[:not(:has(:target))]/examples:first-of-type:block">
-                        <pre class="rounded p-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2"><code class="language-php">
-                            {{- examples.first() | escape('html') -}}
-                        </code></pre>
+                        {% apply spaceless %}
+                            <pre class="rounded p-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2">
+                                <code class="language-php !p-0 !bg-transparent" {{ stimulus_controller('syntax_highlight') }}>
+                                    {{- examples.first() | escape('html') -}}
+                                </code>
+                            </pre>
+                        {% endapply %}
                     </div>
                 {% endfor %}
             </div>
@@ -97,7 +101,7 @@
             <div class="grid gap-1 sm:gap-2 lg:gap-4 grid-cols-8 lg:grid-cols-12">
                 {% for contributor in contributors %}
                     <a href="{{ contributor.html_url }}" rel="nofollow">
-                        <img src="{{ contributor.avatar_url }}" alt="{{ contributor.login }}" title="{{ contributor.login }}" class="w-full max-w-14 rounded-full">
+                        <img loading="lazy" src="{{ contributor.avatar_url }}" alt="{{ contributor.login }}" title="{{ contributor.login }}" class="w-full max-w-14 rounded-full">
                     </a>
                 {% endfor %}
             </div>

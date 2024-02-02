@@ -1,3 +1,4 @@
+<!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -9,18 +10,15 @@
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('images/favicons/favicon-16x16.png') }}">
     <link rel="shortcut icon" href="{{ asset('images/favicons/favicon.ico') }}">
 
-    <link rel="preload" href="https://fonts.googleapis.com/css?family=Cabin" as="style">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Cabin">
-
     {% block stylesheets %}
         <link rel="stylesheet" href="{{ asset('styles/app.css') }}">
     {% endblock %}
 
     {% block javascripts %}
-        {{ importmap([]) }}
+        {{ importmap() }}
     {% endblock %}
 </head>
-<body class="scroll-smooth font-['Cabin'] bg-black text-white">
+<body class="scroll-smooth bg-black text-white">
     <header class="py-2 text-white bg-blue-200">
         <div class="mx-auto max-w-screen-xl px-4 flex items-center justify-between ">
             <a href="{{ url('main') }}">

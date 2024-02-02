@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+body {
+    font-family: "Cabin Variable", sans-serif;
+}
+
 .unset {
     inset: unset;
 }
