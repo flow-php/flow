@@ -57,7 +57,13 @@ final class DbalLimitOffsetExtractor implements Extractor
             $total = $this->maximum;
         } else {
             $countQuery = (clone $this->queryBuilder)->select('COUNT(*)');
-            $countQuery->resetQueryPart('orderBy');
+
+            if (\method_exists($countQuery, 'resetOrderBy')) {
+                $countQuery->resetOrderBy();
+            } else {
+                /** @psalm-suppress DeprecatedMethod */
+                $countQuery->resetQueryPart('orderBy');
+            }
 
             $total = (int) $this->connection->fetchOne(
                 $countQuery->getSQL(),
