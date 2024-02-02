@@ -3,6 +3,12 @@
     "description": "Flow PHP ETL - Web",
     "type": "project",
     "require": {
+        "flow-php/etl": "1.x-dev",
+        "flow-php/etl-adapter-http": "1.x-dev",
+        "flow-php/etl-adapter-json": "1.x-dev",
+        "nyholm/psr7": "^1.8",
+        "php-http/curl-client": "^2.3",
+        "psr/http-client": "^1.0",
         "symfony/http-kernel": "^6.4",
         "symfony/http-foundation": "^6.4",
         "symfony/routing": "^6.4",
