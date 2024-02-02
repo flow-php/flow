@@ -10,3 +10,7 @@ services:
         resource: '../src/Flow/Website/'
         exclude:
             - '../src/Flow/Website/Kernel.php'
+
+    Flow\Website\Factory\Github\ContributorsUrlFactory:
+        arguments:
+            $githubToken: '%env(GITHUB_TOKEN)%'
