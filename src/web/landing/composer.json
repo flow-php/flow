@@ -32,6 +32,7 @@
     },
     "config": {
         "allow-plugins": {
+            "php-http/discovery": false,
             "symfony/runtime": true
         }
     },
@@ -41,6 +42,10 @@
             "@assets:clear",
             "bin/console tailwind:build",
             "bin/console asset-map:compile"
+        ],
+        "page:build": [
+            "bin/console static-content-generator:generate:routes",
+            "bin/console static-content-generator:copy:assets -d assets"
         ]
     }
 }
