@@ -31,7 +31,7 @@ final class CapitalizeTest extends TestCase
             [
                 ['key' => 'this is title', 'capitalized' => 'This Is Title'],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 }

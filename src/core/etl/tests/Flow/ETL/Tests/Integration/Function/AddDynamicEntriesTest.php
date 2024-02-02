@@ -33,7 +33,7 @@ final class AddDynamicEntriesTest extends TestCase
                 ['id' => 1, 'updated_at' => new \DateTimeImmutable('2020-01-01T00:00:00+00:00')],
                 ['id' => 2, 'updated_at' => new \DateTimeImmutable('2020-01-01T00:00:00+00:00')],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 }

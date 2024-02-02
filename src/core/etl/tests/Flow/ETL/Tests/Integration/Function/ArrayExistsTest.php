@@ -35,7 +35,7 @@ final class ArrayExistsTest extends TestCase
                 ['id' => 1, 'has_array' => true],
                 ['id' => 2, 'has_array' => false],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 }

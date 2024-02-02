@@ -36,7 +36,7 @@ final class ArraySortTest extends TestCase
                 ['id' => 1, 'array' => ['a' => 1, 'b' => 2, 'c' => 3]],
                 ['id' => 2, 'array' => null],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 }

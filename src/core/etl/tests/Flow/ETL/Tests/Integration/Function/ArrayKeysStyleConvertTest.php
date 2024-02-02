@@ -32,7 +32,7 @@ final class ArrayKeysStyleConvertTest extends TestCase
             [
                 ['id' => 1, 'array' => ['camel-cased' => 1, 'snake-cased' => 2, 'space-word' => 3]],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 }

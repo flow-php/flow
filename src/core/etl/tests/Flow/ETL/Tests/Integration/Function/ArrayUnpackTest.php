@@ -35,7 +35,7 @@ final class ArrayUnpackTest extends TestCase
                 ['id' => 1, 'a' => 1, 'b' => 2, 'c' => 3],
                 ['id' => 2],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 }

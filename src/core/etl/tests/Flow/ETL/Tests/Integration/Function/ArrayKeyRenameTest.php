@@ -35,7 +35,7 @@ final class ArrayKeyRenameTest extends TestCase
                 ['id' => 1, 'array' => ['b' => 2, 'c' => 3, 'd' => 1]],
                 ['id' => 2, 'array' => null],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 }

@@ -48,7 +48,7 @@ final class NotTest extends TestCase
                 ['id' => 3, 'result' => 'not found'],
                 ['id' => 4, 'result' => 'found'],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 }

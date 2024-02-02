@@ -34,7 +34,7 @@ final class ArrayReverseTest extends TestCase
                 ['id' => 1, 'array' => ['c' => 3, 'b' => 2, 'a' => 1]],
                 ['id' => 2, 'array' => null],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 }

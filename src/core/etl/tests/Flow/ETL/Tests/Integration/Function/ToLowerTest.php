@@ -31,7 +31,7 @@ final class ToLowerTest extends TestCase
             [
                 ['key' => 'VALUE', 'to_lower' => 'value'],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 
@@ -53,7 +53,7 @@ final class ToLowerTest extends TestCase
             [
                 ['id' => 1, 'to_lower' => 1],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 }

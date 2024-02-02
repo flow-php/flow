@@ -32,7 +32,7 @@ final class StartsWithTest extends TestCase
             [
                 ['key' => 'value', 'starts_with' => true],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 
@@ -54,7 +54,7 @@ final class StartsWithTest extends TestCase
             [
                 ['id' => 1, 'starts_with' => false],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 
@@ -76,7 +76,7 @@ final class StartsWithTest extends TestCase
             [
                 ['id' => '1', 'starts_with' => false],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 }

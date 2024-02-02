@@ -32,7 +32,7 @@ final class PregReplaceTest extends TestCase
             [
                 ['key' => 'value', 'preg_replace' => 'values'],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 
@@ -54,7 +54,7 @@ final class PregReplaceTest extends TestCase
             [
                 ['id' => 1, 'preg_replace' => null],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 
@@ -76,7 +76,7 @@ final class PregReplaceTest extends TestCase
             [
                 ['id' => '1', 'preg_replace' => null],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 }

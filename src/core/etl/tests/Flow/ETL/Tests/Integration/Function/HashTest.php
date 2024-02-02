@@ -41,7 +41,7 @@ final class HashTest extends TestCase
             [
                 ['key' => $value, 'hash' => $expected],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 
@@ -63,7 +63,7 @@ final class HashTest extends TestCase
             [
                 ['key' => 'value', 'hash' => 'ec2c83edecb60304d154ebdb85bdfaf61a92bd142e71c4f7b25a15b9cb5f3c0ae301cfb3569cf240e4470031385348bc296d8d99d09e06b26f09591a97527296'],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 }

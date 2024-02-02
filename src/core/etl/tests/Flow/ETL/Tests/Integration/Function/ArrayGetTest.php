@@ -34,7 +34,7 @@ final class ArrayGetTest extends TestCase
                 ['id' => 1, 'result' => 2],
                 ['id' => 2, 'result' => null],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 }

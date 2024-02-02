@@ -31,7 +31,7 @@ final class StrReplaceTest extends TestCase
             [
                 ['key' => 'value', 'str_replace' => 'values'],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 
@@ -53,7 +53,7 @@ final class StrReplaceTest extends TestCase
             [
                 ['id' => 1, 'str_replace' => null],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 }

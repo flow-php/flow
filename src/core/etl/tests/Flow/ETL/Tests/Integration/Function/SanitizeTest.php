@@ -32,7 +32,7 @@ final class SanitizeTest extends TestCase
             [
                 ['id' => 1, 'sanitize' => null],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 
@@ -54,7 +54,7 @@ final class SanitizeTest extends TestCase
             [
                 ['key' => 'value', 'sanitize' => 'va***'],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 
@@ -76,7 +76,7 @@ final class SanitizeTest extends TestCase
             [
                 ['key' => 'value', 'sanitize' => '*****'],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 }

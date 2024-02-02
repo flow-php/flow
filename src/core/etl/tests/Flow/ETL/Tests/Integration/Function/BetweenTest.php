@@ -37,7 +37,7 @@ final class BetweenTest extends TestCase
                     'not_between' => false,
                 ],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 }

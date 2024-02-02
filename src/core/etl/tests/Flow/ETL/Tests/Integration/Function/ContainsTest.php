@@ -32,7 +32,7 @@ final class ContainsTest extends TestCase
             [
                 ['key' => 'value', 'contains' => true],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 
@@ -54,7 +54,7 @@ final class ContainsTest extends TestCase
             [
                 ['id' => 1, 'contains' => false],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 
@@ -76,7 +76,7 @@ final class ContainsTest extends TestCase
             [
                 ['id' => '1', 'contains' => false],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 }

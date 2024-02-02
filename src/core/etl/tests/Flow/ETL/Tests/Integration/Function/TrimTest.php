@@ -32,7 +32,7 @@ final class TrimTest extends TestCase
             [
                 ['key' => ' value ', 'trim' => 'value'],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 
@@ -54,7 +54,7 @@ final class TrimTest extends TestCase
             [
                 ['key' => '-value ', 'trim' => 'value '],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 
@@ -76,7 +76,7 @@ final class TrimTest extends TestCase
             [
                 ['key' => ' value ', 'trim' => 'value '],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 
@@ -98,7 +98,7 @@ final class TrimTest extends TestCase
             [
                 ['id' => 1, 'trim' => null],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 
@@ -120,7 +120,7 @@ final class TrimTest extends TestCase
             [
                 ['key' => ' value ', 'trim' => ' value'],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 }

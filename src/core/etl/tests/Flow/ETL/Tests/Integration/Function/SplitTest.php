@@ -32,7 +32,7 @@ final class SplitTest extends TestCase
             [
                 ['key' => '1-2', 'split' => ['1', '2']],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 
@@ -54,7 +54,7 @@ final class SplitTest extends TestCase
             [
                 ['key' => 1, 'split' => 1],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 
@@ -76,7 +76,7 @@ final class SplitTest extends TestCase
             [
                 ['key' => '1', 'split' => ['1']],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 }
