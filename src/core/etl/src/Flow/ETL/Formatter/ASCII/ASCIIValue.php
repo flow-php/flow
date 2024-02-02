@@ -10,7 +10,7 @@ final class ASCIIValue
 {
     private ?string $stringValue = null;
 
-    public function __construct(private readonly null|string|int|bool|float|array|Entry $value)
+    public function __construct(private readonly string|int|bool|float|array|Entry|null $value)
     {
     }
 

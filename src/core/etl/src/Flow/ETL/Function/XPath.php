@@ -13,7 +13,7 @@ final class XPath extends ScalarFunctionChain
     /**
      * @psalm-suppress InvalidReturnStatement
      */
-    public function eval(Row $row) : null|\DOMNode|array
+    public function eval(Row $row) : \DOMNode|array|null
     {
         /** @var mixed $value */
         $value = $this->ref->eval($row);

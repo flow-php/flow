@@ -10,7 +10,7 @@ final class DOMNodeAttribute extends ScalarFunctionChain
     {
     }
 
-    public function eval(Row $row) : null|string
+    public function eval(Row $row) : string|null
     {
         /** @var mixed $value */
         $value = $this->ref->eval($row);
