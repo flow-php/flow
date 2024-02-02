@@ -5,7 +5,6 @@
     "require": {
         "flow-php/etl": "1.x-dev",
         "flow-php/etl-adapter-http": "1.x-dev",
-        "flow-php/etl-adapter-json": "1.x-dev",
         "nyholm/psr7": "^1.8",
         "php-http/curl-client": "^2.3",
         "psr/http-client": "^1.0",
