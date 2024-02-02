@@ -1,6 +1,5 @@
 .env.local
 build/
 vendor/
-node_modules/
 var/
 public/assets
