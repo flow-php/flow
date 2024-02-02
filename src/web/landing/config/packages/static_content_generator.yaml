@@ -1,0 +1,2 @@
+static_content_generator:
+    output_directory: "%kernel.project_dir%/build"
