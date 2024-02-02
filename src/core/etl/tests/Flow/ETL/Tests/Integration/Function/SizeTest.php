@@ -31,7 +31,7 @@ final class SizeTest extends TestCase
             [
                 ['array' => [1, 2, 3], 'size' => 3],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 
@@ -53,7 +53,7 @@ final class SizeTest extends TestCase
             [
                 ['id' => 1, 'size' => null],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 
@@ -75,7 +75,7 @@ final class SizeTest extends TestCase
             [
                 ['key' => 'value', 'size' => 5],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 }

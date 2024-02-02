@@ -31,7 +31,7 @@ final class ToUpperTest extends TestCase
             [
                 ['key' => 'value', 'to_upper' => 'VALUE'],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 
@@ -53,7 +53,7 @@ final class ToUpperTest extends TestCase
             [
                 ['id' => 1, 'to_upper' => 1],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 }

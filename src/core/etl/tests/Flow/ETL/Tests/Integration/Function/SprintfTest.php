@@ -32,7 +32,7 @@ final class SprintfTest extends TestCase
             [
                 ['key' => 'test %s', 'sprintf' => 'test value'],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 
@@ -54,7 +54,7 @@ final class SprintfTest extends TestCase
             [
                 ['id' => 1, 'sprintf' => null],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 
@@ -76,7 +76,7 @@ final class SprintfTest extends TestCase
             [
                 ['id' => '1', 'sprintf' => null],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 }

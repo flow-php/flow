@@ -30,7 +30,7 @@ final class AddJsonTest extends TestCase
             [
                 ['id' => 1, 'array' => ['a' => 1, 'b' => 2, 'c' => 3, 'd' => 4]],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 
@@ -52,7 +52,7 @@ final class AddJsonTest extends TestCase
             [
                 ['id' => 1, 'array' => ['a' => 1, 'b' => 2, 'c' => 3, 'd' => 4]],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 
@@ -74,7 +74,7 @@ final class AddJsonTest extends TestCase
                     'json' => '{"id":1,"name":"test"}',
                 ],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 
@@ -95,7 +95,7 @@ final class AddJsonTest extends TestCase
                     'json' => '[{"id":1},{"id":2}]',
                 ],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 }

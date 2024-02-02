@@ -27,7 +27,7 @@ final class CastTest extends TestCase
             [
                 ['date' => '2023-01-01T00:00:00+00:00'],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 }

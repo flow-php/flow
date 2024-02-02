@@ -9,20 +9,13 @@ use Flow\ETL\Exception\InvalidArgumentException;
 final class ArrayMemory implements \Countable, Memory
 {
     /**
-     * @var array<array<string, mixed>>
-     */
-    public array $data;
-
-    /**
-     * @param array<mixed> $memory
+     * @param array<array-key, array<string, mixed>> $memory
      *
      * @throws InvalidArgumentException
      */
-    public function __construct(array $memory = [])
+    public function __construct(private array $memory = [])
     {
         $this->assertMemoryStructure($memory);
-        /** @var array<array-key, array<string, mixed>> $memory */
-        $this->data = $memory;
     }
 
     /**
@@ -36,7 +29,7 @@ final class ArrayMemory implements \Countable, Memory
 
         $chunks = [];
 
-        foreach (\array_chunk($this->data, $size) as $chunk) {
+        foreach (\array_chunk($this->memory, $size) as $chunk) {
             $chunks[] = new self($chunk);
         }
 
@@ -45,7 +38,7 @@ final class ArrayMemory implements \Countable, Memory
 
     public function count() : int
     {
-        return \count($this->data);
+        return \count($this->memory);
     }
 
     /**
@@ -55,7 +48,7 @@ final class ArrayMemory implements \Countable, Memory
      */
     public function dump() : array
     {
-        return $this->data;
+        return $this->memory;
     }
 
     /**
@@ -70,7 +63,7 @@ final class ArrayMemory implements \Countable, Memory
     {
         $data = [];
 
-        foreach ($this->data as $entry) {
+        foreach ($this->memory as $entry) {
             $data[] = \array_values($entry);
         }
 
@@ -86,7 +79,7 @@ final class ArrayMemory implements \Countable, Memory
     {
         $data = [];
 
-        foreach ($this->data as $entry) {
+        foreach ($this->memory as $entry) {
             $data[] = $callback($entry);
         }
 
@@ -100,7 +93,7 @@ final class ArrayMemory implements \Countable, Memory
     {
         $this->assertMemoryStructure($data);
 
-        $this->data = \array_merge($this->data, $data);
+        $this->memory = \array_merge($this->memory, $data);
     }
 
     /**

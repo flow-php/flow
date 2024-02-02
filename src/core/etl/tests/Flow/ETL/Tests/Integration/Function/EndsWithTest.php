@@ -32,7 +32,7 @@ final class EndsWithTest extends TestCase
             [
                 ['key' => 'value', 'ends_with' => true],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 
@@ -54,7 +54,7 @@ final class EndsWithTest extends TestCase
             [
                 ['id' => 1, 'ends_with' => false],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 
@@ -76,7 +76,7 @@ final class EndsWithTest extends TestCase
             [
                 ['id' => '1', 'ends_with' => false],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 }

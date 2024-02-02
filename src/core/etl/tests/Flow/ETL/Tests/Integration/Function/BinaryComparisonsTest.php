@@ -109,7 +109,7 @@ final class BinaryComparisonsTest extends TestCase
                     'type' => false,
                 ],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 }

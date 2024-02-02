@@ -32,7 +32,7 @@ final class PregMatchTest extends TestCase
             [
                 ['key' => 'value', 'preg_match' => true],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 
@@ -54,7 +54,7 @@ final class PregMatchTest extends TestCase
             [
                 ['id' => 1, 'preg_match' => null],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 
@@ -76,7 +76,7 @@ final class PregMatchTest extends TestCase
             [
                 ['id' => '1', 'preg_match' => null],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 }

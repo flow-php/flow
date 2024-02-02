@@ -31,7 +31,7 @@ final class CountTest extends TestCase
             [
                 ['array' => [1, 2, 3], 'count' => 3],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 
@@ -53,7 +53,7 @@ final class CountTest extends TestCase
             [
                 ['key' => 1, 'count' => null],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 
@@ -77,7 +77,7 @@ final class CountTest extends TestCase
             [
                 ['key' => $iterator, 'count' => 3],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 }

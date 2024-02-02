@@ -31,7 +31,7 @@ final class StrPadTest extends TestCase
             [
                 ['key' => 'value', 'strpad' => 'value*****'],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 
@@ -53,7 +53,7 @@ final class StrPadTest extends TestCase
             [
                 ['id' => 1, 'strpad' => null],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 }

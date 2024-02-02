@@ -32,7 +32,7 @@ final class PregMatchAllTest extends TestCase
             [
                 ['key' => 'value', 'preg_match' => [['a']]],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 
@@ -54,7 +54,7 @@ final class PregMatchAllTest extends TestCase
             [
                 ['key' => 'value', 'preg_match' => []],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 
@@ -76,7 +76,7 @@ final class PregMatchAllTest extends TestCase
             [
                 ['id' => 1, 'preg_match' => []],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 
@@ -98,7 +98,7 @@ final class PregMatchAllTest extends TestCase
             [
                 ['id' => '1', 'preg_match' => []],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 }

@@ -44,7 +44,7 @@ final class WhenTest extends TestCase
                 ['id' => 9, 'type' => 'odd'],
                 ['id' => 10, 'type' => 'even'],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 }

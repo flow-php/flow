@@ -36,7 +36,7 @@ final class ConcatTest extends TestCase
                 ['id' => 1, 'concat' => null],
                 ['id' => 2, 'concat' => null],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 
@@ -61,7 +61,7 @@ final class ConcatTest extends TestCase
                 ['id' => 1, 'concat' => '1-value'],
                 ['id' => 2, 'concat' => null],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 }

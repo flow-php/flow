@@ -36,7 +36,7 @@ final class ArrayExpandTest extends TestCase
                 ['id' => 1, 'expanded' => ['b' => 2]],
                 ['id' => 1, 'expanded' => ['c' => 3]],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 
@@ -61,7 +61,7 @@ final class ArrayExpandTest extends TestCase
                 ['id' => 1, 'expanded' => 'b'],
                 ['id' => 1, 'expanded' => 'c'],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 
@@ -86,7 +86,7 @@ final class ArrayExpandTest extends TestCase
                 ['id' => 1, 'expanded' => 2],
                 ['id' => 1, 'expanded' => 3],
             ],
-            $memory->data
+            $memory->dump()
         );
     }
 }
