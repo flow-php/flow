@@ -51,7 +51,7 @@ final class DefaultController extends AbstractController
             ->run();
 
         return $this->render('main/index.html.twig', [
-            'contributors' => $memory->data,
+            'contributors' => $memory->dump(),
         ]);
     }
 }
