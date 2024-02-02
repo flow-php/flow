@@ -11,6 +11,7 @@ return static function (MBConfig $config): void {
         __DIR__ . '/src/core',
         __DIR__ . '/src/adapter',
         __DIR__ . '/src/lib',
+        __DIR__ . '/src/web',
     ]);
 
     $config->dataToAppend([
