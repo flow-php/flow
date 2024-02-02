@@ -50,6 +50,7 @@
 - [#869](https://github.com/flow-php/flow/pull/869) - **RDSL library** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#952](https://github.com/flow-php/flow/pull/952) - **Hide data in `ArrayMemory` by default** - [@stloyd](https://github.com/stloyd)
 - [#950](https://github.com/flow-php/flow/pull/950) - **Fetch latest contributors using FlowPHP itself** - [@stloyd](https://github.com/stloyd)
 - [#948](https://github.com/flow-php/flow/pull/948) - **Updated dependencies** - [@norberttech](https://github.com/norberttech)
 - [#938](https://github.com/flow-php/flow/pull/938) - **Tuned default parquet options** - [@norberttech](https://github.com/norberttech)
