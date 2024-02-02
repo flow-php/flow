@@ -1,6 +1,21 @@
 {% extends 'base.html.twig' %}
 {% import "main/example.txt.twig" as examples %}
 
+{% block stylesheets %}
+    {{ parent() }}
+
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" as="style">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/php.min.js"></script>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+
+    <script type="application/javascript">hljs.highlightAll();</script>
+{% endblock %}
+
 {% block main %}
     {% set topics = [
         {id: 'partitioning', name: 'Partitioning'},
@@ -75,9 +90,11 @@
 
                 {% for example in examples %}
                     <div id="{{ topic.id }}_example_{{ example }}" class="-mt-36 pt-36 hidden target:block group-[:not(:has(:target))]/examples:first-of-type:block">
-                        <pre class="rounded p-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2"><code class="language-php">
-                            {{- examples.first() | escape('html') -}}
-                        </code></pre>
+                        {% apply spaceless %}
+                        <pre class="rounded overflow-auto shadow-2xl shadow-gray border-gray border-2">
+                            <code class="language-php">{{ examples.first() | escape('html') }}</code>
+                        </pre>
+                        {% endapply %}
                     </div>
                 {% endfor %}
             </div>
