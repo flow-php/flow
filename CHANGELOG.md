@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-02-01
+## [Unreleased] - 2024-02-02
 
 ### Added
 - [#946](https://github.com/flow-php/flow/pull/946) - **Addeding contributors section in a landing page** - [@owsiakl](https://github.com/owsiakl)
@@ -50,6 +50,7 @@
 - [#869](https://github.com/flow-php/flow/pull/869) - **RDSL library** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#948](https://github.com/flow-php/flow/pull/948) - **Updated dependencies** - [@norberttech](https://github.com/norberttech)
 - [#938](https://github.com/flow-php/flow/pull/938) - **Tuned default parquet options** - [@norberttech](https://github.com/norberttech)
 - [#927](https://github.com/flow-php/flow/pull/927) - **reduced size of csv files to speedup tests** - [@norberttech](https://github.com/norberttech)
 - [#923](https://github.com/flow-php/flow/pull/923) - **Extracted isJson,isXML,isUuif from NativeEntryFactory to StringTypeChecker** - [@norberttech](https://github.com/norberttech)
