@@ -43,7 +43,7 @@
             "bin/console tailwind:build",
             "bin/console asset-map:compile"
         ],
-        "page:build": [
+        "build": [
             "bin/console static-content-generator:generate:routes",
             "bin/console static-content-generator:copy:assets -d assets"
         ]
