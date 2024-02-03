@@ -1,6 +1,7 @@
 ## [Unreleased] - 2024-02-03
 
 ### Added
+- [#957](https://github.com/flow-php/flow/pull/957) - **Row::hash and Rows::hash** - [@norberttech](https://github.com/norberttech)
 - [#956](https://github.com/flow-php/flow/pull/956) - **Added popover polyfill for a landing page** - [@owsiakl](https://github.com/owsiakl)
 - [#954](https://github.com/flow-php/flow/pull/954) - **Added symfony stimulus to a landing page** - [@owsiakl](https://github.com/owsiakl)
 - [#954](https://github.com/flow-php/flow/pull/954) - **Added controller for syntax hightlighting to a landing page** - [@owsiakl](https://github.com/owsiakl)
