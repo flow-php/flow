@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-02-02
+## [Unreleased] - 2024-02-03
 
 ### Added
 - [#954](https://github.com/flow-php/flow/pull/954) - **Added symfony stimulus to a landing page** - [@owsiakl](https://github.com/owsiakl)
@@ -53,6 +53,7 @@
 - [#869](https://github.com/flow-php/flow/pull/869) - **RDSL library** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#955](https://github.com/flow-php/flow/pull/955) - **Cleanup examples and prepare them to be used on landing page** - [@norberttech](https://github.com/norberttech)
 - [#952](https://github.com/flow-php/flow/pull/952) - **Hide data in `ArrayMemory` by default** - [@stloyd](https://github.com/stloyd)
 - [#950](https://github.com/flow-php/flow/pull/950) - **Fetch latest contributors using FlowPHP itself** - [@stloyd](https://github.com/stloyd)
 - [#948](https://github.com/flow-php/flow/pull/948) - **Updated dependencies** - [@norberttech](https://github.com/norberttech)
