@@ -3,6 +3,7 @@
 namespace Flow\ETL\DataFrame;
 
 use Flow\ETL\DataFrame;
+use Flow\ETL\Dataset\Report;
 use Flow\ETL\Filesystem\SaveMode;
 use Flow\ETL\Formatter;
 use Flow\ETL\Formatter\AsciiTableFormatter;
@@ -60,9 +61,9 @@ final class PartitionedDataFrame
     /**
      * @param null|callable(Rows $rows): void $callback
      */
-    public function run(?callable $callback = null) : void
+    public function run(?callable $callback = null, bool $analyze = false) : Report|null
     {
-        $this->df->run($callback);
+        return $this->df->run($callback, $analyze);
     }
 
     public function saveMode(SaveMode $mode) : self
