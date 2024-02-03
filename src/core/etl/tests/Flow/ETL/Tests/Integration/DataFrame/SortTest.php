@@ -38,7 +38,7 @@ final class SortTest extends IntegrationTestCase
         // 50 tmp caches
         // 1 sorted cache
         // 1 extracted cache
-        $this->assertSame(53, $cacheSpy->clears());
+        $this->assertSame(52, $cacheSpy->clears());
     }
 
     public function test_etl_sort_by_in_memory() : void

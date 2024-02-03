@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Pipeline;
 
+use function Flow\ETL\DSL\from_rows;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
@@ -12,13 +13,16 @@ use Flow\ETL\Transformer;
 
 final class CachingPipeline implements OverridingPipeline, Pipeline
 {
+    private readonly Pipeline $nextPipeline;
+
     public function __construct(private readonly Pipeline $pipeline, private readonly ?string $id = null)
     {
+        $this->nextPipeline = $this->pipeline->cleanCopy();
     }
 
     public function add(Loader|Transformer $pipe) : Pipeline
     {
-        $this->pipeline->add($pipe);
+        $this->nextPipeline->add($pipe);
 
         return $this;
     }
@@ -51,21 +55,33 @@ final class CachingPipeline implements OverridingPipeline, Pipeline
 
         $pipelines[] = $this->pipeline;
 
+        if ($this->nextPipeline instanceof OverridingPipeline) {
+            $pipelines = \array_merge($pipelines, $this->nextPipeline->pipelines());
+        }
+
+        $pipelines[] = $this->nextPipeline;
+
         return $pipelines;
     }
 
     public function pipes() : Pipes
     {
-        return $this->pipeline->pipes();
+        return $this->pipeline->pipes()->merge($this->nextPipeline->pipes());
     }
 
     public function process(FlowContext $context) : \Generator
     {
-        $context->config->cache()->clear($id = $this->id ?: $context->config->id());
+        $id = $this->id ?: $context->config->id();
+        $cacheExists = $context->config->cache()->has($id);
 
         foreach ($this->pipeline->process($context) as $rows) {
-            $context->config->cache()->add($id, $rows);
-            yield $rows;
+            if (!$cacheExists) {
+                $context->config->cache()->add($id, $rows);
+            }
+
+            foreach ($this->nextPipeline->setSource(from_rows($rows))->process($context) as $nextRows) {
+                yield $nextRows;
+            }
         }
     }
 
