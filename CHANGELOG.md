@@ -1,6 +1,7 @@
 ## [Unreleased] - 2024-02-03
 
 ### Added
+- [#959](https://github.com/flow-php/flow/pull/959) - **Using Flow cache when reading contributors and fallback to GitHub only when cache expires or does not exists** - [@norberttech](https://github.com/norberttech)
 - [#957](https://github.com/flow-php/flow/pull/957) - **Row::hash and Rows::hash** - [@norberttech](https://github.com/norberttech)
 - [#956](https://github.com/flow-php/flow/pull/956) - **Added popover polyfill for a landing page** - [@owsiakl](https://github.com/owsiakl)
 - [#954](https://github.com/flow-php/flow/pull/954) - **Added symfony stimulus to a landing page** - [@owsiakl](https://github.com/owsiakl)
@@ -55,6 +56,7 @@
 - [#869](https://github.com/flow-php/flow/pull/869) - **RDSL library** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#959](https://github.com/flow-php/flow/pull/959) - **Extracted fetching contributors logic to standalone service** - [@norberttech](https://github.com/norberttech)
 - [#955](https://github.com/flow-php/flow/pull/955) - **Cleanup examples and prepare them to be used on landing page** - [@norberttech](https://github.com/norberttech)
 - [#952](https://github.com/flow-php/flow/pull/952) - **Hide data in `ArrayMemory` by default** - [@stloyd](https://github.com/stloyd)
 - [#950](https://github.com/flow-php/flow/pull/950) - **Fetch latest contributors using FlowPHP itself** - [@stloyd](https://github.com/stloyd)
