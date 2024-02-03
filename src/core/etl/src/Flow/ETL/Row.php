@@ -58,6 +58,21 @@ final class Row
         return $this->entries->has($ref);
     }
 
+    public function hash(string $algorithm = 'xxh128', bool $binary = false, array $options = []) : string
+    {
+        if (!\in_array($algorithm, \hash_algos(), true)) {
+            throw new \InvalidArgumentException(\sprintf('Hashing algorithm "%s" is not supported', $algorithm));
+        }
+
+        $string = '';
+
+        foreach ($this->entries->sort()->all() as $entry) {
+            $string .= $entry->name() . $entry->toString();
+        }
+
+        return \hash($algorithm, $string, $binary, $options);
+    }
+
     public function isEqual(self $row) : bool
     {
         return $this->entries->isEqual($row->entries());
