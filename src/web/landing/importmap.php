@@ -25,4 +25,16 @@ return [
         'version' => '5.0.17',
         'type' => 'css',
     ],
+
+    /**
+     * On mobile there is a collapsible menu that uses relatively new popover attribute,
+     * but it's not yet available in a firefox browser: https://caniuse.com/?search=popover.
+     * This polyfill will make it work there.
+     *
+     * Once it's available, run 'bin/console importmap:remove @oddbird/popover-polyfill'
+     * and remove import from 'landing/assets/app.js'.
+     */
+    '@oddbird/popover-polyfill' => [
+        'version' => '0.3.8',
+    ],
 ];
