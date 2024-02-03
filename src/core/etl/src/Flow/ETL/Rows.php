@@ -256,6 +256,21 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
         return new \ArrayIterator($this->rows);
     }
 
+    public function hash(string $algorithm = 'xxh128', bool $binary = false, array $options = []) : string
+    {
+        $hashes = [];
+
+        if (!\in_array($algorithm, \hash_algos(), true)) {
+            throw new \InvalidArgumentException(\sprintf('Hashing algorithm "%s" is not supported', $algorithm));
+        }
+
+        foreach ($this->rows as $row) {
+            $hashes[] = $row->hash($algorithm, $binary, $options);
+        }
+
+        return \hash($algorithm, \implode('', $hashes), $binary, $options);
+    }
+
     public function isPartitioned() : bool
     {
         return \count($this->partitions) > 0;

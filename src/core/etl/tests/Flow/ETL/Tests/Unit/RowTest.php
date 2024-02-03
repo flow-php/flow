@@ -13,6 +13,7 @@ use function Flow\ETL\DSL\list_entry;
 use function Flow\ETL\DSL\map_entry;
 use function Flow\ETL\DSL\null_entry;
 use function Flow\ETL\DSL\object_entry;
+use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\struct_element;
 use function Flow\ETL\DSL\struct_entry;
@@ -29,15 +30,16 @@ use Flow\ETL\PHP\Type\Logical\Map\MapValue;
 use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\StructureType;
-use Flow\ETL\Row;
-use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry\ArrayEntry;
 use Flow\ETL\Row\Entry\BooleanEntry;
 use Flow\ETL\Row\Entry\DateTimeEntry;
 use Flow\ETL\Row\Entry\IntegerEntry;
+use Flow\ETL\Row\Entry\MapEntry;
 use Flow\ETL\Row\Entry\NullEntry;
 use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Row\Entry\StructureEntry;
+use Flow\ETL\Row\Schema;
+use Flow\ETL\Row\Schema\Definition;
 use PHPUnit\Framework\TestCase;
 
 final class RowTest extends TestCase
@@ -46,63 +48,55 @@ final class RowTest extends TestCase
     {
         yield 'equal simple same integer entries' => [
             true,
-            new Row(new Entries(new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3))),
-            new Row(new Entries(new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3))),
+            row(new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3)),
+            row(new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3)),
         ];
         yield 'same integer entries with different number of entries' => [
             false,
-            new Row(new Entries(new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3))),
-            new Row(new Entries(new IntegerEntry('1', 1), new IntegerEntry('2', 2))),
+            row(new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3)),
+            row(new IntegerEntry('1', 1), new IntegerEntry('2', 2)),
         ];
         yield 'simple same integer entries with different number of entries reversed' => [
             false,
-            new Row(new Entries(new IntegerEntry('1', 1), new IntegerEntry('2', 2))),
-            new Row(new Entries(new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3))),
+            row(new IntegerEntry('1', 1), new IntegerEntry('2', 2)),
+            row(new IntegerEntry('1', 1), new IntegerEntry('2', 2), new IntegerEntry('3', 3)),
         ];
         yield 'simple same array entries' => [
             true,
-            new Row(new Entries(new ArrayEntry('json', ['foo' => ['bar' => 'baz']]))),
-            new Row(new Entries(new ArrayEntry('json', ['foo' => ['bar' => 'baz']]))),
+            row(new ArrayEntry('json', ['foo' => ['bar' => 'baz']])),
+            row(new ArrayEntry('json', ['foo' => ['bar' => 'baz']])),
         ];
         yield 'simple same collection entries' => [
             true,
-            new Row(
-                new Entries(
-                    new StructureEntry(
-                        'json',
-                        ['json' => [1, 2, 3]],
-                        new StructureType([new StructureElement('json', new ListType(ListElement::integer()))])
-                    )
+            row(
+                new StructureEntry(
+                    'json',
+                    ['json' => [1, 2, 3]],
+                    new StructureType([new StructureElement('json', new ListType(ListElement::integer()))])
                 )
             ),
-            new Row(
-                new Entries(
-                    new StructureEntry(
-                        'json',
-                        ['json' => [1, 2, 3]],
-                        new StructureType([new StructureElement('json', new ListType(ListElement::integer()))])
-                    )
+            row(
+                new StructureEntry(
+                    'json',
+                    ['json' => [1, 2, 3]],
+                    new StructureType([new StructureElement('json', new ListType(ListElement::integer()))])
                 )
             ),
         ];
         yield 'simple different collection entries' => [
             false,
-            new Row(
-                new Entries(
-                    new StructureEntry(
-                        'json',
-                        ['json' => ['5', '2', '1']],
-                        new StructureType([new StructureElement('json', new ListType(ListElement::string()))])
-                    )
+            row(
+                new StructureEntry(
+                    'json',
+                    ['json' => ['5', '2', '1']],
+                    new StructureType([new StructureElement('json', new ListType(ListElement::string()))])
                 )
             ),
-            new Row(
-                new Entries(
-                    new StructureEntry(
-                        'json',
-                        ['json' => ['1', '2', '3']],
-                        new StructureType([new StructureElement('json', new ListType(ListElement::string()))])
-                    )
+            row(
+                new StructureEntry(
+                    'json',
+                    ['json' => ['1', '2', '3']],
+                    new StructureType([new StructureElement('json', new ListType(ListElement::string()))])
                 )
             ),
         ];
@@ -110,7 +104,7 @@ final class RowTest extends TestCase
 
     public function test_getting_schema_from_row() : void
     {
-        $row = Row::create(
+        $row = row(
             int_entry('id', \random_int(100, 100000)),
             float_entry('price', \random_int(100, 100000) / 100),
             bool_entry('deleted', false),
@@ -141,52 +135,88 @@ final class RowTest extends TestCase
         );
 
         $this->assertEquals(
-            new Row\Schema(
-                Row\Schema\Definition::integer('id'),
-                Row\Schema\Definition::float('price'),
-                Row\Schema\Definition::boolean('deleted'),
-                Row\Schema\Definition::dateTime('created-at'),
-                Row\Schema\Definition::null('phase'),
-                Row\Schema\Definition::array('array'),
-                Row\Schema\Definition::structure(
+            new Schema(
+                Definition::integer('id'),
+                Definition::float('price'),
+                Definition::boolean('deleted'),
+                Definition::dateTime('created-at'),
+                Definition::null('phase'),
+                Definition::array('array'),
+                Definition::structure(
                     'items',
                     new StructureType([
                         new StructureElement('item-id', type_int()),
                         new StructureElement('name', type_string()),
                     ])
                 ),
-                Row\Schema\Definition::map(
+                Definition::map(
                     'statuses',
                     new MapType(MapKey::integer(), MapValue::string())
                 ),
-                Row\Schema\Definition::list('list', new ListType(ListElement::integer())),
-                Row\Schema\Definition::object('object', type_object(\ArrayIterator::class)),
+                Definition::list('list', new ListType(ListElement::integer())),
+                Definition::object('object', type_object(\ArrayIterator::class)),
             ),
             $row->schema()
+        );
+    }
+
+    public function test_hash() : void
+    {
+        $row = row(
+            int_entry('id', 1),
+            str_entry('string', 'string'),
+            bool_entry('bool', false),
+            list_entry('list', [1, 2, 3], type_list(type_int()))
+        );
+
+        $this->assertSame(
+            $row->hash(),
+            row(
+                int_entry('id', 1),
+                bool_entry('bool', false),
+                str_entry('string', 'string'),
+                list_entry('list', [1, 2, 3], type_list(type_int()))
+            )->hash()
+        );
+    }
+
+    public function test_hash_different_rows() : void
+    {
+        $this->assertNotSame(
+            row(list_entry('list', [1, 2, 3], type_list(type_int())))->hash(),
+            row(list_entry('list', [3, 2, 1], type_list(type_int())))->hash()
+        );
+    }
+
+    public function test_hash_empty_row() : void
+    {
+        $this->assertSame(
+            row()->hash(),
+            row()->hash()
         );
     }
 
     /**
      * @dataProvider is_equal_data_provider
      */
-    public function test_is_equal(bool $equals, Row $row, Row $nextRow) : void
+    public function test_is_equal(bool $equals, \Flow\ETL\Row $row, \Flow\ETL\Row $nextRow) : void
     {
         $this->assertSame($equals, $row->isEqual($nextRow));
     }
 
     public function test_keep() : void
     {
-        $row = new Row(new Entries(
+        $row = row(
             int_entry('id', 1),
             str_entry('name', 'test'),
             bool_entry('active', true)
-        ));
+        );
 
         $this->assertEquals(
-            new Row(new Entries(
+            row(
                 int_entry('id', 1),
                 bool_entry('active', true)
-            )),
+            ),
             $row->keep('id', 'active')
         );
     }
@@ -195,14 +225,14 @@ final class RowTest extends TestCase
     {
         $this->expectExceptionMessage('Entry "something" does not exist.');
 
-        $row = new Row(new Entries(
+        $row = row(
             int_entry('id', 1),
             str_entry('name', 'test'),
             bool_entry('active', true)
-        ));
+        );
 
         $this->assertEquals(
-            new Row(new Entries()),
+            row(),
             $row->keep('something')
         );
     }
@@ -214,57 +244,57 @@ final class RowTest extends TestCase
                 'id' => 1,
                 '_id' => 2,
             ],
-            Row::create(new IntegerEntry('id', 1))
-                ->merge(Row::create(new IntegerEntry('id', 2)), $prefix = '_')
+            row(new IntegerEntry('id', 1))
+                ->merge(row(new IntegerEntry('id', 2)), $prefix = '_')
                 ->toArray()
         );
     }
 
     public function test_remove() : void
     {
-        $row = new Row(new Entries(
+        $row = row(
             int_entry('id', 1),
             str_entry('name', 'test'),
             bool_entry('active', true)
-        ));
+        );
 
         $this->assertEquals(
-            new Row(new Entries(
+            row(
                 int_entry('id', 1),
                 str_entry('name', 'test')
-            )),
+            ),
             $row->remove('active')
         );
     }
 
     public function test_remove_non_existing_entry() : void
     {
-        $row = new Row(new Entries(
+        $row = row(
             int_entry('id', 1),
             str_entry('name', 'test'),
             bool_entry('active', true)
-        ));
+        );
 
         $this->assertEquals(
-            new Row(new Entries(
+            row(
                 int_entry('id', 1),
                 str_entry('name', 'test'),
                 bool_entry('active', true)
-            )),
+            ),
             $row->remove('something')
         );
     }
 
     public function test_renames_entry() : void
     {
-        $row = Row::create(
+        $row = row(
             new StringEntry('name', 'just a string'),
             new BooleanEntry('active', true)
         );
         $newRow = $row->rename('name', 'new-name');
 
         $this->assertEquals(
-            Row::create(
+            row(
                 new BooleanEntry('active', true),
                 new StringEntry('new-name', 'just a string')
             ),
@@ -274,7 +304,7 @@ final class RowTest extends TestCase
 
     public function test_transforms_row_to_array() : void
     {
-        $row = Row::create(
+        $row = row(
             new IntegerEntry('id', 1234),
             new BooleanEntry('deleted', false),
             new DateTimeEntry('created-at', $createdAt = new \DateTimeImmutable('2020-07-13 15:00')),
@@ -284,7 +314,7 @@ final class RowTest extends TestCase
                 ['item-id' => 1, 'name' => 'one'],
                 new StructureType([new StructureElement('id', type_int()), new StructureElement('name', type_string())])
             ),
-            new Row\Entry\MapEntry(
+            new MapEntry(
                 'statuses',
                 ['NEW', 'PENDING'],
                 new MapType(MapKey::integer(), MapValue::string())

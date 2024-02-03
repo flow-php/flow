@@ -452,6 +452,74 @@ final class RowsTest extends TestCase
         );
     }
 
+    public function test_hash() : void
+    {
+        $rows = rows(
+            row(int_entry('id', 1), bool_entry('bool', false)),
+            row(int_entry('id', 2), bool_entry('bool', false)),
+            row(int_entry('id', 3), bool_entry('bool', false)),
+            row(int_entry('id', 4), bool_entry('bool', false))
+        );
+
+        $this->assertSame(
+            $rows->hash(),
+            rows(
+                row(bool_entry('bool', false), int_entry('id', 1)),
+                row(bool_entry('bool', false), int_entry('id', 2)),
+                row(bool_entry('bool', false), int_entry('id', 3)),
+                row(bool_entry('bool', false), int_entry('id', 4))
+            )->hash()
+        );
+    }
+
+    public function test_hash_empty_rows() : void
+    {
+        $this->assertSame(
+            rows()->hash(),
+            rows()->hash(),
+        );
+    }
+
+    public function test_hash_rows_with_different_columns() : void
+    {
+        $rows = rows(
+            row(int_entry('id', 1), bool_entry('bool', false)),
+            row(int_entry('id', 3), bool_entry('bool', false)),
+            row(int_entry('id', 2), bool_entry('bool', false)),
+            row(int_entry('id', 4), bool_entry('bool', false))
+        );
+
+        $this->assertNotSame(
+            $rows->hash(),
+            rows(
+                row(bool_entry('bool', false)),
+                row(bool_entry('bool', false)),
+                row(bool_entry('bool', false)),
+                row(bool_entry('bool', false))
+            )->hash()
+        );
+    }
+
+    public function test_hash_rows_with_different_order() : void
+    {
+        $rows = rows(
+            row(int_entry('id', 1), bool_entry('bool', false)),
+            row(int_entry('id', 3), bool_entry('bool', false)),
+            row(int_entry('id', 2), bool_entry('bool', false)),
+            row(int_entry('id', 4), bool_entry('bool', false))
+        );
+
+        $this->assertNotSame(
+            $rows->hash(),
+            rows(
+                row(bool_entry('bool', false), int_entry('id', 1)),
+                row(bool_entry('bool', false), int_entry('id', 2)),
+                row(bool_entry('bool', false), int_entry('id', 3)),
+                row(bool_entry('bool', false), int_entry('id', 4))
+            )->hash()
+        );
+    }
+
     public function test_merge_empty_rows_with_partitioned_rows() : void
     {
         $rows1 = rows(row(int_entry('id', 1), str_entry('group', 'a')))->partitionBy(ref('group'))[0];
