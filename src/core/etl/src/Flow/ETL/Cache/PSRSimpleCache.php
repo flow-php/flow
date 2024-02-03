@@ -21,7 +21,7 @@ final class PSRSimpleCache implements Cache
 
     public function add(string $id, Rows $rows) : void
     {
-        $rowsId = \uniqid($id, true);
+        $rowsId = $rows->hash();
 
         $this->addToIndex($id, $rowsId);
         $this->cache->set($rowsId, $this->serializer->serialize($rows), $this->ttl);

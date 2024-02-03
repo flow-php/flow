@@ -2,6 +2,7 @@
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
+use function Flow\ETL\DSL\config_builder;
 use function Flow\ETL\DSL\df;
 use function Flow\ETL\DSL\from_cache;
 use Flow\ETL\Cache\PSRSimpleCache;
@@ -27,16 +28,18 @@ final class CacheTest extends IntegrationTestCase
 
     public function test_psr_cache() : void
     {
-        df(Config::builder()->cache($cache = new PSRSimpleCache(new Psr16Cache(new ArrayAdapter())))->build())
+        $adapter = new PSRSimpleCache(new Psr16Cache(new ArrayAdapter()));
+
+        df(config_builder()->cache($adapter)->build())
             ->read(new AllRowTypesFakeExtractor($rowsets = 20, $rows = 2))
             ->cache('test_etl_cache')
             ->run();
 
-        $cachedRows = df(Config::builder()->cache($cache)->build())->from(from_cache('test_etl_cache'))->fetch();
+        $cachedRows = df(Config::builder()->cache($adapter)->build())->from(from_cache('test_etl_cache'))->fetch();
 
         $this->assertCount($rowsets * $rows, $cachedRows);
 
-        $cache->clear('test_etl_cache');
-        $this->assertCount(0, \iterator_to_array($cache->read('test_etl_cache')));
+        $adapter->clear('test_etl_cache');
+        $this->assertCount(0, \iterator_to_array($adapter->read('test_etl_cache')));
     }
 }
