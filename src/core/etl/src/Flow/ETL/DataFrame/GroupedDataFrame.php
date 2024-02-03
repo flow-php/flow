@@ -4,9 +4,13 @@ namespace Flow\ETL\DataFrame;
 
 use Flow\ETL\DataFrame;
 use Flow\ETL\Function\AggregatingFunction;
+use Flow\ETL\Loader;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Rows;
 
+/**
+ * @method DataFrame write(Loader $loader)
+ */
 final class GroupedDataFrame
 {
     public function __construct(private readonly DataFrame $df)
