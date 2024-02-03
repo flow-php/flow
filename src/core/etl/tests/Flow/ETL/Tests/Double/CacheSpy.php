@@ -45,7 +45,7 @@ final class CacheSpy implements Cache
 
     public function has(string $id) : bool
     {
-        if (!\array_key_exists($id, $this->reads)) {
+        if (\array_key_exists($id, $this->reads)) {
             return $this->reads[$id] > 0;
         }
 
