@@ -6,9 +6,10 @@ namespace Flow\Website\Factory\Github;
 
 use Flow\ETL\Adapter\Http\DynamicExtractor\NextRequestFactory;
 use Nyholm\Psr7\Factory\Psr17Factory;
-use Psr\Http\Message;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 
-final class ContributorsUrlFactory implements NextRequestFactory
+final class ContributorsRequestFactory implements NextRequestFactory
 {
     public function __construct(
         private readonly string $githubToken,
@@ -16,9 +17,9 @@ final class ContributorsUrlFactory implements NextRequestFactory
     ) {
     }
 
-    public function create(?Message\ResponseInterface $previousResponse = null) : ?Message\RequestInterface
+    public function create(?ResponseInterface $previousResponse = null) : ?RequestInterface
     {
-        if ($previousResponse instanceof Message\ResponseInterface) {
+        if ($previousResponse instanceof ResponseInterface) {
             return null;
         }
 
