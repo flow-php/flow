@@ -6,6 +6,8 @@ framework:
     handle_all_throwables: true
     php_errors:
         log: true
+    router:
+        default_uri: 'https://%domain%/'
 
 when@test:
     framework:

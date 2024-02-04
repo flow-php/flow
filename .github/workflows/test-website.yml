@@ -1,13 +1,22 @@
-name: Publish Website
+name: Test Website
 
 on:
-  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+      - 'web/**'
+
   push:
     branches: [ 1.x ]
 
+# See https://stackoverflow.com/a/72408109
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  publish-website:
-    name: "Publish Website"
+  website-tests:
+    name: "Website Tests"
 
     runs-on: ${{ matrix.operating-system }}
 
@@ -26,6 +35,7 @@ jobs:
       - name: "Install PHP"
         uses: "shivammathur/setup-php@v2"
         with:
+          coverage: pcov
           tools: composer:v2
           php-version: "${{ matrix.php-version }}"
           ini-values: memory_limit=-1
@@ -48,18 +58,6 @@ jobs:
         run: "composer install --no-interaction --no-progress --no-suggest"
         working-directory: "web/landing"
 
-      - name: "Build"
-        run: "composer build"
-        env:
-          DOMAIN: flow-php.com
-          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+      - name: "Test"
+        run: "composer test"
         working-directory: "web/landing"
-
-      - name: Pushes build to website repository
-        uses: cpina/github-action-push-to-another-repository@main
-        env:
-          API_TOKEN_GITHUB: ${{ secrets.ACCESS_TOKEN }}
-        with:
-          source-directory: 'web/landing/build'
-          destination-github-username: 'flow-php'
-          destination-repository-name: 'flow-php.com'

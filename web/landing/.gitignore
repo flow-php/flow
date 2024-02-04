@@ -1,4 +1,5 @@
 .env.local
+/.env.*.local
 build/
 vendor/
 var/

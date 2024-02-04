@@ -1,6 +1,7 @@
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
-    examples_path: '../../examples'
+    examples_path: '%kernel.project_dir%/../../examples'
+    domain: '%env(DOMAIN)%'
 
 services:
     _defaults:
@@ -26,3 +27,7 @@ services:
     Flow\Website\Service\Examples:
         arguments:
             $examplesPath: '%examples_path%'
+
+    Flow\Website\Twig\:
+        resource: '../src/Flow/Website/Twig/**/*Extension.php'
+        tags: [twig.extension]

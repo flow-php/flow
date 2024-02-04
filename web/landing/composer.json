@@ -21,7 +21,8 @@
         "symfony/dotenv": "^6.4",
         "symfony/stimulus-bundle": "^2.14",
         "monolog/monolog": "^3.5",
-        "symfony/monolog-bundle": "^3.10"
+        "symfony/monolog-bundle": "^3.10",
+        "coduo/php-humanizer": "^4.0"
     },
     "require-dev": {
         "symfony/web-profiler-bundle": "^6.4",
@@ -73,9 +74,14 @@
             "bin/console tailwind:build"
         ],
         "build": [
-            "@build:assets",
-            "bin/console static-content-generator:generate:routes --clean",
-            "bin/console static-content-generator:copy:assets -d public"
+            "rm -rf public/assets",
+            "rm -rf build",
+            "APP_ENV=prod bin/console cache:clear",
+            "APP_ENV=prod bin/console importmap:install",
+            "APP_ENV=prod bin/console asset-map:compile",
+            "APP_ENV=prod bin/console tailwind:build --minify",
+            "APP_ENV=prod bin/console static-content-generator:generate:routes --clean",
+            "APP_ENV=prod bin/console static-content-generator:copy:assets -d public"
         ]
     }
 }
