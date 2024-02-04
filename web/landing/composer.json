@@ -31,6 +31,11 @@
             "Flow\\Website\\": "src/Flow/Website/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Flow\\Website\\": "tests/Flow/Website/"
+        }
+    },
     "config": {
         "allow-plugins": {
             "php-http/discovery": false,
@@ -38,6 +43,9 @@
         }
     },
     "scripts": {
+        "test": [
+            "tools/phpunit/vendor/bin/phpunit"
+        ],
         "assets:clear": "rm -rf public/assets",
         "assets:build": [
             "@assets:clear",
