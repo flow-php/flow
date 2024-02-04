@@ -104,6 +104,9 @@
 - [#871](https://github.com/flow-php/flow/pull/871) - **phar file** - [@norberttech](https://github.com/norberttech)
 - [#870](https://github.com/flow-php/flow/pull/870) - **Reduced number of files in phar** - [@norberttech](https://github.com/norberttech)
 
+### Updated
+- [83d81d](https://github.com/flow-php/flow/commit/83d81d4ad364ec285e4cc2811627dfe2f7fdaf34) - **publish-website.yml** - [@norberttech](https://github.com/norberttech)
+
 ### Removed
 - [#935](https://github.com/flow-php/flow/pull/935) - **Schema Definition Constraints** - [@norberttech](https://github.com/norberttech)
 - [#935](https://github.com/flow-php/flow/pull/935) - **Schema Definition Metadata is no longer accepting objects** - [@norberttech](https://github.com/norberttech)
