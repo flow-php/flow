@@ -24,10 +24,5 @@ $df = data_frame()
     )
     ->withEntry('rank', dense_rank()->over(window()->partitionBy(ref('department'))->orderBy(ref('salary')->desc())))
     ->sortBy(ref('department'), ref('rank'))
-    ->write(to_output(false));
-
-if ($_ENV['FLOW_PHAR_APP'] ?? false) {
-    return $df;
-}
-
-$df->run();
+    ->write(to_output(false))
+    ->run();
