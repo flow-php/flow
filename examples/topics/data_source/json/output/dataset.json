@@ -1,0 +1,26 @@
+[
+  {
+    "id": "1",
+    "name": "John",
+    "email": "john@email.com",
+    "active": "true"
+  },
+  {
+    "id": "2",
+    "name": "Paul",
+    "email": "paul@email.com",
+    "active": "true"
+  },
+  {
+    "id": "3",
+    "name": "George",
+    "email": "george@email.com",
+    "active": "false"
+  },
+  {
+    "id": "4",
+    "name": "Ringo",
+    "email": "rino@email.com",
+    "active": "true"
+  }
+]

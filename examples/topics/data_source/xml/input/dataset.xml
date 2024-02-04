@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<users>
+    <user id="1">
+        <email>alice@example.com</email>
+        <name>Alice</name>
+        <active>true</active>
+    </user>
+    <user id="2">
+        <email>bob@example.com</email>
+        <name>Bob</name>
+        <active>false</active>
+    </user>
+    <user id="3">
+        <email>charlie@example.com</email>
+        <name>Charlie</name>
+        <active>true</active>
+    </user>
+    <user id="4">
+        <email>david@example.com</email>
+        <name>David</name>
+        <active>false</active>
+    </user>
+    <user id="5">
+        <email>emma@example.com</email>
+        <name>Emma</name>
+        <active>true</active>
+    </user>
+    <user id="6">
+        <email>frank@example.com</email>
+        <name>Frank</name>
+        <active>false</active>
+    </user>
+    <user id="7">
+        <email>grace@example.com</email>
+        <name>Grace</name>
+        <active>true</active>
+    </user>
+    <user id="8">
+        <email>harry@example.com</email>
+        <name>Harry</name>
+        <active>false</active>
+    </user>
+    <user id="9">
+        <email>isla@example.com</email>
+        <name>Isla</name>
+        <active>true</active>
+    </user>
+    <user id="10">
+        <email>james@example.com</email>
+        <name>James</name>
+        <active>false</active>
+    </user>
+</users>

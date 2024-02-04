@@ -20,6 +20,7 @@ if (!\file_exists(__DIR__ . '/output/schema.json')) {
 
     \file_put_contents(__DIR__ . '/output/schema.json', schema_to_json($schema));
 } else {
+    /* @phpstan-ignore-next-line */
     $schema = schema_from_json(\file_get_contents(__DIR__ . '/output/schema.json'));
 }
 

@@ -25,3 +25,11 @@ data_frame()
     ->groupBy(ref('group'))
     ->write(to_output(truncate: false))
     ->run();
+
+// +-------+
+// | group |
+// +-------+
+// |     A |
+// |     B |
+// +-------+
+// 2 rows
