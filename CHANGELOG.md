@@ -1,6 +1,7 @@
 ## [Unreleased] - 2024-02-04
 
 ### Added
+- [#962](https://github.com/flow-php/flow/pull/962) - **Setup CI/CD for website** - [@norberttech](https://github.com/norberttech)
 - [#960](https://github.com/flow-php/flow/pull/960) - **Separate routes for topics and examples to a landing page** - [@owsiakl](https://github.com/owsiakl)
 - [#959](https://github.com/flow-php/flow/pull/959) - **Using Flow cache when reading contributors and fallback to GitHub only when cache expires or does not exists** - [@norberttech](https://github.com/norberttech)
 - [#957](https://github.com/flow-php/flow/pull/957) - **Row::hash and Rows::hash** - [@norberttech](https://github.com/norberttech)
