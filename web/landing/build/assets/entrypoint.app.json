@@ -1,6 +1,0 @@
-[
-    "\/assets\/bootstrap.js",
-    "@symfony\/stimulus-bundle",
-    "\/assets\/@symfony\/stimulus-bundle\/controllers.js",
-    "\/assets\/controllers\/syntax_highlight_controller.js"
-]

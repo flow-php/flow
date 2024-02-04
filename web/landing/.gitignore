@@ -1,4 +1,5 @@
 .env.local
+build/
 vendor/
 var/
 public/assets
