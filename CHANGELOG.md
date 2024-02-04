@@ -1,6 +1,7 @@
 ## [Unreleased] - 2024-02-04
 
 ### Added
+- [#963](https://github.com/flow-php/flow/pull/963) - **PHP Humanizer to humanize topics/example names** - [@norberttech](https://github.com/norberttech)
 - [33df4d](https://github.com/flow-php/flow/commit/33df4ddf6b8cbe662859956ad126951ff30a227f) - **CNAME to website** - [@norberttech](https://github.com/norberttech)
 - [#962](https://github.com/flow-php/flow/pull/962) - **Setup CI/CD for website** - [@norberttech](https://github.com/norberttech)
 - [#960](https://github.com/flow-php/flow/pull/960) - **Separate routes for topics and examples to a landing page** - [@owsiakl](https://github.com/owsiakl)
@@ -82,6 +83,7 @@
 - [#867](https://github.com/flow-php/flow/pull/867) - **Update Homebrew TAP formula: flow-php to version: 0.5.2** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#963](https://github.com/flow-php/flow/pull/963) - **Fixed links in website** - [@norberttech](https://github.com/norberttech)
 - [#961](https://github.com/flow-php/flow/pull/961) - **Separated main repo composer file from web** - [@owsiakl](https://github.com/owsiakl)
 - [#958](https://github.com/flow-php/flow/pull/958) - **building phar** - [@norberttech](https://github.com/norberttech)
 - [#958](https://github.com/flow-php/flow/pull/958) - **CachingPipeline - by not clearing cache when it already has items** - [@norberttech](https://github.com/norberttech)
