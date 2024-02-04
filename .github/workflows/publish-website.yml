@@ -59,4 +59,4 @@ jobs:
         with:
           source-directory: 'web/landing/build'
           destination-github-username: 'flow-php'
-          destination-repository-name: 'website'
+          destination-repository-name: 'flow-php.com'
