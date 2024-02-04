@@ -1,6 +1,7 @@
 ## [Unreleased] - 2024-02-04
 
 ### Added
+- [#965](https://github.com/flow-php/flow/pull/965) - **Added HTMX for smoother examples reloading** - [@norberttech](https://github.com/norberttech)
 - [#964](https://github.com/flow-php/flow/pull/964) - **Added google analytics tag** - [@norberttech](https://github.com/norberttech)
 - [#963](https://github.com/flow-php/flow/pull/963) - **PHP Humanizer to humanize topics/example names** - [@norberttech](https://github.com/norberttech)
 - [33df4d](https://github.com/flow-php/flow/commit/33df4ddf6b8cbe662859956ad126951ff30a227f) - **CNAME to website** - [@norberttech](https://github.com/norberttech)
