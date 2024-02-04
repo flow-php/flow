@@ -25,6 +25,9 @@ return [
         'version' => '5.0.17',
         'type' => 'css',
     ],
+    'htmx.org' => [
+        'version' => '1.9.10',
+    ],
 
     /**
      * On mobile there is a collapsible menu that uses relatively new popover attribute,
