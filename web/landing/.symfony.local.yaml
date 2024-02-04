@@ -1,0 +1,7 @@
+workers:
+    tailwind:
+        cmd: ['symfony', 'console', 'tailwind:build', '--watch']
+
+proxy:
+    domains:
+        - "flow-php"

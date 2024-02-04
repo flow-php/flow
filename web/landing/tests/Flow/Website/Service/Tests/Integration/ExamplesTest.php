@@ -77,7 +77,7 @@ final class ExamplesTest extends TestCase
         $service = new Examples($path);
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessageMatches('/Topic "topic_1" doesn\'t have any example, there should be at least one example in path ".*"./');
+        $this->expectExceptionMessage('Topic "topic_1" doesn\'t exists, it should be located in path:');
 
         $service->examples('topic_1');
     }
@@ -88,7 +88,7 @@ final class ExamplesTest extends TestCase
         $service = new Examples($path);
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessageMatches('/Topics root directory doesn\'t have any topic, there should be at least one topic in path ".*"./');
+        $this->expectExceptionMessage('Topics root directory doesn\'t exists, it should be located in path:');
 
         $service->topics();
     }

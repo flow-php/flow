@@ -44,7 +44,7 @@ final class Examples
      */
     public function topics() : array
     {
-        $path = \sprintf('%s/topics', \realpath($this->examplesPath));
+        $path = \realpath(\sprintf('%s/topics', \realpath($this->examplesPath)));
 
         if (false === \file_exists($path)) {
             throw new \RuntimeException(\sprintf('Topics root directory doesn\'t exists, it should be located in path: "%s".', $path));

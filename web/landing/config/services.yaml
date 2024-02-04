@@ -1,6 +1,6 @@
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
-    examples_path: '../../../examples'
+    examples_path: '../../examples'
 
 services:
     _defaults:
@@ -18,6 +18,10 @@ services:
     Flow\Website\Factory\Github\ContributorsRequestFactory:
         arguments:
             $githubToken: '%env(GITHUB_TOKEN)%'
+
+    Flow\Website\StaticSourceProvider\:
+        resource: '../src/Flow/Website/StaticSourceProvider/'
+        tags: ['static_content_generator.source_provider']
 
     Flow\Website\Service\Examples:
         arguments:

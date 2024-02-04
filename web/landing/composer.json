@@ -19,7 +19,9 @@
         "symfony/console": "^6.4",
         "symfony/yaml": "^6.4",
         "symfony/dotenv": "^6.4",
-        "symfony/stimulus-bundle": "^2.14"
+        "symfony/stimulus-bundle": "^2.14",
+        "monolog/monolog": "^3.5",
+        "symfony/monolog-bundle": "^3.10"
     },
     "require-dev": {
         "symfony/web-profiler-bundle": "^6.4",
@@ -43,18 +45,37 @@
         }
     },
     "scripts": {
+        "post-install-cmd": [
+            "@importmap:install",
+            "@build:tailwind",
+            "@tools:install"
+        ],
+        "post-update-cmd": [
+            "@importmap:install",
+            "@build:tailwind",
+            "@tools:update"
+        ],
+        "tools:install": [
+            "composer install --working-dir=./tools/phpunit"
+        ],
         "test": [
             "tools/phpunit/vendor/bin/phpunit"
         ],
         "assets:clear": "rm -rf public/assets",
-        "assets:build": [
+        "importmap:install": "bin/console importmap:install",
+        "build:assets": [
             "@assets:clear",
-            "bin/console tailwind:build",
+            "@importmap:install",
+            "@build:tailwind",
             "bin/console asset-map:compile"
         ],
+        "build:tailwind": [
+            "bin/console tailwind:build"
+        ],
         "build": [
-            "bin/console static-content-generator:generate:routes",
-            "bin/console static-content-generator:copy:assets -d assets"
+            "@build:assets",
+            "bin/console static-content-generator:generate:routes --clean",
+            "bin/console static-content-generator:copy:assets -d public"
         ]
     }
 }
