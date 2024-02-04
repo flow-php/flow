@@ -15,9 +15,10 @@ final class ExamplesSourceProvider implements SourceProvider
 
     }
 
-    public function all(): array
+    public function all() : array
     {
         $sources = [];
+
         foreach ($this->examples->topics() as $topic) {
             $sources[] = new Source('topic', ['topic' => $topic]);
 
@@ -25,6 +26,7 @@ final class ExamplesSourceProvider implements SourceProvider
                 $sources[] = new Source('example', ['topic' => $topic, 'example' => $example]);
             }
         }
+
         return $sources;
     }
 }
