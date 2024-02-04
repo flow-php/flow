@@ -1,6 +1,7 @@
 ## [Unreleased] - 2024-02-04
 
 ### Added
+- [#968](https://github.com/flow-php/flow/pull/968) - **Added more examples** - [@norberttech](https://github.com/norberttech)
 - [#967](https://github.com/flow-php/flow/pull/967) - **Added HTML meta description tag to each landing page** - [@owsiakl](https://github.com/owsiakl)
 - [#966](https://github.com/flow-php/flow/pull/966) - **schema inferring example** - [@norberttech](https://github.com/norberttech)
 - [#965](https://github.com/flow-php/flow/pull/965) - **Added HTMX for smoother examples reloading** - [@norberttech](https://github.com/norberttech)
