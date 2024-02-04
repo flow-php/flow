@@ -1,6 +1,7 @@
 ## [Unreleased] - 2024-02-04
 
 ### Added
+- [#967](https://github.com/flow-php/flow/pull/967) - **Added HTML meta description tag to each landing page** - [@owsiakl](https://github.com/owsiakl)
 - [#966](https://github.com/flow-php/flow/pull/966) - **schema inferring example** - [@norberttech](https://github.com/norberttech)
 - [#965](https://github.com/flow-php/flow/pull/965) - **Added HTMX for smoother examples reloading** - [@norberttech](https://github.com/norberttech)
 - [#964](https://github.com/flow-php/flow/pull/964) - **Added google analytics tag** - [@norberttech](https://github.com/norberttech)
@@ -86,6 +87,9 @@
 - [#867](https://github.com/flow-php/flow/pull/867) - **Update Homebrew TAP formula: flow-php to version: 0.5.2** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#967](https://github.com/flow-php/flow/pull/967) - **Fixed landing page mobile view** - [@owsiakl](https://github.com/owsiakl)
+- [#967](https://github.com/flow-php/flow/pull/967) - **Limited landing page gh profiles avatars size to 128px** - [@owsiakl](https://github.com/owsiakl)
+- [#967](https://github.com/flow-php/flow/pull/967) - **Fixed minifying tailwind css app file** - [@owsiakl](https://github.com/owsiakl)
 - [#963](https://github.com/flow-php/flow/pull/963) - **Fixed links in website** - [@norberttech](https://github.com/norberttech)
 - [#961](https://github.com/flow-php/flow/pull/961) - **Separated main repo composer file from web** - [@owsiakl](https://github.com/owsiakl)
 - [#958](https://github.com/flow-php/flow/pull/958) - **building phar** - [@norberttech](https://github.com/norberttech)
