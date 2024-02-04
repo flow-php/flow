@@ -1,0 +1,5 @@
+id,name,email,active
+1,John,john@email.com,true
+2,Paul,paul@email.com,true
+3,George,george@email.com,false
+4,Ringo,rino@email.com,true
