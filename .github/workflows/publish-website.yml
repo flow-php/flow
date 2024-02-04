@@ -1,0 +1,62 @@
+name: Publish Website
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ 1.x ]
+
+jobs:
+  publish-website:
+    name: "Publish Website"
+
+    runs-on: ${{ matrix.operating-system }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version:
+          - "8.1"
+        operating-system:
+          - "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v4"
+
+      - name: "Install PHP"
+        uses: "shivammathur/setup-php@v2"
+        with:
+          tools: composer:v2
+          php-version: "${{ matrix.php-version }}"
+          ini-values: memory_limit=-1
+          extensions: :psr
+
+      - name: "Get Composer Cache Directory"
+        id: composer-cache
+        run: |
+          echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: "Cache Composer dependencies"
+        uses: "actions/cache@v3"
+        with:
+          path: "${{ steps.composer-cache.outputs.dir }}"
+          key: "php-${{ matrix.php-version }}-composer-website-${{ hashFiles('web/landing/composer.lock') }}"
+          restore-keys: |
+            php-${{ matrix.php-version }}-composer-website-
+
+      - name: "Install dependencies"
+        run: "composer install --no-interaction --no-progress --no-suggest"
+        working-directory: "web/landing"
+
+      - name: "Build"
+        run: "composer build"
+        working-directory: "web/landing"
+
+      - name: Pushes build to website repository
+        uses: cpina/github-action-push-to-another-repository@main
+        env:
+          API_TOKEN_GITHUB: ${{ secrets.ACCESS_TOKEN }}
+        with:
+          source-directory: 'web/landing/build'
+          destination-github-username: 'flow-php'
+          destination-repository-name: 'website'
