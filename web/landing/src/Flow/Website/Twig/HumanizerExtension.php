@@ -14,16 +14,10 @@ final class HumanizerExtension extends AbstractExtension
     {
         return [
             new TwigFilter('humanize', [$this, 'humanize']),
-            new TwigFilter('humanize_file_name', [$this, 'humanizeFileName']),
         ];
     }
 
     public function humanize(string $fileName, bool $capitalize = true, string $separator = '_', array $forbiddenWords = []) : string
-    {
-        return StringHumanizer::humanize($fileName, $capitalize, $separator, $forbiddenWords);
-    }
-
-    public function humanizeFileName(string $fileName, bool $capitalize = true, string $separator = '_', array $forbiddenWords = []) : string
     {
         return StringHumanizer::humanize($fileName, $capitalize, $separator, $forbiddenWords);
     }
