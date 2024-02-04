@@ -181,8 +181,7 @@
             "@test:mutation"
         ],
         "test": [
-            "tools/phpunit/vendor/bin/phpunit",
-            "@test:web"
+            "tools/phpunit/vendor/bin/phpunit"
         ],
         "test:docs": [
             "docker run -t --rm -v $PWD:/app norberttech/md-link-linter --exclude=vendor ."
@@ -209,7 +208,6 @@
             "tools/infection/vendor/bin/infection -j2"
         ],
         "test:monorepo": "tools/monorepo/vendor/bin/monorepo-builder validate",
-        "test:web": "composer test --working-dir=web/landing",
         "static:analyze": [
             "@static:analyze:cs-fixer",
             "@static:analyze:psalm",
@@ -249,8 +247,7 @@
             "composer install --working-dir=./tools/phpbench",
             "composer install --working-dir=./tools/phpstan",
             "composer install --working-dir=./tools/psalm",
-            "composer install --working-dir=./tools/phpunit",
-            "composer install --working-dir=./web/landing/tools/phpunit"
+            "composer install --working-dir=./tools/phpunit"
         ],
         "tools:update": [
             "composer update --working-dir=./tools/blackfire",
@@ -261,8 +258,7 @@
             "composer update --working-dir=./tools/phpbench",
             "composer update --working-dir=./tools/phpstan",
             "composer update --working-dir=./tools/psalm",
-            "composer update --working-dir=./tools/phpunit",
-            "composer update --working-dir=./web/landing/tools/phpunit"
+            "composer update --working-dir=./tools/phpunit"
         ]
     },
     "extra": {
