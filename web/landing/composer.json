@@ -78,8 +78,8 @@
             "rm -rf build",
             "APP_ENV=prod bin/console cache:clear",
             "APP_ENV=prod bin/console importmap:install",
-            "APP_ENV=prod bin/console asset-map:compile",
             "APP_ENV=prod bin/console tailwind:build --minify",
+            "APP_ENV=prod bin/console asset-map:compile",
             "APP_ENV=prod bin/console static-content-generator:generate:routes --clean",
             "APP_ENV=prod bin/console static-content-generator:copy:assets -d public"
         ]
