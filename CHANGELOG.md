@@ -80,6 +80,7 @@
 - [#867](https://github.com/flow-php/flow/pull/867) - **Update Homebrew TAP formula: flow-php to version: 0.5.2** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#961](https://github.com/flow-php/flow/pull/961) - **Separated main repo composer file from web** - [@owsiakl](https://github.com/owsiakl)
 - [#958](https://github.com/flow-php/flow/pull/958) - **building phar** - [@norberttech](https://github.com/norberttech)
 - [#958](https://github.com/flow-php/flow/pull/958) - **CachingPipeline - by not clearing cache when it already has items** - [@norberttech](https://github.com/norberttech)
 - [#942](https://github.com/flow-php/flow/pull/942) - **handling empty headers in CSV files** - [@norberttech](https://github.com/norberttech)
