@@ -1,0 +1,63 @@
+name: Test Website
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+      - 'web/**'
+
+  push:
+    branches: [ 1.x ]
+
+# See https://stackoverflow.com/a/72408109
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  website-tests:
+    name: "Website Tests"
+
+    runs-on: ${{ matrix.operating-system }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version:
+          - "8.1"
+        operating-system:
+          - "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v4"
+
+      - name: "Install PHP"
+        uses: "shivammathur/setup-php@v2"
+        with:
+          coverage: pcov
+          tools: composer:v2
+          php-version: "${{ matrix.php-version }}"
+          ini-values: memory_limit=-1
+          extensions: :psr
+
+      - name: "Get Composer Cache Directory"
+        id: composer-cache
+        run: |
+          echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: "Cache Composer dependencies"
+        uses: "actions/cache@v3"
+        with:
+          path: "${{ steps.composer-cache.outputs.dir }}"
+          key: "php-${{ matrix.php-version }}-composer-website-${{ hashFiles('web/landing/composer.lock') }}"
+          restore-keys: |
+            php-${{ matrix.php-version }}-composer-website-
+
+      - name: "Install dependencies"
+        run: "composer install --no-interaction --no-progress --no-suggest"
+        working-directory: "web/landing"
+
+      - name: "Test"
+        run: "composer test"
+        working-directory: "web/landing"
