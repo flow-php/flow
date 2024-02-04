@@ -17,13 +17,13 @@ Otherwise, you can use [https://127.0.0.1:800X](https://127.0.0.1:8000);
 
 ## Building Static Content
 
-```
-comoser build
+```shell
+composer build
 ```
 
 Before opening a pull request, please verify if the build is successful: 
 
-```
+```shell
 php -S localhost:9000 -t build
 ```
 
