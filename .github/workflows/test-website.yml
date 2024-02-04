@@ -61,3 +61,7 @@ jobs:
       - name: "Test"
         run: "composer test"
         working-directory: "web/landing"
+
+      - name: "Test Build"
+        run: "composer build"
+        working-directory: "web/landing"
