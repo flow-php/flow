@@ -18,6 +18,14 @@
         {{ importmap() }}
     {% endblock %}
 </head>
+<script async src="https://www.googletagmanager.com/gtag/js?id={{ google_analytics_id }}"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', '{{ google_analytics_id }}');
+</script>
 <body class="scroll-smooth bg-black text-white">
     <header class="py-2 text-white bg-blue-200">
         <div class="mx-auto max-w-screen-xl px-4 flex items-center justify-between ">
