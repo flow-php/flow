@@ -14,3 +14,18 @@ symfony server:start -d
 
 To use [https://flow-php.wip](https://flow-php.wip) you need to [configure local proxy](https://symfony.com/doc/current/setup/symfony_server.html#setting-up-the-local-proxy).
 Otherwise, you can use [https://127.0.0.1:800X](https://127.0.0.1:8000);
+
+## Building Static Content
+
+```
+comoser build
+```
+
+Before opening a pull request, please verify if the build is successful: 
+
+```
+php -S localhost:9000 -t build
+```
+
+Open: [https://localhost:9000](https://localhost:9000)
+
