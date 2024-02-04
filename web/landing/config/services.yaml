@@ -1,5 +1,6 @@
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    examples_path: '../../../examples'
 
 services:
     _defaults:
@@ -17,3 +18,7 @@ services:
     Flow\Website\Factory\Github\ContributorsRequestFactory:
         arguments:
             $githubToken: '%env(GITHUB_TOKEN)%'
+
+    Flow\Website\Service\Examples:
+        arguments:
+            $examplesPath: '%examples_path%'

@@ -13,7 +13,8 @@ $finder = Finder::create()
         __DIR__ . '/src/adapter/**/tests',
         __DIR__ . '/src/lib/**/src',
         __DIR__ . '/src/lib/**/tests',
-        __DIR__ . '/src/web/**/src',
+        __DIR__ . '/web/**/src',
+        __DIR__ . '/web/**/tests',
         __DIR__ . '/examples',
     ]);
 
