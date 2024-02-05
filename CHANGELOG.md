@@ -88,6 +88,7 @@
 - [#867](https://github.com/flow-php/flow/pull/867) - **Update Homebrew TAP formula: flow-php to version: 0.5.2** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#969](https://github.com/flow-php/flow/pull/969) - **Added trailing slash to landing urls to avoid github pages redirections** - [@norberttech](https://github.com/norberttech)
 - [ebd1fc](https://github.com/flow-php/flow/commit/ebd1fccfec879956ce21981deae3354fda56974a) - **failing examples** - [@norberttech](https://github.com/norberttech)
 - [#967](https://github.com/flow-php/flow/pull/967) - **Fixed landing page mobile view** - [@owsiakl](https://github.com/owsiakl)
 - [#967](https://github.com/flow-php/flow/pull/967) - **Limited landing page gh profiles avatars size to 128px** - [@owsiakl](https://github.com/owsiakl)
