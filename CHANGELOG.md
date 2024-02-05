@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-02-04
+## [Unreleased] - 2024-02-05
 
 ### Added
 - [#968](https://github.com/flow-php/flow/pull/968) - **Added more examples** - [@norberttech](https://github.com/norberttech)
@@ -88,6 +88,7 @@
 - [#867](https://github.com/flow-php/flow/pull/867) - **Update Homebrew TAP formula: flow-php to version: 0.5.2** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [ebd1fc](https://github.com/flow-php/flow/commit/ebd1fccfec879956ce21981deae3354fda56974a) - **failing examples** - [@norberttech](https://github.com/norberttech)
 - [#967](https://github.com/flow-php/flow/pull/967) - **Fixed landing page mobile view** - [@owsiakl](https://github.com/owsiakl)
 - [#967](https://github.com/flow-php/flow/pull/967) - **Limited landing page gh profiles avatars size to 128px** - [@owsiakl](https://github.com/owsiakl)
 - [#967](https://github.com/flow-php/flow/pull/967) - **Fixed minifying tailwind css app file** - [@owsiakl](https://github.com/owsiakl)
