@@ -16,7 +16,7 @@ final class DefaultController extends AbstractController
     ) {
     }
 
-    #[Route('/{topic}/{example}', name: 'example')]
+    #[Route('/{topic}/{example}/', name: 'example')]
     public function example(string $topic, string $example) : Response
     {
         $topics = $this->examples->topics();
@@ -54,7 +54,7 @@ final class DefaultController extends AbstractController
         ]);
     }
 
-    #[Route('/{topic}', name: 'topic')]
+    #[Route('/{topic}/', name: 'topic')]
     public function topic(string $topic) : Response
     {
         $topics = $this->examples->topics();
