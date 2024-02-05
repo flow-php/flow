@@ -1,6 +1,7 @@
 ## [Unreleased] - 2024-02-05
 
 ### Added
+- [#970](https://github.com/flow-php/flow/pull/970) - **Added possibility to copy code from landing page examples** - [@owsiakl](https://github.com/owsiakl)
 - [#968](https://github.com/flow-php/flow/pull/968) - **Added more examples** - [@norberttech](https://github.com/norberttech)
 - [#967](https://github.com/flow-php/flow/pull/967) - **Added HTML meta description tag to each landing page** - [@owsiakl](https://github.com/owsiakl)
 - [#966](https://github.com/flow-php/flow/pull/966) - **schema inferring example** - [@norberttech](https://github.com/norberttech)
