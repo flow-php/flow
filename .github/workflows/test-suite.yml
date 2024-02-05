@@ -8,6 +8,7 @@ on:
       - 'src/core/**'
       - 'src/lib/**'
       - 'tools/**'
+      - 'examples/**'
       - 'composer.lock'
   push:
     branches: [ 1.x ]
