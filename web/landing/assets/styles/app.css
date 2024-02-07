@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 body {
-    font-family: "Cabin Variable", sans-serif;
+    font-family: "Cabin Variable", system-ui;
 }
 
 .unset {

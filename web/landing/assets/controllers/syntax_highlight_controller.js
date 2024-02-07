@@ -1,10 +1,12 @@
 import {Controller} from '@hotwired/stimulus';
-import hljs from 'highlight.js/lib/core';
+import 'highlight.js/styles/github-dark.min.css';
 import php from 'highlight.js/lib/languages/php';
+import hljs from 'highlight.js/lib/core';
 
+/* stimulusFetch: 'lazy' */
 export default class extends Controller
 {
-    static afterLoad(identifier, application)
+    initialize()
     {
         hljs.registerLanguage('php', php);
     }
