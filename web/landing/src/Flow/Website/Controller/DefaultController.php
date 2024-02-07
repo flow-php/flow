@@ -38,11 +38,11 @@ final class DefaultController extends AbstractController
     #[Route('/', name: 'main')]
     public function main() : Response
     {
-//        TODO: uncomment and remove below code when frontpage features will be available
-//        return $this->render('main/index.html.twig', [
-//            'contributors' => $this->github->contributors(),
-//            'topics' => $this->examples->topics(),
-//        ]);
+        //        TODO: uncomment and remove below code when frontpage features will be available
+        //        return $this->render('main/index.html.twig', [
+        //            'contributors' => $this->github->contributors(),
+        //            'topics' => $this->examples->topics(),
+        //        ]);
 
         $topics = $this->examples->topics();
         $currentTopic = \current($topics);
