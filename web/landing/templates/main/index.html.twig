@@ -1,110 +1,39 @@
 {% extends 'base.html.twig' %}
 
 {%- block description -%}
-    {%- if app.current_route == 'main' -%}
-        Flow PHP main page with code examples.
-    {%- else -%}
-        Flow PHP '{{ currentTopic | humanize | lower }}' topic showing '{{ currentExample | humanize | lower }}' code example.
-    {%- endif -%}
+    Flow PHP main page with code examples.
 {%- endblock -%}
 
 {% block main %}
-    <div class="mx-auto max-w-screen-xl px-2 sm:px-4 relative max-lg:py-10 p-[116px]">
-        <h1 class="font-bold max-sm:text-5xl text-6xl tracking-wide leading-[70px] max-w-[450px] mb-8 z-10">UNIFIED DATA PROCESSING FRAMEWORK</h1>
-        <code class="w-fit py-2 px-3 before:content-['$'] bg-orange-100 rounded">
-            <span id="command">composer require flow-php/etl</span>
-            <button class="[&.copied]:after:content-['Copied!'] after:absolute after:translate-x-6 select-none" title="copy command" data-clipboard-target="#command" {{ stimulus_controller('clipboard') }}>
-                <img src="{{ asset('images/icons/copy.svg') }}" alt="copy command" class="inline w-5">
-            </button>
-        </code>
-        <img src="{{ asset('images/elephant.svg') }}" alt="elephant" class="max-lg:hidden max-w-[720px] absolute right-0 top-0">
-    </div>
-
-    <div class="bg-blue-200">
-        <div class="mx-auto max-w-screen-xl flex items-center justify-center text-center max-sm:flex-col lg:pr-[550px] xl:pr-[600px]">
-            <div class="p-2 my-2 basis-1/3">
-                <img src="{{ asset('images/icons/extract.svg') }}" alt="extract" class="inline">
-                <h2 class="my-2 text-2xl font-semibold tracking-wide">Extracts</h2>
-                <p>Read from various data sources.</p>
-            </div>
-
-            <img src="{{ asset('images/icons/arrow-right.svg') }}" alt="arrow right" class="max-sm:rotate-90">
-
-            <div class="p-2 my-2 ml-4 basis-1/3">
-                <img src="{{ asset('images/icons/transform.svg') }}" alt="transform" class="inline">
-                <h2 class="my-2 text-2xl font-semibold tracking-wide">Transforms</h2>
-                <p>Shape and optimize for your needs</p>
-            </div>
-
-            <img src="{{ asset('images/icons/arrow-right.svg') }}" alt="arrow right" class="max-sm:rotate-90">
-
-            <div class="p-2 my-2 basis-1/3">
-                <img src="{{ asset('images/icons/load.svg') }}" alt="load" class="inline">
-                <h2 class="my-2 text-2xl font-semibold tracking-wide">Loads</h2>
-                <p>Store and secure in one of many available data sinks.</p>
-            </div>
-        </div>
-    </div>
-
     <div class="py-10 px-2 sm:px-4 mx-auto max-w-screen-xl" data-hx-boost="true">
+        <h2 class="mb-4 text-2xl font-semibold tracking-wide">Examples:</h2>
         <nav class="font-medium text-center bg-orange-100 rounded">
             <ul class="flex whitespace-nowrap overflow-auto justify-between">
                 {% for topic in topics %}
                     <li class="grow">
-                        <a href="{{ path('topic', {topic: topic}) }}#example" class="{% if currentTopic == topic %}active {% elseif currentTopic is null and loop.first %}active {% endif %}inline-block leading-10 px-4 py-2 w-full [&.active]:bg-orange-300 rounded">
+                        <a href="{{ path('topic', {topic: topic}) }}#example" class="inline-block leading-10 px-4 py-2 w-full [&.active]:bg-orange-300 rounded">
                             {{ topic|humanize }}
                         </a>
                     </li>
                 {% endfor %}
             </ul>
         </nav>
-
-        <div class="pb-4 -mt-20 pt-20">
-            <nav>
-                <ul class="flex whitespace-nowrap overflow-auto py-4">
-                    {% for example in examples %}
-                        <li>
-                            <a href="{{ path('example', {topic: currentTopic, example: example}) }}#example" class="{% if currentExample == example %}active {% elseif currentExample is null and loop.first %}active {% endif %}w-max tracking-wide flex items-center leading-8 px-2 [&.active]:bg-orange-300 rounded">
-                                <img src="{{ asset('images/favicons/favicon-16x16.png') }}" alt="flow php icon" class="mr-2">
-                                {{ example|humanize }}
-                            </a>
-                        </li>
-                    {% endfor %}
-                </ul>
-            </nav>
-
-            <div id="example" class="-mt-36 pt-36">
-                {% apply spaceless %}
-                    <pre class="rounded p-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2 relative">
-                        <button class="absolute top-0 right-0 bg-orange-100 rounded px-4 leading-9 [&.copied]:before:content-['Copied!'] before:absolute before:-translate-x-24" title="copy code" data-clipboard-target="#code" {{ stimulus_controller('clipboard') }}>
-                            <img src="{{ asset('images/icons/copy.svg') }}" alt="copy code" class="inline w-5">
-                        </button>
-                        <code id="code" class="language-php !p-0 !bg-transparent" {{ stimulus_controller('syntax_highlight') }}>
-                            {{- code | escape('html') -}}
-                        </code>
-                    </pre>
-                {% endapply %}
-            </div>
-        </div>
     </div>
 
-    <div class="bg-blue-200">
-        <section class="mx-auto max-w-screen-xl sm:flex justify-between items-center py-6 px-2 sm:px-4">
-            <div class="max-sm:mb-6 mr-6 whitespace-nowrap">
-                <h2 class="text-2xl font-semibold tracking-wide">Contributors</h2>
-                <a href="https://github.com/flow-php/flow/graphs/contributors" target="_blank" class="flex items-center">
-                    Join us on GitHub
-                    <img src="{{ asset('images/icons/external.svg') }}" alt="external resource" class="w-4 ml-0.5">
-                </a>
-            </div>
-
-            <div class="grid gap-1 sm:gap-2 lg:gap-4 grid-cols-8 lg:grid-cols-12">
-                {% for contributor in contributors %}
-                    <a href="{{ contributor.html_url }}" rel="nofollow" target="_blank">
-                        <img loading="lazy" src="{{ contributor.avatar_url }}" alt="{{ contributor.login }}" title="{{ contributor.login }}" class="w-full max-w-14 rounded-full">
-                    </a>
-                {% endfor %}
-            </div>
-        </section>
+    <div class="mx-auto max-w-screen-xl mb-10 px-4 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        {% for i in 1..6 %}
+            <section class="shadow-2xl shadow-gray rounded border-gray border-2 p-4 rounded">
+                <img src="{{ asset('images/icons/tools.svg') }}" width="32" height="32" alt="feature" class="inline mr-4 bg-blue-100 p-1 rounded">
+                <h2 class="inline">Flow PHP Feature #{{ i }}</h2>
+                <hr class="text-blue-100 my-4 border-t-2 rounded">
+                {% if i is odd %} {# TODO: if key feature subtitle is optional #}
+                    <h3 class="mb-4">This feature is awesome</h3>
+                {% endif %}
+                <p>
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                    Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                </p>
+            </section>
+        {% endfor %}
     </div>
 {% endblock %}

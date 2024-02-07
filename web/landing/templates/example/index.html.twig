@@ -1,0 +1,49 @@
+{% extends 'base.html.twig' %}
+
+{%- block description -%}
+    Flow PHP '{{ currentTopic|humanize|lower }}' topic showing '{{ currentExample|humanize|lower }}' code example.
+{%- endblock -%}
+
+{% block main %}
+    <div class="py-10 px-2 sm:px-4 mx-auto max-w-screen-xl" data-hx-boost="true">
+        <nav class="font-medium text-center bg-orange-100 rounded">
+            <ul class="flex whitespace-nowrap overflow-auto justify-between">
+                {% for topic in topics %}
+                    <li class="grow">
+                        <a href="{{ path('topic', {topic: topic}) }}#example" class="{% if currentTopic == topic %}active {% elseif currentTopic is null and loop.first %}active {% endif %}inline-block leading-10 px-4 py-2 w-full [&.active]:bg-orange-300 rounded">
+                            {{ topic|humanize }}
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </nav>
+
+        <div class="-mt-20 pt-20">
+            <nav>
+                <ul class="flex whitespace-nowrap overflow-auto py-4">
+                    {% for example in examples %}
+                        <li>
+                            <a href="{{ path('example', {topic: currentTopic, example: example}) }}#example" class="{% if currentExample == example %}active {% elseif currentExample is null and loop.first %}active {% endif %}w-max tracking-wide flex items-center leading-8 px-2 [&.active]:bg-orange-300 rounded">
+                                <img src="{{ asset('images/icons/flow.svg') }}" alt="flow php icon" width="16" height="16" class="mr-2">
+                                {{ example|humanize }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </nav>
+
+            <div id="example" class="-mt-36 pt-36">
+                {% apply spaceless %}
+                    <pre class="rounded p-4 overflow-auto shadow-2xl shadow-gray rounded border-gray border-2 relative">
+                        <button class="absolute top-0 right-0 bg-orange-100 rounded px-4 leading-9 [&.copied]:before:content-['Copied!'] before:absolute before:-translate-x-24" title="copy code" data-clipboard-target="#code" {{ stimulus_controller('clipboard') }}>
+                            <img src="{{ asset('images/icons/copy.svg') }}" alt="copy code" width="20" height="20" class="inline">
+                        </button>
+                        <code id="code" class="language-php !p-0 !bg-transparent" {{ stimulus_controller('syntax_highlight') }}>
+                            {{- code | escape('html') -}}
+                        </code>
+                    </pre>
+                {% endapply %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,6 +1,7 @@
 import {Controller} from '@hotwired/stimulus';
 import ClipboardJS from 'clipboard';
 
+/* stimulusFetch: 'lazy' */
 export default class extends Controller
 {
     connect()
