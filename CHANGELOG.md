@@ -68,6 +68,8 @@
 - [#869](https://github.com/flow-php/flow/pull/869) - **RDSL library** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#972](https://github.com/flow-php/flow/pull/972) - **Changed landing page mobile view to save some horizontal space** - [@owsiakl](https://github.com/owsiakl)
+- [#972](https://github.com/flow-php/flow/pull/972) - **Changed to a faster font loading in a landing page** - [@owsiakl](https://github.com/owsiakl)
 - [#960](https://github.com/flow-php/flow/pull/960) - **Moved `src/web/landing` directory one lever higher - to `web/landing`** - [@owsiakl](https://github.com/owsiakl)
 - [#959](https://github.com/flow-php/flow/pull/959) - **Extracted fetching contributors logic to standalone service** - [@norberttech](https://github.com/norberttech)
 - [#955](https://github.com/flow-php/flow/pull/955) - **Cleanup examples and prepare them to be used on landing page** - [@norberttech](https://github.com/norberttech)
