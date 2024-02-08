@@ -6,7 +6,6 @@ use Doctrine\DBAL\Platforms\MariaDBPlatform;
 use Doctrine\DBAL\Platforms\MySQL80Platform;
 use Doctrine\DBAL\Platforms\OraclePlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
-use Doctrine\DBAL\Platforms\SqlitePlatform;
 use Flow\Doctrine\Bulk\DbalPlatform;
 use Flow\Doctrine\Bulk\Dialect\MySQLDialect;
 use Flow\Doctrine\Bulk\Dialect\PostgreSQLDialect;
@@ -16,6 +15,12 @@ use PHPUnit\Framework\TestCase;
 
 final class DbalPlatformTest extends TestCase
 {
+    public static function provideSQLitePlatform() : iterable
+    {
+        yield 'legacy' => ['Doctrine\DBAL\Platforms\SqlitePlatform'];
+        yield 'new' => ['Doctrine\DBAL\Platforms\SQLitePlatform'];
+    }
+
     public function test_is_mysql() : void
     {
         $platform = new DbalPlatform(new MySQL80Platform());
@@ -37,9 +42,16 @@ final class DbalPlatformTest extends TestCase
         $this->assertInstanceOf(PostgreSQLDialect::class, $platform->dialect());
     }
 
-    public function test_is_sqlite_sql() : void
+    /**
+     * @dataProvider provideSQLitePlatform
+     */
+    public function test_is_sqlite_sql(string $className) : void
     {
-        $platform = new DbalPlatform(new SqlitePlatform());
+        if (\class_exists($className)) {
+            $platform = new DbalPlatform(new $className());
+        } else {
+            $this->markTestSkipped('Unknown platform class: ' . $className);
+        }
 
         $this->assertInstanceOf(SqliteDialect::class, $platform->dialect());
     }

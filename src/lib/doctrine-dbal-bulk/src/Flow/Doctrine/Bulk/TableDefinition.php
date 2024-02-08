@@ -6,6 +6,7 @@ namespace Flow\Doctrine\Bulk;
 
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Schema\Column;
+use Doctrine\DBAL\Types\Type;
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
 
 final class TableDefinition
@@ -15,11 +16,8 @@ final class TableDefinition
      */
     private array $columns;
 
-    private string $name;
-
-    public function __construct(string $name, Column ...$columns)
+    public function __construct(private readonly string $name, Column ...$columns)
     {
-        $this->name = $name;
         $this->columns = $columns;
     }
 
@@ -43,8 +41,6 @@ final class TableDefinition
      * @throws RuntimeException
      *
      * @return array<string, string>
-     *
-     * @psalm-suppress DeprecatedMethod
      */
     public function dbalTypes(BulkData $bulkData) : array
     {
@@ -54,7 +50,7 @@ final class TableDefinition
             $dbColumn = $this->dbalColumn($columnName);
 
             for ($i = 0; $i < $bulkData->count(); $i++) {
-                $types[$columnName . '_' . $i] = $dbColumn->getType()->getName();
+                $types[$columnName . '_' . $i] = Type::getTypeRegistry()->lookupName($dbColumn->getType());
             }
         }
 

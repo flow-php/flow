@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace Flow\Doctrine\Bulk\Tests\Unit;
 
 use Doctrine\DBAL\Schema\Column;
-use Doctrine\DBAL\Types\IntegerType;
-use Doctrine\DBAL\Types\JsonType;
-use Doctrine\DBAL\Types\StringType;
+use Doctrine\DBAL\Types\Type;
+use Doctrine\DBAL\Types\Types;
 use Flow\Doctrine\Bulk\BulkData;
 use Flow\Doctrine\Bulk\Columns;
 use Flow\Doctrine\Bulk\TableDefinition;
@@ -83,6 +82,8 @@ final class BulkDataTest extends TestCase
             ],
         ]);
 
+        $registry = Type::getTypeRegistry();
+
         $this->assertEquals(
             [
                 'date_0' => 'today',
@@ -99,11 +100,11 @@ final class BulkDataTest extends TestCase
             $bulkData->toSqlParameters(
                 new TableDefinition(
                     'test',
-                    new Column('date', new StringType()),
-                    new Column('title', new StringType()),
-                    new Column('description', new StringType()),
-                    new Column('quantity', new IntegerType()),
-                    new Column('errors', new JsonType()),
+                    new Column('date', $registry->get(Types::STRING)),
+                    new Column('title', $registry->get(Types::STRING)),
+                    new Column('description', $registry->get(Types::STRING)),
+                    new Column('quantity', $registry->get(Types::INTEGER)),
+                    new Column('errors', $registry->get(Types::JSON)),
                 )
             )
         );

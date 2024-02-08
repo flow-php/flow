@@ -5,18 +5,14 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Doctrine\Tests\Context;
 
 use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\Logging\SQLLogger;
 use Doctrine\DBAL\Schema\Table;
 
 final class DatabaseContext
 {
-    private readonly SQLLogger $sqlLogger;
-
-    public function __construct(private readonly Connection $connection)
-    {
-        $this->sqlLogger = new InsertQueryCounter();
-
-        $this->connection->getConfiguration()->setSQLLogger($this->sqlLogger);
+    public function __construct(
+        private readonly Connection $connection,
+        private readonly InsertQueryCounter $logger
+    ) {
     }
 
     public function connection() : Connection
@@ -26,11 +22,9 @@ final class DatabaseContext
 
     public function createTable(Table $table) : void
     {
-        $schemaManager = $this
-            ->connection
-            ->getSchemaManager();
+        $schemaManager = $this->connection->createSchemaManager();
 
-        if ($schemaManager->tablesExist($table->getName())) {
+        if ($schemaManager->tablesExist([$table->getName()])) {
             $schemaManager->dropTable($table->getName());
         }
 
@@ -39,8 +33,10 @@ final class DatabaseContext
 
     public function dropAllTables() : void
     {
-        foreach ($this->connection->getSchemaManager()->listTables() as $table) {
-            $this->connection->getSchemaManager()->dropTable($table->getName());
+        $schemaManager = $this->connection->createSchemaManager();
+
+        foreach ($schemaManager->listTables() as $table) {
+            $schemaManager->dropTable($table->getName());
         }
     }
 
@@ -51,11 +47,7 @@ final class DatabaseContext
 
     public function numberOfExecutedInsertQueries() : int
     {
-        if ($this->sqlLogger instanceof InsertQueryCounter) {
-            return $this->sqlLogger->count;
-        }
-
-        return 0;
+        return $this->logger->count;
     }
 
     public function selectAll(string $tableName) : array

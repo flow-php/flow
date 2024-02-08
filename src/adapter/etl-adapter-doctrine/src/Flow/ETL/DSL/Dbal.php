@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\DSL;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Types\Type;
 use Flow\ETL\Adapter\Doctrine\DbalDataFrameFactory;
@@ -94,7 +96,7 @@ class Dbal
      * @param Connection $connection
      * @param string $query
      * @param null|ParametersSet $parameters_set - each one parameters array will be evaluated as new query
-     * @param array<int, null|int|string|Type>|array<string, null|int|string|Type> $types
+     * @param array<int<0, max>|string, ArrayParameterType|ParameterType|string|Type> $types
      *
      * @return Extractor
      */
@@ -116,7 +118,7 @@ class Dbal
      * @param Connection $connection
      * @param string $query
      * @param array<string, mixed>|list<mixed> $parameters
-     * @param array<int, null|int|string|Type>|array<string, null|int|string|Type> $types
+     * @param array<int<0, max>|string, ArrayParameterType|ParameterType|string|Type> $types
      *
      * @return Extractor
      */

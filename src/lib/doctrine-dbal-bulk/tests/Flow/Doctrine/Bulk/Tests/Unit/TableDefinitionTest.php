@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk\Tests\Unit;
 
-use Doctrine\DBAL\Platforms\PostgreSQL100Platform;
+use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Types\Type;
 use Flow\Doctrine\Bulk\BulkData;
@@ -26,13 +26,13 @@ final class TableDefinitionTest extends TestCase
         $table = new TableDefinition(
             'test',
             new Column('id', Type::getType('integer')),
-            new Column('name', Type::getType('string')),
+            new Column('name', Type::getType('string'), ['length' => 255]),
             new Column('updated_at', Type::getType('datetime_immutable')),
         );
 
         $this->assertSame(
             '(CAST(:id_0 as INT),CAST(:name_0 as VARCHAR(255)),CAST(:updated_at_0 as TIMESTAMP(0) WITHOUT TIME ZONE)),(CAST(:id_1 as INT),CAST(:name_1 as VARCHAR(255)),CAST(:updated_at_1 as TIMESTAMP(0) WITHOUT TIME ZONE))',
-            $table->toSqlCastedPlaceholders($data, new PostgreSQL100Platform())
+            $table->toSqlCastedPlaceholders($data, new PostgreSQLPlatform())
         );
     }
 

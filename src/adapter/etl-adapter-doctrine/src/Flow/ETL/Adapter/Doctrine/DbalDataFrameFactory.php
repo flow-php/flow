@@ -55,6 +55,7 @@ final class DbalDataFrameFactory implements DataFrameFactory
             }
         }
 
+        /** @psalm-suppress InvalidArgument */
         return (new Flow())->extract(\Flow\ETL\Adapter\Doctrine\dbal_from_query($this->connection(), $this->query, $parameters, $types));
     }
 

@@ -36,7 +36,7 @@ final class DbalLimitOffsetExtractor implements Extractor
         }
 
         $queryBuilder = $connection->createQueryBuilder()
-            ->select($table->columns ?: '*')
+            ->select(...$table->columns ?: ['*'])
             ->from($table->name);
 
         foreach ($orderBy as $order) {
@@ -61,7 +61,6 @@ final class DbalLimitOffsetExtractor implements Extractor
             if (\method_exists($countQuery, 'resetOrderBy')) {
                 $countQuery->resetOrderBy();
             } else {
-                /** @psalm-suppress DeprecatedMethod */
                 $countQuery->resetQueryPart('orderBy');
             }
 

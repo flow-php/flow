@@ -11,9 +11,9 @@ use Flow\ETL\Rows;
 final class Parameter implements QueryParameter
 {
     public function __construct(
-        public readonly string $queryParamName,
-        public readonly EntryReference $ref,
-        public readonly int $type = ArrayParameterType::STRING,
+        private readonly string $queryParamName,
+        private readonly EntryReference $ref,
+        private readonly int|ArrayParameterType $type = ArrayParameterType::STRING,
     ) {
     }
 
@@ -42,7 +42,7 @@ final class Parameter implements QueryParameter
         return $rows->reduceToArray($this->ref);
     }
 
-    public function type() : ?int
+    public function type() : int|ArrayParameterType|null
     {
         return $this->type;
     }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk;
 
+use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
 
@@ -109,8 +110,6 @@ final class BulkData
      * ]
      *
      * @return array<string, mixed>
-     *
-     * @psalm-suppress DeprecatedMethod
      */
     public function toSqlParameters(TableDefinition $table) : array
     {
@@ -122,7 +121,7 @@ final class BulkData
              */
             foreach ($row as $column => $entry) {
                 $rows[$index][$column . '_' . $index] = match (\gettype($entry)) {
-                    'string' => match ($table->dbalColumn($column)->getType()->getName()) {
+                    'string' => match (Type::getTypeRegistry()->lookupName($table->dbalColumn($column)->getType())) {
                         Types::JSON, 'json_array' => \json_decode($entry, true, 512, JSON_THROW_ON_ERROR),
                         Types::DATETIME_IMMUTABLE,
                         Types::DATETIMETZ_IMMUTABLE,

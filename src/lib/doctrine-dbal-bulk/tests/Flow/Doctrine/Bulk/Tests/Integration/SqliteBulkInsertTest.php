@@ -25,7 +25,7 @@ final class SqliteBulkInsertTest extends SqliteIntegrationTestCase
                     new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
                     new Column('description', Type::getType(Types::STRING), ['notnull' => false]),
                     new Column('active', Type::getType(Types::BOOLEAN), ['notnull' => true]),
-                    new Column('updated_at', Type::getType(Types::DATETIME_IMMUTABLE), ['notnull' => true]),
+                    new Column('updated_at', Type::getType(Types::DATETIME_MUTABLE), ['notnull' => true]),
                     new Column('tags', Type::getType(Types::JSON), ['notnull' => true, 'platformOptions' => ['jsonb' => true]]),
                 ],
             ))
@@ -36,9 +36,9 @@ final class SqliteBulkInsertTest extends SqliteIntegrationTestCase
             $this->databaseContext->connection(),
             $table,
             new BulkData([
-                ['id' => $id1 = \bin2hex(\random_bytes(5)), 'age' => 20, 'name' => 'Name One', 'description' => 'Description One', 'active' => false, 'updated_at' => $date1 = new \DateTimeImmutable(), 'tags' => \json_encode(['a', 'b', 'c'])],
-                ['id' => $id2 = \bin2hex(\random_bytes(5)), 'age' => 30, 'name' => 'Name Two', 'description' => null, 'active' => true, 'updated_at' => $date2 = new \DateTimeImmutable(), 'tags' => \json_encode(['a', 'b', 'c'])],
-                ['id' => $id3 = \bin2hex(\random_bytes(5)), 'age' => 40, 'name' => 'Name Three', 'description' => 'Description Three', 'active' => false, 'updated_at' => $date3 = new \DateTimeImmutable(), 'tags' => \json_encode(['a', 'b', 'c'])],
+                ['id' => $id1 = \bin2hex(\random_bytes(5)), 'age' => 20, 'name' => 'Name One', 'description' => 'Description One', 'active' => false, 'updated_at' => $date1 = new \DateTime(), 'tags' => \json_encode(['a', 'b', 'c'])],
+                ['id' => $id2 = \bin2hex(\random_bytes(5)), 'age' => 30, 'name' => 'Name Two', 'description' => null, 'active' => true, 'updated_at' => $date2 = new \DateTime(), 'tags' => \json_encode(['a', 'b', 'c'])],
+                ['id' => $id3 = \bin2hex(\random_bytes(5)), 'age' => 40, 'name' => 'Name Three', 'description' => 'Description Three', 'active' => false, 'updated_at' => $date3 = new \DateTime(), 'tags' => \json_encode(['a', 'b', 'c'])],
             ])
         );
 

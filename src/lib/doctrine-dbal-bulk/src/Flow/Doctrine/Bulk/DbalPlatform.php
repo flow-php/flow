@@ -6,7 +6,6 @@ use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Platforms\MariaDBPlatform;
 use Doctrine\DBAL\Platforms\MySQLPlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
-use Doctrine\DBAL\Platforms\SqlitePlatform;
 use Flow\Doctrine\Bulk\Dialect\Dialect;
 use Flow\Doctrine\Bulk\Dialect\MySQLDialect;
 use Flow\Doctrine\Bulk\Dialect\PostgreSQLDialect;
@@ -59,6 +58,6 @@ final class DbalPlatform
 
     private function isSqlite() : bool
     {
-        return $this->platform instanceof SqlitePlatform;
+        return \in_array($this->platform::class, ['Doctrine\DBAL\Platforms\SqlitePlatform', 'Doctrine\DBAL\Platforms\SQLitePlatform'], true);
     }
 }
