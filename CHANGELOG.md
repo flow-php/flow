@@ -1,6 +1,7 @@
 ## [Unreleased] - 2024-02-09
 
 ### Added
+- [#975](https://github.com/flow-php/flow/pull/975) - **Converting parquet to flow schema** - [@norberttech](https://github.com/norberttech)
 - [#974](https://github.com/flow-php/flow/pull/974) - **Support Doctrine DBAL 4** - [@stloyd](https://github.com/stloyd)
 - [#971](https://github.com/flow-php/flow/pull/971) - **Added key features to the landing page** - [@owsiakl](https://github.com/owsiakl)
 - [#971](https://github.com/flow-php/flow/pull/971) - **Improved initial load of the landing page** - [@owsiakl](https://github.com/owsiakl)
@@ -94,6 +95,8 @@
 - [#867](https://github.com/flow-php/flow/pull/867) - **Update Homebrew TAP formula: flow-php to version: 0.5.2** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#975](https://github.com/flow-php/flow/pull/975) - **Parquet JSON is now stored as BYTE_ARRAY with logical type JSON instead of STRING** - [@norberttech](https://github.com/norberttech)
+- [#975](https://github.com/flow-php/flow/pull/975) - **Parquet UUID is now stored as BYTE_ARRAY with logical type JSON instead of STRING** - [@norberttech](https://github.com/norberttech)
 - [#973](https://github.com/flow-php/flow/pull/973) - **Fixed static analysis in web landing page** - [@owsiakl](https://github.com/owsiakl)
 - [#969](https://github.com/flow-php/flow/pull/969) - **Added trailing slash to landing urls to avoid github pages redirections** - [@norberttech](https://github.com/norberttech)
 - [ebd1fc](https://github.com/flow-php/flow/commit/ebd1fccfec879956ce21981deae3354fda56974a) - **failing examples** - [@norberttech](https://github.com/norberttech)
