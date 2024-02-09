@@ -26,7 +26,7 @@ final class PostgreSqlBulkUpdateTest extends PostgreSqlIntegrationTestCase
                     new Column('name', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
                     new Column('description', Type::getType(Types::STRING), ['notnull' => true, 'length' => 255]),
                     new Column('active', Type::getType(Types::BOOLEAN), ['notnull' => true]),
-                    new Column('created_at', Type::getType(Types::DATETIME_IMMUTABLE), ['notnull' => true]),
+                    new Column('created_at', Type::getType(Types::DATETIME_MUTABLE), ['notnull' => true]),
                 ],
             ))
             ->setPrimaryKey(['id', 'account'])
@@ -36,9 +36,9 @@ final class PostgreSqlBulkUpdateTest extends PostgreSqlIntegrationTestCase
             $this->databaseContext->connection(),
             $table,
             new BulkData([
-                ['id' => 1, 'account' => 'Bob', 'name' => 'Name One', 'description' => 'Description One', 'active' => false, 'created_at' => new \DateTimeImmutable('2021-01-01 10:00:00')],
-                ['id' => 2, 'account' => 'Bob', 'name' => 'Name Two', 'description' => 'Description Two', 'active' => true, 'created_at' => new \DateTimeImmutable('2021-01-01 10:00:00')],
-                ['id' => 3, 'account' => 'Joe', 'name' => 'Name Three', 'description' => 'Description Three', 'active' => false, 'created_at' => new \DateTimeImmutable('2021-01-01 10:00:00')],
+                ['id' => 1, 'account' => 'Bob', 'name' => 'Name One', 'description' => 'Description One', 'active' => false, 'created_at' => new \DateTime('2021-01-01 10:00:00')],
+                ['id' => 2, 'account' => 'Bob', 'name' => 'Name Two', 'description' => 'Description Two', 'active' => true, 'created_at' => new \DateTime('2021-01-01 10:00:00')],
+                ['id' => 3, 'account' => 'Joe', 'name' => 'Name Three', 'description' => 'Description Three', 'active' => false, 'created_at' => new \DateTime('2021-01-01 10:00:00')],
             ])
         );
 
@@ -46,8 +46,8 @@ final class PostgreSqlBulkUpdateTest extends PostgreSqlIntegrationTestCase
             $this->databaseContext->connection(),
             $table,
             new BulkData([
-                ['id' => 2, 'account' => 'Bob', 'name' => 'Changed name Two', 'description' => 'Changed description Two', 'active' => false, 'created_at' => new \DateTimeImmutable('2021-01-02 10:00:00')],
-                ['id' => 3, 'account' => 'Joe', 'name' => 'Changed name Three', 'description' => 'Changed description Three', 'active' => true, 'created_at' => new \DateTimeImmutable('2021-01-02 20:00:00')],
+                ['id' => 2, 'account' => 'Bob', 'name' => 'Changed name Two', 'description' => 'Changed description Two', 'active' => false, 'created_at' => new \DateTime('2021-01-02 10:00:00')],
+                ['id' => 3, 'account' => 'Joe', 'name' => 'Changed name Three', 'description' => 'Changed description Three', 'active' => true, 'created_at' => new \DateTime('2021-01-02 20:00:00')],
             ]),
             [
                 'primary_key_columns' => [

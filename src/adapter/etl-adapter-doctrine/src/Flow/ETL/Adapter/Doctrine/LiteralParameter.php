@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Flow\ETL\Rows;
 
 final class LiteralParameter implements QueryParameter
 {
     public function __construct(
-        public readonly string $queryParamName,
-        public readonly mixed $value,
-        public readonly ?int $type = null
+        private readonly string $queryParamName,
+        private readonly mixed $value,
+        private readonly int|ArrayParameterType|null $type = null
     ) {
     }
 
@@ -25,7 +26,7 @@ final class LiteralParameter implements QueryParameter
         return $this->value;
     }
 
-    public function type() : ?int
+    public function type() : int|ArrayParameterType|null
     {
         return $this->type;
     }

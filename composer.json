@@ -20,7 +20,7 @@
         "ext-zlib": "*",
         "composer-runtime-api": "^2.1",
         "coduo/php-humanizer": "^4.0",
-        "doctrine/dbal": "^3.6",
+        "doctrine/dbal": "^3.6 || ^4.0",
         "elasticsearch/elasticsearch": "^7.6|^8.0",
         "flix-tech/avro-php": "~4.2.0 || ~4.3.0",
         "google/apiclient": "^2.13",

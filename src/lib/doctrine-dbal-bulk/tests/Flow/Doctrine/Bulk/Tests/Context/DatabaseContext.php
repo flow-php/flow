@@ -22,7 +22,7 @@ final class DatabaseContext
     {
         $schemaManager = $this->connection->createSchemaManager();
 
-        if ($schemaManager->tablesExist($table->getName())) {
+        if ($schemaManager->tablesExist([$table->getName()])) {
             $schemaManager->dropTable($table->getName());
         }
 

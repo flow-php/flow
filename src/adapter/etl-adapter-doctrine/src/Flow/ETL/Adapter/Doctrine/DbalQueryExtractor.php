@@ -5,21 +5,19 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Doctrine;
 
 use function Flow\ETL\DSL\array_to_rows;
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Types\Type;
 use Flow\ETL\Extractor;
 use Flow\ETL\FlowContext;
 
 final class DbalQueryExtractor implements Extractor
 {
-    /**
-     * @var ParametersSet
-     */
     private readonly ParametersSet $parametersSet;
 
     /**
-     * @param null|ParametersSet $parametersSet
-     * @param array<int, null|int|string|Type>|array<string, null|int|string|Type> $types
+     * @param array<int|string, ArrayParameterType|int|ParameterType|string|Type> $types
      */
     public function __construct(
         private readonly Connection $connection,
@@ -32,7 +30,7 @@ final class DbalQueryExtractor implements Extractor
 
     /**
      * @param array<string, mixed>|list<mixed> $parameters
-     * @param array<int, null|int|string|Type>|array<string, null|int|string|Type> $types
+     * @param array<int|string, ArrayParameterType|int|ParameterType|string|Type> $types
      */
     public static function single(Connection $connection, string $query, array $parameters = [], array $types = []) : self
     {
@@ -42,6 +40,11 @@ final class DbalQueryExtractor implements Extractor
     public function extract(FlowContext $context) : \Generator
     {
         foreach ($this->parametersSet->all() as $parameters) {
+            /**
+             * @phpstan-ignore-next-line
+             *
+             * @psalm-suppress InvalidArgument
+             */
             foreach ($this->connection->fetchAllAssociative($this->query, $parameters, $this->types) as $row) {
                 $signal = yield array_to_rows($row, $context->entryFactory());
 

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine;
 
+use Doctrine\DBAL\ArrayParameterType as DbalArrayType;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\ParameterType as DbalParameterType;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Types\Type as DbalType;
 use Flow\ETL\DataFrameFactory;
@@ -78,10 +80,8 @@ function from_dbal_limit_offset_qb(
 }
 
 /**
- * @param Connection $connection
- * @param string $query
  * @param null|ParametersSet $parameters_set - each one parameters array will be evaluated as new query
- * @param array<int, null|DbalType|int|string>|array<string, null|DbalType|int|string> $types
+ * @param array<int|string, DbalArrayType|DbalParameterType|DbalType|int|string> $types
  *
  * @return Extractor
  */
@@ -100,10 +100,8 @@ function dbal_from_queries(
 }
 
 /**
- * @param Connection $connection
- * @param string $query
  * @param array<string, mixed>|list<mixed> $parameters
- * @param array<int, null|DbalType|int|string>|array<string, null|DbalType|int|string> $types
+ * @param array<int|string, DbalArrayType|DbalParameterType|DbalType|int|string> $types
  *
  * @return Extractor
  */
