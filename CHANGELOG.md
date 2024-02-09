@@ -1,6 +1,7 @@
 ## [Unreleased] - 2024-02-09
 
 ### Added
+- [#977](https://github.com/flow-php/flow/pull/977) - **Added homepage SEO copy** - [@norberttech](https://github.com/norberttech)
 - [#975](https://github.com/flow-php/flow/pull/975) - **Converting parquet to flow schema** - [@norberttech](https://github.com/norberttech)
 - [#974](https://github.com/flow-php/flow/pull/974) - **Support Doctrine DBAL 4** - [@stloyd](https://github.com/stloyd)
 - [#971](https://github.com/flow-php/flow/pull/971) - **Added key features to the landing page** - [@owsiakl](https://github.com/owsiakl)
