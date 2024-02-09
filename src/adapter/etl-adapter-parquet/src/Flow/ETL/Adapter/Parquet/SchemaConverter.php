@@ -2,6 +2,14 @@
 
 namespace Flow\ETL\Adapter\Parquet;
 
+use function Flow\ETL\DSL\list_schema;
+use function Flow\ETL\DSL\map_schema;
+use function Flow\ETL\DSL\struct_schema;
+use function Flow\ETL\DSL\struct_type;
+use function Flow\ETL\DSL\structure_element;
+use function Flow\ETL\DSL\type_list;
+use function Flow\ETL\DSL\type_map;
+use function Flow\ETL\DSL\type_object;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\PHP\Type\Logical\DateTimeType;
 use Flow\ETL\PHP\Type\Logical\JsonType;
@@ -9,6 +17,7 @@ use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\PHP\Type\Logical\Map\MapKey;
 use Flow\ETL\PHP\Type\Logical\Map\MapValue;
 use Flow\ETL\PHP\Type\Logical\MapType;
+use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\PHP\Type\Logical\UuidType;
 use Flow\ETL\PHP\Type\Logical\XMLNodeType;
@@ -26,6 +35,17 @@ use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 
 final class SchemaConverter
 {
+    public function fromParquet(ParquetSchema $schema) : Schema
+    {
+        $definitions = [];
+
+        foreach ($schema->columns() as $column) {
+            $definitions[] = $this->fromParquetColumnToFlowDefinition($column);
+        }
+
+        return \Flow\ETL\DSL\schema(...$definitions);
+    }
+
     public function toParquet(Schema $schema) : ParquetSchema
     {
         $columns = [];
@@ -241,5 +261,86 @@ final class SchemaConverter
         }
 
         throw new RuntimeException($type::class . ' is not supported.');
+    }
+
+    private function fromParquetColumnToFlowDefinition(Column $column) : Schema\Definition
+    {
+        if ($column instanceof FlatColumn) {
+            return $this->parquetFlatToFlowType($column);
+        }
+
+        /** @var NestedColumn $column */
+        return $this->parquetNestedToFlowType($column);
+    }
+
+    private function parquetFlatToFlowType(FlatColumn $column) : Schema\Definition
+    {
+        $logicalType = $column->logicalType();
+
+        if ($logicalType === null) {
+            return match ($column->type()) {
+                ParquetSchema\PhysicalType::INT32 => Schema\Definition::integer($column->name(), $column->repetition() === ParquetSchema\Repetition::OPTIONAL),
+                ParquetSchema\PhysicalType::INT64 => Schema\Definition::integer($column->name(), $column->repetition() === ParquetSchema\Repetition::OPTIONAL),
+                ParquetSchema\PhysicalType::BOOLEAN => Schema\Definition::boolean($column->name(), $column->repetition() === ParquetSchema\Repetition::OPTIONAL),
+                ParquetSchema\PhysicalType::DOUBLE => Schema\Definition::float($column->name(), $column->repetition() === ParquetSchema\Repetition::OPTIONAL),
+                ParquetSchema\PhysicalType::FLOAT => Schema\Definition::float($column->name(), $column->repetition() === ParquetSchema\Repetition::OPTIONAL),
+                ParquetSchema\PhysicalType::BYTE_ARRAY => Schema\Definition::string($column->name(), $column->repetition() === ParquetSchema\Repetition::OPTIONAL),
+                default => throw new RuntimeException($column->type()->name . ' is not supported.')
+            };
+        }
+
+        return match ($logicalType->name()) {
+            ParquetSchema\LogicalType::STRING => Schema\Definition::string($column->name(), $column->repetition() === ParquetSchema\Repetition::OPTIONAL),
+            ParquetSchema\LogicalType::DATE => Schema\Definition::dateTime($column->name(), $column->repetition() === ParquetSchema\Repetition::OPTIONAL),
+            ParquetSchema\LogicalType::TIME => Schema\Definition::object($column->name(), type_object(\DateInterval::class, $column->repetition() === ParquetSchema\Repetition::OPTIONAL)),
+            ParquetSchema\LogicalType::TIMESTAMP => Schema\Definition::dateTime($column->name(), $column->repetition() === ParquetSchema\Repetition::OPTIONAL),
+            ParquetSchema\LogicalType::UUID => Schema\Definition::uuid($column->name(), $column->repetition() === ParquetSchema\Repetition::OPTIONAL),
+            ParquetSchema\LogicalType::JSON => Schema\Definition::json($column->name(), $column->repetition() === ParquetSchema\Repetition::OPTIONAL),
+            ParquetSchema\LogicalType::DECIMAL => Schema\Definition::float($column->name(), $column->repetition() === ParquetSchema\Repetition::OPTIONAL),
+            ParquetSchema\LogicalType::INTEGER => Schema\Definition::integer($column->name(), $column->repetition() === ParquetSchema\Repetition::OPTIONAL),
+            default => throw new RuntimeException($logicalType->name() . ' is not supported.')
+        };
+    }
+
+    private function parquetNestedToFlowType(NestedColumn $column) : Schema\Definition
+    {
+        if ($column->isList()) {
+            return list_schema(
+                $column->name(),
+                type_list(
+                    $this->fromParquetColumnToFlowDefinition($column->getListElement())->type(),
+                    $column->repetition() === ParquetSchema\Repetition::OPTIONAL
+                )
+            );
+        }
+
+        if ($column->isMap()) {
+            $keyType = $this->fromParquetColumnToFlowDefinition($column->getMapKeyColumn())->type();
+
+            if (!$keyType instanceof ScalarType) {
+                throw new RuntimeException('Flow expects map key type to be scalar type.');
+            }
+
+            return map_schema(
+                $column->name(),
+                type_map(
+                    $keyType,
+                    $this->fromParquetColumnToFlowDefinition($column->getMapValueColumn())->type(),
+                    $column->repetition() === ParquetSchema\Repetition::OPTIONAL
+                )
+            );
+        }
+
+        /** @var array<StructureElement> $elements */
+        $elements = [];
+
+        foreach ($column->children() as $structColumn) {
+            $elements[] = structure_element(
+                $structColumn->name(),
+                $this->fromParquetColumnToFlowDefinition($structColumn)->type()
+            );
+        }
+
+        return struct_schema($column->name(), struct_type($elements, $column->repetition() === ParquetSchema\Repetition::OPTIONAL));
     }
 }

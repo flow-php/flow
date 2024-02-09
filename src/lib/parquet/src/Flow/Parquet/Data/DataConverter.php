@@ -7,7 +7,9 @@ use Flow\Parquet\Data\Converter\Int32DateConverter;
 use Flow\Parquet\Data\Converter\Int32DateTimeConverter;
 use Flow\Parquet\Data\Converter\Int64DateTimeConverter;
 use Flow\Parquet\Data\Converter\Int96DateTimeConverter;
+use Flow\Parquet\Data\Converter\JsonConverter;
 use Flow\Parquet\Data\Converter\TimeConverter;
+use Flow\Parquet\Data\Converter\UuidConverter;
 use Flow\Parquet\Exception\DataConversionException;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
@@ -37,6 +39,8 @@ final class DataConverter
                 new Int64DateTimeConverter(),
                 new Int96DateTimeConverter(),
                 new BytesStringConverter(),
+                new UuidConverter(),
+                new JsonConverter(),
             ],
             $options
         );

@@ -9,7 +9,7 @@ use Flow\Parquet\DataSize;
 
 final class Bytes implements \ArrayAccess, \Countable, \IteratorAggregate
 {
-    private readonly \ArrayIterator $iterator;
+    private \ArrayIterator|null $iterator = null;
 
     private readonly DataSize $size;
 
@@ -18,7 +18,6 @@ final class Bytes implements \ArrayAccess, \Countable, \IteratorAggregate
         private readonly ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN
     ) {
         $this->size = new DataSize(\count($this->bytes) * 8);
-        $this->iterator = new \ArrayIterator($this->bytes);
     }
 
     public static function fromString(string $string, ByteOrder $byteOrder = ByteOrder::LITTLE_ENDIAN) : self
@@ -36,6 +35,10 @@ final class Bytes implements \ArrayAccess, \Countable, \IteratorAggregate
     // IteratorAggregate methods
     public function getIterator() : \ArrayIterator
     {
+        if ($this->iterator === null) {
+            $this->iterator = new \ArrayIterator($this->bytes);
+        }
+
         return $this->iterator;
     }
 

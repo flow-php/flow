@@ -23,7 +23,7 @@ use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\Schema\NestedColumn;
 use PHPUnit\Framework\TestCase;
 
-final class SchemaConverterTest extends TestCase
+final class FlowToParquetSchemaTest extends TestCase
 {
     public function test_convert_array_entry_to_parquet_array() : void
     {

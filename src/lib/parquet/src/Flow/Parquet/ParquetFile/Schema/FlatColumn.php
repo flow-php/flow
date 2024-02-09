@@ -118,7 +118,7 @@ final class FlatColumn implements Column
 
     public static function json(string $string, Repetition $repetition = Repetition::OPTIONAL) : self
     {
-        return new self($string, PhysicalType::BYTE_ARRAY, ConvertedType::JSON, LogicalType::string(), $repetition);
+        return new self($string, PhysicalType::BYTE_ARRAY, ConvertedType::JSON, LogicalType::json(), $repetition);
     }
 
     public static function string(string $name, Repetition $repetition = Repetition::OPTIONAL) : self
@@ -137,7 +137,7 @@ final class FlatColumn implements Column
 
     public static function uuid(string $string, Repetition $repetition = Repetition::OPTIONAL) : self
     {
-        return new self($string, PhysicalType::BYTE_ARRAY, null, LogicalType::string(), $repetition);
+        return new self($string, PhysicalType::BYTE_ARRAY, null, LogicalType::uuid(), $repetition);
     }
 
     /**
