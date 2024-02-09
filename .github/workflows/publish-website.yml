@@ -53,7 +53,7 @@ jobs:
         env:
           DOMAIN: flow-php.com
           GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-          GOOGLE_ANALYTICS_ID: 'G-1W17JSMLE5'
+          GOOGLE_ANALYTICS_ID: '${{ vars.GOOGLE_ANALYTICS_ID }}'
         working-directory: "web/landing"
 
       - name: Pushes build to website repository
