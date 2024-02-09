@@ -70,6 +70,8 @@
 - [#869](https://github.com/flow-php/flow/pull/869) - **RDSL library** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#976](https://github.com/flow-php/flow/pull/976) - **Extracted static analyze to standalone workflow in order to run it always for website/code changes** - [@norberttech](https://github.com/norberttech)
+- [#976](https://github.com/flow-php/flow/pull/976) - **Moved website google analytics id to GH Actions variables** - [@norberttech](https://github.com/norberttech)
 - [#972](https://github.com/flow-php/flow/pull/972) - **Changed landing page mobile view to save some horizontal space** - [@owsiakl](https://github.com/owsiakl)
 - [#972](https://github.com/flow-php/flow/pull/972) - **Changed to a faster font loading in a landing page** - [@owsiakl](https://github.com/owsiakl)
 - [#960](https://github.com/flow-php/flow/pull/960) - **Moved `src/web/landing` directory one lever higher - to `web/landing`** - [@owsiakl](https://github.com/owsiakl)
