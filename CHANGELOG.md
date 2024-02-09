@@ -1,6 +1,7 @@
-## [Unreleased] - 2024-02-07
+## [Unreleased] - 2024-02-09
 
 ### Added
+- [#974](https://github.com/flow-php/flow/pull/974) - **Support Doctrine DBAL 4** - [@stloyd](https://github.com/stloyd)
 - [#971](https://github.com/flow-php/flow/pull/971) - **Added key features to the landing page** - [@owsiakl](https://github.com/owsiakl)
 - [#971](https://github.com/flow-php/flow/pull/971) - **Improved initial load of the landing page** - [@owsiakl](https://github.com/owsiakl)
 - [#970](https://github.com/flow-php/flow/pull/970) - **Added possibility to copy code from landing page examples** - [@owsiakl](https://github.com/owsiakl)
