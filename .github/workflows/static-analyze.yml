@@ -1,0 +1,109 @@
+name: Static Analyze
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+      - 'src/adapter/**'
+      - 'src/core/**'
+      - 'src/lib/**'
+      - 'tools/**'
+      - 'web/**'
+      - 'examples/**'
+      - 'composer.lock'
+  push:
+    branches: [ 1.x ]
+    paths-ignore:
+      - 'CHANGELOG.md'
+
+# See https://stackoverflow.com/a/72408109
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  static-analyze:
+    name: "Static Analyze"
+
+    runs-on: ${{ matrix.operating-system }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        dependencies:
+          - "locked"
+        php-version:
+          - "8.1"
+        operating-system:
+          - "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v4"
+
+      - name: "Install PHP"
+        uses: "shivammathur/setup-php@v2"
+        with:
+          coverage: none
+          tools: composer:v2
+          php-version: "${{ matrix.php-version }}"
+          ini-values: memory_limit=-1
+          extensions: :psr
+
+      - name: "Create cache directories"
+        run: |
+          mkdir -p var/cs-fixer
+          mkdir -p var/phpstan/cache
+          mkdir -p var/psalm/cache
+
+      - name: "Get Composer Cache Directory"
+        id: composer-cache
+        run: |
+          echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: "Cache Composer dependencies"
+        uses: "actions/cache@v3"
+        with:
+          path: "${{ steps.composer-cache.outputs.dir }}"
+          key: "php-${{ matrix.php-version }}-locked-composer-${{ hashFiles('**/composer.lock') }}"
+          restore-keys: |
+            php-${{ matrix.php-version }}-locked-composer-
+
+      - name: "Install locked dependencies"
+        run: "composer install --no-interaction --no-progress"
+
+      - name: "Cache cs-fixer results"
+        uses: "actions/cache@v3"
+        with:
+          path: "var/cs-fixer"
+          key: "php-${{ matrix.php-version }}-cache-cs-fixer-${{ github.run_id }}"
+          restore-keys: |
+            php-${{ matrix.php-version }}-cache-cs-fixer-
+
+      - name: "Cache phpstan results"
+        uses: "actions/cache@v3"
+        with:
+          path: "var/phpstan/cache"
+          key: "php-${{ matrix.php-version }}-cache-phpstan-${{ github.run_id }}"
+          restore-keys: |
+            php-${{ matrix.php-version }}-cache-phpstan-
+
+      - name: "Cache psalm results"
+        uses: "actions/cache@v3"
+        with:
+          path: "var/psalm/cache"
+          key: "php-${{ matrix.php-version }}-cache-psalm-${{ github.run_id }}"
+          restore-keys: |
+            php-${{ matrix.php-version }}-cache-psalm-
+
+      - name: "Monorepo Validate"
+        run: "composer test:monorepo"
+
+      - name: "Static Analyze - CS Fixer"
+        run: "composer static:analyze:cs-fixer"
+
+      - name: "Static Analyze - PHPStan"
+        run: "composer static:analyze:phpstan -- --error-format=github"
+
+      - name: "Static Analyze - Psalm"
+        run: "composer static:analyze:psalm -- --output-format=github"
