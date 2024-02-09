@@ -87,8 +87,8 @@ final class PlainValuesPacker
                 break;
             case PhysicalType::BYTE_ARRAY:
                 switch ($column->logicalType()?->name()) {
-                    case LogicalType::JSON:
                     case LogicalType::UUID:
+                    case LogicalType::JSON:
                     case LogicalType::STRING:
                         $this->writer->writeStrings($parquetValues);
 

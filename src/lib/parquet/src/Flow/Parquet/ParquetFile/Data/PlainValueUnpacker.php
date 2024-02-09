@@ -29,7 +29,7 @@ final class PlainValueUnpacker
             PhysicalType::FLOAT => $this->reader->readFloats($total),
             PhysicalType::DOUBLE => $this->reader->readDoubles($total),
             PhysicalType::BYTE_ARRAY => match ($column->logicalType()?->name()) {
-                LogicalType::STRING => $this->reader->readStrings($total),
+                LogicalType::STRING, LogicalType::JSON, LogicalType::UUID => $this->reader->readStrings($total),
                 default => $this->reader->readByteArrays($total)
             },
             PhysicalType::FIXED_LEN_BYTE_ARRAY => match ($column->logicalType()?->name()) {

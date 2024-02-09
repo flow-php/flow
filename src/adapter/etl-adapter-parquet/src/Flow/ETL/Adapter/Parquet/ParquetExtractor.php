@@ -25,6 +25,8 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
     use Limitable;
     use PartitionFiltering;
 
+    private SchemaConverter $schemaConverter;
+
     /**
      * @param Path $path
      * @param array<string> $columns
@@ -37,6 +39,7 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
         private readonly ?int $offset = null
     ) {
         $this->resetLimit();
+        $this->schemaConverter = new SchemaConverter();
 
         if ($this->path->isPattern() && $this->offset !== null) {
             throw new InvalidArgumentException('Offset can be used only with single file path, not with pattern');
@@ -48,12 +51,14 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
         foreach ($this->readers($context) as $fileData) {
+            $flowSchema = $this->schemaConverter->fromParquet($fileData['file']->schema());
+
             foreach ($fileData['file']->values($this->columns, $this->limit(), $this->offset) as $row) {
                 if ($shouldPutInputIntoRows) {
                     $row['_input_file_uri'] = $fileData['uri'];
                 }
 
-                $signal = yield array_to_rows($row, $context->entryFactory(), $fileData['partitions']);
+                $signal = yield array_to_rows($row, $context->entryFactory(), $fileData['partitions'], $flowSchema);
 
                 $this->countRow();
 

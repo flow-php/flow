@@ -176,6 +176,11 @@ final class LogicalType
         return new self(self::UNKNOWN);
     }
 
+    public static function uuid() : self
+    {
+        return new self(self::UUID);
+    }
+
     public function decimalData() : ?Decimal
     {
         return $this->decimal;
