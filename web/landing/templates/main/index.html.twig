@@ -20,20 +20,101 @@
         </nav>
     </div>
 
-    <div class="mx-auto max-w-screen-xl mb-10 px-4 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-        {% for i in 1..6 %}
-            <section class="shadow-2xl shadow-gray rounded border-gray border-2 p-4 rounded">
-                <img src="{{ asset('images/icons/tools.svg') }}" width="32" height="32" alt="feature" class="inline mr-4 bg-blue-100 p-1 rounded">
-                <h2 class="inline">Flow PHP Feature #{{ i }}</h2>
-                <hr class="text-blue-100 my-4 border-t-2 rounded">
-                {% if i is odd %} {# TODO: if key feature subtitle is optional #}
-                    <h3 class="mb-4">This feature is awesome</h3>
-                {% endif %}
-                <p>
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                    Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-                </p>
-            </section>
-        {% endfor %}
+    <div class="max-w-screen-xl mx-auto mt-5">
+        <div class="flex flex-wrap -mx-2 mb-20 px-4 items-center">
+            <div class="w-full lg:w-2/3 px-2">
+                <section class="shadow-2xl shadow-gray rounded border-gray border-2 p-4 rounded">
+                    <img src="{{ asset('images/icons/tools.svg') }}" width="32" height="32" alt="feature" class="inline mr-2 bg-blue-100 p-1 -mt-4 rounded">
+                    <h2 class="inline text-4xl">Data Processing Made Easy</h2>
+                    <hr class="text-blue-100 my-4 border-t-2 rounded">
+                    <p class="mb-2">
+                        One of the most significant challenges in data processing lies in maintaining consistency, particularly in languages as flexible as PHP.
+                        Instead of creating custom code for each dataset or integration, Flow PHP offers a uniform API for all data sources.
+                    </p>
+                    <p class="mb-2">
+                        Whether you’re dealing with a CSV file or consuming data from a REST API, Flow ensures consistency by offering a uniform API for all data sources.
+                    </p>
+                    <p class="mb-2">
+                        It will not only make your codebase more consistent but also ensure that your system processes data in a memory-efficient way out of the box.
+                    </p>
+                </section>
+            </div>
+            <div class="w-full lg:w-1/3 px-2 hidden lg:block">
+                <div class="text-center">
+                    <img src="{{ asset('images/icons/data-flow.svg') }}" alt="extract" width="128" height="128" class="inline mb-4">
+                    <h2 class="mt-5 text-4xl">Framework</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex flex-wrap -mx-2 mb-20 px-4 items-center">
+            <div class="w-full lg:w-1/3 px-2 text-center hidden lg:block">
+                <div class="p-4 bg-gray-300">
+                    <img src="{{ asset('images/icons/api.svg') }}" alt="extract" width="128" height="128" class="inline mb-4">
+                    <h2 class="mt-5 text-4xl">API</h2>
+                </div>
+            </div>
+            <div class="w-full lg:w-2/3 px-2">
+                <section class="shadow-2xl shadow-gray rounded border-gray border-2 p-4 rounded">
+                    <img src="{{ asset('images/icons/tools.svg') }}" width="32" height="32" alt="feature" class="inline mr-2 bg-blue-100 p-1 -mt-4 rounded">
+                    <h2 class="inline text-4xl">Unified, Strongly Typed API</h2>
+                    <hr class="text-blue-100 my-4 border-t-2 rounded">
+                    <p class="mb-2">
+                        Flow PHP offers a unified, strongly typed API for all data sources, including:
+                    </p>
+                    <ul class="flex flex-wrap items-center mb-2">
+                        <li class="mr-2">CSV,</li>
+                        <li class="mr-2">Json,</li>
+                        <li class="mr-2">XML,</li>
+                        <li class="mr-2">Text,</li>
+                        <li class="mr-2">Parquet,</li>
+                        <li class="mr-2">Avro,</li>
+                        <li class="mr-2">Rest API,</li>
+                        <li class="mr-2">RDBMS,</li>
+                        <li class="mr-2">Elasticsearch / Meilisearch</li>
+                    </ul>
+                    <p class="mb-2">
+                        Flow not only enables you to process various data sources consistently, but also strives to accurately
+                        detect data types and cast them to the appropriate PHP types.
+                    </p>
+                    <p>
+                        Even when reading schemaless formats like CSV, Flow allows you to either predefine the schema
+                        according to which it will cast the data, or it will attempt to infer the schema from the data itself.
+                    </p>
+                </section>
+            </div>
+        </div>
+
+        <div class="flex flex-wrap -mx-2 mb-20 px-4 items-center">
+            <div class="w-full lg:w-2/3 px-2">
+                <section class="shadow-2xl shadow-gray rounded border-gray border-2 p-4 rounded">
+                    <img src="{{ asset('images/icons/tools.svg') }}" width="32" height="32" alt="feature" class="inline mr-2 bg-blue-100 p-1 -mt-4 rounded">
+                    <h2 class="inline text-4xl">Consistent Memory Consumption</h2>
+                    <hr class="text-blue-100 my-4 border-t-2 rounded">
+                    <p class="mb-2">
+                        Processing large datasets is no easy task, especially without dedicated tools.
+                        The most common solution is to read datasets in chunks and process them one by one.
+                    </p>
+                    <p class="mb-2">
+                        But unfortunatelly it sounds easier than it is. The most common problem is lack of unified
+                        API for all data sources and memory management. Flow PHP solves this problem for you.
+                    </p>
+                    <p class="mb-2">
+                        But unfortunately, it sounds easier than it actually is. The most common problem lies in the lack of a unified API for all data sources and proper memory management.
+                        Flow PHP addresses this issue for you.
+                    </p>
+                    <p class="mb-2">
+                        All of this is possible thanks to the Flow PHP architecture based on generators and iterators.
+                        This approach enables you to process large datasets even on small machines.
+                    </p>
+                </section>
+            </div>
+            <div class="w-full lg:w-1/3 px-2 hidden lg:block">
+                <div class="text-center">
+                    <img src="{{ asset('images/icons/chart-bar.svg') }}" alt="extract" width="128" height="128" class="inline mb-4">
+                    <h2 class="mt-5 text-4xl">Memory Management</h2>
+                </div>
+            </div>
+        </div>
     </div>
 {% endblock %}
