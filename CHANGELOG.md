@@ -71,6 +71,8 @@
 - [#869](https://github.com/flow-php/flow/pull/869) - **RDSL library** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#978](https://github.com/flow-php/flow/pull/978) - **Moved main text & install instruction to center on mobile landing page** - [@owsiakl](https://github.com/owsiakl)
+- [#978](https://github.com/flow-php/flow/pull/978) - **Decresed mobile margin in key features in a landing page** - [@owsiakl](https://github.com/owsiakl)
 - [#976](https://github.com/flow-php/flow/pull/976) - **Extracted static analyze to standalone workflow in order to run it always for website/code changes** - [@norberttech](https://github.com/norberttech)
 - [#976](https://github.com/flow-php/flow/pull/976) - **Moved website google analytics id to GH Actions variables** - [@norberttech](https://github.com/norberttech)
 - [#972](https://github.com/flow-php/flow/pull/972) - **Changed landing page mobile view to save some horizontal space** - [@owsiakl](https://github.com/owsiakl)
