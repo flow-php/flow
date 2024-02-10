@@ -51,7 +51,7 @@ jobs:
       - name: "Build"
         run: "composer build"
         env:
-          DOMAIN: flow-php.com
+          BASE_URL: https://flow-php.com
           GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
           GOOGLE_ANALYTICS_ID: '${{ vars.GOOGLE_ANALYTICS_ID }}'
         working-directory: "web/landing"
