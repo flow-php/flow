@@ -6,9 +6,6 @@ use function Flow\ETL\Adapter\CSV\to_csv;
 use function Flow\ETL\DSL\data_frame;
 use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\to_output;
-use Flow\ETL\Join\Expression;
-use Flow\ETL\Join\Join;
 
 require __DIR__ . '/../../../autoload.php';
 
@@ -22,7 +19,7 @@ data_frame()
             ['id' => 5, 'color' => 'green', 'sku' => 'PRODUCT02'],
             ['id' => 6, 'color' => 'green', 'sku' => 'PRODUCT03'],
             ['id' => 7, 'color' => 'blue', 'sku' => 'PRODUCT01'],
-            ['id' => 8, 'color' => 'blue', 'sku' => 'PRODUCT02']
+            ['id' => 8, 'color' => 'blue', 'sku' => 'PRODUCT02'],
         ]
     ))
     ->partitionBy(ref('color'), ref('sku'))
@@ -51,4 +48,3 @@ data_frame()
 //         └── 65c7e9bc44209401416287.csv
 //
 // 12 directories, 8 files
-
