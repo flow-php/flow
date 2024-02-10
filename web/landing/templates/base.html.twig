@@ -3,9 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=2.0, minimum-scale=1.0">
-    <meta name="description" content="{% block description %}{% endblock %}">
 
-    <title>Flow ETL - PHP Data Processing Framework</title>
+    <title>{{ block('title') }}</title>
+    <meta property="og:title" content="{{ block('title') }}" />
+    <meta name="twitter:title" content="{{ block('title') }}" >
+
+    <meta name="description" content="{{ block('description') }}">
+    <meta property="og:description" content="{{ block('description') }}">
+    <meta name="twitter:description" content="{{ block('description') }}">
+
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="{{ url(app.request.attributes.get('_route'), app.request.attributes.get('_route_params')) }}" />
+    <meta property="og:image" content="{{ absolute_url(asset('images/banner.png')) }}" />
+    <meta property="og:image:type" content="image/svg+xml" />
+    <meta property="og:image:alt" content="Flow PHP - Unified data processing framework" />
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="{{ url(app.request.attributes.get('_route'), app.request.attributes.get('_route_params')) }}" />
+    <meta name="twitter:image" content="{{ absolute_url(asset('images/banner.png')) }}">
+    <meta name="twitter:site" content="@norbert_tech" />
+    <meta name="twitter:creator" content="@norbert_tech" />
 
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/favicons/apple-touch-icon.png') }}">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/favicons/favicon-32x32.png') }}">
@@ -74,7 +91,7 @@
 
     <main>
         <div class="mx-auto max-w-screen-xl max-lg:text-center px-2 sm:px-4 relative max-lg:py-10 p-[116px]">
-            <h1 class="font-bold max-sm:text-5xl max-lg:mx-auto text-6xl tracking-wide leading-[70px] max-w-[450px] mb-8 z-10">UNIFIED DATA PROCESSING FRAMEWORK</h1>
+            <h1 class="font-bold max-sm:text-5xl max-lg:mx-auto text-6xl tracking-wider leading-[70px] max-w-[450px] mb-8 z-10">UNIFIED DATA PROCESSING FRAMEWORK</h1>
             {% apply spaceless %}
                 <code class="w-fit py-2 px-3 before:content-['$'] before:mr-2 bg-orange-100 rounded">
                     <span id="command">composer require flow-php/etl</span>
