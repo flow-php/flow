@@ -1,7 +1,8 @@
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
     examples_path: '%kernel.project_dir%/../../examples'
-    base_url: '%env(BASE_URL)%'
+    scheme: '%env(SCHEME)%'
+    domain: '%env(DOMAIN)%'
 
 services:
     _defaults:
