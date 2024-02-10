@@ -51,6 +51,7 @@ jobs:
       - name: "Build"
         run: "composer build"
         env:
+          SCHEME: https
           DOMAIN: flow-php.com
           GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
           GOOGLE_ANALYTICS_ID: '${{ vars.GOOGLE_ANALYTICS_ID }}'

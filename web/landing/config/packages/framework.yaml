@@ -7,7 +7,10 @@ framework:
     php_errors:
         log: true
     router:
-        default_uri: 'https://%domain%/'
+        default_uri: '%scheme%://%domain%/'
+    assets:
+        base_urls:
+            - '%scheme%://%domain%/'
 
 when@test:
     framework:
