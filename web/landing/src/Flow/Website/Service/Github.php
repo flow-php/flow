@@ -63,6 +63,7 @@ final class Github
                 ->drop('unpacked', 'data')
                 ->filter(not(ref('login')->endsWith(lit('[bot]'))))
                 ->filter(not(ref('login')->equals(lit('aeon-automation'))))
+                ->filter(not(ref('login')->equals(lit('norbertmwk'))))
                 ->withEntry('avatar_url', ref('avatar_url')->concat(lit('&s=128')))
                 ->limit(24)
                 ->write(to_memory($memory = new ArrayMemory()))
