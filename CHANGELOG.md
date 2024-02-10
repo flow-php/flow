@@ -101,6 +101,8 @@
 - [#867](https://github.com/flow-php/flow/pull/867) - **Update Homebrew TAP formula: flow-php to version: 0.5.2** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#981](https://github.com/flow-php/flow/pull/981) - **Fixed generating urls in landing page** - [@norberttech](https://github.com/norberttech)
+- [#981](https://github.com/flow-php/flow/pull/981) - **dependabot landing page composer.json path** - [@norberttech](https://github.com/norberttech)
 - [#980](https://github.com/flow-php/flow/pull/980) - **Added base asset url to a landing page** - [@owsiakl](https://github.com/owsiakl)
 - [#975](https://github.com/flow-php/flow/pull/975) - **Parquet JSON is now stored as BYTE_ARRAY with logical type JSON instead of STRING** - [@norberttech](https://github.com/norberttech)
 - [#975](https://github.com/flow-php/flow/pull/975) - **Parquet UUID is now stored as BYTE_ARRAY with logical type JSON instead of STRING** - [@norberttech](https://github.com/norberttech)
