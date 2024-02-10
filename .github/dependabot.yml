@@ -51,6 +51,6 @@ updates:
       interval: "daily"
 
   - package-ecosystem: "composer"
-    directory: "/src/web/landing"
+    directory: "/web/landing"
     schedule:
       interval: "daily"

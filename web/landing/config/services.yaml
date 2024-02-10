@@ -3,6 +3,9 @@ parameters:
     examples_path: '%kernel.project_dir%/../../examples'
     scheme: '%env(SCHEME)%'
     domain: '%env(DOMAIN)%'
+    router.request_context.base_url: '%env(SCHEME)%://%env(BASE_URL)%'
+    router.request_context.host: '%env(DOMAIN)%'
+    router.request_context.scheme: '%env(SCHEME)%'
 
 services:
     _defaults:
