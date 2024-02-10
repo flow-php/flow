@@ -1,6 +1,7 @@
 ## [Unreleased] - 2024-02-10
 
 ### Added
+- [#982](https://github.com/flow-php/flow/pull/982) - **Added partitioning examples** - [@norberttech](https://github.com/norberttech)
 - [#979](https://github.com/flow-php/flow/pull/979) - **Added open graph related tags to a landing page** - [@owsiakl](https://github.com/owsiakl)
 - [#977](https://github.com/flow-php/flow/pull/977) - **Added homepage SEO copy** - [@norberttech](https://github.com/norberttech)
 - [#975](https://github.com/flow-php/flow/pull/975) - **Converting parquet to flow schema** - [@norberttech](https://github.com/norberttech)
