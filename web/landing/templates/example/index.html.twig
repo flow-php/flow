@@ -1,7 +1,11 @@
 {% extends 'base.html.twig' %}
 
+{%- block title -%}
+    {{ currentTopic|humanize }} - Flow PHP
+{%- endblock -%}
+
 {%- block description -%}
-    Flow PHP '{{ currentTopic|humanize|lower }}' topic showing '{{ currentExample|humanize|lower }}' code example.
+    Code example showing {{ currentExample|humanize|lower }} {{ currentTopic|humanize|lower }}.
 {%- endblock -%}
 
 {% block main %}
