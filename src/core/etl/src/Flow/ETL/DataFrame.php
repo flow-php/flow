@@ -73,10 +73,9 @@ final class DataFrame
     }
 
     /**
-     * @throws \JsonException
-     * @throws RuntimeException
+     * @throws InvalidArgumentException
      */
-    public static function fromJson(string $json) : self
+    public static function fromArray(array $definition) : self
     {
         $namespaces = [
             DSLNamespace::global(new DenyAll()),
@@ -103,12 +102,7 @@ final class DataFrame
                 )
             );
 
-            try {
-                $results = (new Executor())
-                    ->execute($builder->parse(\json_decode($json, true, 512, JSON_THROW_ON_ERROR)));
-            } catch (\JsonException $exception) {
-                throw new InvalidFileFormatException('json', 'unknown');
-            }
+            $results = (new Executor())->execute($builder->parse($definition));
 
             if (\count($results) !== 1) {
                 throw new InvalidArgumentException('Invalid JSON, please make sure that there is only one data_frame function');
@@ -121,6 +115,19 @@ final class DataFrame
             return $results[0];
         } catch (\Flow\RDSL\Exception\InvalidArgumentException $e) {
             throw new InvalidArgumentException($e->getMessage(), $e->getCode(), $e);
+        }
+    }
+
+    /**
+     * @throws \JsonException
+     * @throws InvalidArgumentException
+     */
+    public static function fromJson(string $json) : self
+    {
+        try {
+            return self::fromArray(\json_decode($json, true, 512, JSON_THROW_ON_ERROR));
+        } catch (\JsonException $exception) {
+            throw new InvalidFileFormatException('json', 'unknown');
         }
     }
 
