@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-02-10
+## [Unreleased] - 2024-02-11
 
 ### Added
 - [#982](https://github.com/flow-php/flow/pull/982) - **Added partitioning examples** - [@norberttech](https://github.com/norberttech)
@@ -102,6 +102,7 @@
 - [#867](https://github.com/flow-php/flow/pull/867) - **Update Homebrew TAP formula: flow-php to version: 0.5.2** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#983](https://github.com/flow-php/flow/pull/983) - **Added missing rdsl dependency** - [@norberttech](https://github.com/norberttech)
 - [#981](https://github.com/flow-php/flow/pull/981) - **Fixed generating urls in landing page** - [@norberttech](https://github.com/norberttech)
 - [#981](https://github.com/flow-php/flow/pull/981) - **dependabot landing page composer.json path** - [@norberttech](https://github.com/norberttech)
 - [#980](https://github.com/flow-php/flow/pull/980) - **Added base asset url to a landing page** - [@owsiakl](https://github.com/owsiakl)
