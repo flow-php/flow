@@ -13,6 +13,7 @@
         "ext-json": "*",
         "ext-mbstring": "*",
         "flow-php/array-dot": "^0.5.0 || 1.x-dev",
+        "flow-php/rdsl": "1.x-dev",
         "psr/simple-cache": "^1.0 || ^2.0 || ^3.0",
         "webmozart/glob": "^3.0 || ^4.0"
     },
