@@ -1,6 +1,6 @@
 ![img](docs/assets/img/flow_php_banner_02_2022.png)
 
-Flow is a PHP-based, strongly typed data processing framework with constant memory consumption.
+Flow is a PHP-based, strongly typed data processing framework with low memory footprint.
 
 [![Latest Stable Version](https://poser.pugx.org/flow-php/flow/v)](https://packagist.org/packages/flow-php/flow)
 [![Latest Unstable Version](https://poser.pugx.org/flow-php/flow/v/unstable)](https://packagist.org/packages/flow-php/flow)
@@ -67,7 +67,7 @@ ETL frameworks are essential in various scenarios, especially in data-driven env
 
 Flow PHP is a powerful and versatile ETL framework designed to cater to a variety of data processing needs. Below are some of its standout features:
 
-- **Low and Constant Memory Consumption**: Optimized for efficiency, Flow PHP ensures minimal memory usage, maintaining low and constant consumption regardless of data size. This makes it ideal for handling large datasets without compromising performance.
+- **Low memory footprint**: Optimized for efficiency, Flow PHP ensures minimal memory usage, maintaining low and constant consumption regardless of data size. This makes it ideal for handling large datasets without compromising performance.
 - **Versatile Data Source Interaction**: Whether your data resides in databases, spreadsheets, or online platforms, Flow PHP can seamlessly read from and write to any data source.
 - **Rich Collection of Data Transformation Functions**: Transform your data with ease using a wide array of built-in functions. From simple mapping to complex manipulations, the framework covers all your data transformation needs.
 - **Direct Access to Remote Filesystems**: Flow PHP provides the ability to interact directly with remote filesystems, facilitating efficient data handling and processing without the need for local storage.

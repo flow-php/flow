@@ -1,6 +1,6 @@
 ![img](assets/img/flow_php_banner_02_2022.png)
 
-Flow is a PHP based, strongly typed data processing framework with constant memory consumption.
+Flow is a PHP based, strongly typed data processing framework with low memory footprint.
 
 Supported PHP versions: [![PHP 8.1](https://img.shields.io/badge/php-~8.1-8892BF.svg)](https://php.net/) [![PHP 8.2](https://img.shields.io/badge/php-~8.2-8892BF.svg)](https://php.net/) [![PHP 8.3](https://img.shields.io/badge/php-~8.3-8892BF.svg)](https://php.net/)
 
@@ -11,7 +11,7 @@ Supported PHP versions: [![PHP 8.1](https://img.shields.io/badge/php-~8.1-8892BF
 
 # Key Features
 
-- **Low and Constant Memory Consumption**: Optimized for efficiency, Flow PHP ensures minimal memory usage, maintaining low and constant consumption regardless of data size. This makes it ideal for handling large datasets without compromising performance.
+- **Low memory footprint**: Optimized for efficiency, Flow PHP ensures minimal memory usage, maintaining low and constant consumption regardless of data size. This makes it ideal for handling large datasets without compromising performance.
 - **Versatile Data Source Interaction**: Whether your data resides in databases, spreadsheets, or online platforms, Flow PHP can seamlessly read from and write to any data source.
 - **Rich Collection of Data Transformation Functions**: Transform your data with ease using a wide array of built-in functions. From simple mapping to complex manipulations, the framework covers all your data transformation needs.
 - **Direct Access to Remote Filesystems**: Flow PHP provides the ability to interact directly with remote filesystems, facilitating efficient data handling and processing without the need for local storage.
