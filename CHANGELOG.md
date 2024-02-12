@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-02-11
+## [Unreleased] - 2024-02-12
 
 ### Added
 - [#982](https://github.com/flow-php/flow/pull/982) - **Added partitioning examples** - [@norberttech](https://github.com/norberttech)
@@ -139,6 +139,7 @@
 - [#870](https://github.com/flow-php/flow/pull/870) - **Reduced number of files in phar** - [@norberttech](https://github.com/norberttech)
 
 ### Updated
+- [9f8f8f](https://github.com/flow-php/flow/commit/9f8f8fd53ca82566d38adf8e575b9c5145fdfc4a) - **interdependencies before 0.6.0 release** - [@norberttech](https://github.com/norberttech)
 - [83d81d](https://github.com/flow-php/flow/commit/83d81d4ad364ec285e4cc2811627dfe2f7fdaf34) - **publish-website.yml** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
