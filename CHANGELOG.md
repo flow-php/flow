@@ -1,3 +1,8 @@
+## [Unreleased] - 2024-02-12
+
+### Fixed
+- [8da770](https://github.com/flow-php/flow/commit/8da770bfb499011105e5564874dbec5614f217ad) - **release workflow** - [@norberttech](https://github.com/norberttech)
+
 ## [0.6.0] - 2024-02-12
 
 ### Added
