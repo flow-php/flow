@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-02-12
+## [0.6.0] - 2024-02-12
 
 ### Added
 - [#982](https://github.com/flow-php/flow/pull/982) - **Added partitioning examples** - [@norberttech](https://github.com/norberttech)
