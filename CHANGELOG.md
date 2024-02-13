@@ -1,4 +1,7 @@
-## [Unreleased] - 2024-02-12
+## [Unreleased] - 2024-02-13
+
+### Added
+- [#987](https://github.com/flow-php/flow/pull/987) - **DataFrame::dropPartitions can now additionally drop also partition columns** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
 - [3fc5e7](https://github.com/flow-php/flow/commit/3fc5e78e32dbcf0926250227af1be4ddf88cad51) - **README - memory consumption description improvements** - [@norberttech](https://github.com/norberttech)
