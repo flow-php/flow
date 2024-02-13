@@ -23,6 +23,7 @@ use function Flow\ETL\DSL\xml_entry;
 use function Flow\ETL\DSL\xml_node_entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\PHP\Type\Caster\StringCastingHandler\StringTypeChecker;
 use Flow\ETL\PHP\Type\Logical\DateTimeType;
@@ -56,6 +57,7 @@ final class NativeEntryFactory implements EntryFactory
     /**
      * @throws InvalidArgumentException
      * @throws RuntimeException
+     * @throws SchemaDefinitionNotFoundException
      */
     public function create(string $entryName, mixed $value, ?Schema $schema = null) : Entry
     {

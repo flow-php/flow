@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Row;
 
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Row\Schema\Definition;
 
 final class Schema implements \Countable
@@ -89,11 +90,11 @@ final class Schema implements \Countable
     }
 
     /**
-     * @throws InvalidArgumentException
+     * @throws SchemaDefinitionNotFoundException
      */
     public function getDefinition(string|Reference $ref) : Definition
     {
-        return $this->findDefinition($ref) ?: throw new InvalidArgumentException("There is no definition for \"{$ref}\" in the schema.");
+        return $this->findDefinition($ref) ?: throw new SchemaDefinitionNotFoundException((string) $ref);
     }
 
     public function merge(self $schema) : self
