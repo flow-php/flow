@@ -10,10 +10,15 @@ use Flow\ETL\Transformer;
 
 final class DropPartitionsTransformer implements Transformer
 {
+    public function __construct(private readonly bool $dropPartitionColumns = false)
+    {
+
+    }
+
     public function transform(Rows $rows, FlowContext $context) : Rows
     {
         if ($rows->isPartitioned()) {
-            return $rows->dropPartitions();
+            return $rows->dropPartitions($this->dropPartitionColumns);
         }
 
         return $rows;

@@ -320,9 +320,14 @@ final class DataFrame
         return $this;
     }
 
-    public function dropPartitions() : self
+    /**
+     * Drop all partitions from Rows, additionally when $dropPartitionColumns is set to true, partition columns are also removed.
+     *
+     * @lazy
+     */
+    public function dropPartitions(bool $dropPartitionColumns = false) : self
     {
-        $this->pipeline->add(new DropPartitionsTransformer());
+        $this->pipeline->add(new DropPartitionsTransformer($dropPartitionColumns));
 
         return $this;
     }
