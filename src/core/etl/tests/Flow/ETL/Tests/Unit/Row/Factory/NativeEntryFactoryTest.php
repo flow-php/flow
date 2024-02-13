@@ -25,7 +25,7 @@ use function Flow\ETL\DSL\type_string;
 use function Flow\ETL\DSL\uuid_entry;
 use function Flow\ETL\DSL\xml_entry;
 use Flow\ETL\Exception\CastingException;
-use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
@@ -427,8 +427,7 @@ final class NativeEntryFactoryTest extends TestCase
 
     public function test_with_empty_schema() : void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('There is no definition for "e" in the schema.');
+        $this->expectException(SchemaDefinitionNotFoundException::class);
 
         (new NativeEntryFactory())
             ->create('e', '1', new Schema());
@@ -436,8 +435,7 @@ final class NativeEntryFactoryTest extends TestCase
 
     public function test_with_schema_for_different_entry() : void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('There is no definition for "diff" in the schema.');
+        $this->expectException(SchemaDefinitionNotFoundException::class);
 
         (new NativeEntryFactory())
             ->create('diff', '1', new Schema(Schema\Definition::string('e')));

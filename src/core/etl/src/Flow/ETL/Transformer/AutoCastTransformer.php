@@ -8,7 +8,6 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\PHP\Type\AutoCaster;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\Entry\StringEntry;
 use Flow\ETL\Rows;
 use Flow\ETL\Transformer;
 
@@ -22,10 +21,6 @@ final class AutoCastTransformer implements Transformer
     {
         return $rows->map(function (Row $row) use ($context) {
             return $row->map(function (Entry $entry) use ($context) {
-                //                if (!$entry instanceof StringEntry) {
-                //                    return $entry;
-                //                }
-
                 return $context->entryFactory()->create($entry->name(), $this->caster->cast($entry->value()));
             });
         });

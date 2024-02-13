@@ -12,6 +12,7 @@ use Flow\ETL\ErrorHandler\SkipRows;
 use Flow\ETL\ErrorHandler\ThrowError;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\InvalidLogicException;
+use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
 use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\LocalFileListExtractor;
 use Flow\ETL\Filesystem\Path;
@@ -916,12 +917,32 @@ function array_to_rows(array $data, EntryFactory $entryFactory = new NativeEntry
         foreach ($data as $key => $value) {
             $name = \is_int($key) ? 'e' . \str_pad((string) $key, 2, '0', STR_PAD_LEFT) : $key;
 
-            $entries[$name] = $entryFactory->create($name, $value, $schema);
+            try {
+                $entries[$name] = $entryFactory->create($name, $value, $schema);
+            } catch (SchemaDefinitionNotFoundException $e) {
+                if ($schema === null) {
+                    throw $e;
+                }
+            }
         }
 
         foreach ($partitions as $partition) {
             if (!\array_key_exists($partition->name, $entries)) {
-                $entries[$partition->name] = $entryFactory->create($partition->name, $partition->value, $schema);
+                try {
+                    $entries[$partition->name] = $entryFactory->create($partition->name, $partition->value, $schema);
+                } catch (SchemaDefinitionNotFoundException $e) {
+                    if ($schema === null) {
+                        throw $e;
+                    }
+                }
+            }
+        }
+
+        if ($schema !== null) {
+            foreach ($schema->definitions() as $definition) {
+                if (!\array_key_exists($definition->entry()->name(), $entries)) {
+                    $entries[$definition->entry()->name()] = null_entry($definition->entry()->name());
+                }
             }
         }
 
@@ -935,12 +956,33 @@ function array_to_rows(array $data, EntryFactory $entryFactory = new NativeEntry
 
         foreach ($row as $column => $value) {
             $name = \is_int($column) ? 'e' . \str_pad((string) $column, 2, '0', STR_PAD_LEFT) : $column;
-            $entries[$name] = $entryFactory->create(\is_int($column) ? 'e' . \str_pad((string) $column, 2, '0', STR_PAD_LEFT) : $column, $value, $schema);
+
+            try {
+                $entries[$name] = $entryFactory->create(\is_int($column) ? 'e' . \str_pad((string) $column, 2, '0', STR_PAD_LEFT) : $column, $value, $schema);
+            } catch (SchemaDefinitionNotFoundException $e) {
+                if ($schema === null) {
+                    throw $e;
+                }
+            }
         }
 
         foreach ($partitions as $partition) {
             if (!\array_key_exists($partition->name, $entries)) {
-                $entries[$partition->name] = $entryFactory->create($partition->name, $partition->value, $schema);
+                try {
+                    $entries[$partition->name] = $entryFactory->create($partition->name, $partition->value, $schema);
+                } catch (SchemaDefinitionNotFoundException $e) {
+                    if ($schema === null) {
+                        throw $e;
+                    }
+                }
+            }
+        }
+
+        if ($schema !== null) {
+            foreach ($schema->definitions() as $definition) {
+                if (!\array_key_exists($definition->entry()->name(), $entries)) {
+                    $entries[$definition->entry()->name()] = null_entry($definition->entry()->name());
+                }
             }
         }
 

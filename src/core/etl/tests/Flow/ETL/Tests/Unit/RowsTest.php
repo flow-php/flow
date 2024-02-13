@@ -7,8 +7,10 @@ namespace Flow\ETL\Tests\Unit;
 use function Flow\ETL\DSL\array_entry;
 use function Flow\ETL\DSL\array_to_rows;
 use function Flow\ETL\DSL\bool_entry;
+use function Flow\ETL\DSL\bool_schema;
 use function Flow\ETL\DSL\datetime_entry;
 use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\int_schema;
 use function Flow\ETL\DSL\list_entry;
 use function Flow\ETL\DSL\null_entry;
 use function Flow\ETL\DSL\partition;
@@ -18,6 +20,7 @@ use function Flow\ETL\DSL\row;
 use function Flow\ETL\DSL\rows;
 use function Flow\ETL\DSL\rows_partitioned;
 use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\str_schema;
 use function Flow\ETL\DSL\type_int;
 use function Flow\ETL\DSL\type_list;
 use function Flow\ETL\DSL\type_string;
@@ -178,6 +181,50 @@ final class RowsTest extends TestCase
         unset($rows[0]);
     }
 
+    public function test_building_row_from_array_with_schema_and_additional_fields_not_covered_by_schema() : void
+    {
+        $rows = array_to_rows(
+            ['id' => 1234, 'deleted' => false, 'phase' => null],
+            schema: new Schema(
+                int_schema('id'),
+                bool_schema('deleted'),
+            )
+        );
+
+        $this->assertEquals(
+            rows(
+                row(
+                    int_entry('id', 1234),
+                    bool_entry('deleted', false),
+                ),
+            ),
+            $rows
+        );
+    }
+
+    public function test_building_row_from_array_with_schema_but_entries_not_available_in_rows() : void
+    {
+        $rows = array_to_rows(
+            ['id' => 1234, 'deleted' => false],
+            schema: new Schema(
+                int_schema('id'),
+                bool_schema('deleted'),
+                str_schema('phase', true),
+            )
+        );
+
+        $this->assertEquals(
+            rows(
+                row(
+                    int_entry('id', 1234),
+                    bool_entry('deleted', false),
+                    null_entry('phase')
+                ),
+            ),
+            $rows
+        );
+    }
+
     public function test_building_rows_from_array() : void
     {
         $rows = array_to_rows(
@@ -198,6 +245,65 @@ final class RowsTest extends TestCase
                     int_entry('id', 4321),
                     bool_entry('deleted', true),
                     str_entry('phase', 'launch'),
+                )
+            ),
+            $rows
+        );
+    }
+
+    public function test_building_rows_from_array_with_schema_and_additional_fields_not_covered_by_schema() : void
+    {
+        $rows = array_to_rows(
+            [
+                ['id' => 1234, 'deleted' => false, 'phase' => null],
+                ['id' => 4321, 'deleted' => true, 'phase' => 'launch'],
+            ],
+            schema: new Schema(
+                int_schema('id'),
+                bool_schema('deleted'),
+            )
+        );
+
+        $this->assertEquals(
+            rows(
+                row(
+                    int_entry('id', 1234),
+                    bool_entry('deleted', false),
+                ),
+                row(
+                    int_entry('id', 4321),
+                    bool_entry('deleted', true),
+                )
+            ),
+            $rows
+        );
+    }
+
+    public function test_building_rows_from_array_with_schema_but_entries_not_available_in_rows() : void
+    {
+        $rows = array_to_rows(
+            [
+                ['id' => 1234, 'deleted' => false],
+                ['id' => 4321, 'deleted' => true],
+            ],
+            schema: new Schema(
+                int_schema('id'),
+                bool_schema('deleted'),
+                str_schema('phase', true),
+            )
+        );
+
+        $this->assertEquals(
+            rows(
+                row(
+                    int_entry('id', 1234),
+                    bool_entry('deleted', false),
+                    null_entry('phase')
+                ),
+                row(
+                    int_entry('id', 4321),
+                    bool_entry('deleted', true),
+                    null_entry('phase')
                 )
             ),
             $rows
