@@ -6,6 +6,8 @@ on:
       - 1.x
     tags:
       - '*'
+    paths-ignore:
+      - 'CHANGELOG.md'
 
 env:
   GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
