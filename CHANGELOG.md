@@ -1,6 +1,7 @@
 ## [Unreleased] - 2024-02-13
 
 ### Added
+- [#988](https://github.com/flow-php/flow/pull/988) - **Respect additional/missing schema fields when creating rows** - [@norberttech](https://github.com/norberttech)
 - [#987](https://github.com/flow-php/flow/pull/987) - **DataFrame::dropPartitions can now additionally drop also partition columns** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
