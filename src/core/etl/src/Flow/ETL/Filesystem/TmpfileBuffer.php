@@ -21,6 +21,11 @@ final class TmpfileBuffer implements LocalBuffer
         }
     }
 
+    public function seek(int $offset, int $whence = SEEK_SET) : void
+    {
+        \fseek($this->stream(), $offset, $whence);
+    }
+
     /**
      * @return resource
      */
@@ -33,6 +38,11 @@ final class TmpfileBuffer implements LocalBuffer
 
         /** @phpstan-ignore-next-line */
         return $this->stream;
+    }
+
+    public function tell() : int|false
+    {
+        return \ftell($this->stream());
     }
 
     public function write(string $data) : void

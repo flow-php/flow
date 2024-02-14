@@ -28,6 +28,8 @@ abstract class FlysystemWrapper implements StreamWrapper
      */
     protected $stream;
 
+    protected ?array $streamMedata = null;
+
     /**
      * @var null|array{path?: string, host?: string}
      */
@@ -53,6 +55,10 @@ abstract class FlysystemWrapper implements StreamWrapper
 
     public function stream_eof() : bool
     {
+        if ($this->stream === null) {
+            return false;
+        }
+
         $this->openRead();
 
         /**
@@ -97,6 +103,10 @@ abstract class FlysystemWrapper implements StreamWrapper
             default => null
         };
 
+        if ($this->stream) {
+            $this->streamMedata = \stream_get_meta_data($this->stream);
+        }
+
         return true;
     }
 
@@ -110,6 +120,25 @@ abstract class FlysystemWrapper implements StreamWrapper
          * @phpstan-ignore-next-line
          */
         return \fread($this->stream, $count);
+    }
+
+    public function stream_seek(int $offset, int $whence = SEEK_SET) : bool
+    {
+        if ($this->stream === null) {
+            return false;
+        }
+
+        if ($this->streamMedata === null) {
+            return false;
+        }
+
+        if ($this->streamMedata['seekable'] === false) {
+            throw new RuntimeException('Remote streams are not seekable');
+        }
+
+        $this->buffer()->seek($offset, $whence);
+
+        return true;
     }
 
     public function stream_stat() : array|false
@@ -132,6 +161,15 @@ abstract class FlysystemWrapper implements StreamWrapper
             'blksize' => 0,
             'blocks' => 0,
         ];
+    }
+
+    public function stream_tell() : int|false
+    {
+        if ($this->stream === null) {
+            return $this->buffer()->tell();
+        }
+
+        return \ftell($this->stream);
     }
 
     public function stream_write(string $data) : int

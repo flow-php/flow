@@ -25,10 +25,14 @@ interface StreamWrapper
 
     public function stream_read(int $count) : string|false;
 
+    public function stream_seek(int $offset, int $whence = SEEK_SET) : bool;
+
     /**
      * @return array<mixed>|false
      */
     public function stream_stat() : array|false;
+
+    public function stream_tell() : int|false;
 
     public function stream_write(string $data) : int;
 

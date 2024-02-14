@@ -150,7 +150,10 @@ final class Writer
 
         $this->stream = $resource;
 
-        \fseek($this->stream(), 0);
+        if (\ftell($this->stream()) !== 0) {
+            \fseek($this->stream(), 0);
+        }
+
         \fwrite($this->stream(), ParquetFile::PARQUET_MAGIC_NUMBER);
         $this->fileOffset = \strlen(ParquetFile::PARQUET_MAGIC_NUMBER);
 
