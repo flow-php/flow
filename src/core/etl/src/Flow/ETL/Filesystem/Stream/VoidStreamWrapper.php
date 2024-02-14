@@ -42,9 +42,19 @@ final class VoidStreamWrapper implements StreamWrapper
         return false;
     }
 
+    public function stream_seek(int $offset, int $whence = SEEK_SET) : bool
+    {
+        return false;
+    }
+
     public function stream_stat() : array|false
     {
         return false;
+    }
+
+    public function stream_tell() : int
+    {
+        return 0;
     }
 
     public function stream_write(string $data) : int
