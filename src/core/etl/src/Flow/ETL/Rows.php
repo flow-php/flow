@@ -361,7 +361,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
          */
         $joined = [];
 
-        $rightSchema = $right->schema()->without(...$expression->right());
+        $rightSchema = $right->schema()->gracefulRemove(...$expression->right());
 
         foreach ($this->rows as $leftRow) {
             /** @var ?Row $joinedRow */
@@ -436,7 +436,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
          */
         $joined = [];
 
-        $leftSchema = $this->schema()->without(...$expression->left());
+        $leftSchema = $this->schema()->gracefulRemove(...$expression->left());
 
         foreach ($right->rows as $rightRow) {
             /** @var ?Row $joinedRow */

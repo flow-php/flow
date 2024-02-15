@@ -6,6 +6,7 @@ namespace Flow\ETL\Row;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
+use Flow\ETL\Exception\SchemaDefinitionNotUniqueException;
 use Flow\ETL\Row\Schema\Definition;
 
 final class Schema implements \Countable
@@ -13,21 +14,11 @@ final class Schema implements \Countable
     /**
      * @var array<string, Definition>
      */
-    private readonly array $definitions;
+    private array $definitions;
 
     public function __construct(Definition ...$definitions)
     {
-        $uniqueDefinitions = [];
-
-        foreach ($definitions as $definition) {
-            $uniqueDefinitions[$definition->entry()->name()] = $definition;
-        }
-
-        if (\count($uniqueDefinitions) !== \count($definitions)) {
-            throw new InvalidArgumentException(\sprintf('Entry definitions must be unique, given: [%s]', \implode(', ', \array_map(fn (Definition $d) => $d->entry()->name(), $definitions))));
-        }
-
-        $this->definitions = $uniqueDefinitions;
+        $this->setDefinitions(...$definitions);
     }
 
     public static function fromArray(array $definitions) : self
@@ -43,6 +34,13 @@ final class Schema implements \Countable
         }
 
         return new self(...$schema);
+    }
+
+    public function add(Definition ...$definitions) : self
+    {
+        $this->setDefinitions(...\array_merge(\array_values($this->definitions), $definitions));
+
+        return $this;
     }
 
     public function count() : int
@@ -97,6 +95,26 @@ final class Schema implements \Countable
         return $this->findDefinition($ref) ?: throw new SchemaDefinitionNotFoundException((string) $ref);
     }
 
+    /**
+     * Gracefully remove entries from schema without throwing an exception if entry does not exist.
+     */
+    public function gracefulRemove(string|Reference ...$entries) : self
+    {
+        $refs = References::init(...$entries);
+
+        $definitions = [];
+
+        foreach ($this->definitions as $definition) {
+            if (!$refs->has($definition->entry())) {
+                $definitions[] = $definition;
+            }
+        }
+
+        $this->setDefinitions(...$definitions);
+
+        return $this;
+    }
+
     public function merge(self $schema) : self
     {
         $newDefinitions = $this->definitions;
@@ -123,7 +141,9 @@ final class Schema implements \Countable
             }
         }
 
-        return new self(...\array_values($newDefinitions));
+        $this->setDefinitions(...\array_values($newDefinitions));
+
+        return $this;
     }
 
     public function normalize() : array
@@ -149,14 +169,22 @@ final class Schema implements \Countable
             }
         }
 
-        return new self(...$definitions);
+        $this->setDefinitions(...$definitions);
+
+        return $this;
     }
 
-    public function without(string|Reference ...$entries) : self
+    public function remove(string|Reference ...$entries) : self
     {
         $refs = References::init(...$entries);
 
         $definitions = [];
+
+        foreach ($entries as $entry) {
+            if (!$this->findDefinition($entry)) {
+                throw new SchemaDefinitionNotFoundException((string) $entry);
+            }
+        }
 
         foreach ($this->definitions as $definition) {
             if (!$refs->has($definition->entry())) {
@@ -164,6 +192,73 @@ final class Schema implements \Countable
             }
         }
 
-        return new self(...$definitions);
+        $this->setDefinitions(...$definitions);
+
+        return $this;
+    }
+
+    public function rename(string|Reference $entry, string $newName) : self
+    {
+        $definitions = [];
+
+        if (!$this->findDefinition($entry)) {
+            throw new SchemaDefinitionNotFoundException((string) $entry);
+        }
+
+        foreach ($this->definitions as $nextDefinition) {
+            if ($nextDefinition->entry()->is(EntryReference::init($entry))) {
+                $definitions[] = $nextDefinition->rename($newName);
+            } else {
+                $definitions[] = $nextDefinition;
+            }
+        }
+
+        $this->setDefinitions(...$definitions);
+
+        return $this;
+    }
+
+    public function replace(string|Reference $entry, Definition $definition) : self
+    {
+        $definitions = [];
+
+        if (!$this->findDefinition($entry)) {
+            throw new SchemaDefinitionNotFoundException((string) $entry);
+        }
+
+        foreach ($this->definitions as $nextDefinition) {
+            if ($nextDefinition->entry()->is(EntryReference::init($entry))) {
+                $definitions[] = $definition;
+            } else {
+                $definitions[] = $nextDefinition;
+            }
+        }
+
+        $this->setDefinitions(...$definitions);
+
+        return $this;
+    }
+
+    /**
+     * @deprecated Use `remove` instead
+     */
+    public function without(string|Reference ...$entries) : self
+    {
+        return $this->remove(...$entries);
+    }
+
+    private function setDefinitions(Definition ...$definitions) : void
+    {
+        $uniqueDefinitions = [];
+
+        foreach ($definitions as $definition) {
+            $uniqueDefinitions[$definition->entry()->name()] = $definition;
+        }
+
+        if (\count($uniqueDefinitions) !== \count($definitions)) {
+            throw new SchemaDefinitionNotUniqueException(\sprintf('Entry definitions must be unique, given: [%s]', \implode(', ', \array_map(fn (Definition $d) => $d->entry()->name(), $definitions))));
+        }
+
+        $this->definitions = $uniqueDefinitions;
     }
 }

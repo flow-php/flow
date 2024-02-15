@@ -363,6 +363,16 @@ final class Definition
         return new self($this->ref, $this->entryClass, $this->type->makeNullable(true), $this->metadata);
     }
 
+    public function rename(string $newName) : self
+    {
+        return new self(
+            $newName,
+            $this->entryClass,
+            $this->type,
+            $this->metadata
+        );
+    }
+
     public function type() : Type
     {
         return $this->type;
