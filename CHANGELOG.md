@@ -1,16 +1,24 @@
-## [Unreleased] - 2024-02-14
+## [Unreleased] - 2024-02-15
 
 ### Added
+- [#991](https://github.com/flow-php/flow/pull/991) - **Schema::remove** - [@norberttech](https://github.com/norberttech)
+- [#991](https://github.com/flow-php/flow/pull/991) - **Schema::gracefulRemove** - [@norberttech](https://github.com/norberttech)
+- [#991](https://github.com/flow-php/flow/pull/991) - **Schema::add** - [@norberttech](https://github.com/norberttech)
+- [#991](https://github.com/flow-php/flow/pull/991) - **Schema::replace** - [@norberttech](https://github.com/norberttech)
 - [#988](https://github.com/flow-php/flow/pull/988) - **Respect additional/missing schema fields when creating rows** - [@norberttech](https://github.com/norberttech)
 - [#987](https://github.com/flow-php/flow/pull/987) - **DataFrame::dropPartitions can now additionally drop also partition columns** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#991](https://github.com/flow-php/flow/pull/991) - **Schema became mutable object [BC Break]** - [@norberttech](https://github.com/norberttech)
 - [239226](https://github.com/flow-php/flow/commit/2392268cb051c898368a01fb7d6042043bd3d3ef) - **Stop triggering workflows when only changelog was updated** - [@norberttech](https://github.com/norberttech)
 - [3fc5e7](https://github.com/flow-php/flow/commit/3fc5e78e32dbcf0926250227af1be4ddf88cad51) - **README - memory consumption description improvements** - [@norberttech](https://github.com/norberttech)
 - [#985](https://github.com/flow-php/flow/pull/985) - **Update Homebrew TAP formula: flow-php to version: 0.6.1** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
 - [#989](https://github.com/flow-php/flow/pull/989) - **Fixed writing parquet to remote locations** - [@norberttech](https://github.com/norberttech)
+
+### Deprecated
+- [#991](https://github.com/flow-php/flow/pull/991) - **Schema::without** - [@norberttech](https://github.com/norberttech)
 
 ## [0.6.1] - 2024-02-12
 
