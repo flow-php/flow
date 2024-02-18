@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-02-15
+## [Unreleased] - 2024-02-18
 
 ### Added
 - [#991](https://github.com/flow-php/flow/pull/991) - **Schema::remove** - [@norberttech](https://github.com/norberttech)
@@ -9,13 +9,20 @@
 - [#987](https://github.com/flow-php/flow/pull/987) - **DataFrame::dropPartitions can now additionally drop also partition columns** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#993](https://github.com/flow-php/flow/pull/993) - **Writing to partitioned datasets is no longer creating random file names, even append will create new files with suffixed name of the original file** - [@norberttech](https://github.com/norberttech)
 - [#991](https://github.com/flow-php/flow/pull/991) - **Schema became mutable object [BC Break]** - [@norberttech](https://github.com/norberttech)
 - [239226](https://github.com/flow-php/flow/commit/2392268cb051c898368a01fb7d6042043bd3d3ef) - **Stop triggering workflows when only changelog was updated** - [@norberttech](https://github.com/norberttech)
 - [3fc5e7](https://github.com/flow-php/flow/commit/3fc5e78e32dbcf0926250227af1be4ddf88cad51) - **README - memory consumption description improvements** - [@norberttech](https://github.com/norberttech)
 - [#985](https://github.com/flow-php/flow/pull/985) - **Update Homebrew TAP formula: flow-php to version: 0.6.1** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#993](https://github.com/flow-php/flow/pull/993) - **updating file by ETL through overwrite save mode** - [@norberttech](https://github.com/norberttech)
+- [#993](https://github.com/flow-php/flow/pull/993) - **FilesystemStreams test suite** - [@norberttech](https://github.com/norberttech)
+- [#993](https://github.com/flow-php/flow/pull/993) - **even when writing to a partitioned dataset, flow will respect original filename given as destination path** - [@norberttech](https://github.com/norberttech)
 - [#989](https://github.com/flow-php/flow/pull/989) - **Fixed writing parquet to remote locations** - [@norberttech](https://github.com/norberttech)
+
+### Removed
+- [#993](https://github.com/flow-php/flow/pull/993) - **DataFrame::threadSafe / DataFrame::appendSafe** - [@norberttech](https://github.com/norberttech)
 
 ### Deprecated
 - [#991](https://github.com/flow-php/flow/pull/991) - **Schema::without** - [@norberttech](https://github.com/norberttech)
