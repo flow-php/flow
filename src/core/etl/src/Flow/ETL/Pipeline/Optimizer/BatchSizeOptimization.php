@@ -7,7 +7,6 @@ use Flow\ETL\Pipeline;
 use Flow\ETL\Pipeline\BatchingPipeline;
 use Flow\ETL\Pipeline\CollectingPipeline;
 use Flow\ETL\Pipeline\OverridingPipeline;
-use Flow\ETL\Pipeline\ParallelizingPipeline;
 use Flow\ETL\Pipeline\PartitioningPipeline;
 use Flow\ETL\Transformer;
 
@@ -22,14 +21,11 @@ use Flow\ETL\Transformer;
 final class BatchSizeOptimization implements Optimization
 {
     /**
-     * @psalm-suppress DeprecatedClass
-     *
      * @var array<class-string<Pipeline>>
      */
     private array $batchingPipelines = [
         BatchingPipeline::class,
         CollectingPipeline::class,
-        ParallelizingPipeline::class,
         PartitioningPipeline::class,
     ];
 

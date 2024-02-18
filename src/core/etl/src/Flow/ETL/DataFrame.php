@@ -29,7 +29,6 @@ use Flow\ETL\Pipeline\BatchingPipeline;
 use Flow\ETL\Pipeline\CachingPipeline;
 use Flow\ETL\Pipeline\CollectingPipeline;
 use Flow\ETL\Pipeline\GroupByPipeline;
-use Flow\ETL\Pipeline\ParallelizingPipeline;
 use Flow\ETL\Pipeline\PartitioningPipeline;
 use Flow\ETL\Pipeline\VoidPipeline;
 use Flow\ETL\Row\Reference;
@@ -581,24 +580,6 @@ final class DataFrame
     public function onError(ErrorHandler $handler) : self
     {
         $this->context->setErrorHandler($handler);
-
-        return $this;
-    }
-
-    /**
-     * @deprecated - use DataFrame::batchSize() instead
-     *
-     * @psalm-suppress DeprecatedClass
-     * Keep extracting rows and passing them through all transformers up to this point.
-     * From here each transformed Row is divided and pushed forward to following pipeline elements.
-     *
-     * @lazy
-     *
-     * @param int<1, max> $chunks
-     */
-    public function parallelize(int $chunks) : self
-    {
-        $this->pipeline = new ParallelizingPipeline($this->pipeline, $chunks);
 
         return $this;
     }

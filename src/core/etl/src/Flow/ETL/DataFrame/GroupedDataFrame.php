@@ -41,4 +41,9 @@ final class GroupedDataFrame
     {
         return $this->df->pivot($ref);
     }
+
+    public function rename(string $from, string $to) : DataFrame
+    {
+        return $this->df->rename($from, $to);
+    }
 }

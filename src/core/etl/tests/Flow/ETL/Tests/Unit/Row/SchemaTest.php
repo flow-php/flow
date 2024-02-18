@@ -223,15 +223,6 @@ final class SchemaTest extends TestCase
             schema(
                 int_schema('id'),
                 str_schema('name'),
-            )->without('name')
-        );
-        $this->assertEquals(
-            schema(
-                int_schema('id'),
-            ),
-            schema(
-                int_schema('id'),
-                str_schema('name'),
             )->remove('name')
         );
     }

@@ -8,7 +8,6 @@ use Flow\ETL\Pipeline\BatchingPipeline;
 use Flow\ETL\Pipeline\CollectingPipeline;
 use Flow\ETL\Pipeline\NestedPipeline;
 use Flow\ETL\Pipeline\Optimizer\BatchSizeOptimization;
-use Flow\ETL\Pipeline\ParallelizingPipeline;
 use Flow\ETL\Pipeline\SynchronousPipeline;
 use Flow\ETL\Transformer;
 use PHPUnit\Framework\TestCase;
@@ -66,15 +65,6 @@ final class BatchSizeOptimizationTest extends TestCase
     public function test_is_for_collecting_pipeline() : void
     {
         $pipeline = new CollectingPipeline(new SynchronousPipeline());
-
-        $this->assertFalse(
-            (new BatchSizeOptimization())->isFor(new DbalLoader('test', [], []), $pipeline)
-        );
-    }
-
-    public function test_is_for_parallelizing_pipeline() : void
-    {
-        $pipeline = new ParallelizingPipeline(new SynchronousPipeline(), 10);
 
         $this->assertFalse(
             (new BatchSizeOptimization())->isFor(new DbalLoader('test', [], []), $pipeline)

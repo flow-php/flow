@@ -19,7 +19,6 @@ use function Flow\ETL\DSL\ref;
 use function Flow\ETL\DSL\str_entry;
 use function Flow\ETL\DSL\sum;
 use function Flow\ETL\DSL\window;
-use Flow\ETL\DSL\Transform;
 use Flow\ETL\Loader;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Row;
@@ -290,7 +289,7 @@ final class GroupByTest extends IntegrationTestCase
                 )
             ))
             ->aggregate(average(ref('age')))
-            ->rows(Transform::rename('age_avg', 'average_age'))
+            ->rename('age_avg', 'average_age')
             ->fetch();
 
         $this->assertEquals(

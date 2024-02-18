@@ -56,7 +56,6 @@ jobs:
       - name: "Validate Flow PHAR"
         run: |
           ./build/flow.phar --version
-          ./build/flow.phar run examples/topics/phar/data_frame/code.php
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
