@@ -108,28 +108,28 @@ final class LocalFilesystem implements Filesystem
     {
         if (!$path->isLocal()) {
             throw new RuntimeException(\sprintf('Path "%s" is not local', $path->uri()));
+        }
+
+        if (!$path->isPattern()) {
+            if (\is_dir($path->path())) {
+                $this->rmdir($path->path());
+            } else {
+                if (\file_exists($path->path())) {
+                    \unlink($path->path());
+                }
             }
 
-            if (!$path->isPattern()) {
-                if (\is_dir($path->path())) {
-                    $this->rmdir($path->path());
-                } else {
-                    if (\file_exists($path->path())) {
-                        \unlink($path->path());
-                    }
-                }
+            return;
+        }
 
-                return;
-            }
-
-            foreach (Glob::glob($path->path()) as $filePath) {
-                if (\is_dir($filePath)) {
-                    $this->rmdir($filePath);
-                } else {
-                    \unlink($filePath);
-                }
+        foreach (Glob::glob($path->path()) as $filePath) {
+            if (\is_dir($filePath)) {
+                $this->rmdir($filePath);
+            } else {
+                \unlink($filePath);
             }
         }
+    }
 
     public function scan(Path $path, PartitionFilter $partitionFilter = new NoopFilter()) : \Generator
     {
