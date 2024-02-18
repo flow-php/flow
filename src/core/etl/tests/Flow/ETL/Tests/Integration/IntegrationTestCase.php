@@ -41,6 +41,52 @@ abstract class IntegrationTestCase extends TestCase
         $this->cleanupCacheDir($this->cacheDir);
     }
 
+    protected function cleanFiles() : void
+    {
+        foreach (\scandir($this->filesDirectory()) as $file) {
+            if (\in_array($file, ['.', '..', '.gitignore'], true)) {
+                continue;
+            }
+
+            $this->fs->rm(Path::realpath($this->filesDirectory() . DIRECTORY_SEPARATOR . $file));
+        }
+    }
+
+    protected function filesDirectory() : string
+    {
+        throw new \RuntimeException('You need to implement filesDirectory method to point to your test files directory.');
+    }
+
+    protected function getPath(string $relativePath) : Path
+    {
+        return new Path($this->filesDirectory() . DIRECTORY_SEPARATOR . $relativePath);
+    }
+
+    /**
+     * @param array<string, array<string, string>|string> $datasets
+     */
+    protected function setupFiles(array $datasets, $path = '') : void
+    {
+        foreach ($datasets as $name => $content) {
+            if (\is_string($content)) {
+                $result = \file_put_contents($this->filesDirectory() . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR . $name, $content);
+
+                if ($result === false) {
+                    throw new \RuntimeException('Could not create file . ' . $name);
+                }
+
+                continue;
+            }
+
+            \mkdir($this->filesDirectory() . DIRECTORY_SEPARATOR . $path . DIRECTORY_SEPARATOR . $name, recursive: true);
+
+            if (\count($content)) {
+                /** @var array<string,string> $content */
+                $this->setupFiles($content, $path . DIRECTORY_SEPARATOR . $name);
+            }
+        }
+    }
+
     private function cleanupCacheDir(string $directory) : void
     {
         if ($this->fs->directoryExists($path = Path::realpath($directory))) {

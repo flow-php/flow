@@ -14,18 +14,11 @@ use Flow\ETL\Row\EntryFactory;
  */
 final class FlowContext
 {
-    private bool $appendSafe = false;
-
     private ErrorHandler $errorHandler;
 
     public function __construct(public readonly Config $config)
     {
         $this->errorHandler = new ThrowError();
-    }
-
-    public function appendSafe() : bool
-    {
-        return $this->appendSafe;
     }
 
     public function cache() : Cache
@@ -41,13 +34,6 @@ final class FlowContext
     public function errorHandler() : ErrorHandler
     {
         return $this->errorHandler;
-    }
-
-    public function setAppendSafe(bool $appendSafe = true) : self
-    {
-        $this->appendSafe = $appendSafe;
-
-        return $this;
     }
 
     public function setErrorHandler(ErrorHandler $handler) : self

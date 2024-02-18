@@ -35,7 +35,7 @@ final class JsonLoader implements Closure, Loader, Loader\FileLoader
             }
         }
 
-        $context->streams()->close($this->path);
+        $context->streams()->closeWriters($this->path);
     }
 
     public function destination() : Path
@@ -60,7 +60,7 @@ final class JsonLoader implements Closure, Loader, Loader\FileLoader
         $streams = $context->streams();
 
         if (!$streams->isOpen($this->path, $partitions)) {
-            $stream = $streams->open($this->path, 'json', $context->appendSafe(), $partitions);
+            $stream = $streams->writeTo($this->path, $partitions);
 
             if (!\array_key_exists($stream->path()->path(), $this->writes)) {
                 $this->writes[$stream->path()->path()] = 0;
@@ -68,7 +68,7 @@ final class JsonLoader implements Closure, Loader, Loader\FileLoader
 
             \fwrite($stream->resource(), '[');
         } else {
-            $stream = $streams->open($this->path, 'json', $context->appendSafe(), $partitions);
+            $stream = $streams->writeTo($this->path, $partitions);
         }
 
         $this->writeJSON($nextRows, $stream);

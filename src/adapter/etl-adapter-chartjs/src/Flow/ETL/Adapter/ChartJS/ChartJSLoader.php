@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\ChartJS;
 
 use Flow\ETL\Filesystem\Path;
-use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
@@ -32,22 +31,23 @@ final class ChartJSLoader implements Closure, Loader
                 $context->streams()->rm($this->output);
             }
 
-            $stream = $context->streams()->open($this->output, 'html', false);
+            $output = $context->streams()->writeTo($this->output);
 
-            $templateStream = $context->streams()->fs()->open($this->template, Mode::READ);
+            $templateStream = $context->streams()->read($this->template);
 
             /** @var string $template */
-            $template = \stream_get_contents($context->streams()->fs()->open($this->template, Mode::READ)->resource());
+            $template = \stream_get_contents($templateStream->resource());
             $templateStream->close();
 
-            $output = \str_replace(
+            $content = \str_replace(
                 '%_CHART_DATA_%',
                 \json_encode($this->type->data(), JSON_THROW_ON_ERROR),
                 $template
             );
 
-            \fwrite($stream->resource(), $output);
-            $stream->close();
+            \fwrite($output->resource(), $content);
+
+            $context->streams()->closeWriters($this->output);
         }
 
         if ($this->outputVar !== null) {

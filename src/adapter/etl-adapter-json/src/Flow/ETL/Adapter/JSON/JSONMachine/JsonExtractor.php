@@ -13,7 +13,6 @@ use Flow\ETL\Extractor\PartitionFiltering;
 use Flow\ETL\Extractor\PartitionsExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Filesystem\Path;
-use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row\Schema;
 use JsonMachine\Items;
@@ -36,30 +35,30 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
-        foreach ($context->streams()->fs()->scan($this->path, $this->partitionFilter()) as $filePath) {
+        foreach ($context->streams()->scan($this->path, $this->partitionFilter()) as $stream) {
 
             /**
              * @var array|object $rowData
              */
-            foreach (Items::fromStream($context->streams()->fs()->open($filePath, Mode::READ)->resource(), $this->readerOptions())->getIterator() as $rowData) {
+            foreach (Items::fromStream($stream->resource(), $this->readerOptions())->getIterator() as $rowData) {
                 $row = (array) $rowData;
 
                 if ($shouldPutInputIntoRows) {
-                    $row['_input_file_uri'] = $filePath->uri();
+                    $row['_input_file_uri'] = $stream->path()->uri();
                 }
 
-                $signal = yield array_to_rows($row, $context->entryFactory(), $filePath->partitions(), $this->schema);
+                $signal = yield array_to_rows($row, $context->entryFactory(), $stream->path()->partitions(), $this->schema);
                 $this->countRow();
 
                 if ($signal === Signal::STOP || $this->reachedLimit()) {
-                    $context->streams()->close($this->path);
+                    $context->streams()->closeWriters($this->path);
 
                     return;
                 }
             }
-        }
 
-        $context->streams()->close($this->path);
+            $stream->close();
+        }
     }
 
     public function source() : Path

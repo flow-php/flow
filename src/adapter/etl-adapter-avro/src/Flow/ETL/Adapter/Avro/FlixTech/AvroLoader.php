@@ -36,7 +36,7 @@ final class AvroLoader implements Closure, Loader, Loader\FileLoader
             $this->writer($context)->close();
         }
 
-        $context->streams()->close($this->path);
+        $context->streams()->closeWriters($this->path);
         $this->writer = null;
     }
 
@@ -127,13 +127,7 @@ final class AvroLoader implements Closure, Loader, Loader\FileLoader
         $schema = \AvroSchema::parse($this->schema());
 
         $this->writer = new \AvroDataIOWriter(
-            new AvroResource(
-                $context->streams()->open(
-                    $this->path,
-                    'avro',
-                    $context->appendSafe()
-                )->resource()
-            ),
+            new AvroResource($context->streams()->writeTo($this->path)->resource()),
             new \AvroIODatumWriter($schema),
             $schema,
             'null'

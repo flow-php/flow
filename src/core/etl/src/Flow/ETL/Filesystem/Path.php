@@ -141,25 +141,38 @@ final class Path
         return new self(DIRECTORY_SEPARATOR . \implode(DIRECTORY_SEPARATOR, $absoluteParts), $options);
     }
 
-    public static function tmpFile(string $extension) : self
+    public static function tmpFile(string $extension, ?string $name = null) : self
     {
-        return new self(\sys_get_temp_dir() . DIRECTORY_SEPARATOR . \str_replace('.', '', \uniqid('', true)) . '.' . $extension);
+        $name = \ltrim($name ?? \str_replace('.', '', \uniqid('', true)), '/');
+
+        return new self(\sys_get_temp_dir() . DIRECTORY_SEPARATOR . $name . '.' . $extension);
     }
 
     public function addPartitions(Partition $partition, Partition ...$partitions) : self
     {
+        if ($this->isPattern()) {
+            throw new InvalidArgumentException("Can't add partitions to path pattern.");
+        }
+
         \array_unshift($partitions, $partition);
 
         $partitionsPath = '';
 
-        foreach ($partitions as $partition) {
-            $partitionsPath .= DIRECTORY_SEPARATOR . $partition->name . '=' . $partition->value;
+        foreach ($partitions as $nextPartition) {
+            $partitionsPath .= DIRECTORY_SEPARATOR . $nextPartition->name . '=' . $nextPartition->value;
         }
 
-        return new self($this->uri() . $partitionsPath, $this->options);
+        /**
+         * @psalm-suppress PossiblyFalseArgument
+         *
+         * @phpstan-ignore-next-line
+         */
+        $base = \trim(\mb_substr($this->path(), 0, \mb_strrpos($this->path(), $this->basename())), DIRECTORY_SEPARATOR);
+
+        return new self($this->scheme . '://' . $base . $partitionsPath . DIRECTORY_SEPARATOR . $this->basename(), $this->options);
     }
 
-    public function basename() : bool|string
+    public function basename() : string
     {
         return $this->basename;
     }
@@ -169,6 +182,9 @@ final class Path
         return ResourceContext::from($this);
     }
 
+    /**
+     * @psalm-assert-if-true string $this->extension
+     */
     public function extension() : string|false
     {
         return $this->extension;
@@ -246,17 +262,41 @@ final class Path
         return $this->partitions;
     }
 
+    public function partitionsPaths() : array
+    {
+        $partitionPaths = [];
+
+        foreach ($this->partitions() as $partition) {
+            $partitionFolder = $partition->name . '=' . $partition->value;
+            /** @psalm-suppress PossiblyFalseOperand */
+            $partitionFolderPos = \mb_strpos($this->uri(), $partitionFolder) + \mb_strlen($partitionFolder);
+
+            $partitionPaths[] = new self(\mb_substr($this->uri(), 0, $partitionFolderPos), $this->options);
+        }
+
+        return $partitionPaths;
+    }
+
+    /**
+     * Difference between Path::uri and Path::path is that Path::uri returns path with scheme and Path::path returns path without scheme.
+     */
     public function path() : string
     {
         return $this->path;
     }
 
+    /**
+     * @psalm-suppress PossiblyFalseArgument
+     */
     public function randomize() : self
     {
         $extension = false !== $this->extension ? '.' . $this->extension : '';
 
+        /** @phpstan-ignore-next-line */
+        $base = \trim(\mb_substr($this->path(), 0, \mb_strrpos($this->path(), $this->basename())), DIRECTORY_SEPARATOR);
+
         return new self(
-            (\rtrim($this->uri(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . \str_replace('.', '', \uniqid('', true)) . $extension),
+            $this->scheme . '://' . $base . DIRECTORY_SEPARATOR . $this->filename . '_' . \str_replace('.', '', \uniqid('', true)) . $extension,
             $this->options
         );
     }
@@ -312,6 +352,9 @@ final class Path
         return new self($this->scheme() . '://' . \implode(DIRECTORY_SEPARATOR, $staticPath), $this->options);
     }
 
+    /**
+     * Difference between Path::uri and Path::path is that Path::uri returns path with scheme and Path::path returns path without scheme.
+     */
     public function uri() : string
     {
         return $this->scheme . '://' . \ltrim($this->path, DIRECTORY_SEPARATOR);

@@ -27,7 +27,7 @@ final class FileStream
 
         $resourcePath = 'void://' . $path->uri();
 
-        $resource = \fopen($resourcePath, Mode::WRITE_BINARY->value);
+        $resource = \fopen($resourcePath, Mode::WRITE->value);
 
         if ($resource === false) {
             throw new RuntimeException("Cannot open void stream for {$resourcePath}");

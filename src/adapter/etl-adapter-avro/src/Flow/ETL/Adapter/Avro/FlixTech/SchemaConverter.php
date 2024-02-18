@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Avro\FlixTech;
 
+use function Flow\ETL\DSL\type_string;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\PHP\Type\Logical\DateTimeType;
 use Flow\ETL\PHP\Type\Logical\JsonType;
@@ -68,6 +69,10 @@ final class SchemaConverter
         }
 
         if ($type instanceof MapType) {
+            if (!$type->key()->isEqual(type_string())) {
+                throw new RuntimeException('Map key can be only string, ' . $type->key()->toString() . ' is not supported.');
+            }
+
             return match ($type->value()->type()->toString()) {
                 ScalarType::STRING => ['name' => $definition->entry()->name(), 'type' => ['type' => 'map', 'values' => \AvroSchema::STRING_TYPE]],
                 ScalarType::INTEGER => ['name' => $definition->entry()->name(), 'type' => ['type' => 'map', 'values' => \AvroSchema::INT_TYPE]],

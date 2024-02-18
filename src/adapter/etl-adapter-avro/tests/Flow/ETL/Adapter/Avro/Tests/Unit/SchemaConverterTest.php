@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Adapter\Avro\Tests;
+namespace Flow\ETL\Adapter\Avro\Tests\Unit;
 
 use function Flow\ETL\DSL\type_object;
 use function Flow\ETL\DSL\type_string;
@@ -24,64 +24,7 @@ final class SchemaConverterTest extends TestCase
     {
         $this->assertSame(
             <<<'AVRO_JSON'
-{
-  "name": "row",
-  "type": "record",
-  "fields": [
-    {
-      "name": "integer",
-      "type": "int"
-    },
-    {
-      "name": "boolean",
-      "type": "boolean"
-    },
-    {
-      "name": "string",
-      "type": "string"
-    },
-    {
-      "name": "float",
-      "type": "float"
-    },
-    {
-      "name": "datetime",
-      "type": "long",
-      "logicalType": "timestamp-micros"
-    },
-    {
-      "name": "json",
-      "type": "string"
-    },
-    {
-      "name": "list",
-      "type": {
-        "type": "array",
-        "items": "string"
-      }
-    },
-    {
-      "name": "structure",
-      "type": {
-        "name": "Structure",
-        "type": "record",
-        "fields": [
-          {
-            "name": "a",
-            "type": "string"
-          }
-        ]
-      }
-    },
-    {
-      "name": "map",
-      "type": {
-        "type": "map",
-        "values": "int"
-      }
-    }
-  ]
-}
+{"name":"row","type":"record","fields":[{"name":"integer","type":"int"},{"name":"boolean","type":"boolean"},{"name":"string","type":"string"},{"name":"float","type":"float"},{"name":"datetime","type":"long","logicalType":"timestamp-micros"},{"name":"json","type":"string"},{"name":"list","type":{"type":"array","items":"string"}},{"name":"structure","type":{"name":"Structure","type":"record","fields":[{"name":"a","type":"string"}]}},{"name":"map","type":{"type":"map","values":"int"}}]}
 AVRO_JSON
             ,
             (new SchemaConverter())->toAvroJsonSchema(new Schema(
@@ -101,7 +44,7 @@ AVRO_JSON
     public function test_convert_object_entry_to_avro_array() : void
     {
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage("Flow\ETL\Row\Entry\ObjectEntry is not yet supported.");
+        $this->expectExceptionMessage("Flow\ETL\PHP\Type\Native\ObjectType is not yet supported.");
 
         (new SchemaConverter())->toAvroJsonSchema(new Schema(
             Schema\Definition::object('object', type_object(\stdClass::class, false))

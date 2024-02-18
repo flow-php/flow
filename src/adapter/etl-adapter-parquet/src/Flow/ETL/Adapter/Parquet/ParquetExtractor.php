@@ -12,9 +12,8 @@ use Flow\ETL\Extractor\PartitionFiltering;
 use Flow\ETL\Extractor\PartitionsExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Filesystem\Path;
-use Flow\ETL\Filesystem\Stream\Mode;
+use Flow\ETL\Filesystem\Stream\FileStream;
 use Flow\ETL\FlowContext;
-use Flow\ETL\Partitions;
 use Flow\Parquet\ByteOrder;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile;
@@ -55,22 +54,22 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
 
             foreach ($fileData['file']->values($this->columns, $this->limit(), $this->offset) as $row) {
                 if ($shouldPutInputIntoRows) {
-                    $row['_input_file_uri'] = $fileData['uri'];
+                    $row['_input_file_uri'] = $fileData['stream']->path()->uri();
                 }
 
-                $signal = yield array_to_rows($row, $context->entryFactory(), $fileData['partitions'], $flowSchema);
+                $signal = yield array_to_rows($row, $context->entryFactory(), $fileData['stream']->path()->partitions(), $flowSchema);
 
                 $this->countRow();
 
                 if ($signal === Signal::STOP || $this->reachedLimit()) {
-                    $context->streams()->close($this->path);
+                    $context->streams()->closeWriters($this->path);
 
                     return;
                 }
             }
-        }
 
-        $context->streams()->close($this->path);
+            $fileData['stream']->close();
+        }
     }
 
     public function source() : Path
@@ -79,19 +78,18 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
     }
 
     /**
-     * @return \Generator<int, array{file: ParquetFile, uri: string, partitions: Partitions}>
+     * @return \Generator<int, array{file: ParquetFile, stream: FileStream}>
      */
     private function readers(FlowContext $context) : \Generator
     {
-        foreach ($context->streams()->fs()->scan($this->path, $this->partitionFilter()) as $filePath) {
+        foreach ($context->streams()->scan($this->path, $this->partitionFilter()) as $stream) {
             yield [
                 'file' => (new Reader(
                     byteOrder: $this->byteOrder,
                     options: $this->options,
                 ))
-                    ->readStream($context->streams()->fs()->open($filePath, Mode::READ)->resource()),
-                'uri' => $filePath->uri(),
-                'partitions' => $filePath->partitions(),
+                    ->readStream($stream->resource()),
+                'stream' => $stream,
             ];
         }
     }

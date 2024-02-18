@@ -13,28 +13,53 @@ use Flow\ETL\Partition;
  */
 final class FilesystemStreams implements \Countable, \IteratorAggregate
 {
+    public const FLOW_TMP_SUFFIX = '._flow_tmp';
+
     private SaveMode $saveMode;
 
     /**
      * @var array<string, array<string, FileStream>>
      */
-    private array $streams;
+    private array $writingStreams;
 
     public function __construct(private readonly Filesystem $filesystem)
     {
-        $this->streams = [];
+        $this->writingStreams = [];
         $this->saveMode = SaveMode::ExceptionIfExists;
     }
 
-    public function close(Path $basePath) : void
+    public function closeWriters(Path $path) : void
     {
         $streams = [];
 
-        foreach ($this->streams as $nextBasePath => $nextStreams) {
-            if ($basePath->uri() === $nextBasePath) {
+        foreach ($this->writingStreams as $nextBasePath => $nextStreams) {
+            if ($path->uri() === $nextBasePath) {
                 foreach ($nextStreams as $fileStream) {
+
                     if ($fileStream->isOpen()) {
                         $fileStream->close();
+                    }
+
+                    if ($this->saveMode === SaveMode::Overwrite) {
+                        if ($fileStream->path()->partitions()->count()) {
+                            $partitionFilesPatter = new Path($fileStream->path()->parentDirectory()->path() . '/*', $fileStream->path()->options());
+
+                            foreach ($this->filesystem->scan($partitionFilesPatter) as $partitionFile) {
+                                if (\str_ends_with($partitionFile->path(), self::FLOW_TMP_SUFFIX)) {
+                                    continue;
+                                }
+
+                                $this->filesystem->rm($partitionFile);
+                            }
+                        }
+
+                        $this->filesystem->mv(
+                            $fileStream->path(),
+                            new Path(
+                                \str_replace(self::FLOW_TMP_SUFFIX, '', $fileStream->path()->uri()),
+                                $fileStream->path()->options()
+                            )
+                        );
                     }
                 }
             } else {
@@ -42,29 +67,24 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
             }
         }
 
-        $this->streams = $streams;
+        $this->writingStreams = $streams;
     }
 
     public function count() : int
     {
-        return \count($this->streams);
+        return \count($this->writingStreams);
     }
 
     /**
      * @param array<Partition> $partitions
      */
-    public function exists(Path $basePath, array $partitions = []) : bool
+    public function exists(Path $path, array $partitions = []) : bool
     {
         $destination = \count($partitions)
-            ? $basePath->addPartitions(...$partitions)
-            : $basePath;
+            ? $path->addPartitions(...$partitions)
+            : $path;
 
         return $this->filesystem->exists($destination);
-    }
-
-    public function fs() : Filesystem
-    {
-        return $this->filesystem;
     }
 
     /**
@@ -72,97 +92,60 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
      */
     public function getIterator() : \Traversable
     {
-        return new \ArrayIterator(\array_merge(...\array_values($this->streams)));
+        return new \ArrayIterator(\array_merge(...\array_values($this->writingStreams)));
     }
 
     /**
      * @param array<Partition> $partitions
      */
-    public function isOpen(Path $basePath, array $partitions = []) : bool
+    public function isOpen(Path $path, array $partitions = []) : bool
     {
-        if (!\array_key_exists($basePath->uri(), $this->streams)) {
+        if (!\array_key_exists($path->uri(), $this->writingStreams)) {
             return false;
         }
 
         $destination = \count($partitions)
-            ? $basePath->addPartitions(...$partitions)
-            : $basePath;
+            ? $path->addPartitions(...$partitions)
+            : $path;
 
-        return \array_key_exists($destination->uri(), $this->streams[$basePath->uri()]);
+        return \array_key_exists($destination->uri(), $this->writingStreams[$path->uri()]);
     }
 
-    /**
-     * @param array<Partition> $partitions
-     */
-    public function open(Path $basePath, string $extension, bool $appendSafe, array $partitions = []) : FileStream
+    public function read(Path $path, array $partitions = []) : FileStream
     {
-        if (!\array_key_exists($basePath->uri(), $this->streams)) {
-            $this->streams[$basePath->uri()] = [];
+        if ($path->isPattern()) {
+            throw new RuntimeException("Path can't be pattern, given: " . $path->uri());
         }
 
         $destination = \count($partitions)
-            ? $basePath->addPartitions(...$partitions)
-            : $basePath;
+            ? $path->addPartitions(...$partitions)
+            : $path;
 
-        if (\array_key_exists($destination->uri(), $this->streams[$basePath->uri()])) {
-            return $this->streams[$basePath->uri()][$destination->uri()];
-        }
-
-        if ($destination->isPattern()) {
-            throw new RuntimeException("Destination path can't be patter, given:" . $destination->uri());
-        }
-
-        $path = (\count($partitions) || $appendSafe === true) ? $destination->randomize()->setExtension($extension) : $basePath;
-
-        if (!\array_key_exists($destination->uri(), $this->streams[$basePath->uri()])) {
-            if ($this->saveMode === SaveMode::Overwrite) {
-                if ($this->filesystem->exists($destination)) {
-                    $this->filesystem->rm($destination);
-                }
-            }
-
-            if ($this->saveMode === SaveMode::ExceptionIfExists) {
-                if ($this->filesystem->exists($destination)) {
-                    throw new RuntimeException('Destination path "' . $destination->uri() . '" already exists, please change path to different or set different SaveMode');
-                }
-            }
-
-            if ($this->saveMode === SaveMode::Append) {
-                if (!$appendSafe) {
-                    throw new RuntimeException('Appending to destination "' . $path->uri() . '" in non append safe mode is not supported.');
-                }
-
-                if ($this->filesystem->fileExists($destination) && !\count($partitions)) {
-                    throw new RuntimeException('Appending to existing single file destination "' . $path->uri() . '" is not supported.');
-                }
-            }
-
-            if ($this->saveMode === SaveMode::Ignore) {
-                if ($this->filesystem->exists($destination)) {
-                    $this->streams[$basePath->uri()][$destination->uri()] = FileStream::voidStream($path);
-                } else {
-                    $this->streams[$basePath->uri()][$destination->uri()] = $this->filesystem->open($path, Mode::WRITE_BINARY);
-                }
-            } else {
-                $this->streams[$basePath->uri()][$destination->uri()] = $this->filesystem->open($path, Mode::WRITE_BINARY);
-            }
-        }
-
-        return $this->streams[$basePath->uri()][$destination->uri()];
+        return $this->filesystem->open($destination, Mode::READ);
     }
 
     /**
-     * @param Path $basePath
+     * @param Path $path
      * @param array<Partition> $partitions
      */
-    public function rm(Path $basePath, array $partitions = []) : void
+    public function rm(Path $path, array $partitions = []) : void
     {
         $destination = \count($partitions)
-            ? $basePath->addPartitions(...$partitions)
-            : $basePath;
+            ? $path->addPartitions(...$partitions)
+            : $path;
 
         if ($this->filesystem->exists($destination)) {
             $this->filesystem->rm($destination);
+        }
+    }
+
+    /**
+     * @return \Generator<FileStream>
+     */
+    public function scan(Path $path, Partition\PartitionFilter $partitionFilter) : \Generator
+    {
+        foreach ($this->filesystem->scan($path, $partitionFilter) as $file) {
+            yield $this->filesystem->open($file, Mode::READ);
         }
     }
 
@@ -171,5 +154,61 @@ final class FilesystemStreams implements \Countable, \IteratorAggregate
         $this->saveMode = $saveMode;
 
         return $this;
+    }
+
+    /**
+     * @param array<Partition> $partitions
+     */
+    public function writeTo(Path $path, array $partitions = []) : FileStream
+    {
+        if (!$path->extension()) {
+            throw new RuntimeException('Stream path must have an extension, given: ' . $path->uri());
+        }
+
+        if ($path->isPattern()) {
+            throw new RuntimeException("Destination path can't be patter, given:" . $path->uri());
+        }
+
+        $pathUri = $path->uri();
+
+        if (!\array_key_exists($pathUri, $this->writingStreams)) {
+            $this->writingStreams[$pathUri] = [];
+        }
+
+        $destination = \count($partitions)
+            ? $path->addPartitions(...$partitions)
+            : $path;
+
+        $destinationPathUri = $destination->uri();
+
+        if (!\array_key_exists($destinationPathUri, $this->writingStreams[$pathUri])) {
+            $outputPath = $destination;
+
+            if ($this->saveMode === SaveMode::Append) {
+                if ($this->filesystem->fileExists($outputPath)) {
+                    $outputPath = $outputPath->randomize();
+                }
+            }
+
+            if ($this->saveMode === SaveMode::Overwrite) {
+                $outputPath = new Path($outputPath->uri() . self::FLOW_TMP_SUFFIX, $outputPath->options());
+            }
+
+            if ($this->saveMode === SaveMode::ExceptionIfExists) {
+                if ($this->filesystem->exists($destination)) {
+                    throw new RuntimeException('Destination path "' . $destinationPathUri . '" already exists, please change path to different or set different SaveMode');
+                }
+            }
+
+            if ($this->saveMode === SaveMode::Ignore) {
+                if ($this->filesystem->exists($destination)) {
+                    return $this->writingStreams[$pathUri][$destinationPathUri] = FileStream::voidStream($outputPath);
+                }
+            }
+
+            return $this->writingStreams[$pathUri][$destinationPathUri] = $this->filesystem->open($outputPath, Mode::WRITE_READ);
+        }
+
+        return $this->writingStreams[$pathUri][$destinationPathUri];
     }
 }

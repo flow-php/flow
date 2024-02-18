@@ -18,6 +18,8 @@ interface Filesystem
 
     public function fileExists(Path $path) : bool;
 
+    public function mv(Path $from, Path $to) : void;
+
     public function open(Path $path, Mode $mode) : FileStream;
 
     public function rm(Path $path) : void;

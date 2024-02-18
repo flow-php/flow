@@ -66,6 +66,25 @@ final class LocalFilesystem implements Filesystem
         return false;
     }
 
+    public function mv(Path $from, Path $to) : void
+    {
+        if (!$from->isLocal() || !$to->isLocal()) {
+            throw new RuntimeException(\sprintf('Paths "%s" and "%s" are not local', $from->uri(), $to->uri()));
+        }
+
+        if ($from->isPattern() || $to->isPattern()) {
+            throw new RuntimeException('Pattern paths can\'t be moved');
+        }
+
+        if (\file_exists($to->path())) {
+            $this->rm($to);
+        }
+
+        if (!\rename($from->path(), $to->path())) {
+            throw new RuntimeException(\sprintf('Can\'t move "%s" to "%s"', $from->uri(), $to->uri()));
+        }
+    }
+
     public function open(Path $path, Mode $mode) : FileStream
     {
         if (!$path->isLocal()) {
@@ -89,26 +108,28 @@ final class LocalFilesystem implements Filesystem
     {
         if (!$path->isLocal()) {
             throw new RuntimeException(\sprintf('Path "%s" is not local', $path->uri()));
-        }
-
-        if (!$path->isPattern()) {
-            if (\is_dir($path->path())) {
-                $this->rmdir($path->path());
-            } else {
-                \unlink($path->path());
             }
 
-            return;
-        }
+            if (!$path->isPattern()) {
+                if (\is_dir($path->path())) {
+                    $this->rmdir($path->path());
+                } else {
+                    if (\file_exists($path->path())) {
+                        \unlink($path->path());
+                    }
+                }
 
-        foreach (Glob::glob($path->path()) as $filePath) {
-            if (\is_dir($filePath)) {
-                $this->rmdir($filePath);
-            } else {
-                \unlink($filePath);
+                return;
+            }
+
+            foreach (Glob::glob($path->path()) as $filePath) {
+                if (\is_dir($filePath)) {
+                    $this->rmdir($filePath);
+                } else {
+                    \unlink($filePath);
+                }
             }
         }
-    }
 
     public function scan(Path $path, PartitionFilter $partitionFilter = new NoopFilter()) : \Generator
     {

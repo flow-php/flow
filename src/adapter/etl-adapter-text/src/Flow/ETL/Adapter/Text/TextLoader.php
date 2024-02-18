@@ -24,7 +24,7 @@ final class TextLoader implements Closure, Loader, Loader\FileLoader
 
     public function closure(FlowContext $context) : void
     {
-        $context->streams()->close($this->path);
+        $context->streams()->closeWriters($this->path);
     }
 
     public function destination() : Path
@@ -41,7 +41,7 @@ final class TextLoader implements Closure, Loader, Loader\FileLoader
                 }
 
                 \fwrite(
-                    $context->streams()->open($this->path, 'text', $context->appendSafe(), $rows->partitions()->toArray())->resource(),
+                    $context->streams()->writeTo($this->path, $rows->partitions()->toArray())->resource(),
                     $row->entries()->all()[0]->toString() . $this->newLineSeparator
                 );
             }
@@ -52,7 +52,7 @@ final class TextLoader implements Closure, Loader, Loader\FileLoader
                 }
 
                 \fwrite(
-                    $context->streams()->open($this->path, 'text', $context->appendSafe(), [])->resource(),
+                    $context->streams()->writeTo($this->path)->resource(),
                     $row->entries()->all()[0]->toString() . $this->newLineSeparator
                 );
             }

@@ -31,7 +31,7 @@ final class CSVLoader implements Closure, Loader, Loader\FileLoader
 
     public function closure(FlowContext $context) : void
     {
-        $context->streams()->close($this->path);
+        $context->streams()->closeWriters($this->path);
     }
 
     public function destination() : Path
@@ -62,14 +62,14 @@ final class CSVLoader implements Closure, Loader, Loader\FileLoader
         if ($this->header && !$context->streams()->isOpen($this->path, $partitions)) {
             $this->writeCSV(
                 $headers,
-                $context->streams()->open($this->path, 'csv', $context->appendSafe(), $partitions)
+                $context->streams()->writeTo($this->path, $partitions)
             );
         }
 
         foreach ($nextRows as $row) {
             $this->writeCSV(
                 $row->toArray(),
-                $context->streams()->open($this->path, 'csv', $context->appendSafe(), $partitions)
+                $context->streams()->writeTo($this->path, $partitions)
             );
         }
     }
