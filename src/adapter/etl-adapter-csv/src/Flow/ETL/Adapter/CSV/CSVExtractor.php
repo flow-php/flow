@@ -13,7 +13,6 @@ use Flow\ETL\Extractor\PartitionFiltering;
 use Flow\ETL\Extractor\PartitionsExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Filesystem\Path;
-use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
 use Flow\ETL\Row\Schema;
 
@@ -42,8 +41,7 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
-        foreach ($context->streams()->fs()->scan($this->path, $this->partitionFilter()) as $path) {
-            $stream = $context->streams()->fs()->open($path, Mode::READ);
+        foreach ($context->streams()->scan($this->path, $this->partitionFilter()) as $stream) {
 
             $option = \Flow\ETL\Adapter\CSV\csv_detect_separator($stream->resource());
 
@@ -103,20 +101,20 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
                     $row['_input_file_uri'] = $stream->path()->uri();
                 }
 
-                $signal = yield array_to_rows($row, $context->entryFactory(), $path->partitions(), $this->schema);
+                $signal = yield array_to_rows($row, $context->entryFactory(), $stream->path()->partitions(), $this->schema);
                 $this->countRow();
 
                 if ($signal === Signal::STOP || $this->reachedLimit()) {
-                    $context->streams()->close($this->path);
+                    $context->streams()->closeWriters($this->path);
 
                     return;
                 }
 
                 $rowData = \fgetcsv($stream->resource(), $this->charactersReadInLine, $separator, $enclosure, $escape);
             }
-        }
 
-        $context->streams()->close($this->path);
+            $stream->close();
+        }
     }
 
     public function source() : Path

@@ -46,9 +46,9 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
-        foreach ($context->streams()->fs()->scan($this->path, $this->partitionFilter()) as $filePath) {
+        foreach ($context->streams()->scan($this->path, $this->partitionFilter()) as $stream) {
             $xmlReader = new \XMLReader();
-            $xmlReader->open($filePath->path());
+            $xmlReader->open($stream->path()->path());
 
             $previousDepth = 0;
             $currentPathBreadCrumbs = [];
@@ -78,19 +78,19 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
                         if ($shouldPutInputIntoRows) {
                             $rowData = [
                                 'node' => $node,
-                                '_input_file_uri' => $filePath->uri(),
+                                '_input_file_uri' => $stream->path()->uri(),
                             ];
                         } else {
                             $rowData = ['node' => $node];
                         }
 
-                        $signal = yield array_to_rows($rowData, $context->entryFactory(), $filePath->partitions());
+                        $signal = yield array_to_rows($rowData, $context->entryFactory(), $stream->path()->partitions());
 
                         $this->countRow();
 
                         if ($signal === Signal::STOP || $this->reachedLimit()) {
                             $xmlReader->close();
-                            $context->streams()->close($this->path);
+                            $context->streams()->closeWriters($this->path);
 
                             return;
                         }
@@ -102,8 +102,6 @@ final class XMLReaderExtractor implements Extractor, FileExtractor, LimitableExt
 
             $xmlReader->close();
         }
-
-        $context->streams()->close($this->path);
     }
 
     public function source() : Path

@@ -7,8 +7,8 @@ use function Flow\ETL\DSL\ref;
 use Flow\ETL\Config;
 use Flow\ETL\ExternalSort\MemorySort;
 use Flow\ETL\Monitoring\Memory\Unit;
-use Flow\ETL\Tests\Double\AllRowTypesFakeExtractor;
 use Flow\ETL\Tests\Double\CacheSpy;
+use Flow\ETL\Tests\Double\FakeExtractor;
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
 
 final class SortTest extends IntegrationTestCase
@@ -23,8 +23,9 @@ final class SortTest extends IntegrationTestCase
             ->externalSort(new MemorySort($id, $cacheSpy, Unit::fromKb(10)));
 
         df($config)
-            ->read(new AllRowTypesFakeExtractor($rowsets = 50, $rows = 50))
-            ->sortBy(ref('id'))
+            ->read(new FakeExtractor($rowsets = 2500))
+            ->batchSize(50)
+            ->sortBy(ref('int'))
             ->run();
 
         $cache = \array_diff(\scandir($this->cacheDir), ['..', '.']);
@@ -50,14 +51,15 @@ final class SortTest extends IntegrationTestCase
             ->cache($cacheSpy = new CacheSpy(Config::default()->cache()));
 
         $rows = df($config)
-            ->read(new AllRowTypesFakeExtractor($rowsets = 20, $rows = 2))
-            ->sortBy(ref('id'))
+            ->read(new FakeExtractor($rowsets = 40))
+            ->batchSize(2)
+            ->sortBy(ref('int'))
             ->fetch();
 
         $cache = \array_diff(\scandir($this->cacheDir), ['..', '.']);
 
         $this->assertEmpty($cache);
-        $this->assertSame(\range(0, 39), $rows->reduceToArray('id'));
+        $this->assertSame(\range(0, 39), $rows->reduceToArray('int'));
         $this->assertSame(20, $cacheSpy->writes());
     }
 }

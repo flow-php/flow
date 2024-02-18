@@ -41,7 +41,10 @@ final class ParquetFile
 
     public function __destruct()
     {
-        \fclose($this->stream);
+        /** @psalm-suppress RedundantConditionGivenDocblockType */
+        if (\is_resource($this->stream)) {
+            \fclose($this->stream);
+        }
     }
 
     public function metadata() : Metadata

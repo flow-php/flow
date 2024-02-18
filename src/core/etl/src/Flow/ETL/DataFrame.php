@@ -147,19 +147,6 @@ final class DataFrame
         return new GroupedDataFrame($this);
     }
 
-    /**
-     * @lazy
-     * When set to true, files are never written under the origin name but instead initial path is turned
-     * into a folder in which each process writes to a new file.
-     * This is also mandatory for SaveMode::Append
-     */
-    public function appendSafe(bool $appendSafe = true) : self
-    {
-        $this->context->setAppendSafe($appendSafe);
-
-        return $this;
-    }
-
     public function autoCast() : self
     {
         $this->pipeline->add(new AutoCastTransformer(new AutoCaster(Caster::default())));
@@ -585,10 +572,6 @@ final class DataFrame
     {
         $this->context->streams()->setSaveMode($mode);
 
-        if ($mode === SaveMode::Append) {
-            $this->appendSafe();
-        }
-
         return $this;
     }
 
@@ -836,18 +819,6 @@ final class DataFrame
 
         $this->pipeline = $this->pipeline->cleanCopy();
         $this->pipeline->setSource($this->context->config->externalSort()->sortBy(...$entries));
-
-        return $this;
-    }
-
-    /**
-     * @deprecated please use DataFrame::appendSafe() instead
-     *
-     * @lazy
-     */
-    public function threadSafe(bool $appendSafe = true) : self
-    {
-        $this->appendSafe($appendSafe);
 
         return $this;
     }

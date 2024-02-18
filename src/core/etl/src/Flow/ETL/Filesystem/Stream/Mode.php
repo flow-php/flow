@@ -6,17 +6,18 @@ namespace Flow\ETL\Filesystem\Stream;
 
 enum Mode : string
 {
-    case APPEND = 'a';
+    case APPEND_READ_WRITE = 'a+';
 
-    case APPEND_BINARY = 'ab';
+    case APPEND_WRITE = 'a';
 
+    case CREATE_READ_WRITE = 'x+';
+
+    case CREATE_WRITE = 'x';
     case READ = 'r';
-
-    case READ_BINARY = 'rb';
 
     case READ_WRITE = 'r+';
 
     case WRITE = 'w';
 
-    case WRITE_BINARY = 'wb';
+    case WRITE_READ = 'w+';
 }

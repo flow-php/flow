@@ -73,6 +73,23 @@ final class FlysystemFS implements Filesystem
         return $fs->fileExists($path->path());
     }
 
+    public function mv(Path $from, Path $to) : void
+    {
+        if ($from->isPattern() || $to->isPattern()) {
+            throw new RuntimeException("Pattern paths can't be moved: " . $from->uri() . ' -> ' . $to->uri());
+        }
+
+        if ($from->scheme() !== $to->scheme()) {
+            throw new RuntimeException("Can't move path from different schemes: " . $from->scheme() . ' -> ' . $to->scheme());
+        }
+
+        if ($this->fileExists($to)) {
+            $this->rm($to);
+        }
+
+        $this->factory->create($from)->move($from->path(), $to->path());
+    }
+
     public function open(Path $path, Mode $mode) : FileStream
     {
         if ($path->isPattern()) {

@@ -36,8 +36,6 @@ final class XMLNodeEntry implements Entry
     public function __toString() : string
     {
         /**
-         * @psalm-suppress PossiblyNullReference
-         *
          * @phpstan-ignore-next-line
          */
         return $this->value->ownerDocument->saveXML($this->value);
@@ -103,8 +101,6 @@ final class XMLNodeEntry implements Entry
     public function toString() : string
     {
         /**
-         * @psalm-suppress PossiblyNullReference
-         *
          * @phpstan-ignore-next-line
          */
         return $this->value->ownerDocument->saveXML($this->value);

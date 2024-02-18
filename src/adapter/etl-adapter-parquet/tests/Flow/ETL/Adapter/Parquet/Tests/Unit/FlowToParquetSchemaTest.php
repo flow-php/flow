@@ -80,7 +80,7 @@ final class FlowToParquetSchemaTest extends TestCase
     public function test_convert_object_entry_to_parquet_array() : void
     {
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage("stdClass can't be converted to any parquet columns.");
+        $this->expectExceptionMessage("object<stdClass> can't be converted to any parquet columns.");
 
         (new SchemaConverter())->toParquet(new Schema(
             Schema\Definition::object('object', type_object(\stdClass::class, false))

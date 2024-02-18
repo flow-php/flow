@@ -11,41 +11,9 @@ use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use PHPUnit\Framework\TestCase;
 
-final class TextLoaderTest extends TestCase
+final class TextTest extends TestCase
 {
-    public function test_loading_text_files_with_append_safe() : void
-    {
-        $path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.csv';
-
-        (new Flow())
-            ->process(
-                new Rows(
-                    Row::create(new Row\Entry\StringEntry('name', 'Norbert')),
-                    Row::create(new Row\Entry\StringEntry('name', 'Tomek')),
-                    Row::create(new Row\Entry\StringEntry('name', 'Dawid')),
-                )
-            )
-            ->write(to_text($path))
-            ->appendSafe()
-            ->run();
-
-        $files = \array_values(\array_diff(\scandir($path), ['..', '.']));
-
-        $this->assertStringContainsString(
-            <<<'TEXT'
-Norbert
-Tomek
-Dawid
-TEXT,
-            \file_get_contents($path . DIRECTORY_SEPARATOR . $files[0])
-        );
-
-        if (\file_exists($path . DIRECTORY_SEPARATOR . $files[0])) {
-            \unlink($path . DIRECTORY_SEPARATOR . $files[0]);
-        }
-    }
-
-    public function test_loading_text_files_without_safe_mode() : void
+    public function test_loading_text_files() : void
     {
         $path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.csv';
 

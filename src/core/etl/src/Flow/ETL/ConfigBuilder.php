@@ -52,7 +52,7 @@ final class ConfigBuilder
         $this->serializer ??= new CompressingSerializer(new NativePHPSerializer());
         $cachePath = \is_string(\getenv(Config::CACHE_DIR_ENV)) && \realpath(\getenv(Config::CACHE_DIR_ENV))
             ? \getenv(Config::CACHE_DIR_ENV)
-            : \sys_get_temp_dir() . '/flow_php/';
+            : \sys_get_temp_dir() . '/flow_php/cache';
 
         if ($this->cache === null) {
             if (!\file_exists($cachePath)) {

@@ -48,7 +48,7 @@ final class ParquetLoader implements Closure, Loader, Loader\FileLoader
             }
         }
 
-        $context->streams()->close($this->path);
+        $context->streams()->closeWriters($this->path);
         $this->writers = [];
     }
 
@@ -67,7 +67,7 @@ final class ParquetLoader implements Closure, Loader, Loader\FileLoader
 
         if ($rows->partitions()->count()) {
 
-            $stream = $streams->open($this->path, 'parquet', $context->appendSafe(), $rows->partitions()->toArray());
+            $stream = $streams->writeTo($this->path, $rows->partitions()->toArray());
 
             if (!\array_key_exists($stream->path()->uri(), $this->writers)) {
                 $this->writers[$stream->path()->uri()] = new Writer(
@@ -80,7 +80,7 @@ final class ParquetLoader implements Closure, Loader, Loader\FileLoader
 
             $this->writers[$stream->path()->uri()]->writeBatch($this->normalizer->normalize($rows, $this->schema()));
         } else {
-            $stream = $streams->open($this->path, 'parquet', $context->appendSafe());
+            $stream = $streams->writeTo($this->path);
 
             if (!\array_key_exists($stream->path()->uri(), $this->writers)) {
                 $this->writers[$stream->path()->uri()] = new Writer(

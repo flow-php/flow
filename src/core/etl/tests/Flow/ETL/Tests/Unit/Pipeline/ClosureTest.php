@@ -9,7 +9,7 @@ use Flow\ETL\FlowContext;
 use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
 use Flow\ETL\Rows;
-use Flow\ETL\Tests\Double\AllRowTypesFakeExtractor;
+use Flow\ETL\Tests\Double\FakeExtractor;
 use PHPUnit\Framework\TestCase;
 
 final class ClosureTest extends TestCase
@@ -17,7 +17,8 @@ final class ClosureTest extends TestCase
     public function test_loader_closure() : void
     {
         (new Flow())
-            ->extract(new AllRowTypesFakeExtractor(20, 2))
+            ->extract(new FakeExtractor(40))
+            ->batchSize(2)
             ->load($loader = new class implements Closure, Loader {
                 public bool $closureCalled = false;
 

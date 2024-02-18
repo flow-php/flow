@@ -13,7 +13,6 @@ use Flow\ETL\Extractor\PartitionFiltering;
 use Flow\ETL\Extractor\PartitionsExtractor;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Filesystem\Path;
-use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\FlowContext;
 
 final class TextExtractor implements Extractor, FileExtractor, LimitableExtractor, PartitionsExtractor
@@ -31,10 +30,9 @@ final class TextExtractor implements Extractor, FileExtractor, LimitableExtracto
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
-        foreach ($context->streams()->fs()->scan($this->path, $this->partitionFilter()) as $filePath) {
-            $fileStream = $context->streams()->fs()->open($filePath, Mode::READ);
+        foreach ($context->streams()->scan($this->path, $this->partitionFilter()) as $stream) {
 
-            $rowData = \fgets($fileStream->resource());
+            $rowData = \fgets($stream->resource());
 
             if ($rowData === false) {
                 return;
@@ -42,26 +40,26 @@ final class TextExtractor implements Extractor, FileExtractor, LimitableExtracto
 
             while ($rowData !== false) {
                 if ($shouldPutInputIntoRows) {
-                    $row = [['text' => \rtrim($rowData), '_input_file_uri' => $filePath->uri()]];
+                    $row = [['text' => \rtrim($rowData), '_input_file_uri' => $stream->path()->uri()]];
                 } else {
                     $row = [['text' => \rtrim($rowData)]];
                 }
 
-                $signal = yield array_to_rows($row, $context->entryFactory(), $filePath->partitions());
+                $signal = yield array_to_rows($row, $context->entryFactory(), $stream->path()->partitions());
 
                 $this->countRow();
 
                 if ($signal === Signal::STOP || $this->reachedLimit()) {
-                    $context->streams()->close($this->path);
+                    $context->streams()->closeWriters($this->path);
 
                     return;
                 }
 
-                $rowData = \fgets($fileStream->resource());
+                $rowData = \fgets($stream->resource());
             }
-        }
 
-        $context->streams()->close($this->path);
+            $stream->close();
+        }
     }
 
     public function source() : Path

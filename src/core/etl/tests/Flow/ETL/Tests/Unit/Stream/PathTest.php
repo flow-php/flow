@@ -75,11 +75,42 @@ final class PathTest extends TestCase
         }
     }
 
-    public function test_add_partitions() : void
+    public function test_add_partitions_to_path_pattern() : void
+    {
+        $this->expectExceptionMessage("Can't add partitions to path pattern.");
+
+        (new Path('/path/to/group=*/file.txt'))->addPartitions(new Partition('group', 'a'));
+    }
+
+    public function test_add_partitions_to_path_with_extension() : void
     {
         $this->assertEquals(
-            new Path('/path/to/file.txt/group=a'),
+            new Path('/path/to/group=a/file.txt'),
             (new Path('/path/to/file.txt'))->addPartitions(new Partition('group', 'a'))
+        );
+    }
+
+    public function test_add_partitions_to_path_without_extension() : void
+    {
+        $this->assertEquals(
+            new Path('/path/to/group=a/folder'),
+            (new Path('/path/to/folder'))->addPartitions(new Partition('group', 'a'))
+        );
+    }
+
+    public function test_add_partitions_to_root_path_with_extension() : void
+    {
+        $this->assertEquals(
+            new Path('/group=a/file.txt'),
+            (new Path('/file.txt'))->addPartitions(new Partition('group', 'a'))
+        );
+    }
+
+    public function test_add_partitions_to_root_path_without_extension() : void
+    {
+        $this->assertEquals(
+            new Path('/group=a/folder'),
+            (new Path('/folder'))->addPartitions(new Partition('group', 'a'))
         );
     }
 
@@ -151,6 +182,19 @@ final class PathTest extends TestCase
         $this->assertEquals($partitions, (new Path($uri))->partitions());
     }
 
+    public function test_partitions_paths() : void
+    {
+        $path = new Path('/var/path/partition_1=A/partition_2=B/file.csv', ['option' => true]);
+
+        $this->assertEquals(
+            [
+                new Path('/var/path/partition_1=A', ['option' => true]),
+                new Path('/var/path/partition_1=A/partition_2=B', ['option' => true]),
+            ],
+            $path->partitionsPaths()
+        );
+    }
+
     public function test_path_starting_with_other_path() : void
     {
         $this->assertTrue(
@@ -172,7 +216,7 @@ final class PathTest extends TestCase
         $path = new Path('flow-file://var/file/test.csv', []);
 
         $this->assertStringStartsWith(
-            'flow-file://var/file/test.csv/',
+            'flow-file://var/file/test_',
             $path->randomize()->uri()
         );
         $this->assertStringEndsWith(
@@ -186,7 +230,7 @@ final class PathTest extends TestCase
         $path = new Path('flow-file://var/file/folder/', []);
 
         $this->assertStringStartsWith(
-            'flow-file://var/file/folder/',
+            'flow-file://var/file/folder_',
             $path->randomize()->uri()
         );
     }

@@ -201,7 +201,7 @@ final class SchemaConverter
             return FlatColumn::time($name);
         }
 
-        throw new RuntimeException($class . ' can\'t be converted to any parquet columns.');
+        throw new RuntimeException($type->toString() . ' can\'t be converted to any parquet columns.');
     }
 
     private function flowScalarToParquetFlat(ScalarType $type, string $name) : FlatColumn

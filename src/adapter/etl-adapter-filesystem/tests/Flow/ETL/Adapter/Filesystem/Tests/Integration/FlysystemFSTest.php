@@ -21,11 +21,11 @@ final class FlysystemFSTest extends TestCase
     {
         $fs = new FlysystemFS();
 
-        $stream = $fs->open(Path::realpath(\sys_get_temp_dir() . '/flow-fs-test/append.txt'), Mode::APPEND);
+        $stream = $fs->open(Path::realpath(\sys_get_temp_dir() . '/flow-fs-test/append.txt'), Mode::APPEND_WRITE);
         \fwrite($stream->resource(), "some data to make file not empty\n");
         $stream->close();
 
-        $appendStream = $fs->open(Path::realpath(\sys_get_temp_dir() . '/flow-fs-test/append.txt'), Mode::APPEND);
+        $appendStream = $fs->open(Path::realpath(\sys_get_temp_dir() . '/flow-fs-test/append.txt'), Mode::APPEND_WRITE);
         \fwrite($appendStream->resource(), "some more data to make file not empty\n");
         $appendStream->close();
 
