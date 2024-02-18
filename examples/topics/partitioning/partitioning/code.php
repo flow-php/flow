@@ -23,28 +23,28 @@ data_frame()
         ]
     ))
     ->partitionBy(ref('color'), ref('sku'))
-    ->write(to_csv(__DIR__ . '/output')) // do not provider extension, partitions are anyway written to separate folders
+    ->write(to_csv(__DIR__ . '/output/products.csv'))
     ->run();
 
 // output
 // ├── color=blue
 // │   ├── sku=PRODUCT01
-// │   │   └── 65c7e9bc4460a568233195.csv
+// │   │   └── products.csv
 // │   └── sku=PRODUCT02
-// │       └── 65c7e9bc446c2326068326.csv
+// │       └── products.csv
 // ├── color=green
 // │   ├── sku=PRODUCT01
-// │   │   └── 65c7e9bc44305321518126.csv
+// │   │   └── products.csv
 // │   ├── sku=PRODUCT02
-// │   │   └── 65c7e9bc44421020940545.csv
+// │   │   └── products.csv
 // │   └── sku=PRODUCT03
-// │       └── 65c7e9bc44515031584752.csv
+// │       └── products.csv
 // └── color=red
 //     ├── sku=PRODUCT01
-//     │   └── 65c7e9bc4386f958078278.csv
+//     │   └── products.csv
 //     ├── sku=PRODUCT02
-//     │   └── 65c7e9bc440fa083889144.csv
+//     │   └── products.csv
 //     └── sku=PRODUCT03
-//         └── 65c7e9bc44209401416287.csv
+//         └── products.csv
 //
 // 12 directories, 8 files
