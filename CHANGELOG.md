@@ -16,12 +16,14 @@
 - [#985](https://github.com/flow-php/flow/pull/985) - **Update Homebrew TAP formula: flow-php to version: 0.6.1** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#994](https://github.com/flow-php/flow/pull/994) - **build workflows** - [@norberttech](https://github.com/norberttech)
 - [#993](https://github.com/flow-php/flow/pull/993) - **updating file by ETL through overwrite save mode** - [@norberttech](https://github.com/norberttech)
 - [#993](https://github.com/flow-php/flow/pull/993) - **FilesystemStreams test suite** - [@norberttech](https://github.com/norberttech)
 - [#993](https://github.com/flow-php/flow/pull/993) - **even when writing to a partitioned dataset, flow will respect original filename given as destination path** - [@norberttech](https://github.com/norberttech)
 - [#989](https://github.com/flow-php/flow/pull/989) - **Fixed writing parquet to remote locations** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#994](https://github.com/flow-php/flow/pull/994) - **deprecated classes/methods** - [@norberttech](https://github.com/norberttech)
 - [#993](https://github.com/flow-php/flow/pull/993) - **DataFrame::threadSafe / DataFrame::appendSafe** - [@norberttech](https://github.com/norberttech)
 
 ### Deprecated
