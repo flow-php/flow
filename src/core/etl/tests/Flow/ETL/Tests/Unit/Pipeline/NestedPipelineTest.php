@@ -10,8 +10,8 @@ use function Flow\ETL\DSL\lit;
 use Flow\ETL\Config;
 use Flow\ETL\Extractor\ProcessExtractor;
 use Flow\ETL\FlowContext;
+use Flow\ETL\Pipeline\BatchingPipeline;
 use Flow\ETL\Pipeline\NestedPipeline;
-use Flow\ETL\Pipeline\ParallelizingPipeline;
 use Flow\ETL\Pipeline\SynchronousPipeline;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
@@ -24,7 +24,7 @@ final class NestedPipelineTest extends TestCase
     {
         $pipeline = new NestedPipeline(
             (new SynchronousPipeline())->add(new ScalarFunctionTransformer('active', lit(true))),
-            new ParallelizingPipeline(new SynchronousPipeline(), 1)
+            new BatchingPipeline(new SynchronousPipeline(), 1)
         );
 
         $pipeline->setSource(new ProcessExtractor(

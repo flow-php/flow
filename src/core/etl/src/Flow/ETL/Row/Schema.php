@@ -239,14 +239,6 @@ final class Schema implements \Countable
         return $this;
     }
 
-    /**
-     * @deprecated Use `remove` instead
-     */
-    public function without(string|Reference ...$entries) : self
-    {
-        return $this->remove(...$entries);
-    }
-
     private function setDefinitions(Definition ...$definitions) : void
     {
         $uniqueDefinitions = [];

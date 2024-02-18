@@ -14,18 +14,6 @@ final class EntryIdFactory implements IdFactory
     {
     }
 
-    public function __serialize() : array
-    {
-        return [
-            'entry_name' => $this->entryName,
-        ];
-    }
-
-    public function __unserialize(array $data) : void
-    {
-        $this->entryName = $data['entry_name'];
-    }
-
     public function create(Row $row) : Entry
     {
         return $row->get($this->entryName)->rename('id');

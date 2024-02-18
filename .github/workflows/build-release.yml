@@ -52,7 +52,6 @@ jobs:
       - name: "Validate Flow PHAR"
         run: |
           ./build/flow.phar --version
-          ./build/flow.phar run examples/topics/phar/data_frame/code.php
 
       - name: "Import GPG Key"
         uses: crazy-max/ghaction-import-gpg@72b6676b71ab476b77e676928516f6982eef7a41
