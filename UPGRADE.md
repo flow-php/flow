@@ -5,6 +5,12 @@ Please follow the instructions for your specific version to ensure a smooth upgr
 
 ---
 
+## Upgrading from 0.6.x to 0.7.x
+
+### 1) DataFrame::appendSafe() method was removed
+
+`DataFrame::appendSafe()` aka `DataFrame::threadSafe()` method was removed as it was introducing additional complexity and was not used in any of the adapters.
+
 ## Upgrading from 0.5.x to 0.6.x
 
 ### 1) Rows::merge() accepts single instance of Rows
