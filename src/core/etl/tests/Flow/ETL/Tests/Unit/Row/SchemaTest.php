@@ -116,6 +116,36 @@ final class SchemaTest extends TestCase
         );
     }
 
+    public function test_keep_non_existing_entries() : void
+    {
+        $this->expectException(SchemaDefinitionNotFoundException::class);
+
+        schema(
+            int_schema('id'),
+            str_schema('name'),
+            str_schema('surname'),
+            str_schema('email'),
+        )->keep('not-existing');
+    }
+
+    public function test_keep_selected_entries() : void
+    {
+        $schema = schema(
+            int_schema('id'),
+            str_schema('name'),
+            str_schema('surname'),
+            str_schema('email'),
+        );
+
+        $this->assertEquals(
+            schema(
+                str_schema('name'),
+                str_schema('surname'),
+            ),
+            $schema->keep('name', 'surname')
+        );
+    }
+
     public function test_making_whole_schema_nullable() : void
     {
         $schema = new Schema(
