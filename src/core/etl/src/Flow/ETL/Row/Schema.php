@@ -115,6 +115,29 @@ final class Schema implements \Countable
         return $this;
     }
 
+    public function keep(string|Reference ...$entries) : self
+    {
+        $refs = References::init(...$entries);
+
+        $definitions = [];
+
+        foreach ($entries as $entry) {
+            if (!$this->findDefinition($entry)) {
+                throw new SchemaDefinitionNotFoundException((string) $entry);
+            }
+        }
+
+        foreach ($this->definitions as $definition) {
+            if ($refs->has($definition->entry())) {
+                $definitions[] = $definition;
+            }
+        }
+
+        $this->setDefinitions(...$definitions);
+
+        return $this;
+    }
+
     public function merge(self $schema) : self
     {
         $newDefinitions = $this->definitions;
