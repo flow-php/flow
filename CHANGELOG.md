@@ -1,6 +1,7 @@
-## [Unreleased] - 2024-02-18
+## [Unreleased] - 2024-02-20
 
 ### Added
+- [#996](https://github.com/flow-php/flow/pull/996) - **Schema::keep() - keep selected schema entries** - [@norberttech](https://github.com/norberttech)
 - [#991](https://github.com/flow-php/flow/pull/991) - **Schema::remove** - [@norberttech](https://github.com/norberttech)
 - [#991](https://github.com/flow-php/flow/pull/991) - **Schema::gracefulRemove** - [@norberttech](https://github.com/norberttech)
 - [#991](https://github.com/flow-php/flow/pull/991) - **Schema::add** - [@norberttech](https://github.com/norberttech)
