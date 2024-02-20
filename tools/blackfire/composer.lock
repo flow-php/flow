@@ -9,16 +9,16 @@
     "packages-dev": [
         {
             "name": "blackfire/php-sdk",
-            "version": "v2.3.7",
+            "version": "v2.3.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/blackfireio/php-sdk.git",
-                "reference": "fb06b24a86b370543be279ad1b3556a404a389c9"
+                "reference": "377f6d882f6173c2f9c7bff1580ad2111666bedc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/blackfireio/php-sdk/zipball/fb06b24a86b370543be279ad1b3556a404a389c9",
-                "reference": "fb06b24a86b370543be279ad1b3556a404a389c9",
+                "url": "https://api.github.com/repos/blackfireio/php-sdk/zipball/377f6d882f6173c2f9c7bff1580ad2111666bedc",
+                "reference": "377f6d882f6173c2f9c7bff1580ad2111666bedc",
                 "shasum": ""
             },
             "require": {
@@ -78,9 +78,9 @@
             ],
             "support": {
                 "issues": "https://github.com/blackfireio/php-sdk/issues",
-                "source": "https://github.com/blackfireio/php-sdk/tree/v2.3.7"
+                "source": "https://github.com/blackfireio/php-sdk/tree/v2.3.8"
             },
-            "time": "2024-01-08T10:36:23+00:00"
+            "time": "2024-02-19T10:36:40+00:00"
         },
         {
             "name": "composer/ca-bundle",
