@@ -11,6 +11,7 @@ use function Flow\ETL\DSL\from_array;
 use function Flow\ETL\DSL\from_memory;
 use function Flow\ETL\DSL\from_rows;
 use function Flow\ETL\DSL\int_entry;
+use function Flow\ETL\DSL\integer_entry;
 use function Flow\ETL\DSL\lit;
 use function Flow\ETL\DSL\max;
 use function Flow\ETL\DSL\null_entry;
@@ -24,6 +25,7 @@ use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Row;
 use Flow\ETL\Rows;
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
+use Ramsey\Uuid\Uuid;
 
 final class GroupByTest extends IntegrationTestCase
 {
@@ -213,6 +215,28 @@ final class GroupByTest extends IntegrationTestCase
                 ['user' => 'user_04', 'contributions_sum' => 3],
             ],
             $rows->toArray()
+        );
+    }
+
+    public function test_group_by_uuid() : void
+    {
+        $rows = df()
+            ->read(from_array([
+                ['id' => Uuid::uuid4()->toString()],
+                ['id' => Uuid::uuid4()->toString()],
+                ['id' => Uuid::uuid4()->toString()],
+                ['id' => Uuid::uuid4()->toString()],
+                ['id' => Uuid::uuid4()->toString()],
+                ['id' => Uuid::uuid4()->toString()],
+                ['id' => Uuid::uuid4()->toString()],
+                ['id' => Uuid::uuid4()->toString()],
+            ]))
+            ->aggregate(count(ref('id')))
+            ->fetch();
+
+        $this->assertEquals(
+            new Rows(Row::create(integer_entry('id_count', 8))),
+            $rows
         );
     }
 

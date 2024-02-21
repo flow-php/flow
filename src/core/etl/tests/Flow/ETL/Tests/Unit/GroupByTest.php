@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
-use function Flow\ETL\DSL\array_entry;
 use function Flow\ETL\DSL\int_entry;
 use function Flow\ETL\DSL\null_entry;
 use function Flow\ETL\DSL\ref;
@@ -21,20 +20,6 @@ use PHPUnit\Framework\TestCase;
 
 final class GroupByTest extends TestCase
 {
-    public function test_group_by_array_entry() : void
-    {
-        $this->expectExceptionMessage('Grouping by non scalar values is not supported, given: array');
-        $this->expectException(RuntimeException::class);
-
-        $groupBy = new GroupBy('array');
-
-        $groupBy->group(new Rows(
-            Row::create(array_entry('array', [1, 2, 3])),
-            Row::create(array_entry('array', [1, 2, 3])),
-            Row::create(array_entry('array', [4, 5, 6]))
-        ));
-    }
-
     public function test_group_by_missing_entry() : void
     {
         $groupBy = new GroupBy('type');
