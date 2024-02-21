@@ -8,6 +8,7 @@ use function Flow\ETL\DSL\array_to_rows;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Function\AggregatingFunction;
+use Flow\ETL\Row\Entry;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\References;
 
@@ -59,13 +60,7 @@ final class GroupBy
         if ($this->pivot) {
             foreach ($rows as $row) {
                 try {
-                    $pivotValue = $row->valueOf($this->pivot);
-
-                    if (!\is_scalar($pivotValue) && null !== $pivotValue) {
-                        throw new RuntimeException('Pivoting by non scalar values is not supported, given: ' . \gettype($pivotValue));
-                    }
-
-                    $this->pivotColumns[] = $pivotValue;
+                    $this->pivotColumns[] = $this->toScalar($row->get($this->pivot));
                 } catch (InvalidArgumentException) {
                     $this->pivotColumns[] = null;
                 }
@@ -99,13 +94,7 @@ final class GroupBy
 
                 foreach ($this->refs as $ref) {
                     try {
-                        $value = $row->valueOf($ref);
-
-                        if (!\is_scalar($value) && null !== $value) {
-                            throw new RuntimeException('Grouping by non scalar values is not supported, given: ' . \gettype($value));
-                        }
-
-                        $values[$ref->name()] = $value;
+                        $values[$ref->name()] = $this->toScalar($row->get($ref));
                     } catch (InvalidArgumentException) {
                         $values[$ref->name()] = null;
                     }
@@ -203,5 +192,26 @@ final class GroupBy
         }
 
         return \hash('xxh128', \implode('', $stringValues));
+    }
+
+    private function toScalar(Entry $entry) : int|string|float|null
+    {
+        if ($entry->value() === null) {
+            return null;
+        }
+
+        if (\is_bool($entry->value())) {
+            return $entry->toString();
+        }
+
+        if (\is_scalar($entry->value())) {
+            return $entry->value();
+        }
+
+        return match ($entry::class) {
+            Entry\UuidEntry::class => $entry->value()->toString(),
+            Entry\DateTimeEntry::class => $entry->value()->format(\DateTimeImmutable::ATOM),
+            default => $entry->toString()
+        };
     }
 }
