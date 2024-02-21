@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-02-20
+## [Unreleased] - 2024-02-21
 
 ### Added
 - [#996](https://github.com/flow-php/flow/pull/996) - **Schema::keep() - keep selected schema entries** - [@norberttech](https://github.com/norberttech)
@@ -10,6 +10,7 @@
 - [#987](https://github.com/flow-php/flow/pull/987) - **DataFrame::dropPartitions can now additionally drop also partition columns** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#998](https://github.com/flow-php/flow/pull/998) - **group by uuid/datetime objects without casting them to scalar first** - [@norberttech](https://github.com/norberttech)
 - [#993](https://github.com/flow-php/flow/pull/993) - **Writing to partitioned datasets is no longer creating random file names, even append will create new files with suffixed name of the original file** - [@norberttech](https://github.com/norberttech)
 - [#991](https://github.com/flow-php/flow/pull/991) - **Schema became mutable object [BC Break]** - [@norberttech](https://github.com/norberttech)
 - [239226](https://github.com/flow-php/flow/commit/2392268cb051c898368a01fb7d6042043bd3d3ef) - **Stop triggering workflows when only changelog was updated** - [@norberttech](https://github.com/norberttech)
