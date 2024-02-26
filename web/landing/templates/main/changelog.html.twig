@@ -1,0 +1,15 @@
+{% extends 'base.html.twig' %}
+
+{%- block title -%}
+    Flow PHP - Unified data processing framework
+{%- endblock -%}
+
+{%- block description -%}
+    Flow is a PHP-based, strongly typed data processing framework with low memory footprint.
+{%- endblock -%}
+
+{% block main %}
+    <section id="changelog" class="py-10 px-2 sm:px-4 mx-auto max-w-screen-xl">
+        {{ changelog_markdown|markdown_to_html }}
+    </section>
+{% endblock %}

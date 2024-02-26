@@ -26,7 +26,6 @@ final class DefaultController extends AbstractController
         $currentExample = $example;
 
         return $this->render('example/index.html.twig', [
-            'contributors' => $this->github->contributors(),
             'topics' => $topics,
             'examples' => $examples,
             'currentTopic' => $topic,
@@ -39,12 +38,11 @@ final class DefaultController extends AbstractController
     public function main() : Response
     {
         return $this->render('main/index.html.twig', [
-            'contributors' => $this->github->contributors(),
             'topics' => $this->examples->topics(),
         ]);
     }
 
-    #[Route('/{topic}/', name: 'topic')]
+    #[Route('/{topic}/', name: 'topic', priority: 10)]
     public function topic(string $topic) : Response
     {
         $topics = $this->examples->topics();
@@ -54,7 +52,6 @@ final class DefaultController extends AbstractController
         $currentExample = \current($examples);
 
         return $this->render('example/index.html.twig', [
-            'contributors' => $this->github->contributors(),
             'topics' => $topics,
             'examples' => $examples,
             'currentTopic' => $currentTopic,

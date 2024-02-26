@@ -1,3 +1,5 @@
+@import 'changelog.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -9,3 +11,17 @@ body {
 .unset {
     inset: unset;
 }
+
+nav a {
+    @apply font-medium text-white dark:text-white hover:underline;
+}
+
+footer a {
+    @apply font-medium text-white dark:text-white hover:underline;
+}
+
+a {
+    font-weight: normal;
+    @apply font-medium text-blue-600 dark:text-blue-500 hover:underline;
+}
+

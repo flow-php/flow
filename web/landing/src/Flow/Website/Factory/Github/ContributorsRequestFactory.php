@@ -12,7 +12,7 @@ use Psr\Http\Message\ResponseInterface;
 final class ContributorsRequestFactory implements NextRequestFactory
 {
     public function __construct(
-        private readonly string $githubToken,
+        public readonly string $githubToken,
         private readonly Psr17Factory $factory = new Psr17Factory()
     ) {
     }
