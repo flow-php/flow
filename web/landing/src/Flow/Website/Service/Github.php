@@ -87,6 +87,10 @@ final class Github
 
         $response = $client->sendRequest($request);
 
+        if ($response->getStatusCode() !== 200) {
+            throw new \RuntimeException('Failed to fetch version from Github: ' . $response->getBody()->getContents());
+        }
+
         $data = \json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
 
         $version = $data['tag_name'];
