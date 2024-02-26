@@ -79,7 +79,7 @@ final class Github
         $client = new Client($factory, $factory);
 
         $request = $factory
-            ->createRequest('GET', 'https://api.github.com/repos/flow-php/flow/releases/latest')
+            ->createRequest('GET', 'https://api.github.com/repos/' . $project . '/releases/latest')
             ->withHeader('Accept', 'application/vnd.github+json')
             ->withHeader('Authorization', 'Bearer ' . $this->requestFactory->githubToken)
             ->withHeader('X-GitHub-Api-Version', '2022-11-28')
