@@ -19,8 +19,7 @@ final class FlowController extends AbstractController
     public function main() : Response
     {
         return $this->render('main/changelog.html.twig', [
-            'changelog_markdown' => file_get_contents($this->getParameter('flow_root_dir') . '/CHANGELOG.md'),
+            'changelog_markdown' => \file_get_contents($this->getParameter('flow_root_dir') . '/CHANGELOG.md'),
         ]);
     }
-
 }

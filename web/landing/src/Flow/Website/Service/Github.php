@@ -29,35 +29,6 @@ final class Github
     ) {
     }
 
-    public function version(string $project) : string
-    {
-        $cache = $this->cache('flow-github-version');
-
-        if ($cache->has('version')) {
-            return $cache->get('version');
-        }
-
-        $factory = new Psr17Factory();
-        $client = new Client($factory, $factory);
-
-        $request = $factory
-            ->createRequest('GET', 'https://api.github.com/repos/flow-php/flow/releases/latest')
-            ->withHeader('Accept', 'application/vnd.github+json')
-            ->withHeader('Authorization', 'Bearer ' . $this->requestFactory->githubToken)
-            ->withHeader('X-GitHub-Api-Version', '2022-11-28')
-            ->withHeader('User-Agent', 'flow-website-fetch');
-
-        $response = $client->sendRequest($request);
-
-        $data = \json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
-
-        $version = $data['tag_name'];
-
-        $cache->set('version', $version);
-
-        return $version;
-    }
-
     public function contributors() : array
     {
         $factory = new Psr17Factory();
@@ -96,7 +67,36 @@ final class Github
         }
     }
 
-    private function cache(string $directoryName): Psr16Cache
+    public function version(string $project) : string
+    {
+        $cache = $this->cache('flow-github-version');
+
+        if ($cache->has('version')) {
+            return $cache->get('version');
+        }
+
+        $factory = new Psr17Factory();
+        $client = new Client($factory, $factory);
+
+        $request = $factory
+            ->createRequest('GET', 'https://api.github.com/repos/flow-php/flow/releases/latest')
+            ->withHeader('Accept', 'application/vnd.github+json')
+            ->withHeader('Authorization', 'Bearer ' . $this->requestFactory->githubToken)
+            ->withHeader('X-GitHub-Api-Version', '2022-11-28')
+            ->withHeader('User-Agent', 'flow-website-fetch');
+
+        $response = $client->sendRequest($request);
+
+        $data = \json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
+
+        $version = $data['tag_name'];
+
+        $cache->set('version', $version);
+
+        return $version;
+    }
+
+    private function cache(string $directoryName) : Psr16Cache
     {
         return new Psr16Cache(
             new FilesystemAdapter(
