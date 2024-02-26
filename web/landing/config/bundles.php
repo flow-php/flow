@@ -8,4 +8,5 @@ return [
     NorbertTech\StaticContentGeneratorBundle\StaticContentGeneratorBundle::class => ['all' => true],
     Symfony\UX\StimulusBundle\StimulusBundle::class => ['all' => true],
     Symfony\Bundle\MonologBundle\MonologBundle::class => ['all' => true],
+    \Twig\Extra\TwigExtraBundle\TwigExtraBundle::class => ['all' => true],
 ];

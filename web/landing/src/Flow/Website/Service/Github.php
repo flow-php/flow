@@ -29,20 +29,41 @@ final class Github
     ) {
     }
 
+    public function version(string $project) : string
+    {
+        $cache = $this->cache('flow-github-version');
+
+        if ($cache->has('version')) {
+            return $cache->get('version');
+        }
+
+        $factory = new Psr17Factory();
+        $client = new Client($factory, $factory);
+
+        $request = $factory
+            ->createRequest('GET', 'https://api.github.com/repos/flow-php/flow/releases/latest')
+            ->withHeader('Accept', 'application/vnd.github+json')
+            ->withHeader('Authorization', 'Bearer ' . $this->requestFactory->githubToken)
+            ->withHeader('X-GitHub-Api-Version', '2022-11-28')
+            ->withHeader('User-Agent', 'flow-website-fetch');
+
+        $response = $client->sendRequest($request);
+
+        $data = \json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
+
+        $version = $data['tag_name'];
+
+        $cache->set('version', $version);
+
+        return $version;
+    }
+
     public function contributors() : array
     {
         $factory = new Psr17Factory();
         $client = new Client($factory, $factory);
 
-        $adapter = new PSRSimpleCache(
-            new Psr16Cache(
-                new FilesystemAdapter(
-                    'flow-website',
-                    3600 * 24,
-                    directory: $this->parameters->get('kernel.cache_dir') . '/flow-github-contributors'
-                )
-            )
-        );
+        $adapter = new PSRSimpleCache($this->cache('flow-github-contributors'));
 
         $from_github = new PsrHttpClientDynamicExtractor($client, $this->requestFactory);
 
@@ -73,5 +94,16 @@ final class Github
         } catch (\Exception $e) {
             return [];
         }
+    }
+
+    private function cache(string $directoryName): Psr16Cache
+    {
+        return new Psr16Cache(
+            new FilesystemAdapter(
+                'flow-website',
+                3600 * 24,
+                directory: $this->parameters->get('kernel.cache_dir') . '/' . \ltrim($directoryName, '/')
+            )
+        );
     }
 }
