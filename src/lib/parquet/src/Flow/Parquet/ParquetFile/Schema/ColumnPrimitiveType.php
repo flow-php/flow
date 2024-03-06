@@ -9,6 +9,10 @@ final class ColumnPrimitiveType
         $logicalType = $column->logicalType();
 
         if ($logicalType === null) {
+            if ($column->convertedType() === ConvertedType::UTF8) {
+                return true;
+            }
+
             return false;
         }
 

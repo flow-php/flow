@@ -33,22 +33,23 @@ final class WholeChunkReader implements ColumnChunkReader
 
         \fseek($stream, $offset);
 
-        if ($columnChunk->dictionaryPageOffset()) {
-            $dictionaryHeader = $this->readHeader($stream, $offset);
+        $firstHeader = $this->readHeader($stream, $offset);
 
-            if ($dictionaryHeader === null) {
-                throw new RuntimeException('Dictionary page header not found in column chunk under offset: ' . $offset);
-            }
+        if ($firstHeader === null) {
+            throw new RuntimeException('Cannot read first page header');
+        }
 
+        if ($firstHeader->type()->isDictionaryPage()) {
             $dictionary = $this->pageReader->readDictionary(
                 $column,
-                $dictionaryHeader,
+                $firstHeader,
                 $columnChunk->codec(),
                 $stream
             );
             $offset = \ftell($stream);
         } else {
             $dictionary = null;
+            \fseek($stream, $offset);
         }
 
         $columnData = ColumnData::initialize($column);
