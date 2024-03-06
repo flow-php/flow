@@ -13,4 +13,9 @@ enum Type : int
     {
         return $this->value === self::DATA_PAGE->value || $this->value === self::DATA_PAGE_V2->value;
     }
+
+    public function isDictionaryPage() : bool
+    {
+        return $this->value === self::DICTIONARY_PAGE->value;
+    }
 }
