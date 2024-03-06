@@ -12,7 +12,7 @@ use Meilisearch\Client;
 
 final class MeilisearchContext
 {
-    private Client|null $client = null;
+    private ?Client $client = null;
 
     public function __construct(private readonly string $url, private readonly string $apiKey)
     {

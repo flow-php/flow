@@ -8,7 +8,7 @@ final class NullNode implements Node
     {
     }
 
-    public function value() : array|null
+    public function value() : ?array
     {
         return null;
     }

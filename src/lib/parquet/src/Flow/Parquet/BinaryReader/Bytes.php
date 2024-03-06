@@ -9,7 +9,7 @@ use Flow\Parquet\DataSize;
 
 final class Bytes implements \ArrayAccess, \Countable, \IteratorAggregate
 {
-    private \ArrayIterator|null $iterator = null;
+    private ?\ArrayIterator $iterator = null;
 
     private readonly DataSize $size;
 

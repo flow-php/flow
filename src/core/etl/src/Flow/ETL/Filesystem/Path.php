@@ -18,7 +18,7 @@ final class Path
 
     private string $filename;
 
-    private Partitions|null $partitions = null;
+    private ?Partitions $partitions = null;
 
     private string $path;
 

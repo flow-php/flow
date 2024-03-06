@@ -19,11 +19,11 @@ function from_csv(
     string|Path|array $path,
     bool $with_header = true,
     bool $empty_to_null = true,
-    string|null $delimiter = null,
-    string|null $enclosure = null,
-    string|null $escape = null,
+    ?string $delimiter = null,
+    ?string $enclosure = null,
+    ?string $escape = null,
     int $characters_read_in_line = 1000,
-    Schema|null $schema = null
+    ?Schema $schema = null
 ) : Extractor {
     if (\is_array($path)) {
         $extractors = [];

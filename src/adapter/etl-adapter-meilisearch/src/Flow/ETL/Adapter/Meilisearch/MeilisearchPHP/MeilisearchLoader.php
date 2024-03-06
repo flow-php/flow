@@ -13,7 +13,7 @@ use Psr\Http\Client\ClientInterface;
 
 final class MeilisearchLoader implements Loader
 {
-    private Client|null $client = null;
+    private ?Client $client = null;
 
     /**
      * @param array{url: string, apiKey: string, httpClient: ?ClientInterface} $config
