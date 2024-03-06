@@ -28,11 +28,11 @@ final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor
         private readonly Path $path,
         private readonly bool $withHeader = true,
         private readonly bool $emptyToNull = true,
-        private readonly string|null $separator = null,
-        private readonly string|null $enclosure = null,
-        private readonly string|null $escape = null,
+        private readonly ?string $separator = null,
+        private readonly ?string $enclosure = null,
+        private readonly ?string $escape = null,
         private readonly int $charactersReadInLine = 1000,
-        private readonly Schema|null $schema = null
+        private readonly ?Schema $schema = null
     ) {
         $this->resetLimit();
     }

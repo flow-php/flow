@@ -4,5 +4,5 @@ namespace Flow\Dremel;
 
 interface Node
 {
-    public function value() : array|null;
+    public function value() : ?array;
 }

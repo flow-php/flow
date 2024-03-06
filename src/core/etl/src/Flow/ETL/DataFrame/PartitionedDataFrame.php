@@ -61,7 +61,7 @@ final class PartitionedDataFrame
     /**
      * @param null|callable(Rows $rows): void $callback
      */
-    public function run(?callable $callback = null, bool $analyze = false) : Report|null
+    public function run(?callable $callback = null, bool $analyze = false) : ?Report
     {
         return $this->df->run($callback, $analyze);
     }

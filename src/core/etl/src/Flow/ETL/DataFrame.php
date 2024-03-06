@@ -611,7 +611,7 @@ final class DataFrame
      * @trigger
      */
     #[DSLMethod(exclude: true)]
-    public function printRows(int|null $limit = 20, int|bool $truncate = 20, Formatter $formatter = new AsciiTableFormatter()) : void
+    public function printRows(?int $limit = 20, int|bool $truncate = 20, Formatter $formatter = new AsciiTableFormatter()) : void
     {
         $clone = clone $this;
 
@@ -628,7 +628,7 @@ final class DataFrame
      * @trigger
      */
     #[DSLMethod(exclude: true)]
-    public function printSchema(int|null $limit = 20, Schema\SchemaFormatter $formatter = new Schema\Formatter\ASCIISchemaFormatter()) : void
+    public function printSchema(?int $limit = 20, Schema\SchemaFormatter $formatter = new Schema\Formatter\ASCIISchemaFormatter()) : void
     {
         $clone = clone $this;
 
@@ -729,7 +729,7 @@ final class DataFrame
      * @param bool $analyze - when set to true, run will return Report
      */
     #[DSLMethod(exclude: true)]
-    public function run(?callable $callback = null, bool $analyze = false) : Report|null
+    public function run(?callable $callback = null, bool $analyze = false) : ?Report
     {
         $clone = clone $this;
 

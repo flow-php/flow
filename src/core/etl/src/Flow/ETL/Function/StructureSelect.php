@@ -22,7 +22,7 @@ final class StructureSelect implements ScalarFunction
         $this->refs = References::init(...$refs);
     }
 
-    public function eval(Row $row) : array|null
+    public function eval(Row $row) : ?array
     {
         if (!$row->has($this->ref)) {
             return null;

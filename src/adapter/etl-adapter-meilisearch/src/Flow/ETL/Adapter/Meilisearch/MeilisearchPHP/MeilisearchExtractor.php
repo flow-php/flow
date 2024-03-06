@@ -10,7 +10,7 @@ use Meilisearch\Client;
 
 final class MeilisearchExtractor implements Extractor
 {
-    private Client|null $client = null;
+    private ?Client $client = null;
 
     /**
      * @param array{url: string, apiKey: string} $config

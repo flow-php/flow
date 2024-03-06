@@ -20,7 +20,7 @@ use Flow\ETL\Row\Schema;
 function from_json(
     string|Path|array $path,
     ?string $pointer = null,
-    Schema|null $schema = null,
+    ?Schema $schema = null,
 ) : Extractor {
     if (\is_array($path)) {
         $extractors = [];

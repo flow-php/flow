@@ -26,7 +26,7 @@ final class JsonExtractor implements Extractor, FileExtractor, LimitableExtracto
     public function __construct(
         private readonly Path $path,
         private readonly ?string $pointer = null,
-        private readonly Schema|null $schema = null,
+        private readonly ?Schema $schema = null,
     ) {
         $this->resetLimit();
     }
