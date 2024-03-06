@@ -11,6 +11,7 @@
 - [#987](https://github.com/flow-php/flow/pull/987) - **DataFrame::dropPartitions can now additionally drop also partition columns** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#1006](https://github.com/flow-php/flow/pull/1006) - **Update dependencies** - [@norberttech](https://github.com/norberttech)
 - [#998](https://github.com/flow-php/flow/pull/998) - **group by uuid/datetime objects without casting them to scalar first** - [@norberttech](https://github.com/norberttech)
 - [#993](https://github.com/flow-php/flow/pull/993) - **Writing to partitioned datasets is no longer creating random file names, even append will create new files with suffixed name of the original file** - [@norberttech](https://github.com/norberttech)
 - [#991](https://github.com/flow-php/flow/pull/991) - **Schema became mutable object [BC Break]** - [@norberttech](https://github.com/norberttech)
