@@ -140,6 +140,11 @@ final class FlatColumn implements Column
         return new self($string, PhysicalType::BYTE_ARRAY, null, LogicalType::uuid(), $repetition);
     }
 
+    public function convertedType() : ?ConvertedType
+    {
+        return $this->convertedType;
+    }
+
     /**
      * @psalm-suppress PossiblyNullOperand
      */
