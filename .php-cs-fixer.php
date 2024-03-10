@@ -77,7 +77,7 @@ return (new Config())
         'multiline_comment_opening_closing' => true,
         'multiline_whitespace_before_semicolons' => true,
         'native_constant_invocation' => false,
-        'native_function_invocation' => ['include' => ['@all']], // todo
+        'native_function_invocation' => false,
         'new_with_parentheses' => false,
         'nullable_type_declaration_for_default_null_value' => true,
         'no_extra_blank_lines' => true, // todo?
