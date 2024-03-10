@@ -7,6 +7,7 @@ $finder = Finder::create()
     ->files()
     ->in([
         __DIR__ . '/bin',
+        __DIR__ . '/src/*',
         __DIR__ . '/src/core/**/src',
         __DIR__ . '/src/core/**/tests',
         __DIR__ . '/src/adapter/**/src',
@@ -32,7 +33,7 @@ return (new Config())
     ->setRules([
         '@Symfony' => true,
         '@Symfony:risky' => true,
-        'blank_line_after_opening_tag' => false,
+        'blank_line_after_opening_tag' => true,
         'blank_line_before_statement' => [
             'statements' => [
                 'break',

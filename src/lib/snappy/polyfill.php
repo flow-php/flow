@@ -17,4 +17,3 @@ if (!\function_exists('snappy_uncompress')) {
         return (new Snappy())->uncompress($compressedText);
     }
 }
-
