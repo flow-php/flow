@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Flow\Website\StaticSourceProvider;
 
 use Flow\Website\Service\Examples;
-use NorbertTech\StaticContentGeneratorBundle\Content\Source;
-use NorbertTech\StaticContentGeneratorBundle\Content\SourceProvider;
+use NorbertTech\StaticContentGeneratorBundle\Content\{Source, SourceProvider};
 
 final class ExamplesSourceProvider implements SourceProvider
 {

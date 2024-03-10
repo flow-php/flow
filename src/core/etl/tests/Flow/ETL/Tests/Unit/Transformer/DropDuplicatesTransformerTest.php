@@ -4,14 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\str_entry;
-use Flow\ETL\Config;
+use function Flow\ETL\DSL\{int_entry, str_entry};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
 use Flow\ETL\Transformer\DropDuplicatesTransformer;
+use Flow\ETL\{Config, FlowContext, Row, Rows};
 use PHPUnit\Framework\TestCase;
 
 final class DropDuplicatesTransformerTest extends TestCase

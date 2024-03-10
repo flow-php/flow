@@ -4,15 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Elasticsearch\Tests\Integration\ElasticsearchPHP;
 
-use function Flow\ETL\Adapter\Elasticsearch\to_es_bulk_index;
-use function Flow\ETL\Adapter\Elasticsearch\to_es_bulk_update;
-use Flow\ETL\Adapter\Elasticsearch\EntryIdFactory\EntryIdFactory;
-use Flow\ETL\Adapter\Elasticsearch\EntryIdFactory\HashIdFactory;
+use function Flow\ETL\Adapter\Elasticsearch\{to_es_bulk_index, to_es_bulk_update};
+use Flow\ETL\Adapter\Elasticsearch\EntryIdFactory\{EntryIdFactory, HashIdFactory};
 use Flow\ETL\Adapter\Elasticsearch\Tests\Integration\TestCase;
-use Flow\ETL\Config;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use Flow\ETL\{Config, FlowContext, Row, Rows};
 
 final class ElasticsearchLoaderTest extends TestCase
 {

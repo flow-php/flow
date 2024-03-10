@@ -4,14 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\PHP\Type;
 
-use function Flow\ETL\DSL\type_boolean;
-use function Flow\ETL\DSL\type_datetime;
-use function Flow\ETL\DSL\type_integer;
-use function Flow\ETL\DSL\type_json;
-use function Flow\ETL\DSL\type_null;
-use function Flow\ETL\DSL\type_string;
-use function Flow\ETL\DSL\type_uuid;
-use function Flow\ETL\DSL\type_xml;
+use function Flow\ETL\DSL\{type_boolean, type_datetime, type_integer, type_json, type_null, type_string, type_uuid, type_xml};
 use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\Row\Entry\Type\Uuid;
 use PHPUnit\Framework\TestCase;

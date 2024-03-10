@@ -5,12 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Cache;
 
 use Flow\ETL\Cache\LocalFilesystemCache;
-use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\IntegerEntry;
-use Flow\ETL\Rows;
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
-use Flow\Serializer\CompressingSerializer;
-use Flow\Serializer\NativePHPSerializer;
+use Flow\ETL\{Row, Rows};
+use Flow\Serializer\{CompressingSerializer, NativePHPSerializer};
 
 final class LocalFilesystemCacheTest extends IntegrationTestCase
 {

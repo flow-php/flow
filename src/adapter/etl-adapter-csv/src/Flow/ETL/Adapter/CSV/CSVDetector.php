@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV;
 
-use Flow\ETL\Adapter\CSV\Detector\Option;
-use Flow\ETL\Adapter\CSV\Detector\Options;
+use Flow\ETL\Adapter\CSV\Detector\{Option, Options};
 use Flow\ETL\Adapter\CSV\Exception\CantDetectCSVOptions;
 use Flow\ETL\Exception\InvalidArgumentException;
 

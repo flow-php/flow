@@ -4,20 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Serializer\Tests\Unit;
 
-use function Flow\ETL\DSL\bool_entry;
-use function Flow\ETL\DSL\datetime_entry;
-use function Flow\ETL\DSL\float_entry;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\null_entry;
-use function Flow\ETL\DSL\object_entry;
-use function Flow\ETL\DSL\str_entry;
-use function Flow\ETL\DSL\struct_element;
-use function Flow\ETL\DSL\struct_entry;
-use function Flow\ETL\DSL\struct_type;
-use function Flow\ETL\DSL\type_int;
-use function Flow\ETL\DSL\type_string;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use function Flow\ETL\DSL\{bool_entry, datetime_entry, float_entry, int_entry, null_entry, object_entry, str_entry, struct_element, struct_entry, struct_type, type_int, type_string};
+use Flow\ETL\{Row, Rows};
 use Flow\Serializer\NativePHPSerializer;
 use PHPUnit\Framework\TestCase;
 

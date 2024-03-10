@@ -2,9 +2,7 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\data_frame;
-use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\to_output;
+use function Flow\ETL\DSL\{data_frame, from_array, to_output};
 use Flow\ETL\Loader\StreamLoader\Output;
 
 require __DIR__ . '/../../../autoload.php';

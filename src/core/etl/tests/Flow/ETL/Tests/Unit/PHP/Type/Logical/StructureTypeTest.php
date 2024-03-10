@@ -4,18 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type\Logical;
 
-use function Flow\ETL\DSL\struct_element;
-use function Flow\ETL\DSL\struct_type;
-use function Flow\ETL\DSL\type_boolean;
-use function Flow\ETL\DSL\type_float;
-use function Flow\ETL\DSL\type_int;
-use function Flow\ETL\DSL\type_string;
+use function Flow\ETL\DSL\{struct_element, struct_type, type_boolean, type_float, type_int, type_string};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
-use Flow\ETL\PHP\Type\Logical\ListType;
-use Flow\ETL\PHP\Type\Logical\Map\MapKey;
-use Flow\ETL\PHP\Type\Logical\Map\MapValue;
-use Flow\ETL\PHP\Type\Logical\MapType;
+use Flow\ETL\PHP\Type\Logical\Map\{MapKey, MapValue};
+use Flow\ETL\PHP\Type\Logical\{ListType, MapType};
 use PHPUnit\Framework\TestCase;
 
 final class StructureTypeTest extends TestCase

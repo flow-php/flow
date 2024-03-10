@@ -6,13 +6,10 @@ namespace Flow\ETL\Loader;
 
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Filesystem\Stream\Mode;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Formatter;
-use Flow\ETL\Loader;
 use Flow\ETL\Loader\StreamLoader\Output;
 use Flow\ETL\Row\Schema\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Row\Schema\SchemaFormatter;
-use Flow\ETL\Rows;
+use Flow\ETL\{FlowContext, Formatter, Loader, Rows};
 
 final class StreamLoader implements Loader
 {

@@ -4,14 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk\Tests\Integration;
 
-use Doctrine\DBAL\Schema\Column;
-use Doctrine\DBAL\Schema\Table;
-use Doctrine\DBAL\Types\Type;
-use Doctrine\DBAL\Types\Types;
-use Flow\Doctrine\Bulk\Bulk;
-use Flow\Doctrine\Bulk\BulkData;
+use Doctrine\DBAL\Schema\{Column, Table};
+use Doctrine\DBAL\Types\{Type, Types};
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
 use Flow\Doctrine\Bulk\Tests\PostgreSqlIntegrationTestCase;
+use Flow\Doctrine\Bulk\{Bulk, BulkData};
 
 final class PostgreSqlBulkUpdateTest extends PostgreSqlIntegrationTestCase
 {

@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\HTTP\Tests\Integration;
 
 use Flow\ETL\Adapter\Http\PsrHttpClientStaticExtractor;
-use Flow\ETL\Config;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Rows;
+use Flow\ETL\{Config, FlowContext, Rows};
 use Http\Mock\Client;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\Response;

@@ -4,13 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\DataFrame;
 
-use Flow\ETL\DataFrame;
 use Flow\ETL\Dataset\Report;
 use Flow\ETL\Filesystem\SaveMode;
-use Flow\ETL\Formatter;
 use Flow\ETL\Formatter\AsciiTableFormatter;
-use Flow\ETL\Loader;
-use Flow\ETL\Rows;
+use Flow\ETL\{DataFrame, Formatter, Loader, Rows};
 
 final class PartitionedDataFrame
 {

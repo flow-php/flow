@@ -5,11 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Row\Entries;
-use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\Reference;
-use Flow\ETL\Row\References;
-use Flow\ETL\Row\Schema;
+use Flow\ETL\Row\{Entries, Entry, Reference, References, Schema};
 
 final class Row
 {

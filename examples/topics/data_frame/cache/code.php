@@ -2,18 +2,13 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\config_builder;
-use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\from_cache;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\to_output;
+use function Flow\ETL\DSL\{config_builder, df, from_cache, ref, to_output};
 use Flow\ETL\Adapter\Http\DynamicExtractor\NextRequestFactory;
 use Flow\ETL\Adapter\Http\PsrHttpClientDynamicExtractor;
 use Flow\ETL\Cache\PSRSimpleCache;
 use Http\Client\Curl\Client;
 use Nyholm\Psr7\Factory\Psr17Factory;
-use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\{RequestInterface, ResponseInterface};
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Cache\Psr16Cache;
 

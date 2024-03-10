@@ -4,27 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Schema;
 
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\null_entry;
-use function Flow\ETL\DSL\str_entry;
-use function Flow\ETL\DSL\struct_element;
-use function Flow\ETL\DSL\struct_entry;
-use function Flow\ETL\DSL\struct_schema;
-use function Flow\ETL\DSL\struct_type;
-use function Flow\ETL\DSL\type_datetime;
-use function Flow\ETL\DSL\type_float;
-use function Flow\ETL\DSL\type_int;
-use function Flow\ETL\DSL\type_list;
-use function Flow\ETL\DSL\type_map;
-use function Flow\ETL\DSL\type_string;
-use function Flow\ETL\DSL\type_structure;
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\RuntimeException;
+use function Flow\ETL\DSL\{int_entry, null_entry, str_entry, struct_element, struct_entry, struct_schema, struct_type, type_datetime, type_float, type_int, type_list, type_map, type_string, type_structure};
+use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
-use Flow\ETL\PHP\Type\Logical\ListType;
-use Flow\ETL\PHP\Type\Logical\StructureType;
-use Flow\ETL\Row\Schema\Definition;
-use Flow\ETL\Row\Schema\Metadata;
+use Flow\ETL\PHP\Type\Logical\{ListType, StructureType};
+use Flow\ETL\Row\Schema\{Definition, Metadata};
 use PHPUnit\Framework\TestCase;
 
 final class DefinitionTest extends TestCase

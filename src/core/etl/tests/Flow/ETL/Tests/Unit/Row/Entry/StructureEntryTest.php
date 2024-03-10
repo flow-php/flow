@@ -4,15 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
-use function Flow\ETL\DSL\struct_element;
-use function Flow\ETL\DSL\struct_entry;
-use function Flow\ETL\DSL\struct_type;
-use function Flow\ETL\DSL\type_array;
-use function Flow\ETL\DSL\type_int;
-use function Flow\ETL\DSL\type_string;
+use function Flow\ETL\DSL\{struct_element, struct_entry, struct_type, type_array, type_int, type_string};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Logical\Map\MapKey;
-use Flow\ETL\PHP\Type\Logical\Map\MapValue;
+use Flow\ETL\PHP\Type\Logical\Map\{MapKey, MapValue};
 use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\Row\Entry\StructureEntry;
 use Flow\ETL\Row\Schema\Definition;

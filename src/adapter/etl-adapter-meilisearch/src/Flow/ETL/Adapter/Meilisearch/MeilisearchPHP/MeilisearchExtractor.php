@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Meilisearch\MeilisearchPHP;
 
-use Flow\ETL\Extractor;
-use Flow\ETL\FlowContext;
+use Flow\ETL\{Extractor, FlowContext};
 use Meilisearch\Client;
 
 final class MeilisearchExtractor implements Extractor

@@ -6,9 +6,7 @@ namespace Flow\Parquet\ParquetFile\Data;
 
 use Flow\Parquet\BinaryWriter;
 use Flow\Parquet\Data\DataConverter;
-use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Flow\Parquet\ParquetFile\Schema\LogicalType;
-use Flow\Parquet\ParquetFile\Schema\PhysicalType;
+use Flow\Parquet\ParquetFile\Schema\{FlatColumn, LogicalType, PhysicalType};
 
 final class PlainValuesPacker
 {

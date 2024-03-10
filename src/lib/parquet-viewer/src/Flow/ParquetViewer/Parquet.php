@@ -4,13 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ParquetViewer;
 
-use Flow\ParquetViewer\Command\ReadDataCommand;
-use Flow\ParquetViewer\Command\ReadMetadataCommand;
+use Flow\ParquetViewer\Command\{ReadDataCommand, ReadMetadataCommand};
 use Symfony\Component\Console\Application;
-use Symfony\Component\Console\Command\CompleteCommand;
-use Symfony\Component\Console\Command\DumpCompletionCommand;
-use Symfony\Component\Console\Command\HelpCommand;
-use Symfony\Component\Console\Command\ListCommand;
+use Symfony\Component\Console\Command\{CompleteCommand, DumpCompletionCommand, HelpCommand, ListCommand};
 
 final class Parquet extends Application
 {

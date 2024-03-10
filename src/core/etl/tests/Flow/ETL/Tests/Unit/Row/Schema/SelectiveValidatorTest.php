@@ -4,13 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Schema;
 
-use function Flow\ETL\DSL\bool_entry;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\str_entry;
-use Flow\ETL\Row;
+use function Flow\ETL\DSL\{bool_entry, int_entry, str_entry};
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Row\Schema\SelectiveValidator;
-use Flow\ETL\Rows;
+use Flow\ETL\{Row, Rows};
 use PHPUnit\Framework\TestCase;
 
 final class SelectiveValidatorTest extends TestCase

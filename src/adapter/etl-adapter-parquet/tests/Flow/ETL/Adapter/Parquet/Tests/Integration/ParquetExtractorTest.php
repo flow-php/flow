@@ -7,13 +7,10 @@ namespace Flow\ETL\Adapter\Parquet\Tests\Integration;
 use function Flow\ETL\Adapter\Parquet\to_parquet;
 use function Flow\ETL\DSL\from_array;
 use Flow\ETL\Adapter\Parquet\ParquetExtractor;
-use Flow\ETL\Config;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Filesystem\Path;
-use Flow\ETL\Flow;
-use Flow\ETL\FlowContext;
-use Flow\Parquet\Options;
-use Flow\Parquet\Reader;
+use Flow\ETL\{Config, Flow, FlowContext};
+use Flow\Parquet\{Options, Reader};
 use PHPUnit\Framework\TestCase;
 
 final class ParquetExtractorTest extends TestCase

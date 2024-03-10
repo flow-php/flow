@@ -4,14 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk\Tests\Unit;
 
-use Doctrine\DBAL\Platforms\MariaDBPlatform;
-use Doctrine\DBAL\Platforms\MySQL80Platform;
-use Doctrine\DBAL\Platforms\OraclePlatform;
-use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
+use Doctrine\DBAL\Platforms\{MariaDBPlatform, MySQL80Platform, OraclePlatform, PostgreSQLPlatform};
 use Flow\Doctrine\Bulk\DbalPlatform;
-use Flow\Doctrine\Bulk\Dialect\MySQLDialect;
-use Flow\Doctrine\Bulk\Dialect\PostgreSQLDialect;
-use Flow\Doctrine\Bulk\Dialect\SqliteDialect;
+use Flow\Doctrine\Bulk\Dialect\{MySQLDialect, PostgreSQLDialect, SqliteDialect};
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
 use PHPUnit\Framework\TestCase;
 

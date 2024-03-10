@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Formatter;
 
-use Flow\ETL\Formatter;
 use Flow\ETL\Formatter\ASCII\ASCIITable;
-use Flow\ETL\Rows;
+use Flow\ETL\{Formatter, Rows};
 
 final class AsciiTableFormatter implements Formatter
 {

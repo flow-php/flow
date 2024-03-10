@@ -4,33 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\array_entry;
-use function Flow\ETL\DSL\datetime_entry;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\lit;
-use function Flow\ETL\DSL\null_entry;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\str_entry;
-use Flow\ETL\Function\Contains;
-use Flow\ETL\Function\EndsWith;
-use Flow\ETL\Function\Equals;
-use Flow\ETL\Function\GreaterThan;
-use Flow\ETL\Function\GreaterThanEqual;
-use Flow\ETL\Function\IsIn;
-use Flow\ETL\Function\IsNotNull;
-use Flow\ETL\Function\IsNotNumeric;
-use Flow\ETL\Function\IsNull;
-use Flow\ETL\Function\IsNumeric;
-use Flow\ETL\Function\IsType;
-use Flow\ETL\Function\LessThan;
-use Flow\ETL\Function\LessThanEqual;
-use Flow\ETL\Function\NotEquals;
-use Flow\ETL\Function\NotSame;
-use Flow\ETL\Function\Same;
-use Flow\ETL\Function\StartsWith;
+use function Flow\ETL\DSL\{array_entry, datetime_entry, int_entry, lit, null_entry, ref, str_entry};
+use Flow\ETL\Function\{Contains, EndsWith, Equals, GreaterThan, GreaterThanEqual, IsIn, IsNotNull, IsNotNumeric, IsNull, IsNumeric, IsType, LessThan, LessThanEqual, NotEquals, NotSame, Same, StartsWith};
 use Flow\ETL\Row;
-use Flow\ETL\Row\Entry\IntegerEntry;
-use Flow\ETL\Row\Entry\StringEntry;
+use Flow\ETL\Row\Entry\{IntegerEntry, StringEntry};
 use PHPUnit\Framework\TestCase;
 
 final class BinaryComparisonsTest extends TestCase

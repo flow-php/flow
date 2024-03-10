@@ -5,12 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\CSV;
 
 use function Flow\ETL\DSL\from_all;
-use Flow\ETL\Adapter\CSV\Detector\Option;
-use Flow\ETL\Adapter\CSV\Detector\Options;
-use Flow\ETL\Extractor;
+use Flow\ETL\Adapter\CSV\Detector\{Option, Options};
 use Flow\ETL\Filesystem\Path;
-use Flow\ETL\Loader;
 use Flow\ETL\Row\Schema;
+use Flow\ETL\{Extractor, Loader};
 
 /**
  * @param int<0, max> $characters_read_in_line

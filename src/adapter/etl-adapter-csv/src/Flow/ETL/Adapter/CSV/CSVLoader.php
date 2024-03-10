@@ -7,12 +7,9 @@ namespace Flow\ETL\Adapter\CSV;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\Stream\FileStream;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
-use Flow\ETL\Partition;
 use Flow\ETL\Row\Entry;
-use Flow\ETL\Rows;
+use Flow\ETL\{FlowContext, Loader, Partition, Rows};
 
 final class CSVLoader implements Closure, Loader, Loader\FileLoader
 {

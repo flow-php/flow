@@ -4,14 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV\Tests\Integration;
 
-use function Flow\ETL\Adapter\CSV\from_csv;
-use function Flow\ETL\Adapter\CSV\to_csv;
-use function Flow\ETL\DSL\array_entry;
-use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
+use function Flow\ETL\Adapter\CSV\{from_csv, to_csv};
+use function Flow\ETL\DSL\{array_entry, df, int_entry, ref, row, rows};
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Flow;
 use Flow\ETL\Tests\Double\FakeExtractor;

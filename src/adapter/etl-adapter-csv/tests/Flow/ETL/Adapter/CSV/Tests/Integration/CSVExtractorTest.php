@@ -4,23 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV\Tests\Integration;
 
-use function Flow\ETL\Adapter\CSV\from_csv;
-use function Flow\ETL\Adapter\CSV\to_csv;
-use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\print_schema;
-use function Flow\ETL\DSL\ref;
+use function Flow\ETL\Adapter\CSV\{from_csv, to_csv};
+use function Flow\ETL\DSL\{df, from_array, print_schema, ref};
 use Flow\ETL\Adapter\CSV\CSVExtractor;
-use Flow\ETL\Config;
-use Flow\ETL\ConfigBuilder;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Extractor\Signal;
-use Flow\ETL\Filesystem\LocalFilesystem;
-use Flow\ETL\Filesystem\Path;
-use Flow\ETL\Flow;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use Flow\ETL\Filesystem\{LocalFilesystem, Path};
+use Flow\ETL\{Config, ConfigBuilder, Flow, FlowContext, Row, Rows};
 use PHPUnit\Framework\TestCase;
 
 final class CSVExtractorTest extends TestCase

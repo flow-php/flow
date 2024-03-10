@@ -5,10 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL;
 
 use Flow\ETL\Filesystem\Path;
-use Flow\ETL\Filesystem\Stream\FileStream;
-use Flow\ETL\Filesystem\Stream\Mode;
-use Flow\ETL\Partition\NoopFilter;
-use Flow\ETL\Partition\PartitionFilter;
+use Flow\ETL\Filesystem\Stream\{FileStream, Mode};
+use Flow\ETL\Partition\{NoopFilter, PartitionFilter};
 
 interface Filesystem
 {

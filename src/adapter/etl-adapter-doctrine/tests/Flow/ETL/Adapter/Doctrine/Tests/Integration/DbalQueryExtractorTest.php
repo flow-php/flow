@@ -4,16 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine\Tests\Integration;
 
-use function Flow\ETL\Adapter\Doctrine\dbal_from_queries;
-use function Flow\ETL\Adapter\Doctrine\dbal_from_query;
+use function Flow\ETL\Adapter\Doctrine\{dbal_from_queries, dbal_from_query};
 use function Flow\ETL\DSL\from_array;
-use Doctrine\DBAL\Schema\Column;
-use Doctrine\DBAL\Schema\Table;
-use Doctrine\DBAL\Types\Type;
-use Doctrine\DBAL\Types\Types;
-use Flow\ETL\Adapter\Doctrine\DbalLoader;
-use Flow\ETL\Adapter\Doctrine\ParametersSet;
+use Doctrine\DBAL\Schema\{Column, Table};
+use Doctrine\DBAL\Types\{Type, Types};
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
+use Flow\ETL\Adapter\Doctrine\{DbalLoader, ParametersSet};
 use Flow\ETL\Flow;
 
 final class DbalQueryExtractorTest extends IntegrationTestCase

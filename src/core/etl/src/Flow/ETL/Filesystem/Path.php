@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Filesystem;
 
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\Filesystem\Stream\ResourceContext;
-use Flow\ETL\Partition;
-use Flow\ETL\Partitions;
+use Flow\ETL\{Partition, Partitions};
 
 final class Path
 {

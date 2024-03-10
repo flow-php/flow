@@ -4,22 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row;
 
-use function Flow\ETL\DSL\bool_entry;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\type_int;
-use function Flow\ETL\DSL\type_string;
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\RuntimeException;
+use function Flow\ETL\DSL\{bool_entry, int_entry, type_int, type_string};
+use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\Row\Entries;
-use Flow\ETL\Row\Entry\BooleanEntry;
-use Flow\ETL\Row\Entry\DateTimeEntry;
-use Flow\ETL\Row\Entry\EnumEntry;
-use Flow\ETL\Row\Entry\IntegerEntry;
-use Flow\ETL\Row\Entry\NullEntry;
-use Flow\ETL\Row\Entry\StringEntry;
-use Flow\ETL\Row\Entry\StructureEntry;
+use Flow\ETL\Row\Entry\{BooleanEntry, DateTimeEntry, EnumEntry, IntegerEntry, NullEntry, StringEntry, StructureEntry};
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
 use PHPUnit\Framework\TestCase;
 

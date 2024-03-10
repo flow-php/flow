@@ -4,11 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\datetime_entry;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\str_entry;
-use function Flow\ETL\DSL\to_date_time;
+use function Flow\ETL\DSL\{datetime_entry, int_entry, ref, str_entry, to_date_time};
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;
 

@@ -4,12 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer;
 
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\FlowContext;
+use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\Function\WindowFunction;
-use Flow\ETL\Rows;
-use Flow\ETL\Transformer;
+use Flow\ETL\{FlowContext, Rows, Transformer};
 
 final class WindowFunctionTransformer implements Transformer
 {

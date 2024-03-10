@@ -4,12 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
-use Flow\ETL\Config;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
-use Flow\ETL\Rows;
 use Flow\ETL\Transformer\CallbackRowTransformer;
+use Flow\ETL\{Config, FlowContext, Row, Rows};
 use PHPUnit\Framework\TestCase;
 
 class CallbackRowTransformerTest extends TestCase

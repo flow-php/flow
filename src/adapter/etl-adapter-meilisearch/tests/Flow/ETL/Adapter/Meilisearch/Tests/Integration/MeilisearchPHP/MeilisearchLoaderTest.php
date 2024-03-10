@@ -4,13 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Meilisearch\Tests\Integration\MeilisearchPHP;
 
-use function Flow\ETL\Adapter\Meilisearch\to_meilisearch_bulk_index;
-use function Flow\ETL\Adapter\Meilisearch\to_meilisearch_bulk_update;
+use function Flow\ETL\Adapter\Meilisearch\{to_meilisearch_bulk_index, to_meilisearch_bulk_update};
 use Flow\ETL\Adapter\Meilisearch\Tests\Context\MeilisearchContext;
-use Flow\ETL\Config;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use Flow\ETL\{Config, FlowContext, Row, Rows};
 use PHPUnit\Framework\TestCase;
 
 final class MeilisearchLoaderTest extends TestCase

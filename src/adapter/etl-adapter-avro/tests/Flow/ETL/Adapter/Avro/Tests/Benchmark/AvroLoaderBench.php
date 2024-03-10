@@ -4,11 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Avro\Tests\Benchmark;
 
-use function Flow\ETL\DSL\Adapter\Avro\from_avro;
-use function Flow\ETL\DSL\Adapter\Avro\to_avro;
-use Flow\ETL\Config;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Rows;
+use function Flow\ETL\DSL\Adapter\Avro\{from_avro, to_avro};
+use Flow\ETL\{Config, FlowContext, Rows};
 use PhpBench\Attributes\Groups;
 
 #[Groups(['loader'])]

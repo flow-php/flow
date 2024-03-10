@@ -4,12 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer;
 
-use Flow\ETL\DataFrame;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Join\Expression;
-use Flow\ETL\Join\Join;
-use Flow\ETL\Rows;
-use Flow\ETL\Transformer;
+use Flow\ETL\Join\{Expression, Join};
+use Flow\ETL\{DataFrame, FlowContext, Rows, Transformer};
 
 final class JoinRowsTransformer implements Transformer
 {

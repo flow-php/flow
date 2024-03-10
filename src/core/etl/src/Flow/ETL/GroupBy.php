@@ -5,12 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL;
 
 use function Flow\ETL\DSL\array_to_rows;
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\Function\AggregatingFunction;
-use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\Reference;
-use Flow\ETL\Row\References;
+use Flow\ETL\Row\{Entry, Reference, References};
 
 final class GroupBy
 {

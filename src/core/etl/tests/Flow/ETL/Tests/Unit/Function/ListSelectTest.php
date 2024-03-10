@@ -4,14 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\list_entry;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\struct_element;
-use function Flow\ETL\DSL\struct_type;
-use function Flow\ETL\DSL\type_int;
-use function Flow\ETL\DSL\type_list;
-use function Flow\ETL\DSL\type_string;
+use function Flow\ETL\DSL\{list_entry, ref, row, struct_element, struct_type, type_int, type_list, type_string};
 use Flow\ETL\Function\ListSelect;
 use PHPUnit\Framework\TestCase;
 

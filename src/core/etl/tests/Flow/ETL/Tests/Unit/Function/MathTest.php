@@ -4,18 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\float_entry;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\lit;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use Flow\ETL\Function\Divide;
-use Flow\ETL\Function\Minus;
-use Flow\ETL\Function\Mod;
-use Flow\ETL\Function\Multiply;
-use Flow\ETL\Function\Plus;
-use Flow\ETL\Function\Power;
-use Flow\ETL\Function\Round;
+use function Flow\ETL\DSL\{float_entry, int_entry, lit, ref, row};
+use Flow\ETL\Function\{Divide, Minus, Mod, Multiply, Plus, Power, Round};
 use PHPUnit\Framework\TestCase;
 
 final class MathTest extends TestCase

@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type\Logical\Map;
 
-use function Flow\ETL\DSL\type_datetime;
-use function Flow\ETL\DSL\type_int;
-use function Flow\ETL\DSL\type_string;
-use function Flow\ETL\DSL\type_uuid;
+use function Flow\ETL\DSL\{type_datetime, type_int, type_string, type_uuid};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\LogicalType;
 use Flow\ETL\PHP\Type\Native\ScalarType;

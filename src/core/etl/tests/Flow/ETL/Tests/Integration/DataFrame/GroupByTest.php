@@ -4,29 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use function Flow\ETL\DSL\average;
-use function Flow\ETL\DSL\count;
-use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\float_entry;
-use function Flow\ETL\DSL\from_all;
-use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\from_memory;
-use function Flow\ETL\DSL\from_rows;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\integer_entry;
-use function Flow\ETL\DSL\lit;
-use function Flow\ETL\DSL\max;
-use function Flow\ETL\DSL\null_entry;
-use function Flow\ETL\DSL\rank;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\str_entry;
-use function Flow\ETL\DSL\sum;
-use function Flow\ETL\DSL\window;
-use Flow\ETL\Loader;
+use function Flow\ETL\DSL\{average, count, df, float_entry, from_all, from_array, from_memory, from_rows, int_entry, integer_entry, lit, max, null_entry, rank, ref, str_entry, sum, window};
 use Flow\ETL\Memory\ArrayMemory;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
+use Flow\ETL\{Loader, Row, Rows};
 use Ramsey\Uuid\Uuid;
 
 final class GroupByTest extends IntegrationTestCase

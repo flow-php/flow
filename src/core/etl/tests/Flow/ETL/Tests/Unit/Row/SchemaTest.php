@@ -4,28 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row;
 
-use function Flow\ETL\DSL\bool_schema;
-use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\json_schema;
-use function Flow\ETL\DSL\list_schema;
-use function Flow\ETL\DSL\map_schema;
-use function Flow\ETL\DSL\schema;
-use function Flow\ETL\DSL\schema_from_json;
-use function Flow\ETL\DSL\schema_to_json;
-use function Flow\ETL\DSL\str_schema;
-use function Flow\ETL\DSL\struct_element;
-use function Flow\ETL\DSL\structure_schema;
-use function Flow\ETL\DSL\type_int;
-use function Flow\ETL\DSL\type_list;
-use function Flow\ETL\DSL\type_map;
-use function Flow\ETL\DSL\type_string;
-use function Flow\ETL\DSL\type_structure;
-use function Flow\ETL\DSL\uuid_schema;
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
-use Flow\ETL\Exception\SchemaDefinitionNotUniqueException;
-use Flow\ETL\Row\EntryReference;
-use Flow\ETL\Row\Schema;
+use function Flow\ETL\DSL\{bool_schema, int_schema, json_schema, list_schema, map_schema, schema, schema_from_json, schema_to_json, str_schema, struct_element, structure_schema, type_int, type_list, type_map, type_string, type_structure, uuid_schema};
+use Flow\ETL\Exception\{InvalidArgumentException, SchemaDefinitionNotFoundException, SchemaDefinitionNotUniqueException};
+use Flow\ETL\Row\{EntryReference, Schema};
 use PHPUnit\Framework\TestCase;
 
 final class SchemaTest extends TestCase

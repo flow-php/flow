@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Monitoring\Memory;
 
-use Flow\ETL\Monitoring\Memory\Configuration;
-use Flow\ETL\Monitoring\Memory\Unit;
+use Flow\ETL\Monitoring\Memory\{Configuration, Unit};
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
 
 final class ConfigurationTest extends IntegrationTestCase

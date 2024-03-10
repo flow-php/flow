@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Formatter;
 
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\{int_entry, str_entry};
 use Flow\ETL\Formatter\ASCII\ASCIITable;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use Flow\ETL\{Row, Rows};
 use PHPUnit\Framework\TestCase;
 
 final class ASCIITableTest extends TestCase

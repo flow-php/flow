@@ -8,11 +8,9 @@ use function Flow\ETL\Adapter\JSON\from_json;
 use function Flow\ETL\Adapter\Json\to_json;
 use function Flow\ETL\DSL\df;
 use Flow\ETL\Adapter\JSON\JsonLoader;
-use Flow\ETL\Config;
 use Flow\ETL\Filesystem\Path;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Rows;
 use Flow\ETL\Tests\Double\FakeExtractor;
+use Flow\ETL\{Config, FlowContext, Rows};
 use PHPUnit\Framework\TestCase;
 
 final class JsonTest extends TestCase

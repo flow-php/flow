@@ -5,11 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Pipeline;
 
 use function Flow\ETL\DSL\from_rows;
-use Flow\ETL\Extractor;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Loader;
-use Flow\ETL\Pipeline;
-use Flow\ETL\Transformer;
+use Flow\ETL\{Extractor, FlowContext, Loader, Pipeline, Transformer};
 
 final class CachingPipeline implements OverridingPipeline, Pipeline
 {

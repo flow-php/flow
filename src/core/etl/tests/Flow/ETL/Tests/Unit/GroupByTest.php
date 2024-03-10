@@ -4,18 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\null_entry;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\str_entry;
-use function Flow\ETL\DSL\sum;
-use Flow\ETL\Config;
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\FlowContext;
-use Flow\ETL\GroupBy;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use function Flow\ETL\DSL\{int_entry, null_entry, ref, str_entry, sum};
+use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
+use Flow\ETL\{Config, FlowContext, GroupBy, Row, Rows};
 use PHPUnit\Framework\TestCase;
 
 final class GroupByTest extends TestCase

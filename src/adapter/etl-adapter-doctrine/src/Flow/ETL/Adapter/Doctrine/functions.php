@@ -4,15 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine;
 
-use Doctrine\DBAL\ArrayParameterType as DbalArrayType;
-use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\ParameterType as DbalParameterType;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Types\Type as DbalType;
-use Flow\ETL\DataFrameFactory;
+use Doctrine\DBAL\{ArrayParameterType as DbalArrayType, Connection, ParameterType as DbalParameterType};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Extractor;
-use Flow\ETL\Loader;
+use Flow\ETL\{DataFrameFactory, Extractor, Loader};
 
 /**
  * @param array<string, mixed>|Connection $connection

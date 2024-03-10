@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Extractor;
 
-use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\local_files;
+use function Flow\ETL\DSL\{flow_context, local_files};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor\Signal;
 use PHPUnit\Framework\TestCase;

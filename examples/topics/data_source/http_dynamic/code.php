@@ -2,9 +2,7 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\data_frame;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\to_output;
+use function Flow\ETL\DSL\{data_frame, ref, to_output};
 use Flow\ETL\Adapter\Http\DynamicExtractor\NextRequestFactory;
 use Flow\ETL\Adapter\Http\PsrHttpClientDynamicExtractor;
 use Http\Client\Curl\Client;

@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\ParquetFile;
 
-use Flow\Parquet\Option;
-use Flow\Parquet\Options;
-use Flow\Parquet\ParquetFile\Codec;
-use Flow\Parquet\ParquetFile\Compressions;
+use Flow\Parquet\ParquetFile\{Codec, Compressions};
+use Flow\Parquet\{Option, Options};
 use PHPUnit\Framework\TestCase;
 
 final class CodecTest extends TestCase

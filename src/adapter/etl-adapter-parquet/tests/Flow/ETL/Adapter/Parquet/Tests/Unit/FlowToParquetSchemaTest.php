@@ -4,23 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Unit;
 
-use function Flow\ETL\DSL\type_boolean;
-use function Flow\ETL\DSL\type_int;
-use function Flow\ETL\DSL\type_object;
-use function Flow\ETL\DSL\type_string;
+use function Flow\ETL\DSL\{type_boolean, type_int, type_object, type_string};
 use Flow\ETL\Adapter\Parquet\SchemaConverter;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
-use Flow\ETL\PHP\Type\Logical\ListType;
-use Flow\ETL\PHP\Type\Logical\Map\MapKey;
-use Flow\ETL\PHP\Type\Logical\Map\MapValue;
-use Flow\ETL\PHP\Type\Logical\MapType;
+use Flow\ETL\PHP\Type\Logical\Map\{MapKey, MapValue};
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
-use Flow\ETL\PHP\Type\Logical\StructureType;
+use Flow\ETL\PHP\Type\Logical\{ListType, MapType, StructureType};
 use Flow\ETL\Row\Schema;
 use Flow\Parquet\ParquetFile\Schema as ParquetSchema;
-use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Flow\Parquet\ParquetFile\Schema\NestedColumn;
+use Flow\Parquet\ParquetFile\Schema\{FlatColumn, NestedColumn};
 use PHPUnit\Framework\TestCase;
 
 final class FlowToParquetSchemaTest extends TestCase

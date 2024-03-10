@@ -6,13 +6,11 @@ namespace Flow\ETL\Adapter\Parquet;
 
 use function Flow\ETL\DSL\from_all;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Extractor;
 use Flow\ETL\Filesystem\Path;
-use Flow\ETL\Loader;
 use Flow\ETL\Row\Schema;
-use Flow\Parquet\ByteOrder;
-use Flow\Parquet\Options;
+use Flow\ETL\{Extractor, Loader};
 use Flow\Parquet\ParquetFile\Compressions;
+use Flow\Parquet\{ByteOrder, Options};
 
 /**
  * @param array<Path>|Path|string $uri

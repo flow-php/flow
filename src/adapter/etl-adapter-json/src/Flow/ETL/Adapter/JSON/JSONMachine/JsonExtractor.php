@@ -5,16 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\JSON\JSONMachine;
 
 use function Flow\ETL\DSL\array_to_rows;
-use Flow\ETL\Extractor;
-use Flow\ETL\Extractor\FileExtractor;
-use Flow\ETL\Extractor\Limitable;
-use Flow\ETL\Extractor\LimitableExtractor;
-use Flow\ETL\Extractor\PartitionFiltering;
-use Flow\ETL\Extractor\PartitionsExtractor;
-use Flow\ETL\Extractor\Signal;
+use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PartitionFiltering, PartitionsExtractor, Signal};
 use Flow\ETL\Filesystem\Path;
-use Flow\ETL\FlowContext;
 use Flow\ETL\Row\Schema;
+use Flow\ETL\{Extractor, FlowContext};
 use JsonMachine\Items;
 use JsonMachine\JsonDecoder\ExtJsonDecoder;
 

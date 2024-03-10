@@ -7,9 +7,8 @@ namespace Flow\Doctrine\Bulk\Tests\Unit;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Types\Type;
-use Flow\Doctrine\Bulk\BulkData;
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
-use Flow\Doctrine\Bulk\TableDefinition;
+use Flow\Doctrine\Bulk\{BulkData, TableDefinition};
 use PHPUnit\Framework\TestCase;
 
 final class TableDefinitionTest extends TestCase

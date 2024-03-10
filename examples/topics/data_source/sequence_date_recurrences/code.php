@@ -2,9 +2,7 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\data_frame;
-use function Flow\ETL\DSL\from_sequence_date_period_recurrences;
-use function Flow\ETL\DSL\to_output;
+use function Flow\ETL\DSL\{data_frame, from_sequence_date_period_recurrences, to_output};
 
 require __DIR__ . '/../../../autoload.php';
 

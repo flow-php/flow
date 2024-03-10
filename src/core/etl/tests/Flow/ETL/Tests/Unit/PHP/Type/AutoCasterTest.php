@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type;
 
-use Flow\ETL\PHP\Type\AutoCaster;
-use Flow\ETL\PHP\Type\Caster;
+use Flow\ETL\PHP\Type\{AutoCaster, Caster};
 use PHPUnit\Framework\TestCase;
 
 final class AutoCasterTest extends TestCase

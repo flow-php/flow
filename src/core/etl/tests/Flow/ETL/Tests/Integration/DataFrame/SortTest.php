@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\{df, ref};
 use Flow\ETL\Config;
 use Flow\ETL\ExternalSort\MemorySort;
 use Flow\ETL\Monitoring\Memory\Unit;
-use Flow\ETL\Tests\Double\CacheSpy;
-use Flow\ETL\Tests\Double\FakeExtractor;
+use Flow\ETL\Tests\Double\{CacheSpy, FakeExtractor};
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
 
 final class SortTest extends IntegrationTestCase

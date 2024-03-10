@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Loader;
 
-use Flow\ETL\FlowContext;
-use Flow\ETL\Loader;
 use Flow\ETL\Memory\Memory;
-use Flow\ETL\Rows;
+use Flow\ETL\{FlowContext, Loader, Rows};
 
 final class MemoryLoader implements Loader
 {

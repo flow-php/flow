@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\ParquetFile\Data;
 
-use Flow\Parquet\BinaryReader;
 use Flow\Parquet\BinaryReader\Bytes;
-use Flow\Parquet\DataSize;
 use Flow\Parquet\ParquetFile\Data\RLEBitPackedHybrid;
+use Flow\Parquet\{BinaryReader, DataSize};
 use PHPUnit\Framework\TestCase;
 
 final class RLEBitPackedHybridTest extends TestCase

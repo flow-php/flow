@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\InvalidFileFormatException;
+use Flow\ETL\Exception\{InvalidArgumentException, InvalidFileFormatException};
 use Flow\ETL\PipelineFactory;
 use PHPUnit\Framework\TestCase;
 

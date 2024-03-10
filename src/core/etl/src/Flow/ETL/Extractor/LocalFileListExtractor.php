@@ -6,9 +6,8 @@ namespace Flow\ETL\Extractor;
 
 use function Flow\ETL\DSL\array_to_rows;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Extractor;
 use Flow\ETL\Filesystem\Path;
-use Flow\ETL\FlowContext;
+use Flow\ETL\{Extractor, FlowContext};
 
 final class LocalFileListExtractor implements Extractor, FileExtractor, LimitableExtractor
 {

@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace Flow\Doctrine\Bulk\Dialect;
 
 use Doctrine\DBAL\Platforms\AbstractPlatform;
-use Flow\Doctrine\Bulk\BulkData;
-use Flow\Doctrine\Bulk\Columns;
-use Flow\Doctrine\Bulk\TableDefinition;
+use Flow\Doctrine\Bulk\{BulkData, Columns, TableDefinition};
 
 final class SqliteDialect implements Dialect
 {

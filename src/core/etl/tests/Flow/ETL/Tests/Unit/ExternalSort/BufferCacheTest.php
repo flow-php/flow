@@ -5,10 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\ExternalSort;
 
 use function Flow\ETL\DSL\int_entry;
-use Flow\ETL\Cache;
 use Flow\ETL\ExternalSort\BufferCache;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use Flow\ETL\{Cache, Row, Rows};
 use PHPUnit\Framework\Constraint\Callback;
 use PHPUnit\Framework\TestCase;
 

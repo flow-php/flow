@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk\Tests;
 
-use Flow\Doctrine\Bulk\Tests\Context\DatabaseContext;
-use Flow\Doctrine\Bulk\Tests\Context\ProxyLogger;
+use Flow\Doctrine\Bulk\Tests\Context\{DatabaseContext, ProxyLogger};
 use PHPUnit\Framework\TestCase;
 
 abstract class IntegrationTestCase extends TestCase

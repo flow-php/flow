@@ -4,14 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Extractor;
 
-use function Flow\ETL\DSL\from_cache;
-use function Flow\ETL\DSL\from_rows;
-use function Flow\ETL\DSL\int_entry;
-use Flow\ETL\Cache;
-use Flow\ETL\Config;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use function Flow\ETL\DSL\{from_cache, from_rows, int_entry};
+use Flow\ETL\{Cache, Config, FlowContext, Row, Rows};
 use PHPUnit\Framework\TestCase;
 
 final class CacheExtractorTest extends TestCase

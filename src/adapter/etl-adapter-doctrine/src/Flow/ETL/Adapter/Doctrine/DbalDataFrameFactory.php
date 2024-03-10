@@ -4,12 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine;
 
-use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\DriverManager;
-use Flow\ETL\DataFrame;
-use Flow\ETL\DataFrameFactory;
-use Flow\ETL\Flow;
-use Flow\ETL\Rows;
+use Doctrine\DBAL\{Connection, DriverManager};
+use Flow\ETL\{DataFrame, DataFrameFactory, Flow, Rows};
 
 final class DbalDataFrameFactory implements DataFrameFactory
 {

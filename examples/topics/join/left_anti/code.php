@@ -2,11 +2,8 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\data_frame;
-use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\to_output;
-use Flow\ETL\Join\Expression;
-use Flow\ETL\Join\Join;
+use function Flow\ETL\DSL\{data_frame, from_array, to_output};
+use Flow\ETL\Join\{Expression, Join};
 
 require __DIR__ . '/../../../autoload.php';
 

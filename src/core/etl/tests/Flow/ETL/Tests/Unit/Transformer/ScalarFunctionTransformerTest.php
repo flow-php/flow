@@ -4,20 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\list_entry;
-use function Flow\ETL\DSL\lit;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\str_entry;
-use function Flow\ETL\DSL\type_list;
-use function Flow\ETL\DSL\type_xml_node;
-use function Flow\ETL\DSL\xml_entry;
-use Flow\ETL\Config;
+use function Flow\ETL\DSL\{int_entry, list_entry, lit, ref, str_entry, type_list, type_xml_node, xml_entry};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
 use Flow\ETL\Transformer\ScalarFunctionTransformer;
+use Flow\ETL\{Config, FlowContext, Row, Rows};
 use PHPUnit\Framework\TestCase;
 
 final class ScalarFunctionTransformerTest extends TestCase

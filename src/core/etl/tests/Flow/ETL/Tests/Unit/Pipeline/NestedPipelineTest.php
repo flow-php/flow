@@ -4,18 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Pipeline;
 
-use function Flow\ETL\DSL\bool_entry;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\lit;
-use Flow\ETL\Config;
+use function Flow\ETL\DSL\{bool_entry, int_entry, lit};
 use Flow\ETL\Extractor\ProcessExtractor;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Pipeline\BatchingPipeline;
-use Flow\ETL\Pipeline\NestedPipeline;
-use Flow\ETL\Pipeline\SynchronousPipeline;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use Flow\ETL\Pipeline\{BatchingPipeline, NestedPipeline, SynchronousPipeline};
 use Flow\ETL\Transformer\ScalarFunctionTransformer;
+use Flow\ETL\{Config, FlowContext, Row, Rows};
 use PHPUnit\Framework\TestCase;
 
 final class NestedPipelineTest extends TestCase

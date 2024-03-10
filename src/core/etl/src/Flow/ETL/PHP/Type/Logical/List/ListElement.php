@@ -4,22 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type\Logical\List;
 
-use function Flow\ETL\DSL\type_boolean;
-use function Flow\ETL\DSL\type_datetime;
-use function Flow\ETL\DSL\type_float;
-use function Flow\ETL\DSL\type_int;
-use function Flow\ETL\DSL\type_json;
-use function Flow\ETL\DSL\type_object;
-use function Flow\ETL\DSL\type_string;
-use function Flow\ETL\DSL\type_uuid;
-use function Flow\ETL\DSL\type_xml;
-use function Flow\ETL\DSL\type_xml_node;
+use function Flow\ETL\DSL\{type_boolean, type_datetime, type_float, type_int, type_json, type_object, type_string, type_uuid, type_xml, type_xml_node};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Logical\ListType;
-use Flow\ETL\PHP\Type\Logical\MapType;
-use Flow\ETL\PHP\Type\Logical\StructureType;
-use Flow\ETL\PHP\Type\Type;
-use Flow\ETL\PHP\Type\TypeFactory;
+use Flow\ETL\PHP\Type\Logical\{ListType, MapType, StructureType};
+use Flow\ETL\PHP\Type\{Type, TypeFactory};
 
 final class ListElement
 {

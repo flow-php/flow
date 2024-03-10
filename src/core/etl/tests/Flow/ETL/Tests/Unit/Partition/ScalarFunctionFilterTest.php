@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Partition;
 
-use function Flow\ETL\DSL\all;
-use function Flow\ETL\DSL\any;
-use function Flow\ETL\DSL\lit;
-use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\{all, any, lit, ref};
 use Flow\ETL\Partition;
 use Flow\ETL\Partition\ScalarFunctionFilter;
 use Flow\ETL\Row\Factory\NativeEntryFactory;

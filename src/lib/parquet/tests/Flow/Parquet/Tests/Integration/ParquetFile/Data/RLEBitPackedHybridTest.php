@@ -6,8 +6,7 @@ namespace Flow\Parquet\Tests\Integration\ParquetFile\Data;
 
 use Flow\Parquet\BinaryReader\BinaryBufferReader;
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
-use Flow\Parquet\ParquetFile\Data\BitWidth;
-use Flow\Parquet\ParquetFile\Data\RLEBitPackedHybrid;
+use Flow\Parquet\ParquetFile\Data\{BitWidth, RLEBitPackedHybrid};
 use PHPUnit\Framework\TestCase;
 
 final class RLEBitPackedHybridTest extends TestCase

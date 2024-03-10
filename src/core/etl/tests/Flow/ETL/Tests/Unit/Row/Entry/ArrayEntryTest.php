@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
-use Flow\ETL\Row\Entry\ArrayEntry;
-use Flow\ETL\Row\Entry\IntegerEntry;
+use Flow\ETL\Row\Entry\{ArrayEntry, IntegerEntry};
 use PHPUnit\Framework\TestCase;
 
 final class ArrayEntryTest extends TestCase

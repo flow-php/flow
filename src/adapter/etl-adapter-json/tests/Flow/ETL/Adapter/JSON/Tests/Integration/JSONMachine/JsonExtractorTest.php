@@ -4,19 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON\Tests\Integration\JSONMachine;
 
-use function Flow\ETL\Adapter\JSON\from_json;
-use function Flow\ETL\Adapter\JSON\to_json;
-use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\print_schema;
+use function Flow\ETL\Adapter\JSON\{from_json, to_json};
+use function Flow\ETL\DSL\{df, from_array, print_schema};
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonExtractor;
-use Flow\ETL\Config;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Filesystem\Path;
-use Flow\ETL\Flow;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use Flow\ETL\{Config, Flow, FlowContext, Row, Rows};
 use PHPUnit\Framework\TestCase;
 
 final class JsonExtractorTest extends TestCase

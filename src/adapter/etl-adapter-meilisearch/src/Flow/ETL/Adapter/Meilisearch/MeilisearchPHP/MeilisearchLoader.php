@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Meilisearch\MeilisearchPHP;
 
-use Flow\ETL\FlowContext;
-use Flow\ETL\Loader;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use Flow\ETL\{FlowContext, Loader, Row, Rows};
 use Meilisearch\Client;
 use Psr\Http\Client\ClientInterface;
 

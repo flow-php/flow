@@ -6,9 +6,8 @@ namespace Flow\ETL\PHP\Type\Caster;
 
 use function Flow\ETL\DSL\type_object;
 use Flow\ETL\Exception\CastingException;
-use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\PHP\Type\Native\ObjectType;
-use Flow\ETL\PHP\Type\Type;
+use Flow\ETL\PHP\Type\{Caster, Type};
 
 final class ObjectCastingHandler implements CastingHandler
 {

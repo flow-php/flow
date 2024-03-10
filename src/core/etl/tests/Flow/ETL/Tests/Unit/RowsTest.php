@@ -4,42 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
-use function Flow\ETL\DSL\array_entry;
-use function Flow\ETL\DSL\array_to_rows;
-use function Flow\ETL\DSL\bool_entry;
-use function Flow\ETL\DSL\bool_schema;
-use function Flow\ETL\DSL\datetime_entry;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\list_entry;
-use function Flow\ETL\DSL\null_entry;
-use function Flow\ETL\DSL\partition;
-use function Flow\ETL\DSL\partitions;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\rows_partitioned;
-use function Flow\ETL\DSL\str_entry;
-use function Flow\ETL\DSL\str_schema;
-use function Flow\ETL\DSL\type_int;
-use function Flow\ETL\DSL\type_list;
-use function Flow\ETL\DSL\type_string;
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\RuntimeException;
+use function Flow\ETL\DSL\{array_entry, array_to_rows, bool_entry, bool_schema, datetime_entry, int_entry, int_schema, list_entry, null_entry, partition, partitions, ref, row, rows, rows_partitioned, str_entry, str_schema, type_int, type_list, type_string};
+use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\ListType;
-use Flow\ETL\Row;
-use Flow\ETL\Row\Comparator;
-use Flow\ETL\Row\Comparator\NativeComparator;
-use Flow\ETL\Row\Comparator\WeakObjectComparator;
-use Flow\ETL\Row\Entry\BooleanEntry;
-use Flow\ETL\Row\Entry\DateTimeEntry;
-use Flow\ETL\Row\Entry\NullEntry;
-use Flow\ETL\Row\Entry\ObjectEntry;
-use Flow\ETL\Row\Entry\StringEntry;
-use Flow\ETL\Row\Schema;
+use Flow\ETL\Row\Comparator\{NativeComparator, WeakObjectComparator};
+use Flow\ETL\Row\Entry\{BooleanEntry, DateTimeEntry, NullEntry, ObjectEntry, StringEntry};
 use Flow\ETL\Row\Schema\Definition;
-use Flow\ETL\Rows;
+use Flow\ETL\Row\{Comparator, Schema};
+use Flow\ETL\{Row, Rows};
 use PHPUnit\Framework\TestCase;
 
 final class RowsTest extends TestCase

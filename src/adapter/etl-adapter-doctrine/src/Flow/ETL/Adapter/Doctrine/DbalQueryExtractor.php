@@ -5,12 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Doctrine;
 
 use function Flow\ETL\DSL\array_to_rows;
-use Doctrine\DBAL\ArrayParameterType;
-use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Types\Type;
-use Flow\ETL\Extractor;
-use Flow\ETL\FlowContext;
+use Doctrine\DBAL\{ArrayParameterType, Connection, ParameterType};
+use Flow\ETL\{Extractor, FlowContext};
 
 final class DbalQueryExtractor implements Extractor
 {

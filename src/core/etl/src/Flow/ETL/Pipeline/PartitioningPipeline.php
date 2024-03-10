@@ -4,17 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Pipeline;
 
-use function Flow\ETL\DSL\from_all;
-use function Flow\ETL\DSL\from_cache;
+use function Flow\ETL\DSL\{from_all, from_cache};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\CollectingExtractor;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Loader;
-use Flow\ETL\Partition;
-use Flow\ETL\Pipeline;
 use Flow\ETL\Row\Reference;
-use Flow\ETL\Transformer;
+use Flow\ETL\{Extractor, FlowContext, Loader, Partition, Pipeline, Transformer};
 
 final class PartitioningPipeline implements OverridingPipeline, Pipeline
 {

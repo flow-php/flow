@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ArrayDot\Tests\Unit;
 
-use function Flow\ArrayDot\array_dot_exists;
-use function Flow\ArrayDot\array_dot_get;
+use function Flow\ArrayDot\{array_dot_exists, array_dot_get};
 use Flow\ArrayDot\Exception\InvalidPathException;
 use PHPUnit\Framework\TestCase;
 

@@ -4,18 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Loader;
 
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\str_entry;
-use function Flow\ETL\DSL\to_output;
-use function Flow\ETL\DSL\to_stream;
-use Flow\ETL\Config;
+use function Flow\ETL\DSL\{int_entry, ref, row, rows, str_entry, to_output, to_stream};
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Filesystem\Stream\Mode;
-use Flow\ETL\FlowContext;
 use Flow\ETL\Loader\StreamLoader;
+use Flow\ETL\{Config, FlowContext};
 use PHPUnit\Framework\TestCase;
 
 final class StreamLoaderTest extends TestCase

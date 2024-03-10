@@ -6,8 +6,7 @@ namespace Flow\ETL\Tests\Unit\Stream;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Filesystem\Path;
-use Flow\ETL\Partition;
-use Flow\ETL\Partitions;
+use Flow\ETL\{Partition, Partitions};
 use PHPUnit\Framework\TestCase;
 
 final class PathTest extends TestCase

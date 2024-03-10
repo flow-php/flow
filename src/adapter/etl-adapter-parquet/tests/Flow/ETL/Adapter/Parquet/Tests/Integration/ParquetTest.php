@@ -4,16 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Integration;
 
-use function Flow\ETL\Adapter\Parquet\from_parquet;
-use function Flow\ETL\Adapter\Parquet\to_parquet;
-use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\json_schema;
-use function Flow\ETL\DSL\schema;
-use function Flow\ETL\DSL\str_schema;
-use Flow\ETL\Flow;
-use Flow\ETL\Row;
+use function Flow\ETL\Adapter\Parquet\{from_parquet, to_parquet};
+use function Flow\ETL\DSL\{df, from_array, json_schema, schema, str_schema};
 use Flow\ETL\Tests\Double\FakeExtractor;
+use Flow\ETL\{Flow, Row};
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\Reader;
 use PHPUnit\Framework\TestCase;

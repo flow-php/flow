@@ -5,15 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Avro\FlixTech;
 
 use Flow\ETL\Filesystem\Path;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
-use Flow\ETL\PHP\Type\Logical\DateTimeType;
-use Flow\ETL\PHP\Type\Logical\ListType;
-use Flow\ETL\PHP\Type\Logical\UuidType;
-use Flow\ETL\Row;
+use Flow\ETL\PHP\Type\Logical\{DateTimeType, ListType, UuidType};
 use Flow\ETL\Row\Schema;
-use Flow\ETL\Rows;
+use Flow\ETL\{FlowContext, Loader, Row, Rows};
 
 final class AvroLoader implements Closure, Loader, Loader\FileLoader
 {

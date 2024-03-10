@@ -4,40 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
-use function Flow\ETL\DSL\array_entry;
-use function Flow\ETL\DSL\average;
-use function Flow\ETL\DSL\bool_entry;
-use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\float_entry;
-use function Flow\ETL\DSL\from_all;
-use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\from_rows;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\lit;
-use function Flow\ETL\DSL\null_entry;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\refs;
-use function Flow\ETL\DSL\str_entry;
-use function Flow\ETL\DSL\to_callable;
-use Flow\ETL\DataFrame;
+use function Flow\ETL\DSL\{array_entry, average, bool_entry, df, float_entry, from_all, from_array, from_rows, int_entry, lit, null_entry, ref, refs, str_entry, to_callable};
 use Flow\ETL\ErrorHandler\IgnoreError;
-use Flow\ETL\Extractor;
-use Flow\ETL\Flow;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Loader;
-use Flow\ETL\Row;
-use Flow\ETL\Row\Entry\BooleanEntry;
-use Flow\ETL\Row\Entry\DateTimeEntry;
-use Flow\ETL\Row\Entry\IntegerEntry;
-use Flow\ETL\Row\Entry\NullEntry;
-use Flow\ETL\Row\Entry\StringEntry;
+use Flow\ETL\Row\Entry\{BooleanEntry, DateTimeEntry, IntegerEntry, NullEntry, StringEntry};
 use Flow\ETL\Row\Schema;
-use Flow\ETL\Rows;
 use Flow\ETL\Tests\Double\AddStampToStringEntryTransformer;
-use Flow\ETL\Transformation;
-use Flow\ETL\Transformer;
-use PHPUnit\Framework\Assert;
-use PHPUnit\Framework\TestCase;
+use Flow\ETL\{DataFrame, Extractor, Flow, FlowContext, Loader, Row, Rows, Transformation, Transformer};
+use PHPUnit\Framework\{Assert, TestCase};
 
 final class DataFrameTest extends TestCase
 {

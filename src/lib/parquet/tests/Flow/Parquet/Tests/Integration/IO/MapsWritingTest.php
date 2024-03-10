@@ -5,13 +5,9 @@ declare(strict_types=1);
 namespace Flow\Parquet\Tests\Integration\IO;
 
 use Faker\Factory;
-use Flow\Parquet\Consts;
 use Flow\Parquet\ParquetFile\Schema;
-use Flow\Parquet\ParquetFile\Schema\MapKey;
-use Flow\Parquet\ParquetFile\Schema\MapValue;
-use Flow\Parquet\ParquetFile\Schema\NestedColumn;
-use Flow\Parquet\Reader;
-use Flow\Parquet\Writer;
+use Flow\Parquet\ParquetFile\Schema\{MapKey, MapValue, NestedColumn};
+use Flow\Parquet\{Consts, Reader, Writer};
 use PHPUnit\Framework\TestCase;
 
 final class MapsWritingTest extends TestCase

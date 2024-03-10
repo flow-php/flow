@@ -4,18 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type;
 
-use Flow\ETL\PHP\Type\Logical\DateTimeType;
-use Flow\ETL\PHP\Type\Logical\JsonType;
-use Flow\ETL\PHP\Type\Logical\ListType;
-use Flow\ETL\PHP\Type\Logical\StructureType;
-use Flow\ETL\PHP\Type\Logical\UuidType;
-use Flow\ETL\PHP\Type\Logical\XMLNodeType;
-use Flow\ETL\PHP\Type\Logical\XMLType;
-use Flow\ETL\PHP\Type\Native\ArrayType;
-use Flow\ETL\PHP\Type\Native\EnumType;
-use Flow\ETL\PHP\Type\Native\NullType;
-use Flow\ETL\PHP\Type\Native\ObjectType;
-use Flow\ETL\PHP\Type\Native\ScalarType;
+use Flow\ETL\PHP\Type\Logical\{DateTimeType, JsonType, ListType, StructureType, UuidType, XMLNodeType, XMLType};
+use Flow\ETL\PHP\Type\Native\{ArrayType, EnumType, NullType, ObjectType, ScalarType};
 use Flow\ETL\PHP\Type\TypeDetector;
 use Flow\ETL\Row\Entry\Type\Uuid;
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;

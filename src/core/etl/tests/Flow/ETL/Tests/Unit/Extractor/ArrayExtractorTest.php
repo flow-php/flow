@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Extractor;
 
-use function Flow\ETL\DSL\config;
-use function Flow\ETL\DSL\config_builder;
-use function Flow\ETL\DSL\execution_context;
-use function Flow\ETL\DSL\from_array;
+use function Flow\ETL\DSL\{config, config_builder, execution_context, from_array};
 use PHPUnit\Framework\TestCase;
 
 final class ArrayExtractorTest extends TestCase

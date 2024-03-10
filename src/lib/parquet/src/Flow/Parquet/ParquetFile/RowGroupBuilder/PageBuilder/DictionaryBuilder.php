@@ -4,12 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\RowGroupBuilder\PageBuilder;
 
-use Flow\Parquet\ParquetFile\RowGroupBuilder\PageBuilder\DictionaryBuilder\FloatDictionaryBuilder;
-use Flow\Parquet\ParquetFile\RowGroupBuilder\PageBuilder\DictionaryBuilder\ObjectDictionaryBuilder;
-use Flow\Parquet\ParquetFile\RowGroupBuilder\PageBuilder\DictionaryBuilder\ScalarDictionaryBuilder;
-use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Flow\Parquet\ParquetFile\Schema\LogicalType;
-use Flow\Parquet\ParquetFile\Schema\PhysicalType;
+use Flow\Parquet\ParquetFile\RowGroupBuilder\PageBuilder\DictionaryBuilder\{FloatDictionaryBuilder, ObjectDictionaryBuilder, ScalarDictionaryBuilder};
+use Flow\Parquet\ParquetFile\Schema\{FlatColumn, LogicalType, PhysicalType};
 
 final class DictionaryBuilder
 {

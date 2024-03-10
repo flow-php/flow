@@ -4,12 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Function;
 
-use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\from_sequence_number;
-use function Flow\ETL\DSL\lit;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\to_memory;
-use function Flow\ETL\DSL\when;
+use function Flow\ETL\DSL\{df, from_sequence_number, lit, ref, to_memory, when};
 use Flow\ETL\Memory\ArrayMemory;
 use PHPUnit\Framework\TestCase;
 

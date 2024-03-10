@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row;
 
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\refs;
+use function Flow\ETL\DSL\{ref, refs};
 use Flow\ETL\Row\References;
 use PHPUnit\Framework\TestCase;
 

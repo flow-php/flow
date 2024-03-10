@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Formatter\ASCII;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Partition;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use Flow\ETL\{Partition, Row, Rows};
 
 final class Body
 {

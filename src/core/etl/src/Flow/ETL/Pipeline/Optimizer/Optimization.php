@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Pipeline\Optimizer;
 
-use Flow\ETL\Loader;
-use Flow\ETL\Pipeline;
-use Flow\ETL\Transformer;
+use Flow\ETL\{Loader, Pipeline, Transformer};
 
 interface Optimization
 {

@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\all;
-use function Flow\ETL\DSL\lit;
-use function Flow\ETL\DSL\null_entry;
-use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\{all, lit, null_entry, ref};
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;
 

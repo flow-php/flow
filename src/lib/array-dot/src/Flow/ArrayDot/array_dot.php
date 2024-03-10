@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ArrayDot;
 
-use Flow\ArrayDot\Exception\Exception;
-use Flow\ArrayDot\Exception\InvalidPathException;
+use Flow\ArrayDot\Exception\{Exception, InvalidPathException};
 
 /**
  * @param string $path

@@ -5,10 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Filesystem;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Filesystem;
-use Flow\ETL\Filesystem\Stream\FileStream;
-use Flow\ETL\Filesystem\Stream\Mode;
-use Flow\ETL\Partition;
+use Flow\ETL\Filesystem\Stream\{FileStream, Mode};
+use Flow\ETL\{Filesystem, Partition};
 
 /**
  * @psalm-suppress MissingTemplateParam

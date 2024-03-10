@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Meilisearch;
 
-use Flow\ETL\Adapter\Meilisearch\MeilisearchPHP\MeilisearchExtractor;
-use Flow\ETL\Adapter\Meilisearch\MeilisearchPHP\MeilisearchLoader;
+use Flow\ETL\Adapter\Meilisearch\MeilisearchPHP\{MeilisearchExtractor, MeilisearchLoader};
 use Flow\ETL\Loader;
 use Psr\Http\Client\ClientInterface;
 

@@ -4,14 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile;
 
-use Flow\Parquet\ByteOrder;
 use Flow\Parquet\Exception\RuntimeException;
-use Flow\Parquet\Options;
-use Flow\Parquet\ParquetFile\Page\ColumnData;
-use Flow\Parquet\ParquetFile\Page\Dictionary;
 use Flow\Parquet\ParquetFile\Page\Header\Type;
-use Flow\Parquet\ParquetFile\Page\PageHeader;
+use Flow\Parquet\ParquetFile\Page\{ColumnData, Dictionary, PageHeader};
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\{ByteOrder, Options};
 
 final class PageReader
 {

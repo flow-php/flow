@@ -5,20 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use function Flow\ETL\Adapter\Text\from_text;
-use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\from_rows;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\lit;
-use function Flow\ETL\DSL\partition;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\rows_partitioned;
-use function Flow\ETL\DSL\str_entry;
-use Flow\ETL\Partition;
-use Flow\ETL\Rows;
+use function Flow\ETL\DSL\{df, from_array, from_rows, int_entry, lit, partition, ref, row, rows, rows_partitioned, str_entry};
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
+use Flow\ETL\{Partition, Rows};
 
 final class PartitioningTest extends IntegrationTestCase
 {

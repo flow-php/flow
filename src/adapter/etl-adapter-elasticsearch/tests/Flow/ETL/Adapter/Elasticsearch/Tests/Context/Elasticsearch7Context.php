@@ -5,14 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Elasticsearch\Tests\Context;
 
 use function Flow\ETL\Adapter\Elasticsearch\to_es_bulk_index;
-use Elasticsearch\Client;
-use Elasticsearch\ClientBuilder;
-use Elasticsearch\Common\Exceptions\BadRequest400Exception;
-use Elasticsearch\Common\Exceptions\Missing404Exception;
+use Elasticsearch\Common\Exceptions\{BadRequest400Exception, Missing404Exception};
+use Elasticsearch\{Client, ClientBuilder};
 use Flow\ETL\Adapter\Elasticsearch\IdFactory;
-use Flow\ETL\Config;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Rows;
+use Flow\ETL\{Config, FlowContext, Rows};
 
 final class Elasticsearch7Context implements ElasticsearchContext
 {

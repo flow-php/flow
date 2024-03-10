@@ -4,16 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\null_entry;
-use function Flow\ETL\DSL\str_entry;
-use Flow\ETL\Config;
-use Flow\ETL\Flow;
-use Flow\ETL\FlowContext;
+use function Flow\ETL\DSL\{int_entry, null_entry, str_entry};
 use Flow\ETL\Join\Expression;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
 use Flow\ETL\Transformer\JoinRowsTransformer;
+use Flow\ETL\{Config, Flow, FlowContext, Row, Rows};
 use PHPUnit\Framework\TestCase;
 
 final class JoinRowsTransformerTest extends TestCase

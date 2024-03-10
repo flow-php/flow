@@ -7,8 +7,7 @@ namespace Flow\Parquet\Data\Converter;
 use Flow\Parquet\Data\Converter;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\Options;
-use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Flow\Parquet\ParquetFile\Schema\LogicalType;
+use Flow\Parquet\ParquetFile\Schema\{FlatColumn, LogicalType};
 
 final class UuidConverter implements Converter
 {

@@ -4,25 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type;
 
-use function Flow\ETL\DSL\structure_element;
-use function Flow\ETL\DSL\type_array;
-use function Flow\ETL\DSL\type_boolean;
-use function Flow\ETL\DSL\type_callable;
-use function Flow\ETL\DSL\type_datetime;
-use function Flow\ETL\DSL\type_enum;
-use function Flow\ETL\DSL\type_float;
-use function Flow\ETL\DSL\type_integer;
-use function Flow\ETL\DSL\type_json;
-use function Flow\ETL\DSL\type_list;
-use function Flow\ETL\DSL\type_map;
-use function Flow\ETL\DSL\type_null;
-use function Flow\ETL\DSL\type_object;
-use function Flow\ETL\DSL\type_resource;
-use function Flow\ETL\DSL\type_string;
-use function Flow\ETL\DSL\type_structure;
-use function Flow\ETL\DSL\type_uuid;
-use function Flow\ETL\DSL\type_xml;
-use function Flow\ETL\DSL\type_xml_node;
+use function Flow\ETL\DSL\{structure_element, type_array, type_boolean, type_callable, type_datetime, type_enum, type_float, type_integer, type_json, type_list, type_map, type_null, type_object, type_resource, type_string, type_structure, type_uuid, type_xml, type_xml_node};
 use Flow\ETL\PHP\Type\TypeFactory;
 use Flow\ETL\Tests\Unit\PHP\Type\Fixtures\SomeEnum;
 use PHPUnit\Framework\TestCase;

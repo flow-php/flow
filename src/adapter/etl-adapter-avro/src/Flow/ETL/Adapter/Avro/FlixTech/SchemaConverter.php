@@ -6,19 +6,9 @@ namespace Flow\ETL\Adapter\Avro\FlixTech;
 
 use function Flow\ETL\DSL\type_string;
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\PHP\Type\Logical\DateTimeType;
-use Flow\ETL\PHP\Type\Logical\JsonType;
-use Flow\ETL\PHP\Type\Logical\ListType;
-use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
-use Flow\ETL\PHP\Type\Logical\StructureType;
-use Flow\ETL\PHP\Type\Logical\UuidType;
-use Flow\ETL\PHP\Type\Logical\XMLNodeType;
-use Flow\ETL\PHP\Type\Logical\XMLType;
-use Flow\ETL\PHP\Type\Native\ArrayType;
-use Flow\ETL\PHP\Type\Native\EnumType;
-use Flow\ETL\PHP\Type\Native\ObjectType;
-use Flow\ETL\PHP\Type\Native\ScalarType;
+use Flow\ETL\PHP\Type\Logical\{DateTimeType, JsonType, ListType, MapType, StructureType, UuidType, XMLNodeType, XMLType};
+use Flow\ETL\PHP\Type\Native\{ArrayType, EnumType, ObjectType, ScalarType};
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Row\Schema\Definition;
 

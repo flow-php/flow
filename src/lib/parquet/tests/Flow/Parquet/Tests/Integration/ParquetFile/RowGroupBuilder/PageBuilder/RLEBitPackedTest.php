@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Flow\Parquet\Tests\Integration\ParquetFile\RowGroupBuilder\PageBuilder;
 
 use Flow\Parquet\BinaryReader\BinaryBufferReader;
-use Flow\Parquet\ParquetFile\Data\BitWidth;
-use Flow\Parquet\ParquetFile\Data\RLEBitPackedHybrid;
+use Flow\Parquet\ParquetFile\Data\{BitWidth, RLEBitPackedHybrid};
 use Flow\Parquet\ParquetFile\RowGroupBuilder\PageBuilder\RLEBitPackedPacker;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;

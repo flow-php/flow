@@ -4,16 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine\Tests\Integration;
 
-use function Flow\ETL\Adapter\Doctrine\from_dbal_limit_offset;
-use function Flow\ETL\Adapter\Doctrine\from_dbal_limit_offset_qb;
+use function Flow\ETL\Adapter\Doctrine\{from_dbal_limit_offset, from_dbal_limit_offset_qb};
 use function Flow\ETL\DSL\df;
-use Doctrine\DBAL\Schema\Column;
-use Doctrine\DBAL\Schema\Table;
-use Doctrine\DBAL\Types\Type;
-use Doctrine\DBAL\Types\Types;
-use Flow\ETL\Adapter\Doctrine\Order;
-use Flow\ETL\Adapter\Doctrine\OrderBy;
+use Doctrine\DBAL\Schema\{Column, Table};
+use Doctrine\DBAL\Types\{Type, Types};
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
+use Flow\ETL\Adapter\Doctrine\{Order, OrderBy};
 use Flow\ETL\Flow;
 
 final class DbalLimitOffsetExtractorTest extends IntegrationTestCase

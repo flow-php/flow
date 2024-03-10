@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP;
 
-use Flow\ETL\Extractor;
-use Flow\ETL\FlowContext;
+use Flow\ETL\{Extractor, FlowContext};
 
 final class ElasticsearchExtractor implements Extractor
 {

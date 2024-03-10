@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type\Logical;
 
-use function Flow\ETL\DSL\type_int;
-use function Flow\ETL\DSL\type_json;
+use function Flow\ETL\DSL\{type_int, type_json};
 use PHPUnit\Framework\TestCase;
 
 final class JsonTypeTest extends TestCase

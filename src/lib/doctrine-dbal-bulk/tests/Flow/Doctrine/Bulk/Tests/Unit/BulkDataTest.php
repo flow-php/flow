@@ -5,11 +5,8 @@ declare(strict_types=1);
 namespace Flow\Doctrine\Bulk\Tests\Unit;
 
 use Doctrine\DBAL\Schema\Column;
-use Doctrine\DBAL\Types\Type;
-use Doctrine\DBAL\Types\Types;
-use Flow\Doctrine\Bulk\BulkData;
-use Flow\Doctrine\Bulk\Columns;
-use Flow\Doctrine\Bulk\TableDefinition;
+use Doctrine\DBAL\Types\{Type, Types};
+use Flow\Doctrine\Bulk\{BulkData, Columns, TableDefinition};
 use PHPUnit\Framework\TestCase;
 
 final class BulkDataTest extends TestCase

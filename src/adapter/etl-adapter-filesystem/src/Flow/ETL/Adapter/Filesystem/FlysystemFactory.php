@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Filesystem;
 
 use Aws\S3\S3Client;
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\MissingDependencyException;
+use Flow\ETL\Exception\{InvalidArgumentException, MissingDependencyException};
 use Flow\ETL\Filesystem\Path;
 use League\Flysystem\AwsS3V3\AwsS3V3Adapter;
 use League\Flysystem\AzureBlobStorage\AzureBlobStorageAdapter;

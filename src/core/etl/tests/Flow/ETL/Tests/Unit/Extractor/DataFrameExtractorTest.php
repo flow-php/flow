@@ -4,14 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Extractor;
 
-use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\from_data_frame;
-use function Flow\ETL\DSL\from_rows;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\str_entry;
-use Flow\ETL\Config;
-use Flow\ETL\FlowContext;
+use function Flow\ETL\DSL\{df, from_data_frame, from_rows, row, rows, str_entry};
+use Flow\ETL\{Config, FlowContext};
 use PHPUnit\Framework\TestCase;
 
 final class DataFrameExtractorTest extends TestCase

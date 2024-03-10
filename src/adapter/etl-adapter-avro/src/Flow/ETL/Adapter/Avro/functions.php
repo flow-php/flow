@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\DSL\Adapter\Avro;
 
 use function Flow\ETL\DSL\from_all;
-use Flow\ETL\Adapter\Avro\FlixTech\AvroExtractor;
-use Flow\ETL\Adapter\Avro\FlixTech\AvroLoader;
+use Flow\ETL\Adapter\Avro\FlixTech\{AvroExtractor, AvroLoader};
 use Flow\ETL\Extractor;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Row\Schema;

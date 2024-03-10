@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\Partitioned;
 
 use function Flow\ETL\DSL\exception_if_exists;
-use Flow\ETL\Filesystem\FilesystemStreams;
-use Flow\ETL\Filesystem\Path;
+use Flow\ETL\Filesystem\{FilesystemStreams, Path};
 use Flow\ETL\Partition;
 use Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\FilesystemStreamsTestCase;
 

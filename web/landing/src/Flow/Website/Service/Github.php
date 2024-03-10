@@ -4,13 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Website\Service;
 
-use function Flow\ETL\DSL\config_builder;
-use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\from_cache;
-use function Flow\ETL\DSL\lit;
-use function Flow\ETL\DSL\not;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\to_memory;
+use function Flow\ETL\DSL\{config_builder, df, from_cache, lit, not, ref, to_memory};
 use Flow\ETL\Adapter\Http\PsrHttpClientDynamicExtractor;
 use Flow\ETL\Cache\PSRSimpleCache;
 use Flow\ETL\Memory\ArrayMemory;

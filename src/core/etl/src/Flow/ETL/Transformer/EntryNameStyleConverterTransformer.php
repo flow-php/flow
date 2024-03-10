@@ -5,12 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Transformer;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
 use Flow\ETL\Row\Entry;
-use Flow\ETL\Rows;
-use Flow\ETL\Transformer;
 use Flow\ETL\Transformer\StyleConverter\StringStyles;
+use Flow\ETL\{FlowContext, Row, Rows, Transformer};
 use Jawira\CaseConverter\Convert;
 
 final class EntryNameStyleConverterTransformer implements Transformer

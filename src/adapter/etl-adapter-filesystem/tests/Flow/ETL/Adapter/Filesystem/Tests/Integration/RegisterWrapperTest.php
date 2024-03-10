@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Filesystem\Tests\Integration;
 
-use Flow\ETL\Adapter\Filesystem\AwsS3Stream;
-use Flow\ETL\Adapter\Filesystem\AzureBlobStream;
+use Flow\ETL\Adapter\Filesystem\{AwsS3Stream, AzureBlobStream};
 use PHPUnit\Framework\TestCase;
 
 final class RegisterWrapperTest extends TestCase

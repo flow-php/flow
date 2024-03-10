@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type\Caster;
 
-use function Flow\ETL\DSL\type_float;
-use function Flow\ETL\DSL\type_int;
-use function Flow\ETL\DSL\type_list;
+use function Flow\ETL\DSL\{type_float, type_int, type_list};
 use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\PHP\Type\Caster\ListCastingHandler;
 use PHPUnit\Framework\TestCase;

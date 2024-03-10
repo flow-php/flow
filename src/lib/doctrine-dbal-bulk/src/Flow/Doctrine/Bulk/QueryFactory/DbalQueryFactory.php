@@ -5,11 +5,8 @@ declare(strict_types=1);
 namespace Flow\Doctrine\Bulk\QueryFactory;
 
 use Doctrine\DBAL\Platforms\AbstractPlatform;
-use Flow\Doctrine\Bulk\BulkData;
-use Flow\Doctrine\Bulk\DbalPlatform;
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
-use Flow\Doctrine\Bulk\QueryFactory;
-use Flow\Doctrine\Bulk\TableDefinition;
+use Flow\Doctrine\Bulk\{BulkData, DbalPlatform, QueryFactory, TableDefinition};
 
 final class DbalQueryFactory implements QueryFactory
 {

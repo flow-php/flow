@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Cache;
 
-use Flow\ETL\Cache;
-use Flow\ETL\Rows;
-use Flow\Serializer\NativePHPSerializer;
-use Flow\Serializer\Serializer;
+use Flow\ETL\{Cache, Rows};
+use Flow\Serializer\{NativePHPSerializer, Serializer};
 use Psr\SimpleCache\CacheInterface;
 
 final class PSRSimpleCache implements Cache

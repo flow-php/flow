@@ -4,19 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use function Flow\ETL\DSL\type_array;
-use function Flow\ETL\DSL\type_boolean;
-use function Flow\ETL\DSL\type_datetime;
-use function Flow\ETL\DSL\type_float;
-use function Flow\ETL\DSL\type_integer;
-use function Flow\ETL\DSL\type_json;
-use function Flow\ETL\DSL\type_object;
-use function Flow\ETL\DSL\type_string;
-use function Flow\ETL\DSL\type_xml;
-use Flow\ETL\Exception\CastingException;
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Caster;
-use Flow\ETL\PHP\Type\Type;
+use function Flow\ETL\DSL\{type_array, type_boolean, type_datetime, type_float, type_integer, type_json, type_object, type_string, type_xml};
+use Flow\ETL\Exception\{CastingException, InvalidArgumentException};
+use Flow\ETL\PHP\Type\{Caster, Type};
 use Flow\ETL\Row;
 
 final class Cast extends ScalarFunctionChain

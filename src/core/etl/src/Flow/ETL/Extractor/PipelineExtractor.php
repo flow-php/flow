@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Extractor;
 
-use Flow\ETL\Extractor;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Pipeline;
-use Flow\ETL\Rows;
+use Flow\ETL\{Extractor, FlowContext, Pipeline, Rows};
 
 final class PipelineExtractor implements Extractor
 {

@@ -4,36 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet;
 
-use function Flow\ETL\DSL\list_schema;
-use function Flow\ETL\DSL\map_schema;
-use function Flow\ETL\DSL\struct_schema;
-use function Flow\ETL\DSL\struct_type;
-use function Flow\ETL\DSL\structure_element;
-use function Flow\ETL\DSL\type_list;
-use function Flow\ETL\DSL\type_map;
-use function Flow\ETL\DSL\type_object;
+use function Flow\ETL\DSL\{list_schema, map_schema, struct_schema, struct_type, structure_element, type_list, type_map, type_object};
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\PHP\Type\Logical\DateTimeType;
-use Flow\ETL\PHP\Type\Logical\JsonType;
-use Flow\ETL\PHP\Type\Logical\ListType;
-use Flow\ETL\PHP\Type\Logical\Map\MapKey;
-use Flow\ETL\PHP\Type\Logical\Map\MapValue;
-use Flow\ETL\PHP\Type\Logical\MapType;
+use Flow\ETL\PHP\Type\Logical\Map\{MapKey, MapValue};
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
-use Flow\ETL\PHP\Type\Logical\StructureType;
-use Flow\ETL\PHP\Type\Logical\UuidType;
-use Flow\ETL\PHP\Type\Logical\XMLNodeType;
-use Flow\ETL\PHP\Type\Logical\XMLType;
-use Flow\ETL\PHP\Type\Native\ObjectType;
-use Flow\ETL\PHP\Type\Native\ScalarType;
+use Flow\ETL\PHP\Type\Logical\{DateTimeType, JsonType, ListType, MapType, StructureType, UuidType, XMLNodeType, XMLType};
+use Flow\ETL\PHP\Type\Native\{ObjectType, ScalarType};
 use Flow\ETL\PHP\Type\Type;
-use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\Schema;
+use Flow\ETL\Row\{Entry, Schema};
 use Flow\Parquet\ParquetFile\Schema as ParquetSchema;
-use Flow\Parquet\ParquetFile\Schema\Column;
-use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Flow\Parquet\ParquetFile\Schema\ListElement;
-use Flow\Parquet\ParquetFile\Schema\NestedColumn;
+use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn, ListElement, NestedColumn};
 
 final class SchemaConverter
 {

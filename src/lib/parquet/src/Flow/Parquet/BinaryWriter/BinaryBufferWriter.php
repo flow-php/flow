@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\BinaryWriter;
 
-use Flow\Parquet\BinaryWriter;
-use Flow\Parquet\ByteOrder;
-use Flow\Parquet\DataSize;
+use Flow\Parquet\{BinaryWriter, ByteOrder, DataSize};
 
 final class BinaryBufferWriter implements BinaryWriter
 {

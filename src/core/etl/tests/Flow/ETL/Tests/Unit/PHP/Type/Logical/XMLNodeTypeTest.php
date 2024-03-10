@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type\Logical;
 
-use function Flow\ETL\DSL\type_int;
-use function Flow\ETL\DSL\type_xml_node;
+use function Flow\ETL\DSL\{type_int, type_xml_node};
 use PHPUnit\Framework\TestCase;
 
 final class XMLNodeTypeTest extends TestCase

@@ -5,13 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Function;
 
 use function Flow\ETL\DSL\int_entry;
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Row;
-use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\Reference;
-use Flow\ETL\Rows;
-use Flow\ETL\Window;
+use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
+use Flow\ETL\Row\{Entry, Reference};
+use Flow\ETL\{Row, Rows, Window};
 
 final class Count implements AggregatingFunction, WindowFunction
 {

@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Flow\RDSL;
 
 use Flow\RDSL\AccessControl\DenyAll;
-use Flow\RDSL\Attribute\DSL;
-use Flow\RDSL\Attribute\DSLMethod;
+use Flow\RDSL\Attribute\{DSL, DSLMethod};
 use Flow\RDSL\Exception\InvalidArgumentException;
 
 final class Finder

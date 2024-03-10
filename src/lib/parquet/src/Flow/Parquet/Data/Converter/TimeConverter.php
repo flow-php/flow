@@ -7,9 +7,7 @@ namespace Flow\Parquet\Data\Converter;
 use Flow\Parquet\Data\Converter;
 use Flow\Parquet\Exception\InvalidArgumentException;
 use Flow\Parquet\Options;
-use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Flow\Parquet\ParquetFile\Schema\LogicalType;
-use Flow\Parquet\ParquetFile\Schema\PhysicalType;
+use Flow\Parquet\ParquetFile\Schema\{FlatColumn, LogicalType, PhysicalType};
 
 final class TimeConverter implements Converter
 {

@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Function\Structure;
 
-use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\structure_ref;
+use function Flow\ETL\DSL\{df, from_array, structure_ref};
 use PHPUnit\Framework\TestCase;
 
 final class StructureSelectTest extends TestCase

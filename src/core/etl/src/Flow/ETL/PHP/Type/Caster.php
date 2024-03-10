@@ -4,34 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type;
 
-use function Flow\ETL\DSL\type_array;
-use function Flow\ETL\DSL\type_boolean;
-use function Flow\ETL\DSL\type_datetime;
-use function Flow\ETL\DSL\type_float;
-use function Flow\ETL\DSL\type_integer;
-use function Flow\ETL\DSL\type_json;
-use function Flow\ETL\DSL\type_null;
-use function Flow\ETL\DSL\type_string;
-use function Flow\ETL\DSL\type_uuid;
-use function Flow\ETL\DSL\type_xml;
+use function Flow\ETL\DSL\{type_array, type_boolean, type_datetime, type_float, type_integer, type_json, type_null, type_string, type_uuid, type_xml};
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\PHP\Type\Caster\ArrayCastingHandler;
-use Flow\ETL\PHP\Type\Caster\BooleanCastingHandler;
-use Flow\ETL\PHP\Type\Caster\CastingContext;
-use Flow\ETL\PHP\Type\Caster\CastingHandler;
-use Flow\ETL\PHP\Type\Caster\DateTimeCastingHandler;
-use Flow\ETL\PHP\Type\Caster\EnumCastingHandler;
-use Flow\ETL\PHP\Type\Caster\FloatCastingHandler;
-use Flow\ETL\PHP\Type\Caster\IntegerCastingHandler;
-use Flow\ETL\PHP\Type\Caster\JsonCastingHandler;
-use Flow\ETL\PHP\Type\Caster\ListCastingHandler;
-use Flow\ETL\PHP\Type\Caster\MapCastingHandler;
-use Flow\ETL\PHP\Type\Caster\NullCastingHandler;
-use Flow\ETL\PHP\Type\Caster\ObjectCastingHandler;
-use Flow\ETL\PHP\Type\Caster\StringCastingHandler;
-use Flow\ETL\PHP\Type\Caster\StructureCastingHandler;
-use Flow\ETL\PHP\Type\Caster\UuidCastingHandler;
-use Flow\ETL\PHP\Type\Caster\XMLCastingHandler;
+use Flow\ETL\PHP\Type\Caster\{ArrayCastingHandler, BooleanCastingHandler, CastingContext, CastingHandler, DateTimeCastingHandler, EnumCastingHandler, FloatCastingHandler, IntegerCastingHandler, JsonCastingHandler, ListCastingHandler, MapCastingHandler, NullCastingHandler, ObjectCastingHandler, StringCastingHandler, StructureCastingHandler, UuidCastingHandler, XMLCastingHandler};
 
 final class Caster
 {

@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\array_entry;
-use function Flow\ETL\DSL\array_keys_style_convert;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\{array_entry, array_keys_style_convert, int_entry, ref};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;

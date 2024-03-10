@@ -5,13 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Extractor;
 
 use function Flow\ETL\DSL\int_entry;
-use Flow\ETL\Config;
-use Flow\ETL\Extractor\PipelineExtractor;
-use Flow\ETL\Extractor\ProcessExtractor;
-use Flow\ETL\FlowContext;
+use Flow\ETL\Extractor\{PipelineExtractor, ProcessExtractor};
 use Flow\ETL\Pipeline\SynchronousPipeline;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use Flow\ETL\{Config, FlowContext, Row, Rows};
 use PHPUnit\Framework\TestCase;
 
 final class PipelineExtractorTest extends TestCase

@@ -8,16 +8,9 @@ use function Flow\ETL\DSL\ref;
 use Flow\ETL\Adapter\CSV\CSVExtractor;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\GroupBy;
-use Flow\ETL\Pipeline\GroupByPipeline;
-use Flow\ETL\Pipeline\Optimizer;
 use Flow\ETL\Pipeline\Optimizer\LimitOptimization;
-use Flow\ETL\Pipeline\PartitioningPipeline;
-use Flow\ETL\Pipeline\SynchronousPipeline;
-use Flow\ETL\Transformer\DropDuplicatesTransformer;
-use Flow\ETL\Transformer\KeepEntriesTransformer;
-use Flow\ETL\Transformer\LimitTransformer;
-use Flow\ETL\Transformer\RenameEntryTransformer;
-use Flow\ETL\Transformer\ScalarFunctionTransformer;
+use Flow\ETL\Pipeline\{GroupByPipeline, Optimizer, PartitioningPipeline, SynchronousPipeline};
+use Flow\ETL\Transformer\{DropDuplicatesTransformer, KeepEntriesTransformer, LimitTransformer, RenameEntryTransformer, ScalarFunctionTransformer};
 use PHPUnit\Framework\TestCase;
 
 final class LimitOptimizationTest extends TestCase

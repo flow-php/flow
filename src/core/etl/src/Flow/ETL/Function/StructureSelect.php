@@ -6,9 +6,7 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\StructureEntry;
-use Flow\ETL\Row\EntryReference;
-use Flow\ETL\Row\Reference;
-use Flow\ETL\Row\References;
+use Flow\ETL\Row\{EntryReference, Reference, References};
 
 final class StructureSelect implements ScalarFunction
 {

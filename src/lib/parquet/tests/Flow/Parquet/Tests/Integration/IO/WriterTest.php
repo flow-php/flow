@@ -6,16 +6,10 @@ namespace Flow\Parquet\Tests\Integration\IO;
 
 use Composer\InstalledVersions;
 use Faker\Factory;
-use Flow\Parquet\Consts;
 use Flow\Parquet\Exception\InvalidArgumentException;
-use Flow\Parquet\Option;
-use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Schema;
-use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Flow\Parquet\ParquetFile\Schema\ListElement;
-use Flow\Parquet\ParquetFile\Schema\NestedColumn;
-use Flow\Parquet\Reader;
-use Flow\Parquet\Writer;
+use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, NestedColumn};
+use Flow\Parquet\{Consts, Option, Options, Reader, Writer};
 use PHPUnit\Framework\TestCase;
 
 final class WriterTest extends TestCase

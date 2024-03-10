@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Flow\Parquet\Tests\Unit\BinaryReader;
 
 use Flow\Parquet\BinaryReader\Bytes;
-use Flow\Parquet\ByteOrder;
-use Flow\Parquet\DataSize;
+use Flow\Parquet\{ByteOrder, DataSize};
 use PHPUnit\Framework\TestCase;
 
 final class BytesTest extends TestCase

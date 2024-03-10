@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\PHP\Type\Caster;
 
 use Flow\ETL\Exception\CastingException;
-use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\PHP\Type\Native\ScalarType;
-use Flow\ETL\PHP\Type\Type;
+use Flow\ETL\PHP\Type\{Caster, Type};
 
 final class FloatCastingHandler implements CastingHandler
 {

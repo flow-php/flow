@@ -4,12 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\ExternalSort;
 
-use Flow\ETL\Cache;
-use Flow\ETL\ExternalSort;
-use Flow\ETL\Extractor;
 use Flow\ETL\Extractor\CacheExtractor;
 use Flow\ETL\Row\Reference;
-use Flow\ETL\Rows;
+use Flow\ETL\{Cache, ExternalSort, Extractor, Rows};
 
 /**
  * External sorting is explained here:.

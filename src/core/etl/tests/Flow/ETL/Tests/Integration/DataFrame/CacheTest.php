@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use function Flow\ETL\DSL\config_builder;
-use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\from_cache;
+use function Flow\ETL\DSL\{config_builder, df, from_cache};
 use Flow\ETL\Cache\PSRSimpleCache;
 use Flow\ETL\Config;
 use Flow\ETL\Tests\Double\FakeExtractor;

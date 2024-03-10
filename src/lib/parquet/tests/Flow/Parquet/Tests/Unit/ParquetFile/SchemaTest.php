@@ -6,9 +6,7 @@ namespace Flow\Parquet\Tests\Unit\ParquetFile;
 
 use Flow\ETL\Adapter\Elasticsearch\Tests\Integration\TestCase;
 use Flow\Parquet\ParquetFile\Schema;
-use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Flow\Parquet\ParquetFile\Schema\ListElement;
-use Flow\Parquet\ParquetFile\Schema\NestedColumn;
+use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, NestedColumn};
 use Flow\Parquet\Thrift\SchemaElement;
 
 final class SchemaTest extends TestCase

@@ -6,8 +6,7 @@ namespace Flow\ETL\Tests\Unit\Join\Comparison;
 
 use function Flow\ETL\DSL\datetime_entry;
 use Flow\ETL\Adapter\Elasticsearch\Tests\Integration\TestCase;
-use Flow\ETL\Join\Comparison\Equal;
-use Flow\ETL\Join\Comparison\Not;
+use Flow\ETL\Join\Comparison\{Equal, Not};
 use Flow\ETL\Row;
 
 final class NotTest extends TestCase

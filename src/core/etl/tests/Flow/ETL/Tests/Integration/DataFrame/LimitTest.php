@@ -4,18 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\from_rows;
-use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\{df, from_array, from_rows, ref};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Extractor;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
-use Flow\ETL\Row\Entry\ArrayEntry;
-use Flow\ETL\Row\Entry\IntegerEntry;
-use Flow\ETL\Rows;
+use Flow\ETL\Row\Entry\{ArrayEntry, IntegerEntry};
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
+use Flow\ETL\{Extractor, FlowContext, Row, Rows};
 
 final class LimitTest extends IntegrationTestCase
 {

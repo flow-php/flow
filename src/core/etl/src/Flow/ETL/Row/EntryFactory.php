@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row;
 
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
+use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException, SchemaDefinitionNotFoundException};
 
 interface EntryFactory
 {

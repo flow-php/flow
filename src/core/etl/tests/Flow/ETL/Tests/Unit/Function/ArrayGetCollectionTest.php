@@ -4,11 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\array_entry;
-use function Flow\ETL\DSL\array_get_collection;
-use function Flow\ETL\DSL\array_get_collection_first;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\{array_entry, array_get_collection, array_get_collection_first, int_entry, ref};
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;
 

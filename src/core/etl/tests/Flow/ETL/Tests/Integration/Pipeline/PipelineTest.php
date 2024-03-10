@@ -4,12 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Pipeline;
 
-use Flow\ETL\GroupBy;
-use Flow\ETL\Loader;
-use Flow\ETL\Pipeline\CollectingPipeline;
-use Flow\ETL\Pipeline\GroupByPipeline;
-use Flow\ETL\Pipeline\SynchronousPipeline;
-use Flow\ETL\Transformer;
+use Flow\ETL\Pipeline\{CollectingPipeline, GroupByPipeline, SynchronousPipeline};
+use Flow\ETL\{GroupBy, Loader, Transformer};
 use PHPUnit\Framework\TestCase;
 
 final class PipelineTest extends TestCase

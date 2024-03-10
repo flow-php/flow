@@ -6,9 +6,8 @@ namespace Flow\ETL\Tests\Integration\Cache;
 
 use function Flow\ETL\DSL\int_entry;
 use Flow\ETL\Cache\PSRSimpleCache;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
+use Flow\ETL\{Row, Rows};
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Cache\Psr16Cache;
 

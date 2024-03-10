@@ -4,16 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\bool_entry;
-use function Flow\ETL\DSL\float_entry;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\null_entry;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\{bool_entry, float_entry, int_entry, null_entry, ref, str_entry};
 use Flow\ETL\Function\ToMoney;
 use Flow\ETL\Row;
-use Money\Currency;
-use Money\Money;
+use Money\{Currency, Money};
 use PHPUnit\Framework\TestCase;
 
 final class ToMoneyTest extends TestCase

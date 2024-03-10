@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type\Logical;
 
-use function Flow\ETL\DSL\type_datetime;
-use function Flow\ETL\DSL\type_int;
+use function Flow\ETL\DSL\{type_datetime, type_int};
 use PHPUnit\Framework\TestCase;
 
 final class DateTimeTypeTest extends TestCase

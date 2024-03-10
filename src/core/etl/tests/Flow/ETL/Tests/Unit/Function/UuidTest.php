@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\lit;
-use function Flow\ETL\DSL\uuid_v4;
-use function Flow\ETL\DSL\uuid_v7;
+use function Flow\ETL\DSL\{lit, uuid_v4, uuid_v7};
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;
 

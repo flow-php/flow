@@ -4,15 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Extractor;
 
-use function Flow\ETL\DSL\from_memory;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\str_entry;
-use function Flow\ETL\DSL\to_memory;
-use Flow\ETL\Config;
-use Flow\ETL\FlowContext;
+use function Flow\ETL\DSL\{from_memory, int_entry, str_entry, to_memory};
 use Flow\ETL\Memory\ArrayMemory;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use Flow\ETL\{Config, FlowContext, Row, Rows};
 use PHPUnit\Framework\TestCase;
 
 final class MemoryExtractorTest extends TestCase

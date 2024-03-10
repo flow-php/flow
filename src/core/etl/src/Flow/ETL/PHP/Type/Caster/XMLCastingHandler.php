@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type\Caster;
 
-use function Flow\ETL\DSL\type_string;
-use function Flow\ETL\DSL\type_xml;
+use function Flow\ETL\DSL\{type_string, type_xml};
 use Flow\ETL\Exception\CastingException;
-use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\PHP\Type\Logical\XMLType;
-use Flow\ETL\PHP\Type\Type;
+use Flow\ETL\PHP\Type\{Caster, Type};
 
 final class XMLCastingHandler implements CastingHandler
 {

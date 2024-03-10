@@ -4,14 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Filesystem\Tests\Integration;
 
-use function Flow\ETL\DSL\all;
-use function Flow\ETL\DSL\lit;
-use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\{all, lit, ref};
 use Flow\ETL\Adapter\Filesystem\FlysystemFS;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\Stream\Mode;
-use Flow\ETL\Partition\NoopFilter;
-use Flow\ETL\Partition\ScalarFunctionFilter;
+use Flow\ETL\Partition\{NoopFilter, ScalarFunctionFilter};
 use Flow\ETL\Row\Factory\NativeEntryFactory;
 use PHPUnit\Framework\TestCase;
 

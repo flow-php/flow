@@ -4,19 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type;
 
-use function Flow\ETL\DSL\type_int;
-use function Flow\ETL\DSL\type_null;
-use function Flow\ETL\DSL\type_string;
-use Flow\ETL\PHP\Type\ArrayContentDetector;
+use function Flow\ETL\DSL\{type_int, type_null, type_string};
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
-use Flow\ETL\PHP\Type\Logical\ListType;
-use Flow\ETL\PHP\Type\Logical\Map\MapKey;
-use Flow\ETL\PHP\Type\Logical\Map\MapValue;
-use Flow\ETL\PHP\Type\Logical\MapType;
+use Flow\ETL\PHP\Type\Logical\Map\{MapKey, MapValue};
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
-use Flow\ETL\PHP\Type\Logical\StructureType;
+use Flow\ETL\PHP\Type\Logical\{ListType, MapType, StructureType};
 use Flow\ETL\PHP\Type\Native\ArrayType;
-use Flow\ETL\PHP\Type\Types;
+use Flow\ETL\PHP\Type\{ArrayContentDetector, Types};
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 

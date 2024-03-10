@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\lit;
-use function Flow\ETL\DSL\split;
+use function Flow\ETL\DSL\{lit, split};
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;
 

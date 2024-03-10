@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace Flow\Parquet\ParquetFile\Schema;
 
 use Flow\Parquet\Exception\InvalidArgumentException;
-use Flow\Parquet\ParquetFile\Schema\LogicalType\Decimal;
-use Flow\Parquet\ParquetFile\Schema\LogicalType\Time;
-use Flow\Parquet\ParquetFile\Schema\LogicalType\Timestamp;
+use Flow\Parquet\ParquetFile\Schema\LogicalType\{Decimal, Time, Timestamp};
 use Flow\Parquet\Thrift\TimeUnit;
 
 final class LogicalType

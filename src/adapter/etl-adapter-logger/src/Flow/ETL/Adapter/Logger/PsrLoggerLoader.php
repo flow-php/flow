@@ -4,12 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Logger;
 
-use Flow\ETL\FlowContext;
-use Flow\ETL\Loader;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
-use Psr\Log\LoggerInterface;
-use Psr\Log\LogLevel;
+use Flow\ETL\{FlowContext, Loader, Row, Rows};
+use Psr\Log\{LogLevel, LoggerInterface};
 
 final class PsrLoggerLoader implements Loader
 {

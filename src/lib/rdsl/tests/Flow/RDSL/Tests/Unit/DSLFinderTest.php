@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\RDSL\Tests\Unit;
 
-use Flow\RDSL\AccessControl\AllowAll;
-use Flow\RDSL\AccessControl\DenyAll;
-use Flow\RDSL\DSLNamespace;
+use Flow\RDSL\AccessControl\{AllowAll, DenyAll};
 use Flow\RDSL\Exception\InvalidArgumentException;
-use Flow\RDSL\Finder;
 use Flow\RDSL\Tests\Fixtures\IntObject;
+use Flow\RDSL\{DSLNamespace, Finder};
 use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../Fixtures/functions.php';

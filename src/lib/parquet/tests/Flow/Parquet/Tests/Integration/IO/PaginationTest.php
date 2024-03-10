@@ -5,13 +5,9 @@ declare(strict_types=1);
 namespace Flow\Parquet\Tests\Integration\IO;
 
 use Flow\Parquet\Exception\InvalidArgumentException;
-use Flow\Parquet\Option;
-use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Schema;
-use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Flow\Parquet\ParquetFile\Schema\NestedColumn;
-use Flow\Parquet\Reader;
-use Flow\Parquet\Writer;
+use Flow\Parquet\ParquetFile\Schema\{FlatColumn, NestedColumn};
+use Flow\Parquet\{Option, Options, Reader, Writer};
 use PHPUnit\Framework\TestCase;
 
 final class PaginationTest extends TestCase

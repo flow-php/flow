@@ -7,13 +7,9 @@ namespace Flow\ETL\Adapter\XML\Tests\Integration;
 use function Flow\ETL\Adapter\XML\from_xml;
 use function Flow\ETL\DSL\xml_entry;
 use Flow\ETL\Adapter\XML\XMLReaderExtractor;
-use Flow\ETL\Config;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Filesystem\Path;
-use Flow\ETL\Flow;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use Flow\ETL\{Config, Flow, FlowContext, Row, Rows};
 use PHPUnit\Framework\TestCase;
 
 final class XMLReaderExtractorTest extends TestCase

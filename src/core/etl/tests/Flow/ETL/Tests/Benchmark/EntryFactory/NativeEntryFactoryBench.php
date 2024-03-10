@@ -6,8 +6,7 @@ namespace Flow\ETL\Tests\Benchmark\EntryFactory;
 
 use function Flow\ETL\DSL\array_to_rows;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
-use PhpBench\Attributes\Groups;
-use PhpBench\Attributes\ParamProviders;
+use PhpBench\Attributes\{Groups, ParamProviders};
 
 #[Groups(['building_blocks'])]
 final class NativeEntryFactoryBench

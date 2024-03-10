@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
-use Flow\ETL\Row\Entry\IntegerEntry;
-use Flow\ETL\Row\Entry\JsonEntry;
+use Flow\ETL\Row\Entry\{IntegerEntry, JsonEntry};
 use PHPUnit\Framework\TestCase;
 
 final class JsonObjectEntryTest extends TestCase

@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\RDSL\Tests\Unit\AccessControl;
 
-use Flow\RDSL\AccessControl\AllowList;
-use Flow\RDSL\AccessControl\Except;
+use Flow\RDSL\AccessControl\{AllowList, Except};
 use PHPUnit\Framework\TestCase;
 
 final class ExceptTest extends TestCase

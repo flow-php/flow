@@ -4,15 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Extractor;
 
-use function Flow\ETL\DSL\datetime_entry;
-use function Flow\ETL\DSL\float_entry;
-use function Flow\ETL\DSL\from_sequence_date_period;
-use function Flow\ETL\DSL\from_sequence_date_period_recurrences;
-use function Flow\ETL\DSL\from_sequence_number;
-use Flow\ETL\Config;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use function Flow\ETL\DSL\{datetime_entry, float_entry, from_sequence_date_period, from_sequence_date_period_recurrences, from_sequence_number};
+use Flow\ETL\{Config, FlowContext, Row, Rows};
 use PHPUnit\Framework\TestCase;
 
 final class SequenceExtractorTest extends TestCase

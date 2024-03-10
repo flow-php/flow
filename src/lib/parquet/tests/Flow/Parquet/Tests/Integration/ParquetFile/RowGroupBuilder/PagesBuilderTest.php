@@ -6,18 +6,12 @@ namespace Flow\Parquet\Tests\Integration\ParquetFile\RowGroupBuilder;
 
 use Faker\Factory;
 use Flow\Parquet\Data\DataConverter;
-use Flow\Parquet\Option;
-use Flow\Parquet\Options;
-use Flow\Parquet\ParquetFile\Compressions;
-use Flow\Parquet\ParquetFile\Encodings;
-use Flow\Parquet\ParquetFile\Page\Header\DataPageHeader;
-use Flow\Parquet\ParquetFile\Page\Header\DictionaryPageHeader;
-use Flow\Parquet\ParquetFile\Page\Header\Type;
+use Flow\Parquet\ParquetFile\Page\Header\{DataPageHeader, DictionaryPageHeader, Type};
 use Flow\Parquet\ParquetFile\Page\PageHeader;
-use Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnChunkStatistics;
-use Flow\Parquet\ParquetFile\RowGroupBuilder\PagesBuilder;
-use Flow\Parquet\ParquetFile\RowGroupBuilder\PageSizeCalculator;
+use Flow\Parquet\ParquetFile\RowGroupBuilder\{ColumnChunkStatistics, PageSizeCalculator, PagesBuilder};
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\{Compressions, Encodings};
+use Flow\Parquet\{Option, Options};
 use PHPUnit\Framework\TestCase;
 
 final class PagesBuilderTest extends TestCase

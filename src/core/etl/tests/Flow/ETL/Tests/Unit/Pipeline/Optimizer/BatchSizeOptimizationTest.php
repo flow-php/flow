@@ -6,11 +6,8 @@ namespace Flow\ETL\Tests\Unit\Pipeline\Optimizer;
 
 use Flow\ETL\Adapter\Doctrine\DbalLoader;
 use Flow\ETL\Loader\StreamLoader;
-use Flow\ETL\Pipeline\BatchingPipeline;
-use Flow\ETL\Pipeline\CollectingPipeline;
-use Flow\ETL\Pipeline\NestedPipeline;
 use Flow\ETL\Pipeline\Optimizer\BatchSizeOptimization;
-use Flow\ETL\Pipeline\SynchronousPipeline;
+use Flow\ETL\Pipeline\{BatchingPipeline, CollectingPipeline, NestedPipeline, SynchronousPipeline};
 use Flow\ETL\Transformer;
 use PHPUnit\Framework\TestCase;
 

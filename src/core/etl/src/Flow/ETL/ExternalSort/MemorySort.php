@@ -4,14 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\ExternalSort;
 
-use Flow\ETL\Cache;
-use Flow\ETL\ExternalSort;
-use Flow\ETL\Extractor;
-use Flow\ETL\Monitoring\Memory\Configuration;
-use Flow\ETL\Monitoring\Memory\Consumption;
-use Flow\ETL\Monitoring\Memory\Unit;
+use Flow\ETL\Monitoring\Memory\{Configuration, Consumption, Unit};
 use Flow\ETL\Row\Reference;
-use Flow\ETL\Rows;
+use Flow\ETL\{Cache, ExternalSort, Extractor, Rows};
 
 /**
  * This implementation of external sort will try to read from cache until it reaches memory limit.

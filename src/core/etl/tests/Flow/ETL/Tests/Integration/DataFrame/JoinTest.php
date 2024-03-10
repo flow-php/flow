@@ -4,20 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use function Flow\ETL\DSL\bool_entry;
-use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\from_rows;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\str_entry;
-use function Flow\ETL\DSL\string_entry;
-use Flow\ETL\DataFrame;
-use Flow\ETL\DataFrameFactory;
-use Flow\ETL\Flow;
+use function Flow\ETL\DSL\{bool_entry, df, from_rows, int_entry, str_entry, string_entry};
 use Flow\ETL\Join\Expression;
-use Flow\ETL\Loader;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
+use Flow\ETL\{DataFrame, DataFrameFactory, Flow, Loader, Row, Rows};
 
 final class JoinTest extends IntegrationTestCase
 {

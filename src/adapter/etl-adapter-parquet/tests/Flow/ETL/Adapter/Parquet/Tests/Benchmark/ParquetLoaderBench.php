@@ -4,11 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Benchmark;
 
-use function Flow\ETL\Adapter\Parquet\from_parquet;
-use function Flow\ETL\Adapter\Parquet\to_parquet;
-use Flow\ETL\Config;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Rows;
+use function Flow\ETL\Adapter\Parquet\{from_parquet, to_parquet};
+use Flow\ETL\{Config, FlowContext, Rows};
 use PhpBench\Attributes\Groups;
 
 #[Groups(['loader'])]

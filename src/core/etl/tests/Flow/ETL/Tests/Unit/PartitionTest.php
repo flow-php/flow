@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
-use function Flow\ETL\DSL\datetime_entry;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\xml_entry;
+use function Flow\ETL\DSL\{datetime_entry, ref, row, xml_entry};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Partition;
 use Flow\ETL\Row\Entry\XMLEntry;

@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\cast;
-use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\{cast, ref};
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\Type\Uuid;
 use Flow\ETL\Row\Factory\NativeEntryFactory;

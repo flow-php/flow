@@ -4,12 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\lit;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\to_branch;
-use function Flow\ETL\DSL\to_memory;
+use function Flow\ETL\DSL\{df, from_array, lit, ref, to_branch, to_memory};
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
 

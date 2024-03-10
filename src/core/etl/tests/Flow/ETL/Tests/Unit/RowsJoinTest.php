@@ -4,14 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
-use function Flow\ETL\DSL\bool_entry;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\null_entry;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\{bool_entry, int_entry, null_entry, str_entry};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Join\Expression;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use Flow\ETL\{Row, Rows};
 use PHPUnit\Framework\TestCase;
 
 final class RowsJoinTest extends TestCase

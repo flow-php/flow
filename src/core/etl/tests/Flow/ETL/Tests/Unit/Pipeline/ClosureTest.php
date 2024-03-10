@@ -4,12 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Pipeline;
 
-use Flow\ETL\Flow;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
-use Flow\ETL\Rows;
 use Flow\ETL\Tests\Double\FakeExtractor;
+use Flow\ETL\{Flow, FlowContext, Loader, Rows};
 use PHPUnit\Framework\TestCase;
 
 final class ClosureTest extends TestCase

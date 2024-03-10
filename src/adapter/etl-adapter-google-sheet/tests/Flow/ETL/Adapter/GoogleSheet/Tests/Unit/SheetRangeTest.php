@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\GoogleSheet\Tests\Unit;
 
-use Flow\ETL\Adapter\GoogleSheet\Columns;
-use Flow\ETL\Adapter\GoogleSheet\SheetRange;
+use Flow\ETL\Adapter\GoogleSheet\{Columns, SheetRange};
 use Flow\ETL\Exception\InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 

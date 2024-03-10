@@ -4,20 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Avro\Tests\Integration;
 
-use function Flow\ETL\DSL\Adapter\Avro\from_avro;
-use function Flow\ETL\DSL\Adapter\Avro\to_avro;
-use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\lit;
-use function Flow\ETL\DSL\type_map;
-use function Flow\ETL\DSL\type_string;
+use function Flow\ETL\DSL\Adapter\Avro\{from_avro, to_avro};
+use function Flow\ETL\DSL\{df, from_array, lit, type_map, type_string};
 use Flow\ETL\Adapter\Avro\FlixTech\AvroExtractor;
-use Flow\ETL\Config;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Filesystem\Path;
-use Flow\ETL\Flow;
-use Flow\ETL\FlowContext;
 use Flow\ETL\Tests\Double\FakeExtractor;
+use Flow\ETL\{Config, Flow, FlowContext};
 use PHPUnit\Framework\TestCase;
 
 final class AvroTest extends TestCase

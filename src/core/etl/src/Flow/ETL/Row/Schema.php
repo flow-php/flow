@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row;
 
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\SchemaDefinitionNotFoundException;
-use Flow\ETL\Exception\SchemaDefinitionNotUniqueException;
+use Flow\ETL\Exception\{InvalidArgumentException, SchemaDefinitionNotFoundException, SchemaDefinitionNotUniqueException};
 use Flow\ETL\Row\Schema\Definition;
 
 final class Schema implements \Countable

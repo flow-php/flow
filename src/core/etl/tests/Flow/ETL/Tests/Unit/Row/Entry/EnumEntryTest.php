@@ -6,9 +6,7 @@ namespace Flow\ETL\Tests\Unit\Row\Entry;
 
 use Flow\ETL\Row\Entry\EnumEntry;
 use Flow\ETL\Row\Schema\Definition;
-use Flow\ETL\Tests\Fixtures\Enum\BackedIntEnum;
-use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
-use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
+use Flow\ETL\Tests\Fixtures\Enum\{BackedIntEnum, BackedStringEnum, BasicEnum};
 use PHPUnit\Framework\TestCase;
 
 final class EnumEntryTest extends TestCase

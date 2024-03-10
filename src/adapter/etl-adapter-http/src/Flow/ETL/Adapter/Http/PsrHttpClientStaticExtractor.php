@@ -4,15 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Http;
 
-use function Flow\ETL\DSL\array_entry;
-use function Flow\ETL\DSL\str_entry;
-use Flow\ETL\Extractor;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use function Flow\ETL\DSL\{array_entry, str_entry};
+use Flow\ETL\{Extractor, FlowContext, Row, Rows};
 use Psr\Http\Client\ClientInterface;
-use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\{RequestInterface, ResponseInterface};
 
 final class PsrHttpClientStaticExtractor implements Extractor
 {
