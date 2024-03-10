@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
@@ -16,6 +18,6 @@ final class XMLNodeEntryTest extends TestCase
         $serialized = \serialize($entry);
         $unserialized = \unserialize($serialized);
 
-        $this->assertTrue($entry->isEqual($unserialized));
+        self::assertTrue($entry->isEqual($unserialized));
     }
 }

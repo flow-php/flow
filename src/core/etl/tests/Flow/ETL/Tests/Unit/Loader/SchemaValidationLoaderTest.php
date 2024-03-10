@@ -4,15 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Loader;
 
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\str_entry;
-use Flow\ETL\Config;
+use function Flow\ETL\DSL\{int_entry, str_entry};
 use Flow\ETL\Exception\SchemaValidationException;
-use Flow\ETL\FlowContext;
 use Flow\ETL\Loader\SchemaValidationLoader;
-use Flow\ETL\Row;
 use Flow\ETL\Row\Schema;
-use Flow\ETL\Rows;
+use Flow\ETL\{Config, FlowContext, Row, Rows};
 use PHPUnit\Framework\TestCase;
 
 final class SchemaValidationLoaderTest extends TestCase

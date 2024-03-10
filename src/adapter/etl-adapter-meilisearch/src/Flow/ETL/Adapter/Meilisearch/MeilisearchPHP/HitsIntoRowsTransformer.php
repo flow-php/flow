@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Meilisearch\MeilisearchPHP;
 
-use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
-use Flow\ETL\Transformer;
+use Flow\ETL\{FlowContext, Row, Rows, Transformer};
 
 final class HitsIntoRowsTransformer implements Transformer
 {

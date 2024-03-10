@@ -1,11 +1,12 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\RowGroup;
 
 use Flow\Parquet\BinaryReader\BinaryBufferReader;
 use Flow\Parquet\ParquetFile\Data\PlainValueUnpacker;
-use Flow\Parquet\ParquetFile\Schema\ColumnPrimitiveType;
-use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\Schema\{ColumnPrimitiveType, FlatColumn};
 use Flow\Parquet\ParquetFile\Statistics;
 
 final class StatisticsReader

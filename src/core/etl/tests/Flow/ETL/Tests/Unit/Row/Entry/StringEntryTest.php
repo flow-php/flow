@@ -22,14 +22,14 @@ final class StringEntryTest extends TestCase
     {
         $entry = StringEntry::lowercase('lowercase', 'It Should Be Lowercase');
 
-        $this->assertEquals('it should be lowercase', $entry->value());
+        self::assertEquals('it should be lowercase', $entry->value());
     }
 
     public function test_creates_uppercase_value() : void
     {
         $entry = StringEntry::uppercase('uppercase', 'It Should Be Uppercase');
 
-        $this->assertEquals('IT SHOULD BE UPPERCASE', $entry->value());
+        self::assertEquals('IT SHOULD BE UPPERCASE', $entry->value());
     }
 
     /**
@@ -37,14 +37,14 @@ final class StringEntryTest extends TestCase
      */
     public function test_is_equal(bool $equals, StringEntry $entry, StringEntry $nextEntry) : void
     {
-        $this->assertSame($equals, $entry->isEqual($nextEntry));
+        self::assertSame($equals, $entry->isEqual($nextEntry));
     }
 
     public function test_map() : void
     {
         $entry = new StringEntry('entry-name', 'any string value');
 
-        $this->assertEquals(
+        self::assertEquals(
             $entry,
             $entry->map(fn (string $value) => $value)
         );
@@ -62,8 +62,8 @@ final class StringEntryTest extends TestCase
         $entry = new StringEntry('entry-name', 'any string value');
         $newEntry = $entry->rename('new-entry-name');
 
-        $this->assertEquals('new-entry-name', $newEntry->name());
-        $this->assertEquals($entry->value(), $newEntry->value());
+        self::assertEquals('new-entry-name', $newEntry->name());
+        self::assertEquals($entry->value(), $newEntry->value());
     }
 
     public function test_serialization() : void
@@ -77,6 +77,6 @@ TXT);
         $serialized = \serialize($string);
         $unserialized = \unserialize($serialized);
 
-        $this->assertTrue($string->isEqual($unserialized));
+        self::assertTrue($string->isEqual($unserialized));
     }
 }

@@ -4,40 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
-use function Flow\ETL\DSL\array_entry;
-use function Flow\ETL\DSL\bool_entry;
-use function Flow\ETL\DSL\datetime_entry;
-use function Flow\ETL\DSL\float_entry;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\list_entry;
-use function Flow\ETL\DSL\map_entry;
-use function Flow\ETL\DSL\null_entry;
-use function Flow\ETL\DSL\object_entry;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\str_entry;
-use function Flow\ETL\DSL\struct_element;
-use function Flow\ETL\DSL\struct_entry;
-use function Flow\ETL\DSL\struct_type;
-use function Flow\ETL\DSL\type_int;
-use function Flow\ETL\DSL\type_list;
-use function Flow\ETL\DSL\type_map;
-use function Flow\ETL\DSL\type_object;
-use function Flow\ETL\DSL\type_string;
+use function Flow\ETL\DSL\{array_entry, bool_entry, datetime_entry, float_entry, int_entry, list_entry, map_entry, null_entry, object_entry, row, str_entry, struct_element, struct_entry, struct_type, type_int, type_list, type_map, type_object, type_string};
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
-use Flow\ETL\PHP\Type\Logical\ListType;
-use Flow\ETL\PHP\Type\Logical\Map\MapKey;
-use Flow\ETL\PHP\Type\Logical\Map\MapValue;
-use Flow\ETL\PHP\Type\Logical\MapType;
+use Flow\ETL\PHP\Type\Logical\Map\{MapKey, MapValue};
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
-use Flow\ETL\PHP\Type\Logical\StructureType;
-use Flow\ETL\Row\Entry\ArrayEntry;
-use Flow\ETL\Row\Entry\BooleanEntry;
-use Flow\ETL\Row\Entry\DateTimeEntry;
-use Flow\ETL\Row\Entry\IntegerEntry;
-use Flow\ETL\Row\Entry\MapEntry;
-use Flow\ETL\Row\Entry\NullEntry;
-use Flow\ETL\Row\Entry\StringEntry;
-use Flow\ETL\Row\Entry\StructureEntry;
+use Flow\ETL\PHP\Type\Logical\{ListType, MapType, StructureType};
+use Flow\ETL\Row\Entry\{ArrayEntry, BooleanEntry, DateTimeEntry, IntegerEntry, MapEntry, NullEntry, StringEntry, StructureEntry};
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Row\Schema\Definition;
 use PHPUnit\Framework\TestCase;
@@ -134,7 +106,7 @@ final class RowTest extends TestCase
             object_entry('object', new \ArrayIterator([1, 2, 3]))
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             new Schema(
                 Definition::integer('id'),
                 Definition::float('price'),
@@ -169,7 +141,7 @@ final class RowTest extends TestCase
             list_entry('list', [1, 2, 3], type_list(type_int()))
         );
 
-        $this->assertSame(
+        self::assertSame(
             $row->hash(),
             row(
                 int_entry('id', 1),
@@ -182,7 +154,7 @@ final class RowTest extends TestCase
 
     public function test_hash_different_rows() : void
     {
-        $this->assertNotSame(
+        self::assertNotSame(
             row(list_entry('list', [1, 2, 3], type_list(type_int())))->hash(),
             row(list_entry('list', [3, 2, 1], type_list(type_int())))->hash()
         );
@@ -190,7 +162,7 @@ final class RowTest extends TestCase
 
     public function test_hash_empty_row() : void
     {
-        $this->assertSame(
+        self::assertSame(
             row()->hash(),
             row()->hash()
         );
@@ -201,7 +173,7 @@ final class RowTest extends TestCase
      */
     public function test_is_equal(bool $equals, \Flow\ETL\Row $row, \Flow\ETL\Row $nextRow) : void
     {
-        $this->assertSame($equals, $row->isEqual($nextRow));
+        self::assertSame($equals, $row->isEqual($nextRow));
     }
 
     public function test_keep() : void
@@ -212,7 +184,7 @@ final class RowTest extends TestCase
             bool_entry('active', true)
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             row(
                 int_entry('id', 1),
                 bool_entry('active', true)
@@ -231,7 +203,7 @@ final class RowTest extends TestCase
             bool_entry('active', true)
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             row(),
             $row->keep('something')
         );
@@ -239,7 +211,7 @@ final class RowTest extends TestCase
 
     public function test_merge_row_with_another_row_using_prefix() : void
     {
-        $this->assertSame(
+        self::assertSame(
             [
                 'id' => 1,
                 '_id' => 2,
@@ -258,7 +230,7 @@ final class RowTest extends TestCase
             bool_entry('active', true)
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             row(
                 int_entry('id', 1),
                 str_entry('name', 'test')
@@ -275,7 +247,7 @@ final class RowTest extends TestCase
             bool_entry('active', true)
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             row(
                 int_entry('id', 1),
                 str_entry('name', 'test'),
@@ -293,7 +265,7 @@ final class RowTest extends TestCase
         );
         $newRow = $row->rename('name', 'new-name');
 
-        $this->assertEquals(
+        self::assertEquals(
             row(
                 new BooleanEntry('active', true),
                 new StringEntry('new-name', 'just a string')
@@ -321,7 +293,7 @@ final class RowTest extends TestCase
             )
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 'id' => 1234,
                 'deleted' => false,

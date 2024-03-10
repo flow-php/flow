@@ -4,14 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\average;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\null_entry;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\str_entry;
-use function Flow\ETL\DSL\window;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use function Flow\ETL\DSL\{average, int_entry, null_entry, ref, str_entry, window};
+use Flow\ETL\{Row, Rows};
 use PHPUnit\Framework\TestCase;
 
 final class AverageTest extends TestCase
@@ -26,7 +20,7 @@ final class AverageTest extends TestCase
         $aggregator->aggregate(Row::create(str_entry('int', '25')));
         $aggregator->aggregate(Row::create(null_entry('not_int')));
 
-        $this->assertSame(
+        self::assertSame(
             21.25,
             $aggregator->result()->value()
         );
@@ -41,7 +35,7 @@ final class AverageTest extends TestCase
         $aggregator->aggregate(Row::create(int_entry('int', 30)));
         $aggregator->aggregate(Row::create(null_entry('int')));
 
-        $this->assertSame(
+        self::assertSame(
             20,
             $aggregator->result()->value()
         );
@@ -56,7 +50,7 @@ final class AverageTest extends TestCase
         $aggregator->aggregate(Row::create(int_entry('int', 30)));
         $aggregator->aggregate(Row::create(int_entry('int', 25)));
 
-        $this->assertSame(
+        self::assertSame(
             21.25,
             $aggregator->result()->value()
         );
@@ -71,7 +65,7 @@ final class AverageTest extends TestCase
         $aggregator->aggregate(Row::create(int_entry('int', 30)));
         $aggregator->aggregate(Row::create(int_entry('int', 40)));
 
-        $this->assertSame(
+        self::assertSame(
             25,
             $aggregator->result()->value()
         );
@@ -81,7 +75,7 @@ final class AverageTest extends TestCase
     {
         $aggregator = average(ref('int'));
 
-        $this->assertSame(
+        self::assertSame(
             0,
             $aggregator->result()->value()
         );
@@ -99,6 +93,6 @@ final class AverageTest extends TestCase
 
         $avg = average(ref('value'))->over(window()->orderBy(ref('value')));
 
-        $this->assertSame(42.6, $avg->apply($row1, $rows));
+        self::assertSame(42.6, $avg->apply($row1, $rows));
     }
 }

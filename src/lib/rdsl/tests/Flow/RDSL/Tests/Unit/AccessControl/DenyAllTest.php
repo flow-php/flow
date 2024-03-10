@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\RDSL\Tests\Unit\AccessControl;
 
@@ -11,8 +13,8 @@ final class DenyAllTest extends TestCase
     {
         $acl = new DenyAll();
 
-        $this->assertFalse($acl->isAllowed('foo'));
-        $this->assertFalse($acl->isAllowed('bar'));
-        $this->assertFalse($acl->isAllowed('baz'));
+        self::assertFalse($acl->isAllowed('foo'));
+        self::assertFalse($acl->isAllowed('bar'));
+        self::assertFalse($acl->isAllowed('baz'));
     }
 }

@@ -1,14 +1,14 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\{df, ref};
 use Flow\ETL\Config;
 use Flow\ETL\ExternalSort\MemorySort;
 use Flow\ETL\Monitoring\Memory\Unit;
-use Flow\ETL\Tests\Double\CacheSpy;
-use Flow\ETL\Tests\Double\FakeExtractor;
+use Flow\ETL\Tests\Double\{CacheSpy, FakeExtractor};
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
 
 final class SortTest extends IntegrationTestCase
@@ -30,16 +30,16 @@ final class SortTest extends IntegrationTestCase
 
         $cache = \array_diff(\scandir($this->cacheDir), ['..', '.']);
 
-        $this->assertEmpty($cache);
+        self::assertEmpty($cache);
         // 50 initial writes
         // 2500 single row writes
         // 50 merged writes
-        $this->assertSame(2600, $cacheSpy->writes());
+        self::assertSame(2600, $cacheSpy->writes());
         // 1 main cache
         // 50 tmp caches
         // 1 sorted cache
         // 1 extracted cache
-        $this->assertSame(52, $cacheSpy->clears());
+        self::assertSame(52, $cacheSpy->clears());
     }
 
     public function test_etl_sort_by_in_memory() : void
@@ -58,8 +58,8 @@ final class SortTest extends IntegrationTestCase
 
         $cache = \array_diff(\scandir($this->cacheDir), ['..', '.']);
 
-        $this->assertEmpty($cache);
-        $this->assertSame(\range(0, 39), $rows->reduceToArray('int'));
-        $this->assertSame(20, $cacheSpy->writes());
+        self::assertEmpty($cache);
+        self::assertSame(\range(0, 39), $rows->reduceToArray('int'));
+        self::assertSame(20, $cacheSpy->writes());
     }
 }

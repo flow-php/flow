@@ -1,14 +1,11 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\Pipeline\Optimizer;
 
-use Flow\ETL\Loader;
-use Flow\ETL\Pipeline;
-use Flow\ETL\Pipeline\BatchingPipeline;
-use Flow\ETL\Pipeline\CollectingPipeline;
-use Flow\ETL\Pipeline\OverridingPipeline;
-use Flow\ETL\Pipeline\PartitioningPipeline;
-use Flow\ETL\Transformer;
+use Flow\ETL\Pipeline\{BatchingPipeline, CollectingPipeline, OverridingPipeline, PartitioningPipeline};
+use Flow\ETL\{Loader, Pipeline, Transformer};
 
 /**
  * The goal of this optimizer is to detect if there is a loader that supports batching and optimize pipeline to use it.

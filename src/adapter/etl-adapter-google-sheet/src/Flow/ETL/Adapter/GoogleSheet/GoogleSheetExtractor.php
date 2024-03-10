@@ -6,11 +6,8 @@ namespace Flow\ETL\Adapter\GoogleSheet;
 
 use function Flow\ETL\DSL\array_to_rows;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Extractor;
-use Flow\ETL\Extractor\Limitable;
-use Flow\ETL\Extractor\LimitableExtractor;
-use Flow\ETL\Extractor\Signal;
-use Flow\ETL\FlowContext;
+use Flow\ETL\Extractor\{Limitable, LimitableExtractor, Signal};
+use Flow\ETL\{Extractor, FlowContext};
 use Google\Service\Sheets;
 
 final class GoogleSheetExtractor implements Extractor, LimitableExtractor

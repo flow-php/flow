@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\ExternalSort;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use Flow\ETL\{Row, Rows};
 
 final class CachedRow
 {

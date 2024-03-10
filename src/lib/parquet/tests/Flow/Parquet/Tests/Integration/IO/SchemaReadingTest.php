@@ -1,14 +1,12 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\IO;
 
 use Flow\Parquet\ParquetFile\RowGroup\StatisticsReader;
 use Flow\Parquet\ParquetFile\Schema;
-use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Flow\Parquet\ParquetFile\Schema\ListElement;
-use Flow\Parquet\ParquetFile\Schema\MapKey;
-use Flow\Parquet\ParquetFile\Schema\MapValue;
-use Flow\Parquet\ParquetFile\Schema\NestedColumn;
+use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, MapKey, MapValue, NestedColumn};
 use Flow\Parquet\Reader;
 use PHPUnit\Framework\TestCase;
 
@@ -39,7 +37,7 @@ final class SchemaReadingTest extends TestCase
             ])
         );
 
-        $this->assertSame(
+        self::assertSame(
             ($reader->read(__DIR__ . '/Fixtures/lists.parquet'))->metadata()->schema()->toDDL(),
             $schema->toDDL(),
         );
@@ -74,7 +72,7 @@ final class SchemaReadingTest extends TestCase
             ])),
         );
 
-        $this->assertSame(
+        self::assertSame(
             ($reader->read(__DIR__ . '/Fixtures/maps.parquet'))->metadata()->schema()->toDDL(),
             $schema->toDDL(),
         );
@@ -113,7 +111,7 @@ final class SchemaReadingTest extends TestCase
             FlatColumn::decimal('decimal_nullable'),
         );
 
-        $this->assertSame(
+        self::assertSame(
             ($reader->read(__DIR__ . '/Fixtures/primitives.parquet'))->metadata()->schema()->toDDL(),
             $schema->toDDL()
         );
@@ -124,7 +122,7 @@ final class SchemaReadingTest extends TestCase
         $metadata = (new Reader())->read(__DIR__ . '/Fixtures/primitives.parquet')->metadata();
 
         foreach ($metadata->columnChunks() as $chunk) {
-            $this->assertInstanceOf(StatisticsReader::class, $chunk->statistics());
+            self::assertInstanceOf(StatisticsReader::class, $chunk->statistics());
         }
     }
 
@@ -227,7 +225,7 @@ final class SchemaReadingTest extends TestCase
             ])
         );
 
-        $this->assertSame(
+        self::assertSame(
             ($reader->read(__DIR__ . '/Fixtures/structs.parquet'))->metadata()->schema()->toDDL(),
             $schema->toDDL()
         );

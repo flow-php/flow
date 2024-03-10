@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\Data\Converter;
 
@@ -13,7 +15,7 @@ final class Int32DateTimeConverterTest extends TestCase
 
         $converter = new Int32DateTimeConverter();
 
-        $this->assertEquals(
+        self::assertEquals(
             new \DateTimeImmutable('2021-01-01T14:58:16.111000+0000'),
             $converter->fromParquetType($converter->toParquetType($date))
         );

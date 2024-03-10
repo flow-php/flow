@@ -5,10 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP;
 
 use Flow\ETL\Adapter\Elasticsearch\IdFactory;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Loader;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use Flow\ETL\{FlowContext, Loader, Row, Rows};
 
 /**
  * @psalm-suppress UndefinedClass

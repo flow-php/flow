@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\ParquetFile\Page;
 
@@ -16,7 +18,7 @@ final class ColumnDataTest extends TestCase
 
         $columnData = new ColumnData(PhysicalType::INT32, null, $repetitions, $definitions, $values);
 
-        $this->assertEquals(
+        self::assertEquals(
             new ColumnData(
                 PhysicalType::INT32,
                 null,
@@ -27,7 +29,7 @@ final class ColumnDataTest extends TestCase
             $columnData->splitLastRow()[0]
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             new ColumnData(
                 PhysicalType::INT32,
                 null,
@@ -47,7 +49,7 @@ final class ColumnDataTest extends TestCase
 
         $columnData = new ColumnData(PhysicalType::INT32, null, $repetitions, $definitions, $values);
 
-        $this->assertEquals(
+        self::assertEquals(
             new ColumnData(
                 PhysicalType::INT32,
                 null,
@@ -58,7 +60,7 @@ final class ColumnDataTest extends TestCase
             $columnData->splitLastRow()[0]
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             new ColumnData(
                 PhysicalType::INT32,
                 null,
@@ -78,7 +80,7 @@ final class ColumnDataTest extends TestCase
 
         $columnData = new ColumnData(PhysicalType::INT32, null, $repetitions, $definitions, $values);
 
-        $this->assertEquals(
+        self::assertEquals(
             new ColumnData(
                 PhysicalType::INT32,
                 null,
@@ -89,7 +91,7 @@ final class ColumnDataTest extends TestCase
             $columnData->splitLastRow()[0]
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             new ColumnData(
                 PhysicalType::INT32,
                 null,

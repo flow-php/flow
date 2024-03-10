@@ -4,20 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Avro\Tests\Integration;
 
-use function Flow\ETL\DSL\Adapter\Avro\from_avro;
-use function Flow\ETL\DSL\Adapter\Avro\to_avro;
-use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\lit;
-use function Flow\ETL\DSL\type_map;
-use function Flow\ETL\DSL\type_string;
+use function Flow\ETL\DSL\Adapter\Avro\{from_avro, to_avro};
+use function Flow\ETL\DSL\{df, from_array, lit, type_map, type_string};
 use Flow\ETL\Adapter\Avro\FlixTech\AvroExtractor;
-use Flow\ETL\Config;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Filesystem\Path;
-use Flow\ETL\Flow;
-use Flow\ETL\FlowContext;
 use Flow\ETL\Tests\Double\FakeExtractor;
+use Flow\ETL\{Config, Flow, FlowContext};
 use PHPUnit\Framework\TestCase;
 
 final class AvroTest extends TestCase
@@ -38,7 +31,7 @@ final class AvroTest extends TestCase
         $extractor = new AvroExtractor(Path::realpath($path));
         $extractor->changeLimit(2);
 
-        $this->assertCount(
+        self::assertCount(
             2,
             \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
         );
@@ -61,16 +54,16 @@ final class AvroTest extends TestCase
 
         $generator = $extractor->extract(new FlowContext(Config::default()));
 
-        $this->assertSame([['id' => 1]], $generator->current()->toArray());
-        $this->assertTrue($generator->valid());
+        self::assertSame([['id' => 1]], $generator->current()->toArray());
+        self::assertTrue($generator->valid());
         $generator->next();
-        $this->assertSame([['id' => 2]], $generator->current()->toArray());
-        $this->assertTrue($generator->valid());
+        self::assertSame([['id' => 2]], $generator->current()->toArray());
+        self::assertTrue($generator->valid());
         $generator->next();
-        $this->assertSame([['id' => 3]], $generator->current()->toArray());
-        $this->assertTrue($generator->valid());
+        self::assertSame([['id' => 3]], $generator->current()->toArray());
+        self::assertTrue($generator->valid());
         $generator->send(Signal::STOP);
-        $this->assertFalse($generator->valid());
+        self::assertFalse($generator->valid());
     }
 
     public function test_using_pattern_path() : void
@@ -93,9 +86,9 @@ final class AvroTest extends TestCase
             ->write(to_avro($path))
             ->run();
 
-        $this->assertFileExists($path);
+        self::assertFileExists($path);
 
-        $this->assertEquals(
+        self::assertEquals(
             100,
             Flow::setUp(Config::builder()->putInputIntoRows()->build())
                 ->read(from_avro($path))

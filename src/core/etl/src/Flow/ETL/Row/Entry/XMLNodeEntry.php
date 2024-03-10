@@ -1,13 +1,14 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
 use function Flow\ETL\DSL\type_xml_node;
 use Flow\ETL\PHP\Type\Logical\XMLNodeType;
 use Flow\ETL\PHP\Type\Type;
-use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
+use Flow\ETL\Row\{Entry, Reference};
 
 /**
  * @implements Entry<\DOMNode>

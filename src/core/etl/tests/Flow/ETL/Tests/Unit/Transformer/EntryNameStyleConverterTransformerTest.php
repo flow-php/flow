@@ -4,12 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
-use Flow\ETL\Config;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
 use Flow\ETL\Transformer\EntryNameStyleConverterTransformer;
 use Flow\ETL\Transformer\StyleConverter\StringStyles;
+use Flow\ETL\{Config, FlowContext, Row, Rows};
 use PHPUnit\Framework\TestCase;
 
 final class EntryNameStyleConverterTransformerTest extends TestCase
@@ -25,7 +22,7 @@ final class EntryNameStyleConverterTransformerTest extends TestCase
             )
         ), new FlowContext(Config::default()));
 
-        $this->assertSame(
+        self::assertSame(
             [
                 [
                     'camel_case_entry_name' => 'test',

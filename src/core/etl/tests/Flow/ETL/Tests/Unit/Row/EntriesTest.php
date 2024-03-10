@@ -4,22 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row;
 
-use function Flow\ETL\DSL\bool_entry;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\type_int;
-use function Flow\ETL\DSL\type_string;
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\RuntimeException;
+use function Flow\ETL\DSL\{bool_entry, int_entry, type_int, type_string};
+use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\Row\Entries;
-use Flow\ETL\Row\Entry\BooleanEntry;
-use Flow\ETL\Row\Entry\DateTimeEntry;
-use Flow\ETL\Row\Entry\EnumEntry;
-use Flow\ETL\Row\Entry\IntegerEntry;
-use Flow\ETL\Row\Entry\NullEntry;
-use Flow\ETL\Row\Entry\StringEntry;
-use Flow\ETL\Row\Entry\StructureEntry;
+use Flow\ETL\Row\Entry\{BooleanEntry, DateTimeEntry, EnumEntry, IntegerEntry, NullEntry, StringEntry, StructureEntry};
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
 use PHPUnit\Framework\TestCase;
 
@@ -31,12 +21,12 @@ final class EntriesTest extends TestCase
         $entries = new Entries(
             new IntegerEntry('integer-entry', 100)
         );
-        $this->assertFalse($entries->has('entry-name'));
+        self::assertFalse($entries->has('entry-name'));
 
         $entries = $entries->add($newEntry);
 
-        $this->assertTrue($entries->has('entry-name'));
-        $this->assertEquals($newEntry, $entries->get('entry-name'));
+        self::assertTrue($entries->has('entry-name'));
+        self::assertEquals($newEntry, $entries->get('entry-name'));
     }
 
     public function test_add_multiple_duplicated_entries() : void
@@ -59,15 +49,15 @@ final class EntriesTest extends TestCase
 
         $entries = new Entries(new IntegerEntry('integer-entry', 100));
 
-        $this->assertFalse($entries->has('string-name'));
-        $this->assertFalse($entries->has('boolean-name'));
+        self::assertFalse($entries->has('string-name'));
+        self::assertFalse($entries->has('boolean-name'));
 
         $entries = $entries->add($stringEntry)->add($booleanEntry);
 
-        $this->assertTrue($entries->has('string-name'));
-        $this->assertTrue($entries->has('boolean-name'));
-        $this->assertEquals($stringEntry, $entries->get('string-name'));
-        $this->assertEquals($booleanEntry, $entries->get('boolean-name'));
+        self::assertTrue($entries->has('string-name'));
+        self::assertTrue($entries->has('boolean-name'));
+        self::assertEquals($stringEntry, $entries->get('string-name'));
+        self::assertEquals($booleanEntry, $entries->get('boolean-name'));
     }
 
     public function test_adds_entry_when_it_does_not_exist() : void
@@ -80,23 +70,23 @@ final class EntriesTest extends TestCase
 
         $entries = $entries->set($stringEntry);
 
-        $this->assertEquals(new Entries($integerEntry, $booleanEntry, $stringEntry), $entries);
+        self::assertEquals(new Entries($integerEntry, $booleanEntry, $stringEntry), $entries);
     }
 
     public function test_array_access_exists() : void
     {
         $entries = new Entries(new IntegerEntry('id', 1), new StringEntry('name', 'John'));
 
-        $this->assertTrue(isset($entries['id']));
-        $this->assertFalse(isset($entries['test']));
+        self::assertTrue(isset($entries['id']));
+        self::assertFalse(isset($entries['test']));
     }
 
     public function test_array_access_get() : void
     {
         $entries = new Entries(new IntegerEntry('id', 1), new StringEntry('name', 'John'));
 
-        $this->assertSame(1, $entries['id']->value());
-        $this->assertSame('John', $entries['name']->value());
+        self::assertSame(1, $entries['id']->value());
+        self::assertSame('John', $entries['name']->value());
     }
 
     public function test_array_access_set() : void
@@ -133,7 +123,7 @@ final class EntriesTest extends TestCase
             new StringEntry('entry-Name', 'just a string'),
         );
 
-        $this->assertFalse($entries->has('entry-name'));
+        self::assertFalse($entries->has('entry-name'));
     }
 
     public function test_create_from_non_unique_entries() : void
@@ -154,7 +144,7 @@ final class EntriesTest extends TestCase
             int_entry('name', 1),
         );
 
-        $this->assertCount(
+        self::assertCount(
             2,
             $entries->getAll('id', 'name')
         );
@@ -178,7 +168,7 @@ final class EntriesTest extends TestCase
             int_entry('name', 1),
         );
 
-        $this->assertFalse($entries->has('id', 'name', 'status'));
+        self::assertFalse($entries->has('id', 'name', 'status'));
     }
 
     public function test_has_when_none_of_many_is_missing() : void
@@ -189,7 +179,7 @@ final class EntriesTest extends TestCase
             bool_entry('active', true)
         );
 
-        $this->assertTrue($entries->has('id', 'name'));
+        self::assertTrue($entries->has('id', 'name'));
     }
 
     public function test_merge_duplicated_entries() : void
@@ -210,7 +200,7 @@ final class EntriesTest extends TestCase
 
         $merged = $entries1->merge($entries2);
 
-        $this->assertCount(2, $merged);
+        self::assertCount(2, $merged);
     }
 
     public function test_merge_entries() : void
@@ -220,7 +210,7 @@ final class EntriesTest extends TestCase
 
         $entries = $entries1->merge($entries2);
 
-        $this->assertEquals(
+        self::assertEquals(
             new Entries(new StringEntry('string-name', 'new string entry'), new IntegerEntry('integer-entry', 100)),
             $entries
         );
@@ -234,14 +224,14 @@ final class EntriesTest extends TestCase
             new BooleanEntry('bool', true),
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             ['integer', 'string', 'bool'],
             $entries->map(fn (\Flow\ETL\Row\Entry $e) => $e->name())
         );
 
         $entries = $entries->order('bool', 'string', 'integer');
 
-        $this->assertEquals(
+        self::assertEquals(
             ['bool', 'string', 'integer'],
             $entries->map(fn (\Flow\ETL\Row\Entry $e) => $e->name())
         );
@@ -270,7 +260,7 @@ final class EntriesTest extends TestCase
 
         $entries = $entries->set($stringEntry);
 
-        $this->assertEquals(new Entries($booleanEntry, $stringEntry), $entries);
+        self::assertEquals(new Entries($booleanEntry, $stringEntry), $entries);
     }
 
     public function test_prevents_from_adding_entry_with_the_same_name() : void
@@ -293,7 +283,7 @@ final class EntriesTest extends TestCase
 
         $newEntries = $entries->add(new StringEntry('entry-name', 'just a string'));
 
-        $this->assertCount(2, $newEntries);
+        self::assertCount(2, $newEntries);
     }
 
     public function test_prevents_from_creating_collection_with_duplicate_entry_names() : void
@@ -323,7 +313,7 @@ final class EntriesTest extends TestCase
             $booleanEntry = new BooleanEntry('boolean-entry', true)
         );
 
-        $this->assertEquals(new Entries($integerEntry, $booleanEntry), $entries->remove('string-entry'));
+        self::assertEquals(new Entries($integerEntry, $booleanEntry), $entries->remove('string-entry'));
     }
 
     public function test_remove_multiple_entries() : void
@@ -334,7 +324,7 @@ final class EntriesTest extends TestCase
             $booleanEntry = new BooleanEntry('boolean-entry', true)
         );
 
-        $this->assertEquals(new Entries($booleanEntry), $entries->remove('string-entry', 'integer-entry'));
+        self::assertEquals(new Entries($booleanEntry), $entries->remove('string-entry', 'integer-entry'));
     }
 
     public function test_rename() : void
@@ -343,7 +333,7 @@ final class EntriesTest extends TestCase
 
         $entries = $entries->rename('string-name', 'new-string-name');
 
-        $this->assertEquals(
+        self::assertEquals(
             new Entries(new StringEntry('new-string-name', 'new string entry')),
             $entries
         );
@@ -354,7 +344,7 @@ final class EntriesTest extends TestCase
         $entries = new Entries(new StringEntry('string-entry', 'just a string'));
         $entries = $entries->set(new StringEntry('string-entry', 'new string'));
 
-        $this->assertEquals(new Entries(new StringEntry('string-entry', 'new string')), $entries);
+        self::assertEquals(new Entries(new StringEntry('string-entry', 'new string')), $entries);
     }
 
     public function test_set_multiple_entries() : void
@@ -362,7 +352,7 @@ final class EntriesTest extends TestCase
         $entries = new Entries(new StringEntry('string-entry', 'just a string'));
         $entries = $entries->set(new StringEntry('string-entry', 'new string'), new IntegerEntry('integer-entry', 100));
 
-        $this->assertEquals(new Entries(new StringEntry('string-entry', 'new string'), new IntegerEntry('integer-entry', 100)), $entries);
+        self::assertEquals(new Entries(new StringEntry('string-entry', 'new string'), new IntegerEntry('integer-entry', 100)), $entries);
     }
 
     public function test_sorts_entries_by_name() : void
@@ -381,7 +371,7 @@ final class EntriesTest extends TestCase
 
         $sorted = $entries->sort();
 
-        $this->assertEquals(
+        self::assertEquals(
             new Entries(
                 $createdAt = new DateTimeEntry('created-at', new \DateTimeImmutable('2020-07-13 15:00')),
                 $deleted = new BooleanEntry('deleted', false),
@@ -412,7 +402,7 @@ final class EntriesTest extends TestCase
             new EnumEntry('enum', BasicEnum::three)
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 'id' => 1234,
                 'deleted' => false,
@@ -443,7 +433,7 @@ final class EntriesTest extends TestCase
             new EnumEntry('enum', BasicEnum::three)
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 1234,
                 false,

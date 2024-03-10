@@ -4,20 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
-use function Flow\ETL\DSL\ignore_error_handler;
-use function Flow\ETL\DSL\skip_rows_handler;
-use function Flow\ETL\DSL\throw_error_handler;
-use Flow\ETL\Extractor;
-use Flow\ETL\Flow;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Loader;
-use Flow\ETL\Row;
-use Flow\ETL\Row\Entry\BooleanEntry;
-use Flow\ETL\Row\Entry\DateTimeEntry;
-use Flow\ETL\Row\Entry\IntegerEntry;
-use Flow\ETL\Row\Entry\NullEntry;
-use Flow\ETL\Rows;
-use Flow\ETL\Transformer;
+use function Flow\ETL\DSL\{ignore_error_handler, skip_rows_handler, throw_error_handler};
+use Flow\ETL\Row\Entry\{BooleanEntry, DateTimeEntry, IntegerEntry, NullEntry};
+use Flow\ETL\{Extractor, Flow, FlowContext, Loader, Row, Rows, Transformer};
 use PHPUnit\Framework\TestCase;
 
 final class ETLErrorHandlingTest extends TestCase
@@ -132,7 +121,7 @@ final class ETLErrorHandlingTest extends TestCase
             ->load($loader)
             ->run();
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 [
                     'id' => 101,
@@ -208,7 +197,7 @@ final class ETLErrorHandlingTest extends TestCase
             ->load($loader)
             ->run();
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 [
                     'id' => 102,

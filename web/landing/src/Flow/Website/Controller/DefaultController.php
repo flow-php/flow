@@ -1,9 +1,10 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Website\Controller;
 
-use Flow\Website\Service\Examples;
-use Flow\Website\Service\Github;
+use Flow\Website\Service\{Examples, Github};
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;

@@ -4,11 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\float_entry;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\null_entry;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\{float_entry, int_entry, null_entry, ref, str_entry};
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;
 
@@ -24,7 +20,7 @@ final class MaxTest extends TestCase
         $aggregator->aggregate(Row::create(str_entry('int', '25')));
         $aggregator->aggregate(Row::create(null_entry('not_int')));
 
-        $this->assertSame(
+        self::assertSame(
             55,
             $aggregator->result()->value()
         );
@@ -39,7 +35,7 @@ final class MaxTest extends TestCase
         $aggregator->aggregate(Row::create(int_entry('int', 30)));
         $aggregator->aggregate(Row::create(null_entry('int')));
 
-        $this->assertSame(
+        self::assertSame(
             30,
             $aggregator->result()->value()
         );
@@ -54,7 +50,7 @@ final class MaxTest extends TestCase
         $aggregator->aggregate(Row::create(float_entry('int', 30.5)));
         $aggregator->aggregate(Row::create(int_entry('int', 25)));
 
-        $this->assertSame(
+        self::assertSame(
             30.5,
             $aggregator->result()->value()
         );
@@ -69,7 +65,7 @@ final class MaxTest extends TestCase
         $aggregator->aggregate(Row::create(int_entry('int', 30)));
         $aggregator->aggregate(Row::create(int_entry('int', 40)));
 
-        $this->assertSame(
+        self::assertSame(
             40,
             $aggregator->result()->value()
         );

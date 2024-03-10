@@ -4,13 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Schema;
 
-use function Flow\ETL\DSL\bool_entry;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\str_entry;
-use Flow\ETL\Row;
+use function Flow\ETL\DSL\{bool_entry, int_entry, str_entry};
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Row\Schema\StrictValidator;
-use Flow\ETL\Rows;
+use Flow\ETL\{Row, Rows};
 use PHPUnit\Framework\TestCase;
 
 final class StrictValidatorTest extends TestCase
@@ -22,7 +19,7 @@ final class StrictValidatorTest extends TestCase
             Schema\Definition::string('name'),
         );
 
-        $this->assertFalse(
+        self::assertFalse(
             (new StrictValidator())->isValid(
                 new Rows(Row::create(int_entry('id', 1), str_entry('name', 'test'), bool_entry('active', true))),
                 $schema
@@ -38,7 +35,7 @@ final class StrictValidatorTest extends TestCase
             Schema\Definition::boolean('active'),
         );
 
-        $this->assertTrue(
+        self::assertTrue(
             (new StrictValidator())->isValid(
                 new Rows(Row::create(int_entry('id', 1), str_entry('name', 'test'), bool_entry('active', true))),
                 $schema
@@ -55,7 +52,7 @@ final class StrictValidatorTest extends TestCase
             Schema\Definition::array('tags'),
         );
 
-        $this->assertFalse(
+        self::assertFalse(
             (new StrictValidator())->isValid(
                 new Rows(Row::create(int_entry('id', 1), str_entry('name', 'test'), bool_entry('active', true))),
                 $schema
@@ -71,7 +68,7 @@ final class StrictValidatorTest extends TestCase
             Schema\Definition::boolean('active'),
         );
 
-        $this->assertFalse(
+        self::assertFalse(
             (new StrictValidator())->isValid(
                 new Rows(Row::create(int_entry('id', 1), str_entry('name', 'test'), bool_entry('active', true))),
                 $schema
@@ -87,7 +84,7 @@ final class StrictValidatorTest extends TestCase
             Schema\Definition::boolean('active'),
         );
 
-        $this->assertFalse(
+        self::assertFalse(
             (new StrictValidator())->isValid(
                 new Rows(
                     Row::create(int_entry('id', 1), str_entry('name', 'test'), bool_entry('active', true)),

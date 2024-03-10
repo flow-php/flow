@@ -1,10 +1,11 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\Page\Header;
 
-use Flow\Parquet\ParquetFile\Encodings;
 use Flow\Parquet\ParquetFile\RowGroup\StatisticsReader;
-use Flow\Parquet\ParquetFile\Statistics;
+use Flow\Parquet\ParquetFile\{Encodings, Statistics};
 
 /**
  * @psalm-suppress RedundantConditionGivenDocblockType

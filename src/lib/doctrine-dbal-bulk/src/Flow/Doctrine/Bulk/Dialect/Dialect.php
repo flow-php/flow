@@ -1,9 +1,10 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk\Dialect;
 
-use Flow\Doctrine\Bulk\BulkData;
-use Flow\Doctrine\Bulk\TableDefinition;
+use Flow\Doctrine\Bulk\{BulkData, TableDefinition};
 
 interface Dialect
 {

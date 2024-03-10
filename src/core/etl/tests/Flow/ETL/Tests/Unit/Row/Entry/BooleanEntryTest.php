@@ -19,7 +19,7 @@ final class BooleanEntryTest extends TestCase
 
     public function test_entry_name_can_be_zero() : void
     {
-        $this->assertSame('0', (new BooleanEntry('0', true))->name());
+        self::assertSame('0', (new BooleanEntry('0', true))->name());
     }
 
     /**
@@ -27,14 +27,14 @@ final class BooleanEntryTest extends TestCase
      */
     public function test_is_equal(bool $equals, BooleanEntry $entry, BooleanEntry $nextEntry) : void
     {
-        $this->assertSame($equals, $entry->isEqual($nextEntry));
+        self::assertSame($equals, $entry->isEqual($nextEntry));
     }
 
     public function test_map() : void
     {
         $entry = new BooleanEntry('entry-name', true);
 
-        $this->assertEquals(
+        self::assertEquals(
             $entry,
             $entry->map(fn (bool $value) => $value)
         );
@@ -52,7 +52,7 @@ final class BooleanEntryTest extends TestCase
         $entry = new BooleanEntry('entry-name', true);
         $newEntry = $entry->rename('new-entry-name');
 
-        $this->assertEquals('new-entry-name', $newEntry->name());
-        $this->assertTrue($newEntry->value());
+        self::assertEquals('new-entry-name', $newEntry->name());
+        self::assertTrue($newEntry->value());
     }
 }

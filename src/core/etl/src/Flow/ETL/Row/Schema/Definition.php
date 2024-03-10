@@ -4,46 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Schema;
 
-use function Flow\ETL\DSL\type_array;
-use function Flow\ETL\DSL\type_boolean;
-use function Flow\ETL\DSL\type_datetime;
-use function Flow\ETL\DSL\type_enum;
-use function Flow\ETL\DSL\type_float;
-use function Flow\ETL\DSL\type_int;
-use function Flow\ETL\DSL\type_json;
-use function Flow\ETL\DSL\type_list;
-use function Flow\ETL\DSL\type_null;
-use function Flow\ETL\DSL\type_string;
-use function Flow\ETL\DSL\type_uuid;
-use function Flow\ETL\DSL\type_xml;
-use function Flow\ETL\DSL\type_xml_node;
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\PHP\Type\Logical\ListType;
-use Flow\ETL\PHP\Type\Logical\MapType;
-use Flow\ETL\PHP\Type\Logical\StructureType;
+use function Flow\ETL\DSL\{type_array, type_boolean, type_datetime, type_enum, type_float, type_int, type_json, type_list, type_null, type_string, type_uuid, type_xml, type_xml_node};
+use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
+use Flow\ETL\PHP\Type\Logical\{ListType, MapType, StructureType};
 use Flow\ETL\PHP\Type\Native\ObjectType;
-use Flow\ETL\PHP\Type\Type;
-use Flow\ETL\PHP\Type\TypeFactory;
-use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\Entry\ArrayEntry;
-use Flow\ETL\Row\Entry\BooleanEntry;
-use Flow\ETL\Row\Entry\DateTimeEntry;
-use Flow\ETL\Row\Entry\EnumEntry;
-use Flow\ETL\Row\Entry\FloatEntry;
-use Flow\ETL\Row\Entry\IntegerEntry;
-use Flow\ETL\Row\Entry\JsonEntry;
-use Flow\ETL\Row\Entry\ListEntry;
-use Flow\ETL\Row\Entry\MapEntry;
-use Flow\ETL\Row\Entry\NullEntry;
-use Flow\ETL\Row\Entry\ObjectEntry;
-use Flow\ETL\Row\Entry\StringEntry;
-use Flow\ETL\Row\Entry\StructureEntry;
-use Flow\ETL\Row\Entry\UuidEntry;
-use Flow\ETL\Row\Entry\XMLEntry;
-use Flow\ETL\Row\Entry\XMLNodeEntry;
-use Flow\ETL\Row\EntryReference;
-use Flow\ETL\Row\Reference;
+use Flow\ETL\PHP\Type\{Type, TypeFactory};
+use Flow\ETL\Row\Entry\{ArrayEntry, BooleanEntry, DateTimeEntry, EnumEntry, FloatEntry, IntegerEntry, JsonEntry, ListEntry, MapEntry, NullEntry, ObjectEntry, StringEntry, StructureEntry, UuidEntry, XMLEntry, XMLNodeEntry};
+use Flow\ETL\Row\{Entry, EntryReference, Reference};
 
 final class Definition
 {

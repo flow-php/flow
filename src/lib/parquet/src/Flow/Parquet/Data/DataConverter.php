@@ -1,15 +1,10 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Parquet\Data;
 
-use Flow\Parquet\Data\Converter\BytesStringConverter;
-use Flow\Parquet\Data\Converter\Int32DateConverter;
-use Flow\Parquet\Data\Converter\Int32DateTimeConverter;
-use Flow\Parquet\Data\Converter\Int64DateTimeConverter;
-use Flow\Parquet\Data\Converter\Int96DateTimeConverter;
-use Flow\Parquet\Data\Converter\JsonConverter;
-use Flow\Parquet\Data\Converter\TimeConverter;
-use Flow\Parquet\Data\Converter\UuidConverter;
+use Flow\Parquet\Data\Converter\{BytesStringConverter, Int32DateConverter, Int32DateTimeConverter, Int64DateTimeConverter, Int96DateTimeConverter, JsonConverter, TimeConverter, UuidConverter};
 use Flow\Parquet\Exception\DataConversionException;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;

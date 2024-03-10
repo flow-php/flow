@@ -33,7 +33,7 @@ final class StringCastingHandlerTest extends TestCase
     #[DataProvider('string_castable_data_provider')]
     public function test_casting_different_data_types_to_string(mixed $value, string $expected) : void
     {
-        $this->assertSame($expected, \trim((new StringCastingHandler())->value($value, type_string(), Caster::default())));
+        self::assertSame($expected, \trim((new StringCastingHandler())->value($value, type_string(), Caster::default())));
     }
 
     public function test_casting_object_to_string() : void

@@ -1,14 +1,12 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Pipeline;
 
-use function Flow\ETL\DSL\from_all;
-use function Flow\ETL\DSL\from_array;
-use Flow\ETL\Config;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Pipeline\BatchingPipeline;
-use Flow\ETL\Pipeline\SynchronousPipeline;
-use Flow\ETL\Rows;
+use function Flow\ETL\DSL\{from_all, from_array};
+use Flow\ETL\Pipeline\{BatchingPipeline, SynchronousPipeline};
+use Flow\ETL\{Config, FlowContext, Rows};
 use PHPUnit\Framework\TestCase;
 
 final class BatchingPipelineTest extends TestCase
@@ -33,7 +31,7 @@ final class BatchingPipelineTest extends TestCase
             ])
         ));
 
-        $this->assertCount(
+        self::assertCount(
             1,
             \iterator_to_array($pipeline->process(new FlowContext(Config::default())))
         );
@@ -57,7 +55,7 @@ final class BatchingPipelineTest extends TestCase
             ])
         ));
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 [
                     ['id' => 1],
@@ -101,7 +99,7 @@ final class BatchingPipelineTest extends TestCase
             ])
         ));
 
-        $this->assertCount(
+        self::assertCount(
             1,
             \iterator_to_array($pipeline->process(new FlowContext(Config::default())))
         );
@@ -125,7 +123,7 @@ final class BatchingPipelineTest extends TestCase
             ])
         ));
 
-        $this->assertCount(
+        self::assertCount(
             2,
             \iterator_to_array($pipeline->process(new FlowContext(Config::default())))
         );

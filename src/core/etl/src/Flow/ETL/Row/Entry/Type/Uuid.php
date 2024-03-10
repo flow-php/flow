@@ -1,9 +1,10 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry\Type;
 
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 
 final class Uuid implements \Stringable
 {

@@ -20,7 +20,7 @@ final class ArrayDotStepsTest extends TestCase
 
     public function test_escaping_dots() : void
     {
-        $this->assertSame(
+        self::assertSame(
             ['foo.bar'],
             array_dot_steps('foo\\.bar')
         );
@@ -28,7 +28,7 @@ final class ArrayDotStepsTest extends TestCase
 
     public function test_escaping_multimatch() : void
     {
-        $this->assertSame(
+        self::assertSame(
             ['foo', 'bar', '\\{bas, bai\\}'],
             array_dot_steps('foo.bar.\\{bas, bai\\}')
         );
@@ -36,7 +36,7 @@ final class ArrayDotStepsTest extends TestCase
 
     public function test_multimatch() : void
     {
-        $this->assertSame(
+        self::assertSame(
             ['foo', 'bar', '{bas, bai}'],
             array_dot_steps('foo.bar.{bas, bai}')
         );
@@ -47,7 +47,7 @@ final class ArrayDotStepsTest extends TestCase
         $this->expectException(InvalidPathException::class);
         $this->expectExceptionMessage('Multimatch syntax not closed');
 
-        $this->assertSame(
+        self::assertSame(
             ['foo', 'bar', '{bas, bai}'],
             array_dot_steps('foo.bar.{bas, bai.id')
         );
@@ -58,7 +58,7 @@ final class ArrayDotStepsTest extends TestCase
         $this->expectException(InvalidPathException::class);
         $this->expectExceptionMessage('Multimatch must be used at the end of path');
 
-        $this->assertSame(
+        self::assertSame(
             ['foo', 'bar', '{bas, bai}'],
             array_dot_steps('foo.bar.{bas, bai}.id')
         );
@@ -66,7 +66,7 @@ final class ArrayDotStepsTest extends TestCase
 
     public function test_simple_steps() : void
     {
-        $this->assertSame(
+        self::assertSame(
             ['foo', 'bar', 'baz'],
             array_dot_steps('foo.bar.baz')
         );
@@ -74,7 +74,7 @@ final class ArrayDotStepsTest extends TestCase
 
     public function test_simple_steps_with_nullsafe() : void
     {
-        $this->assertSame(
+        self::assertSame(
             ['foo', '?bar', 'baz'],
             array_dot_steps('foo.?bar.baz')
         );
@@ -82,7 +82,7 @@ final class ArrayDotStepsTest extends TestCase
 
     public function test_simple_steps_with_nullsafe_wildcard() : void
     {
-        $this->assertSame(
+        self::assertSame(
             ['foo', 'bar', '?*', 'baz'],
             array_dot_steps('foo.bar.?*.baz')
         );
@@ -90,7 +90,7 @@ final class ArrayDotStepsTest extends TestCase
 
     public function test_simple_steps_with_wildcard() : void
     {
-        $this->assertSame(
+        self::assertSame(
             ['foo', 'bar', '*', 'baz'],
             array_dot_steps('foo.bar.*.baz')
         );

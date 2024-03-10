@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Elasticsearch;
 
-use Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\DocumentDataSource;
-use Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\ElasticsearchExtractor;
-use Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\ElasticsearchLoader;
-use Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\HitsIntoRowsTransformer;
+use Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\{DocumentDataSource, ElasticsearchExtractor, ElasticsearchLoader, HitsIntoRowsTransformer};
 use Flow\ETL\Loader;
 
 /**

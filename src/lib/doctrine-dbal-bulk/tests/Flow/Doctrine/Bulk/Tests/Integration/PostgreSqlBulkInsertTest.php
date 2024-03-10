@@ -4,13 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk\Tests\Integration;
 
-use Doctrine\DBAL\Schema\Column;
-use Doctrine\DBAL\Schema\Table;
-use Doctrine\DBAL\Types\Type;
-use Doctrine\DBAL\Types\Types;
-use Flow\Doctrine\Bulk\Bulk;
-use Flow\Doctrine\Bulk\BulkData;
+use Doctrine\DBAL\Schema\{Column, Table};
+use Doctrine\DBAL\Types\{Type, Types};
 use Flow\Doctrine\Bulk\Tests\PostgreSqlIntegrationTestCase;
+use Flow\Doctrine\Bulk\{Bulk, BulkData};
 
 final class PostgreSqlBulkInsertTest extends PostgreSqlIntegrationTestCase
 {
@@ -44,10 +41,10 @@ final class PostgreSqlBulkInsertTest extends PostgreSqlIntegrationTestCase
             ])
         );
 
-        $this->assertEquals(3, $this->databaseContext->tableCount($table));
-        $this->assertEquals(1, $this->executedQueriesCount());
+        self::assertEquals(3, $this->databaseContext->tableCount($table));
+        self::assertEquals(1, $this->executedQueriesCount());
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => $id1, 'age' => 20, 'name' => 'Name One', 'description' => 'Description One', 'active' => false, 'updated_at' => $date1->format('Y-m-d H:i:s'), 'tags' => '["a", "b", "c"]'],
                 ['id' => $id2, 'age' => 30, 'name' => 'Name Two', 'description' => null, 'active' => true, 'updated_at' => $date2->format('Y-m-d H:i:s'), 'tags' => '["a", "b", "c"]'],
@@ -95,9 +92,9 @@ final class PostgreSqlBulkInsertTest extends PostgreSqlIntegrationTestCase
             ]
         );
 
-        $this->assertEquals(4, $this->databaseContext->tableCount($table));
-        $this->assertEquals(2, $this->executedQueriesCount());
-        $this->assertEquals(
+        self::assertEquals(4, $this->databaseContext->tableCount($table));
+        self::assertEquals(2, $this->executedQueriesCount());
+        self::assertEquals(
             [
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One', 'active' => true],
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two', 'active' => true],
@@ -145,9 +142,9 @@ final class PostgreSqlBulkInsertTest extends PostgreSqlIntegrationTestCase
             ]
         );
 
-        $this->assertEquals(4, $this->databaseContext->tableCount($table));
-        $this->assertEquals(2, $this->executedQueriesCount());
-        $this->assertEquals(
+        self::assertEquals(4, $this->databaseContext->tableCount($table));
+        self::assertEquals(2, $this->executedQueriesCount());
+        self::assertEquals(
             [
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One', 'active' => true],
                 ['id' => 2, 'name' => 'New Name Two', 'description' => 'New Description Two', 'active' => true],
@@ -194,9 +191,9 @@ final class PostgreSqlBulkInsertTest extends PostgreSqlIntegrationTestCase
             ]
         );
 
-        $this->assertEquals(3, $this->databaseContext->tableCount($table));
-        $this->assertEquals(2, $this->executedQueriesCount());
-        $this->assertEquals(
+        self::assertEquals(3, $this->databaseContext->tableCount($table));
+        self::assertEquals(2, $this->executedQueriesCount());
+        self::assertEquals(
             [
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One', 'active' => true],
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'DESCRIPTION', 'active' => false],
@@ -243,9 +240,9 @@ final class PostgreSqlBulkInsertTest extends PostgreSqlIntegrationTestCase
             ]
         );
 
-        $this->assertEquals(4, $this->databaseContext->tableCount($table));
-        $this->assertEquals(2, $this->executedQueriesCount());
-        $this->assertEquals(
+        self::assertEquals(4, $this->databaseContext->tableCount($table));
+        self::assertEquals(2, $this->executedQueriesCount());
+        self::assertEquals(
             [
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One', 'active' => true],
                 ['id' => 2, 'name' => 'New Name Two', 'description' => 'New Description Two', 'active' => true],

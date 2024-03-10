@@ -4,11 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Function;
 
-use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\lit;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\to_memory;
+use function Flow\ETL\DSL\{df, from_array, lit, ref, to_memory};
 use Flow\ETL\Memory\ArrayMemory;
 use PHPUnit\Framework\TestCase;
 
@@ -30,7 +26,7 @@ final class BetweenTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 [
                     'between' => true,

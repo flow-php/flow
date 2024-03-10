@@ -1,17 +1,13 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Integration;
 
-use function Flow\ETL\Adapter\Parquet\from_parquet;
-use function Flow\ETL\Adapter\Parquet\to_parquet;
-use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\json_schema;
-use function Flow\ETL\DSL\schema;
-use function Flow\ETL\DSL\str_schema;
-use Flow\ETL\Flow;
-use Flow\ETL\Row;
+use function Flow\ETL\Adapter\Parquet\{from_parquet, to_parquet};
+use function Flow\ETL\DSL\{df, from_array, json_schema, schema, str_schema};
 use Flow\ETL\Tests\Double\FakeExtractor;
+use Flow\ETL\{Flow, Row};
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\Reader;
 use PHPUnit\Framework\TestCase;
@@ -30,7 +26,7 @@ final class ParquetTest extends TestCase
             ->write(to_parquet($path))
             ->run();
 
-        $this->assertEquals(
+        self::assertEquals(
             10,
             (new Flow())
                 ->read(from_parquet($path))
@@ -38,13 +34,13 @@ final class ParquetTest extends TestCase
         );
 
         $parquetFile = (new Reader())->read($path);
-        $this->assertNotEmpty($parquetFile->metadata()->columnChunks());
+        self::assertNotEmpty($parquetFile->metadata()->columnChunks());
 
         foreach ($parquetFile->metadata()->columnChunks() as $columnChunk) {
-            $this->assertSame(Compressions::SNAPPY, $columnChunk->codec());
+            self::assertSame(Compressions::SNAPPY, $columnChunk->codec());
         }
 
-        $this->assertFileExists($path);
+        self::assertFileExists($path);
         $this->removeFile($path);
     }
 
@@ -68,7 +64,7 @@ final class ParquetTest extends TestCase
             )
             ->run();
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 ['id' => '1', 'name' => 'test', 'uuid' => new Row\Entry\Type\Uuid('26fd21b0-6080-4d6c-bdb4-1214f1feffef'), 'json' => '[{"id":1,"name":"test"},{"id":2,"name":"test"}]'],
                 ['id' => '2', 'name' => 'test', 'uuid' => new Row\Entry\Type\Uuid('26fd21b0-6080-4d6c-bdb4-1214f1feffef'), 'json' => '[{"id":1,"name":"test"},{"id":2,"name":"test"}]'],
@@ -79,7 +75,7 @@ final class ParquetTest extends TestCase
                 ->toArray()
         );
 
-        $this->assertFileExists($path);
+        self::assertFileExists($path);
         $this->removeFile($path);
     }
 

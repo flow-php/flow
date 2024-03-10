@@ -137,7 +137,7 @@ final class ArrayComparisonTest extends TestCase
 
     public function test_compare_arrays() : void
     {
-        $this->assertSame(
+        self::assertSame(
             -1,
             (new ArrayComparison())->compare([1, 2, 3], [4, 5, 6])
         );
@@ -148,7 +148,7 @@ final class ArrayComparisonTest extends TestCase
      */
     public function test_equals(array $a, array $b) : void
     {
-        $this->assertTrue((new ArrayComparison())->equals($a, $b));
+        self::assertTrue((new ArrayComparison())->equals($a, $b));
     }
 
     /**
@@ -156,6 +156,6 @@ final class ArrayComparisonTest extends TestCase
      */
     public function test_not_equals(array $a, array $b) : void
     {
-        $this->assertFalse((new ArrayComparison())->equals($a, $b));
+        self::assertFalse((new ArrayComparison())->equals($a, $b));
     }
 }

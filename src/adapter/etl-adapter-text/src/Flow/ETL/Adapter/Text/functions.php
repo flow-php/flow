@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Text;
 
-use Flow\ETL\Extractor;
 use Flow\ETL\Filesystem\Path;
-use Flow\ETL\Loader;
+use Flow\ETL\{Extractor, Loader};
 
 /**
  * @param array<Path|string>|Path|string $path

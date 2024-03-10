@@ -1,9 +1,10 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\Data;
 
-use Flow\Parquet\BinaryReader;
-use Flow\Parquet\BinaryWriter;
+use Flow\Parquet\{BinaryReader, BinaryWriter};
 
 final class RLEBitPackedHybrid
 {

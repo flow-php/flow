@@ -3,8 +3,7 @@
 declare(strict_types=1);
 
 use function Flow\ETL\Adapter\CSV\from_csv;
-use function Flow\ETL\DSL\data_frame;
-use function Flow\ETL\DSL\to_output;
+use function Flow\ETL\DSL\{data_frame, to_output};
 
 require __DIR__ . '/../../../autoload.php';
 

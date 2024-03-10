@@ -5,13 +5,9 @@ declare(strict_types=1);
 namespace Flow\Parquet\Tests\Integration\IO;
 
 use Flow\Parquet\Exception\InvalidArgumentException;
-use Flow\Parquet\Option;
-use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Schema;
-use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Flow\Parquet\ParquetFile\Schema\NestedColumn;
-use Flow\Parquet\Reader;
-use Flow\Parquet\Writer;
+use Flow\Parquet\ParquetFile\Schema\{FlatColumn, NestedColumn};
+use Flow\Parquet\{Option, Options, Reader, Writer};
 use PHPUnit\Framework\TestCase;
 
 final class PaginationTest extends TestCase
@@ -20,7 +16,7 @@ final class PaginationTest extends TestCase
     {
         $path = __DIR__ . '/Fixtures/pagination_row_group_1kb_5k_rows.snappy.parquet';
 
-        $this->assertEquals(
+        self::assertEquals(
             [],
             \iterator_to_array((new Reader())->read($path)->values(['id'], offset: 6000, limit: 10))
         );
@@ -30,7 +26,7 @@ final class PaginationTest extends TestCase
     {
         $path = __DIR__ . '/Fixtures/pagination_row_group_1kb_5k_rows.snappy.parquet';
 
-        $this->assertCount(
+        self::assertCount(
             100,
             \iterator_to_array((new Reader())->read($path)->values(['id'], offset: 4900, limit: 100))
         );
@@ -40,7 +36,7 @@ final class PaginationTest extends TestCase
     {
         $path = __DIR__ . '/Fixtures/pagination_row_group_1kb_5k_rows.snappy.parquet';
 
-        $this->assertCount(
+        self::assertCount(
             1,
             \iterator_to_array((new Reader())->read($path)->values(['id'], offset: 4999, limit: 2))
         );
@@ -60,7 +56,7 @@ final class PaginationTest extends TestCase
     {
         $path = __DIR__ . '/Fixtures/pagination_row_group_1kb_5k_rows.snappy.parquet';
 
-        $this->assertCount(
+        self::assertCount(
             2,
             \iterator_to_array((new Reader())->read($path)->values(['id'], offset: 0, limit: 2))
         );
@@ -83,7 +79,7 @@ final class PaginationTest extends TestCase
         // Uncomment only to apply changes to the dataset
         // $this->generateDataset($path);
 
-        $this->assertEquals(
+        self::assertEquals(
             \array_merge(
                 ...\array_map(
                     static function (int $i) : array {

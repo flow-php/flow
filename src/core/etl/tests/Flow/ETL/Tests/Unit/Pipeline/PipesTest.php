@@ -4,14 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Pipeline;
 
-use function Flow\ETL\DSL\lit;
-use function Flow\ETL\DSL\to_memory;
-use function Flow\ETL\DSL\to_output;
+use function Flow\ETL\DSL\{lit, to_memory, to_output};
 use Flow\ETL\Adapter\Elasticsearch\Tests\Integration\TestCase;
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Pipeline\Pipes;
-use Flow\ETL\Transformer\DropDuplicatesTransformer;
-use Flow\ETL\Transformer\ScalarFunctionTransformer;
+use Flow\ETL\Transformer\{DropDuplicatesTransformer, ScalarFunctionTransformer};
 
 final class PipesTest extends TestCase
 {
@@ -23,7 +20,7 @@ final class PipesTest extends TestCase
             $memoryLoader = to_memory(new ArrayMemory()),
         ]);
 
-        $this->assertEquals(
+        self::assertEquals(
             [$outputLoader, $memoryLoader],
             $pipes->loaders()
         );
@@ -37,8 +34,8 @@ final class PipesTest extends TestCase
             $memoryLoader = to_memory(new ArrayMemory()),
         ]);
 
-        $this->assertTrue($pipes->has(ScalarFunctionTransformer::class));
-        $this->assertFalse($pipes->has(DropDuplicatesTransformer::class));
+        self::assertTrue($pipes->has(ScalarFunctionTransformer::class));
+        self::assertFalse($pipes->has(DropDuplicatesTransformer::class));
     }
 
     public function test_has_transformer_when_passed_class_does_not_exists() : void
@@ -49,7 +46,7 @@ final class PipesTest extends TestCase
             $memoryLoader = to_memory(new ArrayMemory()),
         ]);
 
-        $this->assertFalse($pipes->has('SomeClassThatDoesNotExist'));
+        self::assertFalse($pipes->has('SomeClassThatDoesNotExist'));
     }
 
     public function test_has_transformer_when_passed_class_is_not_a_transformer_class() : void
@@ -60,6 +57,6 @@ final class PipesTest extends TestCase
             $memoryLoader = to_memory(new ArrayMemory()),
         ]);
 
-        $this->assertFalse($pipes->has(Pipes::class));
+        self::assertFalse($pipes->has(Pipes::class));
     }
 }

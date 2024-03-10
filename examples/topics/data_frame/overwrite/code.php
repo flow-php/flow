@@ -2,10 +2,8 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\Adapter\CSV\from_csv;
-use function Flow\ETL\Adapter\CSV\to_csv;
-use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\overwrite;
+use function Flow\ETL\Adapter\CSV\{from_csv, to_csv};
+use function Flow\ETL\DSL\{df, overwrite};
 
 require __DIR__ . '/../../../autoload.php';
 

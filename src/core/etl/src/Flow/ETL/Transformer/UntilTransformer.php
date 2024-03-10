@@ -1,12 +1,12 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\Transformer;
 
 use Flow\ETL\Exception\LimitReachedException;
-use Flow\ETL\FlowContext;
 use Flow\ETL\Function\ScalarFunction;
-use Flow\ETL\Rows;
-use Flow\ETL\Transformer;
+use Flow\ETL\{FlowContext, Rows, Transformer};
 
 final class UntilTransformer implements Transformer
 {

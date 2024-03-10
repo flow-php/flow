@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\Data\Converter;
 
@@ -14,7 +16,7 @@ final class UuidConverterTest extends TestCase
 
         $converter = new UuidConverter();
 
-        $this->assertEquals(
+        self::assertEquals(
             $uuid,
             $converter->fromParquetType($converter->toParquetType($uuid))
         );

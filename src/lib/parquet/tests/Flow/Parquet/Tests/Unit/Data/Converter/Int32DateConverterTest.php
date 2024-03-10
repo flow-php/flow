@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\Data\Converter;
 
@@ -13,7 +15,7 @@ final class Int32DateConverterTest extends TestCase
 
         $converter = new Int32DateConverter();
 
-        $this->assertEquals(
+        self::assertEquals(
             $date,
             $converter->fromParquetType($converter->toParquetType($date))
         );

@@ -1,14 +1,13 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Benchmark;
 
 use function Flow\ETL\DSL\ref;
-use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\StringEntry;
-use Flow\ETL\Rows;
-use PhpBench\Attributes\BeforeMethods;
-use PhpBench\Attributes\Groups;
-use PhpBench\Attributes\Revs;
+use Flow\ETL\{Row, Rows};
+use PhpBench\Attributes\{BeforeMethods, Groups, Revs};
 
 #[BeforeMethods('setUp')]
 #[Revs(2)]

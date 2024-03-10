@@ -4,12 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
-use function Flow\ETL\DSL\list_entry;
-use function Flow\ETL\DSL\type_boolean;
-use function Flow\ETL\DSL\type_datetime;
-use function Flow\ETL\DSL\type_int;
-use function Flow\ETL\DSL\type_list;
-use function Flow\ETL\DSL\type_string;
+use function Flow\ETL\DSL\{list_entry, type_boolean, type_datetime, type_int, type_list, type_string};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\ListType;
@@ -77,7 +72,7 @@ final class ListEntryTest extends TestCase
 
     public function test_definition() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             Definition::list('strings', new ListType(ListElement::string())),
             list_entry('strings', ['one', 'two', 'three'], type_list(type_string()))->definition()
         );
@@ -85,15 +80,15 @@ final class ListEntryTest extends TestCase
 
     public function test_is_equal() : void
     {
-        $this->assertTrue(
+        self::assertTrue(
             list_entry('strings', ['one', 'two', 'three'], type_list(type_string()))
                 ->isEqual(list_entry('strings', ['one', 'two', 'three'], type_list(type_string())))
         );
-        $this->assertFalse(
+        self::assertFalse(
             list_entry('strings', ['one', 'two', 'three'], type_list(type_string()))
                 ->isEqual(list_entry('strings', [1, 2, 3], type_list(type_int())))
         );
-        $this->assertTrue(
+        self::assertTrue(
             list_entry('strings', ['two', 'one', 'three'], type_list(type_string()))
                 ->isEqual(list_entry('strings', ['one', 'two', 'three'], type_list(type_string())))
         );
@@ -101,7 +96,7 @@ final class ListEntryTest extends TestCase
 
     public function test_map() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             list_entry('strings', ['one, two, three'], type_list(type_string())),
             list_entry('strings', ['one', 'two', 'three'], type_list(type_string()))->map(fn (array $value) => [\implode(', ', $value)])
         );
@@ -109,7 +104,7 @@ final class ListEntryTest extends TestCase
 
     public function test_rename() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             list_entry('new_name', ['one', 'two', 'three'], type_list(type_string())),
             list_entry('strings', ['one', 'two', 'three'], type_list(type_string()))->rename('new_name')
         );
@@ -117,7 +112,7 @@ final class ListEntryTest extends TestCase
 
     public function test_to_string() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             '["one","two","three"]',
             list_entry('strings', ['one', 'two', 'three'], type_list(type_string()))->toString()
         );
@@ -125,7 +120,7 @@ final class ListEntryTest extends TestCase
 
     public function test_to_string_date_time() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             '[{"date":"2021-01-01 00:00:00.000000","timezone_type":3,"timezone":"UTC"}]',
             list_entry('strings', [new \DateTimeImmutable('2021-01-01 00:00:00')], type_list(type_datetime()))->toString()
         );
@@ -133,7 +128,7 @@ final class ListEntryTest extends TestCase
 
     public function test_type() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             new ListType(ListElement::string()),
             list_entry('strings', ['one', 'two', 'three'], type_list(type_string()))->type()
         );
@@ -141,7 +136,7 @@ final class ListEntryTest extends TestCase
 
     public function test_value() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             ['one', 'two', 'three'],
             list_entry('strings', ['one', 'two', 'three'], type_list(type_string()))->value()
         );

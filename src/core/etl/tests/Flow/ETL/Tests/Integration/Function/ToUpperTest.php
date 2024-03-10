@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Function;
 
-use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\to_memory;
+use function Flow\ETL\DSL\{from_array, ref, to_memory};
 use Flow\ETL\Flow;
 use Flow\ETL\Memory\ArrayMemory;
 use PHPUnit\Framework\TestCase;
@@ -27,7 +25,7 @@ final class ToUpperTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['key' => 'value', 'to_upper' => 'VALUE'],
             ],
@@ -49,7 +47,7 @@ final class ToUpperTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'to_upper' => 1],
             ],

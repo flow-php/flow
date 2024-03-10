@@ -4,18 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Elasticsearch\Tests\Integration\ElasticsearchPHP;
 
-use function Flow\ETL\Adapter\Elasticsearch\es_hits_to_rows;
-use function Flow\ETL\Adapter\Elasticsearch\from_es;
-use function Flow\ETL\Adapter\Elasticsearch\to_es_bulk_index;
+use function Flow\ETL\Adapter\Elasticsearch\{es_hits_to_rows, from_es, to_es_bulk_index};
 use function Flow\ETL\DSL\df;
 use Flow\ETL\Adapter\Elasticsearch\ElasticsearchPHP\DocumentDataSource;
 use Flow\ETL\Adapter\Elasticsearch\EntryIdFactory\EntryIdFactory;
 use Flow\ETL\Adapter\Elasticsearch\Tests\Integration\TestCase;
-use Flow\ETL\Config;
-use Flow\ETL\Flow;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use Flow\ETL\{Config, Flow, FlowContext, Row, Rows};
 
 final class ElasticsearchExtractorTest extends TestCase
 {
@@ -73,7 +67,7 @@ final class ElasticsearchExtractorTest extends TestCase
             ->read(from_es($this->elasticsearchContext->clientConfig(), $params, $pitParams))
             ->fetch();
 
-        $this->assertCount(0, $results);
+        self::assertCount(0, $results);
     }
 
     public function test_extraction_index_with_from_and_size() : void
@@ -112,11 +106,11 @@ final class ElasticsearchExtractorTest extends TestCase
             ->transform(es_hits_to_rows(DocumentDataSource::fields))
             ->fetch();
 
-        $this->assertCount(2000, $results);
-        $this->assertArrayHasKey('id', $results->first()->toArray());
-        $this->assertArrayHasKey('position', $results->first()->toArray());
-        $this->assertArrayNotHasKey('active', $results->first()->toArray());
-        $this->assertArrayNotHasKey('name', $results->first()->toArray());
+        self::assertCount(2000, $results);
+        self::assertArrayHasKey('id', $results->first()->toArray());
+        self::assertArrayHasKey('position', $results->first()->toArray());
+        self::assertArrayNotHasKey('active', $results->first()->toArray());
+        self::assertArrayNotHasKey('name', $results->first()->toArray());
     }
 
     public function test_extraction_index_with_search_after() : void
@@ -152,7 +146,7 @@ final class ElasticsearchExtractorTest extends TestCase
             ->extract(from_es($this->elasticsearchContext->clientConfig(), $params))
             ->fetch();
 
-        $this->assertCount(3, $results);
+        self::assertCount(3, $results);
     }
 
     public function test_extraction_index_with_search_after_with_point_in_time() : void
@@ -193,7 +187,7 @@ final class ElasticsearchExtractorTest extends TestCase
             ->extract(from_es($this->elasticsearchContext->clientConfig(), $params, $pitParams))
             ->fetch();
 
-        $this->assertCount(3, $results);
+        self::assertCount(3, $results);
     }
 
     public function test_extraction_whole_index_with_point_in_time() : void
@@ -234,6 +228,6 @@ final class ElasticsearchExtractorTest extends TestCase
             ->extract(from_es($this->elasticsearchContext->clientConfig(), $params, $pitParams))
             ->fetch();
 
-        $this->assertCount(3, $results);
+        self::assertCount(3, $results);
     }
 }

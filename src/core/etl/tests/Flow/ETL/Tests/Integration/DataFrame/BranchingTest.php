@@ -4,12 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\lit;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\to_branch;
-use function Flow\ETL\DSL\to_memory;
+use function Flow\ETL\DSL\{df, from_array, lit, ref, to_branch, to_memory};
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
 
@@ -40,7 +35,7 @@ final class BranchingTest extends IntegrationTestCase
             )
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'group' => 'A'],
                 ['id' => 3, 'group' => 'A'],
@@ -48,7 +43,7 @@ final class BranchingTest extends IntegrationTestCase
             ],
             $memoryA->dump(),
         );
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 2, 'group' => 'B'],
                 ['id' => 4, 'group' => 'B'],

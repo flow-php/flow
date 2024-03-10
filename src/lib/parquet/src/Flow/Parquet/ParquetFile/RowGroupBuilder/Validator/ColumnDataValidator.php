@@ -1,14 +1,12 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\RowGroupBuilder\Validator;
 
 use Flow\Parquet\Exception\ValidationException;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\Validator;
-use Flow\Parquet\ParquetFile\Schema\Column;
-use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Flow\Parquet\ParquetFile\Schema\LogicalType;
-use Flow\Parquet\ParquetFile\Schema\PhysicalType;
-use Flow\Parquet\ParquetFile\Schema\Repetition;
+use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn, LogicalType, PhysicalType, Repetition};
 
 final class ColumnDataValidator implements Validator
 {

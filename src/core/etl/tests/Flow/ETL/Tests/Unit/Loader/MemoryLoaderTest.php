@@ -4,14 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Loader;
 
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\str_entry;
-use function Flow\ETL\DSL\to_memory;
-use Flow\ETL\Config;
-use Flow\ETL\FlowContext;
+use function Flow\ETL\DSL\{int_entry, str_entry, to_memory};
 use Flow\ETL\Memory\ArrayMemory;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use Flow\ETL\{Config, FlowContext, Row, Rows};
 use PHPUnit\Framework\TestCase;
 
 final class MemoryLoaderTest extends TestCase
@@ -27,6 +22,6 @@ final class MemoryLoaderTest extends TestCase
 
         to_memory($memory)->load($rows, new FlowContext(Config::default()));
 
-        $this->assertEquals($rows->toArray(), $memory->dump());
+        self::assertEquals($rows->toArray(), $memory->dump());
     }
 }

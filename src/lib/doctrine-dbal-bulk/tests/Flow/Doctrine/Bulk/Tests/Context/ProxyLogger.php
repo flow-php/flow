@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk\Tests\Context;
 
-use Psr\Log\AbstractLogger;
-use Psr\Log\LoggerAwareInterface;
-use Psr\Log\LoggerAwareTrait;
-use Psr\Log\NullLogger;
+use Psr\Log\{AbstractLogger, LoggerAwareInterface, LoggerAwareTrait, NullLogger};
 
 final class ProxyLogger extends AbstractLogger implements LoggerAwareInterface
 {

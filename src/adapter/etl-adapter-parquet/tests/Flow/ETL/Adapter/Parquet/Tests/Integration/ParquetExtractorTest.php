@@ -1,17 +1,16 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Integration;
 
 use function Flow\ETL\Adapter\Parquet\to_parquet;
 use function Flow\ETL\DSL\from_array;
 use Flow\ETL\Adapter\Parquet\ParquetExtractor;
-use Flow\ETL\Config;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Filesystem\Path;
-use Flow\ETL\Flow;
-use Flow\ETL\FlowContext;
-use Flow\Parquet\Options;
-use Flow\Parquet\Reader;
+use Flow\ETL\{Config, Flow, FlowContext};
+use Flow\Parquet\{Options, Reader};
 use PHPUnit\Framework\TestCase;
 
 final class ParquetExtractorTest extends TestCase
@@ -31,7 +30,7 @@ final class ParquetExtractorTest extends TestCase
         $extractor = new ParquetExtractor(Path::realpath($path), Options::default());
         $extractor->changeLimit(2);
 
-        $this->assertCount(
+        self::assertCount(
             2,
             \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
         );
@@ -47,7 +46,7 @@ final class ParquetExtractorTest extends TestCase
             offset: $totalRows - 100
         );
 
-        $this->assertCount(
+        self::assertCount(
             100,
             \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
         );
@@ -69,15 +68,15 @@ final class ParquetExtractorTest extends TestCase
 
         $generator = $extractor->extract(new FlowContext(Config::default()));
 
-        $this->assertSame([['id' => 1]], $generator->current()->toArray());
-        $this->assertTrue($generator->valid());
+        self::assertSame([['id' => 1]], $generator->current()->toArray());
+        self::assertTrue($generator->valid());
         $generator->next();
-        $this->assertSame([['id' => 2]], $generator->current()->toArray());
-        $this->assertTrue($generator->valid());
+        self::assertSame([['id' => 2]], $generator->current()->toArray());
+        self::assertTrue($generator->valid());
         $generator->next();
-        $this->assertSame([['id' => 3]], $generator->current()->toArray());
-        $this->assertTrue($generator->valid());
+        self::assertSame([['id' => 3]], $generator->current()->toArray());
+        self::assertTrue($generator->valid());
         $generator->send(Signal::STOP);
-        $this->assertFalse($generator->valid());
+        self::assertFalse($generator->valid());
     }
 }

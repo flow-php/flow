@@ -4,17 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Avro\Tests\Unit;
 
-use function Flow\ETL\DSL\type_object;
-use function Flow\ETL\DSL\type_string;
+use function Flow\ETL\DSL\{type_object, type_string};
 use Flow\ETL\Adapter\Avro\FlixTech\SchemaConverter;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
-use Flow\ETL\PHP\Type\Logical\ListType;
-use Flow\ETL\PHP\Type\Logical\Map\MapKey;
-use Flow\ETL\PHP\Type\Logical\Map\MapValue;
-use Flow\ETL\PHP\Type\Logical\MapType;
+use Flow\ETL\PHP\Type\Logical\Map\{MapKey, MapValue};
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
-use Flow\ETL\PHP\Type\Logical\StructureType;
+use Flow\ETL\PHP\Type\Logical\{ListType, MapType, StructureType};
 use Flow\ETL\Row\Schema;
 use PHPUnit\Framework\TestCase;
 
@@ -22,7 +18,7 @@ final class SchemaConverterTest extends TestCase
 {
     public function test_convert_etl_entries_to_avro_json() : void
     {
-        $this->assertSame(
+        self::assertSame(
             <<<'AVRO_JSON'
 {"name":"row","type":"record","fields":[{"name":"integer","type":"int"},{"name":"boolean","type":"boolean"},{"name":"string","type":"string"},{"name":"float","type":"float"},{"name":"datetime","type":"long","logicalType":"timestamp-micros"},{"name":"json","type":"string"},{"name":"list","type":{"type":"array","items":"string"}},{"name":"structure","type":{"name":"Structure","type":"record","fields":[{"name":"a","type":"string"}]}},{"name":"map","type":{"type":"map","values":"int"}}]}
 AVRO_JSON

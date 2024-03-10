@@ -1,11 +1,12 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Meilisearch\Tests\Double\Spy;
 
 use Nyholm\Psr7\Response;
 use Psr\Http\Client\ClientInterface;
-use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\{RequestInterface, ResponseInterface};
 
 final class HttpClientSpy implements ClientInterface
 {

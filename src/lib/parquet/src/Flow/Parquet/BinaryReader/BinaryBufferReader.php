@@ -1,10 +1,10 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Parquet\BinaryReader;
 
-use Flow\Parquet\BinaryReader;
-use Flow\Parquet\ByteOrder;
-use Flow\Parquet\DataSize;
+use Flow\Parquet\{BinaryReader, ByteOrder, DataSize};
 
 final class BinaryBufferReader implements BinaryReader
 {

@@ -4,13 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type;
 
-use function Flow\ETL\DSL\get_type;
-use function Flow\ETL\DSL\type_boolean;
-use function Flow\ETL\DSL\type_datetime;
-use function Flow\ETL\DSL\type_float;
-use function Flow\ETL\DSL\type_integer;
-use function Flow\ETL\DSL\type_json;
-use function Flow\ETL\DSL\type_uuid;
+use function Flow\ETL\DSL\{get_type, type_boolean, type_datetime, type_float, type_integer, type_json, type_uuid};
 use Flow\ETL\PHP\Type\Caster\StringCastingHandler\StringTypeChecker;
 
 final class AutoCaster

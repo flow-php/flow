@@ -6,14 +6,12 @@ namespace Flow\ETL\Adapter\HTTP\Tests\Integration;
 
 use Flow\ETL\Adapter\Http\DynamicExtractor\NextRequestFactory;
 use Flow\ETL\Adapter\Http\PsrHttpClientDynamicExtractor;
-use Flow\ETL\Config;
-use Flow\ETL\FlowContext;
+use Flow\ETL\{Config, FlowContext};
 use Http\Mock\Client;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\Response;
 use PHPUnit\Framework\TestCase;
-use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\{RequestInterface, ResponseInterface};
 
 final class PsrHttpClientDynamicExtractorTest extends TestCase
 {
@@ -48,14 +46,14 @@ final class PsrHttpClientDynamicExtractorTest extends TestCase
 
         $body = \json_decode($rows->current()->first()->valueOf('response_body'), true, 512, JSON_THROW_ON_ERROR);
 
-        $this->assertSame(1, $rows->current()->count());
-        $this->assertSame('flow-php', $body['login'], \json_encode($body, JSON_THROW_ON_ERROR));
-        $this->assertSame(73_495_297, $body['id'], \json_encode($body, JSON_THROW_ON_ERROR));
-        $this->assertSame(['GitHub.com'], $rows->current()->first()->valueOf('response_headers')['Server']);
-        $this->assertSame(200, $rows->current()->first()->valueOf('response_status_code'));
-        $this->assertSame('1.1', $rows->current()->first()->valueOf('response_protocol_version'));
-        $this->assertSame('OK', $rows->current()->first()->valueOf('response_reason_phrase'));
-        $this->assertSame('https://api.github.com/orgs/flow-php', $rows->current()->first()->valueOf('request_uri'));
-        $this->assertSame('GET', $rows->current()->first()->valueOf('request_method'));
+        self::assertSame(1, $rows->current()->count());
+        self::assertSame('flow-php', $body['login'], \json_encode($body, JSON_THROW_ON_ERROR));
+        self::assertSame(73_495_297, $body['id'], \json_encode($body, JSON_THROW_ON_ERROR));
+        self::assertSame(['GitHub.com'], $rows->current()->first()->valueOf('response_headers')['Server']);
+        self::assertSame(200, $rows->current()->first()->valueOf('response_status_code'));
+        self::assertSame('1.1', $rows->current()->first()->valueOf('response_protocol_version'));
+        self::assertSame('OK', $rows->current()->first()->valueOf('response_reason_phrase'));
+        self::assertSame('https://api.github.com/orgs/flow-php', $rows->current()->first()->valueOf('request_uri'));
+        self::assertSame('GET', $rows->current()->first()->valueOf('request_method'));
     }
 }

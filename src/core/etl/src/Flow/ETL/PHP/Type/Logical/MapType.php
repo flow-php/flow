@@ -1,10 +1,11 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type\Logical;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Logical\Map\MapKey;
-use Flow\ETL\PHP\Type\Logical\Map\MapValue;
+use Flow\ETL\PHP\Type\Logical\Map\{MapKey, MapValue};
 use Flow\ETL\PHP\Type\Native\NullType;
 use Flow\ETL\PHP\Type\Type;
 

@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\array_entry;
-use function Flow\ETL\DSL\array_key_rename;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\{array_entry, array_key_rename, int_entry, ref};
 use Flow\ArrayDot\Exception\InvalidPathException;
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;
@@ -20,7 +17,7 @@ final class ArrayKeyRenameTest extends TestCase
             int_entry('integer_entry', 1),
         );
 
-        $this->assertNull(array_key_rename(ref('integer_entry'), 'invalid_path', 'new_name')->eval($row));
+        self::assertNull(array_key_rename(ref('integer_entry'), 'invalid_path', 'new_name')->eval($row));
     }
 
     public function test_renames_array_entry_keys_in_multiple_array_entry() : void
@@ -39,7 +36,7 @@ final class ArrayKeyRenameTest extends TestCase
             ]),
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 'first_name' => 'John',
                 'last' => 'Snow',
@@ -47,7 +44,7 @@ final class ArrayKeyRenameTest extends TestCase
             array_key_rename(ref('customer'), 'first', 'first_name')->eval($row)
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 'address' => [
                     'street' => '3644 Clement Street',
@@ -71,7 +68,7 @@ final class ArrayKeyRenameTest extends TestCase
             ]),
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 'id' => 1,
                 'status' => 'PENDING',

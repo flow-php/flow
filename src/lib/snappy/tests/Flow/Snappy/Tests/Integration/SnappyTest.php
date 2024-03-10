@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Snappy\Tests\Integration;
 
@@ -11,14 +13,14 @@ final class SnappyTest extends TestCase
     public function test_decompress_text_compressed_with_extension() : void
     {
         if (!\function_exists('snappy_compress')) {
-            $this->markTestSkipped('Snappy extension is not installed');
+            self::markTestSkipped('Snappy extension is not installed');
         }
 
         $string = 'This is some random string with UTF-8 characters: ąęćźżół';
 
         $snappy = new Snappy();
 
-        $this->assertSame(
+        self::assertSame(
             $string,
             $snappy->uncompress(\snappy_compress($string))
         );
@@ -27,14 +29,14 @@ final class SnappyTest extends TestCase
     public function test_decompress_with_extension_text_compressed_with_library() : void
     {
         if (!\function_exists('snappy_uncompress')) {
-            $this->markTestSkipped('Snappy extension is not installed');
+            self::markTestSkipped('Snappy extension is not installed');
         }
 
         $string = 'This is some random string with UTF-8 characters: ąęćźżół';
 
         $snappy = new Snappy();
 
-        $this->assertSame(
+        self::assertSame(
             $string,
             \snappy_uncompress($snappy->compress($string))
         );
@@ -46,7 +48,7 @@ final class SnappyTest extends TestCase
 
         $snappy = new Snappy();
 
-        $this->assertSame(
+        self::assertSame(
             $string,
             $snappy->uncompress($snappy->compress($string))
         );
@@ -58,7 +60,7 @@ final class SnappyTest extends TestCase
 
         $snappy = new Snappy();
 
-        $this->assertSame(
+        self::assertSame(
             $string,
             $snappy->uncompress($snappy->compress($string))
         );
@@ -71,7 +73,7 @@ final class SnappyTest extends TestCase
         for ($iteration = 0; $iteration < 100; $iteration++) {
             $string = Factory::create()->text(\random_int(10, 1000));
 
-            $this->assertSame(
+            self::assertSame(
                 $string,
                 $snappy->uncompress($snappy->compress($string)),
                 'Snappy compression/decomression failed at ' . $iteration . ' iteration, with text: "' . $string . '"'
@@ -85,7 +87,7 @@ final class SnappyTest extends TestCase
 
         $snappy = new Snappy();
 
-        $this->assertSame(
+        self::assertSame(
             $string,
             $snappy->uncompress($snappy->compress($string))
         );

@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\ParquetFile\RowGroupBuilder;
 
@@ -20,11 +22,11 @@ final class ColumnChunkStatisticsTest extends TestCase
         $statistics->add(false);
         $statistics->add(null);
 
-        $this->assertFalse($statistics->min());
-        $this->assertTrue($statistics->max());
-        $this->assertSame(7, $statistics->valuesCount());
-        $this->assertSame(2, $statistics->distinctCount());
-        $this->assertSame(1, $statistics->nullCount());
+        self::assertFalse($statistics->min());
+        self::assertTrue($statistics->max());
+        self::assertSame(7, $statistics->valuesCount());
+        self::assertSame(2, $statistics->distinctCount());
+        self::assertSame(1, $statistics->nullCount());
     }
 
     public function test_statistics_for_date() : void
@@ -39,11 +41,11 @@ final class ColumnChunkStatisticsTest extends TestCase
         $statistics->add(new \DateTimeImmutable('2020-01-05'));
         $statistics->add(null);
 
-        $this->assertSame('2020-01-01', $statistics->min()->format('Y-m-d'));
-        $this->assertSame('2020-01-05', $statistics->max()->format('Y-m-d'));
-        $this->assertSame(7, $statistics->valuesCount());
-        $this->assertSame(5, $statistics->distinctCount());
-        $this->assertSame(1, $statistics->nullCount());
+        self::assertSame('2020-01-01', $statistics->min()->format('Y-m-d'));
+        self::assertSame('2020-01-05', $statistics->max()->format('Y-m-d'));
+        self::assertSame(7, $statistics->valuesCount());
+        self::assertSame(5, $statistics->distinctCount());
+        self::assertSame(1, $statistics->nullCount());
     }
 
     public function test_statistics_for_decimal() : void
@@ -58,11 +60,11 @@ final class ColumnChunkStatisticsTest extends TestCase
         $statistics->add('5.5');
         $statistics->add(null);
 
-        $this->assertSame('1.1', $statistics->min());
-        $this->assertSame('5.5', $statistics->max());
-        $this->assertSame(7, $statistics->valuesCount());
-        $this->assertSame(5, $statistics->distinctCount());
-        $this->assertSame(1, $statistics->nullCount());
+        self::assertSame('1.1', $statistics->min());
+        self::assertSame('5.5', $statistics->max());
+        self::assertSame(7, $statistics->valuesCount());
+        self::assertSame(5, $statistics->distinctCount());
+        self::assertSame(1, $statistics->nullCount());
     }
 
     public function test_statistics_for_double() : void
@@ -77,11 +79,11 @@ final class ColumnChunkStatisticsTest extends TestCase
         $statistics->add(5.5);
         $statistics->add(null);
 
-        $this->assertSame(1.1, $statistics->min());
-        $this->assertSame(5.5, $statistics->max());
-        $this->assertSame(7, $statistics->valuesCount());
-        $this->assertSame(5, $statistics->distinctCount());
-        $this->assertSame(1, $statistics->nullCount());
+        self::assertSame(1.1, $statistics->min());
+        self::assertSame(5.5, $statistics->max());
+        self::assertSame(7, $statistics->valuesCount());
+        self::assertSame(5, $statistics->distinctCount());
+        self::assertSame(1, $statistics->nullCount());
     }
 
     public function test_statistics_for_enum() : void
@@ -96,11 +98,11 @@ final class ColumnChunkStatisticsTest extends TestCase
         $statistics->add('e');
         $statistics->add(null);
 
-        $this->assertSame('a', $statistics->min());
-        $this->assertSame('e', $statistics->max());
-        $this->assertSame(7, $statistics->valuesCount());
-        $this->assertSame(5, $statistics->distinctCount());
-        $this->assertSame(1, $statistics->nullCount());
+        self::assertSame('a', $statistics->min());
+        self::assertSame('e', $statistics->max());
+        self::assertSame(7, $statistics->valuesCount());
+        self::assertSame(5, $statistics->distinctCount());
+        self::assertSame(1, $statistics->nullCount());
     }
 
     public function test_statistics_for_float() : void
@@ -115,11 +117,11 @@ final class ColumnChunkStatisticsTest extends TestCase
         $statistics->add(5.5);
         $statistics->add(null);
 
-        $this->assertSame(1.1, $statistics->min());
-        $this->assertSame(5.5, $statistics->max());
-        $this->assertSame(7, $statistics->valuesCount());
-        $this->assertSame(5, $statistics->distinctCount());
-        $this->assertSame(1, $statistics->nullCount());
+        self::assertSame(1.1, $statistics->min());
+        self::assertSame(5.5, $statistics->max());
+        self::assertSame(7, $statistics->valuesCount());
+        self::assertSame(5, $statistics->distinctCount());
+        self::assertSame(1, $statistics->nullCount());
     }
 
     public function test_statistics_for_int32() : void
@@ -134,11 +136,11 @@ final class ColumnChunkStatisticsTest extends TestCase
         $statistics->add(5);
         $statistics->add(null);
 
-        $this->assertSame(1, $statistics->min());
-        $this->assertSame(5, $statistics->max());
-        $this->assertSame(7, $statistics->valuesCount());
-        $this->assertSame(5, $statistics->distinctCount());
-        $this->assertSame(1, $statistics->nullCount());
+        self::assertSame(1, $statistics->min());
+        self::assertSame(5, $statistics->max());
+        self::assertSame(7, $statistics->valuesCount());
+        self::assertSame(5, $statistics->distinctCount());
+        self::assertSame(1, $statistics->nullCount());
     }
 
     public function test_statistics_for_int64() : void
@@ -153,11 +155,11 @@ final class ColumnChunkStatisticsTest extends TestCase
         $statistics->add(5);
         $statistics->add(null);
 
-        $this->assertSame(1, $statistics->min());
-        $this->assertSame(5, $statistics->max());
-        $this->assertSame(7, $statistics->valuesCount());
-        $this->assertSame(5, $statistics->distinctCount());
-        $this->assertSame(1, $statistics->nullCount());
+        self::assertSame(1, $statistics->min());
+        self::assertSame(5, $statistics->max());
+        self::assertSame(7, $statistics->valuesCount());
+        self::assertSame(5, $statistics->distinctCount());
+        self::assertSame(1, $statistics->nullCount());
     }
 
     public function test_statistics_for_json() : void
@@ -172,11 +174,11 @@ final class ColumnChunkStatisticsTest extends TestCase
         $statistics->add('{"e":5}');
         $statistics->add(null);
 
-        $this->assertSame('{"a":1}', $statistics->min());
-        $this->assertSame('{"e":5}', $statistics->max());
-        $this->assertSame(7, $statistics->valuesCount());
-        $this->assertSame(5, $statistics->distinctCount());
-        $this->assertSame(1, $statistics->nullCount());
+        self::assertSame('{"a":1}', $statistics->min());
+        self::assertSame('{"e":5}', $statistics->max());
+        self::assertSame(7, $statistics->valuesCount());
+        self::assertSame(5, $statistics->distinctCount());
+        self::assertSame(1, $statistics->nullCount());
     }
 
     public function test_statistics_for_string() : void
@@ -191,11 +193,11 @@ final class ColumnChunkStatisticsTest extends TestCase
         $statistics->add('e');
         $statistics->add(null);
 
-        $this->assertSame('a', $statistics->min());
-        $this->assertSame('e', $statistics->max());
-        $this->assertSame(7, $statistics->valuesCount());
-        $this->assertSame(5, $statistics->distinctCount());
-        $this->assertSame(1, $statistics->nullCount());
+        self::assertSame('a', $statistics->min());
+        self::assertSame('e', $statistics->max());
+        self::assertSame(7, $statistics->valuesCount());
+        self::assertSame(5, $statistics->distinctCount());
+        self::assertSame(1, $statistics->nullCount());
     }
 
     public function test_statistics_for_time() : void
@@ -210,11 +212,11 @@ final class ColumnChunkStatisticsTest extends TestCase
         $statistics->add(new \DateInterval('PT5S'));
         $statistics->add(null);
 
-        $this->assertSame('PT01S', $statistics->min()->format('PT%SS'));
-        $this->assertSame('PT05S', $statistics->max()->format('PT%SS'));
-        $this->assertSame(7, $statistics->valuesCount());
-        $this->assertSame(5, $statistics->distinctCount());
-        $this->assertSame(1, $statistics->nullCount());
+        self::assertSame('PT01S', $statistics->min()->format('PT%SS'));
+        self::assertSame('PT05S', $statistics->max()->format('PT%SS'));
+        self::assertSame(7, $statistics->valuesCount());
+        self::assertSame(5, $statistics->distinctCount());
+        self::assertSame(1, $statistics->nullCount());
     }
 
     public function test_statistics_for_uuid() : void
@@ -229,10 +231,10 @@ final class ColumnChunkStatisticsTest extends TestCase
         $statistics->add('00000000-0000-0000-0000-000000000004');
         $statistics->add(null);
 
-        $this->assertSame('00000000-0000-0000-0000-000000000000', $statistics->min());
-        $this->assertSame('00000000-0000-0000-0000-000000000004', $statistics->max());
-        $this->assertSame(7, $statistics->valuesCount());
-        $this->assertSame(5, $statistics->distinctCount());
-        $this->assertSame(1, $statistics->nullCount());
+        self::assertSame('00000000-0000-0000-0000-000000000000', $statistics->min());
+        self::assertSame('00000000-0000-0000-0000-000000000004', $statistics->max());
+        self::assertSame(7, $statistics->valuesCount());
+        self::assertSame(5, $statistics->distinctCount());
+        self::assertSame(1, $statistics->nullCount());
     }
 }

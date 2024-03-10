@@ -8,8 +8,7 @@ use function Flow\ETL\DSL\array_to_rows;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Extractor;
-use Flow\ETL\FlowContext;
+use Flow\ETL\{Extractor, FlowContext};
 
 final class DbalLimitOffsetExtractor implements Extractor
 {

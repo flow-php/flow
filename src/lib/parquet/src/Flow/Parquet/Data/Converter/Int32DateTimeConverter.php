@@ -1,13 +1,13 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Parquet\Data\Converter;
 
 use Flow\Parquet\Data\Converter;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\Options;
-use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Flow\Parquet\ParquetFile\Schema\LogicalType;
-use Flow\Parquet\ParquetFile\Schema\PhysicalType;
+use Flow\Parquet\ParquetFile\Schema\{FlatColumn, LogicalType, PhysicalType};
 
 final class Int32DateTimeConverter implements Converter
 {

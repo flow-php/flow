@@ -4,23 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\CSV\Tests\Integration;
 
-use function Flow\ETL\Adapter\CSV\from_csv;
-use function Flow\ETL\Adapter\CSV\to_csv;
-use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\print_schema;
-use function Flow\ETL\DSL\ref;
+use function Flow\ETL\Adapter\CSV\{from_csv, to_csv};
+use function Flow\ETL\DSL\{df, from_array, print_schema, ref};
 use Flow\ETL\Adapter\CSV\CSVExtractor;
-use Flow\ETL\Config;
-use Flow\ETL\ConfigBuilder;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Extractor\Signal;
-use Flow\ETL\Filesystem\LocalFilesystem;
-use Flow\ETL\Filesystem\Path;
-use Flow\ETL\Flow;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use Flow\ETL\Filesystem\{LocalFilesystem, Path};
+use Flow\ETL\{Config, ConfigBuilder, Flow, FlowContext, Row, Rows};
 use PHPUnit\Framework\TestCase;
 
 final class CSVExtractorTest extends TestCase
@@ -32,7 +22,7 @@ final class CSVExtractorTest extends TestCase
             empty_to_null: false,
         );
 
-        $this->assertSame(
+        self::assertSame(
             [
                 [
                     [
@@ -64,7 +54,7 @@ final class CSVExtractorTest extends TestCase
             __DIR__ . '/../Fixtures/file_with_empty_columns.csv'
         );
 
-        $this->assertSame(
+        self::assertSame(
             [
                 [
                     [
@@ -94,7 +84,7 @@ final class CSVExtractorTest extends TestCase
             __DIR__ . '/../Fixtures/file_with_empty_headers.csv'
         );
 
-        $this->assertSame(
+        self::assertSame(
             [
                 [
                     ['e00' => null, 'name' => null, 'active' => 'false'],
@@ -133,7 +123,7 @@ final class CSVExtractorTest extends TestCase
             $total += $rows->count();
         }
 
-        $this->assertSame(1998, $total);
+        self::assertSame(1998, $total);
     }
 
     public function test_extracting_csv_files_with_header() : void
@@ -145,7 +135,7 @@ final class CSVExtractorTest extends TestCase
             ->fetch();
 
         foreach ($rows as $row) {
-            $this->assertSame(
+            self::assertSame(
                 [
                     'Year',
                     'Industry_aggregation_NZSIOC',
@@ -163,7 +153,7 @@ final class CSVExtractorTest extends TestCase
             );
         }
 
-        $this->assertSame(998, $rows->count());
+        self::assertSame(998, $rows->count());
     }
 
     public function test_extracting_csv_files_with_schema() : void
@@ -180,7 +170,7 @@ final class CSVExtractorTest extends TestCase
             ->fetch();
 
         foreach ($rows as $row) {
-            $this->assertSame(
+            self::assertSame(
                 [
                     'Year',
                     'Industry_aggregation_NZSIOC',
@@ -198,10 +188,10 @@ final class CSVExtractorTest extends TestCase
             );
         }
 
-        $this->assertSame(998, $rows->count());
-        $this->assertEquals($schema, $rows->schema());
+        self::assertSame(998, $rows->count());
+        self::assertEquals($schema, $rows->schema());
 
-        $this->assertSame(
+        self::assertSame(
             <<<'SCHEMA'
 schema
 |-- Year: integer
@@ -241,7 +231,7 @@ SCHEMA,
             $total += $rows->count();
         }
 
-        $this->assertSame(999, $total);
+        self::assertSame(999, $total);
     }
 
     public function test_extracting_csv_with_corrupted_row() : void
@@ -250,7 +240,7 @@ SCHEMA,
             ->extract(from_csv(__DIR__ . '/../Fixtures/corrupted_row.csv'))
             ->fetch();
 
-        $this->assertSame(3, $rows->count());
+        self::assertSame(3, $rows->count());
     }
 
     public function test_extracting_csv_with_more_columns_than_headers() : void
@@ -272,7 +262,7 @@ SCHEMA,
             $total += $rows->count();
         }
 
-        $this->assertSame(1, $total);
+        self::assertSame(1, $total);
     }
 
     public function test_extracting_csv_with_more_headers_than_columns() : void
@@ -294,12 +284,12 @@ SCHEMA,
             $total += $rows->count();
         }
 
-        $this->assertSame(1, $total);
+        self::assertSame(1, $total);
     }
 
     public function test_extracting_csv_with_more_than_1000_characters_per_line_splits_rows() : void
     {
-        $this->assertCount(
+        self::assertCount(
             2,
             df()
                 ->read(from_csv(__DIR__ . '/../Fixtures/more_than_1000_characters_per_line.csv'))
@@ -311,7 +301,7 @@ SCHEMA,
 
     public function test_extracting_csv_with_more_than_1000_characters_per_line_with_increased_read_in_line_option() : void
     {
-        $this->assertCount(
+        self::assertCount(
             1,
             df()
                 ->read(from_csv(__DIR__ . '/../Fixtures/more_than_1000_characters_per_line.csv', characters_read_in_line: 2000))
@@ -336,7 +326,7 @@ SCHEMA,
         $extractor = new CSVExtractor(Path::realpath($path));
         $extractor->changeLimit(2);
 
-        $this->assertCount(
+        self::assertCount(
             2,
             \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
         );
@@ -352,7 +342,7 @@ SCHEMA,
 
     public function test_loading_data_from_all_partitions() : void
     {
-        $this->assertSame(
+        self::assertSame(
             [
                 ['group' => '1', 'id' => 1, 'value' => 'a'],
                 ['group' => '1', 'id' => 2, 'value' => 'b'],
@@ -374,7 +364,7 @@ SCHEMA,
 
     public function test_loading_data_from_all_with_local_fs() : void
     {
-        $this->assertSame(
+        self::assertSame(
             [
                 ['group' => '1', 'id' => 1, 'value' => 'a'],
                 ['group' => '1', 'id' => 2, 'value' => 'b'],
@@ -410,15 +400,15 @@ SCHEMA,
 
         $generator = $extractor->extract(new FlowContext(Config::default()));
 
-        $this->assertSame([['id' => '1']], $generator->current()->toArray());
-        $this->assertTrue($generator->valid());
+        self::assertSame([['id' => '1']], $generator->current()->toArray());
+        self::assertTrue($generator->valid());
         $generator->next();
-        $this->assertSame([['id' => '2']], $generator->current()->toArray());
-        $this->assertTrue($generator->valid());
+        self::assertSame([['id' => '2']], $generator->current()->toArray());
+        self::assertTrue($generator->valid());
         $generator->next();
-        $this->assertSame([['id' => '3']], $generator->current()->toArray());
-        $this->assertTrue($generator->valid());
+        self::assertSame([['id' => '3']], $generator->current()->toArray());
+        self::assertTrue($generator->valid());
         $generator->send(Signal::STOP);
-        $this->assertFalse($generator->valid());
+        self::assertFalse($generator->valid());
     }
 }

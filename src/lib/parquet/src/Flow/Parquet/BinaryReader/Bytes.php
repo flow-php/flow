@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\BinaryReader;
 
-use Flow\Parquet\ByteOrder;
-use Flow\Parquet\DataSize;
+use Flow\Parquet\{ByteOrder, DataSize};
 
 final class Bytes implements \ArrayAccess, \Countable, \IteratorAggregate
 {

@@ -4,13 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use function Flow\ETL\DSL\float_entry;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\null_entry;
+use function Flow\ETL\DSL\{float_entry, int_entry, null_entry};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
-use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\{Entry, Reference};
 
 final class Max implements AggregatingFunction
 {

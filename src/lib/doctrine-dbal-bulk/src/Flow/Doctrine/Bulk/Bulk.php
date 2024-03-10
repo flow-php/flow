@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk;
 
-use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\Exception;
+use Doctrine\DBAL\{Connection, Exception};
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
 use Flow\Doctrine\Bulk\QueryFactory\DbalQueryFactory;
 

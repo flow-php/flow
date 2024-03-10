@@ -1,10 +1,11 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\Extractor;
 
 use function Flow\ETL\DSL\array_to_rows;
-use Flow\ETL\Extractor;
-use Flow\ETL\FlowContext;
+use Flow\ETL\{Extractor, FlowContext};
 
 final class ArrayExtractor implements Extractor
 {

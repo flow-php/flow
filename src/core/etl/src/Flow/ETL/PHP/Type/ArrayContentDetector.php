@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type;
 
-use function Flow\ETL\DSL\type_array;
-use function Flow\ETL\DSL\type_null;
+use function Flow\ETL\DSL\{type_array, type_null};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Native\ScalarType;
 

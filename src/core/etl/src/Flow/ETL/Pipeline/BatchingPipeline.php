@@ -1,15 +1,12 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\Pipeline;
 
-use function Flow\ETL\DSL\chunks_from;
-use function Flow\ETL\DSL\from_pipeline;
+use function Flow\ETL\DSL\{chunks_from, from_pipeline};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Extractor;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Loader;
-use Flow\ETL\Pipeline;
-use Flow\ETL\Transformer;
+use Flow\ETL\{Extractor, FlowContext, Loader, Pipeline, Transformer};
 
 final class BatchingPipeline implements OverridingPipeline, Pipeline
 {

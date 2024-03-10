@@ -1,9 +1,10 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Pipeline;
 
-use function Flow\ETL\Adapter\CSV\from_csv;
-use function Flow\ETL\Adapter\CSV\to_csv;
+use function Flow\ETL\Adapter\CSV\{from_csv, to_csv};
 use function Flow\ETL\DSL\from_array;
 use Flow\ETL\Flow;
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
@@ -30,7 +31,7 @@ final class SynchronousPipelineTest extends IntegrationTestCase
             ->write(to_csv($path))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             3,
             (new Flow())
                 ->read(from_csv($path))

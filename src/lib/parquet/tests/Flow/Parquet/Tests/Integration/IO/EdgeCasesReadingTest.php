@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\IO;
 
@@ -19,7 +21,7 @@ final class EdgeCasesReadingTest extends TestCase
             $rows[] = $row;
         }
 
-        $this->assertSame(
+        self::assertSame(
             [
                 [
                     'ID' => null,
@@ -98,7 +100,7 @@ final class EdgeCasesReadingTest extends TestCase
             $rows[] = $row;
         }
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['emptylist' => null],
             ],
@@ -118,7 +120,7 @@ final class EdgeCasesReadingTest extends TestCase
             $rows[] = $row;
         }
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['emptylist' => null],
             ],

@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\any;
-use function Flow\ETL\DSL\lit;
-use function Flow\ETL\DSL\null_entry;
-use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\{any, lit, null_entry, ref};
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;
 
@@ -15,28 +12,28 @@ final class AnyTest extends TestCase
 {
     public function test_any_expression_on_boolean_false_value() : void
     {
-        $this->assertFalse(
+        self::assertFalse(
             any(lit(false))->eval(Row::create())
         );
     }
 
     public function test_any_expression_on_boolean_true_value() : void
     {
-        $this->assertTrue(
+        self::assertTrue(
             any(lit(true))->eval(Row::create())
         );
     }
 
     public function test_any_expression_on_is_null_expression() : void
     {
-        $this->assertTrue(
+        self::assertTrue(
             any(ref('value')->isNull())->eval(Row::create(null_entry('value')))
         );
     }
 
     public function test_any_expression_on_multiple_boolean_values() : void
     {
-        $this->assertTrue(
+        self::assertTrue(
             any(lit(false), lit(true), lit(false))->eval(Row::create())
         );
     }

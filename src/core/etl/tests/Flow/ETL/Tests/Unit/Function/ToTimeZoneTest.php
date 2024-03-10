@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\lit;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\str_entry;
-use function Flow\ETL\DSL\to_timezone;
+use function Flow\ETL\DSL\{lit, ref, str_entry, to_timezone};
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;
 
@@ -15,7 +12,7 @@ final class ToTimeZoneTest extends TestCase
 {
     public function test_casting_date_time_pst_to_utc_time_zone() : void
     {
-        $this->assertSame(
+        self::assertSame(
             '2020-01-01 08:00:00.000000',
             to_timezone(
                 lit(new \DateTimeImmutable('2020-01-01 00:00:00', new \DateTimeZone('PST'))),
@@ -26,7 +23,7 @@ final class ToTimeZoneTest extends TestCase
 
     public function test_casting_date_time_pst_to_utc_time_zone_from_entry_ref() : void
     {
-        $this->assertSame(
+        self::assertSame(
             '2020-01-01 08:00:00.000000',
             to_timezone(
                 lit(new \DateTimeImmutable('2020-01-01 00:00:00', new \DateTimeZone('PST'))),
@@ -37,7 +34,7 @@ final class ToTimeZoneTest extends TestCase
 
     public function test_casting_date_time_pst_to_utc_time_zone_from_string_tz() : void
     {
-        $this->assertSame(
+        self::assertSame(
             '2020-01-01 08:00:00.000000',
             to_timezone(
                 lit(new \DateTimeImmutable('2020-01-01 00:00:00', new \DateTimeZone('PST'))),

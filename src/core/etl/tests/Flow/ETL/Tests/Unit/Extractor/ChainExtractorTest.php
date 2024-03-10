@@ -4,13 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Extractor;
 
-use function Flow\ETL\DSL\from_all;
-use function Flow\ETL\DSL\int_entry;
-use Flow\ETL\Config;
-use Flow\ETL\Extractor;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use function Flow\ETL\DSL\{from_all, int_entry};
+use Flow\ETL\{Config, Extractor, FlowContext, Row, Rows};
 use PHPUnit\Framework\TestCase;
 
 final class ChainExtractorTest extends TestCase
@@ -34,7 +29,7 @@ final class ChainExtractorTest extends TestCase
             },
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 new Rows(Row::create(int_entry('id', 1))),
                 new Rows(Row::create(int_entry('id', 2))),

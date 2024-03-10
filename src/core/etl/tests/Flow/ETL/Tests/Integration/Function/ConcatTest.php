@@ -4,12 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Function;
 
-use function Flow\ETL\DSL\array_get;
-use function Flow\ETL\DSL\concat;
-use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\lit;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\to_memory;
+use function Flow\ETL\DSL\{array_get, concat, from_array, lit, ref, to_memory};
 use Flow\ETL\Flow;
 use Flow\ETL\Memory\ArrayMemory;
 use PHPUnit\Framework\TestCase;
@@ -31,7 +26,7 @@ final class ConcatTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'concat' => null],
                 ['id' => 2, 'concat' => null],
@@ -56,7 +51,7 @@ final class ConcatTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'concat' => '1-value'],
                 ['id' => 2, 'concat' => null],

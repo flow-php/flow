@@ -4,42 +4,15 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
-use function Flow\ETL\DSL\array_entry;
-use function Flow\ETL\DSL\array_to_rows;
-use function Flow\ETL\DSL\bool_entry;
-use function Flow\ETL\DSL\bool_schema;
-use function Flow\ETL\DSL\datetime_entry;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\list_entry;
-use function Flow\ETL\DSL\null_entry;
-use function Flow\ETL\DSL\partition;
-use function Flow\ETL\DSL\partitions;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\rows_partitioned;
-use function Flow\ETL\DSL\str_entry;
-use function Flow\ETL\DSL\str_schema;
-use function Flow\ETL\DSL\type_int;
-use function Flow\ETL\DSL\type_list;
-use function Flow\ETL\DSL\type_string;
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\RuntimeException;
+use function Flow\ETL\DSL\{array_entry, array_to_rows, bool_entry, bool_schema, datetime_entry, int_entry, int_schema, list_entry, null_entry, partition, partitions, ref, row, rows, rows_partitioned, str_entry, str_schema, type_int, type_list, type_string};
+use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\ListType;
-use Flow\ETL\Row;
-use Flow\ETL\Row\Comparator;
-use Flow\ETL\Row\Comparator\NativeComparator;
-use Flow\ETL\Row\Comparator\WeakObjectComparator;
-use Flow\ETL\Row\Entry\BooleanEntry;
-use Flow\ETL\Row\Entry\DateTimeEntry;
-use Flow\ETL\Row\Entry\NullEntry;
-use Flow\ETL\Row\Entry\ObjectEntry;
-use Flow\ETL\Row\Entry\StringEntry;
-use Flow\ETL\Row\Schema;
+use Flow\ETL\Row\Comparator\{NativeComparator, WeakObjectComparator};
+use Flow\ETL\Row\Entry\{BooleanEntry, DateTimeEntry, NullEntry, ObjectEntry, StringEntry};
 use Flow\ETL\Row\Schema\Definition;
-use Flow\ETL\Rows;
+use Flow\ETL\Row\{Comparator, Schema};
+use Flow\ETL\{Row, Rows};
 use PHPUnit\Framework\TestCase;
 
 final class RowsTest extends TestCase
@@ -137,7 +110,7 @@ final class RowsTest extends TestCase
         $two = row(int_entry('number', 2), new StringEntry('name', 'two'));
         $rows = (rows())->add($one, $two);
 
-        $this->assertEquals(rows($one, $two), $rows);
+        self::assertEquals(rows($one, $two), $rows);
     }
 
     public function test_array_access_exists() : void
@@ -148,8 +121,8 @@ final class RowsTest extends TestCase
             row(int_entry('id', 3)),
         );
 
-        $this->assertTrue(isset($rows[0]));
-        $this->assertFalse(isset($rows[3]));
+        self::assertTrue(isset($rows[0]));
+        self::assertFalse(isset($rows[3]));
     }
 
     public function test_array_access_get() : void
@@ -160,9 +133,9 @@ final class RowsTest extends TestCase
             row(int_entry('id', 3)),
         );
 
-        $this->assertSame(1, $rows[0]->valueOf('id'));
-        $this->assertSame(2, $rows[1]->valueOf('id'));
-        $this->assertSame(3, $rows[2]->valueOf('id'));
+        self::assertSame(1, $rows[0]->valueOf('id'));
+        self::assertSame(2, $rows[1]->valueOf('id'));
+        self::assertSame(3, $rows[2]->valueOf('id'));
     }
 
     public function test_array_access_set() : void
@@ -191,7 +164,7 @@ final class RowsTest extends TestCase
             )
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             rows(
                 row(
                     int_entry('id', 1234),
@@ -213,7 +186,7 @@ final class RowsTest extends TestCase
             )
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             rows(
                 row(
                     int_entry('id', 1234),
@@ -234,7 +207,7 @@ final class RowsTest extends TestCase
             ]
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             rows(
                 row(
                     int_entry('id', 1234),
@@ -264,7 +237,7 @@ final class RowsTest extends TestCase
             )
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             rows(
                 row(
                     int_entry('id', 1234),
@@ -293,7 +266,7 @@ final class RowsTest extends TestCase
             )
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             rows(
                 row(
                     int_entry('id', 1234),
@@ -324,8 +297,8 @@ final class RowsTest extends TestCase
 
         $chunk = \iterator_to_array($rows->chunks(10));
 
-        $this->assertCount(1, $chunk);
-        $this->assertSame([1, 2, 3, 4, 5, 6, 7], $chunk[0]->reduceToArray('id'));
+        self::assertCount(1, $chunk);
+        self::assertSame([1, 2, 3, 4, 5, 6, 7], $chunk[0]->reduceToArray('id'));
     }
 
     public function test_chunks_with_more_than_expected_in_chunk_rows() : void
@@ -345,9 +318,9 @@ final class RowsTest extends TestCase
 
         $chunk = \iterator_to_array($rows->chunks(5));
 
-        $this->assertCount(2, $chunk);
-        $this->assertSame([1, 2, 3, 4, 5], $chunk[0]->reduceToArray('id'));
-        $this->assertSame([6, 7, 8, 9, 10], $chunk[1]->reduceToArray('id'));
+        self::assertCount(2, $chunk);
+        self::assertSame([1, 2, 3, 4, 5], $chunk[0]->reduceToArray('id'));
+        self::assertSame([6, 7, 8, 9, 10], $chunk[1]->reduceToArray('id'));
     }
 
     public function test_drop() : void
@@ -360,9 +333,9 @@ final class RowsTest extends TestCase
 
         $rows = $rows->drop(1);
 
-        $this->assertCount(2, $rows);
-        $this->assertSame(2, $rows[0]->valueOf('id'));
-        $this->assertSame(3, $rows[1]->valueOf('id'));
+        self::assertCount(2, $rows);
+        self::assertSame(2, $rows[0]->valueOf('id'));
+        self::assertSame(3, $rows[1]->valueOf('id'));
     }
 
     public function test_drop_all() : void
@@ -375,7 +348,7 @@ final class RowsTest extends TestCase
 
         $rows = $rows->drop(3);
 
-        $this->assertCount(0, $rows);
+        self::assertCount(0, $rows);
     }
 
     public function test_drop_more_than_exists() : void
@@ -388,7 +361,7 @@ final class RowsTest extends TestCase
 
         $rows = $rows->drop(4);
 
-        $this->assertCount(0, $rows);
+        self::assertCount(0, $rows);
     }
 
     public function test_drop_right() : void
@@ -401,9 +374,9 @@ final class RowsTest extends TestCase
 
         $rows = $rows->dropRight(1);
 
-        $this->assertCount(2, $rows);
-        $this->assertSame(1, $rows[0]->valueOf('id'));
-        $this->assertSame(2, $rows[1]->valueOf('id'));
+        self::assertCount(2, $rows);
+        self::assertSame(1, $rows[0]->valueOf('id'));
+        self::assertSame(2, $rows[1]->valueOf('id'));
     }
 
     public function test_drop_right_all() : void
@@ -416,7 +389,7 @@ final class RowsTest extends TestCase
 
         $rows = $rows->dropRight(3);
 
-        $this->assertCount(0, $rows);
+        self::assertCount(0, $rows);
     }
 
     public function test_drop_right_more_than_available() : void
@@ -429,7 +402,7 @@ final class RowsTest extends TestCase
 
         $rows = $rows->dropRight(5);
 
-        $this->assertCount(0, $rows);
+        self::assertCount(0, $rows);
     }
 
     public function test_drop_right_more_than_exists() : void
@@ -442,13 +415,13 @@ final class RowsTest extends TestCase
 
         $rows = $rows->dropRight(4);
 
-        $this->assertCount(0, $rows);
+        self::assertCount(0, $rows);
     }
 
     public function test_empty_rows() : void
     {
-        $this->assertTrue((rows())->empty());
-        $this->assertFalse((rows(row(int_entry('id', 1))))->empty());
+        self::assertTrue((rows())->empty());
+        self::assertFalse((rows(row(int_entry('id', 1))))->empty());
     }
 
     public function test_filters_out_rows() : void
@@ -464,8 +437,8 @@ final class RowsTest extends TestCase
         $evenRows = fn (Row $row) : bool => $row->get('number')->value() % 2 === 0;
         $oddRows = fn (Row $row) : bool => $row->get('number')->value() % 2 === 1;
 
-        $this->assertEquals(rows($two, $four), $rows->filter($evenRows));
-        $this->assertEquals(rows($one, $three, $five), $rows->filter($oddRows));
+        self::assertEquals(rows($two, $four), $rows->filter($evenRows));
+        self::assertEquals(rows($one, $three, $five), $rows->filter($oddRows));
     }
 
     public function test_find() : void
@@ -478,7 +451,7 @@ final class RowsTest extends TestCase
             $three1 = row(int_entry('number', 3), new StringEntry('name', 'three')),
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             rows(
                 $one,
                 $three
@@ -489,7 +462,7 @@ final class RowsTest extends TestCase
 
     public function test_find_on_empty_rows() : void
     {
-        $this->assertEquals(rows(), (rows())->find(fn (Row $row) => false));
+        self::assertEquals(rows(), (rows())->find(fn (Row $row) => false));
     }
 
     public function test_find_one() : void
@@ -502,13 +475,13 @@ final class RowsTest extends TestCase
             $three1 = row(int_entry('number', 3), new StringEntry('name', 'three')),
         );
 
-        $this->assertSame($three, $rows->findOne(fn (Row $row) : bool => $row->valueOf('number') === 3));
-        $this->assertNotSame($three1, $rows->findOne(fn (Row $row) : bool => $row->valueOf('number') === 3));
+        self::assertSame($three, $rows->findOne(fn (Row $row) : bool => $row->valueOf('number') === 3));
+        self::assertNotSame($three1, $rows->findOne(fn (Row $row) : bool => $row->valueOf('number') === 3));
     }
 
     public function test_find_one_on_empty_rows() : void
     {
-        $this->assertNull((rows())->findOne(fn (Row $row) => false));
+        self::assertNull((rows())->findOne(fn (Row $row) => false));
     }
 
     public function test_find_without_results() : void
@@ -521,7 +494,7 @@ final class RowsTest extends TestCase
             $three1 = row(int_entry('number', 3), new StringEntry('name', 'three')),
         );
 
-        $this->assertNull($rows->findOne(fn (Row $row) : bool => $row->valueOf('number') === 5));
+        self::assertNull($rows->findOne(fn (Row $row) : bool => $row->valueOf('number') === 5));
     }
 
     public function test_first_on_empty_rows() : void
@@ -547,7 +520,7 @@ final class RowsTest extends TestCase
             $row->add(new StringEntry('name', $row->valueOf('id') . '-name-02')),
         ]);
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1234, 'name' => '1234-name-01'],
                 ['id' => 1234, 'name' => '1234-name-02'],
@@ -567,7 +540,7 @@ final class RowsTest extends TestCase
             row(int_entry('id', 4), bool_entry('bool', false))
         );
 
-        $this->assertSame(
+        self::assertSame(
             $rows->hash(),
             rows(
                 row(bool_entry('bool', false), int_entry('id', 1)),
@@ -580,7 +553,7 @@ final class RowsTest extends TestCase
 
     public function test_hash_empty_rows() : void
     {
-        $this->assertSame(
+        self::assertSame(
             rows()->hash(),
             rows()->hash(),
         );
@@ -595,7 +568,7 @@ final class RowsTest extends TestCase
             row(int_entry('id', 4), bool_entry('bool', false))
         );
 
-        $this->assertNotSame(
+        self::assertNotSame(
             $rows->hash(),
             rows(
                 row(bool_entry('bool', false)),
@@ -615,7 +588,7 @@ final class RowsTest extends TestCase
             row(int_entry('id', 4), bool_entry('bool', false))
         );
 
-        $this->assertNotSame(
+        self::assertNotSame(
             $rows->hash(),
             rows(
                 row(bool_entry('bool', false), int_entry('id', 1)),
@@ -631,11 +604,11 @@ final class RowsTest extends TestCase
         $rows1 = rows(row(int_entry('id', 1), str_entry('group', 'a')))->partitionBy(ref('group'))[0];
         $rows2 = rows();
 
-        $this->assertEquals(
+        self::assertEquals(
             partitions(partition('group', 'a')),
             $rows1->merge($rows2)->partitions()
         );
-        $this->assertCount(1, $rows1->merge($rows2));
+        self::assertCount(1, $rows1->merge($rows2));
     }
 
     public function test_merge_row_with_another_row_that_has_duplicated_entries() : void
@@ -652,11 +625,11 @@ final class RowsTest extends TestCase
         $rows1 = rows(row(int_entry('id', 1), str_entry('group', 'a')))->partitionBy(ref('group'))[0];
         $rows2 = rows(row(int_entry('id', 2), str_entry('group', 'b')))->partitionBy(ref('group'))[0];
 
-        $this->assertEquals(
+        self::assertEquals(
             partitions(),
             $rows1->merge($rows2)->partitions()
         );
-        $this->assertCount(2, $rows1->merge($rows2));
+        self::assertCount(2, $rows1->merge($rows2));
     }
 
     public function test_merge_rows_from_same_partition() : void
@@ -664,11 +637,11 @@ final class RowsTest extends TestCase
         $rows1 = rows(row(int_entry('id', 1), str_entry('group', 'a')))->partitionBy(ref('group'))[0];
         $rows2 = rows(row(int_entry('id', 2), str_entry('group', 'a')))->partitionBy(ref('group'))[0];
 
-        $this->assertEquals(
+        self::assertEquals(
             partitions(partition('group', 'a')),
             $rows1->merge($rows2)->partitions()
         );
-        $this->assertCount(2, $rows1->merge($rows2));
+        self::assertCount(2, $rows1->merge($rows2));
     }
 
     public function test_merge_rows_from_same_partitions() : void
@@ -679,11 +652,11 @@ final class RowsTest extends TestCase
         $rows2 = rows(row(int_entry('id', 2), str_entry('group', 'a'), str_entry('sub_group', '1')))
             ->partitionBy(ref('sub_group'), ref('group'))[0];
 
-        $this->assertEquals(
+        self::assertEquals(
             partitions(partition('group', 'a'), partition('sub_group', '1')),
             $rows1->merge($rows2)->partitions()
         );
-        $this->assertCount(2, $rows1->merge($rows2));
+        self::assertCount(2, $rows1->merge($rows2));
     }
 
     public function test_merges_collection_together() : void
@@ -705,7 +678,7 @@ final class RowsTest extends TestCase
 
         $merged = $rowsOne->merge($rowsTwo)->merge($rowsThree);
 
-        $this->assertEquals(
+        self::assertEquals(
             rows(
                 row(int_entry('id', 1)),
                 row(int_entry('id', 2)),
@@ -735,7 +708,7 @@ final class RowsTest extends TestCase
 
     public function test_partition_rows_by_multiple_duplicated_entries() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             [
                 rows_partitioned(
                     [
@@ -781,7 +754,7 @@ final class RowsTest extends TestCase
 
     public function test_partition_rows_by_multiple_entries() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             [
                 rows_partitioned(
                     [
@@ -841,7 +814,7 @@ final class RowsTest extends TestCase
 
     public function test_partition_rows_by_single_entry() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             [
                 rows_partitioned(
                     [row(int_entry('number', 1)), row(int_entry('number', 1))],
@@ -863,7 +836,7 @@ final class RowsTest extends TestCase
 
     public function test_partition_rows_date_entry() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             [
                 rows_partitioned(
                     [row(datetime_entry('date', '2023-01-01 00:00:00 UTC'))],
@@ -898,7 +871,7 @@ final class RowsTest extends TestCase
             row(int_entry('number', 4), str_entry('group', 'a')),
         ))->partitionBy('group');
 
-        $this->assertEquals(
+        self::assertEquals(
             partitions(partition('group', 'a')),
             $rows[0]->partitions()
         );
@@ -914,9 +887,9 @@ final class RowsTest extends TestCase
 
         $rows = $rows->remove(1);
 
-        $this->assertCount(2, $rows);
-        $this->assertSame(1, $rows[0]->valueOf('id'));
-        $this->assertSame(3, $rows[1]->valueOf('id'));
+        self::assertCount(2, $rows);
+        self::assertSame(1, $rows[0]->valueOf('id'));
+        self::assertSame(3, $rows[1]->valueOf('id'));
     }
 
     public function test_remove_on_empty_rows() : void
@@ -934,7 +907,7 @@ final class RowsTest extends TestCase
             row(int_entry('number', 2), new StringEntry('name', 'two')),
         );
 
-        $this->assertEquals($first, $rows->first());
+        self::assertEquals($first, $rows->first());
     }
 
     public function test_reverse() : void
@@ -947,10 +920,10 @@ final class RowsTest extends TestCase
 
         $rows = $rows->reverse();
 
-        $this->assertCount(3, $rows);
-        $this->assertSame(3, $rows[0]->valueOf('id'));
-        $this->assertSame(2, $rows[1]->valueOf('id'));
-        $this->assertSame(1, $rows[2]->valueOf('id'));
+        self::assertCount(3, $rows);
+        self::assertSame(3, $rows[0]->valueOf('id'));
+        self::assertSame(2, $rows[1]->valueOf('id'));
+        self::assertSame(1, $rows[2]->valueOf('id'));
     }
 
     /**
@@ -958,7 +931,7 @@ final class RowsTest extends TestCase
      */
     public function test_rows_diff_left(Rows $expected, Rows $left, Rows $right) : void
     {
-        $this->assertEquals($expected->toArray(), $left->diffLeft($right)->toArray());
+        self::assertEquals($expected->toArray(), $left->diffLeft($right)->toArray());
     }
 
     /**
@@ -966,7 +939,7 @@ final class RowsTest extends TestCase
      */
     public function test_rows_diff_right(Rows $expected, Rows $left, Rows $right) : void
     {
-        $this->assertEquals($expected->toArray(), $left->diffRight($right)->toArray());
+        self::assertEquals($expected->toArray(), $left->diffRight($right)->toArray());
     }
 
     public function test_rows_schema() : void
@@ -978,7 +951,7 @@ final class RowsTest extends TestCase
             row(int_entry('id', 1), int_entry('name', 25)),
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             new Schema(
                 Definition::integer('id'),
                 Definition::string('name', true),
@@ -996,7 +969,7 @@ final class RowsTest extends TestCase
             row(list_entry('list', [1, 2], type_list(type_int()))),
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             new Schema(Definition::array('list')),
             $rows->schema()
         );
@@ -1015,9 +988,9 @@ final class RowsTest extends TestCase
         /** @var Rows $unserialized */
         $unserialized = \unserialize($serialized);
 
-        $this->assertTrue($unserialized[0]->isEqual($rows[0]));
-        $this->assertTrue($unserialized[1]->isEqual($rows[1]));
-        $this->assertTrue($unserialized[2]->isEqual($rows[2]));
+        self::assertTrue($unserialized[0]->isEqual($rows[0]));
+        self::assertTrue($unserialized[1]->isEqual($rows[1]));
+        self::assertTrue($unserialized[2]->isEqual($rows[2]));
     }
 
     /**
@@ -1025,7 +998,7 @@ final class RowsTest extends TestCase
      */
     public function test_rows_unique(Rows $expected, Rows $notUnique, Comparator $comparator = new NativeComparator()) : void
     {
-        $this->assertEquals($expected, $notUnique->unique($comparator));
+        self::assertEquals($expected, $notUnique->unique($comparator));
     }
 
     public function test_sort() : void
@@ -1040,8 +1013,8 @@ final class RowsTest extends TestCase
 
         $sort = $rows->sort(fn (Row $row, Row $nextRow) : int => $row->valueOf('number') <=> $nextRow->valueOf('number'));
 
-        $this->assertEquals(rows($one, $two, $three, $four, $five), $sort);
-        $this->assertNotEquals($sort, $rows);
+        self::assertEquals(rows($one, $two, $three, $four, $five), $sort);
+        self::assertNotEquals($sort, $rows);
     }
 
     public function test_sort_rows_by_not_existing_column() : void
@@ -1075,13 +1048,13 @@ final class RowsTest extends TestCase
         $ascending = $rows->sortBy(ref('a'), ref('b')->desc());
         $descending = $rows->sortBy(ref('a')->desc(), ref('b'));
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['a' => 1, 'b' => 5], ['a' => 1, 'b' => 4], ['a' => 2, 'b' => 7], ['a' => 2, 'b' => 4], ['a' => 3, 'b' => 10], ['a' => 3, 'b' => 2],
             ],
             $ascending->toArray()
         );
-        $this->assertSame(
+        self::assertSame(
             [
                 ['a' => 3, 'b' => 2], ['a' => 3, 'b' => 10], ['a' => 2, 'b' => 4], ['a' => 2, 'b' => 7], ['a' => 1, 'b' => 4], ['a' => 1, 'b' => 5],
             ],
@@ -1102,10 +1075,10 @@ final class RowsTest extends TestCase
         $ascending = $rows->sortAscending(ref('number'));
         $descending = $rows->sortDescending(ref('number'));
 
-        $this->assertEquals(rows($one, $two, $three, $four, $five), $ascending);
-        $this->assertEquals(rows($five, $four, $three, $two, $one), $descending);
-        $this->assertNotEquals($ascending, $rows);
-        $this->assertNotEquals($descending, $rows);
+        self::assertEquals(rows($one, $two, $three, $four, $five), $ascending);
+        self::assertEquals(rows($five, $four, $three, $two, $one), $descending);
+        self::assertNotEquals($ascending, $rows);
+        self::assertNotEquals($descending, $rows);
     }
 
     public function test_sorts_entries_in_all_rows() : void
@@ -1127,7 +1100,7 @@ final class RowsTest extends TestCase
 
         $sorted = $rows->sortEntries();
 
-        $this->assertEquals(
+        self::assertEquals(
             rows(
                 row(
                     $rowOneCreatedAt = new DateTimeEntry('created-at', new \DateTimeImmutable('2020-08-13 15:00')),
@@ -1156,8 +1129,8 @@ final class RowsTest extends TestCase
 
         $rows = $rows->take(1);
 
-        $this->assertCount(1, $rows);
-        $this->assertSame(1, $rows[0]->valueOf('id'));
+        self::assertCount(1, $rows);
+        self::assertSame(1, $rows[0]->valueOf('id'));
     }
 
     public function test_take_all() : void
@@ -1170,10 +1143,10 @@ final class RowsTest extends TestCase
 
         $rows = $rows->take(3);
 
-        $this->assertCount(3, $rows);
-        $this->assertSame(1, $rows[0]->valueOf('id'));
-        $this->assertSame(2, $rows[1]->valueOf('id'));
-        $this->assertSame(3, $rows[2]->valueOf('id'));
+        self::assertCount(3, $rows);
+        self::assertSame(1, $rows[0]->valueOf('id'));
+        self::assertSame(2, $rows[1]->valueOf('id'));
+        self::assertSame(3, $rows[2]->valueOf('id'));
     }
 
     public function test_take_more_than_exists() : void
@@ -1186,10 +1159,10 @@ final class RowsTest extends TestCase
 
         $rows = $rows->take(4);
 
-        $this->assertCount(3, $rows);
-        $this->assertSame(1, $rows[0]->valueOf('id'));
-        $this->assertSame(2, $rows[1]->valueOf('id'));
-        $this->assertSame(3, $rows[2]->valueOf('id'));
+        self::assertCount(3, $rows);
+        self::assertSame(1, $rows[0]->valueOf('id'));
+        self::assertSame(2, $rows[1]->valueOf('id'));
+        self::assertSame(3, $rows[2]->valueOf('id'));
     }
 
     public function test_take_right() : void
@@ -1202,8 +1175,8 @@ final class RowsTest extends TestCase
 
         $rows = $rows->takeRight(1);
 
-        $this->assertCount(1, $rows);
-        $this->assertSame(3, $rows[0]->valueOf('id'));
+        self::assertCount(1, $rows);
+        self::assertSame(3, $rows[0]->valueOf('id'));
     }
 
     public function test_take_right_all() : void
@@ -1216,10 +1189,10 @@ final class RowsTest extends TestCase
 
         $rows = $rows->takeRight(3);
 
-        $this->assertCount(3, $rows);
-        $this->assertSame(3, $rows[0]->valueOf('id'));
-        $this->assertSame(2, $rows[1]->valueOf('id'));
-        $this->assertSame(1, $rows[2]->valueOf('id'));
+        self::assertCount(3, $rows);
+        self::assertSame(3, $rows[0]->valueOf('id'));
+        self::assertSame(2, $rows[1]->valueOf('id'));
+        self::assertSame(1, $rows[2]->valueOf('id'));
     }
 
     public function test_take_right_more_than_exists() : void
@@ -1232,10 +1205,10 @@ final class RowsTest extends TestCase
 
         $rows = $rows->takeRight(4);
 
-        $this->assertCount(3, $rows);
-        $this->assertSame(3, $rows[0]->valueOf('id'));
-        $this->assertSame(2, $rows[1]->valueOf('id'));
-        $this->assertSame(1, $rows[2]->valueOf('id'));
+        self::assertCount(3, $rows);
+        self::assertSame(3, $rows[0]->valueOf('id'));
+        self::assertSame(2, $rows[1]->valueOf('id'));
+        self::assertSame(1, $rows[2]->valueOf('id'));
     }
 
     public function test_transforms_rows_to_array() : void
@@ -1253,7 +1226,7 @@ final class RowsTest extends TestCase
             )
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 ['id' => 1234, 'deleted' => false, 'phase' => null],
                 ['id' => 4321, 'deleted' => true, 'phase' => 'launch'],
@@ -1277,7 +1250,7 @@ final class RowsTest extends TestCase
             )
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 [1234, false, null],
                 [4321, true, 'launch'],

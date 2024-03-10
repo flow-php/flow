@@ -4,15 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\count;
-use function Flow\ETL\DSL\float_entry;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\null_entry;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\str_entry;
-use function Flow\ETL\DSL\window;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use function Flow\ETL\DSL\{count, float_entry, int_entry, null_entry, ref, str_entry, window};
+use Flow\ETL\{Row, Rows};
 use PHPUnit\Framework\TestCase;
 
 final class CountTest extends TestCase
@@ -27,7 +20,7 @@ final class CountTest extends TestCase
         $aggregator->aggregate(Row::create(str_entry('int', '25')));
         $aggregator->aggregate(Row::create(null_entry('not_int')));
 
-        $this->assertSame(
+        self::assertSame(
             4,
             $aggregator->result()->value()
         );
@@ -42,7 +35,7 @@ final class CountTest extends TestCase
         $aggregator->aggregate(Row::create(int_entry('int', 305)));
         $aggregator->aggregate(Row::create(int_entry('int', 25)));
 
-        $this->assertSame(
+        self::assertSame(
             4,
             $aggregator->result()->value()
         );
@@ -58,7 +51,7 @@ final class CountTest extends TestCase
         $aggregator->aggregate(Row::create(null_entry('int')));
         $aggregator->aggregate(Row::create(null_entry('test')));
 
-        $this->assertSame(
+        self::assertSame(
             4,
             $aggregator->result()->value()
         );
@@ -76,7 +69,7 @@ final class CountTest extends TestCase
 
         $count = count(ref('id'))->over(window()->orderBy(ref('id')->desc()));
 
-        $this->assertSame(2, $count->apply($row1, $rows));
-        $this->assertSame(1, $count->apply($row2, $rows));
+        self::assertSame(2, $count->apply($row1, $rows));
+        self::assertSame(1, $count->apply($row2, $rows));
     }
 }

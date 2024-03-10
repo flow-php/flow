@@ -44,8 +44,8 @@ final class ExceptionIfExistsModeTest extends FilesystemStreamsTestCase
         \fwrite($fileStream->resource(), 'some content');
         $streams->closeWriters($file);
 
-        $this->assertFileExists($file->path());
-        $this->assertSame('some content', \file_get_contents($file->path()));
+        self::assertFileExists($file->path());
+        self::assertSame('some content', \file_get_contents($file->path()));
     }
 
     protected function streams() : FilesystemStreams

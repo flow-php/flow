@@ -4,15 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\float_entry;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\null_entry;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\str_entry;
-use function Flow\ETL\DSL\sum;
-use function Flow\ETL\DSL\window;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use function Flow\ETL\DSL\{float_entry, int_entry, null_entry, ref, str_entry, sum, window};
+use Flow\ETL\{Row, Rows};
 use PHPUnit\Framework\TestCase;
 
 final class SumTest extends TestCase
@@ -27,7 +20,7 @@ final class SumTest extends TestCase
         $aggregator->aggregate(Row::create(str_entry('int', '25')));
         $aggregator->aggregate(Row::create(null_entry('not_int')));
 
-        $this->assertSame(
+        self::assertSame(
             110,
             $aggregator->result()->value()
         );
@@ -42,7 +35,7 @@ final class SumTest extends TestCase
         $aggregator->aggregate(Row::create(int_entry('int', 30)));
         $aggregator->aggregate(Row::create(null_entry('int')));
 
-        $this->assertSame(
+        self::assertSame(
             60,
             $aggregator->result()->value()
         );
@@ -57,7 +50,7 @@ final class SumTest extends TestCase
         $aggregator->aggregate(Row::create(int_entry('int', 305)));
         $aggregator->aggregate(Row::create(int_entry('int', 25)));
 
-        $this->assertSame(
+        self::assertSame(
             360.25,
             $aggregator->result()->value()
         );
@@ -75,6 +68,6 @@ final class SumTest extends TestCase
 
         $sum = sum(ref('id'))->over(window()->orderBy(ref('id')->desc()));
 
-        $this->assertSame(15, $sum->apply($row1, $rows));
+        self::assertSame(15, $sum->apply($row1, $rows));
     }
 }

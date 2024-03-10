@@ -4,12 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row_number;
-use function Flow\ETL\DSL\window;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use function Flow\ETL\DSL\{int_entry, ref, row_number, window};
+use Flow\ETL\{Row, Rows};
 use PHPUnit\Framework\TestCase;
 
 final class RowNumberTest extends TestCase
@@ -26,6 +22,6 @@ final class RowNumberTest extends TestCase
 
         $rowNumber = row_number()->over(window()->partitionBy(ref('value'))->orderBy(ref('id')->desc()));
 
-        $this->assertSame(5, $rowNumber->apply($row1, $rows));
+        self::assertSame(5, $rowNumber->apply($row1, $rows));
     }
 }

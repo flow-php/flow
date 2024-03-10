@@ -1,13 +1,12 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Pipeline;
 
-use function Flow\ETL\DSL\from_all;
-use function Flow\ETL\DSL\from_array;
-use Flow\ETL\Config;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Pipeline\CollectingPipeline;
-use Flow\ETL\Pipeline\SynchronousPipeline;
+use function Flow\ETL\DSL\{from_all, from_array};
+use Flow\ETL\Pipeline\{CollectingPipeline, SynchronousPipeline};
+use Flow\ETL\{Config, FlowContext};
 use PHPUnit\Framework\TestCase;
 
 final class CollectingPipelineTest extends TestCase
@@ -37,7 +36,7 @@ final class CollectingPipelineTest extends TestCase
             ])
         ));
 
-        $this->assertCount(
+        self::assertCount(
             1,
             \iterator_to_array($pipeline->process(new FlowContext(Config::default())))
         );

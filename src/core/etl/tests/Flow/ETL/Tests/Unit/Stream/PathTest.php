@@ -6,8 +6,7 @@ namespace Flow\ETL\Tests\Unit\Stream;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Filesystem\Path;
-use Flow\ETL\Partition;
-use Flow\ETL\Partitions;
+use Flow\ETL\{Partition, Partitions};
 use PHPUnit\Framework\TestCase;
 
 final class PathTest extends TestCase
@@ -84,7 +83,7 @@ final class PathTest extends TestCase
 
     public function test_add_partitions_to_path_with_extension() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             new Path('/path/to/group=a/file.txt'),
             (new Path('/path/to/file.txt'))->addPartitions(new Partition('group', 'a'))
         );
@@ -92,7 +91,7 @@ final class PathTest extends TestCase
 
     public function test_add_partitions_to_path_without_extension() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             new Path('/path/to/group=a/folder'),
             (new Path('/path/to/folder'))->addPartitions(new Partition('group', 'a'))
         );
@@ -100,7 +99,7 @@ final class PathTest extends TestCase
 
     public function test_add_partitions_to_root_path_with_extension() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             new Path('/group=a/file.txt'),
             (new Path('/file.txt'))->addPartitions(new Partition('group', 'a'))
         );
@@ -108,7 +107,7 @@ final class PathTest extends TestCase
 
     public function test_add_partitions_to_root_path_without_extension() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             new Path('/group=a/folder'),
             (new Path('/folder'))->addPartitions(new Partition('group', 'a'))
         );
@@ -119,12 +118,12 @@ final class PathTest extends TestCase
      */
     public function test_directories(string $uri, string $dirPath) : void
     {
-        $this->assertSame($dirPath, (new Path($uri))->parentDirectory()->path());
+        self::assertSame($dirPath, (new Path($uri))->parentDirectory()->path());
     }
 
     public function test_equal_paths_starts_with() : void
     {
-        $this->assertTrue(
+        self::assertTrue(
             Path::realpath(\sys_get_temp_dir() . '/some/path/file.json')
                 ->startsWith(Path::realpath(\sys_get_temp_dir() . '/some/path/file.json'))
         );
@@ -132,8 +131,8 @@ final class PathTest extends TestCase
 
     public function test_extension() : void
     {
-        $this->assertSame('php', (new Path(__FILE__))->extension());
-        $this->assertFalse((new Path(__DIR__))->extension());
+        self::assertSame('php', (new Path(__FILE__))->extension());
+        self::assertFalse((new Path(__DIR__))->extension());
     }
 
     /**
@@ -141,12 +140,12 @@ final class PathTest extends TestCase
      */
     public function test_finding_static_part_of_the_path(string $staticPart, string $uri) : void
     {
-        $this->assertEquals(new Path($staticPart), (new Path($uri))->staticPart());
+        self::assertEquals(new Path($staticPart), (new Path($uri))->staticPart());
     }
 
     public function test_local_file() : void
     {
-        $this->assertNull((new Path(__FILE__))->context()->resource());
+        self::assertNull((new Path(__FILE__))->context()->resource());
     }
 
     /**
@@ -154,15 +153,15 @@ final class PathTest extends TestCase
      */
     public function test_matching_pattern_with_path(string $path, string $pattern, bool $result) : void
     {
-        $this->assertSame($result, (new Path($path))->matches(new Path($pattern)));
+        self::assertSame($result, (new Path($path))->matches(new Path($pattern)));
     }
 
     public function test_not_matching_items_under_directory_that_matches_pattern() : void
     {
         $path = new Path('flow-file://var/file/partition=*');
 
-        $this->assertTrue($path->matches(new Path('flow-file://var/file/partition=1')));
-        $this->assertFalse($path->matches(new Path('flow-file://var/file/partition=1/file.csv')));
+        self::assertTrue($path->matches(new Path('flow-file://var/file/partition=1')));
+        self::assertFalse($path->matches(new Path('flow-file://var/file/partition=1/file.csv')));
     }
 
     /**
@@ -170,8 +169,8 @@ final class PathTest extends TestCase
      */
     public function test_parsing_path(string $uri, string $schema, string $parsedUri) : void
     {
-        $this->assertEquals($schema, (new Path($uri))->scheme());
-        $this->assertEquals($parsedUri, (new Path($uri))->uri());
+        self::assertEquals($schema, (new Path($uri))->scheme());
+        self::assertEquals($parsedUri, (new Path($uri))->uri());
     }
 
     /**
@@ -179,14 +178,14 @@ final class PathTest extends TestCase
      */
     public function test_partitions_in_path(string $uri, Partitions $partitions) : void
     {
-        $this->assertEquals($partitions, (new Path($uri))->partitions());
+        self::assertEquals($partitions, (new Path($uri))->partitions());
     }
 
     public function test_partitions_paths() : void
     {
         $path = new Path('/var/path/partition_1=A/partition_2=B/file.csv', ['option' => true]);
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 new Path('/var/path/partition_1=A', ['option' => true]),
                 new Path('/var/path/partition_1=A/partition_2=B', ['option' => true]),
@@ -197,7 +196,7 @@ final class PathTest extends TestCase
 
     public function test_path_starting_with_other_path() : void
     {
-        $this->assertTrue(
+        self::assertTrue(
             Path::realpath(\sys_get_temp_dir() . '/some/path/file.json')
                 ->startsWith(Path::realpath(\sys_get_temp_dir() . '/some/path'))
         );
@@ -205,7 +204,7 @@ final class PathTest extends TestCase
 
     public function test_pattern_path_starting_with_realpath_path() : void
     {
-        $this->assertTrue(
+        self::assertTrue(
             Path::realpath(\sys_get_temp_dir() . '/some/path/*.json')
                 ->startsWith(Path::realpath(\sys_get_temp_dir() . '/some/path'))
         );
@@ -215,11 +214,11 @@ final class PathTest extends TestCase
     {
         $path = new Path('flow-file://var/file/test.csv', []);
 
-        $this->assertStringStartsWith(
+        self::assertStringStartsWith(
             'flow-file://var/file/test_',
             $path->randomize()->uri()
         );
-        $this->assertStringEndsWith(
+        self::assertStringEndsWith(
             '.csv',
             $path->randomize()->uri()
         );
@@ -229,7 +228,7 @@ final class PathTest extends TestCase
     {
         $path = new Path('flow-file://var/file/folder/', []);
 
-        $this->assertStringStartsWith(
+        self::assertStringStartsWith(
             'flow-file://var/file/folder_',
             $path->randomize()->uri()
         );
@@ -237,7 +236,7 @@ final class PathTest extends TestCase
 
     public function test_realpath_starting_with_non_realpath_path() : void
     {
-        $this->assertFalse(
+        self::assertFalse(
             Path::realpath(\sys_get_temp_dir() . '/some/path/file.json')
                 ->startsWith(new Path('/some/path'))
         );
@@ -247,7 +246,7 @@ final class PathTest extends TestCase
     {
         $path = new Path('flow-file://var/file/folder/file.txt', ['option' => true]);
 
-        $this->assertEquals(
+        self::assertEquals(
             new Path('flow-file://var/file/folder/file.csv', ['option' => true]),
             $path->setExtension('csv')
         );
@@ -257,7 +256,7 @@ final class PathTest extends TestCase
     {
         $path = (new Path('flow-file://var/file/folder/file', ['option' => true]))->randomize();
 
-        $this->assertEquals(
+        self::assertEquals(
             new Path($path->uri() . '.csv', ['option' => true]),
             $path->setExtension('csv')
         );
@@ -267,7 +266,7 @@ final class PathTest extends TestCase
     {
         $path = new Path('flow-file://var/file/folder/file.csv', ['option' => true]);
 
-        $this->assertEquals(
+        self::assertEquals(
             $path,
             $path->setExtension('csv')
         );

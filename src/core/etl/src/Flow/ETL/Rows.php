@@ -4,22 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
-use function Flow\ETL\DSL\array_to_rows;
-use function Flow\ETL\DSL\null_entry;
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\RuntimeException;
+use function Flow\ETL\DSL\{array_to_rows, null_entry};
+use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Partition\CartesianProduct;
-use Flow\ETL\Row\Comparator;
 use Flow\ETL\Row\Comparator\NativeComparator;
-use Flow\ETL\Row\Entries;
 use Flow\ETL\Row\Entry\NullEntry;
-use Flow\ETL\Row\EntryFactory;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
-use Flow\ETL\Row\Reference;
-use Flow\ETL\Row\References;
-use Flow\ETL\Row\Schema;
-use Flow\ETL\Row\SortOrder;
+use Flow\ETL\Row\{Comparator, Entries, EntryFactory, Reference, References, Schema, SortOrder};
 
 /**
  * @implements \ArrayAccess<int, Row>

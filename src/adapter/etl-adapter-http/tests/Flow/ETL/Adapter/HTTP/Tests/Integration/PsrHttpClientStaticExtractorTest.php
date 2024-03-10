@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\HTTP\Tests\Integration;
 
 use Flow\ETL\Adapter\Http\PsrHttpClientStaticExtractor;
-use Flow\ETL\Config;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Rows;
+use Flow\ETL\{Config, FlowContext, Rows};
 use Http\Mock\Client;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\Response;
@@ -53,7 +51,7 @@ final class PsrHttpClientStaticExtractorTest extends TestCase
         $norbertResponseBody = \json_decode($norbertRows->first()->valueOf('response_body'), true, 512, JSON_THROW_ON_ERROR);
         $tomekResponseBody = \json_decode($tomekRows->first()->valueOf('response_body'), true, 512, JSON_THROW_ON_ERROR);
 
-        $this->assertSame('norberttech', $norbertResponseBody['login']);
-        $this->assertSame('tomaszhanc', $tomekResponseBody['login']);
+        self::assertSame('norberttech', $norbertResponseBody['login']);
+        self::assertSame('tomaszhanc', $tomekResponseBody['login']);
     }
 }

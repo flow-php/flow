@@ -5,21 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\PHP\Type;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Logical\DateTimeType;
-use Flow\ETL\PHP\Type\Logical\JsonType;
-use Flow\ETL\PHP\Type\Logical\ListType;
-use Flow\ETL\PHP\Type\Logical\MapType;
-use Flow\ETL\PHP\Type\Logical\StructureType;
-use Flow\ETL\PHP\Type\Logical\UuidType;
-use Flow\ETL\PHP\Type\Logical\XMLNodeType;
-use Flow\ETL\PHP\Type\Logical\XMLType;
-use Flow\ETL\PHP\Type\Native\ArrayType;
-use Flow\ETL\PHP\Type\Native\CallableType;
-use Flow\ETL\PHP\Type\Native\EnumType;
-use Flow\ETL\PHP\Type\Native\NullType;
-use Flow\ETL\PHP\Type\Native\ObjectType;
-use Flow\ETL\PHP\Type\Native\ResourceType;
-use Flow\ETL\PHP\Type\Native\ScalarType;
+use Flow\ETL\PHP\Type\Logical\{DateTimeType, JsonType, ListType, MapType, StructureType, UuidType, XMLNodeType, XMLType};
+use Flow\ETL\PHP\Type\Native\{ArrayType, CallableType, EnumType, NullType, ObjectType, ResourceType, ScalarType};
 
 final class TypeFactory
 {

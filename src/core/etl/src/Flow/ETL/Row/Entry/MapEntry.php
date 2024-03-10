@@ -7,11 +7,9 @@ namespace Flow\ETL\Row\Entry;
 use Flow\ArrayComparison\ArrayComparison;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\MapType;
-use Flow\ETL\PHP\Type\Type;
-use Flow\ETL\PHP\Type\TypeDetector;
-use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\Reference;
+use Flow\ETL\PHP\Type\{Type, TypeDetector};
 use Flow\ETL\Row\Schema\Definition;
+use Flow\ETL\Row\{Entry, Reference};
 
 /**
  * @template T

@@ -1,11 +1,11 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\ParquetFile;
 
-use Flow\Parquet\Option;
-use Flow\Parquet\Options;
-use Flow\Parquet\ParquetFile\Codec;
-use Flow\Parquet\ParquetFile\Compressions;
+use Flow\Parquet\ParquetFile\{Codec, Compressions};
+use Flow\Parquet\{Option, Options};
 use PHPUnit\Framework\TestCase;
 
 final class CodecTest extends TestCase
@@ -16,7 +16,7 @@ final class CodecTest extends TestCase
 
         $codec = new Codec((new Options())->set(Option::GZIP_COMPRESSION_LEVEL, 9));
 
-        $this->assertSame(
+        self::assertSame(
             $data,
             $codec->decompress($codec->compress($data, Compressions::GZIP), Compressions::GZIP)
         );
@@ -28,7 +28,7 @@ final class CodecTest extends TestCase
 
         $codec = new Codec((new Options()));
 
-        $this->assertSame(
+        self::assertSame(
             $data,
             $codec->decompress($codec->compress($data, Compressions::SNAPPY), Compressions::SNAPPY)
         );
@@ -40,7 +40,7 @@ final class CodecTest extends TestCase
 
         $codec = new Codec((new Options()));
 
-        $this->assertSame(
+        self::assertSame(
             $data,
             $codec->decompress($codec->compress($data, Compressions::UNCOMPRESSED), Compressions::UNCOMPRESSED)
         );

@@ -1,10 +1,11 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\ParquetFile\RowGroupBuilder\PageBuilder;
 
 use Flow\Parquet\BinaryReader\BinaryBufferReader;
-use Flow\Parquet\ParquetFile\Data\BitWidth;
-use Flow\Parquet\ParquetFile\Data\RLEBitPackedHybrid;
+use Flow\Parquet\ParquetFile\Data\{BitWidth, RLEBitPackedHybrid};
 use Flow\Parquet\ParquetFile\RowGroupBuilder\PageBuilder\RLEBitPackedPacker;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -31,10 +32,10 @@ final class RLEBitPackedTest extends TestCase
 
         $buffer = $packer->packWithLength($values);
         $reader = new BinaryBufferReader($buffer);
-        $this->assertSame($length, $reader->readInts32(1)[0]);
+        self::assertSame($length, $reader->readInts32(1)[0]);
         $unpacked = $rleBitPackedHybrid->decodeHybrid($reader, BitWidth::fromArray($values), \count($values));
 
-        $this->assertSame(
+        self::assertSame(
             $values,
             $unpacked
         );

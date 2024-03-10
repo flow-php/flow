@@ -1,15 +1,11 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Window;
 
-use function Flow\ETL\DSL\dense_rank;
-use function Flow\ETL\DSL\from_all;
-use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\rank;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\window;
-use Flow\ETL\Flow;
-use Flow\ETL\Rows;
+use function Flow\ETL\DSL\{dense_rank, from_all, from_array, rank, ref, window};
+use Flow\ETL\{Flow, Rows};
 use PHPUnit\Framework\TestCase;
 
 final class WindowFunctionsTest extends TestCase
@@ -35,7 +31,7 @@ final class WindowFunctionsTest extends TestCase
             ->sortBy(ref('department'), ref('rank'))
             ->get();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 [
                     ['id' => 5, 'name' => 'Jane', 'department' => 'Finances', 'salary' => 14_000, 'rank' => 1],
@@ -75,7 +71,7 @@ final class WindowFunctionsTest extends TestCase
             ->withEntry('rank', rank()->over(window()->orderBy(ref('salary')->desc())))
             ->get();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 [
                     ['id' => 5, 'name' => 'Jane', 'department' => 'Finances', 'salary' => 14_000, 'rank' => 1],

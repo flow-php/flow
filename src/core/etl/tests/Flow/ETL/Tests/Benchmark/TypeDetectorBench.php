@@ -1,10 +1,11 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Benchmark;
 
 use function Flow\ETL\DSL\get_type;
-use PhpBench\Attributes\Groups;
-use PhpBench\Attributes\ParamProviders;
+use PhpBench\Attributes\{Groups, ParamProviders};
 
 #[Groups(['building_blocks'])]
 final class TypeDetectorBench

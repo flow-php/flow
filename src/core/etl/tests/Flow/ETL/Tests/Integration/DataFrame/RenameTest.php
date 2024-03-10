@@ -1,19 +1,13 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use function Flow\ETL\DSL\array_entry;
-use function Flow\ETL\DSL\bool_entry;
-use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\from_rows;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\null_entry;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\str_entry;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use function Flow\ETL\DSL\{array_entry, bool_entry, df, from_rows, int_entry, null_entry, ref, str_entry};
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
 use Flow\ETL\Transformer\StyleConverter\StringStyles;
+use Flow\ETL\{Row, Rows};
 
 final class RenameTest extends IntegrationTestCase
 {
@@ -30,7 +24,7 @@ final class RenameTest extends IntegrationTestCase
             ->rename('name', 'new_name')
             ->fetch();
 
-        $this->assertEquals(
+        self::assertEquals(
             new Rows(
                 Row::create(int_entry('id', 1), str_entry('new_name', 'foo'), bool_entry('active', true)),
                 Row::create(int_entry('id', 2), null_entry('new_name'), bool_entry('active', false)),
@@ -54,7 +48,7 @@ final class RenameTest extends IntegrationTestCase
             ->drop('array')
             ->getEachAsArray();
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 ['id' => 1, 'name' => 'name', 'active' => true],
                 ['id' => 2, 'name' => 'name', 'active' => false],
@@ -72,7 +66,7 @@ final class RenameTest extends IntegrationTestCase
 
         $ds = df()->read(from_rows($rows))->renameAllLowerCase()->getEachAsArray();
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 ['id' => 1, 'name' => 'name', 'active' => true],
                 ['id' => 2, 'name' => 'name', 'active' => false],
@@ -94,7 +88,7 @@ final class RenameTest extends IntegrationTestCase
             ->renameAllLowerCase()
             ->getEachAsArray();
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 ['id' => 1, 'user_name' => 'name', 'is_active' => true],
                 ['id' => 2, 'user_name' => 'name', 'is_active' => false],
@@ -115,7 +109,7 @@ final class RenameTest extends IntegrationTestCase
             ->renameAllUpperCase()
             ->getEachAsArray();
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 ['ID' => 1, 'NAME' => 'name', 'ACTIVE' => true],
                 ['ID' => 2, 'NAME' => 'name', 'ACTIVE' => false],
@@ -136,7 +130,7 @@ final class RenameTest extends IntegrationTestCase
             ->renameAllUpperCaseFirst()
             ->getEachAsArray();
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 ['Id' => 1, 'Name' => 'name', 'Active' => true],
                 ['Id' => 2, 'Name' => 'name', 'Active' => false],
@@ -157,7 +151,7 @@ final class RenameTest extends IntegrationTestCase
             ->renameAllUpperCaseWord()
             ->getEachAsArray();
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 ['Id' => 1, 'Name' => 'name', 'Active' => true],
                 ['Id' => 2, 'Name' => 'name', 'Active' => false],

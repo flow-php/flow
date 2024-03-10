@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\RDSL\Tests\Unit;
 
@@ -38,6 +40,6 @@ final class NamespaceTest extends TestCase
      */
     public function test_valid_namespaces(string $ns) : void
     {
-        $this->assertInstanceOf(DSLNamespace::class, new DSLNamespace($ns, new AllowAll()));
+        self::assertInstanceOf(DSLNamespace::class, new DSLNamespace($ns, new AllowAll()));
     }
 }

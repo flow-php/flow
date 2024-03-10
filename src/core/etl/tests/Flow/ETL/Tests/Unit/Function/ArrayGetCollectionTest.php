@@ -4,11 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\array_entry;
-use function Flow\ETL\DSL\array_get_collection;
-use function Flow\ETL\DSL\array_get_collection_first;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\{array_entry, array_get_collection, array_get_collection_first, int_entry, ref};
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;
 
@@ -20,7 +16,7 @@ final class ArrayGetCollectionTest extends TestCase
             int_entry('invalid_entry', 1),
         );
 
-        $this->assertNull(array_get_collection(ref('invalid_entry'), 'id')->eval($row));
+        self::assertNull(array_get_collection(ref('invalid_entry'), 'id')->eval($row));
     }
 
     public function test_getting_keys_from_simple_array() : void
@@ -37,7 +33,7 @@ final class ArrayGetCollectionTest extends TestCase
             ),
         );
 
-        $this->assertNull(array_get_collection(ref('array_entry'), 'id', 'status')->eval($row));
+        self::assertNull(array_get_collection(ref('array_entry'), 'id', 'status')->eval($row));
     }
 
     public function test_getting_specific_keys_from_collection_of_array() : void
@@ -62,7 +58,7 @@ final class ArrayGetCollectionTest extends TestCase
             ),
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 ['id' => 1, 'status' => 'PENDING'],
                 ['id' => 2, 'status' => 'NEW'],
@@ -95,7 +91,7 @@ final class ArrayGetCollectionTest extends TestCase
             ),
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 'parent_id' => 1,
             ],
@@ -127,7 +123,7 @@ final class ArrayGetCollectionTest extends TestCase
             ),
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 'parent_id' => 1,
             ],

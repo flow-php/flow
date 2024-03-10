@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit;
 
@@ -8,7 +10,7 @@ final class FunctionsTest extends TestCase
 {
     public function test_array_merge_recursive() : void
     {
-        $this->assertSame(
+        self::assertSame(
             [
                 'members' => [
                     0 => [

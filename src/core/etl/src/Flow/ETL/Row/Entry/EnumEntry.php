@@ -6,9 +6,8 @@ namespace Flow\ETL\Row\Entry;
 
 use Flow\ETL\PHP\Type\Native\EnumType;
 use Flow\ETL\PHP\Type\Type;
-use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
+use Flow\ETL\Row\{Entry, Reference};
 
 /**
  * @implements Entry<\UnitEnum>

@@ -22,6 +22,6 @@ final class RealpathTest extends TestCase
      */
     public function test_double_dots_in_path(string $relative, string $absolute) : void
     {
-        $this->assertEquals(new Path($absolute), Path::realpath($relative));
+        self::assertEquals(new Path($absolute), Path::realpath($relative));
     }
 }

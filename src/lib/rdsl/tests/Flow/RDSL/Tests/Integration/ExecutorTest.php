@@ -1,15 +1,12 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\RDSL\Tests\Integration;
 
-use Flow\RDSL\AccessControl\AllowAll;
-use Flow\RDSL\AccessControl\AllowList;
-use Flow\RDSL\AccessControl\Except;
-use Flow\RDSL\Builder;
-use Flow\RDSL\DSLNamespace;
-use Flow\RDSL\Executor;
-use Flow\RDSL\Finder;
+use Flow\RDSL\AccessControl\{AllowAll, AllowList, Except};
 use Flow\RDSL\Tests\Fixtures\IntObject;
+use Flow\RDSL\{Builder, DSLNamespace, Executor, Finder};
 use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../Fixtures/functions.php';
@@ -44,8 +41,8 @@ final class ExecutorTest extends TestCase
 
         $results = (new Executor())->execute($executables);
 
-        $this->assertInstanceOf(IntObject::class, $results[0]);
-        $this->assertSame(5, $results[0]->value());
+        self::assertInstanceOf(IntObject::class, $results[0]);
+        self::assertSame(5, $results[0]->value());
     }
 
     public function test_executing_not_allowed_methods() : void

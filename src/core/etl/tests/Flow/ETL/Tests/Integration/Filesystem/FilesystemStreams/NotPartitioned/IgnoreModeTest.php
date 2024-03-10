@@ -30,8 +30,8 @@ final class IgnoreModeTest extends FilesystemStreamsTestCase
         \fwrite($fileStream->resource(), 'different content');
         $streams->closeWriters($path);
 
-        $this->assertFileExists($path->path());
-        $this->assertSame('some content', \file_get_contents($path->path()));
+        self::assertFileExists($path->path());
+        self::assertSame('some content', \file_get_contents($path->path()));
     }
 
     public function test_open_stream_for_non_existing_file() : void
@@ -46,8 +46,8 @@ final class IgnoreModeTest extends FilesystemStreamsTestCase
         \fwrite($fileStream->resource(), 'some content');
         $streams->closeWriters($path);
 
-        $this->assertFileExists($path->path());
-        $this->assertSame('some content', \file_get_contents($path->path()));
+        self::assertFileExists($path->path());
+        self::assertSame('some content', \file_get_contents($path->path()));
     }
 
     protected function streams() : FilesystemStreams

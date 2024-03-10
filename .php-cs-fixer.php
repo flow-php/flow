@@ -7,6 +7,7 @@ $finder = Finder::create()
     ->files()
     ->in([
         __DIR__ . '/bin',
+        __DIR__ . '/src',
         __DIR__ . '/src/core/**/src',
         __DIR__ . '/src/core/**/tests',
         __DIR__ . '/src/adapter/**/src',
@@ -32,7 +33,9 @@ return (new Config())
     ->setRules([
         '@Symfony' => true,
         '@Symfony:risky' => true,
-        'blank_line_after_opening_tag' => false,
+        'blank_line_after_opening_tag' => true,
+        'group_import' => true,
+        'single_import_per_statement' => false,
         'blank_line_before_statement' => [
             'statements' => [
                 'break',
@@ -74,7 +77,7 @@ return (new Config())
         'multiline_comment_opening_closing' => true,
         'multiline_whitespace_before_semicolons' => true,
         'native_constant_invocation' => false,
-        'native_function_invocation' => ['include' => ['@all']], // todo
+        'native_function_invocation' => false,
         'new_with_parentheses' => false,
         'nullable_type_declaration_for_default_null_value' => true,
         'no_extra_blank_lines' => true, // todo?
@@ -129,7 +132,6 @@ return (new Config())
         'phpdoc_order' => true,
         'phpdoc_to_comment' => false,
         'phpdoc_types_order' => true,
-        'php_unit_method_casing' => ['case' => 'snake_case'],
         'protected_to_private' => true,
         'return_assignment' => false,
         'return_type_declaration' => ['space_before' => 'one'],
@@ -139,5 +141,7 @@ return (new Config())
         'ternary_to_null_coalescing' => true,
         'yoda_style' => false,
         'void_return' => true,
+        'php_unit_method_casing' => ['case' => 'snake_case'],
+        'php_unit_test_case_static_method_calls' => ['call_type' => 'static'],
     ])
     ->setFinder($finder);

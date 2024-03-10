@@ -1,10 +1,10 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use function Flow\ETL\DSL\config_builder;
-use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\from_cache;
+use function Flow\ETL\DSL\{config_builder, df, from_cache};
 use Flow\ETL\Cache\PSRSimpleCache;
 use Flow\ETL\Config;
 use Flow\ETL\Tests\Double\FakeExtractor;
@@ -24,7 +24,7 @@ final class CacheTest extends IntegrationTestCase
 
         $cacheContent = \array_values(\array_diff(\scandir($this->cacheDir), ['..', '.']));
 
-        $this->assertContains('test_etl_cache', $cacheContent);
+        self::assertContains('test_etl_cache', $cacheContent);
     }
 
     public function test_psr_cache() : void
@@ -39,9 +39,9 @@ final class CacheTest extends IntegrationTestCase
 
         $cachedRows = df(Config::builder()->cache($adapter)->build())->from(from_cache('test_etl_cache'))->fetch();
 
-        $this->assertCount($rowsets, $cachedRows);
+        self::assertCount($rowsets, $cachedRows);
 
         $adapter->clear('test_etl_cache');
-        $this->assertCount(0, \iterator_to_array($adapter->read('test_etl_cache')));
+        self::assertCount(0, \iterator_to_array($adapter->read('test_etl_cache')));
     }
 }

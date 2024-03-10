@@ -20,7 +20,7 @@ final class ValueConverterTest extends TestCase
             ],
         ]);
 
-        $this->assertEquals(
+        self::assertEquals(
             ['datetime_entry' => new \DateTimeImmutable('2022-01-01 00:00:00')],
             $converter->convert(['datetime_entry' => (int) (new \DateTimeImmutable('2022-01-01 00:00:00'))->format('Uu')])
         );
@@ -44,7 +44,7 @@ final class ValueConverterTest extends TestCase
             ],
         ]);
 
-        $this->assertEquals(
+        self::assertEquals(
             ['list_of_datetimes' => [new \DateTimeImmutable('2022-01-01 00:00:00'), new \DateTimeImmutable('2022-01-02 00:00:00')]],
             $converter->convert(['list_of_datetimes' => [
                 (int) (new \DateTimeImmutable('2022-01-01 00:00:00'))->format('Uu'),
@@ -63,7 +63,7 @@ final class ValueConverterTest extends TestCase
             ],
         ]);
 
-        $this->assertSame(
+        self::assertSame(
             ['list_of_ints' => [1, 2, 3]],
             $converter->convert(['list_of_ints' => [1, 2, 3]])
         );
@@ -79,7 +79,7 @@ final class ValueConverterTest extends TestCase
             ],
         ]);
 
-        $this->assertSame(
+        self::assertSame(
             ['string_entry' => 'some_string'],
             $converter->convert(['string_entry' => 'some_string'])
         );

@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\first;
-use function Flow\ETL\DSL\null_entry;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\{first, null_entry, ref, str_entry};
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;
 
@@ -23,7 +20,7 @@ final class FirstTest extends TestCase
         $aggregator->aggregate(Row::create(str_entry('int', '55')));
         $aggregator->aggregate(Row::create(str_entry('int', '25')));
 
-        $this->assertSame(
+        self::assertSame(
             '10',
             $aggregator->result()->value()
         );
@@ -33,7 +30,7 @@ final class FirstTest extends TestCase
     {
         $aggregator = first(ref('int'));
 
-        $this->assertEquals(
+        self::assertEquals(
             new Row\Entry\NullEntry('int'),
             $aggregator->result()
         );

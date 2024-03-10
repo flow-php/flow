@@ -4,27 +4,17 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\list_entry;
-use function Flow\ETL\DSL\lit;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\str_entry;
-use function Flow\ETL\DSL\type_list;
-use function Flow\ETL\DSL\type_xml_node;
-use function Flow\ETL\DSL\xml_entry;
-use Flow\ETL\Config;
+use function Flow\ETL\DSL\{int_entry, list_entry, lit, ref, str_entry, type_list, type_xml_node, xml_entry};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
 use Flow\ETL\Transformer\ScalarFunctionTransformer;
+use Flow\ETL\{Config, FlowContext, Row, Rows};
 use PHPUnit\Framework\TestCase;
 
 final class ScalarFunctionTransformerTest extends TestCase
 {
     public function test_lit_expression_on_empty_rows() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             [
             ],
             (new ScalarFunctionTransformer('number', lit(1_000)))
@@ -35,7 +25,7 @@ final class ScalarFunctionTransformerTest extends TestCase
 
     public function test_lit_expression_on_non_empty_rows() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             [
                 ['name' => 'Norbert', 'number' => 1],
             ],
@@ -50,7 +40,7 @@ final class ScalarFunctionTransformerTest extends TestCase
 
     public function test_plus_expression_on_empty_rows() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             [
             ],
             (new ScalarFunctionTransformer('number', ref('num')->plus(ref('num1'))))
@@ -61,7 +51,7 @@ final class ScalarFunctionTransformerTest extends TestCase
 
     public function test_plus_expression_on_non_empty_rows() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             [
                 ['a' => 1, 'b' => 2, 'c' => 3],
             ],
@@ -78,7 +68,7 @@ final class ScalarFunctionTransformerTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Entry "num" does not exist. Did you mean one of the following? ["a"]');
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 ['a' => 1, 'number' => 0],
             ],
@@ -98,7 +88,7 @@ final class ScalarFunctionTransformerTest extends TestCase
         $document->loadXML($xml);
         $xpath = new \DOMXPath($document);
 
-        $this->assertEquals(
+        self::assertEquals(
             list_entry('xpath', [
                 $xpath->query('/root/foo')->item(0),
                 $xpath->query('/root/foo')->item(1),

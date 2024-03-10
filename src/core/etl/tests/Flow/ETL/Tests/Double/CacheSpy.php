@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use Flow\ETL\Cache;
-use Flow\ETL\Rows;
+use Flow\ETL\{Cache, Rows};
 
 final class CacheSpy implements Cache
 {

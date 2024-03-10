@@ -45,7 +45,7 @@ final class UuidEntryTest extends TestCase
     protected function setUp() : void
     {
         if (!\class_exists(\Ramsey\Uuid\Uuid::class) && !\class_exists(\Symfony\Component\Uid\Uuid::class)) {
-            $this->markTestSkipped("Package 'ramsey/uuid' or 'symfony/uid' is required for this test.");
+            self::markTestSkipped("Package 'ramsey/uuid' or 'symfony/uid' is required for this test.");
         }
     }
 
@@ -56,7 +56,7 @@ final class UuidEntryTest extends TestCase
     {
         $entry = UuidEntry::from('entry-name', $value);
 
-        $this->assertEquals($value, $entry->value()->toString());
+        self::assertEquals($value, $entry->value()->toString());
     }
 
     /**
@@ -64,14 +64,14 @@ final class UuidEntryTest extends TestCase
      */
     public function test_is_equal(bool $equals, UuidEntry $entry, UuidEntry $nextEntry) : void
     {
-        $this->assertSame($equals, $entry->isEqual($nextEntry));
+        self::assertSame($equals, $entry->isEqual($nextEntry));
     }
 
     public function test_map() : void
     {
         $entry = new UuidEntry('entry-name', Uuid::fromString('00000000-0000-0000-0000-000000000000'));
 
-        $this->assertEquals(
+        self::assertEquals(
             $entry,
             $entry->map(fn ($value) => $value)
         );
@@ -97,7 +97,7 @@ final class UuidEntryTest extends TestCase
         /** @var UuidEntry $newEntry */
         $newEntry = $entry->rename('new-entry-name');
 
-        $this->assertEquals('new-entry-name', $newEntry->name());
-        $this->assertEquals($uuid->toString(), $newEntry->value()->toString());
+        self::assertEquals('new-entry-name', $newEntry->name());
+        self::assertEquals($uuid->toString(), $newEntry->value()->toString());
     }
 }

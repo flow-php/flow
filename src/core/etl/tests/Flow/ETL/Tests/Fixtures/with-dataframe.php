@@ -3,9 +3,7 @@
 declare(strict_types=1);
 
 use function Flow\ETL\DSL\str_entry;
-use Flow\ETL\Flow;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use Flow\ETL\{Flow, Row, Rows};
 
 return (new Flow())->process(
     new Rows(

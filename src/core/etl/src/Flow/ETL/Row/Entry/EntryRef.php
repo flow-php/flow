@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use Flow\ETL\Row\EntryReference;
-use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\{EntryReference, Reference};
 
 trait EntryRef
 {

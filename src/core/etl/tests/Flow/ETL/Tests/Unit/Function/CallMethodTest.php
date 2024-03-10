@@ -1,12 +1,10 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\call_method;
-use function Flow\ETL\DSL\datetime_entry;
-use function Flow\ETL\DSL\null_entry;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\{call_method, datetime_entry, null_entry, ref, str_entry};
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;
 
@@ -20,7 +18,7 @@ final class CallMethodTest extends TestCase
             str_entry('method_param', 'H:i:s Y-m-d'),
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             '00:00:00 2023-01-01',
             call_method(
                 ref('object'),
@@ -37,7 +35,7 @@ final class CallMethodTest extends TestCase
             datetime_entry('method', '2023-01-01 00:00:00 UTC'),
         );
 
-        $this->assertNull(
+        self::assertNull(
             call_method(
                 ref('object'),
                 ref('method')
@@ -52,7 +50,7 @@ final class CallMethodTest extends TestCase
             str_entry('method', 'method_that_not_exists'),
         );
 
-        $this->assertNull(
+        self::assertNull(
             call_method(
                 ref('object'),
                 ref('method')
@@ -67,7 +65,7 @@ final class CallMethodTest extends TestCase
             null_entry('method'),
         );
 
-        $this->assertNull(
+        self::assertNull(
             call_method(
                 ref('object'),
                 ref('method')
@@ -82,7 +80,7 @@ final class CallMethodTest extends TestCase
             str_entry('method', 'getTimestamp'),
         );
 
-        $this->assertNull(
+        self::assertNull(
             call_method(
                 ref('object'),
                 ref('method')

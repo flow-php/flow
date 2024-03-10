@@ -4,18 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\ChartJS\Tests\Integration;
 
-use function Flow\ETL\Adapter\ChartJS\bar_chart;
-use function Flow\ETL\Adapter\ChartJS\line_chart;
-use function Flow\ETL\Adapter\ChartJS\pie_chart;
-use function Flow\ETL\Adapter\ChartJS\to_chartjs_file;
-use function Flow\ETL\Adapter\ChartJS\to_chartjs_var;
-use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\first;
-use function Flow\ETL\DSL\from_memory;
-use function Flow\ETL\DSL\lit;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\refs;
-use function Flow\ETL\DSL\sum;
+use function Flow\ETL\Adapter\ChartJS\{bar_chart, line_chart, pie_chart, to_chartjs_file, to_chartjs_var};
+use function Flow\ETL\DSL\{df, first, from_memory, lit, ref, refs, sum};
 use Flow\ETL\Memory\ArrayMemory;
 use PHPUnit\Framework\TestCase;
 
@@ -53,7 +43,7 @@ final class ChartJSLoaderTest extends TestCase
             )
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 'type' => 'bar',
                 'data' => [
@@ -88,7 +78,7 @@ final class ChartJSLoaderTest extends TestCase
             ],
             $chart->data(),
         );
-        $this->assertFileExists($output);
+        self::assertFileExists($output);
     }
 
     public function test_loading_data_to_bar_chart_output_variable() : void
@@ -125,7 +115,7 @@ final class ChartJSLoaderTest extends TestCase
             )
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 'type' => 'bar',
                 'data' => [
@@ -194,7 +184,7 @@ final class ChartJSLoaderTest extends TestCase
             )
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 'type' => 'line',
                 'data' => [
@@ -229,7 +219,7 @@ final class ChartJSLoaderTest extends TestCase
             ],
             $chart->data(),
         );
-        $this->assertFileExists($output);
+        self::assertFileExists($output);
     }
 
     public function test_loading_data_to_pie_chart() : void
@@ -276,7 +266,7 @@ final class ChartJSLoaderTest extends TestCase
             )
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 'type' => 'pie',
                 'data' => [
@@ -301,6 +291,6 @@ final class ChartJSLoaderTest extends TestCase
             ],
             $chart->data(),
         );
-        $this->assertFileExists($output);
+        self::assertFileExists($output);
     }
 }

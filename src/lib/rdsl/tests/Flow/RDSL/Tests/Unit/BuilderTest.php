@@ -1,14 +1,12 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\RDSL\Tests\Unit;
 
-use Flow\RDSL\AccessControl\AllowAll;
-use Flow\RDSL\AccessControl\AllowList;
-use Flow\RDSL\Builder;
-use Flow\RDSL\DSLNamespace;
+use Flow\RDSL\AccessControl\{AllowAll, AllowList};
 use Flow\RDSL\Exception\InvalidArgumentException;
-use Flow\RDSL\Executable;
-use Flow\RDSL\Finder;
+use Flow\RDSL\{Builder, DSLNamespace, Executable, Finder};
 use PHPUnit\Framework\TestCase;
 
 final class BuilderTest extends TestCase
@@ -33,9 +31,9 @@ final class BuilderTest extends TestCase
 
         $executables = $builder->parse([['function' => 'strlen', 'args' => ['string']]]);
 
-        $this->assertInstanceOf(Executable::class, $executables->toArray()[0]);
-        $this->assertSame('strlen', $executables->toArray()[0]->name());
-        $this->assertSame(['string'], $executables->toArray()[0]->arguments()->toArray());
+        self::assertInstanceOf(Executable::class, $executables->toArray()[0]);
+        self::assertSame('strlen', $executables->toArray()[0]->name());
+        self::assertSame(['string'], $executables->toArray()[0]->arguments()->toArray());
     }
 
     public function test_parsing_array_with_non_existing_function() : void

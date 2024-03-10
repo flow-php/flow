@@ -1,9 +1,10 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Extractor;
 
-use function Flow\ETL\DSL\flow_context;
-use function Flow\ETL\DSL\local_files;
+use function Flow\ETL\DSL\{flow_context, local_files};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor\Signal;
 use PHPUnit\Framework\TestCase;
@@ -31,11 +32,11 @@ final class LocalFileListExtractorTest extends TestCase
         $totalRows = 0;
 
         foreach ($extractor->extract(flow_context()) as $rows) {
-            $this->assertCount(1, $rows);
+            self::assertCount(1, $rows);
             $totalRows += $rows->count();
         }
 
-        $this->assertEquals(6, $totalRows);
+        self::assertEquals(6, $totalRows);
     }
 
     public function test_extracting_files_from_directory_after_getting_stop_signal() : void
@@ -45,12 +46,12 @@ final class LocalFileListExtractorTest extends TestCase
         $totalRows = 0;
 
         foreach ($generator as $rows) {
-            $this->assertCount(1, $rows);
+            self::assertCount(1, $rows);
             $totalRows += $rows->count();
             $generator->send(Signal::STOP);
         }
 
-        $this->assertEquals(1, $totalRows);
+        self::assertEquals(1, $totalRows);
     }
 
     public function test_extracting_files_from_directory_recursive() : void
@@ -60,11 +61,11 @@ final class LocalFileListExtractorTest extends TestCase
         $totalRows = 0;
 
         foreach ($extractor->extract(flow_context()) as $rows) {
-            $this->assertCount(1, $rows);
+            self::assertCount(1, $rows);
             $totalRows += $rows->count();
         }
 
-        $this->assertEquals(7, $totalRows);
+        self::assertEquals(7, $totalRows);
     }
 
     public function test_extracting_files_from_directory_with_limit() : void
@@ -75,11 +76,11 @@ final class LocalFileListExtractorTest extends TestCase
         $totalRows = 0;
 
         foreach ($extractor->extract(flow_context()) as $rows) {
-            $this->assertCount(1, $rows);
+            self::assertCount(1, $rows);
             $totalRows += $rows->count();
         }
 
-        $this->assertEquals(2, $totalRows);
+        self::assertEquals(2, $totalRows);
     }
 
     public function test_extracting_from_directory_with_pattern() : void

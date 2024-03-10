@@ -1,11 +1,11 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
-use Flow\ETL\Window;
+use Flow\ETL\{Row, Rows, Window};
 
 final class DenseRank implements WindowFunction
 {

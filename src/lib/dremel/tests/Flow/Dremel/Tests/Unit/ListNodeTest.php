@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Dremel\Tests\Unit;
 
@@ -17,7 +19,7 @@ final class ListNodeTest extends TestCase
 
     public function test_push_by_2_levels() : void
     {
-        $this->assertSame(
+        self::assertSame(
             [
                 [
                     [
@@ -48,7 +50,7 @@ final class ListNodeTest extends TestCase
 
     public function test_push_to_level_3_then_2_then_1() : void
     {
-        $this->assertSame(
+        self::assertSame(
             [
                 [
                     [
@@ -70,7 +72,7 @@ final class ListNodeTest extends TestCase
 
     public function test_push_to_level_3_then_2_then_1_then_1_again() : void
     {
-        $this->assertSame(
+        self::assertSame(
             [
                 [
                     [
@@ -97,7 +99,7 @@ final class ListNodeTest extends TestCase
 
     public function test_push_to_level_3_then_2_then_1_then_2() : void
     {
-        $this->assertSame(
+        self::assertSame(
             [
                 [
                     [
@@ -122,7 +124,7 @@ final class ListNodeTest extends TestCase
 
     public function test_push_to_level_3_then_2_then_1_then_3() : void
     {
-        $this->assertSame(
+        self::assertSame(
             [
                 [
                     [
@@ -145,7 +147,7 @@ final class ListNodeTest extends TestCase
 
     public function test_push_value_highest_level_then_lower_and_higher() : void
     {
-        $this->assertSame(
+        self::assertSame(
             [
                 [
                     [
@@ -165,7 +167,7 @@ final class ListNodeTest extends TestCase
 
     public function test_push_value_to_highest_level() : void
     {
-        $this->assertSame(
+        self::assertSame(
             [
                 [
                     [
@@ -183,7 +185,7 @@ final class ListNodeTest extends TestCase
 
     public function test_push_value_to_lower_level() : void
     {
-        $this->assertSame(
+        self::assertSame(
             [
                 [
                     [
@@ -200,7 +202,7 @@ final class ListNodeTest extends TestCase
 
     public function test_push_value_to_specific_level() : void
     {
-        $this->assertSame(
+        self::assertSame(
             [
                 [
                     [

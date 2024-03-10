@@ -4,14 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine;
 
-use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\DriverManager;
-use Flow\Doctrine\Bulk\Bulk;
-use Flow\Doctrine\Bulk\BulkData;
+use Doctrine\DBAL\{Connection, DriverManager};
+use Flow\Doctrine\Bulk\{Bulk, BulkData};
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Loader;
-use Flow\ETL\Rows;
+use Flow\ETL\{FlowContext, Loader, Rows};
 
 final class DbalLoader implements Loader
 {

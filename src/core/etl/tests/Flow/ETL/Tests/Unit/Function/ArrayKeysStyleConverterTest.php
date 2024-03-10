@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\array_entry;
-use function Flow\ETL\DSL\array_keys_style_convert;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\{array_entry, array_keys_style_convert, int_entry, ref};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;
@@ -32,7 +29,7 @@ final class ArrayKeysStyleConverterTest extends TestCase
             int_entry('invalid_entry', 1),
         );
 
-        $this->assertNull(array_keys_style_convert(ref('invalid_entry'), 'snake')->eval($row));
+        self::assertNull(array_keys_style_convert(ref('invalid_entry'), 'snake')->eval($row));
     }
 
     public function test_transforms_case_style_for_all_keys_in_array_entry() : void
@@ -61,7 +58,7 @@ final class ArrayKeysStyleConverterTest extends TestCase
             )
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 'item_id' => 1,
                 'item_status' => 'PENDING',

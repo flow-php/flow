@@ -4,12 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Pipeline;
 
-use Flow\ETL\Extractor;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Loader;
-use Flow\ETL\Pipeline;
-use Flow\ETL\Rows;
-use Flow\ETL\Transformer;
+use Flow\ETL\{Extractor, FlowContext, Loader, Pipeline, Rows, Transformer};
 
 final class VoidPipeline implements OverridingPipeline, Pipeline
 {

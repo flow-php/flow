@@ -2,16 +2,7 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\from_rows;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\lit;
-use function Flow\ETL\DSL\null_entry;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\to_output;
-use function Flow\ETL\DSL\when;
+use function Flow\ETL\DSL\{df, from_rows, int_entry, lit, null_entry, ref, row, rows, to_output, when};
 
 require __DIR__ . '/../../../autoload.php';
 

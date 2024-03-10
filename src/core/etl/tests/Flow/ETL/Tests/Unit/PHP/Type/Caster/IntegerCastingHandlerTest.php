@@ -26,6 +26,6 @@ final class IntegerCastingHandlerTest extends TestCase
     #[DataProvider('integer_castable_data_provider')]
     public function test_casting_different_data_types_to_integer(mixed $value, int $expected) : void
     {
-        $this->assertSame($expected, (new IntegerCastingHandler())->value($value, type_integer(), Caster::default()));
+        self::assertSame($expected, (new IntegerCastingHandler())->value($value, type_integer(), Caster::default()));
     }
 }

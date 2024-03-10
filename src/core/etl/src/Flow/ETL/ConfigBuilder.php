@@ -6,14 +6,11 @@ namespace Flow\ETL;
 
 use Flow\ETL\Cache\LocalFilesystemCache;
 use Flow\ETL\ExternalSort\MemorySort;
-use Flow\ETL\Filesystem\FilesystemStreams;
-use Flow\ETL\Filesystem\LocalFilesystem;
+use Flow\ETL\Filesystem\{FilesystemStreams, LocalFilesystem};
 use Flow\ETL\Monitoring\Memory\Unit;
 use Flow\ETL\Pipeline\Optimizer;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
-use Flow\Serializer\CompressingSerializer;
-use Flow\Serializer\NativePHPSerializer;
-use Flow\Serializer\Serializer;
+use Flow\Serializer\{CompressingSerializer, NativePHPSerializer, Serializer};
 
 final class ConfigBuilder
 {

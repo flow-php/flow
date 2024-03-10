@@ -6,8 +6,7 @@ namespace Flow\Website\Factory\Github;
 
 use Flow\ETL\Adapter\Http\DynamicExtractor\NextRequestFactory;
 use Nyholm\Psr7\Factory\Psr17Factory;
-use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\{RequestInterface, ResponseInterface};
 
 final class ContributorsRequestFactory implements NextRequestFactory
 {

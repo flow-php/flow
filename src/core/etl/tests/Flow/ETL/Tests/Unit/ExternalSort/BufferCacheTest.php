@@ -5,10 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\ExternalSort;
 
 use function Flow\ETL\DSL\int_entry;
-use Flow\ETL\Cache;
 use Flow\ETL\ExternalSort\BufferCache;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use Flow\ETL\{Cache, Row, Rows};
 use PHPUnit\Framework\Constraint\Callback;
 use PHPUnit\Framework\TestCase;
 
@@ -21,7 +19,7 @@ final class BufferCacheTest extends TestCase
             10,
         );
 
-        $cacheMock->expects($this->once())
+        $cacheMock->expects(self::once())
             ->method('add')
             ->with('id', new Callback(fn (Rows $rows) => $rows->count() === 2));
 
@@ -38,7 +36,7 @@ final class BufferCacheTest extends TestCase
             2,
         );
 
-        $cacheMock->expects($this->once())
+        $cacheMock->expects(self::once())
             ->method('add')
             ->with('id', new Callback(fn (Rows $rows) => $rows->count() === 2));
 
@@ -53,7 +51,7 @@ final class BufferCacheTest extends TestCase
             2,
         );
 
-        $cacheMock->expects($this->exactly(2))
+        $cacheMock->expects(self::exactly(2))
             ->method('add');
 
         $bufferCache->add('id', new Rows(Row::create(int_entry('id', 1))));

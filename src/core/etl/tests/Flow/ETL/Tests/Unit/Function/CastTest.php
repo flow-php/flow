@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\cast;
-use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\{cast, ref};
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\Type\Uuid;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
@@ -57,24 +56,24 @@ XML;
         $resultCastRef = cast(ref('value'), $to)->eval(Row::create((new NativeEntryFactory())->create('value', $from)));
 
         if (\is_object($expected) || \is_object($from)) {
-            $this->assertEquals($expected, $resultRefCast);
-            $this->assertEquals($expected, $resultCastRef);
+            self::assertEquals($expected, $resultRefCast);
+            self::assertEquals($expected, $resultCastRef);
         } else {
-            $this->assertSame($expected, $resultRefCast);
-            $this->assertSame($expected, $resultCastRef);
+            self::assertSame($expected, $resultRefCast);
+            self::assertSame($expected, $resultCastRef);
         }
     }
 
     public function test_casting_integer_to_xml() : void
     {
-        $this->assertNull(
+        self::assertNull(
             ref('value')->cast('xml')->eval(Row::create((new NativeEntryFactory())->create('value', 1)))
         );
     }
 
     public function test_casting_non_xml_string_to_xml() : void
     {
-        $this->assertNull(
+        self::assertNull(
             ref('value')->cast('xml')->eval(Row::create((new NativeEntryFactory())->create('value', 'foo')))
         );
     }

@@ -3,10 +3,7 @@
 declare(strict_types=1);
 
 use function Flow\ETL\Adapter\CSV\from_csv;
-use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\schema_from_json;
-use function Flow\ETL\DSL\schema_to_json;
-use function Flow\ETL\DSL\to_output;
+use function Flow\ETL\DSL\{df, schema_from_json, schema_to_json, to_output};
 use Flow\ETL\Loader\StreamLoader\Output;
 
 require __DIR__ . '/../../../autoload.php';

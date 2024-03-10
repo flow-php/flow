@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\ParquetFile\RowGroupBuilder;
 
@@ -16,9 +18,9 @@ final class ColumnChunkSizeStatisticsTest extends TestCase
             $statistics->add($i);
         }
 
-        $this->assertSame(100, $statistics->valuesCount());
-        $this->assertSame(0, $statistics->nullCount());
-        $this->assertSame(4 * 100, $statistics->uncompressedSize());
+        self::assertSame(100, $statistics->valuesCount());
+        self::assertSame(0, $statistics->nullCount());
+        self::assertSame(4 * 100, $statistics->uncompressedSize());
     }
 
     public function test_int64_statistics() : void
@@ -29,9 +31,9 @@ final class ColumnChunkSizeStatisticsTest extends TestCase
             $statistics->add($i);
         }
 
-        $this->assertSame(100, $statistics->valuesCount());
-        $this->assertSame(0, $statistics->nullCount());
-        $this->assertSame(8 * 100, $statistics->uncompressedSize());
+        self::assertSame(100, $statistics->valuesCount());
+        self::assertSame(0, $statistics->nullCount());
+        self::assertSame(8 * 100, $statistics->uncompressedSize());
     }
 
     public function test_string_statistics() : void
@@ -42,8 +44,8 @@ final class ColumnChunkSizeStatisticsTest extends TestCase
             $statistics->add($string = 'string with a fixed length');
         }
 
-        $this->assertSame(100, $statistics->valuesCount());
-        $this->assertSame(0, $statistics->nullCount());
-        $this->assertSame(\strlen($string) * $statistics->notNullCount() + (4 * $statistics->notNullCount()), $statistics->uncompressedSize());
+        self::assertSame(100, $statistics->valuesCount());
+        self::assertSame(0, $statistics->nullCount());
+        self::assertSame(\strlen($string) * $statistics->notNullCount() + (4 * $statistics->notNullCount()), $statistics->uncompressedSize());
     }
 }

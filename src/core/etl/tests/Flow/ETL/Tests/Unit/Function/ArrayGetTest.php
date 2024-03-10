@@ -4,11 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\array_entry;
-use function Flow\ETL\DSL\array_exists;
-use function Flow\ETL\DSL\array_get;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\ref;
+use function Flow\ETL\DSL\{array_entry, array_exists, array_get, int_entry, ref};
 use Flow\ArrayDot\Exception\InvalidPathException;
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;
@@ -17,8 +13,8 @@ final class ArrayGetTest extends TestCase
 {
     public function test_array_access_for_not_array_entry() : void
     {
-        $this->assertNull(array_get(ref('integer_entry'), 'invalid_path')->eval(Row::create(int_entry('integer_entry', 1))));
-        $this->assertFalse(array_exists(ref('integer_entry'), 'invalid_path')->eval(Row::create(int_entry('integer_entry', 1))));
+        self::assertNull(array_get(ref('integer_entry'), 'invalid_path')->eval(Row::create(int_entry('integer_entry', 1))));
+        self::assertFalse(array_exists(ref('integer_entry'), 'invalid_path')->eval(Row::create(int_entry('integer_entry', 1))));
     }
 
     public function test_array_accessor_transformer() : void
@@ -31,8 +27,8 @@ final class ArrayGetTest extends TestCase
                 'array' => ['foo' => 'bar'],
             ]),
         );
-        $this->assertEquals('bar', array_get(ref('array_entry'), 'array.foo')->eval($row));
-        $this->assertTrue(array_exists(ref('array_entry'), 'array.foo')->eval($row));
+        self::assertEquals('bar', array_get(ref('array_entry'), 'array.foo')->eval($row));
+        self::assertTrue(array_exists(ref('array_entry'), 'array.foo')->eval($row));
     }
 
     public function test_array_accessor_transformer_with_invalid_and_without_strict_path() : void
@@ -46,9 +42,9 @@ final class ArrayGetTest extends TestCase
                 'array' => ['foo' => 'bar'],
             ]),
         );
-        $this->assertNull(array_get(ref('array_entry'), '?invalid_path')->eval($row));
-        $this->assertTrue(array_exists(ref('array_entry'), '?invalid_path')->eval($row));
-        $this->assertFalse(array_exists(ref('array_entry'), 'invalid_path')->eval($row));
+        self::assertNull(array_get(ref('array_entry'), '?invalid_path')->eval($row));
+        self::assertTrue(array_exists(ref('array_entry'), '?invalid_path')->eval($row));
+        self::assertFalse(array_exists(ref('array_entry'), 'invalid_path')->eval($row));
     }
 
     public function test_array_accessor_transformer_with_invalid_but_strict_path() : void

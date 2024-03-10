@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Function;
 
-use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\optional;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\to_memory;
+use function Flow\ETL\DSL\{from_array, optional, ref, to_memory};
 use Flow\ETL\Flow;
 use Flow\ETL\Memory\ArrayMemory;
 use PHPUnit\Framework\TestCase;
@@ -34,7 +31,7 @@ final class ArrayMergeCollectionTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'result' => ['a' => 1, 'b' => 2, 'c' => 3]],
                 ['id' => 2, 'result' => null],

@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ParquetViewer\Tests\Integration;
 
@@ -22,11 +24,11 @@ final class ReadMetadataTest extends TestCase
             'file' => $path,
         ]);
 
-        $this->assertStringContainsString(
+        self::assertStringContainsString(
             'not a valid parquet file',
             $tester->getDisplay()
         );
-        $this->assertSame(1, $tester->getStatusCode());
+        self::assertSame(1, $tester->getStatusCode());
     }
 
     public function test_reading_metadata_from_parquet_file() : void
@@ -47,11 +49,11 @@ final class ReadMetadataTest extends TestCase
             '--statistics' => 1,
         ]);
 
-        $this->assertStringContainsString('Metadata', $tester->getDisplay());
-        $this->assertStringContainsString('Row Groups', $tester->getDisplay());
-        $this->assertStringContainsString('Column Chunks', $tester->getDisplay());
-        $this->assertStringContainsString('Column Chunks Statistics', $tester->getDisplay());
-        $this->assertStringContainsString('Page Headers', $tester->getDisplay());
-        $this->assertSame(0, $tester->getStatusCode());
+        self::assertStringContainsString('Metadata', $tester->getDisplay());
+        self::assertStringContainsString('Row Groups', $tester->getDisplay());
+        self::assertStringContainsString('Column Chunks', $tester->getDisplay());
+        self::assertStringContainsString('Column Chunks Statistics', $tester->getDisplay());
+        self::assertStringContainsString('Page Headers', $tester->getDisplay());
+        self::assertSame(0, $tester->getStatusCode());
     }
 }

@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\lit;
-use function Flow\ETL\DSL\regex_match_all;
+use function Flow\ETL\DSL\{lit, regex_match_all};
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;
 
@@ -19,7 +18,7 @@ final class PregMatchAllTest extends TestCase
             lit('invalid')
         );
 
-        $this->assertSame(
+        self::assertSame(
             [],
             $pregMatchAll->eval(Row::create())
         );
@@ -32,7 +31,7 @@ final class PregMatchAllTest extends TestCase
             lit('12 apples and 45 oranges')
         );
 
-        $this->assertSame(
+        self::assertSame(
             [],
             $pregMatchAll->eval(Row::create())
         );
@@ -45,7 +44,7 @@ final class PregMatchAllTest extends TestCase
             lit(2)
         );
 
-        $this->assertSame(
+        self::assertSame(
             [],
             $pregMatchAll->eval(Row::create())
         );
@@ -58,7 +57,7 @@ final class PregMatchAllTest extends TestCase
             lit('12 apples and 45 oranges')
         );
 
-        $this->assertSame(
+        self::assertSame(
             [['12', '45']],
             $pregMatchAll->eval(Row::create())
         );
@@ -72,7 +71,7 @@ final class PregMatchAllTest extends TestCase
             lit(PREG_PATTERN_ORDER)
         );
 
-        $this->assertSame(
+        self::assertSame(
             [['12', '45'], ['12', '45']],
             $pregMatchAll->eval(Row::create())
         );

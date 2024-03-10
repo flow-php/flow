@@ -1,14 +1,14 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Row;
 use Money\Currencies\ISOCurrencies;
-use Money\Currency;
-use Money\Money;
-use Money\MoneyParser;
 use Money\Parser\DecimalMoneyParser;
+use Money\{Currency, Money, MoneyParser};
 
 if (!\interface_exists(MoneyParser::class)) {
     throw new RuntimeException("Money\MoneyParser class not found, please add moneyphp/money dependency to the project first.");

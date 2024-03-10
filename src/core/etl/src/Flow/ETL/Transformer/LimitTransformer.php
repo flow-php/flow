@@ -1,12 +1,11 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\Transformer;
 
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\LimitReachedException;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Rows;
-use Flow\ETL\Transformer;
+use Flow\ETL\Exception\{InvalidArgumentException, LimitReachedException};
+use Flow\ETL\{FlowContext, Rows, Transformer};
 
 final class LimitTransformer implements Transformer
 {

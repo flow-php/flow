@@ -1,13 +1,12 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\ChartJS;
 
-use Flow\ETL\Adapter\ChartJS\Chart\BarChart;
-use Flow\ETL\Adapter\ChartJS\Chart\LineChart;
-use Flow\ETL\Adapter\ChartJS\Chart\PieChart;
+use Flow\ETL\Adapter\ChartJS\Chart\{BarChart, LineChart, PieChart};
 use Flow\ETL\Filesystem\Path;
-use Flow\ETL\Row\EntryReference;
-use Flow\ETL\Row\References;
+use Flow\ETL\Row\{EntryReference, References};
 
 function bar_chart(EntryReference $label, References $datasets) : BarChart
 {

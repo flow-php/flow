@@ -1,18 +1,14 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile;
 
 use Flow\Parquet\Data\DataConverter;
 use Flow\Parquet\Exception\InvalidArgumentException;
-use Flow\Parquet\Option;
-use Flow\Parquet\Options;
-use Flow\Parquet\ParquetFile\RowGroupBuilder\ColumnChunkBuilder;
-use Flow\Parquet\ParquetFile\RowGroupBuilder\Flattener;
-use Flow\Parquet\ParquetFile\RowGroupBuilder\PageSizeCalculator;
-use Flow\Parquet\ParquetFile\RowGroupBuilder\RowGroupContainer;
-use Flow\Parquet\ParquetFile\RowGroupBuilder\RowGroupStatistics;
-use Flow\Parquet\ParquetFile\RowGroupBuilder\Validator\ColumnDataValidator;
-use Flow\Parquet\ParquetFile\RowGroupBuilder\Validator\DisabledValidator;
+use Flow\Parquet\ParquetFile\RowGroupBuilder\Validator\{ColumnDataValidator, DisabledValidator};
+use Flow\Parquet\ParquetFile\RowGroupBuilder\{ColumnChunkBuilder, Flattener, PageSizeCalculator, RowGroupContainer, RowGroupStatistics};
+use Flow\Parquet\{Option, Options};
 
 /**
  * @psalm-suppress PropertyNotSetInConstructor

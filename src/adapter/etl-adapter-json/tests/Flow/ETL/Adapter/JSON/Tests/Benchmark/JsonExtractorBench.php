@@ -1,10 +1,11 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\JSON\Tests\Benchmark;
 
 use function Flow\ETL\Adapter\JSON\from_json;
-use Flow\ETL\Config;
-use Flow\ETL\FlowContext;
+use Flow\ETL\{Config, FlowContext};
 use PhpBench\Attributes\Groups;
 
 #[Groups(['extractor'])]

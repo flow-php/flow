@@ -4,11 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type\Caster;
 
-use function Flow\ETL\DSL\struct_type;
-use function Flow\ETL\DSL\structure_element;
-use function Flow\ETL\DSL\structure_type;
-use function Flow\ETL\DSL\type_integer;
-use function Flow\ETL\DSL\type_string;
+use function Flow\ETL\DSL\{struct_type, structure_element, structure_type, type_integer, type_string};
 use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\PHP\Type\Caster\StructureCastingHandler;
 use PHPUnit\Framework\TestCase;
@@ -17,7 +13,7 @@ final class StructureCastingHandlerTest extends TestCase
 {
     public function test_casting_array_into_structure() : void
     {
-        $this->assertSame(
+        self::assertSame(
             [
                 'name' => 'Norbert Orzechowicz',
                 'age' => 30,
@@ -53,7 +49,7 @@ final class StructureCastingHandlerTest extends TestCase
 
     public function test_casting_structure_with_empty_not_nullable_fields() : void
     {
-        $this->assertSame(
+        self::assertSame(
             [
                 'name' => 'Norbert Orzechowicz',
                 'age' => 30,
@@ -86,7 +82,7 @@ final class StructureCastingHandlerTest extends TestCase
 
     public function test_casting_structure_with_missing_nullable_fields() : void
     {
-        $this->assertSame(
+        self::assertSame(
             [
                 'name' => 'Norbert Orzechowicz',
                 'age' => 30,

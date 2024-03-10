@@ -4,25 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type;
 
-use function Flow\ETL\DSL\type_array;
-use function Flow\ETL\DSL\type_boolean;
-use function Flow\ETL\DSL\type_datetime;
-use function Flow\ETL\DSL\type_float;
-use function Flow\ETL\DSL\type_int;
-use function Flow\ETL\DSL\type_json;
-use function Flow\ETL\DSL\type_null;
-use function Flow\ETL\DSL\type_object;
-use function Flow\ETL\DSL\type_string;
-use function Flow\ETL\DSL\type_uuid;
-use function Flow\ETL\DSL\type_xml;
-use function Flow\ETL\DSL\type_xml_node;
+use function Flow\ETL\DSL\{type_array, type_boolean, type_datetime, type_float, type_int, type_json, type_null, type_object, type_string, type_uuid, type_xml, type_xml_node};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
-use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
-use Flow\ETL\PHP\Type\Logical\StructureType;
-use Flow\ETL\PHP\Type\Native\ArrayType;
-use Flow\ETL\PHP\Type\Native\EnumType;
+use Flow\ETL\PHP\Type\Logical\{ListType, StructureType};
+use Flow\ETL\PHP\Type\Native\{ArrayType, EnumType};
 
 final class TypeDetector
 {

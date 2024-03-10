@@ -1,12 +1,12 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\ParquetFile;
 
 use Flow\ETL\Adapter\Elasticsearch\Tests\Integration\TestCase;
 use Flow\Parquet\ParquetFile\Schema;
-use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Flow\Parquet\ParquetFile\Schema\ListElement;
-use Flow\Parquet\ParquetFile\Schema\NestedColumn;
+use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, NestedColumn};
 use Flow\Parquet\Thrift\SchemaElement;
 
 final class SchemaTest extends TestCase
@@ -31,14 +31,14 @@ final class SchemaTest extends TestCase
             ),
         );
 
-        $this->assertSame(1, $schema->get('int')->maxDefinitionsLevel());
-        $this->assertSame(0, $schema->get('int')->maxRepetitionsLevel());
-        $this->assertSame(2, $schema->get('nested.int')->maxDefinitionsLevel());
-        $this->assertSame(0, $schema->get('nested.int')->maxRepetitionsLevel());
-        $this->assertSame(3, $schema->get('nested.nested.bool')->maxDefinitionsLevel());
-        $this->assertSame(0, $schema->get('nested.nested.bool')->maxRepetitionsLevel());
-        $this->assertSame(4, $schema->get('nested.list_of_ints.list.element')->maxDefinitionsLevel());
-        $this->assertSame(1, $schema->get('nested.list_of_ints.list.element')->maxRepetitionsLevel());
+        self::assertSame(1, $schema->get('int')->maxDefinitionsLevel());
+        self::assertSame(0, $schema->get('int')->maxRepetitionsLevel());
+        self::assertSame(2, $schema->get('nested.int')->maxDefinitionsLevel());
+        self::assertSame(0, $schema->get('nested.int')->maxRepetitionsLevel());
+        self::assertSame(3, $schema->get('nested.nested.bool')->maxDefinitionsLevel());
+        self::assertSame(0, $schema->get('nested.nested.bool')->maxRepetitionsLevel());
+        self::assertSame(4, $schema->get('nested.list_of_ints.list.element')->maxDefinitionsLevel());
+        self::assertSame(1, $schema->get('nested.list_of_ints.list.element')->maxRepetitionsLevel());
     }
 
     public function test_converting_schema_to_thrift() : void
@@ -60,8 +60,8 @@ final class SchemaTest extends TestCase
                 ]
             ),
         );
-        $this->assertCount(10, $schema->toThrift());
-        $this->assertSame(
+        self::assertCount(10, $schema->toThrift());
+        self::assertSame(
             [
                 'schema',
                 'int',
@@ -102,7 +102,7 @@ final class SchemaTest extends TestCase
         );
 
         foreach ($schema->columnsFlat() as $column) {
-            $this->assertInstanceOf(FlatColumn::class, $column);
+            self::assertInstanceOf(FlatColumn::class, $column);
         }
     }
 }

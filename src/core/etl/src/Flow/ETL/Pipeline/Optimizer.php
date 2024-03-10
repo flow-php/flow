@@ -1,11 +1,11 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\Pipeline;
 
-use Flow\ETL\Loader;
-use Flow\ETL\Pipeline;
 use Flow\ETL\Pipeline\Optimizer\Optimization;
-use Flow\ETL\Transformer;
+use Flow\ETL\{Loader, Pipeline, Transformer};
 
 final class Optimizer
 {

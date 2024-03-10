@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use Flow\ETL\Extractor;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Rows;
+use Flow\ETL\{Extractor, FlowContext, Rows};
 
 final class EmptyExtractor implements Extractor
 {

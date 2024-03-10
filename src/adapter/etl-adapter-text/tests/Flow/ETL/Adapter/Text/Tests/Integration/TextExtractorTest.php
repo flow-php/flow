@@ -4,17 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Text\Tests\Integration;
 
-use function Flow\ETL\Adapter\Text\from_text;
-use function Flow\ETL\Adapter\Text\to_text;
+use function Flow\ETL\Adapter\Text\{from_text, to_text};
 use function Flow\ETL\DSL\from_array;
 use Flow\ETL\Adapter\Text\TextExtractor;
-use Flow\ETL\Config;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Filesystem\Path;
-use Flow\ETL\Flow;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use Flow\ETL\{Config, Flow, FlowContext, Row, Rows};
 use PHPUnit\Framework\TestCase;
 
 final class TextExtractorTest extends TestCase
@@ -28,10 +23,10 @@ final class TextExtractorTest extends TestCase
             ->fetch();
 
         foreach ($rows as $row) {
-            $this->assertInstanceOf(Row\Entry\StringEntry::class, $row->get('text'));
+            self::assertInstanceOf(Row\Entry\StringEntry::class, $row->get('text'));
         }
 
-        $this->assertSame(1024, $rows->count());
+        self::assertSame(1024, $rows->count());
     }
 
     public function test_extracting_text_files_from_directory() : void
@@ -53,7 +48,7 @@ final class TextExtractorTest extends TestCase
             $total += $rows->count();
         }
 
-        $this->assertSame(2048, $total);
+        self::assertSame(2048, $total);
     }
 
     public function test_limit() : void
@@ -70,7 +65,7 @@ final class TextExtractorTest extends TestCase
         $extractor = new TextExtractor(Path::realpath($path));
         $extractor->changeLimit(2);
 
-        $this->assertCount(
+        self::assertCount(
             2,
             \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
         );
@@ -91,15 +86,15 @@ final class TextExtractorTest extends TestCase
         $extractor = new TextExtractor(Path::realpath($path));
         $generator = $extractor->extract(new FlowContext(Config::default()));
 
-        $this->assertSame([['text' => '1']], $generator->current()->toArray());
-        $this->assertTrue($generator->valid());
+        self::assertSame([['text' => '1']], $generator->current()->toArray());
+        self::assertTrue($generator->valid());
         $generator->next();
-        $this->assertSame([['text' => '2']], $generator->current()->toArray());
-        $this->assertTrue($generator->valid());
+        self::assertSame([['text' => '2']], $generator->current()->toArray());
+        self::assertTrue($generator->valid());
         $generator->next();
-        $this->assertSame([['text' => '3']], $generator->current()->toArray());
-        $this->assertTrue($generator->valid());
+        self::assertSame([['text' => '3']], $generator->current()->toArray());
+        self::assertTrue($generator->valid());
         $generator->send(Signal::STOP);
-        $this->assertFalse($generator->valid());
+        self::assertFalse($generator->valid());
     }
 }

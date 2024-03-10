@@ -12,8 +12,8 @@ final class MetadataTest extends TestCase
 {
     public function test_equal_metadata() : void
     {
-        $this->assertTrue(Metadata::empty()->add('array', [1, 2, 3])->isEqual(Metadata::empty()->add('array', [1, 2, 3])));
-        $this->assertFalse(Metadata::empty()->add('array', [1, 2, 3])->isEqual(Metadata::empty()->add('array', [2, 3])));
+        self::assertTrue(Metadata::empty()->add('array', [1, 2, 3])->isEqual(Metadata::empty()->add('array', [1, 2, 3])));
+        self::assertFalse(Metadata::empty()->add('array', [1, 2, 3])->isEqual(Metadata::empty()->add('array', [2, 3])));
     }
 
     public function test_get_non_existing_key() : void
@@ -26,7 +26,7 @@ final class MetadataTest extends TestCase
 
     public function test_merge_metadata() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             Metadata::empty()->add('id', 1)->add('name', 'test'),
             Metadata::empty()->add('id', 1)->merge(Metadata::empty()->add('name', 'test'))
         );
@@ -34,7 +34,7 @@ final class MetadataTest extends TestCase
 
     public function test_merge_metadata_with_the_same_keys() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             Metadata::empty()->add('id', 2),
             Metadata::empty()->add('id', 1)->merge(Metadata::empty()->add('id', 2))
         );
@@ -42,7 +42,7 @@ final class MetadataTest extends TestCase
 
     public function test_remove_metadata_with_the_same_keys() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             Metadata::empty()->add('name', 'test'),
             Metadata::empty()->add('id', 1)->add('name', 'test')->remove('id')
         );

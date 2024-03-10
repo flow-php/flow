@@ -6,8 +6,7 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
-use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\{Entry, Reference};
 
 final class IsType extends ScalarFunctionChain
 {

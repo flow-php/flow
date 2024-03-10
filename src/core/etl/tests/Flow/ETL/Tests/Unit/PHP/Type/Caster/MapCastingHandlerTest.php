@@ -4,11 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type\Caster;
 
-use function Flow\ETL\DSL\type_float;
-use function Flow\ETL\DSL\type_int;
-use function Flow\ETL\DSL\type_integer;
-use function Flow\ETL\DSL\type_map;
-use function Flow\ETL\DSL\type_string;
+use function Flow\ETL\DSL\{type_float, type_int, type_integer, type_map, type_string};
 use Flow\ETL\Exception\CastingException;
 use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\PHP\Type\Caster\MapCastingHandler;
@@ -18,7 +14,7 @@ final class MapCastingHandlerTest extends TestCase
 {
     public function test_casting_map_of_ints_into_map_of_floats() : void
     {
-        $this->assertSame(
+        self::assertSame(
             [
                 'a' => 1.0,
                 'b' => 2.0,
@@ -33,7 +29,7 @@ final class MapCastingHandlerTest extends TestCase
         $this->expectException(CastingException::class);
         $this->expectExceptionMessage('Can\'t cast "array" into "map<integer, float>"');
 
-        $this->assertSame(
+        self::assertSame(
             [
                 'a' => 1.0,
                 'b' => 2.0,
@@ -45,7 +41,7 @@ final class MapCastingHandlerTest extends TestCase
 
     public function test_casting_scalar_to_map() : void
     {
-        $this->assertSame(
+        self::assertSame(
             [
                 '0' => 2,
             ],

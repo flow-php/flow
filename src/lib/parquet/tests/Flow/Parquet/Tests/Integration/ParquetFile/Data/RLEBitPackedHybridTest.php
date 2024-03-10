@@ -1,11 +1,12 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\ParquetFile\Data;
 
 use Flow\Parquet\BinaryReader\BinaryBufferReader;
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
-use Flow\Parquet\ParquetFile\Data\BitWidth;
-use Flow\Parquet\ParquetFile\Data\RLEBitPackedHybrid;
+use Flow\Parquet\ParquetFile\Data\{BitWidth, RLEBitPackedHybrid};
 use PHPUnit\Framework\TestCase;
 
 final class RLEBitPackedHybridTest extends TestCase
@@ -15,7 +16,7 @@ final class RLEBitPackedHybridTest extends TestCase
         $values = [0, 1, 1, 1, 1, 1, 1, 1, 1, 1];
         $buffer = '';
         (new RLEBitPackedHybrid())->encodeHybrid($writer = new BinaryBufferWriter($buffer), $values);
-        $this->assertSame(
+        self::assertSame(
             $values,
             (new RLEBitPackedHybrid())->decodeHybrid(
                 new BinaryBufferReader($buffer),
@@ -30,7 +31,7 @@ final class RLEBitPackedHybridTest extends TestCase
         $values = [5, 5, 5, 5, 5, 5, 4, 4, 4, 4];
         $buffer = '';
         (new RLEBitPackedHybrid())->encodeHybrid($writer = new BinaryBufferWriter($buffer), $values);
-        $this->assertSame(
+        self::assertSame(
             $values,
             (new RLEBitPackedHybrid())->decodeHybrid(
                 new BinaryBufferReader($buffer),
@@ -46,7 +47,7 @@ final class RLEBitPackedHybridTest extends TestCase
         $buffer = '';
         (new RLEBitPackedHybrid())->encodeHybrid($writer = new BinaryBufferWriter($buffer), $values);
         $writer->writeBytes([1, 2, 3]);
-        $this->assertSame(
+        self::assertSame(
             $values,
             (new RLEBitPackedHybrid())->decodeHybrid(
                 new BinaryBufferReader($buffer),
@@ -63,7 +64,7 @@ final class RLEBitPackedHybridTest extends TestCase
         $buffer = '';
         (new RLEBitPackedHybrid())->encodeHybrid(new BinaryBufferWriter($buffer), $values);
 
-        $this->assertSame(
+        self::assertSame(
             $values,
             (new RLEBitPackedHybrid())->decodeHybrid(
                 new BinaryBufferReader($buffer),
@@ -83,7 +84,7 @@ final class RLEBitPackedHybridTest extends TestCase
         $buffer = '';
         (new RLEBitPackedHybrid())->encodeHybrid(new BinaryBufferWriter($buffer), $values);
 
-        $this->assertSame(
+        self::assertSame(
             $values,
             (new RLEBitPackedHybrid())->decodeHybrid(
                 new BinaryBufferReader($buffer),
@@ -100,7 +101,7 @@ final class RLEBitPackedHybridTest extends TestCase
         $buffer = '';
         (new RLEBitPackedHybrid())->encodeHybrid(new BinaryBufferWriter($buffer), $values);
 
-        $this->assertSame(
+        self::assertSame(
             $values,
             (new RLEBitPackedHybrid())->decodeHybrid(
                 new BinaryBufferReader($buffer),
@@ -116,7 +117,7 @@ final class RLEBitPackedHybridTest extends TestCase
         $buffer = '';
         (new RLEBitPackedHybrid())->encodeHybrid($writer = new BinaryBufferWriter($buffer), $values);
         $writer->writeBytes([1, 2, 3]);
-        $this->assertSame(
+        self::assertSame(
             $values,
             (new RLEBitPackedHybrid())->decodeHybrid(
                 new BinaryBufferReader($buffer),
@@ -133,7 +134,7 @@ final class RLEBitPackedHybridTest extends TestCase
         $buffer = '';
         (new RLEBitPackedHybrid())->encodeHybrid(new BinaryBufferWriter($buffer), $values);
 
-        $this->assertSame(
+        self::assertSame(
             $values,
             (new RLEBitPackedHybrid())->decodeHybrid(
                 new BinaryBufferReader($buffer),
@@ -150,7 +151,7 @@ final class RLEBitPackedHybridTest extends TestCase
         $buffer = '';
         (new RLEBitPackedHybrid())->encodeHybrid(new BinaryBufferWriter($buffer), $values);
 
-        $this->assertSame(
+        self::assertSame(
             $values,
             (new RLEBitPackedHybrid())->decodeHybrid(
                 new BinaryBufferReader($buffer),
@@ -166,7 +167,7 @@ final class RLEBitPackedHybridTest extends TestCase
         $buffer = '';
         (new RLEBitPackedHybrid())->encodeHybrid(new BinaryBufferWriter($buffer), $values);
 
-        $this->assertSame(
+        self::assertSame(
             $values,
             (new RLEBitPackedHybrid())->decodeHybrid(
                 new BinaryBufferReader($buffer),
@@ -183,7 +184,7 @@ final class RLEBitPackedHybridTest extends TestCase
         $buffer = '';
         (new RLEBitPackedHybrid())->encodeHybrid(new BinaryBufferWriter($buffer), $values);
 
-        $this->assertSame(
+        self::assertSame(
             $values,
             (new RLEBitPackedHybrid())->decodeHybrid(
                 new BinaryBufferReader($buffer),
@@ -200,7 +201,7 @@ final class RLEBitPackedHybridTest extends TestCase
         $buffer = '';
         (new RLEBitPackedHybrid())->encodeHybrid(new BinaryBufferWriter($buffer), $values);
 
-        $this->assertSame(
+        self::assertSame(
             $values,
             (new RLEBitPackedHybrid())->decodeHybrid(
                 new BinaryBufferReader($buffer),
@@ -223,7 +224,7 @@ final class RLEBitPackedHybridTest extends TestCase
             $buffer = '';
             (new RLEBitPackedHybrid())->encodeHybrid(new BinaryBufferWriter($buffer), $values);
 
-            $this->assertSame(
+            self::assertSame(
                 $values,
                 (new RLEBitPackedHybrid())->decodeHybrid(
                     new BinaryBufferReader($buffer),

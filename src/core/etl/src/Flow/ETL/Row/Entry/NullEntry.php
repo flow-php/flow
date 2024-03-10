@@ -7,9 +7,8 @@ namespace Flow\ETL\Row\Entry;
 use function Flow\ETL\DSL\type_null;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Type;
-use Flow\ETL\Row\Entry;
-use Flow\ETL\Row\Reference;
 use Flow\ETL\Row\Schema\Definition;
+use Flow\ETL\Row\{Entry, Reference};
 
 /**
  * @implements Entry<null>

@@ -1,16 +1,13 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\IO;
 
 use Faker\Factory;
-use Flow\Parquet\Consts;
-use Flow\Parquet\ParquetFile\Compressions;
-use Flow\Parquet\ParquetFile\Schema;
-use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Flow\Parquet\ParquetFile\Schema\ListElement;
-use Flow\Parquet\ParquetFile\Schema\NestedColumn;
-use Flow\Parquet\Reader;
-use Flow\Parquet\Writer;
+use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, NestedColumn};
+use Flow\Parquet\ParquetFile\{Compressions, Schema};
+use Flow\Parquet\{Consts, Reader, Writer};
 use PHPUnit\Framework\TestCase;
 
 final class CompressionTest extends TestCase
@@ -54,11 +51,11 @@ final class CompressionTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        $this->assertSame(
+        self::assertSame(
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertFileExists($path);
+        self::assertFileExists($path);
         \unlink($path);
     }
 
@@ -101,11 +98,11 @@ final class CompressionTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        $this->assertSame(
+        self::assertSame(
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertFileExists($path);
+        self::assertFileExists($path);
         \unlink($path);
     }
 
@@ -148,11 +145,11 @@ final class CompressionTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        $this->assertSame(
+        self::assertSame(
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertFileExists($path);
+        self::assertFileExists($path);
         \unlink($path);
     }
 }

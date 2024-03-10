@@ -4,12 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\dense_rank;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\window;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use function Flow\ETL\DSL\{dense_rank, int_entry, ref, window};
+use Flow\ETL\{Row, Rows};
 use PHPUnit\Framework\TestCase;
 
 final class DenseRankTest extends TestCase
@@ -26,11 +22,11 @@ final class DenseRankTest extends TestCase
 
         $denseRank = dense_rank()->over(window()->orderBy(ref('salary')->desc()));
 
-        $this->assertSame(1, $denseRank->apply($row1, $rows));
-        $this->assertSame(1, $denseRank->apply($row2, $rows));
-        $this->assertSame(1, $denseRank->apply($row3, $rows));
-        $this->assertSame(3, $denseRank->apply($row4, $rows));
-        $this->assertSame(2, $denseRank->apply($row5, $rows));
+        self::assertSame(1, $denseRank->apply($row1, $rows));
+        self::assertSame(1, $denseRank->apply($row2, $rows));
+        self::assertSame(1, $denseRank->apply($row3, $rows));
+        self::assertSame(3, $denseRank->apply($row4, $rows));
+        self::assertSame(2, $denseRank->apply($row5, $rows));
     }
 
     public function test_rank_function_without_more_than_one_order_by_entries() : void
@@ -47,7 +43,7 @@ final class DenseRankTest extends TestCase
 
         $densRank = dense_rank()->over(window()->orderBy(ref('salary'), ref('id')));
 
-        $this->assertSame(1, $densRank->apply($row1, $rows));
+        self::assertSame(1, $densRank->apply($row1, $rows));
     }
 
     public function test_rank_function_without_order_by() : void

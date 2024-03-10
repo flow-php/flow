@@ -1,14 +1,13 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Pipeline\Optimizer;
 
 use Flow\ETL\Adapter\Doctrine\DbalLoader;
 use Flow\ETL\Loader\StreamLoader;
-use Flow\ETL\Pipeline\BatchingPipeline;
-use Flow\ETL\Pipeline\CollectingPipeline;
-use Flow\ETL\Pipeline\NestedPipeline;
 use Flow\ETL\Pipeline\Optimizer\BatchSizeOptimization;
-use Flow\ETL\Pipeline\SynchronousPipeline;
+use Flow\ETL\Pipeline\{BatchingPipeline, CollectingPipeline, NestedPipeline, SynchronousPipeline};
 use Flow\ETL\Transformer;
 use PHPUnit\Framework\TestCase;
 
@@ -21,7 +20,7 @@ final class BatchSizeOptimizationTest extends TestCase
             new SynchronousPipeline()
         );
 
-        $this->assertFalse(
+        self::assertFalse(
             (new BatchSizeOptimization())->isFor(new DbalLoader('test', [], []), $pipeline)
         );
     }
@@ -30,7 +29,7 @@ final class BatchSizeOptimizationTest extends TestCase
     {
         $pipeline = new SynchronousPipeline();
 
-        $this->assertTrue(
+        self::assertTrue(
             (new BatchSizeOptimization())->isFor(new DbalLoader('test', [], []), $pipeline)
         );
     }
@@ -39,7 +38,7 @@ final class BatchSizeOptimizationTest extends TestCase
     {
         $pipeline = new SynchronousPipeline();
 
-        $this->assertFalse(
+        self::assertFalse(
             (new BatchSizeOptimization())->isFor(StreamLoader::output(), $pipeline)
         );
     }
@@ -48,7 +47,7 @@ final class BatchSizeOptimizationTest extends TestCase
     {
         $pipeline = new SynchronousPipeline();
 
-        $this->assertFalse(
+        self::assertFalse(
             (new BatchSizeOptimization())->isFor($this->createMock(Transformer::class), $pipeline)
         );
     }
@@ -57,7 +56,7 @@ final class BatchSizeOptimizationTest extends TestCase
     {
         $pipeline = new BatchingPipeline(new SynchronousPipeline(), 10);
 
-        $this->assertFalse(
+        self::assertFalse(
             (new BatchSizeOptimization())->isFor(new DbalLoader('test', [], []), $pipeline)
         );
     }
@@ -66,7 +65,7 @@ final class BatchSizeOptimizationTest extends TestCase
     {
         $pipeline = new CollectingPipeline(new SynchronousPipeline());
 
-        $this->assertFalse(
+        self::assertFalse(
             (new BatchSizeOptimization())->isFor(new DbalLoader('test', [], []), $pipeline)
         );
     }

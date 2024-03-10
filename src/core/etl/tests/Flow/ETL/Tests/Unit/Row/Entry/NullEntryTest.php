@@ -17,7 +17,7 @@ final class NullEntryTest extends TestCase
 
     public function test_entry_name_can_be_zero() : void
     {
-        $this->assertSame('0', (new NullEntry('0'))->name());
+        self::assertSame('0', (new NullEntry('0'))->name());
     }
 
     /**
@@ -25,7 +25,7 @@ final class NullEntryTest extends TestCase
      */
     public function test_is_equal(bool $equals, NullEntry $entry, NullEntry $nextEntry) : void
     {
-        $this->assertSame($equals, $entry->isEqual($nextEntry));
+        self::assertSame($equals, $entry->isEqual($nextEntry));
     }
 
     public function test_prevents_from_creating_entry_with_empty_entry_name() : void
@@ -40,8 +40,8 @@ final class NullEntryTest extends TestCase
         $entry = new NullEntry('entry-name');
         $newEntry = $entry->rename('new-entry-name');
 
-        $this->assertEquals('new-entry-name', $newEntry->name());
-        $this->assertNull($newEntry->value());
+        self::assertEquals('new-entry-name', $newEntry->name());
+        self::assertNull($newEntry->value());
     }
 
     public function test_serialization() : void
@@ -52,6 +52,6 @@ final class NullEntryTest extends TestCase
         /** @var NullEntry $unserialized */
         $unserialized = \unserialize($serialized);
 
-        $this->assertTrue($string->isEqual($unserialized));
+        self::assertTrue($string->isEqual($unserialized));
     }
 }

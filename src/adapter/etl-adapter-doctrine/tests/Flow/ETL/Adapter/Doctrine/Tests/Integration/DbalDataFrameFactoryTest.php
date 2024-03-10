@@ -5,17 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Doctrine\Tests\Integration;
 
 use function Flow\ETL\Adapter\Doctrine\dbal_dataframe_factory;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\ref;
-use Doctrine\DBAL\Schema\Column;
-use Doctrine\DBAL\Schema\Table;
-use Doctrine\DBAL\Types\Type;
-use Doctrine\DBAL\Types\Types;
-use Flow\ETL\Adapter\Doctrine\LiteralParameter;
-use Flow\ETL\Adapter\Doctrine\Parameter;
+use function Flow\ETL\DSL\{int_entry, ref};
+use Doctrine\DBAL\Schema\{Column, Table};
+use Doctrine\DBAL\Types\{Type, Types};
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use Flow\ETL\Adapter\Doctrine\{LiteralParameter, Parameter};
+use Flow\ETL\{Row, Rows};
 
 final class DbalDataFrameFactoryTest extends IntegrationTestCase
 {
@@ -54,7 +49,7 @@ final class DbalDataFrameFactoryTest extends IntegrationTestCase
         ->select('id')
         ->fetch();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1],
             ],

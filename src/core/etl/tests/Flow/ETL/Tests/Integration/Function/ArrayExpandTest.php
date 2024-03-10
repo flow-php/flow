@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Function;
 
-use function Flow\ETL\DSL\array_expand;
-use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\to_memory;
+use function Flow\ETL\DSL\{array_expand, from_array, ref, to_memory};
 use Flow\ETL\Flow;
 use Flow\ETL\Function\ArrayExpand\ArrayExpand;
 use Flow\ETL\Memory\ArrayMemory;
@@ -30,7 +27,7 @@ final class ArrayExpandTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'expanded' => ['a' => 1]],
                 ['id' => 1, 'expanded' => ['b' => 2]],
@@ -55,7 +52,7 @@ final class ArrayExpandTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'expanded' => 'a'],
                 ['id' => 1, 'expanded' => 'b'],
@@ -80,7 +77,7 @@ final class ArrayExpandTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'expanded' => 1],
                 ['id' => 1, 'expanded' => 2],

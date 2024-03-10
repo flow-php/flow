@@ -1,18 +1,15 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile;
 
 use Flow\Parquet\BinaryReader\BinaryBufferReader;
 use Flow\Parquet\ByteOrder;
 use Flow\Parquet\Exception\RuntimeException;
-use Flow\Parquet\ParquetFile\Data\BitWidth;
-use Flow\Parquet\ParquetFile\Data\PlainValueUnpacker;
-use Flow\Parquet\ParquetFile\Data\RLEBitPackedHybrid;
-use Flow\Parquet\ParquetFile\Page\ColumnData;
-use Flow\Parquet\ParquetFile\Page\Dictionary;
-use Flow\Parquet\ParquetFile\Page\Header\DataPageHeader;
-use Flow\Parquet\ParquetFile\Page\Header\DataPageHeaderV2;
-use Flow\Parquet\ParquetFile\Page\Header\DictionaryPageHeader;
+use Flow\Parquet\ParquetFile\Data\{BitWidth, PlainValueUnpacker, RLEBitPackedHybrid};
+use Flow\Parquet\ParquetFile\Page\Header\{DataPageHeader, DataPageHeaderV2, DictionaryPageHeader};
+use Flow\Parquet\ParquetFile\Page\{ColumnData, Dictionary};
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 
 final class DataCoder

@@ -1,12 +1,11 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\Page;
 
 use Flow\Parquet\ParquetFile\Encodings;
-use Flow\Parquet\ParquetFile\Page\Header\DataPageHeader;
-use Flow\Parquet\ParquetFile\Page\Header\DataPageHeaderV2;
-use Flow\Parquet\ParquetFile\Page\Header\DictionaryPageHeader;
-use Flow\Parquet\ParquetFile\Page\Header\Type;
+use Flow\Parquet\ParquetFile\Page\Header\{DataPageHeader, DataPageHeaderV2, DictionaryPageHeader, Type};
 
 /**
  * @psalm-suppress RedundantConditionGivenDocblockType

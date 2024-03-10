@@ -1,11 +1,11 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\RowGroupBuilder;
 
 use Flow\Parquet\Exception\RuntimeException;
-use Flow\Parquet\ParquetFile\Schema\Column;
-use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Flow\Parquet\ParquetFile\Schema\NestedColumn;
+use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn, NestedColumn};
 
 final class Flattener
 {

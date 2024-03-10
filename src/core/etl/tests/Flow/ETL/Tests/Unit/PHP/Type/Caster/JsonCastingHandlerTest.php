@@ -14,7 +14,7 @@ final class JsonCastingHandlerTest extends TestCase
 {
     public function test_casting_array_to_json() : void
     {
-        $this->assertSame(
+        self::assertSame(
             '{"items":{"item":1}}',
             (new JsonCastingHandler())->value(['items' => ['item' => 1]], type_json(), Caster::default())
         );
@@ -22,7 +22,7 @@ final class JsonCastingHandlerTest extends TestCase
 
     public function test_casting_datetime_to_json() : void
     {
-        $this->assertSame(
+        self::assertSame(
             '{"date":"2021-01-01 00:00:00.000000","timezone_type":3,"timezone":"UTC"}',
             (new JsonCastingHandler())->value(new \DateTimeImmutable('2021-01-01 00:00:00 UTC'), type_json(), Caster::default())
         );
@@ -38,7 +38,7 @@ final class JsonCastingHandlerTest extends TestCase
 
     public function test_casting_json_string_to_json() : void
     {
-        $this->assertSame(
+        self::assertSame(
             '{"items":{"item":1}}',
             (new JsonCastingHandler())->value('{"items":{"item":1}}', type_json(), Caster::default())
         );

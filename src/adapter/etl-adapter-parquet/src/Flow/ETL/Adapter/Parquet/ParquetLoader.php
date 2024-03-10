@@ -1,17 +1,16 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet;
 
 use Flow\ETL\Filesystem\Path;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
 use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\Row\Schema;
-use Flow\ETL\Rows;
-use Flow\Parquet\Options;
+use Flow\ETL\{FlowContext, Loader, Rows};
 use Flow\Parquet\ParquetFile\Compressions;
-use Flow\Parquet\Writer;
+use Flow\Parquet\{Options, Writer};
 
 final class ParquetLoader implements Closure, Loader, Loader\FileLoader
 {

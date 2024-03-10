@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\Partitioned;
 
 use function Flow\ETL\DSL\ignore;
-use Flow\ETL\Filesystem\FilesystemStreams;
-use Flow\ETL\Filesystem\Path;
+use Flow\ETL\Filesystem\{FilesystemStreams, Path};
 use Flow\ETL\Partition;
 use Flow\ETL\Tests\Integration\Filesystem\FilesystemStreams\FilesystemStreamsTestCase;
 
@@ -37,10 +36,10 @@ final class IgnoreModeTest extends FilesystemStreamsTestCase
 
         $files = \iterator_to_array($this->fs->scan(new Path($file->parentDirectory()->path() . '/**/*.txt')));
 
-        $this->assertCount(1, $files);
+        self::assertCount(1, $files);
 
-        $this->assertStringStartsWith('file.txt', $files[0]->basename());
-        $this->assertSame('file content', \file_get_contents($files[0]->path()));
+        self::assertStringStartsWith('file.txt', $files[0]->basename());
+        self::assertSame('file content', \file_get_contents($files[0]->path()));
     }
 
     public function test_open_stream_for_existing_partition_without_existing_file() : void
@@ -60,10 +59,10 @@ final class IgnoreModeTest extends FilesystemStreamsTestCase
 
         $files = \iterator_to_array($this->fs->scan(new Path($file->parentDirectory()->path() . '/**/*.txt')));
 
-        $this->assertCount(1, $files);
+        self::assertCount(1, $files);
 
-        $this->assertSame('file.txt', $files[0]->basename());
-        $this->assertSame('appended content', \file_get_contents($files[0]->path()));
+        self::assertSame('file.txt', $files[0]->basename());
+        self::assertSame('appended content', \file_get_contents($files[0]->path()));
     }
 
     public function test_open_stream_for_non_existing_partition() : void
@@ -80,10 +79,10 @@ final class IgnoreModeTest extends FilesystemStreamsTestCase
         $streams->closeWriters($file);
         $files = \iterator_to_array($this->fs->scan(new Path($file->parentDirectory()->path() . '/partition=value/*')));
 
-        $this->assertCount(1, $files);
+        self::assertCount(1, $files);
 
-        $this->assertSame('file.txt', $files[0]->basename());
-        $this->assertSame('appended content', \file_get_contents($files[0]->path()));
+        self::assertSame('file.txt', $files[0]->basename());
+        self::assertSame('appended content', \file_get_contents($files[0]->path()));
     }
 
     protected function streams() : FilesystemStreams

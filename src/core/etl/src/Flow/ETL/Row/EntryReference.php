@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row;
 
-use Flow\ETL\Function\ListFunctions;
-use Flow\ETL\Function\ScalarFunctionChain;
-use Flow\ETL\Function\StructureFunctions;
+use Flow\ETL\Function\{ListFunctions, ScalarFunctionChain, StructureFunctions};
 use Flow\ETL\Row;
 
 final class EntryReference extends ScalarFunctionChain implements Reference

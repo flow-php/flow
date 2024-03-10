@@ -1,18 +1,15 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Filesystem;
 
 use function Flow\ETL\DSL\array_to_rows;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Extractor;
-use Flow\ETL\Extractor\FileExtractor;
-use Flow\ETL\Extractor\Limitable;
-use Flow\ETL\Extractor\LimitableExtractor;
-use Flow\ETL\Extractor\Signal;
+use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, Signal};
 use Flow\ETL\Filesystem\Path;
-use Flow\ETL\FlowContext;
-use League\Flysystem\DirectoryAttributes;
-use League\Flysystem\FileAttributes;
+use Flow\ETL\{Extractor, FlowContext};
+use League\Flysystem\{DirectoryAttributes, FileAttributes};
 
 final class RemoteFileListExtractor implements Extractor, FileExtractor, LimitableExtractor
 {

@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
@@ -14,7 +16,7 @@ final class XPathTest extends TestCase
         $xml = new \DOMDocument();
         $xml->loadXML('<root><foo baz="buz">bar</foo></root>');
 
-        $this->assertEquals(
+        self::assertEquals(
             $xml->documentElement->firstChild,
             ref('value')->xpath('/root/foo')->eval(Row::create((new NativeEntryFactory())->create('value', $xml)))
         );
@@ -25,7 +27,7 @@ final class XPathTest extends TestCase
         $xml = new \DOMDocument();
         $xml->loadXML('<root><foo baz="buz">bar</foo><foo baz="buz">bar</foo></root>');
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 $xml->documentElement->firstChild,
                 $xml->documentElement->lastChild,
@@ -39,7 +41,7 @@ final class XPathTest extends TestCase
         $xml = new \DOMDocument();
         $xml->loadXML('<root><foo baz="buz">bar</foo></root>');
 
-        $this->assertNull(
+        self::assertNull(
             ref('value')->xpath('/root/foo/@')->eval(Row::create((new NativeEntryFactory())->create('value', $xml)))
         );
     }
@@ -49,7 +51,7 @@ final class XPathTest extends TestCase
         $xml = new \DOMDocument();
         $xml->loadXML('<root><foo baz="buz">bar</foo></root>');
 
-        $this->assertNull(
+        self::assertNull(
             ref('value')->xpath('/root/bar')->eval(Row::create((new NativeEntryFactory())->create('value', $xml)))
         );
     }

@@ -22,7 +22,7 @@ final class XMLCastingHandlerTest extends TestCase
 
     public function test_casting_string_to_xml() : void
     {
-        $this->assertSame(
+        self::assertSame(
             '<?xml version="1.0"?>' . "\n" . '<items><item>1</item></items>' . "\n",
             (new XMLCastingHandler())->value('<items><item>1</item></items>', type_xml(), Caster::default())->saveXML()
         );

@@ -1,12 +1,12 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\ListEntry;
-use Flow\ETL\Row\EntryReference;
-use Flow\ETL\Row\Reference;
-use Flow\ETL\Row\References;
+use Flow\ETL\Row\{EntryReference, Reference, References};
 
 final class ListSelect implements ScalarFunction
 {

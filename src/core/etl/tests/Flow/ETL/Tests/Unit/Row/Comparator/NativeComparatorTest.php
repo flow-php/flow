@@ -16,7 +16,7 @@ final class NativeComparatorTest extends TestCase
 
         $comparator = new Row\Comparator\NativeComparator();
 
-        $this->assertTrue($comparator->equals($row, $nextRow));
+        self::assertTrue($comparator->equals($row, $nextRow));
     }
 
     public function test_row_comparison_for_different_rows() : void
@@ -26,6 +26,6 @@ final class NativeComparatorTest extends TestCase
 
         $comparator = new Row\Comparator\NativeComparator();
 
-        $this->assertFalse($comparator->equals($row, $nextRow));
+        self::assertFalse($comparator->equals($row, $nextRow));
     }
 }

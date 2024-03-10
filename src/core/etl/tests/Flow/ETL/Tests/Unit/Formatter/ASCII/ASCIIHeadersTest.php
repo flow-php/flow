@@ -4,13 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Formatter\ASCII;
 
-use function Flow\ETL\DSL\float_entry;
-use function Flow\ETL\DSL\int_entry;
-use Flow\ETL\Formatter\ASCII\ASCIIHeaders;
-use Flow\ETL\Formatter\ASCII\Body;
-use Flow\ETL\Formatter\ASCII\Headers;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use function Flow\ETL\DSL\{float_entry, int_entry};
+use Flow\ETL\Formatter\ASCII\{ASCIIHeaders, Body, Headers};
+use Flow\ETL\{Row, Rows};
 use PHPUnit\Framework\TestCase;
 
 final class ASCIIHeadersTest extends TestCase
@@ -27,7 +23,7 @@ final class ASCIIHeadersTest extends TestCase
             new Body($rows)
         );
 
-        $this->assertStringContainsString(
+        self::assertStringContainsString(
             <<<'TABLE'
 +----+-------+
 | id | value |

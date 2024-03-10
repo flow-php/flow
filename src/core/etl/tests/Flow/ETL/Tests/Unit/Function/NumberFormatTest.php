@@ -1,12 +1,10 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\float_entry;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\lit;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\{float_entry, int_entry, lit, ref, str_entry};
 use Flow\ETL\Function\NumberFormat;
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;
@@ -22,7 +20,7 @@ final class NumberFormatTest extends TestCase
             ref('thousands_separator')
         );
 
-        $this->assertSame(
+        self::assertSame(
             '1,234.57',
             $expression->eval(
                 Row::create(
@@ -44,7 +42,7 @@ final class NumberFormatTest extends TestCase
             lit(',')
         );
 
-        $this->assertSame(
+        self::assertSame(
             '1,234.57',
             $expression->eval(
                 Row::create(
@@ -63,7 +61,7 @@ final class NumberFormatTest extends TestCase
             ref('thousands_separator')
         );
 
-        $this->assertNull(
+        self::assertNull(
             $expression->eval(
                 Row::create(
                     float_entry('value', 1234.5678),
@@ -84,7 +82,7 @@ final class NumberFormatTest extends TestCase
             ref('thousands_separator')
         );
 
-        $this->assertNull(
+        self::assertNull(
             $expression->eval(
                 Row::create(
                     str_entry('value', 'test'),
@@ -105,7 +103,7 @@ final class NumberFormatTest extends TestCase
             ref('thousands_separator')
         );
 
-        $this->assertSame(
+        self::assertSame(
             '1,234.57',
             $expression->eval(
                 Row::create(

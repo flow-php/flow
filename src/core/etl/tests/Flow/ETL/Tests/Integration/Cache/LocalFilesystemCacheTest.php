@@ -5,12 +5,10 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Cache;
 
 use Flow\ETL\Cache\LocalFilesystemCache;
-use Flow\ETL\Row;
 use Flow\ETL\Row\Entry\IntegerEntry;
-use Flow\ETL\Rows;
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
-use Flow\Serializer\CompressingSerializer;
-use Flow\Serializer\NativePHPSerializer;
+use Flow\ETL\{Row, Rows};
+use Flow\Serializer\{CompressingSerializer, NativePHPSerializer};
 
 final class LocalFilesystemCacheTest extends IntegrationTestCase
 {
@@ -18,20 +16,20 @@ final class LocalFilesystemCacheTest extends IntegrationTestCase
     {
         $cache = new LocalFilesystemCache($this->cacheDir, new CompressingSerializer(new NativePHPSerializer()));
 
-        $this->assertFalse($cache->has('test'));
+        self::assertFalse($cache->has('test'));
 
         $cache->add('test', new Rows(Row::create(new IntegerEntry('id', 1))));
         $cache->add('test', new Rows(Row::create(new IntegerEntry('id', 2))));
 
-        $this->assertTrue($cache->has('test'));
+        self::assertTrue($cache->has('test'));
 
         $cache->clear('test');
 
-        $this->assertCount(
+        self::assertCount(
             0,
             \iterator_to_array($cache->read('test'))
         );
-        $this->assertFalse($cache->has('test'));
+        self::assertFalse($cache->has('test'));
     }
 
     public function test_cleaning_different_cache_id() : void
@@ -43,7 +41,7 @@ final class LocalFilesystemCacheTest extends IntegrationTestCase
 
         $cache->clear('other-test');
 
-        $this->assertCount(
+        self::assertCount(
             1,
             \iterator_to_array($cache->read('test'))
         );
@@ -53,7 +51,7 @@ final class LocalFilesystemCacheTest extends IntegrationTestCase
     {
         $cache = new LocalFilesystemCache($this->cacheDir, new CompressingSerializer(new NativePHPSerializer()));
 
-        $this->assertCount(
+        self::assertCount(
             0,
             \iterator_to_array($cache->read('test'))
         );
@@ -66,7 +64,7 @@ final class LocalFilesystemCacheTest extends IntegrationTestCase
         $cache->add('test', new Rows(Row::create(new IntegerEntry('id', 1))));
         $cache->add('test', new Rows(Row::create(new IntegerEntry('id', 2))));
 
-        $this->assertCount(
+        self::assertCount(
             2,
             \iterator_to_array($cache->read('test'))
         );
@@ -79,11 +77,11 @@ final class LocalFilesystemCacheTest extends IntegrationTestCase
         $cache->add('test', new Rows(Row::create(new IntegerEntry('id', 1))));
         $cache->add('other-test', new Rows(Row::create(new IntegerEntry('id', 2))));
 
-        $this->assertCount(
+        self::assertCount(
             1,
             \iterator_to_array($cache->read('test'))
         );
-        $this->assertCount(
+        self::assertCount(
             1,
             \iterator_to_array($cache->read('other-test'))
         );

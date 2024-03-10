@@ -6,8 +6,7 @@ namespace Flow\ETL\Join\Comparison;
 
 use Flow\ETL\Join\Comparison;
 use Flow\ETL\Row;
-use Flow\ETL\Row\EntryReference;
-use Flow\ETL\Row\Reference;
+use Flow\ETL\Row\{EntryReference, Reference};
 
 final class GreaterThan implements Comparison
 {

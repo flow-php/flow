@@ -4,12 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer;
 
-use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
-use Flow\ETL\Row\Reference;
-use Flow\ETL\Row\References;
-use Flow\ETL\Rows;
-use Flow\ETL\Transformer;
+use Flow\ETL\Row\{Reference, References};
+use Flow\ETL\{FlowContext, Row, Rows, Transformer};
 
 final class RemoveEntriesTransformer implements Transformer
 {

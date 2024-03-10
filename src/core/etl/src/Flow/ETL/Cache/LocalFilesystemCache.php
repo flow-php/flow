@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Cache;
 
-use Flow\ETL\Cache;
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Rows;
+use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
+use Flow\ETL\{Cache, Rows};
 use Flow\Serializer\Serializer;
 
 /**

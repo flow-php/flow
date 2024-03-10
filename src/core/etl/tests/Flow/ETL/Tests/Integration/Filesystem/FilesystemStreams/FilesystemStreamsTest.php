@@ -24,10 +24,10 @@ final class FilesystemStreamsTest extends FilesystemStreamsTestCase
 
         $streams = $this->streams();
         $streams->writeTo($this->getPath(__FUNCTION__ . '/file.txt'));
-        $this->assertTrue($streams->isOpen($this->getPath(__FUNCTION__ . '/file.txt')));
-        $this->assertCount(1, $streams);
+        self::assertTrue($streams->isOpen($this->getPath(__FUNCTION__ . '/file.txt')));
+        self::assertCount(1, $streams);
         $streams->closeWriters($this->getPath(__FUNCTION__ . '/file.txt'));
-        $this->assertFalse($streams->isOpen($this->getPath(__FUNCTION__ . '/file.txt')));
+        self::assertFalse($streams->isOpen($this->getPath(__FUNCTION__ . '/file.txt')));
     }
 
     public function test_read() : void
@@ -39,7 +39,7 @@ final class FilesystemStreamsTest extends FilesystemStreamsTestCase
         ]);
 
         $streams = $this->streams();
-        $this->assertEquals(
+        self::assertEquals(
             'file content',
             \file_get_contents($streams->read($this->getPath(__FUNCTION__ . '/file.txt'))->path()->path())
         );
@@ -56,7 +56,7 @@ final class FilesystemStreamsTest extends FilesystemStreamsTestCase
         ]);
 
         $streams = $this->streams();
-        $this->assertEquals(
+        self::assertEquals(
             'file content',
             \file_get_contents(
                 $streams->read($this->getPath(__FUNCTION__ . '/file.txt'), [new Partition('partition', 'a')])
@@ -73,10 +73,10 @@ final class FilesystemStreamsTest extends FilesystemStreamsTestCase
             ],
         ]);
 
-        $this->assertTrue($this->streams()->exists($this->getPath(__FUNCTION__ . '/file.txt')));
+        self::assertTrue($this->streams()->exists($this->getPath(__FUNCTION__ . '/file.txt')));
         $this->streams()->rm($this->getPath(__FUNCTION__ . '/file.txt'));
 
-        $this->assertFileDoesNotExist($this->getPath(__FUNCTION__ . '/file.txt')->path());
+        self::assertFileDoesNotExist($this->getPath(__FUNCTION__ . '/file.txt')->path());
     }
 
     public function test_rm_partitioned() : void
@@ -89,10 +89,10 @@ final class FilesystemStreamsTest extends FilesystemStreamsTestCase
             ],
         ]);
 
-        $this->assertTrue($this->streams()->exists($this->getPath(__FUNCTION__ . '/file.txt'), [new Partition('partition', 'a')]));
+        self::assertTrue($this->streams()->exists($this->getPath(__FUNCTION__ . '/file.txt'), [new Partition('partition', 'a')]));
         $this->streams()->rm($this->getPath(__FUNCTION__ . '/file.txt'), [new Partition('partition', 'a')]);
 
-        $this->assertFileDoesNotExist($this->getPath(__FUNCTION__ . '/partition=a/file.txt')->path());
+        self::assertFileDoesNotExist($this->getPath(__FUNCTION__ . '/partition=a/file.txt')->path());
     }
 
     public function test_scan() : void
@@ -109,7 +109,7 @@ final class FilesystemStreamsTest extends FilesystemStreamsTestCase
         ]);
 
         $streams = $this->streams();
-        $this->assertCount(
+        self::assertCount(
             4,
             \iterator_to_array($streams->scan($this->getPath(__FUNCTION__ . '/**/*.txt'), new NoopFilter()))
         );

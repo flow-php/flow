@@ -6,8 +6,7 @@ namespace Flow\ETL\Row\Schema;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Schema;
-use Flow\ETL\Rows;
-use Flow\ETL\SchemaValidator;
+use Flow\ETL\{Rows, SchemaValidator};
 
 /**
  * Matches only entries defined in the schema, ignoring every other entries in the row.

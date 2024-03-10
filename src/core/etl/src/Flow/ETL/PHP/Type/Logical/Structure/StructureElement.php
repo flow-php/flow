@@ -1,11 +1,11 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type\Logical\Structure;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Type;
-use Flow\ETL\PHP\Type\TypeFactory;
+use Flow\ETL\PHP\Type\{Type, TypeFactory};
 
 final class StructureElement
 {

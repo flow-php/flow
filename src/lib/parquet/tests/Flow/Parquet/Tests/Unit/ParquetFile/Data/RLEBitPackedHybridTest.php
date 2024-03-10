@@ -1,11 +1,12 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\ParquetFile\Data;
 
-use Flow\Parquet\BinaryReader;
 use Flow\Parquet\BinaryReader\Bytes;
-use Flow\Parquet\DataSize;
 use Flow\Parquet\ParquetFile\Data\RLEBitPackedHybrid;
+use Flow\Parquet\{BinaryReader, DataSize};
 use PHPUnit\Framework\TestCase;
 
 final class RLEBitPackedHybridTest extends TestCase
@@ -21,18 +22,18 @@ final class RLEBitPackedHybridTest extends TestCase
         $varInt = 2;
         $maxItems = 5;
 
-        $binaryReader->expects($this->once())
+        $binaryReader->expects(self::once())
             ->method('remainingLength')
             ->willReturn(new DataSize(1));
 
-        $binaryReader->expects($this->once())
+        $binaryReader->expects(self::once())
             ->method('readBytes')
             ->willReturn(new Bytes([8]));
 
         $result = [];
         $rleBitPackedHybrid->decodeBitPacked($binaryReader, $bitWidth, $varInt, $maxItems, $result);
 
-        $this->assertEquals([8], $result);
+        self::assertEquals([8], $result);
     }
 
     public function test_decode_bit_packed_with_different_bit_width() : void
@@ -46,18 +47,18 @@ final class RLEBitPackedHybridTest extends TestCase
         $varInt = 2;
         $maxItems = 5;
 
-        $binaryReader->expects($this->once())
+        $binaryReader->expects(self::once())
             ->method('remainingLength')
             ->willReturn(new DataSize(2));
 
-        $binaryReader->expects($this->once())
+        $binaryReader->expects(self::once())
             ->method('readBytes')
             ->willReturn(new Bytes([8, 4]));
 
         $result = [];
         $rleBitPackedHybrid->decodeBitPacked($binaryReader, $bitWidth, $varInt, $maxItems, $result);
 
-        $this->assertEquals([8, 0, 4, 0], $result);
+        self::assertEquals([8, 0, 4, 0], $result);
     }
 
     public function test_decode_bit_packed_with_fewer_remaining_bytes_than_byte_count() : void
@@ -71,18 +72,18 @@ final class RLEBitPackedHybridTest extends TestCase
         $varInt = 2;
         $maxItems = 5;
 
-        $binaryReader->expects($this->once())
+        $binaryReader->expects(self::once())
             ->method('remainingLength')
             ->willReturn(new DataSize(1));
 
-        $binaryReader->expects($this->once())
+        $binaryReader->expects(self::once())
             ->method('readBytes')
             ->willReturn(new Bytes([8]));
 
         $result = [];
         $rleBitPackedHybrid->decodeBitPacked($binaryReader, $bitWidth, $varInt, $maxItems, $result);
 
-        $this->assertEquals([8], $result);
+        self::assertEquals([8], $result);
     }
 
     public function test_decode_bit_packed_with_zero_group_count_and_count() : void
@@ -99,7 +100,7 @@ final class RLEBitPackedHybridTest extends TestCase
         $result = [];
         $rleBitPackedHybrid->decodeBitPacked($binaryReader, $bitWidth, $varInt, $maxItems, $result);
 
-        $this->assertEquals([], $result);
+        self::assertEquals([], $result);
     }
 
     public function test_decode_rl_e_with_is_literal_run_false() : void
@@ -113,14 +114,14 @@ final class RLEBitPackedHybridTest extends TestCase
         $intVar = 4; // Even intVar, so isLiteralRun will be false
         $maxItems = 2;
 
-        $binaryReader->expects($this->once())
+        $binaryReader->expects(self::once())
             ->method('readBytes')
             ->willReturn(new Bytes([2]));
 
         $result = [];
         $rleBitPackedHybrid->decodeRLE($binaryReader, $bitWidth, $intVar, $maxItems, $result);
 
-        $this->assertEquals([2, 2], $result);
+        self::assertEquals([2, 2], $result);
     }
 
     public function test_decode_rl_e_with_is_literal_run_true() : void
@@ -134,18 +135,18 @@ final class RLEBitPackedHybridTest extends TestCase
         $intVar = 3; // Odd intVar, so isLiteralRun will be true
         $maxItems = 2;
 
-        $binaryReader->expects($this->exactly(1))
+        $binaryReader->expects(self::exactly(1))
             ->method('readBytes')
             ->willReturn(new Bytes([]));
 
-        $binaryReader->expects($this->exactly(1))
+        $binaryReader->expects(self::exactly(1))
             ->method('readBits')
             ->willReturnOnConsecutiveCalls([1]);
 
         $result = [];
         $rleBitPackedHybrid->decodeRLE($binaryReader, $bitWidth, $intVar, $maxItems, $result);
 
-        $this->assertEquals([[1]], $result);
+        self::assertEquals([[1]], $result);
     }
 
     public function test_decode_rl_e_with_run_length_zero() : void
@@ -162,6 +163,6 @@ final class RLEBitPackedHybridTest extends TestCase
         $result = [];
         $rleBitPackedHybrid->decodeRLE($binaryReader, $bitWidth, $intVar, $maxItems, $result);
 
-        $this->assertEquals([0], $result);
+        self::assertEquals([0], $result);
     }
 }

@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
-use Flow\ETL\Row\Entry\ArrayEntry;
-use Flow\ETL\Row\Entry\IntegerEntry;
+use Flow\ETL\Row\Entry\{ArrayEntry, IntegerEntry};
 use PHPUnit\Framework\TestCase;
 
 final class ArrayEntryTest extends TestCase
@@ -81,7 +80,7 @@ final class ArrayEntryTest extends TestCase
 
     public function test_entry_name_can_be_zero() : void
     {
-        $this->assertSame('0', (new ArrayEntry('0', ['id' => 1]))->name());
+        self::assertSame('0', (new ArrayEntry('0', ['id' => 1]))->name());
     }
 
     /**
@@ -89,14 +88,14 @@ final class ArrayEntryTest extends TestCase
      */
     public function test_is_equal(bool $equals, ArrayEntry $entry, ArrayEntry $nextEntry) : void
     {
-        $this->assertSame($equals, $entry->isEqual($nextEntry));
+        self::assertSame($equals, $entry->isEqual($nextEntry));
     }
 
     public function test_map() : void
     {
         $entry = new ArrayEntry('entry-name', ['id' => 1, 'name' => 'one']);
 
-        $this->assertEquals(
+        self::assertEquals(
             $entry,
             $entry->map(fn (array $value) => $value)
         );
@@ -114,8 +113,8 @@ final class ArrayEntryTest extends TestCase
         $entry = new ArrayEntry('entry-name', ['id' => 1, 'name' => 'one']);
         $newEntry = $entry->rename('new-entry-name');
 
-        $this->assertEquals('new-entry-name', $newEntry->name());
-        $this->assertEquals(['id' => 1, 'name' => 'one'], $newEntry->value());
+        self::assertEquals('new-entry-name', $newEntry->name());
+        self::assertEquals(['id' => 1, 'name' => 'one'], $newEntry->value());
     }
 
     public function test_returns_array_as_value() : void
@@ -127,7 +126,7 @@ final class ArrayEntryTest extends TestCase
         ];
         $entry = new ArrayEntry('items', $items);
 
-        $this->assertEquals($items, $entry->value());
+        self::assertEquals($items, $entry->value());
     }
 
     public function test_serialization() : void
@@ -138,6 +137,6 @@ final class ArrayEntryTest extends TestCase
         /** @var ArrayEntry $unserialized */
         $unserialized = \unserialize($serialized);
 
-        $this->assertTrue($string->isEqual($unserialized));
+        self::assertTrue($string->isEqual($unserialized));
     }
 }

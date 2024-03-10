@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Filesystem;
 
-use Flow\ETL\Exception\MissingDependencyException;
-use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Exception\{MissingDependencyException, RuntimeException};
 use League\Flysystem\AzureBlobStorage\AzureBlobStorageAdapter;
 use League\Flysystem\Filesystem;
 use MicrosoftAzure\Storage\Blob\BlobRestProxy;

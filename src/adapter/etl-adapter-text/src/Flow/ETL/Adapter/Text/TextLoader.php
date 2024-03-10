@@ -6,10 +6,8 @@ namespace Flow\ETL\Adapter\Text;
 
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Filesystem\Path;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Loader;
 use Flow\ETL\Loader\Closure;
-use Flow\ETL\Rows;
+use Flow\ETL\{FlowContext, Loader, Rows};
 
 final class TextLoader implements Closure, Loader, Loader\FileLoader
 {

@@ -1,16 +1,10 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\list_entry;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\struct_element;
-use function Flow\ETL\DSL\struct_entry;
-use function Flow\ETL\DSL\struct_type;
-use function Flow\ETL\DSL\type_int;
-use function Flow\ETL\DSL\type_list;
-use function Flow\ETL\DSL\type_string;
+use function Flow\ETL\DSL\{list_entry, ref, row, struct_element, struct_entry, struct_type, type_int, type_list, type_string};
 use Flow\ETL\Function\StructureSelect;
 use PHPUnit\Framework\TestCase;
 
@@ -30,7 +24,7 @@ final class StructureSelectTest extends TestCase
             ])
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             ['id' => 1, 'name' => 'test'],
             (new StructureSelect(ref('struct'), ref('id'), ref('name')))
                 ->eval(row($structure))
@@ -51,7 +45,7 @@ final class StructureSelectTest extends TestCase
             ])
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             ['id' => 1],
             (new StructureSelect(ref('struct'), 'id'))
                 ->eval(row($structure))
@@ -72,7 +66,7 @@ final class StructureSelectTest extends TestCase
             ])
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             ['new_id' => 1],
             (new StructureSelect(ref('struct'), ref('id')->as('new_id')))
                 ->eval(row($structure))
@@ -93,7 +87,7 @@ final class StructureSelectTest extends TestCase
             ])
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             ['new_id' => null],
             (new StructureSelect(ref('struct'), ref('id')->as('new_id')))
                 ->eval(row($structure))
@@ -116,7 +110,7 @@ final class StructureSelectTest extends TestCase
             )
         );
 
-        $this->assertNull(
+        self::assertNull(
             (new StructureSelect(ref('list'), ref('id')))->eval(row($list))
         );
     }

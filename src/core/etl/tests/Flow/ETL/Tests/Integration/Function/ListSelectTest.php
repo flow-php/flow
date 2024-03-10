@@ -1,10 +1,10 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\Function;
 
-use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\list_ref;
+use function Flow\ETL\DSL\{df, from_array, list_ref};
 use PHPUnit\Framework\TestCase;
 
 final class ListSelectTest extends TestCase
@@ -21,7 +21,7 @@ final class ListSelectTest extends TestCase
             ->withEntry('list', list_ref('list')->select('id'))
             ->fetch();
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 ['list' => [['id' => 1], ['id' => 2], ['id' => 3]]],
                 ['list' => [['id' => 4], ['id' => 5], ['id' => 6]]],

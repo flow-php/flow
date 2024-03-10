@@ -13,11 +13,11 @@ final class ObjectCastingHandlerTest extends TestCase
 {
     public function test_casting_string_to_object() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             (object) ['foo' => 'bar'],
             (new ObjectCastingHandler())->value((object) ['foo' => 'bar'], type_object(\stdClass::class), Caster::default())
         );
-        $this->assertInstanceOf(
+        self::assertInstanceOf(
             \stdClass::class,
             (new ObjectCastingHandler())->value((object) ['foo' => 'bar'], type_object(\stdClass::class), Caster::default())
         );

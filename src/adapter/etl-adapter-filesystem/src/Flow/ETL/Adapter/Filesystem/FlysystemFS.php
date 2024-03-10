@@ -4,19 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Filesystem;
 
-use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Exception\MissingDependencyException;
-use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Exception\{InvalidArgumentException, MissingDependencyException, RuntimeException};
 use Flow\ETL\Filesystem;
 use Flow\ETL\Filesystem\Path;
-use Flow\ETL\Filesystem\Stream\FileStream;
-use Flow\ETL\Filesystem\Stream\Mode;
-use Flow\ETL\Partition\NoopFilter;
-use Flow\ETL\Partition\PartitionFilter;
-use League\Flysystem\DirectoryAttributes;
-use League\Flysystem\FileAttributes;
-use League\Flysystem\Filesystem as Flysystem;
-use League\Flysystem\FilesystemException;
+use Flow\ETL\Filesystem\Stream\{FileStream, Mode};
+use Flow\ETL\Partition\{NoopFilter, PartitionFilter};
+use League\Flysystem\{DirectoryAttributes, FileAttributes, Filesystem as Flysystem, FilesystemException};
 
 final class FlysystemFS implements Filesystem
 {

@@ -16,7 +16,7 @@ final class ArrayKeyConverterTest extends TestCase
             fn (string $key) : string => (new Convert($key))->toSnake()
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 'item_id' => 1,
                 'item_status' => 'PENDING',

@@ -1,38 +1,13 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use function Flow\ETL\DSL\array_entry;
-use function Flow\ETL\DSL\bool_entry;
-use function Flow\ETL\DSL\datetime_entry;
-use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\enum_entry;
-use function Flow\ETL\DSL\float_entry;
-use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\from_rows;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\list_entry;
-use function Flow\ETL\DSL\map_entry;
-use function Flow\ETL\DSL\null_entry;
-use function Flow\ETL\DSL\object_entry;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\str_entry;
-use function Flow\ETL\DSL\string_entry;
-use function Flow\ETL\DSL\struct_element;
-use function Flow\ETL\DSL\struct_entry;
-use function Flow\ETL\DSL\struct_type;
-use function Flow\ETL\DSL\type_int;
-use function Flow\ETL\DSL\type_list;
-use function Flow\ETL\DSL\type_map;
-use function Flow\ETL\DSL\type_string;
-use function Flow\ETL\DSL\xml_entry;
-use Flow\ETL\Extractor;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Rows;
+use function Flow\ETL\DSL\{array_entry, bool_entry, datetime_entry, df, enum_entry, float_entry, from_array, from_rows, int_entry, list_entry, map_entry, null_entry, object_entry, ref, row, rows, str_entry, string_entry, struct_element, struct_entry, struct_type, type_int, type_list, type_map, type_string, xml_entry};
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
+use Flow\ETL\{Extractor, FlowContext, Rows};
 
 final class DisplayTest extends IntegrationTestCase
 {
@@ -89,7 +64,7 @@ final class DisplayTest extends IntegrationTestCase
             })
             ->collect();
 
-        $this->assertSame(
+        self::assertSame(
             <<<'ASCIITABLE'
 +------+--------+-----+---------+----------------------+-------+----------------------+---------+-------------------+----------------------+----------------------+-------+----------------------+
 |   id |  price | 100 | deleted |           created-at | phase |                array |    list |               map |                items |               object |  enum |                  xml |
@@ -146,7 +121,7 @@ ASCIITABLE,
             ->collect()
             ->partitionBy(ref('group'));
 
-        $this->assertSame(
+        self::assertSame(
             <<<'ASCIITABLE'
 +------+--------+-----+---------+----------------------+-------+
 |   id |  price | 100 | deleted |           created-at | group |
@@ -221,7 +196,7 @@ ASCIITABLE,
             ]))
             ->collect();
 
-        $this->assertStringContainsString(
+        self::assertStringContainsString(
             <<<'ASCIITABLE'
 +----------------------+
 | this is very long en |
@@ -256,7 +231,7 @@ ASCIITABLE,
             ->printRows();
         $output = \ob_get_clean();
 
-        $this->assertStringContainsString(
+        self::assertStringContainsString(
             <<<'ASCII'
 +----+---------+-----+
 | id | country | age |
@@ -296,7 +271,7 @@ ASCII,
             ->printSchema();
         $output = \ob_get_clean();
 
-        $this->assertStringContainsString(
+        self::assertStringContainsString(
             <<<'ASCII'
 schema
 |-- id: integer

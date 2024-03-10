@@ -1,22 +1,13 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use function Flow\ETL\Adapter\Text\from_text;
-use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\from_rows;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\lit;
-use function Flow\ETL\DSL\partition;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\rows_partitioned;
-use function Flow\ETL\DSL\str_entry;
-use Flow\ETL\Partition;
-use Flow\ETL\Rows;
+use function Flow\ETL\DSL\{df, from_array, from_rows, int_entry, lit, partition, ref, row, rows, rows_partitioned, str_entry};
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
+use Flow\ETL\{Partition, Rows};
 
 final class PartitioningTest extends IntegrationTestCase
 {
@@ -39,7 +30,7 @@ final class PartitioningTest extends IntegrationTestCase
             ->dropPartitions()
             ->fetch();
 
-        $this->assertFalse($rows->isPartitioned());
+        self::assertFalse($rows->isPartitioned());
     }
 
     public function test_partition_by() : void
@@ -60,7 +51,7 @@ final class PartitioningTest extends IntegrationTestCase
             ->partitionBy(ref('country'))
             ->get();
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 rows_partitioned(
                     [
@@ -144,8 +135,8 @@ final class PartitioningTest extends IntegrationTestCase
 
         $days = $rows->reduceToArray('day');
         \sort($days);
-        $this->assertCount(2, $rows);
-        $this->assertSame([1, 2], $days);
+        self::assertCount(2, $rows);
+        self::assertSame([1, 2], $days);
     }
 
     public function test_pruning_single_partition() : void
@@ -159,7 +150,7 @@ final class PartitioningTest extends IntegrationTestCase
             ->groupBy(ref('year'))
             ->fetch();
 
-        $this->assertCount(1, $rows);
-        $this->assertSame(2023, $rows->first()->valueOf('year'));
+        self::assertCount(1, $rows);
+        self::assertSame(2023, $rows->first()->valueOf('year'));
     }
 }

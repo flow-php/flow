@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\BinaryReader;
 
@@ -18,10 +20,10 @@ final class BinaryBufferReaderTest extends TestCase
 
         // First varint should be 1
         $result1 = $reader->readVarInt();
-        $this->assertSame(1, $result1);
+        self::assertSame(1, $result1);
 
         // Second varint should be 300
         $result2 = $reader->readVarInt();
-        $this->assertSame(300, $result2);
+        self::assertSame(300, $result2);
     }
 }

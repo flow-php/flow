@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\HTTP\Tests\Unit;
 
 use Flow\ETL\Adapter\Http\RequestEntriesFactory;
-use Flow\ETL\Row\Entry\JsonEntry;
-use Flow\ETL\Row\Entry\NullEntry;
-use Flow\ETL\Row\Entry\StringEntry;
+use Flow\ETL\Row\Entry\{JsonEntry, NullEntry, StringEntry};
 use Nyholm\Psr7\Factory\Psr17Factory;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
@@ -53,7 +51,7 @@ final class RequestEntriesFactoryTest extends TestCase
     {
         $entryFactory = new RequestEntriesFactory();
 
-        $this->assertInstanceOf(
+        self::assertInstanceOf(
             $expectedRequestBodyEntryClass,
             $entryFactory->create($request)->get('request_body')
         );

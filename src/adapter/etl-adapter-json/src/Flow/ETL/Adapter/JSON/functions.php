@@ -6,10 +6,9 @@ namespace Flow\ETL\Adapter\JSON;
 
 use function Flow\ETL\DSL\from_all;
 use Flow\ETL\Adapter\JSON\JSONMachine\JsonExtractor;
-use Flow\ETL\Extractor;
 use Flow\ETL\Filesystem\Path;
-use Flow\ETL\Loader;
 use Flow\ETL\Row\Schema;
+use Flow\ETL\{Extractor, Loader};
 
 /**
  * @param array<Path|string>|Path|string $path - string is internally turned into stream

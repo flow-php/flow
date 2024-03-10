@@ -1,15 +1,15 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\ColumnChunkReader;
 
 use Flow\Parquet\Exception\RuntimeException;
-use Flow\Parquet\ParquetFile\ColumnChunkReader;
 use Flow\Parquet\ParquetFile\Data\DataBuilder;
-use Flow\Parquet\ParquetFile\Page\ColumnData;
-use Flow\Parquet\ParquetFile\Page\PageHeader;
-use Flow\Parquet\ParquetFile\PageReader;
+use Flow\Parquet\ParquetFile\Page\{ColumnData, PageHeader};
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\{ColumnChunkReader, PageReader};
 use Flow\Parquet\ThriftStream\TPhpFileStream;
 use Thrift\Protocol\TCompactProtocol;
 use Thrift\Transport\TBufferedTransport;

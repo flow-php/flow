@@ -4,14 +4,11 @@ declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk\Tests\Integration;
 
-use Doctrine\DBAL\Schema\Column;
-use Doctrine\DBAL\Schema\Table;
-use Doctrine\DBAL\Types\Type;
-use Doctrine\DBAL\Types\Types;
-use Flow\Doctrine\Bulk\Bulk;
-use Flow\Doctrine\Bulk\BulkData;
+use Doctrine\DBAL\Schema\{Column, Table};
+use Doctrine\DBAL\Types\{Type, Types};
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
 use Flow\Doctrine\Bulk\Tests\PostgreSqlIntegrationTestCase;
+use Flow\Doctrine\Bulk\{Bulk, BulkData};
 
 final class PostgreSqlBulkUpdateTest extends PostgreSqlIntegrationTestCase
 {
@@ -57,7 +54,7 @@ final class PostgreSqlBulkUpdateTest extends PostgreSqlIntegrationTestCase
             ]
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One', 'active' => false, 'account' => 'Bob', 'created_at' => (new \DateTimeImmutable('2021-01-01 10:00:00'))->format('Y-m-d H:i:s')],
                 ['id' => 2, 'name' => 'Changed name Two', 'description' => 'Changed description Two', 'active' => false, 'account' => 'Bob', 'created_at' => (new \DateTimeImmutable('2021-01-02 10:00:00'))->format('Y-m-d H:i:s')],
@@ -106,7 +103,7 @@ final class PostgreSqlBulkUpdateTest extends PostgreSqlIntegrationTestCase
             ]
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One', 'active' => false],
                 ['id' => 2, 'name' => 'Changed name Two', 'description' => 'Changed description Two', 'active' => false],
@@ -158,7 +155,7 @@ final class PostgreSqlBulkUpdateTest extends PostgreSqlIntegrationTestCase
             ]
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One', 'active' => false],
                 ['id' => 2, 'name' => 'Changed name Two', 'description' => 'Description Two', 'active' => true],

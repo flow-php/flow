@@ -2,19 +2,10 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\str_entry;
-use function Flow\ETL\DSL\to_output;
-use Flow\ETL\DataFrame;
-use Flow\ETL\DataFrameFactory;
-use Flow\ETL\Extractor;
-use Flow\ETL\FlowContext;
+use function Flow\ETL\DSL\{df, int_entry, str_entry, to_output};
 use Flow\ETL\Join\Comparison\Equal;
-use Flow\ETL\Join\Expression;
-use Flow\ETL\Join\Join;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use Flow\ETL\Join\{Expression, Join};
+use Flow\ETL\{DataFrame, DataFrameFactory, Extractor, FlowContext, Row, Rows};
 
 require __DIR__ . '/../../../autoload.php';
 

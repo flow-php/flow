@@ -1,19 +1,15 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\IO;
 
 use Composer\InstalledVersions;
 use Faker\Factory;
-use Flow\Parquet\Consts;
 use Flow\Parquet\Exception\InvalidArgumentException;
-use Flow\Parquet\Option;
-use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Schema;
-use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Flow\Parquet\ParquetFile\Schema\ListElement;
-use Flow\Parquet\ParquetFile\Schema\NestedColumn;
-use Flow\Parquet\Reader;
-use Flow\Parquet\Writer;
+use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, NestedColumn};
+use Flow\Parquet\{Consts, Option, Options, Reader, Writer};
 use PHPUnit\Framework\TestCase;
 
 final class WriterTest extends TestCase
@@ -31,11 +27,11 @@ final class WriterTest extends TestCase
 
         $writer->append($path, [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row]);
 
-        $this->assertSame(
+        self::assertSame(
             [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row],
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertFileExists($path);
+        self::assertFileExists($path);
         \unlink($path);
     }
 
@@ -58,11 +54,11 @@ final class WriterTest extends TestCase
         $writer->writeBatch([$row, $row]);
         $writer->close();
 
-        $this->assertSame(
+        self::assertSame(
             [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row],
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertFileExists($path);
+        self::assertFileExists($path);
         \unlink($path);
     }
 
@@ -83,11 +79,11 @@ final class WriterTest extends TestCase
         $writer->writeBatch([$row, $row, $row, $row, $row, $row, $row, $row, $row, $row]);
         $writer->close();
 
-        $this->assertSame(
+        self::assertSame(
             [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row, $row],
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertFileExists($path);
+        self::assertFileExists($path);
         \unlink($path);
     }
 
@@ -113,7 +109,7 @@ final class WriterTest extends TestCase
 
         $metadata = (new Reader())->read($path)->metadata();
 
-        $this->assertSame('flow-php parquet version ' . InstalledVersions::getRootPackage()['pretty_version'], $metadata->createdBy());
+        self::assertSame('flow-php parquet version ' . InstalledVersions::getRootPackage()['pretty_version'], $metadata->createdBy());
     }
 
     public function test_opening_already_open_writer() : void
@@ -176,14 +172,14 @@ final class WriterTest extends TestCase
 
         $statistics = (new Reader())->read($path)->metadata()->columnChunks()[0]->statistics();
 
-        $this->assertSame(1, $statistics->min($column));
-        $this->assertSame(100, $statistics->max($column));
-        $this->assertSame(1, $statistics->minValue($column));
-        $this->assertSame(100, $statistics->maxValue($column));
-        $this->assertSame(100, $statistics->distinctCount());
-        $this->assertSame(0, $statistics->nullCount());
+        self::assertSame(1, $statistics->min($column));
+        self::assertSame(100, $statistics->max($column));
+        self::assertSame(1, $statistics->minValue($column));
+        self::assertSame(100, $statistics->maxValue($column));
+        self::assertSame(100, $statistics->distinctCount());
+        self::assertSame(0, $statistics->nullCount());
 
-        $this->assertFileExists($path);
+        self::assertFileExists($path);
         \unlink($path);
     }
 
@@ -206,12 +202,12 @@ final class WriterTest extends TestCase
         foreach ((new Reader())->read($path)->pageHeaders() as $pageHeader) {
             $statistics = $pageHeader->pageHeader->dataPageHeaderV2()->statistics();
 
-            $this->assertSame(1, $statistics->min($column));
-            $this->assertSame(100, $statistics->max($column));
-            $this->assertSame(1, $statistics->minValue($column));
-            $this->assertSame(100, $statistics->maxValue($column));
-            $this->assertSame(100, $statistics->distinctCount());
-            $this->assertSame(0, $statistics->nullCount());
+            self::assertSame(1, $statistics->min($column));
+            self::assertSame(100, $statistics->max($column));
+            self::assertSame(1, $statistics->minValue($column));
+            self::assertSame(100, $statistics->maxValue($column));
+            self::assertSame(100, $statistics->distinctCount());
+            self::assertSame(0, $statistics->nullCount());
         }
 
         \unlink($path);
@@ -236,11 +232,11 @@ final class WriterTest extends TestCase
 
         $writer->close();
 
-        $this->assertSame(
+        self::assertSame(
             [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row],
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertFileExists($path);
+        self::assertFileExists($path);
         \unlink($path);
     }
 
@@ -262,11 +258,11 @@ final class WriterTest extends TestCase
 
         unset($writer);
 
-        $this->assertSame(
+        self::assertSame(
             [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row],
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertFileExists($path);
+        self::assertFileExists($path);
         \unlink($path);
     }
 
@@ -290,11 +286,11 @@ final class WriterTest extends TestCase
 
         $writer->close();
 
-        $this->assertSame(
+        self::assertSame(
             [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row],
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertFileExists($path);
+        self::assertFileExists($path);
         \unlink($path);
     }
 
@@ -319,11 +315,11 @@ final class WriterTest extends TestCase
 
         $writer->write($path, $schema, [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row]);
 
-        $this->assertSame(
+        self::assertSame(
             [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row],
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertFileExists($path);
+        self::assertFileExists($path);
         \unlink($path);
     }
 
@@ -341,12 +337,12 @@ final class WriterTest extends TestCase
 
         $writer->write($path, $schema, [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row]);
 
-        $this->assertSame(2, (new Reader())->read($path)->metadata()->version());
-        $this->assertSame(
+        self::assertSame(2, (new Reader())->read($path)->metadata()->version());
+        self::assertSame(
             [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row],
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertFileExists($path);
+        self::assertFileExists($path);
         \unlink($path);
     }
 
@@ -363,11 +359,11 @@ final class WriterTest extends TestCase
 
         $writer->writeStream($stream, $schema, [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row]);
 
-        $this->assertSame(
+        self::assertSame(
             [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row],
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertFileExists($path);
+        self::assertFileExists($path);
         \unlink($path);
     }
 

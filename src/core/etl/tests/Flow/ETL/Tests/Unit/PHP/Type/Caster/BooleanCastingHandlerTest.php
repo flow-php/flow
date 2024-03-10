@@ -35,6 +35,6 @@ final class BooleanCastingHandlerTest extends TestCase
     #[DataProvider('boolean_castable_data_provider')]
     public function test_casting_different_data_types_to_integer(mixed $value, bool $expected) : void
     {
-        $this->assertSame($expected, (new BooleanCastingHandler())->value($value, type_boolean(), Caster::default()));
+        self::assertSame($expected, (new BooleanCastingHandler())->value($value, type_boolean(), Caster::default()));
     }
 }

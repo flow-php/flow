@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\ExternalSort;
 
-use Flow\ETL\Cache;
-use Flow\ETL\Rows;
+use Flow\ETL\{Cache, Rows};
 
 /**
  * @internal

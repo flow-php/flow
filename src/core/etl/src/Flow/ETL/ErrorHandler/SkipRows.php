@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\ErrorHandler;
 
-use Flow\ETL\ErrorHandler;
-use Flow\ETL\Rows;
+use Flow\ETL\{ErrorHandler, Rows};
 
 final class SkipRows implements ErrorHandler
 {

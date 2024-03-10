@@ -1,13 +1,13 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\IO;
 
 use Faker\Factory;
-use Flow\Parquet\Consts;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Flow\Parquet\Reader;
-use Flow\Parquet\Writer;
+use Flow\Parquet\{Consts, Reader, Writer};
 use PHPUnit\Framework\TestCase;
 
 final class SimpleTypesWritingTest extends TestCase
@@ -29,12 +29,12 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        $this->assertSame(
+        self::assertSame(
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
 
-        $this->assertTrue(\file_exists($path));
+        self::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
@@ -55,12 +55,12 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        $this->assertSame(
+        self::assertSame(
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
 
-        $this->assertTrue(\file_exists($path));
+        self::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
@@ -83,12 +83,12 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        $this->assertEquals(
+        self::assertEquals(
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
 
-        $this->assertTrue(\file_exists($path));
+        self::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
@@ -111,12 +111,12 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        $this->assertEquals(
+        self::assertEquals(
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
 
-        $this->assertTrue(\file_exists($path));
+        self::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
@@ -139,12 +139,12 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        $this->assertEquals(
+        self::assertEquals(
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
 
-        $this->assertTrue(\file_exists($path));
+        self::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
@@ -167,12 +167,12 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        $this->assertEquals(
+        self::assertEquals(
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
 
-        $this->assertTrue(\file_exists($path));
+        self::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
@@ -195,12 +195,12 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        $this->assertEquals(
+        self::assertEquals(
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
 
-        $this->assertTrue(\file_exists($path));
+        self::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
@@ -223,12 +223,12 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        $this->assertEquals(
+        self::assertEquals(
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
 
-        $this->assertTrue(\file_exists($path));
+        self::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
@@ -251,12 +251,12 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        $this->assertEquals(
+        self::assertEquals(
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
 
-        $this->assertTrue(\file_exists($path));
+        self::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
@@ -277,12 +277,12 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        $this->assertEquals(
+        self::assertEquals(
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
 
-        $this->assertTrue(\file_exists($path));
+        self::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
@@ -303,12 +303,12 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        $this->assertEquals(
+        self::assertEquals(
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
 
-        $this->assertTrue(\file_exists($path));
+        self::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
@@ -331,12 +331,12 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        $this->assertEquals(
+        self::assertEquals(
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
 
-        $this->assertTrue(\file_exists($path));
+        self::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
@@ -359,12 +359,12 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        $this->assertEquals(
+        self::assertEquals(
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
 
-        $this->assertTrue(\file_exists($path));
+        self::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
@@ -387,11 +387,11 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        $this->assertEquals(
+        self::assertEquals(
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertTrue(\file_exists($path));
+        self::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
@@ -414,11 +414,11 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        $this->assertEquals(
+        self::assertEquals(
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertTrue(\file_exists($path));
+        self::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
@@ -441,11 +441,11 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        $this->assertEquals(
+        self::assertEquals(
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertTrue(\file_exists($path));
+        self::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
@@ -470,11 +470,11 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        $this->assertEquals(
+        self::assertEquals(
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertTrue(\file_exists($path));
+        self::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
@@ -497,11 +497,11 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        $this->assertEquals(
+        self::assertEquals(
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertTrue(\file_exists($path));
+        self::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
@@ -524,11 +524,11 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        $this->assertEquals(
+        self::assertEquals(
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertTrue(\file_exists($path));
+        self::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
@@ -549,11 +549,11 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        $this->assertEquals(
+        self::assertEquals(
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertTrue(\file_exists($path));
+        self::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
@@ -574,11 +574,11 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        $this->assertEquals(
+        self::assertEquals(
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertTrue(\file_exists($path));
+        self::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
@@ -601,11 +601,11 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        $this->assertEquals(
+        self::assertEquals(
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertTrue(\file_exists($path));
+        self::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
@@ -628,11 +628,11 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        $this->assertEquals(
+        self::assertEquals(
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertTrue(\file_exists($path));
+        self::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
@@ -655,11 +655,11 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        $this->assertEquals(
+        self::assertEquals(
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertTrue(\file_exists($path));
+        self::assertTrue(\file_exists($path));
         \unlink($path);
     }
 
@@ -682,11 +682,11 @@ final class SimpleTypesWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        $this->assertEquals(
+        self::assertEquals(
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertTrue(\file_exists($path));
+        self::assertTrue(\file_exists($path));
         \unlink($path);
     }
 }

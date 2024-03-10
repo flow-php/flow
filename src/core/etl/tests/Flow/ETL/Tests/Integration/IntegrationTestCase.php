@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration;
 
-use Flow\ETL\Config;
-use Flow\ETL\Filesystem;
-use Flow\ETL\Filesystem\LocalFilesystem;
-use Flow\ETL\Filesystem\Path;
+use Flow\ETL\Filesystem\{LocalFilesystem, Path};
+use Flow\ETL\{Config, Filesystem};
 use PHPUnit\Framework\TestCase;
 
 abstract class IntegrationTestCase extends TestCase

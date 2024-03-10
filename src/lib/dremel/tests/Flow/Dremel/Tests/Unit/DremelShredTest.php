@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Dremel\Tests\Unit;
 
@@ -13,7 +15,7 @@ final class DremelShredTest extends TestCase
         $data = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 
         $shredded = (new Dremel())->shred($data, 10);
-        $this->assertEquals(
+        self::assertEquals(
             [
                 'repetitions' => [],
                 'definitions' => [10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
@@ -43,7 +45,7 @@ final class DremelShredTest extends TestCase
         ];
 
         $shredded = (new Dremel())->shred($data, 5);
-        $this->assertSame(
+        self::assertSame(
             [
                 'repetitions' => [0, 2, 2, 0, 2, 2, 1, 2, 2, 0, 2, 2],
                 'definitions' => [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
@@ -66,7 +68,7 @@ final class DremelShredTest extends TestCase
         ];
 
         $shredded = (new Dremel())->shred($data, 2);
-        $this->assertSame(
+        self::assertSame(
             [
                 'repetitions' => [0, 2, 2, 0, 2, 2, 0, 2, 2],
                 'definitions' => [2, 2, 2, 2, 2, 2, 2, 2, 2],
@@ -85,7 +87,7 @@ final class DremelShredTest extends TestCase
         $data = [[1, 2, 3], [null, null], [4, 5, 6]];
 
         $shredded = (new Dremel())->shred($data, 3);
-        $this->assertSame(
+        self::assertSame(
             [
                 'repetitions' => [0, 1, 1, 0, 1, 0, 1, 1],
                 'definitions' => [3, 3, 3, 2, 2, 3, 3, 3],
@@ -108,7 +110,7 @@ final class DremelShredTest extends TestCase
         ];
 
         $shredded = (new Dremel())->shred($data, 2);
-        $this->assertSame(
+        self::assertSame(
             [
                 'repetitions' => [0, 1, 1, 0, 1, 1, 0, 1, 1],
                 'definitions' => [2, 2, 2, 2, 2, 2, 2, 2, 2],

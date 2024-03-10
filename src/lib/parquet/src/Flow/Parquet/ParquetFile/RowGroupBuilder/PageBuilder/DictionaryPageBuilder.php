@@ -1,19 +1,18 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\RowGroupBuilder\PageBuilder;
 
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
 use Flow\Parquet\Data\DataConverter;
 use Flow\Parquet\Options;
-use Flow\Parquet\ParquetFile\Codec;
-use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Data\PlainValuesPacker;
-use Flow\Parquet\ParquetFile\Encodings;
-use Flow\Parquet\ParquetFile\Page\Header\DictionaryPageHeader;
-use Flow\Parquet\ParquetFile\Page\Header\Type;
+use Flow\Parquet\ParquetFile\Page\Header\{DictionaryPageHeader, Type};
 use Flow\Parquet\ParquetFile\Page\PageHeader;
 use Flow\Parquet\ParquetFile\RowGroupBuilder\PageContainer;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\ParquetFile\{Codec, Compressions, Encodings};
 use Thrift\Protocol\TCompactProtocol;
 use Thrift\Transport\TMemoryBuffer;
 

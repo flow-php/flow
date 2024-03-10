@@ -1,12 +1,12 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\DataFrame;
 
-use Flow\ETL\DataFrame;
 use Flow\ETL\Function\AggregatingFunction;
-use Flow\ETL\Loader;
 use Flow\ETL\Row\Reference;
-use Flow\ETL\Rows;
+use Flow\ETL\{DataFrame, Loader, Rows};
 
 /**
  * @method DataFrame write(Loader $loader)

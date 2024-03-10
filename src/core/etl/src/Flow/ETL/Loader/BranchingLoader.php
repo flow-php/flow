@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Loader;
 
-use Flow\ETL\FlowContext;
 use Flow\ETL\Function\ScalarFunction;
-use Flow\ETL\Loader;
-use Flow\ETL\Rows;
 use Flow\ETL\Transformer\ScalarFunctionFilterTransformer;
+use Flow\ETL\{FlowContext, Loader, Rows};
 
 final class BranchingLoader implements Closure, Loader, OverridingLoader
 {

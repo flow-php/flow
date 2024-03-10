@@ -1,17 +1,14 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Parquet;
 
 use Composer\InstalledVersions;
 use Flow\Parquet\Data\DataConverter;
-use Flow\Parquet\Exception\InvalidArgumentException;
-use Flow\Parquet\Exception\RuntimeException;
-use Flow\Parquet\ParquetFile\Compressions;
-use Flow\Parquet\ParquetFile\Metadata;
-use Flow\Parquet\ParquetFile\RowGroupBuilder;
+use Flow\Parquet\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\Parquet\ParquetFile\RowGroupBuilder\PageSizeCalculator;
-use Flow\Parquet\ParquetFile\RowGroups;
-use Flow\Parquet\ParquetFile\Schema;
+use Flow\Parquet\ParquetFile\{Compressions, Metadata, RowGroupBuilder, RowGroups, Schema};
 use Flow\Parquet\Thrift\FileMetaData;
 use Flow\Parquet\ThriftStream\TPhpFileStream;
 use Thrift\Protocol\TCompactProtocol;

@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Loader;
 
-use Flow\ETL\FlowContext;
-use Flow\ETL\Loader;
-use Flow\ETL\Rows;
+use Flow\ETL\{FlowContext, Loader, Rows};
 
 final class CallbackLoader implements Loader
 {

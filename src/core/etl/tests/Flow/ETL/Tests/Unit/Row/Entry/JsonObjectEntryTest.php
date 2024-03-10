@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
-use Flow\ETL\Row\Entry\IntegerEntry;
-use Flow\ETL\Row\Entry\JsonEntry;
+use Flow\ETL\Row\Entry\{IntegerEntry, JsonEntry};
 use PHPUnit\Framework\TestCase;
 
 final class JsonObjectEntryTest extends TestCase
@@ -59,7 +58,7 @@ final class JsonObjectEntryTest extends TestCase
      */
     public function test_is_equal(bool $equals, JsonEntry $entry, JsonEntry $nextEntry) : void
     {
-        $this->assertSame($equals, $entry->isEqual($nextEntry));
+        self::assertSame($equals, $entry->isEqual($nextEntry));
     }
 
     public function test_map() : void
@@ -76,7 +75,7 @@ final class JsonObjectEntryTest extends TestCase
             return \json_encode($jsonValue, JSON_THROW_ON_ERROR);
         });
 
-        $this->assertEquals(
+        self::assertEquals(
             \json_encode(
                 ['item-id' => 1, 'name' => 'ONE']
             ),
@@ -89,8 +88,8 @@ final class JsonObjectEntryTest extends TestCase
         $entry = JsonEntry::object('entry-name', ['id' => 1, 'name' => 'one']);
         $newEntry = $entry->rename('new-entry-name');
 
-        $this->assertEquals('new-entry-name', $newEntry->name());
-        $this->assertEquals($entry->value(), $newEntry->value());
+        self::assertEquals('new-entry-name', $newEntry->name());
+        self::assertEquals($entry->value(), $newEntry->value());
     }
 
     public function test_returns_json_as_value() : void
@@ -98,6 +97,6 @@ final class JsonObjectEntryTest extends TestCase
         $item = ['item-id' => 1, 'name' => 'one'];
         $entry = JsonEntry::object('item', $item);
 
-        $this->assertEquals(\json_encode($item), $entry->value());
+        self::assertEquals(\json_encode($item), $entry->value());
     }
 }

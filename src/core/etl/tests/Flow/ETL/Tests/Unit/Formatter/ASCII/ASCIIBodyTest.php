@@ -4,15 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Formatter\ASCII;
 
-use function Flow\ETL\DSL\float_entry;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\string_entry;
-use Flow\ETL\Formatter\ASCII\ASCIIBody;
-use Flow\ETL\Formatter\ASCII\Body;
-use Flow\ETL\Formatter\ASCII\Headers;
+use function Flow\ETL\DSL\{float_entry, int_entry, ref, row, rows, string_entry};
+use Flow\ETL\Formatter\ASCII\{ASCIIBody, Body, Headers};
 use PHPUnit\Framework\TestCase;
 
 final class ASCIIBodyTest extends TestCase
@@ -29,7 +22,7 @@ final class ASCIIBodyTest extends TestCase
             new Body($rows)
         );
 
-        $this->assertStringContainsString(
+        self::assertStringContainsString(
             <<<'TABLE'
 |  1 |   1.4 |
 |  2 |   3.4 |
@@ -51,7 +44,7 @@ TABLE,
             new Body($rows[0])
         );
 
-        $this->assertStringContainsString(
+        self::assertStringContainsString(
             <<<'TABLE'
 |  1 |   1.4 |     a |
 |  2 |   3.4 |     a |

@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\ExternalSort;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Row\Reference;
-use Flow\ETL\Row\References;
-use Flow\ETL\Row\SortOrder;
+use Flow\ETL\Row\{Reference, References, SortOrder};
 
 /**
  * @template HeapElement

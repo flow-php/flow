@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Row\Entry\IntegerEntry;
-use Flow\ETL\Row\Entry\JsonEntry;
+use Flow\ETL\Row\Entry\{IntegerEntry, JsonEntry};
 use PHPUnit\Framework\TestCase;
 
 final class JsonEntryTest extends TestCase
@@ -85,13 +84,13 @@ final class JsonEntryTest extends TestCase
         $jsonEntry = new JsonEntry('empty', []);
         $jsonObjectEntry = JsonEntry::object('empty', []);
 
-        $this->assertEquals('[]', $jsonEntry->value());
-        $this->assertEquals('{}', $jsonObjectEntry->value());
+        self::assertEquals('[]', $jsonEntry->value());
+        self::assertEquals('{}', $jsonObjectEntry->value());
     }
 
     public function test_entry_name_can_be_zero() : void
     {
-        $this->assertSame('0', (new JsonEntry('0', [1]))->name());
+        self::assertSame('0', (new JsonEntry('0', [1]))->name());
     }
 
     public function test_invalid_json() : void
@@ -107,7 +106,7 @@ final class JsonEntryTest extends TestCase
      */
     public function test_is_equal(bool $equals, JsonEntry $entry, JsonEntry $nextEntry) : void
     {
-        $this->assertSame($equals, $entry->isEqual($nextEntry));
+        self::assertSame($equals, $entry->isEqual($nextEntry));
     }
 
     public function test_map() : void
@@ -129,7 +128,7 @@ final class JsonEntryTest extends TestCase
             return \json_encode($trimValue, JSON_THROW_ON_ERROR);
         });
 
-        $this->assertEquals(
+        self::assertEquals(
             \json_encode(
                 $items = [
                     ['item-id' => 1, 'name' => 'one', 'address' => ['line1' => 'NO. 47 HENGSHAN ROAD, ECONOMIC TECHNOLOGICAL DEVELOPMENT ZONE, WUHU, ANHUI, 241000, CHINA']],
@@ -162,8 +161,8 @@ final class JsonEntryTest extends TestCase
         $entry = new JsonEntry('entry-name', ['id' => 1, 'name' => 'one']);
         $newEntry = $entry->rename('new-entry-name');
 
-        $this->assertEquals('new-entry-name', $newEntry->name());
-        $this->assertEquals($entry->value(), $newEntry->value());
+        self::assertEquals('new-entry-name', $newEntry->name());
+        self::assertEquals($entry->value(), $newEntry->value());
     }
 
     public function test_returns_json_as_value() : void
@@ -175,7 +174,7 @@ final class JsonEntryTest extends TestCase
         ];
         $entry = new JsonEntry('items', $items);
 
-        $this->assertEquals(\json_encode($items), $entry->value());
+        self::assertEquals(\json_encode($items), $entry->value());
     }
 
     public function test_serialization() : void
@@ -185,7 +184,7 @@ final class JsonEntryTest extends TestCase
         $serialized = \serialize($entry);
         $unserialized = \unserialize($serialized);
 
-        $this->assertTrue($entry->isEqual($unserialized));
+        self::assertTrue($entry->isEqual($unserialized));
     }
 
     public function test_serialization_of_json_objects() : void
@@ -195,6 +194,6 @@ final class JsonEntryTest extends TestCase
         $serialized = \serialize($entry);
         $unserialized = \unserialize($serialized);
 
-        $this->assertTrue($entry->isEqual($unserialized));
+        self::assertTrue($entry->isEqual($unserialized));
     }
 }

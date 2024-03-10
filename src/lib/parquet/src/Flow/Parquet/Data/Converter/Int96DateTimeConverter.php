@@ -1,14 +1,14 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Parquet\Data\Converter;
 
 use Flow\Parquet\BinaryReader\Bytes;
 use Flow\Parquet\Data\Converter;
 use Flow\Parquet\Exception\RuntimeException;
-use Flow\Parquet\Option;
-use Flow\Parquet\Options;
-use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Flow\Parquet\ParquetFile\Schema\PhysicalType;
+use Flow\Parquet\ParquetFile\Schema\{FlatColumn, PhysicalType};
+use Flow\Parquet\{Option, Options};
 
 final class Int96DateTimeConverter implements Converter
 {

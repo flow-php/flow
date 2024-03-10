@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Elasticsearch\Tests\Integration;
 
-use Flow\ETL\Adapter\Elasticsearch\Tests\Context\Elasticsearch7Context;
-use Flow\ETL\Adapter\Elasticsearch\Tests\Context\Elasticsearch8Context;
-use Flow\ETL\Adapter\Elasticsearch\Tests\Context\ElasticsearchContext;
+use Flow\ETL\Adapter\Elasticsearch\Tests\Context\{Elasticsearch7Context, Elasticsearch8Context, ElasticsearchContext};
 
 abstract class TestCase extends \PHPUnit\Framework\TestCase
 {

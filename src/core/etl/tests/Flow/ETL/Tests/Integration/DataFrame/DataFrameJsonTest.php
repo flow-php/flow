@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
@@ -35,7 +37,7 @@ final class DataFrameJsonTest extends IntegrationTestCase
 JSON
         );
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'name' => 'Norbert', 'active' => true],
                 ['id' => 2, 'name' => 'Michal', 'active' => true],

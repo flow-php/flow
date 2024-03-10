@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Integration\Binary;
 
@@ -44,7 +46,7 @@ final class BinaryReaderWriterTest extends TestCase
 
         $buffer = '';
         (new BinaryBufferWriter($buffer))->writeDecimals($decimals, $byteLength, $precision, $scale);
-        $this->assertSame(
+        self::assertSame(
             $decimals,
             (new BinaryBufferReader($buffer))->readDecimals(\count($decimals), $byteLength, $precision, $scale)
         );
@@ -56,7 +58,7 @@ final class BinaryReaderWriterTest extends TestCase
         $floats = [1.1, 2.2, 3.3, 4.4, 9.1];
 
         (new BinaryBufferWriter($buffer))->writeFloats($floats);
-        $this->assertEqualsWithDelta(
+        self::assertEqualsWithDelta(
             $floats,
             (new BinaryBufferReader($buffer))->readFloats(\count($floats)),
             0.000001,
@@ -67,7 +69,7 @@ final class BinaryReaderWriterTest extends TestCase
     {
         $buffer = '';
         (new BinaryBufferWriter($buffer))->writeStrings($strings = ['some_string_01', 'some_string_02', 'some_string_02', 'ĄCZXCĄŚQWRQW']);
-        $this->assertSame(
+        self::assertSame(
             $strings,
             (new BinaryBufferReader($buffer))->readStrings(\count($strings))
         );

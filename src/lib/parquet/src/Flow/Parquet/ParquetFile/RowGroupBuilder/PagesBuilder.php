@@ -1,15 +1,14 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\RowGroupBuilder;
 
 use Flow\Parquet\Data\DataConverter;
-use Flow\Parquet\Option;
-use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
-use Flow\Parquet\ParquetFile\RowGroupBuilder\PageBuilder\DataPageBuilder;
-use Flow\Parquet\ParquetFile\RowGroupBuilder\PageBuilder\DictionaryPageBuilder;
-use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Flow\Parquet\ParquetFile\Schema\PhysicalType;
+use Flow\Parquet\ParquetFile\RowGroupBuilder\PageBuilder\{DataPageBuilder, DictionaryPageBuilder};
+use Flow\Parquet\ParquetFile\Schema\{FlatColumn, PhysicalType};
+use Flow\Parquet\{Option, Options};
 
 final class PagesBuilder
 {

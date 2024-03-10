@@ -19,7 +19,7 @@ final class ObjectEntryTest extends TestCase
 
     public function test_entry_name_can_be_zero() : void
     {
-        $this->assertSame('0', (new ObjectEntry('0', new \stdClass()))->name());
+        self::assertSame('0', (new ObjectEntry('0', new \stdClass()))->name());
     }
 
     /**
@@ -27,14 +27,14 @@ final class ObjectEntryTest extends TestCase
      */
     public function test_is_equal(bool $equals, ObjectEntry $entry, ObjectEntry $nextEntry) : void
     {
-        $this->assertSame($equals, $entry->isEqual($nextEntry));
+        self::assertSame($equals, $entry->isEqual($nextEntry));
     }
 
     public function test_map() : void
     {
         $entry = new ObjectEntry('entry-name', new \stdClass());
 
-        $this->assertEquals(
+        self::assertEquals(
             $entry,
             $entry->map(fn (\stdClass $object) => $object)
         );
@@ -52,8 +52,8 @@ final class ObjectEntryTest extends TestCase
         $entry = new ObjectEntry('entry-name', new \stdClass());
         $newEntry = $entry->rename('new-entry-name');
 
-        $this->assertEquals('new-entry-name', $newEntry->name());
-        $this->assertIsObject($newEntry->value());
+        self::assertEquals('new-entry-name', $newEntry->name());
+        self::assertIsObject($newEntry->value());
     }
 
     public function test_serialization() : void
@@ -64,6 +64,6 @@ final class ObjectEntryTest extends TestCase
         /** @var ObjectEntry $unserialized */
         $unserialized = \unserialize($serialized);
 
-        $this->assertTrue($string->isEqual($unserialized));
+        self::assertTrue($string->isEqual($unserialized));
     }
 }

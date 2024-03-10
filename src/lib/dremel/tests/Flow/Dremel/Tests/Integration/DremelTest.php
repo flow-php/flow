@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Dremel\Tests\Integration;
 
@@ -24,7 +26,7 @@ final class DremelTest extends TestCase
 
         $shredded = (new Dremel())->shred($values, 5);
 
-        $this->assertSame(
+        self::assertSame(
             $values,
             (new Dremel())->assemble($shredded->repetitions, $shredded->definitions, $shredded->values)
         );
@@ -39,12 +41,12 @@ final class DremelTest extends TestCase
         $dremel = new Dremel();
         $shredded = $dremel->shred($values, \max($definitions));
 
-        $this->assertSame($repetitions, $shredded->repetitions);
-        $this->assertSame($definitions, $shredded->definitions);
+        self::assertSame($repetitions, $shredded->repetitions);
+        self::assertSame($definitions, $shredded->definitions);
 
         $assembledValues = $dremel->assemble($shredded->repetitions, $shredded->definitions, $shredded->values);
 
-        $this->assertSame($values, $assembledValues);
+        self::assertSame($values, $assembledValues);
     }
 
     public function test_dremel_shredding_and_assembling_list_with_empty_elements() : void
@@ -56,10 +58,10 @@ final class DremelTest extends TestCase
         $dremel = new Dremel();
         $shredded = $dremel->shred($values, 3);
 
-        $this->assertSame($repetitions, $shredded->repetitions);
-        $this->assertSame($definitions, $shredded->definitions);
+        self::assertSame($repetitions, $shredded->repetitions);
+        self::assertSame($definitions, $shredded->definitions);
 
-        $this->assertSame(
+        self::assertSame(
             $values,
             $dremel->assemble($shredded->repetitions, $shredded->definitions, $shredded->values)
         );
@@ -74,10 +76,10 @@ final class DremelTest extends TestCase
         $dremel = new Dremel();
         $shredded = $dremel->shred($values, 3);
 
-        $this->assertSame($repetitions, $shredded->repetitions);
-        $this->assertSame($definitions, $shredded->definitions);
+        self::assertSame($repetitions, $shredded->repetitions);
+        self::assertSame($definitions, $shredded->definitions);
 
-        $this->assertSame(
+        self::assertSame(
             $values,
             $dremel->assemble($shredded->repetitions, $shredded->definitions, $shredded->values)
         );
@@ -93,11 +95,11 @@ final class DremelTest extends TestCase
         $dremel = new Dremel();
         $shredded = $dremel->shred($values, 2);
 
-        $this->assertSame($repetitions, $shredded->repetitions);
-        $this->assertSame($definitions, $shredded->definitions);
-        $this->assertSame($flatValues, $shredded->values);
+        self::assertSame($repetitions, $shredded->repetitions);
+        self::assertSame($definitions, $shredded->definitions);
+        self::assertSame($flatValues, $shredded->values);
 
-        $this->assertSame(
+        self::assertSame(
             $values,
             $dremel->assemble($shredded->repetitions, $shredded->definitions, $shredded->values)
         );

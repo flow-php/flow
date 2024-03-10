@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
@@ -14,7 +16,7 @@ final class DOMNodeAttributeTest extends TestCase
         $xml = new \DOMDocument();
         $xml->loadXML('<root><foo baz="buz">bar</foo></root>');
 
-        $this->assertEquals(
+        self::assertEquals(
             'buz',
             ref('value')->domNodeAttribute('baz')->eval(Row::create((new NativeEntryFactory())->create('value', $xml->documentElement->firstChild)))
         );
@@ -25,7 +27,7 @@ final class DOMNodeAttributeTest extends TestCase
         $xml = new \DOMDocument();
         $xml->loadXML('<root><foo baz="buz">bar</foo></root>');
 
-        $this->assertNull(
+        self::assertNull(
             ref('value')->domNodeAttribute('bar')->eval(Row::create((new NativeEntryFactory())->create('value', $xml->documentElement->firstChild)))
         );
     }

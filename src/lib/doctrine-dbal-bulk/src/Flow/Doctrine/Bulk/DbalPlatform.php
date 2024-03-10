@@ -1,15 +1,11 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Doctrine\Bulk;
 
-use Doctrine\DBAL\Platforms\AbstractPlatform;
-use Doctrine\DBAL\Platforms\MariaDBPlatform;
-use Doctrine\DBAL\Platforms\MySQLPlatform;
-use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
-use Flow\Doctrine\Bulk\Dialect\Dialect;
-use Flow\Doctrine\Bulk\Dialect\MySQLDialect;
-use Flow\Doctrine\Bulk\Dialect\PostgreSQLDialect;
-use Flow\Doctrine\Bulk\Dialect\SqliteDialect;
+use Doctrine\DBAL\Platforms\{AbstractPlatform, MariaDBPlatform, MySQLPlatform, PostgreSQLPlatform};
+use Flow\Doctrine\Bulk\Dialect\{Dialect, MySQLDialect, PostgreSQLDialect, SqliteDialect};
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
 
 /**

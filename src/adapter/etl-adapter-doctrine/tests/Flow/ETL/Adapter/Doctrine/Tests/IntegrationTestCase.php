@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine\Tests;
 
-use Doctrine\DBAL\Configuration;
-use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Logging\Middleware;
 use Doctrine\DBAL\Tools\DsnParser;
-use Flow\ETL\Adapter\Doctrine\Tests\Context\DatabaseContext;
-use Flow\ETL\Adapter\Doctrine\Tests\Context\InsertQueryCounter;
+use Doctrine\DBAL\{Configuration, DriverManager};
+use Flow\ETL\Adapter\Doctrine\Tests\Context\{DatabaseContext, InsertQueryCounter};
 use PHPUnit\Framework\TestCase;
 
 abstract class IntegrationTestCase extends TestCase

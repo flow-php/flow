@@ -1,13 +1,11 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Parquet\Tests\Unit\ParquetFile\Schema;
 
 use Flow\Parquet\ParquetFile\Schema;
-use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Flow\Parquet\ParquetFile\Schema\ListElement;
-use Flow\Parquet\ParquetFile\Schema\MapKey;
-use Flow\Parquet\ParquetFile\Schema\MapValue;
-use Flow\Parquet\ParquetFile\Schema\NestedColumn;
+use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, MapKey, MapValue, NestedColumn};
 use PHPUnit\Framework\TestCase;
 
 final class NestedColumnTest extends TestCase
@@ -21,9 +19,9 @@ final class NestedColumnTest extends TestCase
             FlatColumn::string('string'),
         ]);
 
-        $this->assertFalse($map->isList());
-        $this->assertTrue($list->isList());
-        $this->assertFalse($struct->isList());
+        self::assertFalse($map->isList());
+        self::assertTrue($list->isList());
+        self::assertFalse($struct->isList());
     }
 
     public function test_column_is_map() : void
@@ -35,9 +33,9 @@ final class NestedColumnTest extends TestCase
             FlatColumn::string('string'),
         ]);
 
-        $this->assertTrue($map->isMap());
-        $this->assertFalse($list->isMap());
-        $this->assertFalse($struct->isMap());
+        self::assertTrue($map->isMap());
+        self::assertFalse($list->isMap());
+        self::assertFalse($struct->isMap());
     }
 
     public function test_column_is_struct() : void
@@ -49,9 +47,9 @@ final class NestedColumnTest extends TestCase
             FlatColumn::string('string'),
         ]);
 
-        $this->assertFalse($map->isStruct());
-        $this->assertFalse($list->isStruct());
-        $this->assertTrue($struct->isStruct());
+        self::assertFalse($map->isStruct());
+        self::assertFalse($list->isStruct());
+        self::assertTrue($struct->isStruct());
     }
 
     public function test_flat_path_for_direct_root_child() : void
@@ -62,9 +60,9 @@ final class NestedColumnTest extends TestCase
             FlatColumn::boolean('bool'),
         );
 
-        $this->assertSame('int', $schema->get('int')->flatPath());
-        $this->assertSame('string', $schema->get('string')->flatPath());
-        $this->assertSame('bool', $schema->get('bool')->flatPath());
+        self::assertSame('int', $schema->get('int')->flatPath());
+        self::assertSame('string', $schema->get('string')->flatPath());
+        self::assertSame('bool', $schema->get('bool')->flatPath());
     }
 
     public function test_getting_flat_list_of_children() : void
@@ -78,7 +76,7 @@ final class NestedColumnTest extends TestCase
             ]),
         ]);
 
-        $this->assertSame(
+        self::assertSame(
             [
                 'struct_nested.string',
                 'struct_nested.struct_flat.int',

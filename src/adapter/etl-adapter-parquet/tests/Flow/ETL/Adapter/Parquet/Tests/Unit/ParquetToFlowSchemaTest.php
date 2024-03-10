@@ -4,30 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Parquet\Tests\Unit;
 
-use function Flow\ETL\DSL\bool_schema;
-use function Flow\ETL\DSL\datetime_schema;
-use function Flow\ETL\DSL\float_schema;
-use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\json_schema;
-use function Flow\ETL\DSL\list_schema;
-use function Flow\ETL\DSL\map_schema;
-use function Flow\ETL\DSL\object_schema;
-use function Flow\ETL\DSL\str_schema;
-use function Flow\ETL\DSL\struct_element;
-use function Flow\ETL\DSL\struct_schema;
-use function Flow\ETL\DSL\type_boolean;
-use function Flow\ETL\DSL\type_int;
-use function Flow\ETL\DSL\type_list;
-use function Flow\ETL\DSL\type_map;
-use function Flow\ETL\DSL\type_object;
-use function Flow\ETL\DSL\type_string;
-use function Flow\ETL\DSL\type_structure;
-use function Flow\ETL\DSL\type_uuid;
-use function Flow\ETL\DSL\uuid_schema;
+use function Flow\ETL\DSL\{bool_schema, datetime_schema, float_schema, int_schema, json_schema, list_schema, map_schema, object_schema, str_schema, struct_element, struct_schema, type_boolean, type_int, type_list, type_map, type_object, type_string, type_structure, type_uuid, uuid_schema};
 use Flow\ETL\Adapter\Parquet\SchemaConverter;
 use Flow\Parquet\ParquetFile\Schema;
-use Flow\Parquet\ParquetFile\Schema\MapKey;
-use Flow\Parquet\ParquetFile\Schema\MapValue;
+use Flow\Parquet\ParquetFile\Schema\{MapKey, MapValue};
 use PHPUnit\Framework\TestCase;
 
 final class ParquetToFlowSchemaTest extends TestCase
@@ -51,7 +31,7 @@ final class ParquetToFlowSchemaTest extends TestCase
             Schema\FlatColumn::json('json'),
         ));
 
-        $this->assertEquals(
+        self::assertEquals(
             \Flow\ETL\DSL\schema(
                 int_schema('int32', true),
                 int_schema('int64', true),
@@ -78,7 +58,7 @@ final class ParquetToFlowSchemaTest extends TestCase
             Schema\NestedColumn::list('list', Schema\ListElement::string()),
         ));
 
-        $this->assertEquals(
+        self::assertEquals(
             \Flow\ETL\DSL\schema(
                 list_schema('list', type_list(type_string(true), true))
             ),
@@ -94,7 +74,7 @@ final class ParquetToFlowSchemaTest extends TestCase
             Schema\NestedColumn::map('map', MapKey::string(), MapValue::int64()),
         ));
 
-        $this->assertEquals(
+        self::assertEquals(
             \Flow\ETL\DSL\schema(
                 map_schema('map', type_map(type_string(), type_int(true), true))
             ),
@@ -117,7 +97,7 @@ final class ParquetToFlowSchemaTest extends TestCase
             ),
         ));
 
-        $this->assertEquals(
+        self::assertEquals(
             \Flow\ETL\DSL\schema(
                 struct_schema(
                     'struct',

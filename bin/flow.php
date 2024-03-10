@@ -3,16 +3,12 @@
 
 declare(strict_types=1);
 
-use Flow\ETL\DataFrame;
 use Flow\ETL\Exception\InvalidFileFormatException;
-use Flow\ETL\FlowVersion;
-use Flow\ETL\PipelineFactory;
-use Flow\ParquetViewer\Command\ReadDataCommand;
-use Flow\ParquetViewer\Command\ReadMetadataCommand;
+use Flow\ETL\{DataFrame, FlowVersion, PipelineFactory};
+use Flow\ParquetViewer\Command\{ReadDataCommand, ReadMetadataCommand};
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputArgument;
-use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\{InputArgument, InputInterface};
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 

@@ -13,7 +13,7 @@ final class IdenticalTest extends TestCase
 {
     public function test_failure() : void
     {
-        $this->assertFalse(
+        self::assertFalse(
             (new Identical('id', 'id'))->compare(
                 Row::create(int_entry('id', 1)),
                 Row::create(int_entry('id', 2)),
@@ -23,7 +23,7 @@ final class IdenticalTest extends TestCase
 
     public function test_success() : void
     {
-        $this->assertTrue(
+        self::assertTrue(
             (new Identical('id', 'id'))->compare(
                 Row::create(int_entry('id', 1)),
                 Row::create(int_entry('id', 1)),

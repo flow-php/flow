@@ -2,13 +2,7 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\bool_schema;
-use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\from_array;
-use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\schema;
-use function Flow\ETL\DSL\str_schema;
-use function Flow\ETL\DSL\to_output;
+use function Flow\ETL\DSL\{bool_schema, df, from_array, int_schema, schema, str_schema, to_output};
 use Flow\ETL\Loader\StreamLoader\Output;
 use Flow\ETL\Row\Schema\Metadata;
 

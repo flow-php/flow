@@ -6,9 +6,7 @@ namespace Flow\ETL\Tests\Unit\Row\Entry;
 
 use Flow\ETL\Row\Entry\EnumEntry;
 use Flow\ETL\Row\Schema\Definition;
-use Flow\ETL\Tests\Fixtures\Enum\BackedIntEnum;
-use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
-use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
+use Flow\ETL\Tests\Fixtures\Enum\{BackedIntEnum, BackedStringEnum, BasicEnum};
 use PHPUnit\Framework\TestCase;
 
 final class EnumEntryTest extends TestCase
@@ -17,11 +15,11 @@ final class EnumEntryTest extends TestCase
     {
         $enum = new EnumEntry('enum', BackedIntEnum::one);
 
-        $this->assertSame(
+        self::assertSame(
             BackedIntEnum::one,
             $enum->value(),
         );
-        $this->assertSame(
+        self::assertSame(
             1,
             $enum->value()->value,
         );
@@ -31,11 +29,11 @@ final class EnumEntryTest extends TestCase
     {
         $enum = new EnumEntry('enum', BackedStringEnum::one);
 
-        $this->assertSame(
+        self::assertSame(
             BackedStringEnum::one,
             $enum->value(),
         );
-        $this->assertSame(
+        self::assertSame(
             'one',
             $enum->value()->value,
         );
@@ -45,16 +43,16 @@ final class EnumEntryTest extends TestCase
     {
         $enum = new EnumEntry('enum', BasicEnum::one);
 
-        $this->assertSame(
+        self::assertSame(
             BasicEnum::one,
             $enum->value(),
         );
-        $this->assertSame('enum', $enum->name());
+        self::assertSame('enum', $enum->name());
     }
 
     public function test_definition() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             Definition::enum(
                 'enum',
                 BackedStringEnum::class
@@ -65,25 +63,25 @@ final class EnumEntryTest extends TestCase
 
     public function test_is_equal() : void
     {
-        $this->assertTrue(
+        self::assertTrue(
             (new EnumEntry('enum', BasicEnum::one))->isEqual(new EnumEntry('enum', BasicEnum::one)),
         );
-        $this->assertFalse(
+        self::assertFalse(
             (new EnumEntry('enum', BasicEnum::one))->isEqual(new EnumEntry('enum', BackedStringEnum::one)),
         );
     }
 
     public function test_to_string() : void
     {
-        $this->assertSame(
+        self::assertSame(
             'one',
             (new EnumEntry('enum', BasicEnum::one))->toString()
         );
-        $this->assertSame(
+        self::assertSame(
             'one',
             (new EnumEntry('enum', BackedStringEnum::one))->toString()
         );
-        $this->assertSame(
+        self::assertSame(
             'one',
             (new EnumEntry('enum', BackedIntEnum::one))->toString()
         );

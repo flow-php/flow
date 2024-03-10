@@ -1,19 +1,11 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type;
 
-use Flow\ETL\PHP\Type\Logical\DateTimeType;
-use Flow\ETL\PHP\Type\Logical\JsonType;
-use Flow\ETL\PHP\Type\Logical\ListType;
-use Flow\ETL\PHP\Type\Logical\StructureType;
-use Flow\ETL\PHP\Type\Logical\UuidType;
-use Flow\ETL\PHP\Type\Logical\XMLNodeType;
-use Flow\ETL\PHP\Type\Logical\XMLType;
-use Flow\ETL\PHP\Type\Native\ArrayType;
-use Flow\ETL\PHP\Type\Native\EnumType;
-use Flow\ETL\PHP\Type\Native\NullType;
-use Flow\ETL\PHP\Type\Native\ObjectType;
-use Flow\ETL\PHP\Type\Native\ScalarType;
+use Flow\ETL\PHP\Type\Logical\{DateTimeType, JsonType, ListType, StructureType, UuidType, XMLNodeType, XMLType};
+use Flow\ETL\PHP\Type\Native\{ArrayType, EnumType, NullType, ObjectType, ScalarType};
 use Flow\ETL\PHP\Type\TypeDetector;
 use Flow\ETL\Row\Entry\Type\Uuid;
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
@@ -321,7 +313,7 @@ final class TypeDetectorTest extends TestCase
 
     public function test_enum_type() : void
     {
-        $this->assertInstanceOf(EnumType::class, (new TypeDetector())->detectType(BasicEnum::two));
+        self::assertInstanceOf(EnumType::class, (new TypeDetector())->detectType(BasicEnum::two));
     }
 
     #[DataProvider('provide_logical_types_data')]
@@ -329,21 +321,21 @@ final class TypeDetectorTest extends TestCase
     {
         $type = (new TypeDetector())->detectType($data);
 
-        $this->assertInstanceOf($class, $type);
-        $this->assertSame($description, $type->toString());
+        self::assertInstanceOf($class, $type);
+        self::assertSame($description, $type->toString());
     }
 
     #[DataProvider('provide_object_data')]
     public function test_object_types(mixed $data) : void
     {
-        $this->assertInstanceOf(ObjectType::class, (new TypeDetector())->detectType($data));
+        self::assertInstanceOf(ObjectType::class, (new TypeDetector())->detectType($data));
     }
 
     #[DataProvider('provide_scalar_data')]
     public function test_scalar_types(mixed $data, string $description) : void
     {
         $type = (new TypeDetector())->detectType($data);
-        $this->assertInstanceOf(ScalarType::class, $type);
-        $this->assertSame($description, $type->toString());
+        self::assertInstanceOf(ScalarType::class, $type);
+        self::assertSame($description, $type->toString());
     }
 }

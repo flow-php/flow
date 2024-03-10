@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Formatter;
 
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\str_entry;
+use function Flow\ETL\DSL\{int_entry, str_entry};
 use Flow\ETL\Formatter\ASCII\ASCIITable;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
+use Flow\ETL\{Row, Rows};
 use PHPUnit\Framework\TestCase;
 
 final class ASCIITableTest extends TestCase
@@ -25,7 +23,7 @@ final class ASCIITableTest extends TestCase
             Row::create(str_entry('row', '[816][853]/Siedem - władcom krasnoludów,|/wspaniałym górnikom')),
         );
 
-        $this->assertStringContainsString(
+        self::assertStringContainsString(
             <<<'TABLE'
 +-------------------------------------------------------------------------------------+
 |                                                                                 row |
@@ -55,7 +53,7 @@ TABLE,
             Row::create(str_entry('row', '[816][853]/Siedem - władcom krasnoludów,|/wspaniałym górnikom')),
         );
 
-        $this->assertStringContainsString(
+        self::assertStringContainsString(
             <<<'TABLE'
 +----------------------+
 |                  row |
@@ -85,7 +83,7 @@ TABLE,
             Row::create(str_entry('test', '[816][853]/Siedem - władcom krasnoludów,|/wspaniałym górnikom')),
         );
 
-        $this->assertStringContainsString(
+        self::assertStringContainsString(
             <<<'TABLE'
 +-------------------------------------------------------------------------------------+---------------------------------------------------------------+
 |                                                                                 row |                                                          test |
@@ -109,7 +107,7 @@ TABLE,
             ['id' => 1, 'name' => 'EN'],
         ];
 
-        $this->assertStringContainsString(
+        self::assertStringContainsString(
             <<<'TABLE'
 +----+------+
 | id | name |

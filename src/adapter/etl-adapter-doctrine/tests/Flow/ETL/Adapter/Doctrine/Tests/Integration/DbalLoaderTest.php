@@ -4,13 +4,10 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Doctrine\Tests\Integration;
 
-use function Flow\ETL\Adapter\Doctrine\to_dbal_table_insert;
-use function Flow\ETL\Adapter\Doctrine\to_dbal_table_update;
+use function Flow\ETL\Adapter\Doctrine\{to_dbal_table_insert, to_dbal_table_update};
 use function Flow\ETL\DSL\from_array;
-use Doctrine\DBAL\Schema\Column;
-use Doctrine\DBAL\Schema\Table;
-use Doctrine\DBAL\Types\Type;
-use Doctrine\DBAL\Types\Types;
+use Doctrine\DBAL\Schema\{Column, Table};
+use Doctrine\DBAL\Types\{Type, Types};
 use Flow\ETL\Adapter\Doctrine\DbalLoader;
 use Flow\ETL\Adapter\Doctrine\Tests\IntegrationTestCase;
 use Flow\ETL\Exception\InvalidArgumentException;
@@ -84,7 +81,7 @@ final class DbalLoaderTest extends IntegrationTestCase
             ->load($loader)
             ->run();
 
-        $this->assertEquals(3, $this->pgsqlDatabaseContext->tableCount($table));
+        self::assertEquals(3, $this->pgsqlDatabaseContext->tableCount($table));
     }
 
     public function test_inserts_multiple_rows_at_once_using_existing_connection() : void
@@ -114,8 +111,8 @@ final class DbalLoaderTest extends IntegrationTestCase
             ->load($loader)
             ->run();
 
-        $this->assertEquals(3, $this->pgsqlDatabaseContext->tableCount($table));
-        $this->assertEquals(1, $this->pgsqlDatabaseContext->numberOfExecutedInsertQueries());
+        self::assertEquals(3, $this->pgsqlDatabaseContext->tableCount($table));
+        self::assertEquals(1, $this->pgsqlDatabaseContext->numberOfExecutedInsertQueries());
     }
 
     public function test_inserts_multiple_rows_in_two_insert_queries() : void
@@ -141,7 +138,7 @@ final class DbalLoaderTest extends IntegrationTestCase
             ->load(to_dbal_table_insert($this->connectionParams(), $table))
             ->run();
 
-        $this->assertEquals(3, $this->pgsqlDatabaseContext->tableCount($table));
+        self::assertEquals(3, $this->pgsqlDatabaseContext->tableCount($table));
     }
 
     public function test_inserts_new_rows_and_skip_already_existed() : void
@@ -177,8 +174,8 @@ final class DbalLoaderTest extends IntegrationTestCase
             ->load(to_dbal_table_insert($this->connectionParams(), $table, ['skip_conflicts' => true]))
             ->run();
 
-        $this->assertEquals(4, $this->pgsqlDatabaseContext->tableCount($table));
-        $this->assertEquals(
+        self::assertEquals(4, $this->pgsqlDatabaseContext->tableCount($table));
+        self::assertEquals(
             [
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
@@ -224,8 +221,8 @@ final class DbalLoaderTest extends IntegrationTestCase
             ->load(to_dbal_table_insert($this->connectionParams(), $table, ['constraint' => 'flow_doctrine_bulk_test_pkey']))
             ->run();
 
-        $this->assertEquals(4, $this->pgsqlDatabaseContext->tableCount($table));
-        $this->assertEquals(
+        self::assertEquals(4, $this->pgsqlDatabaseContext->tableCount($table));
+        self::assertEquals(
             [
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
                 ['id' => 2, 'name' => 'New Name Two', 'description' => 'New Description Two'],
@@ -272,7 +269,7 @@ final class DbalLoaderTest extends IntegrationTestCase
         ->load($updateLoader)
         ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'name' => 'Changed Name One', 'description' => 'Description One'],
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
@@ -281,6 +278,6 @@ final class DbalLoaderTest extends IntegrationTestCase
             $this->pgsqlDatabaseContext->selectAll('flow_doctrine_bulk_test')
         );
 
-        $this->assertEquals(3, $this->pgsqlDatabaseContext->tableCount($table));
+        self::assertEquals(3, $this->pgsqlDatabaseContext->tableCount($table));
     }
 }

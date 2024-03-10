@@ -1,11 +1,11 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\RowGroup;
 
-use Flow\Parquet\ParquetFile\Compressions;
-use Flow\Parquet\ParquetFile\Encodings;
 use Flow\Parquet\ParquetFile\Schema\PhysicalType;
-use Flow\Parquet\ParquetFile\Statistics;
+use Flow\Parquet\ParquetFile\{Compressions, Encodings, Statistics};
 use Flow\Parquet\Thrift\ColumnMetaData;
 
 final class ColumnChunk

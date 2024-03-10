@@ -4,32 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use function Flow\ETL\DSL\array_entry;
-use function Flow\ETL\DSL\bool_entry;
-use function Flow\ETL\DSL\datetime_entry;
-use function Flow\ETL\DSL\enum_entry;
-use function Flow\ETL\DSL\float_entry;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\json_entry;
-use function Flow\ETL\DSL\list_entry;
-use function Flow\ETL\DSL\map_entry;
-use function Flow\ETL\DSL\null_entry;
-use function Flow\ETL\DSL\object_entry;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\struct_element;
-use function Flow\ETL\DSL\struct_entry;
-use function Flow\ETL\DSL\struct_type;
-use function Flow\ETL\DSL\type_datetime;
-use function Flow\ETL\DSL\type_float;
-use function Flow\ETL\DSL\type_int;
-use function Flow\ETL\DSL\type_list;
-use function Flow\ETL\DSL\type_map;
-use function Flow\ETL\DSL\type_string;
-use function Flow\ETL\DSL\uuid_entry;
-use Flow\ETL\Extractor;
-use Flow\ETL\FlowContext;
+use function Flow\ETL\DSL\{array_entry, bool_entry, datetime_entry, enum_entry, float_entry, int_entry, json_entry, list_entry, map_entry, null_entry, object_entry, row, rows, struct_element, struct_entry, struct_type, type_datetime, type_float, type_int, type_list, type_map, type_string, uuid_entry};
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
+use Flow\ETL\{Extractor, FlowContext};
 use Ramsey\Uuid\Uuid;
 
 final class FakeExtractor implements Extractor

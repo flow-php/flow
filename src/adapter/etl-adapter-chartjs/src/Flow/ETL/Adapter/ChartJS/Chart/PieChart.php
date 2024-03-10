@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\ChartJS\Chart;
 
 use Flow\ETL\Adapter\ChartJS\Chart;
-use Flow\ETL\Row\Reference;
-use Flow\ETL\Row\References;
+use Flow\ETL\Row\{Reference, References};
 use Flow\ETL\Rows;
 
 final class PieChart implements Chart

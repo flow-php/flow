@@ -1,10 +1,11 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile;
 
 use Flow\Parquet\Exception\RuntimeException;
-use Flow\Parquet\Option;
-use Flow\Parquet\Options;
+use Flow\Parquet\{Option, Options};
 
 final class Codec
 {

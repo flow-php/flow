@@ -2,15 +2,7 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\array_entry;
-use function Flow\ETL\DSL\array_expand;
-use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\from_rows;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\to_output;
+use function Flow\ETL\DSL\{array_entry, array_expand, df, from_rows, int_entry, ref, row, rows, to_output};
 
 // flow.phar run examples/topics/phar/data_frame/code.php
 // when executing data processing pipeline through phar make sure to not use any trigger, like ->run();

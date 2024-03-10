@@ -4,12 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Pipeline;
 
-use Flow\ETL\Extractor;
-use Flow\ETL\FlowContext;
-use Flow\ETL\GroupBy;
-use Flow\ETL\Loader;
-use Flow\ETL\Pipeline;
-use Flow\ETL\Transformer;
+use Flow\ETL\{Extractor, FlowContext, GroupBy, Loader, Pipeline, Transformer};
 
 final class GroupByPipeline implements OverridingPipeline, Pipeline
 {

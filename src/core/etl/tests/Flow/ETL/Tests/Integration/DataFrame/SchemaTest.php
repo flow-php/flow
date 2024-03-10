@@ -4,13 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use function Flow\ETL\DSL\array_to_rows;
-use function Flow\ETL\DSL\bool_schema;
-use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\from_rows;
-use function Flow\ETL\DSL\int_schema;
-use function Flow\ETL\DSL\schema;
-use function Flow\ETL\DSL\str_schema;
+use function Flow\ETL\DSL\{array_to_rows, bool_schema, df, from_rows, int_schema, schema, str_schema};
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
 
 final class SchemaTest extends IntegrationTestCase
@@ -28,7 +22,7 @@ final class SchemaTest extends IntegrationTestCase
             \range(1, 100)
         ));
 
-        $this->assertEquals(
+        self::assertEquals(
             schema(
                 int_schema('id'),
                 str_schema('name'),
@@ -55,7 +49,7 @@ final class SchemaTest extends IntegrationTestCase
             \range(1, 100)
         ));
 
-        $this->assertEquals(
+        self::assertEquals(
             schema(
                 int_schema('id'),
                 str_schema('name'),

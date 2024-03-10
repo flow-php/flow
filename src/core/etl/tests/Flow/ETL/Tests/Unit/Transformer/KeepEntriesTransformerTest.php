@@ -4,11 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
-use Flow\ETL\Config;
-use Flow\ETL\FlowContext;
-use Flow\ETL\Row;
-use Flow\ETL\Rows;
 use Flow\ETL\Transformer\KeepEntriesTransformer;
+use Flow\ETL\{Config, FlowContext, Row, Rows};
 use PHPUnit\Framework\TestCase;
 
 final class KeepEntriesTransformerTest extends TestCase
@@ -24,7 +21,7 @@ final class KeepEntriesTransformerTest extends TestCase
         );
 
         $transformer = new KeepEntriesTransformer('name');
-        $this->assertSame(
+        self::assertSame(
             [
                 ['name' => 'Row Name'],
             ],
@@ -43,7 +40,7 @@ final class KeepEntriesTransformerTest extends TestCase
         );
 
         $transformer = new KeepEntriesTransformer('not_existing');
-        $this->assertSame(
+        self::assertSame(
             [['not_existing' => null]],
             $transformer->transform($rows, new FlowContext(Config::default()))->toArray()
         );

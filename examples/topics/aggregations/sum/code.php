@@ -2,14 +2,7 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\df;
-use function Flow\ETL\DSL\from_rows;
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\ref;
-use function Flow\ETL\DSL\row;
-use function Flow\ETL\DSL\rows;
-use function Flow\ETL\DSL\sum;
-use function Flow\ETL\DSL\to_output;
+use function Flow\ETL\DSL\{df, from_rows, int_entry, ref, row, rows, sum, to_output};
 
 require __DIR__ . '/../../../autoload.php';
 

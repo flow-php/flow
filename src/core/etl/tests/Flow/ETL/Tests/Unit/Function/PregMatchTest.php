@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\lit;
-use function Flow\ETL\DSL\regex_match;
+use function Flow\ETL\DSL\{lit, regex_match};
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;
 
@@ -18,7 +17,7 @@ final class PregMatchTest extends TestCase
             lit('12 apples and 45 oranges')
         );
 
-        $this->assertNull($pregMatch->eval(Row::create()));
+        self::assertNull($pregMatch->eval(Row::create()));
     }
 
     public function test_preg_match_expression_on_invalid_subject() : void
@@ -28,7 +27,7 @@ final class PregMatchTest extends TestCase
             lit(2)
         );
 
-        $this->assertNull($pregMatch->eval(Row::create()));
+        self::assertNull($pregMatch->eval(Row::create()));
     }
 
     public function test_preg_match_expression_on_no_match() : void
@@ -38,7 +37,7 @@ final class PregMatchTest extends TestCase
             lit('apples and oranges')
         );
 
-        $this->assertFalse($pregMatch->eval(Row::create()));
+        self::assertFalse($pregMatch->eval(Row::create()));
     }
 
     public function test_preg_match_expression_on_valid_strings() : void
@@ -48,6 +47,6 @@ final class PregMatchTest extends TestCase
             lit('12 apples and 45 oranges')
         );
 
-        $this->assertTrue($pregMatch->eval(Row::create()));
+        self::assertTrue($pregMatch->eval(Row::create()));
     }
 }

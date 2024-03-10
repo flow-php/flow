@@ -4,11 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\int_entry;
-use function Flow\ETL\DSL\lit;
-use function Flow\ETL\DSL\ref;
-use Flow\ETL\Function\Literal;
-use Flow\ETL\Function\When;
+use function Flow\ETL\DSL\{int_entry, lit, ref};
+use Flow\ETL\Function\{Literal, When};
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;
 
@@ -16,7 +13,7 @@ final class WhenTest extends TestCase
 {
     public function test_condition_not_satisfied_without_else() : void
     {
-        $this->assertSame(
+        self::assertSame(
             1,
             (new When(
                 ref('id')->equals(lit(2)),
@@ -28,7 +25,7 @@ final class WhenTest extends TestCase
 
     public function test_else() : void
     {
-        $this->assertSame(
+        self::assertSame(
             'else',
             (new When(
                 new Literal(false),
@@ -40,7 +37,7 @@ final class WhenTest extends TestCase
 
     public function test_when() : void
     {
-        $this->assertSame(
+        self::assertSame(
             'then',
             (new When(
                 new Literal(true),
