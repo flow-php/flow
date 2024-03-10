@@ -1,6 +1,8 @@
-## [Unreleased] - 2024-03-06
+## [Unreleased] - 2024-03-10
 
 ### Added
+- [#1008](https://github.com/flow-php/flow/pull/1008) - **group imports** - [@norberttech](https://github.com/norberttech)
+- [#1008](https://github.com/flow-php/flow/pull/1008) - **make phpunit assertions static/self** - [@norberttech](https://github.com/norberttech)
 - [#1002](https://github.com/flow-php/flow/pull/1002) - **changelog page to landing** - [@norberttech](https://github.com/norberttech)
 - [#996](https://github.com/flow-php/flow/pull/996) - **Schema::keep() - keep selected schema entries** - [@norberttech](https://github.com/norberttech)
 - [#991](https://github.com/flow-php/flow/pull/991) - **Schema::remove** - [@norberttech](https://github.com/norberttech)
@@ -11,6 +13,7 @@
 - [#987](https://github.com/flow-php/flow/pull/987) - **DataFrame::dropPartitions can now additionally drop also partition columns** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#1008](https://github.com/flow-php/flow/pull/1008) - **disabled native functions invocation that was messing with namespaced functions** - [@norberttech](https://github.com/norberttech)
 - [#1006](https://github.com/flow-php/flow/pull/1006) - **Update dependencies** - [@norberttech](https://github.com/norberttech)
 - [#998](https://github.com/flow-php/flow/pull/998) - **group by uuid/datetime objects without casting them to scalar first** - [@norberttech](https://github.com/norberttech)
 - [#993](https://github.com/flow-php/flow/pull/993) - **Writing to partitioned datasets is no longer creating random file names, even append will create new files with suffixed name of the original file** - [@norberttech](https://github.com/norberttech)
