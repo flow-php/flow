@@ -49,7 +49,7 @@ final class DbalDataFrameFactoryTest extends IntegrationTestCase
         ->select('id')
         ->fetch();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1],
             ],

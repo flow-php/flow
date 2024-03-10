@@ -19,7 +19,7 @@ final class BufferCacheTest extends TestCase
             10,
         );
 
-        $cacheMock->expects($this->once())
+        $cacheMock->expects(self::once())
             ->method('add')
             ->with('id', new Callback(fn (Rows $rows) => $rows->count() === 2));
 
@@ -36,7 +36,7 @@ final class BufferCacheTest extends TestCase
             2,
         );
 
-        $cacheMock->expects($this->once())
+        $cacheMock->expects(self::once())
             ->method('add')
             ->with('id', new Callback(fn (Rows $rows) => $rows->count() === 2));
 
@@ -51,7 +51,7 @@ final class BufferCacheTest extends TestCase
             2,
         );
 
-        $cacheMock->expects($this->exactly(2))
+        $cacheMock->expects(self::exactly(2))
             ->method('add');
 
         $bufferCache->add('id', new Rows(Row::create(int_entry('id', 1))));

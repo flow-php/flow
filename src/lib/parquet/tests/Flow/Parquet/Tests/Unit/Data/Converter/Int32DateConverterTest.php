@@ -15,7 +15,7 @@ final class Int32DateConverterTest extends TestCase
 
         $converter = new Int32DateConverter();
 
-        $this->assertEquals(
+        self::assertEquals(
             $date,
             $converter->fromParquetType($converter->toParquetType($date))
         );

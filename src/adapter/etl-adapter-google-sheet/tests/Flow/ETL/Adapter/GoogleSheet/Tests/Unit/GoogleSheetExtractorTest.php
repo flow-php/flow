@@ -39,17 +39,17 @@ final class GoogleSheetExtractorTest extends TestCase
         ]);
         $service->spreadsheets_values = ($spreadsheetsValues = $this->createMock(SpreadsheetsValues::class));
 
-        $spreadsheetsValues->expects($this->exactly(2))
+        $spreadsheetsValues->expects(self::exactly(2))
             ->method('get')
             ->willReturnOnConsecutiveCalls($firstValueRangeMock, $secondValueRangeMock);
 
         /** @var array<Rows> $rowsArray */
         $rowsArray = \iterator_to_array($extractor->extract(new FlowContext((new ConfigBuilder())->putInputIntoRows()->build())));
-        $this->assertCount(2, $rowsArray);
-        $this->assertSame(1, $rowsArray[0]->count());
-        $this->assertEquals(Row::create($sheetNameEntry, $spreadSheetIdEntry, str_entry('header', 'row1')), $rowsArray[0]->first());
-        $this->assertSame(1, $rowsArray[1]->count());
-        $this->assertEquals(Row::create($sheetNameEntry, $spreadSheetIdEntry, str_entry('header', 'row2')), $rowsArray[1]->first());
+        self::assertCount(2, $rowsArray);
+        self::assertSame(1, $rowsArray[0]->count());
+        self::assertEquals(Row::create($sheetNameEntry, $spreadSheetIdEntry, str_entry('header', 'row1')), $rowsArray[0]->first());
+        self::assertSame(1, $rowsArray[1]->count());
+        self::assertEquals(Row::create($sheetNameEntry, $spreadSheetIdEntry, str_entry('header', 'row2')), $rowsArray[1]->first());
     }
 
     public function test_rows_in_batch_must_be_positive_integer() : void
@@ -86,6 +86,6 @@ final class GoogleSheetExtractorTest extends TestCase
         $spreadsheetsValues->method('get')->willReturn($ValueRangeMock);
         /** @var array<Rows> $rowsArray */
         $rowsArray = \iterator_to_array($extractor->extract(new FlowContext((new ConfigBuilder())->build())));
-        $this->assertCount(0, $rowsArray);
+        self::assertCount(0, $rowsArray);
     }
 }

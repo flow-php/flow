@@ -81,7 +81,7 @@ final class BulkDataTest extends TestCase
 
         $registry = Type::getTypeRegistry();
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 'date_0' => 'today',
                 'title_0' => 'Title One',
@@ -124,7 +124,7 @@ final class BulkDataTest extends TestCase
             ],
         ]);
 
-        $this->assertEquals(
+        self::assertEquals(
             new Columns('date', 'title', 'description', 'quantity'),
             $bulkData->columns()
         );
@@ -147,7 +147,7 @@ final class BulkDataTest extends TestCase
             ],
         ]);
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 0 => [
                     'date' => 'today',
@@ -183,7 +183,7 @@ final class BulkDataTest extends TestCase
             ],
         ]);
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 0 => [
                     'date_0' => 'today',
@@ -219,7 +219,7 @@ final class BulkDataTest extends TestCase
             ],
         ]);
 
-        $this->assertEquals(
+        self::assertEquals(
             '(:date_0,:title_0,:description_0,:quantity_0),(:date_1,:title_1,:description_1,:quantity_1)',
             $bulkData->toSqlPlaceholders()
         );

@@ -33,7 +33,7 @@ final class MemoryExtractorTest extends TestCase
             $data = [...$data, ...$rowsData->toArray()];
         }
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['number' => 1, 'name' => 'one'],
                 ['number' => 2, 'name' => 'two'],

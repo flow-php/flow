@@ -22,7 +22,7 @@ final class PipelineTest extends TestCase
         $collecting = new CollectingPipeline($limiting);
         $collecting->add($loader2 = $this->createMock(Loader::class));
 
-        $this->assertSame(
+        self::assertSame(
             [
                 $transformer1,
                 $transformer2,

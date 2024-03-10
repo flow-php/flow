@@ -35,7 +35,7 @@ final class BranchingTest extends IntegrationTestCase
             )
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'group' => 'A'],
                 ['id' => 3, 'group' => 'A'],
@@ -43,7 +43,7 @@ final class BranchingTest extends IntegrationTestCase
             ],
             $memoryA->dump(),
         );
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 2, 'group' => 'B'],
                 ['id' => 4, 'group' => 'B'],

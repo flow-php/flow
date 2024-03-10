@@ -26,7 +26,7 @@ final class TextTest extends TestCase
             ->write(to_text($path))
             ->run();
 
-        $this->assertStringContainsString(
+        self::assertStringContainsString(
             <<<'TEXT'
 Norbert
 Tomek

@@ -13,7 +13,7 @@ final class StructureCastingHandlerTest extends TestCase
 {
     public function test_casting_array_into_structure() : void
     {
-        $this->assertSame(
+        self::assertSame(
             [
                 'name' => 'Norbert Orzechowicz',
                 'age' => 30,
@@ -49,7 +49,7 @@ final class StructureCastingHandlerTest extends TestCase
 
     public function test_casting_structure_with_empty_not_nullable_fields() : void
     {
-        $this->assertSame(
+        self::assertSame(
             [
                 'name' => 'Norbert Orzechowicz',
                 'age' => 30,
@@ -82,7 +82,7 @@ final class StructureCastingHandlerTest extends TestCase
 
     public function test_casting_structure_with_missing_nullable_fields() : void
     {
-        $this->assertSame(
+        self::assertSame(
             [
                 'name' => 'Norbert Orzechowicz',
                 'age' => 30,

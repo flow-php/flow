@@ -11,28 +11,28 @@ final class JsonTypeTest extends TestCase
 {
     public function test_equals() : void
     {
-        $this->assertTrue(
+        self::assertTrue(
             type_json()->isEqual(type_json())
         );
-        $this->assertFalse(
+        self::assertFalse(
             type_json()->isEqual(type_int())
         );
     }
 
     public function test_is_valid() : void
     {
-        $this->assertTrue(type_json()->isValid('{"foo": "bar"}'));
-        $this->assertFalse(type_json()->isValid('{"foo": "bar"'));
-        $this->assertFalse(type_json()->isValid('2'));
+        self::assertTrue(type_json()->isValid('{"foo": "bar"}'));
+        self::assertFalse(type_json()->isValid('{"foo": "bar"'));
+        self::assertFalse(type_json()->isValid('2'));
     }
 
     public function test_to_string() : void
     {
-        $this->assertSame(
+        self::assertSame(
             'json',
             type_json()->toString()
         );
-        $this->assertSame(
+        self::assertSame(
             '?json',
             type_json(true)->toString()
         );

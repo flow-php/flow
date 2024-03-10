@@ -32,7 +32,7 @@ final class BarChartTest extends TestCase
 
         $chart->collect($rows);
 
-        $this->assertSame(
+        self::assertSame(
             [
                 'type' => 'bar',
                 'data' => [

@@ -26,7 +26,7 @@ final class AddDynamicEntriesTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 ['id' => 1, 'updated_at' => new \DateTimeImmutable('2020-01-01T00:00:00+00:00')],
                 ['id' => 2, 'updated_at' => new \DateTimeImmutable('2020-01-01T00:00:00+00:00')],

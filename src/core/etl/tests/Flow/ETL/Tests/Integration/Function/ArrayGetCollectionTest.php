@@ -31,7 +31,7 @@ final class ArrayGetCollectionTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'result' => [['a' => 1, 'c' => 3], ['a' => 1, 'c' => 3], ['a' => 1, 'c' => 3]]],
                 ['id' => 2, 'result' => null],

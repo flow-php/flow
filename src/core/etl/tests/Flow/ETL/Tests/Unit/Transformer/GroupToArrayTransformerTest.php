@@ -38,7 +38,7 @@ final class GroupToArrayTransformerTest extends TestCase
 
         $transformer = new GroupToArrayTransformer('order_id', 'order_line_items');
 
-        $this->assertSame(
+        self::assertSame(
             [
                 [
                     'order_line_items' => [

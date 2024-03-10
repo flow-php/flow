@@ -256,7 +256,7 @@ final class ArrayContentDetectorTest extends TestCase
     #[DataProvider('provide_list_data')]
     public function test_list_data(array $keys, array $values, bool $expected) : void
     {
-        $this->assertSame(
+        self::assertSame(
             $expected,
             (new ArrayContentDetector(new Types(...$keys), new Types(...$values)))->isList()
         );
@@ -265,7 +265,7 @@ final class ArrayContentDetectorTest extends TestCase
     #[DataProvider('provide_map_data')]
     public function test_map_data(array $keys, array $values, bool $expected) : void
     {
-        $this->assertSame(
+        self::assertSame(
             $expected,
             (new ArrayContentDetector(new Types(...$keys), new Types(...$values)))->isMap()
         );
@@ -274,7 +274,7 @@ final class ArrayContentDetectorTest extends TestCase
     #[DataProvider('provide_structure_data')]
     public function test_structure_data(array $keys, array $values, bool $expected) : void
     {
-        $this->assertSame(
+        self::assertSame(
             $expected,
             (new ArrayContentDetector(new Types(...$keys), new Types(...$values)))->isStructure()
         );

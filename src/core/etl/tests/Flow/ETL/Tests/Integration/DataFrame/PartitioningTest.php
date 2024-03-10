@@ -30,7 +30,7 @@ final class PartitioningTest extends IntegrationTestCase
             ->dropPartitions()
             ->fetch();
 
-        $this->assertFalse($rows->isPartitioned());
+        self::assertFalse($rows->isPartitioned());
     }
 
     public function test_partition_by() : void
@@ -51,7 +51,7 @@ final class PartitioningTest extends IntegrationTestCase
             ->partitionBy(ref('country'))
             ->get();
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 rows_partitioned(
                     [
@@ -135,8 +135,8 @@ final class PartitioningTest extends IntegrationTestCase
 
         $days = $rows->reduceToArray('day');
         \sort($days);
-        $this->assertCount(2, $rows);
-        $this->assertSame([1, 2], $days);
+        self::assertCount(2, $rows);
+        self::assertSame([1, 2], $days);
     }
 
     public function test_pruning_single_partition() : void
@@ -150,7 +150,7 @@ final class PartitioningTest extends IntegrationTestCase
             ->groupBy(ref('year'))
             ->fetch();
 
-        $this->assertCount(1, $rows);
-        $this->assertSame(2023, $rows->first()->valueOf('year'));
+        self::assertCount(1, $rows);
+        self::assertSame(2023, $rows->first()->valueOf('year'));
     }
 }

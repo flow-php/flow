@@ -30,7 +30,7 @@ final class FlowToParquetSchemaTest extends TestCase
 
     public function test_convert_etl_entries_to_parquet_fields() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             ParquetSchema::with(
                 FlatColumn::int64('integer'),
                 FlatColumn::boolean('boolean'),

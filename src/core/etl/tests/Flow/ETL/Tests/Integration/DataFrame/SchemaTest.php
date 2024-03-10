@@ -22,7 +22,7 @@ final class SchemaTest extends IntegrationTestCase
             \range(1, 100)
         ));
 
-        $this->assertEquals(
+        self::assertEquals(
             schema(
                 int_schema('id'),
                 str_schema('name'),
@@ -49,7 +49,7 @@ final class SchemaTest extends IntegrationTestCase
             \range(1, 100)
         ));
 
-        $this->assertEquals(
+        self::assertEquals(
             schema(
                 int_schema('id'),
                 str_schema('name'),

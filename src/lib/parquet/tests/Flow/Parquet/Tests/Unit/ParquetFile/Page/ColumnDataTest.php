@@ -18,7 +18,7 @@ final class ColumnDataTest extends TestCase
 
         $columnData = new ColumnData(PhysicalType::INT32, null, $repetitions, $definitions, $values);
 
-        $this->assertEquals(
+        self::assertEquals(
             new ColumnData(
                 PhysicalType::INT32,
                 null,
@@ -29,7 +29,7 @@ final class ColumnDataTest extends TestCase
             $columnData->splitLastRow()[0]
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             new ColumnData(
                 PhysicalType::INT32,
                 null,
@@ -49,7 +49,7 @@ final class ColumnDataTest extends TestCase
 
         $columnData = new ColumnData(PhysicalType::INT32, null, $repetitions, $definitions, $values);
 
-        $this->assertEquals(
+        self::assertEquals(
             new ColumnData(
                 PhysicalType::INT32,
                 null,
@@ -60,7 +60,7 @@ final class ColumnDataTest extends TestCase
             $columnData->splitLastRow()[0]
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             new ColumnData(
                 PhysicalType::INT32,
                 null,
@@ -80,7 +80,7 @@ final class ColumnDataTest extends TestCase
 
         $columnData = new ColumnData(PhysicalType::INT32, null, $repetitions, $definitions, $values);
 
-        $this->assertEquals(
+        self::assertEquals(
             new ColumnData(
                 PhysicalType::INT32,
                 null,
@@ -91,7 +91,7 @@ final class ColumnDataTest extends TestCase
             $columnData->splitLastRow()[0]
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             new ColumnData(
                 PhysicalType::INT32,
                 null,

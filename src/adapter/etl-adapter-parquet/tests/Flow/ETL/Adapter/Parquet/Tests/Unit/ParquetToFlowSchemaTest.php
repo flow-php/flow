@@ -31,7 +31,7 @@ final class ParquetToFlowSchemaTest extends TestCase
             Schema\FlatColumn::json('json'),
         ));
 
-        $this->assertEquals(
+        self::assertEquals(
             \Flow\ETL\DSL\schema(
                 int_schema('int32', true),
                 int_schema('int64', true),
@@ -58,7 +58,7 @@ final class ParquetToFlowSchemaTest extends TestCase
             Schema\NestedColumn::list('list', Schema\ListElement::string()),
         ));
 
-        $this->assertEquals(
+        self::assertEquals(
             \Flow\ETL\DSL\schema(
                 list_schema('list', type_list(type_string(true), true))
             ),
@@ -74,7 +74,7 @@ final class ParquetToFlowSchemaTest extends TestCase
             Schema\NestedColumn::map('map', MapKey::string(), MapValue::int64()),
         ));
 
-        $this->assertEquals(
+        self::assertEquals(
             \Flow\ETL\DSL\schema(
                 map_schema('map', type_map(type_string(), type_int(true), true))
             ),
@@ -97,7 +97,7 @@ final class ParquetToFlowSchemaTest extends TestCase
             ),
         ));
 
-        $this->assertEquals(
+        self::assertEquals(
             \Flow\ETL\DSL\schema(
                 struct_schema(
                     'struct',

@@ -18,7 +18,7 @@ final class SchemaConverterTest extends TestCase
 {
     public function test_convert_etl_entries_to_avro_json() : void
     {
-        $this->assertSame(
+        self::assertSame(
             <<<'AVRO_JSON'
 {"name":"row","type":"record","fields":[{"name":"integer","type":"int"},{"name":"boolean","type":"boolean"},{"name":"string","type":"string"},{"name":"float","type":"float"},{"name":"datetime","type":"long","logicalType":"timestamp-micros"},{"name":"json","type":"string"},{"name":"list","type":{"type":"array","items":"string"}},{"name":"structure","type":{"name":"Structure","type":"record","fields":[{"name":"a","type":"string"}]}},{"name":"map","type":{"type":"map","values":"int"}}]}
 AVRO_JSON

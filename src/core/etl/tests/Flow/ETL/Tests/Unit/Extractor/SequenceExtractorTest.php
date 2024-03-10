@@ -14,7 +14,7 @@ final class SequenceExtractorTest extends TestCase
     {
         $extractor = from_sequence_date_period('day', new \DateTimeImmutable('2023-01-01'), new \DateInterval('P1D'), new \DateTimeImmutable('2023-01-11'), \DatePeriod::EXCLUDE_START_DATE);
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 new Rows(Row::create(datetime_entry('day', new \DateTimeImmutable('2023-01-02')))),
                 new Rows(Row::create(datetime_entry('day', new \DateTimeImmutable('2023-01-03')))),
@@ -34,7 +34,7 @@ final class SequenceExtractorTest extends TestCase
     {
         $extractor = from_sequence_date_period_recurrences('day', new \DateTimeImmutable('2023-01-01'), new \DateInterval('P1D'), 10, \DatePeriod::EXCLUDE_START_DATE);
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 new Rows(Row::create(datetime_entry('day', new \DateTimeImmutable('2023-01-02')))),
                 new Rows(Row::create(datetime_entry('day', new \DateTimeImmutable('2023-01-03')))),
@@ -55,7 +55,7 @@ final class SequenceExtractorTest extends TestCase
     {
         $extractor = from_sequence_number('num', 0, 10, 1.5);
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 new Rows(Row::create(float_entry('num', 0))),
                 new Rows(Row::create(float_entry('num', 1.5))),

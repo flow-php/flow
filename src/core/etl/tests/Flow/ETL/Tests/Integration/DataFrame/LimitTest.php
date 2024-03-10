@@ -24,7 +24,7 @@ final class LimitTest extends IntegrationTestCase
             ->limit(9)
             ->fetch();
 
-        $this->assertCount(9, $rows);
+        self::assertCount(9, $rows);
     }
 
     public function test_fetch_with_limit() : void
@@ -44,7 +44,7 @@ final class LimitTest extends IntegrationTestCase
             ]))
             ->fetch(5);
 
-        $this->assertCount(5, $rows);
+        self::assertCount(5, $rows);
     }
 
     public function test_fetch_with_limit_below_0() : void
@@ -75,7 +75,7 @@ final class LimitTest extends IntegrationTestCase
             })
             ->fetch();
 
-        $this->assertCount(20, $rows);
+        self::assertCount(20, $rows);
     }
 
     public function test_limit() : void
@@ -100,7 +100,7 @@ final class LimitTest extends IntegrationTestCase
             ->limit(10)
             ->fetch();
 
-        $this->assertCount(10, $rows);
+        self::assertCount(10, $rows);
     }
 
     public function test_limit_below_0() : void
@@ -143,7 +143,7 @@ final class LimitTest extends IntegrationTestCase
             ->limit(3)
             ->fetch();
 
-        $this->assertCount(3, $rows);
+        self::assertCount(3, $rows);
     }
 
     public function test_limit_with_batch_size() : void
@@ -169,7 +169,7 @@ final class LimitTest extends IntegrationTestCase
             ->limit(10)
             ->fetch();
 
-        $this->assertCount(10, $rows);
+        self::assertCount(10, $rows);
     }
 
     public function test_limit_with_collecting() : void
@@ -195,7 +195,7 @@ final class LimitTest extends IntegrationTestCase
             ->collect()
             ->fetch();
 
-        $this->assertCount(10, $rows);
+        self::assertCount(10, $rows);
     }
 
     public function test_with_total_rows_below_the_limit() : void
@@ -219,6 +219,6 @@ final class LimitTest extends IntegrationTestCase
             ->limit(10)
             ->fetch();
 
-        $this->assertCount(5, $rows);
+        self::assertCount(5, $rows);
     }
 }

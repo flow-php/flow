@@ -25,6 +25,6 @@ final class DateTimeCastingHandlerTest extends TestCase
     #[DataProvider('datetime_castable_data_provider')]
     public function test_casting_different_data_types_to_datetime(mixed $value, \DateTimeImmutable $expected) : void
     {
-        $this->assertEquals($expected, (new DateTimeCastingHandler())->value($value, type_datetime(), Caster::default()));
+        self::assertEquals($expected, (new DateTimeCastingHandler())->value($value, type_datetime(), Caster::default()));
     }
 }

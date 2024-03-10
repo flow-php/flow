@@ -23,6 +23,6 @@ final class CallbackLoaderTest extends TestCase
             $data = $rows->toArray();
         })->load($rows, new FlowContext(Config::default()));
 
-        $this->assertEquals($rows->toArray(), $data);
+        self::assertEquals($rows->toArray(), $data);
     }
 }

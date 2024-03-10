@@ -13,8 +13,8 @@ final class AllowAllTest extends TestCase
     {
         $acl = new AllowAll();
 
-        $this->assertTrue($acl->isAllowed('foo'));
-        $this->assertTrue($acl->isAllowed('bar'));
-        $this->assertTrue($acl->isAllowed('baz'));
+        self::assertTrue($acl->isAllowed('foo'));
+        self::assertTrue($acl->isAllowed('bar'));
+        self::assertTrue($acl->isAllowed('baz'));
     }
 }

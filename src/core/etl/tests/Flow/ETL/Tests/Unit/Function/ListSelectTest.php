@@ -27,7 +27,7 @@ final class ListSelectTest extends TestCase
             )
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 ['id' => 1, 'mail' => null],
                 ['id' => 2, 'mail' => null],
@@ -54,7 +54,7 @@ final class ListSelectTest extends TestCase
             )
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 ['id' => 1],
                 ['id' => 2],
@@ -81,7 +81,7 @@ final class ListSelectTest extends TestCase
             )
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 ['new_id' => 1],
                 ['new_id' => 2],
@@ -103,7 +103,7 @@ final class ListSelectTest extends TestCase
             )
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 ['id' => null],
                 ['id' => null],

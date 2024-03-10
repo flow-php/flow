@@ -22,7 +22,7 @@ final class JsonEncodeTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 [
                     'id' => 1,
@@ -44,7 +44,7 @@ final class JsonEncodeTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 [
                     'id' => 1,

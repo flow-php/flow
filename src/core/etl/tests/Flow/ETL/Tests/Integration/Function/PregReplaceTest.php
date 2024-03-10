@@ -25,7 +25,7 @@ final class PregReplaceTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['key' => 'value', 'preg_replace' => 'values'],
             ],
@@ -47,7 +47,7 @@ final class PregReplaceTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'preg_replace' => null],
             ],
@@ -69,7 +69,7 @@ final class PregReplaceTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => '1', 'preg_replace' => null],
             ],

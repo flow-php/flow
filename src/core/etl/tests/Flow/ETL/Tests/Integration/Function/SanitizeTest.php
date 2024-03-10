@@ -25,7 +25,7 @@ final class SanitizeTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'sanitize' => null],
             ],
@@ -47,7 +47,7 @@ final class SanitizeTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['key' => 'value', 'sanitize' => 'va***'],
             ],
@@ -69,7 +69,7 @@ final class SanitizeTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['key' => 'value', 'sanitize' => '*****'],
             ],

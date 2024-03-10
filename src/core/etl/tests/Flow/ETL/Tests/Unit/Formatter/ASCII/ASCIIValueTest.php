@@ -34,7 +34,7 @@ final class ASCIIValueTest extends TestCase
      */
     public function test_converting_value_to_ascii_value(mixed $value, string $asciiValue) : void
     {
-        $this->assertSame(
+        self::assertSame(
             $asciiValue,
             (new ASCIIValue($value))->print(false),
         );
@@ -45,7 +45,7 @@ final class ASCIIValueTest extends TestCase
      */
     public function test_converting_value_to_ascii_value_with_truncating(mixed $value, string $asciiValue) : void
     {
-        $this->assertSame(
+        self::assertSame(
             $asciiValue,
             (new ASCIIValue($value))->print(3),
         );
@@ -53,17 +53,17 @@ final class ASCIIValueTest extends TestCase
 
     public function test_mb_str_pad() : void
     {
-        $this->assertSame(
+        self::assertSame(
             '00ąćę',
             ASCIIValue::mb_str_pad('ąćę', 5, '0', STR_PAD_LEFT)
         );
 
-        $this->assertSame(
+        self::assertSame(
             'ąćę00',
             ASCIIValue::mb_str_pad('ąćę', 5, '0', STR_PAD_RIGHT)
         );
 
-        $this->assertSame(
+        self::assertSame(
             '0ąćę0',
             ASCIIValue::mb_str_pad('ąćę', 5, '0', STR_PAD_BOTH)
         );

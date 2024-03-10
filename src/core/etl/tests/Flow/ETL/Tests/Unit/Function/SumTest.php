@@ -20,7 +20,7 @@ final class SumTest extends TestCase
         $aggregator->aggregate(Row::create(str_entry('int', '25')));
         $aggregator->aggregate(Row::create(null_entry('not_int')));
 
-        $this->assertSame(
+        self::assertSame(
             110,
             $aggregator->result()->value()
         );
@@ -35,7 +35,7 @@ final class SumTest extends TestCase
         $aggregator->aggregate(Row::create(int_entry('int', 30)));
         $aggregator->aggregate(Row::create(null_entry('int')));
 
-        $this->assertSame(
+        self::assertSame(
             60,
             $aggregator->result()->value()
         );
@@ -50,7 +50,7 @@ final class SumTest extends TestCase
         $aggregator->aggregate(Row::create(int_entry('int', 305)));
         $aggregator->aggregate(Row::create(int_entry('int', 25)));
 
-        $this->assertSame(
+        self::assertSame(
             360.25,
             $aggregator->result()->value()
         );
@@ -68,6 +68,6 @@ final class SumTest extends TestCase
 
         $sum = sum(ref('id'))->over(window()->orderBy(ref('id')->desc()));
 
-        $this->assertSame(15, $sum->apply($row1, $rows));
+        self::assertSame(15, $sum->apply($row1, $rows));
     }
 }

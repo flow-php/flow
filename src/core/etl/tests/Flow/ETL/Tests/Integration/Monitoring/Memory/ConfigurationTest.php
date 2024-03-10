@@ -15,7 +15,7 @@ final class ConfigurationTest extends IntegrationTestCase
 
         $config = new Configuration(0);
 
-        $this->assertFalse($config->isLessThan(Unit::fromGb(1_000_000)));
+        self::assertFalse($config->isLessThan(Unit::fromGb(1_000_000)));
     }
 
     public function test_less_than_for_set_memory() : void
@@ -24,9 +24,9 @@ final class ConfigurationTest extends IntegrationTestCase
 
         $config = new Configuration(0);
 
-        $this->assertTrue($config->isLessThan(Unit::fromGb(1_000_000)));
-        $this->assertFalse($config->isLessThan(Unit::fromGb(1)));
-        $this->assertFalse($config->isLessThan(Unit::fromMb(100)));
+        self::assertTrue($config->isLessThan(Unit::fromGb(1_000_000)));
+        self::assertFalse($config->isLessThan(Unit::fromGb(1)));
+        self::assertFalse($config->isLessThan(Unit::fromMb(100)));
     }
 
     public function test_memory_limit_fixed() : void
@@ -35,7 +35,7 @@ final class ConfigurationTest extends IntegrationTestCase
 
         $config = new Configuration(0);
 
-        $this->assertEquals(Unit::fromGb(1), $config->limit());
+        self::assertEquals(Unit::fromGb(1), $config->limit());
     }
 
     public function test_memory_limit_fixed_with_safety_buffer() : void
@@ -44,7 +44,7 @@ final class ConfigurationTest extends IntegrationTestCase
 
         $config = new Configuration(10);
 
-        $this->assertEquals(Unit::fromMb(900), $config->limit());
+        self::assertEquals(Unit::fromMb(900), $config->limit());
     }
 
     public function test_memory_limit_infinite() : void
@@ -53,7 +53,7 @@ final class ConfigurationTest extends IntegrationTestCase
 
         $config = new Configuration(0);
 
-        $this->assertNull($config->limit());
+        self::assertNull($config->limit());
     }
 
     public function test_memory_limit_wift_safety_buffer() : void
@@ -62,7 +62,7 @@ final class ConfigurationTest extends IntegrationTestCase
 
         $config = new Configuration(10);
 
-        $this->assertEquals(
+        self::assertEquals(
             Unit::fromString('900M'),
             $config->limit()
         );
@@ -74,8 +74,8 @@ final class ConfigurationTest extends IntegrationTestCase
 
         $config = new Configuration(0);
 
-        $this->assertTrue($config->isConsumptionBelow(Unit::fromMb(99), 10));
-        $this->assertFalse($config->isConsumptionBelow(Unit::fromMb(100), 10));
+        self::assertTrue($config->isConsumptionBelow(Unit::fromMb(99), 10));
+        self::assertFalse($config->isConsumptionBelow(Unit::fromMb(100), 10));
     }
 
     public function test_unit_below_limit_percentage_for_infinite_memory() : void
@@ -84,6 +84,6 @@ final class ConfigurationTest extends IntegrationTestCase
 
         $config = new Configuration(0);
 
-        $this->assertTrue($config->isConsumptionBelow(Unit::fromGb(1_000_000), 10));
+        self::assertTrue($config->isConsumptionBelow(Unit::fromGb(1_000_000), 10));
     }
 }

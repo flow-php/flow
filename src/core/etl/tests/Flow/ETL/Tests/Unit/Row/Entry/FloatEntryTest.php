@@ -21,7 +21,7 @@ final class FloatEntryTest extends TestCase
 
     public function test_entry_name_can_be_zero() : void
     {
-        $this->assertSame('0', (new FloatEntry('0', 0))->name());
+        self::assertSame('0', (new FloatEntry('0', 0))->name());
     }
 
     /**
@@ -29,14 +29,14 @@ final class FloatEntryTest extends TestCase
      */
     public function test_is_equal(bool $equals, FloatEntry $entry, FloatEntry $nextEntry) : void
     {
-        $this->assertSame($equals, $entry->isEqual($nextEntry));
+        self::assertSame($equals, $entry->isEqual($nextEntry));
     }
 
     public function test_map() : void
     {
         $entry = new FloatEntry('entry-name', 1);
 
-        $this->assertEquals(
+        self::assertEquals(
             $entry,
             $entry->map(fn (float $float) => $float)
         );
@@ -54,8 +54,8 @@ final class FloatEntryTest extends TestCase
         $entry = new FloatEntry('entry-name', 100.00001);
         $newEntry = $entry->rename('new-entry-name');
 
-        $this->assertEquals('new-entry-name', $newEntry->name());
-        $this->assertEquals(100.00001, $newEntry->value());
+        self::assertEquals('new-entry-name', $newEntry->name());
+        self::assertEquals(100.00001, $newEntry->value());
     }
 
     public function test_serialization() : void
@@ -66,6 +66,6 @@ final class FloatEntryTest extends TestCase
         /** @var FloatEntry $unserialized */
         $unserialized = \unserialize($serialized);
 
-        $this->assertTrue($string->isEqual($unserialized));
+        self::assertTrue($string->isEqual($unserialized));
     }
 }

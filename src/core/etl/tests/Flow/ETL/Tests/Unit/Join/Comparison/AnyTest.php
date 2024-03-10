@@ -24,7 +24,7 @@ final class AnyTest extends TestCase
             ->method('compare')
             ->willReturn(false);
 
-        $this->assertFalse(
+        self::assertFalse(
             (new Any($comparison1, $comparison2))
                 ->compare(
                     Row::create(int_entry('id', 1)),
@@ -45,7 +45,7 @@ final class AnyTest extends TestCase
             ->method('compare')
             ->willReturn(false);
 
-        $this->assertTrue(
+        self::assertTrue(
             (new Any($comparison1, $comparison2))
                 ->compare(
                     Row::create(int_entry('id', 1)),

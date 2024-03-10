@@ -12,7 +12,7 @@ final class ToLowerTest extends TestCase
 {
     public function test_int_to_lower() : void
     {
-        $this->assertSame(
+        self::assertSame(
             1,
             lower(lit(1))->eval(Row::create())
         );
@@ -20,7 +20,7 @@ final class ToLowerTest extends TestCase
 
     public function test_string_to_lower() : void
     {
-        $this->assertSame(
+        self::assertSame(
             'lower',
             lower(lit('LOWER'))->eval(Row::create())
         );

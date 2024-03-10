@@ -13,12 +13,12 @@ final class TransformerLoaderTest extends TestCase
     public function test_transformer_loader() : void
     {
         $transformerMock = $this->createMock(Transformer::class);
-        $transformerMock->expects($this->once())
+        $transformerMock->expects(self::once())
             ->method('transform')
             ->willReturn(new Rows());
 
         $loaderMock = $this->createMock(Loader::class);
-        $loaderMock->expects($this->once())
+        $loaderMock->expects(self::once())
             ->method('load');
 
         $transformer = to_transformation(

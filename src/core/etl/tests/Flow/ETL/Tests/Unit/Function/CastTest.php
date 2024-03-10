@@ -56,24 +56,24 @@ XML;
         $resultCastRef = cast(ref('value'), $to)->eval(Row::create((new NativeEntryFactory())->create('value', $from)));
 
         if (\is_object($expected) || \is_object($from)) {
-            $this->assertEquals($expected, $resultRefCast);
-            $this->assertEquals($expected, $resultCastRef);
+            self::assertEquals($expected, $resultRefCast);
+            self::assertEquals($expected, $resultCastRef);
         } else {
-            $this->assertSame($expected, $resultRefCast);
-            $this->assertSame($expected, $resultCastRef);
+            self::assertSame($expected, $resultRefCast);
+            self::assertSame($expected, $resultCastRef);
         }
     }
 
     public function test_casting_integer_to_xml() : void
     {
-        $this->assertNull(
+        self::assertNull(
             ref('value')->cast('xml')->eval(Row::create((new NativeEntryFactory())->create('value', 1)))
         );
     }
 
     public function test_casting_non_xml_string_to_xml() : void
     {
-        $this->assertNull(
+        self::assertNull(
             ref('value')->cast('xml')->eval(Row::create((new NativeEntryFactory())->create('value', 'foo')))
         );
     }

@@ -30,7 +30,7 @@ final class ParquetExtractorTest extends TestCase
         $extractor = new ParquetExtractor(Path::realpath($path), Options::default());
         $extractor->changeLimit(2);
 
-        $this->assertCount(
+        self::assertCount(
             2,
             \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
         );
@@ -46,7 +46,7 @@ final class ParquetExtractorTest extends TestCase
             offset: $totalRows - 100
         );
 
-        $this->assertCount(
+        self::assertCount(
             100,
             \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
         );
@@ -68,15 +68,15 @@ final class ParquetExtractorTest extends TestCase
 
         $generator = $extractor->extract(new FlowContext(Config::default()));
 
-        $this->assertSame([['id' => 1]], $generator->current()->toArray());
-        $this->assertTrue($generator->valid());
+        self::assertSame([['id' => 1]], $generator->current()->toArray());
+        self::assertTrue($generator->valid());
         $generator->next();
-        $this->assertSame([['id' => 2]], $generator->current()->toArray());
-        $this->assertTrue($generator->valid());
+        self::assertSame([['id' => 2]], $generator->current()->toArray());
+        self::assertTrue($generator->valid());
         $generator->next();
-        $this->assertSame([['id' => 3]], $generator->current()->toArray());
-        $this->assertTrue($generator->valid());
+        self::assertSame([['id' => 3]], $generator->current()->toArray());
+        self::assertTrue($generator->valid());
         $generator->send(Signal::STOP);
-        $this->assertFalse($generator->valid());
+        self::assertFalse($generator->valid());
     }
 }

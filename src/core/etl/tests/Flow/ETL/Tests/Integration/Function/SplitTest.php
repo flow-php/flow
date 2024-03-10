@@ -25,7 +25,7 @@ final class SplitTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['key' => '1-2', 'split' => ['1', '2']],
             ],
@@ -47,7 +47,7 @@ final class SplitTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['key' => 1, 'split' => 1],
             ],
@@ -69,7 +69,7 @@ final class SplitTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['key' => '1', 'split' => ['1']],
             ],

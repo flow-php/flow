@@ -36,7 +36,7 @@ final class NotTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'result' => 'found'],
                 ['id' => 2, 'result' => 'not found'],

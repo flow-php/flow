@@ -51,10 +51,10 @@ final class ExceptionIfExistsModeTest extends FilesystemStreamsTestCase
 
         $files = \iterator_to_array($this->fs->scan(new Path($file->parentDirectory()->path() . '/**/*.txt')));
 
-        $this->assertCount(1, $files);
+        self::assertCount(1, $files);
 
-        $this->assertSame('file.txt', $files[0]->basename());
-        $this->assertSame('file content', \file_get_contents($files[0]->path()));
+        self::assertSame('file.txt', $files[0]->basename());
+        self::assertSame('file content', \file_get_contents($files[0]->path()));
     }
 
     public function test_open_stream_for_non_existing_partition() : void
@@ -71,10 +71,10 @@ final class ExceptionIfExistsModeTest extends FilesystemStreamsTestCase
         $streams->closeWriters($file);
         $files = \iterator_to_array($this->fs->scan(new Path($file->parentDirectory()->path() . '/partition=value/*')));
 
-        $this->assertCount(1, $files);
+        self::assertCount(1, $files);
 
-        $this->assertSame('file.txt', $files[0]->basename());
-        $this->assertSame('file content', \file_get_contents($files[0]->path()));
+        self::assertSame('file.txt', $files[0]->basename());
+        self::assertSame('file content', \file_get_contents($files[0]->path()));
     }
 
     protected function streams() : FilesystemStreams

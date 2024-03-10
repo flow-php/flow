@@ -33,7 +33,7 @@ final class ClosureTest extends TestCase
             })
             ->run();
 
-        $this->assertTrue($loader->closureCalled);
-        $this->assertSame(20, $loader->rowsLoaded);
+        self::assertTrue($loader->closureCalled);
+        self::assertSame(20, $loader->rowsLoaded);
     }
 }

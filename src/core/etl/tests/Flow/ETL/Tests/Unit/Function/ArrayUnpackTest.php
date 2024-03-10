@@ -22,7 +22,7 @@ final class ArrayUnpackTest extends TestCase
             ]),
         );
 
-        $this->assertSame(
+        self::assertSame(
             [
                 'status' => 'PENDING',
                 'enabled' => true,

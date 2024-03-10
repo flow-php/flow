@@ -17,6 +17,6 @@ final class OptimizerTest extends TestCase
 
         $optimizedPipeline = (new Optimizer())->optimize(new KeepEntriesTransformer(ref('id')), $pipeline);
 
-        $this->assertCount(1, $optimizedPipeline->pipes()->all());
+        self::assertCount(1, $optimizedPipeline->pipes()->all());
     }
 }

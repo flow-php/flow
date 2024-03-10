@@ -13,27 +13,27 @@ final class CallableTypeTest extends TestCase
 {
     public function test_equals() : void
     {
-        $this->assertTrue(
+        self::assertTrue(
             type_callable(false)->isEqual(type_callable(false))
         );
-        $this->assertFalse(
+        self::assertFalse(
             type_callable(false)->isEqual(new MapType(MapKey::string(), MapValue::float()))
         );
-        $this->assertFalse(
+        self::assertFalse(
             type_callable(false)->isEqual(type_float())
         );
-        $this->assertFalse(
+        self::assertFalse(
             type_callable(false)->isEqual(type_callable(true))
         );
     }
 
     public function test_to_string() : void
     {
-        $this->assertSame(
+        self::assertSame(
             'callable',
             type_callable(false)->toString()
         );
-        $this->assertSame(
+        self::assertSame(
             '?callable',
             type_callable(true)->toString()
         );
@@ -41,16 +41,16 @@ final class CallableTypeTest extends TestCase
 
     public function test_valid() : void
     {
-        $this->assertTrue(
+        self::assertTrue(
             type_callable(false)->isValid('printf')
         );
-        $this->assertFalse(
+        self::assertFalse(
             type_callable(false)->isValid('one')
         );
-        $this->assertFalse(
+        self::assertFalse(
             type_callable(false)->isValid([1, 2])
         );
-        $this->assertFalse(
+        self::assertFalse(
             type_callable(false)->isValid(123)
         );
     }

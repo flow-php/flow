@@ -26,6 +26,6 @@ final class FloatCastingHandlerTest extends TestCase
     #[DataProvider('float_castable_data_provider')]
     public function test_casting_different_data_types_to_float(mixed $value, float $expected) : void
     {
-        $this->assertSame($expected, (new FloatCastingHandler())->value($value, type_float(), Caster::default()));
+        self::assertSame($expected, (new FloatCastingHandler())->value($value, type_float(), Caster::default()));
     }
 }

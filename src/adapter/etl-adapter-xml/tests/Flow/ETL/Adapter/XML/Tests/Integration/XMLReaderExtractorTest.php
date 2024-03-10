@@ -47,7 +47,7 @@ XML);
         $extractor = new XMLReaderExtractor(Path::realpath($path), 'items/item');
         $extractor->changeLimit(2);
 
-        $this->assertCount(
+        self::assertCount(
             2,
             \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
         );
@@ -55,7 +55,7 @@ XML);
 
     public function test_reading_deep_xml() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             new Rows(
                 Row::create(xml_entry(
                     'node',
@@ -89,7 +89,7 @@ XML);
         $xml = new \DOMDocument();
         $xml->load(__DIR__ . '/../Fixtures/simple_items.xml');
 
-        $this->assertEquals(
+        self::assertEquals(
             (new Rows(Row::create(xml_entry('node', $xml)))),
             (new Flow())
                 ->read(from_xml(__DIR__ . '/../Fixtures/simple_items.xml'))
@@ -99,7 +99,7 @@ XML);
 
     public function test_reading_xml_each_collection_item() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             new Rows(
                 Row::create(xml_entry('node', '<item item_attribute_01="1"><id id_attribute_01="1">1</id></item>')),
                 Row::create(xml_entry('node', '<item item_attribute_01="2"><id id_attribute_01="2">2</id></item>')),
@@ -137,7 +137,7 @@ XML);
     </items>
 
 XML);
-        $this->assertEquals(
+        self::assertEquals(
             new Rows(Row::create(xml_entry('node', $xml))),
             (new Flow())
                 ->read(from_xml(__DIR__ . '/../Fixtures/simple_items.xml', 'root/items'))
@@ -179,15 +179,15 @@ XML);
 
         $generator = $extractor->extract(new FlowContext(Config::default()));
 
-        $this->assertSame('1', $generator->current()->first()->valueOf('node')->getElementsByTagName('id')[0]->nodeValue);
-        $this->assertTrue($generator->valid());
+        self::assertSame('1', $generator->current()->first()->valueOf('node')->getElementsByTagName('id')[0]->nodeValue);
+        self::assertTrue($generator->valid());
         $generator->next();
-        $this->assertSame('2', $generator->current()->first()->valueOf('node')->getElementsByTagName('id')[0]->nodeValue);
-        $this->assertTrue($generator->valid());
+        self::assertSame('2', $generator->current()->first()->valueOf('node')->getElementsByTagName('id')[0]->nodeValue);
+        self::assertTrue($generator->valid());
         $generator->next();
-        $this->assertSame('3', $generator->current()->first()->valueOf('node')->getElementsByTagName('id')[0]->nodeValue);
-        $this->assertTrue($generator->valid());
+        self::assertSame('3', $generator->current()->first()->valueOf('node')->getElementsByTagName('id')[0]->nodeValue);
+        self::assertTrue($generator->valid());
         $generator->send(Signal::STOP);
-        $this->assertFalse($generator->valid());
+        self::assertFalse($generator->valid());
     }
 }

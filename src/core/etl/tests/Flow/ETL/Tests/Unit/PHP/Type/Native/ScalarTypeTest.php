@@ -14,13 +14,13 @@ final class ScalarTypeTest extends TestCase
 {
     public function test_equals() : void
     {
-        $this->assertTrue(
+        self::assertTrue(
             type_int()->isEqual(type_int())
         );
-        $this->assertFalse(
+        self::assertFalse(
             type_int()->isEqual(new MapType(MapKey::string(), MapValue::float()))
         );
-        $this->assertFalse(
+        self::assertFalse(
             type_int()->isEqual(type_float())
         );
     }
@@ -35,53 +35,53 @@ final class ScalarTypeTest extends TestCase
 
     public function test_merge_same_types() : void
     {
-        $this->assertTrue(
+        self::assertTrue(
             type_int()->merge(type_int())->isEqual(type_int())
         );
-        $this->assertTrue(
+        self::assertTrue(
             type_string()->merge(type_string())->isEqual(type_string())
         );
-        $this->assertTrue(
+        self::assertTrue(
             type_boolean()->merge(type_boolean())->isEqual(type_boolean())
         );
-        $this->assertTrue(
+        self::assertTrue(
             type_float()->merge(type_float())->isEqual(type_float())
         );
     }
 
     public function test_merge_with_null() : void
     {
-        $this->assertTrue(
+        self::assertTrue(
             type_int()->merge(type_int(true))->isEqual(type_int(true))
         );
-        $this->assertTrue(
+        self::assertTrue(
             type_string()->merge(type_string(true))->isEqual(type_string(true))
         );
-        $this->assertTrue(
+        self::assertTrue(
             type_boolean()->merge(type_boolean(true))->isEqual(type_boolean(true))
         );
-        $this->assertTrue(
+        self::assertTrue(
             type_float()->merge(type_float(true))->isEqual(type_float(true))
         );
     }
 
     public function test_nullable() : void
     {
-        $this->assertFalse(
+        self::assertFalse(
             type_string(false)->nullable()
         );
-        $this->assertTrue(
+        self::assertTrue(
             type_boolean(true)->nullable()
         );
     }
 
     public function test_to_string() : void
     {
-        $this->assertSame(
+        self::assertSame(
             'boolean',
             type_boolean()->toString()
         );
-        $this->assertSame(
+        self::assertSame(
             '?string',
             type_string(true)->toString()
         );
@@ -89,25 +89,25 @@ final class ScalarTypeTest extends TestCase
 
     public function test_valid() : void
     {
-        $this->assertTrue(
+        self::assertTrue(
             type_boolean()->isValid(true)
         );
-        $this->assertTrue(
+        self::assertTrue(
             type_string()->isValid('one')
         );
-        $this->assertTrue(
+        self::assertTrue(
             type_int()->isValid(1)
         );
-        $this->assertTrue(
+        self::assertTrue(
             type_int(true)->isValid(null)
         );
-        $this->assertFalse(
+        self::assertFalse(
             type_int()->isValid('one')
         );
-        $this->assertFalse(
+        self::assertFalse(
             type_string()->isValid([1, 2])
         );
-        $this->assertFalse(
+        self::assertFalse(
             type_boolean()->isValid(123)
         );
     }

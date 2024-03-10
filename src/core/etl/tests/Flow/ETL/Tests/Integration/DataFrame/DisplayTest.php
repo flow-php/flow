@@ -64,7 +64,7 @@ final class DisplayTest extends IntegrationTestCase
             })
             ->collect();
 
-        $this->assertSame(
+        self::assertSame(
             <<<'ASCIITABLE'
 +------+--------+-----+---------+----------------------+-------+----------------------+---------+-------------------+----------------------+----------------------+-------+----------------------+
 |   id |  price | 100 | deleted |           created-at | phase |                array |    list |               map |                items |               object |  enum |                  xml |
@@ -121,7 +121,7 @@ ASCIITABLE,
             ->collect()
             ->partitionBy(ref('group'));
 
-        $this->assertSame(
+        self::assertSame(
             <<<'ASCIITABLE'
 +------+--------+-----+---------+----------------------+-------+
 |   id |  price | 100 | deleted |           created-at | group |
@@ -196,7 +196,7 @@ ASCIITABLE,
             ]))
             ->collect();
 
-        $this->assertStringContainsString(
+        self::assertStringContainsString(
             <<<'ASCIITABLE'
 +----------------------+
 | this is very long en |
@@ -231,7 +231,7 @@ ASCIITABLE,
             ->printRows();
         $output = \ob_get_clean();
 
-        $this->assertStringContainsString(
+        self::assertStringContainsString(
             <<<'ASCII'
 +----+---------+-----+
 | id | country | age |
@@ -271,7 +271,7 @@ ASCII,
             ->printSchema();
         $output = \ob_get_clean();
 
-        $this->assertStringContainsString(
+        self::assertStringContainsString(
             <<<'ASCII'
 schema
 |-- id: integer

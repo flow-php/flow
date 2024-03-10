@@ -24,7 +24,7 @@ final class RenameTest extends IntegrationTestCase
             ->rename('name', 'new_name')
             ->fetch();
 
-        $this->assertEquals(
+        self::assertEquals(
             new Rows(
                 Row::create(int_entry('id', 1), str_entry('new_name', 'foo'), bool_entry('active', true)),
                 Row::create(int_entry('id', 2), null_entry('new_name'), bool_entry('active', false)),
@@ -48,7 +48,7 @@ final class RenameTest extends IntegrationTestCase
             ->drop('array')
             ->getEachAsArray();
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 ['id' => 1, 'name' => 'name', 'active' => true],
                 ['id' => 2, 'name' => 'name', 'active' => false],
@@ -66,7 +66,7 @@ final class RenameTest extends IntegrationTestCase
 
         $ds = df()->read(from_rows($rows))->renameAllLowerCase()->getEachAsArray();
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 ['id' => 1, 'name' => 'name', 'active' => true],
                 ['id' => 2, 'name' => 'name', 'active' => false],
@@ -88,7 +88,7 @@ final class RenameTest extends IntegrationTestCase
             ->renameAllLowerCase()
             ->getEachAsArray();
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 ['id' => 1, 'user_name' => 'name', 'is_active' => true],
                 ['id' => 2, 'user_name' => 'name', 'is_active' => false],
@@ -109,7 +109,7 @@ final class RenameTest extends IntegrationTestCase
             ->renameAllUpperCase()
             ->getEachAsArray();
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 ['ID' => 1, 'NAME' => 'name', 'ACTIVE' => true],
                 ['ID' => 2, 'NAME' => 'name', 'ACTIVE' => false],
@@ -130,7 +130,7 @@ final class RenameTest extends IntegrationTestCase
             ->renameAllUpperCaseFirst()
             ->getEachAsArray();
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 ['Id' => 1, 'Name' => 'name', 'Active' => true],
                 ['Id' => 2, 'Name' => 'name', 'Active' => false],
@@ -151,7 +151,7 @@ final class RenameTest extends IntegrationTestCase
             ->renameAllUpperCaseWord()
             ->getEachAsArray();
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 ['Id' => 1, 'Name' => 'name', 'Active' => true],
                 ['Id' => 2, 'Name' => 'name', 'Active' => false],

@@ -20,23 +20,23 @@ final class CacheExtractorTest extends TestCase
             yield new Rows(Row::create(int_entry('id', 3)));
         };
 
-        $cache->expects($this->any())
+        $cache->expects(self::any())
             ->method('read')
             ->with('id')
             ->willReturn($generator());
 
-        $cache->expects($this->any())
+        $cache->expects(self::any())
             ->method('has')
             ->with('id')
             ->willReturn(true);
 
-        $cache->expects($this->never())
+        $cache->expects(self::never())
             ->method('clear')
             ->with('id');
 
         $extractor = from_cache('id');
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 new Rows(Row::create(int_entry('id', 1))),
                 new Rows(Row::create(int_entry('id', 2))),
@@ -56,17 +56,17 @@ final class CacheExtractorTest extends TestCase
             yield new Rows(Row::create(int_entry('id', 3)));
         };
 
-        $cache->expects($this->any())
+        $cache->expects(self::any())
             ->method('read')
             ->with('id')
             ->willReturn($generator());
 
-        $cache->expects($this->any())
+        $cache->expects(self::any())
             ->method('has')
             ->with('id')
             ->willReturn(true);
 
-        $cache->expects($this->once())
+        $cache->expects(self::once())
             ->method('clear')
             ->with('id');
 
@@ -79,12 +79,12 @@ final class CacheExtractorTest extends TestCase
             ->cache($cache = $this->createMock(Cache::class))
             ->build();
 
-        $cache->expects($this->exactly(2))
+        $cache->expects(self::exactly(2))
             ->method('has')
             ->with('id')
             ->willReturnOnConsecutiveCalls(false, true);
 
-        $cache->expects($this->once())
+        $cache->expects(self::once())
             ->method('read')
             ->with('id')
             ->willReturn(
@@ -95,7 +95,7 @@ final class CacheExtractorTest extends TestCase
                 ))->extract(new FlowContext($config))
             );
 
-        $cache->expects($this->never())
+        $cache->expects(self::never())
             ->method('clear')
             ->with('id');
 
@@ -103,7 +103,7 @@ final class CacheExtractorTest extends TestCase
 
         \iterator_to_array($extractor->extract(new FlowContext($config)));
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 $rowsToCache,
             ],

@@ -23,7 +23,7 @@ final class ASCIIHeadersTest extends TestCase
             new Body($rows)
         );
 
-        $this->assertStringContainsString(
+        self::assertStringContainsString(
             <<<'TABLE'
 +----+-------+
 | id | value |

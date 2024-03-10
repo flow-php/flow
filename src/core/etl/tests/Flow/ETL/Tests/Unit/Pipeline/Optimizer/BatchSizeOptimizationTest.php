@@ -20,7 +20,7 @@ final class BatchSizeOptimizationTest extends TestCase
             new SynchronousPipeline()
         );
 
-        $this->assertFalse(
+        self::assertFalse(
             (new BatchSizeOptimization())->isFor(new DbalLoader('test', [], []), $pipeline)
         );
     }
@@ -29,7 +29,7 @@ final class BatchSizeOptimizationTest extends TestCase
     {
         $pipeline = new SynchronousPipeline();
 
-        $this->assertTrue(
+        self::assertTrue(
             (new BatchSizeOptimization())->isFor(new DbalLoader('test', [], []), $pipeline)
         );
     }
@@ -38,7 +38,7 @@ final class BatchSizeOptimizationTest extends TestCase
     {
         $pipeline = new SynchronousPipeline();
 
-        $this->assertFalse(
+        self::assertFalse(
             (new BatchSizeOptimization())->isFor(StreamLoader::output(), $pipeline)
         );
     }
@@ -47,7 +47,7 @@ final class BatchSizeOptimizationTest extends TestCase
     {
         $pipeline = new SynchronousPipeline();
 
-        $this->assertFalse(
+        self::assertFalse(
             (new BatchSizeOptimization())->isFor($this->createMock(Transformer::class), $pipeline)
         );
     }
@@ -56,7 +56,7 @@ final class BatchSizeOptimizationTest extends TestCase
     {
         $pipeline = new BatchingPipeline(new SynchronousPipeline(), 10);
 
-        $this->assertFalse(
+        self::assertFalse(
             (new BatchSizeOptimization())->isFor(new DbalLoader('test', [], []), $pipeline)
         );
     }
@@ -65,7 +65,7 @@ final class BatchSizeOptimizationTest extends TestCase
     {
         $pipeline = new CollectingPipeline(new SynchronousPipeline());
 
-        $this->assertFalse(
+        self::assertFalse(
             (new BatchSizeOptimization())->isFor(new DbalLoader('test', [], []), $pipeline)
         );
     }

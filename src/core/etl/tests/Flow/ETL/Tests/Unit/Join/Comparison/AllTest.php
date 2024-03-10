@@ -24,7 +24,7 @@ final class AllTest extends TestCase
             ->method('compare')
             ->willReturn(false);
 
-        $this->assertFalse(
+        self::assertFalse(
             (new All($comparison1, $comparison2))
                 ->compare(
                     Row::create(int_entry('id', 1)),
@@ -45,7 +45,7 @@ final class AllTest extends TestCase
             ->method('compare')
             ->willReturn(true);
 
-        $this->assertTrue(
+        self::assertTrue(
             (new All($comparison1, $comparison2))
                 ->compare(
                     Row::create(int_entry('id', 1)),

@@ -51,7 +51,7 @@ final class MeilisearchExtractorTest extends TestCase
             ->extract(from_meilisearch($this->meilisearchContext->clientConfig(), $params, self::INDEX_NAME))
             ->fetch();
 
-        $this->assertCount(0, $results);
+        self::assertCount(0, $results);
     }
 
     public function test_extraction_index_with_from_and_size() : void
@@ -84,11 +84,11 @@ final class MeilisearchExtractorTest extends TestCase
             ->transform(meilisearch_hits_to_rows())
             ->fetch();
 
-        $this->assertCount(999, $results);
-        $this->assertArrayHasKey('id', $results->first()->toArray());
-        $this->assertArrayHasKey('position', $results->first()->toArray());
-        $this->assertArrayNotHasKey('active', $results->first()->toArray());
-        $this->assertArrayNotHasKey('name', $results->first()->toArray());
+        self::assertCount(999, $results);
+        self::assertArrayHasKey('id', $results->first()->toArray());
+        self::assertArrayHasKey('position', $results->first()->toArray());
+        self::assertArrayNotHasKey('active', $results->first()->toArray());
+        self::assertArrayNotHasKey('name', $results->first()->toArray());
     }
 
     public function test_extraction_index_with_sort() : void
@@ -118,7 +118,7 @@ final class MeilisearchExtractorTest extends TestCase
             ->extract(from_meilisearch($this->meilisearchContext->clientConfig(), $params, self::INDEX_NAME))
             ->fetch();
 
-        $this->assertCount(999, $results);
-        $this->assertSame(999, $results->first()->toArray()['position']);
+        self::assertCount(999, $results);
+        self::assertSame(999, $results->first()->toArray()['position']);
     }
 }

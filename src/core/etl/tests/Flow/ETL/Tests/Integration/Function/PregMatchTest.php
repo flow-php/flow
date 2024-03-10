@@ -25,7 +25,7 @@ final class PregMatchTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['key' => 'value', 'preg_match' => true],
             ],
@@ -47,7 +47,7 @@ final class PregMatchTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'preg_match' => null],
             ],
@@ -69,7 +69,7 @@ final class PregMatchTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => '1', 'preg_match' => null],
             ],

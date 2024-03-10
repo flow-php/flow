@@ -45,7 +45,7 @@ final class MySqlBulkUpdateTest extends MysqlIntegrationTestCase
             ]),
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One', 'active' => false],
                 ['id' => 2, 'name' => 'Changed name Two', 'description' => 'Changed description Two', 'active' => false],

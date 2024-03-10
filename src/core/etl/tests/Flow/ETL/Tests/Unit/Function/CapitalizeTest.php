@@ -12,7 +12,7 @@ final class CapitalizeTest extends TestCase
 {
     public function test_capitalize_valid_string() : void
     {
-        $this->assertSame(
+        self::assertSame(
             'This Is A Value',
             ref('string')->capitalize()->eval(Row::create(str_entry('string', 'this is a value')))
         );

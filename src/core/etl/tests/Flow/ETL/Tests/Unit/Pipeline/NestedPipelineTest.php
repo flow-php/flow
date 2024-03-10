@@ -27,7 +27,7 @@ final class NestedPipelineTest extends TestCase
             )
         ));
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 new Rows(
                     Row::create(int_entry('id', 1), bool_entry('active', true)),

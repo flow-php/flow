@@ -25,7 +25,7 @@ final class ToLowerTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['key' => 'VALUE', 'to_lower' => 'value'],
             ],
@@ -47,7 +47,7 @@ final class ToLowerTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'to_lower' => 1],
             ],

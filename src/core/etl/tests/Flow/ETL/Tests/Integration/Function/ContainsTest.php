@@ -25,7 +25,7 @@ final class ContainsTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['key' => 'value', 'contains' => true],
             ],
@@ -47,7 +47,7 @@ final class ContainsTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'contains' => false],
             ],
@@ -69,7 +69,7 @@ final class ContainsTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => '1', 'contains' => false],
             ],

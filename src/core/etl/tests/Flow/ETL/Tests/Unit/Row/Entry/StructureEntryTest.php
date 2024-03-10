@@ -133,7 +133,7 @@ final class StructureEntryTest extends TestCase
             ]),
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             Definition::structure(
                 'items',
                 struct_type([
@@ -154,7 +154,7 @@ final class StructureEntryTest extends TestCase
 
     public function test_entry_name_can_be_zero() : void
     {
-        $this->assertSame(
+        self::assertSame(
             '0',
             (
                 new StructureEntry(
@@ -171,7 +171,7 @@ final class StructureEntryTest extends TestCase
      */
     public function test_is_equal(bool $equals, StructureEntry $entry, StructureEntry $nextEntry) : void
     {
-        $this->assertSame($equals, $entry->isEqual($nextEntry));
+        self::assertSame($equals, $entry->isEqual($nextEntry));
     }
 
     public function test_map() : void
@@ -182,7 +182,7 @@ final class StructureEntryTest extends TestCase
             struct_type([struct_element('id', type_int())])
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             $entry,
             $entry->map(fn (array $entries) => $entries)
         );
@@ -209,8 +209,8 @@ final class StructureEntryTest extends TestCase
         );
         $newEntry = $entry->rename('new-entry-name');
 
-        $this->assertEquals('new-entry-name', $newEntry->name());
-        $this->assertEquals($entry->value(), $newEntry->value());
+        self::assertEquals('new-entry-name', $newEntry->name());
+        self::assertEquals($entry->value(), $newEntry->value());
     }
 
     public function test_returns_array_as_value() : void
@@ -221,7 +221,7 @@ final class StructureEntryTest extends TestCase
             struct_type([struct_element('id', type_int()), struct_element('name', type_string())])
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 'item-id' => 1,
                 'name' => 'one',
@@ -242,6 +242,6 @@ final class StructureEntryTest extends TestCase
         /** @var StructureEntry $unserialized */
         $unserialized = \unserialize($serialized);
 
-        $this->assertTrue($string->isEqual($unserialized));
+        self::assertTrue($string->isEqual($unserialized));
     }
 }

@@ -13,7 +13,7 @@ final class TrimTest extends TestCase
 {
     public function test_trim_both_valid_string() : void
     {
-        $this->assertSame(
+        self::assertSame(
             'value',
             ref('string')->trim()->eval(Row::create(str_entry('string', '   value')))
         );
@@ -21,14 +21,14 @@ final class TrimTest extends TestCase
 
     public function test_trim_integer() : void
     {
-        $this->assertNull(
+        self::assertNull(
             ref('integer')->trim()->eval(Row::create(int_entry('integer', 1)))
         );
     }
 
     public function test_trim_left_valid_string() : void
     {
-        $this->assertSame(
+        self::assertSame(
             'value   ',
             ref('string')->trim(Type::LEFT)->eval(Row::create(str_entry('string', '   value   ')))
         );
@@ -36,7 +36,7 @@ final class TrimTest extends TestCase
 
     public function test_trim_right_valid_string() : void
     {
-        $this->assertSame(
+        self::assertSame(
             '   value',
             ref('string')->trim(Type::RIGHT)->eval(Row::create(str_entry('string', '   value   ')))
         );

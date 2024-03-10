@@ -71,7 +71,7 @@ final class MapEntryTest extends TestCase
 
     public function test_definition() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             Definition::map('strings', new MapType(MapKey::integer(), MapValue::string())),
             (new MapEntry('strings', ['one', 'two', 'three'], new MapType(MapKey::integer(), MapValue::string())))->definition()
         );
@@ -79,15 +79,15 @@ final class MapEntryTest extends TestCase
 
     public function test_is_equal() : void
     {
-        $this->assertTrue(
+        self::assertTrue(
             (new MapEntry('strings', ['one', 'two', 'three'], new MapType(MapKey::integer(), MapValue::string())))
                 ->isEqual((new MapEntry('strings', ['one', 'two', 'three'], new MapType(MapKey::integer(), MapValue::string()))))
         );
-        $this->assertFalse(
+        self::assertFalse(
             (new MapEntry('strings', ['one', 'two', 'three'], new MapType(MapKey::integer(), MapValue::string())))
                 ->isEqual(new MapEntry('strings', [1, 2, 3], new MapType(MapKey::integer(), MapValue::integer())))
         );
-        $this->assertTrue(
+        self::assertTrue(
             (new MapEntry('strings', ['one', 'two', 'three'], new MapType(MapKey::integer(), MapValue::string())))
                 ->isEqual((new MapEntry('strings', ['one', 'two', 'three'], new MapType(MapKey::integer(), MapValue::string()))))
         );
@@ -95,7 +95,7 @@ final class MapEntryTest extends TestCase
 
     public function test_map() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             (new MapEntry('strings', ['one, two, three'], new MapType(MapKey::integer(), MapValue::string()))),
             (new MapEntry('strings', ['one', 'two', 'three'], new MapType(MapKey::integer(), MapValue::string())))->map(fn (array $value) => [\implode(', ', $value)])
         );
@@ -103,7 +103,7 @@ final class MapEntryTest extends TestCase
 
     public function test_rename() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             (new MapEntry('new_name', ['one', 'two', 'three'], new MapType(MapKey::integer(), MapValue::string()))),
             (new MapEntry('strings', ['one', 'two', 'three'], new MapType(MapKey::integer(), MapValue::string())))->rename('new_name')
         );
@@ -111,7 +111,7 @@ final class MapEntryTest extends TestCase
 
     public function test_to_string() : void
     {
-        $this->assertSame(
+        self::assertSame(
             '["one","two","three"]',
             (new MapEntry('strings', ['one', 'two', 'three'], new MapType(MapKey::integer(), MapValue::string())))->toString()
         );
@@ -119,7 +119,7 @@ final class MapEntryTest extends TestCase
 
     public function test_type() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             new MapType(MapKey::integer(), MapValue::string()),
             (new MapEntry('strings', ['one', 'two', 'three'], new MapType(MapKey::integer(), MapValue::string())))->type()
         );
@@ -127,11 +127,11 @@ final class MapEntryTest extends TestCase
 
     public function test_value() : void
     {
-        $this->assertSame(
+        self::assertSame(
             ['one', 'two', 'three'],
             (new MapEntry('strings', ['one', 'two', 'three'], new MapType(MapKey::integer(), MapValue::string())))->value()
         );
-        $this->assertSame(
+        self::assertSame(
             ['one' => 'two'],
             (new MapEntry('strings', ['one' => 'two'], new MapType(MapKey::string(), MapValue::string())))->value()
         );

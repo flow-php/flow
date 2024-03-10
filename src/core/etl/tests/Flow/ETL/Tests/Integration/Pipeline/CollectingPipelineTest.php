@@ -36,7 +36,7 @@ final class CollectingPipelineTest extends TestCase
             ])
         ));
 
-        $this->assertCount(
+        self::assertCount(
             1,
             \iterator_to_array($pipeline->process(new FlowContext(Config::default())))
         );

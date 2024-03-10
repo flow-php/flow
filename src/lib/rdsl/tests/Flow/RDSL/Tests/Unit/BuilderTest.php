@@ -31,9 +31,9 @@ final class BuilderTest extends TestCase
 
         $executables = $builder->parse([['function' => 'strlen', 'args' => ['string']]]);
 
-        $this->assertInstanceOf(Executable::class, $executables->toArray()[0]);
-        $this->assertSame('strlen', $executables->toArray()[0]->name());
-        $this->assertSame(['string'], $executables->toArray()[0]->arguments()->toArray());
+        self::assertInstanceOf(Executable::class, $executables->toArray()[0]);
+        self::assertSame('strlen', $executables->toArray()[0]->name());
+        self::assertSame(['string'], $executables->toArray()[0]->arguments()->toArray());
     }
 
     public function test_parsing_array_with_non_existing_function() : void

@@ -16,7 +16,7 @@ final class DOMNodeValueTest extends TestCase
         $xml = new \DOMDocument();
         $xml->loadXML('<root><foo><bar>baz</bar></foo></root>');
 
-        $this->assertEquals(
+        self::assertEquals(
             'baz',
             ref('value')->domNodeValue()->eval(Row::create((new NativeEntryFactory())->create('value', $xml->documentElement->firstChild)))
         );
@@ -27,7 +27,7 @@ final class DOMNodeValueTest extends TestCase
         $xml = new \DOMDocument();
         $xml->loadXML('<root><foo>bar</foo></root>');
 
-        $this->assertEquals(
+        self::assertEquals(
             'bar',
             ref('value')->domNodeValue()->eval(Row::create((new NativeEntryFactory())->create('value', $xml->documentElement->firstChild)))
         );

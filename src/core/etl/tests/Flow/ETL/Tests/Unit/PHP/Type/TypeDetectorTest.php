@@ -313,7 +313,7 @@ final class TypeDetectorTest extends TestCase
 
     public function test_enum_type() : void
     {
-        $this->assertInstanceOf(EnumType::class, (new TypeDetector())->detectType(BasicEnum::two));
+        self::assertInstanceOf(EnumType::class, (new TypeDetector())->detectType(BasicEnum::two));
     }
 
     #[DataProvider('provide_logical_types_data')]
@@ -321,21 +321,21 @@ final class TypeDetectorTest extends TestCase
     {
         $type = (new TypeDetector())->detectType($data);
 
-        $this->assertInstanceOf($class, $type);
-        $this->assertSame($description, $type->toString());
+        self::assertInstanceOf($class, $type);
+        self::assertSame($description, $type->toString());
     }
 
     #[DataProvider('provide_object_data')]
     public function test_object_types(mixed $data) : void
     {
-        $this->assertInstanceOf(ObjectType::class, (new TypeDetector())->detectType($data));
+        self::assertInstanceOf(ObjectType::class, (new TypeDetector())->detectType($data));
     }
 
     #[DataProvider('provide_scalar_data')]
     public function test_scalar_types(mixed $data, string $description) : void
     {
         $type = (new TypeDetector())->detectType($data);
-        $this->assertInstanceOf(ScalarType::class, $type);
-        $this->assertSame($description, $type->toString());
+        self::assertInstanceOf(ScalarType::class, $type);
+        self::assertSame($description, $type->toString());
     }
 }

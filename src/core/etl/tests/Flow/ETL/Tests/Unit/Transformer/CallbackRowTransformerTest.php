@@ -27,7 +27,7 @@ class CallbackRowTransformerTest extends TestCase
             new FlowContext(Config::default())
         );
 
-        $this->assertEquals(new Rows(
+        static::assertEquals(new Rows(
             Row::create(
                 new Entry\StringEntry('string-entry ', 'String entry')
             )

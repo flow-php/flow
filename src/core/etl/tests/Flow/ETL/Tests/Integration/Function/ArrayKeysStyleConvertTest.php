@@ -25,7 +25,7 @@ final class ArrayKeysStyleConvertTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'array' => ['camel-cased' => 1, 'snake-cased' => 2, 'space-word' => 3]],
             ],

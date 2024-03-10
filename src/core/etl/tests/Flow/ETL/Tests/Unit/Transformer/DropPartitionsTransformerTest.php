@@ -26,11 +26,11 @@ final class DropPartitionsTransformerTest extends TestCase
         ])->partitionBy(ref('category'));
 
         foreach ($partitioned as $rows) {
-            $this->assertTrue($rows->isPartitioned());
+            self::assertTrue($rows->isPartitioned());
 
             $notPartitioned = (new DropPartitionsTransformer())->transform($rows, flow_context());
 
-            $this->assertFalse($notPartitioned->isPartitioned());
+            self::assertFalse($notPartitioned->isPartitioned());
         }
     }
 
@@ -50,12 +50,12 @@ final class DropPartitionsTransformerTest extends TestCase
         ])->partitionBy(ref('category'));
 
         foreach ($partitioned as $rows) {
-            $this->assertTrue($rows->isPartitioned());
+            self::assertTrue($rows->isPartitioned());
 
             $notPartitioned = (new DropPartitionsTransformer(true))->transform($rows, flow_context());
 
-            $this->assertFalse($notPartitioned->isPartitioned());
-            $this->assertFalse($notPartitioned->first()->has('category'));
+            self::assertFalse($notPartitioned->isPartitioned());
+            self::assertFalse($notPartitioned->first()->has('category'));
         }
     }
 
@@ -74,7 +74,7 @@ final class DropPartitionsTransformerTest extends TestCase
             ['id' => 10, 'name' => 'ten', 'category' => 'b'],
         ]);
 
-        $this->assertSame(
+        self::assertSame(
             $rows,
             (new DropPartitionsTransformer())->transform($rows, flow_context())
         );

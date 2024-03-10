@@ -32,6 +32,6 @@ final class OptionTest extends TestCase
         $option->parse('a,b,c');
         $option->parse('a,b,c');
 
-        $this->assertSame(301000, $option->score());
+        self::assertSame(301000, $option->score());
     }
 }

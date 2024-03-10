@@ -27,7 +27,7 @@ final class ArrayGetTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'result' => 2],
                 ['id' => 2, 'result' => null],

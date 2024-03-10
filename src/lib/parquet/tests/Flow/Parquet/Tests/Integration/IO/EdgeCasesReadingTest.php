@@ -21,7 +21,7 @@ final class EdgeCasesReadingTest extends TestCase
             $rows[] = $row;
         }
 
-        $this->assertSame(
+        self::assertSame(
             [
                 [
                     'ID' => null,
@@ -100,7 +100,7 @@ final class EdgeCasesReadingTest extends TestCase
             $rows[] = $row;
         }
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['emptylist' => null],
             ],
@@ -120,7 +120,7 @@ final class EdgeCasesReadingTest extends TestCase
             $rows[] = $row;
         }
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['emptylist' => null],
             ],

@@ -12,7 +12,7 @@ final class ArrayDotGetTest extends TestCase
 {
     public function test_accessing_array_scalar_value_by_path_multiple_asterix_paths() : void
     {
-        $this->assertSame(
+        self::assertSame(
             [
                 ['12345', '22222'],
                 ['3333'],
@@ -47,7 +47,7 @@ final class ArrayDotGetTest extends TestCase
 
     public function test_accessing_array_scalar_value_by_path_multiple_asterix_paths_with_nullsafe() : void
     {
-        $this->assertSame(
+        self::assertSame(
             [
                 ['12345', '22222'],
                 ['3333'],
@@ -92,7 +92,7 @@ final class ArrayDotGetTest extends TestCase
 
     public function test_accessing_array_scalar_value_by_path_with_asterix() : void
     {
-        $this->assertSame(
+        self::assertSame(
             ['Michael', 'Jack'],
             array_dot_get(
                 [
@@ -143,7 +143,7 @@ final class ArrayDotGetTest extends TestCase
 
     public function test_accessing_array_scalar_value_by_path_with_asterix_and_different_elements_using_nullsafe() : void
     {
-        $this->assertSame(
+        self::assertSame(
             ['Michael', null],
             array_dot_get(
                 [
@@ -168,7 +168,7 @@ final class ArrayDotGetTest extends TestCase
 
     public function test_accessing_array_scalar_value_by_path_with_escaped_nullable_asterix() : void
     {
-        $this->assertSame(
+        self::assertSame(
             'Michael',
             array_dot_get(
                 [
@@ -185,7 +185,7 @@ final class ArrayDotGetTest extends TestCase
 
     public function test_accessing_array_scalar_value_by_path_with_escaped_wildcard_key() : void
     {
-        $this->assertSame(
+        self::assertSame(
             'Michael',
             array_dot_get(
                 [
@@ -203,7 +203,7 @@ final class ArrayDotGetTest extends TestCase
 
     public function test_accessing_array_scalar_value_by_path_with_nullable_asterix_and_different_elements() : void
     {
-        $this->assertSame(
+        self::assertSame(
             ['Michael'],
             array_dot_get(
                 [
@@ -231,12 +231,12 @@ final class ArrayDotGetTest extends TestCase
         $this->expectException(InvalidPathException::class);
         $this->expectExceptionMessage("Path \"invalid_path\" does not exists in array \"array('user'=>array('id'=>1,),)\"");
 
-        $this->assertSame(array_dot_get(['user' => ['id' => 1]], 'invalid_path'), 1);
+        self::assertSame(array_dot_get(['user' => ['id' => 1]], 'invalid_path'), 1);
     }
 
     public function test_accessing_array_value_by_nullsafe_path() : void
     {
-        $this->assertNull(
+        self::assertNull(
             array_dot_get(
                 [
                     'user' => [
@@ -246,7 +246,7 @@ final class ArrayDotGetTest extends TestCase
                 'user.?name'
             )
         );
-        $this->assertNull(
+        self::assertNull(
             array_dot_get(
                 [
                     'user' => [
@@ -258,7 +258,7 @@ final class ArrayDotGetTest extends TestCase
                 'user.?wrong_path.name'
             )
         );
-        $this->assertNull(
+        self::assertNull(
             array_dot_get(
                 [
                     'users' => [],
@@ -270,7 +270,7 @@ final class ArrayDotGetTest extends TestCase
 
     public function test_accessing_array_value_by_path() : void
     {
-        $this->assertSame(
+        self::assertSame(
             1,
             array_dot_get(
                 [
@@ -281,7 +281,7 @@ final class ArrayDotGetTest extends TestCase
                 'user.id'
             )
         );
-        $this->assertTrue(
+        self::assertTrue(
             array_dot_exists(
                 [
                     'user' => [
@@ -291,7 +291,7 @@ final class ArrayDotGetTest extends TestCase
                 'user.id'
             )
         );
-        $this->assertFalse(
+        self::assertFalse(
             array_dot_exists(
                 [
                     'user' => [
@@ -305,7 +305,7 @@ final class ArrayDotGetTest extends TestCase
 
     public function test_accessing_array_value_by_path_with_asterix() : void
     {
-        $this->assertSame(
+        self::assertSame(
             [
                 [
                     'id' => 1,
@@ -343,12 +343,12 @@ final class ArrayDotGetTest extends TestCase
         $this->expectException(InvalidPathException::class);
         $this->expectExceptionMessage('Path "invalid_path" does not exists in array "array()"');
 
-        $this->assertSame(array_dot_get([], 'invalid_path'), 1);
+        self::assertSame(array_dot_get([], 'invalid_path'), 1);
     }
 
     public function test_accessing_nested_array_value_by_numeric_path() : void
     {
-        $this->assertSame(
+        self::assertSame(
             1,
             array_dot_get(
                 [
@@ -367,7 +367,7 @@ final class ArrayDotGetTest extends TestCase
 
     public function test_accessing_nested_collection_using_wildcard() : void
     {
-        $this->assertSame(
+        self::assertSame(
             [
                 [
                     'id' => 1,
@@ -398,7 +398,7 @@ final class ArrayDotGetTest extends TestCase
 
     public function test_accessing_not_nested_nullsafe() : void
     {
-        $this->assertNull(
+        self::assertNull(
             array_dot_get(
                 [
                     '@name' => 'Test',
@@ -410,7 +410,7 @@ final class ArrayDotGetTest extends TestCase
 
     public function test_accessing_not_nested_nullsafe_on_empty_array() : void
     {
-        $this->assertNull(
+        self::assertNull(
             array_dot_get(
                 [
                 ],
@@ -421,7 +421,7 @@ final class ArrayDotGetTest extends TestCase
 
     public function test_accessing_null_value_under_existing_path() : void
     {
-        $this->assertTrue(
+        self::assertTrue(
             array_dot_exists(
                 [
                     'user' => [
@@ -431,7 +431,7 @@ final class ArrayDotGetTest extends TestCase
                 'user.id'
             )
         );
-        $this->assertFalse(
+        self::assertFalse(
             array_dot_exists(
                 [
                     'user' => [
@@ -441,7 +441,7 @@ final class ArrayDotGetTest extends TestCase
                 'user.ids'
             )
         );
-        $this->assertTrue(
+        self::assertTrue(
             array_dot_exists(
                 [
                     'user' => [
@@ -455,7 +455,7 @@ final class ArrayDotGetTest extends TestCase
 
     public function test_all_multi_key_get() : void
     {
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'name' => 'foo'],
                 ['id' => 2, 'name' => 'bar'],
@@ -485,7 +485,7 @@ final class ArrayDotGetTest extends TestCase
 
     public function test_all_multi_key_get_nested() : void
     {
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'name' => 'foo', 'property_status_value' => 'active'],
                 ['id' => 2, 'name' => 'bar', 'property_status_value' => 'active'],
@@ -518,7 +518,7 @@ final class ArrayDotGetTest extends TestCase
 
     public function test_escape_dot_path() : void
     {
-        $this->assertSame(
+        self::assertSame(
             'baz',
             array_dot_get(
                 [
@@ -534,7 +534,7 @@ final class ArrayDotGetTest extends TestCase
 
     public function test_escape_multi_key_syntax() : void
     {
-        $this->assertSame(
+        self::assertSame(
             1,
             array_dot_get(
                 [
@@ -577,7 +577,7 @@ final class ArrayDotGetTest extends TestCase
 
     public function test_single_multi_key_get() : void
     {
-        $this->assertSame(
+        self::assertSame(
             [
                 'id' => 1, 'name' => 'foo',
             ],
@@ -605,7 +605,7 @@ final class ArrayDotGetTest extends TestCase
 
     public function test_single_nullsafe_multi_key_get() : void
     {
-        $this->assertSame(
+        self::assertSame(
             [
                 'id' => 1, 'name' => null,
             ],

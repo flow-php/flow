@@ -34,7 +34,7 @@ final class RenameEntryTransformerTest extends TestCase
 
         $rows = $renameTransformerTwo->transform($rows, $context);
 
-        $this->assertEquals(
+        self::assertEquals(
             new Rows(
                 Row::create(
                     new Row\Entry\IntegerEntry('id', 1),

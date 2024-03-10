@@ -22,21 +22,21 @@ final class DbalPlatformTest extends TestCase
     {
         $platform = new DbalPlatform(new MySQL80Platform());
 
-        $this->assertInstanceOf(MySQLDialect::class, $platform->dialect());
+        self::assertInstanceOf(MySQLDialect::class, $platform->dialect());
     }
 
     public function test_is_mysql_with_mariadb() : void
     {
         $platform = new DbalPlatform(new MariaDBPlatform());
 
-        $this->assertInstanceOf(MySQLDialect::class, $platform->dialect());
+        self::assertInstanceOf(MySQLDialect::class, $platform->dialect());
     }
 
     public function test_is_postgres_sql() : void
     {
         $platform = new DbalPlatform(new PostgreSQLPlatform());
 
-        $this->assertInstanceOf(PostgreSQLDialect::class, $platform->dialect());
+        self::assertInstanceOf(PostgreSQLDialect::class, $platform->dialect());
     }
 
     /**
@@ -47,10 +47,10 @@ final class DbalPlatformTest extends TestCase
         if (\class_exists($className)) {
             $platform = new DbalPlatform(new $className());
         } else {
-            $this->markTestSkipped('Unknown platform class: ' . $className);
+            self::markTestSkipped('Unknown platform class: ' . $className);
         }
 
-        $this->assertInstanceOf(SqliteDialect::class, $platform->dialect());
+        self::assertInstanceOf(SqliteDialect::class, $platform->dialect());
     }
 
     public function test_no_supported_platform() : void

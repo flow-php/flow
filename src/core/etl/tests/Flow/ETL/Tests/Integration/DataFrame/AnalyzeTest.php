@@ -23,8 +23,8 @@ final class AnalyzeTest extends IntegrationTestCase
             ->autoCast()
             ->run(analyze: true);
 
-        $this->assertSame(5, $report->statistics()->totalRows());
-        $this->assertEquals(
+        self::assertSame(5, $report->statistics()->totalRows());
+        self::assertEquals(
             schema(
                 int_schema('Index'),
                 datetime_schema('Date'),
@@ -36,7 +36,7 @@ final class AnalyzeTest extends IntegrationTestCase
             ),
             $report->schema()
         );
-        $this->assertSame(7, $report->schema()->count());
+        self::assertSame(7, $report->schema()->count());
     }
 
     public function test_analyzing_csv_file_with_limit() : void
@@ -52,8 +52,8 @@ final class AnalyzeTest extends IntegrationTestCase
             ->limit(2)
             ->run(analyze: true);
 
-        $this->assertSame(2, $report->statistics()->totalRows());
-        $this->assertEquals(
+        self::assertSame(2, $report->statistics()->totalRows());
+        self::assertEquals(
             schema(
                 str_schema('Index'),
                 str_schema('Date'),
@@ -65,7 +65,7 @@ final class AnalyzeTest extends IntegrationTestCase
             ),
             $report->schema()
         );
-        $this->assertSame(7, $report->schema()->count());
+        self::assertSame(7, $report->schema()->count());
     }
 
     public function test_analyzing_partitioned_datasets() : void
@@ -74,8 +74,8 @@ final class AnalyzeTest extends IntegrationTestCase
             ->read(from_text(__DIR__ . '/Fixtures/Partitioning/multi_partition_pruning_test/year=*/month=*/day=*/*.txt'))
             ->run(analyze: true);
 
-        $this->assertSame(7, $report->statistics()->totalRows());
-        $this->assertEquals(
+        self::assertSame(7, $report->statistics()->totalRows());
+        self::assertEquals(
             schema(
                 str_schema('year'),
                 str_schema('month'),

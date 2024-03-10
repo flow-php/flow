@@ -44,7 +44,7 @@ final class CSVTest extends TestCase
             ->load(to_csv($path))
             ->run();
 
-        $this->assertEquals(
+        self::assertEquals(
             100,
             df()->read(from_csv($path))->count()
         );

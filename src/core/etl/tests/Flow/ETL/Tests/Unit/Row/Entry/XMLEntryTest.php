@@ -94,7 +94,7 @@ final class XMLEntryTest extends TestCase
         </item>
 XML);
 
-        $this->assertNotEquals(
+        self::assertNotEquals(
             xml_entry('row', $doc),
             xml_entry('row', $doc2),
         );
@@ -112,8 +112,8 @@ XML);
     {
         $entry = new XMLEntry('name', '<root><foo>1</foo><bar>2</bar><baz>3</baz></root>');
 
-        $this->assertSame('name', $entry->name());
-        $this->assertSame("<?xml version=\"1.0\"?>\n<root><foo>1</foo><bar>2</bar><baz>3</baz></root>\n", $entry->__toString());
+        self::assertSame('name', $entry->name());
+        self::assertSame("<?xml version=\"1.0\"?>\n<root><foo>1</foo><bar>2</bar><baz>3</baz></root>\n", $entry->__toString());
     }
 
     public function test_creating_xml_entry_with_empty_dom_document() : void
@@ -121,9 +121,9 @@ XML);
         $doc = new \DOMDocument();
         $entry = new XMLEntry('name', $doc);
 
-        $this->assertSame('name', $entry->name());
-        $this->assertSame($doc, $entry->value());
-        $this->assertSame("<?xml version=\"1.0\"?>\n", $entry->__toString());
+        self::assertSame('name', $entry->name());
+        self::assertSame($doc, $entry->value());
+        self::assertSame("<?xml version=\"1.0\"?>\n", $entry->__toString());
     }
 
     /**
@@ -131,7 +131,7 @@ XML);
      */
     public function test_is_equal(bool $equals, XMLEntry $entry, XMLEntry $nextEntry) : void
     {
-        $this->assertSame($equals, $entry->isEqual($nextEntry));
+        self::assertSame($equals, $entry->isEqual($nextEntry));
     }
 
     public function test_serialization() : void
@@ -154,6 +154,6 @@ XML);
         $serialized = \serialize($entry);
         $unserialized = \unserialize($serialized);
 
-        $this->assertTrue($entry->isEqual($unserialized));
+        self::assertTrue($entry->isEqual($unserialized));
     }
 }

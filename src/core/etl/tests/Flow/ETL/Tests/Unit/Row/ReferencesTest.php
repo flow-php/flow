@@ -14,7 +14,7 @@ final class ReferencesTest extends TestCase
     {
         $refs = refs()->without('id')->add('id')->add('name');
 
-        $this->assertEquals(
+        self::assertEquals(
             refs('name')->all(),
             $refs->all()
         );
@@ -24,21 +24,21 @@ final class ReferencesTest extends TestCase
     {
         $refs = new References(ref('id')->as('test'), ref('name'));
 
-        $this->assertFalse($refs->has(ref('id')));
-        $this->assertTrue($refs->has(ref('test')));
+        self::assertFalse($refs->has(ref('id')));
+        self::assertTrue($refs->has(ref('test')));
     }
 
     public function test_that_reference_without_alias_exists() : void
     {
         $refs = new References(ref('id'), ref('name'));
 
-        $this->assertTrue($refs->has(ref('id')));
-        $this->assertFalse($refs->has(ref('test')));
+        self::assertTrue($refs->has(ref('id')));
+        self::assertFalse($refs->has(ref('test')));
     }
 
     public function test_without() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             refs('name')->all(),
             refs('id', 'name')->without('id')->all()
         );

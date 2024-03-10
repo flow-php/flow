@@ -22,7 +22,7 @@ final class ArrayMergeCollectionTest extends TestCase
             ),
         );
 
-        $this->assertNull(array_merge_collection(ref('array_entry'))->eval($row));
+        self::assertNull(array_merge_collection(ref('array_entry'))->eval($row));
     }
 
     public function test_for_not_array_entry() : void
@@ -31,7 +31,7 @@ final class ArrayMergeCollectionTest extends TestCase
             int_entry('invalid_entry', 1),
         );
 
-        $this->assertNull(array_merge_collection(ref('invalid_entry'))->eval($row));
+        self::assertNull(array_merge_collection(ref('invalid_entry'))->eval($row));
     }
 
     public function test_merging_collection_of_arrays() : void
@@ -51,7 +51,7 @@ final class ArrayMergeCollectionTest extends TestCase
             ),
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             [1, 2],
             array_merge_collection(ref('array_entry'))->eval($row)
         );

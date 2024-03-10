@@ -43,7 +43,7 @@ final class DbalQueryExtractorTest extends IntegrationTestCase
             )
         )->fetch();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
@@ -97,8 +97,8 @@ final class DbalQueryExtractorTest extends IntegrationTestCase
             )
         )->fetch();
 
-        $this->assertSame(10, $rows->count());
-        $this->assertSame(
+        self::assertSame(10, $rows->count());
+        self::assertSame(
             [
                 ['id' => 1, 'name' => 'Name', 'description' => 'Description'],
                 ['id' => 2, 'name' => 'Name', 'description' => 'Description'],

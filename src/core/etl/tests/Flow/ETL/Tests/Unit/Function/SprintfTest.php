@@ -18,7 +18,7 @@ final class SprintfTest extends TestCase
             lit(25)
         );
 
-        $this->assertNull($sprintf->eval(Row::create()));
+        self::assertNull($sprintf->eval(Row::create()));
     }
 
     public function test_sprintf_expression_on_valid_format_and_args() : void
@@ -29,7 +29,7 @@ final class SprintfTest extends TestCase
             lit(25)
         );
 
-        $this->assertSame(
+        self::assertSame(
             'Hello, John! Your age is 25.',
             $sprintf->eval(Row::create())
         );

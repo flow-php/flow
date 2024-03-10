@@ -21,16 +21,16 @@ final class PSRSimpleCacheTest extends IntegrationTestCase
             ),
         );
 
-        $this->assertFalse($cache->has('test'));
+        self::assertFalse($cache->has('test'));
 
         $cache->add('test', new Rows(Row::create(int_entry('id', 1))));
         $cache->add('test', new Rows(Row::create(int_entry('id', 2))));
         $cache->add('test', new Rows(Row::create(int_entry('id', 3))));
 
-        $this->assertCount(
+        self::assertCount(
             3,
             \iterator_to_array($cache->read('test'))
         );
-        $this->assertTrue($cache->has('test'));
+        self::assertTrue($cache->has('test'));
     }
 }

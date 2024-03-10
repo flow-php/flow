@@ -58,7 +58,7 @@ final class MailiSearchTest extends TestCase
             )
             ->run();
 
-        $this->assertCount(
+        self::assertCount(
             2, // second request is to check if the first one was processed
             $httpClient->requests
         );
@@ -98,8 +98,8 @@ final class MailiSearchTest extends TestCase
             )
             ->fetch();
 
-        $this->assertCount($limit, $results);
-        $this->assertSame(
+        self::assertCount($limit, $results);
+        self::assertSame(
             \array_map(
                 static fn (int $i) : array => [
                     'id' => \sha1((string) $i),

@@ -12,7 +12,7 @@ final class DataFrameExtractorTest extends TestCase
 {
     public function test_extracting_from_another_data_frame() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             [
                 rows(
                     row(str_entry('value', 'test')),

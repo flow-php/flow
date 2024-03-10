@@ -60,8 +60,8 @@ final class SheetRangeTest extends TestCase
     public function test_next_rows_range() : void
     {
         $range = new SheetRange(new Columns('Sheet2', 'A', 'B'), 1, 10);
-        $this->assertSame('Sheet2!A11:B20', $range->nextRows(10)->toString());
-        $this->assertSame('Sheet2!A21:B40', $range->nextRows(10)->nextRows(20)->toString());
+        self::assertSame('Sheet2!A11:B20', $range->nextRows(10)->toString());
+        self::assertSame('Sheet2!A21:B40', $range->nextRows(10)->nextRows(20)->toString());
     }
 
     /**
@@ -69,6 +69,6 @@ final class SheetRangeTest extends TestCase
      */
     public function test_range_to_string(SheetRange $range, string $expectedStringRange) : void
     {
-        $this->assertSame($expectedStringRange, $range->toString());
+        self::assertSame($expectedStringRange, $range->toString());
     }
 }

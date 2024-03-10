@@ -18,7 +18,7 @@ final class TimeConverterTest extends TestCase
 
         $microseconds = (new TimeConverter())->toParquetType($diff);
 
-        $this->assertEquals(
+        self::assertEquals(
             $diff,
             (new TimeConverter())->fromParquetType($microseconds)
         );

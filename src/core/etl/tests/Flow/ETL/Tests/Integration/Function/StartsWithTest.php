@@ -25,7 +25,7 @@ final class StartsWithTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['key' => 'value', 'starts_with' => true],
             ],
@@ -47,7 +47,7 @@ final class StartsWithTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'starts_with' => false],
             ],
@@ -69,7 +69,7 @@ final class StartsWithTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => '1', 'starts_with' => false],
             ],

@@ -14,7 +14,7 @@ final class ExamplesTest extends TestCase
         $path = __DIR__ . '/../Fixtures/Valid';
         $service = new Examples($path);
 
-        $this->assertStringContainsString(
+        self::assertStringContainsString(
             'example code file',
             $service->code('topic_3', 'example_1')
         );
@@ -25,7 +25,7 @@ final class ExamplesTest extends TestCase
         $path = __DIR__ . '/../Fixtures/Valid';
         $service = new Examples($path);
 
-        $this->assertEqualsCanonicalizing(
+        self::assertEqualsCanonicalizing(
             $service->examples('topic_2'),
             [
                 'example_1',
@@ -39,7 +39,7 @@ final class ExamplesTest extends TestCase
         $path = __DIR__ . '/../Fixtures/Valid';
         $service = new Examples($path);
 
-        $this->assertEqualsCanonicalizing(
+        self::assertEqualsCanonicalizing(
             $service->topics(),
             [
                 'topic_1',

@@ -40,7 +40,7 @@ final class NativePHPSerializerTest extends TestCase
 
         $serialized = $serializer->serialize($rows);
 
-        $this->assertEquals(
+        self::assertEquals(
             $rows,
             $serializer->unserialize($serialized, Rows::class)
         );

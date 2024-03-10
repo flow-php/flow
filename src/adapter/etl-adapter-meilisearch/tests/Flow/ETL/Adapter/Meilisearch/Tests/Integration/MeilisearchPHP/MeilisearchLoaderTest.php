@@ -35,7 +35,7 @@ final class MeilisearchLoaderTest extends TestCase
 
         $response = $this->meilisearchContext->client()->index(self::INDEX_NAME)->search('', ['page' => 1]);
 
-        $this->assertCount(0, $response->getHits());
+        self::assertCount(0, $response->getHits());
     }
 
     public function test_integration_with_entry_factory() : void
@@ -62,12 +62,12 @@ final class MeilisearchLoaderTest extends TestCase
 
         $response = $this->meilisearchContext->client()->index(self::INDEX_NAME)->search('');
 
-        $this->assertSame(4, $response->getEstimatedTotalHits());
+        self::assertSame(4, $response->getEstimatedTotalHits());
 
         $names = \array_map(static fn (array $hit) : string => $hit['name'], $response->getHits());
         \sort($names);
 
-        $this->assertSame(['Dawid', 'Norbert', 'Tomek', 'Łukasz'], $names);
+        self::assertSame(['Dawid', 'Norbert', 'Tomek', 'Łukasz'], $names);
     }
 
     public function test_integration_with_json_entry() : void
@@ -82,11 +82,11 @@ final class MeilisearchLoaderTest extends TestCase
 
         $response = $this->meilisearchContext->client()->index(self::INDEX_NAME)->search('');
 
-        $this->assertSame(1, $response->getEstimatedTotalHits());
+        self::assertSame(1, $response->getEstimatedTotalHits());
 
         $json = \array_map(static fn (array $hit) : array => $hit['json'], $response->getHits());
 
-        $this->assertSame([['foo' => 'bar']], $json);
+        self::assertSame([['foo' => 'bar']], $json);
     }
 
     public function test_integration_with_partial_update_id_factory() : void
@@ -111,11 +111,11 @@ final class MeilisearchLoaderTest extends TestCase
 
         $response = $this->meilisearchContext->client()->index(self::INDEX_NAME)->search('');
 
-        $this->assertSame(1, $response->getEstimatedTotalHits());
+        self::assertSame(1, $response->getEstimatedTotalHits());
 
         $data = \array_map(static fn (array $hit) : array => $hit, $response->getHits());
 
-        $this->assertSame(
+        self::assertSame(
             [
                 [
                     'id' => 1,

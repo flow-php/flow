@@ -22,7 +22,7 @@ final class CastTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 ['date' => '2023-01-01T00:00:00+00:00'],
             ],

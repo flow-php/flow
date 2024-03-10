@@ -12,7 +12,7 @@ final class JsonDecodeTest extends TestCase
 {
     public function test_json_decode_expression() : void
     {
-        $this->assertSame(
+        self::assertSame(
             ['value' => 1],
             ref('value')->jsonDecode()->eval(Row::create(str_entry('value', '{"value": 1}'))),
         );
@@ -20,14 +20,14 @@ final class JsonDecodeTest extends TestCase
 
     public function test_json_decode_expression_with_invalid_json() : void
     {
-        $this->assertNull(
+        self::assertNull(
             ref('value')->jsonDecode()->eval(Row::create(str_entry('value', '{"value": 1'))),
         );
     }
 
     public function test_json_decode_on_non_json_value() : void
     {
-        $this->assertNull(
+        self::assertNull(
             ref('value')->jsonDecode()->eval(Row::create(int_entry('value', 125))),
         );
     }

@@ -19,7 +19,7 @@ final class CollectUniqueTest extends TestCase
         $aggregator->aggregate(Row::create(str_entry('data', 'b')));
         $aggregator->aggregate(Row::create(str_entry('data', 'c')));
 
-        $this->assertSame(
+        self::assertSame(
             [
                 'a', 'b', 'c',
             ],

@@ -24,7 +24,7 @@ final class CacheTest extends IntegrationTestCase
 
         $cacheContent = \array_values(\array_diff(\scandir($this->cacheDir), ['..', '.']));
 
-        $this->assertContains('test_etl_cache', $cacheContent);
+        self::assertContains('test_etl_cache', $cacheContent);
     }
 
     public function test_psr_cache() : void
@@ -39,9 +39,9 @@ final class CacheTest extends IntegrationTestCase
 
         $cachedRows = df(Config::builder()->cache($adapter)->build())->from(from_cache('test_etl_cache'))->fetch();
 
-        $this->assertCount($rowsets, $cachedRows);
+        self::assertCount($rowsets, $cachedRows);
 
         $adapter->clear('test_etl_cache');
-        $this->assertCount(0, \iterator_to_array($adapter->read('test_etl_cache')));
+        self::assertCount(0, \iterator_to_array($adapter->read('test_etl_cache')));
     }
 }

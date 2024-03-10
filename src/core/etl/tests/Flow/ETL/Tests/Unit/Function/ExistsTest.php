@@ -13,28 +13,28 @@ final class ExistsTest extends TestCase
 {
     public function test_if_reference_exists() : void
     {
-        $this->assertTrue(
+        self::assertTrue(
             ref('value')->exists()->eval(Row::create(str_entry('value', 'test')))
         );
     }
 
     public function test_that_lit_function_exists() : void
     {
-        $this->assertTrue(
+        self::assertTrue(
             (new Exists(lit('val')))->eval(Row::create())
         );
     }
 
     public function test_that_null_reference_to_null_entry_exists() : void
     {
-        $this->assertTrue(
+        self::assertTrue(
             ref('value')->exists()->eval(Row::create(null_entry('value')))
         );
     }
 
     public function test_that_reference_does_not_exists() : void
     {
-        $this->assertFalse(
+        self::assertFalse(
             ref('value')->exists()->eval(Row::create())
         );
     }

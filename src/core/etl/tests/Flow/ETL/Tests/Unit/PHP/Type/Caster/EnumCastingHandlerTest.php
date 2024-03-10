@@ -23,7 +23,7 @@ final class EnumCastingHandlerTest extends TestCase
 
     public function test_casting_string_to_enum() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             ColorsEnum::RED,
             (new EnumCastingHandler())->value('red', type_enum(ColorsEnum::class), Caster::default())
         );

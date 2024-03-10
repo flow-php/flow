@@ -54,7 +54,7 @@ final class PostgreSqlBulkUpdateTest extends PostgreSqlIntegrationTestCase
             ]
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One', 'active' => false, 'account' => 'Bob', 'created_at' => (new \DateTimeImmutable('2021-01-01 10:00:00'))->format('Y-m-d H:i:s')],
                 ['id' => 2, 'name' => 'Changed name Two', 'description' => 'Changed description Two', 'active' => false, 'account' => 'Bob', 'created_at' => (new \DateTimeImmutable('2021-01-02 10:00:00'))->format('Y-m-d H:i:s')],
@@ -103,7 +103,7 @@ final class PostgreSqlBulkUpdateTest extends PostgreSqlIntegrationTestCase
             ]
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One', 'active' => false],
                 ['id' => 2, 'name' => 'Changed name Two', 'description' => 'Changed description Two', 'active' => false],
@@ -155,7 +155,7 @@ final class PostgreSqlBulkUpdateTest extends PostgreSqlIntegrationTestCase
             ]
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One', 'active' => false],
                 ['id' => 2, 'name' => 'Changed name Two', 'description' => 'Description Two', 'active' => true],

@@ -16,7 +16,7 @@ final class ToMoneyTest extends TestCase
     {
         $row = Row::create(str_entry('a', '19.90'), str_entry('b', 'USD'));
 
-        $this->assertEquals(
+        self::assertEquals(
             new Money('1990', new Currency('USD')),
             (new ToMoney(ref('a'), ref('b')))->eval($row)
         );
@@ -26,7 +26,7 @@ final class ToMoneyTest extends TestCase
     {
         $row = Row::create(float_entry('a', 19.90), str_entry('b', 'USD'));
 
-        $this->assertEquals(
+        self::assertEquals(
             new Money('1990', new Currency('USD')),
             (new ToMoney(ref('a'), ref('b')))->eval($row)
         );
@@ -36,7 +36,7 @@ final class ToMoneyTest extends TestCase
     {
         $row = Row::create(int_entry('a', 19), str_entry('b', 'USD'));
 
-        $this->assertEquals(
+        self::assertEquals(
             new Money('1900', new Currency('USD')),
             (new ToMoney(ref('a'), ref('b')))->eval($row)
         );
@@ -46,7 +46,7 @@ final class ToMoneyTest extends TestCase
     {
         $row = Row::create(bool_entry('a', false), null_entry('b'));
 
-        $this->assertNull(
+        self::assertNull(
             (new ToMoney(ref('a'), ref('b')))->eval($row)
         );
     }
@@ -55,7 +55,7 @@ final class ToMoneyTest extends TestCase
     {
         $row = Row::create(str_entry('a', '19.90'), null_entry('b'));
 
-        $this->assertNull(
+        self::assertNull(
             (new ToMoney(ref('a'), ref('b')))->eval($row)
         );
     }

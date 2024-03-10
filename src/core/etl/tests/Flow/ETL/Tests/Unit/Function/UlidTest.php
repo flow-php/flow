@@ -14,12 +14,12 @@ final class UlidTest extends TestCase
     public function test_ulid() : void
     {
         $expression = ulid();
-        $this->assertTrue(
+        self::assertTrue(
             Ulid::isValid(
                 $expression->eval(Row::create())->toBase32()
             )
         );
-        $this->assertNotSame(
+        self::assertNotSame(
             $expression->eval(Row::create()),
             $expression->eval(Row::create())
         );
@@ -29,7 +29,7 @@ final class UlidTest extends TestCase
     {
         $expression = ulid();
 
-        $this->assertNotEquals(
+        self::assertNotEquals(
             $expression->eval(Row::create()),
             $expression->eval(Row::create())
         );
@@ -37,7 +37,7 @@ final class UlidTest extends TestCase
 
     public function test_ulid_with_invalid_value_returns_null() : void
     {
-        $this->assertNull(
+        self::assertNull(
             ulid(lit(''))->eval(Row::create())
         );
     }

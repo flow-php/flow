@@ -14,7 +14,7 @@ final class JoinTest extends IntegrationTestCase
     public function test_cross_join() : void
     {
         $loader = $this->createMock(Loader::class);
-        $loader->expects($this->exactly(2))
+        $loader->expects(self::exactly(2))
             ->method('load');
 
         $rows = df()
@@ -38,7 +38,7 @@ final class JoinTest extends IntegrationTestCase
             ->write($loader)
             ->fetch();
 
-        $this->assertEquals(
+        self::assertEquals(
             new Rows(
                 Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('num', 1), bool_entry('active', true)),
                 Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('num', 2), bool_entry('active', false)),
@@ -56,7 +56,7 @@ final class JoinTest extends IntegrationTestCase
     public function test_join() : void
     {
         $loader = $this->createMock(Loader::class);
-        $loader->expects($this->exactly(2))
+        $loader->expects(self::exactly(2))
             ->method('load');
 
         $rows = df()
@@ -85,7 +85,7 @@ final class JoinTest extends IntegrationTestCase
             ->write($loader)
             ->fetch();
 
-        $this->assertEquals(
+        self::assertEquals(
             new Rows(
                 Row::create(int_entry('id', 1), string_entry('country', 'PL'), string_entry('name', 'Poland')),
                 Row::create(int_entry('id', 2), string_entry('country', 'PL'), string_entry('name', 'Poland')),
@@ -103,7 +103,7 @@ final class JoinTest extends IntegrationTestCase
     public function test_join_each() : void
     {
         $loader = $this->createMock(Loader::class);
-        $loader->expects($this->exactly(2))
+        $loader->expects(self::exactly(2))
             ->method('load');
 
         $rows = df()
@@ -137,7 +137,7 @@ final class JoinTest extends IntegrationTestCase
             ->write($loader)
             ->fetch();
 
-        $this->assertEquals(
+        self::assertEquals(
             new Rows(
                 Row::create(int_entry('id', 1), str_entry('country', 'PL'), str_entry('name', 'Poland')),
                 Row::create(int_entry('id', 2), str_entry('country', 'PL'), str_entry('name', 'Poland')),

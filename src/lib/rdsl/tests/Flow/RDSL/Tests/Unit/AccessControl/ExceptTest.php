@@ -16,8 +16,8 @@ final class ExceptTest extends TestCase
             ['bar']
         );
 
-        $this->assertTrue($acl->isAllowed('foo'));
-        $this->assertFalse($acl->isAllowed('bar'));
-        $this->assertFalse($acl->isAllowed('baz'));
+        self::assertTrue($acl->isAllowed('foo'));
+        self::assertFalse($acl->isAllowed('bar'));
+        self::assertFalse($acl->isAllowed('baz'));
     }
 }

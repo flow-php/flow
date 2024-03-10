@@ -25,7 +25,7 @@ final class PsrLoggerLoaderTest extends TestCase
             )
         ), new FlowContext(Config::default()));
 
-        $this->assertTrue($logger->hasErrorRecords());
-        $this->assertTrue($logger->hasError('row log'));
+        self::assertTrue($logger->hasErrorRecords());
+        self::assertTrue($logger->hasError('row log'));
     }
 }

@@ -21,7 +21,7 @@ final class RemoveEntriesTransformerTest extends TestCase
         );
 
         $transformer = new RemoveEntriesTransformer('id', 'array');
-        $this->assertSame(
+        self::assertSame(
             [
                 ['name' => 'Row Name'],
             ],
@@ -40,7 +40,7 @@ final class RemoveEntriesTransformerTest extends TestCase
         );
 
         $transformer = new RemoveEntriesTransformer('not_existing');
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'name' => 'Row Name', 'array' => ['test']],
             ],

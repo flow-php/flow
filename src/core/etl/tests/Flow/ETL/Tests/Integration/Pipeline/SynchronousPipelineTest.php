@@ -31,7 +31,7 @@ final class SynchronousPipelineTest extends IntegrationTestCase
             ->write(to_csv($path))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             3,
             (new Flow())
                 ->read(from_csv($path))

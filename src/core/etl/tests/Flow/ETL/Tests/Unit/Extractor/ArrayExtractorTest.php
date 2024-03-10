@@ -18,9 +18,9 @@ final class ArrayExtractorTest extends TestCase
 
         $rows = \iterator_to_array($extractor->extract(execution_context(config_builder()->build())));
 
-        $this->assertCount(2, $rows);
-        $this->assertSame(['id' => 1, 'name' => 'Norbert'], $rows[0]->first()->toArray());
-        $this->assertSame(['id' => 2, 'name' => 'Michal'], $rows[1]->first()->toArray());
+        self::assertCount(2, $rows);
+        self::assertSame(['id' => 1, 'name' => 'Norbert'], $rows[0]->first()->toArray());
+        self::assertSame(['id' => 2, 'name' => 'Michal'], $rows[1]->first()->toArray());
     }
 
     public function test_generator_extraction() : void
@@ -34,8 +34,8 @@ final class ArrayExtractorTest extends TestCase
 
         $rows = \iterator_to_array($extractor->extract(execution_context(config())));
 
-        $this->assertCount(2, $rows);
-        $this->assertSame(['id' => 1, 'name' => 'Norbert'], $rows[0]->first()->toArray());
-        $this->assertSame(['id' => 2, 'name' => 'Michal'], $rows[1]->first()->toArray());
+        self::assertCount(2, $rows);
+        self::assertSame(['id' => 1, 'name' => 'Norbert'], $rows[0]->first()->toArray());
+        self::assertSame(['id' => 2, 'name' => 'Michal'], $rows[1]->first()->toArray());
     }
 }

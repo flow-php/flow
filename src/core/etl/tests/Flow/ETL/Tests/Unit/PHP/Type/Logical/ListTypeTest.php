@@ -13,7 +13,7 @@ final class ListTypeTest extends TestCase
 {
     public function test_element() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             $element = ListElement::integer(),
             (new ListType($element))->element()
         );
@@ -21,20 +21,20 @@ final class ListTypeTest extends TestCase
 
     public function test_equals() : void
     {
-        $this->assertTrue(
+        self::assertTrue(
             (new ListType(ListElement::integer()))->isEqual(new ListType(ListElement::integer()))
         );
-        $this->assertFalse(
+        self::assertFalse(
             (new ListType(ListElement::integer()))->isEqual(new MapType(MapKey::string(), MapValue::float()))
         );
-        $this->assertFalse(
+        self::assertFalse(
             (new ListType(ListElement::integer()))->isEqual(new ListType(ListElement::float()))
         );
     }
 
     public function test_to_string() : void
     {
-        $this->assertSame(
+        self::assertSame(
             'list<boolean>',
             (new ListType(ListElement::boolean()))->toString()
         );
@@ -42,36 +42,36 @@ final class ListTypeTest extends TestCase
 
     public function test_valid() : void
     {
-        $this->assertTrue(
+        self::assertTrue(
             (new ListType(ListElement::boolean()))->isValid([true, false])
         );
-        $this->assertTrue(
+        self::assertTrue(
             (new ListType(ListElement::string()))->isValid(['one', 'two'])
         );
-        $this->assertTrue(
+        self::assertTrue(
             (new ListType(ListElement::list(new ListType(ListElement::string()))))->isValid([['one', 'two']])
         );
-        $this->assertTrue(
+        self::assertTrue(
             (
                 new ListType(
                     ListElement::map(new MapType(MapKey::string(), MapValue::list(new ListType(ListElement::integer()))))
                 )
             )->isValid([['one' => [1, 2], 'two' => [3, 4]], ['one' => [5, 6], 'two' => [7, 8]]])
         );
-        $this->assertFalse(
+        self::assertFalse(
             (new ListType(ListElement::string()))->isValid(['one' => 'two'])
         );
-        $this->assertFalse(
+        self::assertFalse(
             (new ListType(ListElement::string()))->isValid([1, 2])
         );
-        $this->assertFalse(
+        self::assertFalse(
             (new ListType(ListElement::string()))->isValid(123)
         );
     }
 
     public function test_value() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             $value = MapValue::string(),
             (new MapType(MapKey::string(), $value))->value()
         );

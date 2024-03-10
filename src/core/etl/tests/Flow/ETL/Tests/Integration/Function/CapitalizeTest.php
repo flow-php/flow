@@ -25,7 +25,7 @@ final class CapitalizeTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['key' => 'this is title', 'capitalized' => 'This Is Title'],
             ],

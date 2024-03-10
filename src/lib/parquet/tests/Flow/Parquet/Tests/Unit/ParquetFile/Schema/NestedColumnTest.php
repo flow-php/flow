@@ -19,9 +19,9 @@ final class NestedColumnTest extends TestCase
             FlatColumn::string('string'),
         ]);
 
-        $this->assertFalse($map->isList());
-        $this->assertTrue($list->isList());
-        $this->assertFalse($struct->isList());
+        self::assertFalse($map->isList());
+        self::assertTrue($list->isList());
+        self::assertFalse($struct->isList());
     }
 
     public function test_column_is_map() : void
@@ -33,9 +33,9 @@ final class NestedColumnTest extends TestCase
             FlatColumn::string('string'),
         ]);
 
-        $this->assertTrue($map->isMap());
-        $this->assertFalse($list->isMap());
-        $this->assertFalse($struct->isMap());
+        self::assertTrue($map->isMap());
+        self::assertFalse($list->isMap());
+        self::assertFalse($struct->isMap());
     }
 
     public function test_column_is_struct() : void
@@ -47,9 +47,9 @@ final class NestedColumnTest extends TestCase
             FlatColumn::string('string'),
         ]);
 
-        $this->assertFalse($map->isStruct());
-        $this->assertFalse($list->isStruct());
-        $this->assertTrue($struct->isStruct());
+        self::assertFalse($map->isStruct());
+        self::assertFalse($list->isStruct());
+        self::assertTrue($struct->isStruct());
     }
 
     public function test_flat_path_for_direct_root_child() : void
@@ -60,9 +60,9 @@ final class NestedColumnTest extends TestCase
             FlatColumn::boolean('bool'),
         );
 
-        $this->assertSame('int', $schema->get('int')->flatPath());
-        $this->assertSame('string', $schema->get('string')->flatPath());
-        $this->assertSame('bool', $schema->get('bool')->flatPath());
+        self::assertSame('int', $schema->get('int')->flatPath());
+        self::assertSame('string', $schema->get('string')->flatPath());
+        self::assertSame('bool', $schema->get('bool')->flatPath());
     }
 
     public function test_getting_flat_list_of_children() : void
@@ -76,7 +76,7 @@ final class NestedColumnTest extends TestCase
             ]),
         ]);
 
-        $this->assertSame(
+        self::assertSame(
             [
                 'struct_nested.string',
                 'struct_nested.struct_flat.int',

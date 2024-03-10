@@ -21,7 +21,7 @@ final class ListSelectTest extends TestCase
             ->withEntry('list', list_ref('list')->select('id'))
             ->fetch();
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 ['list' => [['id' => 1], ['id' => 2], ['id' => 3]]],
                 ['list' => [['id' => 4], ['id' => 5], ['id' => 6]]],

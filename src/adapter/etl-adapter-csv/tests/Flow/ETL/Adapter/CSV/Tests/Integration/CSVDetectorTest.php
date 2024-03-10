@@ -52,7 +52,7 @@ final class CSVDetectorTest extends TestCase
     {
         $detector = new CSVDetector($this->createResource(',', $enclosure));
 
-        $this->assertSame($enclosure, $detector->detect()->enclosure);
+        self::assertSame($enclosure, $detector->detect()->enclosure);
     }
 
     #[DataProvider('separator_provider')]
@@ -60,7 +60,7 @@ final class CSVDetectorTest extends TestCase
     {
         $detector = new CSVDetector($this->createResource($separator));
 
-        $this->assertSame($separator, $detector->detect()->separator);
+        self::assertSame($separator, $detector->detect()->separator);
     }
 
     /**

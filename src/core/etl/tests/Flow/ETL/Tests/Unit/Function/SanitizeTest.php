@@ -12,14 +12,14 @@ final class SanitizeTest extends TestCase
 {
     public function test_sanitize_on_non_string_value() : void
     {
-        $this->assertNull(
+        self::assertNull(
             ref('value')->sanitize()->eval(Row::create(int_entry('value', 1000))),
         );
     }
 
     public function test_sanitize_on_valid_string() : void
     {
-        $this->assertSame(
+        self::assertSame(
             '****',
             ref('value')->sanitize()->eval(Row::create(str_entry('value', 'test'))),
         );
@@ -27,7 +27,7 @@ final class SanitizeTest extends TestCase
 
     public function test_sanitize_on_valid_string_with_left_characters() : void
     {
-        $this->assertSame(
+        self::assertSame(
             'te**',
             ref('value')->sanitize(skipCharacters: lit(2))->eval(Row::create(str_entry('value', 'test'))),
         );
@@ -35,7 +35,7 @@ final class SanitizeTest extends TestCase
 
     public function test_sanitize_on_valid_string_with_left_characters_longer_than_string() : void
     {
-        $this->assertSame(
+        self::assertSame(
             '****',
             ref('value')->sanitize(skipCharacters: lit(5))->eval(Row::create(str_entry('value', 'test'))),
         );
@@ -43,7 +43,7 @@ final class SanitizeTest extends TestCase
 
     public function test_sanitize_on_valid_string_with_placeholder() : void
     {
-        $this->assertSame(
+        self::assertSame(
             '----',
             ref('value')->sanitize(lit('-'))->eval(Row::create(str_entry('value', 'test'))),
         );

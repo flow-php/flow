@@ -12,7 +12,7 @@ final class DumpLoggerTest extends TestCase
     public function test_logger() : void
     {
         if (\extension_loaded('xdebug')) {
-            $this->markTestSkipped('Xdebug extension is loaded and it will affect DumpLogger');
+            self::markTestSkipped('Xdebug extension is loaded and it will affect DumpLogger');
         }
 
         $logger = new DumpLogger();
@@ -22,7 +22,7 @@ final class DumpLoggerTest extends TestCase
         $output = \ob_get_contents();
         \ob_end_clean();
 
-        $this->assertStringContainsString(
+        self::assertStringContainsString(
             <<<'OUTPUT'
 array(1) {
   ["error"]=>

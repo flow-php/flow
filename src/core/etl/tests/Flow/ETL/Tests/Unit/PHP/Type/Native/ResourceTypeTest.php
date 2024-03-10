@@ -13,27 +13,27 @@ final class ResourceTypeTest extends TestCase
 {
     public function test_equals() : void
     {
-        $this->assertTrue(
+        self::assertTrue(
             (type_resource(false))->isEqual(type_resource(false))
         );
-        $this->assertFalse(
+        self::assertFalse(
             (type_resource(false))->isEqual(new MapType(MapKey::string(), MapValue::float()))
         );
-        $this->assertFalse(
+        self::assertFalse(
             (type_resource(false))->isEqual(type_float())
         );
-        $this->assertFalse(
+        self::assertFalse(
             (type_resource(false))->isEqual(type_resource())
         );
     }
 
     public function test_to_string() : void
     {
-        $this->assertSame(
+        self::assertSame(
             'resource',
             (type_resource(false))->toString()
         );
-        $this->assertSame(
+        self::assertSame(
             '?resource',
             (type_resource())->toString()
         );
@@ -42,17 +42,17 @@ final class ResourceTypeTest extends TestCase
     public function test_valid() : void
     {
         $handle = \fopen('php://temp/max', 'r+b');
-        $this->assertTrue(
+        self::assertTrue(
             (type_resource(false))->isValid($handle)
         );
         \fclose($handle);
-        $this->assertFalse(
+        self::assertFalse(
             (type_resource(false))->isValid('one')
         );
-        $this->assertFalse(
+        self::assertFalse(
             (type_resource(false))->isValid([1, 2])
         );
-        $this->assertFalse(
+        self::assertFalse(
             (type_resource(false))->isValid(123)
         );
     }

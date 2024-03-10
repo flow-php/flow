@@ -23,7 +23,7 @@ final class ASCIITableTest extends TestCase
             Row::create(str_entry('row', '[816][853]/Siedem - władcom krasnoludów,|/wspaniałym górnikom')),
         );
 
-        $this->assertStringContainsString(
+        self::assertStringContainsString(
             <<<'TABLE'
 +-------------------------------------------------------------------------------------+
 |                                                                                 row |
@@ -53,7 +53,7 @@ TABLE,
             Row::create(str_entry('row', '[816][853]/Siedem - władcom krasnoludów,|/wspaniałym górnikom')),
         );
 
-        $this->assertStringContainsString(
+        self::assertStringContainsString(
             <<<'TABLE'
 +----------------------+
 |                  row |
@@ -83,7 +83,7 @@ TABLE,
             Row::create(str_entry('test', '[816][853]/Siedem - władcom krasnoludów,|/wspaniałym górnikom')),
         );
 
-        $this->assertStringContainsString(
+        self::assertStringContainsString(
             <<<'TABLE'
 +-------------------------------------------------------------------------------------+---------------------------------------------------------------+
 |                                                                                 row |                                                          test |
@@ -107,7 +107,7 @@ TABLE,
             ['id' => 1, 'name' => 'EN'],
         ];
 
-        $this->assertStringContainsString(
+        self::assertStringContainsString(
             <<<'TABLE'
 +----+------+
 | id | name |

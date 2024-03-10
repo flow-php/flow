@@ -15,7 +15,7 @@ final class StructureTypeTest extends TestCase
 {
     public function test_elements() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             $map = [struct_element('map', new MapType(MapKey::string(), MapValue::float()))],
             (struct_type($map))->elements()
         );
@@ -23,19 +23,19 @@ final class StructureTypeTest extends TestCase
 
     public function test_equals() : void
     {
-        $this->assertTrue(
+        self::assertTrue(
             (struct_type([struct_element('map', new MapType(MapKey::string(), MapValue::float()))]))
                 ->isEqual(struct_type([struct_element('map', new MapType(MapKey::string(), MapValue::float()))]))
         );
-        $this->assertFalse(
+        self::assertFalse(
             (struct_type([struct_element('string', type_string()), struct_element('bool', type_boolean())]))
                 ->isEqual(new ListType(ListElement::integer()))
         );
-        $this->assertFalse(
+        self::assertFalse(
             (struct_type([struct_element('string', type_string()), struct_element('bool', type_boolean())]))
                 ->isEqual(struct_type([struct_element('bool', type_boolean()), struct_element('integer', type_string())]))
         );
-        $this->assertTrue(
+        self::assertTrue(
             struct_type([
                 struct_element('string', type_string()),
                 struct_element('bool', type_boolean()),
@@ -47,7 +47,7 @@ final class StructureTypeTest extends TestCase
             ])
             )
         );
-        $this->assertFalse(
+        self::assertFalse(
             struct_type([
                 struct_element('string', type_string()),
                 struct_element('bool', type_boolean()),
@@ -63,7 +63,7 @@ final class StructureTypeTest extends TestCase
 
     public function test_merging_different_left_structure() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             struct_type([
                 struct_element('string', type_string(true)),
                 struct_element('float', type_float()),
@@ -81,7 +81,7 @@ final class StructureTypeTest extends TestCase
 
     public function test_merging_different_right_structure() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             struct_type([
                 struct_element('string', type_string(true)),
                 struct_element('float', type_float(true)),
@@ -98,7 +98,7 @@ final class StructureTypeTest extends TestCase
 
     public function test_merging_nested_structures() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             struct_type([
                 struct_element('string', type_string(true)),
                 struct_element('float', type_float(true)),
@@ -153,7 +153,7 @@ final class StructureTypeTest extends TestCase
             struct_element('map', new MapType(MapKey::string(), MapValue::list(new ListType(ListElement::datetime())))),
         ]);
 
-        $this->assertSame(
+        self::assertSame(
             'structure{string: string, float: float, map: map<string, list<datetime>>}',
             $struct->toString()
         );
@@ -161,10 +161,10 @@ final class StructureTypeTest extends TestCase
 
     public function test_valid() : void
     {
-        $this->assertTrue(
+        self::assertTrue(
             (struct_type([struct_element('string', type_string())]))->isValid(['one' => 'two'])
         );
-        $this->assertTrue(
+        self::assertTrue(
             (
                 struct_type([
                     struct_element(
@@ -179,7 +179,7 @@ final class StructureTypeTest extends TestCase
                 ])
             )->isValid(['a' => [0 => ['one' => [1, 2]], 1 => ['two' => [3, 4]]], 'b' => 'c', 'd' => 1.5])
         );
-        $this->assertFalse(
+        self::assertFalse(
             (struct_type([struct_element('int', type_int())]))->isValid([1, 2])
         );
     }

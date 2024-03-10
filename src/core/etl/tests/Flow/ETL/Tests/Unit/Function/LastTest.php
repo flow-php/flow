@@ -20,7 +20,7 @@ final class LastTest extends TestCase
         $aggregator->aggregate(Row::create(str_entry('int', '25')));
         $aggregator->aggregate(Row::create(null_entry('not_int')));
 
-        $this->assertSame(
+        self::assertSame(
             '25',
             $aggregator->result()->value()
         );
@@ -30,7 +30,7 @@ final class LastTest extends TestCase
     {
         $aggregator = last(ref('int'));
 
-        $this->assertEquals(
+        self::assertEquals(
             new Row\Entry\NullEntry('int'),
             $aggregator->result()
         );

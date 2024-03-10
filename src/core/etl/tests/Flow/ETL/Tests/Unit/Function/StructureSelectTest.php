@@ -24,7 +24,7 @@ final class StructureSelectTest extends TestCase
             ])
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             ['id' => 1, 'name' => 'test'],
             (new StructureSelect(ref('struct'), ref('id'), ref('name')))
                 ->eval(row($structure))
@@ -45,7 +45,7 @@ final class StructureSelectTest extends TestCase
             ])
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             ['id' => 1],
             (new StructureSelect(ref('struct'), 'id'))
                 ->eval(row($structure))
@@ -66,7 +66,7 @@ final class StructureSelectTest extends TestCase
             ])
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             ['new_id' => 1],
             (new StructureSelect(ref('struct'), ref('id')->as('new_id')))
                 ->eval(row($structure))
@@ -87,7 +87,7 @@ final class StructureSelectTest extends TestCase
             ])
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             ['new_id' => null],
             (new StructureSelect(ref('struct'), ref('id')->as('new_id')))
                 ->eval(row($structure))
@@ -110,7 +110,7 @@ final class StructureSelectTest extends TestCase
             )
         );
 
-        $this->assertNull(
+        self::assertNull(
             (new StructureSelect(ref('list'), ref('id')))->eval(row($list))
         );
     }

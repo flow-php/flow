@@ -17,7 +17,7 @@ final class ArrayExpandTest extends TestCase
             array_entry('array', ['a' => 1, 'b' => 2, 'c' => 3]),
         );
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['a' => 1],
                 ['b' => 2],
@@ -33,7 +33,7 @@ final class ArrayExpandTest extends TestCase
             array_entry('array', ['a' => 1, 'b' => 2, 'c' => 3]),
         );
 
-        $this->assertSame(
+        self::assertSame(
             ['a', 'b', 'c'],
             array_expand(ref('array'), ArrayExpand::KEYS)->eval($row)
         );
@@ -45,7 +45,7 @@ final class ArrayExpandTest extends TestCase
             array_entry('array', ['a' => 1, 'b' => 2, 'c' => 3]),
         );
 
-        $this->assertSame(
+        self::assertSame(
             ['a' => 1, 'b' => 2, 'c' => 3],
             array_expand(ref('array'))->eval($row)
         );
@@ -53,7 +53,7 @@ final class ArrayExpandTest extends TestCase
 
     public function test_for_not_array_entry() : void
     {
-        $this->assertNull(
+        self::assertNull(
             array_expand(ref('integer_entry'))->eval(Row::create(int_entry('integer_entry', 1)))
         );
     }

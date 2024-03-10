@@ -22,7 +22,7 @@ final class ASCIIBodyTest extends TestCase
             new Body($rows)
         );
 
-        $this->assertStringContainsString(
+        self::assertStringContainsString(
             <<<'TABLE'
 |  1 |   1.4 |
 |  2 |   3.4 |
@@ -44,7 +44,7 @@ TABLE,
             new Body($rows[0])
         );
 
-        $this->assertStringContainsString(
+        self::assertStringContainsString(
             <<<'TABLE'
 |  1 |   1.4 |     a |
 |  2 |   3.4 |     a |

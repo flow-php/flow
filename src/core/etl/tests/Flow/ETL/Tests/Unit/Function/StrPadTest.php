@@ -12,14 +12,14 @@ final class StrPadTest extends TestCase
 {
     public function test_str_pad_on_non_string_value() : void
     {
-        $this->assertNull(
+        self::assertNull(
             ref('value')->strPad(5, '-', \STR_PAD_LEFT)->eval(Row::create(int_entry('value', 1000))),
         );
     }
 
     public function test_str_pad_on_valid_string() : void
     {
-        $this->assertSame(
+        self::assertSame(
             '----N',
             ref('value')->strPad(5, '-', \STR_PAD_LEFT)->eval(Row::create(str_entry('value', 'N'))),
         );

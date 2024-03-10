@@ -25,7 +25,7 @@ final class ToUpperTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['key' => 'value', 'to_upper' => 'VALUE'],
             ],
@@ -47,7 +47,7 @@ final class ToUpperTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'to_upper' => 1],
             ],

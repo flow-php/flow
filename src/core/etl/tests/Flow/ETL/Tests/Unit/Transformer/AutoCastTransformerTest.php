@@ -27,7 +27,7 @@ final class AutoCastTransformerTest extends TestCase
             ],
         ]);
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 [
                     'integer' => 1,

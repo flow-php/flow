@@ -25,7 +25,7 @@ final class StrPadTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['key' => 'value', 'strpad' => 'value*****'],
             ],
@@ -47,7 +47,7 @@ final class StrPadTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'strpad' => null],
             ],

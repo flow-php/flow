@@ -13,13 +13,13 @@ final class LessTest extends TestCase
 {
     public function test_failure() : void
     {
-        $this->assertFalse(
+        self::assertFalse(
             (new LessThan('id', 'id'))->compare(
                 Row::create(int_entry('id', 2)),
                 Row::create(int_entry('id', 1)),
             )
         );
-        $this->assertFalse(
+        self::assertFalse(
             (new LessThan('id', 'id'))->compare(
                 Row::create(int_entry('id', 1)),
                 Row::create(int_entry('id', 1)),
@@ -29,7 +29,7 @@ final class LessTest extends TestCase
 
     public function test_success() : void
     {
-        $this->assertTrue(
+        self::assertTrue(
             (new LessThan('id', 'id'))->compare(
                 Row::create(int_entry('id', 1)),
                 Row::create(int_entry('id', 5)),

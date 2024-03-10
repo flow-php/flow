@@ -21,7 +21,7 @@ final class JsonExtractorTest extends TestCase
             ->fetch();
 
         foreach ($rows as $row) {
-            $this->assertSame(
+            self::assertSame(
                 [
                     'timezones',
                     'latlng',
@@ -34,7 +34,7 @@ final class JsonExtractorTest extends TestCase
             );
         }
 
-        $this->assertSame(247, $rows->count());
+        self::assertSame(247, $rows->count());
     }
 
     public function test_extracting_json_from_local_file_stream_using_pointer() : void
@@ -44,7 +44,7 @@ final class JsonExtractorTest extends TestCase
             ->fetch();
 
         foreach ($rows as $row) {
-            $this->assertSame(
+            self::assertSame(
                 [
                     'timezones',
                     'latlng',
@@ -57,7 +57,7 @@ final class JsonExtractorTest extends TestCase
             );
         }
 
-        $this->assertSame(247, $rows->count());
+        self::assertSame(247, $rows->count());
     }
 
     public function test_extracting_json_from_local_file_stream_with_schema() : void
@@ -73,7 +73,7 @@ final class JsonExtractorTest extends TestCase
             ->fetch();
 
         foreach ($rows as $row) {
-            $this->assertSame(
+            self::assertSame(
                 [
                     'timezones',
                     'latlng',
@@ -85,9 +85,9 @@ final class JsonExtractorTest extends TestCase
             );
         }
 
-        $this->assertSame(247, $rows->count());
-        $this->assertEquals($schema, $rows->schema());
-        $this->assertSame(
+        self::assertSame(247, $rows->count());
+        self::assertEquals($schema, $rows->schema());
+        self::assertSame(
             <<<'SCHEMA'
 schema
 |-- timezones: list<string>
@@ -126,7 +126,7 @@ SCHEMA
             $total += $rows->count();
         }
 
-        $this->assertSame(247, $total);
+        self::assertSame(247, $total);
     }
 
     public function test_limit() : void
@@ -144,7 +144,7 @@ SCHEMA
         $extractor = new JsonExtractor(Path::realpath($path));
         $extractor->changeLimit(2);
 
-        $this->assertCount(
+        self::assertCount(
             2,
             \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
         );
@@ -166,16 +166,16 @@ SCHEMA
 
         $generator = $extractor->extract(new FlowContext(Config::default()));
 
-        $this->assertSame([['id' => 1]], $generator->current()->toArray());
-        $this->assertTrue($generator->valid());
+        self::assertSame([['id' => 1]], $generator->current()->toArray());
+        self::assertTrue($generator->valid());
         $generator->next();
-        $this->assertSame([['id' => 2]], $generator->current()->toArray());
-        $this->assertTrue($generator->valid());
+        self::assertSame([['id' => 2]], $generator->current()->toArray());
+        self::assertTrue($generator->valid());
         $generator->next();
-        $this->assertSame([['id' => 3]], $generator->current()->toArray());
-        $this->assertTrue($generator->valid());
+        self::assertSame([['id' => 3]], $generator->current()->toArray());
+        self::assertTrue($generator->valid());
         $generator->send(Signal::STOP);
-        $this->assertFalse($generator->valid());
+        self::assertFalse($generator->valid());
     }
 
     public function test_using_pattern_path() : void

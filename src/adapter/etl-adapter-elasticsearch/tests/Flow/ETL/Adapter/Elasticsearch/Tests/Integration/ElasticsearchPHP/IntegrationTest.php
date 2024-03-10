@@ -77,8 +77,8 @@ final class IntegrationTest extends TestCase
             )
             ->fetch();
 
-        $this->assertCount($limit, $results);
-        $this->assertSame(
+        self::assertCount($limit, $results);
+        self::assertSame(
             \array_map(
                 static fn (int $i) : array => [
                     'id' => \sha1((string) $i),

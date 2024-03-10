@@ -25,8 +25,8 @@ final class ReadDataCommandTest extends TestCase
             '-t' => 20,
         ]);
 
-        $this->assertSame(0, $tester->getStatusCode());
-        $this->assertStringContainsString(
+        self::assertSame(0, $tester->getStatusCode());
+        self::assertStringContainsString(
             <<<'OUTPUT'
 +---------+------------+---------------------+-------+--------------+---------------+----------------------+----------------------+----------------------+----------------------+----------------------+----------------------+----------------------+
 | boolean |      int32 |               int64 | float |       double |       decimal |               string |                 date |             datetime |    list_of_datetimes |          map_of_ints |      list_of_strings |          struct_flat |

@@ -132,7 +132,6 @@ return (new Config())
         'phpdoc_order' => true,
         'phpdoc_to_comment' => false,
         'phpdoc_types_order' => true,
-        'php_unit_method_casing' => ['case' => 'snake_case'],
         'protected_to_private' => true,
         'return_assignment' => false,
         'return_type_declaration' => ['space_before' => 'one'],
@@ -142,5 +141,7 @@ return (new Config())
         'ternary_to_null_coalescing' => true,
         'yoda_style' => false,
         'void_return' => true,
+        'php_unit_method_casing' => ['case' => 'snake_case'],
+        'php_unit_test_case_static_method_calls' => ['call_type' => 'static'],
     ])
     ->setFinder($finder);

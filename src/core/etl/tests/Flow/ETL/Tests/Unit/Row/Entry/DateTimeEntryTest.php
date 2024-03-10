@@ -24,7 +24,7 @@ final class DateTimeEntryTest extends TestCase
 
     public function test_entry_name_can_be_zero() : void
     {
-        $this->assertSame('0', (new DateTimeEntry('0', new \DateTimeImmutable('2020-07-13 12:00')))->name());
+        self::assertSame('0', (new DateTimeEntry('0', new \DateTimeImmutable('2020-07-13 12:00')))->name());
     }
 
     public function test_invalid_date() : void
@@ -40,14 +40,14 @@ final class DateTimeEntryTest extends TestCase
      */
     public function test_is_equal(bool $equals, DateTimeEntry $entry, DateTimeEntry $nextEntry) : void
     {
-        $this->assertEquals($equals, $entry->isEqual($nextEntry));
+        self::assertEquals($equals, $entry->isEqual($nextEntry));
     }
 
     public function test_map() : void
     {
         $entry = new DateTimeEntry('entry-name', new \DateTimeImmutable());
 
-        $this->assertEquals(
+        self::assertEquals(
             $entry,
             $entry->map(fn (\DateTimeImmutable $dateTimeImmutable) => $dateTimeImmutable)
         );
@@ -66,8 +66,8 @@ final class DateTimeEntryTest extends TestCase
         $entry = new DateTimeEntry('entry-name', new \DateTimeImmutable());
         $newEntry = $entry->rename('new-entry-name');
 
-        $this->assertEquals('new-entry-name', $newEntry->name());
-        $this->assertEquals($entry->value(), $newEntry->value());
+        self::assertEquals('new-entry-name', $newEntry->name());
+        self::assertEquals($entry->value(), $newEntry->value());
     }
 
     public function test_serialization() : void
@@ -78,13 +78,13 @@ final class DateTimeEntryTest extends TestCase
         /** @var DateTimeEntry $unserialized */
         $unserialized = \unserialize($serialized);
 
-        $this->assertTrue($string->isEqual($unserialized));
+        self::assertTrue($string->isEqual($unserialized));
     }
 
     public function test_uses_full_date_time() : void
     {
         $entry = new DateTimeEntry('entry-name', new \DateTimeImmutable('2020-07-13 12:00'));
 
-        $this->assertEquals($entry->value(), new \DateTimeImmutable('2020-07-13 12:00'));
+        self::assertEquals($entry->value(), new \DateTimeImmutable('2020-07-13 12:00'));
     }
 }

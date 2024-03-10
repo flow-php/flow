@@ -26,7 +26,7 @@ final class ArrayReverseTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'array' => ['c' => 3, 'b' => 2, 'a' => 1]],
                 ['id' => 2, 'array' => null],

@@ -26,7 +26,7 @@ final class ArrayKeyRenameTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'array' => ['b' => 2, 'c' => 3, 'd' => 1]],
                 ['id' => 2, 'array' => null],

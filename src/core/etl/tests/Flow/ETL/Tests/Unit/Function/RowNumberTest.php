@@ -22,6 +22,6 @@ final class RowNumberTest extends TestCase
 
         $rowNumber = row_number()->over(window()->partitionBy(ref('value'))->orderBy(ref('id')->desc()));
 
-        $this->assertSame(5, $rowNumber->apply($row1, $rows));
+        self::assertSame(5, $rowNumber->apply($row1, $rows));
     }
 }

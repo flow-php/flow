@@ -51,7 +51,7 @@ final class PsrHttpClientStaticExtractorTest extends TestCase
         $norbertResponseBody = \json_decode($norbertRows->first()->valueOf('response_body'), true, 512, JSON_THROW_ON_ERROR);
         $tomekResponseBody = \json_decode($tomekRows->first()->valueOf('response_body'), true, 512, JSON_THROW_ON_ERROR);
 
-        $this->assertSame('norberttech', $norbertResponseBody['login']);
-        $this->assertSame('tomaszhanc', $tomekResponseBody['login']);
+        self::assertSame('norberttech', $norbertResponseBody['login']);
+        self::assertSame('tomaszhanc', $tomekResponseBody['login']);
     }
 }

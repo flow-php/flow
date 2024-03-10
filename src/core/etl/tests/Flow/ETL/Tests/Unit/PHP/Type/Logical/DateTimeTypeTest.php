@@ -11,29 +11,29 @@ final class DateTimeTypeTest extends TestCase
 {
     public function test_equals() : void
     {
-        $this->assertTrue(
+        self::assertTrue(
             type_datetime()->isEqual(type_datetime())
         );
-        $this->assertFalse(
+        self::assertFalse(
             type_datetime()->isEqual(type_int())
         );
     }
 
     public function test_is_valid() : void
     {
-        $this->assertTrue(type_datetime()->isValid(new \DateTimeImmutable()));
-        $this->assertTrue(type_datetime()->isValid(new \DateTime()));
-        $this->assertFalse(type_datetime()->isValid('2020-01-01'));
-        $this->assertFalse(type_datetime()->isValid('2020-01-01 00:00:00'));
+        self::assertTrue(type_datetime()->isValid(new \DateTimeImmutable()));
+        self::assertTrue(type_datetime()->isValid(new \DateTime()));
+        self::assertFalse(type_datetime()->isValid('2020-01-01'));
+        self::assertFalse(type_datetime()->isValid('2020-01-01 00:00:00'));
     }
 
     public function test_to_string() : void
     {
-        $this->assertSame(
+        self::assertSame(
             'datetime',
             type_datetime()->toString()
         );
-        $this->assertSame(
+        self::assertSame(
             '?datetime',
             type_datetime(true)->toString()
         );

@@ -25,7 +25,7 @@ final class SizeTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['array' => [1, 2, 3], 'size' => 3],
             ],
@@ -47,7 +47,7 @@ final class SizeTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'size' => null],
             ],
@@ -69,7 +69,7 @@ final class SizeTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['key' => 'value', 'size' => 5],
             ],

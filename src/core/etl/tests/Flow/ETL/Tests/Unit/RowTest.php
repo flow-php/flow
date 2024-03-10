@@ -106,7 +106,7 @@ final class RowTest extends TestCase
             object_entry('object', new \ArrayIterator([1, 2, 3]))
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             new Schema(
                 Definition::integer('id'),
                 Definition::float('price'),
@@ -141,7 +141,7 @@ final class RowTest extends TestCase
             list_entry('list', [1, 2, 3], type_list(type_int()))
         );
 
-        $this->assertSame(
+        self::assertSame(
             $row->hash(),
             row(
                 int_entry('id', 1),
@@ -154,7 +154,7 @@ final class RowTest extends TestCase
 
     public function test_hash_different_rows() : void
     {
-        $this->assertNotSame(
+        self::assertNotSame(
             row(list_entry('list', [1, 2, 3], type_list(type_int())))->hash(),
             row(list_entry('list', [3, 2, 1], type_list(type_int())))->hash()
         );
@@ -162,7 +162,7 @@ final class RowTest extends TestCase
 
     public function test_hash_empty_row() : void
     {
-        $this->assertSame(
+        self::assertSame(
             row()->hash(),
             row()->hash()
         );
@@ -173,7 +173,7 @@ final class RowTest extends TestCase
      */
     public function test_is_equal(bool $equals, \Flow\ETL\Row $row, \Flow\ETL\Row $nextRow) : void
     {
-        $this->assertSame($equals, $row->isEqual($nextRow));
+        self::assertSame($equals, $row->isEqual($nextRow));
     }
 
     public function test_keep() : void
@@ -184,7 +184,7 @@ final class RowTest extends TestCase
             bool_entry('active', true)
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             row(
                 int_entry('id', 1),
                 bool_entry('active', true)
@@ -203,7 +203,7 @@ final class RowTest extends TestCase
             bool_entry('active', true)
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             row(),
             $row->keep('something')
         );
@@ -211,7 +211,7 @@ final class RowTest extends TestCase
 
     public function test_merge_row_with_another_row_using_prefix() : void
     {
-        $this->assertSame(
+        self::assertSame(
             [
                 'id' => 1,
                 '_id' => 2,
@@ -230,7 +230,7 @@ final class RowTest extends TestCase
             bool_entry('active', true)
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             row(
                 int_entry('id', 1),
                 str_entry('name', 'test')
@@ -247,7 +247,7 @@ final class RowTest extends TestCase
             bool_entry('active', true)
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             row(
                 int_entry('id', 1),
                 str_entry('name', 'test'),
@@ -265,7 +265,7 @@ final class RowTest extends TestCase
         );
         $newRow = $row->rename('name', 'new-name');
 
-        $this->assertEquals(
+        self::assertEquals(
             row(
                 new BooleanEntry('active', true),
                 new StringEntry('new-name', 'just a string')
@@ -293,7 +293,7 @@ final class RowTest extends TestCase
             )
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 'id' => 1234,
                 'deleted' => false,

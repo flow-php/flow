@@ -46,7 +46,7 @@ final class ASCIISchemaFormatterTest extends TestCase
             Schema\Definition::dateTime('datetime'),
         );
 
-        $this->assertSame(
+        self::assertSame(
             <<<'SCHEMA'
 schema
 |-- integer: ?integer
@@ -84,7 +84,7 @@ SCHEMA,
             Schema\Definition::list('list', new ListType(ListElement::map(new MapType(MapKey::string(), MapValue::integer()))))
         );
 
-        $this->assertSame(
+        self::assertSame(
             <<<'SCHEMA'
 schema
 |-- name: ?string

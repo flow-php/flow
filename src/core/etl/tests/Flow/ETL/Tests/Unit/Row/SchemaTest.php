@@ -27,7 +27,7 @@ final class SchemaTest extends TestCase
             str_schema('str', true),
         )->add(int_schema('number'), bool_schema('bool'));
 
-        $this->assertEquals(
+        self::assertEquals(
             schema(
                 int_schema('id'),
                 str_schema('str', true),
@@ -55,7 +55,7 @@ final class SchemaTest extends TestCase
             Schema\Definition::integer('Id')
         );
 
-        $this->assertEquals([EntryReference::init('id'), EntryReference::init('Id')], $schema->entries());
+        self::assertEquals([EntryReference::init('id'), EntryReference::init('Id')], $schema->entries());
     }
 
     public function test_creating_schema_from_corrupted_json() : void
@@ -85,7 +85,7 @@ final class SchemaTest extends TestCase
     public function test_graceful_remove_non_existing_definition() : void
     {
 
-        $this->assertEquals(
+        self::assertEquals(
             schema(
                 int_schema('id'),
                 str_schema('name'),
@@ -118,7 +118,7 @@ final class SchemaTest extends TestCase
             str_schema('email'),
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             schema(
                 str_schema('name'),
                 str_schema('surname'),
@@ -134,7 +134,7 @@ final class SchemaTest extends TestCase
             Schema\Definition::string('name', $nullable = true)
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             new Schema(
                 Schema\Definition::integer('id', $nullable = true),
                 Schema\Definition::string('name', $nullable = true)
@@ -152,7 +152,7 @@ final class SchemaTest extends TestCase
             )
         );
 
-        $this->assertSame(
+        self::assertSame(
             $notEmptySchema,
             $schema
         );
@@ -169,7 +169,7 @@ final class SchemaTest extends TestCase
             )
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             new Schema(
                 Schema\Definition::integer('id', $nullable = true),
                 Schema\Definition::string('name', $nullable = true),
@@ -188,7 +188,7 @@ final class SchemaTest extends TestCase
             new Schema()
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             $notEmptySchema,
             $schema
         );
@@ -209,7 +209,7 @@ final class SchemaTest extends TestCase
             ]))
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             $schema,
             Schema::fromArray($schema->normalize())
         );
@@ -227,7 +227,7 @@ final class SchemaTest extends TestCase
 
     public function test_removing_elements_from_schema() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             schema(
                 int_schema('id'),
             ),
@@ -245,7 +245,7 @@ final class SchemaTest extends TestCase
             str_schema('name'),
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             schema(
                 int_schema('id'),
                 str_schema('new_name'),
@@ -281,7 +281,7 @@ final class SchemaTest extends TestCase
             str_schema('str', true),
         )->replace('str', int_schema('number'));
 
-        $this->assertEquals(
+        self::assertEquals(
             schema(
                 int_schema('id'),
                 int_schema('number'),
@@ -305,7 +305,7 @@ final class SchemaTest extends TestCase
             ]))
         );
 
-        $this->assertSame(
+        self::assertSame(
             <<<'JSON'
 [
     {
@@ -410,7 +410,7 @@ JSON,
             \json_encode($schema->normalize(), JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT)
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             $schema,
             schema_from_json(schema_to_json($schema))
         );

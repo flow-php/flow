@@ -27,7 +27,7 @@ final class ArrayExpandTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'expanded' => ['a' => 1]],
                 ['id' => 1, 'expanded' => ['b' => 2]],
@@ -52,7 +52,7 @@ final class ArrayExpandTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'expanded' => 'a'],
                 ['id' => 1, 'expanded' => 'b'],
@@ -77,7 +77,7 @@ final class ArrayExpandTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'expanded' => 1],
                 ['id' => 1, 'expanded' => 2],

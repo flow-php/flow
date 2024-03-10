@@ -18,7 +18,7 @@ final class ScalarFunctionFilterTransformerTest extends TestCase
             Row::create(int_entry('a', 1), int_entry('b', 2))
         );
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['a' => 1, 'b' => 1],
             ],
@@ -35,7 +35,7 @@ final class ScalarFunctionFilterTransformerTest extends TestCase
             Row::create(int_entry('a', 1), int_entry('b', 2))
         );
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['a' => 1, 'b' => 2],
             ],
@@ -49,7 +49,7 @@ final class ScalarFunctionFilterTransformerTest extends TestCase
             Row::create(int_entry('a', 1), int_entry('b', 2))
         );
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['a' => 1, 'b' => 2],
             ],
@@ -64,7 +64,7 @@ final class ScalarFunctionFilterTransformerTest extends TestCase
             Row::create(int_entry('a', 1), int_entry('b', 2))
         );
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['a' => 1, 'b' => 1],
                 ['a' => 1, 'b' => 2],
@@ -80,7 +80,7 @@ final class ScalarFunctionFilterTransformerTest extends TestCase
             Row::create(int_entry('a', 1), int_entry('b', 2))
         );
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['a' => 1, 'b' => 2],
             ],
@@ -95,7 +95,7 @@ final class ScalarFunctionFilterTransformerTest extends TestCase
             Row::create(int_entry('a', 1), int_entry('b', 2))
         );
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['a' => 1, 'b' => 1],
                 ['a' => 1, 'b' => 2],
@@ -111,7 +111,7 @@ final class ScalarFunctionFilterTransformerTest extends TestCase
             Row::create(int_entry('a', 1), int_entry('b', 2))
         );
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['a' => 1, 'b' => 2],
             ],
@@ -126,7 +126,7 @@ final class ScalarFunctionFilterTransformerTest extends TestCase
             Row::create(int_entry('a', 1), int_entry('b', 2))
         );
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['a' => 1, 'b' => 2],
             ],
@@ -141,7 +141,7 @@ final class ScalarFunctionFilterTransformerTest extends TestCase
             Row::create(int_entry('a', 1), int_entry('b', 2))
         );
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['a' => 1, 'b' => 1],
             ],

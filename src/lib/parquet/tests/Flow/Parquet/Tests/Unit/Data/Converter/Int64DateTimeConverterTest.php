@@ -17,7 +17,7 @@ final class Int64DateTimeConverterTest extends TestCase
 
         $converter = new Int64DateTimeConverter();
 
-        $this->assertEquals(
+        self::assertEquals(
             $date,
             $converter->fromParquetType($converter->toParquetType($date))
         );

@@ -47,7 +47,7 @@ final class StreamLoaderTest extends TestCase
         $output = \ob_get_contents();
         \ob_end_clean();
 
-        $this->assertStringContainsString(
+        self::assertStringContainsString(
             <<<'TABLE'
 +----+------+-------+
 | id | name | group |
@@ -81,7 +81,7 @@ TABLE,
         $output = \ob_get_contents();
         \ob_end_clean();
 
-        $this->assertSame(
+        self::assertSame(
             <<<'ASCII'
 +----+------+
 | id | name |
@@ -118,7 +118,7 @@ ASCII,
         $output = \ob_get_contents();
         \ob_end_clean();
 
-        $this->assertStringContainsString(
+        self::assertStringContainsString(
             <<<'TABLE'
 +----+------+
 | id | name |
@@ -150,7 +150,7 @@ TABLE,
         $output = \ob_get_contents();
         \ob_end_clean();
 
-        $this->assertSame(
+        self::assertSame(
             <<<'ASCII'
 schema
 |-- id: integer

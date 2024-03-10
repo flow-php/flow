@@ -11,7 +11,7 @@ final class ArrayDotRenameTest extends TestCase
 {
     public function test_renames_array_by_path() : void
     {
-        $this->assertSame(
+        self::assertSame(
             [
                 'users' => [
                     ['id' => 1, 'user_name' => 'John'],
@@ -33,7 +33,7 @@ final class ArrayDotRenameTest extends TestCase
 
     public function test_renames_array_by_path_with_asterix() : void
     {
-        $this->assertSame(
+        self::assertSame(
             [
                 'users' => [
                     ['id' => 1, 'user_name' => 'John'],
@@ -55,7 +55,7 @@ final class ArrayDotRenameTest extends TestCase
 
     public function test_renames_array_by_path_with_asterix_as_a_key() : void
     {
-        $this->assertSame(
+        self::assertSame(
             [
                 'users' => [
                     'john' => ['id' => 1],
@@ -79,7 +79,7 @@ final class ArrayDotRenameTest extends TestCase
 
     public function test_renames_array_by_path_with_multiple_asterix() : void
     {
-        $this->assertSame(
+        self::assertSame(
             [
                 'transactions' => [
                     [
@@ -135,7 +135,7 @@ final class ArrayDotRenameTest extends TestCase
 
     public function test_renames_array_root_key_name() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             [
                 'admins' => [
                     ['id' => 1, 'name' => 'John'],

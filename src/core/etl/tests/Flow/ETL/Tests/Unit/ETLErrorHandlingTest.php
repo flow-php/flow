@@ -121,7 +121,7 @@ final class ETLErrorHandlingTest extends TestCase
             ->load($loader)
             ->run();
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 [
                     'id' => 101,
@@ -197,7 +197,7 @@ final class ETLErrorHandlingTest extends TestCase
             ->load($loader)
             ->run();
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 [
                     'id' => 102,

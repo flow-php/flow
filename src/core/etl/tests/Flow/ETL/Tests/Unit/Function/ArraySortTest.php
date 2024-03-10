@@ -12,7 +12,7 @@ final class ArraySortTest extends TestCase
 {
     public function test_sorting_big_arrays() : void
     {
-        $this->assertSame(
+        self::assertSame(
             ref('array')->arraySort('sort')->eval(Row::create(array_entry('array', \json_decode($this->jsonDifferentOrder(), true, 512, JSON_THROW_ON_ERROR)))),
             ref('array')->arraySort('sort')->eval(Row::create(array_entry('array', \json_decode($this->json(), true, 512, JSON_THROW_ON_ERROR))))
         );
@@ -20,7 +20,7 @@ final class ArraySortTest extends TestCase
 
     public function test_sorting_nested_array_using_asort_algo() : void
     {
-        $this->assertSame(
+        self::assertSame(
             [
                 'a' => [
                     'g' => 'h',
@@ -49,7 +49,7 @@ final class ArraySortTest extends TestCase
 
     public function test_sorting_nested_associative_array() : void
     {
-        $this->assertSame(
+        self::assertSame(
             [
                 'a' => [
                     'b' => [
@@ -79,7 +79,7 @@ final class ArraySortTest extends TestCase
 
     public function test_sorting_non_array_value() : void
     {
-        $this->assertNull(
+        self::assertNull(
             ref('array')->arraySort()->eval(Row::create(str_entry('array', 'string')))
         );
     }

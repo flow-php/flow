@@ -33,7 +33,7 @@ final class StructureSelectTest extends TestCase
             ->withEntry('user', structure_ref('user')->select('id', 'email', 'tags'))
             ->fetch();
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 [
                     'user' => [

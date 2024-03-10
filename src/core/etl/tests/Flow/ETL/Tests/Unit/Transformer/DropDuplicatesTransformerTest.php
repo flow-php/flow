@@ -32,7 +32,7 @@ final class DropDuplicatesTransformerTest extends TestCase
             Row::create(int_entry('id', 3), str_entry('name', 'name3')),
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             new Rows(
                 Row::create(int_entry('id', 1), str_entry('name', 'name1')),
                 Row::create(int_entry('id', 2), str_entry('name', 'name2')),
@@ -55,7 +55,7 @@ final class DropDuplicatesTransformerTest extends TestCase
             Row::create(int_entry('id', 4), str_entry('name', 'name4')),
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             new Rows(
                 Row::create(int_entry('id', 1), str_entry('name', 'name1')),
                 Row::create(int_entry('id', 2), str_entry('name', 'name2')),
@@ -78,7 +78,7 @@ final class DropDuplicatesTransformerTest extends TestCase
             Row::create(int_entry('id', 3), str_entry('name', 'name3')),
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             new Rows(
                 Row::create(int_entry('id', 1), str_entry('name', 'name1')),
                 Row::create(int_entry('id', 2), str_entry('name', 'name2')),

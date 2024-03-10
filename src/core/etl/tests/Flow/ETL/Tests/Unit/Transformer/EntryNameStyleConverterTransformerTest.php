@@ -22,7 +22,7 @@ final class EntryNameStyleConverterTransformerTest extends TestCase
             )
         ), new FlowContext(Config::default()));
 
-        $this->assertSame(
+        self::assertSame(
             [
                 [
                     'camel_case_entry_name' => 'test',

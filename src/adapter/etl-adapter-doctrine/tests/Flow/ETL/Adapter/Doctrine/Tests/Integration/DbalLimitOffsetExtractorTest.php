@@ -39,7 +39,7 @@ final class DbalLimitOffsetExtractorTest extends IntegrationTestCase
             ))
             ->fetch();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'name' => 'name_1', 'description' => 'description_1'],
                 ['id' => 2, 'name' => 'name_2', 'description' => 'description_2'],
@@ -83,7 +83,7 @@ final class DbalLimitOffsetExtractorTest extends IntegrationTestCase
             )
             ->fetch();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'name' => 'name_1', 'description' => 'description_1'],
                 ['id' => 2, 'name' => 'name_2', 'description' => 'description_2'],
@@ -124,7 +124,7 @@ final class DbalLimitOffsetExtractorTest extends IntegrationTestCase
             ))
             ->fetch();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'name' => 'name_1', 'description' => 'description_1'],
                 ['id' => 2, 'name' => 'name_2', 'description' => 'description_2'],
@@ -164,7 +164,7 @@ final class DbalLimitOffsetExtractorTest extends IntegrationTestCase
             ))
             ->fetch();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['name' => 'name_1'],
                 ['name' => 'name_2'],

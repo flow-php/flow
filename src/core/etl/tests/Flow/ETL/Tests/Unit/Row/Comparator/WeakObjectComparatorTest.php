@@ -21,7 +21,7 @@ final class WeakObjectComparatorTest extends TestCase
 
         $comparator = new Row\Comparator\WeakObjectComparator();
 
-        $this->assertFalse($comparator->equals($row, $nextRow));
+        self::assertFalse($comparator->equals($row, $nextRow));
     }
 
     public function test_compare_rows_with_other_different_entries() : void
@@ -37,6 +37,6 @@ final class WeakObjectComparatorTest extends TestCase
 
         $comparator = new Row\Comparator\WeakObjectComparator();
 
-        $this->assertFalse($comparator->equals($row, $nextRow));
+        self::assertFalse($comparator->equals($row, $nextRow));
     }
 }

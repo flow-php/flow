@@ -12,52 +12,52 @@ final class BetweenTest extends TestCase
 {
     public function test_between_exclusive() : void
     {
-        $this->assertTrue(
+        self::assertTrue(
             between(ref('value'), lit(10), lit(50), Boundary::EXCLUSIVE)->eval(row(int_entry('value', 11)))
         );
-        $this->assertTrue(
+        self::assertTrue(
             between(ref('value'), lit(10), lit(50), Boundary::EXCLUSIVE)->eval(row(int_entry('value', 49)))
         );
-        $this->assertFalse(
+        self::assertFalse(
             between(ref('value'), lit(10), lit(50), Boundary::EXCLUSIVE)->eval(row(int_entry('value', 10)))
         );
-        $this->assertFalse(
+        self::assertFalse(
             between(ref('value'), lit(10), lit(50), Boundary::EXCLUSIVE)->eval(row(int_entry('value', 50)))
         );
     }
 
     public function test_between_inclusive() : void
     {
-        $this->assertTrue(
+        self::assertTrue(
             between(ref('value'), lit(10), lit(50), Boundary::INCLUSIVE)->eval(row(int_entry('value', 10)))
         );
-        $this->assertTrue(
+        self::assertTrue(
             between(ref('value'), lit(10), lit(50), Boundary::INCLUSIVE)->eval(row(int_entry('value', 50)))
         );
-        $this->assertFalse(
+        self::assertFalse(
             between(ref('value'), lit(10), lit(50), Boundary::INCLUSIVE)->eval(row(int_entry('value', 9)))
         );
-        $this->assertFalse(
+        self::assertFalse(
             between(ref('value'), lit(10), lit(50), Boundary::INCLUSIVE)->eval(row(int_entry('value', 51)))
         );
     }
 
     public function test_between_left_inclusive() : void
     {
-        $this->assertTrue(
+        self::assertTrue(
             between(ref('value'), lit(10), lit(50))->eval(row(int_entry('value', 10)))
         );
-        $this->assertFalse(
+        self::assertFalse(
             between(ref('value'), lit(10), lit(50))->eval(row(int_entry('value', 9)))
         );
     }
 
     public function test_between_right_inclusive() : void
     {
-        $this->assertTrue(
+        self::assertTrue(
             between(ref('value'), lit(10), lit(50), Boundary::RIGHT_INCLUSIVE)->eval(row(int_entry('value', 50)))
         );
-        $this->assertFalse(
+        self::assertFalse(
             between(ref('value'), lit(10), lit(50), Boundary::RIGHT_INCLUSIVE)->eval(row(int_entry('value', 51)))
         );
     }

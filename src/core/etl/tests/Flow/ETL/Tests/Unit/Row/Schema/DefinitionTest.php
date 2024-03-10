@@ -25,7 +25,7 @@ final class DefinitionTest extends TestCase
     {
         $def = Definition::list('list', new ListType(ListElement::integer()));
 
-        $this->assertTrue(
+        self::assertTrue(
             $def->isEqual(
                 Definition::list('list', new ListType(ListElement::integer()))
             )
@@ -36,19 +36,19 @@ final class DefinitionTest extends TestCase
     {
         $def = Definition::integer('test', $nullable = true);
 
-        $this->assertTrue($def->matches(null_entry('test')));
+        self::assertTrue($def->matches(null_entry('test')));
     }
 
     public function test_matches_when_type_and_name_match() : void
     {
         $def = Definition::integer('test');
 
-        $this->assertTrue($def->matches(int_entry('test', 1)));
+        self::assertTrue($def->matches(int_entry('test', 1)));
     }
 
     public function test_merge_definitions() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             Definition::integer('id', true),
             Definition::integer('id')->merge(Definition::integer('id', true))
         );
@@ -56,19 +56,19 @@ final class DefinitionTest extends TestCase
 
     public function test_merging_anything_and_string() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             Definition::string('id', true),
             Definition::integer('id', false)->merge(Definition::string('id', true))
         );
-        $this->assertEquals(
+        self::assertEquals(
             Definition::string('id', true),
             Definition::float('id', false)->merge(Definition::string('id', true))
         );
-        $this->assertEquals(
+        self::assertEquals(
             Definition::string('id', true),
             Definition::boolean('id', false)->merge(Definition::string('id', true))
         );
-        $this->assertEquals(
+        self::assertEquals(
             Definition::string('id', true),
             Definition::dateTime('id', false)->merge(Definition::string('id', true))
         );
@@ -76,19 +76,19 @@ final class DefinitionTest extends TestCase
 
     public function test_merging_anything_with_null() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             Definition::string('id', true),
             Definition::string('id', false)->merge(Definition::null('id'))
         );
-        $this->assertEquals(
+        self::assertEquals(
             Definition::dateTime('datetime', true),
             Definition::dateTime('datetime', false)->merge(Definition::null('datetime'))
         );
-        $this->assertEquals(
+        self::assertEquals(
             Definition::integer('id', true),
             Definition::integer('id', false)->merge(Definition::null('id'))
         );
-        $this->assertEquals(
+        self::assertEquals(
             Definition::float('id', true),
             Definition::float('id', false)->merge(Definition::null('id'))
         );
@@ -104,7 +104,7 @@ final class DefinitionTest extends TestCase
 
     public function test_merging_list_of_ints_and_floats() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             Definition::list('list', type_list(type_float())),
             Definition::list('list', type_list(type_int()))->merge(Definition::list('list', type_list(type_float())))
         );
@@ -112,11 +112,11 @@ final class DefinitionTest extends TestCase
 
     public function test_merging_numeric_types() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             Definition::float('id', true),
             Definition::integer('id', false)->merge(Definition::float('id', true))
         );
-        $this->assertEquals(
+        self::assertEquals(
             Definition::float('id', true),
             Definition::float('id', false)->merge(Definition::integer('id', true))
         );
@@ -124,7 +124,7 @@ final class DefinitionTest extends TestCase
 
     public function test_merging_two_different_lists() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             Definition::array('list'),
             Definition::list('list', type_list(type_string()))->merge(Definition::list('list', type_list(type_int())))
         );
@@ -132,7 +132,7 @@ final class DefinitionTest extends TestCase
 
     public function test_merging_two_different_maps() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             Definition::array('map'),
             Definition::map('map', type_map(type_string(), type_string()))->merge(Definition::map('map', type_map(type_string(), type_int())))
         );
@@ -140,7 +140,7 @@ final class DefinitionTest extends TestCase
 
     public function test_merging_two_different_structures() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             Definition::array('structure'),
             Definition::structure(
                 'structure',
@@ -162,7 +162,7 @@ final class DefinitionTest extends TestCase
 
     public function test_merging_two_same_lists() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             Definition::list('list', type_list(type_int())),
             Definition::list('list', type_list(type_int()))->merge(Definition::list('list', type_list(type_int())))
         );
@@ -170,7 +170,7 @@ final class DefinitionTest extends TestCase
 
     public function test_merging_two_same_maps() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             Definition::map('map', type_map(type_string(), type_string())),
             Definition::map('map', type_map(type_string(), type_string()))->merge(Definition::map('map', type_map(type_string(), type_string())))
         );
@@ -195,7 +195,7 @@ final class DefinitionTest extends TestCase
             Metadata::with('description', 'some_random_description')->add('priority', 1)
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             $definition,
             Definition::fromArray($definition->normalize())
         );
@@ -205,21 +205,21 @@ final class DefinitionTest extends TestCase
     {
         $def = Definition::integer('test', $nullable = false);
 
-        $this->assertFalse($def->matches(null_entry('test')));
+        self::assertFalse($def->matches(null_entry('test')));
     }
 
     public function test_not_matches_when_type_does_not_match() : void
     {
         $def = Definition::integer('test');
 
-        $this->assertFalse($def->matches(str_entry('test', 'test')));
+        self::assertFalse($def->matches(str_entry('test', 'test')));
     }
 
     public function test_not_matches_when_type_name_not_match() : void
     {
         $def = Definition::integer('test');
 
-        $this->assertFalse($def->matches(int_entry('not-test', 1)));
+        self::assertFalse($def->matches(int_entry('not-test', 1)));
     }
 
     public function test_structure_definition_metadata() : void
@@ -244,7 +244,7 @@ final class DefinitionTest extends TestCase
             ]),
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             new StructureType([
                 struct_element('street', type_string()),
                 struct_element('city', type_string()),

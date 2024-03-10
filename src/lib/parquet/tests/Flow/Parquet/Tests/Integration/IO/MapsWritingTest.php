@@ -35,7 +35,7 @@ final class MapsWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        $this->assertSame(
+        self::assertSame(
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
@@ -64,7 +64,7 @@ final class MapsWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        $this->assertSame(
+        self::assertSame(
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
@@ -95,7 +95,7 @@ final class MapsWritingTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        $this->assertSame(
+        self::assertSame(
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );

@@ -16,7 +16,7 @@ final class UuidConverterTest extends TestCase
 
         $converter = new UuidConverter();
 
-        $this->assertEquals(
+        self::assertEquals(
             $uuid,
             $converter->fromParquetType($converter->toParquetType($uuid))
         );

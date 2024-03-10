@@ -14,30 +14,30 @@ final class ArrayTypeTest extends TestCase
 {
     public function test_equals() : void
     {
-        $this->assertTrue(
+        self::assertTrue(
             (type_array())->isEqual(new ArrayType)
         );
-        $this->assertTrue(
+        self::assertTrue(
             ArrayType::empty()->isEqual(ArrayType::empty())
         );
-        $this->assertFalse(
+        self::assertFalse(
             (type_array())->isEqual(new MapType(MapKey::string(), MapValue::float()))
         );
-        $this->assertFalse(
+        self::assertFalse(
             (type_array())->isEqual(type_float())
         );
-        $this->assertFalse(
+        self::assertFalse(
             ArrayType::empty()->isEqual(type_array())
         );
     }
 
     public function test_to_string() : void
     {
-        $this->assertSame(
+        self::assertSame(
             'array<mixed>',
             type_array()->toString()
         );
-        $this->assertSame(
+        self::assertSame(
             'array<empty, empty>',
             ArrayType::empty()->toString()
         );
@@ -45,25 +45,25 @@ final class ArrayTypeTest extends TestCase
 
     public function test_valid() : void
     {
-        $this->assertTrue(
+        self::assertTrue(
             type_array()->isValid([])
         );
-        $this->assertTrue(
+        self::assertTrue(
             type_array()->isValid(['one'])
         );
-        $this->assertTrue(
+        self::assertTrue(
             type_array()->isValid([1])
         );
-        $this->assertFalse(
+        self::assertFalse(
             type_array()->isValid(null)
         );
-        $this->assertFalse(
+        self::assertFalse(
             type_array()->isValid('one')
         );
-        $this->assertFalse(
+        self::assertFalse(
             type_array()->isValid(true)
         );
-        $this->assertFalse(
+        self::assertFalse(
             type_array()->isValid(123)
         );
     }

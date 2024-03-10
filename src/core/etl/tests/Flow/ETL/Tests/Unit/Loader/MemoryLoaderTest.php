@@ -22,6 +22,6 @@ final class MemoryLoaderTest extends TestCase
 
         to_memory($memory)->load($rows, new FlowContext(Config::default()));
 
-        $this->assertEquals($rows->toArray(), $memory->dump());
+        self::assertEquals($rows->toArray(), $memory->dump());
     }
 }

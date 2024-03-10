@@ -40,6 +40,6 @@ final class NamespaceTest extends TestCase
      */
     public function test_valid_namespaces(string $ns) : void
     {
-        $this->assertInstanceOf(DSLNamespace::class, new DSLNamespace($ns, new AllowAll()));
+        self::assertInstanceOf(DSLNamespace::class, new DSLNamespace($ns, new AllowAll()));
     }
 }

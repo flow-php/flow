@@ -51,7 +51,7 @@ final class RequestEntriesFactoryTest extends TestCase
     {
         $entryFactory = new RequestEntriesFactory();
 
-        $this->assertInstanceOf(
+        self::assertInstanceOf(
             $expectedRequestBodyEntryClass,
             $entryFactory->create($request)->get('request_body')
         );

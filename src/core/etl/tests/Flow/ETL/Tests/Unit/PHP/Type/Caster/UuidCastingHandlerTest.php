@@ -23,7 +23,7 @@ final class UuidCastingHandlerTest extends TestCase
 
     public function test_casting_ramsey_uuid_to_uuid() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             new Uuid('6c2f6e0e-8d8e-4e9e-8f0e-5a2d9c1c4f6e'),
             (new UuidCastingHandler())->value(\Ramsey\Uuid\Uuid::fromString('6c2f6e0e-8d8e-4e9e-8f0e-5a2d9c1c4f6e'), type_uuid(), Caster::default())
         );
@@ -31,7 +31,7 @@ final class UuidCastingHandlerTest extends TestCase
 
     public function test_casting_string_to_uuid() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             new Uuid('6c2f6e0e-8d8e-4e9e-8f0e-5a2d9c1c4f6e'),
             (new UuidCastingHandler())->value('6c2f6e0e-8d8e-4e9e-8f0e-5a2d9c1c4f6e', type_uuid(), Caster::default())
         );

@@ -14,7 +14,7 @@ final class ScalarFunctionTransformerTest extends TestCase
 {
     public function test_lit_expression_on_empty_rows() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             [
             ],
             (new ScalarFunctionTransformer('number', lit(1_000)))
@@ -25,7 +25,7 @@ final class ScalarFunctionTransformerTest extends TestCase
 
     public function test_lit_expression_on_non_empty_rows() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             [
                 ['name' => 'Norbert', 'number' => 1],
             ],
@@ -40,7 +40,7 @@ final class ScalarFunctionTransformerTest extends TestCase
 
     public function test_plus_expression_on_empty_rows() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             [
             ],
             (new ScalarFunctionTransformer('number', ref('num')->plus(ref('num1'))))
@@ -51,7 +51,7 @@ final class ScalarFunctionTransformerTest extends TestCase
 
     public function test_plus_expression_on_non_empty_rows() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             [
                 ['a' => 1, 'b' => 2, 'c' => 3],
             ],
@@ -68,7 +68,7 @@ final class ScalarFunctionTransformerTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Entry "num" does not exist. Did you mean one of the following? ["a"]');
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 ['a' => 1, 'number' => 0],
             ],
@@ -88,7 +88,7 @@ final class ScalarFunctionTransformerTest extends TestCase
         $document->loadXML($xml);
         $xpath = new \DOMXPath($document);
 
-        $this->assertEquals(
+        self::assertEquals(
             list_entry('xpath', [
                 $xpath->query('/root/foo')->item(0),
                 $xpath->query('/root/foo')->item(1),

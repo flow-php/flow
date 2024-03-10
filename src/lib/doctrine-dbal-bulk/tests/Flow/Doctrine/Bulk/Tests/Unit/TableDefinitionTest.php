@@ -29,7 +29,7 @@ final class TableDefinitionTest extends TestCase
             new Column('updated_at', Type::getType('datetime_immutable')),
         );
 
-        $this->assertSame(
+        self::assertSame(
             '(CAST(:id_0 as INT),CAST(:name_0 as VARCHAR(255)),CAST(:updated_at_0 as TIMESTAMP(0) WITHOUT TIME ZONE)),(CAST(:id_1 as INT),CAST(:name_1 as VARCHAR(255)),CAST(:updated_at_1 as TIMESTAMP(0) WITHOUT TIME ZONE))',
             $table->toSqlCastedPlaceholders($data, new PostgreSQLPlatform())
         );
@@ -51,7 +51,7 @@ final class TableDefinitionTest extends TestCase
             new Column('updated_at', Type::getType('datetime_immutable')),
         );
 
-        $this->assertSame(
+        self::assertSame(
             [
                 'id_0' => 'integer',
                 'id_1' => 'integer',

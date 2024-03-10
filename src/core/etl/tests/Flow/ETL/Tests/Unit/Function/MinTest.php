@@ -20,7 +20,7 @@ final class MinTest extends TestCase
         $aggregator->aggregate(Row::create(str_entry('int', '25')));
         $aggregator->aggregate(Row::create(null_entry('not_int')));
 
-        $this->assertSame(
+        self::assertSame(
             10,
             $aggregator->result()->value()
         );
@@ -35,7 +35,7 @@ final class MinTest extends TestCase
         $aggregator->aggregate(Row::create(int_entry('int', 30)));
         $aggregator->aggregate(Row::create(null_entry('int')));
 
-        $this->assertSame(
+        self::assertSame(
             10,
             $aggregator->result()->value()
         );
@@ -50,7 +50,7 @@ final class MinTest extends TestCase
         $aggregator->aggregate(Row::create(int_entry('int', 305)));
         $aggregator->aggregate(Row::create(int_entry('int', 25)));
 
-        $this->assertSame(
+        self::assertSame(
             10.25,
             $aggregator->result()->value()
         );
@@ -65,7 +65,7 @@ final class MinTest extends TestCase
         $aggregator->aggregate(Row::create(int_entry('int', 30)));
         $aggregator->aggregate(Row::create(int_entry('int', 40)));
 
-        $this->assertSame(
+        self::assertSame(
             10,
             $aggregator->result()->value()
         );

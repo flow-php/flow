@@ -51,11 +51,11 @@ final class CompressionTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        $this->assertSame(
+        self::assertSame(
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertFileExists($path);
+        self::assertFileExists($path);
         \unlink($path);
     }
 
@@ -98,11 +98,11 @@ final class CompressionTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        $this->assertSame(
+        self::assertSame(
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertFileExists($path);
+        self::assertFileExists($path);
         \unlink($path);
     }
 
@@ -145,11 +145,11 @@ final class CompressionTest extends TestCase
 
         $writer->write($path, $schema, $inputData);
 
-        $this->assertSame(
+        self::assertSame(
             $inputData,
             \iterator_to_array((new Reader())->read($path)->values())
         );
-        $this->assertFileExists($path);
+        self::assertFileExists($path);
         \unlink($path);
     }
 }

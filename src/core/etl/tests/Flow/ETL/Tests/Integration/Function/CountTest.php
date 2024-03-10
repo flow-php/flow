@@ -25,7 +25,7 @@ final class CountTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['array' => [1, 2, 3], 'count' => 3],
             ],
@@ -47,7 +47,7 @@ final class CountTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['key' => 1, 'count' => null],
             ],
@@ -71,7 +71,7 @@ final class CountTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 ['key' => $iterator, 'count' => 3],
             ],

@@ -14,7 +14,7 @@ final class EntryReferenceTest extends TestCase
     {
         $ref = ref('a')->equals(ref('b'));
 
-        $this->assertTrue(
+        self::assertTrue(
             $ref->eval(Row::create(int_entry('a', 1), int_entry('b', 1)))
         );
     }
@@ -23,7 +23,7 @@ final class EntryReferenceTest extends TestCase
     {
         $ref = ref('b')->literal(100);
 
-        $this->assertSame(
+        self::assertSame(
             100,
             $ref->eval(Row::create(int_entry('a', 1)))
         );
@@ -33,11 +33,11 @@ final class EntryReferenceTest extends TestCase
     {
         $ref = ref('a')->isEven();
 
-        $this->assertFalse(
+        self::assertFalse(
             $ref->eval(Row::create(int_entry('a', 1)))
         );
 
-        $this->assertTrue(
+        self::assertTrue(
             $ref->eval(Row::create(int_entry('a', 2)))
         );
     }
@@ -46,11 +46,11 @@ final class EntryReferenceTest extends TestCase
     {
         $ref = ref('a')->isOdd();
 
-        $this->assertTrue(
+        self::assertTrue(
             $ref->eval(Row::create(int_entry('a', 1)))
         );
 
-        $this->assertFalse(
+        self::assertFalse(
             $ref->eval(Row::create(int_entry('a', 2)))
         );
     }

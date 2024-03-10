@@ -16,7 +16,7 @@ final class HashIdFactoryTest extends TestCase
     {
         $factory = new HashIdFactory('first_name', 'last_name');
 
-        $this->assertEquals(
+        self::assertEquals(
             new Row\Entry\StringEntry(
                 'id',
                 \hash('xxh128', 'John:Doe')
@@ -31,7 +31,7 @@ final class HashIdFactoryTest extends TestCase
     {
         $factory = (new HashIdFactory('first_name', 'last_name'))->withAlgorithm('sha1');
 
-        $this->assertEquals(
+        self::assertEquals(
             new Row\Entry\StringEntry(
                 'id',
                 \sha1('John:Doe')

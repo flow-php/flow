@@ -23,7 +23,7 @@ final class PipelineExtractorTest extends TestCase
 
         $extractor = new PipelineExtractor($pipeline, Config::default());
 
-        $this->assertCount(
+        self::assertCount(
             3,
             \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
         );

@@ -41,8 +41,8 @@ final class ExecutorTest extends TestCase
 
         $results = (new Executor())->execute($executables);
 
-        $this->assertInstanceOf(IntObject::class, $results[0]);
-        $this->assertSame(5, $results[0]->value());
+        self::assertInstanceOf(IntObject::class, $results[0]);
+        self::assertSame(5, $results[0]->value());
     }
 
     public function test_executing_not_allowed_methods() : void

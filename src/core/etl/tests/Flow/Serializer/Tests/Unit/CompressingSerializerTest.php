@@ -14,7 +14,7 @@ final class CompressingSerializerTest extends TestCase
     protected function setUp() : void
     {
         if (!\function_exists('gzcompress')) {
-            $this->markTestSkipped('gzcompress unavailable.');
+            self::markTestSkipped('gzcompress unavailable.');
         }
     }
 
@@ -49,7 +49,7 @@ final class CompressingSerializerTest extends TestCase
 
         $unserialized = $serializer->unserialize($serialized, Rows::class);
 
-        $this->assertEquals(
+        self::assertEquals(
             $rows,
             $unserialized
         );

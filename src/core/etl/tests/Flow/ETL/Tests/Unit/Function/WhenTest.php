@@ -13,7 +13,7 @@ final class WhenTest extends TestCase
 {
     public function test_condition_not_satisfied_without_else() : void
     {
-        $this->assertSame(
+        self::assertSame(
             1,
             (new When(
                 ref('id')->equals(lit(2)),
@@ -25,7 +25,7 @@ final class WhenTest extends TestCase
 
     public function test_else() : void
     {
-        $this->assertSame(
+        self::assertSame(
             'else',
             (new When(
                 new Literal(false),
@@ -37,7 +37,7 @@ final class WhenTest extends TestCase
 
     public function test_when() : void
     {
-        $this->assertSame(
+        self::assertSame(
             'then',
             (new When(
                 new Literal(true),

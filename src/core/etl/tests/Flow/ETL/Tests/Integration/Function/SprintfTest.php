@@ -25,7 +25,7 @@ final class SprintfTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['key' => 'test %s', 'sprintf' => 'test value'],
             ],
@@ -47,7 +47,7 @@ final class SprintfTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'sprintf' => null],
             ],
@@ -69,7 +69,7 @@ final class SprintfTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => '1', 'sprintf' => null],
             ],

@@ -25,7 +25,7 @@ final class StrReplaceTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['key' => 'value', 'str_replace' => 'values'],
             ],
@@ -47,7 +47,7 @@ final class StrReplaceTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'str_replace' => null],
             ],

@@ -31,8 +31,8 @@ final class PagesBuilderTest extends TestCase
         $pages = (new PagesBuilder(DataConverter::initialize($options), Compressions::UNCOMPRESSED, new PageSizeCalculator($options), $options))
             ->build($column, $values, $statistics);
 
-        $this->assertCount(4, $pages->dataPageContainers());
-        $this->assertEquals(
+        self::assertCount(4, $pages->dataPageContainers());
+        self::assertEquals(
             new PageHeader(
                 Type::DATA_PAGE,
                 \strlen($pages->dataPageContainers()[0]->pageBuffer),
@@ -69,7 +69,7 @@ final class PagesBuilderTest extends TestCase
         $pages = (new PagesBuilder(DataConverter::initialize($options), Compressions::UNCOMPRESSED, new PageSizeCalculator($options), $options))
             ->build($column, $values, $statistics);
 
-        $this->assertEquals(
+        self::assertEquals(
             new PageHeader(
                 Type::DICTIONARY_PAGE,
                 \strlen($pages->dictionaryPageContainer()->pageBuffer),
@@ -83,7 +83,7 @@ final class PagesBuilderTest extends TestCase
             ),
             $pages->dictionaryPageContainer()->pageHeader
         );
-        $this->assertEquals(
+        self::assertEquals(
             new PageHeader(
                 Type::DATA_PAGE,
                 \strlen($pages->dataPageContainers()[0]->pageBuffer),
@@ -116,8 +116,8 @@ final class PagesBuilderTest extends TestCase
         $pages = (new PagesBuilder(DataConverter::initialize($options), Compressions::UNCOMPRESSED, new PageSizeCalculator($options), $options))
             ->build($column, $values, $statistics);
 
-        $this->assertCount(1, $pages->dataPageContainers());
-        $this->assertEquals(
+        self::assertCount(1, $pages->dataPageContainers());
+        self::assertEquals(
             new PageHeader(
                 Type::DATA_PAGE,
                 \strlen($pages->dataPageContainers()[0]->pageBuffer),
@@ -150,8 +150,8 @@ final class PagesBuilderTest extends TestCase
         $pages = (new PagesBuilder(DataConverter::initialize($options), Compressions::UNCOMPRESSED, new PageSizeCalculator($options), $options))
             ->build($column, $values, $statistics);
 
-        $this->assertNull($pages->dictionaryPageContainer());
-        $this->assertEquals(
+        self::assertNull($pages->dictionaryPageContainer());
+        self::assertEquals(
             new PageHeader(
                 Type::DATA_PAGE,
                 \strlen($pages->dataPageContainers()[0]->pageBuffer),
@@ -183,8 +183,8 @@ final class PagesBuilderTest extends TestCase
         $pages = (new PagesBuilder(DataConverter::initialize($options), Compressions::UNCOMPRESSED, new PageSizeCalculator($options), $options))
             ->build($column, $values, $statistics);
 
-        $this->assertCount(1, $pages->dataPageContainers());
-        $this->assertEquals(
+        self::assertCount(1, $pages->dataPageContainers());
+        self::assertEquals(
             new PageHeader(
                 Type::DICTIONARY_PAGE,
                 \strlen($pages->dictionaryPageContainer()->pageBuffer),
@@ -198,7 +198,7 @@ final class PagesBuilderTest extends TestCase
             ),
             $pages->dictionaryPageContainer()->pageHeader
         );
-        $this->assertEquals(
+        self::assertEquals(
             new PageHeader(
                 Type::DATA_PAGE,
                 \strlen($pages->dataPageContainers()[0]->pageBuffer),
@@ -230,8 +230,8 @@ final class PagesBuilderTest extends TestCase
         $pages = (new PagesBuilder(DataConverter::initialize($options), Compressions::UNCOMPRESSED, new PageSizeCalculator($options), $options))
             ->build($column, $values, $statistics);
 
-        $this->assertNull($pages->dictionaryPageContainer());
-        $this->assertEquals(
+        self::assertNull($pages->dictionaryPageContainer());
+        self::assertEquals(
             new PageHeader(
                 Type::DATA_PAGE,
                 \strlen($pages->dataPageContainers()[0]->pageBuffer),

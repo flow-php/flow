@@ -20,7 +20,7 @@ final class CountTest extends TestCase
         $aggregator->aggregate(Row::create(str_entry('int', '25')));
         $aggregator->aggregate(Row::create(null_entry('not_int')));
 
-        $this->assertSame(
+        self::assertSame(
             4,
             $aggregator->result()->value()
         );
@@ -35,7 +35,7 @@ final class CountTest extends TestCase
         $aggregator->aggregate(Row::create(int_entry('int', 305)));
         $aggregator->aggregate(Row::create(int_entry('int', 25)));
 
-        $this->assertSame(
+        self::assertSame(
             4,
             $aggregator->result()->value()
         );
@@ -51,7 +51,7 @@ final class CountTest extends TestCase
         $aggregator->aggregate(Row::create(null_entry('int')));
         $aggregator->aggregate(Row::create(null_entry('test')));
 
-        $this->assertSame(
+        self::assertSame(
             4,
             $aggregator->result()->value()
         );
@@ -69,7 +69,7 @@ final class CountTest extends TestCase
 
         $count = count(ref('id'))->over(window()->orderBy(ref('id')->desc()));
 
-        $this->assertSame(2, $count->apply($row1, $rows));
-        $this->assertSame(1, $count->apply($row2, $rows));
+        self::assertSame(2, $count->apply($row1, $rows));
+        self::assertSame(1, $count->apply($row2, $rows));
     }
 }

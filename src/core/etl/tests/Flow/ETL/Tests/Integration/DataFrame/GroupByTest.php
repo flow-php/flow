@@ -15,7 +15,7 @@ final class GroupByTest extends IntegrationTestCase
     public function test_group_by_multiple_columns_and_batch_size() : void
     {
         $loader = $this->createMock(Loader::class);
-        $loader->expects($this->exactly(4))
+        $loader->expects(self::exactly(4))
             ->method('load');
 
         $rows = df()
@@ -36,7 +36,7 @@ final class GroupByTest extends IntegrationTestCase
             ->write($loader)
             ->fetch();
 
-        $this->assertEquals(
+        self::assertEquals(
             new Rows(
                 Row::create(str_entry('country', 'PL'), str_entry('gender', 'male')),
                 Row::create(str_entry('country', 'PL'), str_entry('gender', 'female')),
@@ -66,7 +66,7 @@ final class GroupByTest extends IntegrationTestCase
             ->aggregate(average(ref('age')))
             ->fetch();
 
-        $this->assertEquals(
+        self::assertEquals(
             new Rows(
                 Row::create(str_entry('country', 'PL'), str_entry('gender', 'male'), float_entry('age_avg', 21.666666666666668)),
                 Row::create(str_entry('country', 'PL'), str_entry('gender', 'female'), int_entry('age_avg', 30)),
@@ -96,7 +96,7 @@ final class GroupByTest extends IntegrationTestCase
             ->aggregate(average(ref('age')))
             ->fetch();
 
-        $this->assertEquals(
+        self::assertEquals(
             new Rows(
                 Row::create(str_entry('country', 'PL'), str_entry('gender', 'male'), float_entry('age_avg', 21.666666666666668)),
                 Row::create(str_entry('country', 'PL'), str_entry('gender', 'female'), int_entry('age_avg', 30)),
@@ -126,7 +126,7 @@ final class GroupByTest extends IntegrationTestCase
             ->groupBy('country')
             ->fetch();
 
-        $this->assertEquals(
+        self::assertEquals(
             new Rows(
                 Row::create(str_entry('country', 'PL')),
                 Row::create(str_entry('country', 'US')),
@@ -154,7 +154,7 @@ final class GroupByTest extends IntegrationTestCase
             ->aggregate(average(ref('age')))
             ->fetch();
 
-        $this->assertEquals(
+        self::assertEquals(
             new Rows(
                 Row::create(str_entry('country', 'PL'), float_entry('age_avg', 23.75)),
                 Row::create(str_entry('country', 'US'), float_entry('age_avg', 43.75)),
@@ -190,7 +190,7 @@ final class GroupByTest extends IntegrationTestCase
             ->aggregate(sum(ref('contributions')))
             ->fetch();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['user' => 'user_01', 'contributions_sum' => 4],
                 ['user' => 'user_02', 'contributions_sum' => 2],
@@ -217,7 +217,7 @@ final class GroupByTest extends IntegrationTestCase
             ->aggregate(count(ref('id')))
             ->fetch();
 
-        $this->assertEquals(
+        self::assertEquals(
             new Rows(Row::create(integer_entry('id_count', 8))),
             $rows
         );
@@ -248,7 +248,7 @@ final class GroupByTest extends IntegrationTestCase
             ->aggregate(sum(ref('contributions')))
             ->fetch();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 [
                     'date' => '2023-11-01',
@@ -299,7 +299,7 @@ final class GroupByTest extends IntegrationTestCase
             ->rename('age_avg', 'average_age')
             ->fetch();
 
-        $this->assertEquals(
+        self::assertEquals(
             new Rows(
                 Row::create(float_entry('average_age', 33.75)),
             ),
@@ -356,7 +356,7 @@ final class GroupByTest extends IntegrationTestCase
             ['employee_name' => 'Charlotte', 'department' => 'Marketing', 'salary' => 3000],
         ]);
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['department' => 'Sales', 'avg_salary' => 3917.0],
                 ['department' => 'Marketing', 'avg_salary' => 2940.0],
@@ -402,7 +402,7 @@ final class GroupByTest extends IntegrationTestCase
             ['employee_name' => 'Charlotte', 'department' => 'Marketing', 'salary' => 3000],
         ]);
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['employee_name' => 'Emma', 'department' => 'Sales', 'salary' => 4800, 'rank' => 1],
                 ['employee_name' => 'Sophia', 'department' => 'Finance', 'salary' => 4200, 'rank' => 1],

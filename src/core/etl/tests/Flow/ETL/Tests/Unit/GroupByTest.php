@@ -21,7 +21,7 @@ final class GroupByTest extends TestCase
             Row::create(str_entry('type', 'c'))
         ));
 
-        $this->assertEquals(
+        self::assertEquals(
             new Rows(
                 Row::create(str_entry('type', 'a')),
                 Row::create(null_entry('type')),
@@ -44,7 +44,7 @@ final class GroupByTest extends TestCase
             Row::create(int_entry('id', 5), str_entry('type', 'd'))
         ));
 
-        $this->assertEquals(
+        self::assertEquals(
             new Rows(
                 Row::create(int_entry('id_sum', 5), str_entry('type', 'a')),
                 Row::create(int_entry('id_sum', 2), str_entry('type', 'b')),
@@ -86,7 +86,7 @@ final class GroupByTest extends TestCase
 
         $group->group($rows);
 
-        $this->assertEquals(
+        self::assertEquals(
             new Rows(
                 Row::create(str_entry('product', 'Banana'), int_entry('Canada', 2000), int_entry('China', 400), null_entry('Mexico'), int_entry('USA', 1000)),
                 Row::create(str_entry('product', 'Beans'), null_entry('Canada'), int_entry('China', 1500), int_entry('Mexico', 2000), int_entry('USA', 1600)),

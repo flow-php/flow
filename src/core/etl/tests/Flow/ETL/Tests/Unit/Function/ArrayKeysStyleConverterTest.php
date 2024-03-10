@@ -29,7 +29,7 @@ final class ArrayKeysStyleConverterTest extends TestCase
             int_entry('invalid_entry', 1),
         );
 
-        $this->assertNull(array_keys_style_convert(ref('invalid_entry'), 'snake')->eval($row));
+        self::assertNull(array_keys_style_convert(ref('invalid_entry'), 'snake')->eval($row));
     }
 
     public function test_transforms_case_style_for_all_keys_in_array_entry() : void
@@ -58,7 +58,7 @@ final class ArrayKeysStyleConverterTest extends TestCase
             )
         );
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 'item_id' => 1,
                 'item_status' => 'PENDING',

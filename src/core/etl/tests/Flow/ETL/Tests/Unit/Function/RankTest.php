@@ -22,11 +22,11 @@ final class RankTest extends TestCase
 
         $rank = rank()->over(window()->orderBy(ref('salary')->desc()));
 
-        $this->assertSame(1, $rank->apply($row1, $rows));
-        $this->assertSame(1, $rank->apply($row2, $rows));
-        $this->assertSame(1, $rank->apply($row3, $rows));
-        $this->assertSame(5, $rank->apply($row4, $rows));
-        $this->assertSame(4, $rank->apply($row5, $rows));
+        self::assertSame(1, $rank->apply($row1, $rows));
+        self::assertSame(1, $rank->apply($row2, $rows));
+        self::assertSame(1, $rank->apply($row3, $rows));
+        self::assertSame(5, $rank->apply($row4, $rows));
+        self::assertSame(4, $rank->apply($row5, $rows));
     }
 
     public function test_rank_function_without_more_than_one_order_by_entries() : void
@@ -43,7 +43,7 @@ final class RankTest extends TestCase
 
         $rank = rank()->over(window()->partitionBy(ref('value'))->orderBy(ref('salary'), ref('id')));
 
-        $this->assertSame(1, $rank->apply($row1, $rows));
+        self::assertSame(1, $rank->apply($row1, $rows));
     }
 
     public function test_rank_function_without_order_by() : void
@@ -59,6 +59,6 @@ final class RankTest extends TestCase
 
         $rank = rank();
 
-        $this->assertSame(1, $rank->apply($row1, $rows));
+        self::assertSame(1, $rank->apply($row1, $rows));
     }
 }

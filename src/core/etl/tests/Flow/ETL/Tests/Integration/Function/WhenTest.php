@@ -26,7 +26,7 @@ final class WhenTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'type' => 'odd'],
                 ['id' => 2, 'type' => 'even'],

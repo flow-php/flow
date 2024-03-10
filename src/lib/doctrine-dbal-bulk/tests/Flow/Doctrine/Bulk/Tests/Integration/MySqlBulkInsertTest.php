@@ -39,10 +39,10 @@ final class MySqlBulkInsertTest extends MysqlIntegrationTestCase
             ])
         );
 
-        $this->assertEquals(3, $this->databaseContext->tableCount($table));
-        $this->assertEquals(1, $this->executedQueriesCount());
+        self::assertEquals(3, $this->databaseContext->tableCount($table));
+        self::assertEquals(1, $this->executedQueriesCount());
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 ['id' => $id1, 'age' => 20, 'name' => 'Name One', 'description' => 'Description One', 'active' => false, 'updated_at' => $date1->format('Y-m-d H:i:s'), 'tags' => '["a", "b", "c"]'],
                 ['id' => $id2, 'age' => 30, 'name' => 'Name Two', 'description' => null, 'active' => true, 'updated_at' => $date2->format('Y-m-d H:i:s'), 'tags' => '["a", "b", "c"]'],
@@ -90,9 +90,9 @@ final class MySqlBulkInsertTest extends MysqlIntegrationTestCase
             ]
         );
 
-        $this->assertEquals(4, $this->databaseContext->tableCount($table));
-        $this->assertEquals(2, $this->executedQueriesCount());
-        $this->assertEquals(
+        self::assertEquals(4, $this->databaseContext->tableCount($table));
+        self::assertEquals(2, $this->executedQueriesCount());
+        self::assertEquals(
             [
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One', 'active' => true],
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two', 'active' => true],
@@ -141,9 +141,9 @@ final class MySqlBulkInsertTest extends MysqlIntegrationTestCase
             ]
         );
 
-        $this->assertEquals(4, $this->databaseContext->tableCount($table));
-        $this->assertEquals(2, $this->executedQueriesCount());
-        $this->assertEquals(
+        self::assertEquals(4, $this->databaseContext->tableCount($table));
+        self::assertEquals(2, $this->executedQueriesCount());
+        self::assertEquals(
             [
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One', 'active' => true],
                 ['id' => 2, 'name' => 'New Name Two', 'description' => 'New Description Two', 'active' => false],
@@ -193,9 +193,9 @@ final class MySqlBulkInsertTest extends MysqlIntegrationTestCase
             ]
         );
 
-        $this->assertEquals(4, $this->databaseContext->tableCount($table));
-        $this->assertEquals(2, $this->executedQueriesCount());
-        $this->assertEquals(
+        self::assertEquals(4, $this->databaseContext->tableCount($table));
+        self::assertEquals(2, $this->executedQueriesCount());
+        self::assertEquals(
             [
                 ['id' => 1, 'name' => 'Name One', 'description' => 'Description One', 'active' => true],
                 ['id' => 2, 'name' => 'Name Two', 'description' => 'New Description Two', 'active' => true],

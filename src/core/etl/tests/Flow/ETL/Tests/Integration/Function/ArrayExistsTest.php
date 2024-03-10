@@ -27,7 +27,7 @@ final class ArrayExistsTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'has_array' => true],
                 ['id' => 2, 'has_array' => false],

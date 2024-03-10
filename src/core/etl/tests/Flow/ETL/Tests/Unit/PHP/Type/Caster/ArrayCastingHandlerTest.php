@@ -13,7 +13,7 @@ final class ArrayCastingHandlerTest extends TestCase
 {
     public function test_casting_boolean_to_array() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             [true],
             (new ArrayCastingHandler())->value(true, type_array(), Caster::default())
         );
@@ -21,7 +21,7 @@ final class ArrayCastingHandlerTest extends TestCase
 
     public function test_casting_datetime_to_array() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             ['date' => '2021-01-01 00:00:00.000000', 'timezone_type' => 3, 'timezone' => 'UTC'],
             (new ArrayCastingHandler())->value(new \DateTimeImmutable('2021-01-01 00:00:00 UTC'), type_array(), Caster::default())
         );
@@ -29,7 +29,7 @@ final class ArrayCastingHandlerTest extends TestCase
 
     public function test_casting_float_to_array() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             [1.1],
             (new ArrayCastingHandler())->value(1.1, type_array(), Caster::default())
         );
@@ -37,7 +37,7 @@ final class ArrayCastingHandlerTest extends TestCase
 
     public function test_casting_integer_to_array() : void
     {
-        $this->assertEquals(
+        self::assertEquals(
             [1],
             (new ArrayCastingHandler())->value(1, type_array(), Caster::default())
         );
@@ -45,7 +45,7 @@ final class ArrayCastingHandlerTest extends TestCase
 
     public function test_casting_string_to_array() : void
     {
-        $this->assertSame(
+        self::assertSame(
             ['items' => ['item' => 1]],
             (new ArrayCastingHandler())->value('{"items":{"item":1}}', type_array(), Caster::default())
         );
@@ -56,7 +56,7 @@ final class ArrayCastingHandlerTest extends TestCase
         $xml = new \DOMDocument();
         $xml->loadXML($xmlString = '<root><foo baz="buz">bar</foo></root>');
 
-        $this->assertSame(
+        self::assertSame(
             ['root' => ['foo' => ['@attributes' => ['baz' => 'buz'], '@value' => 'bar']]],
             (new ArrayCastingHandler())->value($xml, type_array(), Caster::default())
         );

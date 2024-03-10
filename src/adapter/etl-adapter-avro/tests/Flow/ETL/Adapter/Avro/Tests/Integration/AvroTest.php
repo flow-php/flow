@@ -31,7 +31,7 @@ final class AvroTest extends TestCase
         $extractor = new AvroExtractor(Path::realpath($path));
         $extractor->changeLimit(2);
 
-        $this->assertCount(
+        self::assertCount(
             2,
             \iterator_to_array($extractor->extract(new FlowContext(Config::default())))
         );
@@ -54,16 +54,16 @@ final class AvroTest extends TestCase
 
         $generator = $extractor->extract(new FlowContext(Config::default()));
 
-        $this->assertSame([['id' => 1]], $generator->current()->toArray());
-        $this->assertTrue($generator->valid());
+        self::assertSame([['id' => 1]], $generator->current()->toArray());
+        self::assertTrue($generator->valid());
         $generator->next();
-        $this->assertSame([['id' => 2]], $generator->current()->toArray());
-        $this->assertTrue($generator->valid());
+        self::assertSame([['id' => 2]], $generator->current()->toArray());
+        self::assertTrue($generator->valid());
         $generator->next();
-        $this->assertSame([['id' => 3]], $generator->current()->toArray());
-        $this->assertTrue($generator->valid());
+        self::assertSame([['id' => 3]], $generator->current()->toArray());
+        self::assertTrue($generator->valid());
         $generator->send(Signal::STOP);
-        $this->assertFalse($generator->valid());
+        self::assertFalse($generator->valid());
     }
 
     public function test_using_pattern_path() : void
@@ -86,9 +86,9 @@ final class AvroTest extends TestCase
             ->write(to_avro($path))
             ->run();
 
-        $this->assertFileExists($path);
+        self::assertFileExists($path);
 
-        $this->assertEquals(
+        self::assertEquals(
             100,
             Flow::setUp(Config::builder()->putInputIntoRows()->build())
                 ->read(from_avro($path))

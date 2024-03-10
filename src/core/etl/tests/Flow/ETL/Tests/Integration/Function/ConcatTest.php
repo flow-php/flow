@@ -26,7 +26,7 @@ final class ConcatTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'concat' => null],
                 ['id' => 2, 'concat' => null],
@@ -51,7 +51,7 @@ final class ConcatTest extends TestCase
             ->write(to_memory($memory = new ArrayMemory()))
             ->run();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 ['id' => 1, 'concat' => '1-value'],
                 ['id' => 2, 'concat' => null],

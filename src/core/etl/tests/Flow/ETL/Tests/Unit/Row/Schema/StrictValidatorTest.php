@@ -19,7 +19,7 @@ final class StrictValidatorTest extends TestCase
             Schema\Definition::string('name'),
         );
 
-        $this->assertFalse(
+        self::assertFalse(
             (new StrictValidator())->isValid(
                 new Rows(Row::create(int_entry('id', 1), str_entry('name', 'test'), bool_entry('active', true))),
                 $schema
@@ -35,7 +35,7 @@ final class StrictValidatorTest extends TestCase
             Schema\Definition::boolean('active'),
         );
 
-        $this->assertTrue(
+        self::assertTrue(
             (new StrictValidator())->isValid(
                 new Rows(Row::create(int_entry('id', 1), str_entry('name', 'test'), bool_entry('active', true))),
                 $schema
@@ -52,7 +52,7 @@ final class StrictValidatorTest extends TestCase
             Schema\Definition::array('tags'),
         );
 
-        $this->assertFalse(
+        self::assertFalse(
             (new StrictValidator())->isValid(
                 new Rows(Row::create(int_entry('id', 1), str_entry('name', 'test'), bool_entry('active', true))),
                 $schema
@@ -68,7 +68,7 @@ final class StrictValidatorTest extends TestCase
             Schema\Definition::boolean('active'),
         );
 
-        $this->assertFalse(
+        self::assertFalse(
             (new StrictValidator())->isValid(
                 new Rows(Row::create(int_entry('id', 1), str_entry('name', 'test'), bool_entry('active', true))),
                 $schema
@@ -84,7 +84,7 @@ final class StrictValidatorTest extends TestCase
             Schema\Definition::boolean('active'),
         );
 
-        $this->assertFalse(
+        self::assertFalse(
             (new StrictValidator())->isValid(
                 new Rows(
                     Row::create(int_entry('id', 1), str_entry('name', 'test'), bool_entry('active', true)),

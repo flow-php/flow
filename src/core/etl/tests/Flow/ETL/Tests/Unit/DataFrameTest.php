@@ -56,7 +56,7 @@ final class DataFrameTest extends TestCase
             ->collectRefs($refs = refs())
             ->run();
 
-        $this->assertEquals(
+        self::assertEquals(
             refs('id', 'name', 'active', 'country', 'group'),
             $refs
         );
@@ -74,7 +74,7 @@ final class DataFrameTest extends TestCase
             ]))
             ->count();
 
-        $this->assertSame(5, $count);
+        self::assertSame(5, $count);
     }
 
     public function test_drop() : void
@@ -89,7 +89,7 @@ final class DataFrameTest extends TestCase
             ->drop('id')
             ->fetch();
 
-        $this->assertEquals(
+        self::assertEquals(
             new Rows(
                 Row::create(str_entry('name', 'foo'), bool_entry('active', true)),
                 Row::create(null_entry('name'), bool_entry('active', false)),
@@ -111,7 +111,7 @@ final class DataFrameTest extends TestCase
             ->dropDuplicates(ref('id'))
             ->fetch();
 
-        $this->assertEquals(
+        self::assertEquals(
             new Rows(
                 Row::create(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
                 Row::create(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
@@ -152,7 +152,7 @@ final class DataFrameTest extends TestCase
             )
             ->fetch();
 
-        $this->assertEquals(
+        self::assertEquals(
             new Rows(
                 Row::create(str_entry('country', 'pl'), int_entry('age', 2)),
                 Row::create(str_entry('country', 'pl'), int_entry('age', 2)),
@@ -189,8 +189,8 @@ final class DataFrameTest extends TestCase
             ->filter(ref('id')->mod(lit(2))->same(lit(0)))
             ->fetch();
 
-        $this->assertCount(5, $rows);
-        $this->assertSame(
+        self::assertCount(5, $rows);
+        self::assertSame(
             [['id' => 2], ['id' => 4], ['id' => 6], ['id' => 8], ['id' => 10]],
             $rows->toArray()
         );
@@ -232,7 +232,7 @@ final class DataFrameTest extends TestCase
             ))
             ->get();
 
-        $this->assertEquals([$extractedRows], \iterator_to_array($rows));
+        self::assertEquals([$extractedRows], \iterator_to_array($rows));
     }
 
     public function test_get_as_array() : void
@@ -250,7 +250,7 @@ final class DataFrameTest extends TestCase
             ))
             ->getAsArray();
 
-        $this->assertEquals([
+        self::assertEquals([
             $extractedRows->toArray(),
         ], \iterator_to_array($rows));
     }
@@ -270,7 +270,7 @@ final class DataFrameTest extends TestCase
             ))
             ->getEach();
 
-        $this->assertEquals([
+        self::assertEquals([
             Row::create(int_entry('id', 1), str_entry('name', 'foo')),
             Row::create(int_entry('id', 2), str_entry('name', 'bar')),
             Row::create(int_entry('id', 3), str_entry('name', 'baz')),
@@ -295,7 +295,7 @@ final class DataFrameTest extends TestCase
             ))
             ->getEachAsArray();
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 ['id' => 1, 'name' => 'foo'],
                 ['id' => 2, 'name' => 'bar'],
@@ -330,8 +330,8 @@ final class DataFrameTest extends TestCase
             ->map(fn (Row $row) => $row->add(new BooleanEntry('odd', $row->valueOf('id') % 2 === 0)))
             ->fetch();
 
-        $this->assertCount(10, $rows);
-        $this->assertSame(
+        self::assertCount(10, $rows);
+        self::assertSame(
             [
                 ['id' => 1, 'odd' => false],
                 ['id' => 2, 'odd' => true],
@@ -411,7 +411,7 @@ final class DataFrameTest extends TestCase
             ->write($loader)
             ->run();
 
-        $this->assertEquals(
+        self::assertEquals(
             [
                 [
                     'id' => 101,
@@ -446,7 +446,7 @@ final class DataFrameTest extends TestCase
         )
             ->fetch();
 
-        $this->assertEquals($rows, $collectedRows);
+        self::assertEquals($rows, $collectedRows);
     }
 
     public function test_select() : void
@@ -461,7 +461,7 @@ final class DataFrameTest extends TestCase
             ->select('name', 'id')
             ->fetch();
 
-        $this->assertEquals(
+        self::assertEquals(
             new Rows(
                 Row::create(str_entry('name', 'foo'), int_entry('id', 1)),
                 Row::create(null_entry('name'), int_entry('id', 2)),
@@ -484,7 +484,7 @@ final class DataFrameTest extends TestCase
             new Schema\SelectiveValidator()
         )->fetch();
 
-        $this->assertEquals(
+        self::assertEquals(
             new Rows(
                 Row::create(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
                 Row::create(int_entry('id', 2), null_entry('name'), array_entry('tags', ['foo', 'bar'])),
@@ -510,7 +510,7 @@ final class DataFrameTest extends TestCase
             )
         )->fetch();
 
-        $this->assertEquals(
+        self::assertEquals(
             new Rows(
                 Row::create(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
                 Row::create(int_entry('id', 2), null_entry('name'), bool_entry('active', false)),
@@ -542,8 +542,8 @@ final class DataFrameTest extends TestCase
             ->until(ref('id')->lessThanEqual(lit(3)))
             ->fetch();
 
-        $this->assertCount(3, $rows);
-        $this->assertSame(
+        self::assertCount(3, $rows);
+        self::assertSame(
             [
                 ['id' => 1],
                 ['id' => 2],
@@ -573,7 +573,7 @@ final class DataFrameTest extends TestCase
             ->rename('age_avg', 'average_age')
             ->fetch();
 
-        $this->assertEquals(
+        self::assertEquals(
             new Rows(),
             $rows
         );

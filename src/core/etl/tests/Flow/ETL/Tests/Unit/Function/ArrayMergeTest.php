@@ -13,7 +13,7 @@ final class ArrayMergeTest extends TestCase
 {
     public function test_array_merge_two_array_row_entries() : void
     {
-        $this->assertSame(
+        self::assertSame(
             ['a' => 1, 'b' => 2],
             ref('a')->arrayMerge(ref('b'))
                 ->eval(
@@ -32,12 +32,12 @@ final class ArrayMergeTest extends TestCase
             lit(['b' => 2])
         );
 
-        $this->assertSame(['a' => 1, 'b' => 2], $function->eval(Row::create()));
+        self::assertSame(['a' => 1, 'b' => 2], $function->eval(Row::create()));
     }
 
     public function test_array_merge_when_left_side_is_not_an_array() : void
     {
-        $this->assertNull(
+        self::assertNull(
             ref('a')->arrayMerge(ref('b'))
                 ->eval(
                     Row::create(
@@ -50,7 +50,7 @@ final class ArrayMergeTest extends TestCase
 
     public function test_array_merge_when_right_side_is_not_an_array() : void
     {
-        $this->assertNull(
+        self::assertNull(
             ref('a')->arrayMerge(ref('b'))
                 ->eval(
                     Row::create(

@@ -18,7 +18,7 @@ final class PregMatchAllTest extends TestCase
             lit('invalid')
         );
 
-        $this->assertSame(
+        self::assertSame(
             [],
             $pregMatchAll->eval(Row::create())
         );
@@ -31,7 +31,7 @@ final class PregMatchAllTest extends TestCase
             lit('12 apples and 45 oranges')
         );
 
-        $this->assertSame(
+        self::assertSame(
             [],
             $pregMatchAll->eval(Row::create())
         );
@@ -44,7 +44,7 @@ final class PregMatchAllTest extends TestCase
             lit(2)
         );
 
-        $this->assertSame(
+        self::assertSame(
             [],
             $pregMatchAll->eval(Row::create())
         );
@@ -57,7 +57,7 @@ final class PregMatchAllTest extends TestCase
             lit('12 apples and 45 oranges')
         );
 
-        $this->assertSame(
+        self::assertSame(
             [['12', '45']],
             $pregMatchAll->eval(Row::create())
         );
@@ -71,7 +71,7 @@ final class PregMatchAllTest extends TestCase
             lit(PREG_PATTERN_ORDER)
         );
 
-        $this->assertSame(
+        self::assertSame(
             [['12', '45'], ['12', '45']],
             $pregMatchAll->eval(Row::create())
         );

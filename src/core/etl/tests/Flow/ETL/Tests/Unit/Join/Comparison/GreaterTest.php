@@ -13,13 +13,13 @@ final class GreaterTest extends TestCase
 {
     public function test_failure() : void
     {
-        $this->assertFalse(
+        self::assertFalse(
             (new GreaterThan('id', 'id'))->compare(
                 Row::create(int_entry('id', 1)),
                 Row::create(int_entry('id', 2)),
             )
         );
-        $this->assertFalse(
+        self::assertFalse(
             (new GreaterThan('id', 'id'))->compare(
                 Row::create(int_entry('id', 1)),
                 Row::create(int_entry('id', 1)),
@@ -29,7 +29,7 @@ final class GreaterTest extends TestCase
 
     public function test_success() : void
     {
-        $this->assertTrue(
+        self::assertTrue(
             (new GreaterThan('id', 'id'))->compare(
                 Row::create(int_entry('id', 5)),
                 Row::create(int_entry('id', 1)),

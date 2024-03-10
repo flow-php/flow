@@ -13,7 +13,7 @@ final class ColumnsTest extends TestCase
     {
         $columns = new Columns('date', 'title', 'description', 'quantity');
 
-        $this->assertEquals(
+        self::assertEquals(
             new Columns('date_7', 'title_7', 'description_7', 'quantity_7'),
             $columns->suffix('_7')
         );
@@ -37,21 +37,21 @@ final class ColumnsTest extends TestCase
     {
         $columns = new Columns('date', 'title', 'description', 'quantity');
 
-        $this->assertTrue($columns->has('date'));
-        $this->assertTrue($columns->has('date', 'title'));
-        $this->assertFalse($columns->has('row'));
+        self::assertTrue($columns->has('date'));
+        self::assertTrue($columns->has('date', 'title'));
+        self::assertFalse($columns->has('row'));
     }
 
     public function test_that_collection_not_contains_columns() : void
     {
         $columns = new Columns('date', 'title', 'description', 'quantity');
-        $this->assertEquals(
+        self::assertEquals(
             new Columns('title', 'description', 'quantity'),
             $columns->without('date')
         );
 
         $columns = new Columns('date', 'title', 'description', 'quantity');
-        $this->assertEquals(
+        self::assertEquals(
             new Columns('title', 'quantity'),
             $columns->without('date', 'description')
         );
@@ -61,7 +61,7 @@ final class ColumnsTest extends TestCase
     {
         $columns = new Columns('date', 'title', 'description', 'quantity');
 
-        $this->assertEquals(
+        self::assertEquals(
             new Columns(':date', ':title', ':description', ':quantity'),
             $columns->prefix(':')
         );

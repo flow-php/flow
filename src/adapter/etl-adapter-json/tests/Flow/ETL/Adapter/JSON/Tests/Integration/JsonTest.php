@@ -28,7 +28,7 @@ final class JsonTest extends TestCase
             ->write(to_json($path))
             ->run();
 
-        $this->assertEquals(
+        self::assertEquals(
             100,
             df()->read(from_json($path))->count()
         );
@@ -48,7 +48,7 @@ final class JsonTest extends TestCase
 
         $loader->closure($context);
 
-        $this->assertJsonStringEqualsJsonString(
+        self::assertJsonStringEqualsJsonString(
             <<<'JSON'
 [
 ]

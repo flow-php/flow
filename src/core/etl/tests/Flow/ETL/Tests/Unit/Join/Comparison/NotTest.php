@@ -13,7 +13,7 @@ final class NotTest extends TestCase
 {
     public function test_failure() : void
     {
-        $this->assertFalse(
+        self::assertFalse(
             (new Not(new Equal('datetime', 'datetime')))->compare(
                 Row::create(datetime_entry('datetime', $datetime = new \DateTimeImmutable('2022-10-01 00:00:00'))),
                 Row::create(datetime_entry('datetime', $datetime)),
@@ -23,7 +23,7 @@ final class NotTest extends TestCase
 
     public function test_success() : void
     {
-        $this->assertTrue(
+        self::assertTrue(
             (new Not(new Equal('datetime', 'datetime')))->compare(
                 Row::create(datetime_entry('datetime', new \DateTimeImmutable('2022-10-01 00:00:00'))),
                 Row::create(datetime_entry('datetime', new \DateTimeImmutable('2022-10-01 01:00:00'))),

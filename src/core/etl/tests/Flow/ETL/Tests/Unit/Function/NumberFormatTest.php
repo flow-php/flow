@@ -20,7 +20,7 @@ final class NumberFormatTest extends TestCase
             ref('thousands_separator')
         );
 
-        $this->assertSame(
+        self::assertSame(
             '1,234.57',
             $expression->eval(
                 Row::create(
@@ -42,7 +42,7 @@ final class NumberFormatTest extends TestCase
             lit(',')
         );
 
-        $this->assertSame(
+        self::assertSame(
             '1,234.57',
             $expression->eval(
                 Row::create(
@@ -61,7 +61,7 @@ final class NumberFormatTest extends TestCase
             ref('thousands_separator')
         );
 
-        $this->assertNull(
+        self::assertNull(
             $expression->eval(
                 Row::create(
                     float_entry('value', 1234.5678),
@@ -82,7 +82,7 @@ final class NumberFormatTest extends TestCase
             ref('thousands_separator')
         );
 
-        $this->assertNull(
+        self::assertNull(
             $expression->eval(
                 Row::create(
                     str_entry('value', 'test'),
@@ -103,7 +103,7 @@ final class NumberFormatTest extends TestCase
             ref('thousands_separator')
         );
 
-        $this->assertSame(
+        self::assertSame(
             '1,234.57',
             $expression->eval(
                 Row::create(

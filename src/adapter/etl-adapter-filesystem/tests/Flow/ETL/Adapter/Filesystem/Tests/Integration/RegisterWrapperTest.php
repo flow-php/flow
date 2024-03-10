@@ -22,13 +22,13 @@ final class RegisterWrapperTest extends TestCase
 
     public function test_registering_wrappers() : void
     {
-        $this->assertFalse(\in_array('flow-aws-s3', \stream_get_wrappers(), true));
-        $this->assertFalse(\in_array('flow-azure-blob', \stream_get_wrappers(), true));
+        self::assertFalse(\in_array('flow-aws-s3', \stream_get_wrappers(), true));
+        self::assertFalse(\in_array('flow-azure-blob', \stream_get_wrappers(), true));
 
         AwsS3Stream::register();
         AzureBlobStream::register();
 
-        $this->assertTrue(\in_array('flow-aws-s3', \stream_get_wrappers(), true));
-        $this->assertTrue(\in_array('flow-azure-blob', \stream_get_wrappers(), true));
+        self::assertTrue(\in_array('flow-aws-s3', \stream_get_wrappers(), true));
+        self::assertTrue(\in_array('flow-azure-blob', \stream_get_wrappers(), true));
     }
 }

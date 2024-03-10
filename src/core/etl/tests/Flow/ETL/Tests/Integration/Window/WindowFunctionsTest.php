@@ -31,7 +31,7 @@ final class WindowFunctionsTest extends TestCase
             ->sortBy(ref('department'), ref('rank'))
             ->get();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 [
                     ['id' => 5, 'name' => 'Jane', 'department' => 'Finances', 'salary' => 14_000, 'rank' => 1],
@@ -71,7 +71,7 @@ final class WindowFunctionsTest extends TestCase
             ->withEntry('rank', rank()->over(window()->orderBy(ref('salary')->desc())))
             ->get();
 
-        $this->assertSame(
+        self::assertSame(
             [
                 [
                     ['id' => 5, 'name' => 'Jane', 'department' => 'Finances', 'salary' => 14_000, 'rank' => 1],
