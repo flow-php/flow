@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-03-11
+## [0.7.0] - 2024-03-11
 
 ### Added
 - [#1008](https://github.com/flow-php/flow/pull/1008) - **group imports** - [@norberttech](https://github.com/norberttech)
