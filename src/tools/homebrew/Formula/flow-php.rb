@@ -1,8 +1,8 @@
 class FlowPhp < Formula
   desc "Flow is a first and the most advanced PHP ETL framework"
   homepage "https://github.com/flow-php/flow"
-  url "https://github.com/flow-php/flow/releases/download/0.6.1/flow.phar"
-  sha256 "90ea1d9054f387545d778e1aae4e18e706db7a2a65476c373280992511f9a3ee"
+  url "https://github.com/flow-php/flow/releases/download/0.7.0/flow.phar"
+  sha256 "6c4a3e1052cbdb152227fe371ec2a7d63b098638bfacb0ba64ba2405a7866170"
   license "MIT"
 
   depends_on "php"
