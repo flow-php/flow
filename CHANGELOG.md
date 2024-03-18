@@ -1,6 +1,7 @@
-## [Unreleased] - 2024-03-11
+## [Unreleased] - 2024-03-18
 
 ### Changed
+- [#1015](https://github.com/flow-php/flow/pull/1015) - **Updated dependencies** - [@norberttech](https://github.com/norberttech)
 - [#1010](https://github.com/flow-php/flow/pull/1010) - **Update Homebrew TAP formula: flow-php to version: 0.7.0** - [@norberttech](https://github.com/norberttech)
 
 ## [0.7.0] - 2024-03-11
