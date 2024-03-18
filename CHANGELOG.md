@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-03-18
+## [0.7.1] - 2024-03-18
 
 ### Changed
 - [#1015](https://github.com/flow-php/flow/pull/1015) - **Updated dependencies** - [@norberttech](https://github.com/norberttech)
