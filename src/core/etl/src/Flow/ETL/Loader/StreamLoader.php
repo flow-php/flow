@@ -9,10 +9,15 @@ use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\Loader\StreamLoader\Output;
 use Flow\ETL\Row\Schema\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Row\Schema\SchemaFormatter;
-use Flow\ETL\{FlowContext, Formatter, Loader, Rows};
+use Flow\ETL\{FlowContext, Formatter, Loader, Loader\StreamLoader\Type, Rows};
 
-final class StreamLoader implements Loader
+final class StreamLoader implements Closure, Loader
 {
+    /**
+     * @var null|resource
+     */
+    private $stream;
+
     /**
      * @param string $url all protocols supported by PHP are allowed https://www.php.net/manual/en/wrappers.php
      * @param Mode $mode only writing modes explained in https://www.php.net/manual/en/function.fopen.php are supported
@@ -25,36 +30,35 @@ final class StreamLoader implements Loader
         private readonly int|bool $truncate = 20,
         private readonly Output $output = Output::rows,
         private readonly Formatter $formatter = new Formatter\AsciiTableFormatter(),
-        private readonly SchemaFormatter $schemaFormatter = new ASCIISchemaFormatter()
+        private readonly SchemaFormatter $schemaFormatter = new ASCIISchemaFormatter(),
+        private readonly Type $type = Type::custom,
     ) {
+        $this->stream = null;
     }
 
     public static function output(int|bool $truncate = 20, Output $output = Output::rows, Formatter $formatter = new Formatter\AsciiTableFormatter(), SchemaFormatter $schemaFormatter = new ASCIISchemaFormatter()) : self
     {
-        return new self('php://output', Mode::WRITE, $truncate, $output, $formatter, $schemaFormatter);
+        return new self('php://output', Mode::WRITE, $truncate, $output, $formatter, $schemaFormatter, Type::output);
     }
 
     public static function stderr(int|bool $truncate = 20, Output $output = Output::rows, Formatter $formatter = new Formatter\AsciiTableFormatter(), SchemaFormatter $schemaFormatter = new ASCIISchemaFormatter()) : self
     {
-        return new self('php://stderr', Mode::WRITE, $truncate, $output, $formatter, $schemaFormatter);
+        return new self('php://stderr', Mode::WRITE, $truncate, $output, $formatter, $schemaFormatter, Type::stderr);
     }
 
     public static function stdout(int|bool $truncate = 20, Output $output = Output::rows, Formatter $formatter = new Formatter\AsciiTableFormatter(), SchemaFormatter $schemaFormatter = new ASCIISchemaFormatter()) : self
     {
-        return new self('php://stdout', Mode::WRITE, $truncate, $output, $formatter, $schemaFormatter);
+        return new self('php://stdout', Mode::WRITE, $truncate, $output, $formatter, $schemaFormatter, Type::stdout);
+    }
+
+    public function closure(FlowContext $context) : void
+    {
+        $this->closeStream();
     }
 
     public function load(Rows $rows, FlowContext $context) : void
     {
-        try {
-            $stream = @\fopen($this->url, $this->mode->value);
-        } catch (\Throwable $e) {
-            throw new RuntimeException("Can't open stream for url: {$this->url} in mode: {$this->mode->value}. Reason: " . $e->getMessage(), (int) $e->getCode(), $e);
-        }
-
-        if ($stream === false) {
-            throw new RuntimeException("Can't open stream for url: {$this->url} in mode: {$this->mode->value}");
-        }
+        $stream = $this->getStream();
 
         \fwrite(
             $stream,
@@ -65,6 +69,42 @@ final class StreamLoader implements Loader
             }
         );
 
-        \fclose($stream);
+        match ($this->type) {
+            Type::output => $this->closeStream(),
+            Type::stderr => $this->closeStream(),
+            Type::stdout => $this->closeStream(),
+            Type::custom => null,
+        };
+    }
+
+    private function closeStream() : void
+    {
+        if ($this->stream !== null) {
+            /**
+             * @psalm-suppress InvalidPropertyAssignmentValue
+             */
+            \fclose($this->stream);
+            $this->stream = null;
+        }
+    }
+
+    /**
+     * @return resource
+     */
+    private function getStream()
+    {
+        if ($this->stream !== null) {
+            return $this->stream;
+        }
+
+        try {
+            /** @phpstan-ignore-next-line */
+            $this->stream = @\fopen($this->url, $this->mode->value);
+        } catch (\Throwable $e) {
+            throw new RuntimeException("Can't open stream for url: {$this->url} in mode: {$this->mode->value}. Reason: " . $e->getMessage(), (int) $e->getCode(), $e);
+        }
+
+        /** @phpstan-ignore-next-line */
+        return $this->stream;
     }
 }

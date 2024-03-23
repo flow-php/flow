@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\{data_frame, from_array, from_data_frame, lit, to_output};
+use function Flow\ETL\DSL\{data_frame, from_array, from_data_frame, lit, to_stream};
 
 require __DIR__ . '/../../../autoload.php';
 
@@ -22,5 +22,6 @@ data_frame()
                 ->withEntry('timestamp', lit(\time()))
         )
     )
-    ->write(to_output(false))
+    ->collect()
+    ->write(to_stream(__DIR__ . '/output.txt', truncate: false))
     ->run();

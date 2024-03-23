@@ -44,7 +44,7 @@ final class StructureTypeTest extends TestCase
                 struct_type([
                     struct_element('string', type_string()),
                     struct_element('bool', type_boolean()),
-            ])
+                ])
             )
         );
         self::assertFalse(

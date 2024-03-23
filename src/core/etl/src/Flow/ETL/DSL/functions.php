@@ -143,7 +143,7 @@ function to_stdout(int|bool $truncate = 20, Output $output = Output::rows, Forma
 
 function to_stream(string $uri, int|bool $truncate = 20, Output $output = Output::rows, string $mode = 'w', Formatter $formatter = new Formatter\AsciiTableFormatter(), SchemaFormatter $schemaFormatter = new ASCIISchemaFormatter()) : StreamLoader
 {
-    return new StreamLoader($uri, Mode::from($mode), $truncate, $output, $formatter, $schemaFormatter);
+    return new StreamLoader($uri, Mode::from($mode), $truncate, $output, $formatter, $schemaFormatter, StreamLoader\Type::custom);
 }
 
 function to_transformation(Transformer $transformer, Loader $loader) : TransformerLoader

@@ -41,6 +41,17 @@ final class Examples
         return $examples;
     }
 
+    public function output(string $topic, string $example) : ?string
+    {
+        $path = \sprintf('%s/topics/%s/%s/output.txt', \realpath($this->examplesPath), $topic, $example);
+
+        if (false === \file_exists($path)) {
+            return null;
+        }
+
+        return \file_get_contents($path);
+    }
+
     /**
      * @return string[]
      */

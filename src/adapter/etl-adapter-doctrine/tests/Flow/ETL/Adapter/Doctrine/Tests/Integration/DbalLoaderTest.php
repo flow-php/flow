@@ -73,10 +73,10 @@ final class DbalLoaderTest extends IntegrationTestCase
         (new Flow())
             ->read(
                 from_array([
-                ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
-                ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
-                ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
-            ])
+                    ['id' => 1, 'name' => 'Name One', 'description' => 'Description One'],
+                    ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
+                    ['id' => 3, 'name' => 'Name Three', 'description' => 'Description Three'],
+                ])
             )
             ->load($loader)
             ->run();
@@ -213,10 +213,10 @@ final class DbalLoaderTest extends IntegrationTestCase
 
         (new Flow())->extract(
             from_array([
-                    ['id' => 2, 'name' => 'New Name Two', 'description' => 'New Description Two'],
-                    ['id' => 3, 'name' => 'New Name Three', 'description' => 'New Description Three'],
-                    ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Three'],
-                ])
+                ['id' => 2, 'name' => 'New Name Two', 'description' => 'New Description Two'],
+                ['id' => 3, 'name' => 'New Name Three', 'description' => 'New Description Three'],
+                ['id' => 4, 'name' => 'New Name Four', 'description' => 'New Description Three'],
+            ])
         )
             ->load(to_dbal_table_insert($this->connectionParams(), $table, ['constraint' => 'flow_doctrine_bulk_test_pkey']))
             ->run();
@@ -264,7 +264,7 @@ final class DbalLoaderTest extends IntegrationTestCase
                     ['id' => 1, 'name' => 'Changed Name One', 'description' => 'Description One'],
                     ['id' => 2, 'name' => 'Name Two', 'description' => 'Description Two'],
                     ['id' => 3, 'name' => 'Changed Name Three', 'description' => 'Description Three'],
-            ])
+                ])
             )
         ->load($updateLoader)
         ->run();

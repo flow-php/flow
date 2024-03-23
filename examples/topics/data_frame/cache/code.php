@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\{config_builder, df, from_cache, ref, to_output};
+use function Flow\ETL\DSL\{config_builder, data_frame, from_cache, ref, to_stream};
 use Flow\ETL\Adapter\Http\DynamicExtractor\NextRequestFactory;
 use Flow\ETL\Adapter\Http\PsrHttpClientDynamicExtractor;
 use Flow\ETL\Cache\PSRSimpleCache;
@@ -41,7 +41,7 @@ $adapter = new PSRSimpleCache(
     )
 );
 
-df(config_builder()->cache($adapter))
+data_frame(config_builder()->cache($adapter))
     ->read(
         from_cache(
             id: 'github_api',
@@ -55,5 +55,5 @@ df(config_builder()->cache($adapter))
     ->renameAll('unpacked.', '')
     ->drop('unpacked')
     ->select('name', 'html_url', 'blog', 'login', 'public_repos', 'followers', 'created_at')
-    ->write(to_output(false))
+    ->write(to_stream(__DIR__ . '/output.txt', truncate: false))
     ->run();

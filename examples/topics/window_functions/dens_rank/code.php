@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\{data_frame, dense_rank, from_array, ref, to_output, window};
+use function Flow\ETL\DSL\{data_frame, dense_rank, from_array, ref, to_stream, window};
 
 require __DIR__ . '/../../../autoload.php';
 
@@ -19,5 +19,6 @@ $df = data_frame()
     )
     ->withEntry('rank', dense_rank()->over(window()->partitionBy(ref('department'))->orderBy(ref('salary')->desc())))
     ->sortBy(ref('department'), ref('rank'))
-    ->write(to_output(false))
+    ->collect()
+    ->write(to_stream(__DIR__ . '/output.txt', truncate: false))
     ->run();

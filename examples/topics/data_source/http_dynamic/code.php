@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\{data_frame, ref, to_output};
+use function Flow\ETL\DSL\{data_frame, ref, to_stream};
 use Flow\ETL\Adapter\Http\DynamicExtractor\NextRequestFactory;
 use Flow\ETL\Adapter\Http\PsrHttpClientDynamicExtractor;
 use Http\Client\Curl\Client;
@@ -38,5 +38,5 @@ data_frame()
     ->renameAll('unpacked.', '')
     ->drop('unpacked')
     ->select('name', 'html_url', 'blog', 'login', 'public_repos', 'followers', 'created_at')
-    ->write(to_output(false))
+    ->write(to_stream(__DIR__ . '/output.txt', truncate: false))
     ->run();
