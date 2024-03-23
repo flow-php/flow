@@ -9,7 +9,7 @@ require __DIR__ . '/../../../autoload.php';
 data_frame()
     ->read(from_sequence_date_period_recurrences(
         'date',
-        new DateTimeImmutable('now'),
+        new DateTimeImmutable('2024-01-01 00:00:00 UTC'),
         new DateInterval('P1D'),
         recurrences: 60
     ))
