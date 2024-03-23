@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\{average, df, from_rows, int_entry, ref, row, rows, to_output};
+use function Flow\ETL\DSL\{average, data_frame, from_rows, int_entry, ref, row, rows, to_stream};
 
 require __DIR__ . '/../../../autoload.php';
 
-df()
+data_frame()
     ->from(from_rows(rows(
         row(int_entry('a', 100)),
         row(int_entry('a', 100)),
@@ -15,12 +15,5 @@ df()
         row(int_entry('a', 400))
     )))
     ->aggregate(average(ref('a')))
-    ->write(to_output(false))
+    ->write(to_stream(__DIR__ . '/output.txt', truncate: false))
     ->run();
-
-// +-------+
-// | a_avg |
-// +-------+
-// |   240 |
-// +-------+
-// 1 rows

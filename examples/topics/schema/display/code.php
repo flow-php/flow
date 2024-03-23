@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\{data_frame, from_array, to_output};
+use function Flow\ETL\DSL\{data_frame, from_array, to_stream};
 use Flow\ETL\Loader\StreamLoader\Output;
 
 require __DIR__ . '/../../../autoload.php';
@@ -15,5 +15,5 @@ data_frame()
         ['id' => 3, 'name' => 'Product 3', 'active' => true],
     ]))
     ->collect()
-    ->write(to_output(false, Output::schema))
+    ->write(to_stream(__DIR__ . '/output.txt', truncate: false, output: Output::schema))
     ->run();

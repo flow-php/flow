@@ -1,0 +1,22 @@
+output
+├── color=blue
+│   ├── sku=PRODUCT01
+│   │   └── products.csv
+│   └── sku=PRODUCT02
+│       └── products.csv
+├── color=green
+│   ├── sku=PRODUCT01
+│   │   └── products.csv
+│   ├── sku=PRODUCT02
+│   │   └── products.csv
+│   └── sku=PRODUCT03
+│       └── products.csv
+└── color=red
+    ├── sku=PRODUCT01
+    │   └── products.csv
+    ├── sku=PRODUCT02
+    │   └── products.csv
+    └── sku=PRODUCT03
+        └── products.csv
+
+12 directories, 8 files

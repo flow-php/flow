@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\{df, int_entry, str_entry, to_output};
+use function Flow\ETL\DSL\{data_frame, df, int_entry, str_entry, to_stream};
 use Flow\ETL\Join\Comparison\Equal;
 use Flow\ETL\Join\{Expression, Join};
 use Flow\ETL\{DataFrame, DataFrameFactory, Extractor, FlowContext, Row, Rows};
@@ -51,23 +51,12 @@ $db_data_frame = new class implements DataFrameFactory {
  * right size is much bigger then a left side. In that case it's better to reduce the ride side
  * by fetching from the storage only what is relevant for the left side.
  */
-df()
+data_frame()
     ->extract($apiExtractor)
     ->joinEach(
         $db_data_frame,
         Expression::on(new Equal('id', 'id')), // by using All or Any comparisons, more than one entry can be used to prepare the condition
         Join::left_anti
     )
-    ->write(to_output())
+    ->write(to_stream(__DIR__ . '/output.txt', truncate: false))
     ->run();
-
-// Output:
-//
-// +-----+-------------+
-// |   id|          sku|
-// +-----+-------------+
-// |10001|PRODUCT10_001|
-// |10002|PRODUCT10_002|
-// |10003|PRODUCT10_003|
-// +-----+-------------+
-// 3 rows

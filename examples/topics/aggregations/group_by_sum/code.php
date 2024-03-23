@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\{data_frame, from_array, ref, sum, to_output};
+use function Flow\ETL\DSL\{data_frame, from_array, ref, sum, to_stream};
 
 require __DIR__ . '/../../../autoload.php';
 
@@ -21,13 +21,5 @@ data_frame()
     ]))
     ->groupBy(ref('group'))
     ->aggregate(sum(ref('value')))
-    ->write(to_output(truncate: false))
+    ->write(to_stream(__DIR__ . '/output.txt', truncate: false))
     ->run();
-
-// +-------+-----------+
-// | group | value_sum |
-// +-------+-----------+
-// |     A |      1800 |
-// |     B |       460 |
-// +-------+-----------+
-// 2 rows

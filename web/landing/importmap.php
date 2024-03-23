@@ -44,16 +44,10 @@ return [
     'clipboard' => [
         'version' => '2.0.11',
     ],
-
-    /**
-     * On mobile there is a collapsible menu that uses relatively new popover attribute,
-     * but it's not yet available in a firefox browser: https://caniuse.com/?search=popover.
-     * This polyfill will make it work there.
-     *
-     * Once it's available, run 'bin/console importmap:remove @oddbird/popover-polyfill'
-     * and remove import from 'landing/assets/app.js'.
-     */
     '@oddbird/popover-polyfill' => [
         'version' => '0.3.8',
+    ],
+    'highlight.js/lib/languages/shell' => [
+        'version' => '11.9.0',
     ],
 ];

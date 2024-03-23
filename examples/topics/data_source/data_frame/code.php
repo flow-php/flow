@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\{data_frame, from_array, from_data_frame, lit, to_output};
+use function Flow\ETL\DSL\{data_frame, from_array, from_data_frame, lit, ref, to_stream};
 
 require __DIR__ . '/../../../autoload.php';
 
@@ -19,8 +19,9 @@ data_frame()
                         ['id' => 5],
                     ]
                 ))
-                ->withEntry('timestamp', lit(\time()))
+                ->withEntry('timestamp', ref('id')->multiply(lit(10000)))
         )
     )
-    ->write(to_output(false))
+    ->collect()
+    ->write(to_stream(__DIR__ . '/output.txt', truncate: false))
     ->run();

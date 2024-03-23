@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\{data_frame, from_array, to_output};
+use function Flow\ETL\DSL\{data_frame, from_array, to_stream};
 use Flow\ETL\Join\{Expression, Join};
 
 require __DIR__ . '/../../../autoload.php';
@@ -31,14 +31,5 @@ data_frame()
         Expression::on(['id' => 'id']),
         Join::left_anti
     )
-    ->write(to_output())
+    ->write(to_stream(__DIR__ . '/output.txt', truncate: false))
     ->run();
-
-// Output
-//
-// +--+---------+
-// |id|      sku|
-// +--+---------+
-// | 1|PRODUCT01|
-// +--+---------+
-// 1 rows

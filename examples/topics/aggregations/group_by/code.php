@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\{data_frame, from_array, ref, to_output};
+use function Flow\ETL\DSL\{data_frame, from_array, ref, to_stream};
 
 require __DIR__ . '/../../../autoload.php';
 
@@ -20,13 +20,5 @@ data_frame()
         ['id' => 10, 'group' => 'B'],
     ]))
     ->groupBy(ref('group'))
-    ->write(to_output(truncate: false))
+    ->write(to_stream(__DIR__ . '/output.txt', truncate: false))
     ->run();
-
-// +-------+
-// | group |
-// +-------+
-// |     A |
-// |     B |
-// +-------+
-// 2 rows

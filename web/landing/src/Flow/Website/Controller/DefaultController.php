@@ -32,6 +32,7 @@ final class DefaultController extends AbstractController
             'currentTopic' => $topic,
             'currentExample' => $example,
             'code' => $this->examples->code($currentTopic, $currentExample),
+            'output' => $this->examples->output($currentTopic, $currentExample),
         ]);
     }
 
@@ -58,6 +59,7 @@ final class DefaultController extends AbstractController
             'currentTopic' => $currentTopic,
             'currentExample' => $currentExample,
             'code' => $this->examples->code($currentTopic, $currentExample),
+            'output' => $this->examples->output($currentTopic, $currentExample),
         ]);
     }
 }

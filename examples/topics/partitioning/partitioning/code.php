@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use function Flow\ETL\Adapter\CSV\to_csv;
-use function Flow\ETL\DSL\{data_frame, from_array, ref};
+use function Flow\ETL\DSL\{data_frame, from_array, overwrite, ref};
 
 require __DIR__ . '/../../../autoload.php';
 
@@ -21,28 +21,6 @@ data_frame()
         ]
     ))
     ->partitionBy(ref('color'), ref('sku'))
+    ->mode(overwrite())
     ->write(to_csv(__DIR__ . '/output/products.csv'))
     ->run();
-
-// output
-// ├── color=blue
-// │   ├── sku=PRODUCT01
-// │   │   └── products.csv
-// │   └── sku=PRODUCT02
-// │       └── products.csv
-// ├── color=green
-// │   ├── sku=PRODUCT01
-// │   │   └── products.csv
-// │   ├── sku=PRODUCT02
-// │   │   └── products.csv
-// │   └── sku=PRODUCT03
-// │       └── products.csv
-// └── color=red
-//     ├── sku=PRODUCT01
-//     │   └── products.csv
-//     ├── sku=PRODUCT02
-//     │   └── products.csv
-//     └── sku=PRODUCT03
-//         └── products.csv
-//
-// 12 directories, 8 files

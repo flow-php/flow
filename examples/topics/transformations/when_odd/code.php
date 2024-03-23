@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\{df, from_sequence_number, lit, ref, to_output, when};
+use function Flow\ETL\DSL\{data_frame, from_sequence_number, lit, ref, to_stream, when};
 
 require __DIR__ . '/../../../autoload.php';
 
-df()
+data_frame()
     ->read(from_sequence_number('number', 1, 100))
     ->collect()
     ->withEntry(
@@ -17,5 +17,5 @@ df()
             else: lit('even')
         )
     )
-    ->write(to_output(false))
+    ->write(to_stream(__DIR__ . '/output.txt', truncate: false))
     ->run();

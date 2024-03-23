@@ -195,9 +195,9 @@ final class ListsWritingTest extends TestCase
                 [
                     'list_of_structs' => $i % 2 === 0
                         ? \array_map(static fn ($i) => [
-                                'id' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
-                                'name' => $faker->text(10),
-                            ], \range(1, \random_int(2, 10)))
+                            'id' => $faker->numberBetween(0, Consts::PHP_INT32_MAX),
+                            'name' => $faker->text(10),
+                        ], \range(1, \random_int(2, 10)))
                         : null,
                 ],
             ];
