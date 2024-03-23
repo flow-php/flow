@@ -108,7 +108,6 @@ final class StreamLoader implements Closure, Loader
             throw new RuntimeException("Can't open stream for url: {$this->url} in mode: {$this->mode->value}");
         }
 
-        /** @phpstan-ignore-next-line */
         return $this->stream;
     }
 }
