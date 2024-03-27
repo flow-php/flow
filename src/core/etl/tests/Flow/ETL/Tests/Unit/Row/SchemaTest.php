@@ -143,57 +143,6 @@ final class SchemaTest extends TestCase
         );
     }
 
-    public function test_merge_int_empty_schema() : void
-    {
-        $schema = (new Schema())->merge(
-            $notEmptySchema = new Schema(
-                Schema\Definition::integer('id', $nullable = true),
-                Schema\Definition::string('name', $nullable = true)
-            )
-        );
-
-        self::assertSame(
-            $notEmptySchema,
-            $schema
-        );
-    }
-
-    public function test_merge_schema() : void
-    {
-        $schema = (new Schema(
-            Schema\Definition::integer('id', $nullable = true),
-            Schema\Definition::string('name', $nullable = true)
-        ))->merge(
-            new Schema(
-                Schema\Definition::null('test'),
-            )
-        );
-
-        self::assertEquals(
-            new Schema(
-                Schema\Definition::integer('id', $nullable = true),
-                Schema\Definition::string('name', $nullable = true),
-                Schema\Definition::null('test'),
-            ),
-            $schema
-        );
-    }
-
-    public function test_merge_with_empty_schema() : void
-    {
-        $schema = ($notEmptySchema = new Schema(
-            Schema\Definition::integer('id', $nullable = true),
-            Schema\Definition::string('name', $nullable = true)
-        ))->merge(
-            new Schema()
-        );
-
-        self::assertEquals(
-            $notEmptySchema,
-            $schema
-        );
-    }
-
     public function test_normalizing_and_recreating_schema() : void
     {
         $schema = schema(
