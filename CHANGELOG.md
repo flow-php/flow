@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-03-23
+## [Unreleased] - 2024-03-27
 
 ### Added
 - [#1021](https://github.com/flow-php/flow/pull/1021) - **output on landing page examples** - [@norberttech](https://github.com/norberttech)
@@ -8,6 +8,7 @@
 - [#1016](https://github.com/flow-php/flow/pull/1016) - **Update Homebrew TAP formula: flow-php to version: 0.7.1** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1023](https://github.com/flow-php/flow/pull/1023) - **merging schemas with different entries** - [@norberttech](https://github.com/norberttech)
 - [#1021](https://github.com/flow-php/flow/pull/1021) - **when writing directly to file stream, loader is not closing stream after each chunk of rows** - [@norberttech](https://github.com/norberttech)
 
 ## [0.7.1] - 2024-03-18
