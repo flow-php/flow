@@ -30,28 +30,6 @@ final class SchemaMergeTest extends TestCase
         );
     }
 
-    public function test_merge_different_schemas_with_common_parts_but_different_nullable_definitions() : void
-    {
-        $schema = (new Schema(
-            Schema\Definition::integer('id'),
-            Schema\Definition::string('name', nullable: true)
-        ))->merge(
-            new Schema(
-                Schema\Definition::boolean('test'),
-                Schema\Definition::string('name', nullable: false)
-            )
-        );
-
-        self::assertEquals(
-            new Schema(
-                Schema\Definition::integer('id', nullable: true),
-                Schema\Definition::string('name', nullable: true),
-                Schema\Definition::boolean('test', nullable: true),
-            ),
-            $schema
-        );
-    }
-
     public function test_merge_different_schemas_with_common_parts() : void
     {
         $schema = (new Schema(
@@ -68,6 +46,28 @@ final class SchemaMergeTest extends TestCase
             new Schema(
                 Schema\Definition::integer('id', nullable: true),
                 Schema\Definition::string('name'),
+                Schema\Definition::boolean('test', nullable: true),
+            ),
+            $schema
+        );
+    }
+
+    public function test_merge_different_schemas_with_common_parts_but_different_nullable_definitions() : void
+    {
+        $schema = (new Schema(
+            Schema\Definition::integer('id'),
+            Schema\Definition::string('name', nullable: true)
+        ))->merge(
+            new Schema(
+                Schema\Definition::boolean('test'),
+                Schema\Definition::string('name', nullable: false)
+            )
+        );
+
+        self::assertEquals(
+            new Schema(
+                Schema\Definition::integer('id', nullable: true),
+                Schema\Definition::string('name', nullable: true),
                 Schema\Definition::boolean('test', nullable: true),
             ),
             $schema
