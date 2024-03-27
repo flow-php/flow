@@ -162,6 +162,12 @@ final class Schema implements \Countable
             }
         }
 
+        foreach ($newDefinitions as $entry => $definition) {
+            if (!\array_key_exists($definition->entry()->name(), $schema->definitions)) {
+                $newDefinitions[$entry] = $definition->nullable();
+            }
+        }
+
         $this->setDefinitions(...\array_values($newDefinitions));
 
         return $this;
