@@ -109,6 +109,8 @@ final class WriterValidatorTest extends TestCase
 
         $writer->write($path, $schema, [['id' => 123]]);
 
+        self::assertFileExists($path);
+
         $reader = new Reader();
         $file = $reader->read($path);
 
@@ -122,7 +124,7 @@ final class WriterValidatorTest extends TestCase
             \iterator_to_array($file->values())
         );
 
-        unlink($path);
+        \unlink($path);
     }
 
     public function test_writing_row_with_missing_optional_columns_in_different_columns() : void
