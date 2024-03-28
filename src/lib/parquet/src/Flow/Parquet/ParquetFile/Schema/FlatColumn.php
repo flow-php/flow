@@ -243,6 +243,11 @@ final class FlatColumn implements Column
         return false;
     }
 
+    public function isRequired() : bool
+    {
+        return $this->repetition !== Repetition::OPTIONAL;
+    }
+
     public function isStruct() : bool
     {
         return false;

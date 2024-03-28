@@ -18,7 +18,7 @@ final class Flattener
         if (!\array_key_exists($column->name(), $row)) {
             $this->validator->validate($column, null);
 
-            return [];
+            return [$column->name() => null];
         }
 
         /**

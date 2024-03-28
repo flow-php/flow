@@ -353,6 +353,6 @@ final class FlattenerTest extends TestCase
         $row = [];
 
         $flattener = new Flattener(new DisabledValidator());
-        self::assertSame([], $flattener->flattenColumn($column, $row));
+        self::assertSame(['int32' => null], $flattener->flattenColumn($column, $row));
     }
 }
