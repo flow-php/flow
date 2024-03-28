@@ -25,7 +25,7 @@ use Flow\ETL\PHP\Type\Native\{ArrayType, CallableType, EnumType, NullType, Objec
 use Flow\ETL\PHP\Type\{Type, TypeDetector};
 use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Row\Schema\Formatter\ASCIISchemaFormatter;
-use Flow\ETL\Row\Schema\{Definition, SchemaFormatter};
+use Flow\ETL\Row\Schema\{Definition, Matcher\EvolvingSchemaMatcher, Matcher\StrictSchemaMatcher, SchemaFormatter};
 use Flow\ETL\Row\{EntryFactory, EntryReference, Reference, References, Schema};
 use Flow\ETL\{Config, ConfigBuilder, DataFrame, Extractor, Flow, FlowContext, Formatter, Loader, Partition, Pipeline, Row, Rows, Transformer, Window};
 
@@ -972,6 +972,16 @@ function schema_to_json(Schema $schema) : string
 function schema_from_json(string $schema) : Schema
 {
     return Schema::fromArray(\json_decode($schema, true, 512, JSON_THROW_ON_ERROR));
+}
+
+function schema_strict_matcher() : StrictSchemaMatcher
+{
+    return new StrictSchemaMatcher();
+}
+
+function schema_evolving_matcher() : EvolvingSchemaMatcher
+{
+    return new EvolvingSchemaMatcher();
 }
 
 function int_schema(string $name, bool $nullable = false, ?Schema\Metadata $metadata = null) : Definition

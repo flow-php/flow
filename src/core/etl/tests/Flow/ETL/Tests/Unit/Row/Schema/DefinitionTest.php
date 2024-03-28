@@ -21,6 +21,22 @@ final class DefinitionTest extends TestCase
         new Definition('name', \DateTimeInterface::class, type_datetime());
     }
 
+    public function test_equals_nullability() : void
+    {
+        $def = Definition::integer('id', nullable: true);
+
+        self::assertFalse(
+            $def->isEqual(
+                Definition::integer('id', nullable: false)
+            )
+        );
+        self::assertTrue(
+            $def->isEqual(
+                Definition::integer('id', nullable: true)
+            )
+        );
+    }
+
     public function test_equals_types() : void
     {
         $def = Definition::list('list', new ListType(ListElement::integer()));
