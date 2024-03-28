@@ -3,3 +3,4 @@ build/flow.phar.asc
 var
 vendor
 compose.yml
+phpunit.xml
