@@ -24,14 +24,16 @@ final class EvolvingSchemaMatcher implements SchemaMatcher
             return false;
         }
 
+        foreach ($left->definitions() as $definition) {
+            if ($right->findDefinition($definition->entry()) === null) {
+                return false;
+            }
+        }
+
         foreach ($right->definitions() as $rightDefinition) {
             $leftDefinition = $left->findDefinition($rightDefinition->entry());
 
             if ($leftDefinition === null) {
-                if ($right->count() === $left->count()) {
-                    return false;
-                }
-
                 continue;
             }
 
