@@ -1,6 +1,7 @@
 ## [Unreleased] - 2024-03-28
 
 ### Added
+- [#1027](https://github.com/flow-php/flow/pull/1027) - **Added Schema::match() with strict/evolving matchers** - [@norberttech](https://github.com/norberttech)
 - [#1026](https://github.com/flow-php/flow/pull/1026) - **Added phpunit.xml to .gitignore** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
