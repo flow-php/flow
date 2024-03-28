@@ -107,7 +107,7 @@ final class WriterValidatorTest extends TestCase
             Schema\FlatColumn::string('string')
         );
 
-        $writer->write($path, $schema, [['id' => 123]]);
+        $writer->write($path, $schema, [['id' => 123], []]);
 
         self::assertFileExists($path);
 
@@ -118,6 +118,10 @@ final class WriterValidatorTest extends TestCase
             [
                 [
                     'id' => 123,
+                    'string' => null,
+                ],
+                [
+                    'id' => null,
                     'string' => null,
                 ],
             ],
