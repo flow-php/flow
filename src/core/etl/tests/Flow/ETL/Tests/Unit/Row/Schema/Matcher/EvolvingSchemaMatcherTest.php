@@ -114,4 +114,20 @@ final class EvolvingSchemaMatcherTest extends TestCase
 
         self::assertTrue((new EvolvingSchemaMatcher())->match($left, $right));
     }
+
+    public function test_right_totally_different() : void
+    {
+        $left = schema(
+            int_schema('id'),
+            str_schema('name'),
+        );
+
+        $right = schema(
+            int_schema('not_id'),
+            str_schema('surname'),
+            bool_schema('active'),
+        );
+
+        self::assertFalse((new EvolvingSchemaMatcher())->match($left, $right));
+    }
 }
