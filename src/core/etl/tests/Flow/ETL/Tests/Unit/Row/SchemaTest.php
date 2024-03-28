@@ -4,7 +4,25 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row;
 
-use function Flow\ETL\DSL\{bool_schema, int_schema, json_schema, list_schema, map_schema, schema, schema_from_json, schema_to_json, str_schema, struct_element, structure_schema, type_int, type_list, type_map, type_string, type_structure, uuid_schema};
+use function Flow\ETL\DSL\{bool_schema,
+    int_schema,
+    json_schema,
+    list_schema,
+    map_schema,
+    schema,
+    schema_evolving_matcher,
+    schema_from_json,
+    schema_strict_matcher,
+    schema_to_json,
+    str_schema,
+    struct_element,
+    structure_schema,
+    type_int,
+    type_list,
+    type_map,
+    type_string,
+    type_structure,
+    uuid_schema};
 use Flow\ETL\Exception\{InvalidArgumentException, SchemaDefinitionNotFoundException, SchemaDefinitionNotUniqueException};
 use Flow\ETL\Row\{EntryReference, Schema};
 use PHPUnit\Framework\TestCase;
@@ -141,6 +159,38 @@ final class SchemaTest extends TestCase
             ),
             $schema->nullable()
         );
+    }
+
+    public function test_matching_schema_with_evolving_schema_matcher() : void
+    {
+        $left = schema(
+            int_schema('id'),
+            str_schema('name'),
+        );
+
+        $right = schema(
+            int_schema('id'),
+            str_schema('name'),
+            str_schema('surname'),
+        );
+
+        self::assertTrue($left->matches($right, schema_evolving_matcher()));
+    }
+
+    public function test_matching_schema_with_strict_schema_matcher() : void
+    {
+        $left = schema(
+            int_schema('id'),
+            str_schema('name'),
+        );
+
+        $right = schema(
+            int_schema('id'),
+            str_schema('name'),
+            str_schema('surname'),
+        );
+
+        self::assertFalse($left->matches($right, schema_strict_matcher()));
     }
 
     public function test_normalizing_and_recreating_schema() : void
