@@ -1,5 +1,8 @@
 ## [Unreleased] - 2024-03-28
 
+### Added
+- [#1026](https://github.com/flow-php/flow/pull/1026) - **Added phpunit.xml to .gitignore** - [@norberttech](https://github.com/norberttech)
+
 ### Changed
 - [#1025](https://github.com/flow-php/flow/pull/1025) - **updated dependencies** - [@norberttech](https://github.com/norberttech)
 - [#1024](https://github.com/flow-php/flow/pull/1024) - **Update Homebrew TAP formula: flow-php to version: 0.7.2** - [@norberttech](https://github.com/norberttech)
