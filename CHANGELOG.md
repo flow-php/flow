@@ -1,7 +1,11 @@
-## [Unreleased] - 2024-03-27
+## [Unreleased] - 2024-03-28
 
 ### Changed
+- [#1025](https://github.com/flow-php/flow/pull/1025) - **updated dependencies** - [@norberttech](https://github.com/norberttech)
 - [#1024](https://github.com/flow-php/flow/pull/1024) - **Update Homebrew TAP formula: flow-php to version: 0.7.2** - [@norberttech](https://github.com/norberttech)
+
+### Fixed
+- [#1025](https://github.com/flow-php/flow/pull/1025) - **writing nullable parquet values that are marked in the schema as optional** - [@norberttech](https://github.com/norberttech)
 
 ## [0.7.2] - 2024-03-27
 
