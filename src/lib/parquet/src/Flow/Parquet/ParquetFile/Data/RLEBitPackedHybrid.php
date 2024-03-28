@@ -37,6 +37,10 @@ final class RLEBitPackedHybrid
         $readBytes = $reader->readBytes(\min($remainingByteCount, $totalByteCount));
         $actualByteCount = $readBytes->count();
 
+        if ($actualByteCount === 0) {
+            return;
+        }
+
         $bitMask = (1 << $bitWidth) - 1;
         $byteIndex = 0;
         $currentByte = $readBytes[$byteIndex];

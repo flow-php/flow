@@ -264,6 +264,11 @@ final class NestedColumn implements Column
         return false;
     }
 
+    public function isRequired() : bool
+    {
+        return $this->repetition !== Repetition::OPTIONAL;
+    }
+
     public function isStruct() : bool
     {
         if ($this->isMap()) {

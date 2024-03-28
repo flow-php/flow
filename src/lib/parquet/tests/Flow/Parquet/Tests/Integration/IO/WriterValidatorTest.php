@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace Flow\Parquet\Tests\Integration\IO;
 
 use Flow\Parquet\ParquetFile\Schema;
-use Flow\Parquet\Writer;
+use Flow\Parquet\{Reader, Writer};
 use PHPUnit\Framework\TestCase;
 
 final class WriterValidatorTest extends TestCase
 {
     public function test_skipping_required_row() : void
     {
-        $this->expectExceptionMessage('Column \'string\' not found in row');
+        $this->expectExceptionMessage('Column "string" is required');
 
         $writer = new Writer();
         $path = \sys_get_temp_dir() . '/test-writer-validator' . \uniqid('parquet-test-', true) . '.parquet';
@@ -95,5 +95,74 @@ final class WriterValidatorTest extends TestCase
         $schema = Schema::with(Schema\FlatColumn::string('string')->makeRequired());
 
         $writer->write($path, $schema, [['string' => null]]);
+    }
+
+    public function test_writing_row_with_missing_optional_columns() : void
+    {
+        $writer = new Writer();
+        $path = \sys_get_temp_dir() . '/test-writer-validator' . \uniqid('parquet-test-', true) . '.parquet';
+
+        $schema = Schema::with(
+            Schema\FlatColumn::int32('id'),
+            Schema\FlatColumn::string('string')
+        );
+
+        $writer->write($path, $schema, [['id' => 123], []]);
+
+        self::assertFileExists($path);
+
+        $reader = new Reader();
+        $file = $reader->read($path);
+
+        self::assertSame(
+            [
+                [
+                    'id' => 123,
+                    'string' => null,
+                ],
+                [
+                    'id' => null,
+                    'string' => null,
+                ],
+            ],
+            \iterator_to_array($file->values())
+        );
+
+        \unlink($path);
+    }
+
+    public function test_writing_row_with_missing_optional_columns_in_different_columns() : void
+    {
+        $writer = new Writer();
+        $path = \sys_get_temp_dir() . '/test-writer-validator' . \uniqid('parquet-test-', true) . '.parquet';
+
+        $schema = Schema::with(
+            Schema\FlatColumn::int32('id'),
+            Schema\FlatColumn::string('string')
+        );
+
+        $writer->write($path, $schema, [
+            ['id' => 123],
+            ['string' => 'string'],
+            ['id' => 123, 'string' => 'string'],
+            ['id' => 123, 'string' => null],
+            ['id' => null, 'string' => 'string'],
+        ]);
+
+        $reader = new Reader();
+        $file = $reader->read($path);
+
+        self::assertSame(
+            [
+                ['id' => 123, 'string' => null],
+                ['id' => null, 'string' => 'string'],
+                ['id' => 123, 'string' => 'string'],
+                ['id' => 123, 'string' => null],
+                ['id' => null, 'string' => 'string'],
+            ],
+            \iterator_to_array($file->values())
+        );
+
+        unlink($path);
     }
 }

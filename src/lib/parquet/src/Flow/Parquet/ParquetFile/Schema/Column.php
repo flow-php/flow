@@ -20,6 +20,8 @@ interface Column
 
     public function isMapElement() : bool;
 
+    public function isRequired() : bool;
+
     public function isStruct() : bool;
 
     public function isStructElement() : bool;

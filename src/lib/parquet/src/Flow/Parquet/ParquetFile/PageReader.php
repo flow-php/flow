@@ -79,7 +79,7 @@ final class PageReader
                 (new Codec($this->options))
                     ->decompress(
                         /** @phpstan-ignore-next-line */
-                        \fread($stream, $pageHeader->compressedPageSize()),
+                        $pageHeader->compressedPageSize() === 0 ? '' : \fread($stream, $pageHeader->compressedPageSize()),
                         $codec
                     ),
                 $column,
