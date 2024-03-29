@@ -79,7 +79,13 @@ final class FloatEntry implements Entry
 
     public function toString() : string
     {
-        return (string) $this->value();
+        $float = (string) $this->value();
+
+        if (!\str_contains($float, '.')) {
+            $float .= '.00';
+        }
+
+        return $float;
     }
 
     public function type() : Type
