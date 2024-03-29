@@ -43,6 +43,10 @@ final class Cast extends ScalarFunctionChain
                 'date' => match (\gettype($value)) {
                     'string' => (new \DateTimeImmutable($value))->setTime(0, 0, 0, 0),
                     'integer' => \DateTimeImmutable::createFromFormat('U', (string) $value),
+                    'object' => match ($value::class) {
+                        \DateTime::class, \DateTimeImmutable::class => $value->setTime(0, 0, 0, 0),
+                        default => null,
+                    },
                     default => null,
                 },
                 'int', 'integer' => $caster->to(type_integer())->value($value),
