@@ -9,6 +9,7 @@
 - [#1024](https://github.com/flow-php/flow/pull/1024) - **Update Homebrew TAP formula: flow-php to version: 0.7.2** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1031](https://github.com/flow-php/flow/pull/1031) - **casting DateTime objects into datetime/date** - [@norberttech](https://github.com/norberttech)
 - [#1030](https://github.com/flow-php/flow/pull/1030) - **Improved displaying floats as strings** - [@norberttech](https://github.com/norberttech)
 - [963d32](https://github.com/flow-php/flow/commit/963d3287a8c4a4af853acc42329477965f15573d) - **edge case where evolving schema is brings new definition but its missing some old ones (#1028)** - [@norberttech](https://github.com/norberttech)
 - [#1025](https://github.com/flow-php/flow/pull/1025) - **writing nullable parquet values that are marked in the schema as optional** - [@norberttech](https://github.com/norberttech)
