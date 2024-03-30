@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-03-29
+## [0.7.3] - 2024-03-30
 
 ### Added
 - [#1027](https://github.com/flow-php/flow/pull/1027) - **Added Schema::match() with strict/evolving matchers** - [@norberttech](https://github.com/norberttech)
