@@ -216,11 +216,6 @@ function json_object_entry(string $name, array|string|null $data) : Row\Entry\Js
     return Row\Entry\JsonEntry::object($name, $data);
 }
 
-function null_entry(string $name) : Row\Entry\StringEntry
-{
-    return new Row\Entry\StringEntry($name, null);
-}
-
 function object_entry(string $name, ?object $data) : Row\Entry\ObjectEntry
 {
     return new Row\Entry\ObjectEntry($name, $data);
@@ -843,7 +838,7 @@ function array_to_rows(array $data, EntryFactory $entryFactory = new NativeEntry
         if ($schema !== null) {
             foreach ($schema->definitions() as $definition) {
                 if (!\array_key_exists($definition->entry()->name(), $entries)) {
-                    $entries[$definition->entry()->name()] = null_entry($definition->entry()->name());
+                    $entries[$definition->entry()->name()] = str_entry($definition->entry()->name(), null);
                 }
             }
         }
@@ -883,7 +878,7 @@ function array_to_rows(array $data, EntryFactory $entryFactory = new NativeEntry
         if ($schema !== null) {
             foreach ($schema->definitions() as $definition) {
                 if (!\array_key_exists($definition->entry()->name(), $entries)) {
-                    $entries[$definition->entry()->name()] = null_entry($definition->entry()->name());
+                    $entries[$definition->entry()->name()] = str_entry($definition->entry()->name(), null);
                 }
             }
         }

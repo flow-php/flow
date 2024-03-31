@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
-use function Flow\ETL\DSL\{bool_entry, int_entry, null_entry, str_entry};
+use function Flow\ETL\DSL\{bool_entry, int_entry, str_entry};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Join\Expression;
 use Flow\ETL\{Row, Rows};
@@ -289,7 +289,7 @@ final class RowsJoinTest extends TestCase
             new Rows(
                 Row::create(int_entry('id', 1), str_entry('country', 'PL'), str_entry('name', 'Poland')),
                 Row::create(int_entry('id', 2), str_entry('country', 'US'), str_entry('name', 'United States')),
-                Row::create(int_entry('id', 3), str_entry('country', 'FR'), null_entry('name')),
+                Row::create(int_entry('id', 3), str_entry('country', 'FR'), str_entry('name', null)),
             ),
             $joined
         );
@@ -381,7 +381,7 @@ final class RowsJoinTest extends TestCase
                 Row::create(str_entry('code', 'PL'), str_entry('name', 'Poland'), int_entry('id', 1)),
                 Row::create(str_entry('code', 'PL'), str_entry('name', 'Poland'), int_entry('id', 2)),
                 Row::create(str_entry('code', 'US'), str_entry('name', 'United States'), int_entry('id', 3)),
-                Row::create(str_entry('code', 'GB'), str_entry('name', 'Great Britain'), null_entry('id')),
+                Row::create(str_entry('code', 'GB'), str_entry('name', 'Great Britain'), str_entry('id', null)),
             ),
             $joined
         );

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{array_entry, concat, datetime_entry, hash, lit, null_entry, ref, str_entry};
+use function Flow\ETL\DSL\{array_entry, concat, datetime_entry, hash, lit, ref, str_entry};
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;
 
@@ -37,7 +37,7 @@ final class HashTest extends TestCase
     public function test_hashing_null_value() : void
     {
         self::assertNull(
-            ref('value')->hash()->eval(Row::create(null_entry('value'))),
+            ref('value')->hash()->eval(Row::create(str_entry('value', null))),
         );
     }
 

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
-use function Flow\ETL\DSL\{array_entry, average, bool_entry, df, float_entry, from_all, from_array, from_rows, int_entry, lit, null_entry, ref, refs, str_entry, to_callable};
+use function Flow\ETL\DSL\{array_entry, average, bool_entry, df, float_entry, from_all, from_array, from_rows, int_entry, lit, ref, refs, str_entry, to_callable};
 use Flow\ETL\ErrorHandler\IgnoreError;
 use Flow\ETL\Row\Entry\{BooleanEntry, DateTimeEntry, IntegerEntry, StringEntry};
 use Flow\ETL\Row\Schema;
@@ -82,7 +82,7 @@ final class DataFrameTest extends TestCase
         $rows = df()->process(
             new Rows(
                 Row::create(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
-                Row::create(int_entry('id', 2), null_entry('name'), bool_entry('active', false)),
+                Row::create(int_entry('id', 2), str_entry('name', null), bool_entry('active', false)),
                 Row::create(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
             )
         )
@@ -92,7 +92,7 @@ final class DataFrameTest extends TestCase
         self::assertEquals(
             new Rows(
                 Row::create(str_entry('name', 'foo'), bool_entry('active', true)),
-                Row::create(null_entry('name'), bool_entry('active', false)),
+                Row::create(str_entry('name', null), bool_entry('active', false)),
                 Row::create(str_entry('name', 'bar'), bool_entry('active', false)),
             ),
             $rows
@@ -201,7 +201,7 @@ final class DataFrameTest extends TestCase
         df()->process(
             new Rows(
                 Row::create(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
-                Row::create(int_entry('id', 2), null_entry('name'), bool_entry('active', false)),
+                Row::create(int_entry('id', 2), str_entry('name', null), bool_entry('active', false)),
                 Row::create(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
             )
         )
@@ -209,7 +209,7 @@ final class DataFrameTest extends TestCase
                 $this->assertEquals(
                     new Rows(
                         Row::create(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
-                        Row::create(int_entry('id', 2), null_entry('name'), bool_entry('active', false)),
+                        Row::create(int_entry('id', 2), str_entry('name', null), bool_entry('active', false)),
                         Row::create(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
                     ),
                     $rows
@@ -454,7 +454,7 @@ final class DataFrameTest extends TestCase
         $rows = (new Flow())->process(
             new Rows(
                 Row::create(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
-                Row::create(int_entry('id', 2), null_entry('name'), bool_entry('active', false)),
+                Row::create(int_entry('id', 2), str_entry('name', null), bool_entry('active', false)),
                 Row::create(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
             )
         )
@@ -464,7 +464,7 @@ final class DataFrameTest extends TestCase
         self::assertEquals(
             new Rows(
                 Row::create(str_entry('name', 'foo'), int_entry('id', 1)),
-                Row::create(null_entry('name'), int_entry('id', 2)),
+                Row::create(str_entry('name', null), int_entry('id', 2)),
                 Row::create(str_entry('name', 'bar'), int_entry('id', 2)),
             ),
             $rows
@@ -476,7 +476,7 @@ final class DataFrameTest extends TestCase
         $rows = (new Flow())->process(
             new Rows(
                 Row::create(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
-                Row::create(int_entry('id', 2), null_entry('name'), array_entry('tags', ['foo', 'bar'])),
+                Row::create(int_entry('id', 2), str_entry('name', null), array_entry('tags', ['foo', 'bar'])),
                 Row::create(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
             )
         )->validate(
@@ -487,7 +487,7 @@ final class DataFrameTest extends TestCase
         self::assertEquals(
             new Rows(
                 Row::create(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
-                Row::create(int_entry('id', 2), null_entry('name'), array_entry('tags', ['foo', 'bar'])),
+                Row::create(int_entry('id', 2), str_entry('name', null), array_entry('tags', ['foo', 'bar'])),
                 Row::create(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
             ),
             $rows
@@ -499,7 +499,7 @@ final class DataFrameTest extends TestCase
         $rows = (new Flow())->process(
             new Rows(
                 Row::create(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
-                Row::create(int_entry('id', 2), null_entry('name'), bool_entry('active', false)),
+                Row::create(int_entry('id', 2), str_entry('name', null), bool_entry('active', false)),
                 Row::create(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
             )
         )->validate(
@@ -513,7 +513,7 @@ final class DataFrameTest extends TestCase
         self::assertEquals(
             new Rows(
                 Row::create(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
-                Row::create(int_entry('id', 2), null_entry('name'), bool_entry('active', false)),
+                Row::create(int_entry('id', 2), str_entry('name', null), bool_entry('active', false)),
                 Row::create(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
             ),
             $rows

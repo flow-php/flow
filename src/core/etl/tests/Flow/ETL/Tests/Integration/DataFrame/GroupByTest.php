@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use function Flow\ETL\DSL\{average, count, df, float_entry, from_all, from_array, from_memory, from_rows, int_entry, integer_entry, lit, max, null_entry, rank, ref, str_entry, sum, window};
+use function Flow\ETL\DSL\{average, count, df, float_entry, from_all, from_array, from_memory, from_rows, int_entry, integer_entry, lit, max, rank, ref, str_entry, sum, window};
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
 use Flow\ETL\{Loader, Row, Rows};
@@ -88,7 +88,7 @@ final class GroupByTest extends IntegrationTestCase
                     Row::create(int_entry('id', 4), str_entry('country', 'PL'), int_entry('age', 30), str_entry('gender', 'female')),
                     Row::create(int_entry('id', 5), str_entry('country', 'US'), int_entry('age', 40), str_entry('gender', 'female')),
                     Row::create(int_entry('id', 6), str_entry('country', 'US'), int_entry('age', 40), str_entry('gender', 'male')),
-                    Row::create(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45), null_entry('gender')),
+                    Row::create(int_entry('id', 7), str_entry('country', 'US'), int_entry('age', 45), str_entry('gender', null)),
                     Row::create(int_entry('id', 9), str_entry('country', 'US'), int_entry('age', 50), str_entry('gender', 'male')),
                 )
             ))

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
-use function Flow\ETL\DSL\{array_entry, array_to_rows, bool_entry, bool_schema, datetime_entry, int_entry, int_schema, list_entry, null_entry, partition, partitions, ref, row, rows, rows_partitioned, str_entry, str_schema, type_int, type_list, type_string};
+use function Flow\ETL\DSL\{array_entry, array_to_rows, bool_entry, bool_schema, datetime_entry, int_entry, int_schema, list_entry, partition, partitions, ref, row, rows, rows_partitioned, str_entry, str_schema, type_int, type_list, type_string};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\ListType;
@@ -191,7 +191,7 @@ final class RowsTest extends TestCase
                 row(
                     int_entry('id', 1234),
                     bool_entry('deleted', false),
-                    null_entry('phase')
+                    str_entry('phase', null)
                 ),
             ),
             $rows
@@ -271,12 +271,12 @@ final class RowsTest extends TestCase
                 row(
                     int_entry('id', 1234),
                     bool_entry('deleted', false),
-                    null_entry('phase')
+                    str_entry('phase', null)
                 ),
                 row(
                     int_entry('id', 4321),
                     bool_entry('deleted', true),
-                    null_entry('phase')
+                    str_entry('phase', null)
                 )
             ),
             $rows
@@ -946,7 +946,7 @@ final class RowsTest extends TestCase
     {
         $rows = rows(
             row(int_entry('id', 1), str_entry('name', 'foo')),
-            row(int_entry('id', 1), null_entry('name'), list_entry('list', [1, 2], type_list(type_int()))),
+            row(int_entry('id', 1), str_entry('name', null), list_entry('list', [1, 2], type_list(type_int()))),
             row(int_entry('id', 1), str_entry('name', 'bar'), array_entry('tags', ['a', 'b'])),
             row(int_entry('id', 1), int_entry('name', 25)),
         );

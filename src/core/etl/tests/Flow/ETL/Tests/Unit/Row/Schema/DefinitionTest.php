@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Row\Schema;
 
 use function Flow\ETL\DSL\{int_entry,
-    null_entry,
     str_entry,
     struct_element,
     struct_entry,
@@ -207,7 +206,7 @@ final class DefinitionTest extends TestCase
     {
         $def = Definition::integer('test', $nullable = false);
 
-        self::assertFalse($def->matches(null_entry('test')));
+        self::assertFalse($def->matches(str_entry('test', null)));
     }
 
     public function test_not_matches_when_type_does_not_match() : void

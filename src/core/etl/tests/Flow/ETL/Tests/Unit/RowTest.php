@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
-use function Flow\ETL\DSL\{array_entry, bool_entry, datetime_entry, float_entry, int_entry, list_entry, map_entry, null_entry, object_entry, row, str_entry, struct_element, struct_entry, struct_type, type_int, type_list, type_map, type_object, type_string};
+use function Flow\ETL\DSL\{array_entry, bool_entry, datetime_entry, float_entry, int_entry, list_entry, map_entry, object_entry, row, str_entry, struct_element, struct_entry, struct_type, type_int, type_list, type_map, type_object, type_string};
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\Map\{MapKey, MapValue};
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
@@ -81,7 +81,7 @@ final class RowTest extends TestCase
             float_entry('price', \random_int(100, 100000) / 100),
             bool_entry('deleted', false),
             datetime_entry('created-at', new \DateTimeImmutable('now')),
-            null_entry('phase'),
+            str_entry('phase', null),
             array_entry(
                 'array',
                 [

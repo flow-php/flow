@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{all, lit, null_entry, ref};
+use function Flow\ETL\DSL\{all, lit, ref, str_entry};
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;
 
@@ -13,7 +13,7 @@ final class AllTest extends TestCase
     public function test_all_expression_on_is_null_expression() : void
     {
         self::assertTrue(
-            all(ref('value')->isNull())->eval(Row::create(null_entry('value')))
+            all(ref('value')->isNull())->eval(Row::create(str_entry('value', null)))
         );
     }
 

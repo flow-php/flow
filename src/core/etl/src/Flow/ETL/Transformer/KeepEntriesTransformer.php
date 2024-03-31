@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Transformer;
 
-use function Flow\ETL\DSL\null_entry;
+use function Flow\ETL\DSL\str_entry;
 use Flow\ETL\Row\{Entry, Reference, References};
 use Flow\ETL\{FlowContext, Row, Rows, Transformer};
 
@@ -30,7 +30,7 @@ final class KeepEntriesTransformer implements Transformer
 
             foreach ($this->refs as $keepEntryName) {
                 if (!$newEntries->entries()->has($keepEntryName)) {
-                    $newEntries = $newEntries->add(null_entry($keepEntryName->name()));
+                    $newEntries = $newEntries->add(str_entry($keepEntryName->name(), null));
                 }
             }
 

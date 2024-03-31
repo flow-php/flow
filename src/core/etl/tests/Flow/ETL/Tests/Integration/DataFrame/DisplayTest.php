@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use function Flow\ETL\DSL\{array_entry, bool_entry, datetime_entry, df, enum_entry, float_entry, from_array, from_rows, int_entry, list_entry, map_entry, null_entry, object_entry, ref, row, rows, str_entry, string_entry, struct_element, struct_entry, struct_type, type_int, type_list, type_map, type_string, xml_entry};
+use function Flow\ETL\DSL\{array_entry, bool_entry, datetime_entry, df, enum_entry, float_entry, from_array, from_rows, int_entry, list_entry, map_entry, object_entry, ref, row, rows, str_entry, string_entry, struct_element, struct_entry, struct_type, type_int, type_list, type_map, type_string, xml_entry};
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
 use Flow\ETL\{Extractor, FlowContext, Rows};
@@ -28,7 +28,7 @@ final class DisplayTest extends IntegrationTestCase
                                 int_entry('100', 100),
                                 bool_entry('deleted', false),
                                 datetime_entry('created-at', new \DateTimeImmutable('2020-07-13 15:00')),
-                                null_entry('phase'),
+                                str_entry('phase', null),
                                 array_entry(
                                     'array',
                                     [
@@ -225,7 +225,7 @@ ASCIITABLE,
                 ),
                 rows(
                     row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), int_entry('salary', 5000)),
-                    row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), null_entry('salary')),
+                    row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), int_entry('salary', null)),
                 )
             ))
             ->printRows();
