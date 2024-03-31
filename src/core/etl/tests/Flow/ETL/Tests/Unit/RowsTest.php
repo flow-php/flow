@@ -9,7 +9,7 @@ use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\ListType;
 use Flow\ETL\Row\Comparator\{NativeComparator, WeakObjectComparator};
-use Flow\ETL\Row\Entry\{BooleanEntry, DateTimeEntry, NullEntry, ObjectEntry, StringEntry};
+use Flow\ETL\Row\Entry\{BooleanEntry, DateTimeEntry, ObjectEntry, StringEntry};
 use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\{Comparator, Schema};
 use Flow\ETL\{Row, Rows};
@@ -212,7 +212,7 @@ final class RowsTest extends TestCase
                 row(
                     int_entry('id', 1234),
                     bool_entry('deleted', false),
-                    null_entry('phase'),
+                    str_entry('phase', null),
                 ),
                 row(
                     int_entry('id', 4321),
@@ -1087,14 +1087,14 @@ final class RowsTest extends TestCase
             row(
                 $rowOneId = int_entry('id', 1),
                 $rowOneDeleted = new BooleanEntry('deleted', true),
-                $rowOnePhase = new NullEntry('phase'),
+                $rowOnePhase = new StringEntry('phase', null),
                 $rowOneCreatedAt = new DateTimeEntry('created-at', new \DateTimeImmutable('2020-08-13 15:00')),
             ),
             row(
                 $rowTwoDeleted = new BooleanEntry('deleted', true),
                 $rowTwoCreatedAt = new DateTimeEntry('created-at', new \DateTimeImmutable('2020-08-13 15:00')),
                 $rowTwoId = int_entry('id', 1),
-                $rowTwoPhase = new NullEntry('phase'),
+                $rowTwoPhase = new StringEntry('phase', null),
             ),
         );
 
@@ -1106,13 +1106,13 @@ final class RowsTest extends TestCase
                     $rowOneCreatedAt = new DateTimeEntry('created-at', new \DateTimeImmutable('2020-08-13 15:00')),
                     $rowOneDeleted = new BooleanEntry('deleted', true),
                     $rowOneId = int_entry('id', 1),
-                    $rowOnePhase = new NullEntry('phase'),
+                    $rowOnePhase = new StringEntry('phase', null),
                 ),
                 row(
                     $rowTwoCreatedAt = new DateTimeEntry('created-at', new \DateTimeImmutable('2020-08-13 15:00')),
                     $rowTwoDeleted = new BooleanEntry('deleted', true),
                     $rowTwoId = int_entry('id', 1),
-                    $rowTwoPhase = new NullEntry('phase'),
+                    $rowTwoPhase = new StringEntry('phase', null),
                 )
             ),
             $sorted
@@ -1217,7 +1217,7 @@ final class RowsTest extends TestCase
             row(
                 int_entry('id', 1234),
                 new BooleanEntry('deleted', false),
-                new NullEntry('phase'),
+                new StringEntry('phase', null),
             ),
             row(
                 int_entry('id', 4321),
@@ -1241,7 +1241,7 @@ final class RowsTest extends TestCase
             row(
                 int_entry('id', 1234),
                 new BooleanEntry('deleted', false),
-                new NullEntry('phase'),
+                new StringEntry('phase', null),
             ),
             row(
                 int_entry('id', 4321),

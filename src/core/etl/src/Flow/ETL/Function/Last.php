@@ -28,6 +28,6 @@ final class Last implements AggregatingFunction
 
     public function result() : Entry
     {
-        return $this->last ?? new Entry\NullEntry($this->ref->name());
+        return $this->last ?? new Entry\StringEntry($this->ref->name(), null);
     }
 }

@@ -37,8 +37,8 @@ final class StructureSelect implements ScalarFunction
         $output = [];
 
         foreach ($this->refs as $ref) {
-            if (\array_key_exists($ref->to(), $structure->value())) {
-                $output[$ref->name()] = $structure->value()[$ref->to()];
+            if (\array_key_exists($ref->to(), $structure->value() ?: [])) {
+                $output[$ref->name()] = $structure->value() ? $structure->value()[$ref->to()] : null;
             } else {
                 $output[$ref->name()] = null;
             }

@@ -69,11 +69,11 @@ final class DisplayTest extends IntegrationTestCase
 +------+--------+-----+---------+----------------------+-------+----------------------+---------+-------------------+----------------------+----------------------+-------+----------------------+
 |   id |  price | 100 | deleted |           created-at | phase |                array |    list |               map |                items |               object |  enum |                  xml |
 +------+--------+-----+---------+----------------------+-------+----------------------+---------+-------------------+----------------------+----------------------+-------+----------------------+
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | ArrayIterator Object | three | <?xml version="1.0"? |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | ArrayIterator Object | three | <?xml version="1.0"? |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | ArrayIterator Object | three | <?xml version="1.0"? |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | ArrayIterator Object | three | <?xml version="1.0"? |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | ArrayIterator Object | three | <?xml version="1.0"? |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |       | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | ArrayIterator Object | three | <?xml version="1.0"? |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |       | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | ArrayIterator Object | three | <?xml version="1.0"? |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |       | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | ArrayIterator Object | three | <?xml version="1.0"? |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |       | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | ArrayIterator Object | three | <?xml version="1.0"? |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |       | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | ArrayIterator Object | three | <?xml version="1.0"? |
 +------+--------+-----+---------+----------------------+-------+----------------------+---------+-------------------+----------------------+----------------------+-------+----------------------+
 5 rows
 
@@ -245,7 +245,7 @@ ASCIITABLE,
 | id | country | age | salary |
 +----+---------+-----+--------+
 |  1 |      PL |  20 |   5000 |
-|  1 |      PL |  20 |   null |
+|  1 |      PL |  20 |        |
 +----+---------+-----+--------+
 2 rows
 ASCII,
@@ -265,7 +265,7 @@ ASCII,
                 ),
                 rows(
                     row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), int_entry('salary', 5000)),
-                    row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), null_entry('salary')),
+                    row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), int_entry('salary', null)),
                 )
             ))
             ->printSchema();

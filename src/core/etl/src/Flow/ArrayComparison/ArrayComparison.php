@@ -16,11 +16,19 @@ final class ArrayComparison
     }
 
     /**
-     * @param array<mixed> $a
-     * @param array<mixed> $b
+     * @param ?array<mixed> $a
+     * @param ?array<mixed> $b
      */
-    public function equals(array $a, array $b) : bool
+    public function equals(?array $a, ?array $b) : bool
     {
+        if ($a === null && $b === null) {
+            return true;
+        }
+
+        if ($a === null || $b === null) {
+            return false;
+        }
+
         return $this->valueEquals((new ArraySortByKey)($a), (new ArraySortByKey)($b));
     }
 

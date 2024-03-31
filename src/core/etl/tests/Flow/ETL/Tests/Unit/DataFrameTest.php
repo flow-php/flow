@@ -6,7 +6,7 @@ namespace Flow\ETL\Tests\Unit;
 
 use function Flow\ETL\DSL\{array_entry, average, bool_entry, df, float_entry, from_all, from_array, from_rows, int_entry, lit, null_entry, ref, refs, str_entry, to_callable};
 use Flow\ETL\ErrorHandler\IgnoreError;
-use Flow\ETL\Row\Entry\{BooleanEntry, DateTimeEntry, IntegerEntry, NullEntry, StringEntry};
+use Flow\ETL\Row\Entry\{BooleanEntry, DateTimeEntry, IntegerEntry, StringEntry};
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Tests\Double\AddStampToStringEntryTransformer;
 use Flow\ETL\{DataFrame, Extractor, Flow, FlowContext, Loader, Row, Rows, Transformation, Transformer};
@@ -363,7 +363,7 @@ final class DataFrameTest extends TestCase
                         new IntegerEntry('id', 101),
                         new BooleanEntry('deleted', false),
                         new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-24')),
-                        new NullEntry('phase')
+                        new StringEntry('phase', null)
                     )
                 );
 
@@ -372,7 +372,7 @@ final class DataFrameTest extends TestCase
                         new IntegerEntry('id', 102),
                         new BooleanEntry('deleted', true),
                         new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-25')),
-                        new NullEntry('phase')
+                        new StringEntry('phase', null)
                     )
                 );
             }
@@ -440,7 +440,7 @@ final class DataFrameTest extends TestCase
                     new IntegerEntry('id', 101),
                     new BooleanEntry('deleted', false),
                     new DateTimeEntry('expiration-date', new \DateTimeImmutable('2020-08-24')),
-                    new NullEntry('phase')
+                    new StringEntry('phase', null)
                 )
             )
         )

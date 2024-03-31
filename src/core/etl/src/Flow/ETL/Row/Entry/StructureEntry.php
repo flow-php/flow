@@ -12,33 +12,37 @@ use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\{Entry, Reference};
 
 /**
- * @implements Entry<array<array-key, mixed>>
+ * @implements Entry<?array<array-key, mixed>>
  */
 final class StructureEntry implements Entry
 {
     use EntryRef;
 
+    private readonly StructureType $type;
+
     /**
-     * @param array<array-key, mixed> $value
+     * @param ?array<array-key, mixed> $value
      *
      * @throws InvalidArgumentException
      */
     public function __construct(
         private readonly string $name,
-        private readonly array $value,
-        private readonly StructureType $type
+        private readonly ?array $value,
+        StructureType $type
     ) {
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        if (0 === \count($value)) {
+        if ($value !== null && 0 === \count($value)) {
             throw InvalidArgumentException::because('Structure must have at least one entry, ' . $name . ' got none.');
         }
 
         if (!$type->isValid($value)) {
             throw InvalidArgumentException::because('Expected ' . $type->toString() . ' got different types: ' . (new TypeDetector())->detectType($this->value)->toString());
         }
+
+        $this->type = $type->makeNullable($this->value === null);
     }
 
     public function __toString() : string
@@ -62,7 +66,22 @@ final class StructureEntry implements Entry
 
     public function isEqual(Entry $entry) : bool
     {
-        return $this->is($entry->name()) && $entry instanceof self && $this->type->isEqual($entry->type) && (new ArrayComparison())->equals($this->value, $entry->value);
+        $entryValue = $entry->value();
+        $thisValue = $this->value();
+
+        if ($entryValue === null && $thisValue !== null) {
+            return false;
+        }
+
+        if ($entryValue !== null && $thisValue === null) {
+            return false;
+        }
+
+        if ($entryValue === null && $thisValue === null) {
+            return $this->is($entry->name()) && $entry instanceof self && $this->type->isEqual($entry->type);
+        }
+
+        return $this->is($entry->name()) && $entry instanceof self && $this->type->isEqual($entry->type) && (new ArrayComparison())->equals($thisValue, $entryValue);
     }
 
     public function map(callable $mapper) : Entry
@@ -82,6 +101,10 @@ final class StructureEntry implements Entry
 
     public function toString() : string
     {
+        if ($this->value === null) {
+            return '';
+        }
+
         return \json_encode($this->value, JSON_THROW_ON_ERROR);
     }
 
@@ -90,7 +113,7 @@ final class StructureEntry implements Entry
         return $this->type;
     }
 
-    public function value() : array
+    public function value() : ?array
     {
         return $this->value;
     }

@@ -102,7 +102,7 @@ final class GroupByTest extends IntegrationTestCase
                 Row::create(str_entry('country', 'PL'), str_entry('gender', 'female'), int_entry('age_avg', 30)),
                 Row::create(str_entry('country', 'US'), str_entry('gender', 'female'), int_entry('age_avg', 40)),
                 Row::create(str_entry('country', 'US'), str_entry('gender', 'male'), int_entry('age_avg', 45)),
-                Row::create(str_entry('country', 'US'), null_entry('gender'), int_entry('age_avg', 45)),
+                Row::create(str_entry('country', 'US'), str_entry('gender', null), int_entry('age_avg', 45)),
             ),
             $rows
         );

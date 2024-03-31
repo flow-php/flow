@@ -12,7 +12,7 @@ use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\{Entry, Reference};
 
 /**
- * @implements Entry<\DOMDocument>
+ * @implements Entry<?\DOMDocument>
  */
 final class XMLEntry implements Entry
 {
@@ -20,9 +20,9 @@ final class XMLEntry implements Entry
 
     private readonly XMLType $type;
 
-    private readonly \DOMDocument $value;
+    private readonly ?\DOMDocument $value;
 
-    public function __construct(private readonly string $name, \DOMDocument|string $value)
+    public function __construct(private readonly string $name, \DOMDocument|string|null $value)
     {
         if (\is_string($value)) {
             $doc = new \DOMDocument();
@@ -36,7 +36,7 @@ final class XMLEntry implements Entry
             $this->value = $value;
         }
 
-        $this->type = type_xml();
+        $this->type = type_xml($this->value === null);
     }
 
     public function __serialize() : array
@@ -44,13 +44,17 @@ final class XMLEntry implements Entry
         return [
             'name' => $this->name,
             /** @phpstan-ignore-next-line  */
-            'value' => \base64_encode(\gzcompress($this->value->saveXML())),
+            'value' => $this->value === null ? null : \base64_encode(\gzcompress($this->value->saveXML())),
             'type' => $this->type,
         ];
     }
 
     public function __toString() : string
     {
+        if ($this->value === null) {
+            return '';
+        }
+
         /** @phpstan-ignore-next-line  */
         return $this->value->saveXML();
     }
@@ -59,6 +63,13 @@ final class XMLEntry implements Entry
     {
         $this->name = $data['name'];
         $this->type = $data['type'];
+
+        if ($data['value'] === null) {
+            $this->value = null;
+
+            return;
+        }
+
         /** @phpstan-ignore-next-line  */
         $xmlString = \gzuncompress(\base64_decode($data['value'], true));
         $doc = new \DOMDocument();
@@ -95,11 +106,11 @@ final class XMLEntry implements Entry
             return false;
         }
 
-        if ($entry->value->documentElement === null && $this->value->documentElement === null) {
+        if ($entry->value?->documentElement === null && $this->value?->documentElement === null) {
             return true;
         }
 
-        return $entry->value()->C14N() === $this->value->C14N();
+        return $entry->value()?->C14N() === $this->value?->C14N();
     }
 
     public function map(callable $mapper) : Entry
@@ -119,6 +130,10 @@ final class XMLEntry implements Entry
 
     public function toString() : string
     {
+        if ($this->value === null) {
+            return '';
+        }
+
         /** @phpstan-ignore-next-line */
         return $this->value->saveXML();
     }
@@ -128,7 +143,7 @@ final class XMLEntry implements Entry
         return $this->type;
     }
 
-    public function value() : \DOMDocument
+    public function value() : ?\DOMDocument
     {
         return $this->value;
     }

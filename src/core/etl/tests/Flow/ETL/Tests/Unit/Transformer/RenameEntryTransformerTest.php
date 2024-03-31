@@ -26,7 +26,7 @@ final class RenameEntryTransformerTest extends TestCase
                     new Row\Entry\ArrayEntry('array', ['foo', 'bar']),
                     new Row\Entry\JsonEntry('json', ['foo', 'bar']),
                     new Row\Entry\ObjectEntry('object', new \stdClass()),
-                    new Row\Entry\NullEntry('null')
+                    new Row\Entry\StringEntry('null', null)
                 ),
             ),
             $context = new FlowContext(Config::default())
@@ -45,7 +45,7 @@ final class RenameEntryTransformerTest extends TestCase
                     new Row\Entry\JsonEntry('json', ['foo', 'bar']),
                     new Row\Entry\ObjectEntry('object', new \stdClass()),
                     new Row\Entry\IntegerEntry('new_int', 1000),
-                    new Row\Entry\NullEntry('nothing')
+                    new Row\Entry\StringEntry('nothing', null)
                 ),
             ),
             $rows

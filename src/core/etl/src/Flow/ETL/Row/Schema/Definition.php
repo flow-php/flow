@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Schema;
 
-use function Flow\ETL\DSL\{type_array, type_boolean, type_datetime, type_enum, type_float, type_int, type_json, type_list, type_null, type_string, type_uuid, type_xml, type_xml_node};
+use function Flow\ETL\DSL\{type_array, type_boolean, type_datetime, type_enum, type_float, type_int, type_json, type_list, type_string, type_uuid, type_xml, type_xml_node};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\PHP\Type\Logical\{ListType, MapType, StructureType};
 use Flow\ETL\PHP\Type\Native\ObjectType;
 use Flow\ETL\PHP\Type\{Type, TypeFactory};
-use Flow\ETL\Row\Entry\{ArrayEntry, BooleanEntry, DateTimeEntry, EnumEntry, FloatEntry, IntegerEntry, JsonEntry, ListEntry, MapEntry, NullEntry, ObjectEntry, StringEntry, StructureEntry, UuidEntry, XMLEntry, XMLNodeEntry};
+use Flow\ETL\Row\Entry\{ArrayEntry, BooleanEntry, DateTimeEntry, EnumEntry, FloatEntry, IntegerEntry, JsonEntry, ListEntry, MapEntry, ObjectEntry, StringEntry, StructureEntry, UuidEntry, XMLEntry, XMLNodeEntry};
 use Flow\ETL\Row\{Entry, EntryReference, Reference};
 
 final class Definition
@@ -102,7 +102,6 @@ final class Definition
                 'json' => JsonEntry::class,
                 'list' => ListEntry::class,
                 'map' => MapEntry::class,
-                'null' => NullEntry::class,
                 'object' => ObjectEntry::class,
                 'structure' => StructureEntry::class,
                 'uuid' => UuidEntry::class,
@@ -143,11 +142,6 @@ final class Definition
             $type,
             $metadata
         );
-    }
-
-    public static function null(string|Reference $entry, ?Metadata $metadata = null) : self
-    {
-        return new self($entry, NullEntry::class, type_null(), $metadata);
     }
 
     public static function object(string|Reference $entry, ObjectType $type, ?Metadata $metadata = null) : self
@@ -215,7 +209,7 @@ final class Definition
 
     public function matches(Entry $entry) : bool
     {
-        if ($this->isNullable() && $entry instanceof NullEntry && $entry->is($this->ref)) {
+        if ($this->isNullable() && $entry->is($this->ref)) {
             return true;
         }
 
@@ -267,19 +261,6 @@ final class Definition
         }
 
         $entryClasses = [$this->entryClass, $definition->entryClass];
-
-        if (\in_array(NullEntry::class, $entryClasses, true)) {
-            $entryClasses = \array_values(\array_diff($entryClasses, [NullEntry::class]));
-
-            $type = $this->entryClass === NullEntry::class ? $definition->type : $this->type();
-
-            return new self(
-                $this->ref,
-                $entryClasses[0],
-                $type->makeNullable(true),
-                $this->metadata->merge($definition->metadata)
-            );
-        }
 
         if (\in_array(StringEntry::class, $entryClasses, true)) {
             return new self(

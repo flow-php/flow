@@ -14,21 +14,23 @@ use Flow\ETL\Row\{Entry, Reference};
 /**
  * @template T
  *
- * @implements Entry<array<T>>
+ * @implements Entry<?array<T>>
  */
 final class MapEntry implements Entry
 {
     use EntryRef;
 
+    private MapType $type;
+
     /**
-     * @param array<T> $value
+     * @param ?array<T> $value
      *
      * @throws InvalidArgumentException
      */
     public function __construct(
         private readonly string $name,
-        private readonly array $value,
-        private readonly MapType $type,
+        private readonly ?array $value,
+        MapType $type,
     ) {
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
@@ -37,6 +39,8 @@ final class MapEntry implements Entry
         if (!$type->isValid($value)) {
             throw InvalidArgumentException::because('Expected ' . $type->toString() . ' got different types: ' . (new TypeDetector())->detectType($this->value)->toString());
         }
+
+        $this->type = $type->makeNullable($this->value === null);
     }
 
     public function __toString() : string
@@ -63,10 +67,27 @@ final class MapEntry implements Entry
 
     public function isEqual(Entry $entry) : bool
     {
+        $entryValue = $entry->value();
+        $thisValue = $this->value();
+
+        if ($entryValue === null && $thisValue !== null) {
+            return false;
+        }
+
+        if ($entryValue !== null && $thisValue === null) {
+            return false;
+        }
+
+        if ($entryValue === null && $thisValue === null) {
+            return $this->is($entry->name())
+                && $entry instanceof self
+                && $this->type->isEqual($entry->type);
+        }
+
         return $this->is($entry->name())
             && $entry instanceof self
             && $this->type->isEqual($entry->type)
-            && (new ArrayComparison())->equals($this->value, $entry->value());
+            && (new ArrayComparison())->equals($thisValue, $entryValue);
     }
 
     public function map(callable $mapper) : Entry
@@ -86,6 +107,10 @@ final class MapEntry implements Entry
 
     public function toString() : string
     {
+        if ($this->value === null) {
+            return '';
+        }
+
         return \json_encode($this->value(), JSON_THROW_ON_ERROR);
     }
 
@@ -94,7 +119,7 @@ final class MapEntry implements Entry
         return $this->type;
     }
 
-    public function value() : array
+    public function value() : ?array
     {
         return $this->value;
     }

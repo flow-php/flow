@@ -12,7 +12,7 @@ use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\{Entry, Reference};
 
 /**
- * @implements Entry<float>
+ * @implements Entry<?float>
  */
 final class FloatEntry implements Entry
 {
@@ -23,13 +23,13 @@ final class FloatEntry implements Entry
     /**
      * @throws InvalidArgumentException
      */
-    public function __construct(private readonly string $name, private readonly float $value, private readonly int $precision = 6)
+    public function __construct(private readonly string $name, private readonly ?float $value, private readonly int $precision = 6)
     {
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        $this->type = type_float();
+        $this->type = type_float($this->value === null);
     }
 
     public function __toString() : string
@@ -53,10 +53,30 @@ final class FloatEntry implements Entry
 
     public function isEqual(Entry $entry) : bool
     {
+        $entryValue = $entry->value();
+        $thisValue = $this->value();
+
+        if ($entryValue === null && $thisValue !== null) {
+            return false;
+        }
+
+        if ($entryValue !== null && $thisValue === null) {
+            return false;
+        }
+
+        if ($entryValue === null && $thisValue === null) {
+            return $this->is($entry->name())
+                && $entry instanceof self
+                && $this->type->isEqual($entry->type);
+        }
+
+        /**
+         * @psalm-suppress ArgumentTypeCoercion
+         */
         return $this->is($entry->name())
             && $entry instanceof self
             && $this->type->isEqual($entry->type)
-            && \bccomp((string) $this->value(), (string) $entry->value(), $this->precision) === 0;
+            && \bccomp((string) $thisValue, (string) $entryValue, $this->precision) === 0;
     }
 
     public function map(callable $mapper) : Entry
@@ -79,6 +99,10 @@ final class FloatEntry implements Entry
 
     public function toString() : string
     {
+        if ($this->value === null) {
+            return '';
+        }
+
         $float = (string) $this->value();
 
         if (!\str_contains($float, '.')) {
@@ -93,7 +117,7 @@ final class FloatEntry implements Entry
         return $this->type;
     }
 
-    public function value() : float
+    public function value() : ?float
     {
         return $this->value;
     }

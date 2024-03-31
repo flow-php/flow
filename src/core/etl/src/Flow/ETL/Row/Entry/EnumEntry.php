@@ -10,7 +10,7 @@ use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\{Entry, Reference};
 
 /**
- * @implements Entry<\UnitEnum>
+ * @implements Entry<?\UnitEnum>
  */
 final class EnumEntry implements Entry
 {
@@ -20,13 +20,17 @@ final class EnumEntry implements Entry
 
     public function __construct(
         private readonly string $name,
-        private readonly \UnitEnum $value
+        private readonly ?\UnitEnum $value
     ) {
-        $this->type = EnumType::of($value::class);
+        $this->type = EnumType::of($value === null ? \UnitEnum::class : $value::class, $value === null);
     }
 
     public function __toString() : string
     {
+        if ($this->value === null) {
+            return '';
+        }
+
         return $this->value->name;
     }
 
@@ -70,6 +74,10 @@ final class EnumEntry implements Entry
 
     public function toString() : string
     {
+        if ($this->value === null) {
+            return '';
+        }
+
         return $this->value->name;
     }
 
@@ -78,7 +86,7 @@ final class EnumEntry implements Entry
         return $this->type;
     }
 
-    public function value() : \UnitEnum
+    public function value() : ?\UnitEnum
     {
         return $this->value;
     }

@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
-use function Flow\ETL\DSL\{array_to_rows, null_entry};
+use function Flow\ETL\DSL\{array_to_rows, string_entry};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Partition\CartesianProduct;
 use Flow\ETL\Row\Comparator\NativeComparator;
-use Flow\ETL\Row\Entry\NullEntry;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
-use Flow\ETL\Row\{Comparator, Entries, EntryFactory, Reference, References, Schema, SortOrder};
+use Flow\ETL\Row\{Comparator, Entries, EntryFactory, Entry\StringEntry, Reference, References, Schema, SortOrder};
 
 /**
  * @implements \ArrayAccess<int, Row>
@@ -376,7 +375,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
             $joined[] = $joinedRow ?: $leftRow->merge(
                 Row::create(
                     ...\array_map(
-                        static fn (string $e) : NullEntry => null_entry($e),
+                        static fn (string $e) : StringEntry => string_entry($e, null),
                         \array_map(
                             static fn (Reference $r) : string => $r->name(),
                             $rightSchema->entries()
@@ -453,7 +452,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
             if ($joinedRow === null) {
                 $joined[] = $rightRow->merge(
                     Row::create(
-                        ...\array_map(static fn (Reference $e) : NullEntry => null_entry($e->name()), $leftSchema->entries())
+                        ...\array_map(static fn (Reference $e) : StringEntry => string_entry($e->name(), null), $leftSchema->entries())
                     ),
                     $expression->prefix()
                 );

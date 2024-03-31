@@ -9,7 +9,7 @@ use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\StructureType;
 use Flow\ETL\Row\Entries;
-use Flow\ETL\Row\Entry\{BooleanEntry, DateTimeEntry, EnumEntry, IntegerEntry, NullEntry, StringEntry, StructureEntry};
+use Flow\ETL\Row\Entry\{BooleanEntry, DateTimeEntry, EnumEntry, IntegerEntry, StringEntry, StructureEntry};
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
 use PHPUnit\Framework\TestCase;
 
@@ -361,7 +361,7 @@ final class EntriesTest extends TestCase
             $id = new IntegerEntry('id', 1234),
             $deleted = new BooleanEntry('deleted', false),
             $createdAt = new DateTimeEntry('created-at', new \DateTimeImmutable('2020-07-13 15:00')),
-            $phase = new NullEntry('phase'),
+            $phase = new StringEntry('phase', null),
             $items = new StructureEntry(
                 'items',
                 ['item-id' => 1, 'name' => 'one'],
@@ -381,7 +381,7 @@ final class EntriesTest extends TestCase
                     ['item-id' => 1, 'name' => 'one'],
                     new StructureType([new StructureElement('id', type_int()), new StructureElement('name', type_string())])
                 ),
-                $phase = new NullEntry('phase')
+                $phase = new StringEntry('phase', null)
             ),
             $sorted
         );
@@ -393,7 +393,7 @@ final class EntriesTest extends TestCase
             new IntegerEntry('id', 1234),
             new BooleanEntry('deleted', false),
             new DateTimeEntry('created-at', $createdAt = new \DateTimeImmutable('2020-07-13 15:00')),
-            new NullEntry('phase'),
+            new StringEntry('phase', null),
             new StructureEntry(
                 'items',
                 ['item-id' => 1, 'name' => 'one'],
@@ -424,7 +424,7 @@ final class EntriesTest extends TestCase
             new IntegerEntry('id', 1234),
             new BooleanEntry('deleted', false),
             new DateTimeEntry('created-at', $createdAt = new \DateTimeImmutable('2020-07-13 15:00')),
-            new NullEntry('phase'),
+            new StringEntry('phase', null),
             new StructureEntry(
                 'items',
                 ['item-id' => 1, 'name' => 'one'],

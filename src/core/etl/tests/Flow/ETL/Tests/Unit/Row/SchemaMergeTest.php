@@ -96,7 +96,7 @@ final class SchemaMergeTest extends TestCase
             Schema\Definition::string('name', nullable: true)
         ))->merge(
             new Schema(
-                Schema\Definition::null('test'),
+                Schema\Definition::string('test'),
             )
         );
 
@@ -104,7 +104,7 @@ final class SchemaMergeTest extends TestCase
             new Schema(
                 Schema\Definition::integer('id', nullable: true),
                 Schema\Definition::string('name', nullable: true),
-                Schema\Definition::null('test'),
+                Schema\Definition::string('test', nullable: true),
             ),
             $schema
         );

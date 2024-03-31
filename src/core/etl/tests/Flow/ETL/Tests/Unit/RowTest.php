@@ -9,7 +9,7 @@ use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\Map\{MapKey, MapValue};
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\{ListType, MapType, StructureType};
-use Flow\ETL\Row\Entry\{ArrayEntry, BooleanEntry, DateTimeEntry, IntegerEntry, MapEntry, NullEntry, StringEntry, StructureEntry};
+use Flow\ETL\Row\Entry\{ArrayEntry, BooleanEntry, DateTimeEntry, IntegerEntry, MapEntry, StringEntry, StructureEntry};
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Row\Schema\Definition;
 use PHPUnit\Framework\TestCase;
@@ -112,7 +112,7 @@ final class RowTest extends TestCase
                 Definition::float('price'),
                 Definition::boolean('deleted'),
                 Definition::dateTime('created-at'),
-                Definition::null('phase'),
+                Definition::string('phase', nullable: true),
                 Definition::array('array'),
                 Definition::structure(
                     'items',
@@ -280,7 +280,7 @@ final class RowTest extends TestCase
             new IntegerEntry('id', 1234),
             new BooleanEntry('deleted', false),
             new DateTimeEntry('created-at', $createdAt = new \DateTimeImmutable('2020-07-13 15:00')),
-            new NullEntry('phase'),
+            new StringEntry('phase', null),
             new StructureEntry(
                 'items',
                 ['item-id' => 1, 'name' => 'one'],
