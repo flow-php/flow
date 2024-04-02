@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Filesystem\FilesystemStreams;
 use Flow\ETL\Pipeline\Optimizer;
 use Flow\ETL\Row\EntryFactory;
@@ -19,6 +20,9 @@ final class Config
 
     public const EXTERNAL_SORT_MAX_MEMORY_ENV = 'FLOW_EXTERNAL_SORT_MAX_MEMORY';
 
+    /**
+     * @param int<1, max> $cacheBatchSize
+     */
     public function __construct(
         private readonly string $id,
         private readonly Serializer $serializer,
@@ -30,6 +34,9 @@ final class Config
         private readonly EntryFactory $entryFactory,
         private readonly int $cacheBatchSize
     ) {
+        if ($this->cacheBatchSize < 1) {
+            throw new InvalidArgumentException('Cache batch size must be greater than 0');
+        }
     }
 
     public static function builder() : ConfigBuilder
@@ -47,6 +54,9 @@ final class Config
         return $this->cache;
     }
 
+    /**
+     * @return int<1, max>
+     */
     public function cacheBatchSize() : int
     {
         return $this->cacheBatchSize;

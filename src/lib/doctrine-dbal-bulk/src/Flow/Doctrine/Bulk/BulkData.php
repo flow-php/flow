@@ -27,7 +27,6 @@ final class BulkData
 
         $firstRow = \reset($rows);
 
-        /** @psalm-suppress DocblockTypeContradiction */
         if (!\is_array($firstRow)) {
             throw new RuntimeException('Each row must be an array');
         }
@@ -35,7 +34,6 @@ final class BulkData
         $columns = \array_keys($firstRow);
 
         foreach ($rows as $row) {
-            /** @psalm-suppress DocblockTypeContradiction */
             if (!\is_array($row)) {
                 throw new RuntimeException('Each row must be an array');
             }

@@ -40,7 +40,6 @@ final class ColumnChunk
     }
 
     /**
-     * @psalm-suppress DocblockTypeContradiction
      * @psalm-suppress RedundantConditionGivenDocblockType
      */
     public static function fromThrift(\Flow\Parquet\Thrift\ColumnChunk $thrift) : self
@@ -57,7 +56,6 @@ final class ColumnChunk
             $thrift->meta_data->dictionary_page_offset,
             $thrift->meta_data->data_page_offset,
             $thrift->meta_data->index_page_offset,
-            /** @phpstan-ignore-next-line  */
             $thrift->meta_data->statistics ? Statistics::fromThrift($thrift->meta_data->statistics) : null,
         );
     }

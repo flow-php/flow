@@ -130,7 +130,6 @@ final class Writer
      */
     public function openForStream($resource, Schema $schema) : void
     {
-        /** @psalm-suppress DocblockTypeContradiction */
         if (!\is_resource($resource)) {
             throw new InvalidArgumentException('Given argument is not a valid resource');
         }
@@ -227,7 +226,6 @@ final class Writer
             throw new RuntimeException('Writer is already open');
         }
 
-        /** @psalm-suppress DocblockTypeContradiction */
         if (!\is_resource($resource)) {
             throw new InvalidArgumentException('Given argument is not a valid resource');
         }

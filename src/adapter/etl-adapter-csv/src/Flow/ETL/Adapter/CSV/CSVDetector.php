@@ -26,7 +26,6 @@ final class CSVDetector
      */
     public function __construct($resource, ?Option $fallback = new Option(',', '"', '\\'), ?Options $options = null)
     {
-        /** @psalm-suppress DocblockTypeContradiction */
         if (!\is_resource($resource)) {
             throw new InvalidArgumentException('Argument must be a valid resource');
         }

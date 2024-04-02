@@ -27,7 +27,6 @@ final class DataPageHeaderV2
 
     public static function fromThrift(\Flow\Parquet\Thrift\DataPageHeaderV2 $thrift) : self
     {
-        /** @psalm-suppress DocblockTypeContradiction */
         return new self(
             $thrift->num_values,
             $thrift->num_nulls,
@@ -37,7 +36,6 @@ final class DataPageHeaderV2
             $thrift->repetition_levels_byte_length,
             /** @phpstan-ignore-next-line */
             $thrift->is_compressed ?? null,
-            /** @phpstan-ignore-next-line */
             $thrift->statistics ? Statistics::fromThrift($thrift->statistics) : null
         );
     }

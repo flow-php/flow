@@ -503,7 +503,6 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
      */
     public function offsetExists($offset) : bool
     {
-        /** @psalm-suppress DocblockTypeContradiction */
         if (!\is_int($offset)) {
             throw new InvalidArgumentException('Rows accepts only integer offsets');
         }

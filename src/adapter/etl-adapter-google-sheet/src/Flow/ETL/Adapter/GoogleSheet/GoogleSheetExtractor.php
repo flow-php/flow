@@ -48,9 +48,7 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
         /**
          * @var array[] $values
          *
-         * @psalm-suppress RedundantConditionGivenDocblockType, DocblockTypeContradiction
-         *
-         * @phpstan-ignore-next-line
+         * @psalm-suppress RedundantConditionGivenDocblockType
          */
         $values = $response->getValues() ?? [];
 
@@ -116,9 +114,7 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
             /**
              * @var array[] $values
              *
-             * @psalm-suppress RedundantConditionGivenDocblockType, DocblockTypeContradiction
-             *
-             * @phpstan-ignore-next-line
+             * @psalm-suppress RedundantConditionGivenDocblockType
              */
             $values = $response->getValues() ?? [];
         }

@@ -41,7 +41,6 @@ final class Reader
      */
     public function readStream($stream) : ParquetFile
     {
-        /** @psalm-suppress DocblockTypeContradiction */
         if (!\is_resource($stream)) {
             throw new InvalidArgumentException('Given argument is not a valid resource');
         }
