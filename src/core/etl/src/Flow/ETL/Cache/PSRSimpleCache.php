@@ -40,28 +40,26 @@ final class PSRSimpleCache implements Cache
     public function read(string $id) : \Generator
     {
         foreach ($this->index($id) as $entry) {
-            if ($this->cache->has($entry)) {
-                /**
-                 * @var Rows $rows
-                 */
-                $rows = $this->serializer->unserialize((string) $this->cache->get($entry), Rows::class);
+            $serializedRows = $this->cache->get($entry);
 
-                yield $rows;
+            if ($serializedRows === null) {
+                continue;
             }
+
+            /**
+             * @var Rows $rows
+             */
+            $rows = $this->serializer->unserialize((string) $serializedRows, Rows::class);
+
+            yield $rows;
         }
     }
 
     private function addToIndex(string $indexId, string $id) : void
     {
-        if (!$this->cache->has($indexId)) {
-            $this->cache->set($indexId, [$id], $this->ttl);
-
-            return;
-        }
-
-        /** @var array<string> $index */
+        /** @var null|array<string> $index */
         $index = $this->cache->get($indexId);
-        $this->cache->set($indexId, \array_merge($index, [$id]), $this->ttl);
+        $this->cache->set($indexId, \array_merge($index ?? [], [$id]), $this->ttl);
     }
 
     /**
@@ -71,13 +69,9 @@ final class PSRSimpleCache implements Cache
      */
     private function index(string $indexId) : array
     {
-        if (!$this->cache->has($indexId)) {
-            return [];
-        }
-
-        /** @var array<string> $index */
+        /** @var null|array<string> $index */
         $index = $this->cache->get($indexId);
 
-        return $index;
+        return $index ?? [];
     }
 }

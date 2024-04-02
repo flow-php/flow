@@ -33,7 +33,12 @@ final class CachedParts
 
         foreach ($this->generators as $cacheId => $generator) {
             if ($generator->valid()) {
-                $heap->insert(CachedRow::fromRows($generator->current(), $cacheId));
+                /** @var Rows $rows */
+                $rows = $generator->current();
+
+                foreach ($rows->chunks(1) as $chunk) {
+                    $heap->insert(CachedRow::fromRows($chunk, $cacheId));
+                }
                 $generator->next();
             }
         }
