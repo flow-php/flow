@@ -91,8 +91,6 @@ final class WholeChunkReader implements ColumnChunkReader
 
     /**
      * @param resource $stream
-     *
-     * @psalm-suppress DocblockTypeContradiction
      */
     private function readHeader($stream, int $pageOffset) : ?PageHeader
     {

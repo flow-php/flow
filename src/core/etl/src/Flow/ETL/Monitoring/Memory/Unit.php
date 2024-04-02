@@ -43,10 +43,13 @@ final class Unit
 
         switch (\strtoupper($unit)) {
             case 'K':
+            case 'B':
                 return self::fromKb((int) \substr($limit, 0, -1));
             case 'M':
+            case 'MB':
                 return self::fromMb((int) \substr($limit, 0, -1));
             case 'G':
+            case 'GB':
                 return self::fromGb((int) \substr($limit, 0, -1));
 
             default:

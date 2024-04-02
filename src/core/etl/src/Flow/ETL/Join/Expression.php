@@ -18,8 +18,6 @@ final class Expression
     }
 
     /**
-     * @psalm-suppress DocblockTypeContradiction
-     *
      * @param array<string, string>|Comparison $comparison
      */
     public static function on(array|Comparison $comparison, string $joinPrefix = '') : self

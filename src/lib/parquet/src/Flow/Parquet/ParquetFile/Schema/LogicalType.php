@@ -65,7 +65,6 @@ final class LogicalType
     }
 
     /**
-     * @psalm-suppress DocblockTypeContradiction
      * @psalm-suppress RedundantConditionGivenDocblockType
      */
     public static function fromThrift(\Flow\Parquet\Thrift\LogicalType $logicalType) : self

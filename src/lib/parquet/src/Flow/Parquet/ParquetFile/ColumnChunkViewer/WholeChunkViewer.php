@@ -52,8 +52,6 @@ final class WholeChunkViewer implements ColumnChunkViewer
 
     /**
      * @param resource $stream
-     *
-     * @psalm-suppress DocblockTypeContradiction
      */
     private function readHeader($stream, int $pageOffset) : ?PageHeader
     {

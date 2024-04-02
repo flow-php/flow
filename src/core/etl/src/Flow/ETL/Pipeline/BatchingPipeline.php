@@ -22,11 +22,6 @@ final class BatchingPipeline implements OverridingPipeline, Pipeline
     {
         $this->nextPipeline = $pipeline->cleanCopy();
 
-        /**
-         * @psalm-suppress DocblockTypeContradiction
-         *
-         * @phpstan-ignore-next-line
-         */
         if ($this->size <= 0) {
             throw new InvalidArgumentException('Batch size must be greater than 0, given: ' . $this->size);
         }

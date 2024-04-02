@@ -38,6 +38,7 @@
         </ignoreFiles>
     </projectFiles>
     <issueHandlers>
+        <DocblockTypeContradiction errorLevel="suppress" />
         <RiskyTruthyFalsyComparison errorLevel="suppress" />
         <LessSpecificReturnStatement errorLevel="suppress" />
         <MoreSpecificReturnType errorLevel="suppress" />

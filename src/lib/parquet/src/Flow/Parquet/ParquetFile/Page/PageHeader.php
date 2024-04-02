@@ -22,9 +22,6 @@ final class PageHeader
     ) {
     }
 
-    /**
-     * @psalm-suppress DocblockTypeContradiction
-     */
     public static function fromThrift(\Flow\Parquet\Thrift\PageHeader $thrift) : self
     {
         return new self(

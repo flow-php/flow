@@ -38,7 +38,6 @@ final class NestedColumn implements Column
     }
 
     /**
-     * @psalm-suppress DocblockTypeContradiction
      * @psalm-suppress RedundantConditionGivenDocblockType
      *
      * @param array<Column> $children
@@ -50,7 +49,6 @@ final class NestedColumn implements Column
             $schemaElement->repetition_type ? Repetition::from($schemaElement->repetition_type) : null,
             $children,
             $schemaElement->converted_type ? ConvertedType::from($schemaElement->converted_type) : null,
-            /** @phpstan-ignore-next-line */
             $schemaElement->logicalType ? LogicalType::fromThrift($schemaElement->logicalType) : null
         );
     }
