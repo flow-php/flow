@@ -31,7 +31,7 @@ final class SortTest extends IntegrationTestCase
         $cache = \array_diff(\scandir($this->cacheDir), ['..', '.']);
 
         self::assertEmpty($cache);
-        self::assertSame(2506, $cacheSpy->writes());
+        self::assertSame(9, $cacheSpy->writes());
         self::assertSame(5, $cacheSpy->clears());
     }
 

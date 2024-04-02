@@ -36,13 +36,8 @@ final class CacheExternalSort implements ExternalSort
         /** @var int $i */
         foreach ($this->cache->read($this->id) as $i => $rows) {
             $maxRowsSize = \max($maxRowsSize, $rows->count());
-            /** @var Rows $singleRowRows */
             $partId = $this->id . '_tmp_' . $i;
-
-            foreach ($rows->sortBy(...$refs)->chunks(1) as $singleRowRows) {
-                $this->cache->add($partId, $singleRowRows);
-            }
-
+            $this->cache->add($partId, $rows->sortBy(...$refs));
             $cachedPartsArray[$partId] = $this->cache->read($partId);
         }
 
