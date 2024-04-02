@@ -28,7 +28,7 @@ final class CompressingSerializer implements Serializer
             // @codeCoverageIgnoreEnd
         }
 
-        return \base64_encode($content);
+        return $content;
     }
 
     public function unserialize(string $serialized, string $class) : object
@@ -39,15 +39,7 @@ final class CompressingSerializer implements Serializer
             // @codeCoverageIgnoreEnd
         }
 
-        $content = \base64_decode($serialized, true);
-
-        if (false === $content) {
-            // @codeCoverageIgnoreStart
-            throw new \RuntimeException('Unable to decode serialized data.');
-            // @codeCoverageIgnoreEnd
-        }
-
-        $content = \gzuncompress($content);
+        $content = \gzuncompress($serialized);
 
         if (false === $content) {
             // @codeCoverageIgnoreStart
