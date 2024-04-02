@@ -31,15 +31,8 @@ final class SortTest extends IntegrationTestCase
         $cache = \array_diff(\scandir($this->cacheDir), ['..', '.']);
 
         self::assertEmpty($cache);
-        // 50 initial writes
-        // 2500 single row writes
-        // 50 merged writes
-        self::assertSame(2600, $cacheSpy->writes());
-        // 1 main cache
-        // 50 tmp caches
-        // 1 sorted cache
-        // 1 extracted cache
-        self::assertSame(52, $cacheSpy->clears());
+        self::assertSame(2506, $cacheSpy->writes());
+        self::assertSame(5, $cacheSpy->clears());
     }
 
     public function test_etl_sort_by_in_memory() : void
@@ -60,6 +53,6 @@ final class SortTest extends IntegrationTestCase
 
         self::assertEmpty($cache);
         self::assertSame(\range(0, 39), $rows->reduceToArray('int'));
-        self::assertSame(20, $cacheSpy->writes());
+        self::assertSame(1, $cacheSpy->writes());
     }
 }
