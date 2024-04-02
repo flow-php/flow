@@ -11,7 +11,7 @@ use Flow\ETL\Filesystem\{FilesystemStreams, LocalFilesystem};
 use Flow\ETL\Monitoring\Memory\Unit;
 use Flow\ETL\Pipeline\Optimizer;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
-use Flow\Serializer\{NativePHPSerializer, Serializer};
+use Flow\Serializer\{Base64Serializer, NativePHPSerializer, Serializer};
 
 final class ConfigBuilder
 {
@@ -52,7 +52,7 @@ final class ConfigBuilder
     {
         $this->id ??= \uniqid('flow_php', true);
         $entryFactory = new NativeEntryFactory();
-        $this->serializer ??= new NativePHPSerializer();
+        $this->serializer ??= new Base64Serializer(new NativePHPSerializer());
         $cachePath = \is_string(\getenv(Config::CACHE_DIR_ENV)) && \realpath(\getenv(Config::CACHE_DIR_ENV))
             ? \getenv(Config::CACHE_DIR_ENV)
             : \sys_get_temp_dir() . '/flow_php/cache';
