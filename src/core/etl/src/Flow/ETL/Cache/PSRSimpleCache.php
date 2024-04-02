@@ -69,7 +69,7 @@ final class PSRSimpleCache implements Cache
      */
     private function index(string $indexId) : array
     {
-        /** @var array<string>|null $index */
+        /** @var null|array<string> $index */
         $index = $this->cache->get($indexId);
 
         return $index ?? [];
