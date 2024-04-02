@@ -1,6 +1,10 @@
 ## [Unreleased] - 2024-04-02
 
+### Added
+- [#1034](https://github.com/flow-php/flow/pull/1034) - **cache batch size configuration** - [@norberttech](https://github.com/norberttech)
+
 ### Changed
+- [#1034](https://github.com/flow-php/flow/pull/1034) - **Replaced CompressingSerializer with NativeSerizer** - [@norberttech](https://github.com/norberttech)
 - [#1032](https://github.com/flow-php/flow/pull/1032) - **Update Homebrew TAP formula: flow-php to version: 0.7.3** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
