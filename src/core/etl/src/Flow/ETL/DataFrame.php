@@ -144,9 +144,16 @@ final class DataFrame
      * @lazy
      *
      * @param null|string $id
+     *
+     * @throws InvalidArgumentException
      */
-    public function cache(?string $id = null) : self
+    public function cache(?string $id = null, ?int $cacheBatchSize = null) : self
     {
+        if ($cacheBatchSize !== null && $cacheBatchSize < 1) {
+            throw new InvalidArgumentException('Cache batch size must be greater than 0');
+        }
+
+        $this->batchSize($cacheBatchSize ?? $this->context->config->cacheBatchSize());
         $this->pipeline = new CachingPipeline($this->pipeline, $id);
 
         return $this;

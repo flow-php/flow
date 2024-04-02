@@ -5,16 +5,22 @@ declare(strict_types=1);
 namespace Flow\ETL;
 
 use Flow\ETL\Cache\LocalFilesystemCache;
+use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\ExternalSort\MemorySort;
 use Flow\ETL\Filesystem\{FilesystemStreams, LocalFilesystem};
 use Flow\ETL\Monitoring\Memory\Unit;
 use Flow\ETL\Pipeline\Optimizer;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
-use Flow\Serializer\{CompressingSerializer, NativePHPSerializer, Serializer};
+use Flow\Serializer\{NativePHPSerializer, Serializer};
 
 final class ConfigBuilder
 {
     private ?Cache $cache;
+
+    /**
+     * @var int<1, max>
+     */
+    private int $cacheBatchSize = 1000;
 
     private ?ExternalSort $externalSort;
 
@@ -46,7 +52,7 @@ final class ConfigBuilder
     {
         $this->id ??= \uniqid('flow_php', true);
         $entryFactory = new NativeEntryFactory();
-        $this->serializer ??= new CompressingSerializer(new NativePHPSerializer());
+        $this->serializer ??= new NativePHPSerializer();
         $cachePath = \is_string(\getenv(Config::CACHE_DIR_ENV)) && \realpath(\getenv(Config::CACHE_DIR_ENV))
             ? \getenv(Config::CACHE_DIR_ENV)
             : \sys_get_temp_dir() . '/flow_php/cache';
@@ -91,13 +97,28 @@ final class ConfigBuilder
             new FilesystemStreams($this->filesystem),
             $this->optimizer,
             $this->putInputIntoRows,
-            $entryFactory
+            $entryFactory,
+            $this->cacheBatchSize
         );
     }
 
     public function cache(Cache $cache) : self
     {
         $this->cache = $cache;
+
+        return $this;
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function cacheBatchSize(int $cacheBatchSize) : self
+    {
+        if ($cacheBatchSize < 1) {
+            throw new InvalidArgumentException('Cache batch size must be greater than 0');
+        }
+
+        $this->cacheBatchSize = $cacheBatchSize;
 
         return $this;
     }

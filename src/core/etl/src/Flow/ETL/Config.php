@@ -27,7 +27,8 @@ final class Config
         private readonly FilesystemStreams $filesystemStreams,
         private readonly Optimizer $optimizer,
         private readonly bool $putInputIntoRows,
-        private readonly EntryFactory $entryFactory
+        private readonly EntryFactory $entryFactory,
+        private readonly int $cacheBatchSize
     ) {
     }
 
@@ -44,6 +45,11 @@ final class Config
     public function cache() : Cache
     {
         return $this->cache;
+    }
+
+    public function cacheBatchSize() : int
+    {
+        return $this->cacheBatchSize;
     }
 
     public function entryFactory() : EntryFactory
