@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use function Flow\ETL\DSL\{array_entry, bool_entry, df, from_rows, int_entry, null_entry, ref, str_entry};
+use function Flow\ETL\DSL\{array_entry, bool_entry, df, from_rows, int_entry, ref, str_entry};
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
 use Flow\ETL\Transformer\StyleConverter\StringStyles;
 use Flow\ETL\{Row, Rows};
@@ -17,7 +17,7 @@ final class RenameTest extends IntegrationTestCase
             ->read(from_rows(
                 new Rows(
                     Row::create(int_entry('id', 1), str_entry('name', 'foo'), bool_entry('active', true)),
-                    Row::create(int_entry('id', 2), null_entry('name'), bool_entry('active', false)),
+                    Row::create(int_entry('id', 2), str_entry('name', null), bool_entry('active', false)),
                     Row::create(int_entry('id', 2), str_entry('name', 'bar'), bool_entry('active', false)),
                 )
             ))
@@ -27,7 +27,7 @@ final class RenameTest extends IntegrationTestCase
         self::assertEquals(
             new Rows(
                 Row::create(int_entry('id', 1), str_entry('new_name', 'foo'), bool_entry('active', true)),
-                Row::create(int_entry('id', 2), null_entry('new_name'), bool_entry('active', false)),
+                Row::create(int_entry('id', 2), str_entry('new_name', null), bool_entry('active', false)),
                 Row::create(int_entry('id', 2), str_entry('new_name', 'bar'), bool_entry('active', false)),
             ),
             $rows

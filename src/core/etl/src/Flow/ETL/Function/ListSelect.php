@@ -36,7 +36,7 @@ final class ListSelect implements ScalarFunction
 
         $output = [];
 
-        foreach ($list->value() as $index => $element) {
+        foreach ($list->value() ?: [] as $index => $element) {
             $output[$index] = [];
 
             foreach ($this->refs as $ref) {

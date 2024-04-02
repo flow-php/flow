@@ -59,7 +59,7 @@ final class ResponseEntriesFactory
                     break;
             }
         } else {
-            $responseBodyEntry = new Row\Entry\NullEntry('response_body');
+            $responseBodyEntry = new Row\Entry\StringEntry('response_body', null);
         }
 
         return new Row\Entries(

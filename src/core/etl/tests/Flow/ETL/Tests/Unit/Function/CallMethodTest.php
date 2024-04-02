@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{call_method, datetime_entry, null_entry, ref, str_entry};
+use function Flow\ETL\DSL\{call_method, datetime_entry, ref, str_entry};
 use Flow\ETL\Row;
 use PHPUnit\Framework\TestCase;
 
@@ -62,7 +62,7 @@ final class CallMethodTest extends TestCase
     {
         $row = Row::create(
             datetime_entry('object', '2023-01-01 00:00:00 UTC'),
-            null_entry('method'),
+            str_entry('method', null),
         );
 
         self::assertNull(
@@ -76,7 +76,7 @@ final class CallMethodTest extends TestCase
     public function test_null_object() : void
     {
         $row = Row::create(
-            null_entry('object'),
+            str_entry('object', null),
             str_entry('method', 'getTimestamp'),
         );
 

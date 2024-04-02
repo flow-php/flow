@@ -206,8 +206,10 @@ final class GroupBy
         }
 
         return match ($entry::class) {
-            Entry\UuidEntry::class => $entry->value()->toString(),
-            Entry\DateTimeEntry::class => $entry->value()->format(\DateTimeImmutable::ATOM),
+            /** @phpstan-ignore-next-line */
+            Entry\UuidEntry::class => $entry->value()?->toString(),
+            /** @phpstan-ignore-next-line */
+            Entry\DateTimeEntry::class => $entry->value()?->format(\DateTimeImmutable::ATOM),
             default => $entry->toString()
         };
     }

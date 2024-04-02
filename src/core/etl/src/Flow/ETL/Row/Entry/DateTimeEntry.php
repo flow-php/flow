@@ -12,7 +12,7 @@ use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\{Entry, Reference};
 
 /**
- * @implements Entry<\DateTimeInterface>
+ * @implements Entry<?\DateTimeInterface>
  */
 final class DateTimeEntry implements Entry
 {
@@ -20,12 +20,12 @@ final class DateTimeEntry implements Entry
 
     private readonly DateTimeType $type;
 
-    private readonly \DateTimeInterface $value;
+    private readonly ?\DateTimeInterface $value;
 
     /**
      * @throws InvalidArgumentException
      */
-    public function __construct(private readonly string $name, \DateTimeInterface|string $value)
+    public function __construct(private readonly string $name, \DateTimeInterface|string|null $value)
     {
         if ($name === '') {
             throw InvalidArgumentException::because('Entry name cannot be empty');
@@ -43,7 +43,7 @@ final class DateTimeEntry implements Entry
             $this->value = $value;
         }
 
-        $this->type = type_datetime();
+        $this->type = type_datetime($this->value === null);
     }
 
     public function __toString() : string
@@ -87,7 +87,13 @@ final class DateTimeEntry implements Entry
 
     public function toString() : string
     {
-        return $this->value()->format(\DateTimeInterface::ATOM);
+        $value = $this->value;
+
+        if ($value === null) {
+            return '';
+        }
+
+        return $value->format(\DateTimeInterface::ATOM);
     }
 
     public function type() : Type
@@ -95,7 +101,7 @@ final class DateTimeEntry implements Entry
         return $this->type;
     }
 
-    public function value() : \DateTimeInterface
+    public function value() : ?\DateTimeInterface
     {
         return $this->value;
     }

@@ -70,8 +70,10 @@ final class ElasticsearchLoader implements Loader
             $factory->create($row),
             new Row\Entry\ArrayEntry('body', $row->map(
                 function (Row\Entry $entry) : Row\Entry {
-                    if ($entry instanceof Row\Entry\JsonEntry) {
-                        return new Row\Entry\ArrayEntry($entry->name(), (array) \json_decode($entry->value(), true, 512, JSON_THROW_ON_ERROR));
+                    $entryValue = $entry->value();
+
+                    if ($entry instanceof Row\Entry\JsonEntry && $entryValue !== null) {
+                        return new Row\Entry\ArrayEntry($entry->name(), (array) \json_decode($entryValue, true, 512, JSON_THROW_ON_ERROR));
                     }
 
                     return $entry;

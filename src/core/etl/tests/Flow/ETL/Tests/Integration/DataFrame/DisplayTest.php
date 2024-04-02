@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use function Flow\ETL\DSL\{array_entry, bool_entry, datetime_entry, df, enum_entry, float_entry, from_array, from_rows, int_entry, list_entry, map_entry, null_entry, object_entry, ref, row, rows, str_entry, string_entry, struct_element, struct_entry, struct_type, type_int, type_list, type_map, type_string, xml_entry};
+use function Flow\ETL\DSL\{array_entry, bool_entry, datetime_entry, df, enum_entry, float_entry, from_array, from_rows, int_entry, list_entry, map_entry, object_entry, ref, row, rows, str_entry, string_entry, struct_element, struct_entry, struct_type, type_int, type_list, type_map, type_string, xml_entry};
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
 use Flow\ETL\{Extractor, FlowContext, Rows};
@@ -28,7 +28,7 @@ final class DisplayTest extends IntegrationTestCase
                                 int_entry('100', 100),
                                 bool_entry('deleted', false),
                                 datetime_entry('created-at', new \DateTimeImmutable('2020-07-13 15:00')),
-                                null_entry('phase'),
+                                str_entry('phase', null),
                                 array_entry(
                                     'array',
                                     [
@@ -69,11 +69,11 @@ final class DisplayTest extends IntegrationTestCase
 +------+--------+-----+---------+----------------------+-------+----------------------+---------+-------------------+----------------------+----------------------+-------+----------------------+
 |   id |  price | 100 | deleted |           created-at | phase |                array |    list |               map |                items |               object |  enum |                  xml |
 +------+--------+-----+---------+----------------------+-------+----------------------+---------+-------------------+----------------------+----------------------+-------+----------------------+
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | ArrayIterator Object | three | <?xml version="1.0"? |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | ArrayIterator Object | three | <?xml version="1.0"? |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | ArrayIterator Object | three | <?xml version="1.0"? |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | ArrayIterator Object | three | <?xml version="1.0"? |
-| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |  null | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | ArrayIterator Object | three | <?xml version="1.0"? |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |       | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | ArrayIterator Object | three | <?xml version="1.0"? |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |       | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | ArrayIterator Object | three | <?xml version="1.0"? |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |       | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | ArrayIterator Object | three | <?xml version="1.0"? |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |       | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | ArrayIterator Object | three | <?xml version="1.0"? |
+| 1234 | 123.45 | 100 |   false | 2020-07-13T15:00:00+ |       | [{"id":1,"status":"N | [1,2,3] | ["NEW","PENDING"] | {"item-id":"1","name | ArrayIterator Object | three | <?xml version="1.0"? |
 +------+--------+-----+---------+----------------------+-------+----------------------+---------+-------------------+----------------------+----------------------+-------+----------------------+
 5 rows
 
@@ -225,7 +225,7 @@ ASCIITABLE,
                 ),
                 rows(
                     row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), int_entry('salary', 5000)),
-                    row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), null_entry('salary')),
+                    row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), int_entry('salary', null)),
                 )
             ))
             ->printRows();
@@ -245,7 +245,7 @@ ASCIITABLE,
 | id | country | age | salary |
 +----+---------+-----+--------+
 |  1 |      PL |  20 |   5000 |
-|  1 |      PL |  20 |   null |
+|  1 |      PL |  20 |        |
 +----+---------+-----+--------+
 2 rows
 ASCII,
@@ -265,7 +265,7 @@ ASCII,
                 ),
                 rows(
                     row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), int_entry('salary', 5000)),
-                    row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), null_entry('salary')),
+                    row(int_entry('id', 1), str_entry('country', 'PL'), int_entry('age', 20), int_entry('salary', null)),
                 )
             ))
             ->printSchema();

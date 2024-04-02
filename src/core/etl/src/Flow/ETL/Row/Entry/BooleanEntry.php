@@ -12,7 +12,7 @@ use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\{Entry, Reference};
 
 /**
- * @implements Entry<bool>
+ * @implements Entry<?bool>
  */
 final class BooleanEntry implements Entry
 {
@@ -23,13 +23,13 @@ final class BooleanEntry implements Entry
     /**
      * @throws InvalidArgumentException
      */
-    public function __construct(private readonly string $name, private readonly bool $value)
+    public function __construct(private readonly string $name, private readonly ?bool $value)
     {
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        $this->type = type_boolean();
+        $this->type = type_boolean($this->value === null);
     }
 
     public function __toString() : string
@@ -76,6 +76,10 @@ final class BooleanEntry implements Entry
 
     public function toString() : string
     {
+        if ($this->value === null) {
+            return '';
+        }
+
         return $this->value() ? 'true' : 'false';
     }
 
@@ -84,7 +88,7 @@ final class BooleanEntry implements Entry
         return $this->type;
     }
 
-    public function value() : bool
+    public function value() : ?bool
     {
         return $this->value;
     }

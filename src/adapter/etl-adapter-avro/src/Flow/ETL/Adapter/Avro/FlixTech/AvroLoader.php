@@ -57,9 +57,9 @@ final class AvroLoader implements Closure, Loader, Loader\FileLoader
             foreach ($row->entries()->all() as $entry) {
                 $rowData[$entry->name()] = match ($entry::class) {
                     Row\Entry\ListEntry::class => $this->listEntryToValues($entry),
-                    Row\Entry\DateTimeEntry::class => (int) $entry->value()->format('Uu'),
-                    Row\Entry\UuidEntry::class => $entry->value()->toString(),
-                    Row\Entry\EnumEntry::class => $entry->value()->name,
+                    Row\Entry\DateTimeEntry::class => (int) $entry->value()?->format('Uu'),
+                    Row\Entry\UuidEntry::class => $entry->value()?->toString(),
+                    Row\Entry\EnumEntry::class => $entry->value()?->name,
                     default => $entry->value(),
                 };
             }
@@ -68,7 +68,7 @@ final class AvroLoader implements Closure, Loader, Loader\FileLoader
         }
     }
 
-    private function listEntryToValues(Row\Entry\ListEntry $entry) : array
+    private function listEntryToValues(Row\Entry\ListEntry $entry) : ?array
     {
         /** @var ListType $listType */
         $listType = $entry->definition()->type();
@@ -78,7 +78,7 @@ final class AvroLoader implements Closure, Loader, Loader\FileLoader
             /** @var array<string> $data */
             $data = [];
 
-            foreach ($entry->value() as $value) {
+            foreach ($entry->value() ?: [] as $value) {
                 $data[] = $value->toString();
             }
 
@@ -89,7 +89,7 @@ final class AvroLoader implements Closure, Loader, Loader\FileLoader
             /** @var array<int> $data */
             $data = [];
 
-            foreach ($entry->value() as $value) {
+            foreach ($entry->value() ?: [] as $value) {
                 $data[] = (int) $value->format('Uu');
             }
 

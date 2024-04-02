@@ -13,7 +13,7 @@ use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\{Entry, Reference};
 
 /**
- * @implements Entry<array>
+ * @implements Entry<?array>
  */
 final class ArrayEntry implements Entry
 {
@@ -28,13 +28,13 @@ final class ArrayEntry implements Entry
      */
     public function __construct(
         private readonly string $name,
-        private readonly array $value
+        private readonly ?array $value
     ) {
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        $this->type = type_array([] === $this->value);
+        $this->type = type_array([] === $this->value, $this->value === null);
     }
 
     public function __toString() : string
@@ -58,7 +58,24 @@ final class ArrayEntry implements Entry
 
     public function isEqual(Entry $entry) : bool
     {
-        return $this->is($entry->name()) && $entry instanceof self && $this->type->isEqual($entry->type) && (new ArrayComparison())->equals($this->value, $entry->value());
+        $entryValue = $entry->value();
+        $thisValue = $this->value();
+
+        if ($entryValue === null && $thisValue !== null) {
+            return false;
+        }
+
+        if ($entryValue !== null && $thisValue === null) {
+            return false;
+        }
+
+        if ($entryValue === null && $thisValue === null) {
+            return $this->is($entry->name())
+                && $entry instanceof self
+                && $this->type->isEqual($entry->type);
+        }
+
+        return $this->is($entry->name()) && $entry instanceof self && $this->type->isEqual($entry->type) && (new ArrayComparison())->equals($thisValue, $entryValue);
     }
 
     public function map(callable $mapper) : Entry
@@ -78,6 +95,10 @@ final class ArrayEntry implements Entry
 
     public function toString() : string
     {
+        if ($this->value === null) {
+            return '';
+        }
+
         return \json_encode($this->value, \JSON_THROW_ON_ERROR);
     }
 
@@ -86,7 +107,7 @@ final class ArrayEntry implements Entry
         return $this->type;
     }
 
-    public function value() : array
+    public function value() : ?array
     {
         return $this->value;
     }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Factory;
 
-use function Flow\ETL\DSL\{array_entry, bool_entry, datetime_entry, enum_entry, float_entry, int_entry, json_entry, json_object_entry, list_entry, null_entry, object_entry, str_entry, type_datetime, type_float, type_int, type_list, type_object, type_string, uuid_entry, xml_entry};
+use function Flow\ETL\DSL\{array_entry, bool_entry, datetime_entry, enum_entry, float_entry, int_entry, json_entry, json_object_entry, list_entry, object_entry, str_entry, type_datetime, type_float, type_int, type_list, type_object, type_string, uuid_entry, xml_entry};
 use Flow\ETL\Exception\{CastingException, SchemaDefinitionNotFoundException};
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
@@ -293,27 +293,6 @@ final class NativeEntryFactoryTest extends TestCase
                 'street' => 'Floriańska',
                 'zip' => '31-021',
             ])
-        );
-    }
-
-    public function test_null() : void
-    {
-        self::assertEquals(
-            null_entry('e'),
-            (new NativeEntryFactory())->create('e', null)
-        );
-    }
-
-    public function test_null_with_schema() : void
-    {
-        self::assertEquals(
-            null_entry('e'),
-            (new NativeEntryFactory())->create('e', null, new Schema(Schema\Definition::null('e')))
-        );
-
-        self::assertEquals(
-            null_entry('e'),
-            (new NativeEntryFactory())->create('e', null, new Schema(Schema\Definition::string('e', true)))
         );
     }
 

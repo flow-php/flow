@@ -12,7 +12,7 @@ use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\{Entry, Reference};
 
 /**
- * @implements Entry<Entry\Type\Uuid>
+ * @implements Entry<?Entry\Type\Uuid>
  */
 final class UuidEntry implements Entry
 {
@@ -20,12 +20,12 @@ final class UuidEntry implements Entry
 
     private readonly UuidType $type;
 
-    private Entry\Type\Uuid $value;
+    private ?Entry\Type\Uuid $value;
 
     /**
      * @throws InvalidArgumentException
      */
-    public function __construct(private readonly string $name, Entry\Type\Uuid|string $value)
+    public function __construct(private readonly string $name, Entry\Type\Uuid|string|null $value)
     {
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
@@ -37,7 +37,7 @@ final class UuidEntry implements Entry
             $this->value = $value;
         }
 
-        $this->type = type_uuid();
+        $this->type = type_uuid($this->value === null);
     }
 
     public static function from(string $name, string $value) : self
@@ -66,7 +66,18 @@ final class UuidEntry implements Entry
 
     public function isEqual(Entry $entry) : bool
     {
-        return $this->is($entry->name()) && $entry instanceof self && $this->type->isEqual($entry->type) && $this->value()->isEqual($entry->value());
+        $entryValue = $entry->value();
+        $thisValue = $this->value();
+
+        if ($entryValue === null && $thisValue !== null) {
+            return false;
+        }
+
+        if ($entryValue !== null && $thisValue === null) {
+            return false;
+        }
+
+        return $this->is($entry->name()) && $entry instanceof self && $this->type->isEqual($entry->type) && $this->value?->isEqual($entryValue);
     }
 
     public function map(callable $mapper) : Entry
@@ -89,6 +100,10 @@ final class UuidEntry implements Entry
 
     public function toString() : string
     {
+        if ($this->value === null) {
+            return '';
+        }
+
         return $this->value->toString();
     }
 
@@ -97,7 +112,7 @@ final class UuidEntry implements Entry
         return $this->type;
     }
 
-    public function value() : Entry\Type\Uuid
+    public function value() : ?Entry\Type\Uuid
     {
         return $this->value;
     }

@@ -11,7 +11,7 @@ use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\{Entry, Reference};
 
 /**
- * @implements Entry<\DOMNode>
+ * @implements Entry<?\DOMNode>
  */
 final class XMLNodeEntry implements Entry
 {
@@ -19,9 +19,9 @@ final class XMLNodeEntry implements Entry
 
     private readonly XMLNodeType $type;
 
-    public function __construct(private readonly string $name, private readonly \DOMNode $value)
+    public function __construct(private readonly string $name, private readonly ?\DOMNode $value)
     {
-        $this->type = type_xml_node();
+        $this->type = type_xml_node($this->value === null);
     }
 
     public function __serialize() : array
@@ -29,13 +29,17 @@ final class XMLNodeEntry implements Entry
         return [
             'name' => $this->name,
             /* @phpstan-ignore-next-line */
-            'value' => \base64_encode(\gzcompress($this->toString())),
+            'value' => $this->value === null ? null : \base64_encode(\gzcompress($this->toString())),
             'type' => $this->type,
         ];
     }
 
     public function __toString() : string
     {
+        if ($this->value === null) {
+            return '';
+        }
+
         /**
          * @phpstan-ignore-next-line
          */
@@ -46,6 +50,12 @@ final class XMLNodeEntry implements Entry
     {
         $this->name = $data['name'];
         $this->type = $data['type'];
+
+        if ($data['value'] === null) {
+            $this->value = null;
+
+            return;
+        }
 
         /* @phpstan-ignore-next-line */
         $nodeString = \gzuncompress(\base64_decode($data['value'], true));
@@ -81,7 +91,7 @@ final class XMLNodeEntry implements Entry
             return false;
         }
 
-        return $this->value->C14N() === $entry->value->C14N();
+        return $this->value?->C14N() === $entry->value?->C14N();
     }
 
     public function map(callable $mapper) : Entry
@@ -101,6 +111,10 @@ final class XMLNodeEntry implements Entry
 
     public function toString() : string
     {
+        if ($this->value === null) {
+            return '';
+        }
+
         /**
          * @phpstan-ignore-next-line
          */
@@ -112,7 +126,7 @@ final class XMLNodeEntry implements Entry
         return $this->type;
     }
 
-    public function value() : \DOMNode
+    public function value() : ?\DOMNode
     {
         return $this->value;
     }

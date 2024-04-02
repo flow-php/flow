@@ -4,7 +4,19 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Schema;
 
-use function Flow\ETL\DSL\{int_entry, null_entry, str_entry, struct_element, struct_entry, struct_schema, struct_type, type_datetime, type_float, type_int, type_list, type_map, type_string, type_structure};
+use function Flow\ETL\DSL\{int_entry,
+    str_entry,
+    struct_element,
+    struct_entry,
+    struct_schema,
+    struct_type,
+    type_datetime,
+    type_float,
+    type_int,
+    type_list,
+    type_map,
+    type_string,
+    type_structure};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\{ListType, StructureType};
@@ -48,13 +60,6 @@ final class DefinitionTest extends TestCase
         );
     }
 
-    public function test_matches_when_nullable_and_name_matches() : void
-    {
-        $def = Definition::integer('test', $nullable = true);
-
-        self::assertTrue($def->matches(null_entry('test')));
-    }
-
     public function test_matches_when_type_and_name_match() : void
     {
         $def = Definition::integer('test');
@@ -87,26 +92,6 @@ final class DefinitionTest extends TestCase
         self::assertEquals(
             Definition::string('id', true),
             Definition::dateTime('id', false)->merge(Definition::string('id', true))
-        );
-    }
-
-    public function test_merging_anything_with_null() : void
-    {
-        self::assertEquals(
-            Definition::string('id', true),
-            Definition::string('id', false)->merge(Definition::null('id'))
-        );
-        self::assertEquals(
-            Definition::dateTime('datetime', true),
-            Definition::dateTime('datetime', false)->merge(Definition::null('datetime'))
-        );
-        self::assertEquals(
-            Definition::integer('id', true),
-            Definition::integer('id', false)->merge(Definition::null('id'))
-        );
-        self::assertEquals(
-            Definition::float('id', true),
-            Definition::float('id', false)->merge(Definition::null('id'))
         );
     }
 
@@ -221,7 +206,7 @@ final class DefinitionTest extends TestCase
     {
         $def = Definition::integer('test', $nullable = false);
 
-        self::assertFalse($def->matches(null_entry('test')));
+        self::assertFalse($def->matches(str_entry('test', null)));
     }
 
     public function test_not_matches_when_type_does_not_match() : void

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{bool_entry, float_entry, int_entry, null_entry, ref, str_entry};
+use function Flow\ETL\DSL\{bool_entry, float_entry, int_entry, ref, str_entry};
 use Flow\ETL\Function\ToMoney;
 use Flow\ETL\Row;
 use Money\{Currency, Money};
@@ -44,7 +44,7 @@ final class ToMoneyTest extends TestCase
 
     public function test_non_numeric_money_amount() : void
     {
-        $row = Row::create(bool_entry('a', false), null_entry('b'));
+        $row = Row::create(bool_entry('a', false), str_entry('b', null));
 
         self::assertNull(
             (new ToMoney(ref('a'), ref('b')))->eval($row)
@@ -53,7 +53,7 @@ final class ToMoneyTest extends TestCase
 
     public function test_null_currency() : void
     {
-        $row = Row::create(str_entry('a', '19.90'), null_entry('b'));
+        $row = Row::create(str_entry('a', '19.90'), str_entry('b', null));
 
         self::assertNull(
             (new ToMoney(ref('a'), ref('b')))->eval($row)

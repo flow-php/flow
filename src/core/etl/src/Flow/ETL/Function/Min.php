@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
-use function Flow\ETL\DSL\{float_entry, int_entry, null_entry};
+use function Flow\ETL\DSL\{float_entry, int_entry};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row;
 use Flow\ETL\Row\{Entry, Reference};
@@ -47,7 +47,7 @@ final class Min implements AggregatingFunction
         $resultInt = (int) $this->min;
 
         if ($this->min === null) {
-            return null_entry($this->ref->name());
+            return int_entry($this->ref->name(), null);
         }
 
         if ($this->min - $resultInt === 0.0) {

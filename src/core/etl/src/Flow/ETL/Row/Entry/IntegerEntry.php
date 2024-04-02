@@ -12,7 +12,7 @@ use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\{Entry, Reference};
 
 /**
- * @implements Entry<int>
+ * @implements Entry<?int>
  */
 final class IntegerEntry implements Entry
 {
@@ -23,13 +23,13 @@ final class IntegerEntry implements Entry
     /**
      * @throws InvalidArgumentException
      */
-    public function __construct(private readonly string $name, private readonly int $value)
+    public function __construct(private readonly string $name, private readonly ?int $value)
     {
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        $this->type = type_int();
+        $this->type = type_int($this->value === null);
     }
 
     public function __toString() : string
@@ -76,6 +76,10 @@ final class IntegerEntry implements Entry
 
     public function toString() : string
     {
+        if ($this->value === null) {
+            return '';
+        }
+
         return (string) $this->value();
     }
 
@@ -84,7 +88,7 @@ final class IntegerEntry implements Entry
         return $this->type;
     }
 
-    public function value() : int
+    public function value() : ?int
     {
         return $this->value;
     }

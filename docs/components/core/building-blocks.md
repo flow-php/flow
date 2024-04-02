@@ -54,7 +54,6 @@ $rows = array_to_rows([
 - [Json](../../../src/core/etl/src/Flow/ETL/Row/Entry/JsonEntry.php)
 - [List](../../../src/core/etl/src/Flow/ETL/Row/Entry/ListEntry.php)
 - [Map](../../../src/core/etl/src/Flow/ETL/Row/Entry/MapEntry.php)
-- [Null](../../../src/core/etl/src/Flow/ETL/Row/Entry/NullEntry.php)
 - [Object](../../../src/core/etl/src/Flow/ETL/Row/Entry/ObjectEntry.php)
 - [String](../../../src/core/etl/src/Flow/ETL/Row/Entry/StringEntry.php)
 - [Structure](../../../src/core/etl/src/Flow/ETL/Row/Entry/StructureEntry.php)

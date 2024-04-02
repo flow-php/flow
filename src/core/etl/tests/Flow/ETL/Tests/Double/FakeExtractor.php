@@ -4,7 +4,29 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Double;
 
-use function Flow\ETL\DSL\{array_entry, bool_entry, datetime_entry, enum_entry, float_entry, int_entry, json_entry, list_entry, map_entry, null_entry, object_entry, row, rows, struct_element, struct_entry, struct_type, type_datetime, type_float, type_int, type_list, type_map, type_string, uuid_entry};
+use function Flow\ETL\DSL\{array_entry,
+    bool_entry,
+    datetime_entry,
+    enum_entry,
+    float_entry,
+    int_entry,
+    json_entry,
+    list_entry,
+    map_entry,
+    object_entry,
+    row,
+    rows,
+    str_entry,
+    struct_element,
+    struct_entry,
+    struct_type,
+    type_datetime,
+    type_float,
+    type_int,
+    type_list,
+    type_map,
+    type_string,
+    uuid_entry};
 use Flow\ETL\Tests\Fixtures\Enum\BackedStringEnum;
 use Flow\ETL\{Extractor, FlowContext};
 use Ramsey\Uuid\Uuid;
@@ -31,7 +53,7 @@ final class FakeExtractor implements Extractor
                     float_entry('float', \random_int(100, 100000) / 100),
                     bool_entry('bool', false),
                     datetime_entry('datetime', new \DateTimeImmutable('now')),
-                    null_entry('null'),
+                    str_entry('null', null),
                     uuid_entry('uuid', new \Flow\ETL\Row\Entry\Type\Uuid(Uuid::uuid4())),
                     json_entry('json', ['id' => $id, 'status' => 'NEW']),
                     array_entry(

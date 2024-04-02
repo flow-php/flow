@@ -1709,16 +1709,16 @@
         },
         {
             "name": "php-http/discovery",
-            "version": "1.19.3",
+            "version": "1.19.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/php-http/discovery.git",
-                "reference": "7fbed2f92518827eb0ece6bf869f8c6b054d5730"
+                "reference": "0700efda8d7526335132360167315fdab3aeb599"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/php-http/discovery/zipball/7fbed2f92518827eb0ece6bf869f8c6b054d5730",
-                "reference": "7fbed2f92518827eb0ece6bf869f8c6b054d5730",
+                "url": "https://api.github.com/repos/php-http/discovery/zipball/0700efda8d7526335132360167315fdab3aeb599",
+                "reference": "0700efda8d7526335132360167315fdab3aeb599",
                 "shasum": ""
             },
             "require": {
@@ -1727,7 +1727,6 @@
             },
             "conflict": {
                 "nyholm/psr7": "<1.0",
-                "sebastian/comparator": ">=5.0",
                 "zendframework/zend-diactoros": "*"
             },
             "provide": {
@@ -1743,6 +1742,7 @@
                 "php-http/httplug": "^1.0 || ^2.0",
                 "php-http/message-factory": "^1.0",
                 "phpspec/phpspec": "^5.1 || ^6.1 || ^7.3",
+                "sebastian/comparator": "^3.0.5 || ^4.0.8",
                 "symfony/phpunit-bridge": "^6.4.4 || ^7.0.1"
             },
             "type": "composer-plugin",
@@ -1782,9 +1782,9 @@
             ],
             "support": {
                 "issues": "https://github.com/php-http/discovery/issues",
-                "source": "https://github.com/php-http/discovery/tree/1.19.3"
+                "source": "https://github.com/php-http/discovery/tree/1.19.4"
             },
-            "time": "2024-03-28T07:38:36+00:00"
+            "time": "2024-03-29T13:00:05+00:00"
         },
         {
             "name": "php-http/httplug",
@@ -3627,16 +3627,16 @@
         },
         {
             "name": "aws/aws-sdk-php",
-            "version": "3.301.9",
+            "version": "3.302.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aws/aws-sdk-php.git",
-                "reference": "23eda9eeb6c44a3ed6a12951b61020dc6048f7f5"
+                "reference": "cb343ed4fc5d86c0ddf8e948f0271052f183f937"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/23eda9eeb6c44a3ed6a12951b61020dc6048f7f5",
-                "reference": "23eda9eeb6c44a3ed6a12951b61020dc6048f7f5",
+                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/cb343ed4fc5d86c0ddf8e948f0271052f183f937",
+                "reference": "cb343ed4fc5d86c0ddf8e948f0271052f183f937",
                 "shasum": ""
             },
             "require": {
@@ -3716,9 +3716,9 @@
             "support": {
                 "forum": "https://forums.aws.amazon.com/forum.jspa?forumID=80",
                 "issues": "https://github.com/aws/aws-sdk-php/issues",
-                "source": "https://github.com/aws/aws-sdk-php/tree/3.301.9"
+                "source": "https://github.com/aws/aws-sdk-php/tree/3.302.0"
             },
-            "time": "2024-03-27T18:26:04+00:00"
+            "time": "2024-03-29T18:07:04+00:00"
         },
         {
             "name": "brick/math",

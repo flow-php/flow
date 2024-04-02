@@ -38,7 +38,7 @@ final class RequestEntriesFactory
             }
         }
 
-        $requestBodyEntry = new Row\Entry\NullEntry('request_body');
+        $requestBodyEntry = new Row\Entry\StringEntry('request_body', null);
         $requestBody = $request->getBody();
 
         if ($requestBody->isReadable()) {

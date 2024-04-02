@@ -12,7 +12,7 @@ use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\{Entry, Reference};
 
 /**
- * @implements Entry<object>
+ * @implements Entry<?object>
  */
 final class ObjectEntry implements Entry
 {
@@ -23,13 +23,13 @@ final class ObjectEntry implements Entry
     /**
      * @throws InvalidArgumentException
      */
-    public function __construct(private readonly string $name, private readonly object $value)
+    public function __construct(private readonly string $name, private readonly ?object $value)
     {
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
-        $this->type = type_object($value::class);
+        $this->type = type_object($value === null ? \stdClass::class : $value::class, $value === null);
     }
 
     public function __toString() : string
@@ -79,6 +79,10 @@ final class ObjectEntry implements Entry
 
     public function toString() : string
     {
+        if ($this->value === null) {
+            return '';
+        }
+
         return ($this->type->nullable() ? '?' : '') . \preg_replace('!\s+!', ' ', \str_replace("\n", '', \print_r($this->value(), true)));
     }
 
@@ -87,7 +91,7 @@ final class ObjectEntry implements Entry
         return $this->type;
     }
 
-    public function value() : object
+    public function value() : ?object
     {
         return $this->value;
     }

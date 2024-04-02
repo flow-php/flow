@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
-use function Flow\ETL\DSL\{array_entry, bool_entry, datetime_entry, float_entry, int_entry, list_entry, map_entry, null_entry, object_entry, row, str_entry, struct_element, struct_entry, struct_type, type_int, type_list, type_map, type_object, type_string};
+use function Flow\ETL\DSL\{array_entry, bool_entry, datetime_entry, float_entry, int_entry, list_entry, map_entry, object_entry, row, str_entry, struct_element, struct_entry, struct_type, type_int, type_list, type_map, type_object, type_string};
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\Map\{MapKey, MapValue};
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\{ListType, MapType, StructureType};
-use Flow\ETL\Row\Entry\{ArrayEntry, BooleanEntry, DateTimeEntry, IntegerEntry, MapEntry, NullEntry, StringEntry, StructureEntry};
+use Flow\ETL\Row\Entry\{ArrayEntry, BooleanEntry, DateTimeEntry, IntegerEntry, MapEntry, StringEntry, StructureEntry};
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Row\Schema\Definition;
 use PHPUnit\Framework\TestCase;
@@ -81,7 +81,7 @@ final class RowTest extends TestCase
             float_entry('price', \random_int(100, 100000) / 100),
             bool_entry('deleted', false),
             datetime_entry('created-at', new \DateTimeImmutable('now')),
-            null_entry('phase'),
+            str_entry('phase', null),
             array_entry(
                 'array',
                 [
@@ -112,7 +112,7 @@ final class RowTest extends TestCase
                 Definition::float('price'),
                 Definition::boolean('deleted'),
                 Definition::dateTime('created-at'),
-                Definition::null('phase'),
+                Definition::string('phase', nullable: true),
                 Definition::array('array'),
                 Definition::structure(
                     'items',
@@ -280,7 +280,7 @@ final class RowTest extends TestCase
             new IntegerEntry('id', 1234),
             new BooleanEntry('deleted', false),
             new DateTimeEntry('created-at', $createdAt = new \DateTimeImmutable('2020-07-13 15:00')),
-            new NullEntry('phase'),
+            new StringEntry('phase', null),
             new StructureEntry(
                 'items',
                 ['item-id' => 1, 'name' => 'one'],

@@ -47,9 +47,9 @@ function from_rows(Rows ...$rows) : Extractor\ProcessExtractor
     return new Extractor\ProcessExtractor(...$rows);
 }
 
-function from_array(iterable $array) : Extractor\ArrayExtractor
+function from_array(iterable $array, ?Schema $schema = null) : Extractor\ArrayExtractor
 {
-    return new Extractor\ArrayExtractor($array);
+    return new Extractor\ArrayExtractor($array, schema: $schema);
 }
 
 function from_cache(string $id, ?Extractor $fallback_extractor = null, bool $clear = false) : Extractor\CacheExtractor
@@ -159,47 +159,47 @@ function to_branch(ScalarFunction $condition, Loader $loader) : Loader
 /**
  * @param array<mixed> $data
  */
-function array_entry(string $array, array $data) : Row\Entry\ArrayEntry
+function array_entry(string $array, ?array $data) : Row\Entry\ArrayEntry
 {
     return new Row\Entry\ArrayEntry($array, $data);
 }
 
-function bool_entry(string $name, bool $value) : Row\Entry\BooleanEntry
+function bool_entry(string $name, ?bool $value) : Row\Entry\BooleanEntry
 {
     return new Row\Entry\BooleanEntry($name, $value);
 }
 
-function boolean_entry(string $name, bool $value) : Row\Entry\BooleanEntry
+function boolean_entry(string $name, ?bool $value) : Row\Entry\BooleanEntry
 {
     return bool_entry($name, $value);
 }
 
-function datetime_entry(string $name, \DateTimeInterface|string $value) : Row\Entry\DateTimeEntry
+function datetime_entry(string $name, \DateTimeInterface|string|null $value) : Row\Entry\DateTimeEntry
 {
     return new Row\Entry\DateTimeEntry($name, $value);
 }
 
-function int_entry(string $name, int $value) : Row\Entry\IntegerEntry
+function int_entry(string $name, ?int $value) : Row\Entry\IntegerEntry
 {
     return new Row\Entry\IntegerEntry($name, $value);
 }
 
-function integer_entry(string $name, int $value) : Row\Entry\IntegerEntry
+function integer_entry(string $name, ?int $value) : Row\Entry\IntegerEntry
 {
     return int_entry($name, $value);
 }
 
-function enum_entry(string $name, \UnitEnum $enum) : Row\Entry\EnumEntry
+function enum_entry(string $name, ?\UnitEnum $enum) : Row\Entry\EnumEntry
 {
     return new Row\Entry\EnumEntry($name, $enum);
 }
 
-function float_entry(string $name, float $value) : Row\Entry\FloatEntry
+function float_entry(string $name, ?float $value) : Row\Entry\FloatEntry
 {
     return new Row\Entry\FloatEntry($name, $value);
 }
 
-function json_entry(string $name, array|string $data) : Row\Entry\JsonEntry
+function json_entry(string $name, array|string|null $data) : Row\Entry\JsonEntry
 {
     return new Row\Entry\JsonEntry($name, $data);
 }
@@ -207,7 +207,7 @@ function json_entry(string $name, array|string $data) : Row\Entry\JsonEntry
 /**
  * @throws InvalidArgumentException
  */
-function json_object_entry(string $name, array|string $data) : Row\Entry\JsonEntry
+function json_object_entry(string $name, array|string|null $data) : Row\Entry\JsonEntry
 {
     if (\is_string($data)) {
         return new Row\Entry\JsonEntry($name, $data);
@@ -216,42 +216,37 @@ function json_object_entry(string $name, array|string $data) : Row\Entry\JsonEnt
     return Row\Entry\JsonEntry::object($name, $data);
 }
 
-function null_entry(string $name) : Row\Entry\NullEntry
-{
-    return new Row\Entry\NullEntry($name);
-}
-
-function object_entry(string $name, object $data) : Row\Entry\ObjectEntry
+function object_entry(string $name, ?object $data) : Row\Entry\ObjectEntry
 {
     return new Row\Entry\ObjectEntry($name, $data);
 }
 
-function obj_entry(string $name, object $data) : Row\Entry\ObjectEntry
+function obj_entry(string $name, ?object $data) : Row\Entry\ObjectEntry
 {
     return object_entry($name, $data);
 }
 
-function str_entry(string $name, string $value) : Row\Entry\StringEntry
+function str_entry(string $name, ?string $value) : Row\Entry\StringEntry
 {
     return new Row\Entry\StringEntry($name, $value);
 }
 
-function string_entry(string $name, string $value) : Row\Entry\StringEntry
+function string_entry(string $name, ?string $value) : Row\Entry\StringEntry
 {
     return str_entry($name, $value);
 }
 
-function uuid_entry(string $name, Row\Entry\Type\Uuid|string $value) : Row\Entry\UuidEntry
+function uuid_entry(string $name, Row\Entry\Type\Uuid|string|null $value) : Row\Entry\UuidEntry
 {
     return new Row\Entry\UuidEntry($name, $value);
 }
 
-function xml_entry(string $name, \DOMDocument|string $value) : Row\Entry\XMLEntry
+function xml_entry(string $name, \DOMDocument|string|null $value) : Row\Entry\XMLEntry
 {
     return new Row\Entry\XMLEntry($name, $value);
 }
 
-function xml_node_entry(string $name, \DOMNode $value) : Row\Entry\XMLNodeEntry
+function xml_node_entry(string $name, ?\DOMNode $value) : Row\Entry\XMLNodeEntry
 {
     return new Row\Entry\XMLNodeEntry($name, $value);
 }
@@ -261,12 +256,12 @@ function entries(Row\Entry ...$entries) : Row\Entries
     return new Row\Entries(...$entries);
 }
 
-function struct_entry(string $name, array $value, StructureType $type) : Row\Entry\StructureEntry
+function struct_entry(string $name, ?array $value, StructureType $type) : Row\Entry\StructureEntry
 {
     return new Row\Entry\StructureEntry($name, $value, $type);
 }
 
-function structure_entry(string $name, array $value, StructureType $type) : Row\Entry\StructureEntry
+function structure_entry(string $name, ?array $value, StructureType $type) : Row\Entry\StructureEntry
 {
     return new Row\Entry\StructureEntry($name, $value, $type);
 }
@@ -317,7 +312,7 @@ function type_map(ScalarType $key_type, Type $value_type, bool $nullable = false
     return new MapType(new MapKey($key_type), new MapValue($value_type), $nullable);
 }
 
-function map_entry(string $name, array $value, MapType $mapType) : Row\Entry\MapEntry
+function map_entry(string $name, ?array $value, MapType $mapType) : Row\Entry\MapEntry
 {
     return new Row\Entry\MapEntry($name, $value, $mapType);
 }
@@ -843,7 +838,7 @@ function array_to_rows(array $data, EntryFactory $entryFactory = new NativeEntry
         if ($schema !== null) {
             foreach ($schema->definitions() as $definition) {
                 if (!\array_key_exists($definition->entry()->name(), $entries)) {
-                    $entries[$definition->entry()->name()] = null_entry($definition->entry()->name());
+                    $entries[$definition->entry()->name()] = str_entry($definition->entry()->name(), null);
                 }
             }
         }
@@ -883,7 +878,7 @@ function array_to_rows(array $data, EntryFactory $entryFactory = new NativeEntry
         if ($schema !== null) {
             foreach ($schema->definitions() as $definition) {
                 if (!\array_key_exists($definition->entry()->name(), $entries)) {
-                    $entries[$definition->entry()->name()] = null_entry($definition->entry()->name());
+                    $entries[$definition->entry()->name()] = str_entry($definition->entry()->name(), null);
                 }
             }
         }
@@ -1034,7 +1029,7 @@ function enum_schema(string $name, string $type, bool $nullable = false, ?Schema
 
 function null_schema(string $name, ?Schema\Metadata $metadata = null) : Definition
 {
-    return Definition::null($name, $metadata);
+    return Definition::string($name, true, $metadata);
 }
 
 function datetime_schema(string $name, bool $nullable = false, ?Schema\Metadata $metadata = null) : Definition

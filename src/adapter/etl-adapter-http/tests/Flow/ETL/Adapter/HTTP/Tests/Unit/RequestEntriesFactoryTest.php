@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\HTTP\Tests\Unit;
 
 use Flow\ETL\Adapter\Http\RequestEntriesFactory;
-use Flow\ETL\Row\Entry\{JsonEntry, NullEntry, StringEntry};
+use Flow\ETL\Row\Entry\{JsonEntry, StringEntry};
 use Nyholm\Psr7\Factory\Psr17Factory;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
@@ -37,7 +37,7 @@ final class RequestEntriesFactoryTest extends TestCase
         ];
 
         yield 'uses NullEntry for request body when when request body is empty' => [
-            NullEntry::class,
+            StringEntry::class,
             $messageFactory
                 ->createRequest('POST', 'https://flow-php.io/example')
                 ->withHeader('Content-Type', 'application/json'),

@@ -40,7 +40,6 @@ final class ASCIISchemaFormatterTest extends TestCase
             Schema\Definition::boolean('active'),
             Schema\Definition::xml('xml'),
             Schema\Definition::xml_node('xml_node'),
-            Schema\Definition::null('null'),
             Schema\Definition::json('json'),
             Schema\Definition::uuid('uuid'),
             Schema\Definition::dateTime('datetime'),
@@ -63,7 +62,6 @@ schema
 |-- active: boolean
 |-- xml: xml
 |-- xml_node: xml_node
-|-- null: null
 |-- json: json
 |-- uuid: uuid
 |-- datetime: datetime

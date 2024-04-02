@@ -79,7 +79,6 @@ return (new Config())
         'native_constant_invocation' => false,
         'native_function_invocation' => false,
         'new_with_parentheses' => false,
-        'nullable_type_declaration_for_default_null_value' => true,
         'no_extra_blank_lines' => true, // todo?
         'no_mixed_echo_print' => ['use' => 'print'],
         'no_superfluous_elseif' => true,

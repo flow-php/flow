@@ -13,7 +13,7 @@ use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\{Entry, Reference};
 
 /**
- * @implements Entry<string>
+ * @implements Entry<?string>
  */
 final class JsonEntry implements Entry
 {
@@ -23,12 +23,12 @@ final class JsonEntry implements Entry
 
     private readonly JsonType $type;
 
-    private readonly array $value;
+    private readonly ?array $value;
 
     /**
      * @throws InvalidArgumentException
      */
-    public function __construct(private readonly string $name, array|string $value)
+    public function __construct(private readonly string $name, array|string|null $value)
     {
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
@@ -46,17 +46,19 @@ final class JsonEntry implements Entry
             $this->value = $value;
         }
 
-        $this->type = type_json();
+        $this->type = type_json($this->value === null);
     }
 
     /**
      * @throws InvalidArgumentException
      */
-    public static function object(string $name, array $value) : self
+    public static function object(string $name, ?array $value) : self
     {
-        foreach (\array_keys($value) as $key) {
-            if (!\is_string($key)) {
-                throw InvalidArgumentException::because('All keys for JsonEntry object must be strings');
+        if (\is_array($value)) {
+            foreach (\array_keys($value) as $key) {
+                if (!\is_string($key)) {
+                    throw InvalidArgumentException::because('All keys for JsonEntry object must be strings');
+                }
             }
         }
 
@@ -87,7 +89,28 @@ final class JsonEntry implements Entry
 
     public function isEqual(Entry $entry) : bool
     {
-        return $this->is($entry->name()) && $entry instanceof self && $this->type->isEqual($entry->type) && (new ArrayComparison())->equals($this->value, $entry->value);
+        $entryValue = $entry->value();
+        $thisValue = $this->value();
+
+        if ($entryValue === null && $thisValue !== null) {
+            return false;
+        }
+
+        if ($entryValue !== null && $thisValue === null) {
+            return false;
+        }
+
+        if ($entryValue === null && $thisValue === null) {
+            return $this->is($entry->name())
+                && $entry instanceof self
+                && $this->type->isEqual($entry->type);
+        }
+
+        /** @phpstan-ignore-next-line */
+        $thisValue = \json_decode($thisValue, true, flags: \JSON_THROW_ON_ERROR);
+        $entryValue = \json_decode($entryValue, true, flags: \JSON_THROW_ON_ERROR);
+
+        return $this->is($entry->name()) && $entry instanceof self && $this->type->isEqual($entry->type) && (new ArrayComparison())->equals($thisValue, $entryValue);
     }
 
     public function map(callable $mapper) : Entry
@@ -110,7 +133,13 @@ final class JsonEntry implements Entry
 
     public function toString() : string
     {
-        return $this->value();
+        $value = $this->value();
+
+        if ($value === null) {
+            return '';
+        }
+
+        return $value;
     }
 
     public function type() : Type
@@ -121,8 +150,12 @@ final class JsonEntry implements Entry
     /**
      * @throws \JsonException
      */
-    public function value() : string
+    public function value() : ?string
     {
+        if ($this->value === null) {
+            return null;
+        }
+
         if (!\count($this->value) && $this->object) {
             return '{}';
         }
