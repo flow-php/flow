@@ -1,9 +1,11 @@
 ## [Unreleased] - 2024-04-02
 
 ### Added
+- [#1037](https://github.com/flow-php/flow/pull/1037) - **Added Base64 serializer** - [@norberttech](https://github.com/norberttech)
 - [#1034](https://github.com/flow-php/flow/pull/1034) - **cache batch size configuration** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#1037](https://github.com/flow-php/flow/pull/1037) - **Compressing serializer is not longer using base64 inside** - [@norberttech](https://github.com/norberttech)
 - [#1034](https://github.com/flow-php/flow/pull/1034) - **Replaced CompressingSerializer with NativeSerizer** - [@norberttech](https://github.com/norberttech)
 - [#1032](https://github.com/flow-php/flow/pull/1032) - **Update Homebrew TAP formula: flow-php to version: 0.7.3** - [@norberttech](https://github.com/norberttech)
 
