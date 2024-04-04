@@ -1,6 +1,7 @@
-## [Unreleased] - 2024-04-02
+## [Unreleased] - 2024-04-04
 
 ### Added
+- [#1038](https://github.com/flow-php/flow/pull/1038) - **How to write a custom data extractor - blog post** - [@norberttech](https://github.com/norberttech)
 - [#1037](https://github.com/flow-php/flow/pull/1037) - **Added Base64 serializer** - [@norberttech](https://github.com/norberttech)
 - [#1034](https://github.com/flow-php/flow/pull/1034) - **cache batch size configuration** - [@norberttech](https://github.com/norberttech)
 
