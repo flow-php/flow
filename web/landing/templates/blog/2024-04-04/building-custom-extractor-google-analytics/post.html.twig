@@ -1,0 +1,134 @@
+{% extends 'base.html.twig' %}
+
+{%- block title -%}
+    Building Custom Data Extractor - Flow PHP
+{%- endblock -%}
+
+{%- block description -%}
+    Learn how to extract data from Google Analytics API using Flow PHP but also how to build a custom data extractor.
+{%- endblock -%}
+
+{% block main %}
+    <div class="py-10 px-2 sm:px-4 mx-auto max-w-screen-xl">
+        <h1 class="font-bold text-4xl" id="title">Building Custom Data Extractor</h1>
+
+        <p class="mt-2">
+            Our goal is to extract a list of Account Summaries from Google Analytics API.<br/>
+        </p>
+        <p class="mt-2">
+            The very first step is to get familiar with the data structure of the dataset we are going to extract.<br/>
+            So let's take a look at <a href="https://developers.google.com/analytics/devguides/config/admin/v1/rest/v1beta/accountSummaries/list" target="_blank" rel="noopener noreferrer">Account Summaries API documentation</a>.
+        </p>
+
+        <h2 class="font-bold text-2xl mt-4">Account Summary</h2>
+        {% apply spaceless %}
+            <pre class="rounded mt-4 p-4 overflow-auto rounded border-gray border-2 relative">
+                <code id="code" class="language-json !p-0 !bg-transparent" {{ stimulus_controller('syntax_highlight') }}>{% include template_folder ~ '/accountSummary.json' %}</code>
+            </pre>
+        {% endapply %}
+        <h2 class="font-bold text-2xl mt-4">Property Summary</h2>
+        {% apply spaceless %}
+            <pre class="rounded mt-4 p-4 overflow-auto rounded border-gray border-2 relative">
+                <code id="code" class="language-json !p-0 !bg-transparent" {{ stimulus_controller('syntax_highlight') }}>{% include template_folder ~ '/propertySummary.json' %}</code>
+            </pre>
+        {% endapply %}
+
+        <p class="mt-4">
+            Ok, not too bad, we have one list of structures (Property Summary is a structure) and few other not nullable fields.<br/>
+            This should give us the following schema:
+        </p>
+
+        {% apply spaceless %}
+            <pre class="rounded mt-4 p-4 overflow-auto rounded border-gray border-2 relative">
+                <code id="code" class="language-shell !p-0 !bg-transparent" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/schema.txt'  %}{% endapply %}</code>
+            </pre>
+        {% endapply %}
+
+        <p class="mt-4">
+            Now that we have our schema, we can start building our custom data extractor.<br/>
+            Our next step is to figure out if there is any existing SDK that we can use to interact with Google Analytics API.<br/>
+            In this case, we are going to use <a href="https://github.com/googleapis/php-analytics-admin" target="_blank" rel="noopener noreferrer">Google Analytics Admin SDK</a>.
+        </p>
+
+        <p class="mt-2">
+            Sometimes we might not be able to find any SDK that fits our needs, in such cases we would have to build our own HTTP client and handle the API requests manually.
+        </p>
+
+        <p class="mt-4">
+            Let's start by preparing our Extractor class. We will call it <code>AccountSummariesExtractor</code>.<br/>
+            First we need to make sure that our extractor is implementing the <code>Flow\ETL\Extractor</code> interface.<br/>
+            Technically speaking, it's all we need but to make our extractor to be compatible with Flow <code>DataFrame::limit()</code> function,
+            we should additionally implement <code>Flow\ETL\Extractor\LimitableExtractor</code> interface.
+        </p>
+        <p class="mt-2">
+            Most of the <code>Flow\ETL\Extractor\LimitableExtractor</code> logic is reusable so to avoid code duplications we are going to use <code>Flow\ETL\Extractor\Limitable</code> trait in our extractor.
+        </p>
+
+        {% apply spaceless %}
+            <pre class="rounded mt-4 p-4 overflow-auto rounded border-gray border-2 relative">
+                <code id="code" class="language-php !p-0 !bg-transparent" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/extractor-01.php'  %}{% endapply %}</code>
+            </pre>
+        {% endapply %}
+
+        <p class="mt-4">
+            Our extractor boilerplate is ready, let's try to implement the <code>extract()</code> method logic.<br/>
+            <code>FlowContext $context</code> is a container for all parameters/services that are shared between all the stages of the ETL process.<br/>
+            We can use it to access things like <code>EntryFactory</code> or <code>Config</code> however we are not going to use it in this example.
+        </p>
+
+        <p class="mt-4">
+            Let's start by fetching the list of Account Summaries from Google Analytics API, iterating over the list and yield each Account Summary.
+        </p>
+
+        {% apply spaceless %}
+            <pre class="rounded mt-4 p-4 overflow-auto rounded border-gray border-2 relative">
+                <code id="code" class="language-php !p-0 !bg-transparent" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/extractor-02.php'  %}{% endapply %}</code>
+            </pre>
+        {% endapply %}
+
+        <p class="mt-2">
+            <code>ga_account_summary_to_row</code> function is responsible for transforming the Account Summary structure into a row that fits our schema.<br/>
+            It could be a private method of our Extractor, however, extracting it to separated function will make our code cleaner and easier to test/use later.
+        </p>
+
+        {% apply spaceless %}
+            <pre class="rounded mt-4 p-4 overflow-auto rounded border-gray border-2 relative">
+                <code id="code" class="language-php !p-0 !bg-transparent" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/ga_account_summary_to_row.php'  %}{% endapply %}</code>
+            </pre>
+        {% endapply %}
+
+        <p class="mt-4">
+            Our final step would be to implement pagination logic, since Google Analytics API returns only up to 200 Account Summaries per page.<br/>
+            Typically, we are not going to have more than 200 Account Summaries, but it's always good to be prepared for such cases.
+        </p>
+
+        {% apply spaceless %}
+            <pre class="rounded mt-4 p-4 overflow-auto rounded border-gray border-2 relative">
+                <code id="code" class="language-php !p-0 !bg-transparent" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/extractor-03.php'  %}{% endapply %}</code>
+            </pre>
+        {% endapply %}
+
+        <p class="mt-4">
+            That's it! Our custom data extractor is ready to be used.<br/>
+            We can now use it in our ETL process to extract Account Summaries from Google Analytics API.
+        </p>
+
+        {% apply spaceless %}
+            <pre class="rounded mt-4 p-4 overflow-auto rounded border-gray border-2 relative">
+                <code id="code" class="language-php !p-0 !bg-transparent" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/usage.php'  %}{% endapply %}</code>
+            </pre>
+        {% endapply %}
+
+        <p class="mt-4">
+            We are almost done, at this point we can fetch all Account Summaries from Google Analytics API and transform them into a DataFrame.<br/>
+            Our final but also optional step would be to prepare a dsl function returning our extractor that is going to improve the readability of our ETL data processing pipeline.
+        </p>
+
+
+        {% apply spaceless %}
+            <pre class="rounded mt-4 p-4 overflow-auto rounded border-gray border-2 relative">
+                <code id="code" class="language-php !p-0 !bg-transparent" {{ stimulus_controller('syntax_highlight') }}>{% apply escape %}{% include template_folder ~ '/usage-dsl.php'  %}{% endapply %}</code>
+            </pre>
+        {% endapply %}
+    </div>
+{% endblock %}

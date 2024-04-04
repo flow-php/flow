@@ -1,0 +1,10 @@
+{
+  "name": string,
+  "account": string,
+  "displayName": string,
+  "propertySummaries": [
+    {
+      object (PropertySummary)
+    }
+  ]
+}

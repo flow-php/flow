@@ -50,4 +50,7 @@ return [
     'highlight.js/lib/languages/shell' => [
         'version' => '11.9.0',
     ],
+    'highlight.js/lib/languages/json' => [
+        'version' => '11.9.0',
+    ],
 ];

@@ -25,3 +25,6 @@ a {
     @apply font-medium text-blue-600 dark:text-blue-500 hover:underline;
 }
 
+code {
+    font-size: 0.9em;
+}
