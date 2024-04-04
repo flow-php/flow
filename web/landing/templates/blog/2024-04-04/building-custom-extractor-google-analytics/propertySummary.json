@@ -1,0 +1,6 @@
+{
+  "property": string,
+  "displayName": string,
+  "propertyType": enum (PropertyType), // integer
+  "parent": string
+}

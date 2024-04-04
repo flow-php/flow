@@ -1,0 +1,5 @@
+schema
+|-- account: string
+|-- name: string
+|-- displayName: string
+|-- propertySummaries: list<structure{property: string, displayName: string, propertyType: integer, parent: string}>
