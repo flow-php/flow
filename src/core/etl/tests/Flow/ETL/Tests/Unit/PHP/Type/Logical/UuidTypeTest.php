@@ -22,6 +22,7 @@ final class UuidTypeTest extends TestCase
 
     public function test_is_valid() : void
     {
+        self::assertTrue(type_uuid(true)->isValid(null));
         self::assertFalse(type_uuid()->isValid('f6d6e0e8-4b7e-4b0e-8d7a-ff0a0c9c9a5a'));
         self::assertFalse(type_uuid()->isValid('f6d6e0e8-4b7e-4b0e-8d7a-ff0a0c9c9a5'));
         self::assertFalse(type_uuid()->isValid('2'));

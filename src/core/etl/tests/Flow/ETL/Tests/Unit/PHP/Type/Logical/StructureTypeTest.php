@@ -165,6 +165,9 @@ final class StructureTypeTest extends TestCase
             (struct_type([struct_element('string', type_string())]))->isValid(['one' => 'two'])
         );
         self::assertTrue(
+            (struct_type([struct_element('string', type_string())], true))->isValid(null)
+        );
+        self::assertTrue(
             (
                 struct_type([
                     struct_element(

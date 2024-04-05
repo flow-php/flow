@@ -46,6 +46,9 @@ final class ResourceTypeTest extends TestCase
             (type_resource(false))->isValid($handle)
         );
         \fclose($handle);
+        self::assertTrue(
+            type_resource(true)->isValid(null)
+        );
         self::assertFalse(
             (type_resource(false))->isValid('one')
         );

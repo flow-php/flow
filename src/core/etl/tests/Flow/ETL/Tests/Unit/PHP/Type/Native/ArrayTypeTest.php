@@ -54,6 +54,9 @@ final class ArrayTypeTest extends TestCase
         self::assertTrue(
             type_array()->isValid([1])
         );
+        self::assertTrue(
+            type_array(nullable: true)->isValid(null)
+        );
         self::assertFalse(
             type_array()->isValid(null)
         );

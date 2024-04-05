@@ -46,6 +46,9 @@ final class MapTypeTest extends TestCase
             (new MapType(MapKey::string(), MapValue::string()))->isValid(['one' => 'two'])
         );
         self::assertTrue(
+            (new MapType(MapKey::string(), MapValue::string(), true))->isValid(null)
+        );
+        self::assertTrue(
             (new MapType(MapKey::integer(), MapValue::list(new ListType(ListElement::integer()))))->isValid([[1, 2], [3, 4]])
         );
         self::assertTrue(

@@ -26,6 +26,10 @@ final class CallableType implements NativeType
 
     public function isValid(mixed $value) : bool
     {
+        if ($this->nullable && $value === null) {
+            return true;
+        }
+
         return \is_callable($value);
     }
 

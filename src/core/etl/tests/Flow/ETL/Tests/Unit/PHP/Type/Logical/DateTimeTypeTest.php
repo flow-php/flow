@@ -21,6 +21,7 @@ final class DateTimeTypeTest extends TestCase
 
     public function test_is_valid() : void
     {
+        self::assertTrue(type_datetime(true)->isValid(null));
         self::assertTrue(type_datetime()->isValid(new \DateTimeImmutable()));
         self::assertTrue(type_datetime()->isValid(new \DateTime()));
         self::assertFalse(type_datetime()->isValid('2020-01-01'));

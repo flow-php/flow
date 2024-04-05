@@ -26,6 +26,10 @@ final class DateTimeType implements LogicalType
 
     public function isValid(mixed $value) : bool
     {
+        if ($this->nullable && $value === null) {
+            return true;
+        }
+
         return $value instanceof \DateTimeInterface;
     }
 

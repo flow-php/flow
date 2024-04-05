@@ -27,6 +27,10 @@ final class JsonType implements LogicalType
 
     public function isValid(mixed $value) : bool
     {
+        if ($this->nullable && $value === null) {
+            return true;
+        }
+
         if (!\is_string($value)) {
             return false;
         }
