@@ -12,6 +12,7 @@
 - [#1032](https://github.com/flow-php/flow/pull/1032) - **Update Homebrew TAP formula: flow-php to version: 0.7.3** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1040](https://github.com/flow-php/flow/pull/1040) - **type value validation for nullable types** - [@norberttech](https://github.com/norberttech)
 - [#1036](https://github.com/flow-php/flow/pull/1036) - **Improve performance of sorting operation by reducing number of writes to cache** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
