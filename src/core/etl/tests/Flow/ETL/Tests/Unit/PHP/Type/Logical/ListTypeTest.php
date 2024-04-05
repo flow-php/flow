@@ -46,6 +46,9 @@ final class ListTypeTest extends TestCase
             (new ListType(ListElement::boolean()))->isValid([true, false])
         );
         self::assertTrue(
+            (new ListType(ListElement::boolean(), true))->isValid(null)
+        );
+        self::assertTrue(
             (new ListType(ListElement::string()))->isValid(['one', 'two'])
         );
         self::assertTrue(

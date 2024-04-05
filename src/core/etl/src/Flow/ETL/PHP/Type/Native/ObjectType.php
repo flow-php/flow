@@ -37,6 +37,10 @@ final class ObjectType implements NativeType
 
     public function isValid(mixed $value) : bool
     {
+        if ($this->nullable && $value === null) {
+            return true;
+        }
+
         return \is_a($value, $this->class, true);
     }
 

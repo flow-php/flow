@@ -26,6 +26,10 @@ final class XMLNodeType implements LogicalType
 
     public function isValid(mixed $value) : bool
     {
+        if ($this->nullable && $value === null) {
+            return true;
+        }
+
         if ($value instanceof \DOMNode) {
             return true;
         }

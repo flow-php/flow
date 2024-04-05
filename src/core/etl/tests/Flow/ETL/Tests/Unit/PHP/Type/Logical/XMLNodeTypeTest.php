@@ -21,6 +21,7 @@ final class XMLNodeTypeTest extends TestCase
 
     public function test_is_valid() : void
     {
+        self::assertTrue(type_xml_node(true)->isValid(null));
         self::assertTrue(type_xml_node()->isValid(new \DOMDocument()));
         self::assertFalse(type_xml_node()->isValid('<xml></xml>'));
         self::assertFalse(type_xml_node()->isValid('2020-01-01'));

@@ -27,6 +27,10 @@ final class UuidType implements LogicalType
 
     public function isValid(mixed $value) : bool
     {
+        if ($this->nullable && $value === null) {
+            return true;
+        }
+
         if (\is_object($value)) {
             foreach ([Uuid::class, \Ramsey\Uuid\UuidInterface::class, \Symfony\Component\Uid\Uuid::class] as $uuidClass) {
                 if ($value instanceof $uuidClass) {

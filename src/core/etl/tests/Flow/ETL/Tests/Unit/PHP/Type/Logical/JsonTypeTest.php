@@ -21,6 +21,7 @@ final class JsonTypeTest extends TestCase
 
     public function test_is_valid() : void
     {
+        self::assertTrue(type_json(true)->isValid(null));
         self::assertTrue(type_json()->isValid('{"foo": "bar"}'));
         self::assertFalse(type_json()->isValid('{"foo": "bar"'));
         self::assertFalse(type_json()->isValid('2'));

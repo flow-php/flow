@@ -44,6 +44,9 @@ final class CallableTypeTest extends TestCase
         self::assertTrue(
             type_callable(false)->isValid('printf')
         );
+        self::assertTrue(
+            type_callable(true)->isValid(null)
+        );
         self::assertFalse(
             type_callable(false)->isValid('one')
         );
