@@ -27,7 +27,28 @@ use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Row\Schema\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Row\Schema\{Definition, Matcher\EvolvingSchemaMatcher, Matcher\StrictSchemaMatcher, SchemaFormatter};
 use Flow\ETL\Row\{EntryFactory, EntryReference, Reference, References, Schema};
-use Flow\ETL\{Config, ConfigBuilder, DataFrame, Extractor, Flow, FlowContext, Formatter, Loader, Partition, Pipeline, Row, Rows, Transformer, Window};
+use Flow\ETL\{Config,
+    ConfigBuilder,
+    DataFrame,
+    Extractor,
+    Flow,
+    FlowContext,
+    Formatter,
+    Join\Comparison,
+    Join\Comparison\Equal,
+    Join\Comparison\GreaterThan,
+    Join\Comparison\GreaterThanEqual,
+    Join\Comparison\Identical,
+    Join\Comparison\LessThan,
+    Join\Comparison\LessThanEqual,
+    Join\Expression,
+    Loader,
+    Partition,
+    Pipeline,
+    Row,
+    Rows,
+    Transformer,
+    Window};
 
 /**
  * Alias for data_frame() : Flow.
@@ -1120,4 +1141,54 @@ function print_schema(Schema $schema, ?SchemaFormatter $formatter = null) : stri
 function print_rows(Rows $rows, int|bool $truncate = false, ?Formatter $formatter = null) : string
 {
     return ($formatter ?? new Formatter\AsciiTableFormatter())->format($rows, $truncate);
+}
+
+function identical(Reference|string $left, Reference|string $right) : Identical
+{
+    return new Identical($left, $right);
+}
+
+function equal(Reference|string $left, Reference|string $right) : Equal
+{
+    return new Equal($left, $right);
+}
+
+function compare_all(Comparison ...$comparisons) : Comparison\All
+{
+    return new Comparison\All(...$comparisons);
+}
+
+function compare_any(Comparison ...$comparisons) : Comparison\Any
+{
+    return new Comparison\Any(...$comparisons);
+}
+
+function greater_than(Reference|string $left, Reference|string $right) : GreaterThan
+{
+    return new GreaterThan($left, $right);
+}
+
+function greater_than_equal(Reference|string $left, Reference|string $right) : GreaterThanEqual
+{
+    return new GreaterThanEqual($left, $right);
+}
+
+function less_than(Reference|string $left, Reference|string $right) : LessThan
+{
+    return new LessThan($left, $right);
+}
+
+function less_than_equal(Reference|string $left, Reference|string $right) : LessThanEqual
+{
+    return new LessThanEqual($left, $right);
+}
+
+function negation(Comparison $comparison) : Comparison\Not
+{
+    return new Comparison\Not($comparison);
+}
+
+function join_on(array|Comparison $comparisons, string $joinPrefix = '') : Expression
+{
+    return Expression::on($comparisons, $joinPrefix);
 }

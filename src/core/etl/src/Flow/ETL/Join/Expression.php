@@ -18,7 +18,7 @@ final class Expression
     }
 
     /**
-     * @param array<string, string>|Comparison $comparison
+     * @param array<Comparison>|array<string, string>|Comparison $comparison
      */
     public static function on(array|Comparison $comparison, string $joinPrefix = '') : self
     {
@@ -27,6 +27,12 @@ final class Expression
             $comparisons = [];
 
             foreach ($comparison as $left => $right) {
+                if ($right instanceof Comparison) {
+                    $comparisons[] = $right;
+
+                    continue;
+                }
+
                 if (!\is_string($left)) {
                     throw new RuntimeException('Expected left entry name to be string, got ' . \gettype($left) . ". Example: ['id' => 'id']");
                 }
