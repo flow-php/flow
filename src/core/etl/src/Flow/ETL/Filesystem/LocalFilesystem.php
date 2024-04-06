@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Filesystem;
 
-use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
+use Flow\ETL\Exception\{FileNotFoundException, InvalidArgumentException, RuntimeException};
 use Flow\ETL\Filesystem;
 use Flow\ETL\Filesystem\Stream\{FileStream, Mode};
 use Flow\ETL\Partition\{NoopFilter, PartitionFilter};
@@ -68,11 +68,11 @@ final class LocalFilesystem implements Filesystem
     public function mv(Path $from, Path $to) : void
     {
         if (!$from->isLocal() || !$to->isLocal()) {
-            throw new RuntimeException(\sprintf('Paths "%s" and "%s" are not local', $from->uri(), $to->uri()));
+            throw new InvalidArgumentException(\sprintf('Paths "%s" and "%s" are not local', $from->uri(), $to->uri()));
         }
 
         if ($from->isPattern() || $to->isPattern()) {
-            throw new RuntimeException('Pattern paths can\'t be moved');
+            throw new InvalidArgumentException('Pattern paths can\'t be moved');
         }
 
         if (\file_exists($to->path())) {
@@ -80,14 +80,14 @@ final class LocalFilesystem implements Filesystem
         }
 
         if (!\rename($from->path(), $to->path())) {
-            throw new RuntimeException(\sprintf('Can\'t move "%s" to "%s"', $from->uri(), $to->uri()));
+            throw new InvalidArgumentException(\sprintf('Can\'t move "%s" to "%s"', $from->uri(), $to->uri()));
         }
     }
 
     public function open(Path $path, Mode $mode) : FileStream
     {
         if (!$path->isLocal()) {
-            throw new RuntimeException(\sprintf('Path "%s" is not local', $path->uri()));
+            throw new InvalidArgumentException(\sprintf('Path "%s" is not local', $path->uri()));
         }
 
         if ($path->isPattern()) {
@@ -96,7 +96,7 @@ final class LocalFilesystem implements Filesystem
 
         if (!$this->directoryExists($path->parentDirectory())) {
             if (!\mkdir($concurrentDirectory = $path->parentDirectory()->path(), recursive: true) && !\is_dir($concurrentDirectory)) {
-                throw new \RuntimeException(\sprintf('Directory "%s" was not created', $concurrentDirectory));
+                throw new RuntimeException(\sprintf('Directory "%s" was not created', $concurrentDirectory));
             }
         }
 
@@ -106,7 +106,7 @@ final class LocalFilesystem implements Filesystem
     public function rm(Path $path) : void
     {
         if (!$path->isLocal()) {
-            throw new RuntimeException(\sprintf('Path "%s" is not local', $path->uri()));
+            throw new InvalidArgumentException(\sprintf('Path "%s" is not local', $path->uri()));
         }
 
         if (!$path->isPattern()) {
@@ -133,13 +133,14 @@ final class LocalFilesystem implements Filesystem
     public function scan(Path $path, PartitionFilter $partitionFilter = new NoopFilter()) : \Generator
     {
         if (!$path->isLocal()) {
-            throw new RuntimeException(\sprintf('Path "%s" is not local', $path->uri()));
+            throw new InvalidArgumentException(\sprintf('Path "%s" is not local', $path->uri()));
         }
 
         if (!$path->isPattern()) {
             if (!$this->fileExists($path)) {
-                throw new RuntimeException(\sprintf('Path "%s" does not exists', $path->uri()));
+                throw new FileNotFoundException($path);
             }
+
             yield $path;
 
             return;

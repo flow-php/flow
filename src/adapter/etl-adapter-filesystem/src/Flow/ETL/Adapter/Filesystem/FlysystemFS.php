@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Adapter\Filesystem;
 
-use Flow\ETL\Exception\{InvalidArgumentException, MissingDependencyException, RuntimeException};
+use Flow\ETL\Exception\{FileNotFoundException, InvalidArgumentException, MissingDependencyException};
 use Flow\ETL\Filesystem;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\Stream\{FileStream, Mode};
@@ -69,11 +69,11 @@ final class FlysystemFS implements Filesystem
     public function mv(Path $from, Path $to) : void
     {
         if ($from->isPattern() || $to->isPattern()) {
-            throw new RuntimeException("Pattern paths can't be moved: " . $from->uri() . ' -> ' . $to->uri());
+            throw new InvalidArgumentException("Pattern paths can't be moved: " . $from->uri() . ' -> ' . $to->uri());
         }
 
         if ($from->scheme() !== $to->scheme()) {
-            throw new RuntimeException("Can't move path from different schemes: " . $from->scheme() . ' -> ' . $to->scheme());
+            throw new InvalidArgumentException("Can't move path from different schemes: " . $from->scheme() . ' -> ' . $to->scheme());
         }
 
         if ($this->fileExists($to)) {
@@ -130,7 +130,7 @@ final class FlysystemFS implements Filesystem
             return;
         }
 
-        throw new RuntimeException("Can't remove path because it does not exists, path: " . $path->uri());
+        throw new FileNotFoundException($path);
     }
 
     /**
@@ -143,7 +143,7 @@ final class FlysystemFS implements Filesystem
     public function scan(Path $path, PartitionFilter $partitionFilter = new NoopFilter()) : \Generator
     {
         if (!$path->isPattern() && !$this->fileExists($path)) {
-            throw new RuntimeException(\sprintf('Path "%s" does not exists', $path->uri()));
+            throw new FileNotFoundException($path);
         }
 
         $fs = $this->factory->create($path);
