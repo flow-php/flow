@@ -7,10 +7,9 @@ namespace Flow\ETL\Adapter\CSV\Tests\Integration;
 use function Flow\ETL\Adapter\CSV\{from_csv, to_csv};
 use function Flow\ETL\DSL\{df, from_array, print_schema, ref};
 use Flow\ETL\Adapter\CSV\CSVExtractor;
-use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\Extractor\Signal;
 use Flow\ETL\Filesystem\{LocalFilesystem, Path};
-use Flow\ETL\{Config, ConfigBuilder, Flow, FlowContext, Row, Rows};
+use Flow\ETL\{Config, ConfigBuilder, Exception\FileNotFoundException, Flow, FlowContext, Row, Rows};
 use PHPUnit\Framework\TestCase;
 
 final class CSVExtractorTest extends TestCase
@@ -334,7 +333,7 @@ SCHEMA,
 
     public function test_load_not_existing_file_throws_exception() : void
     {
-        $this->expectException(RuntimeException::class);
+        $this->expectException(FileNotFoundException::class);
         $extractor = from_csv(Path::realpath('not_existing_file.csv'));
         $generator = $extractor->extract(new FlowContext(Config::default()));
         \iterator_to_array($generator);

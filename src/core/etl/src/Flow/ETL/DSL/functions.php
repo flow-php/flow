@@ -301,7 +301,7 @@ function structure_type(array $elements, bool $nullable = false) : StructureType
 }
 
 /**
- * @param array<string, StructureElement> $elements
+ * @param array<StructureElement> $elements
  */
 function type_structure(array $elements, bool $nullable = false) : StructureType
 {
