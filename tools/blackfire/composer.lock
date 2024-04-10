@@ -9,16 +9,16 @@
     "packages-dev": [
         {
             "name": "blackfire/php-sdk",
-            "version": "v2.3.9",
+            "version": "v2.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/blackfireio/php-sdk.git",
-                "reference": "21bb57824990c808c6e2fe1374053245ab4528d2"
+                "reference": "09bf29faa001d6dca779f4892f26faa09515cadb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/blackfireio/php-sdk/zipball/21bb57824990c808c6e2fe1374053245ab4528d2",
-                "reference": "21bb57824990c808c6e2fe1374053245ab4528d2",
+                "url": "https://api.github.com/repos/blackfireio/php-sdk/zipball/09bf29faa001d6dca779f4892f26faa09515cadb",
+                "reference": "09bf29faa001d6dca779f4892f26faa09515cadb",
                 "shasum": ""
             },
             "require": {
@@ -29,6 +29,7 @@
                 "behat/behat": "^3.8",
                 "friends-of-behat/mink-browserkit-driver": "^1.4",
                 "friends-of-behat/mink-extension": "^2.5",
+                "friends-of-behat/symfony-extension": "^2",
                 "guzzlehttp/psr7": "^1.6",
                 "illuminate/console": "^8.81",
                 "illuminate/queue": "^8.81",
@@ -51,7 +52,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "2.3-dev"
+                    "dev-master": "2.4-dev"
                 }
             },
             "autoload": {
@@ -78,9 +79,9 @@
             ],
             "support": {
                 "issues": "https://github.com/blackfireio/php-sdk/issues",
-                "source": "https://github.com/blackfireio/php-sdk/tree/v2.3.9"
+                "source": "https://github.com/blackfireio/php-sdk/tree/v2.4.0"
             },
-            "time": "2024-03-05T12:40:34+00:00"
+            "time": "2024-04-09T07:14:01+00:00"
         },
         {
             "name": "composer/ca-bundle",
