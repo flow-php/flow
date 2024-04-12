@@ -4,28 +4,27 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0b7f9b297f300c099b209a9078cda708",
+    "content-hash": "e4e9a102592839a9bad40cb719ec36df",
     "packages": [
         {
             "name": "aeon-php/calendar",
-            "version": "1.0.9",
+            "version": "1.0.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aeon-php/calendar.git",
-                "reference": "2cfc45a2cd28b78f1450d8155a1c62df2efe45de"
+                "reference": "49e3167815ca6af1f4215eed0719c3d83d749571"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aeon-php/calendar/zipball/2cfc45a2cd28b78f1450d8155a1c62df2efe45de",
-                "reference": "2cfc45a2cd28b78f1450d8155a1c62df2efe45de",
+                "url": "https://api.github.com/repos/aeon-php/calendar/zipball/49e3167815ca6af1f4215eed0719c3d83d749571",
+                "reference": "49e3167815ca6af1f4215eed0719c3d83d749571",
                 "shasum": ""
             },
             "require": {
-                "php": "~8.1.10 || ~8.2"
+                "php": "^7.4.2 || ~8.0 || ~8.1.10"
             },
             "require-dev": {
-                "ext-bcmath": "*",
-                "ext-pcov": "*"
+                "ext-bcmath": "*"
             },
             "suggest": {
                 "ext-bcmath": "Compare time units with high precision"
@@ -52,9 +51,9 @@
             ],
             "support": {
                 "issues": "https://github.com/aeon-php/calendar/issues",
-                "source": "https://github.com/aeon-php/calendar/tree/1.0.9"
+                "source": "https://github.com/aeon-php/calendar/tree/1.0.7"
             },
-            "time": "2023-08-29T09:47:37+00:00"
+            "time": "2022-09-10T13:11:14+00:00"
         },
         {
             "name": "clue/stream-filter",
@@ -124,26 +123,25 @@
         },
         {
             "name": "coduo/php-humanizer",
-            "version": "4.0.3",
+            "version": "5.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/coduo/php-humanizer.git",
-                "reference": "1158b443ef197a0bc84bf4aff46743fb2767b4a4"
+                "reference": "9d5058698294312d79f6def8613e8011466c4f84"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/coduo/php-humanizer/zipball/1158b443ef197a0bc84bf4aff46743fb2767b4a4",
-                "reference": "1158b443ef197a0bc84bf4aff46743fb2767b4a4",
+                "url": "https://api.github.com/repos/coduo/php-humanizer/zipball/9d5058698294312d79f6def8613e8011466c4f84",
+                "reference": "9d5058698294312d79f6def8613e8011466c4f84",
                 "shasum": ""
             },
             "require": {
-                "aeon-php/calendar": "^0.16.1 || ^1.0",
-                "php": "~7.4 || ~8.0 || ~8.1",
-                "symfony/translation": "^4.4|^5.0|^6.0",
-                "symfony/yaml": "^4.4|^5.0|^6.0"
+                "aeon-php/calendar": "^1.0",
+                "php": "~8.1 || ~8.2 || ~8.3",
+                "symfony/translation": "~5.4||~6.4||~7",
+                "symfony/yaml": "~5.4||~6.4||~7"
             },
             "require-dev": {
-                "phpunit/phpunit": "^9.4",
                 "thunderer/shortcode": "^0.7"
             },
             "suggest": {
@@ -177,9 +175,9 @@
             ],
             "support": {
                 "issues": "https://github.com/coduo/php-humanizer/issues",
-                "source": "https://github.com/coduo/php-humanizer/tree/4.0.3"
+                "source": "https://github.com/coduo/php-humanizer/tree/5.0.0"
             },
-            "time": "2022-06-07T18:50:44+00:00"
+            "time": "2024-04-11T10:30:46+00:00"
         },
         {
             "name": "doctrine/dbal",
@@ -3372,16 +3370,16 @@
         },
         {
             "name": "symfony/translation-contracts",
-            "version": "v3.4.1",
+            "version": "v3.4.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/translation-contracts.git",
-                "reference": "06450585bf65e978026bda220cdebca3f867fde7"
+                "reference": "43810bdb2ddb5400e5c5e778e27b210a0ca83b6b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/translation-contracts/zipball/06450585bf65e978026bda220cdebca3f867fde7",
-                "reference": "06450585bf65e978026bda220cdebca3f867fde7",
+                "url": "https://api.github.com/repos/symfony/translation-contracts/zipball/43810bdb2ddb5400e5c5e778e27b210a0ca83b6b",
+                "reference": "43810bdb2ddb5400e5c5e778e27b210a0ca83b6b",
                 "shasum": ""
             },
             "require": {
@@ -3430,7 +3428,7 @@
                 "standards"
             ],
             "support": {
-                "source": "https://github.com/symfony/translation-contracts/tree/v3.4.1"
+                "source": "https://github.com/symfony/translation-contracts/tree/v3.4.2"
             },
             "funding": [
                 {
@@ -3446,7 +3444,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2023-12-26T14:02:43+00:00"
+            "time": "2024-01-23T14:51:35+00:00"
         },
         {
             "name": "symfony/yaml",
