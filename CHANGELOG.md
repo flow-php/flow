@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-04-06
+## [Unreleased] - 2024-04-12
 
 ### Added
 - [#1039](https://github.com/flow-php/flow/pull/1039) - **join expressions to DSL** - [@norberttech](https://github.com/norberttech)
@@ -12,6 +12,7 @@
 - [#1032](https://github.com/flow-php/flow/pull/1032) - **Update Homebrew TAP formula: flow-php to version: 0.7.3** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1046](https://github.com/flow-php/flow/pull/1046) - **Improve performance of merching rows into given batch size** - [@norberttech](https://github.com/norberttech)
 - [#1041](https://github.com/flow-php/flow/pull/1041) - **Invalid inputs now throws InvalidArgumentException** - [@norberttech](https://github.com/norberttech)
 - [#1041](https://github.com/flow-php/flow/pull/1041) - **Missing file/directory now throws FileNotFoundException** - [@norberttech](https://github.com/norberttech)
 - [#1040](https://github.com/flow-php/flow/pull/1040) - **type value validation for nullable types** - [@norberttech](https://github.com/norberttech)
