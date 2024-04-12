@@ -19,34 +19,53 @@ final class ChunkExtractor implements Extractor, OverridingExtractor
 
     public function extract(FlowContext $context) : \Generator
     {
-        $chunk = new Rows();
+        $chunk = [];
+        $chunkSize = 0;
 
         foreach ($this->extractor->extract($context) as $rows) {
             foreach ($rows->chunks($this->chunkSize) as $rowsChunk) {
-                $chunk = $chunk->merge($rowsChunk);
+                $chunk[] = $rowsChunk->all();
+                $chunkSize += $rowsChunk->count();
 
-                if ($chunk->count() === $this->chunkSize) {
-                    $signal = yield $chunk;
+                if ($chunkSize === $this->chunkSize) {
+                    $signal = yield new Rows(
+                        ...\array_merge(
+                            ...$chunk
+                        )
+                    );
 
                     if ($signal === Signal::STOP) {
                         return;
                     }
-                    $chunk = new Rows();
+                    $chunkSize = 0;
+                    $chunk = [];
                 }
 
-                if ($chunk->count() > $this->chunkSize) {
-                    $signal = yield $chunk->dropRight($chunk->count() - $this->chunkSize);
+                if ($chunkSize > $this->chunkSize) {
+                    $allRows = new Rows(
+                        ...\array_merge(
+                            ...$chunk
+                        )
+                    );
+
+                    $signal = yield $allRows->dropRight($allRows->count() - $this->chunkSize);
 
                     if ($signal === Signal::STOP) {
                         return;
                     }
-                    $chunk = $chunk->takeRight($chunk->count() - $this->chunkSize);
+                    $leftover = $allRows->takeRight($allRows->count() - $this->chunkSize);
+                    $chunk = [$leftover->all()];
+                    $chunkSize = $leftover->count();
                 }
             }
         }
 
-        if ($chunk->count()) {
-            yield $chunk;
+        if ($chunkSize) {
+            yield new Rows(
+                ...\array_merge(
+                    ...$chunk
+                )
+            );
         }
     }
 
