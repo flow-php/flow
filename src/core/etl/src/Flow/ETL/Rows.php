@@ -62,7 +62,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
     }
 
     /**
-     * return array<Row>.
+     * @return array<Row>
      */
     public function all() : array
     {

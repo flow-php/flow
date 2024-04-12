@@ -16,6 +16,8 @@ final class Path
 
     private string $filename;
 
+    private ?bool $isPattern = null;
+
     private ?Partitions $partitions = null;
 
     private string $path;
@@ -206,7 +208,13 @@ final class Path
 
     public function isPattern() : bool
     {
-        return $this->isPathPattern($this->path);
+        if ($this->isPattern !== null) {
+            return $this->isPattern;
+        }
+
+        $this->isPattern = $this->isPathPattern($this->path);
+
+        return $this->isPattern;
     }
 
     public function matches(self $path) : bool
