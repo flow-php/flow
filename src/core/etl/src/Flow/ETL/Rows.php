@@ -62,6 +62,14 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
     }
 
     /**
+     * @return array<Row>
+     */
+    public function all() : array
+    {
+        return $this->rows;
+    }
+
+    /**
      * @param int<1, max> $size
      *
      * @return \Generator<Rows>
