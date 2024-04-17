@@ -195,4 +195,30 @@ STRING,
         self::assertFalse($fs->exists($stream->path()));
         $fs->rm($dirPath);
     }
+
+    public function test_that_scan_sort_files_by_path_names() : void
+    {
+        $paths = \iterator_to_array(
+            (new LocalFilesystem())
+                ->scan(
+                    new Path(__DIR__ . '/Fixtures/multi_partitions/**/*.txt'),
+                )
+        );
+
+        self::assertEquals(
+            [
+                new Path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-01/country=de/file.txt'),
+                new Path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-01/country=pl/file.txt'),
+                new Path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-02/country=de/file.txt'),
+                new Path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-02/country=pl/file.txt'),
+                new Path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-03/country=de/file.txt'),
+                new Path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-03/country=pl/file.txt'),
+                new Path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-04/country=de/file.txt'),
+                new Path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-04/country=pl/file.txt'),
+                new Path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-05/country=de/file.txt'),
+                new Path(__DIR__ . '/Fixtures/multi_partitions/date=2022-01-05/country=pl/file.txt'),
+            ],
+            $paths
+        );
+    }
 }
