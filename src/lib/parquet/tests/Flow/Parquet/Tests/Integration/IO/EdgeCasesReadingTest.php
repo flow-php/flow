@@ -24,7 +24,7 @@ final class EdgeCasesReadingTest extends TestCase
         self::assertSame(
             [
                 [
-                    'ID' => null,
+                    'ID' => 8,
                     'Int_Array' => [
                         'list' => [
                             'element' => 4294967295,
@@ -58,7 +58,7 @@ final class EdgeCasesReadingTest extends TestCase
                         ],
                     ],
                     'nested_Struct' => [
-                        'a' => null,
+                        'a' => 4294967295,
                         'B' => [
                             'list' => [
                                 'element' => 4294967295,
