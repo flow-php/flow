@@ -14,6 +14,7 @@
 - [#1032](https://github.com/flow-php/flow/pull/1032) - **Update Homebrew TAP formula: flow-php to version: 0.7.3** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1051](https://github.com/flow-php/flow/pull/1051) - **Make sure that filesystem scans are returning files in proper order** - [@norberttech](https://github.com/norberttech)
 - [#1046](https://github.com/flow-php/flow/pull/1046) - **Improve performance of merching rows into given batch size** - [@norberttech](https://github.com/norberttech)
 - [#1041](https://github.com/flow-php/flow/pull/1041) - **Invalid inputs now throws InvalidArgumentException** - [@norberttech](https://github.com/norberttech)
 - [#1041](https://github.com/flow-php/flow/pull/1041) - **Missing file/directory now throws FileNotFoundException** - [@norberttech](https://github.com/norberttech)
