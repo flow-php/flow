@@ -16,6 +16,7 @@ final class ReaderTest extends TestCase
         $file = $reader->read(__DIR__ . '/Fixtures/columns.required.parquet');
 
         $rows = 0;
+
         foreach ($file->values() as $row) {
             foreach ($row as $column => $value) {
                 self::assertNotNull($value);
