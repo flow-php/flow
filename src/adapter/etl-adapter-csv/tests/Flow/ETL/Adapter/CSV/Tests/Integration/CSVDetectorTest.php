@@ -12,39 +12,39 @@ final class CSVDetectorTest extends TestCase
 {
     public static function enclosure_provider() : \Generator
     {
-        yield ['double_quote' => '"'];
-        yield ['single_quote' => "'"];
+        yield ['enclosure' => '"'];
+        yield ['enclosure' => "'"];
     }
 
     public static function separator_provider() : \Generator
     {
-        yield ['comma' => ','];
-        yield ['tab' => "\t"];
-        yield ['semicolon' => ';'];
-        yield ['pipe' => '|'];
-        yield ['space' => ' '];
-        yield ['underscore' => '_'];
-        yield ['dash' => '-'];
-        yield ['double_dot' => ':'];
-        yield ['tilde' => '~'];
-        yield ['at' => '@'];
-        yield ['hash' => '#'];
-        yield ['dollar' => '$'];
-        yield ['percent' => '%'];
-        yield ['caret' => '^'];
-        yield ['ampersand' => '&'];
-        yield ['asterisk' => '*'];
-        yield ['left_parenthesis' => '('];
-        yield ['right_parenthesis' => ')'];
-        yield ['plus' => '+'];
-        yield ['equal' => '='];
-        yield ['question_mark' => '?'];
-        yield ['exclamation_mark' => '!'];
-        yield ['backslash' => '\\'];
-        yield ['slash' => '/'];
-        yield ['dot' => '.'];
-        yield ['greater_than' => '>'];
-        yield ['less_than' => '<'];
+        yield ['separator' => ','];
+        yield ['separator' => "\t"];
+        yield ['separator' => ';'];
+        yield ['separator' => '|'];
+        yield ['separator' => ' '];
+        yield ['separator' => '_'];
+        yield ['separator' => '-'];
+        yield ['separator' => ':'];
+        yield ['separator' => '~'];
+        yield ['separator' => '@'];
+        yield ['separator' => '#'];
+        yield ['separator' => '$'];
+        yield ['separator' => '%'];
+        yield ['separator' => '^'];
+        yield ['separator' => '&'];
+        yield ['separator' => '*'];
+        yield ['separator' => '('];
+        yield ['separator' => ')'];
+        yield ['separator' => '+'];
+        yield ['separator' => '='];
+        yield ['separator' => '?'];
+        yield ['separator' => '!'];
+        yield ['separator' => '\\'];
+        yield ['separator' => '/'];
+        yield ['separator' => '.'];
+        yield ['separator' => '>'];
+        yield ['separator' => '<'];
     }
 
     #[DataProvider('enclosure_provider')]

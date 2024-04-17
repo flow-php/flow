@@ -173,7 +173,7 @@ final class FlysystemFS implements Filesystem
          *
          * @phpstan-ignore-next-line
          */
-        foreach ($fs->listContents($path->staticPart()->path(), Flysystem::LIST_DEEP)->filter($filter) as $file) {
+        foreach ($fs->listContents($path->staticPart()->path(), Flysystem::LIST_DEEP)->sortByPath()->filter($filter) as $file) {
             yield new Path($path->scheme() . '://' . $file->path(), $path->options());
         }
     }

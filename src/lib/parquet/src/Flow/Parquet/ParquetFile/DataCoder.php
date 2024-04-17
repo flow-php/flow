@@ -50,7 +50,7 @@ final class DataCoder
                 $pageHeader->valuesCount(),
             );
         } else {
-            $definitions = [];
+            $definitions = \array_fill(0, $pageHeader->valuesCount(), 1);
         }
 
         $nullsCount = \count($definitions) ? \count(\array_filter($definitions, static fn ($definition) => $definition === 0)) : 0;

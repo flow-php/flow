@@ -53,11 +53,11 @@ final class NestedColumn implements Column
         );
     }
 
-    public static function list(string $name, ListElement $element) : self
+    public static function list(string $name, ListElement $element, Repetition $repetition = Repetition::OPTIONAL) : self
     {
         return new self(
             $name,
-            Repetition::OPTIONAL,
+            $repetition,
             [
                 new self(
                     'list',
@@ -70,11 +70,11 @@ final class NestedColumn implements Column
         );
     }
 
-    public static function map(string $name, MapKey $key, MapValue $value) : self
+    public static function map(string $name, MapKey $key, MapValue $value, Repetition $repetition = Repetition::OPTIONAL) : self
     {
         return new self(
             $name,
-            Repetition::OPTIONAL,
+            $repetition,
             [
                 new self(
                     'key_value',
@@ -101,9 +101,14 @@ final class NestedColumn implements Column
     /**
      * @param array<Column> $children
      */
-    public static function struct(string $name, array $children) : self
+    public static function struct(string $name, array $children, Repetition $repetition = Repetition::OPTIONAL) : self
     {
-        return new self($name, Repetition::OPTIONAL, $children);
+        return new self($name, $repetition, $children);
+    }
+
+    public static function structure(string $name, array $children, Repetition $repetition = Repetition::OPTIONAL) : self
+    {
+        return new self($name, $repetition, $children);
     }
 
     /**
