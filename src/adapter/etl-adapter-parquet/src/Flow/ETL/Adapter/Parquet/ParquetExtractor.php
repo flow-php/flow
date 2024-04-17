@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Parquet;
 
 use function Flow\ETL\DSL\array_to_rows;
-use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PartitionFiltering, PartitionsExtractor, Signal};
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\Stream\FileStream;
@@ -32,20 +31,26 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
     ) {
         $this->resetLimit();
         $this->schemaConverter = new SchemaConverter();
-
-        if ($this->path->isPattern() && $this->offset !== null) {
-            throw new InvalidArgumentException('Offset can be used only with single file path, not with pattern');
-        }
     }
 
     public function extract(FlowContext $context) : \Generator
     {
         $shouldPutInputIntoRows = $context->config->shouldPutInputIntoRows();
 
+        $fileOffset = $this->offset ?? 0;
+
         foreach ($this->readers($context) as $fileData) {
+            $fileRows = $fileData['file']->metadata()->rowsNumber();
             $flowSchema = $this->schemaConverter->fromParquet($fileData['file']->schema());
 
-            foreach ($fileData['file']->values($this->columns, $this->limit(), $this->offset) as $row) {
+            if ($fileOffset > $fileRows) {
+                $fileData['stream']->close();
+                $fileOffset -= $fileRows;
+
+                continue;
+            }
+
+            foreach ($fileData['file']->values($this->columns, $this->limit(), $fileOffset) as $row) {
                 if ($shouldPutInputIntoRows) {
                     $row['_input_file_uri'] = $fileData['stream']->path()->uri();
                 }
@@ -61,6 +66,7 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
                 }
             }
 
+            $fileOffset = max($fileOffset - $fileRows, 0);
             $fileData['stream']->close();
         }
     }
@@ -77,10 +83,7 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
     {
         foreach ($context->streams()->scan($this->path, $this->partitionFilter()) as $stream) {
             yield [
-                'file' => (new Reader(
-                    byteOrder: $this->byteOrder,
-                    options: $this->options,
-                ))
+                'file' => (new Reader(byteOrder: $this->byteOrder, options: $this->options))
                     ->readStream($stream->resource()),
                 'stream' => $stream,
             ];
