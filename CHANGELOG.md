@@ -1,6 +1,7 @@
 ## [Unreleased] - 2024-04-17
 
 ### Added
+- [#1050](https://github.com/flow-php/flow/pull/1050) - **Added support for parquet multifile pagination** - [@norberttech](https://github.com/norberttech)
 - [#1039](https://github.com/flow-php/flow/pull/1039) - **join expressions to DSL** - [@norberttech](https://github.com/norberttech)
 - [#1038](https://github.com/flow-php/flow/pull/1038) - **How to write a custom data extractor - blog post** - [@norberttech](https://github.com/norberttech)
 - [#1037](https://github.com/flow-php/flow/pull/1037) - **Added Base64 serializer** - [@norberttech](https://github.com/norberttech)
