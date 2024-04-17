@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-04-12
+## [Unreleased] - 2024-04-17
 
 ### Added
 - [#1039](https://github.com/flow-php/flow/pull/1039) - **join expressions to DSL** - [@norberttech](https://github.com/norberttech)
@@ -7,6 +7,7 @@
 - [#1034](https://github.com/flow-php/flow/pull/1034) - **cache batch size configuration** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#1049](https://github.com/flow-php/flow/pull/1049) - **Flysystem scan will sort files by file name** - [@norberttech](https://github.com/norberttech)
 - [#1037](https://github.com/flow-php/flow/pull/1037) - **Compressing serializer is not longer using base64 inside** - [@norberttech](https://github.com/norberttech)
 - [#1034](https://github.com/flow-php/flow/pull/1034) - **Replaced CompressingSerializer with NativeSerizer** - [@norberttech](https://github.com/norberttech)
 - [#1032](https://github.com/flow-php/flow/pull/1032) - **Update Homebrew TAP formula: flow-php to version: 0.7.3** - [@norberttech](https://github.com/norberttech)
