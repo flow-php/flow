@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use function Flow\ETL\Adapter\Text\from_text;
+use function Flow\ETL\Adapter\Text\{from_text, to_text};
 use function Flow\ETL\DSL\{df, from_array, from_rows, int_entry, lit, partition, ref, row, rows, rows_partitioned, str_entry};
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
 use Flow\ETL\{Partition, Rows};
@@ -31,6 +31,18 @@ final class PartitioningTest extends IntegrationTestCase
             ->fetch();
 
         self::assertFalse($rows->isPartitioned());
+    }
+
+    public function test_overwrite_save_mode_not_dropping_old_partitions() : void
+    {
+        df()
+            ->read(from_array([
+                ['date' => '2024-04-03'],
+                ['date' => '2024-04-04'],
+            ]))
+            ->partitionBy('date')
+            ->write(to_text(__DIR__ . '/Fixtures/Partitioning/overwrite/file.txt'))
+            ->run();
     }
 
     public function test_partition_by() : void
