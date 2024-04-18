@@ -1,6 +1,7 @@
-## [Unreleased] - 2024-04-17
+## [Unreleased] - 2024-04-18
 
 ### Added
+- [#1052](https://github.com/flow-php/flow/pull/1052) - **Test that covers writing to a partitioned dataset with overwrite mode** - [@norberttech](https://github.com/norberttech)
 - [#1050](https://github.com/flow-php/flow/pull/1050) - **Added support for parquet multifile pagination** - [@norberttech](https://github.com/norberttech)
 - [#1039](https://github.com/flow-php/flow/pull/1039) - **join expressions to DSL** - [@norberttech](https://github.com/norberttech)
 - [#1038](https://github.com/flow-php/flow/pull/1038) - **How to write a custom data extractor - blog post** - [@norberttech](https://github.com/norberttech)
