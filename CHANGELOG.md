@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-04-18
+## [0.7.4] - 2024-04-18
 
 ### Added
 - [#1052](https://github.com/flow-php/flow/pull/1052) - **Test that covers writing to a partitioned dataset with overwrite mode** - [@norberttech](https://github.com/norberttech)
