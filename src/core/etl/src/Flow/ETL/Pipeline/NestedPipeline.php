@@ -21,14 +21,6 @@ final class NestedPipeline implements OverridingPipeline, Pipeline
         return $this;
     }
 
-    public function cleanCopy() : Pipeline
-    {
-        return new self(
-            $this->pipeline->cleanCopy(),
-            $this->nextPipeline->cleanCopy(),
-        );
-    }
-
     public function closure(FlowContext $context) : void
     {
         $this->pipeline->closure($context);

@@ -25,11 +25,6 @@ final class GroupByPipeline implements OverridingPipeline, Pipeline
         return $this;
     }
 
-    public function cleanCopy() : Pipeline
-    {
-        return $this->pipeline->cleanCopy();
-    }
-
     public function closure(FlowContext $context) : void
     {
         $this->pipeline->closure($context);

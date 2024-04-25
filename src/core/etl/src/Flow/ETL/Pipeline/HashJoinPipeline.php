@@ -34,11 +34,6 @@ final class HashJoinPipeline implements Pipeline
         return $this;
     }
 
-    public function cleanCopy() : Pipeline
-    {
-        return new self($this->left->cleanCopy(), $this->right, $this->expression, $this->join);
-    }
-
     public function closure(FlowContext $context) : void
     {
         foreach ($this->left->pipes()->all() as $pipe) {

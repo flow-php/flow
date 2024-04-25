@@ -29,11 +29,6 @@ final class SynchronousPipeline implements Pipeline
         return $this;
     }
 
-    public function cleanCopy() : Pipeline
-    {
-        return new self();
-    }
-
     public function closure(FlowContext $context) : void
     {
         foreach ($this->pipes->all() as $pipe) {

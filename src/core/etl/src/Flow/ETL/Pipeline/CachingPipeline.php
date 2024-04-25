@@ -13,7 +13,7 @@ final class CachingPipeline implements OverridingPipeline, Pipeline
 
     public function __construct(private readonly Pipeline $pipeline, private readonly ?string $id = null)
     {
-        $this->nextPipeline = $this->pipeline->cleanCopy();
+        $this->nextPipeline = new SynchronousPipeline();
     }
 
     public function add(Loader|Transformer $pipe) : Pipeline
@@ -21,11 +21,6 @@ final class CachingPipeline implements OverridingPipeline, Pipeline
         $this->nextPipeline->add($pipe);
 
         return $this;
-    }
-
-    public function cleanCopy() : Pipeline
-    {
-        return $this->pipeline->cleanCopy();
     }
 
     public function closure(FlowContext $context) : void

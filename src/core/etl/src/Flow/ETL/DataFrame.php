@@ -23,6 +23,7 @@ use Flow\ETL\Pipeline\{BatchingPipeline,
     GroupByPipeline,
     HashJoinPipeline,
     PartitioningPipeline,
+    SynchronousPipeline,
     VoidPipeline};
 use Flow\ETL\Row\{Reference, References, Schema};
 use Flow\ETL\Transformer\StyleConverter\StringStyles;
@@ -766,7 +767,7 @@ final class DataFrame
             ->cache($this->context->config->id())
             ->run();
 
-        $this->pipeline = $this->pipeline->cleanCopy();
+        $this->pipeline = new SynchronousPipeline();
         $this->pipeline->setSource($this->context->config->externalSort()->sortBy(...$entries));
 
         return $this;

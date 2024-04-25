@@ -30,7 +30,7 @@ final class PartitioningPipeline implements OverridingPipeline, Pipeline
             throw new InvalidArgumentException('PartitioningPipeline requires at least one partitionBy entry');
         }
 
-        $this->nextPipeline = $this->pipeline->cleanCopy();
+        $this->nextPipeline = new SynchronousPipeline();
     }
 
     public function add(Loader|Transformer $pipe) : Pipeline
@@ -38,11 +38,6 @@ final class PartitioningPipeline implements OverridingPipeline, Pipeline
         $this->nextPipeline->add($pipe);
 
         return $this;
-    }
-
-    public function cleanCopy() : Pipeline
-    {
-        return $this->pipeline->cleanCopy();
     }
 
     public function closure(FlowContext $context) : void

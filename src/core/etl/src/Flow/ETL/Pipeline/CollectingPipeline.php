@@ -22,7 +22,7 @@ final class CollectingPipeline implements OverridingPipeline, Pipeline
      */
     public function __construct(private readonly Pipeline $pipeline)
     {
-        $this->nextPipeline = $pipeline->cleanCopy();
+        $this->nextPipeline = new SynchronousPipeline();
     }
 
     public function add(Loader|Transformer $pipe) : self
@@ -30,11 +30,6 @@ final class CollectingPipeline implements OverridingPipeline, Pipeline
         $this->nextPipeline->add($pipe);
 
         return $this;
-    }
-
-    public function cleanCopy() : Pipeline
-    {
-        return $this->pipeline->cleanCopy();
     }
 
     public function closure(FlowContext $context) : void

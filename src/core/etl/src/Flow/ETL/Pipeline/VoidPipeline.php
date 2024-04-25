@@ -17,11 +17,6 @@ final class VoidPipeline implements OverridingPipeline, Pipeline
         return $this;
     }
 
-    public function cleanCopy() : Pipeline
-    {
-        return new self($this->pipeline->cleanCopy());
-    }
-
     public function closure(FlowContext $context) : void
     {
         $this->pipeline->closure($context);
