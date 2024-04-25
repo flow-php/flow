@@ -1,10 +1,17 @@
-## [Unreleased] - 2024-04-24
+## [Unreleased] - 2024-04-25
 
 ### Added
 - [#1054](https://github.com/flow-php/flow/pull/1054) - **missing tests for parquet rows normalizer** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#1055](https://github.com/flow-php/flow/pull/1055) - **NestedLoop join algorithm was replaced with HashJoin algorithm** - [@norberttech](https://github.com/norberttech)
 - [#1053](https://github.com/flow-php/flow/pull/1053) - **Update Homebrew TAP formula: flow-php to version: 0.7.4** - [@norberttech](https://github.com/norberttech)
+
+### Fixed
+- [#1055](https://github.com/flow-php/flow/pull/1055) - **Right Join before duplicating right side rows in each batch from the left side dataset** - [@norberttech](https://github.com/norberttech)
+
+### Removed
+- [#1055](https://github.com/flow-php/flow/pull/1055) - **Join expression comparison types other than equal/identical/any/all** - [@norberttech](https://github.com/norberttech)
 
 ## [0.7.4] - 2024-04-18
 
