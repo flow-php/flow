@@ -4,7 +4,23 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
-use function Flow\ETL\DSL\{average, count, df, float_entry, from_all, from_array, from_memory, from_rows, int_entry, integer_entry, lit, max, rank, ref, str_entry, sum, window};
+use function Flow\ETL\DSL\{average,
+    count,
+    df,
+    float_entry,
+    from_all,
+    from_array,
+    from_memory,
+    from_rows,
+    int_entry,
+    integer_entry,
+    lit,
+    max,
+    rank,
+    ref,
+    str_entry,
+    sum,
+    window};
 use Flow\ETL\Memory\ArrayMemory;
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
 use Flow\ETL\{Loader, Row, Rows};
@@ -32,19 +48,20 @@ final class GroupByTest extends IntegrationTestCase
                 )
             ))
             ->groupBy('country', 'gender')
-            ->toDF()
+            ->aggregate(average(ref('age')))
+            ->withEntry('age_avg', ref('age_avg')->round(lit(2)))
             ->batchSize(1)
             ->write($loader)
             ->fetch();
 
         self::assertEquals(
-            new Rows(
-                Row::create(str_entry('country', 'PL'), str_entry('gender', 'male')),
-                Row::create(str_entry('country', 'PL'), str_entry('gender', 'female')),
-                Row::create(str_entry('country', 'US'), str_entry('gender', 'female')),
-                Row::create(str_entry('country', 'US'), str_entry('gender', 'male')),
-            ),
-            $rows
+            [
+                ['country' => 'PL', 'gender' => 'male', 'age_avg' => 21.67],
+                ['country' => 'PL', 'gender' => 'female', 'age_avg' => 30.0],
+                ['country' => 'US', 'gender' => 'female', 'age_avg' => 42.5],
+                ['country' => 'US', 'gender' => 'male', 'age_avg' => 45],
+            ],
+            $rows->toArray()
         );
     }
 
@@ -125,15 +142,15 @@ final class GroupByTest extends IntegrationTestCase
                 )
             ))
             ->groupBy('country')
-            ->toDF()
+            ->aggregate(sum(ref('age')))
             ->fetch();
 
         self::assertEquals(
-            new Rows(
-                Row::create(str_entry('country', 'PL')),
-                Row::create(str_entry('country', 'US')),
-            ),
-            $rows
+            [
+                ['country' => 'PL', 'age_sum' => 95],
+                ['country' => 'US', 'age_sum' => 175],
+            ],
+            $rows->toArray()
         );
     }
 

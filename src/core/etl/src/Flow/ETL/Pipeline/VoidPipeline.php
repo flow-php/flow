@@ -36,11 +36,6 @@ final class VoidPipeline implements Pipeline
         yield new Rows();
     }
 
-    public function setSource(Extractor $extractor) : self
-    {
-        return $this;
-    }
-
     public function source() : Extractor
     {
         return $this->pipeline->source();

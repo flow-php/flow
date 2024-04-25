@@ -114,13 +114,6 @@ final class HashJoinPipeline implements Pipeline
         }
     }
 
-    public function setSource(Extractor $extractor) : Pipeline
-    {
-        $this->extractor = $extractor;
-
-        return $this;
-    }
-
     public function source() : Extractor
     {
         return $this->extractor;

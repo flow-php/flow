@@ -18,18 +18,6 @@ final class GroupedDataFrame
     {
         $this->groupBy->aggregate(...$aggregations);
 
-        return $this->toDataFrame();
-    }
-
-    public function pivot(Reference $ref) : self
-    {
-        $this->groupBy->pivot($ref);
-
-        return $this;
-    }
-
-    public function toDataFrame() : DataFrame
-    {
         return $this->df->rebuild(function (Pipeline $pipeline, FlowContext $context) : DataFrame {
             return new DataFrame(
                 new Pipeline\LinkedPipeline(new Pipeline\GroupByPipeline($this->groupBy, $pipeline)),
@@ -38,8 +26,10 @@ final class GroupedDataFrame
         });
     }
 
-    public function toDF() : DataFrame
+    public function pivot(Reference $ref) : self
     {
-        return $this->toDataFrame();
+        $this->groupBy->pivot($ref);
+
+        return $this;
     }
 }

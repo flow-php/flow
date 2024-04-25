@@ -82,13 +82,6 @@ final class SynchronousPipeline implements Pipeline
         }
     }
 
-    public function setSource(Extractor $extractor) : self
-    {
-        $this->extractor = $extractor;
-
-        return $this;
-    }
-
     public function source() : Extractor
     {
         return $this->extractor;
