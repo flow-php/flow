@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL;
 
 use function Flow\ETL\DSL\to_output;
-use Flow\ETL\DataFrame\{GroupedDataFrame, PartitionedDataFrame};
+use Flow\ETL\DataFrame\GroupedDataFrame;
 use Flow\ETL\Dataset\{Report, Statistics};
 use Flow\ETL\Exception\{InvalidArgumentException, InvalidFileFormatException, RuntimeException};
 use Flow\ETL\Extractor\PartitionsExtractor;
@@ -22,6 +22,7 @@ use Flow\ETL\Pipeline\{BatchingPipeline,
     CollectingPipeline,
     GroupByPipeline,
     HashJoinPipeline,
+    LinkedPipeline,
     PartitioningPipeline,
     SynchronousPipeline,
     VoidPipeline};
@@ -36,9 +37,18 @@ final class DataFrame
 {
     private FlowContext $context;
 
-    public function __construct(private Pipeline $pipeline, Config $configuration)
+    public function __construct(private Pipeline $pipeline, Config|FlowContext $context)
     {
-        $this->context = new FlowContext($configuration);
+        $this->context = $context instanceof  FlowContext ? $context : new FlowContext($context);
+    }
+
+    /**
+     * @lazy
+     * @param callable(Pipeline $pipeline, FlowContext $context) : DataFrame $callback
+     */
+    public function rebuild(callable $callback) : self
+    {
+        return $callback($this->pipeline, $this->context);
     }
 
     /**
@@ -102,18 +112,15 @@ final class DataFrame
 
     /**
      * @lazy
-     *
-     * @throws InvalidArgumentException
      */
-    public function aggregate(AggregatingFunction ...$aggregations) : GroupedDataFrame
+    public function aggregate(AggregatingFunction ...$aggregations) : self
     {
-        if (!$this->pipeline instanceof GroupByPipeline) {
-            $this->pipeline = new GroupByPipeline(new GroupBy(), $this->pipeline);
-        }
+        $groupBy = new GroupBy();
+        $groupBy->aggregate(...$aggregations);
 
-        $this->pipeline->groupBy->aggregate(...$aggregations);
+        $this->pipeline = new LinkedPipeline(new GroupByPipeline($groupBy, $this->pipeline), new SynchronousPipeline());
 
-        return new GroupedDataFrame($this);
+        return $this;
     }
 
     public function autoCast() : self
@@ -137,7 +144,7 @@ final class DataFrame
      */
     public function batchSize(int $size) : self
     {
-        $this->pipeline = new BatchingPipeline($this->pipeline, $size);
+        $this->pipeline = new LinkedPipeline(new BatchingPipeline($this->pipeline, $size), new SynchronousPipeline());
 
         return $this;
     }
@@ -161,7 +168,7 @@ final class DataFrame
         }
 
         $this->batchSize($cacheBatchSize ?? $this->context->config->cacheBatchSize());
-        $this->pipeline = new CachingPipeline($this->pipeline, $id);
+        $this->pipeline = new LinkedPipeline(new CachingPipeline($this->pipeline, $id), new SynchronousPipeline());
 
         return $this;
     }
@@ -174,7 +181,7 @@ final class DataFrame
      */
     public function collect() : self
     {
-        $this->pipeline = new CollectingPipeline($this->pipeline);
+        $this->pipeline = new LinkedPipeline(new CollectingPipeline($this->pipeline), new SynchronousPipeline());
 
         return $this;
     }
@@ -447,9 +454,7 @@ final class DataFrame
      */
     public function groupBy(string|Reference ...$entries) : GroupedDataFrame
     {
-        $this->pipeline = new GroupByPipeline(new GroupBy(...$entries), $this->pipeline);
-
-        return new GroupedDataFrame($this);
+        return new GroupedDataFrame($this, new GroupBy(...$entries));
     }
 
     /**
@@ -463,7 +468,7 @@ final class DataFrame
             $type = Join::from($type);
         }
 
-        $this->pipeline = new HashJoinPipeline($this->pipeline, $dataFrame, $on, $type);
+        $this->pipeline = new LinkedPipeline(new HashJoinPipeline($this->pipeline, $dataFrame, $on, $type), new SynchronousPipeline());
 
         return $this;
     }
@@ -556,13 +561,13 @@ final class DataFrame
     /**
      * @lazy
      */
-    public function partitionBy(string|Reference $entry, string|Reference ...$entries) : PartitionedDataFrame
+    public function partitionBy(string|Reference $entry, string|Reference ...$entries) : self
     {
         \array_unshift($entries, $entry);
 
-        $this->pipeline = new PartitioningPipeline($this->pipeline, References::init(...$entries)->all());
+        $this->pipeline = new LinkedPipeline(new PartitioningPipeline($this->pipeline, References::init(...$entries)->all()), new SynchronousPipeline());
 
-        return new PartitionedDataFrame($this);
+        return $this;
     }
 
     public function pivot(Reference $ref) : self
@@ -847,7 +852,7 @@ final class DataFrame
     {
         if ($ref instanceof WindowFunction) {
             if (\count($ref->window()->partitions())) {
-                $this->pipeline = new PartitioningPipeline($this->pipeline, $ref->window()->partitions(), $ref->window()->order());
+                $this->pipeline = new LinkedPipeline(new PartitioningPipeline($this->pipeline, $ref->window()->partitions(), $ref->window()->order()), new SynchronousPipeline());
             } else {
                 $this->collect();
 

@@ -11,10 +11,8 @@ use Flow\ETL\{Extractor, FlowContext, Loader, Pipeline, Rows, Transformer};
 /**
  * @internal
  */
-final class CollectingPipeline implements OverridingPipeline, Pipeline
+final class CollectingPipeline implements Pipeline
 {
-    private readonly Pipeline $nextPipeline;
-
     /**
      * @param Pipeline $pipeline
      *
@@ -22,12 +20,11 @@ final class CollectingPipeline implements OverridingPipeline, Pipeline
      */
     public function __construct(private readonly Pipeline $pipeline)
     {
-        $this->nextPipeline = new SynchronousPipeline();
     }
 
     public function add(Loader|Transformer $pipe) : self
     {
-        $this->nextPipeline->add($pipe);
+        $this->pipeline->add($pipe);
 
         return $this;
     }
@@ -42,24 +39,9 @@ final class CollectingPipeline implements OverridingPipeline, Pipeline
         return $this->pipeline->has($transformerClass);
     }
 
-    /**
-     * @return array<Pipeline>
-     */
-    public function pipelines() : array
-    {
-        $pipelines = [];
-
-        if ($this->pipeline instanceof OverridingPipeline) {
-            $pipelines = $this->pipeline->pipelines();
-        }
-        $pipelines[] = $this->pipeline;
-
-        return $pipelines;
-    }
-
     public function pipes() : Pipes
     {
-        return $this->pipeline->pipes()->merge($this->nextPipeline->pipes());
+        return $this->pipeline->pipes();
     }
 
     public function process(FlowContext $context) : \Generator
@@ -70,9 +52,7 @@ final class CollectingPipeline implements OverridingPipeline, Pipeline
             $rows = $rows->merge($nextRows);
         }
 
-        $this->nextPipeline->setSource(from_rows($rows));
-
-        return $this->nextPipeline->process($context);
+        yield $rows;
     }
 
     public function setSource(Extractor $extractor) : self

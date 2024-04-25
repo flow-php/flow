@@ -32,6 +32,7 @@ final class GroupByTest extends IntegrationTestCase
                 )
             ))
             ->groupBy('country', 'gender')
+            ->toDF()
             ->batchSize(1)
             ->write($loader)
             ->fetch();
@@ -124,6 +125,7 @@ final class GroupByTest extends IntegrationTestCase
                 )
             ))
             ->groupBy('country')
+            ->toDF()
             ->fetch();
 
         self::assertEquals(

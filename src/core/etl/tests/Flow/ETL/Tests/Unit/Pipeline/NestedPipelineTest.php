@@ -6,7 +6,7 @@ namespace Flow\ETL\Tests\Unit\Pipeline;
 
 use function Flow\ETL\DSL\{bool_entry, int_entry, lit};
 use Flow\ETL\Extractor\ProcessExtractor;
-use Flow\ETL\Pipeline\{BatchingPipeline, NestedPipeline, SynchronousPipeline};
+use Flow\ETL\Pipeline\{BatchingPipeline, LinkedPipeline, SynchronousPipeline};
 use Flow\ETL\Transformer\ScalarFunctionTransformer;
 use Flow\ETL\{Config, FlowContext, Row, Rows};
 use PHPUnit\Framework\TestCase;
@@ -15,7 +15,7 @@ final class NestedPipelineTest extends TestCase
 {
     public function test_nested_pipelines() : void
     {
-        $pipeline = new NestedPipeline(
+        $pipeline = new LinkedPipeline(
             (new SynchronousPipeline())->add(new ScalarFunctionTransformer('active', lit(true))),
             new BatchingPipeline(new SynchronousPipeline(), 1)
         );

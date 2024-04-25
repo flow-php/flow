@@ -195,6 +195,7 @@ final class PartitioningTest extends IntegrationTestCase
             ->select('year')
             ->withEntry('year', ref('year')->cast('int'))
             ->groupBy(ref('year'))
+            ->toDF()
             ->fetch();
 
         self::assertCount(1, $rows);

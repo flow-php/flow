@@ -6,7 +6,7 @@ namespace Flow\ETL\Pipeline;
 
 use Flow\ETL\{Extractor, FlowContext, Loader, Pipeline, Transformer};
 
-final class NestedPipeline implements OverridingPipeline, Pipeline
+final class LinkedPipeline implements OverridingPipeline, Pipeline
 {
     public function __construct(
         private readonly Pipeline $pipeline,
