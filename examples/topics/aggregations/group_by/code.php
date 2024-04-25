@@ -19,6 +19,7 @@ data_frame()
         ['id' => 9, 'group' => 'A'],
         ['id' => 10, 'group' => 'B'],
     ]))
-    ->groupBy(ref('group'))
+    ->groupBy(ref('group')) // GroupedDataFrame
+    ->toDF() // DataFrame
     ->write(to_stream(__DIR__ . '/output.txt', truncate: false))
     ->run();

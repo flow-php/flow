@@ -8,7 +8,6 @@ use function Flow\ETL\DSL\{from_rows, refs, row, rows, schema};
 use Flow\ETL\Exception\{DuplicatedEntriesException, JoinException};
 use Flow\ETL\Hash\NativePHPHash;
 use Flow\ETL\Join\{Expression, Join};
-use Flow\ETL\Loader\Closure;
 use Flow\ETL\Pipeline\HashJoin\HashTable;
 use Flow\ETL\Row\Entry;
 use Flow\ETL\{DataFrame, Extractor, FlowContext, Loader, Pipeline, Row, Rows, Transformer};
@@ -29,23 +28,14 @@ final class HashJoinPipeline implements Pipeline
 
     public function add(Loader|Transformer $pipe) : Pipeline
     {
-        $this->left->pipes()->add($pipe);
+        $this->left->add($pipe);
 
         return $this;
     }
 
-    public function closure(FlowContext $context) : void
-    {
-        foreach ($this->left->pipes()->all() as $pipe) {
-            if ($pipe instanceof Loader && $pipe instanceof Closure) {
-                $pipe->closure($context);
-            }
-        }
-    }
-
     public function has(string $transformerClass) : bool
     {
-        return $this->left->pipes()->has($transformerClass);
+        return $this->left->has($transformerClass);
     }
 
     public function pipes() : Pipes

@@ -75,7 +75,7 @@ final class BatchSizeOptimization implements Optimization
             return $pipeline;
         }
 
-        $pipeline = new Pipeline\LinkedPipeline(new BatchingPipeline($pipeline, $this->batchSize), new Pipeline\SynchronousPipeline());
+        $pipeline = new Pipeline\LinkedPipeline(new BatchingPipeline($pipeline, $this->batchSize));
         $pipeline->add($element);
 
         return $pipeline;

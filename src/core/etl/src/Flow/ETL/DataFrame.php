@@ -109,7 +109,7 @@ final class DataFrame
         $groupBy = new GroupBy();
         $groupBy->aggregate(...$aggregations);
 
-        $this->pipeline = new LinkedPipeline(new GroupByPipeline($groupBy, $this->pipeline), new SynchronousPipeline());
+        $this->pipeline = new LinkedPipeline(new GroupByPipeline($groupBy, $this->pipeline));
 
         return $this;
     }
@@ -135,7 +135,7 @@ final class DataFrame
      */
     public function batchSize(int $size) : self
     {
-        $this->pipeline = new LinkedPipeline(new BatchingPipeline($this->pipeline, $size), new SynchronousPipeline());
+        $this->pipeline = new LinkedPipeline(new BatchingPipeline($this->pipeline, $size));
 
         return $this;
     }
@@ -159,7 +159,7 @@ final class DataFrame
         }
 
         $this->batchSize($cacheBatchSize ?? $this->context->config->cacheBatchSize());
-        $this->pipeline = new LinkedPipeline(new CachingPipeline($this->pipeline, $id), new SynchronousPipeline());
+        $this->pipeline = new LinkedPipeline(new CachingPipeline($this->pipeline, $id));
 
         return $this;
     }
@@ -172,7 +172,7 @@ final class DataFrame
      */
     public function collect() : self
     {
-        $this->pipeline = new LinkedPipeline(new CollectingPipeline($this->pipeline), new SynchronousPipeline());
+        $this->pipeline = new LinkedPipeline(new CollectingPipeline($this->pipeline));
 
         return $this;
     }
@@ -459,7 +459,7 @@ final class DataFrame
             $type = Join::from($type);
         }
 
-        $this->pipeline = new LinkedPipeline(new HashJoinPipeline($this->pipeline, $dataFrame, $on, $type), new SynchronousPipeline());
+        $this->pipeline = new LinkedPipeline(new HashJoinPipeline($this->pipeline, $dataFrame, $on, $type));
 
         return $this;
     }
@@ -556,7 +556,7 @@ final class DataFrame
     {
         \array_unshift($entries, $entry);
 
-        $this->pipeline = new LinkedPipeline(new PartitioningPipeline($this->pipeline, References::init(...$entries)->all()), new SynchronousPipeline());
+        $this->pipeline = new LinkedPipeline(new PartitioningPipeline($this->pipeline, References::init(...$entries)->all()));
 
         return $this;
     }
@@ -852,7 +852,7 @@ final class DataFrame
     {
         if ($ref instanceof WindowFunction) {
             if (\count($ref->window()->partitions())) {
-                $this->pipeline = new LinkedPipeline(new PartitioningPipeline($this->pipeline, $ref->window()->partitions(), $ref->window()->order()), new SynchronousPipeline());
+                $this->pipeline = new LinkedPipeline(new PartitioningPipeline($this->pipeline, $ref->window()->partitions(), $ref->window()->order()));
             } else {
                 $this->collect();
 

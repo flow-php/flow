@@ -32,7 +32,7 @@ final class GroupedDataFrame
     {
         return $this->df->rebuild(function (Pipeline $pipeline, FlowContext $context) : DataFrame {
             return new DataFrame(
-                new Pipeline\LinkedPipeline(new Pipeline\GroupByPipeline($this->groupBy, $pipeline), new Pipeline\SynchronousPipeline()),
+                new Pipeline\LinkedPipeline(new Pipeline\GroupByPipeline($this->groupBy, $pipeline)),
                 $context
             );
         });
