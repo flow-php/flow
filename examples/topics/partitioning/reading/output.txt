@@ -1,6 +1,33 @@
 +----+-------+-----------+
 | id | color |       sku |
 +----+-------+-----------+
+|  7 |  blue | PRODUCT01 |
++----+-------+-----------+
+Partitions:
+ - color=blue
+ - sku=PRODUCT01
+1 rows
++----+-------+-----------+
+| id | color |       sku |
++----+-------+-----------+
+|  8 |  blue | PRODUCT02 |
++----+-------+-----------+
+Partitions:
+ - color=blue
+ - sku=PRODUCT02
+1 rows
++----+-------+-----------+
+| id | color |       sku |
++----+-------+-----------+
+|  4 | green | PRODUCT01 |
++----+-------+-----------+
+Partitions:
+ - color=green
+ - sku=PRODUCT01
+1 rows
++----+-------+-----------+
+| id | color |       sku |
++----+-------+-----------+
 |  5 | green | PRODUCT02 |
 +----+-------+-----------+
 Partitions:
@@ -19,10 +46,10 @@ Partitions:
 +----+-------+-----------+
 | id | color |       sku |
 +----+-------+-----------+
-|  4 | green | PRODUCT01 |
+|  1 |   red | PRODUCT01 |
 +----+-------+-----------+
 Partitions:
- - color=green
+ - color=red
  - sku=PRODUCT01
 1 rows
 +----+-------+-----------+
@@ -42,31 +69,4 @@ Partitions:
 Partitions:
  - color=red
  - sku=PRODUCT03
-1 rows
-+----+-------+-----------+
-| id | color |       sku |
-+----+-------+-----------+
-|  1 |   red | PRODUCT01 |
-+----+-------+-----------+
-Partitions:
- - color=red
- - sku=PRODUCT01
-1 rows
-+----+-------+-----------+
-| id | color |       sku |
-+----+-------+-----------+
-|  8 |  blue | PRODUCT02 |
-+----+-------+-----------+
-Partitions:
- - color=blue
- - sku=PRODUCT02
-1 rows
-+----+-------+-----------+
-| id | color |       sku |
-+----+-------+-----------+
-|  7 |  blue | PRODUCT01 |
-+----+-------+-----------+
-Partitions:
- - color=blue
- - sku=PRODUCT01
 1 rows
