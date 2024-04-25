@@ -6,44 +6,30 @@ namespace Flow\ETL\DataFrame;
 
 use Flow\ETL\Function\AggregatingFunction;
 use Flow\ETL\Row\Reference;
-use Flow\ETL\{DataFrame, Loader, Rows};
+use Flow\ETL\{DataFrame, FlowContext, GroupBy, Pipeline};
 
-/**
- * @method DataFrame write(Loader $loader)
- */
 final class GroupedDataFrame
 {
-    public function __construct(private readonly DataFrame $df)
+    public function __construct(private readonly DataFrame $df, private readonly GroupBy $groupBy)
     {
     }
 
-    public function __call(string $name, array $arguments) : DataFrame|Rows|self|null
+    public function aggregate(AggregatingFunction ...$aggregations) : DataFrame
     {
-        if (\strtolower($name) === 'pivot') {
-            return $this->pivot(...$arguments);
-        }
+        $this->groupBy->aggregate(...$aggregations);
 
-        if (\strtolower($name) === 'aggregate') {
-            return $this->aggregate(...$arguments);
-        }
-
-        return $this->df->{$name}(...$arguments);
+        return $this->df->rebuild(function (Pipeline $pipeline, FlowContext $context) : DataFrame {
+            return new DataFrame(
+                new Pipeline\LinkedPipeline(new Pipeline\GroupByPipeline($this->groupBy, $pipeline)),
+                $context
+            );
+        });
     }
 
-    public function aggregate(AggregatingFunction ...$aggregations) : self
+    public function pivot(Reference $ref) : self
     {
-        $this->df->aggregate(...$aggregations);
+        $this->groupBy->pivot($ref);
 
         return $this;
-    }
-
-    public function pivot(Reference $ref) : DataFrame
-    {
-        return $this->df->pivot($ref);
-    }
-
-    public function rename(string $from, string $to) : DataFrame
-    {
-        return $this->df->rename($from, $to);
     }
 }

@@ -6,33 +6,20 @@ namespace Flow\ETL\Pipeline;
 
 use Flow\ETL\{Extractor, FlowContext, GroupBy, Loader, Pipeline, Transformer};
 
-final class GroupByPipeline implements OverridingPipeline, Pipeline
+final class GroupByPipeline implements Pipeline
 {
-    private readonly Pipeline $nextPipeline;
-
     private readonly Pipeline $pipeline;
 
     public function __construct(public readonly GroupBy $groupBy, Pipeline $pipeline)
     {
         $this->pipeline = $pipeline;
-        $this->nextPipeline = new SynchronousPipeline();
     }
 
     public function add(Loader|Transformer $pipe) : self
     {
-        $this->nextPipeline->add($pipe);
+        $this->pipeline->add($pipe);
 
         return $this;
-    }
-
-    public function cleanCopy() : Pipeline
-    {
-        return $this->pipeline->cleanCopy();
-    }
-
-    public function closure(FlowContext $context) : void
-    {
-        $this->pipeline->closure($context);
     }
 
     public function has(string $transformerClass) : bool
@@ -40,24 +27,9 @@ final class GroupByPipeline implements OverridingPipeline, Pipeline
         return $this->pipeline->has($transformerClass);
     }
 
-    /**
-     * @return array<Pipeline>
-     */
-    public function pipelines() : array
-    {
-        $pipelines = [];
-
-        if ($this->pipeline instanceof OverridingPipeline) {
-            $pipelines = $this->pipeline->pipelines();
-        }
-        $pipelines[] = $this->pipeline;
-
-        return $pipelines;
-    }
-
     public function pipes() : Pipes
     {
-        return $this->pipeline->pipes()->merge($this->nextPipeline->pipes());
+        return $this->pipeline->pipes();
     }
 
     public function process(FlowContext $context) : \Generator
@@ -66,18 +38,7 @@ final class GroupByPipeline implements OverridingPipeline, Pipeline
             $this->groupBy->group($nextRows);
         }
 
-        $this->nextPipeline->setSource(new Extractor\ProcessExtractor($this->groupBy->result($context)));
-
-        foreach ($this->nextPipeline->process($context) as $nextRows) {
-            yield $nextRows;
-        }
-    }
-
-    public function setSource(Extractor $extractor) : self
-    {
-        $this->pipeline->setSource($extractor);
-
-        return $this;
+        yield $this->groupBy->result($context);
     }
 
     public function source() : Extractor

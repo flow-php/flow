@@ -13,8 +13,7 @@ final class CollectingPipelineTest extends TestCase
 {
     public function test_collecting() : void
     {
-        $pipeline = new CollectingPipeline(new SynchronousPipeline());
-        $pipeline->setSource(from_all(
+        $pipeline = new CollectingPipeline(new SynchronousPipeline(from_all(
             from_array([
                 ['id' => 1],
                 ['id' => 2],
@@ -34,7 +33,7 @@ final class CollectingPipelineTest extends TestCase
                 ['id' => 12],
                 ['id' => 13],
             ])
-        ));
+        )));
 
         self::assertCount(
             1,

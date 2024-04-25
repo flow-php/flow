@@ -6,7 +6,7 @@ namespace Flow\ETL\Pipeline;
 
 use Flow\ETL\{Extractor, FlowContext, Loader, Pipeline, Rows, Transformer};
 
-final class VoidPipeline implements OverridingPipeline, Pipeline
+final class VoidPipeline implements Pipeline
 {
     public function __construct(private readonly Pipeline $pipeline)
     {
@@ -17,34 +17,9 @@ final class VoidPipeline implements OverridingPipeline, Pipeline
         return $this;
     }
 
-    public function cleanCopy() : Pipeline
-    {
-        return new self($this->pipeline->cleanCopy());
-    }
-
-    public function closure(FlowContext $context) : void
-    {
-        $this->pipeline->closure($context);
-    }
-
     public function has(string $transformerClass) : bool
     {
         return $this->pipeline->has($transformerClass);
-    }
-
-    /**
-     * @return array<Pipeline>
-     */
-    public function pipelines() : array
-    {
-        $pipelines = [];
-
-        if ($this->pipeline instanceof OverridingPipeline) {
-            $pipelines = $this->pipeline->pipelines();
-        }
-        $pipelines[] = $this->pipeline;
-
-        return $pipelines;
     }
 
     public function pipes() : Pipes
@@ -59,11 +34,6 @@ final class VoidPipeline implements OverridingPipeline, Pipeline
         }
 
         yield new Rows();
-    }
-
-    public function setSource(Extractor $extractor) : self
-    {
-        return $this;
     }
 
     public function source() : Extractor

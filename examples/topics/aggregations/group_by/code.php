@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use function Flow\ETL\DSL\{data_frame, from_array, ref, to_stream};
+use function Flow\ETL\DSL\{count, data_frame, from_array, ref, to_stream};
 
 require __DIR__ . '/../../../autoload.php';
 
@@ -20,5 +20,6 @@ data_frame()
         ['id' => 10, 'group' => 'B'],
     ]))
     ->groupBy(ref('group'))
+    ->aggregate(count(ref('group')))
     ->write(to_stream(__DIR__ . '/output.txt', truncate: false))
     ->run();

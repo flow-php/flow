@@ -7,7 +7,7 @@ namespace Flow\ETL\Tests\Unit\Pipeline\Optimizer;
 use Flow\ETL\Adapter\Doctrine\DbalLoader;
 use Flow\ETL\Loader\StreamLoader;
 use Flow\ETL\Pipeline\Optimizer\BatchSizeOptimization;
-use Flow\ETL\Pipeline\{BatchingPipeline, CollectingPipeline, NestedPipeline, SynchronousPipeline};
+use Flow\ETL\Pipeline\{BatchingPipeline, CollectingPipeline, LinkedPipeline, SynchronousPipeline};
 use Flow\ETL\Transformer;
 use PHPUnit\Framework\TestCase;
 
@@ -15,7 +15,7 @@ final class BatchSizeOptimizationTest extends TestCase
 {
     public function test_for_nested_pipeline_with_batching_pipeline() : void
     {
-        $pipeline = new NestedPipeline(
+        $pipeline = new LinkedPipeline(
             new BatchingPipeline(new SynchronousPipeline(), 10),
             new SynchronousPipeline()
         );

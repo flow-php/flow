@@ -23,6 +23,11 @@ Above changes were introduced in all 3 types of joins:
 - `DataFrame::joinEach()`
 - `DataFrame::crossJoin()`
 
+### 2) GroupBy
+
+From now on, DataFrame::groupBy() method will return GroupedDataFrame object, which is nothing more than a GroupBy
+statement Builder. In order to get the results you first need to define the aggregation functions or optionally pivot the data.
+
 ## Upgrading from 0.6.x to 0.7.x
 
 ### 1) DataFrame::appendSafe() method was removed

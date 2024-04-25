@@ -27,7 +27,6 @@ final class JoinTest extends IntegrationTestCase
                     row(int_entry('id', 5), str_entry('country', 'GB')),
                 )
             ))
-            ->batchSize(4)
             ->join(
                 (new Flow())->process(
                     rows(
@@ -40,6 +39,7 @@ final class JoinTest extends IntegrationTestCase
                 Expression::on(['country' => 'code']),
                 Join::inner
             )
+            ->batchSize(2)
             ->write($loader)
             ->fetch();
 
@@ -72,7 +72,6 @@ final class JoinTest extends IntegrationTestCase
                     row(int_entry('id', 9), str_entry('country', 'US')),
                 )
             ))
-            ->batchSize(4)
             ->join(
                 (new Flow())->process(
                     rows(
@@ -82,6 +81,7 @@ final class JoinTest extends IntegrationTestCase
                 ),
                 Expression::on(['country' => 'code']),
             )
+            ->batchSize(4)
             ->write($loader)
             ->fetch();
 
@@ -160,7 +160,6 @@ final class JoinTest extends IntegrationTestCase
                     row(int_entry('id', 9), datetime_entry('date', new \DateTimeImmutable('2024-01-05 00:00:00'))),
                 )
             ))
-            ->batchSize(4)
             ->join(
                 (new Flow())->process(
                     rows(
@@ -171,6 +170,7 @@ final class JoinTest extends IntegrationTestCase
                 Expression::on(['date' => 'date']),
                 Join::left
             )
+            ->batchSize(4)
             ->write($loader)
             ->fetch();
 

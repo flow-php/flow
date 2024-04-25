@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\DataFrame;
 
 use function Flow\ETL\Adapter\Text\{from_text, to_text};
-use function Flow\ETL\DSL\{df,
+use function Flow\ETL\DSL\{collect,
+    df,
     from_array,
     from_rows,
     int_entry,
@@ -195,6 +196,7 @@ final class PartitioningTest extends IntegrationTestCase
             ->select('year')
             ->withEntry('year', ref('year')->cast('int'))
             ->groupBy(ref('year'))
+            ->aggregate(collect(ref('year')))
             ->fetch();
 
         self::assertCount(1, $rows);

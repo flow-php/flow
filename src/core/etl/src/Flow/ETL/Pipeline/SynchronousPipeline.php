@@ -16,10 +16,10 @@ final class SynchronousPipeline implements Pipeline
 
     private readonly Pipes $pipes;
 
-    public function __construct()
+    public function __construct(?Extractor $extractor = null)
     {
         $this->pipes = Pipes::empty();
-        $this->extractor = from_rows(new Rows());
+        $this->extractor = $extractor ?? from_rows(new Rows());
     }
 
     public function add(Loader|Transformer $pipe) : self
@@ -27,20 +27,6 @@ final class SynchronousPipeline implements Pipeline
         $this->pipes->add($pipe);
 
         return $this;
-    }
-
-    public function cleanCopy() : Pipeline
-    {
-        return new self();
-    }
-
-    public function closure(FlowContext $context) : void
-    {
-        foreach ($this->pipes->all() as $pipe) {
-            if ($pipe instanceof Loader && $pipe instanceof Closure) {
-                $pipe->closure($context);
-            }
-        }
     }
 
     public function has(string $transformerClass) : bool
@@ -89,14 +75,11 @@ final class SynchronousPipeline implements Pipeline
             }
         }
 
-        $this->closure($context);
-    }
-
-    public function setSource(Extractor $extractor) : self
-    {
-        $this->extractor = $extractor;
-
-        return $this;
+        foreach ($this->pipes->all() as $pipe) {
+            if ($pipe instanceof Loader && $pipe instanceof Closure) {
+                $pipe->closure($context);
+            }
+        }
     }
 
     public function source() : Extractor

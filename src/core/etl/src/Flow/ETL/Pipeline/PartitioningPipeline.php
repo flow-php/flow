@@ -10,10 +10,8 @@ use Flow\ETL\Extractor\CollectingExtractor;
 use Flow\ETL\Row\Reference;
 use Flow\ETL\{Extractor, FlowContext, Loader, Partition, Pipeline, Transformer};
 
-final class PartitioningPipeline implements OverridingPipeline, Pipeline
+final class PartitioningPipeline implements Pipeline
 {
-    private Pipeline $nextPipeline;
-
     /**
      * @param Pipeline $pipeline
      * @param array<Reference> $partitionBy
@@ -29,55 +27,23 @@ final class PartitioningPipeline implements OverridingPipeline, Pipeline
         if (!\count($this->partitionBy)) {
             throw new InvalidArgumentException('PartitioningPipeline requires at least one partitionBy entry');
         }
-
-        $this->nextPipeline = $this->pipeline->cleanCopy();
     }
 
     public function add(Loader|Transformer $pipe) : Pipeline
     {
-        $this->nextPipeline->add($pipe);
+        $this->pipeline->add($pipe);
 
         return $this;
     }
 
-    public function cleanCopy() : Pipeline
-    {
-        return $this->pipeline->cleanCopy();
-    }
-
-    public function closure(FlowContext $context) : void
-    {
-        $this->pipeline->closure($context);
-    }
-
     public function has(string $transformerClass) : bool
     {
-        return $this->pipeline->has($transformerClass) || $this->nextPipeline->has($transformerClass);
-    }
-
-    /**
-     * @return array<Pipeline>
-     */
-    public function pipelines() : array
-    {
-        $pipelines = [];
-
-        if ($this->pipeline instanceof OverridingPipeline) {
-            $pipelines = $this->pipeline->pipelines();
-        }
-        $pipelines[] = $this->pipeline;
-
-        if ($this->nextPipeline instanceof OverridingPipeline) {
-            $pipelines = $this->nextPipeline->pipelines();
-        }
-        $pipelines[] = $this->nextPipeline;
-
-        return $pipelines;
+        return $this->pipeline->has($transformerClass);
     }
 
     public function pipes() : Pipes
     {
-        return $this->pipeline->pipes()->merge($this->nextPipeline->pipes());
+        return $this->pipeline->pipes();
     }
 
     public function process(FlowContext $context) : \Generator
@@ -99,21 +65,12 @@ final class PartitioningPipeline implements OverridingPipeline, Pipeline
             }
         }
 
-        $this->nextPipeline->setSource(from_all(...\array_map(
-            static fn (string $id) : Extractor => new CollectingExtractor(from_cache($id, null, true)),
-            \array_unique($partitionIds)
-        )));
-
-        foreach ($this->nextPipeline->process($context) as $rows) {
-            yield $rows;
-        }
-    }
-
-    public function setSource(Extractor $extractor) : Pipeline
-    {
-        $this->pipeline->setSource($extractor);
-
-        return $this;
+        return from_all(
+            ...\array_map(
+                static fn (string $id) : Extractor => new CollectingExtractor(from_cache($id, null, true)),
+                \array_unique($partitionIds)
+            )
+        )->extract($context);
     }
 
     public function source() : Extractor

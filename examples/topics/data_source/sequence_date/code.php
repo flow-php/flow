@@ -11,7 +11,7 @@ data_frame()
         'date',
         new DateTimeImmutable('2024-01-01 00:00:00 UTC'),
         new DateInterval('P1D'),
-        new DateTimeImmutable('now + 60 days'),
+        new DateTimeImmutable('2024-01-01 00:00:00 +60 days'),
     ))
     ->collect()
     ->write(to_stream(__DIR__ . '/output.txt', truncate: false))
