@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Pipeline;
 
-use function Flow\ETL\DSL\from_rows;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\{Extractor, FlowContext, Loader, Pipeline, Rows, Transformer};
 
@@ -53,13 +52,6 @@ final class CollectingPipeline implements Pipeline
         }
 
         yield $rows;
-    }
-
-    public function setSource(Extractor $extractor) : self
-    {
-        $this->pipeline->setSource($extractor);
-
-        return $this;
     }
 
     public function source() : Extractor

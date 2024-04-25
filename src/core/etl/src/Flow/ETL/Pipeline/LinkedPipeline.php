@@ -8,10 +8,12 @@ use Flow\ETL\{Extractor, FlowContext, Loader, Pipeline, Transformer};
 
 final class LinkedPipeline implements OverridingPipeline, Pipeline
 {
+    private readonly Pipeline $nextPipeline;
+
     public function __construct(
         private readonly Pipeline $pipeline,
-        private readonly Pipeline $nextPipeline
     ) {
+        $this->nextPipeline = new SynchronousPipeline(new Extractor\PipelineExtractor($this->pipeline));
     }
 
     public function add(Loader|Transformer $pipe) : Pipeline
@@ -60,16 +62,9 @@ final class LinkedPipeline implements OverridingPipeline, Pipeline
 
     public function process(FlowContext $context) : \Generator
     {
-        foreach ($this->nextPipeline->setSource(new Extractor\PipelineExtractor($this->pipeline))->process($context) as $rows) {
+        foreach ($this->nextPipeline->process($context) as $rows) {
             yield $rows;
         }
-    }
-
-    public function setSource(Extractor $extractor) : Pipeline
-    {
-        $this->pipeline->setSource($extractor);
-
-        return $this;
     }
 
     public function source() : Extractor

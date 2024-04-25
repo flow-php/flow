@@ -28,9 +28,9 @@ final class GroupedDataFrame
         return $this;
     }
 
-    public function toDataFrame(): DataFrame
+    public function toDataFrame() : DataFrame
     {
-        return $this->df->rebuild(function (Pipeline $pipeline, FlowContext $context): DataFrame {
+        return $this->df->rebuild(function (Pipeline $pipeline, FlowContext $context) : DataFrame {
             return new DataFrame(
                 new Pipeline\LinkedPipeline(new Pipeline\GroupByPipeline($this->groupBy, $pipeline), new Pipeline\SynchronousPipeline()),
                 $context
@@ -38,7 +38,7 @@ final class GroupedDataFrame
         });
     }
 
-    public function toDF(): DataFrame
+    public function toDF() : DataFrame
     {
         return $this->toDataFrame();
     }

@@ -31,8 +31,7 @@ final class LimitOptimizationTest extends TestCase
 
     public function test_optimization_for_a_pipeline_with_expanding_expression_transformations() : void
     {
-        $pipeline = new SynchronousPipeline();
-        $pipeline->setSource(new CSVExtractor(Path::realpath('file.csv')));
+        $pipeline = new SynchronousPipeline(new CSVExtractor(Path::realpath('file.csv')));
         $pipeline->add(new ScalarFunctionTransformer('expanded', ref('data')->expand()));
 
         $optimizedPipeline = (new Optimizer(new LimitOptimization()))->optimize(new LimitTransformer(10), $pipeline);
@@ -43,8 +42,7 @@ final class LimitOptimizationTest extends TestCase
 
     public function test_optimization_for_a_pipeline_with_expanding_transformations() : void
     {
-        $pipeline = new SynchronousPipeline();
-        $pipeline->setSource(new CSVExtractor(Path::realpath('file.csv')));
+        $pipeline = new SynchronousPipeline(new CSVExtractor(Path::realpath('file.csv')));
         $pipeline->add(new DropDuplicatesTransformer(ref('id')));
 
         $optimizedPipeline = (new Optimizer(new LimitOptimization()))->optimize(new LimitTransformer(10), $pipeline);
@@ -55,10 +53,9 @@ final class LimitOptimizationTest extends TestCase
 
     public function test_optimization_for_a_pipeline_with_limited_extractor() : void
     {
-        $pipeline = new SynchronousPipeline();
         $extractor = new CSVExtractor(Path::realpath('file.csv'));
         $extractor->changeLimit(10);
-        $pipeline->setSource($extractor);
+        $pipeline = new SynchronousPipeline($extractor);
         $pipeline->add(new RenameEntryTransformer('id', 'new_id'));
 
         $optimizedPipeline = (new Optimizer(new LimitOptimization()))->optimize(new LimitTransformer(10), $pipeline);
@@ -70,8 +67,7 @@ final class LimitOptimizationTest extends TestCase
 
     public function test_optimization_for_a_pipeline_without_expanding_transformations() : void
     {
-        $pipeline = new SynchronousPipeline();
-        $pipeline->setSource(new CSVExtractor(Path::realpath('file.csv')));
+        $pipeline = new SynchronousPipeline(new CSVExtractor(Path::realpath('file.csv')));
         $pipeline->add(new KeepEntriesTransformer(ref('id'), ref('name')));
 
         $optimizedPipeline = (new Optimizer(new LimitOptimization()))->optimize(new LimitTransformer(10), $pipeline);
@@ -82,8 +78,7 @@ final class LimitOptimizationTest extends TestCase
 
     public function test_optimization_of_limit_on_empty_pipeline() : void
     {
-        $pipeline = new SynchronousPipeline();
-        $pipeline->setSource(new CSVExtractor(Path::realpath('file.csv')));
+        $pipeline = new SynchronousPipeline(new CSVExtractor(Path::realpath('file.csv')));
 
         $optimizedPipeline = (new Optimizer(new LimitOptimization()))->optimize(new LimitTransformer(10), $pipeline);
 

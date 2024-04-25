@@ -13,8 +13,7 @@ final class BatchingPipelineTest extends TestCase
 {
     public function test_batching_rows() : void
     {
-        $pipeline = new BatchingPipeline(new SynchronousPipeline(), size: 10);
-        $pipeline->setSource(from_all(
+        $pipeline = new BatchingPipeline(new SynchronousPipeline(from_all(
             from_array([
                 ['id' => 1],
                 ['id' => 2],
@@ -29,7 +28,7 @@ final class BatchingPipelineTest extends TestCase
                 ['id' => 9],
                 ['id' => 10],
             ])
-        ));
+        )), size: 10);
 
         self::assertCount(
             1,
@@ -39,8 +38,7 @@ final class BatchingPipelineTest extends TestCase
 
     public function test_that_rows_are_not_lost() : void
     {
-        $pipeline = new BatchingPipeline(new SynchronousPipeline(), size: 7);
-        $pipeline->setSource(from_all(
+        $pipeline = new BatchingPipeline(new SynchronousPipeline(from_all(
             from_array([
                 ['id' => 1],
                 ['id' => 2],
@@ -53,7 +51,7 @@ final class BatchingPipelineTest extends TestCase
                 ['id' => 9],
                 ['id' => 10],
             ])
-        ));
+        )), size: 7);
 
         self::assertEquals(
             [
@@ -81,8 +79,7 @@ final class BatchingPipelineTest extends TestCase
 
     public function test_using_bigger_batch_size_than_total_number_of_rows() : void
     {
-        $pipeline = new BatchingPipeline(new SynchronousPipeline(), size: 11);
-        $pipeline->setSource(from_all(
+        $pipeline = new BatchingPipeline(new SynchronousPipeline(from_all(
             from_array([
                 ['id' => 1],
                 ['id' => 2],
@@ -97,7 +94,7 @@ final class BatchingPipelineTest extends TestCase
                 ['id' => 9],
                 ['id' => 10],
             ])
-        ));
+        )), size: 11);
 
         self::assertCount(
             1,
@@ -107,8 +104,7 @@ final class BatchingPipelineTest extends TestCase
 
     public function test_using_smaller_batch_size_than_total_number_of_rows() : void
     {
-        $pipeline = new BatchingPipeline(new SynchronousPipeline(), size: 5);
-        $pipeline->setSource(from_all(
+        $pipeline = new BatchingPipeline(new SynchronousPipeline(from_all(
             from_array([
                 ['id' => 1],
                 ['id' => 2],
@@ -121,7 +117,7 @@ final class BatchingPipelineTest extends TestCase
                 ['id' => 9],
                 ['id' => 10],
             ])
-        ));
+        )), size: 5);
 
         self::assertCount(
             2,

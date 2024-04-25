@@ -16,10 +16,10 @@ final class SynchronousPipeline implements Pipeline
 
     private readonly Pipes $pipes;
 
-    public function __construct()
+    public function __construct(?Extractor $extractor = null)
     {
         $this->pipes = Pipes::empty();
-        $this->extractor = from_rows(new Rows());
+        $this->extractor = $extractor ?? from_rows(new Rows());
     }
 
     public function add(Loader|Transformer $pipe) : self

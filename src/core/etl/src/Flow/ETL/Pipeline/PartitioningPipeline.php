@@ -78,13 +78,6 @@ final class PartitioningPipeline implements Pipeline
         )->extract($context);
     }
 
-    public function setSource(Extractor $extractor) : Pipeline
-    {
-        $this->pipeline->setSource($extractor);
-
-        return $this;
-    }
-
     public function source() : Extractor
     {
         return $this->pipeline->source();

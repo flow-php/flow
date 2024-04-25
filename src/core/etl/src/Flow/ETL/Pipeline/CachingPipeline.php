@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Pipeline;
 
-use function Flow\ETL\DSL\from_rows;
 use Flow\ETL\{Extractor, FlowContext, Loader, Pipeline, Transformer};
 
 final class CachingPipeline implements Pipeline
@@ -47,13 +46,6 @@ final class CachingPipeline implements Pipeline
 
             yield $rows;
         }
-    }
-
-    public function setSource(Extractor $extractor) : Pipeline
-    {
-        $this->pipeline->setSource($extractor);
-
-        return $this;
     }
 
     public function source() : Extractor

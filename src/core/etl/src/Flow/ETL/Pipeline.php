@@ -24,7 +24,5 @@ interface Pipeline
      */
     public function process(FlowContext $context) : \Generator;
 
-    public function setSource(Extractor $extractor) : self;
-
     public function source() : Extractor;
 }

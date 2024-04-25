@@ -10,7 +10,6 @@ use Flow\ETL\{Extractor, FlowContext, Loader, Pipeline, Transformer};
 
 final class BatchingPipeline implements Pipeline
 {
-
     /**
      * @param Pipeline $pipeline
      * @param int<1, max> $size
@@ -49,13 +48,6 @@ final class BatchingPipeline implements Pipeline
     public function process(FlowContext $context) : \Generator
     {
         return chunks_from(from_pipeline($this->pipeline), $this->size)->extract($context);
-    }
-
-    public function setSource(Extractor $extractor) : self
-    {
-        $this->pipeline->setSource($extractor);
-
-        return $this;
     }
 
     public function source() : Extractor

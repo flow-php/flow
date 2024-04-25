@@ -46,13 +46,6 @@ final class GroupByPipeline implements Pipeline
         yield $this->groupBy->result($context);
     }
 
-    public function setSource(Extractor $extractor) : self
-    {
-        $this->pipeline->setSource($extractor);
-
-        return $this;
-    }
-
     public function source() : Extractor
     {
         return $this->pipeline->source();

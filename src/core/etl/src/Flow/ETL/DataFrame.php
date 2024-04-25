@@ -39,16 +39,7 @@ final class DataFrame
 
     public function __construct(private Pipeline $pipeline, Config|FlowContext $context)
     {
-        $this->context = $context instanceof  FlowContext ? $context : new FlowContext($context);
-    }
-
-    /**
-     * @lazy
-     * @param callable(Pipeline $pipeline, FlowContext $context) : DataFrame $callback
-     */
-    public function rebuild(callable $callback) : self
-    {
-        return $callback($this->pipeline, $this->context);
+        $this->context = $context instanceof FlowContext ? $context : new FlowContext($context);
     }
 
     /**
@@ -616,6 +607,16 @@ final class DataFrame
 
     /**
      * @lazy
+     *
+     * @param callable(Pipeline $pipeline, FlowContext $context) : DataFrame $callback
+     */
+    public function rebuild(callable $callback) : self
+    {
+        return $callback($this->pipeline, $this->context);
+    }
+
+    /**
+     * @lazy
      */
     public function rename(string $from, string $to) : self
     {
@@ -772,8 +773,7 @@ final class DataFrame
             ->cache($this->context->config->id())
             ->run();
 
-        $this->pipeline = new SynchronousPipeline();
-        $this->pipeline->setSource($this->context->config->externalSort()->sortBy(...$entries));
+        $this->pipeline = new SynchronousPipeline($this->context->config->externalSort()->sortBy(...$entries));
 
         return $this;
     }
