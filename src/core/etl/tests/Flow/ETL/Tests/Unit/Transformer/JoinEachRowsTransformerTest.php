@@ -4,30 +4,30 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
-use function Flow\ETL\DSL\{int_entry, str_entry};
+use function Flow\ETL\DSL\{int_entry, row, rows, str_entry};
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Transformer\JoinEachRowsTransformer;
-use Flow\ETL\{Config, DataFrame, DataFrameFactory, Flow, FlowContext, Row, Rows};
+use Flow\ETL\{Config, DataFrame, DataFrameFactory, Flow, FlowContext, Rows};
 use PHPUnit\Framework\TestCase;
 
 final class JoinEachRowsTransformerTest extends TestCase
 {
     public function test_inner_join_rows() : void
     {
-        $left = new Rows(
-            Row::create(int_entry('id', 1), str_entry('country', 'PL')),
-            Row::create(int_entry('id', 2), str_entry('country', 'US')),
-            Row::create(int_entry('id', 3), str_entry('country', 'FR')),
+        $left = rows(
+            row(int_entry('id', 1), str_entry('country', 'PL')),
+            row(int_entry('id', 2), str_entry('country', 'US')),
+            row(int_entry('id', 3), str_entry('country', 'FR')),
         );
 
         $right = new class implements DataFrameFactory {
             public function from(Rows $rows) : DataFrame
             {
                 return (new Flow())->process(
-                    new Rows(
-                        Row::create(str_entry('code', 'PL'), str_entry('name', 'Poland')),
-                        Row::create(str_entry('code', 'US'), str_entry('name', 'United States')),
-                        Row::create(str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
+                    rows(
+                        row(str_entry('code', 'PL'), str_entry('name', 'Poland')),
+                        row(str_entry('code', 'US'), str_entry('name', 'United States')),
+                        row(str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
                     )
                 );
             }
@@ -36,29 +36,29 @@ final class JoinEachRowsTransformerTest extends TestCase
         $transformer = JoinEachRowsTransformer::inner($right, Expression::on(['country' => 'code']));
 
         self::assertEquals(
-            new Rows(
-                Row::create(str_entry('name', 'Poland'), int_entry('id', 1), str_entry('country', 'PL')),
-                Row::create(str_entry('name', 'United States'), int_entry('id', 2), str_entry('country', 'US')),
-            ),
-            $transformer->transform($left, new FlowContext(Config::default()))
+            [
+                ['id' => 1, 'country' => 'PL', 'joined_name' => 'Poland', 'joined_code' => 'PL'],
+                ['id' => 2, 'country' => 'US', 'joined_name' => 'United States', 'joined_code' => 'US'],
+            ],
+            $transformer->transform($left, new FlowContext(Config::default()))->toArray()
         );
     }
 
     public function test_left_join_rows() : void
     {
-        $left = new Rows(
-            Row::create(int_entry('id', 1), str_entry('country', 'PL')),
-            Row::create(int_entry('id', 2), str_entry('country', 'US')),
-            Row::create(int_entry('id', 3), str_entry('country', 'FR')),
+        $left = rows(
+            row(int_entry('id', 1), str_entry('country', 'PL')),
+            row(int_entry('id', 2), str_entry('country', 'US')),
+            row(int_entry('id', 3), str_entry('country', 'FR')),
         );
         $right = new class implements DataFrameFactory {
             public function from(Rows $rows) : DataFrame
             {
                 return (new Flow())->process(
-                    new Rows(
-                        Row::create(str_entry('code', 'PL'), str_entry('name', 'Poland')),
-                        Row::create(str_entry('code', 'US'), str_entry('name', 'United States')),
-                        Row::create(str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
+                    rows(
+                        row(str_entry('code', 'PL'), str_entry('name', 'Poland')),
+                        row(str_entry('code', 'US'), str_entry('name', 'United States')),
+                        row(str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
                     )
                 );
             }
@@ -67,30 +67,30 @@ final class JoinEachRowsTransformerTest extends TestCase
         $transformer = JoinEachRowsTransformer::left($right, Expression::on(['country' => 'code']));
 
         self::assertEquals(
-            new Rows(
-                Row::create(int_entry('id', 1), str_entry('country', 'PL'), str_entry('name', 'Poland')),
-                Row::create(int_entry('id', 2), str_entry('country', 'US'), str_entry('name', 'United States')),
-                Row::create(int_entry('id', 3), str_entry('country', 'FR'), str_entry('name', null)),
-            ),
-            $transformer->transform($left, new FlowContext(Config::default()))
+            [
+                ['id' => 1, 'country' => 'PL', 'joined_name' => 'Poland', 'joined_code' => 'PL'],
+                ['id' => 2, 'country' => 'US', 'joined_name' => 'United States', 'joined_code' => 'US'],
+                ['id' => 3, 'country' => 'FR', 'joined_name' => null, 'joined_code' => null],
+            ],
+            $transformer->transform($left, new FlowContext(Config::default()))->toArray()
         );
     }
 
     public function test_right_join_rows() : void
     {
-        $left = new Rows(
-            Row::create(int_entry('id', 1), str_entry('country', 'PL')),
-            Row::create(int_entry('id', 2), str_entry('country', 'US')),
-            Row::create(int_entry('id', 3), str_entry('country', 'FR')),
+        $left = rows(
+            row(int_entry('id', 1), str_entry('country', 'PL')),
+            row(int_entry('id', 2), str_entry('country', 'US')),
+            row(int_entry('id', 3), str_entry('country', 'FR')),
         );
         $right = new class implements DataFrameFactory {
             public function from(Rows $rows) : DataFrame
             {
                 return (new Flow())->process(
-                    new Rows(
-                        Row::create(str_entry('code', 'PL'), str_entry('name', 'Poland')),
-                        Row::create(str_entry('code', 'US'), str_entry('name', 'United States')),
-                        Row::create(str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
+                    rows(
+                        row(str_entry('code', 'PL'), str_entry('name', 'Poland')),
+                        row(str_entry('code', 'US'), str_entry('name', 'United States')),
+                        row(str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
                     )
                 );
             }
@@ -99,12 +99,12 @@ final class JoinEachRowsTransformerTest extends TestCase
         $transformer = JoinEachRowsTransformer::right($right, Expression::on(['country' => 'code']));
 
         self::assertEquals(
-            new Rows(
-                Row::create(str_entry('name', 'Poland'), str_entry('code', 'PL'), int_entry('id', 1)),
-                Row::create(str_entry('name', 'United States'), str_entry('code', 'US'), int_entry('id', 2)),
-                Row::create(str_entry('name', 'Great Britain'), str_entry('code', 'GB'), str_entry('id', null)),
-            ),
-            $transformer->transform($left, new FlowContext(Config::default()))
+            [
+                ['id' => 1, 'country' => 'PL', 'joined_code' => 'PL', 'joined_name' => 'Poland'],
+                ['id' => 2, 'country' => 'US', 'joined_code' => 'US', 'joined_name' => 'United States'],
+                ['id' => null, 'country' => null, 'joined_code' => 'GB', 'joined_name' => 'Great Britain'],
+            ],
+            $transformer->transform($left, new FlowContext(Config::default()))->toArray()
         );
     }
 }

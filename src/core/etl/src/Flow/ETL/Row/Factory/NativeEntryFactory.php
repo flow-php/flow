@@ -10,7 +10,7 @@ use Flow\ETL\PHP\Type\Caster\StringCastingHandler\StringTypeChecker;
 use Flow\ETL\PHP\Type\Logical\{DateTimeType, JsonType, ListType, MapType, StructureType, UuidType, XMLNodeType, XMLType};
 use Flow\ETL\PHP\Type\Native\{ArrayType, EnumType, ObjectType, ScalarType};
 use Flow\ETL\PHP\Type\{Caster, TypeDetector};
-use Flow\ETL\Row\{Entry, EntryFactory, Schema};
+use Flow\ETL\Row\{Entry, EntryFactory, Schema, Schema\Definition};
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\Uuid;
 
@@ -28,9 +28,13 @@ final class NativeEntryFactory implements EntryFactory
      * @throws RuntimeException
      * @throws SchemaDefinitionNotFoundException
      */
-    public function create(string $entryName, mixed $value, ?Schema $schema = null) : Entry
+    public function create(string $entryName, mixed $value, Schema|Definition|null $schema = null) : Entry
     {
-        if ($schema !== null) {
+        if ($schema instanceof Definition) {
+            return $this->fromDefinition($schema, $value);
+        }
+
+        if ($schema instanceof Schema) {
             return $this->fromDefinition($schema->getDefinition($entryName), $value);
         }
 
@@ -143,7 +147,7 @@ final class NativeEntryFactory implements EntryFactory
         throw new InvalidArgumentException("{$valueType->toString()} can't be converted to any known Entry");
     }
 
-    private function fromDefinition(Schema\Definition $definition, mixed $value) : Entry
+    private function fromDefinition(Definition $definition, mixed $value) : Entry
     {
         $type = $definition->type();
 

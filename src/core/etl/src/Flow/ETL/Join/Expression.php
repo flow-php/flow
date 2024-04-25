@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Join;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Join\Comparison\{All, Identical};
+use Flow\ETL\Join\Comparison\{All, Equal};
 use Flow\ETL\Row;
 use Flow\ETL\Row\Reference;
 
@@ -20,7 +20,7 @@ final class Expression
     /**
      * @param array<Comparison>|array<string, string>|Comparison $comparison
      */
-    public static function on(array|Comparison $comparison, string $joinPrefix = '') : self
+    public static function on(array|Comparison $comparison, string $joinPrefix = 'joined_') : self
     {
         if (\is_array($comparison)) {
             /** @var array<Comparison> $comparisons */
@@ -41,7 +41,7 @@ final class Expression
                     throw new RuntimeException('Expected right entry name to be string, got ' . \gettype($right) . ". Example: ['id' => 'id']");
                 }
 
-                $comparisons[] = new Identical($left, $right);
+                $comparisons[] = new Equal($left, $right);
             }
 
             return new self(new All(...$comparisons), $joinPrefix);

@@ -17,10 +17,16 @@ use Flow\ETL\Loader\SchemaValidationLoader;
 use Flow\ETL\Loader\StreamLoader\Output;
 use Flow\ETL\Partition\ScalarFunctionFilter;
 use Flow\ETL\PHP\Type\{AutoCaster, Caster};
-use Flow\ETL\Pipeline\{BatchingPipeline, CachingPipeline, CollectingPipeline, GroupByPipeline, PartitioningPipeline, VoidPipeline};
+use Flow\ETL\Pipeline\{BatchingPipeline,
+    CachingPipeline,
+    CollectingPipeline,
+    GroupByPipeline,
+    HashJoinPipeline,
+    PartitioningPipeline,
+    VoidPipeline};
 use Flow\ETL\Row\{Reference, References, Schema};
 use Flow\ETL\Transformer\StyleConverter\StringStyles;
-use Flow\ETL\Transformer\{AutoCastTransformer, CallbackRowTransformer, CrossJoinRowsTransformer, DropDuplicatesTransformer, DropPartitionsTransformer, EntryNameStyleConverterTransformer, JoinEachRowsTransformer, JoinRowsTransformer, KeepEntriesTransformer, LimitTransformer, RemoveEntriesTransformer, RenameAllCaseTransformer, RenameEntryTransformer, RenameStrReplaceAllEntriesTransformer, ScalarFunctionFilterTransformer, ScalarFunctionTransformer, UntilTransformer, WindowFunctionTransformer};
+use Flow\ETL\Transformer\{AutoCastTransformer, CallbackRowTransformer, CrossJoinRowsTransformer, DropDuplicatesTransformer, DropPartitionsTransformer, EntryNameStyleConverterTransformer, JoinEachRowsTransformer, KeepEntriesTransformer, LimitTransformer, RemoveEntriesTransformer, RenameAllCaseTransformer, RenameEntryTransformer, RenameStrReplaceAllEntriesTransformer, ScalarFunctionFilterTransformer, ScalarFunctionTransformer, UntilTransformer, WindowFunctionTransformer};
 use Flow\RDSL\AccessControl\{AllowAll, AllowList, DenyAll};
 use Flow\RDSL\Attribute\DSLMethod;
 use Flow\RDSL\{Builder, DSLNamespace, Executor, Finder};
@@ -452,19 +458,11 @@ final class DataFrame
      */
     public function join(self $dataFrame, Expression $on, string|Join $type = Join::left) : self
     {
-        if ($type instanceof Join) {
-            $type = $type->name;
+        if (\is_string($type)) {
+            $type = Join::from($type);
         }
 
-        $transformer = match ($type) {
-            Join::left->value => JoinRowsTransformer::left($dataFrame, $on),
-            Join::left_anti->value => JoinRowsTransformer::leftAnti($dataFrame, $on),
-            Join::right->value => JoinRowsTransformer::right($dataFrame, $on),
-            Join::inner->value => JoinRowsTransformer::inner($dataFrame, $on),
-            default => throw new InvalidArgumentException('Unsupported join type')
-        };
-
-        $this->pipeline->add($transformer);
+        $this->pipeline = new HashJoinPipeline($this->pipeline, $dataFrame, $on, $type);
 
         return $this;
     }

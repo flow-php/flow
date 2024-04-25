@@ -5,6 +5,24 @@ Please follow the instructions for your specific version to ensure a smooth upgr
 
 ---
 
+## Upgrading from 0.7.x to 0.8.x
+
+### 1) Joins 
+
+In order to support joining bigger datasets, we had to move from initial NestedLoop join algorithm into Hash Join algorithm.
+
+- the only supported coin expression is `=` (equals) that can be grouped with `AND` and `OR` operators. 
+- `joinPrefix` is now always required, and by default is set to 'joined_'
+- join will always result all columns from both datasets, columns used in join condition will be prefixed with `joinPrefix`.
+
+Other than that, API stays the same. 
+
+Above changes were introduced in all 3 types of joins: 
+
+- `DataFrame::join()`
+- `DataFrame::joinEach()`
+- `DataFrame::crossJoin()`
+
 ## Upgrading from 0.6.x to 0.7.x
 
 ### 1) DataFrame::appendSafe() method was removed
