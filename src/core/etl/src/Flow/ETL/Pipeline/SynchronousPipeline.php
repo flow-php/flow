@@ -29,15 +29,6 @@ final class SynchronousPipeline implements Pipeline
         return $this;
     }
 
-    public function closure(FlowContext $context) : void
-    {
-        foreach ($this->pipes->all() as $pipe) {
-            if ($pipe instanceof Loader && $pipe instanceof Closure) {
-                $pipe->closure($context);
-            }
-        }
-    }
-
     public function has(string $transformerClass) : bool
     {
         return $this->pipes->has($transformerClass);
@@ -84,7 +75,11 @@ final class SynchronousPipeline implements Pipeline
             }
         }
 
-        $this->closure($context);
+        foreach ($this->pipes->all() as $pipe) {
+            if ($pipe instanceof Loader && $pipe instanceof Closure) {
+                $pipe->closure($context);
+            }
+        }
     }
 
     public function setSource(Extractor $extractor) : self

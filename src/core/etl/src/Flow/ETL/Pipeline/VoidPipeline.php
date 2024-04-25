@@ -17,11 +17,6 @@ final class VoidPipeline implements Pipeline
         return $this;
     }
 
-    public function closure(FlowContext $context) : void
-    {
-        $this->pipeline->closure($context);
-    }
-
     public function has(string $transformerClass) : bool
     {
         return $this->pipeline->has($transformerClass);

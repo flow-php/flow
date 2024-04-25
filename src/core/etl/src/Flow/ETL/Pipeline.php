@@ -13,8 +13,6 @@ interface Pipeline
 {
     public function add(Loader|Transformer $pipe) : self;
 
-    public function closure(FlowContext $context) : void;
-
     public function has(string $transformerClass) : bool;
 
     public function pipes() : Pipes;
