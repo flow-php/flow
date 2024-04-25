@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row;
 
-use Flow\ETL\Exception\{InvalidArgumentException, InvalidLogicException, RuntimeException};
+use Flow\ETL\Exception\{DuplicatedEntriesException, InvalidArgumentException, InvalidLogicException, RuntimeException};
 
 /**
  * @implements \ArrayAccess<string, Entry>
@@ -170,7 +170,7 @@ final class Entries implements \ArrayAccess, \Countable, \IteratorAggregate
         $newEntries = \array_merge($this->entries, $entries->entries);
 
         if (\count($newEntries) !== $this->count() + $entries->count()) {
-            throw InvalidArgumentException::because(
+            throw new DuplicatedEntriesException(
                 \sprintf(
                     'Merged entries names must be unique, given: [%s] + [%s]',
                     \implode(', ', \array_map(fn (Entry $entry) => $entry->name(), $this->entries)),

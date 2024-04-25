@@ -36,11 +36,7 @@ use Flow\ETL\{Config,
     Formatter,
     Join\Comparison,
     Join\Comparison\Equal,
-    Join\Comparison\GreaterThan,
-    Join\Comparison\GreaterThanEqual,
     Join\Comparison\Identical,
-    Join\Comparison\LessThan,
-    Join\Comparison\LessThanEqual,
     Join\Expression,
     Loader,
     Partition,
@@ -1161,31 +1157,6 @@ function compare_all(Comparison ...$comparisons) : Comparison\All
 function compare_any(Comparison ...$comparisons) : Comparison\Any
 {
     return new Comparison\Any(...$comparisons);
-}
-
-function greater_than(Reference|string $left, Reference|string $right) : GreaterThan
-{
-    return new GreaterThan($left, $right);
-}
-
-function greater_than_equal(Reference|string $left, Reference|string $right) : GreaterThanEqual
-{
-    return new GreaterThanEqual($left, $right);
-}
-
-function less_than(Reference|string $left, Reference|string $right) : LessThan
-{
-    return new LessThan($left, $right);
-}
-
-function less_than_equal(Reference|string $left, Reference|string $right) : LessThanEqual
-{
-    return new LessThanEqual($left, $right);
-}
-
-function negation(Comparison $comparison) : Comparison\Not
-{
-    return new Comparison\Not($comparison);
 }
 
 function join_on(array|Comparison $comparisons, string $joinPrefix = '') : Expression

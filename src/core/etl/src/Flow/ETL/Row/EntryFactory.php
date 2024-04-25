@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Row;
 
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException, SchemaDefinitionNotFoundException};
+use Flow\ETL\Row\Schema\Definition;
 
 interface EntryFactory
 {
@@ -13,5 +14,5 @@ interface EntryFactory
      * @throws RuntimeException
      * @throws SchemaDefinitionNotFoundException
      */
-    public function create(string $entryName, mixed $value, ?Schema $schema = null) : Entry;
+    public function create(string $entryName, mixed $value, Schema|Definition|null $schema = null) : Entry;
 }

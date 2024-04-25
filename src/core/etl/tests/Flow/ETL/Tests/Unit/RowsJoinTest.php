@@ -4,90 +4,90 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
-use function Flow\ETL\DSL\{bool_entry, int_entry, str_entry};
-use Flow\ETL\Exception\InvalidArgumentException;
+use function Flow\ETL\DSL\{bool_entry, int_entry, row, rows, str_entry};
+use Flow\ETL\Exception\{DuplicatedEntriesException, InvalidArgumentException};
 use Flow\ETL\Join\Expression;
-use Flow\ETL\{Row, Rows};
 use PHPUnit\Framework\TestCase;
 
 final class RowsJoinTest extends TestCase
 {
     public function test_cross_join() : void
     {
-        $left = new Rows(
-            Row::create(int_entry('id', 1), str_entry('country', 'PL')),
-            Row::create(int_entry('id', 2), str_entry('country', 'PL')),
-            Row::create(int_entry('id', 3), str_entry('country', 'US')),
-            Row::create(int_entry('id', 4), str_entry('country', 'FR')),
+        $left = rows(
+            row(int_entry('id', 1), str_entry('country', 'PL')),
+            row(int_entry('id', 2), str_entry('country', 'PL')),
+            row(int_entry('id', 3), str_entry('country', 'US')),
+            row(int_entry('id', 4), str_entry('country', 'FR')),
         );
 
         $joined = $left->joinCross(
-            new Rows(
-                Row::create(int_entry('num', 1), bool_entry('active', true)),
-                Row::create(int_entry('num', 2), bool_entry('active', false)),
+            rows(
+                row(int_entry('num', 1), bool_entry('active', true)),
+                row(int_entry('num', 2), bool_entry('active', false)),
             ),
         );
 
         self::assertEquals(
-            new Rows(
-                Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('num', 1), bool_entry('active', true)),
-                Row::create(int_entry('id', 1), str_entry('country', 'PL'), int_entry('num', 2), bool_entry('active', false)),
-                Row::create(int_entry('id', 2), str_entry('country', 'PL'), int_entry('num', 1), bool_entry('active', true)),
-                Row::create(int_entry('id', 2), str_entry('country', 'PL'), int_entry('num', 2), bool_entry('active', false)),
-                Row::create(int_entry('id', 3), str_entry('country', 'US'), int_entry('num', 1), bool_entry('active', true)),
-                Row::create(int_entry('id', 3), str_entry('country', 'US'), int_entry('num', 2), bool_entry('active', false)),
-                Row::create(int_entry('id', 4), str_entry('country', 'FR'), int_entry('num', 1), bool_entry('active', true)),
-                Row::create(int_entry('id', 4), str_entry('country', 'FR'), int_entry('num', 2), bool_entry('active', false)),
-            ),
-            $joined,
+            [
+                ['id' => 1, 'country' => 'PL', 'joined_num' => 1, 'joined_active' => true],
+                ['id' => 1, 'country' => 'PL', 'joined_num' => 2, 'joined_active' => false],
+                ['id' => 2, 'country' => 'PL', 'joined_num' => 1, 'joined_active' => true],
+                ['id' => 2, 'country' => 'PL', 'joined_num' => 2, 'joined_active' => false],
+                ['id' => 3, 'country' => 'US', 'joined_num' => 1, 'joined_active' => true],
+                ['id' => 3, 'country' => 'US', 'joined_num' => 2, 'joined_active' => false],
+                ['id' => 4, 'country' => 'FR', 'joined_num' => 1, 'joined_active' => true],
+                ['id' => 4, 'country' => 'FR', 'joined_num' => 2, 'joined_active' => false],
+
+            ],
+            $joined->toArray(),
         );
     }
 
     public function test_cross_join_empty() : void
     {
-        $left = new Rows(
-            Row::create(int_entry('id', 1), str_entry('country', 'PL')),
-            Row::create(int_entry('id', 2), str_entry('country', 'PL')),
-            Row::create(int_entry('id', 3), str_entry('country', 'US')),
-            Row::create(int_entry('id', 4), str_entry('country', 'FR')),
+        $left = rows(
+            row(int_entry('id', 1), str_entry('country', 'PL')),
+            row(int_entry('id', 2), str_entry('country', 'PL')),
+            row(int_entry('id', 3), str_entry('country', 'US')),
+            row(int_entry('id', 4), str_entry('country', 'FR')),
         );
 
         $joined = $left->joinCross(
-            new Rows(),
+            rows(),
         );
 
         self::assertEquals(
-            new Rows(
-                Row::create(int_entry('id', 1), str_entry('country', 'PL')),
-                Row::create(int_entry('id', 2), str_entry('country', 'PL')),
-                Row::create(int_entry('id', 3), str_entry('country', 'US')),
-                Row::create(int_entry('id', 4), str_entry('country', 'FR')),
-            ),
-            $joined
+            [
+                ['id' => 1, 'country' => 'PL'],
+                ['id' => 2, 'country' => 'PL'],
+                ['id' => 3, 'country' => 'US'],
+                ['id' => 4, 'country' => 'FR'],
+            ],
+            $joined->toArray()
         );
     }
 
     public function test_cross_join_left_empty() : void
     {
-        $left = new Rows();
+        $left = rows();
 
         $joined = $left->joinCross(
-            new Rows(
-                Row::create(int_entry('id', 1), str_entry('country', 'PL')),
-                Row::create(int_entry('id', 2), str_entry('country', 'PL')),
-                Row::create(int_entry('id', 3), str_entry('country', 'US')),
-                Row::create(int_entry('id', 4), str_entry('country', 'FR')),
+            rows(
+                row(int_entry('id', 1), str_entry('country', 'PL')),
+                row(int_entry('id', 2), str_entry('country', 'PL')),
+                row(int_entry('id', 3), str_entry('country', 'US')),
+                row(int_entry('id', 4), str_entry('country', 'FR')),
             ),
         );
 
         self::assertEquals(
-            new Rows(
-                Row::create(int_entry('id', 1), str_entry('country', 'PL')),
-                Row::create(int_entry('id', 2), str_entry('country', 'PL')),
-                Row::create(int_entry('id', 3), str_entry('country', 'US')),
-                Row::create(int_entry('id', 4), str_entry('country', 'FR')),
-            ),
-            $joined
+            [
+                ['id' => 1, 'country' => 'PL'],
+                ['id' => 2, 'country' => 'PL'],
+                ['id' => 3, 'country' => 'US'],
+                ['id' => 4, 'country' => 'FR'],
+            ],
+            $joined->toArray()
         );
     }
 
@@ -95,155 +95,156 @@ final class RowsJoinTest extends TestCase
     {
         $this->expectExceptionMessage('Merged entries names must be unique, given: [id, country, active] + [active]. Please consider using join prefix option');
 
-        $left = new Rows(
-            Row::create(int_entry('id', 1), str_entry('country', 'PL'), bool_entry('active', false)),
-            Row::create(int_entry('id', 2), str_entry('country', 'PL'), bool_entry('active', false)),
-            Row::create(int_entry('id', 3), str_entry('country', 'US'), bool_entry('active', false)),
-            Row::create(int_entry('id', 4), str_entry('country', 'FR'), bool_entry('active', false)),
+        $left = rows(
+            row(int_entry('id', 1), str_entry('country', 'PL'), bool_entry('active', false)),
+            row(int_entry('id', 2), str_entry('country', 'PL'), bool_entry('active', false)),
+            row(int_entry('id', 3), str_entry('country', 'US'), bool_entry('active', false)),
+            row(int_entry('id', 4), str_entry('country', 'FR'), bool_entry('active', false)),
         );
 
         $joined = $left->joinCross(
-            new Rows(
-                Row::create(bool_entry('active', true))
+            rows(
+                row(bool_entry('active', true))
             ),
+            ''
         );
     }
 
     public function test_cross_join_left_with_name_conflict_with_prefix() : void
     {
-        $left = new Rows(
-            Row::create(int_entry('id', 1), str_entry('country', 'PL'), bool_entry('active', false)),
-            Row::create(int_entry('id', 2), str_entry('country', 'PL'), bool_entry('active', false)),
-            Row::create(int_entry('id', 3), str_entry('country', 'US'), bool_entry('active', false)),
-            Row::create(int_entry('id', 4), str_entry('country', 'FR'), bool_entry('active', false)),
+        $left = rows(
+            row(int_entry('id', 1), str_entry('country', 'PL'), bool_entry('active', false)),
+            row(int_entry('id', 2), str_entry('country', 'PL'), bool_entry('active', false)),
+            row(int_entry('id', 3), str_entry('country', 'US'), bool_entry('active', false)),
+            row(int_entry('id', 4), str_entry('country', 'FR'), bool_entry('active', false)),
         );
 
         $joined = $left->joinCross(
-            new Rows(
-                Row::create(bool_entry('active', true))
+            rows(
+                row(bool_entry('active', true))
             ),
             '_'
         );
 
         self::assertEquals(
-            new Rows(
-                Row::create(int_entry('id', 1), str_entry('country', 'PL'), bool_entry('active', false), bool_entry('_active', true)),
-                Row::create(int_entry('id', 2), str_entry('country', 'PL'), bool_entry('active', false), bool_entry('_active', true)),
-                Row::create(int_entry('id', 3), str_entry('country', 'US'), bool_entry('active', false), bool_entry('_active', true)),
-                Row::create(int_entry('id', 4), str_entry('country', 'FR'), bool_entry('active', false), bool_entry('_active', true)),
-            ),
-            $joined
+            [
+                ['id' => 1, 'country' => 'PL', 'active' => false, '_active' => true],
+                ['id' => 2, 'country' => 'PL', 'active' => false, '_active' => true],
+                ['id' => 3, 'country' => 'US', 'active' => false, '_active' => true],
+                ['id' => 4, 'country' => 'FR', 'active' => false, '_active' => true],
+            ],
+            $joined->toArray()
         );
     }
 
     public function test_inner_empty() : void
     {
-        $left = new Rows(
-            Row::create(int_entry('id', 1), str_entry('country', 'PL')),
-            Row::create(int_entry('id', 2), str_entry('country', 'PL')),
-            Row::create(int_entry('id', 3), str_entry('country', 'US')),
-            Row::create(int_entry('id', 4), str_entry('country', 'FR')),
+        $left = rows(
+            row(int_entry('id', 1), str_entry('country', 'PL')),
+            row(int_entry('id', 2), str_entry('country', 'PL')),
+            row(int_entry('id', 3), str_entry('country', 'US')),
+            row(int_entry('id', 4), str_entry('country', 'FR')),
         );
 
         $joined = $left->joinInner(
-            new Rows(),
+            rows(),
             Expression::on(['country' => 'code'])
         );
 
         self::assertEquals(
-            new Rows(),
+            rows(),
             $joined
         );
     }
 
     public function test_inner_join() : void
     {
-        $left = new Rows(
-            Row::create(int_entry('id', 1), str_entry('country', 'PL')),
-            Row::create(int_entry('id', 2), str_entry('country', 'PL')),
-            Row::create(int_entry('id', 3), str_entry('country', 'US')),
-            Row::create(int_entry('id', 4), str_entry('country', 'FR')),
+        $left = rows(
+            row(int_entry('id', 1), str_entry('country', 'PL')),
+            row(int_entry('id', 2), str_entry('country', 'PL')),
+            row(int_entry('id', 3), str_entry('country', 'US')),
+            row(int_entry('id', 4), str_entry('country', 'FR')),
         );
 
         $joined = $left->joinInner(
-            new Rows(
-                Row::create(str_entry('code', 'PL'), str_entry('name', 'Poland')),
-                Row::create(str_entry('code', 'US'), str_entry('name', 'United States')),
-                Row::create(str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
+            rows(
+                row(str_entry('code', 'PL'), str_entry('name', 'Poland')),
+                row(str_entry('code', 'US'), str_entry('name', 'United States')),
+                row(str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
             ),
             Expression::on(['country' => 'code'])
         );
 
         self::assertEquals(
-            new Rows(
-                Row::create(int_entry('id', 1), str_entry('country', 'PL'), str_entry('name', 'Poland')),
-                Row::create(int_entry('id', 2), str_entry('country', 'PL'), str_entry('name', 'Poland')),
-                Row::create(int_entry('id', 3), str_entry('country', 'US'), str_entry('name', 'United States')),
-            ),
-            $joined
+            [
+                ['id' => 1, 'country' => 'PL', 'joined_code' => 'PL', 'joined_name' => 'Poland'],
+                ['id' => 2, 'country' => 'PL', 'joined_code' => 'PL', 'joined_name' => 'Poland'],
+                ['id' => 3, 'country' => 'US', 'joined_code' => 'US', 'joined_name' => 'United States'],
+            ],
+            $joined->toArray()
         );
     }
 
     public function test_inner_join_into_empty() : void
     {
-        $left = new Rows();
+        $left = rows();
 
         $joined = $left->joinInner(
-            new Rows(
-                Row::create(str_entry('code', 'PL'), str_entry('name', 'Poland')),
-                Row::create(str_entry('code', 'US'), str_entry('name', 'United States')),
-                Row::create(str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
+            rows(
+                row(str_entry('code', 'PL'), str_entry('name', 'Poland')),
+                row(str_entry('code', 'US'), str_entry('name', 'United States')),
+                row(str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
             ),
             Expression::on(['country' => 'code'])
         );
 
         self::assertEquals(
-            new Rows(),
+            rows(),
             $joined
         );
     }
 
     public function test_inner_join_with_duplicated_entries() : void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Merged entries names must be unique, given: [id, country] + [id, code, name]. Please consider using Condition, join prefix option');
+        $this->expectException(DuplicatedEntriesException::class);
+        $this->expectExceptionMessage('Merged entries names must be unique, given: [id, country] + [id, code, name] try to use a different join prefix than: ""');
 
-        $left = new Rows(
-            Row::create(int_entry('id', 1), str_entry('country', 'PL')),
-            Row::create(int_entry('id', 2), str_entry('country', 'PL')),
-            Row::create(int_entry('id', 3), str_entry('country', 'US')),
-            Row::create(int_entry('id', 4), str_entry('country', 'FR')),
+        $left = rows(
+            row(int_entry('id', 1), str_entry('country', 'PL')),
+            row(int_entry('id', 2), str_entry('country', 'PL')),
+            row(int_entry('id', 3), str_entry('country', 'US')),
+            row(int_entry('id', 4), str_entry('country', 'FR')),
         );
 
         $left->joinInner(
-            new Rows(
-                Row::create(int_entry('id', 101), str_entry('code', 'PL'), str_entry('name', 'Poland')),
-                Row::create(int_entry('id', 102), str_entry('code', 'US'), str_entry('name', 'United States')),
-                Row::create(int_entry('id', 103), str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
+            rows(
+                row(int_entry('id', 101), str_entry('code', 'PL'), str_entry('name', 'Poland')),
+                row(int_entry('id', 102), str_entry('code', 'US'), str_entry('name', 'United States')),
+                row(int_entry('id', 103), str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
             ),
-            Expression::on(['country' => 'code'])
+            Expression::on(['country' => 'code'], joinPrefix: '')
         );
     }
 
     public function test_left_anti_join() : void
     {
-        $left = new Rows(
-            Row::create(int_entry('id', 1), str_entry('country', 'PL')),
-            Row::create(int_entry('id', 2), str_entry('country', 'US')),
-            Row::create(int_entry('id', 3), str_entry('country', 'FR')),
+        $left = rows(
+            row(int_entry('id', 1), str_entry('country', 'PL')),
+            row(int_entry('id', 2), str_entry('country', 'US')),
+            row(int_entry('id', 3), str_entry('country', 'FR')),
         );
 
         $joined = $left->joinLeftAnti(
-            new Rows(
-                Row::create(str_entry('code', 'US'), str_entry('name', 'United States')),
-                Row::create(str_entry('code', 'FR'), str_entry('name', 'France')),
+            rows(
+                row(str_entry('code', 'US'), str_entry('name', 'United States')),
+                row(str_entry('code', 'FR'), str_entry('name', 'France')),
             ),
             Expression::on(['country' => 'code'])
         );
 
         self::assertEquals(
-            new Rows(
-                Row::create(int_entry('id', 1), str_entry('country', 'PL')),
+            rows(
+                row(int_entry('id', 1), str_entry('country', 'PL')),
             ),
             $joined
         );
@@ -251,14 +252,14 @@ final class RowsJoinTest extends TestCase
 
     public function test_left_anti_join_on_empty() : void
     {
-        $left = new Rows(
-            Row::create(int_entry('id', 1), str_entry('country', 'PL')),
-            Row::create(int_entry('id', 2), str_entry('country', 'US')),
-            Row::create(int_entry('id', 3), str_entry('country', 'FR')),
+        $left = rows(
+            row(int_entry('id', 1), str_entry('country', 'PL')),
+            row(int_entry('id', 2), str_entry('country', 'US')),
+            row(int_entry('id', 3), str_entry('country', 'FR')),
         );
 
         $joined = $left->joinLeftAnti(
-            new Rows(),
+            rows(),
             Expression::on(['country' => 'code'])
         );
 
@@ -270,49 +271,49 @@ final class RowsJoinTest extends TestCase
 
     public function test_left_join() : void
     {
-        $left = new Rows(
-            Row::create(int_entry('id', 1), str_entry('country', 'PL')),
-            Row::create(int_entry('id', 2), str_entry('country', 'US')),
-            Row::create(int_entry('id', 3), str_entry('country', 'FR')),
+        $left = rows(
+            row(int_entry('id', 1), str_entry('country', 'PL')),
+            row(int_entry('id', 2), str_entry('country', 'US')),
+            row(int_entry('id', 3), str_entry('country', 'FR')),
         );
 
         $joined = $left->joinLeft(
-            new Rows(
-                Row::create(str_entry('code', 'PL'), str_entry('name', 'Poland')),
-                Row::create(str_entry('code', 'US'), str_entry('name', 'United States')),
-                Row::create(str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
+            rows(
+                row(str_entry('code', 'PL'), str_entry('name', 'Poland')),
+                row(str_entry('code', 'US'), str_entry('name', 'United States')),
+                row(str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
             ),
             Expression::on(['country' => 'code'])
         );
 
         self::assertEquals(
-            new Rows(
-                Row::create(int_entry('id', 1), str_entry('country', 'PL'), str_entry('name', 'Poland')),
-                Row::create(int_entry('id', 2), str_entry('country', 'US'), str_entry('name', 'United States')),
-                Row::create(int_entry('id', 3), str_entry('country', 'FR'), str_entry('name', null)),
-            ),
-            $joined
+            [
+                ['id' => 1, 'country' => 'PL', 'joined_code' => 'PL', 'joined_name' => 'Poland'],
+                ['id' => 2, 'country' => 'US', 'joined_code' => 'US', 'joined_name' => 'United States'],
+                ['id' => 3, 'country' => 'FR', 'joined_code' => null, 'joined_name' => null],
+            ],
+            $joined->toArray()
         );
     }
 
     public function test_left_join_empty() : void
     {
-        $left = new Rows(
-            Row::create(int_entry('id', 1), str_entry('country', 'PL')),
-            Row::create(int_entry('id', 2), str_entry('country', 'US')),
-            Row::create(int_entry('id', 3), str_entry('country', 'FR')),
+        $left = rows(
+            row(int_entry('id', 1), str_entry('country', 'PL')),
+            row(int_entry('id', 2), str_entry('country', 'US')),
+            row(int_entry('id', 3), str_entry('country', 'FR')),
         );
 
         $joined = $left->joinLeft(
-            new Rows(),
+            rows(),
             Expression::on(['country' => 'code'])
         );
 
         self::assertEquals(
-            new Rows(
-                Row::create(int_entry('id', 1), str_entry('country', 'PL')),
-                Row::create(int_entry('id', 2), str_entry('country', 'US')),
-                Row::create(int_entry('id', 3), str_entry('country', 'FR')),
+            rows(
+                row(int_entry('id', 1), str_entry('country', 'PL')),
+                row(int_entry('id', 2), str_entry('country', 'US')),
+                row(int_entry('id', 3), str_entry('country', 'FR')),
             ),
             $joined
         );
@@ -320,19 +321,19 @@ final class RowsJoinTest extends TestCase
 
     public function test_left_join_to_empty() : void
     {
-        $left = new Rows();
+        $left = rows();
 
         $joined = $left->joinLeft(
-            new Rows(
-                Row::create(str_entry('code', 'PL'), str_entry('name', 'Poland')),
-                Row::create(str_entry('code', 'US'), str_entry('name', 'United States')),
-                Row::create(str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
+            rows(
+                row(str_entry('code', 'PL'), str_entry('name', 'Poland')),
+                row(str_entry('code', 'US'), str_entry('name', 'United States')),
+                row(str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
             ),
             Expression::on(['country' => 'code'])
         );
 
         self::assertEquals(
-            new Rows(),
+            rows(),
             $joined
         );
     }
@@ -340,115 +341,115 @@ final class RowsJoinTest extends TestCase
     public function test_left_join_with_the_duplicated_columns() : void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Merged entries names must be unique, given: [id, country] + [id, code, name]. Please consider using Condition, join prefix option');
+        $this->expectExceptionMessage('Merged entries names must be unique, given: [id, country] + [id, code, name] try to use a different join prefix than: ""');
 
-        $left = new Rows(
-            Row::create(int_entry('id', 1), str_entry('country', 'PL')),
-            Row::create(int_entry('id', 2), str_entry('country', 'US')),
-            Row::create(int_entry('id', 3), str_entry('country', 'FR')),
+        $left = rows(
+            row(int_entry('id', 1), str_entry('country', 'PL')),
+            row(int_entry('id', 2), str_entry('country', 'US')),
+            row(int_entry('id', 3), str_entry('country', 'FR')),
         );
 
         $left->joinLeft(
-            new Rows(
-                Row::create(int_entry('id', 100), str_entry('code', 'PL'), str_entry('name', 'Poland')),
-                Row::create(int_entry('id', 101), str_entry('code', 'US'), str_entry('name', 'United States')),
-                Row::create(int_entry('id', 102), str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
+            rows(
+                row(int_entry('id', 100), str_entry('code', 'PL'), str_entry('name', 'Poland')),
+                row(int_entry('id', 101), str_entry('code', 'US'), str_entry('name', 'United States')),
+                row(int_entry('id', 102), str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
             ),
-            Expression::on(['country' => 'code'])
+            Expression::on(['country' => 'code'], '')
         );
     }
 
     public function test_right_join() : void
     {
-        $left = new Rows(
-            Row::create(int_entry('id', 1), str_entry('country', 'PL')),
-            Row::create(int_entry('id', 2), str_entry('country', 'PL')),
-            Row::create(int_entry('id', 3), str_entry('country', 'US')),
-            Row::create(int_entry('id', 4), str_entry('country', 'FR')),
+        $left = rows(
+            row(int_entry('id', 1), str_entry('country', 'PL')),
+            row(int_entry('id', 2), str_entry('country', 'PL')),
+            row(int_entry('id', 3), str_entry('country', 'US')),
+            row(int_entry('id', 4), str_entry('country', 'FR')),
         );
 
         $joined = $left->joinRight(
-            new Rows(
-                Row::create(str_entry('code', 'PL'), str_entry('name', 'Poland')),
-                Row::create(str_entry('code', 'US'), str_entry('name', 'United States')),
-                Row::create(str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
+            rows(
+                row(str_entry('code', 'PL'), str_entry('name', 'Poland')),
+                row(str_entry('code', 'US'), str_entry('name', 'United States')),
+                row(str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
             ),
             Expression::on(['country' => 'code'])
         );
 
         self::assertEquals(
-            new Rows(
-                Row::create(str_entry('code', 'PL'), str_entry('name', 'Poland'), int_entry('id', 1)),
-                Row::create(str_entry('code', 'PL'), str_entry('name', 'Poland'), int_entry('id', 2)),
-                Row::create(str_entry('code', 'US'), str_entry('name', 'United States'), int_entry('id', 3)),
-                Row::create(str_entry('code', 'GB'), str_entry('name', 'Great Britain'), str_entry('id', null)),
-            ),
-            $joined
+            [
+                ['id' => 1, 'country' => 'PL', 'joined_code' => 'PL', 'joined_name' => 'Poland'],
+                ['id' => 2, 'country' => 'PL', 'joined_code' => 'PL', 'joined_name' => 'Poland'],
+                ['id' => 3, 'country' => 'US', 'joined_code' => 'US', 'joined_name' => 'United States'],
+                ['id' => null, 'country' => null, 'joined_code' => 'GB', 'joined_name' => 'Great Britain'],
+            ],
+            $joined->toArray()
         );
     }
 
     public function test_right_join_empty() : void
     {
-        $left = new Rows(
-            Row::create(int_entry('id', 1), str_entry('country', 'PL')),
-            Row::create(int_entry('id', 2), str_entry('country', 'PL')),
-            Row::create(int_entry('id', 3), str_entry('country', 'US')),
-            Row::create(int_entry('id', 4), str_entry('country', 'FR')),
+        $left = rows(
+            row(int_entry('id', 1), str_entry('country', 'PL')),
+            row(int_entry('id', 2), str_entry('country', 'PL')),
+            row(int_entry('id', 3), str_entry('country', 'US')),
+            row(int_entry('id', 4), str_entry('country', 'FR')),
         );
 
         $joined = $left->joinRight(
-            new Rows(),
+            rows(),
             Expression::on(['country' => 'code'])
         );
 
         self::assertEquals(
-            new Rows(),
+            rows(),
             $joined
         );
     }
 
     public function test_right_join_to_empty() : void
     {
-        $left = new Rows();
+        $left = rows();
 
         $joined = $left->joinRight(
-            new Rows(
-                Row::create(str_entry('code', 'PL'), str_entry('name', 'Poland')),
-                Row::create(str_entry('code', 'US'), str_entry('name', 'United States')),
-                Row::create(str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
+            rows(
+                row(str_entry('code', 'PL'), str_entry('name', 'Poland')),
+                row(str_entry('code', 'US'), str_entry('name', 'United States')),
+                row(str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
             ),
             Expression::on(['country' => 'code'])
         );
 
         self::assertEquals(
-            new Rows(
-                Row::create(str_entry('code', 'PL'), str_entry('name', 'Poland')),
-                Row::create(str_entry('code', 'US'), str_entry('name', 'United States')),
-                Row::create(str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
-            ),
-            $joined
+            [
+                ['joined_code' => 'PL', 'joined_name' => 'Poland'],
+                ['joined_code' => 'US', 'joined_name' => 'United States'],
+                ['joined_code' => 'GB', 'joined_name' => 'Great Britain'],
+            ],
+            $joined->toArray()
         );
     }
 
     public function test_right_join_with_duplicated_entry_names() : void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Merged entries names must be unique, given: [id, code, name] + [id, country]. Please consider using Condition, join prefix option');
+        $this->expectException(DuplicatedEntriesException::class);
+        $this->expectExceptionMessage('erged entries names must be unique, given: [id, country] + [id, code, name] try to use a different join prefix than: ""');
 
-        $left = new Rows(
-            Row::create(int_entry('id', 1), str_entry('country', 'PL')),
-            Row::create(int_entry('id', 2), str_entry('country', 'PL')),
-            Row::create(int_entry('id', 3), str_entry('country', 'US')),
-            Row::create(int_entry('id', 4), str_entry('country', 'FR')),
+        $left = rows(
+            row(int_entry('id', 1), str_entry('country', 'PL')),
+            row(int_entry('id', 2), str_entry('country', 'PL')),
+            row(int_entry('id', 3), str_entry('country', 'US')),
+            row(int_entry('id', 4), str_entry('country', 'FR')),
         );
 
         $left->joinRight(
-            new Rows(
-                Row::create(int_entry('id', 101), str_entry('code', 'PL'), str_entry('name', 'Poland')),
-                Row::create(int_entry('id', 102), str_entry('code', 'US'), str_entry('name', 'United States')),
-                Row::create(int_entry('id', 103), str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
+            rows(
+                row(int_entry('id', 101), str_entry('code', 'PL'), str_entry('name', 'Poland')),
+                row(int_entry('id', 102), str_entry('code', 'US'), str_entry('name', 'United States')),
+                row(int_entry('id', 103), str_entry('code', 'GB'), str_entry('name', 'Great Britain')),
             ),
-            Expression::on(['country' => 'code'])
+            Expression::on(['country' => 'code'], '')
         );
     }
 }

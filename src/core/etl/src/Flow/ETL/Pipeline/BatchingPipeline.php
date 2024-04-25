@@ -20,7 +20,7 @@ final class BatchingPipeline implements OverridingPipeline, Pipeline
      */
     public function __construct(private readonly Pipeline $pipeline, private readonly int $size)
     {
-        $this->nextPipeline = $pipeline->cleanCopy();
+        $this->nextPipeline = new SynchronousPipeline();
 
         if ($this->size <= 0) {
             throw new InvalidArgumentException('Batch size must be greater than 0, given: ' . $this->size);

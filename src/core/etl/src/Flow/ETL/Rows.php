@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
-use function Flow\ETL\DSL\{array_to_rows, string_entry};
-use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
+use function Flow\ETL\DSL\{array_to_rows, row};
+use Flow\ETL\Exception\{DuplicatedEntriesException, InvalidArgumentException, RuntimeException};
 use Flow\ETL\Join\Expression;
 use Flow\ETL\Partition\CartesianProduct;
 use Flow\ETL\Row\Comparator\NativeComparator;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
-use Flow\ETL\Row\{Comparator, Entries, EntryFactory, Entry\StringEntry, Reference, References, Schema, SortOrder};
+use Flow\ETL\Row\{Comparator, Entries, EntryFactory, Reference, References, Schema, SortOrder};
 
 /**
  * @implements \ArrayAccess<int, Row>
@@ -286,7 +286,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
         return \count($this->partitions) > 0;
     }
 
-    public function joinCross(self $right, string $joinPrefix = '') : self
+    public function joinCross(self $right, string $joinPrefix = 'joined_') : self
     {
         /**
          * @var array<Row> $joined
@@ -331,11 +331,9 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
             foreach ($right as $rightRow) {
                 if ($expression->meet($leftRow, $rightRow)) {
                     try {
-                        $joinedRow = $leftRow
-                            ->merge($rightRow, $expression->prefix())
-                            ->remove(...\array_map(static fn (Reference $e) : string => $expression->prefix() . $e->name(), $expression->right()));
-                    } catch (InvalidArgumentException $e) {
-                        throw new InvalidArgumentException($e->getMessage() . '. Please consider using Condition, join prefix option');
+                        $joinedRow = $leftRow->merge($rightRow, $expression->prefix());
+                    } catch (DuplicatedEntriesException $e) {
+                        throw new DuplicatedEntriesException($e->getMessage() . ' try to use a different join prefix than: "' . $expression->prefix() . '"');
                     }
 
                     break;
@@ -360,7 +358,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
          */
         $joined = [];
 
-        $rightSchema = $right->schema()->gracefulRemove(...$expression->right());
+        $rightSchema = $right->schema();
 
         foreach ($this->rows as $leftRow) {
             /** @var ?Row $joinedRow */
@@ -369,29 +367,28 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
             foreach ($right as $rightRow) {
                 if ($expression->meet($leftRow, $rightRow)) {
                     try {
-                        $joinedRow = $leftRow
-                            ->merge($rightRow, $expression->prefix())
-                            ->remove(...\array_map(static fn (Reference $e) : string => $expression->prefix() . $e->name(), $expression->right()));
-                    } catch (InvalidArgumentException $e) {
-                        throw new InvalidArgumentException($e->getMessage() . '. Please consider using Condition, join prefix option');
+                        $joinedRow = $leftRow->merge($rightRow, $expression->prefix());
+                    } catch (DuplicatedEntriesException $e) {
+                        throw new DuplicatedEntriesException($e->getMessage() . ' try to use a different join prefix than: "' . $expression->prefix() . '"');
                     }
 
                     break;
                 }
             }
 
-            $joined[] = $joinedRow ?: $leftRow->merge(
-                Row::create(
-                    ...\array_map(
-                        static fn (string $e) : StringEntry => string_entry($e, null),
-                        \array_map(
-                            static fn (Reference $r) : string => $r->name(),
-                            $rightSchema->entries()
-                        )
-                    )
-                ),
-                $expression->prefix()
-            );
+            if ($joinedRow === null) {
+                $entryFactory = new NativeEntryFactory();
+
+                $entries = [];
+
+                foreach ($rightSchema->definitions() as $definition) {
+                    $entries[] = $entryFactory->create($definition->entry()->name(), null, $definition->nullable());
+                }
+
+                $joinedRow = $leftRow->merge(row(...$entries), $expression->prefix());
+            }
+
+            $joined[] = $joinedRow;
         }
 
         return new self(...$joined);
@@ -435,7 +432,7 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
          */
         $joined = [];
 
-        $leftSchema = $this->schema()->gracefulRemove(...$expression->left());
+        $leftSchema = $this->schema();
 
         foreach ($right->rows as $rightRow) {
             /** @var ?Row $joinedRow */
@@ -444,13 +441,9 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
             foreach ($this->rows as $leftRow) {
                 if ($expression->meet($leftRow, $rightRow)) {
                     try {
-                        $joinedRow = $rightRow
-                            ->merge($leftRow, $expression->prefix())
-                            ->remove(
-                                ...\array_map(static fn (Reference $e) : string => $expression->prefix() . $e->name(), $expression->left())
-                            );
-                    } catch (InvalidArgumentException $e) {
-                        throw new InvalidArgumentException($e->getMessage() . '. Please consider using Condition, join prefix option');
+                        $joinedRow = $leftRow->merge($rightRow, $expression->prefix());
+                    } catch (DuplicatedEntriesException $e) {
+                        throw new DuplicatedEntriesException($e->getMessage() . ' try to use a different join prefix than: "' . $expression->prefix() . '"');
                     }
 
                     $joined[] = $joinedRow;
@@ -458,12 +451,15 @@ final class Rows implements \ArrayAccess, \Countable, \IteratorAggregate
             }
 
             if ($joinedRow === null) {
-                $joined[] = $rightRow->merge(
-                    Row::create(
-                        ...\array_map(static fn (Reference $e) : StringEntry => string_entry($e->name(), null), $leftSchema->entries())
-                    ),
-                    $expression->prefix()
-                );
+                $entryFactory = new NativeEntryFactory();
+
+                $entries = [];
+
+                foreach ($leftSchema->definitions() as $definition) {
+                    $entries[] = $entryFactory->create($definition->entry()->name(), null, $definition->nullable());
+                }
+
+                $joined[] = row(...$entries)->merge($rightRow, $expression->prefix());
             }
         }
 
