@@ -57,9 +57,7 @@ final class LinkedPipeline implements OverridingPipeline, Pipeline
 
     public function process(FlowContext $context) : \Generator
     {
-        foreach ($this->nextPipeline->process($context) as $rows) {
-            yield $rows;
-        }
+        return $this->nextPipeline->process($context);
     }
 
     public function source() : Extractor
