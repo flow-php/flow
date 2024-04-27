@@ -28,7 +28,28 @@ use Flow\ETL\Pipeline\{BatchingPipeline,
     VoidPipeline};
 use Flow\ETL\Row\{Reference, References, Schema};
 use Flow\ETL\Transformer\StyleConverter\StringStyles;
-use Flow\ETL\Transformer\{AutoCastTransformer, CallbackRowTransformer, CrossJoinRowsTransformer, DropDuplicatesTransformer, DropEntriesTransformer, DropPartitionsTransformer, EntryNameStyleConverterTransformer, JoinEachRowsTransformer, LimitTransformer, RenameAllCaseTransformer, RenameEntryTransformer, RenameStrReplaceAllEntriesTransformer, ScalarFunctionFilterTransformer, ScalarFunctionTransformer, SelectEntriesTransformer, UntilTransformer, WindowFunctionTransformer};
+use Flow\ETL\Transformer\{
+    AutoCastTransformer,
+    CallbackRowTransformer,
+    CrossJoinRowsTransformer,
+    DropDuplicatesTransformer,
+    DropEntriesTransformer,
+    DropPartitionsTransformer,
+    EntryNameStyleConverterTransformer,
+    JoinEachRowsTransformer,
+    LimitTransformer,
+    OrderEntriesTransformer,
+    OrderEntries\Comparator,
+    OrderEntries\TypeComparator,
+    RenameAllCaseTransformer,
+    RenameEntryTransformer,
+    RenameStrReplaceAllEntriesTransformer,
+    ScalarFunctionFilterTransformer,
+    ScalarFunctionTransformer,
+    SelectEntriesTransformer,
+    UntilTransformer,
+    WindowFunctionTransformer
+};
 use Flow\RDSL\AccessControl\{AllowAll, AllowList, DenyAll};
 use Flow\RDSL\Attribute\DSLMethod;
 use Flow\RDSL\{Builder, DSLNamespace, Executor, Finder};
@@ -674,6 +695,13 @@ final class DataFrame
     public function renameAllUpperCaseWord() : self
     {
         $this->pipeline->add(new RenameAllCaseTransformer(ucwords: true));
+
+        return $this;
+    }
+
+    public function reorderEntries(Comparator $comparator = new TypeComparator()) : self
+    {
+        $this->pipeline->add(new OrderEntriesTransformer($comparator));
 
         return $this;
     }

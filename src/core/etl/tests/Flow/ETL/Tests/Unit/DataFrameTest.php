@@ -4,7 +4,21 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit;
 
-use function Flow\ETL\DSL\{array_entry, average, bool_entry, df, float_entry, from_all, from_array, from_rows, int_entry, lit, ref, refs, str_entry, to_callable};
+use function Flow\ETL\DSL\{array_entry,
+    average,
+    bool_entry,
+    compare_entries_by_name_desc,
+    df,
+    float_entry,
+    from_all,
+    from_array,
+    from_rows,
+    int_entry,
+    lit,
+    ref,
+    refs,
+    str_entry,
+    to_callable};
 use Flow\ETL\ErrorHandler\IgnoreError;
 use Flow\ETL\Row\Entry\{BooleanEntry, DateTimeEntry, IntegerEntry, StringEntry};
 use Flow\ETL\Row\Schema;
@@ -345,6 +359,26 @@ final class DataFrameTest extends TestCase
                 ['id' => 10, 'odd' => true],
             ],
             $rows->toArray()
+        );
+    }
+
+    public function test_order_entries() : void
+    {
+        $dataset1 = [
+            ['id' => 1, 'name' => 'test', 'active' => false],
+            ['id' => 1, 'name' => 'test', 'active' => false],
+            ['id' => 1, 'name' => 'test', 'active' => false],
+            ['id' => 1, 'name' => 'test', 'active' => false],
+        ];
+
+        $df = df()
+            ->read(from_array($dataset1))
+            ->autoCast()
+            ->reorderEntries(compare_entries_by_name_desc());
+
+        self::assertEquals(
+            ['name', 'id', 'active'],
+            \array_keys($df->fetch()[0]->toArray())
         );
     }
 
