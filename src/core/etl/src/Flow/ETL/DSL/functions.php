@@ -26,7 +26,7 @@ use Flow\ETL\PHP\Type\{Type, TypeDetector};
 use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Row\Schema\Formatter\ASCIISchemaFormatter;
 use Flow\ETL\Row\Schema\{Definition, Matcher\EvolvingSchemaMatcher, Matcher\StrictSchemaMatcher, SchemaFormatter};
-use Flow\ETL\Row\{EntryFactory, EntryReference, Reference, References, Schema};
+use Flow\ETL\Row\{Entry, EntryFactory, EntryReference, Reference, References, Schema};
 use Flow\ETL\{Config,
     ConfigBuilder,
     DataFrame,
@@ -176,121 +176,124 @@ function to_branch(ScalarFunction $condition, Loader $loader) : Loader
 /**
  * @param array<mixed> $data
  */
-function array_entry(string $array, ?array $data) : Row\Entry\ArrayEntry
+function array_entry(string $array, ?array $data) : Entry\ArrayEntry
 {
-    return new Row\Entry\ArrayEntry($array, $data);
+    return new Entry\ArrayEntry($array, $data);
 }
 
-function bool_entry(string $name, ?bool $value) : Row\Entry\BooleanEntry
+function bool_entry(string $name, ?bool $value) : Entry\BooleanEntry
 {
-    return new Row\Entry\BooleanEntry($name, $value);
+    return new Entry\BooleanEntry($name, $value);
 }
 
-function boolean_entry(string $name, ?bool $value) : Row\Entry\BooleanEntry
+function boolean_entry(string $name, ?bool $value) : Entry\BooleanEntry
 {
     return bool_entry($name, $value);
 }
 
-function datetime_entry(string $name, \DateTimeInterface|string|null $value) : Row\Entry\DateTimeEntry
+function datetime_entry(string $name, \DateTimeInterface|string|null $value) : Entry\DateTimeEntry
 {
-    return new Row\Entry\DateTimeEntry($name, $value);
+    return new Entry\DateTimeEntry($name, $value);
 }
 
-function int_entry(string $name, ?int $value) : Row\Entry\IntegerEntry
+function int_entry(string $name, ?int $value) : Entry\IntegerEntry
 {
-    return new Row\Entry\IntegerEntry($name, $value);
+    return new Entry\IntegerEntry($name, $value);
 }
 
-function integer_entry(string $name, ?int $value) : Row\Entry\IntegerEntry
+function integer_entry(string $name, ?int $value) : Entry\IntegerEntry
 {
     return int_entry($name, $value);
 }
 
-function enum_entry(string $name, ?\UnitEnum $enum) : Row\Entry\EnumEntry
+function enum_entry(string $name, ?\UnitEnum $enum) : Entry\EnumEntry
 {
-    return new Row\Entry\EnumEntry($name, $enum);
+    return new Entry\EnumEntry($name, $enum);
 }
 
-function float_entry(string $name, ?float $value) : Row\Entry\FloatEntry
+function float_entry(string $name, ?float $value) : Entry\FloatEntry
 {
-    return new Row\Entry\FloatEntry($name, $value);
+    return new Entry\FloatEntry($name, $value);
 }
 
-function json_entry(string $name, array|string|null $data) : Row\Entry\JsonEntry
+function json_entry(string $name, array|string|null $data) : Entry\JsonEntry
 {
-    return new Row\Entry\JsonEntry($name, $data);
+    return new Entry\JsonEntry($name, $data);
 }
 
 /**
  * @throws InvalidArgumentException
  */
-function json_object_entry(string $name, array|string|null $data) : Row\Entry\JsonEntry
+function json_object_entry(string $name, array|string|null $data) : Entry\JsonEntry
 {
     if (\is_string($data)) {
-        return new Row\Entry\JsonEntry($name, $data);
+        return new Entry\JsonEntry($name, $data);
     }
 
-    return Row\Entry\JsonEntry::object($name, $data);
+    return Entry\JsonEntry::object($name, $data);
 }
 
-function object_entry(string $name, ?object $data) : Row\Entry\ObjectEntry
+function object_entry(string $name, ?object $data) : Entry\ObjectEntry
 {
-    return new Row\Entry\ObjectEntry($name, $data);
+    return new Entry\ObjectEntry($name, $data);
 }
 
-function obj_entry(string $name, ?object $data) : Row\Entry\ObjectEntry
+function obj_entry(string $name, ?object $data) : Entry\ObjectEntry
 {
     return object_entry($name, $data);
 }
 
-function str_entry(string $name, ?string $value) : Row\Entry\StringEntry
+function str_entry(string $name, ?string $value) : Entry\StringEntry
 {
-    return new Row\Entry\StringEntry($name, $value);
+    return new Entry\StringEntry($name, $value);
 }
 
-function string_entry(string $name, ?string $value) : Row\Entry\StringEntry
+function string_entry(string $name, ?string $value) : Entry\StringEntry
 {
     return str_entry($name, $value);
 }
 
-function uuid_entry(string $name, Row\Entry\Type\Uuid|string|null $value) : Row\Entry\UuidEntry
+function uuid_entry(string $name, Entry\Type\Uuid|string|null $value) : Entry\UuidEntry
 {
-    return new Row\Entry\UuidEntry($name, $value);
+    return new Entry\UuidEntry($name, $value);
 }
 
-function xml_entry(string $name, \DOMDocument|string|null $value) : Row\Entry\XMLEntry
+function xml_entry(string $name, \DOMDocument|string|null $value) : Entry\XMLEntry
 {
-    return new Row\Entry\XMLEntry($name, $value);
+    return new Entry\XMLEntry($name, $value);
 }
 
-function xml_node_entry(string $name, ?\DOMNode $value) : Row\Entry\XMLNodeEntry
+function xml_node_entry(string $name, ?\DOMNode $value) : Entry\XMLNodeEntry
 {
-    return new Row\Entry\XMLNodeEntry($name, $value);
+    return new Entry\XMLNodeEntry($name, $value);
 }
 
-function entries(Row\Entry ...$entries) : Row\Entries
+function entries(Entry ...$entries) : Row\Entries
 {
     return new Row\Entries(...$entries);
 }
 
-function struct_entry(string $name, ?array $value, StructureType $type) : Row\Entry\StructureEntry
+function struct_entry(string $name, ?array $value, StructureType $type) : Entry\StructureEntry
 {
-    return new Row\Entry\StructureEntry($name, $value, $type);
+    return new Entry\StructureEntry($name, $value, $type);
 }
 
-function structure_entry(string $name, ?array $value, StructureType $type) : Row\Entry\StructureEntry
+function structure_entry(string $name, ?array $value, StructureType $type) : Entry\StructureEntry
 {
-    return new Row\Entry\StructureEntry($name, $value, $type);
+    return new Entry\StructureEntry($name, $value, $type);
 }
 
 /**
- * @param array<string, StructureElement> $elements
+ * @param array<StructureElement> $elements
  */
 function struct_type(array $elements, bool $nullable = false) : StructureType
 {
     return new StructureType($elements, $nullable);
 }
 
+/**
+ * @param array<StructureElement> $elements
+ */
 function structure_type(array $elements, bool $nullable = false) : StructureType
 {
     return new StructureType($elements, $nullable);
@@ -314,9 +317,9 @@ function structure_element(string $name, Type $type) : StructureElement
     return new StructureElement($name, $type);
 }
 
-function list_entry(string $name, array $value, ListType $type) : Row\Entry\ListEntry
+function list_entry(string $name, array $value, ListType $type) : Entry\ListEntry
 {
-    return new Row\Entry\ListEntry($name, $value, $type);
+    return new Entry\ListEntry($name, $value, $type);
 }
 
 function type_list(Type $element, bool $nullable = false) : ListType
@@ -329,9 +332,9 @@ function type_map(ScalarType $key_type, Type $value_type, bool $nullable = false
     return new MapType(new MapKey($key_type), new MapValue($value_type), $nullable);
 }
 
-function map_entry(string $name, ?array $value, MapType $mapType) : Row\Entry\MapEntry
+function map_entry(string $name, ?array $value, MapType $mapType) : Entry\MapEntry
 {
-    return new Row\Entry\MapEntry($name, $value, $mapType);
+    return new Entry\MapEntry($name, $value, $mapType);
 }
 
 function type_json(bool $nullable = false) : JsonType
@@ -424,7 +427,7 @@ function type_enum(string $class, bool $nullable = false) : EnumType
     return new EnumType($class, $nullable);
 }
 
-function row(Row\Entry ...$entry) : Row
+function row(Entry ...$entry) : Row
 {
     return Row::create(...$entry);
 }
@@ -1162,4 +1165,41 @@ function compare_any(Comparison ...$comparisons) : Comparison\Any
 function join_on(array|Comparison $comparisons, string $joinPrefix = '') : Expression
 {
     return Expression::on($comparisons, $joinPrefix);
+}
+
+function compare_entries_by_name(Transformer\OrderEntries\Order $order = Transformer\OrderEntries\Order::ASC) : Transformer\OrderEntries\Comparator
+{
+    return new Transformer\OrderEntries\NameComparator($order);
+}
+
+function compare_entries_by_name_desc() : Transformer\OrderEntries\Comparator
+{
+    return new Transformer\OrderEntries\NameComparator(Transformer\OrderEntries\Order::DESC);
+}
+
+/**
+ * @param array<class-string<Entry>, int> $priorities
+ */
+function compare_entries_by_type(array $priorities = Transformer\OrderEntries\TypePriorities::PRIORITIES, Transformer\OrderEntries\Order $order = Transformer\OrderEntries\Order::ASC) : Transformer\OrderEntries\Comparator
+{
+    return new Transformer\OrderEntries\TypeComparator(new Transformer\OrderEntries\TypePriorities($priorities), $order);
+}
+
+/**
+ * @param array<class-string<Entry>, int> $priorities
+ */
+function compare_entries_by_type_desc(array $priorities = Transformer\OrderEntries\TypePriorities::PRIORITIES) : Transformer\OrderEntries\Comparator
+{
+    return new Transformer\OrderEntries\TypeComparator(new Transformer\OrderEntries\TypePriorities($priorities), Transformer\OrderEntries\Order::DESC);
+}
+
+/**
+ * @param array<class-string<Entry>, int> $priorities
+ */
+function compare_entries_by_type_and_name(array $priorities = Transformer\OrderEntries\TypePriorities::PRIORITIES, Transformer\OrderEntries\Order $order = Transformer\OrderEntries\Order::ASC) : Transformer\OrderEntries\Comparator
+{
+    return new Transformer\OrderEntries\CombinedComparator(
+        new Transformer\OrderEntries\TypeComparator(new Transformer\OrderEntries\TypePriorities($priorities), $order),
+        new Transformer\OrderEntries\NameComparator($order)
+    );
 }

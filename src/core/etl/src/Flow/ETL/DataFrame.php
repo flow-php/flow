@@ -28,7 +28,28 @@ use Flow\ETL\Pipeline\{BatchingPipeline,
     VoidPipeline};
 use Flow\ETL\Row\{Reference, References, Schema};
 use Flow\ETL\Transformer\StyleConverter\StringStyles;
-use Flow\ETL\Transformer\{AutoCastTransformer, CallbackRowTransformer, CrossJoinRowsTransformer, DropDuplicatesTransformer, DropPartitionsTransformer, EntryNameStyleConverterTransformer, JoinEachRowsTransformer, KeepEntriesTransformer, LimitTransformer, RemoveEntriesTransformer, RenameAllCaseTransformer, RenameEntryTransformer, RenameStrReplaceAllEntriesTransformer, ScalarFunctionFilterTransformer, ScalarFunctionTransformer, UntilTransformer, WindowFunctionTransformer};
+use Flow\ETL\Transformer\{
+    AutoCastTransformer,
+    CallbackRowTransformer,
+    CrossJoinRowsTransformer,
+    DropDuplicatesTransformer,
+    DropEntriesTransformer,
+    DropPartitionsTransformer,
+    EntryNameStyleConverterTransformer,
+    JoinEachRowsTransformer,
+    LimitTransformer,
+    OrderEntriesTransformer,
+    OrderEntries\Comparator,
+    OrderEntries\TypeComparator,
+    RenameAllCaseTransformer,
+    RenameEntryTransformer,
+    RenameStrReplaceAllEntriesTransformer,
+    ScalarFunctionFilterTransformer,
+    ScalarFunctionTransformer,
+    SelectEntriesTransformer,
+    UntilTransformer,
+    WindowFunctionTransformer
+};
 use Flow\RDSL\AccessControl\{AllowAll, AllowList, DenyAll};
 use Flow\RDSL\Attribute\DSLMethod;
 use Flow\RDSL\{Builder, DSLNamespace, Executor, Finder};
@@ -262,7 +283,7 @@ final class DataFrame
      */
     public function drop(string|Reference ...$entries) : self
     {
-        $this->pipeline->add(new RemoveEntriesTransformer(...$entries));
+        $this->pipeline->add(new DropEntriesTransformer(...$entries));
 
         return $this;
     }
@@ -678,6 +699,13 @@ final class DataFrame
         return $this;
     }
 
+    public function reorderEntries(Comparator $comparator = new TypeComparator()) : self
+    {
+        $this->pipeline->add(new OrderEntriesTransformer($comparator));
+
+        return $this;
+    }
+
     /**
      * @lazy
      * Alias for ETL::transform method.
@@ -749,7 +777,7 @@ final class DataFrame
      */
     public function select(string|Reference ...$entries) : self
     {
-        $this->pipeline->add(new KeepEntriesTransformer(...$entries));
+        $this->pipeline->add(new SelectEntriesTransformer(...$entries));
 
         return $this;
     }
