@@ -2,14 +2,11 @@
 
 declare(strict_types=1);
 
-use Ramsey\Uuid\Uuid;
 use function Flow\ETL\DSL\{array_entry,
-    array_expand,
     bool_entry,
     compare_entries_by_type_and_name,
     data_frame,
     datetime_entry,
-    enum_entry,
     float_entry,
     from_rows,
     int_entry,
@@ -17,7 +14,6 @@ use function Flow\ETL\DSL\{array_entry,
     list_entry,
     map_entry,
     object_entry,
-    ref,
     row,
     rows,
     str_entry,
@@ -32,6 +28,7 @@ use function Flow\ETL\DSL\{array_entry,
     type_map,
     type_string,
     uuid_entry};
+use Ramsey\Uuid\Uuid;
 
 data_frame()
     ->read(from_rows(rows(
@@ -43,11 +40,11 @@ data_frame()
             bool_entry('bool', false),
             bool_entry('bool_a', false),
             bool_entry('bool_c', false),
-            datetime_entry('datetime_d', new \DateTimeImmutable('now')),
-            datetime_entry('datetime_z', new \DateTimeImmutable('now')),
+            datetime_entry('datetime_d', new DateTimeImmutable('now')),
+            datetime_entry('datetime_z', new DateTimeImmutable('now')),
             str_entry('string_a', 'string'),
             str_entry('string_b', 'string'),
-            uuid_entry('uuid', new \Flow\ETL\Row\Entry\Type\Uuid(Uuid::uuid4())),
+            uuid_entry('uuid', new Flow\ETL\Row\Entry\Type\Uuid(Uuid::uuid4())),
             json_entry('json', ['id' => 1, 'status' => 'NEW']),
             array_entry(
                 'array',
@@ -81,7 +78,7 @@ data_frame()
                     ),
                 ]),
             ),
-            object_entry('object', new \ArrayIterator([1, 2, 3])),
+            object_entry('object', new ArrayIterator([1, 2, 3])),
         )
     )))
     ->reorderEntries(compare_entries_by_type_and_name())
