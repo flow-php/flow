@@ -6,24 +6,29 @@ namespace Flow\ETL\DataFrame;
 
 use Flow\ETL\Function\AggregatingFunction;
 use Flow\ETL\Row\Reference;
-use Flow\ETL\{DataFrame, FlowContext, GroupBy, Pipeline};
+use Flow\ETL\{DataFrame, GroupBy, Pipeline};
 
 final class GroupedDataFrame
 {
+    /**
+     * @var \ReflectionClass<DataFrame>
+     */
+    private \ReflectionClass $dataFrameReflection;
+
     public function __construct(private readonly DataFrame $df, private readonly GroupBy $groupBy)
     {
+        $this->dataFrameReflection = new \ReflectionClass($this->df);
     }
 
     public function aggregate(AggregatingFunction ...$aggregations) : DataFrame
     {
         $this->groupBy->aggregate(...$aggregations);
 
-        return $this->df->rebuild(function (Pipeline $pipeline, FlowContext $context) : DataFrame {
-            return new DataFrame(
-                new Pipeline\LinkedPipeline(new Pipeline\GroupByPipeline($this->groupBy, $pipeline)),
-                $context
-            );
-        });
+        $pipelineProperty = $this->dataFrameReflection->getProperty('pipeline');
+        $currentPipeline = $pipelineProperty->getValue($this->df);
+        $pipelineProperty->setValue($this->df, new Pipeline\LinkedPipeline(new Pipeline\GroupByPipeline($this->groupBy, $currentPipeline)));
+
+        return $this->df;
     }
 
     public function pivot(Reference $ref) : self

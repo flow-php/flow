@@ -607,16 +607,6 @@ final class DataFrame
 
     /**
      * @lazy
-     *
-     * @param callable(Pipeline $pipeline, FlowContext $context) : DataFrame $callback
-     */
-    public function rebuild(callable $callback) : self
-    {
-        return $callback($this->pipeline, $this->context);
-    }
-
-    /**
-     * @lazy
      */
     public function rename(string $from, string $to) : self
     {
