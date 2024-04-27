@@ -10,23 +10,28 @@ use Flow\ETL\{DataFrame, GroupBy, Pipeline};
 
 final class GroupedDataFrame
 {
-    /**
-     * @var \ReflectionClass<DataFrame>
-     */
-    private \ReflectionClass $dataFrameReflection;
-
     public function __construct(private readonly DataFrame $df, private readonly GroupBy $groupBy)
     {
-        $this->dataFrameReflection = new \ReflectionClass($this->df);
     }
 
     public function aggregate(AggregatingFunction ...$aggregations) : DataFrame
     {
         $this->groupBy->aggregate(...$aggregations);
 
-        $pipelineProperty = $this->dataFrameReflection->getProperty('pipeline');
-        $currentPipeline = $pipelineProperty->getValue($this->df);
-        $pipelineProperty->setValue($this->df, new Pipeline\LinkedPipeline(new Pipeline\GroupByPipeline($this->groupBy, $currentPipeline)));
+        $pipelineSetter = function (GroupBy $groupBy) : void {
+            /**
+             * @psalm-suppress UndefinedThisPropertyAssignment
+             * @psalm-suppress UndefinedThisPropertyFetch
+             *
+             * @phpstan-ignore-next-line
+             */
+            $this->pipeline = new Pipeline\LinkedPipeline(new Pipeline\GroupByPipeline($groupBy, $this->pipeline));
+        };
+
+        /**
+         * @psalm-suppress PossiblyNullFunctionCall
+         */
+        $pipelineSetter->bindTo($this->df, $this->df)($this->groupBy);
 
         return $this->df;
     }
