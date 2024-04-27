@@ -9,6 +9,9 @@ use Flow\ETL\Row\Entry\{IntegerEntry, UuidEntry};
 
 final class TypePriorities
 {
+    /**
+     * @var array<class-string<Entry>,int>
+     */
     public const PRIORITIES = [
         UuidEntry::class => 1,
         IntegerEntry::class => 2,

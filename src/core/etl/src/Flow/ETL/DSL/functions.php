@@ -284,13 +284,16 @@ function structure_entry(string $name, ?array $value, StructureType $type) : Ent
 }
 
 /**
- * @param array<string, StructureElement> $elements
+ * @param array<StructureElement> $elements
  */
 function struct_type(array $elements, bool $nullable = false) : StructureType
 {
     return new StructureType($elements, $nullable);
 }
 
+/**
+ * @param array<StructureElement> $elements
+ */
 function structure_type(array $elements, bool $nullable = false) : StructureType
 {
     return new StructureType($elements, $nullable);
