@@ -7,7 +7,7 @@ namespace Flow\ETL\Pipeline\Optimizer;
 use Flow\ETL\Extractor\LimitableExtractor;
 use Flow\ETL\Function\ScalarFunction\ExpandResults;
 use Flow\ETL\Pipeline\{BatchingPipeline, CollectingPipeline, LinkedPipeline, SynchronousPipeline, VoidPipeline};
-use Flow\ETL\Transformer\{CallbackRowTransformer, EntryNameStyleConverterTransformer, KeepEntriesTransformer, LimitTransformer, RemoveEntriesTransformer, RenameAllCaseTransformer, RenameEntryTransformer, RenameStrReplaceAllEntriesTransformer, ScalarFunctionTransformer};
+use Flow\ETL\Transformer\{CallbackRowTransformer, DropEntriesTransformer, EntryNameStyleConverterTransformer, LimitTransformer, RenameAllCaseTransformer, RenameEntryTransformer, RenameStrReplaceAllEntriesTransformer, ScalarFunctionTransformer, SelectEntriesTransformer};
 use Flow\ETL\{Loader, Pipeline, Transformer};
 
 final class LimitOptimization implements Optimization
@@ -24,8 +24,8 @@ final class LimitOptimization implements Optimization
         CallbackRowTransformer::class,
         ScalarFunctionTransformer::class,
         EntryNameStyleConverterTransformer::class,
-        KeepEntriesTransformer::class,
-        RemoveEntriesTransformer::class,
+        SelectEntriesTransformer::class,
+        DropEntriesTransformer::class,
         RenameAllCaseTransformer::class,
         RenameEntryTransformer::class,
         RenameStrReplaceAllEntriesTransformer::class,

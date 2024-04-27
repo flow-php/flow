@@ -6,7 +6,7 @@ namespace Flow\ETL\Tests\Integration\Pipeline;
 
 use function Flow\ETL\DSL\ref;
 use Flow\ETL\Pipeline\{Optimizer, SynchronousPipeline};
-use Flow\ETL\Transformer\KeepEntriesTransformer;
+use Flow\ETL\Transformer\SelectEntriesTransformer;
 use PHPUnit\Framework\TestCase;
 
 final class OptimizerTest extends TestCase
@@ -15,7 +15,7 @@ final class OptimizerTest extends TestCase
     {
         $pipeline = new SynchronousPipeline();
 
-        $optimizedPipeline = (new Optimizer())->optimize(new KeepEntriesTransformer(ref('id')), $pipeline);
+        $optimizedPipeline = (new Optimizer())->optimize(new SelectEntriesTransformer(ref('id')), $pipeline);
 
         self::assertCount(1, $optimizedPipeline->pipes()->all());
     }
