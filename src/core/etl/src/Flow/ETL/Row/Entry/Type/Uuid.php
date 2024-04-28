@@ -23,7 +23,7 @@ final class Uuid implements \Stringable
     {
         if (\is_string($value)) {
             try {
-                if (\class_exists(\Ramsey\Uuid\UuidInterface::class)) {
+                if (\class_exists(\Ramsey\Uuid\Uuid::class)) {
                     $this->value = (string) \Ramsey\Uuid\Uuid::fromString($value);
                 } elseif (\class_exists(\Symfony\Component\Uid\Uuid::class)) {
                     $this->value = \Symfony\Component\Uid\Uuid::fromString($value)->toRfc4122();
