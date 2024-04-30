@@ -22,7 +22,6 @@
 ### Removed
 - [#1056](https://github.com/flow-php/flow/pull/1056) - **Pipeline::closure** - [@norberttech](https://github.com/norberttech)
 - [#1056](https://github.com/flow-php/flow/pull/1056) - **Pipeline::cleanCopy** - [@norberttech](https://github.com/norberttech)
-- [#1056](https://github.com/flow-php/flow/pull/1056) - **** - [@norberttech](https://github.com/norberttech)
 - [#1055](https://github.com/flow-php/flow/pull/1055) - **Join expression comparison types other than equal/identical/any/all** - [@norberttech](https://github.com/norberttech)
 
 ## [0.7.4] - 2024-04-18
