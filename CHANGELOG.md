@@ -1,9 +1,13 @@
-## [Unreleased] - 2024-04-25
+## [Unreleased] - 2024-04-30
 
 ### Added
+- [#1065](https://github.com/flow-php/flow/pull/1065) - **Added cloud storage examples to homepage** - [@norberttech](https://github.com/norberttech)
+- [#1059](https://github.com/flow-php/flow/pull/1059) - **allow to reorder entries through DataFrame::select** - [@norberttech](https://github.com/norberttech)
+- [#1059](https://github.com/flow-php/flow/pull/1059) - **DataFrame::reorderEntries() with built-in custom ordering strategies** - [@norberttech](https://github.com/norberttech)
 - [#1054](https://github.com/flow-php/flow/pull/1054) - **missing tests for parquet rows normalizer** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#1058](https://github.com/flow-php/flow/pull/1058) - **Replaced reflection with bind closure approach to set dataframe pipeline** - [@norberttech](https://github.com/norberttech)
 - [#1056](https://github.com/flow-php/flow/pull/1056) - **GroupBy is now allowed only with aggregations** - [@norberttech](https://github.com/norberttech)
 - [#1056](https://github.com/flow-php/flow/pull/1056) - **NestedPipeline was renamed to LinkedPipeline** - [@norberttech](https://github.com/norberttech)
 - [#1056](https://github.com/flow-php/flow/pull/1056) - **All pipelines are now grouped by LinkedPipeline** - [@norberttech](https://github.com/norberttech)
@@ -11,6 +15,8 @@
 - [#1053](https://github.com/flow-php/flow/pull/1053) - **Update Homebrew TAP formula: flow-php to version: 0.7.4** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1061](https://github.com/flow-php/flow/pull/1061) - **checks on Ramsey UUID concrete class** - [@jguittard](https://github.com/jguittard)
+- [#1057](https://github.com/flow-php/flow/pull/1057) - **DataFrame::aggregate returns the same instance of dataframe with updated pipeline** - [@norberttech](https://github.com/norberttech)
 - [#1055](https://github.com/flow-php/flow/pull/1055) - **Right Join before duplicating right side rows in each batch from the left side dataset** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
@@ -1711,6 +1717,7 @@
 - @drupol
 - @flavioheleno
 - @ghost
+- @jguittard
 - @jpiatko
 - @jwojtyra-aterian
 - @mleczakm
