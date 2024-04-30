@@ -28,23 +28,22 @@ use function Flow\ETL\DSL\{array_entry,
     type_map,
     type_string,
     uuid_entry};
-use Ramsey\Uuid\Uuid;
 
 data_frame()
     ->read(from_rows(rows(
         row(
             int_entry('int_a', 1),
             int_entry('int_b', 1),
-            float_entry('float_a', \random_int(100, 100000) / 100),
-            float_entry('float_b', \random_int(100, 100000) / 100),
+            float_entry('float_a', 57291 / 100),
+            float_entry('float_b', 21021 / 100),
             bool_entry('bool', false),
             bool_entry('bool_a', false),
             bool_entry('bool_c', false),
-            datetime_entry('datetime_d', new DateTimeImmutable('now')),
-            datetime_entry('datetime_z', new DateTimeImmutable('now')),
+            datetime_entry('datetime_d', new DateTimeImmutable('2024-04-01 00:00:00')),
+            datetime_entry('datetime_z', new DateTimeImmutable('2024-04-01 00:00:00')),
             str_entry('string_a', 'string'),
             str_entry('string_b', 'string'),
-            uuid_entry('uuid', new Flow\ETL\Row\Entry\Type\Uuid(Uuid::uuid4())),
+            uuid_entry('uuid', '06143adb-3009-45c8-a4f0-c7016f97cab7'),
             json_entry('json', ['id' => 1, 'status' => 'NEW']),
             array_entry(
                 'array',

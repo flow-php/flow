@@ -62,6 +62,9 @@
         "tools:install": [
             "composer install --working-dir=./tools/phpunit"
         ],
+        "tools:updated": [
+            "composer update --working-dir=./tools/phpunit"
+        ],
         "test": [
             "tools/phpunit/vendor/bin/phpunit"
         ],

@@ -32,7 +32,7 @@ final class Examples
             throw new \RuntimeException(\sprintf('Topic "%s" doesn\'t exists, it should be located in path: "%s".', $topic, $path));
         }
 
-        $examples = \array_diff(\scandir($path), ['..', '.']);
+        $examples = \array_diff(\scandir($path), ['..', '.', '.gitignore']);
 
         if (0 === \count($examples)) {
             throw new \RuntimeException(\sprintf('Topic "%s" doesn\'t have any example, there should be at least one example in path "%s".', $topic, $path));
