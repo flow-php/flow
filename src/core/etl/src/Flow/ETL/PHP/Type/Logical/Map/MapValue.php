@@ -4,7 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type\Logical\Map;
 
-use function Flow\ETL\DSL\{type_boolean, type_datetime, type_float, type_int, type_object, type_string, type_xml, type_xml_node};
+use function Flow\ETL\DSL\{type_boolean,
+    type_datetime,
+    type_float,
+    type_int,
+    type_object,
+    type_string,
+    type_xml,
+    type_xml_element};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\{ListType, MapType};
 use Flow\ETL\PHP\Type\{Type, TypeFactory};
@@ -82,9 +89,9 @@ final class MapValue
         return new self(type_xml());
     }
 
-    public static function xmlNode() : self
+    public static function xmlElement() : self
     {
-        return new self(type_xml_node());
+        return new self(type_xml_element());
     }
 
     public function isEqual(mixed $value) : bool

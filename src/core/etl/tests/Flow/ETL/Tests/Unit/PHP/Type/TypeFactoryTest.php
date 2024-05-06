@@ -4,7 +4,25 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type;
 
-use function Flow\ETL\DSL\{structure_element, type_array, type_boolean, type_callable, type_datetime, type_enum, type_float, type_integer, type_json, type_list, type_map, type_null, type_object, type_resource, type_string, type_structure, type_uuid, type_xml, type_xml_node};
+use function Flow\ETL\DSL\{structure_element,
+    type_array,
+    type_boolean,
+    type_callable,
+    type_datetime,
+    type_enum,
+    type_float,
+    type_integer,
+    type_json,
+    type_list,
+    type_map,
+    type_null,
+    type_object,
+    type_resource,
+    type_string,
+    type_structure,
+    type_uuid,
+    type_xml,
+    type_xml_element};
 use Flow\ETL\PHP\Type\TypeFactory;
 use Flow\ETL\Tests\Unit\PHP\Type\Fixtures\SomeEnum;
 use PHPUnit\Framework\TestCase;
@@ -104,10 +122,10 @@ final class TypeFactoryTest extends TestCase
         self::assertEquals($uuid, TypeFactory::fromArray($uuid->normalize()));
     }
 
-    public function test_normalizing_and_creating_xml_node_type() : void
+    public function test_normalizing_and_creating_xml_element_type() : void
     {
-        $xmlNode = type_xml_node();
-        self::assertEquals($xmlNode, TypeFactory::fromArray($xmlNode->normalize()));
+        $xmlElement = type_xml_element();
+        self::assertEquals($xmlElement, TypeFactory::fromArray($xmlElement->normalize()));
     }
 
     public function test_normalizing_and_creating_xml_type() : void

@@ -90,14 +90,14 @@ abstract class ScalarFunctionChain implements ScalarFunction
         return new Divide($this, $ref);
     }
 
-    public function domNodeAttribute(string $attribute) : self
+    public function domElementAttribute(string $attribute) : self
     {
-        return new DOMNodeAttribute($this, $attribute);
+        return new DOMElementAttribute($this, $attribute);
     }
 
-    public function domNodeValue() : self
+    public function domElementValue() : self
     {
-        return new DOMNodeValue($this);
+        return new DOMElementValue($this);
     }
 
     public function endsWith(ScalarFunction $needle) : self

@@ -7,7 +7,7 @@ namespace Flow\ETL\Adapter\Avro\FlixTech;
 use function Flow\ETL\DSL\type_string;
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
-use Flow\ETL\PHP\Type\Logical\{DateTimeType, JsonType, ListType, MapType, StructureType, UuidType, XMLNodeType, XMLType};
+use Flow\ETL\PHP\Type\Logical\{DateTimeType, JsonType, ListType, MapType, StructureType, UuidType, XMLElementType, XMLType};
 use Flow\ETL\PHP\Type\Native\{ArrayType, EnumType, ObjectType, ScalarType};
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Row\Schema\Definition;
@@ -104,7 +104,7 @@ final class SchemaConverter
         }
 
         $avroType = match ($type::class) {
-            JsonType::class, UuidType::class, XMLType::class, XMLNodeType::class => ['name' => $definition->entry()->name(), 'type' => \AvroSchema::STRING_TYPE],
+            JsonType::class, UuidType::class, XMLType::class, XMLElementType::class => ['name' => $definition->entry()->name(), 'type' => \AvroSchema::STRING_TYPE],
             EnumType::class => [
                 'name' => $definition->entry()->name(),
                 'type' => [

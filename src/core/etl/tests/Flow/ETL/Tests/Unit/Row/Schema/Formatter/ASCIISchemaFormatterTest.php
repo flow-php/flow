@@ -39,7 +39,7 @@ final class ASCIISchemaFormatterTest extends TestCase
             Schema\Definition::array('tags'),
             Schema\Definition::boolean('active'),
             Schema\Definition::xml('xml'),
-            Schema\Definition::xml_node('xml_node'),
+            Schema\Definition::xml_element('xml_element'),
             Schema\Definition::json('json'),
             Schema\Definition::uuid('uuid'),
             Schema\Definition::dateTime('datetime'),
@@ -61,7 +61,7 @@ schema
 |-- tags: array<mixed>
 |-- active: boolean
 |-- xml: xml
-|-- xml_node: xml_node
+|-- xml_element: xml_element
 |-- json: json
 |-- uuid: uuid
 |-- datetime: datetime

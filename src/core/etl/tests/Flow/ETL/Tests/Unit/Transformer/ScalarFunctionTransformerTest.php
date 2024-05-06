@@ -4,7 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Transformer;
 
-use function Flow\ETL\DSL\{int_entry, list_entry, lit, ref, str_entry, type_list, type_xml_node, xml_entry};
+use function Flow\ETL\DSL\{int_entry,
+    list_entry,
+    lit,
+    ref,
+    str_entry,
+    type_list,
+    type_xml_element,
+    xml_entry};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Transformer\ScalarFunctionTransformer;
 use Flow\ETL\{Config, FlowContext, Row, Rows};
@@ -92,7 +99,7 @@ final class ScalarFunctionTransformerTest extends TestCase
             list_entry('xpath', [
                 $xpath->query('/root/foo')->item(0),
                 $xpath->query('/root/foo')->item(1),
-            ], type_list(type_xml_node())),
+            ], type_list(type_xml_element())),
             (new ScalarFunctionTransformer('xpath', ref('xml')->xpath('/root/foo')))
                 ->transform(
                     new Rows(Row::create(xml_entry('xml', $xml))),

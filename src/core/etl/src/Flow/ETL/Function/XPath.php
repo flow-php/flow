@@ -17,15 +17,10 @@ final class XPath extends ScalarFunctionChain
      */
     public function eval(Row $row) : \DOMNode|array|null
     {
-        /** @var mixed $value */
         $value = $this->ref->eval($row);
 
         if ($value instanceof \DOMNode && !$value instanceof \DOMDocument) {
-            $newDom = new \DOMDocument();
-            $newNode = $newDom->importNode($value, true);
-            $newDom->append($newNode);
-
-            $value = $newDom;
+            $value = (new \DOMDocument())->importNode($value, true);
         }
 
         if (!$value instanceof \DOMDocument) {

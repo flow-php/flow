@@ -5,7 +5,14 @@ declare(strict_types=1);
 namespace Flow\ETL\PHP\Type;
 
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\PHP\Type\Logical\{DateTimeType, JsonType, ListType, MapType, StructureType, UuidType, XMLNodeType, XMLType};
+use Flow\ETL\PHP\Type\Logical\{DateTimeType,
+    JsonType,
+    ListType,
+    MapType,
+    StructureType,
+    UuidType,
+    XMLElementType,
+    XMLType};
 use Flow\ETL\PHP\Type\Native\{ArrayType, CallableType, EnumType, NullType, ObjectType, ResourceType, ScalarType};
 
 final class TypeFactory
@@ -30,7 +37,7 @@ final class TypeFactory
             'list' => ListType::fromArray($data),
             'map' => MapType::fromArray($data),
             'structure' => StructureType::fromArray($data),
-            'xml_node' => XMLNodeType::fromArray($data),
+            'xml_element' => XMLElementType::fromArray($data),
             'xml' => XMLType::fromArray($data),
             default => throw new InvalidArgumentException("Unknown type '{$data['type']}'"),
         };

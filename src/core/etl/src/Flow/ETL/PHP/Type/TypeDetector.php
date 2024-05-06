@@ -4,7 +4,18 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type;
 
-use function Flow\ETL\DSL\{type_array, type_boolean, type_datetime, type_float, type_int, type_json, type_null, type_object, type_string, type_uuid, type_xml, type_xml_node};
+use function Flow\ETL\DSL\{type_array,
+    type_boolean,
+    type_datetime,
+    type_float,
+    type_int,
+    type_json,
+    type_null,
+    type_object,
+    type_string,
+    type_uuid,
+    type_xml,
+    type_xml_element};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
@@ -85,8 +96,8 @@ final class TypeDetector
                 return type_xml();
             }
 
-            if (type_xml_node()->isValid($value)) {
-                return type_xml_node();
+            if (type_xml_element()->isValid($value)) {
+                return type_xml_element();
             }
 
             return type_object($value::class);

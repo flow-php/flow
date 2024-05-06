@@ -4,12 +4,23 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Schema;
 
-use function Flow\ETL\DSL\{type_array, type_boolean, type_datetime, type_enum, type_float, type_int, type_json, type_list, type_string, type_uuid, type_xml, type_xml_node};
+use function Flow\ETL\DSL\{type_array,
+    type_boolean,
+    type_datetime,
+    type_enum,
+    type_float,
+    type_int,
+    type_json,
+    type_list,
+    type_string,
+    type_uuid,
+    type_xml,
+    type_xml_element};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\PHP\Type\Logical\{ListType, MapType, StructureType};
 use Flow\ETL\PHP\Type\Native\ObjectType;
 use Flow\ETL\PHP\Type\{Type, TypeFactory};
-use Flow\ETL\Row\Entry\{ArrayEntry, BooleanEntry, DateTimeEntry, EnumEntry, FloatEntry, IntegerEntry, JsonEntry, ListEntry, MapEntry, ObjectEntry, StringEntry, StructureEntry, UuidEntry, XMLEntry, XMLNodeEntry};
+use Flow\ETL\Row\Entry\{ArrayEntry, BooleanEntry, DateTimeEntry, EnumEntry, FloatEntry, IntegerEntry, JsonEntry, ListEntry, MapEntry, ObjectEntry, StringEntry, StructureEntry, UuidEntry, XMLEntry};
 use Flow\ETL\Row\{Entry, EntryReference, Reference};
 
 final class Definition
@@ -106,7 +117,7 @@ final class Definition
                 'structure' => StructureEntry::class,
                 'uuid' => UuidEntry::class,
                 'xml' => XMLEntry::class,
-                'xml_node' => XMLNodeEntry::class,
+                'xml_element' => Entry\XMLElementEntry::class,
                 default => throw new InvalidArgumentException(\sprintf('Unknown entry type "%s"', \json_encode($definition['type']))),
             },
             TypeFactory::fromArray($definition['type']),
@@ -179,9 +190,9 @@ final class Definition
         return new self($entry, XMLEntry::class, type_xml($nullable), $metadata);
     }
 
-    public static function xml_node(string|Reference $entry, bool $nullable = false, ?Metadata $metadata = null) : self
+    public static function xml_element(string|Reference $entry, bool $nullable = false, ?Metadata $metadata = null) : self
     {
-        return new self($entry, XMLNodeEntry::class, type_xml_node($nullable), $metadata);
+        return new self($entry, Entry\XMLElementEntry::class, type_xml_element($nullable), $metadata);
     }
 
     public function entry() : Reference
