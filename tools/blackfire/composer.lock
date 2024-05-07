@@ -9,16 +9,16 @@
     "packages-dev": [
         {
             "name": "blackfire/php-sdk",
-            "version": "v2.4.1",
+            "version": "v2.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/blackfireio/php-sdk.git",
-                "reference": "dc22745d5ecf1126da04e9231d14f4bb1fef8c43"
+                "reference": "f133820a1c3131af7a9816c51a9e0fab90fc5a66"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/blackfireio/php-sdk/zipball/dc22745d5ecf1126da04e9231d14f4bb1fef8c43",
-                "reference": "dc22745d5ecf1126da04e9231d14f4bb1fef8c43",
+                "url": "https://api.github.com/repos/blackfireio/php-sdk/zipball/f133820a1c3131af7a9816c51a9e0fab90fc5a66",
+                "reference": "f133820a1c3131af7a9816c51a9e0fab90fc5a66",
                 "shasum": ""
             },
             "require": {
@@ -52,7 +52,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "2.4-dev"
+                    "dev-master": "2.5-dev"
                 }
             },
             "autoload": {
@@ -79,9 +79,9 @@
             ],
             "support": {
                 "issues": "https://github.com/blackfireio/php-sdk/issues",
-                "source": "https://github.com/blackfireio/php-sdk/tree/v2.4.1"
+                "source": "https://github.com/blackfireio/php-sdk/tree/v2.5.0"
             },
-            "time": "2024-04-29T13:48:06+00:00"
+            "time": "2024-05-06T09:29:53+00:00"
         },
         {
             "name": "composer/ca-bundle",
