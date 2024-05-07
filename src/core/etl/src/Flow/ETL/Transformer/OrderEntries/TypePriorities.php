@@ -27,7 +27,7 @@ final class TypePriorities
         Entry\ObjectEntry::class => 12,
         Entry\StructureEntry::class => 13,
         Entry\XMLEntry::class => 14,
-        Entry\XMLNodeEntry::class => 15,
+        Entry\XMLElementEntry::class => 15,
     ];
 
     /**

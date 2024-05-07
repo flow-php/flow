@@ -59,7 +59,7 @@ $rows = array_to_rows([
 - [Structure](../../../src/core/etl/src/Flow/ETL/Row/Entry/StructureEntry.php)
 - [Uuid](../../../src/core/etl/src/Flow/ETL/Row/Entry/UuidEntry.php)
 - [XML](../../../src/core/etl/src/Flow/ETL/Row/Entry/XMLEntry.php)
-- [XMLNode](../../../src/core/etl/src/Flow/ETL/Row/Entry/XMLNodeEntry.php)
+- [XMLElement](../../../src/core/etl/src/Flow/ETL/Row/Entry/XMLElementEntry.php)
 
 Internally flow is using [EntryFactory](../../../src/core/etl/src/Flow/ETL/Row/Factory/NativeEntryFactory.php) to create entries. 
 It will try to detect and create the most appropriate entry type based on the value.

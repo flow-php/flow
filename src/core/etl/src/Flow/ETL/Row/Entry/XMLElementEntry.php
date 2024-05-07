@@ -4,32 +4,48 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Entry;
 
-use function Flow\ETL\DSL\type_xml_node;
-use Flow\ETL\PHP\Type\Logical\XMLNodeType;
+use function Flow\ETL\DSL\type_xml_element;
+use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\ETL\PHP\Type\Logical\XMLElementType;
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\{Entry, Reference};
 
 /**
- * @implements Entry<?\DOMNode>
+ * @implements Entry<?\DOMElement>
  */
-final class XMLNodeEntry implements Entry
+final class XMLElementEntry implements Entry
 {
     use EntryRef;
 
-    private readonly XMLNodeType $type;
+    private readonly XMLElementType $type;
 
-    public function __construct(private readonly string $name, private readonly ?\DOMNode $value)
+    private readonly ?\DOMElement $value;
+
+    public function __construct(private readonly string $name, \DOMElement|string|null $value)
     {
-        $this->type = type_xml_node($this->value === null);
+        if (\is_string($value)) {
+            $doc = new \DOMDocument();
+
+            if (!@$doc->loadXML($value)) {
+                throw new InvalidArgumentException(\sprintf('Given string "%s" is not valid XML', $value));
+            }
+
+            $value = $doc->documentElement;
+        } elseif ($value instanceof \DOMElement) {
+            /** @var \DOMElement $value */
+            $value = (new \DOMDocument())->importNode($value, true);
+        }
+
+        $this->type = type_xml_element($value === null);
+        $this->value = $value;
     }
 
     public function __serialize() : array
     {
         return [
             'name' => $this->name,
-            /* @phpstan-ignore-next-line */
-            'value' => $this->value === null ? null : \base64_encode(\gzcompress($this->toString())),
+            'value' => $this->value === null ? null : \base64_encode(\gzcompress($this->toString()) ?: ''),
             'type' => $this->type,
         ];
     }
@@ -40,9 +56,7 @@ final class XMLNodeEntry implements Entry
             return '';
         }
 
-        /**
-         * @phpstan-ignore-next-line
-         */
+        /* @phpstan-ignore-next-line */
         return $this->value->ownerDocument->saveXML($this->value);
     }
 
@@ -57,19 +71,22 @@ final class XMLNodeEntry implements Entry
             return;
         }
 
-        /* @phpstan-ignore-next-line */
-        $nodeString = \gzuncompress(\base64_decode($data['value'], true));
-        $domDocument = new \DOMDocument();
-        /* @phpstan-ignore-next-line */
-        @$domDocument->loadXML($nodeString);
+        $element = \gzuncompress(\base64_decode($data['value'], true) ?: '') ?: '';
 
-        /* @phpstan-ignore-next-line */
+        $domDocument = new \DOMDocument();
+        @$domDocument->loadXML($element);
+
+        /**
+         * @psalm-suppress PropertyTypeCoercion
+         *
+         * @phpstan-ignore-next-line
+         */
         $this->value = (new \DOMDocument())->importNode($domDocument->documentElement, true);
     }
 
     public function definition() : Definition
     {
-        return Definition::xml_node($this->ref(), $this->type->nullable());
+        return Definition::xml_element($this->ref(), $this->type->nullable());
     }
 
     public function is(Reference|string $name) : bool
@@ -115,9 +132,7 @@ final class XMLNodeEntry implements Entry
             return '';
         }
 
-        /**
-         * @phpstan-ignore-next-line
-         */
+        /* @phpstan-ignore-next-line */
         return $this->value->ownerDocument->saveXML($this->value);
     }
 
@@ -126,7 +141,7 @@ final class XMLNodeEntry implements Entry
         return $this->type;
     }
 
-    public function value() : ?\DOMNode
+    public function value() : ?\DOMElement
     {
         return $this->value;
     }

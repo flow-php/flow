@@ -4,7 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\PHP\Type;
 
-use Flow\ETL\PHP\Type\Logical\{DateTimeType, JsonType, ListType, StructureType, UuidType, XMLNodeType, XMLType};
+use Flow\ETL\PHP\Type\Logical\{DateTimeType,
+    JsonType,
+    ListType,
+    StructureType,
+    UuidType,
+    XMLElementType,
+    XMLType};
 use Flow\ETL\PHP\Type\Native\{ArrayType, EnumType, NullType, ObjectType, ScalarType};
 use Flow\ETL\PHP\Type\TypeDetector;
 use Flow\ETL\Row\Entry\Type\Uuid;
@@ -54,10 +60,10 @@ final class TypeDetectorTest extends TestCase
             'xml',
         ];
 
-        yield 'xml_node' => [
+        yield 'xml_element' => [
             $dom->documentElement,
-            XMLNodeType::class,
-            'xml_node',
+            XMLElementType::class,
+            'xml_element',
         ];
 
         yield 'simple list' => [

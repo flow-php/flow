@@ -20,7 +20,14 @@ use Flow\ETL\Memory\Memory;
 use Flow\ETL\PHP\Type\Logical\List\ListElement;
 use Flow\ETL\PHP\Type\Logical\Map\{MapKey, MapValue};
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
-use Flow\ETL\PHP\Type\Logical\{DateTimeType, JsonType, ListType, MapType, StructureType, UuidType, XMLNodeType, XMLType};
+use Flow\ETL\PHP\Type\Logical\{DateTimeType,
+    JsonType,
+    ListType,
+    MapType,
+    StructureType,
+    UuidType,
+    XMLElementType,
+    XMLType};
 use Flow\ETL\PHP\Type\Native\{ArrayType, CallableType, EnumType, NullType, ObjectType, ResourceType, ScalarType};
 use Flow\ETL\PHP\Type\{Type, TypeDetector};
 use Flow\ETL\Row\Factory\NativeEntryFactory;
@@ -263,9 +270,9 @@ function xml_entry(string $name, \DOMDocument|string|null $value) : Entry\XMLEnt
     return new Entry\XMLEntry($name, $value);
 }
 
-function xml_node_entry(string $name, ?\DOMNode $value) : Entry\XMLNodeEntry
+function xml_element_entry(string $name, \DOMElement|string|null $value) : Entry\XMLElementEntry
 {
-    return new Entry\XMLNodeEntry($name, $value);
+    return new Entry\XMLElementEntry($name, $value);
 }
 
 function entries(Entry ...$entries) : Row\Entries
@@ -352,9 +359,9 @@ function type_xml(bool $nullable = false) : XMLType
     return new XMLType($nullable);
 }
 
-function type_xml_node(bool $nullable = false) : XMLNodeType
+function type_xml_element(bool $nullable = false) : XMLElementType
 {
-    return new XMLNodeType($nullable);
+    return new XMLElementType($nullable);
 }
 
 function type_uuid(bool $nullable = false) : UuidType
@@ -1067,9 +1074,9 @@ function xml_schema(string $name, bool $nullable = false, ?Schema\Metadata $meta
     return Definition::xml($name, $nullable, $metadata);
 }
 
-function xml_node_schema(string $name, bool $nullable = false, ?Schema\Metadata $metadata = null) : Definition
+function xml_element_schema(string $name, bool $nullable = false, ?Schema\Metadata $metadata = null) : Definition
 {
-    return Definition::xml_node($name, $nullable, $metadata);
+    return Definition::xml_element($name, $nullable, $metadata);
 }
 
 function struct_schema(string $name, StructureType $type, ?Schema\Metadata $metadata = null) : Definition

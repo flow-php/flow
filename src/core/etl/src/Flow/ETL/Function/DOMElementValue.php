@@ -6,7 +6,7 @@ namespace Flow\ETL\Function;
 
 use Flow\ETL\Row;
 
-final class DOMNodeValue extends ScalarFunctionChain
+final class DOMElementValue extends ScalarFunctionChain
 {
     public function __construct(private readonly ScalarFunction $ref)
     {
@@ -17,7 +17,7 @@ final class DOMNodeValue extends ScalarFunctionChain
         /** @var mixed $value */
         $value = $this->ref->eval($row);
 
-        if (!$value instanceof \DOMNode) {
+        if (!$value instanceof \DOMElement) {
             return null;
         }
 

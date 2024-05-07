@@ -8,7 +8,7 @@ use function Flow\ETL\DSL\{list_schema, map_schema, struct_schema, struct_type, 
 use Flow\ETL\Exception\RuntimeException;
 use Flow\ETL\PHP\Type\Logical\Map\{MapKey, MapValue};
 use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
-use Flow\ETL\PHP\Type\Logical\{DateTimeType, JsonType, ListType, MapType, StructureType, UuidType, XMLNodeType, XMLType};
+use Flow\ETL\PHP\Type\Logical\{DateTimeType, JsonType, ListType, MapType, StructureType, UuidType, XMLElementType, XMLType};
 use Flow\ETL\PHP\Type\Native\{ObjectType, ScalarType};
 use Flow\ETL\PHP\Type\Type;
 use Flow\ETL\Row\{Entry, Schema};
@@ -67,7 +67,7 @@ final class SchemaConverter
             case JsonType::class:
                 return ListElement::json();
             case XMLType::class:
-            case XMLNodeType::class:
+            case XMLElementType::class:
                 return ListElement::string();
             case ObjectType::class:
                 $class = $element->class;
@@ -143,7 +143,7 @@ final class SchemaConverter
             case JsonType::class:
                 return ParquetSchema\MapValue::json();
             case XMLType::class:
-            case XMLNodeType::class:
+            case XMLElementType::class:
                 return ParquetSchema\MapValue::string();
             case ObjectType::class:
                 $class = $mapValueType->class;
@@ -226,7 +226,7 @@ final class SchemaConverter
             case JsonType::class:
                 return FlatColumn::json($name);
             case XMLType::class:
-            case XMLNodeType::class:
+            case XMLElementType::class:
                 return FlatColumn::string($name);
             case ObjectType::class:
                 return $this->flowObjectToParquetFlat($type, $name);

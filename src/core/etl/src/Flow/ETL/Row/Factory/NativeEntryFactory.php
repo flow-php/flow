@@ -4,10 +4,32 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Row\Factory;
 
-use function Flow\ETL\DSL\{array_entry, bool_entry, datetime_entry, enum_entry, float_entry, int_entry, json_entry, json_object_entry, map_entry, obj_entry, object_entry, str_entry, struct_entry, uuid_entry, xml_entry, xml_node_entry};
+use function Flow\ETL\DSL\{array_entry,
+    bool_entry,
+    datetime_entry,
+    enum_entry,
+    float_entry,
+    int_entry,
+    json_entry,
+    json_object_entry,
+    map_entry,
+    obj_entry,
+    object_entry,
+    str_entry,
+    struct_entry,
+    uuid_entry,
+    xml_element_entry,
+    xml_entry};
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException, SchemaDefinitionNotFoundException};
 use Flow\ETL\PHP\Type\Caster\StringCastingHandler\StringTypeChecker;
-use Flow\ETL\PHP\Type\Logical\{DateTimeType, JsonType, ListType, MapType, StructureType, UuidType, XMLNodeType, XMLType};
+use Flow\ETL\PHP\Type\Logical\{DateTimeType,
+    JsonType,
+    ListType,
+    MapType,
+    StructureType,
+    UuidType,
+    XMLElementType,
+    XMLType};
 use Flow\ETL\PHP\Type\Native\{ArrayType, EnumType, ObjectType, ScalarType};
 use Flow\ETL\PHP\Type\{Caster, TypeDetector};
 use Flow\ETL\Row\{Entry, EntryFactory, Schema, Schema\Definition};
@@ -96,8 +118,8 @@ final class NativeEntryFactory implements EntryFactory
             return xml_entry($entryName, $value);
         }
 
-        if ($valueType instanceof XMLNodeType) {
-            return xml_node_entry($entryName, $value);
+        if ($valueType instanceof XMLElementType) {
+            return xml_element_entry($entryName, $value);
         }
 
         if ($valueType instanceof ObjectType) {
@@ -105,8 +127,8 @@ final class NativeEntryFactory implements EntryFactory
                 return xml_entry($entryName, $value);
             }
 
-            if (\in_array($valueType->class, [\DOMElement::class, \DOMNode::class], true)) {
-                return xml_node_entry($entryName, $value);
+            if ($valueType->class === \DOMElement::class) {
+                return xml_element_entry($entryName, $value);
             }
 
             if (\in_array($valueType->class, [\DateTimeImmutable::class, \DateTimeInterface::class, \DateTime::class], true)) {

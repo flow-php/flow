@@ -89,7 +89,7 @@ final class ASCIIValue
                 if ($val instanceof Entry) {
                     $this->stringValue = $val->toString();
 
-                    if ($val instanceof Entry\XMLEntry || $val instanceof Entry\XMLNodeEntry) {
+                    if ($val instanceof Entry\XMLEntry || $val instanceof Entry\XMLElementEntry) {
                         $this->stringValue = \str_replace("\n", '', $this->stringValue);
                     }
 

@@ -4,7 +4,16 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type\Logical\List;
 
-use function Flow\ETL\DSL\{type_boolean, type_datetime, type_float, type_int, type_json, type_object, type_string, type_uuid, type_xml, type_xml_node};
+use function Flow\ETL\DSL\{type_boolean,
+    type_datetime,
+    type_float,
+    type_int,
+    type_json,
+    type_object,
+    type_string,
+    type_uuid,
+    type_xml,
+    type_xml_element};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\{ListType, MapType, StructureType};
 use Flow\ETL\PHP\Type\{Type, TypeFactory};
@@ -96,9 +105,9 @@ final class ListElement
         return new self(type_xml($nullable));
     }
 
-    public static function xml_node(bool $nullable = false) : self
+    public static function xml_element(bool $nullable = false) : self
     {
-        return new self(type_xml_node($nullable));
+        return new self(type_xml_element($nullable));
     }
 
     public function isEqual(mixed $value) : bool
