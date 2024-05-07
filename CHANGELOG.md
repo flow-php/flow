@@ -1,6 +1,7 @@
 ## [Unreleased] - 2024-05-07
 
 ### Added
+- [#1068](https://github.com/flow-php/flow/pull/1068) - **Add new XMLElementEntry** - [@stloyd](https://github.com/stloyd)
 - [#1065](https://github.com/flow-php/flow/pull/1065) - **Added cloud storage examples to homepage** - [@norberttech](https://github.com/norberttech)
 - [#1059](https://github.com/flow-php/flow/pull/1059) - **allow to reorder entries through DataFrame::select** - [@norberttech](https://github.com/norberttech)
 - [#1059](https://github.com/flow-php/flow/pull/1059) - **DataFrame::reorderEntries() with built-in custom ordering strategies** - [@norberttech](https://github.com/norberttech)
@@ -21,6 +22,7 @@
 - [#1055](https://github.com/flow-php/flow/pull/1055) - **Right Join before duplicating right side rows in each batch from the left side dataset** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#1068](https://github.com/flow-php/flow/pull/1068) - **Remove XMLNodeEntry** - [@stloyd](https://github.com/stloyd)
 - [#1056](https://github.com/flow-php/flow/pull/1056) - **Pipeline::closure** - [@norberttech](https://github.com/norberttech)
 - [#1056](https://github.com/flow-php/flow/pull/1056) - **Pipeline::cleanCopy** - [@norberttech](https://github.com/norberttech)
 - [#1055](https://github.com/flow-php/flow/pull/1055) - **Join expression comparison types other than equal/identical/any/all** - [@norberttech](https://github.com/norberttech)
