@@ -324,7 +324,7 @@ function structure_element(string $name, Type $type) : StructureElement
     return new StructureElement($name, $type);
 }
 
-function list_entry(string $name, array $value, ListType $type) : Entry\ListEntry
+function list_entry(string $name, ?array $value, ListType $type) : Entry\ListEntry
 {
     return new Entry\ListEntry($name, $value, $type);
 }
