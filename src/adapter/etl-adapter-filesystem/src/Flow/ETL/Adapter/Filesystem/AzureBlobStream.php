@@ -43,14 +43,10 @@ final class AzureBlobStream extends FlysystemWrapper
             /**
              * @var array{connection-string: string} $clientOptions
              */
-            $clientOptions = \array_merge(
-                ['connection-string' => ''],
-                /** @phpstan-ignore-next-line */
-                ['connection-string' => $contextOptions[self::PROTOCOL]['connection-string']] ?? []
-            );
+            $clientOptions = ['connection-string' => $contextOptions[self::PROTOCOL]['connection-string']];
 
             /** @var string $container */
-            $container = $contextOptions[self::PROTOCOL]['container'] ?? '';
+            $container = $contextOptions[self::PROTOCOL]['container'];
 
             /**
              * @psalm-suppress PossiblyNullArrayAccess
