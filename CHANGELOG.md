@@ -16,6 +16,7 @@
 - [#1053](https://github.com/flow-php/flow/pull/1053) - **Update Homebrew TAP formula: flow-php to version: 0.7.4** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1072](https://github.com/flow-php/flow/pull/1072) - **definition of list_entry function in dsl** - [@norberttech](https://github.com/norberttech)
 - [6748a6](https://github.com/flow-php/flow/commit/6748a68b314c40ed5dcec378048fce4be91e46c5) - **CHANGELOG.md** - [@norberttech](https://github.com/norberttech)
 - [#1061](https://github.com/flow-php/flow/pull/1061) - **checks on Ramsey UUID concrete class** - [@jguittard](https://github.com/jguittard)
 - [#1057](https://github.com/flow-php/flow/pull/1057) - **DataFrame::aggregate returns the same instance of dataframe with updated pipeline** - [@norberttech](https://github.com/norberttech)
