@@ -37,23 +37,10 @@ final class AwsS3Stream extends FlysystemWrapper
              */
             $contextOptions = \stream_context_get_options($this->context);
 
-            /**
-             * @var array{credentials: array{key: string, secret: string}, region: string, version: string} $clientOptions
-             */
-            $clientOptions = \array_merge(
-                [
-                    'credentials' => [
-                        'key' => '',
-                        'secret' => '',
-                    ],
-                    'region' => '',
-                    'version' => 'latest',
-                ],
-                $contextOptions[self::PROTOCOL]['client'] ?? []
-            );
+            $clientOptions = $contextOptions[self::PROTOCOL]['client'];
 
             /** @var string $bucket */
-            $bucket = $contextOptions[self::PROTOCOL]['bucket'] ?? '';
+            $bucket = $contextOptions[self::PROTOCOL]['bucket'];
 
             /**
              * @psalm-suppress PossiblyNullArrayAccess
