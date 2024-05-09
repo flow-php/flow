@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-05-08
+## [Unreleased] - 2024-05-09
 
 ### Added
 - [#1068](https://github.com/flow-php/flow/pull/1068) - **Add new XMLElementEntry** - [@stloyd](https://github.com/stloyd)
@@ -22,6 +22,7 @@
 - [#1055](https://github.com/flow-php/flow/pull/1055) - **Right Join before duplicating right side rows in each batch from the left side dataset** - [@norberttech](https://github.com/norberttech)
 
 ### Removed
+- [#1071](https://github.com/flow-php/flow/pull/1071) - **removed empty aws/azure client credentials** - [@norberttech](https://github.com/norberttech)
 - [#1068](https://github.com/flow-php/flow/pull/1068) - **Remove XMLNodeEntry** - [@stloyd](https://github.com/stloyd)
 - [#1056](https://github.com/flow-php/flow/pull/1056) - **Pipeline::closure** - [@norberttech](https://github.com/norberttech)
 - [#1056](https://github.com/flow-php/flow/pull/1056) - **Pipeline::cleanCopy** - [@norberttech](https://github.com/norberttech)
