@@ -28,10 +28,6 @@ final class TextExtractor implements Extractor, FileExtractor, LimitableExtracto
 
             $rowData = \fgets($stream->resource());
 
-            if ($rowData === false) {
-                return;
-            }
-
             while ($rowData !== false) {
                 if ($shouldPutInputIntoRows) {
                     $row = [['text' => \rtrim($rowData), '_input_file_uri' => $stream->path()->uri()]];
