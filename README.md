@@ -1,6 +1,6 @@
 ![img](docs/assets/img/flow_php_banner_02_2022.png)
 
-Flow is a PHP-based, strongly typed data processing framework with low memory footprint.
+Flow is a PHP-based, strongly typed data processing framework with a low memory footprint.
 
 [![Latest Stable Version](https://poser.pugx.org/flow-php/flow/v)](https://packagist.org/packages/flow-php/flow)
 [![Latest Unstable Version](https://poser.pugx.org/flow-php/flow/v/unstable)](https://packagist.org/packages/flow-php/flow)
@@ -14,76 +14,14 @@ Flow is a PHP-based, strongly typed data processing framework with low memory fo
 
 Supported PHP versions: [![PHP 8.1](https://img.shields.io/badge/php-~8.1-8892BF.svg)](https://php.net/) [![PHP 8.2](https://img.shields.io/badge/php-~8.2-8892BF.svg)](https://php.net/) [![PHP 8.3](https://img.shields.io/badge/php-~8.3-8892BF.svg)](https://php.net/)
 
-## We Stand Against Terror
-
-<table>
-  <thead>
-    <tr>
-      <td align="center"><a href="https://www.standwithukraine.how/" target="_blank">Stand With Ukraine</a></td>
-      <td align="center"><a href="https://www.standwithus.com/">Stand With Us</a></td>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td align="center"><img width="256" height="186" alt="Flag of Ukraine" src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Flag_of_Ukraine.svg/256px-Flag_of_Ukraine.svg.png"></td>
-      <td align="center"><img width="256" height="186" alt="Flag of Israel" src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Flag_of_Israel.svg/256px-Flag_of_Israel.svg.png"></td>
-    </tr>
-  </tbody>
-</table>
-
-> On Feb. 24, 2022, Russia declared an unprovoked war on Ukraine and launched a full-scale invasion. Russia is currently bombing peaceful Ukrainian cities, including schools and hospitals and attacking civilians who are fleeing conflict zones.
-
-> On Oct. 7, 2023, the national holiday of Simchat Torah, Hamas terrorists initiated an attack on Israel in the early hours, targeting civilians. They unleashed violence that resulted in at least 1,400 casualties and abducted at least 200 individuals, not limited to Israelis.
-
 ---
 
-## Introduction
+## Flow PHP
 
-Flow is a first and the most advanced PHP ETL framework. 
+Flow is the most advanced PHP ETL framework. 
 
 📜 [Documentation](docs/introduction.md)
 
-#### What is ETL?
-
-ETL stands for **Extract, Transform, Load** – a process used in database usage and data warehousing. It involves three critical steps:
-
-1. **Extract**: The first step is to extract data from various sources. These sources could be databases, CSV files, online services, or other formats. During extraction, the goal is to retrieve all the necessary data efficiently and accurately.
-2. **Transform**: Once the data is extracted, it needs to be transformed. This transformation process involves cleaning the data (removing duplicates, fixing errors), converting it into a suitable format or structure for the purposes of querying and analysis, and applying any business rules or calculations that are needed.
-3. **Load**: Finally, the transformed data is loaded into a target database, data warehouse, or a data mart where it can be accessed, queried, and used for business analysis or decision-making processes.
-
-#### Main Use Cases
-
-ETL frameworks are essential in various scenarios, especially in data-driven environments. Some of the key use cases include:
-1. **Data Integration**: ETL is fundamental in integrating data from multiple, often disparate, sources. This is crucial for businesses that gather data from various systems and need a unified view.
-2. **Business Intelligence (BI)**: For BI processes, ETL is used to collect data from different sources and bring it into a data warehouse, where it can be analyzed to provide business insights.
-3. **Data Warehousing**: ETL plays a pivotal role in building and maintaining data warehouses. It helps in structuring large amounts of data into a format that is easy to analyze.
-4. **Data Migration**: When organizations change systems or upgrade databases, ETL processes are necessary to migrate data effectively from the old system to the new one.
-5. **Data Cleaning and Transformation**: Ensuring data quality is paramount. ETL frameworks are used to clean, standardize, and transform data, thus ensuring high-quality data for analysis.
-6. **Historical Data Storage**: ETL is used to extract large volumes of historical data from operational systems and load it into data warehouses for long-term storage, analysis, and reporting.
-7. **Reporting and Analysis**: By consolidating data from various sources, ETL frameworks simplify the reporting and analysis process, providing businesses with actionable insights.
-8. **Regulatory Compliance**: For compliance with various regulations, organizations use ETL processes to gather, standardize, and store data in a manner that meets regulatory requirements.
-
-## Features of Flow PHP
-
-Flow PHP is a powerful and versatile ETL framework designed to cater to a variety of data processing needs. Below are some of its standout features:
-
-- **Low memory footprint**: Optimized for efficiency, Flow PHP ensures minimal memory usage, maintaining low and constant consumption regardless of data size. This makes it ideal for handling large datasets without compromising performance.
-- **Versatile Data Source Interaction**: Whether your data resides in databases, spreadsheets, or online platforms, Flow PHP can seamlessly read from and write to any data source.
-- **Rich Collection of Data Transformation Functions**: Transform your data with ease using a wide array of built-in functions. From simple mapping to complex manipulations, the framework covers all your data transformation needs.
-- **Direct Access to Remote Filesystems**: Flow PHP provides the ability to interact directly with remote filesystems, facilitating efficient data handling and processing without the need for local storage.
-- **Advanced Data Partitioning**: Efficiently partition your data for improved manageability and processing. This feature is crucial for handling large datasets or for processing data in distributed systems.
-- **Grouping & Aggregating**: Easily group and aggregate data to extract meaningful insights. This feature is particularly useful for summarizing datasets and performing statistical analysis.
-- **Remote File Processing**: Process files stored remotely with the same ease as local files, enabling powerful and flexible data integration from various sources.
-- **Join Operations**: Perform join operations between different datasets. This is essential for combining data from multiple sources, providing a more comprehensive view.
-- **Efficient Sorting**: Sort your data based on specific criteria or conditions, ensuring that your datasets are organized precisely as needed.
-- **ASCII Table Display**: Visualize your datasets as neatly formatted ASCII tables, making it easier to read and analyze data directly from the console.
-- **Schema Validation**: Ensure data quality and consistency by validating your datasets against predefined schemas.
-- **Window Functions**: Utilize window functions for advanced data analysis, allowing you to perform calculations across sets of rows that are related to the current row.
-- **Built-In Caching Mechanism**: Improve performance with built-in caching, reducing processing time and enhancing overall efficiency, especially in repetitive data processing tasks.
-
-Flow PHP’s comprehensive set of features makes it an ideal choice for developers and organizations looking to harness the power of ETL for efficient and effective data processing.
-
-## Usage Example
 
 ```php
 <?php
@@ -91,13 +29,13 @@ Flow PHP’s comprehensive set of features makes it an ideal choice for develope
 declare(strict_types=1);
 
 use function Flow\ETL\Adapter\Parquet\{from_parquet, to_parquet};
-use function Flow\ETL\DSL\{data_frame, lit, ref, sum, to_output};
+use function Flow\ETL\DSL\{data_frame, lit, ref, sum, to_output, overwrite};
 use Flow\ETL\Filesystem\SaveMode;
 
 require __DIR__ . '/vendor/autoload.php';
 
 data_frame()
-    ->read(from_parquet(__FLOW_DATA__ . '/orders_flow.parquet'))
+    ->read(from_parquet(__DIR__ . '/orders_flow.parquet'))
     ->select('created_at', 'total_price', 'discount')
     ->withEntry('created_at', ref('created_at')->cast('date')->dateFormat('Y/m'))
     ->withEntry('revenue', ref('total_price')->minus(ref('discount')))
@@ -109,8 +47,8 @@ data_frame()
     ->drop('revenue_sum')
     ->write(to_output(truncate: false))
     ->withEntry('created_at', ref('created_at')->toDate('Y/m'))
-    ->mode(SaveMode::Overwrite)
-    ->write(to_parquet(__FLOW_OUTPUT__ . '/daily_revenue.parquet'))
+    ->saveMode(overwrite())
+    ->write(to_parquet(__DIR__ . '/daily_revenue.parquet'))
     ->run();
 ```
 
