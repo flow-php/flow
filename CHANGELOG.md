@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-05-09
+## [Unreleased] - 2024-05-11
 
 ### Added
 - [#1068](https://github.com/flow-php/flow/pull/1068) - **Add new XMLElementEntry** - [@stloyd](https://github.com/stloyd)
@@ -8,6 +8,7 @@
 - [#1054](https://github.com/flow-php/flow/pull/1054) - **missing tests for parquet rows normalizer** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [747f19](https://github.com/flow-php/flow/commit/747f197578ae23c0f29b48957141f12edc6651b7) - **Simplify README.md** - [@norberttech](https://github.com/norberttech)
 - [#1058](https://github.com/flow-php/flow/pull/1058) - **Replaced reflection with bind closure approach to set dataframe pipeline** - [@norberttech](https://github.com/norberttech)
 - [#1056](https://github.com/flow-php/flow/pull/1056) - **GroupBy is now allowed only with aggregations** - [@norberttech](https://github.com/norberttech)
 - [#1056](https://github.com/flow-php/flow/pull/1056) - **NestedPipeline was renamed to LinkedPipeline** - [@norberttech](https://github.com/norberttech)
