@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-05-11
+## [Unreleased] - 2024-05-14
 
 ### Added
 - [#1068](https://github.com/flow-php/flow/pull/1068) - **Add new XMLElementEntry** - [@stloyd](https://github.com/stloyd)
