@@ -260,7 +260,7 @@ function string_entry(string $name, ?string $value) : Entry\StringEntry
     return str_entry($name, $value);
 }
 
-function uuid_entry(string $name, Entry\Type\Uuid|string|null $value) : Entry\UuidEntry
+function uuid_entry(string $name, \Flow\ETL\PHP\Value\Uuid|string|null $value) : Entry\UuidEntry
 {
     return new Entry\UuidEntry($name, $value);
 }
@@ -931,19 +931,19 @@ function dense_rank() : DenseRank
     return new DenseRank();
 }
 
-function average(Reference $ref) : Average
+function average(Reference|string $ref) : Average
 {
-    return new Average($ref);
+    return new Average(is_string($ref) ? ref($ref) : $ref);
 }
 
-function collect(Reference $ref) : Collect
+function collect(Reference|string $ref) : Collect
 {
-    return new Collect($ref);
+    return new Collect(is_string($ref) ? ref($ref) : $ref);
 }
 
-function collect_unique(Reference $ref) : CollectUnique
+function collect_unique(Reference|string $ref) : CollectUnique
 {
-    return new CollectUnique($ref);
+    return new CollectUnique(is_string($ref) ? ref($ref) : $ref);
 }
 
 function window() : Window
@@ -951,29 +951,29 @@ function window() : Window
     return new Window();
 }
 
-function sum(Reference $ref) : Sum
+function sum(Reference|string $ref) : Sum
 {
-    return new Sum($ref);
+    return new Sum(is_string($ref) ? ref($ref) : $ref);
 }
 
-function first(Reference $ref) : First
+function first(Reference|string $ref) : First
 {
-    return new First($ref);
+    return new First(is_string($ref) ? ref($ref) : $ref);
 }
 
-function last(Reference $ref) : Last
+function last(Reference|string $ref) : Last
 {
-    return new Last($ref);
+    return new Last(is_string($ref) ? ref($ref) : $ref);
 }
 
-function max(Reference $ref) : Max
+function max(Reference|string $ref) : Max
 {
-    return new Max($ref);
+    return new Max(is_string($ref) ? ref($ref) : $ref);
 }
 
-function min(Reference $ref) : Min
+function min(Reference|string $ref) : Min
 {
-    return new Min($ref);
+    return new Min(is_string($ref) ? ref($ref) : $ref);
 }
 
 function row_number() : RowNumber

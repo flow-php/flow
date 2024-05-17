@@ -2,6 +2,7 @@
 
 use PhpCsFixer\Config;
 use PhpCsFixer\Finder;
+use PhpCsFixer\Runner\Parallel\ParallelConfigFactory;
 
 $finder = Finder::create()
     ->files()
@@ -28,6 +29,7 @@ if (!\file_exists(__DIR__ . '/var/cs-fixer')) {
 }
 
 return (new Config())
+    ->setParallelConfig(ParallelConfigFactory::detect())
     ->setRiskyAllowed(true)
     ->setCacheFile(__DIR__ . '/var/cs-fixer/php_cs.cache')
     ->setRules([

@@ -8,7 +8,7 @@ use function Flow\ETL\DSL\type_uuid;
 use Flow\ETL\Exception\CastingException;
 use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\PHP\Type\Caster\UuidCastingHandler;
-use Flow\ETL\Row\Entry\Type\Uuid;
+use Flow\ETL\PHP\Value\Uuid;
 use PHPUnit\Framework\TestCase;
 
 final class UuidCastingHandlerTest extends TestCase

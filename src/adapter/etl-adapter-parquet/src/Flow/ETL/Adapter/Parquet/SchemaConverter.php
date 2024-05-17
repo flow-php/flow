@@ -11,7 +11,7 @@ use Flow\ETL\PHP\Type\Logical\Structure\StructureElement;
 use Flow\ETL\PHP\Type\Logical\{DateTimeType, JsonType, ListType, MapType, StructureType, UuidType, XMLElementType, XMLType};
 use Flow\ETL\PHP\Type\Native\{ObjectType, ScalarType};
 use Flow\ETL\PHP\Type\Type;
-use Flow\ETL\Row\{Entry, Schema};
+use Flow\ETL\Row\{Schema};
 use Flow\Parquet\ParquetFile\Schema as ParquetSchema;
 use Flow\Parquet\ParquetFile\Schema\{Column, FlatColumn, ListElement, NestedColumn};
 
@@ -152,7 +152,7 @@ final class SchemaConverter
                     return ParquetSchema\MapValue::datetime();
                 }
 
-                if ($class === Entry\Type\Uuid::class) {
+                if ($class === \Flow\ETL\PHP\Value\Uuid::class) {
                     return ParquetSchema\MapValue::string();
                 }
 

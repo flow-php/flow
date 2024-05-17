@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\PHP\Type\Caster\StringCastingHandler;
 
-use Flow\ETL\Row\Entry\Type\Uuid;
+use Flow\ETL\PHP\Value\Uuid;
 
 final class StringTypeChecker
 {

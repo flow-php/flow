@@ -75,7 +75,7 @@ final class NativeEntryFactory implements EntryFactory
                 }
 
                 if ($stringChecker->isUuid()) {
-                    return uuid_entry($entryName, Entry\Type\Uuid::fromString($value));
+                    return uuid_entry($entryName, \Flow\ETL\PHP\Value\Uuid::fromString($value));
                 }
 
                 if ($stringChecker->isXML()) {
@@ -103,7 +103,7 @@ final class NativeEntryFactory implements EntryFactory
         }
 
         if ($valueType instanceof UuidType) {
-            if ($value instanceof Entry\Type\Uuid) {
+            if ($value instanceof \Flow\ETL\PHP\Value\Uuid) {
                 return uuid_entry($entryName, $value);
             }
 
@@ -135,9 +135,9 @@ final class NativeEntryFactory implements EntryFactory
                 return datetime_entry($entryName, $value);
             }
 
-            if (\in_array($valueType->class, [Entry\Type\Uuid::class, UuidInterface::class, Uuid::class], true)) {
+            if (\in_array($valueType->class, [\Flow\ETL\PHP\Value\Uuid::class, UuidInterface::class, Uuid::class], true)) {
                 if (\in_array($valueType->class, [UuidInterface::class, Uuid::class], true)) {
-                    return uuid_entry($entryName, new Entry\Type\Uuid($value));
+                    return uuid_entry($entryName, new \Flow\ETL\PHP\Value\Uuid($value));
                 }
 
                 return uuid_entry($entryName, $value);

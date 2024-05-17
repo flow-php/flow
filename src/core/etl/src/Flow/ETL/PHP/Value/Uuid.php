@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Flow\ETL\Row\Entry\Type;
+namespace Flow\ETL\PHP\Value;
 
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 
