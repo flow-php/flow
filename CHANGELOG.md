@@ -1,6 +1,8 @@
 ## [Unreleased] - 2024-05-17
 
 ### Added
+- [#1079](https://github.com/flow-php/flow/pull/1079) - **Enabled parallelization for cs fixer** - [@norberttech](https://github.com/norberttech)
+- [#1079](https://github.com/flow-php/flow/pull/1079) - **Allowed to pass both string/reference to aggregating functions** - [@norberttech](https://github.com/norberttech)
 - [#1068](https://github.com/flow-php/flow/pull/1068) - **Add new XMLElementEntry** - [@stloyd](https://github.com/stloyd)
 - [#1065](https://github.com/flow-php/flow/pull/1065) - **Added cloud storage examples to homepage** - [@norberttech](https://github.com/norberttech)
 - [#1059](https://github.com/flow-php/flow/pull/1059) - **allow to reorder entries through DataFrame::select** - [@norberttech](https://github.com/norberttech)
@@ -17,6 +19,7 @@
 - [#1053](https://github.com/flow-php/flow/pull/1053) - **Update Homebrew TAP formula: flow-php to version: 0.7.4** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1079](https://github.com/flow-php/flow/pull/1079) - **Group by will no longer change type of entries used for groupping** - [@norberttech](https://github.com/norberttech)
 - [#1072](https://github.com/flow-php/flow/pull/1072) - **definition of list_entry function in dsl** - [@norberttech](https://github.com/norberttech)
 - [6748a6](https://github.com/flow-php/flow/commit/6748a68b314c40ed5dcec378048fce4be91e46c5) - **CHANGELOG.md** - [@norberttech](https://github.com/norberttech)
 - [#1061](https://github.com/flow-php/flow/pull/1061) - **checks on Ramsey UUID concrete class** - [@jguittard](https://github.com/jguittard)
