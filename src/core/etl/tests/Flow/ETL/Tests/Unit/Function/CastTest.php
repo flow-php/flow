@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Function;
 
 use function Flow\ETL\DSL\{cast, ref};
+use Flow\ETL\PHP\Value\Uuid;
 use Flow\ETL\Row;
-use Flow\ETL\Row\Entry\Type\Uuid;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
 use PHPUnit\Framework\TestCase;
 

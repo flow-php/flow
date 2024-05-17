@@ -7,7 +7,7 @@ namespace Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\Exception\CastingException;
 use Flow\ETL\PHP\Type\Logical\UuidType;
 use Flow\ETL\PHP\Type\{Caster, Type};
-use Flow\ETL\Row\Entry\Type\Uuid;
+use Flow\ETL\PHP\Value\Uuid;
 
 final class UuidCastingHandler implements CastingHandler
 {

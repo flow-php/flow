@@ -7,7 +7,7 @@ namespace Flow\ETL;
 use function Flow\ETL\DSL\array_to_rows;
 use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 use Flow\ETL\Function\AggregatingFunction;
-use Flow\ETL\Row\{Entry, Reference, References};
+use Flow\ETL\Row\{Reference, References};
 
 final class GroupBy
 {
@@ -57,7 +57,7 @@ final class GroupBy
         if ($this->pivot) {
             foreach ($rows as $row) {
                 try {
-                    $this->pivotColumns[] = $this->toScalar($row->get($this->pivot));
+                    $this->pivotColumns[] = $row->get($this->pivot)->value();
                 } catch (InvalidArgumentException) {
                     $this->pivotColumns[] = null;
                 }
@@ -91,7 +91,7 @@ final class GroupBy
 
                 foreach ($this->refs as $ref) {
                     try {
-                        $values[$ref->name()] = $this->toScalar($row->get($ref));
+                        $values[$ref->name()] = $row->get($ref)->value();
                     } catch (InvalidArgumentException) {
                         $values[$ref->name()] = null;
                     }
@@ -185,32 +185,19 @@ final class GroupBy
                 $stringValues[] = 'null';
             } elseif (\is_scalar($value)) {
                 $stringValues[] = (string) $value;
+            } else {
+                if ($value instanceof \Stringable) {
+                    $stringValues[] = $value->__toString();
+                } elseif ($value instanceof \DateTimeInterface) {
+                    $stringValues[] = $value->format(\DateTimeImmutable::ATOM);
+                } elseif (\is_array($value)) {
+                    $stringValues[] = $this->hash($value);
+                } else {
+                    $stringValues[] = \serialize($value);
+                }
             }
         }
 
         return \hash('xxh128', \implode('', $stringValues));
-    }
-
-    private function toScalar(Entry $entry) : int|string|float|null
-    {
-        if ($entry->value() === null) {
-            return null;
-        }
-
-        if (\is_bool($entry->value())) {
-            return $entry->toString();
-        }
-
-        if (\is_scalar($entry->value())) {
-            return $entry->value();
-        }
-
-        return match ($entry::class) {
-            /** @phpstan-ignore-next-line */
-            Entry\UuidEntry::class => $entry->value()?->toString(),
-            /** @phpstan-ignore-next-line */
-            Entry\DateTimeEntry::class => $entry->value()?->format(\DateTimeImmutable::ATOM),
-            default => $entry->toString()
-        };
     }
 }

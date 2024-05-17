@@ -13,7 +13,7 @@ use Flow\ETL\PHP\Type\Logical\{DateTimeType,
     XMLType};
 use Flow\ETL\PHP\Type\Native\{ArrayType, EnumType, NullType, ObjectType, ScalarType};
 use Flow\ETL\PHP\Type\TypeDetector;
-use Flow\ETL\Row\Entry\Type\Uuid;
+use Flow\ETL\PHP\Value\Uuid;
 use Flow\ETL\Tests\Fixtures\Enum\BasicEnum;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;

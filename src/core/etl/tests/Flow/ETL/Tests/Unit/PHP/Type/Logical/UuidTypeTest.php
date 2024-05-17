@@ -28,7 +28,7 @@ final class UuidTypeTest extends TestCase
         self::assertFalse(type_uuid()->isValid('2'));
         self::assertTrue(type_uuid()->isValid(Uuid::uuid4()));
         self::assertTrue(type_uuid()->isValid(\Symfony\Component\Uid\Uuid::v4()));
-        self::assertTrue(type_uuid()->isValid(new \Flow\ETL\Row\Entry\Type\Uuid(Uuid::uuid4())));
+        self::assertTrue(type_uuid()->isValid(new \Flow\ETL\PHP\Value\Uuid(Uuid::uuid4())));
     }
 
     public function test_to_string() : void

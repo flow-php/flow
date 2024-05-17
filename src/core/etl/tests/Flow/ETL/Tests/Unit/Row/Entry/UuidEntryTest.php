@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
-use Flow\ETL\Row\Entry\Type\Uuid;
+use Flow\ETL\PHP\Value\Uuid;
 use Flow\ETL\Row\Entry\UuidEntry;
 use PHPUnit\Framework\TestCase;
 

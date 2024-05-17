@@ -8,11 +8,12 @@ use function Flow\ETL\DSL\type_uuid;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\PHP\Type\Logical\UuidType;
 use Flow\ETL\PHP\Type\Type;
+use Flow\ETL\PHP\Value\Uuid;
 use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\{Entry, Reference};
 
 /**
- * @implements Entry<?Entry\Type\Uuid>
+ * @implements Entry<?Uuid>
  */
 final class UuidEntry implements Entry
 {
@@ -20,19 +21,19 @@ final class UuidEntry implements Entry
 
     private readonly UuidType $type;
 
-    private ?Entry\Type\Uuid $value;
+    private ?Uuid $value;
 
     /**
      * @throws InvalidArgumentException
      */
-    public function __construct(private readonly string $name, Entry\Type\Uuid|string|null $value)
+    public function __construct(private readonly string $name, Uuid|string|null $value)
     {
         if ('' === $name) {
             throw InvalidArgumentException::because('Entry name cannot be empty');
         }
 
         if (\is_string($value)) {
-            $this->value = Entry\Type\Uuid::fromString($value);
+            $this->value = Uuid::fromString($value);
         } else {
             $this->value = $value;
         }
@@ -42,7 +43,7 @@ final class UuidEntry implements Entry
 
     public static function from(string $name, string $value) : self
     {
-        return new self($name, Entry\Type\Uuid::fromString($value));
+        return new self($name, Uuid::fromString($value));
     }
 
     public function __toString() : string
@@ -112,7 +113,7 @@ final class UuidEntry implements Entry
         return $this->type;
     }
 
-    public function value() : ?Entry\Type\Uuid
+    public function value() : ?Uuid
     {
         return $this->value;
     }

@@ -54,7 +54,7 @@ final class FakeExtractor implements Extractor
                     bool_entry('bool', false),
                     datetime_entry('datetime', new \DateTimeImmutable('now')),
                     str_entry('null', null),
-                    uuid_entry('uuid', new \Flow\ETL\Row\Entry\Type\Uuid(Uuid::uuid4())),
+                    uuid_entry('uuid', new \Flow\ETL\PHP\Value\Uuid(Uuid::uuid4())),
                     json_entry('json', ['id' => $id, 'status' => 'NEW']),
                     array_entry(
                         'array',
