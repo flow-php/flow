@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-05-17
+## [Unreleased] - 2024-05-22
 
 ### Added
 - [#1079](https://github.com/flow-php/flow/pull/1079) - **Enabled parallelization for cs fixer** - [@norberttech](https://github.com/norberttech)
@@ -10,6 +10,8 @@
 - [#1054](https://github.com/flow-php/flow/pull/1054) - **missing tests for parquet rows normalizer** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#1081](https://github.com/flow-php/flow/pull/1081) - **String based Scalar functions are now using caster to cast values to string** - [@norberttech](https://github.com/norberttech)
+- [#1081](https://github.com/flow-php/flow/pull/1081) - **Moved caster to dataframe configuration** - [@norberttech](https://github.com/norberttech)
 - [747f19](https://github.com/flow-php/flow/commit/747f197578ae23c0f29b48957141f12edc6651b7) - **Simplify README.md** - [@norberttech](https://github.com/norberttech)
 - [#1058](https://github.com/flow-php/flow/pull/1058) - **Replaced reflection with bind closure approach to set dataframe pipeline** - [@norberttech](https://github.com/norberttech)
 - [#1056](https://github.com/flow-php/flow/pull/1056) - **GroupBy is now allowed only with aggregations** - [@norberttech](https://github.com/norberttech)
@@ -19,6 +21,7 @@
 - [#1053](https://github.com/flow-php/flow/pull/1053) - **Update Homebrew TAP formula: flow-php to version: 0.7.4** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1081](https://github.com/flow-php/flow/pull/1081) - **Scalar comparison functions are now also detecting types of compared values to prevent comparing not compatible values** - [@norberttech](https://github.com/norberttech)
 - [#1079](https://github.com/flow-php/flow/pull/1079) - **Group by will no longer change type of entries used for groupping** - [@norberttech](https://github.com/norberttech)
 - [#1072](https://github.com/flow-php/flow/pull/1072) - **definition of list_entry function in dsl** - [@norberttech](https://github.com/norberttech)
 - [6748a6](https://github.com/flow-php/flow/commit/6748a68b314c40ed5dcec378048fce4be91e46c5) - **CHANGELOG.md** - [@norberttech](https://github.com/norberttech)
