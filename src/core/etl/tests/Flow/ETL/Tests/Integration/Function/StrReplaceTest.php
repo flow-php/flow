@@ -49,7 +49,7 @@ final class StrReplaceTest extends TestCase
 
         self::assertSame(
             [
-                ['id' => 1, 'str_replace' => null],
+                ['id' => 1, 'str_replace' => '1'],
             ],
             $memory->dump()
         );

@@ -21,7 +21,8 @@ final class TrimTest extends TestCase
 
     public function test_trim_integer() : void
     {
-        self::assertNull(
+        self::assertSame(
+            '1',
             ref('integer')->trim()->eval(Row::create(int_entry('integer', 1)))
         );
     }

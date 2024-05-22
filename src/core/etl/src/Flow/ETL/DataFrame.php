@@ -16,7 +16,7 @@ use Flow\ETL\Join\{Expression, Join};
 use Flow\ETL\Loader\SchemaValidationLoader;
 use Flow\ETL\Loader\StreamLoader\Output;
 use Flow\ETL\Partition\ScalarFunctionFilter;
-use Flow\ETL\PHP\Type\{AutoCaster, Caster};
+use Flow\ETL\PHP\Type\{AutoCaster};
 use Flow\ETL\Pipeline\{BatchingPipeline,
     CachingPipeline,
     CollectingPipeline,
@@ -137,7 +137,7 @@ final class DataFrame
 
     public function autoCast() : self
     {
-        $this->pipeline->add(new AutoCastTransformer(new AutoCaster(Caster::default())));
+        $this->pipeline->add(new AutoCastTransformer(new AutoCaster($this->context->config->caster())));
 
         return $this;
     }
@@ -374,7 +374,13 @@ final class DataFrame
             return $this;
         }
 
-        $extractor->addPartitionFilter(new ScalarFunctionFilter($filter, $this->context->entryFactory()));
+        $extractor->addPartitionFilter(
+            new ScalarFunctionFilter(
+                $filter,
+                $this->context->entryFactory(),
+                new AutoCaster($this->context->config->caster())
+            )
+        );
 
         return $this;
     }

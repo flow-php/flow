@@ -8,6 +8,7 @@ use function Flow\ETL\DSL\{all, lit, ref};
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\Filesystem\{LocalFilesystem, Path};
 use Flow\ETL\Partition\{NoopFilter, ScalarFunctionFilter};
+use Flow\ETL\PHP\Type\{AutoCaster, Caster};
 use Flow\ETL\Row\Factory\NativeEntryFactory;
 use PHPUnit\Framework\TestCase;
 
@@ -89,7 +90,8 @@ STRING,
                                 ref('date')->cast('date')->lessThan(lit(new \DateTimeImmutable('2022-01-04')))
                             )
                         ),
-                        new NativeEntryFactory()
+                        new NativeEntryFactory(),
+                        new AutoCaster(Caster::default())
                     )
                 )
         );
@@ -128,7 +130,7 @@ STRING,
                 (new LocalFilesystem())
                     ->scan(
                         new Path(__DIR__ . '/Fixtures/partitioned/**/*.txt'),
-                        new ScalarFunctionFilter(ref('partition_01')->equals(lit('b')), new NativeEntryFactory())
+                        new ScalarFunctionFilter(ref('partition_01')->equals(lit('b')), new NativeEntryFactory(), new AutoCaster(Caster::default()))
                     )
             )
         );

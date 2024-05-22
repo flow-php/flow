@@ -9,6 +9,7 @@ use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\ExternalSort\MemorySort;
 use Flow\ETL\Filesystem\{FilesystemStreams, LocalFilesystem};
 use Flow\ETL\Monitoring\Memory\Unit;
+use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\Pipeline\Optimizer;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\Serializer\{Base64Serializer, NativePHPSerializer, Serializer};
@@ -21,6 +22,8 @@ final class ConfigBuilder
      * @var int<1, max>
      */
     private int $cacheBatchSize = 1000;
+
+    private ?Caster $caster;
 
     private ?ExternalSort $externalSort;
 
@@ -43,6 +46,7 @@ final class ConfigBuilder
         $this->filesystem = null;
         $this->putInputIntoRows = false;
         $this->optimizer = null;
+        $this->caster = null;
     }
 
     /**
@@ -89,6 +93,8 @@ final class ConfigBuilder
             new Optimizer\BatchSizeOptimization(batchSize: 1000)
         );
 
+        $this->caster ??= Caster::default();
+
         return new Config(
             $this->id,
             $this->serializer,
@@ -96,6 +102,7 @@ final class ConfigBuilder
             $this->externalSort,
             new FilesystemStreams($this->filesystem),
             $this->optimizer,
+            $this->caster,
             $this->putInputIntoRows,
             $entryFactory,
             $this->cacheBatchSize

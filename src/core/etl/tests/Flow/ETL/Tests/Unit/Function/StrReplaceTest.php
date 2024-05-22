@@ -12,7 +12,8 @@ final class StrReplaceTest extends TestCase
 {
     public function test_str_replace_on_non_string_value() : void
     {
-        self::assertNull(
+        self::assertSame(
+            '1000',
             ref('value')->strReplace('test', '1')->eval(Row::create(int_entry('value', 1000))),
         );
     }

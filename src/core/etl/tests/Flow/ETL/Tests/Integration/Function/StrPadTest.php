@@ -49,7 +49,7 @@ final class StrPadTest extends TestCase
 
         self::assertSame(
             [
-                ['id' => 1, 'strpad' => null],
+                ['id' => 1, 'strpad' => '1         '],
             ],
             $memory->dump()
         );

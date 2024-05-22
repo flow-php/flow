@@ -30,6 +30,15 @@ final class ObjectType implements NativeType
         return new self($data['class'], $nullable);
     }
 
+    public function isComparableWith(Type $type) : bool
+    {
+        if ($type instanceof self) {
+            return true;
+        }
+
+        return false;
+    }
+
     public function isEqual(Type $type) : bool
     {
         return $type instanceof self && $this->class === $type->class && $this->nullable === $type->nullable;

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use function Flow\ETL\DSL\type_string;
 use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\Row;
 use Money\Currencies\ISOCurrencies;
 use Money\Parser\DecimalMoneyParser;
@@ -25,7 +27,7 @@ final class ToMoney extends ScalarFunctionChain
 
     public function eval(Row $row) : ?Money
     {
-        $currency = $this->currencyRef->eval($row);
+        $currency = Caster::default()->to(type_string(true))->value($this->currencyRef->eval($row));
 
         if (!\is_string($currency)) {
             return null;
