@@ -19,6 +19,15 @@ final class ResourceType implements NativeType
         return new self($data['nullable'] ?? false);
     }
 
+    public function isComparableWith(Type $type) : bool
+    {
+        if ($type instanceof NullType) {
+            return true;
+        }
+
+        return false;
+    }
+
     public function isEqual(Type $type) : bool
     {
         return $type instanceof self && $this->nullable === $type->nullable;

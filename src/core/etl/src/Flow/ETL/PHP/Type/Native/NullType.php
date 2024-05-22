@@ -13,6 +13,11 @@ final class NullType implements NativeType
         return new self();
     }
 
+    public function isComparableWith(Type $type) : bool
+    {
+        return true;
+    }
+
     public function isEqual(Type $type) : bool
     {
         return $type instanceof self;

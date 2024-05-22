@@ -12,7 +12,8 @@ final class StrPadTest extends TestCase
 {
     public function test_str_pad_on_non_string_value() : void
     {
-        self::assertNull(
+        self::assertSame(
+            '-1000',
             ref('value')->strPad(5, '-', \STR_PAD_LEFT)->eval(Row::create(int_entry('value', 1000))),
         );
     }

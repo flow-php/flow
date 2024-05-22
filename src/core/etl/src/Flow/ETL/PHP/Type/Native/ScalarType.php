@@ -66,6 +66,19 @@ final class ScalarType implements NativeType
         return $this->type === self::BOOLEAN;
     }
 
+    public function isComparableWith(Type $type) : bool
+    {
+        if ($type instanceof self) {
+            return true;
+        }
+
+        if ($type instanceof NullType) {
+            return true;
+        }
+
+        return false;
+    }
+
     public function isEqual(Type $type) : bool
     {
         return $type instanceof self && $type->type === $this->type && $this->nullable === $type->nullable;

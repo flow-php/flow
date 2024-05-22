@@ -23,6 +23,19 @@ final class ArrayType implements NativeType
         return new self($data['empty'] ?? false, $data['nullable'] ?? false);
     }
 
+    public function isComparableWith(Type $type) : bool
+    {
+        if ($type instanceof NullType) {
+            return true;
+        }
+
+        if ($type instanceof self) {
+            return true;
+        }
+
+        return false;
+    }
+
     public function isEqual(Type $type) : bool
     {
         return $type instanceof self && $this->empty === $type->empty;

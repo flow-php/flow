@@ -94,7 +94,7 @@ final class TrimTest extends TestCase
 
         self::assertSame(
             [
-                ['id' => 1, 'trim' => null],
+                ['id' => 1, 'trim' => '1'],
             ],
             $memory->dump()
         );

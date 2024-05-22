@@ -20,6 +20,19 @@ final class MapType implements LogicalType
         return new self(MapKey::fromArray($data['key']), MapValue::fromArray($data['value']), $data['nullable'] ?? false);
     }
 
+    public function isComparableWith(Type $type) : bool
+    {
+        if ($type instanceof self) {
+            return true;
+        }
+
+        if ($type instanceof NullType) {
+            return true;
+        }
+
+        return false;
+    }
+
     public function isEqual(Type $type) : bool
     {
         if (!$type instanceof self) {

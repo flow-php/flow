@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use function Flow\ETL\DSL\type_string;
+use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\Row;
 
 final class StrPad extends ScalarFunctionChain
@@ -18,8 +20,8 @@ final class StrPad extends ScalarFunctionChain
 
     public function eval(Row $row) : mixed
     {
-        /** @var mixed $val */
-        $val = $this->ref->eval($row);
+        /** @var null|string $val */
+        $val = Caster::default()->to(type_string(true))->value($this->ref->eval($row));
 
         if (!\is_string($val)) {
             return null;

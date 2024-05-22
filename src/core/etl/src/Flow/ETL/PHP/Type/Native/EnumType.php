@@ -38,6 +38,23 @@ final class EnumType implements NativeType
         return new self($class, $nullable);
     }
 
+    public function isComparableWith(Type $type) : bool
+    {
+        if ($type instanceof self) {
+            return true;
+        }
+
+        if ($type instanceof NullType) {
+            return true;
+        }
+
+        if ($type instanceof ScalarType && \is_a($this->class, \BackedEnum::class, true)) {
+            return true;
+        }
+
+        return false;
+    }
+
     public function isEqual(Type $type) : bool
     {
         return $type instanceof self && $this->class === $type->class && $this->nullable === $type->nullable;

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use function Flow\ETL\DSL\type_string;
+use Flow\ETL\PHP\Type\Caster;
 use Flow\ETL\Row;
 
 final class Concat extends ScalarFunctionChain
@@ -22,7 +24,7 @@ final class Concat extends ScalarFunctionChain
     public function eval(Row $row) : mixed
     {
         $values = \array_map(function (ScalarFunction $ref) use ($row) : mixed {
-            return (new Cast($ref, 'string'))->eval($row);
+            return Caster::default()->to(type_string(true))->value($ref->eval($row));
         }, $this->refs);
 
         foreach ($values as $value) {

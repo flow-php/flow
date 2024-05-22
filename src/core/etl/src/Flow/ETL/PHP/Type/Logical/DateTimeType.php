@@ -19,6 +19,19 @@ final class DateTimeType implements LogicalType
         return new self($data['nullable'] ?? false);
     }
 
+    public function isComparableWith(Type $type) : bool
+    {
+        if ($type instanceof self) {
+            return true;
+        }
+
+        if ($type instanceof NullType) {
+            return true;
+        }
+
+        return false;
+    }
+
     public function isEqual(Type $type) : bool
     {
         return $type instanceof self;

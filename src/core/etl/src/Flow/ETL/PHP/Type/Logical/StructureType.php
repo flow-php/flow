@@ -52,6 +52,19 @@ final class StructureType implements LogicalType
         return $this->elements;
     }
 
+    public function isComparableWith(Type $type) : bool
+    {
+        if ($type instanceof self) {
+            return true;
+        }
+
+        if ($type instanceof NullType) {
+            return true;
+        }
+
+        return false;
+    }
+
     public function isEqual(Type $type) : bool
     {
         if (!$type instanceof self) {

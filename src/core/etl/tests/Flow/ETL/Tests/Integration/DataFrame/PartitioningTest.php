@@ -191,7 +191,12 @@ final class PartitioningTest extends IntegrationTestCase
     {
         $rows = df()
             ->read(from_text(__DIR__ . '/Fixtures/Partitioning/multi_partition_pruning_test/year=*/month=*/day=*/*.txt'))
-            ->filterPartitions(ref('year')->concat(lit('-'), ref('month')->strPadLeft(2, '0'), lit('-'), ref('day')->strPadLeft(2, '0'))->cast('date')->greaterThanEqual(lit(new \DateTimeImmutable('2023-01-01'))))
+            ->filterPartitions(
+                ref('year')
+                    ->concat(lit('-'), ref('month')->strPadLeft(2, '0'), lit('-'), ref('day')->strPadLeft(2, '0'))
+                    ->cast('date')
+                    ->greaterThanEqual(lit(new \DateTimeImmutable('2023-01-01')))
+            )
             ->collect()
             ->select('year')
             ->withEntry('year', ref('year')->cast('int'))

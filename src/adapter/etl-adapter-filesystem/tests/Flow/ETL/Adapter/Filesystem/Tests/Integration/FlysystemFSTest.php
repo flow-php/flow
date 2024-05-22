@@ -9,6 +9,7 @@ use Flow\ETL\Adapter\Filesystem\FlysystemFS;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\Partition\{NoopFilter, ScalarFunctionFilter};
+use Flow\ETL\PHP\Type\{AutoCaster, Caster};
 use Flow\ETL\Row\Factory\NativeEntryFactory;
 use PHPUnit\Framework\TestCase;
 
@@ -90,7 +91,8 @@ STRING,
                                 ref('date')->cast('date')->lessThan(lit(new \DateTimeImmutable('2022-01-04 00:00:00')))
                             )
                         ),
-                        new NativeEntryFactory()
+                        new NativeEntryFactory(),
+                        new AutoCaster(Caster::default())
                     )
                 )
         );
@@ -129,7 +131,7 @@ STRING,
                 (new FlysystemFS())
                     ->scan(
                         new Path(__DIR__ . '/Fixtures/partitioned/**/*.txt'),
-                        new ScalarFunctionFilter(ref('partition_01')->equals(lit('b')), new NativeEntryFactory())
+                        new ScalarFunctionFilter(ref('partition_01')->equals(lit('b')), new NativeEntryFactory(), new AutoCaster(Caster::default()))
                     )
             )
         );

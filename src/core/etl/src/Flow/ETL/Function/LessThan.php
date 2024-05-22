@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Function;
 
+use Flow\ETL\Function\Comparison\Comparable;
 use Flow\ETL\Row;
 
 final class LessThan extends ScalarFunctionChain
 {
+    use Comparable;
+
     public function __construct(
         private readonly ScalarFunction $base,
         private readonly ScalarFunction $next
@@ -18,6 +21,8 @@ final class LessThan extends ScalarFunctionChain
     {
         $base = $this->base->eval($row);
         $next = $this->next->eval($row);
+
+        $this->assertComparable($base, $next, '<');
 
         return $base < $next;
     }

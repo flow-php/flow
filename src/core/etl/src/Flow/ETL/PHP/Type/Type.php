@@ -8,6 +8,8 @@ interface Type
 {
     public static function fromArray(array $data) : self;
 
+    public function isComparableWith(self $type) : bool;
+
     public function isEqual(self $type) : bool;
 
     public function isValid(mixed $value) : bool;
