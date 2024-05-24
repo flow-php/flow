@@ -1,6 +1,8 @@
-## [Unreleased] - 2024-05-22
+## [Unreleased] - 2024-05-24
 
 ### Added
+- [#1082](https://github.com/flow-php/flow/pull/1082) - **path partitions extractor** - [@norberttech](https://github.com/norberttech)
+- [#1082](https://github.com/flow-php/flow/pull/1082) - **Partitions::get(string $name) : Partition** - [@norberttech](https://github.com/norberttech)
 - [#1079](https://github.com/flow-php/flow/pull/1079) - **Enabled parallelization for cs fixer** - [@norberttech](https://github.com/norberttech)
 - [#1079](https://github.com/flow-php/flow/pull/1079) - **Allowed to pass both string/reference to aggregating functions** - [@norberttech](https://github.com/norberttech)
 - [#1068](https://github.com/flow-php/flow/pull/1068) - **Add new XMLElementEntry** - [@stloyd](https://github.com/stloyd)
