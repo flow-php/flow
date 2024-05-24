@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL\Tests\Unit\Function;
 
-use function Flow\ETL\DSL\{float_entry, int_entry, ref, str_entry};
-use Flow\ETL\Row;
+use function Flow\ETL\DSL\{datetime_entry, float_entry, int_entry, ref, row, str_entry};
 use PHPUnit\Framework\TestCase;
 
 final class MaxTest extends TestCase
@@ -14,11 +13,11 @@ final class MaxTest extends TestCase
     {
         $aggregator = \Flow\ETL\DSL\max(ref('int'));
 
-        $aggregator->aggregate(Row::create(str_entry('int', '10')));
-        $aggregator->aggregate(Row::create(str_entry('int', '20')));
-        $aggregator->aggregate(Row::create(str_entry('int', '55')));
-        $aggregator->aggregate(Row::create(str_entry('int', '25')));
-        $aggregator->aggregate(Row::create(str_entry('not_int', null)));
+        $aggregator->aggregate(row(str_entry('int', '10')));
+        $aggregator->aggregate(row(str_entry('int', '20')));
+        $aggregator->aggregate(row(str_entry('int', '55')));
+        $aggregator->aggregate(row(str_entry('int', '25')));
+        $aggregator->aggregate(row(str_entry('not_int', null)));
 
         self::assertSame(
             55,
@@ -30,13 +29,28 @@ final class MaxTest extends TestCase
     {
         $aggregator = \Flow\ETL\DSL\max(ref('int'));
 
-        $aggregator->aggregate(Row::create(int_entry('int', 10)));
-        $aggregator->aggregate(Row::create(int_entry('int', 20)));
-        $aggregator->aggregate(Row::create(int_entry('int', 30)));
-        $aggregator->aggregate(Row::create(str_entry('int', null)));
+        $aggregator->aggregate(row(int_entry('int', 10)));
+        $aggregator->aggregate(row(int_entry('int', 20)));
+        $aggregator->aggregate(row(int_entry('int', 30)));
+        $aggregator->aggregate(row(str_entry('int', null)));
 
         self::assertSame(
             30,
+            $aggregator->result()->value()
+        );
+    }
+
+    public function test_aggregation_max_with_datetime_values() : void
+    {
+        $aggregator = \Flow\ETL\DSL\max(ref('datetime'));
+
+        $aggregator->aggregate(row(datetime_entry('datetime', '2021-01-01 00:00:00')));
+        $aggregator->aggregate(row(datetime_entry('datetime', '2021-01-02 00:00:00')));
+        $aggregator->aggregate(row(datetime_entry('datetime', '2021-01-03 00:00:00')));
+        $aggregator->aggregate(row(datetime_entry('datetime', '2021-01-04 00:00:00')));
+
+        self::assertEquals(
+            new \DateTimeImmutable('2021-01-04 00:00:00'),
             $aggregator->result()->value()
         );
     }
@@ -45,10 +59,10 @@ final class MaxTest extends TestCase
     {
         $aggregator = \Flow\ETL\DSL\max(ref('int'));
 
-        $aggregator->aggregate(Row::create(int_entry('int', 10)));
-        $aggregator->aggregate(Row::create(int_entry('int', 20)));
-        $aggregator->aggregate(Row::create(float_entry('int', 30.5)));
-        $aggregator->aggregate(Row::create(int_entry('int', 25)));
+        $aggregator->aggregate(row(int_entry('int', 10)));
+        $aggregator->aggregate(row(int_entry('int', 20)));
+        $aggregator->aggregate(row(float_entry('int', 30.5)));
+        $aggregator->aggregate(row(int_entry('int', 25)));
 
         self::assertSame(
             30.5,
@@ -60,10 +74,10 @@ final class MaxTest extends TestCase
     {
         $aggregator = \Flow\ETL\DSL\max(ref('int'));
 
-        $aggregator->aggregate(Row::create(int_entry('int', 10)));
-        $aggregator->aggregate(Row::create(int_entry('int', 20)));
-        $aggregator->aggregate(Row::create(int_entry('int', 30)));
-        $aggregator->aggregate(Row::create(int_entry('int', 40)));
+        $aggregator->aggregate(row(int_entry('int', 10)));
+        $aggregator->aggregate(row(int_entry('int', 20)));
+        $aggregator->aggregate(row(int_entry('int', 30)));
+        $aggregator->aggregate(row(int_entry('int', 40)));
 
         self::assertSame(
             40,
