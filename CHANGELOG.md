@@ -1,6 +1,7 @@
 ## [Unreleased] - 2024-05-24
 
 ### Added
+- [#1083](https://github.com/flow-php/flow/pull/1083) - **Allow to use max/min aggregations on date time columns** - [@norberttech](https://github.com/norberttech)
 - [#1082](https://github.com/flow-php/flow/pull/1082) - **path partitions extractor** - [@norberttech](https://github.com/norberttech)
 - [#1082](https://github.com/flow-php/flow/pull/1082) - **Partitions::get(string $name) : Partition** - [@norberttech](https://github.com/norberttech)
 - [#1079](https://github.com/flow-php/flow/pull/1079) - **Enabled parallelization for cs fixer** - [@norberttech](https://github.com/norberttech)
