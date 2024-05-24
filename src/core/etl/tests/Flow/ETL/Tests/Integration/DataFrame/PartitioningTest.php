@@ -8,6 +8,7 @@ use function Flow\ETL\Adapter\Text\{from_text, to_text};
 use function Flow\ETL\DSL\{collect,
     df,
     from_array,
+    from_path_partitions,
     from_rows,
     int_entry,
     lit,
@@ -67,6 +68,31 @@ final class PartitioningTest extends IntegrationTestCase
             ->write(to_text(__DIR__ . '/Fixtures/Partitioning/overwrite/file.txt'))
             ->run();
 
+        $partitions = df()
+            ->read(from_path_partitions(__DIR__ . '/Fixtures/Partitioning/overwrite/**/*.txt'))
+            ->fetch();
+
+        self::assertSame(
+            [
+                [
+                    'path' => 'file:/' . __DIR__ . '/Fixtures/Partitioning/overwrite/date=2024-04-01/file.txt',
+                    'partitions' => ['date' => '2024-04-01'],
+                ],
+                [
+                    'path' => 'file:/' . __DIR__ . '/Fixtures/Partitioning/overwrite/date=2024-04-02/file.txt',
+                    'partitions' => ['date' => '2024-04-02'],
+                ],
+                [
+                    'path' => 'file:/' . __DIR__ . '/Fixtures/Partitioning/overwrite/date=2024-04-03/file.txt',
+                    'partitions' => ['date' => '2024-04-03'],
+                ],
+                [
+                    'path' => 'file:/' . __DIR__ . '/Fixtures/Partitioning/overwrite/date=2024-04-04/file.txt',
+                    'partitions' => ['date' => '2024-04-04'],
+                ],
+            ],
+            $partitions->toArray()
+        );
         self::assertSame(
             [
                 ['text' => '2024-04-01', 'date' => '2024-04-01'],

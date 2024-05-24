@@ -71,6 +71,11 @@ function from_rows(Rows ...$rows) : Extractor\ProcessExtractor
     return new Extractor\ProcessExtractor(...$rows);
 }
 
+function from_path_partitions(Path|string $path) : Extractor\PathPartitionsExtractor
+{
+    return new Extractor\PathPartitionsExtractor(\is_string($path) ? Path::realpath($path) : $path);
+}
+
 function from_array(iterable $array, ?Schema $schema = null) : Extractor\ArrayExtractor
 {
     return new Extractor\ArrayExtractor($array, schema: $schema);
