@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Parquet;
 
 use function Flow\ETL\DSL\array_to_rows;
-use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PartitionFiltering, PartitionsExtractor, Signal};
+use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PartitionExtractor, PartitionFiltering, Signal};
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\Stream\FileStream;
 use Flow\ETL\{Extractor, FlowContext};
 use Flow\Parquet\{ByteOrder, Options, ParquetFile, Reader};
 
-final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtractor, PartitionsExtractor
+final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtractor, PartitionExtractor
 {
     use Limitable;
     use PartitionFiltering;

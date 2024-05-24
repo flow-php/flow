@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\ETL;
 
-use Flow\ETL\Exception\RuntimeException;
+use Flow\ETL\Exception\{InvalidArgumentException, RuntimeException};
 
 /**
  * @implements \ArrayAccess<int, Partition>
@@ -22,6 +22,17 @@ final class Partitions implements \ArrayAccess, \Countable, \IteratorAggregate
     public function count() : int
     {
         return \count($this->partitions);
+    }
+
+    public function get(string $name) : Partition
+    {
+        foreach ($this->partitions as $partition) {
+            if ($partition->name === $name) {
+                return $partition;
+            }
+        }
+
+        throw new InvalidArgumentException("Partition with name: '{$name}' not found");
     }
 
     public function getIterator() : \Traversable

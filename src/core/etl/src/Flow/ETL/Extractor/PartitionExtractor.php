@@ -6,7 +6,7 @@ namespace Flow\ETL\Extractor;
 
 use Flow\ETL\Partition\PartitionFilter;
 
-interface PartitionsExtractor
+interface PartitionExtractor
 {
     public function addPartitionFilter(PartitionFilter $filter) : void;
 

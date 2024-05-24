@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\CSV;
 
 use function Flow\ETL\DSL\array_to_rows;
-use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PartitionFiltering, PartitionsExtractor, Signal};
+use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PartitionExtractor, PartitionFiltering, Signal};
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Row\Schema;
 use Flow\ETL\{Extractor, FlowContext};
 
-final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor, PartitionsExtractor
+final class CSVExtractor implements Extractor, FileExtractor, LimitableExtractor, PartitionExtractor
 {
     use Limitable;
     use PartitionFiltering;

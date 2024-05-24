@@ -1,8 +1,9 @@
 parameters:
     level: 8
     treatPhpDocTypesAsCertain: false
-    checkGenericClassInNonGenericObjectType: false
-    checkMissingIterableValueType: false
+    ignoreErrors:
+        - identifier: missingType.iterableValue
+        - identifier: missingType.generics
     paths:
         - src/core/etl/src
         - src/adapter/etl-adapter-avro/src
