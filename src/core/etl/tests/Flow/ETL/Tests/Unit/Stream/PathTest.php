@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\Stream;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\{Partition, Partitions};
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class PathTest extends TestCase
@@ -113,9 +114,7 @@ final class PathTest extends TestCase
         );
     }
 
-    /**
-     * @dataProvider directories
-     */
+    #[DataProvider('directories')]
     public function test_directories(string $uri, string $dirPath) : void
     {
         self::assertSame($dirPath, (new Path($uri))->parentDirectory()->path());
@@ -135,9 +134,7 @@ final class PathTest extends TestCase
         self::assertFalse((new Path(__DIR__))->extension());
     }
 
-    /**
-     * @dataProvider paths_with_static_parts
-     */
+    #[DataProvider('paths_with_static_parts')]
     public function test_finding_static_part_of_the_path(string $staticPart, string $uri) : void
     {
         self::assertEquals(new Path($staticPart), (new Path($uri))->staticPart());
@@ -148,9 +145,7 @@ final class PathTest extends TestCase
         self::assertNull((new Path(__FILE__))->context()->resource());
     }
 
-    /**
-     * @dataProvider paths_pattern_matching
-     */
+    #[DataProvider('paths_pattern_matching')]
     public function test_matching_pattern_with_path(string $path, string $pattern, bool $result) : void
     {
         self::assertSame($result, (new Path($path))->matches(new Path($pattern)));
@@ -164,18 +159,14 @@ final class PathTest extends TestCase
         self::assertFalse($path->matches(new Path('flow-file://var/file/partition=1/file.csv')));
     }
 
-    /**
-     * @dataProvider paths
-     */
+    #[DataProvider('paths')]
     public function test_parsing_path(string $uri, string $schema, string $parsedUri) : void
     {
         self::assertEquals($schema, (new Path($uri))->scheme());
         self::assertEquals($parsedUri, (new Path($uri))->uri());
     }
 
-    /**
-     * @dataProvider paths_with_partitions
-     */
+    #[DataProvider('paths_with_partitions')]
     public function test_partitions_in_path(string $uri, Partitions $partitions) : void
     {
         self::assertEquals($partitions, (new Path($uri))->partitions());

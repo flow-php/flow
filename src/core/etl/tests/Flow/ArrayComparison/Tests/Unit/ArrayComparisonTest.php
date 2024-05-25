@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ArrayComparison\Tests\Unit;
 
 use Flow\ArrayComparison\ArrayComparison;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class ArrayComparisonTest extends TestCase
@@ -143,17 +144,13 @@ final class ArrayComparisonTest extends TestCase
         );
     }
 
-    /**
-     * @dataProvider equal_arrays
-     */
+    #[DataProvider('equal_arrays')]
     public function test_equals(array $a, array $b) : void
     {
         self::assertTrue((new ArrayComparison())->equals($a, $b));
     }
 
-    /**
-     * @dataProvider not_equal_arrays
-     */
+    #[DataProvider('not_equal_arrays')]
     public function test_not_equals(array $a, array $b) : void
     {
         self::assertFalse((new ArrayComparison())->equals($a, $b));

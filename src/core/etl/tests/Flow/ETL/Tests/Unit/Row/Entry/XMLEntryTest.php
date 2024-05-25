@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Unit\Row\Entry;
 use function Flow\ETL\DSL\xml_entry;
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry\XMLEntry;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class XMLEntryTest extends TestCase
@@ -126,9 +127,7 @@ XML);
         self::assertSame("<?xml version=\"1.0\"?>\n", $entry->__toString());
     }
 
-    /**
-     * @dataProvider is_equal_data_provider
-     */
+    #[DataProvider('is_equal_data_provider')]
     public function test_is_equal(bool $equals, XMLEntry $entry, XMLEntry $nextEntry) : void
     {
         self::assertSame($equals, $entry->isEqual($nextEntry));

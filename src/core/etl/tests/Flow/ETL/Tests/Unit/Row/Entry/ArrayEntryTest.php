@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
 use Flow\ETL\Row\Entry\{ArrayEntry, IntegerEntry};
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class ArrayEntryTest extends TestCase
@@ -83,9 +84,7 @@ final class ArrayEntryTest extends TestCase
         self::assertSame('0', (new ArrayEntry('0', ['id' => 1]))->name());
     }
 
-    /**
-     * @dataProvider is_equal_data_provider
-     */
+    #[DataProvider('is_equal_data_provider')]
     public function test_is_equal(bool $equals, ArrayEntry $entry, ArrayEntry $nextEntry) : void
     {
         self::assertSame($equals, $entry->isEqual($nextEntry));

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ArrayComparison\Tests\Unit;
 
 use Flow\ArrayComparison\ArraySortByKey;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class ArraySortByKeyTest extends TestCase
@@ -109,9 +110,7 @@ final class ArraySortByKeyTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider arrays
-     */
+    #[DataProvider('arrays')]
     public function test_sorts_array_by_key(array $origin, array $sorted) : void
     {
         // serialize to JSON to be sure that array is sorted exactly as expected

@@ -10,6 +10,7 @@ use Flow\ETL\PHP\Type\Logical\Map\{MapKey, MapValue};
 use Flow\ETL\PHP\Type\Logical\MapType;
 use Flow\ETL\Row\Entry\StructureEntry;
 use Flow\ETL\Row\Schema\Definition;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class StructureEntryTest extends TestCase
@@ -166,9 +167,7 @@ final class StructureEntryTest extends TestCase
         );
     }
 
-    /**
-     * @dataProvider is_equal_data_provider
-     */
+    #[DataProvider('is_equal_data_provider')]
     public function test_is_equal(bool $equals, StructureEntry $entry, StructureEntry $nextEntry) : void
     {
         self::assertSame($equals, $entry->isEqual($nextEntry));

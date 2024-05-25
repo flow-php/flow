@@ -6,6 +6,7 @@ namespace Flow\Parquet\Tests\Integration\Binary;
 
 use Flow\Parquet\BinaryReader\BinaryBufferReader;
 use Flow\Parquet\BinaryWriter\BinaryBufferWriter;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class BinaryReaderWriterTest extends TestCase
@@ -36,9 +37,7 @@ final class BinaryReaderWriterTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider decimalProvider
-     */
+    #[DataProvider('decimalProvider')]
     public function test_writing_and_reading_decimals(array $decimals, int $precision, int $scale) : void
     {
         $bitsNeeded = \ceil(\log(10 ** $precision, 2));

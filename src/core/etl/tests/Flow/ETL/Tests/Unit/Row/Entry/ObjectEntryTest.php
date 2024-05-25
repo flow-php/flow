@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
 use Flow\ETL\Row\Entry\ObjectEntry;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class ObjectEntryTest extends TestCase
@@ -22,9 +23,7 @@ final class ObjectEntryTest extends TestCase
         self::assertSame('0', (new ObjectEntry('0', new \stdClass()))->name());
     }
 
-    /**
-     * @dataProvider is_equal_data_provider
-     */
+    #[DataProvider('is_equal_data_provider')]
     public function test_is_equal(bool $equals, ObjectEntry $entry, ObjectEntry $nextEntry) : void
     {
         self::assertSame($equals, $entry->isEqual($nextEntry));

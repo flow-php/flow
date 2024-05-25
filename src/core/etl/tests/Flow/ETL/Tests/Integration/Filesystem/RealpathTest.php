@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Integration\Filesystem;
 
 use Flow\ETL\Filesystem\Path;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class RealpathTest extends TestCase
@@ -17,9 +18,7 @@ final class RealpathTest extends TestCase
         yield ['/path/more/nested/..//../file.txt', '/path/file.txt'];
     }
 
-    /**
-     * @dataProvider double_dots_paths
-     */
+    #[DataProvider('double_dots_paths')]
     public function test_double_dots_in_path(string $relative, string $absolute) : void
     {
         self::assertEquals(new Path($absolute), Path::realpath($relative));

@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Row\Entry;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry\DateTimeEntry;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class DateTimeEntryTest extends TestCase
@@ -35,9 +36,7 @@ final class DateTimeEntryTest extends TestCase
         new DateTimeEntry('a', 'random string');
     }
 
-    /**
-     * @dataProvider is_equal_data_provider
-     */
+    #[DataProvider('is_equal_data_provider')]
     public function test_is_equal(bool $equals, DateTimeEntry $entry, DateTimeEntry $nextEntry) : void
     {
         self::assertEquals($equals, $entry->isEqual($nextEntry));

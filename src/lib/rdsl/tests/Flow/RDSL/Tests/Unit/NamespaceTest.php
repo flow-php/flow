@@ -7,6 +7,7 @@ namespace Flow\RDSL\Tests\Unit;
 use Flow\RDSL\AccessControl\AllowAll;
 use Flow\RDSL\DSLNamespace;
 use Flow\RDSL\Exception\InvalidArgumentException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class NamespaceTest extends TestCase
@@ -26,18 +27,14 @@ final class NamespaceTest extends TestCase
         yield ['\Foo\Bar\Baz'];
     }
 
-    /**
-     * @dataProvider invalid_namespaces_provider
-     */
+    #[DataProvider('invalid_namespaces_provider')]
     public function test_invalid_namespaces(string $ns) : void
     {
         $this->expectException(InvalidArgumentException::class);
         new DSLNamespace($ns, new AllowAll());
     }
 
-    /**
-     * @dataProvider valid_namespaces_provider
-     */
+    #[DataProvider('valid_namespaces_provider')]
     public function test_valid_namespaces(string $ns) : void
     {
         self::assertInstanceOf(DSLNamespace::class, new DSLNamespace($ns, new AllowAll()));

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
 use Flow\ETL\Row\Entry\{IntegerEntry, JsonEntry};
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class JsonObjectEntryTest extends TestCase
@@ -53,9 +54,7 @@ final class JsonObjectEntryTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider is_equal_data_provider
-     */
+    #[DataProvider('is_equal_data_provider')]
     public function test_is_equal(bool $equals, JsonEntry $entry, JsonEntry $nextEntry) : void
     {
         self::assertSame($equals, $entry->isEqual($nextEntry));

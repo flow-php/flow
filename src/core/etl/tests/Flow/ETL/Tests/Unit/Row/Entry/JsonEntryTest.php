@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Row\Entry;
 
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Row\Entry\{IntegerEntry, JsonEntry};
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class JsonEntryTest extends TestCase
@@ -101,9 +102,7 @@ final class JsonEntryTest extends TestCase
         new JsonEntry('a', 'random string');
     }
 
-    /**
-     * @dataProvider is_equal_data_provider
-     */
+    #[DataProvider('is_equal_data_provider')]
     public function test_is_equal(bool $equals, JsonEntry $entry, JsonEntry $nextEntry) : void
     {
         self::assertSame($equals, $entry->isEqual($nextEntry));
