@@ -16,6 +16,10 @@ final class DOMElementAttribute extends ScalarFunctionChain
     {
         $value = $this->ref->eval($row);
 
+        if ($value instanceof \DOMAttr) {
+            return $value->nodeValue;
+        }
+
         if (!$value instanceof \DOMElement) {
             return null;
         }

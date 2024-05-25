@@ -12,7 +12,7 @@ data_frame()
         __DIR__ . '/input/dataset.xml',
         'users/user'
     ))
-    ->withEntry('id', ref('node')->xpath('@id')->domElementValue())
+    ->withEntry('id', ref('node')->xpath('@id')->domElementAttribute('id'))
     ->withEntry('name', ref('node')->xpath('name')->domElementValue())
     ->withEntry('active', ref('node')->xpath('active')->domElementValue())
     ->withEntry('email', ref('node')->xpath('email')->domElementValue())
