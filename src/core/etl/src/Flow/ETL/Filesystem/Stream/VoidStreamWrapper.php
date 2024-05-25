@@ -8,6 +8,11 @@ final class VoidStreamWrapper implements StreamWrapper
 {
     public const PROTOCOL = 'void';
 
+    /**
+     * @var null|resource
+     */
+    public $context;
+
     public static function register() : void
     {
         if (!\in_array(self::PROTOCOL, \stream_get_wrappers(), true)) {
