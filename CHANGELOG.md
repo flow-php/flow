@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-05-24
+## [Unreleased] - 2024-05-25
 
 ### Added
 - [#1083](https://github.com/flow-php/flow/pull/1083) - **Allow to use max/min aggregations on date time columns** - [@norberttech](https://github.com/norberttech)
@@ -24,6 +24,7 @@
 - [#1053](https://github.com/flow-php/flow/pull/1053) - **Update Homebrew TAP formula: flow-php to version: 0.7.4** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1084](https://github.com/flow-php/flow/pull/1084) - **Fix for extracting XML attribute** - [@stloyd](https://github.com/stloyd)
 - [#1081](https://github.com/flow-php/flow/pull/1081) - **Scalar comparison functions are now also detecting types of compared values to prevent comparing not compatible values** - [@norberttech](https://github.com/norberttech)
 - [#1079](https://github.com/flow-php/flow/pull/1079) - **Group by will no longer change type of entries used for groupping** - [@norberttech](https://github.com/norberttech)
 - [#1072](https://github.com/flow-php/flow/pull/1072) - **definition of list_entry function in dsl** - [@norberttech](https://github.com/norberttech)
