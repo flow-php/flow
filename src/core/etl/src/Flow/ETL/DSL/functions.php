@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\DSL;
 
 use Flow\ETL\ErrorHandler\{IgnoreError, SkipRows, ThrowError};
-use Flow\ETL\Exception\{InvalidArgumentException, InvalidLogicException, SchemaDefinitionNotFoundException};
+use Flow\ETL\Exception\{InvalidArgumentException,
+    RuntimeException,
+    SchemaDefinitionNotFoundException};
 use Flow\ETL\Extractor\LocalFileListExtractor;
 use Flow\ETL\Filesystem\Stream\Mode;
 use Flow\ETL\Filesystem\{Path, SaveMode};
@@ -47,6 +49,7 @@ use Flow\ETL\{Config,
     Join\Expression,
     Loader,
     Partition,
+    Partitions,
     Pipeline,
     Row,
     Rows,
@@ -404,10 +407,6 @@ function type_boolean(bool $nullable = false) : ScalarType
  */
 function type_object(string $class, bool $nullable = false) : ObjectType
 {
-    if (\is_a($class, \DateTimeInterface::class, true)) {
-        throw new InvalidLogicException("Please use type_datetime instead, DateTime is a valid object, but most schema converters are expecting DateTimeType as a logical type rather than ObjectType<DateTime>')");
-    }
-
     return new ObjectType($class, $nullable);
 }
 
@@ -454,9 +453,9 @@ function partition(string $name, string $value) : Partition
     return new Partition($name, $value);
 }
 
-function partitions(Partition ...$partition) : \Flow\ETL\Partitions
+function partitions(Partition ...$partition) : Partitions
 {
-    return new \Flow\ETL\Partitions(...$partition);
+    return new Partitions(...$partition);
 }
 
 /**
@@ -472,7 +471,7 @@ function path_real(string $path, array $options = []) : Path
     return Path::realpath($path, $options);
 }
 
-function rows_partitioned(array $rows, array|\Flow\ETL\Partitions $partitions) : Rows
+function rows_partitioned(array $rows, array|Partitions $partitions) : Rows
 {
     return Rows::partitioned($rows, $partitions);
 }
@@ -824,11 +823,11 @@ function number_format(ScalarFunction $function, ?ScalarFunction $decimals = nul
  * @psalm-suppress PossiblyInvalidIterator
  *
  * @param array<array<mixed>>|array<mixed|string> $data
- * @param array<Partition>|\Flow\ETL\Partitions $partitions
+ * @param array<Partition>|Partitions $partitions
  */
-function array_to_rows(array $data, EntryFactory $entryFactory = new NativeEntryFactory(), array|\Flow\ETL\Partitions $partitions = [], ?Schema $schema = null) : Rows
+function array_to_rows(array $data, EntryFactory $entryFactory = new NativeEntryFactory(), array|Partitions $partitions = [], ?Schema $schema = null) : Rows
 {
-    $partitions = \is_array($partitions) ? new \Flow\ETL\Partitions(...$partitions) : $partitions;
+    $partitions = \is_array($partitions) ? new Partitions(...$partitions) : $partitions;
 
     $isRows = true;
 
@@ -1214,4 +1213,37 @@ function compare_entries_by_type_and_name(array $priorities = Transformer\OrderE
         new Transformer\OrderEntries\TypeComparator(new Transformer\OrderEntries\TypePriorities($priorities), $order),
         new Transformer\OrderEntries\NameComparator($order)
     );
+}
+
+/**
+ * @param array<string|Type> $types
+ * @param mixed $value
+ */
+function is_type(array $types, mixed $value) : bool
+{
+    foreach ($types as $type) {
+        if (\is_string($type)) {
+            if (match (\strtolower($type)) {
+                'str', 'string' => \is_string($value),
+                'int', 'integer' => \is_int($value),
+                'float' => \is_float($value),
+                'null' => null === $value,
+                'object' => \is_object($value),
+                'array' => \is_array($value),
+                'list' => \is_array($value) && \array_is_list($value),
+                default => match (\class_exists($type) || \enum_exists($type)) {
+                    true => $value instanceof $type,
+                    false => throw new RuntimeException('Unexpected type: ' . $type)
+                }
+            }) {
+                return true;
+            }
+        } else {
+            if ($type->isValid($value)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
