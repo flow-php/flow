@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-05-25
+## [Unreleased] - 2024-06-01
 
 ### Added
 - [#1083](https://github.com/flow-php/flow/pull/1083) - **Allow to use max/min aggregations on date time columns** - [@norberttech](https://github.com/norberttech)
@@ -13,6 +13,7 @@
 - [#1054](https://github.com/flow-php/flow/pull/1054) - **missing tests for parquet rows normalizer** - [@norberttech](https://github.com/norberttech)
 
 ### Changed
+- [#1087](https://github.com/flow-php/flow/pull/1087) - **Prepare for PHPUnit 11** - [@stloyd](https://github.com/stloyd)
 - [#1081](https://github.com/flow-php/flow/pull/1081) - **String based Scalar functions are now using caster to cast values to string** - [@norberttech](https://github.com/norberttech)
 - [#1081](https://github.com/flow-php/flow/pull/1081) - **Moved caster to dataframe configuration** - [@norberttech](https://github.com/norberttech)
 - [747f19](https://github.com/flow-php/flow/commit/747f197578ae23c0f29b48957141f12edc6651b7) - **Simplify README.md** - [@norberttech](https://github.com/norberttech)
