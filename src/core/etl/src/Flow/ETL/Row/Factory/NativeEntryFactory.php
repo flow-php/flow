@@ -10,6 +10,7 @@ use function Flow\ETL\DSL\{array_entry,
     enum_entry,
     float_entry,
     int_entry,
+    is_type,
     json_entry,
     json_object_entry,
     map_entry,
@@ -17,6 +18,10 @@ use function Flow\ETL\DSL\{array_entry,
     object_entry,
     str_entry,
     struct_entry,
+    type_boolean,
+    type_float,
+    type_int,
+    type_string,
     uuid_entry,
     xml_element_entry,
     xml_entry};
@@ -198,56 +203,56 @@ final class NativeEntryFactory implements EntryFactory
         try {
             if ($type instanceof ScalarType) {
                 return match ($type->type()) {
-                    ScalarType::STRING => str_entry($definition->entry()->name(), $this->caster->to($type)->value($value)),
-                    ScalarType::INTEGER => int_entry($definition->entry()->name(), $this->caster->to($type)->value($value)),
-                    ScalarType::FLOAT => float_entry($definition->entry()->name(), $this->caster->to($type)->value($value)),
-                    ScalarType::BOOLEAN => bool_entry($definition->entry()->name(), $this->caster->to($type)->value($value)),
+                    ScalarType::STRING => str_entry($definition->entry()->name(), is_type([type_string()], $value) ? $value : $this->caster->to($type)->value($value)),
+                    ScalarType::INTEGER => int_entry($definition->entry()->name(), is_type([type_int()], $value) ? $value : $this->caster->to($type)->value($value)),
+                    ScalarType::FLOAT => float_entry($definition->entry()->name(), is_type([type_float()], $value) ? $value : $this->caster->to($type)->value($value)),
+                    ScalarType::BOOLEAN => bool_entry($definition->entry()->name(), is_type([type_boolean()], $value) ? $value : $this->caster->to($type)->value($value)),
                     default => throw new InvalidArgumentException("Can't convert value into entry \"{$definition->entry()}\""),
                 };
             }
 
             if ($type instanceof XMLType) {
-                return xml_entry($definition->entry()->name(), $this->caster->to($type)->value($value));
+                return xml_entry($definition->entry()->name(), is_type([$type], $value) ? $value : $this->caster->to($type)->value($value));
             }
 
             if ($type instanceof UuidType) {
-                return uuid_entry($definition->entry()->name(), $this->caster->to($type)->value($value));
-            }
-
-            if ($type instanceof ObjectType) {
-                return obj_entry($definition->entry()->name(), $this->caster->to($type)->value($value));
+                return uuid_entry($definition->entry()->name(), is_type([$type], $value) ? $value : $this->caster->to($type)->value($value));
             }
 
             if ($type instanceof DateTimeType) {
-                return datetime_entry($definition->entry()->name(), $this->caster->to($type)->value($value));
+                return datetime_entry($definition->entry()->name(), is_type([$type], $value) ? $value : $this->caster->to($type)->value($value));
             }
 
             if ($type instanceof EnumType) {
-                return enum_entry($definition->entry()->name(), $this->caster->to($type)->value($value));
+                return enum_entry($definition->entry()->name(), is_type([$type], $value) ? $value : $this->caster->to($type)->value($value));
             }
 
             if ($type instanceof JsonType) {
                 try {
-                    return json_object_entry($definition->entry()->name(), $this->caster->to($type)->value($value));
+                    return json_object_entry($definition->entry()->name(), is_type([$type], $value) ? $value : $this->caster->to($type)->value($value));
                 } catch (InvalidArgumentException) {
-                    return json_entry($definition->entry()->name(), $this->caster->to($type)->value($value));
+                    return json_entry($definition->entry()->name(), is_type([$type], $value) ? $value : $this->caster->to($type)->value($value));
                 }
             }
 
+            if ($type instanceof ObjectType) {
+                return obj_entry($definition->entry()->name(), is_type([$type], $value) ? $value : $this->caster->to($type)->value($value));
+            }
+
             if ($type instanceof ArrayType) {
-                return array_entry($definition->entry()->name(), $this->caster->to($type)->value($value));
+                return array_entry($definition->entry()->name(), is_type([$type], $value) ? $value : $this->caster->to($type)->value($value));
             }
 
             if ($type instanceof MapType) {
-                return map_entry($definition->entry()->name(), $this->caster->to($type)->value($value), $type);
+                return map_entry($definition->entry()->name(), is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $type);
             }
 
             if ($type instanceof StructureType) {
-                return struct_entry($definition->entry()->name(), $this->caster->to($type)->value($value), $type);
+                return struct_entry($definition->entry()->name(), is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $type);
             }
 
             if ($type instanceof ListType) {
-                return new Entry\ListEntry($definition->entry()->name(), $this->caster->to($type)->value($value), $type);
+                return new Entry\ListEntry($definition->entry()->name(), is_type([$type], $value) ? $value : $this->caster->to($type)->value($value), $type);
             }
         } catch (InvalidArgumentException|\TypeError $e) {
             throw new InvalidArgumentException("Field \"{$definition->entry()}\" conversion exception. {$e->getMessage()}", previous: $e);
