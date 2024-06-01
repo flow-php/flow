@@ -8,6 +8,7 @@ use Doctrine\DBAL\Platforms\{MariaDBPlatform, MySQL80Platform, OraclePlatform, P
 use Flow\Doctrine\Bulk\DbalPlatform;
 use Flow\Doctrine\Bulk\Dialect\{MySQLDialect, PostgreSQLDialect, SqliteDialect};
 use Flow\Doctrine\Bulk\Exception\RuntimeException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class DbalPlatformTest extends TestCase
@@ -39,9 +40,7 @@ final class DbalPlatformTest extends TestCase
         self::assertInstanceOf(PostgreSQLDialect::class, $platform->dialect());
     }
 
-    /**
-     * @dataProvider provideSQLitePlatform
-     */
+    #[DataProvider('provideSQLitePlatform')]
     public function test_is_sqlite_sql(string $className) : void
     {
         if (\class_exists($className)) {

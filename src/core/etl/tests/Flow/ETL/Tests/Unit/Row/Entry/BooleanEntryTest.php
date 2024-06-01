@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
 use Flow\ETL\Row\Entry\BooleanEntry;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class BooleanEntryTest extends TestCase
@@ -22,9 +23,7 @@ final class BooleanEntryTest extends TestCase
         self::assertSame('0', (new BooleanEntry('0', true))->name());
     }
 
-    /**
-     * @dataProvider is_equal_data_provider
-     */
+    #[DataProvider('is_equal_data_provider')]
     public function test_is_equal(bool $equals, BooleanEntry $entry, BooleanEntry $nextEntry) : void
     {
         self::assertSame($equals, $entry->isEqual($nextEntry));

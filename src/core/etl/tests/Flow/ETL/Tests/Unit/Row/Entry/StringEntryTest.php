@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Tests\Unit\Row\Entry;
 
 use Flow\ETL\Row\Entry\StringEntry;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class StringEntryTest extends TestCase
@@ -32,9 +33,7 @@ final class StringEntryTest extends TestCase
         self::assertEquals('IT SHOULD BE UPPERCASE', $entry->value());
     }
 
-    /**
-     * @dataProvider is_equal_data_provider
-     */
+    #[DataProvider('is_equal_data_provider')]
     public function test_is_equal(bool $equals, StringEntry $entry, StringEntry $nextEntry) : void
     {
         self::assertSame($equals, $entry->isEqual($nextEntry));

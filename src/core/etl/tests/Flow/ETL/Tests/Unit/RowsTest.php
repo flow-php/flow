@@ -13,6 +13,7 @@ use Flow\ETL\Row\Entry\{BooleanEntry, DateTimeEntry, ObjectEntry, StringEntry};
 use Flow\ETL\Row\Schema\Definition;
 use Flow\ETL\Row\{Comparator, Schema};
 use Flow\ETL\{Row, Rows};
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class RowsTest extends TestCase
@@ -926,17 +927,13 @@ final class RowsTest extends TestCase
         self::assertSame(1, $rows[2]->valueOf('id'));
     }
 
-    /**
-     * @dataProvider rows_diff_left_provider
-     */
+    #[DataProvider('rows_diff_left_provider')]
     public function test_rows_diff_left(Rows $expected, Rows $left, Rows $right) : void
     {
         self::assertEquals($expected->toArray(), $left->diffLeft($right)->toArray());
     }
 
-    /**
-     * @dataProvider rows_diff_right_provider
-     */
+    #[DataProvider('rows_diff_right_provider')]
     public function test_rows_diff_right(Rows $expected, Rows $left, Rows $right) : void
     {
         self::assertEquals($expected->toArray(), $left->diffRight($right)->toArray());
@@ -993,9 +990,7 @@ final class RowsTest extends TestCase
         self::assertTrue($unserialized[2]->isEqual($rows[2]));
     }
 
-    /**
-     * @dataProvider unique_rows_provider
-     */
+    #[DataProvider('unique_rows_provider')]
     public function test_rows_unique(Rows $expected, Rows $notUnique, Comparator $comparator = new NativeComparator()) : void
     {
         self::assertEquals($expected, $notUnique->unique($comparator));

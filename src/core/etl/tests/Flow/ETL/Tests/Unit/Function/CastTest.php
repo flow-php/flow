@@ -8,6 +8,7 @@ use function Flow\ETL\DSL\{cast, ref};
 use Flow\ETL\PHP\Value\Uuid;
 use Flow\ETL\Row;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class CastTest extends TestCase
@@ -48,9 +49,7 @@ XML;
         ];
     }
 
-    /**
-     * @dataProvider cast_provider
-     */
+    #[DataProvider('cast_provider')]
     public function test_cast(mixed $from, string $to, mixed $expected) : void
     {
         $resultRefCast = ref('value')->cast($to)->eval(Row::create((new NativeEntryFactory())->create('value', $from)));

@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\GoogleSheet\Tests\Unit;
 
 use Flow\ETL\Adapter\GoogleSheet\{Columns, SheetRange};
 use Flow\ETL\Exception\InvalidArgumentException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class SheetRangeTest extends TestCase
@@ -46,9 +47,7 @@ final class SheetRangeTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider invalid_cases
-     */
+    #[DataProvider('invalid_cases')]
     public function test_assertions(int $startRow, int $endRow, string $expectedExceptionMessage) : void
     {
         $this->expectExceptionMessage($expectedExceptionMessage);
@@ -64,9 +63,7 @@ final class SheetRangeTest extends TestCase
         self::assertSame('Sheet2!A21:B40', $range->nextRows(10)->nextRows(20)->toString());
     }
 
-    /**
-     * @dataProvider example_string_ranges
-     */
+    #[DataProvider('example_string_ranges')]
     public function test_range_to_string(SheetRange $range, string $expectedStringRange) : void
     {
         self::assertSame($expectedStringRange, $range->toString());

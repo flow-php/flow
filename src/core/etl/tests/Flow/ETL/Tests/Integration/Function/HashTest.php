@@ -7,6 +7,7 @@ namespace Flow\ETL\Tests\Integration\Function;
 use function Flow\ETL\DSL\{from_array, ref, to_memory};
 use Flow\ETL\Flow;
 use Flow\ETL\Memory\ArrayMemory;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class HashTest extends TestCase
@@ -18,9 +19,7 @@ final class HashTest extends TestCase
         yield 'string' => ['value', 'd7ab8cce59abd5050d59506fb013961a'];
     }
 
-    /**
-     * @dataProvider provideValues
-     */
+    #[DataProvider('provideValues')]
     public function test_hash_on_given_value(mixed $value, string $expected) : void
     {
         (new Flow())

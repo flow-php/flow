@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Row\Entry;
 
 use Flow\ETL\PHP\Value\Uuid;
 use Flow\ETL\Row\Entry\UuidEntry;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class UuidEntryTest extends TestCase
@@ -49,9 +50,7 @@ final class UuidEntryTest extends TestCase
         }
     }
 
-    /**
-     * @dataProvider valid_string_entries
-     */
+    #[DataProvider('valid_string_entries')]
     public function test_creates_uuid_entry_from_string(string $value) : void
     {
         $entry = UuidEntry::from('entry-name', $value);
@@ -59,9 +58,7 @@ final class UuidEntryTest extends TestCase
         self::assertEquals($value, $entry->value()->toString());
     }
 
-    /**
-     * @dataProvider is_equal_data_provider
-     */
+    #[DataProvider('is_equal_data_provider')]
     public function test_is_equal(bool $equals, UuidEntry $entry, UuidEntry $nextEntry) : void
     {
         self::assertSame($equals, $entry->isEqual($nextEntry));

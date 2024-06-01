@@ -6,6 +6,7 @@ namespace Flow\ETL\Tests\Unit\Formatter\ASCII;
 
 use function Flow\ETL\DSL\datetime_entry;
 use Flow\ETL\Formatter\ASCII\ASCIIValue;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class ASCIIValueTest extends TestCase
@@ -29,9 +30,7 @@ final class ASCIIValueTest extends TestCase
         yield [['a' => 1, 'b' => 2, 'c' => ['test']], '{"a":1,"b":2,"c":["test"]}'];
     }
 
-    /**
-     * @dataProvider values_without_truncating
-     */
+    #[DataProvider('values_without_truncating')]
     public function test_converting_value_to_ascii_value(mixed $value, string $asciiValue) : void
     {
         self::assertSame(
@@ -40,9 +39,7 @@ final class ASCIIValueTest extends TestCase
         );
     }
 
-    /**
-     * @dataProvider values_with_truncating
-     */
+    #[DataProvider('values_with_truncating')]
     public function test_converting_value_to_ascii_value_with_truncating(mixed $value, string $asciiValue) : void
     {
         self::assertSame(

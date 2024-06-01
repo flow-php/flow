@@ -6,6 +6,7 @@ namespace Flow\ETL\Adapter\GoogleSheet\Tests\Unit;
 
 use Flow\ETL\Adapter\GoogleSheet\Columns;
 use Flow\ETL\Exception\InvalidArgumentException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class ColumnsTest extends TestCase
@@ -46,9 +47,7 @@ final class ColumnsTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider invalid_cases
-     */
+    #[DataProvider('invalid_cases')]
     public function test_assertions(string $sheetName, string $startColumn, string $endColumn, string $expectedExceptionMessage) : void
     {
         $this->expectException(InvalidArgumentException::class);

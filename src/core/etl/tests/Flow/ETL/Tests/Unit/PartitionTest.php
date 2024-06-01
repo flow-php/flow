@@ -8,6 +8,7 @@ use function Flow\ETL\DSL\{datetime_entry, ref, row, xml_entry};
 use Flow\ETL\Exception\InvalidArgumentException;
 use Flow\ETL\Partition;
 use Flow\ETL\Row\Entry\XMLEntry;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class PartitionTest extends TestCase
@@ -84,9 +85,7 @@ final class PartitionTest extends TestCase
         self::assertCount(0, $partitions);
     }
 
-    /**
-     * @dataProvider provider_forbidden_characters_values
-     */
+    #[DataProvider('provider_forbidden_characters_values')]
     public function test_forbidden_names(string $value) : void
     {
         $this->expectException(InvalidArgumentException::class);
@@ -94,9 +93,7 @@ final class PartitionTest extends TestCase
         new Partition($value, 'value');
     }
 
-    /**
-     * @dataProvider provider_forbidden_characters_values
-     */
+    #[DataProvider('provider_forbidden_characters_values')]
     public function test_forbidden_values(string $value) : void
     {
         $this->expectException(InvalidArgumentException::class);

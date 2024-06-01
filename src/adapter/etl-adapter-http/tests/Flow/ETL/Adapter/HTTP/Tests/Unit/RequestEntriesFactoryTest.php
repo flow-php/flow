@@ -7,6 +7,7 @@ namespace Flow\ETL\Adapter\HTTP\Tests\Unit;
 use Flow\ETL\Adapter\Http\RequestEntriesFactory;
 use Flow\ETL\Row\Entry\{JsonEntry, StringEntry};
 use Nyholm\Psr7\Factory\Psr17Factory;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\RequestInterface;
 
@@ -44,9 +45,7 @@ final class RequestEntriesFactoryTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider requests
-     */
+    #[DataProvider('requests')]
     public function test_uses_expected_entry_for_request_body(string $expectedRequestBodyEntryClass, RequestInterface $request) : void
     {
         $entryFactory = new RequestEntriesFactory();

@@ -12,6 +12,7 @@ use Flow\ETL\PHP\Type\Logical\{ListType, MapType, StructureType};
 use Flow\ETL\Row\Entry\{ArrayEntry, BooleanEntry, DateTimeEntry, IntegerEntry, MapEntry, StringEntry, StructureEntry};
 use Flow\ETL\Row\Schema;
 use Flow\ETL\Row\Schema\Definition;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class RowTest extends TestCase
@@ -168,9 +169,7 @@ final class RowTest extends TestCase
         );
     }
 
-    /**
-     * @dataProvider is_equal_data_provider
-     */
+    #[DataProvider('is_equal_data_provider')]
     public function test_is_equal(bool $equals, \Flow\ETL\Row $row, \Flow\ETL\Row $nextRow) : void
     {
         self::assertSame($equals, $row->isEqual($nextRow));
