@@ -25,6 +25,7 @@
 - [#1053](https://github.com/flow-php/flow/pull/1053) - **Update Homebrew TAP formula: flow-php to version: 0.7.4** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1091](https://github.com/flow-php/flow/pull/1091) - **Avoid type casting when it's necessary in entry factory** - [@norberttech](https://github.com/norberttech)
 - [#1085](https://github.com/flow-php/flow/pull/1085) - **Fix fragile test comparing console output** - [@stloyd](https://github.com/stloyd)
 - [#1084](https://github.com/flow-php/flow/pull/1084) - **Fix for extracting XML attribute** - [@stloyd](https://github.com/stloyd)
 - [#1081](https://github.com/flow-php/flow/pull/1081) - **Scalar comparison functions are now also detecting types of compared values to prevent comparing not compatible values** - [@norberttech](https://github.com/norberttech)
