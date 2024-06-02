@@ -1,4 +1,4 @@
-## [Unreleased] - 2024-06-01
+## [Unreleased] - 2024-06-02
 
 ### Added
 - [#1083](https://github.com/flow-php/flow/pull/1083) - **Allow to use max/min aggregations on date time columns** - [@norberttech](https://github.com/norberttech)
@@ -25,6 +25,7 @@
 - [#1053](https://github.com/flow-php/flow/pull/1053) - **Update Homebrew TAP formula: flow-php to version: 0.7.4** - [@norberttech](https://github.com/norberttech)
 
 ### Fixed
+- [#1086](https://github.com/flow-php/flow/pull/1086) - **Fix deprecated dynamic property usage** - [@stloyd](https://github.com/stloyd)
 - [#1091](https://github.com/flow-php/flow/pull/1091) - **Avoid type casting when it's necessary in entry factory** - [@norberttech](https://github.com/norberttech)
 - [#1085](https://github.com/flow-php/flow/pull/1085) - **Fix fragile test comparing console output** - [@stloyd](https://github.com/stloyd)
 - [#1084](https://github.com/flow-php/flow/pull/1084) - **Fix for extracting XML attribute** - [@stloyd](https://github.com/stloyd)
