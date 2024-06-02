@@ -13,6 +13,11 @@ final class AwsS3Stream extends FlysystemWrapper
 {
     public const PROTOCOL = 'flow-aws-s3';
 
+    /**
+     * @var null|resource
+     */
+    public $context;
+
     public static function register() : void
     {
         if (!\class_exists('League\Flysystem\AwsS3V3\AwsS3V3Adapter')) {

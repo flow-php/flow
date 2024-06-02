@@ -16,6 +16,11 @@ final class AzureBlobStream extends FlysystemWrapper
 {
     public const PROTOCOL = 'flow-azure-blob';
 
+    /**
+     * @var null|resource
+     */
+    public $context;
+
     public static function register() : void
     {
         if (!\class_exists('League\Flysystem\AzureBlobStorage\AzureBlobStorageAdapter')) {

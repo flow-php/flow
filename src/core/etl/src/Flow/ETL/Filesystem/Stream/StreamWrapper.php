@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Flow\ETL\Filesystem\Stream;
 
 /**
- * @property resource $context
+ * @property null|resource $context
  */
 interface StreamWrapper
 {
