@@ -6,6 +6,7 @@ namespace Flow\Parquet;
 
 use Flow\Parquet\Data\DataConverter;
 use Flow\Parquet\Exception\InvalidArgumentException;
+use Flow\Parquet\Stream\LocalStream;
 
 final class Reader
 {
@@ -33,24 +34,11 @@ final class Reader
             throw new InvalidArgumentException("File {$path} is not seekable");
         }
 
-        return new ParquetFile($stream, $this->byteOrder, DataConverter::initialize($this->options), $this->options);
+        return new ParquetFile(new LocalStream($stream), $this->byteOrder, DataConverter::initialize($this->options), $this->options);
     }
 
-    /**
-     * @param resource $stream
-     */
-    public function readStream($stream) : ParquetFile
+    public function readStream(Stream $stream) : ParquetFile
     {
-        if (!\is_resource($stream)) {
-            throw new InvalidArgumentException('Given argument is not a valid resource');
-        }
-
-        $streamMetadata = \stream_get_meta_data($stream);
-
-        if (!$streamMetadata['seekable']) {
-            throw new InvalidArgumentException('Given stream is not seekable');
-        }
-
         return new ParquetFile($stream, $this->byteOrder, DataConverter::initialize($this->options), $this->options);
     }
 

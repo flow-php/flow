@@ -9,7 +9,7 @@ use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PartitionE
 use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Filesystem\Stream\FileStream;
 use Flow\ETL\{Extractor, FlowContext};
-use Flow\Parquet\{ByteOrder, Options, ParquetFile, Reader};
+use Flow\Parquet\{ByteOrder, Options, ParquetFile, Reader, Stream\LocalStream};
 
 final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtractor, PartitionExtractor
 {
@@ -84,7 +84,7 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
         foreach ($context->streams()->scan($this->path, $this->partitionFilter()) as $stream) {
             yield [
                 'file' => (new Reader(byteOrder: $this->byteOrder, options: $this->options))
-                    ->readStream($stream->resource()),
+                    ->readStream(new LocalStream($stream->resource())),
                 'stream' => $stream,
             ];
         }

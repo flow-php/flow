@@ -6,13 +6,12 @@ namespace Flow\Parquet\ParquetFile;
 
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
+use Flow\Parquet\Stream;
 
 interface ColumnChunkReader
 {
     /**
-     * @param resource $stream
-     *
      * @return \Generator<array<mixed>>
      */
-    public function read(ColumnChunk $columnChunk, FlatColumn $column, $stream) : \Generator;
+    public function read(ColumnChunk $columnChunk, FlatColumn $column, Stream $stream) : \Generator;
 }
