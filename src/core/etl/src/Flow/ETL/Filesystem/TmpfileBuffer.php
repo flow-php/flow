@@ -32,11 +32,9 @@ final class TmpfileBuffer implements LocalBuffer
     public function stream()
     {
         if ($this->stream === null) {
-            /** @phpstan-ignore-next-line */
             $this->stream = \tmpfile();
         }
 
-        /** @phpstan-ignore-next-line */
         return $this->stream;
     }
 
