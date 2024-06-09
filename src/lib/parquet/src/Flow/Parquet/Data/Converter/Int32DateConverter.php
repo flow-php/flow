@@ -6,7 +6,7 @@ namespace Flow\Parquet\Data\Converter;
 
 use Flow\Parquet\Data\Converter;
 use Flow\Parquet\Options;
-use Flow\Parquet\ParquetFile\Schema\{FlatColumn, LogicalType, PhysicalType};
+use Flow\Parquet\ParquetFile\Schema\{ConvertedType, FlatColumn, LogicalType, PhysicalType};
 
 final class Int32DateConverter implements Converter
 {
@@ -18,6 +18,10 @@ final class Int32DateConverter implements Converter
     public function isFor(FlatColumn $column, Options $options) : bool
     {
         if ($column->type() === PhysicalType::INT32 && $column->logicalType()?->name() === LogicalType::DATE) {
+            return true;
+        }
+
+        if ($column->type() === PhysicalType::INT32 && $column->convertedType() === ConvertedType::DATE) {
             return true;
         }
 

@@ -6,7 +6,7 @@ namespace Flow\Parquet\Data\Converter;
 
 use Flow\Parquet\BinaryReader\Bytes;
 use Flow\Parquet\Data\Converter;
-use Flow\Parquet\ParquetFile\Schema\{FlatColumn, PhysicalType};
+use Flow\Parquet\ParquetFile\Schema\{ConvertedType, FlatColumn, PhysicalType};
 use Flow\Parquet\{Option, Options};
 
 final class BytesStringConverter implements Converter

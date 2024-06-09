@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Flow\Parquet\Tests\Unit\Data\Converter;
 
 use Flow\Parquet\Data\Converter\Int32DateConverter;
+use Flow\Parquet\Options;
+use Flow\Parquet\ParquetFile\Schema\{ConvertedType, FlatColumn, PhysicalType};
 use PHPUnit\Framework\TestCase;
 
 final class Int32DateConverterTest extends TestCase
@@ -18,6 +20,23 @@ final class Int32DateConverterTest extends TestCase
         self::assertEquals(
             $date,
             $converter->fromParquetType($converter->toParquetType($date))
+        );
+    }
+
+    public function test_converting_int32_with_deprecated_converted_type() : void
+    {
+        $converter = new Int32DateConverter();
+
+        self::assertTrue(
+            $converter->isFor(
+                new FlatColumn(
+                    'date',
+                    PhysicalType::INT32,
+                    ConvertedType::DATE,
+                    null,
+                ),
+                Options::default()
+            )
         );
     }
 }
