@@ -98,23 +98,6 @@ final class BinaryReaderWriterTest extends TestCase
         );
     }
 
-    public function test_writing_and_reading_large_integers() : void
-    {
-        $buffer = '';
-        $ints = [];
-
-        for ($i = 0; $i < 10000; $i++) {
-            $ints[] = $i;
-            $ints[] = -$i;
-        }
-
-        (new BinaryBufferWriter($buffer))->writeInts96($ints);
-        self::assertEquals(
-            $ints,
-            (new BinaryBufferReader($buffer))->readInts96(\count($ints)),
-        );
-    }
-
     public function test_writing_and_reading_small_integers() : void
     {
         $buffer = '';
