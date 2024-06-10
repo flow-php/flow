@@ -4,7 +4,14 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\Data;
 
-use Flow\Parquet\Data\Converter\{BytesStringConverter, Int32DateConverter, Int32DateTimeConverter, Int64DateTimeConverter, Int96DateTimeConverter, JsonConverter, TimeConverter, UuidConverter};
+use Flow\Parquet\Data\Converter\{BytesStringConverter,
+    Int32DateConverter,
+    Int32DateTimeConverter,
+    Int64DateTimeConverter,
+    Int96DateTimeConverter,
+    JsonConverter,
+    TimeConverter,
+    UuidConverter};
 use Flow\Parquet\Exception\DataConversionException;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;

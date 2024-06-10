@@ -37,6 +37,23 @@ final class BinaryReaderWriterTest extends TestCase
         ];
     }
 
+    public function test_writing_and_reading_big_integers() : void
+    {
+        $buffer = '';
+        $ints = [];
+
+        for ($i = 0; $i < 10000; $i++) {
+            $ints[] = $i;
+            $ints[] = -$i;
+        }
+
+        (new BinaryBufferWriter($buffer))->writeInts64($ints);
+        self::assertEquals(
+            $ints,
+            (new BinaryBufferReader($buffer))->readInts64(\count($ints)),
+        );
+    }
+
     #[DataProvider('decimalProvider')]
     public function test_writing_and_reading_decimals(array $decimals, int $precision, int $scale) : void
     {
@@ -61,6 +78,40 @@ final class BinaryReaderWriterTest extends TestCase
             $floats,
             (new BinaryBufferReader($buffer))->readFloats(\count($floats)),
             0.000001,
+        );
+    }
+
+    public function test_writing_and_reading_integers() : void
+    {
+        $buffer = '';
+        $ints = [];
+
+        for ($i = 0; $i < 10000; $i++) {
+            $ints[] = $i;
+            $ints[] = -$i;
+        }
+
+        (new BinaryBufferWriter($buffer))->writeInts32($ints);
+        self::assertEquals(
+            $ints,
+            (new BinaryBufferReader($buffer))->readInts32(\count($ints)),
+        );
+    }
+
+    public function test_writing_and_reading_small_integers() : void
+    {
+        $buffer = '';
+        $ints = [];
+
+        for ($i = 0; $i < 1000; $i++) {
+            $ints[] = $i;
+            $ints[] = -$i;
+        }
+
+        (new BinaryBufferWriter($buffer))->writeInts16($ints);
+        self::assertEquals(
+            $ints,
+            (new BinaryBufferReader($buffer))->readInts16(\count($ints)),
         );
     }
 

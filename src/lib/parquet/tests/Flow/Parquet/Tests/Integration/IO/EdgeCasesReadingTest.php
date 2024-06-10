@@ -27,7 +27,7 @@ final class EdgeCasesReadingTest extends TestCase
                     'ID' => 8,
                     'Int_Array' => [
                         'list' => [
-                            'element' => 4294967295,
+                            'element' => -1,
                         ],
                     ],
                     'int_array_array' => [
@@ -35,7 +35,7 @@ final class EdgeCasesReadingTest extends TestCase
                             'element' => [
                                 'list' => [
                                     'element' => [
-                                        [4294967295, 4294967294],
+                                        [-1, -2],
                                         [null],
                                     ],
                                 ],
@@ -45,7 +45,7 @@ final class EdgeCasesReadingTest extends TestCase
                     'Int_Map' => [
                         'map' => [
                             'key' => 'k1',
-                            'value' => 4294967295,
+                            'value' => -1,
                         ],
                     ],
                     'int_map_array' => [
@@ -58,10 +58,10 @@ final class EdgeCasesReadingTest extends TestCase
                         ],
                     ],
                     'nested_Struct' => [
-                        'a' => 4294967295,
+                        'a' => -1,
                         'B' => [
                             'list' => [
-                                'element' => 4294967295,
+                                'element' => -1,
                             ],
                         ],
                         'c' => [
@@ -70,7 +70,7 @@ final class EdgeCasesReadingTest extends TestCase
                                     'element' => [
                                         'list' => [
                                             'element' => [
-                                                'e' => 4294967295,
+                                                'e' => -1,
                                                 'f' => 'nonnullable',
                                             ],
                                         ],

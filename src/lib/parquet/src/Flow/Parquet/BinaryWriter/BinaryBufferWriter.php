@@ -108,6 +108,15 @@ final class BinaryBufferWriter implements BinaryWriter
         }
     }
 
+    public function writeInts16(array $ints) : void
+    {
+        $format = $this->byteOrder === ByteOrder::BIG_ENDIAN ? 'n' : 'v';
+
+        foreach ($ints as $int) {
+            $this->buffer .= \pack($format, $int);
+        }
+    }
+
     public function writeInts32(array $ints) : void
     {
         $format = $this->byteOrder === ByteOrder::BIG_ENDIAN ? 'N' : 'V';
