@@ -43,6 +43,11 @@ interface BinaryWriter
     /**
      * @param array<int> $ints
      */
+    public function writeInts16(array $ints) : void;
+
+    /**
+     * @param array<int> $ints
+     */
     public function writeInts32(array $ints) : void;
 
     /**

@@ -161,15 +161,30 @@ final class BinaryBufferReader implements BinaryReader
         return $floats;
     }
 
-    public function readInt32() : int
+    /**
+     * @return array<int>
+     */
+    public function readInts16(int $total) : array
     {
-        $bytes = $this->readBytes(4)->toArray();
+        $intBytes = \array_chunk($this->readBytes(2 * $total)->toArray(), 2);
+        $ints = [];
 
-        if ($this->byteOrder === ByteOrder::LITTLE_ENDIAN) {
-            return $bytes[0] | ($bytes[1] << 8) | ($bytes[2] << 16) | ($bytes[3] << 24);
+        foreach ($intBytes as $bytes) {
+
+            if ($this->byteOrder === ByteOrder::LITTLE_ENDIAN) {
+                $integer = $bytes[0] | ($bytes[1] << 8);
+            } else {
+                $integer = ($bytes[0] << 24) | ($bytes[1] << 16);
+            }
+
+            if ($integer & 0x8000) {
+                $integer = -((~$integer & 0xFFFF) + 1);
+            }
+
+            $ints[] = $integer;
         }
 
-        return ($bytes[0] << 24) | ($bytes[1] << 16) | ($bytes[2] << 8) | $bytes[3];
+        return $ints;
     }
 
     /**
@@ -182,10 +197,16 @@ final class BinaryBufferReader implements BinaryReader
 
         foreach ($intBytes as $bytes) {
             if ($this->byteOrder === ByteOrder::LITTLE_ENDIAN) {
-                $ints[] = $bytes[0] | ($bytes[1] << 8) | ($bytes[2] << 16) | ($bytes[3] << 24);
+                $int = $bytes[0] | ($bytes[1] << 8) | ($bytes[2] << 16) | ($bytes[3] << 24);
             } else {
-                $ints[] = ($bytes[0] << 24) | ($bytes[1] << 16) | ($bytes[2] << 8) | $bytes[3];
+                $ints = ($bytes[0] << 24) | ($bytes[1] << 16) | ($bytes[2] << 8) | $bytes[3];
             }
+
+            if ($int & 0x80000000) {
+                $int = -((~$int & 0xFFFFFFFF) + 1);  // Two's complement
+            }
+
+            $ints[] = $int;
         }
 
         return $ints;
@@ -199,12 +220,22 @@ final class BinaryBufferReader implements BinaryReader
 
         foreach ($intBytes as $bytes) {
             if ($this->byteOrder === ByteOrder::LITTLE_ENDIAN) {
-                $ints[] = $bytes[0] | ($bytes[1] << 8) | ($bytes[2] << 16) | ($bytes[3] << 24) |
+                $int = $bytes[0] | ($bytes[1] << 8) | ($bytes[2] << 16) | ($bytes[3] << 24) |
                     ($bytes[4] << 32) | ($bytes[5] << 40) | ($bytes[6] << 48) | ($bytes[7] << 56);
+                $sign = $bytes[7];
             } else {
-                $ints[] = ($bytes[0] << 56) | ($bytes[1] << 48) | ($bytes[2] << 40) | ($bytes[3] << 32) |
+                $int = ($bytes[0] << 56) | ($bytes[1] << 48) | ($bytes[2] << 40) | ($bytes[3] << 32) |
                     ($bytes[4] << 24) | ($bytes[5] << 16) | ($bytes[6] << 8) | $bytes[7];
+                $sign = $bytes[7];
             }
+
+            if ($sign & 0x80) {
+                $int |= (-1 ^ 0xFFFFFFFFFFFFFFFF) << 56;
+            } else {
+                $int |= $sign << 56;
+            }
+
+            $ints[] = $int;
         }
 
         return $ints;

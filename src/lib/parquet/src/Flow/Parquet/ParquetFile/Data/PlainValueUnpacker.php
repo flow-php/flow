@@ -6,7 +6,7 @@ namespace Flow\Parquet\ParquetFile\Data;
 
 use Flow\Parquet\BinaryReader;
 use Flow\Parquet\Exception\RuntimeException;
-use Flow\Parquet\ParquetFile\Schema\{FlatColumn, LogicalType, PhysicalType};
+use Flow\Parquet\ParquetFile\Schema\{ConvertedType, FlatColumn, LogicalType, PhysicalType};
 
 final class PlainValueUnpacker
 {
@@ -23,7 +23,10 @@ final class PlainValueUnpacker
     public function unpack(FlatColumn $column, int $total) : array
     {
         return match ($column->type()) {
-            PhysicalType::INT32 => $this->reader->readInts32($total),
+            PhysicalType::INT32 => match ($column->convertedType()) {
+                ConvertedType::INT_16 => $this->reader->readInts16($total),
+                default => $this->reader->readInts32($total),
+            },
             PhysicalType::INT64 => $this->reader->readInts64($total),
             PhysicalType::INT96 => $this->reader->readInts96($total),
             PhysicalType::FLOAT => $this->reader->readFloats($total),

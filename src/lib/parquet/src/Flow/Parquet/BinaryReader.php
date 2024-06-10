@@ -44,6 +44,11 @@ interface BinaryReader
     /**
      * @return array<int>
      */
+    public function readInts16(int $total) : array;
+
+    /**
+     * @return array<int>
+     */
     public function readInts32(int $total) : array;
 
     /**
