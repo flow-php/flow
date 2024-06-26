@@ -15,6 +15,11 @@ use PHPUnit\Framework\TestCase;
 
 final class AvroTest extends TestCase
 {
+    protected function setUp() : void
+    {
+        self::markTestSkipped('Avro integration was abandoned due to lack of availability of good Avro libraries.');
+    }
+
     public function test_limit() : void
     {
         $path = \sys_get_temp_dir() . '/avro_extractor_signal_stop.csv';

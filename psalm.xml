@@ -15,6 +15,7 @@
         <directory name="src/lib/**/src" />
         <ignoreFiles>
             <directory name="vendor"/>
+            <directory name="src/adapter/etl-adapter-avro/src" />
 
             <file name="src/core/etl/src/Flow/ETL/Formatter/ASCII/ASCIITable.php" />
             <file name="src/core/etl/src/Flow/ETL/ExternalSort/RowsMinHeap.php" />
@@ -22,9 +23,6 @@
             <file name="src/adapter/etl-adapter-elasticsearch/src/Flow/ETL/Adapter/Elasticsearch/ElasticsearchPHP/SearchResults.php"/>
             <file name="src/adapter/etl-adapter-elasticsearch/src/Flow/ETL/Adapter/Elasticsearch/ElasticsearchPHP/PointInTime.php"/>
             <file name="src/adapter/etl-adapter-elasticsearch/src/Flow/ETL/Adapter/Elasticsearch/ElasticsearchPHP/SearchParams.php"/>
-
-            <file name="src/adapter/etl-adapter-avro/src/Flow/ETL/Adapter/Avro/FlixTech/SchemaConverter.php" />
-            <file name="src/adapter/etl-adapter-avro/src/Flow/ETL/Adapter/Avro/FlixTech/ValueConverter.php" />
 
             <file name="src/adapter/etl-adapter-filesystem/src/Flow/ETL/Adapter/Filesystem/AwsS3Stream.php" />
             <file name="src/adapter/etl-adapter-filesystem/src/Flow/ETL/Adapter/Filesystem/AzureBlobStream.php" />

@@ -6,9 +6,7 @@ namespace Flow\ETL\Adapter\Avro\Tests\Benchmark;
 
 use function Flow\ETL\DSL\Adapter\Avro\from_avro;
 use Flow\ETL\{Config, FlowContext};
-use PhpBench\Attributes\Groups;
 
-#[Groups(['extractor'])]
 final class AvroExtractorBench
 {
     private readonly FlowContext $context;
