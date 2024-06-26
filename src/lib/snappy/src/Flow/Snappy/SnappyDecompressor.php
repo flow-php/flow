@@ -75,7 +75,7 @@ final class SnappyDecompressor
                 if ($pos + $len > $this->arrayLength) {
                     return false;
                 }
-                $this->copyBytes($this->array, $pos, $outBuffer, $outPos, $len);
+                $this->copyBytes($this->array, $pos, $outBuffer, $outPos, (int) $len);
                 $pos += $len;
                 $outPos += $len;
             } else {

@@ -6,7 +6,6 @@ parameters:
         - identifier: missingType.generics
     paths:
         - src/core/etl/src
-        - src/adapter/etl-adapter-avro/src
         - src/adapter/etl-adapter-chartjs/src
         - src/adapter/etl-adapter-csv/src
         - src/adapter/etl-adapter-doctrine/src
@@ -31,8 +30,6 @@ parameters:
     excludePaths:
         - src/core/etl/src/Flow/ETL/Formatter/ASCII/ASCIITable.php
         - src/core/etl/src/Flow/ETL/ExternalSort/RowsMinHeap.php
-        - src/adapter/etl-adapter-avro/src/Flow/ETL/Adapter/Avro/FlixTech/SchemaConverter.php
-        - src/adapter/etl-adapter-avro/src/Flow/ETL/Adapter/Avro/FlixTech/ValueConverter.php
         - src/adapter/etl-adapter-elasticsearch/src/Flow/ETL/Adapter/Elasticsearch/ElasticsearchPHP/SearchResults.php
         - src/adapter/etl-adapter-elasticsearch/src/Flow/ETL/Adapter/Elasticsearch/ElasticsearchPHP/SearchParams.php
         - src/adapter/etl-adapter-elasticsearch/src/Flow/ETL/Adapter/Elasticsearch/ElasticsearchPHP/PointInTime.php

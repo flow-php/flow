@@ -6,9 +6,7 @@ namespace Flow\ETL\Adapter\Avro\Tests\Benchmark;
 
 use function Flow\ETL\DSL\Adapter\Avro\{from_avro, to_avro};
 use Flow\ETL\{Config, FlowContext, Rows};
-use PhpBench\Attributes\Groups;
 
-#[Groups(['loader'])]
 final class AvroLoaderBench
 {
     private readonly FlowContext $context;
