@@ -15,7 +15,7 @@ final class CSVTest extends TestCase
 {
     public function test_loading_array_entry() : void
     {
-        $path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.csv';
+        $path = \sys_get_temp_dir() . '/flow_php_etl_csv_loader' . bin2hex(random_bytes(16)) . '.csv';
 
         if (\file_exists($path)) {
             \unlink($path);
@@ -31,7 +31,7 @@ final class CSVTest extends TestCase
 
     public function test_loading_csv_files() : void
     {
-        $path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_csv_loader', true) . '.csv';
+        $path = \sys_get_temp_dir() . '/flow_php_etl_csv_loader' . bin2hex(random_bytes(16)) . '.csv';
 
         if (\file_exists($path)) {
             \unlink($path);

@@ -17,7 +17,7 @@ final class JsonTest extends TestCase
 {
     public function test_json_loader() : void
     {
-        $path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_json_loader', true) . '.json';
+        $path = \sys_get_temp_dir() . '/flow_php_etl_json_loader' . bin2hex(random_bytes(16)) . '.json';
 
         if (\file_exists($path)) {
             \unlink($path);
@@ -40,7 +40,7 @@ final class JsonTest extends TestCase
 
     public function test_json_loader_loading_empty_string() : void
     {
-        $stream = \sys_get_temp_dir() . '/' . \uniqid('flow_php_etl_json_loader', true) . '.json';
+        $stream = \sys_get_temp_dir() . '/flow_php_etl_json_loader' . bin2hex(random_bytes(16)) . '.json';
 
         $loader = new JsonLoader(Path::realpath($stream));
 

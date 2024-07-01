@@ -53,19 +53,19 @@ final class ElasticsearchLoaderTest extends TestCase
 
         $loader->load(new Rows(
             Row::create(
-                new Row\Entry\StringEntry('id', \sha1(\uniqid('id', true))),
+                new Row\Entry\StringEntry('id', \sha1('id' . bin2hex(random_bytes(16)))),
                 new Row\Entry\StringEntry('name', 'Łukasz')
             ),
             Row::create(
-                new Row\Entry\StringEntry('id', \sha1(\uniqid('id', true))),
+                new Row\Entry\StringEntry('id', \sha1('id' . bin2hex(random_bytes(16)))),
                 new Row\Entry\StringEntry('name', 'Norbert')
             ),
             Row::create(
-                new Row\Entry\StringEntry('id', \sha1(\uniqid('id', true))),
+                new Row\Entry\StringEntry('id', \sha1('id' . bin2hex(random_bytes(16)))),
                 new Row\Entry\StringEntry('name', 'Dawid')
             ),
             Row::create(
-                new Row\Entry\StringEntry('id', \sha1(\uniqid('id', true))),
+                new Row\Entry\StringEntry('id', \sha1('id' . bin2hex(random_bytes(16)))),
                 new Row\Entry\StringEntry('name', 'Tomek')
             ),
         ), new FlowContext(Config::default()));

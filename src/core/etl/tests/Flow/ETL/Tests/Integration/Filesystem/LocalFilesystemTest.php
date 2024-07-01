@@ -69,7 +69,7 @@ STRING,
 
     public function test_open_file_stream_for_non_existing_file() : void
     {
-        $path = \sys_get_temp_dir() . '/' . \uniqid('flow_php_test_file_', true) . '.txt';
+        $path = \sys_get_temp_dir() . '/flow_php_test_file_' . bin2hex(random_bytes(16)) . '.txt';
 
         $stream = (new LocalFilesystem())->open(new Path($path), Mode::WRITE);
 

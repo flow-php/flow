@@ -166,7 +166,7 @@ final class PartitioningTest extends IntegrationTestCase
 
                         for ($d = 0; $d < $maxItems; $d++) {
                             $data[] = [
-                                'id' => \uniqid('', true),
+                                'id' => bin2hex(random_bytes(16)),
                                 'created_at' => (new \DateTimeImmutable('2020-01-01'))->add(new \DateInterval('P' . $i . 'D'))->setTime(\random_int(0, 23), \random_int(0, 59), \random_int(0, 59)),
                                 'value' => \random_int(1, 1000),
                             ];
