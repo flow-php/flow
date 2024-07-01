@@ -14,7 +14,7 @@ final class ListsWritingTest extends TestCase
 {
     public function test_writing_list_of_ints() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(NestedColumn::list('list_of_ints', ListElement::int32()));
@@ -38,7 +38,7 @@ final class ListsWritingTest extends TestCase
 
     public function test_writing_list_of_strings() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(NestedColumn::list('list_of_strings', ListElement::string()));
@@ -62,7 +62,7 @@ final class ListsWritingTest extends TestCase
 
     public function test_writing_list_of_structures() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(
@@ -96,7 +96,7 @@ final class ListsWritingTest extends TestCase
 
     public function test_writing_list_with_nullable_elements() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(NestedColumn::list('list_of_ints', ListElement::int32()));
@@ -122,7 +122,7 @@ final class ListsWritingTest extends TestCase
 
     public function test_writing_list_with_nullable_list_values() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(NestedColumn::list('list_of_ints', ListElement::int32()));
@@ -148,7 +148,7 @@ final class ListsWritingTest extends TestCase
 
     public function test_writing_nullable_list_of_ints() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(NestedColumn::list('list_of_ints', ListElement::int32()));
@@ -174,7 +174,7 @@ final class ListsWritingTest extends TestCase
 
     public function test_writing_nullable_list_of_structures() : void
     {
-        $path = \sys_get_temp_dir() . '/test-writer' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $writer = new Writer();
         $schema = Schema::with(

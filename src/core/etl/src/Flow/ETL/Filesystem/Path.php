@@ -143,7 +143,7 @@ final class Path
 
     public static function tmpFile(string $extension, ?string $name = null) : self
     {
-        $name = \ltrim($name ?? \str_replace('.', '', \uniqid('', true)), '/');
+        $name = \ltrim($name ?? bin2hex(random_bytes(16)), '/');
 
         return new self(\sys_get_temp_dir() . DIRECTORY_SEPARATOR . $name . '.' . $extension);
     }
@@ -302,7 +302,7 @@ final class Path
         $base = \trim(\mb_substr($this->path(), 0, \mb_strrpos($this->path(), $this->basename())), DIRECTORY_SEPARATOR);
 
         return new self(
-            $this->scheme . '://' . $base . DIRECTORY_SEPARATOR . $this->filename . '_' . \str_replace('.', '', \uniqid('', true)) . $extension,
+            $this->scheme . '://' . $base . DIRECTORY_SEPARATOR . $this->filename . '_' . bin2hex(random_bytes(16)) . $extension,
             $this->options
         );
     }

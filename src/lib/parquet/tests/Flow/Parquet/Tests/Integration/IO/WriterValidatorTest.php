@@ -15,7 +15,7 @@ final class WriterValidatorTest extends TestCase
         $this->expectExceptionMessage('Column "string" is required');
 
         $writer = new Writer();
-        $path = \sys_get_temp_dir() . '/test-writer-validator' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = \sys_get_temp_dir() . '/test-writer-validator-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $schema = Schema::with(
             Schema\FlatColumn::int32('id'),
@@ -30,7 +30,7 @@ final class WriterValidatorTest extends TestCase
         $this->expectExceptionMessage('Column "string" is not string, got "integer" instead');
 
         $writer = new Writer();
-        $path = \sys_get_temp_dir() . '/test-writer-validator' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = \sys_get_temp_dir() . '/test-writer-validator-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $schema = Schema::with(Schema\FlatColumn::string('string'));
 
@@ -42,7 +42,7 @@ final class WriterValidatorTest extends TestCase
         $this->expectExceptionMessage('Column "list" is required');
 
         $writer = new Writer();
-        $path = \sys_get_temp_dir() . '/test-writer-validator' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = \sys_get_temp_dir() . '/test-writer-validator-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $schema = Schema::with(Schema\NestedColumn::list('list', Schema\ListElement::string())->makeRequired());
 
@@ -54,7 +54,7 @@ final class WriterValidatorTest extends TestCase
         $this->expectExceptionMessage('Column "list.list.element" is not string, got "NULL" instead');
 
         $writer = new Writer();
-        $path = \sys_get_temp_dir() . '/test-writer-validator' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = \sys_get_temp_dir() . '/test-writer-validator-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $schema = Schema::with(Schema\NestedColumn::list('list', Schema\ListElement::string(required: true)));
 
@@ -66,7 +66,7 @@ final class WriterValidatorTest extends TestCase
         $this->expectExceptionMessage('Column "map.key_value.value" is not string, got "NULL" instead');
 
         $writer = new Writer();
-        $path = \sys_get_temp_dir() . '/test-writer-validator' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = \sys_get_temp_dir() . '/test-writer-validator-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $schema = Schema::with(Schema\NestedColumn::map('map', Schema\MapKey::string(), Schema\MapValue::string(required: true)));
 
@@ -78,7 +78,7 @@ final class WriterValidatorTest extends TestCase
         $this->expectExceptionMessage('Column "map" is required');
 
         $writer = new Writer();
-        $path = \sys_get_temp_dir() . '/test-writer-validator' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = \sys_get_temp_dir() . '/test-writer-validator-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $schema = Schema::with(Schema\NestedColumn::map('map', Schema\MapKey::string(), Schema\MapValue::string())->makeRequired());
 
@@ -90,7 +90,7 @@ final class WriterValidatorTest extends TestCase
         $this->expectExceptionMessage('Column "string" is required');
 
         $writer = new Writer();
-        $path = \sys_get_temp_dir() . '/test-writer-validator' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = \sys_get_temp_dir() . '/test-writer-validator-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $schema = Schema::with(Schema\FlatColumn::string('string')->makeRequired());
 
@@ -100,7 +100,7 @@ final class WriterValidatorTest extends TestCase
     public function test_writing_row_with_missing_optional_columns() : void
     {
         $writer = new Writer();
-        $path = \sys_get_temp_dir() . '/test-writer-validator' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = \sys_get_temp_dir() . '/test-writer-validator-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $schema = Schema::with(
             Schema\FlatColumn::int32('id'),
@@ -134,7 +134,7 @@ final class WriterValidatorTest extends TestCase
     public function test_writing_row_with_missing_optional_columns_in_different_columns() : void
     {
         $writer = new Writer();
-        $path = \sys_get_temp_dir() . '/test-writer-validator' . \uniqid('parquet-test-', true) . '.parquet';
+        $path = \sys_get_temp_dir() . '/test-writer-validator-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
 
         $schema = Schema::with(
             Schema\FlatColumn::int32('id'),

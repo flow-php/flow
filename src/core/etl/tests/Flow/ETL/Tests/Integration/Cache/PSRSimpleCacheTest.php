@@ -17,7 +17,7 @@ final class PSRSimpleCacheTest extends IntegrationTestCase
     {
         $cache = new PSRSimpleCache(
             new Psr16Cache(
-                new FilesystemAdapter(directory: \sys_get_temp_dir() . '/' . \uniqid('flow-etl-cache-', true))
+                new FilesystemAdapter(directory: \sys_get_temp_dir() . '/flow-etl-cache-' . bin2hex(random_bytes(16)))
             ),
         );
 

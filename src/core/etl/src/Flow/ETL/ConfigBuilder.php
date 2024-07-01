@@ -54,7 +54,7 @@ final class ConfigBuilder
      */
     public function build() : Config
     {
-        $this->id ??= \uniqid('flow_php', true);
+        $this->id ??= 'flow_php' . bin2hex(random_bytes(16));
         $entryFactory = new NativeEntryFactory();
         $this->serializer ??= new Base64Serializer(new NativePHPSerializer());
         $cachePath = \is_string(\getenv(Config::CACHE_DIR_ENV)) && \realpath(\getenv(Config::CACHE_DIR_ENV))
