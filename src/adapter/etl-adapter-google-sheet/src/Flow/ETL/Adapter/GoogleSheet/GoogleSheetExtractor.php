@@ -47,8 +47,6 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
 
         /**
          * @var array[] $values
-         *
-         * @psalm-suppress RedundantConditionGivenDocblockType
          */
         $values = $response->getValues() ?? [];
 
@@ -97,7 +95,7 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
 
             foreach ($rows as $row) {
                 $signal = yield array_to_rows($row, $context->entryFactory());
-                $this->countRow();
+                $this->incrementReturnedRows();
 
                 if ($signal === Signal::STOP || $this->reachedLimit()) {
                     return;
@@ -113,8 +111,6 @@ final class GoogleSheetExtractor implements Extractor, LimitableExtractor
             $response = $this->service->spreadsheets_values->get($this->spreadsheetId, $cellsRange->toString(), $this->options);
             /**
              * @var array[] $values
-             *
-             * @psalm-suppress RedundantConditionGivenDocblockType
              */
             $values = $response->getValues() ?? [];
         }

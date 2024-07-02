@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Flow\Parquet;
 
+use Flow\Filesystem\{Path, SourceStream, Stream\NativeLocalSourceStream};
 use Flow\Parquet\Data\DataConverter;
-use Flow\Parquet\Exception\InvalidArgumentException;
-use Flow\Parquet\Stream\LocalStream;
 
 final class Reader
 {
@@ -18,26 +17,15 @@ final class Reader
 
     public function read(string $path) : ParquetFile
     {
-        if (!\file_exists($path)) {
-            throw new InvalidArgumentException("File {$path} does not exist");
-        }
-
-        $stream = \fopen($path, 'rb');
-
-        if (!\is_resource($stream)) {
-            throw new InvalidArgumentException("File {$path} is not a valid resource");
-        }
-
-        $streamMetadata = \stream_get_meta_data($stream);
-
-        if (!$streamMetadata['seekable']) {
-            throw new InvalidArgumentException("File {$path} is not seekable");
-        }
-
-        return new ParquetFile(new LocalStream($stream), $this->byteOrder, DataConverter::initialize($this->options), $this->options);
+        return new ParquetFile(
+            NativeLocalSourceStream::open(Path::realpath($path)),
+            $this->byteOrder,
+            DataConverter::initialize($this->options),
+            $this->options
+        );
     }
 
-    public function readStream(Stream $stream) : ParquetFile
+    public function readStream(SourceStream $stream) : ParquetFile
     {
         return new ParquetFile($stream, $this->byteOrder, DataConverter::initialize($this->options), $this->options);
     }

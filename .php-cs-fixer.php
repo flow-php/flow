@@ -12,6 +12,7 @@ $finder = Finder::create()
         __DIR__ . '/src/core/**/src',
         __DIR__ . '/src/core/**/tests',
         __DIR__ . '/src/adapter/**/src',
+        __DIR__ . '/src/bridge/**/**/src',
         __DIR__ . '/src/adapter/**/tests',
         __DIR__ . '/src/lib/**/src',
         __DIR__ . '/src/lib/**/tests',

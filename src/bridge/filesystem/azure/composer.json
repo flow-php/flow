@@ -1,0 +1,43 @@
+{
+  "name": "flow-php/filesytem-azure-bridge",
+  "type": "library",
+  "description": "PHP ETL - Flow Filesystem Azure Bridge",
+  "keywords": [
+    "filesystem",
+    "azure",
+    "blob",
+    "read",
+    "range",
+    "stream",
+    "remote",
+    "storage",
+    "cloud"
+  ],
+  "require": {
+    "php": "~8.1.0 || ~8.2.0 || ~8.3.0",
+    "flow-php/filesystem": "^0.7 || 1.x-dev",
+    "flow-php/azure-sdk": "^0.7 || 1.x-dev"
+  },
+  "config": {
+    "optimize-autoloader": true,
+    "sort-packages": true
+  },
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "Flow\\": [
+        "src/Flow"
+      ]
+    },
+    "files": [
+      "src/Flow/Filesystem/Bridge/Azure/DSL/functions.php"
+    ]
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Flow\\": "tests/Flow"
+    }
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
+}

@@ -8,8 +8,8 @@ use function Flow\ETL\Adapter\Text\{from_text, to_text};
 use function Flow\ETL\DSL\from_array;
 use Flow\ETL\Adapter\Text\TextExtractor;
 use Flow\ETL\Extractor\Signal;
-use Flow\ETL\Filesystem\Path;
 use Flow\ETL\{Config, Flow, FlowContext, Row, Rows};
+use Flow\Filesystem\Path;
 use PHPUnit\Framework\TestCase;
 
 final class TextExtractorTest extends TestCase

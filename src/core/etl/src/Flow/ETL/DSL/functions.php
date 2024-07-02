@@ -9,8 +9,7 @@ use Flow\ETL\Exception\{InvalidArgumentException,
     RuntimeException,
     SchemaDefinitionNotFoundException};
 use Flow\ETL\Extractor\LocalFileListExtractor;
-use Flow\ETL\Filesystem\Stream\Mode;
-use Flow\ETL\Filesystem\{Path, SaveMode};
+use Flow\ETL\Filesystem\{SaveMode};
 use Flow\ETL\Function\ArrayExpand\ArrayExpand;
 use Flow\ETL\Function\ArraySort\Sort;
 use Flow\ETL\Function\Between\Boundary;
@@ -48,13 +47,13 @@ use Flow\ETL\{Config,
     Join\Comparison\Identical,
     Join\Expression,
     Loader,
-    Partition,
-    Partitions,
     Pipeline,
     Row,
     Rows,
     Transformer,
     Window};
+use Flow\Filesystem\Stream\Mode;
+use Flow\Filesystem\{Partition, Partitions, Path};
 
 /**
  * Alias for data_frame() : Flow.
@@ -124,7 +123,6 @@ function from_data_frame(DataFrame $data_frame) : Extractor\DataFrameExtractor
 
 function from_sequence_date_period(string $entry_name, \DateTimeInterface $start, \DateInterval $interval, \DateTimeInterface $end, int $options = 0) : Extractor\SequenceExtractor
 {
-    /** @psalm-suppress ArgumentTypeCoercion */
     return new Extractor\SequenceExtractor(
         new Extractor\SequenceGenerator\DatePeriodSequenceGenerator(new \DatePeriod($start, $interval, $end, $options)),
         $entry_name
@@ -133,7 +131,6 @@ function from_sequence_date_period(string $entry_name, \DateTimeInterface $start
 
 function from_sequence_date_period_recurrences(string $entry_name, \DateTimeInterface $start, \DateInterval $interval, int $recurrences, int $options = 0) : Extractor\SequenceExtractor
 {
-    /** @psalm-suppress ArgumentTypeCoercion */
     return new Extractor\SequenceExtractor(
         new Extractor\SequenceGenerator\DatePeriodSequenceGenerator(new \DatePeriod($start, $interval, $recurrences, $options)),
         $entry_name
@@ -446,29 +443,6 @@ function row(Entry ...$entry) : Row
 function rows(Row ...$row) : Rows
 {
     return new Rows(...$row);
-}
-
-function partition(string $name, string $value) : Partition
-{
-    return new Partition($name, $value);
-}
-
-function partitions(Partition ...$partition) : Partitions
-{
-    return new Partitions(...$partition);
-}
-
-/**
- * @param array<string, mixed> $options
- */
-function path(string $path, array $options = []) : Path
-{
-    return new Path($path, $options);
-}
-
-function path_real(string $path, array $options = []) : Path
-{
-    return Path::realpath($path, $options);
 }
 
 function rows_partitioned(array $rows, array|Partitions $partitions) : Rows

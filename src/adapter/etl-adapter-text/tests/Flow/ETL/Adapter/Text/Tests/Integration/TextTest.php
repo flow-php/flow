@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Text\Tests\Integration;
 
 use function Flow\ETL\Adapter\Text\to_text;
-use Flow\ETL\Filesystem\Path;
 use Flow\ETL\{Flow, Row, Rows};
+use Flow\Filesystem\Path;
 use PHPUnit\Framework\TestCase;
 
 final class TextTest extends TestCase

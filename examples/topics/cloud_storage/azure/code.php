@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
+use function Flow\Azure\SDK\DSL\{azure_blob_service, azure_blob_service_config, azure_http_factory, azure_shared_key_authorization_factory, azure_url_factory};
 use function Flow\ETL\Adapter\CSV\to_csv;
-use function Flow\ETL\DSL\{data_frame, from_array, overwrite};
-use Flow\ETL\Adapter\Filesystem\AzureBlobStream;
-use Flow\ETL\Filesystem\Path;
+use function Flow\ETL\DSL\{config_builder, data_frame, from_array, overwrite};
+use function Flow\Filesystem\Bridge\Azure\DSL\azure_filesystem;
+use function Flow\Filesystem\DSL\path;
+use Http\Discovery\{Psr17FactoryDiscovery, Psr18ClientDiscovery};
 use Symfony\Component\Dotenv\Dotenv;
 
 require __DIR__ . '/../../../autoload.php';
@@ -19,14 +21,18 @@ if (!\file_exists(__DIR__ . '/.env')) {
 $dotenv = new Dotenv();
 $dotenv->load(__DIR__ . '/.env');
 
-$azure_client_option = [
-    'connection-string' => $_ENV['AZURE_CONNECTION_STRING'],
-    'container' => $_ENV['AZURE_CONTAINER'],
-];
+$config = config_builder()
+    ->mount(azure_filesystem(
+        azure_blob_service(
+            $azureConfig = azure_blob_service_config($_ENV['AZURE_ACCOUNT'], $_ENV['AZURE_CONTAINER']),
+            Psr18ClientDiscovery::find(),
+            azure_http_factory(Psr17FactoryDiscovery::findRequestFactory(), Psr17FactoryDiscovery::findStreamFactory()),
+            azure_url_factory(),
+            azure_shared_key_authorization_factory($azureConfig, $_ENV['AZURE_ACCOUNT_KEY'])
+        )
+    ));
 
-AzureBlobStream::register();
-
-data_frame()
+data_frame($config)
     ->read(from_array([
         ['id' => 1, 'name' => 'test'],
         ['id' => 2, 'name' => 'test'],
@@ -34,5 +40,5 @@ data_frame()
         ['id' => 4, 'name' => 'test'],
     ]))
     ->saveMode(overwrite())
-    ->write(to_csv(new Path('flow-azure-blob://test.csv', $azure_client_option)))
+    ->write(to_csv(path('azure-blob://test.csv')))
     ->run();

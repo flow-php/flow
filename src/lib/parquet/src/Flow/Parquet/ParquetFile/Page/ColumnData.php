@@ -64,8 +64,6 @@ final class ColumnData
     }
 
     /**
-     * @psalm-suppress ArgumentTypeCoercion
-     *
      * @return array{0: self, 1: self}
      */
     public function splitLastRow() : array

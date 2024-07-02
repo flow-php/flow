@@ -32,7 +32,7 @@ final class AccountSummariesExtractor implements Extractor, LimitableExtractor
         /** @var AccountSummary $account */
         foreach ($list->iterateAllElements() as $accountSummary) {
             $signal = yield rows(ga_account_summary_to_row($accountSummary));
-            $this->countRow();
+            $this->incrementReturnedRows();
 
             if ($signal === Signal::STOP || $this->reachedLimit()) {
                 return;
@@ -44,7 +44,7 @@ final class AccountSummariesExtractor implements Extractor, LimitableExtractor
 
             foreach ($list->iterateAllElements() as $accountSummary) {
                 $signal = yield rows(ga_account_summary_to_row($accountSummary));
-                $this->countRow();
+                $this->incrementReturnedRows();
 
                 if ($signal === Signal::STOP || $this->reachedLimit()) {
                     return;

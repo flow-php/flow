@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\ColumnChunkReader;
 
+use Flow\Filesystem\SourceStream;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\ParquetFile\Data\DataBuilder;
 use Flow\Parquet\ParquetFile\Page\{ColumnData, PageHeader};
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
 use Flow\Parquet\ParquetFile\{ColumnChunkReader, PageReader};
-use Flow\Parquet\Stream;
 use Flow\Parquet\ThriftStream\{TPhpFileStream};
 use Thrift\Protocol\TCompactProtocol;
 use Thrift\Transport\{TBufferedTransport};
@@ -24,14 +24,18 @@ final class WholeChunkReader implements ColumnChunkReader
     }
 
     /**
-     * @param resource $stream
-     *
      * @return \Generator<array<mixed>>
      */
-    public function read(ColumnChunk $columnChunk, FlatColumn $column, Stream $stream) : \Generator
+    public function read(ColumnChunk $columnChunk, FlatColumn $column, SourceStream $stream) : \Generator
     {
         $pageStream = fopen('php://temp', 'rb+');
-        \fwrite($pageStream, $stream->read($columnChunk->totalCompressedSize(), $columnChunk->pageOffset(), SEEK_SET));
+
+        if ($pageStream === false) {
+            throw new RuntimeException('Cannot open temporary stream');
+        }
+
+        /** @phpstan-ignore-next-line */
+        \fwrite($pageStream, $stream->read($columnChunk->totalCompressedSize(), $columnChunk->pageOffset()));
         \rewind($pageStream);
 
         $header = $this->readHeader($pageStream);
@@ -56,7 +60,6 @@ final class WholeChunkReader implements ColumnChunkReader
         $rowsToRead = $columnChunk->valuesCount();
 
         while (true) {
-            /** @phpstan-ignore-next-line */
             $dataHeader = $dictionary ? $this->readHeader($pageStream) : $header;
 
             /** There are no more pages in given column chunk */

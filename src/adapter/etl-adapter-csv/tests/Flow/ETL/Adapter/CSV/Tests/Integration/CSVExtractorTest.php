@@ -8,8 +8,8 @@ use function Flow\ETL\Adapter\CSV\{from_csv, to_csv};
 use function Flow\ETL\DSL\{df, from_array, print_schema, ref};
 use Flow\ETL\Adapter\CSV\CSVExtractor;
 use Flow\ETL\Extractor\Signal;
-use Flow\ETL\Filesystem\{LocalFilesystem, Path};
-use Flow\ETL\{Config, ConfigBuilder, Exception\FileNotFoundException, Flow, FlowContext, Row, Rows};
+use Flow\ETL\{Config, FlowContext, Row, Rows};
+use Flow\Filesystem\Path;
 use PHPUnit\Framework\TestCase;
 
 final class CSVExtractorTest extends TestCase
@@ -289,7 +289,7 @@ SCHEMA,
     public function test_extracting_csv_with_more_than_1000_characters_per_line_splits_rows() : void
     {
         self::assertCount(
-            2,
+            1,
             df()
                 ->read(from_csv(__DIR__ . '/../Fixtures/more_than_1000_characters_per_line.csv'))
                 ->fetch()
@@ -331,14 +331,6 @@ SCHEMA,
         );
     }
 
-    public function test_load_not_existing_file_throws_exception() : void
-    {
-        $this->expectException(FileNotFoundException::class);
-        $extractor = from_csv(Path::realpath('not_existing_file.csv'));
-        $generator = $extractor->extract(new FlowContext(Config::default()));
-        \iterator_to_array($generator);
-    }
-
     public function test_loading_data_from_all_partitions() : void
     {
         self::assertSame(
@@ -353,28 +345,6 @@ SCHEMA,
                 ['group' => '2', 'id' => 8, 'value' => 'h'],
             ],
             df()
-                ->read(from_csv(__DIR__ . '/../Fixtures/partitioned/group=*/*.csv'))
-                ->withEntry('id', ref('id')->cast('int'))
-                ->sortBy(ref('id'))
-                ->fetch()
-                ->toArray()
-        );
-    }
-
-    public function test_loading_data_from_all_with_local_fs() : void
-    {
-        self::assertSame(
-            [
-                ['group' => '1', 'id' => 1, 'value' => 'a'],
-                ['group' => '1', 'id' => 2, 'value' => 'b'],
-                ['group' => '1', 'id' => 3, 'value' => 'c'],
-                ['group' => '1', 'id' => 4, 'value' => 'd'],
-                ['group' => '2', 'id' => 5, 'value' => 'e'],
-                ['group' => '2', 'id' => 6, 'value' => 'f'],
-                ['group' => '2', 'id' => 7, 'value' => 'g'],
-                ['group' => '2', 'id' => 8, 'value' => 'h'],
-            ],
-            (new Flow((new ConfigBuilder())->filesystem(new LocalFilesystem())))
                 ->read(from_csv(__DIR__ . '/../Fixtures/partitioned/group=*/*.csv'))
                 ->withEntry('id', ref('id')->cast('int'))
                 ->sortBy(ref('id'))

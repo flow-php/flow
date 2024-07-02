@@ -86,7 +86,7 @@ final class ReadMetadataCommand extends Command
                     $column->flatPath(),
                     $column->type() ? $column->type()->name : 'group',
                     $column->logicalType() ? $column->logicalType()->name() : '-',
-                    $column->repetition()->name,
+                    $column->repetition()?->name ?? 'N/A',
                     $column->maxRepetitionsLevel(),
                     $column->maxDefinitionsLevel(),
                 ]);

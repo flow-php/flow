@@ -58,9 +58,6 @@ final class DbalDataFrameFactory implements DataFrameFactory
     private function connection() : Connection
     {
         if ($this->connection === null) {
-            /**
-             * @psalm-suppress ArgumentTypeCoercion
-             */
             $this->connection = DriverManager::getConnection($this->connectionParams);
         }
 

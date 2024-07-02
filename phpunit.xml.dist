@@ -15,6 +15,10 @@
     </report>
   </coverage>
   <php>
+    <env name="AZURITE_HOST" value="localhost"/>
+    <env name="AZURITE_BLOB_PORT" value="10000"/>
+    <env name="AZURITE_ACCOUNT_NAME" value="flowphpaccount01"/>
+    <env name="AZURITE_ACCOUNT_KEY" value="flowphpkey01"/>
     <env name="PGSQL_DATABASE_URL" value="pgsql://postgres:postgres@127.0.0.1:5432/postgres?serverVersion=11%26charset=utf8"/>
     <env name="MYSQL_DATABASE_URL" value="mysql://mysql:mysql@127.0.0.1:3306/mysql"/>
     <env name="SQLITE_DATABASE_URL" value="sqlite:///:memory:"/>
@@ -27,12 +31,14 @@
   <testsuites>
     <testsuite name="unit">
       <directory>src/adapter/**/**/**/**/**/**/Tests/Unit</directory>
+      <directory>src/bridge/**/**/**/**/**/**/Tests/Unit</directory>
       <directory>src/core/etl/tests/Flow/ETL/Tests/Unit</directory>
       <directory>src/lib/**/**/**/**/Tests/Unit</directory>
       <directory>src/lib/doctrine-dbal-bulk/tests/Flow/Doctrine/Bulk/Tests/Unit</directory>
     </testsuite>
     <testsuite name="integration-io">
       <directory>src/adapter/**/**/**/**/**/**/Tests/Integration</directory>
+      <directory>src/bridge/**/**/**/**/**/**/Tests/Integration</directory>
       <directory>src/core/etl/tests/Flow/ETL/Tests/Integration</directory>
       <directory>src/lib/**/**/**/**/Tests/Integration</directory>
       <directory>src/lib/doctrine-dbal-bulk/tests/Flow/Doctrine/Bulk/Tests/Integration</directory>
@@ -41,6 +47,7 @@
   <source>
     <include>
       <directory suffix=".php">src/adapter/**/src</directory>
+      <directory suffix=".php">src/bridge/**/src</directory>
       <directory suffix=".php">src/core/**/src</directory>
       <directory suffix=".php">src/lib/**/src</directory>
     </include>

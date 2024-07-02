@@ -10,6 +10,7 @@ return static function (MBConfig $config): void {
     $config->packageDirectories([
         __DIR__ . '/src/core',
         __DIR__ . '/src/adapter',
+        __DIR__ . '/src/bridge',
         __DIR__ . '/src/lib',
     ]);
 

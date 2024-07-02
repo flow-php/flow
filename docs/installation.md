@@ -26,9 +26,13 @@ this will reduce the number of unnecessary dependencies in your project (less ma
     - [array-dot](components/libs/array-dot.md)
     - [doctrine-dbal-bulk](components/libs/doctrine-dbal-bulk.md)
     - [dremel](components/libs/dremel.md)
+    - [filesystem](components/libs/filesystem.md)
     - [parquet](components/libs/parquet.md)
     - [parquet-viewer](components/libs/parquet-viewer.md)
     - [snappy](components/libs/snappy.md)
+- Bridges
+    - [filesystem-azure](components/bridges/filesystem-azure-bridge.md)
+    - [monolog-http](components/bridges/monolog-http-bridge.md) 
 
 For example, if you want to work with JSON/CSV files here are the dependencies you will need to install:
 

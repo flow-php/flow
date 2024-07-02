@@ -7,6 +7,7 @@ namespace Flow\ETL\Adapter\CSV;
 use Flow\ETL\Adapter\CSV\Detector\{Option, Options};
 use Flow\ETL\Adapter\CSV\Exception\CantDetectCSVOptions;
 use Flow\ETL\Exception\InvalidArgumentException;
+use Flow\Filesystem\SourceStream;
 
 final class CSVDetector
 {
@@ -14,32 +15,13 @@ final class CSVDetector
 
     private Options $options;
 
-    /**
-     * @var resource
-     */
-    private $resource;
+    private SourceStream $stream;
 
-    private int $startingPosition;
-
-    /**
-     * @param resource $resource
-     */
-    public function __construct($resource, ?Option $fallback = new Option(',', '"', '\\'), ?Options $options = null)
+    public function __construct(SourceStream $stream, ?Option $fallback = new Option(',', '"', '\\'), ?Options $options = null)
     {
-        if (!\is_resource($resource)) {
-            throw new InvalidArgumentException('Argument must be a valid resource');
-        }
-
-        $this->resource = $resource;
-        /** @phpstan-ignore-next-line */
-        $this->startingPosition = \ftell($resource);
+        $this->stream = $stream;
         $this->options = $options ?? Options::all();
         $this->fallback = $fallback;
-    }
-
-    public function __destruct()
-    {
-        \fseek($this->resource, $this->startingPosition);
     }
 
     /**
@@ -53,7 +35,7 @@ final class CSVDetector
 
         $readLines = 1;
 
-        while ($line = \fgets($this->resource)) {
+        foreach ($this->stream->readLines() as $line) {
             $this->options->parse($line);
 
             if ($readLines++ >= $lines) {

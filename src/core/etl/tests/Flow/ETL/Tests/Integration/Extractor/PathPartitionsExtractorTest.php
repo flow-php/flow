@@ -6,8 +6,8 @@ namespace Flow\ETL\Tests\Integration\Extractor;
 
 use function Flow\ETL\DSL\{flow_context, rows};
 use Flow\ETL\Extractor\PathPartitionsExtractor;
-use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Tests\Integration\IntegrationTestCase;
+use Flow\Filesystem\Path;
 
 final class PathPartitionsExtractorTest extends IntegrationTestCase
 {

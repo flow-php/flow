@@ -8,8 +8,8 @@ use function Flow\ETL\Adapter\XML\from_xml;
 use function Flow\ETL\DSL\xml_entry;
 use Flow\ETL\Adapter\XML\XMLReaderExtractor;
 use Flow\ETL\Extractor\Signal;
-use Flow\ETL\Filesystem\Path;
 use Flow\ETL\{Config, Flow, FlowContext, Row, Rows};
+use Flow\Filesystem\Path;
 use PHPUnit\Framework\TestCase;
 
 final class XMLReaderExtractorTest extends TestCase

@@ -39,9 +39,6 @@ final class ColumnChunk
     ) {
     }
 
-    /**
-     * @psalm-suppress RedundantConditionGivenDocblockType
-     */
     public static function fromThrift(\Flow\Parquet\Thrift\ColumnChunk $thrift) : self
     {
         return new self(
@@ -93,9 +90,6 @@ final class ColumnChunk
         return \implode('.', $this->path);
     }
 
-    /**
-     * @psalm-suppress ArgumentTypeCoercion
-     */
     public function pageOffset() : int
     {
         $offset = \min(

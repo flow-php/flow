@@ -4,25 +4,28 @@ declare(strict_types=1);
 
 namespace Flow\Parquet\ParquetFile\ColumnChunkViewer;
 
+use Flow\Filesystem\SourceStream;
 use Flow\Parquet\Exception\RuntimeException;
 use Flow\Parquet\ParquetFile\ColumnChunkViewer;
 use Flow\Parquet\ParquetFile\Page\PageHeader;
 use Flow\Parquet\ParquetFile\RowGroup\ColumnChunk;
 use Flow\Parquet\ParquetFile\Schema\FlatColumn;
-use Flow\Parquet\Stream;
 use Flow\Parquet\ThriftStream\TPhpFileStream;
 use Thrift\Protocol\TCompactProtocol;
 use Thrift\Transport\TBufferedTransport;
 
 final class WholeChunkViewer implements ColumnChunkViewer
 {
-    /**
-     * @param resource $stream
-     */
-    public function view(ColumnChunk $columnChunk, FlatColumn $column, Stream $stream) : \Generator
+    public function view(ColumnChunk $columnChunk, FlatColumn $column, SourceStream $stream) : \Generator
     {
         $pageStream = fopen('php://temp', 'rb+');
-        \fwrite($pageStream, $stream->read($columnChunk->totalCompressedSize(), $columnChunk->pageOffset(), SEEK_SET));
+
+        if ($pageStream === false) {
+            throw new RuntimeException('Cannot open temporary stream');
+        }
+
+        /** @phpstan-ignore-next-line */
+        \fwrite($pageStream, $stream->read($columnChunk->totalCompressedSize(), $columnChunk->pageOffset()));
         \rewind($pageStream);
 
         if ($columnChunk->dictionaryPageOffset()) {

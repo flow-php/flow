@@ -5,16 +5,15 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Parquet;
 
 use function Flow\ETL\DSL\array_to_rows;
-use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PartitionExtractor, PartitionFiltering, Signal};
-use Flow\ETL\Filesystem\Path;
-use Flow\ETL\Filesystem\Stream\FileStream;
+use Flow\ETL\Extractor\{FileExtractor, Limitable, LimitableExtractor, PartitionExtractor, PathFiltering, Signal};
 use Flow\ETL\{Extractor, FlowContext};
-use Flow\Parquet\{ByteOrder, Options, ParquetFile, Reader, Stream\LocalStream};
+use Flow\Filesystem\{Path, SourceStream};
+use Flow\Parquet\{ByteOrder, Options, ParquetFile, Reader};
 
 final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtractor, PartitionExtractor
 {
     use Limitable;
-    use PartitionFiltering;
+    use PathFiltering;
 
     private SchemaConverter $schemaConverter;
 
@@ -57,7 +56,7 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
 
                 $signal = yield array_to_rows($row, $context->entryFactory(), $fileData['stream']->path()->partitions(), $flowSchema);
 
-                $this->countRow();
+                $this->incrementReturnedRows();
 
                 if ($signal === Signal::STOP || $this->reachedLimit()) {
                     $context->streams()->closeWriters($this->path);
@@ -77,14 +76,14 @@ final class ParquetExtractor implements Extractor, FileExtractor, LimitableExtra
     }
 
     /**
-     * @return \Generator<int, array{file: ParquetFile, stream: FileStream}>
+     * @return \Generator<int, array{file: ParquetFile, stream: SourceStream}>
      */
     private function readers(FlowContext $context) : \Generator
     {
-        foreach ($context->streams()->scan($this->path, $this->partitionFilter()) as $stream) {
+        foreach ($context->streams()->list($this->path, $this->filter()) as $stream) {
             yield [
                 'file' => (new Reader(byteOrder: $this->byteOrder, options: $this->options))
-                    ->readStream(new LocalStream($stream->resource())),
+                    ->readStream($stream),
                 'stream' => $stream,
             ];
         }

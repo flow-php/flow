@@ -229,7 +229,7 @@ $writer->close();
 We can also open a file for a resource:
 
 ```php
-$writer->openForStream($resource, $schema);
+$writer->openForStream($stream, $schema);
 ```
 
 ### Writing a single row
@@ -243,29 +243,6 @@ $writer->writeRow($row);
 $writer->writeRow($row);
 $writer->close();
 ```
-
-### Appending data to existing file
-
-Like with writing to the file we can append entire dataset or batch or single row. 
-
-```php
-$writter->append($path, $rows); 
-```
-
-First we need to reopen a file or stream: 
-
-```php
-$writer->reopen($path);
-$writer->reopenForStream(\fopen($path, 'rb+'));
-
-$writer->writeBatch([$row, $row]);
-$writer->writeBatch([$row, $row]);
-$writer->writeBatch([$row, $row]);
-$writer->writeBatch([$row, $row]);
-$writer->writeBatch([$row, $row]);
-```
-
-As we can see, we don't need to provide a schema as it is already stored in the file.
 
 > [!WARNING]  
 > At this point, schema evolution is not yet supported. 

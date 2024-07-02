@@ -41,7 +41,7 @@ final class ExceptionIfExistsModeTest extends FilesystemStreamsTestCase
         $file = $this->getPath(__FUNCTION__ . '/non-existing-file.txt');
 
         $fileStream = $streams->writeTo($file);
-        \fwrite($fileStream->resource(), 'some content');
+        $fileStream->append('some content');
         $streams->closeWriters($file);
 
         self::assertFileExists($file->path());
@@ -50,7 +50,7 @@ final class ExceptionIfExistsModeTest extends FilesystemStreamsTestCase
 
     protected function streams() : FilesystemStreams
     {
-        $streams = new FilesystemStreams($this->fs);
+        $streams = new FilesystemStreams($this->fstab);
         $streams->setSaveMode(exception_if_exists());
 
         return $streams;

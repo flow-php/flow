@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\ChartJS;
 
 use Flow\ETL\Adapter\ChartJS\Chart\{BarChart, LineChart, PieChart};
-use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Row\{EntryReference, References};
+use Flow\Filesystem\Path;
 
 function bar_chart(EntryReference $label, References $datasets) : BarChart
 {

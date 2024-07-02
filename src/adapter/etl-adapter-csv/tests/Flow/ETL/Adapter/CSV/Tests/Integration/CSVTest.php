@@ -6,9 +6,9 @@ namespace Flow\ETL\Adapter\CSV\Tests\Integration;
 
 use function Flow\ETL\Adapter\CSV\{from_csv, to_csv};
 use function Flow\ETL\DSL\{array_entry, df, int_entry, ref, row, rows};
-use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Flow;
 use Flow\ETL\Tests\Double\FakeExtractor;
+use Flow\Filesystem\Path;
 use PHPUnit\Framework\TestCase;
 
 final class CSVTest extends TestCase

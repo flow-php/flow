@@ -7,10 +7,11 @@ namespace Flow\ETL;
 use function Flow\ETL\DSL\{array_to_rows, row};
 use Flow\ETL\Exception\{DuplicatedEntriesException, InvalidArgumentException, RuntimeException};
 use Flow\ETL\Join\Expression;
-use Flow\ETL\Partition\CartesianProduct;
+use Flow\ETL\Row\CartesianProduct;
 use Flow\ETL\Row\Comparator\NativeComparator;
 use Flow\ETL\Row\Factory\NativeEntryFactory;
 use Flow\ETL\Row\{Comparator, Entries, EntryFactory, Reference, References, Schema, SortOrder};
+use Flow\Filesystem\{Partition, Partitions};
 
 /**
  * @implements \ArrayAccess<int, Row>

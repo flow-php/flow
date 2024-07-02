@@ -8,9 +8,9 @@ use function Flow\ETL\DSL\Adapter\Avro\{from_avro, to_avro};
 use function Flow\ETL\DSL\{df, from_array, lit, type_map, type_string};
 use Flow\ETL\Adapter\Avro\FlixTech\AvroExtractor;
 use Flow\ETL\Extractor\Signal;
-use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Tests\Double\FakeExtractor;
 use Flow\ETL\{Config, Flow, FlowContext};
+use Flow\Filesystem\Path;
 use PHPUnit\Framework\TestCase;
 
 final class AvroTest extends TestCase

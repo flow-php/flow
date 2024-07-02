@@ -38,8 +38,6 @@ final class NestedColumn implements Column
     }
 
     /**
-     * @psalm-suppress RedundantConditionGivenDocblockType
-     *
      * @param array<Column> $children
      */
     public static function fromThrift(SchemaElement $schemaElement, array $children) : self

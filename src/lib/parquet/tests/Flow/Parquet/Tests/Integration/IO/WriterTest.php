@@ -6,7 +6,8 @@ namespace Flow\Parquet\Tests\Integration\IO;
 
 use Composer\InstalledVersions;
 use Faker\Factory;
-use Flow\Parquet\Exception\InvalidArgumentException;
+use Flow\Filesystem\Stream\NativeLocalDestinationStream;
+use Flow\Filesystem\{Path};
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\ParquetFile\Schema\{FlatColumn, ListElement, NestedColumn};
 use Flow\Parquet\{Consts, Option, Options, Reader, Writer};
@@ -16,6 +17,8 @@ final class WriterTest extends TestCase
 {
     public function test_appending_to_file() : void
     {
+        self::markTestSkipped('Rethink appending to parquet on remote filesystems');
+
         $writer = new Writer();
 
         $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
@@ -37,6 +40,8 @@ final class WriterTest extends TestCase
 
     public function test_appending_to_in_batches_file() : void
     {
+        self::markTestSkipped('Rethink appending to parquet on remote filesystems');
+
         $writer = new Writer();
 
         $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
@@ -64,6 +69,8 @@ final class WriterTest extends TestCase
 
     public function test_appending_to_stream() : void
     {
+        self::markTestSkipped('Rethink appending to parquet on remote filesystems');
+
         $writer = new Writer();
 
         $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
@@ -72,7 +79,7 @@ final class WriterTest extends TestCase
         $row = $this->createRow();
 
         $stream = \fopen($path, 'wb+');
-        $writer->writeStream($stream, $schema, [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row]);
+        $writer->writeStream(new NativeLocalDestinationStream(new Path($path), $stream), $schema, [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row]);
 
         $stream = \fopen($path, 'ab+');
         $writer->reopenForStream($stream);
@@ -136,22 +143,6 @@ final class WriterTest extends TestCase
         $this->expectExceptionMessage('Writer is not open');
 
         $writer->writeBatch([$this->createRow()]);
-    }
-
-    public function test_writing_batch_to_not_writable_stream() : void
-    {
-        $writer = new Writer();
-
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Given stream is not opened in write mode, expected wb, got: rb+');
-
-        $path = \sys_get_temp_dir() . '/test-writer-parquet-test-' . bin2hex(random_bytes(16)) . '.parquet';
-        \file_put_contents($path, 'test');
-        $stream = \fopen($path, 'rb+');
-
-        $writer->openForStream($stream, $this->createSchema());
-        $writer->writeBatch([$this->createRow()]);
-        \unlink($path);
     }
 
     public function test_writing_column_statistics() : void
@@ -277,7 +268,7 @@ final class WriterTest extends TestCase
         $row = $this->createRow();
 
         $stream = \fopen($path, 'wb+');
-        $writer->openForStream($stream, $schema);
+        $writer->openForStream(new NativeLocalDestinationStream(new Path($path), $stream), $schema);
         $writer->writeBatch([$row, $row]);
         $writer->writeBatch([$row, $row]);
         $writer->writeBatch([$row, $row]);
@@ -357,7 +348,7 @@ final class WriterTest extends TestCase
 
         $stream = \fopen($path, 'wb+');
 
-        $writer->writeStream($stream, $schema, [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row]);
+        $writer->writeStream(new NativeLocalDestinationStream(new Path($path), $stream), $schema, [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row]);
 
         self::assertSame(
             [$row, $row, $row, $row, $row, $row, $row, $row, $row, $row],

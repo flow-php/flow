@@ -27,7 +27,7 @@ final class IgnoreModeTest extends FilesystemStreamsTestCase
         $path = $this->getPath(__FUNCTION__ . '/existing-file.txt');
 
         $fileStream = $streams->writeTo($path);
-        \fwrite($fileStream->resource(), 'different content');
+        $fileStream->append('different content');
         $streams->closeWriters($path);
 
         self::assertFileExists($path->path());
@@ -43,7 +43,7 @@ final class IgnoreModeTest extends FilesystemStreamsTestCase
         $path = $this->getPath(__FUNCTION__ . '/non-existing-file.txt');
 
         $fileStream = $streams->writeTo($path);
-        \fwrite($fileStream->resource(), 'some content');
+        $fileStream->append('some content');
         $streams->closeWriters($path);
 
         self::assertFileExists($path->path());
@@ -52,7 +52,7 @@ final class IgnoreModeTest extends FilesystemStreamsTestCase
 
     protected function streams() : FilesystemStreams
     {
-        $streams = new FilesystemStreams($this->fs);
+        $streams = new FilesystemStreams($this->fstab);
         $streams->setSaveMode(ignore());
 
         return $streams;

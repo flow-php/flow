@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Flow\ETL\Adapter\Text;
 
 use Flow\ETL\Exception\RuntimeException;
-use Flow\ETL\Filesystem\Path;
 use Flow\ETL\Loader\Closure;
 use Flow\ETL\{FlowContext, Loader, Rows};
+use Flow\Filesystem\Path;
 
 final class TextLoader implements Closure, Loader, Loader\FileLoader
 {
@@ -38,8 +38,7 @@ final class TextLoader implements Closure, Loader, Loader\FileLoader
                     throw new RuntimeException(\sprintf('Text data loader supports only a single entry rows, and you have %d rows.', $row->entries()->count()));
                 }
 
-                \fwrite(
-                    $context->streams()->writeTo($this->path, $rows->partitions()->toArray())->resource(),
+                $context->streams()->writeTo($this->path, $rows->partitions()->toArray())->append(
                     $row->entries()->all()[0]->toString() . $this->newLineSeparator
                 );
             }
@@ -49,8 +48,7 @@ final class TextLoader implements Closure, Loader, Loader\FileLoader
                     throw new RuntimeException(\sprintf('Text data loader supports only a single entry rows, and you have %d rows.', $row->entries()->count()));
                 }
 
-                \fwrite(
-                    $context->streams()->writeTo($this->path)->resource(),
+                $context->streams()->writeTo($this->path)->append(
                     $row->entries()->all()[0]->toString() . $this->newLineSeparator
                 );
             }

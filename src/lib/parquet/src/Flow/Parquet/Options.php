@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Flow\Parquet;
 
+use Flow\Filesystem\SizeUnits;
 use Flow\Parquet\Exception\InvalidArgumentException;
 
 final class Options
@@ -19,10 +20,10 @@ final class Options
             Option::BYTE_ARRAY_TO_STRING->name => true,
             Option::ROUND_NANOSECONDS->name => false,
             Option::INT_96_AS_DATETIME->name => true,
-            Option::PAGE_SIZE_BYTES->name => Consts::KB_SIZE * 8,
-            Option::ROW_GROUP_SIZE_BYTES->name => Consts::MB_SIZE * 4,
+            Option::PAGE_SIZE_BYTES->name => SizeUnits::KiB_SIZE * 8,
+            Option::ROW_GROUP_SIZE_BYTES->name => SizeUnits::MiB_SIZE * 4,
             Option::ROW_GROUP_SIZE_CHECK_INTERVAL->name => 1000,
-            Option::DICTIONARY_PAGE_SIZE->name => Consts::MB_SIZE,
+            Option::DICTIONARY_PAGE_SIZE->name => SizeUnits::MiB_SIZE,
             Option::DICTIONARY_PAGE_MIN_CARDINALITY_RATION->name => 0.4,
             Option::GZIP_COMPRESSION_LEVEL->name => 9,
             Option::WRITER_VERSION->name => 1,

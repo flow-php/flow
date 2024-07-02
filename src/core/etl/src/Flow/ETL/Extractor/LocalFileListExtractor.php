@@ -6,12 +6,13 @@ namespace Flow\ETL\Extractor;
 
 use function Flow\ETL\DSL\array_to_rows;
 use Flow\ETL\Exception\InvalidArgumentException;
-use Flow\ETL\Filesystem\Path;
 use Flow\ETL\{Extractor, FlowContext};
+use Flow\Filesystem\Path;
 
 final class LocalFileListExtractor implements Extractor, FileExtractor, LimitableExtractor
 {
     use Limitable;
+    use PathFiltering;
 
     public function __construct(
         private readonly Path $directory,
@@ -67,7 +68,7 @@ final class LocalFileListExtractor implements Extractor, FileExtractor, Limitabl
                 'last_modified' => $file->getMTime(),
             ], $context->entryFactory());
 
-            $this->countRow();
+            $this->incrementReturnedRows();
 
             if ($signal === Signal::STOP || $this->reachedLimit()) {
                 return;

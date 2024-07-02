@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Flow\ETL\Extractor;
 
 use function Flow\ETL\DSL\{array_entry, row, rows, string_entry};
-use Flow\ETL\Filesystem\Path;
-use Flow\ETL\{Extractor, FlowContext, Partition};
+use Flow\ETL\{Extractor, FlowContext};
+use Flow\Filesystem\{Partition, Path};
 
 final class PathPartitionsExtractor implements Extractor, FileExtractor, LimitableExtractor, PartitionExtractor
 {
     use Limitable;
-    use PartitionFiltering;
+    use PathFiltering;
 
     public function __construct(private readonly Path $path)
     {
@@ -20,7 +20,7 @@ final class PathPartitionsExtractor implements Extractor, FileExtractor, Limitab
 
     public function extract(FlowContext $context) : \Generator
     {
-        foreach ($context->config->filesystemStreams()->scan($this->path, $this->partitionFilter()) as $stream) {
+        foreach ($context->config->filesystemStreams()->list($this->path, $this->filter()) as $stream) {
             $partitions = $stream->path()->partitions();
 
             $row = row(
@@ -30,7 +30,7 @@ final class PathPartitionsExtractor implements Extractor, FileExtractor, Limitab
 
             $signal = yield rows($row);
 
-            $this->countRow();
+            $this->incrementReturnedRows();
 
             if ($signal === Signal::STOP || $this->reachedLimit()) {
                 $context->streams()->closeWriters($this->path);
