@@ -11,11 +11,11 @@ use PHPUnit\Framework\TestCase;
 
 abstract class IntegrationTestCase extends TestCase
 {
-    protected string $cacheDir;
+    protected string $cacheDir = __DIR__ . '/var/';
 
-    protected Filesystem $fs;
+    protected ?Filesystem $fs = null;
 
-    protected FilesystemTable $fstab;
+    protected ?FilesystemTable $fstab = null;
 
     private string $baseMemoryLimit = '-1';
 
