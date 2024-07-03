@@ -24,8 +24,14 @@ $config = config_builder()
     ->mount(
         azure_filesystem(
             azure_blob_service(
-                $azureConfig = azure_blob_service_config($_ENV['AZURE_ACCOUNT'], $_ENV['AZURE_CONTAINER']),
-                azure_shared_key_authorization_factory($_ENV['AZURE_ACCOUNT'], $_ENV['AZURE_ACCOUNT_KEY']),
+                azure_blob_service_config(
+                    $_ENV['AZURE_ACCOUNT'],
+                    $_ENV['AZURE_CONTAINER']
+                ),
+                azure_shared_key_authorization_factory(
+                    $_ENV['AZURE_ACCOUNT'],
+                    $_ENV['AZURE_ACCOUNT_KEY']
+                ),
             )
         )
     );

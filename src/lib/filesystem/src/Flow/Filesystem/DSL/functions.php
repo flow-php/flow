@@ -5,7 +5,12 @@ declare(strict_types=1);
 namespace Flow\Filesystem\DSL;
 
 use Flow\Filesystem\Local\NativeLocalFilesystem;
-use Flow\Filesystem\{Filesystem, FilesystemTable, Partition, Partitions, Path};
+use Flow\Filesystem\{Filesystem, FilesystemTable, Partition, Partitions, Path, Protocol};
+
+function protocol(string $protocol) : Protocol
+{
+    return new Protocol($protocol);
+}
 
 function partition(string $name, string $value) : Partition
 {

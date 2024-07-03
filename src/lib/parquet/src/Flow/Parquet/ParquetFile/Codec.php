@@ -30,7 +30,7 @@ final class Codec
         };
 
         if ($result === false) {
-            throw new RuntimeException('Failed to decompress data');
+            throw new RuntimeException('Failed to compress data');
         }
 
         return $result;
