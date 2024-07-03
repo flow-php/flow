@@ -18,14 +18,11 @@ final class Codec
     {
         /**
          * @var false|string $result
-         *
-         * @psalm-suppress PossiblyInvalidArgument
          */
         $result = match ($compression) {
             Compressions::UNCOMPRESSED => $data,
             Compressions::SNAPPY => \snappy_compress($data),
-            /** @phpstan-ignore-next-line */
-            Compressions::GZIP => \gzencode($data, $this->options->get(Option::GZIP_COMPRESSION_LEVEL)),
+            Compressions::GZIP => \gzencode($data, $this->options->getInt(Option::GZIP_COMPRESSION_LEVEL)),
             Compressions::ZSTD => \zstd_compress($data, $this->options->getInt(Option::ZSTD_COMPRESSION_LEVEL)),
             default => throw new RuntimeException('Compression ' . $compression->name . ' is not supported yet')
         };

@@ -26,6 +26,7 @@ final class CSVTest extends TestCase
 
         (new Flow())
             ->process(rows(row(int_entry('id', 1), array_entry('data', ['foo' => 'bar']))))
+            ->saveMode(overwrite())
             ->write(to_csv(__DIR__ . '/var/test_loading_array_entry.csv'))
             ->run();
     }

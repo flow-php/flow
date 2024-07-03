@@ -14,6 +14,13 @@ use Flow\Filesystem\{FileStatus, Path, Stream\NativeLocalDestinationStream};
 
 final class NativeLocalFilesystemTest extends NativeLocalFilesystemTestCase
 {
+    protected function setUp() : void
+    {
+        if (!\file_exists(__DIR__ . '/var')) {
+            \mkdir(__DIR__ . '/var');
+        }
+    }
+
     public function test_dir_exists() : void
     {
         self::assertFalse((new NativeLocalFilesystem())->status(new Path(__DIR__))->isFile());
