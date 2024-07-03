@@ -70,6 +70,7 @@
             "src/lib/azure-sdk/src/Flow/Azure/SDK/DSL/functions.php",
             "src/lib/filesystem/src/Flow/Filesystem/DSL/functions.php",
             "src/lib/parquet/src/Flow/Parquet/functions.php",
+            "src/lib/parquet/src/stubs.php",
             "src/lib/snappy/polyfill.php"
         ],
         "psr-4": {

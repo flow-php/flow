@@ -107,4 +107,12 @@ enum Option
      * Default 1
      */
     case WRITER_VERSION;
+
+    /**
+     * Compression level for ZSTD codec. This option is going to be passed to zstd_compress function when Compression is set to ZSTD.
+     * A value smaller than 0 means a faster compression level. (Zstandard library 1.3.4 or later).
+     *
+     * Default value is 3
+     */
+    case ZSTD_COMPRESSION_LEVEL;
 }

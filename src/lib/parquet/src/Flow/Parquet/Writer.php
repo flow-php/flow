@@ -32,6 +32,7 @@ final class Writer
             case Compressions::UNCOMPRESSED:
             case Compressions::SNAPPY:
             case Compressions::GZIP:
+            case Compressions::ZSTD:
                 break;
 
             default:
