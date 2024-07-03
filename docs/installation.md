@@ -22,7 +22,7 @@ this will reduce the number of unnecessary dependencies in your project (less ma
     - [xml](components/adapters/xml.md)
 - Libraries
     - [array-dot](components/libs/array-dot.md)
-    - [array-dot](components/libs/azure-sdk.md)
+    - [azure-sdk](components/libs/azure-sdk.md)
     - [doctrine-dbal-bulk](components/libs/doctrine-dbal-bulk.md)
     - [dremel](components/libs/dremel.md)
     - [filesystem](components/libs/filesystem.md)
