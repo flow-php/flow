@@ -50,6 +50,8 @@
 - [#1055](https://github.com/flow-php/flow/pull/1055) - **Right Join before duplicating right side rows in each batch from the left side dataset** - [@norberttech](https://github.com/norberttech)
 
 ### Updated
+- [fafd11](https://github.com/flow-php/flow/commit/fafd11fd225f69c6fea1dadd308d8b7bcf1e3699) - **installation.md** - [@norberttech](https://github.com/norberttech)
+- [20c8e7](https://github.com/flow-php/flow/commit/20c8e7c436fdbc5785623b4ccc7cafe0e13db182) - **introduction.md** - [@norberttech](https://github.com/norberttech)
 - [e1b237](https://github.com/flow-php/flow/commit/e1b2371cbef8e14e96fc2c24630cfe222b247584) - **introduction.md** - [@norberttech](https://github.com/norberttech)
 - [03dc6d](https://github.com/flow-php/flow/commit/03dc6dfa7e30473ae10e1d146a607106536cbe31) - **installation.md** - [@norberttech](https://github.com/norberttech)
 
