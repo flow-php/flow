@@ -46,6 +46,9 @@
 - [#1057](https://github.com/flow-php/flow/pull/1057) - **DataFrame::aggregate returns the same instance of dataframe with updated pipeline** - [@norberttech](https://github.com/norberttech)
 - [#1055](https://github.com/flow-php/flow/pull/1055) - **Right Join before duplicating right side rows in each batch from the left side dataset** - [@norberttech](https://github.com/norberttech)
 
+### Updated
+- [03dc6d](https://github.com/flow-php/flow/commit/03dc6dfa7e30473ae10e1d146a607106536cbe31) - **installation.md** - [@norberttech](https://github.com/norberttech)
+
 ### Removed
 - [#1104](https://github.com/flow-php/flow/pull/1104) - **Parquet append to existing files** - [@norberttech](https://github.com/norberttech)
 - [#1101](https://github.com/flow-php/flow/pull/1101) - **Temporarily drop support for Avro file format** - [@norberttech](https://github.com/norberttech)
