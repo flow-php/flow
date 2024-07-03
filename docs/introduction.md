@@ -9,6 +9,36 @@ Supported PHP versions: [![PHP 8.1](https://img.shields.io/badge/php-~8.1-8892BF
 - 📈 [Project Roadmap](https://github.com/orgs/flow-php/projects/1)
 - 🛠️ [Contributing](../CONTRIBUTING.md)
 
+# Table of contents 
+
+- [ETL](components/core/core.md)
+- Adapters
+    - [chartjs](components/adapters/chartjs.md)
+    - [csv](components/adapters/csv.md)
+    - [doctrine](components/adapters/doctrine.md)
+    - [elasticsearch](components/adapters/elasticsearch.md)
+    - [filesystem](components/adapters/filesystem.md)
+    - [google sheet](components/adapters/google-sheet.md)
+    - [http](components/adapters/http.md)
+    - [json](components/adapters/json.md)
+    - [logger](components/adapters/logger.md)
+    - [meilisearch](components/adapters/meilisearch.md)
+    - [parquet](components/adapters/parquet.md)
+    - [text](components/adapters/text.md)
+    - [xml](components/adapters/xml.md)
+- Libraries
+    - [array-dot](components/libs/array-dot.md)
+    - [azure-sdk](components/libs/azure-sdk.md)
+    - [doctrine-dbal-bulk](components/libs/doctrine-dbal-bulk.md)
+    - [dremel](components/libs/dremel.md)
+    - [filesystem](components/libs/filesystem.md)
+    - [parquet](components/libs/parquet.md)
+    - [parquet-viewer](components/libs/parquet-viewer.md)
+    - [snappy](components/libs/snappy.md)
+- Bridges
+    - [filesystem-azure](components/bridges/filesystem-azure-bridge.md)
+    - [monolog-http](components/bridges/monolog-http-bridge.md) 
+
 # Key Features
 
 - **Low memory footprint**: Optimized for efficiency, Flow PHP ensures minimal memory usage, maintaining low and constant consumption regardless of data size. This makes it ideal for handling large datasets without compromising performance.
