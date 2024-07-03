@@ -63,13 +63,6 @@ jobs:
           MYSQL_PASSWORD: mysql
           MYSQL_DATABASE: mysql
           MYSQL_ROOT_PASSWORD: root
-      azurite:
-        image: mcr.microsoft.com/azure-storage/azurite
-        options: "--loose --blobHost 0.0.0.0 --blobPort 10000"
-        env:
-          AZURITE_ACCOUNTS: flowphpaccount01:flowphpkey01
-        ports:
-          - 10000:10000
 
     strategy:
       fail-fast: false
@@ -102,6 +95,20 @@ jobs:
 
       - name: "List PHP configuration"
         run: php -i
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: '14'
+
+      - name: Install Azurite storage emulator
+        run: npm install -g azurite
+
+      - name: Start Azurite blob endpoint
+        shell: bash
+        run: azurite-blob --blobHost 0.0.0.0 --blobPort 10000 &
+        env:
+          AZURITE_ACCOUNTS: flowphpaccount01:flowphpkey01
 
       - name: "Get Composer Cache Directory"
         id: composer-cache
