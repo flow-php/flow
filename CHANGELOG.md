@@ -1,6 +1,7 @@
 ## [Unreleased] - 2024-07-03
 
 ### Added
+- [#1105](https://github.com/flow-php/flow/pull/1105) - **zstd compression functions** - [@flavioheleno](https://github.com/flavioheleno)
 - [#1104](https://github.com/flow-php/flow/pull/1104) - **Flow Filesystem Library** - [@norberttech](https://github.com/norberttech)
 - [#1104](https://github.com/flow-php/flow/pull/1104) - **Flow Azure SDK Library** - [@norberttech](https://github.com/norberttech)
 - [#1104](https://github.com/flow-php/flow/pull/1104) - **Flow Monolog HTTP Bridge** - [@norberttech](https://github.com/norberttech)
