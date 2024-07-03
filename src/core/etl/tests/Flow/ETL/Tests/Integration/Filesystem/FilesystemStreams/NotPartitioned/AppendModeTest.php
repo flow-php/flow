@@ -32,7 +32,7 @@ final class AppendModeTest extends FilesystemStreamsTestCase
         $appendFileStream->append('new content');
         $streams->closeWriters($file);
 
-        $files = \iterator_to_array($this->fs->list(new Path($file->parentDirectory()->path() . '/*')));
+        $files = \iterator_to_array($this->fs()->list(new Path($file->parentDirectory()->path() . '/*')));
 
         self::assertCount(2, $files);
 
@@ -55,7 +55,7 @@ final class AppendModeTest extends FilesystemStreamsTestCase
         $appendFileStream->append('new content');
         $streams->closeWriters($file);
 
-        $files = \iterator_to_array($this->fs->list(new Path($file->parentDirectory()->path() . '/*')));
+        $files = \iterator_to_array($this->fs()->list(new Path($file->parentDirectory()->path() . '/*')));
 
         self::assertCount(1, $files);
         self::assertSame('non-existing-file.txt', $files[0]->path->basename());
@@ -63,7 +63,7 @@ final class AppendModeTest extends FilesystemStreamsTestCase
 
     protected function streams() : FilesystemStreams
     {
-        $streams = new FilesystemStreams($this->fstab);
+        $streams = new FilesystemStreams($this->fstab());
         $streams->setSaveMode(append());
 
         return $streams;

@@ -50,7 +50,7 @@ final class ExceptionIfExistsModeTest extends FilesystemStreamsTestCase
 
     protected function streams() : FilesystemStreams
     {
-        $streams = new FilesystemStreams($this->fstab);
+        $streams = new FilesystemStreams($this->fstab());
         $streams->setSaveMode(exception_if_exists());
 
         return $streams;

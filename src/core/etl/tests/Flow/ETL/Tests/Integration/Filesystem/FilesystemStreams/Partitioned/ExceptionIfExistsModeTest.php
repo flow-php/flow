@@ -49,7 +49,7 @@ final class ExceptionIfExistsModeTest extends FilesystemStreamsTestCase
         $fileStream->append('file content');
         $streams->closeWriters($file);
 
-        $files = \iterator_to_array($this->fs->list(new Path($file->parentDirectory()->path() . '/**/*.txt')));
+        $files = \iterator_to_array($this->fs()->list(new Path($file->parentDirectory()->path() . '/**/*.txt')));
 
         self::assertCount(1, $files);
 
@@ -69,7 +69,7 @@ final class ExceptionIfExistsModeTest extends FilesystemStreamsTestCase
         $appendedFile = $streams->writeTo($file, partitions: [new Partition('partition', 'value')]);
         $appendedFile->append('file content');
         $streams->closeWriters($file);
-        $files = \iterator_to_array($this->fs->list(new Path($file->parentDirectory()->path() . '/partition=value/*')));
+        $files = \iterator_to_array($this->fs()->list(new Path($file->parentDirectory()->path() . '/partition=value/*')));
 
         self::assertCount(1, $files);
 
@@ -79,7 +79,7 @@ final class ExceptionIfExistsModeTest extends FilesystemStreamsTestCase
 
     protected function streams() : FilesystemStreams
     {
-        $streams = new FilesystemStreams($this->fstab);
+        $streams = new FilesystemStreams($this->fstab());
         $streams->setSaveMode(exception_if_exists());
 
         return $streams;

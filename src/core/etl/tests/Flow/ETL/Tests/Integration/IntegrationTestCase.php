@@ -24,12 +24,9 @@ abstract class IntegrationTestCase extends TestCase
         $this->baseMemoryLimit = \ini_get('memory_limit');
         $this->cacheDir = Path::realpath(\getenv(Config::CACHE_DIR_ENV))->path();
 
-        $this->fs = new NativeLocalFilesystem();
-        $this->fstab = new FilesystemTable($this->fs);
-
         $this->cleanupCacheDir($this->cacheDir);
 
-        if (!$this->fs->status(Path::realpath($this->cacheDir))?->isDirectory()) {
+        if (!$this->fs()->status(Path::realpath($this->cacheDir))?->isDirectory()) {
             \mkdir($this->cacheDir, recursive: true);
         }
     }
@@ -50,13 +47,31 @@ abstract class IntegrationTestCase extends TestCase
                 continue;
             }
 
-            $this->fs->rm(Path::realpath($this->filesDirectory() . DIRECTORY_SEPARATOR . $file));
+            $this->fs()->rm(Path::realpath($this->filesDirectory() . DIRECTORY_SEPARATOR . $file));
         }
     }
 
     protected function filesDirectory() : string
     {
         throw new \RuntimeException('You need to implement filesDirectory method to point to your test files directory.');
+    }
+
+    protected function fs() : Filesystem
+    {
+        if ($this->fs === null) {
+            $this->fs = new NativeLocalFilesystem();
+        }
+
+        return $this->fs;
+    }
+
+    protected function fstab() : FilesystemTable
+    {
+        if ($this->fstab === null) {
+            $this->fstab = new FilesystemTable($this->fs());
+        }
+
+        return $this->fstab;
     }
 
     protected function getPath(string $relativePath) : Path
@@ -91,8 +106,8 @@ abstract class IntegrationTestCase extends TestCase
 
     private function cleanupCacheDir(string $directory) : void
     {
-        if ($this->fs->status($path = Path::realpath($directory))?->isDirectory()) {
-            $this->fs->rm($path);
+        if ($this->fs()->status($path = Path::realpath($directory))?->isDirectory()) {
+            $this->fs()->rm($path);
         }
     }
 }

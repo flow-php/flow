@@ -117,6 +117,6 @@ final class FilesystemStreamsTest extends FilesystemStreamsTestCase
 
     protected function streams() : FilesystemStreams
     {
-        return new FilesystemStreams($this->fstab);
+        return new FilesystemStreams($this->fstab());
     }
 }
